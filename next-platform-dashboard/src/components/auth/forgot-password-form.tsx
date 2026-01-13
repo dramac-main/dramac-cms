@@ -40,7 +40,7 @@ export function ForgotPasswordForm() {
       } else if (result?.success) {
         setSuccess(result.message || "Check your email for the reset link");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred");
     } finally {
       setIsPending(false);

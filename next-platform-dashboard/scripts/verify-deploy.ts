@@ -23,7 +23,7 @@ async function verifyDeployment() {
       console.log(`${status} ${check.name}: ${response.status}`);
 
       if (!response.ok) allPassed = false;
-    } catch (error) {
+    } catch (_error) {
       console.log(`❌ ${check.name}: Failed to connect`);
       allPassed = false;
     }

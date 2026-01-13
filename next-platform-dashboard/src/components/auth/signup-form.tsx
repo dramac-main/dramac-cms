@@ -45,7 +45,7 @@ export function SignupForm() {
       } else if (result?.success) {
         setSuccess(result.message || "Account created successfully!");
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred");
     } finally {
       setIsPending(false);

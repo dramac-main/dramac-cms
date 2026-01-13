@@ -21,7 +21,7 @@ interface LoginFormProps {
   redirectTo?: string;
 }
 
-export function LoginForm({ redirectTo }: LoginFormProps) {
+export function LoginForm({ redirectTo: _redirectTo }: LoginFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -42,7 +42,7 @@ export function LoginForm({ redirectTo }: LoginFormProps) {
       if (result?.error) {
         setError(result.error);
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred");
     } finally {
       setIsPending(false);
