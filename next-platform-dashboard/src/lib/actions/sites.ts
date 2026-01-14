@@ -69,7 +69,7 @@ export async function getSite(siteId: string) {
     .select(`
       *,
       client:clients(id, name, company),
-      pages(id, title, slug, is_homepage, created_at)
+      pages(id, name, slug, is_homepage, created_at)
     `)
     .eq("id", siteId)
     .single();
