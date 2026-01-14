@@ -7,12 +7,20 @@ import { Container } from "./user-components/container";
 import { Text } from "./user-components/text";
 import { ButtonComponent } from "./user-components/button-component";
 import { ImageComponent } from "./user-components/image-component";
+import { HeroSection } from "./user-components/hero-section";
+import { FeatureGrid } from "./user-components/feature-grid";
+import { Testimonials } from "./user-components/testimonials";
+import { CTASection } from "./user-components/cta-section";
 import {
   LayoutGrid,
   Type,
   MousePointer,
   Image as ImageIcon,
   GripVertical,
+  LayoutTemplate,
+  Grid3X3,
+  Quote,
+  Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,22 +29,30 @@ const iconMap: Record<string, React.ElementType> = {
   Type,
   MousePointer,
   Image: ImageIcon,
+  LayoutTemplate,
+  Grid3X3,
+  Quote,
+  Megaphone,
 };
 
-const componentMap: Record<string, React.ComponentType> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const componentMap: Record<string, React.ComponentType<any>> = {
   Container,
   Text,
   Button: ButtonComponent,
   Image: ImageComponent,
+  HeroSection,
+  FeatureGrid,
+  Testimonials,
+  CTASection,
 };
 
 // Group components by category
-const categories = Array.from(
-  new Set(componentRegistry.map((c) => c.category))
-);
+const categories = ["layout", "sections", "typography", "buttons", "media"];
 
 const categoryLabels: Record<string, string> = {
   layout: "Layout",
+  sections: "Sections",
   typography: "Typography",
   buttons: "Buttons",
   media: "Media",
@@ -55,6 +71,7 @@ export function EditorToolbox() {
         <div className="p-4 space-y-6">
           {categories.map((category) => {
             const items = componentRegistry.filter((c) => c.category === category);
+            if (items.length === 0) return null;
 
             return (
               <div key={category}>
