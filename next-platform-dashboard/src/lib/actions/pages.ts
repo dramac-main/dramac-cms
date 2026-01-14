@@ -9,6 +9,7 @@ import {
   type UpdatePageFormData,
 } from "@/lib/validations/page";
 import type { Page } from "@/types/page";
+import type { Json } from "@/types/database";
 
 // Helper to get current user's agency
 async function getAgencyId() {
@@ -79,6 +80,63 @@ export async function getPage(pageId: string): Promise<Page | null> {
   }
 
   return data;
+}
+
+export async function getPageWithContent(pageId: string): Promise<{
+  id: string;
+  site_id: string;
+  name: string;
+  slug: string;
+  is_homepage: boolean;
+  seo_title: string | null;
+  seo_description: string | null;
+  seo_image: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+  content: Record<string, unknown> | null;
+  site?: { id: string; name: string; subdomain: string; agency_id: string };
+} | null> {
+  const supabase = await createClient();
+  const agencyId = await getAgencyId();
+
+  if (!agencyId) {
+    throw new Error("Not authenticated");
+  }
+
+  const { data, error } = await supabase
+    .from("pages")
+    .select(
+      `
+      *,
+      site:sites(id, name, subdomain, agency_id),
+      page_content(content)
+    `
+    )
+    .eq("id", pageId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null;
+    }
+    throw new Error(error.message);
+  }
+
+  // Verify agency access
+  if (data.site?.agency_id !== agencyId) {
+    throw new Error("Unauthorized");
+  }
+
+  // Extract content from page_content relation
+  const content = Array.isArray(data.page_content) && data.page_content.length > 0
+    ? (data.page_content[0] as { content: Record<string, unknown> }).content
+    : null;
+
+  return {
+    ...data,
+    content,
+  };
 }
 
 export async function createPageAction(
@@ -248,6 +306,67 @@ export async function deletePageAction(
       return { error: error.message };
     }
     return { error: "Failed to delete page" };
+  }
+}
+
+export async function savePageContentAction(
+  pageId: string,
+  content: Json
+): Promise<{ success?: boolean; error?: string }> {
+  const supabase = await createClient();
+
+  try {
+    const agencyId = await getAgencyId();
+
+    if (!agencyId) {
+      return { error: "Not authenticated" };
+    }
+
+    // Verify ownership
+    const { data: page } = await supabase
+      .from("pages")
+      .select("site:sites(agency_id)")
+      .eq("id", pageId)
+      .single();
+
+    if (!page || page.site?.agency_id !== agencyId) {
+      return { error: "Page not found" };
+    }
+
+    // Check if page_content exists
+    const { data: existingContent } = await supabase
+      .from("page_content")
+      .select("id")
+      .eq("page_id", pageId)
+      .single();
+
+    if (existingContent) {
+      // Update existing content
+      const { error } = await supabase
+        .from("page_content")
+        .update({ content: content as Json, updated_at: new Date().toISOString() })
+        .eq("page_id", pageId);
+
+      if (error) {
+        return { error: error.message };
+      }
+    } else {
+      // Insert new content
+      const { error } = await supabase
+        .from("page_content")
+        .insert({ page_id: pageId, content: content as Json });
+
+      if (error) {
+        return { error: error.message };
+      }
+    }
+
+    return { success: true };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { error: error.message };
+    }
+    return { error: "Failed to save page content" };
   }
 }
 
