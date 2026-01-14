@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { unstable_cache } from "next/cache";
 import { RENDERER_CONFIG } from "./config";
 import type { Json } from "@/types/database";
+import type { ThemeSettings } from "./theme";
 
 export interface SiteData {
   id: string;
@@ -16,6 +17,7 @@ export interface SiteData {
     customCss?: string;
     customHead?: string;
     fonts?: string[];
+    theme?: ThemeSettings;
   };
   pages: PageData[];
   published: boolean;
