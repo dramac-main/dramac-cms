@@ -148,7 +148,7 @@ export async function unpublishPage(pageId: string): Promise<PublishResult> {
     }
 
     return { success: true, publishedAt: null };
-  } catch (error) {
+  } catch (_error) {
     return { success: false, publishedAt: null, error: "Unexpected error" };
   }
 }
