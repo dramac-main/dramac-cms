@@ -5,6 +5,7 @@ import { getSite } from "@/lib/actions/sites";
 import { PageHeader } from "@/components/layout/page-header";
 import { SiteSettingsForm } from "@/components/sites/site-settings-form";
 import { SiteDangerZone } from "@/components/sites/site-danger-zone";
+import { SiteModulesTab } from "@/components/sites/site-modules-tab";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft } from "lucide-react";
@@ -50,6 +51,7 @@ export default async function SiteSettingsPage({ params }: SiteSettingsPageProps
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="domains">Domains</TabsTrigger>
           <TabsTrigger value="seo">SEO</TabsTrigger>
+          <TabsTrigger value="modules">Modules</TabsTrigger>
           <TabsTrigger value="danger">Danger Zone</TabsTrigger>
         </TabsList>
 
@@ -63,6 +65,10 @@ export default async function SiteSettingsPage({ params }: SiteSettingsPageProps
 
         <TabsContent value="seo">
           <SiteSettingsForm site={site} section="seo" />
+        </TabsContent>
+
+        <TabsContent value="modules">
+          <SiteModulesTab siteId={site.id} />
         </TabsContent>
 
         <TabsContent value="danger">
