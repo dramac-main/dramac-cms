@@ -6,6 +6,10 @@ import { HeroSection } from "./user-components/hero-section";
 import { FeatureGrid } from "./user-components/feature-grid";
 import { Testimonials } from "./user-components/testimonials";
 import { CTASection } from "./user-components/cta-section";
+import { ContactForm } from "./user-components/contact-form";
+import { Newsletter } from "./user-components/newsletter";
+import { Navigation } from "./user-components/navigation";
+import { Footer } from "./user-components/footer";
 
 // Map of all user components for Craft.js resolver
 export const componentResolver = {
@@ -17,10 +21,23 @@ export const componentResolver = {
   FeatureGrid,
   Testimonials,
   CTASection,
+  ContactForm,
+  Newsletter,
+  Navigation,
+  Footer,
 };
 
 // Component metadata for toolbox
 export const componentRegistry = [
+  // Navigation
+  {
+    name: "Navigation",
+    displayName: "Navigation",
+    description: "Site header with logo and links",
+    category: "navigation" as const,
+    icon: "Menu",
+    component: Navigation,
+  },
   // Layout
   {
     name: "Container",
@@ -29,33 +46,6 @@ export const componentRegistry = [
     category: "layout" as const,
     icon: "LayoutGrid",
     component: Container,
-  },
-  // Typography
-  {
-    name: "Text",
-    displayName: "Text",
-    description: "Text content with various styles",
-    category: "typography" as const,
-    icon: "Type",
-    component: Text,
-  },
-  // Buttons
-  {
-    name: "Button",
-    displayName: "Button",
-    description: "Interactive button element",
-    category: "buttons" as const,
-    icon: "MousePointer",
-    component: ButtonComponent,
-  },
-  // Media
-  {
-    name: "Image",
-    displayName: "Image",
-    description: "Display images",
-    category: "media" as const,
-    icon: "Image",
-    component: ImageComponent,
   },
   // Sections
   {
@@ -89,5 +79,58 @@ export const componentRegistry = [
     category: "sections" as const,
     icon: "Megaphone",
     component: CTASection,
+  },
+  // Forms
+  {
+    name: "ContactForm",
+    displayName: "Contact Form",
+    description: "Contact form with fields",
+    category: "forms" as const,
+    icon: "Mail",
+    component: ContactForm,
+  },
+  {
+    name: "Newsletter",
+    displayName: "Newsletter",
+    description: "Email subscription form",
+    category: "forms" as const,
+    icon: "Inbox",
+    component: Newsletter,
+  },
+  // Typography
+  {
+    name: "Text",
+    displayName: "Text",
+    description: "Text content with various styles",
+    category: "typography" as const,
+    icon: "Type",
+    component: Text,
+  },
+  // Buttons
+  {
+    name: "Button",
+    displayName: "Button",
+    description: "Interactive button element",
+    category: "buttons" as const,
+    icon: "MousePointer",
+    component: ButtonComponent,
+  },
+  // Media
+  {
+    name: "Image",
+    displayName: "Image",
+    description: "Display images",
+    category: "media" as const,
+    icon: "Image",
+    component: ImageComponent,
+  },
+  // Navigation (Footer)
+  {
+    name: "Footer",
+    displayName: "Footer",
+    description: "Site footer with links",
+    category: "navigation" as const,
+    icon: "PanelBottom",
+    component: Footer,
   },
 ];
