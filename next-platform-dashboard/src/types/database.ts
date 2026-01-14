@@ -660,6 +660,195 @@ export type Database = {
           }
         ];
       };
+      billing_customers: {
+        Row: {
+          id: string;
+          agency_id: string;
+          stripe_customer_id: string;
+          email: string;
+          name: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          stripe_customer_id: string;
+          email: string;
+          name?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          stripe_customer_id?: string;
+          email?: string;
+          name?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "billing_customers_agency_id_fkey";
+            columns: ["agency_id"];
+            isOneToOne: true;
+            referencedRelation: "agencies";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      billing_subscriptions: {
+        Row: {
+          id: string;
+          agency_id: string;
+          stripe_subscription_id: string;
+          status: string;
+          billing_cycle: string;
+          quantity: number;
+          current_period_start: string | null;
+          current_period_end: string | null;
+          cancel_at_period_end: boolean;
+          trial_end: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          stripe_subscription_id: string;
+          status?: string;
+          billing_cycle?: string;
+          quantity?: number;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          trial_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          stripe_subscription_id?: string;
+          status?: string;
+          billing_cycle?: string;
+          quantity?: number;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          cancel_at_period_end?: boolean;
+          trial_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "billing_subscriptions_agency_id_fkey";
+            columns: ["agency_id"];
+            isOneToOne: false;
+            referencedRelation: "agencies";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      billing_invoices: {
+        Row: {
+          id: string;
+          agency_id: string;
+          stripe_invoice_id: string;
+          amount_due: number;
+          amount_paid: number;
+          currency: string;
+          status: string;
+          invoice_pdf: string | null;
+          hosted_invoice_url: string | null;
+          period_start: string | null;
+          period_end: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          stripe_invoice_id: string;
+          amount_due: number;
+          amount_paid: number;
+          currency?: string;
+          status: string;
+          invoice_pdf?: string | null;
+          hosted_invoice_url?: string | null;
+          period_start?: string | null;
+          period_end?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          stripe_invoice_id?: string;
+          amount_due?: number;
+          amount_paid?: number;
+          currency?: string;
+          status?: string;
+          invoice_pdf?: string | null;
+          hosted_invoice_url?: string | null;
+          period_start?: string | null;
+          period_end?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "billing_invoices_agency_id_fkey";
+            columns: ["agency_id"];
+            isOneToOne: false;
+            referencedRelation: "agencies";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      billing_usage: {
+        Row: {
+          id: string;
+          agency_id: string;
+          module_id: string | null;
+          stripe_subscription_item_id: string | null;
+          quantity: number;
+          timestamp: string;
+          idempotency_key: string | null;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          module_id?: string | null;
+          stripe_subscription_item_id?: string | null;
+          quantity?: number;
+          timestamp?: string;
+          idempotency_key?: string | null;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          module_id?: string | null;
+          stripe_subscription_item_id?: string | null;
+          quantity?: number;
+          timestamp?: string;
+          idempotency_key?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "billing_usage_agency_id_fkey";
+            columns: ["agency_id"];
+            isOneToOne: false;
+            referencedRelation: "agencies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "billing_usage_module_id_fkey";
+            columns: ["module_id"];
+            isOneToOne: false;
+            referencedRelation: "modules";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -728,3 +917,19 @@ export type DbSiteModuleUpdate = Database["public"]["Tables"]["site_modules"]["U
 export type DbModuleUsage = Database["public"]["Tables"]["module_usage"]["Row"];
 export type DbModuleUsageInsert = Database["public"]["Tables"]["module_usage"]["Insert"];
 export type DbModuleUsageUpdate = Database["public"]["Tables"]["module_usage"]["Update"];
+
+export type DbBillingCustomer = Database["public"]["Tables"]["billing_customers"]["Row"];
+export type DbBillingCustomerInsert = Database["public"]["Tables"]["billing_customers"]["Insert"];
+export type DbBillingCustomerUpdate = Database["public"]["Tables"]["billing_customers"]["Update"];
+
+export type DbBillingSubscription = Database["public"]["Tables"]["billing_subscriptions"]["Row"];
+export type DbBillingSubscriptionInsert = Database["public"]["Tables"]["billing_subscriptions"]["Insert"];
+export type DbBillingSubscriptionUpdate = Database["public"]["Tables"]["billing_subscriptions"]["Update"];
+
+export type DbBillingInvoice = Database["public"]["Tables"]["billing_invoices"]["Row"];
+export type DbBillingInvoiceInsert = Database["public"]["Tables"]["billing_invoices"]["Insert"];
+export type DbBillingInvoiceUpdate = Database["public"]["Tables"]["billing_invoices"]["Update"];
+
+export type DbBillingUsage = Database["public"]["Tables"]["billing_usage"]["Row"];
+export type DbBillingUsageInsert = Database["public"]["Tables"]["billing_usage"]["Insert"];
+export type DbBillingUsageUpdate = Database["public"]["Tables"]["billing_usage"]["Update"];
