@@ -3,6 +3,7 @@ import {
   Users,
   Globe,
   Puzzle,
+  Package,
   CreditCard,
   Settings,
   HelpCircle,
@@ -46,8 +47,13 @@ export const mainNavigation: NavGroup[] = [
     title: "Marketplace",
     items: [
       {
-        title: "Modules",
-        href: "/dashboard/modules",
+        title: "Marketplace",
+        href: "/marketplace",
+        icon: Package,
+      },
+      {
+        title: "My Modules",
+        href: "/dashboard/settings/modules",
         icon: Puzzle,
       },
     ],
