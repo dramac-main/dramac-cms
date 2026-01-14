@@ -479,6 +479,9 @@ export type Database = {
           screenshots: Json;
           requirements: Json;
           version: string;
+          stripe_product_id: string | null;
+          stripe_price_monthly: string | null;
+          stripe_price_yearly: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -498,6 +501,9 @@ export type Database = {
           screenshots?: Json;
           requirements?: Json;
           version?: string;
+          stripe_product_id?: string | null;
+          stripe_price_monthly?: string | null;
+          stripe_price_yearly?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -517,6 +523,9 @@ export type Database = {
           screenshots?: Json;
           requirements?: Json;
           version?: string;
+          stripe_product_id?: string | null;
+          stripe_price_monthly?: string | null;
+          stripe_price_yearly?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -527,11 +536,12 @@ export type Database = {
           id: string;
           agency_id: string;
           module_id: string;
-          status: "active" | "canceled" | "past_due";
+          status: "active" | "canceled" | "past_due" | "incomplete" | "incomplete_expired" | "trialing" | "unpaid";
           billing_cycle: "monthly" | "yearly";
           current_period_start: string | null;
           current_period_end: string | null;
           stripe_subscription_id: string | null;
+          cancel_at_period_end: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -539,11 +549,12 @@ export type Database = {
           id?: string;
           agency_id: string;
           module_id: string;
-          status?: "active" | "canceled" | "past_due";
+          status?: "active" | "canceled" | "past_due" | "incomplete" | "incomplete_expired" | "trialing" | "unpaid";
           billing_cycle?: "monthly" | "yearly";
           current_period_start?: string | null;
           current_period_end?: string | null;
           stripe_subscription_id?: string | null;
+          cancel_at_period_end?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -551,11 +562,12 @@ export type Database = {
           id?: string;
           agency_id?: string;
           module_id?: string;
-          status?: "active" | "canceled" | "past_due";
+          status?: "active" | "canceled" | "past_due" | "incomplete" | "incomplete_expired" | "trialing" | "unpaid";
           billing_cycle?: "monthly" | "yearly";
           current_period_start?: string | null;
           current_period_end?: string | null;
           stripe_subscription_id?: string | null;
+          cancel_at_period_end?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -611,6 +623,48 @@ export type Database = {
           },
           {
             foreignKeyName: "site_modules_module_id_fkey";
+            columns: ["module_id"];
+            isOneToOne: false;
+            referencedRelation: "modules";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      agency_modules: {
+        Row: {
+          id: string;
+          agency_id: string;
+          module_id: string;
+          enabled: boolean;
+          settings: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          module_id: string;
+          enabled?: boolean;
+          settings?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          module_id?: string;
+          enabled?: boolean;
+          settings?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "agency_modules_agency_id_fkey";
+            columns: ["agency_id"];
+            isOneToOne: false;
+            referencedRelation: "agencies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "agency_modules_module_id_fkey";
             columns: ["module_id"];
             isOneToOne: false;
             referencedRelation: "modules";
