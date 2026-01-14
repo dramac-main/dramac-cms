@@ -114,3 +114,5 @@ export {
   AlertDialogAction,
   AlertDialogCancel,
 } from "./alert-dialog";
+
+export { Alert, AlertTitle, AlertDescription } from "./alert";
