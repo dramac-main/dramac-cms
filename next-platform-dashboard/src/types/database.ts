@@ -412,6 +412,56 @@ export type Database = {
           }
         ];
       };
+      templates: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          thumbnail_url: string | null;
+          content: Json;
+          category: string;
+          is_public: boolean;
+          agency_id: string;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          thumbnail_url?: string | null;
+          content: Json;
+          category: string;
+          is_public?: boolean;
+          agency_id: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          thumbnail_url?: string | null;
+          content?: Json;
+          category?: string;
+          is_public?: boolean;
+          agency_id?: string;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "templates_agency_id_fkey";
+            columns: ["agency_id"];
+            isOneToOne: false;
+            referencedRelation: "agencies";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -461,3 +511,6 @@ export type Asset = Database["public"]["Tables"]["assets"]["Row"];
 export type AssetInsert = Database["public"]["Tables"]["assets"]["Insert"];
 export type AssetUpdate = Database["public"]["Tables"]["assets"]["Update"];
 
+export type Template = Database["public"]["Tables"]["templates"]["Row"];
+export type TemplateInsert = Database["public"]["Tables"]["templates"]["Insert"];
+export type TemplateUpdate = Database["public"]["Tables"]["templates"]["Update"];
