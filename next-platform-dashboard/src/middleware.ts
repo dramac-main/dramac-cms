@@ -1,19 +1,55 @@
-import { type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
+  const hostname = request.headers.get("host") || "";
+  const pathname = request.nextUrl.pathname;
+
+  // Skip for dashboard, API, and static files
+  if (
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon") ||
+    pathname.includes(".")
+  ) {
+    // For dashboard routes, still run session update
+    if (pathname.startsWith("/dashboard")) {
+      return await updateSession(request);
+    }
+    return NextResponse.next();
+  }
+
+  // Get base domain from env
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "localhost:3000";
+  const appDomain = process.env.NEXT_PUBLIC_APP_URL || "localhost:3000";
+
+  // Check if this is a custom domain or subdomain
+  const isBaseDomain = hostname === baseDomain || hostname.endsWith(`.${baseDomain}`);
+  const isAppDomain = hostname.includes(new URL(appDomain).host);
+
+  // If custom domain (not our base domain), rewrite to renderer
+  if (!isBaseDomain && !isAppDomain) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/site/${hostname}${pathname}`;
+    return NextResponse.rewrite(url);
+  }
+
+  // If subdomain of base domain (e.g., mysite.platform.com)
+  if (isBaseDomain && hostname !== baseDomain) {
+    const subdomain = hostname.replace(`.${baseDomain}`, "");
+    const url = request.nextUrl.clone();
+    url.pathname = `/site/${subdomain}${pathname}`;
+    return NextResponse.rewrite(url);
+  }
+
+  // For main app routes, run session update
   return await updateSession(request);
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (images, etc.)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };
