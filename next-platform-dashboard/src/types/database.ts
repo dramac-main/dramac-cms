@@ -462,6 +462,204 @@ export type Database = {
           }
         ];
       };
+      modules: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          description: string | null;
+          long_description: string | null;
+          icon: string;
+          category: string;
+          price_monthly: number;
+          price_yearly: number | null;
+          is_active: boolean;
+          is_featured: boolean;
+          features: Json;
+          screenshots: Json;
+          requirements: Json;
+          version: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          name: string;
+          description?: string | null;
+          long_description?: string | null;
+          icon?: string;
+          category: string;
+          price_monthly?: number;
+          price_yearly?: number | null;
+          is_active?: boolean;
+          is_featured?: boolean;
+          features?: Json;
+          screenshots?: Json;
+          requirements?: Json;
+          version?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          name?: string;
+          description?: string | null;
+          long_description?: string | null;
+          icon?: string;
+          category?: string;
+          price_monthly?: number;
+          price_yearly?: number | null;
+          is_active?: boolean;
+          is_featured?: boolean;
+          features?: Json;
+          screenshots?: Json;
+          requirements?: Json;
+          version?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      module_subscriptions: {
+        Row: {
+          id: string;
+          agency_id: string;
+          module_id: string;
+          status: "active" | "canceled" | "past_due";
+          billing_cycle: "monthly" | "yearly";
+          current_period_start: string | null;
+          current_period_end: string | null;
+          stripe_subscription_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          module_id: string;
+          status?: "active" | "canceled" | "past_due";
+          billing_cycle?: "monthly" | "yearly";
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          stripe_subscription_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          module_id?: string;
+          status?: "active" | "canceled" | "past_due";
+          billing_cycle?: "monthly" | "yearly";
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          stripe_subscription_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "module_subscriptions_agency_id_fkey";
+            columns: ["agency_id"];
+            isOneToOne: false;
+            referencedRelation: "agencies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "module_subscriptions_module_id_fkey";
+            columns: ["module_id"];
+            isOneToOne: false;
+            referencedRelation: "modules";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      site_modules: {
+        Row: {
+          id: string;
+          site_id: string;
+          module_id: string;
+          settings: Json;
+          is_enabled: boolean;
+          enabled_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          module_id: string;
+          settings?: Json;
+          is_enabled?: boolean;
+          enabled_at?: string;
+        };
+        Update: {
+          id?: string;
+          site_id?: string;
+          module_id?: string;
+          settings?: Json;
+          is_enabled?: boolean;
+          enabled_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "site_modules_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "site_modules_module_id_fkey";
+            columns: ["module_id"];
+            isOneToOne: false;
+            referencedRelation: "modules";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      module_usage: {
+        Row: {
+          id: string;
+          module_subscription_id: string;
+          site_id: string | null;
+          event_type: string;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          module_subscription_id: string;
+          site_id?: string | null;
+          event_type: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          module_subscription_id?: string;
+          site_id?: string | null;
+          event_type?: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "module_usage_module_subscription_id_fkey";
+            columns: ["module_subscription_id"];
+            isOneToOne: false;
+            referencedRelation: "module_subscriptions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "module_usage_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -514,3 +712,19 @@ export type AssetUpdate = Database["public"]["Tables"]["assets"]["Update"];
 export type Template = Database["public"]["Tables"]["templates"]["Row"];
 export type TemplateInsert = Database["public"]["Tables"]["templates"]["Insert"];
 export type TemplateUpdate = Database["public"]["Tables"]["templates"]["Update"];
+
+export type DbModule = Database["public"]["Tables"]["modules"]["Row"];
+export type DbModuleInsert = Database["public"]["Tables"]["modules"]["Insert"];
+export type DbModuleUpdate = Database["public"]["Tables"]["modules"]["Update"];
+
+export type DbModuleSubscription = Database["public"]["Tables"]["module_subscriptions"]["Row"];
+export type DbModuleSubscriptionInsert = Database["public"]["Tables"]["module_subscriptions"]["Insert"];
+export type DbModuleSubscriptionUpdate = Database["public"]["Tables"]["module_subscriptions"]["Update"];
+
+export type DbSiteModule = Database["public"]["Tables"]["site_modules"]["Row"];
+export type DbSiteModuleInsert = Database["public"]["Tables"]["site_modules"]["Insert"];
+export type DbSiteModuleUpdate = Database["public"]["Tables"]["site_modules"]["Update"];
+
+export type DbModuleUsage = Database["public"]["Tables"]["module_usage"]["Row"];
+export type DbModuleUsageInsert = Database["public"]["Tables"]["module_usage"]["Insert"];
+export type DbModuleUsageUpdate = Database["public"]["Tables"]["module_usage"]["Update"];
