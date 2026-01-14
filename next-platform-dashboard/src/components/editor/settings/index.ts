@@ -5,3 +5,7 @@ export * from "./container-settings";
 export * from "./text-settings";
 export * from "./button-settings";
 export * from "./image-settings";
+export * from "./hero-settings";
+export * from "./feature-grid-settings";
+export * from "./testimonials-settings";
+export * from "./cta-settings";
