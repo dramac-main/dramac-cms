@@ -175,23 +175,15 @@ export function NodeRenderer({ node, nodes, resolveNode }: NodeRendererProps) {
 
 // Main render function
 export function renderCraftJSON(json: any): ReactNode {
-  console.log("[renderCraftJSON] Input type:", typeof json);
-  console.log("[renderCraftJSON] Input:", json);
-  
   if (!json || !json.ROOT) {
-    console.log("[renderCraftJSON] No ROOT node found, returning null");
     return null;
   }
-
-  console.log("[renderCraftJSON] ROOT node found, rendering...");
-  console.log("[renderCraftJSON] Node keys:", Object.keys(json));
 
   const nodes = json;
 
   function resolveNode(nodeId: string): ReactNode {
     const node = nodes[nodeId];
     if (!node) {
-      console.log("[renderCraftJSON] Node not found:", nodeId);
       return null;
     }
 

@@ -9,14 +9,7 @@ interface SiteRendererProps {
 }
 
 export function SiteRenderer({ site, page }: SiteRendererProps) {
-  console.log("[SiteRenderer] Rendering page:", page.slug);
-  console.log("[SiteRenderer] Page content:", page.content);
-  console.log("[SiteRenderer] Content type:", typeof page.content);
-  console.log("[SiteRenderer] Has ROOT:", page.content && typeof page.content === 'object' && 'ROOT' in page.content);
-  
   const content = renderCraftJSON(page.content);
-  
-  console.log("[SiteRenderer] Rendered content:", content ? 'Has content' : 'No content');
 
   return (
     <>
