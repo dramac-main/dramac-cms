@@ -903,6 +903,51 @@ export type Database = {
           }
         ];
       };
+      backups: {
+        Row: {
+          id: string;
+          site_id: string;
+          filename: string;
+          size_bytes: number;
+          type: "manual" | "automatic";
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          filename: string;
+          size_bytes?: number;
+          type?: "manual" | "automatic";
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          site_id?: string;
+          filename?: string;
+          size_bytes?: number;
+          type?: "manual" | "automatic";
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "backups_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "backups_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -987,3 +1032,7 @@ export type DbBillingInvoiceUpdate = Database["public"]["Tables"]["billing_invoi
 export type DbBillingUsage = Database["public"]["Tables"]["billing_usage"]["Row"];
 export type DbBillingUsageInsert = Database["public"]["Tables"]["billing_usage"]["Insert"];
 export type DbBillingUsageUpdate = Database["public"]["Tables"]["billing_usage"]["Update"];
+
+export type DbBackup = Database["public"]["Tables"]["backups"]["Row"];
+export type DbBackupInsert = Database["public"]["Tables"]["backups"]["Insert"];
+export type DbBackupUpdate = Database["public"]["Tables"]["backups"]["Update"];
