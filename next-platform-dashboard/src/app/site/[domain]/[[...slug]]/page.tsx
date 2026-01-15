@@ -35,8 +35,8 @@ export async function generateStaticParams() {
   return params;
 }
 
-// Enable ISR in production
-export const revalidate = process.env.NODE_ENV === 'production' ? 60 : 0;
+// Enable ISR with 60 second revalidation
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: SitePageProps): Promise<Metadata> {
   const { domain, slug } = await params;
