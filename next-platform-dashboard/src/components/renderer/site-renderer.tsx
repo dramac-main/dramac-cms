@@ -9,7 +9,14 @@ interface SiteRendererProps {
 }
 
 export function SiteRenderer({ site, page }: SiteRendererProps) {
+  console.log("[SiteRenderer] Rendering page:", page.slug);
+  console.log("[SiteRenderer] Page content:", page.content);
+  console.log("[SiteRenderer] Content type:", typeof page.content);
+  console.log("[SiteRenderer] Has ROOT:", page.content && typeof page.content === 'object' && 'ROOT' in page.content);
+  
   const content = renderCraftJSON(page.content);
+  
+  console.log("[SiteRenderer] Rendered content:", content ? 'Has content' : 'No content');
 
   return (
     <>
@@ -17,7 +24,12 @@ export function SiteRenderer({ site, page }: SiteRendererProps) {
       <SiteStyles site={site} />
       
       <div className="site-content" data-site-id={site.id} data-page-id={page.id}>
-        {content}
+        {content || (
+          <div style={{ padding: '2rem', textAlign: 'center', color: '#888' }}>
+            <p>No content to display</p>
+            <p style={{ fontSize: '0.875rem' }}>This page has no content yet or the content format is not recognized.</p>
+          </div>
+        )}
       </div>
     </>
   );

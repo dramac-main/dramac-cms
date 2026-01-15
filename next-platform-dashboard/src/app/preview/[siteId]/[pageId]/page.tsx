@@ -24,13 +24,28 @@ export default function PreviewPage({ params }: PreviewPageProps) {
 
     async function fetchContent() {
       try {
+        console.log("[Preview] Fetching content for:", resolvedParams);
         const response = await fetch(`/api/preview/${resolvedParams!.siteId}/${resolvedParams!.pageId}`);
+        
         if (!response.ok) {
-          throw new Error("Failed to load page content");
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || "Failed to load page content");
         }
+        
         const data = await response.json();
-        setContent(data.content);
+        console.log("[Preview] Received data:", data);
+        console.log("[Preview] Content type:", typeof data.content);
+        
+        if (data.content) {
+          // Content is already a JSON string from the API
+          setContent(data.content);
+          console.log("[Preview] Content set successfully");
+        } else {
+          console.log("[Preview] No content in response");
+          setContent(null);
+        }
       } catch (err) {
+        console.error("[Preview] Error:", err);
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
@@ -62,13 +77,24 @@ export default function PreviewPage({ params }: PreviewPageProps) {
     );
   }
 
+  if (!content) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <h1 className="text-xl font-medium text-muted-foreground mb-2">No Content</h1>
+          <p className="text-muted-foreground">This page has no content yet.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Editor
         resolver={componentResolver}
         enabled={false}
       >
-        <Frame data={content || undefined}>
+        <Frame data={content}>
           <Element is={Root} canvas />
         </Frame>
       </Editor>

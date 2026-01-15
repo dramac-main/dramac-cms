@@ -15,25 +15,102 @@ import { RenderFAQ } from "./components/render-faq";
 import { RenderTeam } from "./components/render-team";
 import { RenderStats } from "./components/render-stats";
 
+// Passthrough component for wrapping components (Root, Section, Columns, Column)
+function PassthroughContainer({ children, ...props }: { children?: ReactNode; [key: string]: unknown }) {
+  const style: React.CSSProperties = {};
+  
+  if (props.backgroundColor) style.backgroundColor = props.backgroundColor as string;
+  if (props.paddingTop) style.paddingTop = `${props.paddingTop}px`;
+  if (props.paddingBottom) style.paddingBottom = `${props.paddingBottom}px`;
+  if (props.paddingLeft) style.paddingLeft = `${props.paddingLeft}px`;
+  if (props.paddingRight) style.paddingRight = `${props.paddingRight}px`;
+  if (props.minHeight) style.minHeight = `${props.minHeight}px`;
+  if (props.maxWidth && props.maxWidth !== 'full') {
+    const maxWidthMap: Record<string, string> = {
+      '7xl': '80rem',
+      '6xl': '72rem',
+      '5xl': '64rem',
+      '4xl': '56rem',
+      '3xl': '48rem',
+      '2xl': '42rem',
+      'xl': '36rem',
+    };
+    style.maxWidth = maxWidthMap[props.maxWidth as string] || '100%';
+    style.marginLeft = 'auto';
+    style.marginRight = 'auto';
+  }
+  
+  return <div style={style}>{children}</div>;
+}
+
 // Map of component types to render functions
 const componentMap: Record<string, React.FC<any>> = {
   Container: RenderContainer,
   Text: RenderText,
   Button: RenderButton,
+  ButtonComponent: RenderButton,
+  ButtonNew: RenderButton,
   Image: RenderImage,
+  ImageComponent: RenderImage,
+  ImageNew: RenderImage,
   Hero: RenderHero,
   HeroSection: RenderHero,
   FeatureGrid: RenderFeatureGrid,
+  Features: RenderFeatureGrid,
   Testimonials: RenderTestimonials,
   CTA: RenderCTA,
   CTASection: RenderCTA,
   ContactForm: RenderContactForm,
   Navigation: RenderNavigation,
+  Navbar: RenderNavigation,
   Footer: RenderFooter,
   Gallery: RenderGallery,
   FAQ: RenderFAQ,
   Team: RenderTeam,
   Stats: RenderStats,
+  // Passthrough components
+  Root: PassthroughContainer,
+  Section: PassthroughContainer,
+  Columns: PassthroughContainer,
+  Column: PassthroughContainer,
+  Heading: RenderText,
+  Divider: ({ color = '#e5e7eb', height = 1 }: { color?: string; height?: number }) => (
+    <hr style={{ borderColor: color, borderWidth: `${height}px`, margin: '1rem 0' }} />
+  ),
+  Spacer: ({ height = 32 }: { height?: number }) => (
+    <div style={{ height: `${height}px` }} />
+  ),
+  Card: PassthroughContainer,
+  Video: ({ url, autoPlay = false }: { url?: string; autoPlay?: boolean }) => (
+    url ? (
+      <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+        <iframe
+          src={url}
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    ) : null
+  ),
+  Map: ({ address, zoom = 14 }: { address?: string; zoom?: number }) => (
+    address ? (
+      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span>Map: {address}</span>
+      </div>
+    ) : null
+  ),
+  MapEmbed: ({ address, zoom = 14 }: { address?: string; zoom?: number }) => (
+    address ? (
+      <div style={{ width: '100%', height: '300px', background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span>Map: {address}</span>
+      </div>
+    ) : null
+  ),
+  SocialLinks: () => null, // Placeholder
+  Form: PassthroughContainer,
+  FormField: () => <input type="text" style={{ padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px', width: '100%' }} />,
+  Newsletter: RenderContactForm,
 };
 
 interface CraftNode {
@@ -98,15 +175,25 @@ export function NodeRenderer({ node, nodes, resolveNode }: NodeRendererProps) {
 
 // Main render function
 export function renderCraftJSON(json: any): ReactNode {
+  console.log("[renderCraftJSON] Input type:", typeof json);
+  console.log("[renderCraftJSON] Input:", json);
+  
   if (!json || !json.ROOT) {
+    console.log("[renderCraftJSON] No ROOT node found, returning null");
     return null;
   }
+
+  console.log("[renderCraftJSON] ROOT node found, rendering...");
+  console.log("[renderCraftJSON] Node keys:", Object.keys(json));
 
   const nodes = json;
 
   function resolveNode(nodeId: string): ReactNode {
     const node = nodes[nodeId];
-    if (!node) return null;
+    if (!node) {
+      console.log("[renderCraftJSON] Node not found:", nodeId);
+      return null;
+    }
 
     return (
       <NodeRenderer

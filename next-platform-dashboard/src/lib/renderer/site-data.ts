@@ -45,7 +45,22 @@ interface PageQueryResult {
   seo_title: string | null;
   seo_description: string | null;
   seo_image: string | null;
-  page_content: { content: Json }[] | null;
+  page_content: { content: Json }[] | { content: Json } | null;
+}
+
+// Helper function to extract content from page_content (handles both array and object formats)
+function extractPageContent(pageContent: { content: Json }[] | { content: Json } | null): Json {
+  if (!pageContent) return {};
+  
+  if (Array.isArray(pageContent) && pageContent.length > 0) {
+    // Array format
+    return pageContent[0].content;
+  } else if (typeof pageContent === 'object' && 'content' in pageContent) {
+    // Object format
+    return pageContent.content;
+  }
+  
+  return {};
 }
 
 // Cached site fetch with ISR
@@ -103,7 +118,7 @@ export const getSiteByDomain = unstable_cache(
           id: p.id,
           slug: p.slug,
           title: p.name,
-          content: p.page_content?.[0]?.content || {},
+          content: extractPageContent(p.page_content),
           seoTitle: p.seo_title,
           seoDescription: p.seo_description,
           ogImage: p.seo_image,
@@ -167,7 +182,7 @@ export const getSiteBySlug = unstable_cache(
           id: p.id,
           slug: p.slug,
           title: p.name,
-          content: p.page_content?.[0]?.content || {},
+          content: extractPageContent(p.page_content),
           seoTitle: p.seo_title,
           seoDescription: p.seo_description,
           ogImage: p.seo_image,
@@ -217,7 +232,7 @@ export async function getPageBySlug(
     id: pageResult.id,
     slug: pageResult.slug,
     title: pageResult.name,
-    content: pageResult.page_content?.[0]?.content || {},
+    content: extractPageContent(pageResult.page_content),
     seoTitle: pageResult.seo_title,
     seoDescription: pageResult.seo_description,
     ogImage: pageResult.seo_image,
