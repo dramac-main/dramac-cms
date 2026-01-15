@@ -1826,3 +1826,4 @@ Copy each variant ID from LemonSqueezy dashboard into `src/config/plans.ts`
 - Test mode available for development
 - Webhook signatures ensure security
 - Customers can manage billing via LemonSqueezy portal
+...
