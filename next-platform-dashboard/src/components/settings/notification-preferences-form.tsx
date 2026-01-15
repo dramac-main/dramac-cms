@@ -6,29 +6,32 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { updateNotificationPreferences } from "@/lib/actions/notifications";
-
-interface NotificationPreferences {
-  email_marketing: boolean;
-  email_security: boolean;
-  email_updates: boolean;
-  email_team: boolean;
-  email_billing: boolean;
-}
+import type { NotificationPreferences } from "@/types/notifications";
 
 interface NotificationPreferencesFormProps {
   preferences: NotificationPreferences | null;
 }
 
 const defaultPreferences: NotificationPreferences = {
+  user_id: "",
   email_marketing: false,
   email_security: true,
   email_updates: true,
   email_team: true,
   email_billing: true,
+  push_enabled: true,
+  digest_frequency: "realtime",
 };
 
-const notificationOptions = [
+const emailOptions = [
   {
     id: "email_security",
     label: "Security alerts",
@@ -56,6 +59,13 @@ const notificationOptions = [
   },
 ];
 
+const digestOptions = [
+  { value: "realtime", label: "Real-time" },
+  { value: "daily", label: "Daily digest" },
+  { value: "weekly", label: "Weekly digest" },
+  { value: "none", label: "No email notifications" },
+];
+
 export function NotificationPreferencesForm({
   preferences,
 }: NotificationPreferencesFormProps) {
@@ -68,6 +78,13 @@ export function NotificationPreferencesForm({
     setPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const handleDigestChange = (value: string) => {
+    setPrefs((prev) => ({
+      ...prev,
+      digest_frequency: value as "realtime" | "daily" | "weekly" | "none",
+    }));
+  };
+
   const handleSave = async () => {
     setIsSubmitting(true);
     try {
@@ -77,7 +94,7 @@ export function NotificationPreferencesForm({
       } else {
         toast.success("Preferences saved");
       }
-    } catch (error) {
+    } catch {
       toast.error("Failed to save preferences");
     } finally {
       setIsSubmitting(false);
@@ -85,27 +102,95 @@ export function NotificationPreferencesForm({
   };
 
   return (
-    <div className="space-y-6">
-      {notificationOptions.map((option) => (
-        <div
-          key={option.id}
-          className="flex items-center justify-between gap-4"
-        >
+    <div className="space-y-8">
+      {/* Email Notification Settings */}
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <h3 className="text-lg font-medium">Email Preferences</h3>
+          <p className="text-sm text-muted-foreground">
+            Choose which types of emails you&apos;d like to receive
+          </p>
+        </div>
+        
+        {emailOptions.map((option) => (
+          <div
+            key={option.id}
+            className="flex items-center justify-between gap-4"
+          >
+            <div className="space-y-0.5">
+              <Label htmlFor={option.id}>{option.label}</Label>
+              <p className="text-sm text-muted-foreground">
+                {option.description}
+              </p>
+            </div>
+            <Switch
+              id={option.id}
+              checked={prefs[option.id as keyof NotificationPreferences] as boolean}
+              onCheckedChange={() =>
+                handleToggle(option.id as keyof NotificationPreferences)
+              }
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Digest Frequency */}
+      <div className="space-y-4 pt-4 border-t">
+        <div className="space-y-1">
+          <h3 className="text-lg font-medium">Email Frequency</h3>
+          <p className="text-sm text-muted-foreground">
+            How often would you like to receive email notifications?
+          </p>
+        </div>
+        
+        <div className="flex items-center justify-between gap-4">
           <div className="space-y-0.5">
-            <Label htmlFor={option.id}>{option.label}</Label>
+            <Label htmlFor="digest_frequency">Notification frequency</Label>
             <p className="text-sm text-muted-foreground">
-              {option.description}
+              Receive notifications immediately or as a digest
+            </p>
+          </div>
+          <Select
+            value={prefs.digest_frequency}
+            onValueChange={handleDigestChange}
+          >
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Select frequency" />
+            </SelectTrigger>
+            <SelectContent>
+              {digestOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Push Notifications */}
+      <div className="space-y-4 pt-4 border-t">
+        <div className="space-y-1">
+          <h3 className="text-lg font-medium">In-App Notifications</h3>
+          <p className="text-sm text-muted-foreground">
+            Manage notifications within the application
+          </p>
+        </div>
+        
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <Label htmlFor="push_enabled">Enable notifications</Label>
+            <p className="text-sm text-muted-foreground">
+              Show notification badge and popover in the header
             </p>
           </div>
           <Switch
-            id={option.id}
-            checked={prefs[option.id as keyof NotificationPreferences]}
-            onCheckedChange={() =>
-              handleToggle(option.id as keyof NotificationPreferences)
-            }
+            id="push_enabled"
+            checked={prefs.push_enabled}
+            onCheckedChange={() => handleToggle("push_enabled")}
           />
         </div>
-      ))}
+      </div>
 
       <div className="flex justify-end pt-4 border-t">
         <Button onClick={handleSave} disabled={isSubmitting}>

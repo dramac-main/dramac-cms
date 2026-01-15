@@ -1061,6 +1061,125 @@ export type Database = {
           }
         ];
       };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          message: string;
+          link: string | null;
+          read: boolean;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          title: string;
+          message: string;
+          link?: string | null;
+          read?: boolean;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: string;
+          title?: string;
+          message?: string;
+          link?: string | null;
+          read?: boolean;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      activity_log: {
+        Row: {
+          id: string;
+          agency_id: string;
+          user_id: string;
+          action: string;
+          resource_type: string;
+          resource_id: string | null;
+          resource_name: string | null;
+          details: Json;
+          ip_address: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          user_id: string;
+          action: string;
+          resource_type: string;
+          resource_id?: string | null;
+          resource_name?: string | null;
+          details?: Json;
+          ip_address?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          user_id?: string;
+          action?: string;
+          resource_type?: string;
+          resource_id?: string | null;
+          resource_name?: string | null;
+          details?: Json;
+          ip_address?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_agency_id_fkey";
+            columns: ["agency_id"];
+            isOneToOne: false;
+            referencedRelation: "agencies";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      notification_preferences: {
+        Row: {
+          user_id: string;
+          email_marketing: boolean;
+          email_security: boolean;
+          email_updates: boolean;
+          email_team: boolean;
+          email_billing: boolean;
+          push_enabled: boolean;
+          digest_frequency: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          email_marketing?: boolean;
+          email_security?: boolean;
+          email_updates?: boolean;
+          email_team?: boolean;
+          email_billing?: boolean;
+          push_enabled?: boolean;
+          digest_frequency?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          email_marketing?: boolean;
+          email_security?: boolean;
+          email_updates?: boolean;
+          email_team?: boolean;
+          email_billing?: boolean;
+          push_enabled?: boolean;
+          digest_frequency?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1158,3 +1277,16 @@ export type DbSubscriptionUpdate = Database["public"]["Tables"]["subscriptions"]
 export type DbInvoice = Database["public"]["Tables"]["invoices"]["Row"];
 export type DbInvoiceInsert = Database["public"]["Tables"]["invoices"]["Insert"];
 export type DbInvoiceUpdate = Database["public"]["Tables"]["invoices"]["Update"];
+
+// Notifications types (Phase 54)
+export type DbNotification = Database["public"]["Tables"]["notifications"]["Row"];
+export type DbNotificationInsert = Database["public"]["Tables"]["notifications"]["Insert"];
+export type DbNotificationUpdate = Database["public"]["Tables"]["notifications"]["Update"];
+
+export type DbActivityLog = Database["public"]["Tables"]["activity_log"]["Row"];
+export type DbActivityLogInsert = Database["public"]["Tables"]["activity_log"]["Insert"];
+export type DbActivityLogUpdate = Database["public"]["Tables"]["activity_log"]["Update"];
+
+export type DbNotificationPreferences = Database["public"]["Tables"]["notification_preferences"]["Row"];
+export type DbNotificationPreferencesInsert = Database["public"]["Tables"]["notification_preferences"]["Insert"];
+export type DbNotificationPreferencesUpdate = Database["public"]["Tables"]["notification_preferences"]["Update"];
