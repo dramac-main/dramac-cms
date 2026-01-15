@@ -1,4 +1,5 @@
 export * from "./database";
+export * from "./roles";
 
 // UI Types
 export interface NavItem {
