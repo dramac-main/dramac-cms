@@ -3,6 +3,7 @@
 import { useNode } from "@craftjs/core";
 import { cn } from "@/lib/utils";
 import { Quote } from "lucide-react";
+import { TestimonialsSettings } from "../settings/testimonials-settings";
 
 export interface Testimonial {
   quote: string;
@@ -109,7 +110,7 @@ Testimonials.craft = {
     textColor: "",
   },
   related: {
-    // toolbar: () => import("../settings/testimonials-settings").then((m) => m.TestimonialsSettings),
+    settings: TestimonialsSettings,
   },
   rules: {
     canDrag: () => true,

@@ -81,7 +81,7 @@ export function CreateSiteDialog({
       if (useAI) {
         router.push(`/sites/${result.data?.id}/builder`);
       } else {
-        router.push(`/sites/${result.data?.id}/editor`);
+        router.push(`/dashboard/sites/${result.data?.id}/editor`);
       }
     } catch (error) {
       toast.error("Failed to create site");

@@ -96,17 +96,39 @@ function EditorContent({
 
   // Load initial content
   useEffect(() => {
+    console.log('=== LOAD OPERATION ===');
+    console.log('[EditorWrapper] useEffect triggered for page:', page.id);
+    console.log('[EditorWrapper] initialized.current:', initialized.current);
+    console.log('[EditorWrapper] page.content exists:', !!page.content);
+    
+    if (page.content) {
+      console.log('[EditorWrapper] page.content type:', typeof page.content);
+      console.log('[EditorWrapper] page.content keys:', Object.keys(page.content));
+      console.log('[EditorWrapper] Number of nodes:', Object.keys(page.content).length);
+      console.log('[EditorWrapper] ROOT exists:', !!(page.content as Record<string, unknown>).ROOT);
+    }
+
     if (!initialized.current && page.content) {
       try {
+        console.log('[EditorWrapper] Attempting to deserialize content');
+        const serialized = JSON.stringify(page.content);
+        console.log('[EditorWrapper] Serialized content length:', serialized.length);
+        
         // Deserialize saved content
-        actions.deserialize(JSON.stringify(page.content));
+        actions.deserialize(serialized);
         initialized.current = true;
+        console.log('[EditorWrapper] ✅ Deserialization successful');
       } catch (error) {
-        console.error("Failed to load page content:", error);
+        console.error("[EditorWrapper] ❌ Failed to load page content:", error);
         toast.error("Failed to load page content");
       }
+    } else if (!page.content) {
+      console.log('[EditorWrapper] No content to load, starting with empty page');
+      initialized.current = true;
+    } else {
+      console.log('[EditorWrapper] Already initialized, skipping');
     }
-  }, [page.content, actions]);
+  }, [page.content, actions, page.id]);
 
   // Save handler
   const handleSave = useCallback(async () => {
@@ -116,22 +138,45 @@ function EditorContent({
 
     try {
       const content = query.serialize();
-      const result = await savePageContentAction(page.id, JSON.parse(content));
+      const parsedContent = JSON.parse(content);
+      
+      console.log('=== SAVE OPERATION ===');
+      console.log('[EditorWrapper] Saving page content for page:', page.id);
+      console.log('[EditorWrapper] Serialized content length:', content.length);
+      console.log('[EditorWrapper] Number of nodes:', Object.keys(parsedContent).length);
+      console.log('[EditorWrapper] Root node exists:', !!parsedContent.ROOT);
+      
+      const result = await savePageContentAction(page.id, parsedContent);
 
       if (result.error) {
+        console.error('[EditorWrapper] Save failed:', result.error);
         toast.error(result.error);
       } else {
+        console.log('[EditorWrapper] Save successful');
         setHasChanges(false);
         setLastSaved(new Date());
         toast.success("Page saved successfully");
       }
     } catch (error) {
-      console.error("Save error:", error);
-      toast.error("Failed to save page");
+      console.error("[EditorWrapper] Save error:", error);
+      toast.error(`Failed to save page: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }
   }, [isSaving, hasChanges, query, page.id, setIsSaving, setHasChanges, setLastSaved]);
+
+  // Auto-save every 30 seconds when there are changes
+  useEffect(() => {
+    if (!hasChanges) return;
+
+    const autoSaveInterval = setInterval(() => {
+      if (hasChanges && !isSaving) {
+        handleSave();
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(autoSaveInterval);
+  }, [hasChanges, isSaving, handleSave]);
 
   // Keyboard shortcuts
   useEditorShortcuts({ onSave: handleSave });

@@ -2,6 +2,7 @@
 
 import { useNode } from "@craftjs/core";
 import { cn } from "@/lib/utils";
+import { FeatureGridSettings } from "../settings/feature-grid-settings";
 import { 
   Zap, 
   Shield, 
@@ -139,7 +140,7 @@ FeatureGrid.craft = {
     textColor: "",
   },
   related: {
-    // toolbar: () => import("../settings/feature-grid-settings").then((m) => m.FeatureGridSettings),
+    settings: FeatureGridSettings,
   },
   rules: {
     canDrag: () => true,

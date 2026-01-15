@@ -1,6 +1,7 @@
 "use client";
 
 import { useNode } from "@craftjs/core";
+import { ContactFormSettings } from "../settings/contact-form-settings";
 
 export interface ContactFormProps {
   title?: string;
@@ -140,7 +141,7 @@ ContactForm.craft = {
     formBackgroundColor: "#ffffff",
   },
   related: {
-    toolbar: () => import("../settings/contact-form-settings").then((m) => m.ContactFormSettings),
+    settings: ContactFormSettings,
   },
   rules: {
     canDrag: () => true,

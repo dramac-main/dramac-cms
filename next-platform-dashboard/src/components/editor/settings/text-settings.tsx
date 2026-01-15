@@ -1,145 +1,136 @@
 "use client";
 
 import { useNode } from "@craftjs/core";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { SettingsSelect } from "./settings-select";
-import { SettingsColor } from "./settings-color";
-import { SettingsInput } from "./settings-input";
-import type { TextProps } from "../user-components/text";
-
-const tagOptions = [
-  { value: "p", label: "Paragraph" },
-  { value: "h1", label: "Heading 1" },
-  { value: "h2", label: "Heading 2" },
-  { value: "h3", label: "Heading 3" },
-  { value: "h4", label: "Heading 4" },
-  { value: "h5", label: "Heading 5" },
-  { value: "h6", label: "Heading 6" },
-  { value: "span", label: "Span" },
-];
-
-const fontSizeOptions = [
-  { value: "text-xs", label: "Extra Small" },
-  { value: "text-sm", label: "Small" },
-  { value: "text-base", label: "Base" },
-  { value: "text-lg", label: "Large" },
-  { value: "text-xl", label: "X-Large" },
-  { value: "text-2xl", label: "2X-Large" },
-  { value: "text-3xl", label: "3X-Large" },
-  { value: "text-4xl", label: "4X-Large" },
-  { value: "text-5xl", label: "5X-Large" },
-];
-
-const fontWeightOptions = [
-  { value: "font-thin", label: "Thin" },
-  { value: "font-light", label: "Light" },
-  { value: "font-normal", label: "Normal" },
-  { value: "font-medium", label: "Medium" },
-  { value: "font-semibold", label: "Semibold" },
-  { value: "font-bold", label: "Bold" },
-  { value: "font-extrabold", label: "Extra Bold" },
-];
-
-const textAlignOptions = [
-  { value: "left", label: "Left" },
-  { value: "center", label: "Center" },
-  { value: "right", label: "Right" },
-];
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 
 export function TextSettings() {
-  const {
-    actions: { setProp },
-    props,
-  } = useNode((node) => ({
-    props: node.data.props as TextProps,
+  const { actions: { setProp }, props } = useNode((node) => ({
+    props: node.data.props,
   }));
 
   return (
-    <div className="space-y-6">
-      {/* Content */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-medium">Content</h4>
+    <div className="space-y-4">
+      {/* Text Content */}
+      <div className="space-y-2">
+        <Label>Text Content</Label>
+        <Textarea
+          value={props.text as string}
+          onChange={(e) => setProp((props: Record<string, unknown>) => (props.text = e.target.value))}
+          rows={3}
+        />
+      </div>
 
-        <div className="space-y-2">
-          <Label className="text-xs">Text</Label>
-          <Textarea
-            value={props.text || ""}
-            onChange={(e) =>
-              setProp((props: TextProps) => (props.text = e.target.value))
-            }
-            placeholder="Enter text..."
-            className="min-h-[80px]"
+      {/* Font Size */}
+      <div className="space-y-2">
+        <Label>Font Size: {props.fontSize}px</Label>
+        <Slider
+          value={[props.fontSize as number]}
+          onValueChange={([value]) => setProp((props: Record<string, unknown>) => (props.fontSize = value))}
+          min={10}
+          max={72}
+          step={1}
+        />
+      </div>
+
+      {/* Font Weight */}
+      <div className="space-y-2">
+        <Label>Font Weight</Label>
+        <Select
+          value={props.fontWeight as string}
+          onValueChange={(value) => setProp((props: Record<string, unknown>) => (props.fontWeight = value))}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="normal">Normal</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="semibold">Semibold</SelectItem>
+            <SelectItem value="bold">Bold</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Text Color */}
+      <div className="space-y-2">
+        <Label>Text Color</Label>
+        <div className="flex gap-2">
+          <Input
+            type="color"
+            value={props.color as string}
+            onChange={(e) => setProp((props: Record<string, unknown>) => (props.color = e.target.value))}
+            className="w-12 h-10 p-1"
+          />
+          <Input
+            value={props.color as string}
+            onChange={(e) => setProp((props: Record<string, unknown>) => (props.color = e.target.value))}
           />
         </div>
+      </div>
 
-        <SettingsSelect
-          label="HTML Tag"
-          value={props.tag || "p"}
-          onChange={(value) =>
-            setProp((props: TextProps) => (props.tag = value as TextProps["tag"]))
-          }
-          options={tagOptions}
+      {/* Text Alignment */}
+      <div className="space-y-2">
+        <Label>Alignment</Label>
+        <ToggleGroup
+          type="single"
+          value={props.textAlign as string}
+          onValueChange={(value) => value && setProp((props: Record<string, unknown>) => (props.textAlign = value))}
+          className="justify-start"
+        >
+          <ToggleGroupItem value="left" aria-label="Left">
+            <AlignLeft className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="center" aria-label="Center">
+            <AlignCenter className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem value="right" aria-label="Right">
+            <AlignRight className="h-4 w-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+
+      {/* Line Height */}
+      <div className="space-y-2">
+        <Label>Line Height: {props.lineHeight}</Label>
+        <Slider
+          value={[(props.lineHeight as number) * 10]}
+          onValueChange={([value]) => setProp((props: Record<string, unknown>) => (props.lineHeight = value / 10))}
+          min={10}
+          max={30}
+          step={1}
         />
       </div>
 
-      <Separator />
-
-      {/* Typography */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-medium">Typography</h4>
-
-        <SettingsSelect
-          label="Font Size"
-          value={props.fontSize || "text-base"}
-          onChange={(value) =>
-            setProp((props: TextProps) => (props.fontSize = value))
-          }
-          options={fontSizeOptions}
-        />
-
-        <SettingsSelect
-          label="Font Weight"
-          value={props.fontWeight || "font-normal"}
-          onChange={(value) =>
-            setProp((props: TextProps) => (props.fontWeight = value))
-          }
-          options={fontWeightOptions}
-        />
-
-        <SettingsSelect
-          label="Text Align"
-          value={props.textAlign || "left"}
-          onChange={(value) =>
-            setProp((props: TextProps) => (props.textAlign = value as "left" | "center" | "right"))
-          }
-          options={textAlignOptions}
-        />
-
-        <SettingsColor
-          label="Text Color"
-          value={props.color || ""}
-          onChange={(value) =>
-            setProp((props: TextProps) => (props.color = value))
-          }
-        />
-      </div>
-
-      <Separator />
-
-      {/* Custom */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-medium">Custom</h4>
-
-        <SettingsInput
-          label="Custom Classes"
-          value={props.className || ""}
-          onChange={(value) =>
-            setProp((props: TextProps) => (props.className = value))
-          }
-          placeholder="e.g., italic underline"
-        />
+      {/* Margins */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-2">
+          <Label>Margin Top</Label>
+          <Input
+            type="number"
+            value={props.marginTop as number}
+            onChange={(e) => setProp((props: Record<string, unknown>) => (props.marginTop = parseInt(e.target.value) || 0))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Margin Bottom</Label>
+          <Input
+            type="number"
+            value={props.marginBottom as number}
+            onChange={(e) => setProp((props: Record<string, unknown>) => (props.marginBottom = parseInt(e.target.value) || 0))}
+          />
+        </div>
       </div>
     </div>
   );

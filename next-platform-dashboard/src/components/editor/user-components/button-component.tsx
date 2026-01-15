@@ -2,6 +2,7 @@
 
 import { useNode } from "@craftjs/core";
 import { cn } from "@/lib/utils";
+import { ButtonSettings } from "../settings/button-settings";
 
 export interface ButtonComponentProps {
   text?: string;
@@ -85,7 +86,7 @@ ButtonComponent.craft = {
     borderRadius: "rounded-md",
   },
   related: {
-    toolbar: () => import("../settings/button-settings").then((m) => m.ButtonSettings),
+    settings: ButtonSettings,
   },
   rules: {
     canDrag: () => true,

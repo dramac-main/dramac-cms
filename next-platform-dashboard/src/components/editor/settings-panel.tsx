@@ -1,33 +1,34 @@
 "use client";
 
 import { useEditor } from "@craftjs/core";
-import { Suspense, useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Settings, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface SelectedNode {
-  id: string;
-  name: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  settings?: () => Promise<any>;
-  isDeletable: boolean;
-}
+import { Suspense, useMemo, ComponentType } from "react";
 
 export function SettingsPanel() {
   const { selected, actions } = useEditor((state, query) => {
     const currentNodeId = state.events.selected.values().next().value;
-    let selected: SelectedNode | undefined;
+    let selected: {
+      id: string;
+      name: string;
+      settings?: ComponentType;
+      isDeletable: boolean;
+    } | undefined;
 
     if (currentNodeId) {
       const nodeData = state.nodes[currentNodeId]?.data;
       const nodeRelated = state.nodes[currentNodeId]?.related;
-      const toolbarFn = nodeRelated?.toolbar;
+      // Check for both 'settings' (new pattern) and 'toolbar' (legacy pattern)
+      const rawSettings = nodeRelated?.settings || nodeRelated?.toolbar;
+      // Ensure we have a valid component (function)
+      const settingsComponent = typeof rawSettings === 'function' ? rawSettings as ComponentType : undefined;
+      
       selected = {
         id: currentNodeId,
         name: nodeData?.displayName || nodeData?.name || 'Unknown',
-        settings: toolbarFn as SelectedNode['settings'],
+        settings: settingsComponent,
         isDeletable: query.node(currentNodeId).isDeletable(),
       };
     }
@@ -35,26 +36,11 @@ export function SettingsPanel() {
     return { selected };
   });
 
-  const [ToolbarComponent, setToolbarComponent] = useState<React.ComponentType | null>(null);
-
-  useEffect(() => {
-    if (!selected?.settings) {
-      setToolbarComponent(null);
-      return;
-    }
-
-    selected.settings().then((component) => {
-      if (component && typeof component === 'object' && 'default' in component && component.default) {
-        setToolbarComponent(() => component.default as React.ComponentType);
-      } else if (typeof component === 'function') {
-        setToolbarComponent(() => component as React.ComponentType);
-      } else {
-        setToolbarComponent(null);
-      }
-    }).catch(() => {
-      setToolbarComponent(null);
-    });
-  }, [selected]);
+  // Memoize the settings component to prevent unnecessary re-renders
+  const SettingsComponent = useMemo(() => {
+    if (!selected?.settings) return null;
+    return selected.settings;
+  }, [selected?.settings]);
 
   if (!selected) {
     return (
@@ -97,8 +83,8 @@ export function SettingsPanel() {
       <ScrollArea className="h-[calc(100vh-180px)]">
         <div className="p-4">
           <Suspense fallback={<SettingsLoading />}>
-            {ToolbarComponent ? (
-              <ToolbarComponent />
+            {SettingsComponent ? (
+              <SettingsComponent />
             ) : (
               <p className="text-sm text-muted-foreground">
                 No settings available for this component.

@@ -117,11 +117,17 @@ export async function getPageWithContent(pageId: string): Promise<{
     .single();
 
   if (error) {
+    console.error('[getPageWithContent] Query error:', error);
     if (error.code === "PGRST116") {
       return null;
     }
     throw new Error(error.message);
   }
+
+  console.log('[getPageWithContent] Page data retrieved for:', pageId);
+  console.log('[getPageWithContent] page_content data:', data.page_content);
+  console.log('[getPageWithContent] page_content type:', typeof data.page_content);
+  console.log('[getPageWithContent] Is array:', Array.isArray(data.page_content));
 
   // Verify agency access
   if (data.site?.agency_id !== agencyId) {
@@ -129,9 +135,23 @@ export async function getPageWithContent(pageId: string): Promise<{
   }
 
   // Extract content from page_content relation
-  const content = Array.isArray(data.page_content) && data.page_content.length > 0
-    ? (data.page_content[0] as { content: Record<string, unknown> }).content
-    : null;
+  // Handle both object (from join) and array (from old queries) formats
+  let content: Record<string, unknown> | null = null;
+  
+  if (data.page_content) {
+    if (Array.isArray(data.page_content) && data.page_content.length > 0) {
+      // Array format: page_content is an array, extract first item
+      content = (data.page_content[0] as { content: Record<string, unknown> }).content;
+    } else if (typeof data.page_content === 'object' && 'content' in data.page_content) {
+      // Object format: page_content is an object with content property
+      content = (data.page_content as { content: Record<string, unknown> }).content;
+    }
+  }
+
+  console.log('[getPageWithContent] Extracted content:', content ? 'Content exists' : 'No content');
+  if (content) {
+    console.log('[getPageWithContent] Content keys:', Object.keys(content));
+  }
 
   return {
     ...data,
@@ -319,28 +339,43 @@ export async function savePageContentAction(
     const agencyId = await getAgencyId();
 
     if (!agencyId) {
+      console.error('[savePageContentAction] Not authenticated');
       return { error: "Not authenticated" };
     }
 
+    console.log('[savePageContentAction] Saving content for page:', pageId);
+
     // Verify ownership
-    const { data: page } = await supabase
+    const { data: page, error: pageError } = await supabase
       .from("pages")
       .select("site:sites(agency_id)")
       .eq("id", pageId)
       .single();
 
+    if (pageError) {
+      console.error('[savePageContentAction] Page query error:', pageError);
+      return { error: pageError.message };
+    }
+
     if (!page || page.site?.agency_id !== agencyId) {
+      console.error('[savePageContentAction] Unauthorized access');
       return { error: "Page not found" };
     }
 
     // Check if page_content exists
-    const { data: existingContent } = await supabase
+    const { data: existingContent, error: checkError } = await supabase
       .from("page_content")
       .select("id")
       .eq("page_id", pageId)
-      .single();
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('[savePageContentAction] Error checking existing content:', checkError);
+      return { error: checkError.message };
+    }
 
     if (existingContent) {
+      console.log('[savePageContentAction] Updating existing content');
       // Update existing content
       const { error } = await supabase
         .from("page_content")
@@ -348,21 +383,44 @@ export async function savePageContentAction(
         .eq("page_id", pageId);
 
       if (error) {
+        console.error('[savePageContentAction] Update error:', error);
         return { error: error.message };
       }
     } else {
+      console.log('[savePageContentAction] Inserting new content');
       // Insert new content
       const { error } = await supabase
         .from("page_content")
         .insert({ page_id: pageId, content: content as Json });
 
       if (error) {
+        console.error('[savePageContentAction] Insert error:', error);
         return { error: error.message };
       }
     }
 
+    console.log('[savePageContentAction] Save completed successfully');
+    
+    // Revalidate the editor page to ensure fresh data on next load
+    try {
+      const { data: pageData } = await supabase
+        .from("pages")
+        .select("site_id")
+        .eq("id", pageId)
+        .single();
+      
+      if (pageData) {
+        revalidatePath(`/dashboard/sites/${pageData.site_id}/editor`);
+        console.log('[savePageContentAction] Cache revalidated for site:', pageData.site_id);
+      }
+    } catch (revalidateError) {
+      console.error('[savePageContentAction] Revalidation error:', revalidateError);
+      // Don't fail the save if revalidation fails
+    }
+    
     return { success: true };
   } catch (error) {
+    console.error('[savePageContentAction] Unexpected error:', error);
     if (error instanceof Error) {
       return { error: error.message };
     }

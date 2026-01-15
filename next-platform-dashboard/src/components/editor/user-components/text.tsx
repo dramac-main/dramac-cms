@@ -1,116 +1,93 @@
 "use client";
 
 import { useNode, useEditor } from "@craftjs/core";
-import { useState, useEffect, useRef } from "react";
-import { cn } from "@/lib/utils";
+import { useState, useRef, useCallback } from "react";
+import ContentEditable from "react-contenteditable";
+import { TextSettings } from "../settings/text-settings";
 
-export interface TextProps {
+interface TextProps {
   text?: string;
-  fontSize?: string;
-  fontWeight?: string;
+  fontSize?: number;
+  fontWeight?: "normal" | "medium" | "semibold" | "bold";
   color?: string;
   textAlign?: "left" | "center" | "right";
-  className?: string;
-  tag?: "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "span";
+  lineHeight?: number;
+  marginTop?: number;
+  marginBottom?: number;
 }
 
+const fontWeightMap = {
+  normal: 400,
+  medium: 500,
+  semibold: 600,
+  bold: 700,
+};
+
 export function Text({
-  text = "Click to edit text",
-  fontSize = "text-base",
-  fontWeight = "font-normal",
-  color = "",
+  text = "Edit this text...",
+  fontSize = 16,
+  fontWeight = "normal",
+  color = "#1f2937",
   textAlign = "left",
-  className = "",
-  tag = "p",
+  lineHeight = 1.5,
+  marginTop = 0,
+  marginBottom = 0,
 }: TextProps) {
-  const {
-    connectors: { connect, drag },
-    actions: { setProp },
-    selected,
-  } = useNode((node) => ({
-    selected: node.events.selected,
-  }));
+  const { connectors: { connect, drag }, actions: { setProp } } = useNode();
+  const { enabled } = useEditor((state) => ({ enabled: state.options.enabled }));
+  const [editable, setEditable] = useState(false);
+  const contentRef = useRef<HTMLElement>(null);
 
-  const { enabled } = useEditor((state) => ({
-    enabled: state.options.enabled,
-  }));
-
-  const [isEditing, setIsEditing] = useState(false);
-  const textRef = useRef<HTMLDivElement>(null);
-
-  // Use a separate effect with proper dependency to avoid setState in effect body
-  const wasSelected = useRef(selected);
-  
-  useEffect(() => {
-    if (wasSelected.current && !selected) {
-      setIsEditing(false);
+  const handleRef = useCallback((ref: HTMLDivElement | null) => {
+    if (ref) {
+      connect(drag(ref));
     }
-    wasSelected.current = selected;
-  }, [selected]);
-
-  const handleDoubleClick = () => {
-    if (enabled) {
-      setIsEditing(true);
-    }
-  };
-
-  const handleBlur = () => {
-    setIsEditing(false);
-    if (textRef.current) {
-      setProp((props: TextProps) => {
-        props.text = textRef.current?.innerText || "";
-      });
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      setIsEditing(false);
-      textRef.current?.blur();
-    }
-  };
-
-  const Tag = tag;
+  }, [connect, drag]);
 
   return (
-    <Tag
-      ref={(ref) => {
-        if (ref) {
-          connect(drag(ref));
-        }
+    <div
+      ref={handleRef}
+      onClick={() => enabled && setEditable(true)}
+      style={{
+        fontSize: `${fontSize}px`,
+        fontWeight: fontWeightMap[fontWeight],
+        color,
+        textAlign,
+        lineHeight,
+        marginTop: `${marginTop}px`,
+        marginBottom: `${marginBottom}px`,
+        cursor: enabled ? "text" : "default",
+        minHeight: "1em",
       }}
-      className={cn(fontSize, fontWeight, className, {
-        "outline-2 outline-primary outline-dashed": isEditing,
-        "cursor-text": enabled,
-      })}
-      style={{ color, textAlign }}
-      contentEditable={isEditing}
-      suppressContentEditableWarning
-      onDoubleClick={handleDoubleClick}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
     >
-      <span ref={textRef}>{text}</span>
-    </Tag>
+      <ContentEditable
+        innerRef={contentRef as React.RefObject<HTMLElement>}
+        html={text}
+        disabled={!editable}
+        onChange={(e) => {
+          setProp((props: Record<string, unknown>) => (props.text = e.target.value));
+        }}
+        onBlur={() => setEditable(false)}
+        tagName="p"
+        style={{ outline: "none", margin: 0 }}
+      />
+    </div>
   );
 }
 
 Text.craft = {
   displayName: "Text",
   props: {
-    text: "Click to edit text",
-    fontSize: "text-base",
-    fontWeight: "font-normal",
-    color: "",
+    text: "Edit this text...",
+    fontSize: 16,
+    fontWeight: "normal",
+    color: "#1f2937",
     textAlign: "left",
-    className: "",
-    tag: "p",
+    lineHeight: 1.5,
+    marginTop: 0,
+    marginBottom: 0,
   },
   related: {
-    toolbar: () => import("../settings/text-settings").then((m) => m.TextSettings),
-  },
-  rules: {
-    canDrag: () => true,
+    settings: TextSettings,
   },
 };

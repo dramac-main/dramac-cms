@@ -2,6 +2,7 @@
 
 import { useNode } from "@craftjs/core";
 import { cn } from "@/lib/utils";
+import { ContainerSettings } from "../settings/container-settings";
 
 export interface ContainerProps {
   children?: React.ReactNode;
@@ -73,7 +74,7 @@ Container.craft = {
     gap: "gap-4",
   },
   related: {
-    toolbar: () => import("../settings/container-settings").then((m) => m.ContainerSettings),
+    settings: ContainerSettings,
   },
   rules: {
     canDrag: () => true,

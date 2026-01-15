@@ -1,7 +1,7 @@
 "use client";
 
 import { Frame, Element, useEditor } from "@craftjs/core";
-import { Container } from "./user-components/container";
+import { Root } from "./user-components/root";
 import { cn } from "@/lib/utils";
 import type { CanvasSettings } from "@/types/editor";
 
@@ -30,17 +30,15 @@ export function EditorCanvas({ settings }: EditorCanvasProps) {
     >
       <div
         className={cn(
-          "mx-auto min-h-[600px] bg-background shadow-lg transition-all duration-300",
+          "mx-auto min-h-150 bg-background shadow-lg transition-all duration-300",
           widthClasses[settings.width],
           settings.showOutlines && "editor-outlines"
         )}
       >
         <Frame>
           <Element
-            is={Container}
+            is={Root}
             canvas
-            className="min-h-[600px] w-full"
-            padding="p-0"
           >
             {/* Content will be loaded via deserialize */}
           </Element>

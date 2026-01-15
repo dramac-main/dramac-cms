@@ -3,6 +3,7 @@
 import { useNode } from "@craftjs/core";
 import { cn } from "@/lib/utils";
 import { Mail } from "lucide-react";
+import { NewsletterSettings } from "../settings/newsletter-settings";
 
 export interface NewsletterProps {
   title?: string;
@@ -81,7 +82,7 @@ Newsletter.craft = {
     textColor: "#ffffff",
   },
   related: {
-    toolbar: () => import("../settings/newsletter-settings").then((m) => m.NewsletterSettings),
+    settings: NewsletterSettings,
   },
   rules: {
     canDrag: () => true,

@@ -95,13 +95,13 @@ function StatCounter({ stat, animate }: { stat: StatItem; animate: boolean }) {
   const { count, ref } = useCountUp(stat.value, 2000, animate);
 
   return (
-    <div ref={ref} className="text-center">
-      <div className="text-4xl md:text-5xl font-bold mb-2">
+    <div ref={ref} className="text-center py-4">
+      <div className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2">
         {stat.prefix}
         {count.toLocaleString()}
         {stat.suffix}
       </div>
-      <div className="text-sm opacity-80">{stat.label}</div>
+      <div className="text-xs sm:text-sm opacity-80">{stat.label}</div>
     </div>
   );
 }
@@ -120,9 +120,9 @@ export function Stats(props: Partial<StatsProps>) {
   }));
 
   const columnClasses = {
-    2: "grid-cols-2",
-    3: "grid-cols-2 md:grid-cols-3",
-    4: "grid-cols-2 md:grid-cols-4",
+    2: "grid-cols-1 sm:grid-cols-2",
+    3: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3",
+    4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
   };
 
   const styleClasses = {
@@ -138,7 +138,7 @@ export function Stats(props: Partial<StatsProps>) {
           connect(drag(ref));
         }
       }}
-      className={`py-16 px-4 ${styleClasses[style]} ${selected ? "ring-2 ring-primary ring-offset-2" : ""}`}
+      className={`py-12 md:py-16 px-4 ${styleClasses[style]} ${selected ? "ring-2 ring-primary ring-offset-2" : ""}`}
       style={{ 
         backgroundColor: style !== "gradient" ? backgroundColor : undefined,
         color: textColor,
@@ -146,15 +146,15 @@ export function Stats(props: Partial<StatsProps>) {
     >
       <div className="max-w-6xl mx-auto">
         {(title || subtitle) && (
-          <div className="text-center mb-12">
-            {title && <h2 className="text-3xl font-bold mb-4">{title}</h2>}
+          <div className="text-center mb-8 md:mb-12">
+            {title && <h2 className="text-2xl md:text-3xl font-bold mb-4">{title}</h2>}
             {subtitle && (
-              <p className="opacity-80 max-w-2xl mx-auto">{subtitle}</p>
+              <p className="opacity-80 max-w-2xl mx-auto text-sm md:text-base">{subtitle}</p>
             )}
           </div>
         )}
 
-        <div className={`grid ${columnClasses[columns]} gap-8`}>
+        <div className={`grid ${columnClasses[columns]} gap-6 md:gap-8`}>
           {stats.map((stat) => (
             <StatCounter key={stat.id} stat={stat} animate={animate} />
           ))}

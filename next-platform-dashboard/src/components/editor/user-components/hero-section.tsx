@@ -2,6 +2,7 @@
 
 import { useNode } from "@craftjs/core";
 import { cn } from "@/lib/utils";
+import { HeroSettings } from "../settings/hero-settings";
 
 export interface HeroSectionProps {
   title?: string;
@@ -105,7 +106,7 @@ HeroSection.craft = {
     overlayOpacity: 50,
   },
   related: {
-    // toolbar: () => import("../settings/hero-settings").then((m) => m.HeroSettings),
+    settings: HeroSettings,
   },
   rules: {
     canDrag: () => true,

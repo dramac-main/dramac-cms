@@ -1,6 +1,7 @@
 "use client";
 
 import { useNode } from "@craftjs/core";
+import { CTASettings } from "../settings/cta-settings";
 
 export interface CTASectionProps {
   title?: string;
@@ -104,7 +105,7 @@ CTASection.craft = {
     layout: "centered",
   },
   related: {
-    // toolbar: () => import("../settings/cta-settings").then((m) => m.CTASettings),
+    settings: CTASettings,
   },
   rules: {
     canDrag: () => true,

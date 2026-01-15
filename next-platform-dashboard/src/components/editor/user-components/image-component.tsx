@@ -3,6 +3,7 @@
 import { useNode } from "@craftjs/core";
 import { cn } from "@/lib/utils";
 import { ImageIcon } from "lucide-react";
+import { ImageSettings } from "../settings/image-settings";
 
 export interface ImageComponentProps {
   src?: string;
@@ -81,7 +82,7 @@ ImageComponent.craft = {
     className: "",
   },
   related: {
-    toolbar: () => import("../settings/image-settings").then((m) => m.ImageSettings),
+    settings: ImageSettings,
   },
   rules: {
     canDrag: () => true,

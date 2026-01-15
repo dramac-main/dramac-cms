@@ -126,7 +126,7 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
         if (data.buildMode === "ai") {
           router.push(`/dashboard/sites/${result.data?.id}/builder`);
         } else {
-          router.push(`/editor/${result.data?.id}`);
+          router.push(`/dashboard/sites/${result.data?.id}/editor`);
         }
       } catch (error) {
         toast.error("Failed to create site. Please try again.");

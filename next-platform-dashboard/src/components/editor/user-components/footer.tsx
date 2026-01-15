@@ -1,6 +1,7 @@
 "use client";
 
 import { useNode } from "@craftjs/core";
+import { FooterSettings } from "../settings/footer-settings";
 
 export interface FooterColumn {
   title: string;
@@ -140,7 +141,7 @@ Footer.craft = {
     textColor: "#ffffff",
   },
   related: {
-    toolbar: () => import("../settings/footer-settings").then((m) => m.FooterSettings),
+    settings: FooterSettings,
   },
   rules: {
     canDrag: () => true,
