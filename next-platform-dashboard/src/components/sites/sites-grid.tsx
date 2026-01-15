@@ -14,12 +14,12 @@ import {
   ExternalLink,
   MoreVertical,
   Pencil,
-  Trash2,
   Eye,
   Globe,
   User,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { DeleteSiteButton } from "./delete-site-button";
 import type { SiteFilters } from "@/types/site";
 
 interface SitesGridProps {
@@ -125,15 +125,17 @@ export async function SitesGrid({ filters }: SitesGridProps) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href={`/dashboard/sites/${site.id}/editor`}>
+                    <Link href={`/editor/${site.id}`}>
                       <Eye className="mr-2 h-4 w-4" />
                       Open Editor
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-danger">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
+                  <DropdownMenuItem
+                    className="text-danger"
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    <DeleteSiteButton siteId={site.id} siteName={site.name} />
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

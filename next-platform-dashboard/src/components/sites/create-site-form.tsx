@@ -1,32 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Check, X, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { z } from "zod";
+import { Loader2, Sparkles, PenTool, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import { createSiteAction, checkSubdomain } from "@/lib/actions/sites";
-import { createSiteSchema, type CreateSiteFormData } from "@/lib/validations/site";
+import { toast } from "sonner";
 import {
   Form,
-  FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
+  FormControl,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -34,8 +24,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useDebouncedCallback } from "@/lib/hooks/use-debounced-callback";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { useDebounce } from "@/hooks/use-debounce";
 import type { Client } from "@/types/client";
+
+const createSiteFormSchema = z.object({
+  name: z.string().min(1, "Site name is required").max(100),
+  subdomain: z
+    .string()
+    .min(3, "Subdomain must be at least 3 characters")
+    .max(30, "Subdomain must be at most 30 characters")
+    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens allowed"),
+  client_id: z.string().min(1, "Please select a client"),
+  description: z.string().optional(),
+  buildMode: z.enum(["ai", "manual"]),
+});
+
+type FormData = z.infer<typeof createSiteFormSchema>;
 
 interface CreateSiteFormProps {
   clients: Client[];
@@ -44,74 +53,96 @@ interface CreateSiteFormProps {
 
 export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps) {
   const router = useRouter();
-  const [isPending, setIsPending] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [subdomainStatus, setSubdomainStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
-
-  const form = useForm<CreateSiteFormData>({
-    resolver: zodResolver(createSiteSchema),
+  
+  const form = useForm<FormData>({
+    resolver: zodResolver(createSiteFormSchema),
     defaultValues: {
       name: "",
       subdomain: "",
       client_id: defaultClientId || "",
       description: "",
+      buildMode: "ai",
     },
   });
 
-  // Auto-generate subdomain from name
   const watchName = form.watch("name");
+  const watchSubdomain = form.watch("subdomain");
+  const debouncedSubdomain = useDebounce(watchSubdomain, 500);
+
+  // Auto-generate subdomain from name
   useEffect(() => {
     if (watchName && !form.getValues("subdomain")) {
-      const subdomain = watchName
+      const generated = watchName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "")
         .slice(0, 30);
-      form.setValue("subdomain", subdomain);
+      form.setValue("subdomain", generated, { shouldValidate: true });
     }
   }, [watchName, form]);
 
   // Check subdomain availability
-  const checkSubdomainAvailability = useDebouncedCallback(async (subdomain: string) => {
-    if (!subdomain || subdomain.length < 3) {
-      setSubdomainStatus("idle");
-      return;
-    }
-
-    setSubdomainStatus("checking");
-    try {
-      const { available } = await checkSubdomain(subdomain);
-      setSubdomainStatus(available ? "available" : "taken");
-    } catch {
-      setSubdomainStatus("idle");
-    }
-  }, 500);
-
-  const watchSubdomain = form.watch("subdomain");
   useEffect(() => {
-    checkSubdomainAvailability(watchSubdomain);
-  }, [watchSubdomain, checkSubdomainAvailability]);
+    if (debouncedSubdomain && debouncedSubdomain.length >= 3) {
+      setSubdomainStatus("checking");
+      checkSubdomain(debouncedSubdomain)
+        .then((result) => {
+          setSubdomainStatus(result.available ? "available" : "taken");
+        })
+        .catch(() => {
+          setSubdomainStatus("idle");
+        });
+    } else {
+      setSubdomainStatus("idle");
+    }
+  }, [debouncedSubdomain]);
 
-  const onSubmit = async (data: CreateSiteFormData) => {
+  const onSubmit = (data: FormData) => {
     if (subdomainStatus === "taken") {
       toast.error("Please choose a different subdomain");
       return;
     }
 
-    setIsPending(true);
+    startTransition(async () => {
+      try {
+        const result = await createSiteAction({
+          name: data.name,
+          subdomain: data.subdomain,
+          client_id: data.client_id,
+          description: data.description,
+        });
 
-    try {
-      const result = await createSiteAction(data);
+        if (result.error) {
+          toast.error(result.error);
+          return;
+        }
 
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Site created successfully");
-        router.push(`/dashboard/sites/${result.data?.id}`);
+        toast.success("Site created successfully!");
+        
+        // Navigate based on build mode
+        if (data.buildMode === "ai") {
+          router.push(`/dashboard/sites/${result.data?.id}/builder`);
+        } else {
+          router.push(`/editor/${result.data?.id}`);
+        }
+      } catch (error) {
+        toast.error("Failed to create site. Please try again.");
       }
-    } catch (_error) {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setIsPending(false);
+    });
+  };
+
+  const getSubdomainIcon = () => {
+    switch (subdomainStatus) {
+      case "checking":
+        return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
+      case "available":
+        return <CheckCircle2 className="h-4 w-4 text-success" />;
+      case "taken":
+        return <XCircle className="h-4 w-4 text-danger" />;
+      default:
+        return null;
     }
   };
 
@@ -121,7 +152,7 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
         <Card>
           <CardHeader>
             <CardTitle>Site Details</CardTitle>
-            <CardDescription>Basic information about the website.</CardDescription>
+            <CardDescription>Basic information about your new site</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <FormField
@@ -129,7 +160,7 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
               name="client_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Client *</FormLabel>
+                  <FormLabel>Client</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -139,8 +170,7 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
                     <SelectContent>
                       {clients.map((client) => (
                         <SelectItem key={client.id} value={client.id}>
-                          {client.name}
-                          {client.company && ` (${client.company})`}
+                          {client.name} {client.company && `(${client.company})`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -155,7 +185,7 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Site Name *</FormLabel>
+                  <FormLabel>Site Name</FormLabel>
                   <FormControl>
                     <Input placeholder="My Awesome Website" {...field} />
                   </FormControl>
@@ -169,44 +199,32 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
               name="subdomain"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Subdomain *</FormLabel>
+                  <FormLabel>Subdomain</FormLabel>
                   <FormControl>
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
                         <Input
-                          placeholder="my-awesome-site"
+                          placeholder="my-site"
                           {...field}
                           onChange={(e) => {
                             const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
                             field.onChange(value);
                           }}
+                          className="pr-10"
                         />
-                        {subdomainStatus !== "idle" && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                            {subdomainStatus === "checking" && (
-                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                            )}
-                            {subdomainStatus === "available" && (
-                              <Check className="h-4 w-4 text-success" />
-                            )}
-                            {subdomainStatus === "taken" && (
-                              <X className="h-4 w-4 text-danger" />
-                            )}
-                          </div>
-                        )}
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          {getSubdomainIcon()}
+                        </div>
                       </div>
-                      <span className="text-sm text-muted-foreground">.dramac.app</span>
+                      <span className="text-muted-foreground">.dramac.app</span>
                     </div>
                   </FormControl>
-                  <FormDescription>
-                    {subdomainStatus === "available" && (
-                      <span className="text-success">This subdomain is available!</span>
-                    )}
-                    {subdomainStatus === "taken" && (
-                      <span className="text-danger">This subdomain is already taken.</span>
-                    )}
-                    {subdomainStatus === "idle" && "Only lowercase letters, numbers, and hyphens."}
-                  </FormDescription>
+                  {subdomainStatus === "taken" && (
+                    <p className="text-sm text-danger">This subdomain is already taken</p>
+                  )}
+                  {subdomainStatus === "available" && (
+                    <p className="text-sm text-success">This subdomain is available!</p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -217,13 +235,81 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Brief description of the website..."
-                      className="resize-none"
-                      {...field}
-                    />
+                    <Input placeholder="Brief description of the site" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>How do you want to build?</CardTitle>
+            <CardDescription>Choose your preferred starting method</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FormField
+              control={form.control}
+              name="buildMode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="grid gap-4 md:grid-cols-2"
+                    >
+                      <div>
+                        <RadioGroupItem
+                          value="ai"
+                          id="ai"
+                          className="peer sr-only"
+                        />
+                        <Label
+                          htmlFor="ai"
+                          className="flex flex-col items-start gap-3 rounded-lg border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <Sparkles className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Generate with AI</p>
+                              <p className="text-sm text-muted-foreground">
+                                Describe your business and let AI build it
+                              </p>
+                            </div>
+                          </div>
+                        </Label>
+                      </div>
+                      <div>
+                        <RadioGroupItem
+                          value="manual"
+                          id="manual"
+                          className="peer sr-only"
+                        />
+                        <Label
+                          htmlFor="manual"
+                          className="flex flex-col items-start gap-3 rounded-lg border-2 border-muted bg-transparent p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                              <PenTool className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Start from Scratch</p>
+                              <p className="text-sm text-muted-foreground">
+                                Build manually with the visual editor
+                              </p>
+                            </div>
+                          </div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -239,19 +325,15 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
           </div>
         )}
 
-        <div className="flex justify-end gap-2">
+        <div className="flex gap-4">
           <Button
             type="button"
             variant="outline"
-            onClick={() => router.back()}
-            disabled={isPending}
+            onClick={() => router.push("/dashboard/sites")}
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            disabled={isPending || clients.length === 0 || subdomainStatus === "taken"}
-          >
+          <Button type="submit" disabled={isPending || subdomainStatus === "taken" || clients.length === 0}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create Site
           </Button>

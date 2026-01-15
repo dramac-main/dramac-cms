@@ -116,3 +116,5 @@ export {
 } from "./alert-dialog";
 
 export { Alert, AlertTitle, AlertDescription } from "./alert";
+
+export { RadioGroup, RadioGroupItem } from "./radio-group";
