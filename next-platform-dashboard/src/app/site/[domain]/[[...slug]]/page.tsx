@@ -11,7 +11,13 @@ interface SitePageProps {
   }>;
 }
 
+// Only generate static params in production for known domains
 export async function generateStaticParams() {
+  // Skip static generation in development
+  if (process.env.NODE_ENV !== 'production') {
+    return [];
+  }
+  
   const sites = await getAllPublishedSites();
   const params: { domain: string; slug?: string[] }[] = [];
 
@@ -28,6 +34,9 @@ export async function generateStaticParams() {
 
   return params;
 }
+
+// Enable ISR in production
+export const revalidate = process.env.NODE_ENV === 'production' ? 60 : 0;
 
 export async function generateMetadata({ params }: SitePageProps): Promise<Metadata> {
   const { domain, slug } = await params;
@@ -61,10 +70,16 @@ export default async function SitePage({ params }: SitePageProps) {
   const { domain, slug } = await params;
   const pageSlug = slug?.join("/") || "";
 
-  // Try custom domain first, then slug
+  console.log("[SitePage] Accessing domain:", domain, "slug:", pageSlug);
+
+  // Try custom domain first, then slug (subdomain)
   const site = await getSiteByDomain(domain) || await getSiteBySlug(domain);
   
+  console.log("[SitePage] Site found:", site ? site.name : "not found");
+  console.log("[SitePage] Site published:", site?.published);
+  
   if (!site || !site.published) {
+    console.log("[SitePage] Site not found or not published, returning 404");
     notFound();
   }
 
@@ -73,7 +88,10 @@ export default async function SitePage({ params }: SitePageProps) {
     ? site.pages.find((p) => p.slug === pageSlug)
     : site.pages.find((p) => p.isHomepage);
 
+  console.log("[SitePage] Page found:", page ? page.title : "not found");
+
   if (!page) {
+    console.log("[SitePage] Page not found, returning 404");
     notFound();
   }
 
@@ -85,5 +103,4 @@ export default async function SitePage({ params }: SitePageProps) {
   );
 }
 
-// Enable ISR
-export const revalidate = 60;
+// ISR configuration removed - moved to top

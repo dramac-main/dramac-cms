@@ -5,6 +5,10 @@ import { Editor, Frame, Element } from "@craftjs/core";
 import { componentResolver } from "@/components/editor/resolver";
 import { Root } from "@/components/editor/user-components/root";
 
+// Force dynamic rendering - no static generation
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 interface PreviewPageProps {
   params: Promise<{ siteId: string; pageId: string }>;
 }
