@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { getUserSessions, revokeSession, revokeAllOtherSessions } from "@/lib/actions/security";
 
 interface Session {
   id: string;
@@ -32,33 +33,25 @@ export function SessionsManager() {
   const [sessionToRevoke, setSessionToRevoke] = useState<Session | null>(null);
   const [isRevoking, setIsRevoking] = useState(false);
 
-  useEffect(() => {
-    // Simulate fetching sessions
-    const fetchSessions = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setSessions([
-        {
-          id: "1",
-          device: "Windows PC",
-          deviceType: "desktop",
-          browser: "Chrome 120",
-          location: "Lusaka, Zambia",
-          lastActive: "Active now",
-          isCurrent: true,
-        },
-        {
-          id: "2",
-          device: "iPhone 15",
-          deviceType: "mobile",
-          browser: "Safari",
-          location: "Lusaka, Zambia",
-          lastActive: "2 hours ago",
-          isCurrent: false,
-        },
-      ]);
+  const fetchSessions = async () => {
+    setIsLoading(true);
+    try {
+      const result = await getUserSessions();
+      if (result.error) {
+        toast.error(result.error);
+        setSessions([]);
+      } else {
+        setSessions(result.sessions);
+      }
+    } catch (error) {
+      toast.error("Failed to fetch sessions");
+      setSessions([]);
+    } finally {
       setIsLoading(false);
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchSessions();
   }, []);
 
@@ -67,10 +60,14 @@ export function SessionsManager() {
 
     setIsRevoking(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSessions((prev) => prev.filter((s) => s.id !== sessionToRevoke.id));
-      toast.success("Session revoked successfully");
+      const result = await revokeSession(sessionToRevoke.id);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Session revoked successfully");
+        // This will log the user out
+        window.location.href = "/login";
+      }
     } catch (error) {
       toast.error("Failed to revoke session");
     } finally {
@@ -82,10 +79,13 @@ export function SessionsManager() {
   const handleRevokeAll = async () => {
     setIsRevoking(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setSessions((prev) => prev.filter((s) => s.isCurrent));
-      toast.success("All other sessions revoked");
+      const result = await revokeAllOtherSessions();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(result.message || "All other sessions revoked");
+        await fetchSessions();
+      }
     } catch (error) {
       toast.error("Failed to revoke sessions");
     } finally {

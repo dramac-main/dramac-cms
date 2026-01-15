@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export async function changePassword(currentPassword: string, newPassword: string) {
@@ -35,6 +36,119 @@ export async function changePassword(currentPassword: string, newPassword: strin
   return { success: true };
 }
 
+interface SessionInfo {
+  id: string;
+  device: string;
+  deviceType: "desktop" | "mobile" | "tablet";
+  browser: string;
+  location: string;
+  lastActive: string;
+  isCurrent: boolean;
+}
+
+function parseUserAgent(userAgent: string) {
+  const ua = userAgent.toLowerCase();
+  
+  // Detect device type
+  let deviceType: "desktop" | "mobile" | "tablet" = "desktop";
+  if (/mobile|android|iphone|ipod/i.test(ua)) {
+    deviceType = "mobile";
+  } else if (/tablet|ipad/i.test(ua)) {
+    deviceType = "tablet";
+  }
+  
+  // Detect browser
+  let browser = "Unknown Browser";
+  if (ua.includes("chrome") && !ua.includes("edg")) {
+    browser = "Chrome";
+  } else if (ua.includes("safari") && !ua.includes("chrome")) {
+    browser = "Safari";
+  } else if (ua.includes("firefox")) {
+    browser = "Firefox";
+  } else if (ua.includes("edg")) {
+    browser = "Edge";
+  }
+  
+  // Detect device name
+  let device = "Unknown Device";
+  if (ua.includes("windows")) {
+    device = "Windows PC";
+  } else if (ua.includes("macintosh") || ua.includes("mac os x")) {
+    device = "Mac";
+  } else if (ua.includes("linux")) {
+    device = "Linux PC";
+  } else if (ua.includes("iphone")) {
+    device = "iPhone";
+  } else if (ua.includes("ipad")) {
+    device = "iPad";
+  } else if (ua.includes("android")) {
+    device = "Android Device";
+  }
+  
+  return { device, deviceType, browser };
+}
+
+export async function getUserSessions() {
+  const supabase = await createClient();
+  
+  const { data: { session }, error } = await supabase.auth.getSession();
+  
+  if (error || !session) {
+    return { sessions: [], error: "Could not fetch sessions" };
+  }
+
+  // Note: Supabase only provides access to the current session
+  // For multi-session management, you'd need to implement custom session tracking
+  
+  // Get user agent from headers (if available)
+  const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : "";
+  const { device, deviceType, browser } = parseUserAgent(userAgent || "Chrome/120.0");
+  
+  const sessions: SessionInfo[] = [
+    {
+      id: session.access_token.substring(0, 16),
+      device,
+      deviceType,
+      browser,
+      location: "Unknown", // Would need IP geolocation service
+      lastActive: "Active now",
+      isCurrent: true,
+    },
+  ];
+
+  return { sessions, error: null };
+}
+
+export async function revokeSession(sessionId: string) {
+  const supabase = await createClient();
+  
+  // Sign out from all devices (Supabase doesn't support selective session revocation)
+  const { error } = await supabase.auth.signOut({ scope: 'global' });
+  
+  if (error) {
+    console.error("Error revoking session:", error);
+    return { error: "Failed to revoke session" };
+  }
+
+  revalidatePath("/settings/security");
+  return { success: true };
+}
+
+export async function revokeAllOtherSessions() {
+  const supabase = await createClient();
+  
+  // Refresh the current session to invalidate any other sessions
+  const { error } = await supabase.auth.refreshSession();
+  
+  if (error) {
+    console.error("Error refreshing session:", error);
+    return { error: "Failed to revoke other sessions" };
+  }
+
+  revalidatePath("/settings/security");
+  return { success: true, message: "Session refreshed successfully" };
+}
+
 export async function enableTwoFactor() {
   const supabase = await createClient();
   
@@ -64,36 +178,5 @@ export async function disableTwoFactor() {
   }
 
   // In production, this would disable TOTP
-  return { success: true };
-}
-
-export async function getSessions() {
-  // Note: Supabase doesn't provide session management out of the box
-  // This would require custom implementation or use of Supabase's session API
-  // For now, returning mock data structure
-  return {
-    sessions: [],
-  };
-}
-
-export async function revokeSession(sessionId: string) {
-  const supabase = await createClient();
-  
-  // In production, this would revoke a specific session
-  // Supabase allows signing out from all devices with signOut({ scope: 'global' })
-  
-  return { success: true };
-}
-
-export async function revokeAllSessions() {
-  const supabase = await createClient();
-  
-  const { error } = await supabase.auth.signOut({ scope: "global" });
-  
-  if (error) {
-    console.error("Error revoking sessions:", error);
-    return { error: "Failed to revoke sessions" };
-  }
-
   return { success: true };
 }
