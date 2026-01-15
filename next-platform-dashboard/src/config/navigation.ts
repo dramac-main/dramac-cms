@@ -68,7 +68,7 @@ export const mainNavigation: NavGroup[] = [
       },
       {
         title: "Settings",
-        href: "/dashboard/settings",
+        href: "/settings",
         icon: Settings,
       },
     ],
