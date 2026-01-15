@@ -11,20 +11,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pencil, Settings, ExternalLink } from "lucide-react";
 
 interface SiteDetailPageProps {
-  params: { siteId: string };
+  params: Promise<{ siteId: string }>;
 }
 
 export async function generateMetadata({
   params,
 }: SiteDetailPageProps): Promise<Metadata> {
-  const site = await getSite(params.siteId).catch(() => null);
+  const { siteId } = await params;
+  const site = await getSite(siteId).catch(() => null);
   return {
     title: site ? `${site.name} | DRAMAC` : "Site Not Found",
   };
 }
 
 export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
-  const site = await getSite(params.siteId).catch(() => null);
+  const { siteId } = await params;
+  const site = await getSite(siteId).catch(() => null);
 
   if (!site) {
     notFound();

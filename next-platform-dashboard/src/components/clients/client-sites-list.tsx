@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSiteUrl, getSiteDomain, getBaseDomain } from "@/lib/utils/site-url";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Plus, Settings } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -55,11 +56,11 @@ export function ClientSitesList({ clientId, sites }: ClientSitesListProps) {
               {site.subdomain && (
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground">
-                    {site.subdomain}.dramac.app
+                    {getSiteDomain(site.subdomain, site.custom_domain)}
                   </span>
                   {site.published && (
                     <a
-                      href={`https://${site.subdomain}.dramac.app`}
+                      href={getSiteUrl(site.subdomain, site.custom_domain)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:text-primary/80"

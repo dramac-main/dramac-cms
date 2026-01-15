@@ -57,7 +57,7 @@ export function DeleteSiteButton({ siteId, siteName, onSuccess }: DeleteSiteButt
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <button className="flex w-full items-center text-danger">
+        <button className="flex w-full items-center text-danger px-2 py-1.5 text-sm">
           <Trash2 className="mr-2 h-4 w-4" />
           Delete
         </button>

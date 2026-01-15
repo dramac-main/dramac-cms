@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { triggerRevalidation } from "@/lib/renderer/revalidate";
+import { getSiteUrl } from "@/lib/utils/site-url";
 
 export interface PublishResult {
   success: boolean;
@@ -54,14 +55,10 @@ export async function publishSite(siteId: string): Promise<PublishResult> {
     // Trigger revalidation
     await triggerRevalidation("site", site.subdomain);
 
-    // Determine URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_DOMAIN || "localhost:3000";
-    const url = site.custom_domain || `${site.subdomain}.${baseUrl}`;
-
     return {
       success: true,
       publishedAt,
-      url: `https://${url}`,
+      url: getSiteUrl(site.subdomain, site.custom_domain),
     };
   } catch (error) {
     console.error("Publish site error:", error);

@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSite } from "@/lib/actions/sites";
+import { getSiteUrl, getSiteDomain, getBaseDomain } from "@/lib/utils/site-url";
 import { PageHeader } from "@/components/layout/page-header";
 import { SiteDetailTabs } from "@/components/sites/site-detail-tabs";
 import { Button } from "@/components/ui/button";
@@ -32,13 +33,13 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
     <div className="space-y-6">
       <PageHeader
         title={site.name}
-        description={`${site.subdomain}.dramac.app`}
+        description={getSiteDomain(site.subdomain, site.custom_domain)}
         backHref="/dashboard/sites"
       >
         <div className="flex items-center gap-2">
           {site.published && (
             <a
-              href={`https://${site.subdomain}.dramac.app`}
+              href={getSiteUrl(site.subdomain, site.custom_domain)}
               target="_blank"
               rel="noopener noreferrer"
             >

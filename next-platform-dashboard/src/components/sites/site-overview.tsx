@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import type { Site } from "@/types/site";
+import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 
 interface SiteOverviewProps {
   site: Site & {
@@ -42,10 +43,10 @@ export function SiteOverview({ site }: SiteOverviewProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Subdomain</p>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{site.subdomain}.dramac.app</span>
+                  <span className="font-medium">{getSiteDomain(site.subdomain, site.custom_domain)}</span>
                   {site.published && (
                     <a
-                      href={`https://${site.subdomain}.dramac.app`}
+                      href={getSiteUrl(site.subdomain, site.custom_domain)}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

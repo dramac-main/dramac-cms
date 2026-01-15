@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getSiteUrl } from "@/lib/utils/site-url";
 
 export interface CloneOptions {
   newName: string;
@@ -154,7 +155,7 @@ export async function cloneSite(
     return {
       success: true,
       newSiteId: newSite.id,
-      newSiteUrl: `https://${options.newSubdomain}.dramac.site`,
+      newSiteUrl: getSiteUrl(options.newSubdomain),
       details: {
         pagesCloned,
         modulesCloned,

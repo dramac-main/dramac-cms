@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
+import { getSiteUrl, getSiteDomain, getBaseDomain } from "@/lib/utils/site-url";
 import { toast } from "sonner";
 import { updateSiteAction } from "@/lib/actions/sites";
 import { updateSiteSchema, type UpdateSiteFormData } from "@/lib/validations/site";
@@ -121,11 +122,11 @@ export function SiteSettingsForm({ site, section }: SiteSettingsFormProps) {
                     <FormControl>
                       <div className="flex items-center gap-2">
                         <Input {...field} />
-                        <span className="text-sm text-muted-foreground">.dramac.app</span>
+                        <span className="text-sm text-muted-foreground">.{getBaseDomain()}</span>
                       </div>
                     </FormControl>
                     <FormDescription>
-                      Your free subdomain on dramac.app
+                      Your free subdomain on {getBaseDomain()}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

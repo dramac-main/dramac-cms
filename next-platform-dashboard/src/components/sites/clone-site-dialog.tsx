@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Copy, Loader2 } from "lucide-react";
+import { getSiteUrl, getSiteDomain, getBaseDomain } from "@/lib/utils/site-url";
 import {
   Dialog,
   DialogContent,
@@ -151,7 +152,7 @@ export function CloneSiteDialog({
                 placeholder="my-new-site"
                 className="flex-1"
               />
-              <span className="text-sm text-muted-foreground">.dramac.site</span>
+              <span className="text-sm text-muted-foreground">.{getBaseDomain()}</span>
             </div>
           </div>
           

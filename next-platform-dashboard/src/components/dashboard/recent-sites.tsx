@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getSiteUrl, getSiteDomain, getBaseDomain } from "@/lib/utils/site-url";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Globe, ArrowRight, ExternalLink } from "lucide-react";
@@ -78,10 +79,10 @@ export function RecentSites({ sites }: RecentSitesProps) {
                     {site.name}
                   </Link>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>{site.subdomain}.dramac.app</span>
+                    <span>{getSiteDomain(site.subdomain, site.custom_domain)}</span>
                     {site.status === "published" && (
                       <a
-                        href={`https://${site.subdomain}.dramac.app`}
+                        href={getSiteUrl(site.subdomain, site.custom_domain)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:text-primary"

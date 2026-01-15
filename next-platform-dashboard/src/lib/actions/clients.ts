@@ -169,3 +169,124 @@ export async function deleteClientAction(clientId: string) {
   revalidatePath("/dashboard/clients");
   return { success: true };
 }
+
+// Invite client to portal
+export async function inviteClientToPortal(clientId: string) {
+  const supabase = await createClient();
+
+  const { data: client } = await supabase
+    .from("clients")
+    .select("id, email, name, agency_id")
+    .eq("id", clientId)
+    .single();
+
+  if (!client) {
+    return { error: "Client not found" };
+  }
+
+  if (!client.email) {
+    return { error: "Client must have an email address" };
+  }
+
+  // Mark the client as having portal access
+  const { error } = await supabase
+    .from("clients")
+    .update({
+      has_portal_access: true,
+    })
+    .eq("id", clientId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  // Log activity
+  await logClientActivity(clientId, "portal.invited", "client", clientId, {
+    email: client.email,
+  });
+
+  revalidatePath(`/dashboard/clients/${clientId}`);
+  return { success: true };
+}
+
+// Revoke client portal access
+export async function revokeClientPortalAccess(clientId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("clients")
+    .update({
+      has_portal_access: false,
+      portal_user_id: null,
+    })
+    .eq("id", clientId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  // Log activity
+  await logClientActivity(clientId, "portal.access_revoked", "client", clientId, {});
+
+  revalidatePath(`/dashboard/clients/${clientId}`);
+  return { success: true };
+}
+
+// Impersonate client (set session flag)
+export async function impersonateClient(clientId: string) {
+  const supabase = await createClient();
+
+  // Verify client exists and has portal access
+  const { data: client } = await supabase
+    .from("clients")
+    .select("id, name, has_portal_access")
+    .eq("id", clientId)
+    .single();
+
+  if (!client) {
+    return { error: "Client not found" };
+  }
+
+  if (!client.has_portal_access) {
+    return { error: "Client does not have portal access enabled" };
+  }
+
+  // Store impersonation state in cookies for middleware to pick up
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  
+  cookieStore.set("impersonating_client_id", client.id, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 60 * 60 * 4, // 4 hours
+    path: "/",
+  });
+
+  return { success: true, clientId: client.id };
+}
+
+// Stop impersonating client
+export async function stopImpersonatingClient() {
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  
+  cookieStore.delete("impersonating_client_id");
+  
+  revalidatePath("/");
+  return { success: true };
+}
+
+// Helper to log client activity (placeholder - activity_logs table pending)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function logClientActivity(
+  _clientId: string, 
+  _action: string, 
+  _entityType: string, 
+  _entityId: string, 
+  _metadata: Record<string, unknown>
+) {
+  // Activity logging will be implemented when activity_logs table is created
+  // This is a placeholder that doesn't fail the calling action
+  return;
+}

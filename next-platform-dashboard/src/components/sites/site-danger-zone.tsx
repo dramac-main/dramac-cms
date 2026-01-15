@@ -33,11 +33,14 @@ interface SiteDangerZoneProps {
 
 export function SiteDangerZone({ site }: SiteDangerZoneProps) {
   const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmText, setConfirmText] = useState("");
   const canDelete = confirmText === site.name;
 
   const handleDelete = async () => {
+    if (!canDelete) return;
+    
     setIsDeleting(true);
 
     try {
@@ -47,9 +50,10 @@ export function SiteDangerZone({ site }: SiteDangerZoneProps) {
         toast.error(result.error);
       } else {
         toast.success("Site deleted successfully");
+        setOpen(false);
         router.push("/dashboard/sites");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("An unexpected error occurred");
     } finally {
       setIsDeleting(false);
@@ -75,7 +79,7 @@ export function SiteDangerZone({ site }: SiteDangerZoneProps) {
               Permanently delete this site and all its pages.
             </p>
           </div>
-          <AlertDialog>
+          <AlertDialog open={open} onOpenChange={setOpen}>
             <AlertDialogTrigger asChild>
               <Button variant="destructive">
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -87,7 +91,7 @@ export function SiteDangerZone({ site }: SiteDangerZoneProps) {
                 <AlertDialogTitle>Delete Site</AlertDialogTitle>
                 <AlertDialogDescription>
                   This action cannot be undone. This will permanently delete the site
-                  <strong> "{site.name}"</strong> and all its pages.
+                  <strong> &quot;{site.name}&quot;</strong> and all its pages.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <div className="py-4">
@@ -104,14 +108,14 @@ export function SiteDangerZone({ site }: SiteDangerZoneProps) {
                 <AlertDialogCancel onClick={() => setConfirmText("")}>
                   Cancel
                 </AlertDialogCancel>
-                <AlertDialogAction
+                <Button
+                  variant="destructive"
                   onClick={handleDelete}
                   disabled={!canDelete || isDeleting}
-                  className="bg-danger hover:bg-danger/90"
                 >
                   {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Delete Site
-                </AlertDialogAction>
+                </Button>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

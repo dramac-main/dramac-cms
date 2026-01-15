@@ -18,6 +18,7 @@ import {
   Globe,
   User,
 } from "lucide-react";
+import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 import { formatDistanceToNow } from "date-fns";
 import { DeleteSiteButton } from "./delete-site-button";
 import type { SiteFilters } from "@/types/site";
@@ -73,7 +74,7 @@ export async function SitesGrid({ filters }: SitesGridProps) {
               </Link>
               {site.published && (
                 <a
-                  href={`https://${site.subdomain}.dramac.app`}
+                  href={getSiteUrl(site.subdomain, site.custom_domain)}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -98,10 +99,10 @@ export async function SitesGrid({ filters }: SitesGridProps) {
                   </Link>
                 </CardTitle>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span className="truncate">{site.subdomain}.dramac.app</span>
+                  <span className="truncate">{getSiteDomain(site.subdomain, site.custom_domain)}</span>
                   {site.published && (
                     <a
-                      href={`https://${site.subdomain}.dramac.app`}
+                      href={getSiteUrl(site.subdomain, site.custom_domain)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="shrink-0"
@@ -129,13 +130,6 @@ export async function SitesGrid({ filters }: SitesGridProps) {
                       <Eye className="mr-2 h-4 w-4" />
                       Open Editor
                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-danger"
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <DeleteSiteButton siteId={site.id} siteName={site.name} />
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

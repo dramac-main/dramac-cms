@@ -13,6 +13,7 @@ export interface RecentSite {
   id: string;
   name: string;
   subdomain: string;
+  custom_domain: string | null;
   status: string;
   updated_at: string;
   client?: { name: string } | null;
@@ -89,7 +90,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   // Get recent sites
   const { data: recentSitesData } = await supabase
     .from("sites")
-    .select("id, name, subdomain, published, published_at, updated_at, client:clients(name)")
+    .select("id, name, subdomain, custom_domain, published, published_at, updated_at, client:clients(name)")
     .eq("agency_id", agencyId)
     .order("updated_at", { ascending: false })
     .limit(5);
@@ -99,6 +100,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     id: site.id,
     name: site.name,
     subdomain: site.subdomain,
+    custom_domain: site.custom_domain,
     status: site.published ? "published" : "draft",
     updated_at: site.updated_at,
     client: site.client,
