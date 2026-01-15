@@ -234,7 +234,7 @@ export function NotificationBell() {
             variant="ghost"
             className="w-full"
             onClick={() => {
-              router.push("/notifications");
+              router.push("/dashboard/notifications");
               setIsOpen(false);
             }}
           >
