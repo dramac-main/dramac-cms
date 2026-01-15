@@ -1,5 +1,7 @@
 import { anthropic, DEFAULT_MODEL, GENERATION_CONFIG } from "./config";
 import { buildSystemPrompt, buildUserPrompt, GenerationContext } from "./prompts";
+import { checkPromptSafety, sanitizeGeneratedContent } from "./safety";
+import { checkRateLimit, recordRateLimitedAction } from "@/lib/rate-limit";
 
 export interface GeneratedWebsite {
   metadata: {
@@ -24,9 +26,35 @@ export interface GenerationResult {
   tokensUsed?: number;
 }
 
+/**
+ * Generate a website with safety checks and rate limiting
+ */
 export async function generateWebsite(
-  context: GenerationContext
+  context: GenerationContext,
+  userId?: string
 ): Promise<GenerationResult> {
+  // 1. Check rate limit (if userId provided)
+  if (userId) {
+    const rateLimit = await checkRateLimit(userId, "aiGeneration");
+    if (!rateLimit.allowed) {
+      return {
+        success: false,
+        error: `Rate limit exceeded. You have ${rateLimit.remaining} generations remaining. Resets in ${Math.ceil((rateLimit.retryAfter || 3600) / 60)} minutes.`,
+      };
+    }
+  }
+
+  // 2. Check content safety
+  const promptText = `${context.businessDescription} ${context.industry?.name || ""} ${context.targetAudience || ""}`;
+  const safetyCheck = checkPromptSafety(promptText);
+  
+  if (!safetyCheck.isAllowed) {
+    return {
+      success: false,
+      error: `Content not allowed: ${safetyCheck.reason}`,
+    };
+  }
+
   try {
     const systemPrompt = buildSystemPrompt();
     const userPrompt = buildUserPrompt(context);
@@ -50,17 +78,31 @@ export async function generateWebsite(
     }
 
     // Parse JSON
-    const website = JSON.parse(content.text) as GeneratedWebsite;
+    const rawWebsite = JSON.parse(content.text) as GeneratedWebsite;
 
     // Validate structure
-    if (!website.metadata || !website.sections) {
+    if (!rawWebsite.metadata || !rawWebsite.sections) {
       throw new Error("Invalid website structure");
+    }
+
+    // 3. Sanitize output
+    const sanitizedContent = sanitizeGeneratedContent(JSON.stringify(rawWebsite));
+    const website = JSON.parse(sanitizedContent) as GeneratedWebsite;
+
+    const tokensUsed = (response.usage?.input_tokens || 0) + (response.usage?.output_tokens || 0);
+
+    // 4. Record successful generation (if userId provided)
+    if (userId) {
+      await recordRateLimitedAction(userId, "aiGeneration", {
+        industry: context.industry?.name,
+        tokensUsed,
+      });
     }
 
     return {
       success: true,
       website,
-      tokensUsed: response.usage?.input_tokens + response.usage?.output_tokens,
+      tokensUsed,
     };
   } catch (error) {
     console.error("Generation error:", error);
