@@ -1,4 +1,4 @@
-import { createElement, ReactNode } from "react";
+import { ReactNode } from "react";
 import { RenderContainer } from "./components/render-container";
 import { RenderText } from "./components/render-text";
 import { RenderButton } from "./components/render-button";
@@ -10,6 +10,10 @@ import { RenderCTA } from "./components/render-cta";
 import { RenderContactForm } from "./components/render-contact-form";
 import { RenderNavigation } from "./components/render-navigation";
 import { RenderFooter } from "./components/render-footer";
+import { RenderGallery } from "./components/render-gallery";
+import { RenderFAQ } from "./components/render-faq";
+import { RenderTeam } from "./components/render-team";
+import { RenderStats } from "./components/render-stats";
 
 // Map of component types to render functions
 const componentMap: Record<string, React.FC<any>> = {
@@ -18,12 +22,18 @@ const componentMap: Record<string, React.FC<any>> = {
   Button: RenderButton,
   Image: RenderImage,
   Hero: RenderHero,
+  HeroSection: RenderHero,
   FeatureGrid: RenderFeatureGrid,
   Testimonials: RenderTestimonials,
   CTA: RenderCTA,
+  CTASection: RenderCTA,
   ContactForm: RenderContactForm,
   Navigation: RenderNavigation,
   Footer: RenderFooter,
+  Gallery: RenderGallery,
+  FAQ: RenderFAQ,
+  Team: RenderTeam,
+  Stats: RenderStats,
 };
 
 interface CraftNode {

@@ -19,6 +19,10 @@ export * from "./user-components/container";
 export * from "./user-components/text";
 export * from "./user-components/button-component";
 export * from "./user-components/image-component";
+export * from "./user-components/gallery";
+export * from "./user-components/faq";
+export * from "./user-components/team";
+export * from "./user-components/stats";
 
 // Settings
 export * from "./settings";

@@ -2,20 +2,30 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
 
-  // Skip for dashboard, API, and static files
+  // Skip for app routes (dashboard, auth, editor, etc), API, and static files
   if (
     pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/signup") ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/editor") ||
+    pathname.startsWith("/sites") ||
+    pathname.startsWith("/settings") ||
+    pathname.startsWith("/marketplace") ||
+    pathname.startsWith("/test-components") ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
+    pathname === "/" ||
     pathname.includes(".")
   ) {
-    // For dashboard routes, still run session update
-    if (pathname.startsWith("/dashboard")) {
+    // For dashboard and auth routes, run session update
+    if (pathname.startsWith("/dashboard") || pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith("/auth")) {
       return await updateSession(request);
     }
     return NextResponse.next();

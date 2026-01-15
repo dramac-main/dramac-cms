@@ -10,6 +10,10 @@ import { ContactForm } from "./user-components/contact-form";
 import { Newsletter } from "./user-components/newsletter";
 import { Navigation } from "./user-components/navigation";
 import { Footer } from "./user-components/footer";
+import { Gallery } from "./user-components/gallery";
+import { FAQ } from "./user-components/faq";
+import { Team } from "./user-components/team";
+import { Stats } from "./user-components/stats";
 
 // Map of all user components for Craft.js resolver
 export const componentResolver = {
@@ -25,6 +29,10 @@ export const componentResolver = {
   Newsletter,
   Navigation,
   Footer,
+  Gallery,
+  FAQ,
+  Team,
+  Stats,
 };
 
 // Component metadata for toolbox
@@ -132,5 +140,38 @@ export const componentRegistry = [
     category: "navigation" as const,
     icon: "PanelBottom",
     component: Footer,
+  },
+  // New Section Components
+  {
+    name: "Gallery",
+    displayName: "Gallery",
+    description: "Image gallery with lightbox",
+    category: "sections" as const,
+    icon: "Images",
+    component: Gallery,
+  },
+  {
+    name: "FAQ",
+    displayName: "FAQ",
+    description: "Frequently asked questions accordion",
+    category: "sections" as const,
+    icon: "HelpCircle",
+    component: FAQ,
+  },
+  {
+    name: "Team",
+    displayName: "Team",
+    description: "Team member cards",
+    category: "sections" as const,
+    icon: "Users",
+    component: Team,
+  },
+  {
+    name: "Stats",
+    displayName: "Stats",
+    description: "Animated statistics counters",
+    category: "sections" as const,
+    icon: "TrendingUp",
+    component: Stats,
   },
 ];

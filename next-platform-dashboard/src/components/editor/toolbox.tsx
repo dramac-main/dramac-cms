@@ -11,6 +11,14 @@ import { HeroSection } from "./user-components/hero-section";
 import { FeatureGrid } from "./user-components/feature-grid";
 import { Testimonials } from "./user-components/testimonials";
 import { CTASection } from "./user-components/cta-section";
+import { ContactForm } from "./user-components/contact-form";
+import { Newsletter } from "./user-components/newsletter";
+import { Navigation } from "./user-components/navigation";
+import { Footer } from "./user-components/footer";
+import { Gallery } from "./user-components/gallery";
+import { FAQ } from "./user-components/faq";
+import { Team } from "./user-components/team";
+import { Stats } from "./user-components/stats";
 import {
   LayoutGrid,
   Type,
@@ -21,6 +29,14 @@ import {
   Grid3X3,
   Quote,
   Megaphone,
+  Images,
+  HelpCircle,
+  Users,
+  TrendingUp,
+  Mail,
+  Inbox,
+  Menu,
+  PanelBottom,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +49,14 @@ const iconMap: Record<string, React.ElementType> = {
   Grid3X3,
   Quote,
   Megaphone,
+  Images,
+  HelpCircle,
+  Users,
+  TrendingUp,
+  Mail,
+  Inbox,
+  Menu,
+  PanelBottom,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,14 +69,24 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   FeatureGrid,
   Testimonials,
   CTASection,
+  ContactForm,
+  Newsletter,
+  Navigation,
+  Footer,
+  Gallery,
+  FAQ,
+  Team,
+  Stats,
 };
 
 // Group components by category
-const categories = ["layout", "sections", "typography", "buttons", "media"];
+const categories = ["navigation", "layout", "sections", "forms", "typography", "buttons", "media"];
 
 const categoryLabels: Record<string, string> = {
+  navigation: "Navigation",
   layout: "Layout",
   sections: "Sections",
+  forms: "Forms",
   typography: "Typography",
   buttons: "Buttons",
   media: "Media",
