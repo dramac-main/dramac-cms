@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import Link from "next/link";
 import {
   CheckCircle,
   AlertCircle,
@@ -224,7 +225,7 @@ export function CurrentPlanCard({ subscription, usage }: CurrentPlanCardProps) {
 
             {(!subscription || !subscription.lemonsqueezy_subscription_id || status === "cancelled" || status === "expired") && (
               <Button asChild>
-                <a href="#plans">Upgrade Now</a>
+                <Link href="#plans">Upgrade Now</Link>
               </Button>
             )}
           </div>
