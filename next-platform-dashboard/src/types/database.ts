@@ -948,6 +948,119 @@ export type Database = {
           }
         ];
       };
+      subscriptions: {
+        Row: {
+          id: string;
+          agency_id: string;
+          plan_id: string;
+          lemonsqueezy_subscription_id: string | null;
+          lemonsqueezy_customer_id: string | null;
+          lemonsqueezy_variant_id: string | null;
+          status: string;
+          current_period_start: string | null;
+          current_period_end: string | null;
+          trial_ends_at: string | null;
+          cancelled_at: string | null;
+          ends_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          plan_id?: string;
+          lemonsqueezy_subscription_id?: string | null;
+          lemonsqueezy_customer_id?: string | null;
+          lemonsqueezy_variant_id?: string | null;
+          status?: string;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          trial_ends_at?: string | null;
+          cancelled_at?: string | null;
+          ends_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          plan_id?: string;
+          lemonsqueezy_subscription_id?: string | null;
+          lemonsqueezy_customer_id?: string | null;
+          lemonsqueezy_variant_id?: string | null;
+          status?: string;
+          current_period_start?: string | null;
+          current_period_end?: string | null;
+          trial_ends_at?: string | null;
+          cancelled_at?: string | null;
+          ends_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_agency_id_fkey";
+            columns: ["agency_id"];
+            isOneToOne: true;
+            referencedRelation: "agencies";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      invoices: {
+        Row: {
+          id: string;
+          agency_id: string;
+          subscription_id: string | null;
+          lemonsqueezy_order_id: string;
+          amount: number;
+          currency: string;
+          status: string;
+          invoice_url: string | null;
+          receipt_url: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          agency_id: string;
+          subscription_id?: string | null;
+          lemonsqueezy_order_id: string;
+          amount: number;
+          currency?: string;
+          status?: string;
+          invoice_url?: string | null;
+          receipt_url?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          agency_id?: string;
+          subscription_id?: string | null;
+          lemonsqueezy_order_id?: string;
+          amount?: number;
+          currency?: string;
+          status?: string;
+          invoice_url?: string | null;
+          receipt_url?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "invoices_agency_id_fkey";
+            columns: ["agency_id"];
+            isOneToOne: false;
+            referencedRelation: "agencies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoices_subscription_id_fkey";
+            columns: ["subscription_id"];
+            isOneToOne: false;
+            referencedRelation: "subscriptions";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1036,3 +1149,12 @@ export type DbBillingUsageUpdate = Database["public"]["Tables"]["billing_usage"]
 export type DbBackup = Database["public"]["Tables"]["backups"]["Row"];
 export type DbBackupInsert = Database["public"]["Tables"]["backups"]["Insert"];
 export type DbBackupUpdate = Database["public"]["Tables"]["backups"]["Update"];
+
+// LemonSqueezy Subscription types (Phase 53)
+export type DbSubscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+export type DbSubscriptionInsert = Database["public"]["Tables"]["subscriptions"]["Insert"];
+export type DbSubscriptionUpdate = Database["public"]["Tables"]["subscriptions"]["Update"];
+
+export type DbInvoice = Database["public"]["Tables"]["invoices"]["Row"];
+export type DbInvoiceInsert = Database["public"]["Tables"]["invoices"]["Insert"];
+export type DbInvoiceUpdate = Database["public"]["Tables"]["invoices"]["Update"];
