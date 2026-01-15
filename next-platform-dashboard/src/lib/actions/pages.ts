@@ -124,11 +124,6 @@ export async function getPageWithContent(pageId: string): Promise<{
     throw new Error(error.message);
   }
 
-  console.log('[getPageWithContent] Page data retrieved for:', pageId);
-  console.log('[getPageWithContent] page_content data:', data.page_content);
-  console.log('[getPageWithContent] page_content type:', typeof data.page_content);
-  console.log('[getPageWithContent] Is array:', Array.isArray(data.page_content));
-
   // Verify agency access
   if (data.site?.agency_id !== agencyId) {
     throw new Error("Unauthorized");
@@ -146,11 +141,6 @@ export async function getPageWithContent(pageId: string): Promise<{
       // Object format: page_content is an object with content property
       content = (data.page_content as { content: Record<string, unknown> }).content;
     }
-  }
-
-  console.log('[getPageWithContent] Extracted content:', content ? 'Content exists' : 'No content');
-  if (content) {
-    console.log('[getPageWithContent] Content keys:', Object.keys(content));
   }
 
   return {
@@ -339,11 +329,8 @@ export async function savePageContentAction(
     const agencyId = await getAgencyId();
 
     if (!agencyId) {
-      console.error('[savePageContentAction] Not authenticated');
       return { error: "Not authenticated" };
     }
-
-    console.log('[savePageContentAction] Saving content for page:', pageId);
 
     // Verify ownership
     const { data: page, error: pageError } = await supabase
@@ -353,12 +340,10 @@ export async function savePageContentAction(
       .single();
 
     if (pageError) {
-      console.error('[savePageContentAction] Page query error:', pageError);
       return { error: pageError.message };
     }
 
     if (!page || page.site?.agency_id !== agencyId) {
-      console.error('[savePageContentAction] Unauthorized access');
       return { error: "Page not found" };
     }
 
@@ -370,12 +355,10 @@ export async function savePageContentAction(
       .maybeSingle();
 
     if (checkError) {
-      console.error('[savePageContentAction] Error checking existing content:', checkError);
       return { error: checkError.message };
     }
 
     if (existingContent) {
-      console.log('[savePageContentAction] Updating existing content');
       // Update existing content
       const { error } = await supabase
         .from("page_content")
@@ -383,23 +366,18 @@ export async function savePageContentAction(
         .eq("page_id", pageId);
 
       if (error) {
-        console.error('[savePageContentAction] Update error:', error);
         return { error: error.message };
       }
     } else {
-      console.log('[savePageContentAction] Inserting new content');
       // Insert new content
       const { error } = await supabase
         .from("page_content")
         .insert({ page_id: pageId, content: content as Json });
 
       if (error) {
-        console.error('[savePageContentAction] Insert error:', error);
         return { error: error.message };
       }
     }
-
-    console.log('[savePageContentAction] Save completed successfully');
     
     // Revalidate the editor page to ensure fresh data on next load
     try {
@@ -411,10 +389,8 @@ export async function savePageContentAction(
       
       if (pageData) {
         revalidatePath(`/dashboard/sites/${pageData.site_id}/editor`);
-        console.log('[savePageContentAction] Cache revalidated for site:', pageData.site_id);
       }
     } catch (revalidateError) {
-      console.error('[savePageContentAction] Revalidation error:', revalidateError);
       // Don't fail the save if revalidation fails
     }
     

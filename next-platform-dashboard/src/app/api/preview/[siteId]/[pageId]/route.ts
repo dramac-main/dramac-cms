@@ -10,8 +10,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const resolvedParams = await params;
     const { siteId, pageId } = resolvedParams;
 
-    console.log("[Preview API] Fetching page:", pageId, "from site:", siteId);
-
     const supabase = await createClient();
 
     // Get page content - for preview we allow public access (no auth check)
@@ -28,10 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .eq("site_id", siteId)
       .single();
 
-    console.log("[Preview API] Query result:", { data, error });
-
     if (error || !data) {
-      console.log("[Preview API] Page not found:", error);
       return NextResponse.json(
         { error: "Page not found" },
         { status: 404 }
@@ -50,8 +45,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         content = (data.page_content as { content: Record<string, unknown> }).content;
       }
     }
-
-    console.log("[Preview API] Extracted content:", content ? `${Object.keys(content).length} nodes` : "No content");
 
     return NextResponse.json({
       id: data.id,
