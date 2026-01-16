@@ -88,10 +88,46 @@ export default function OnboardingPage() {
           return;
         }
 
-        // Pre-fill name from auth metadata if available
+        // Pre-fill name from auth metadata or profile
         const userName = user.user_metadata?.full_name || user.user_metadata?.name || "";
         if (userName) {
           profileForm.setValue("fullName", userName);
+        }
+
+        // Fetch profile to get existing name and job_title
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("name, full_name, job_title, agency_id")
+          .eq("id", user.id)
+          .single();
+
+        if (profile) {
+          // Pre-fill profile form with existing data
+          if (profile.full_name || profile.name) {
+            profileForm.setValue("fullName", profile.full_name || profile.name || "");
+          }
+          if (profile.job_title) {
+            profileForm.setValue("jobTitle", profile.job_title);
+          }
+
+          // If user has an agency, fetch and pre-fill agency data
+          if (profile.agency_id) {
+            const { data: agency } = await supabase
+              .from("agencies")
+              .select("name, description, website")
+              .eq("id", profile.agency_id)
+              .single();
+
+            if (agency) {
+              agencyForm.setValue("agencyName", agency.name || "");
+              if (agency.description) {
+                agencyForm.setValue("agencyDescription", agency.description);
+              }
+              if (agency.website) {
+                agencyForm.setValue("website", agency.website);
+              }
+            }
+          }
         }
 
         setIsChecking(false);
@@ -102,7 +138,7 @@ export default function OnboardingPage() {
     };
 
     checkStatus();
-  }, [router, profileForm]);
+  }, [router, profileForm, agencyForm]);
 
   const handleProfileSubmit = async (values: ProfileValues) => {
     setIsLoading(true);

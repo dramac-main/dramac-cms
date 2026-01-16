@@ -120,7 +120,8 @@ export async function signup(formData: SignupFormData) {
     return { success: true, message: "Check your email to confirm your account" };
   }
 
-  redirect("/dashboard");
+  // Redirect to onboarding to complete profile setup
+  redirect("/onboarding");
 }
 
 export async function forgotPassword(formData: ForgotPasswordFormData) {

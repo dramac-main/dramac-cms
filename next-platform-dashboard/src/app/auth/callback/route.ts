@@ -15,19 +15,21 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
           .select("onboarding_completed, agency_id")
           .eq("id", user.id)
           .single();
         
-        // Redirect to onboarding if not completed or no agency
-        if (!profile?.onboarding_completed || !profile?.agency_id) {
+        // If profile doesn't exist or has error, or onboarding not completed - redirect to onboarding
+        if (profileError || !profile || !profile.onboarding_completed) {
           return NextResponse.redirect(`${origin}/onboarding`);
         }
       }
       
-      return NextResponse.redirect(`${origin}${next}`);
+      // If next is an auth route, override to dashboard
+      const safeNext = (next === "/login" || next === "/signup") ? "/dashboard" : next;
+      return NextResponse.redirect(`${origin}${safeNext}`);
     }
   }
 

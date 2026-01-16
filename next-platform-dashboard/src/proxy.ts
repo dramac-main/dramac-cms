@@ -12,11 +12,14 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/login") ||
     pathname.startsWith("/signup") ||
     pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/onboarding") ||
     pathname.startsWith("/auth") ||
     pathname.startsWith("/editor") ||
     pathname.startsWith("/sites") ||
     pathname.startsWith("/settings") ||
+    pathname.startsWith("/clients") ||
     pathname.startsWith("/marketplace") ||
+    pathname.startsWith("/admin") ||
     pathname.startsWith("/test-components") ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
@@ -24,8 +27,20 @@ export async function proxy(request: NextRequest) {
     pathname === "/" ||
     pathname.includes(".")
   ) {
-    // For dashboard and auth routes, run session update
-    if (pathname.startsWith("/dashboard") || pathname.startsWith("/login") || pathname.startsWith("/signup") || pathname.startsWith("/auth")) {
+    // For dashboard, auth, and protected routes - run session update with onboarding check
+    if (
+      pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/signup") ||
+      pathname.startsWith("/onboarding") ||
+      pathname.startsWith("/auth") ||
+      pathname.startsWith("/sites") ||
+      pathname.startsWith("/settings") ||
+      pathname.startsWith("/clients") ||
+      pathname.startsWith("/marketplace") ||
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/editor")
+    ) {
       return await updateSession(request);
     }
     return NextResponse.next();
