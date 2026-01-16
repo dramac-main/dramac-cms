@@ -79,9 +79,15 @@ export function CreateSiteDialog({
       setMode("select");
 
       if (useAI) {
-        router.push(`/sites/${result.data?.id}/builder`);
+        router.push(`/sites/${result.data?.site?.id}/builder`);
       } else {
-        router.push(`/dashboard/sites/${result.data?.id}/editor`);
+        const siteId = result.data?.site?.id;
+        const pageId = result.data?.homepage?.id;
+        if (siteId && pageId) {
+          router.push(`/dashboard/sites/${siteId}/editor?pageId=${pageId}`);
+        } else {
+          router.push(`/dashboard/sites/${siteId}`);
+        }
       }
     } catch (error) {
       toast.error("Failed to create site");

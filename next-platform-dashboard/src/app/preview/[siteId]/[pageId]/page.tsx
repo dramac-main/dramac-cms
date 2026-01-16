@@ -1,103 +1,153 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { use } from "react";
 import { Editor, Frame, Element } from "@craftjs/core";
 import { componentResolver } from "@/components/editor/resolver";
 import { Root } from "@/components/editor/user-components/root";
+import { Loader2, AlertTriangle, FileText } from "lucide-react";
 
 interface PreviewPageProps {
   params: Promise<{ siteId: string; pageId: string }>;
 }
 
+interface PreviewData {
+  page: {
+    id: string;
+    name: string;
+    slug: string;
+    metaTitle: string | null;
+    metaDescription: string | null;
+  };
+  site: {
+    id: string;
+    name: string;
+    subdomain: string;
+    theme_settings: Record<string, unknown> | null;
+  } | null;
+  content: string | null;
+  themeSettings: Record<string, unknown> | null;
+}
+
 export default function PreviewPage({ params }: PreviewPageProps) {
-  const [content, setContent] = useState<string | null>(null);
+  const resolvedParams = use(params);
+  const [data, setData] = useState<PreviewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [resolvedParams, setResolvedParams] = useState<{ siteId: string; pageId: string } | null>(null);
 
   useEffect(() => {
-    params.then(setResolvedParams);
-  }, [params]);
-
-  useEffect(() => {
-    if (!resolvedParams) return;
-
-    async function fetchContent() {
+    async function fetchPreview() {
       try {
-        console.log("[Preview] Fetching content for:", resolvedParams);
-        const response = await fetch(`/api/preview/${resolvedParams!.siteId}/${resolvedParams!.pageId}`);
-        
+        const response = await fetch(
+          `/api/preview/${resolvedParams.siteId}/${resolvedParams.pageId}`
+        );
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || "Failed to load page content");
+          throw new Error(
+            errorData.error || `Failed to load preview (${response.status})`
+          );
         }
-        
-        const data = await response.json();
-        console.log("[Preview] Received data:", data);
-        console.log("[Preview] Content type:", typeof data.content);
-        
-        if (data.content) {
-          // Content is already a JSON string from the API
-          setContent(data.content);
-          console.log("[Preview] Content set successfully");
-        } else {
-          console.log("[Preview] No content in response");
-          setContent(null);
-        }
+
+        const previewData = await response.json();
+        setData(previewData);
       } catch (err) {
         console.error("[Preview] Error:", err);
-        setError(err instanceof Error ? err.message : "An error occurred");
+        setError(err instanceof Error ? err.message : "Failed to load preview");
       } finally {
         setLoading(false);
       }
     }
 
-    fetchContent();
-  }, [resolvedParams]);
+    fetchPreview();
+  }, [resolvedParams.siteId, resolvedParams.pageId]);
 
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading preview...</p>
+          <Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto mb-4" />
+          <p className="text-gray-500">Loading preview...</p>
         </div>
       </div>
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-destructive mb-2">Error</h1>
-          <p className="text-muted-foreground">{error}</p>
+        <div className="text-center max-w-md px-4">
+          <AlertTriangle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+          <h1 className="text-xl font-semibold mb-2 text-gray-900">
+            Preview Error
+          </h1>
+          <p className="text-gray-500 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
-  if (!content) {
+  // No content state
+  if (!data?.content) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <h1 className="text-xl font-medium text-muted-foreground mb-2">No Content</h1>
-          <p className="text-muted-foreground">This page has no content yet.</p>
+        <div className="text-center max-w-md px-4">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <FileText className="h-8 w-8 text-gray-400" />
+          </div>
+          <h1 className="text-xl font-semibold mb-2 text-gray-900">
+            No Content Yet
+          </h1>
+          <p className="text-gray-500">
+            This page doesn't have any content. Open the editor to add
+            components.
+          </p>
         </div>
       </div>
     );
+  }
+
+  // Apply theme settings as CSS custom properties
+  const themeVars: Record<string, string> = {};
+  if (data.themeSettings) {
+    const settings = data.themeSettings as Record<string, string>;
+    if (settings.primaryColor) {
+      themeVars["--theme-primary"] = settings.primaryColor;
+    }
+    if (settings.fontFamily) {
+      themeVars["--theme-font-family"] = settings.fontFamily;
+    }
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <Editor
-        resolver={componentResolver}
-        enabled={false}
+    <>
+      {/* Document title update */}
+      {typeof document !== "undefined" && data.page.metaTitle && (
+        <title>{data.page.metaTitle}</title>
+      )}
+
+      <div
+        className="min-h-screen bg-white"
+        style={themeVars as React.CSSProperties}
       >
-        <Frame data={content}>
-          <Element is={Root} canvas />
-        </Frame>
-      </Editor>
-    </div>
+        <Editor
+          resolver={componentResolver}
+          enabled={false}
+          onRender={({ render }) => render}
+        >
+          <Frame data={data.content}>
+            <Element is={Root} canvas />
+          </Frame>
+        </Editor>
+      </div>
+    </>
   );
 }

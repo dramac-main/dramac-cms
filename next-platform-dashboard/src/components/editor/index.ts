@@ -8,6 +8,13 @@ export * from "./toolbox";
 export * from "./settings-panel";
 export * from "./page-selector";
 
+// Preview components
+export * from "./preview-device-switcher";
+export * from "./preview-frame";
+export * from "./preview-toolbar";
+export * from "./preview-panel";
+export * from "./editor-header";
+
 // Toolbar
 export * from "./toolbar";
 

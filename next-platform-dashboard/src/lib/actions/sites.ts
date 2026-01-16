@@ -86,10 +86,10 @@ export async function checkSubdomain(subdomain: string) {
     .from("sites")
     .select("id")
     .eq("subdomain", subdomain.toLowerCase())
-    .limit(1);
+    .maybeSingle(); // Returns null if no match, throws on multiple matches
 
   if (error) throw error;
-  return { available: !data || data.length === 0 };
+  return { available: data === null };
 }
 
 // Create new site
@@ -113,13 +113,7 @@ export async function createSiteAction(formData: unknown) {
 
   if (!profile?.agency_id) return { error: "No organization found" };
 
-  // Check subdomain availability
-  const { available } = await checkSubdomain(validated.data.subdomain);
-  if (!available) {
-    return { error: "Subdomain is already taken" };
-  }
-
-  // Create site
+  // Create site (database constraint will catch duplicates)
   const { data: site, error: siteError } = await supabase
     .from("sites")
     .insert({
@@ -134,18 +128,26 @@ export async function createSiteAction(formData: unknown) {
     .single();
 
   if (siteError) {
+    // Check if it's a duplicate subdomain error
+    if (siteError.code === '23505' && siteError.message.includes('subdomain')) {
+      return { error: "This subdomain is already taken. Please choose a different one." };
+    }
     return { error: siteError.message };
   }
 
   // Create default homepage
-  const { error: pageError } = await supabase.from("pages").insert({
-    site_id: site.id,
-    name: "Home",
-    slug: "/",
-    is_homepage: true,
-  });
+  const { data: homepage, error: pageError } = await supabase
+    .from("pages")
+    .insert({
+      site_id: site.id,
+      name: "Home",
+      slug: "/",
+      is_homepage: true,
+    })
+    .select()
+    .single();
 
-  if (pageError) {
+  if (pageError || !homepage) {
     // Cleanup site if page creation fails
     await supabase.from("sites").delete().eq("id", site.id);
     return { error: "Failed to create homepage" };
@@ -153,7 +155,7 @@ export async function createSiteAction(formData: unknown) {
 
   revalidatePath("/dashboard/sites");
   revalidatePath(`/dashboard/clients/${validated.data.client_id}`);
-  return { success: true, data: site };
+  return { success: true, data: { site, homepage } };
 }
 
 // Update site

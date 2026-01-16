@@ -9,8 +9,12 @@ import { EditorBreadcrumb } from "./toolbar/editor-breadcrumb";
 import { EditorToolbox } from "./toolbox";
 import { EditorCanvas } from "./canvas";
 import { SettingsPanel } from "./settings-panel";
+import { PreviewFrame } from "./preview-frame";
+import { PreviewPanel } from "./preview-panel";
 import { savePageContentAction } from "@/lib/actions/pages";
 import { useEditorShortcuts } from "@/hooks/use-editor-shortcuts";
+import { usePreview } from "@/lib/preview/use-preview";
+import { cn } from "@/lib/utils";
 import type { Site } from "@/types/site";
 import type { CanvasSettings } from "@/types/editor";
 
@@ -94,6 +98,20 @@ function EditorContent({
   const { actions, query } = useEditor();
   const initialized = useRef(false);
 
+  // Preview state management
+  const {
+    isPreviewMode,
+    togglePreviewMode,
+    device,
+    setDevice,
+    showPreviewPanel,
+    togglePreviewPanel,
+    previewUrl,
+    previewKey,
+    refreshPreview,
+    openInNewWindow,
+  } = usePreview({ siteId: site.id, pageId: page.id });
+
   // Load initial content
   useEffect(() => {
     if (!initialized.current && page.content) {
@@ -130,6 +148,8 @@ function EditorContent({
         setHasChanges(false);
         setLastSaved(new Date());
         toast.success("Page saved successfully");
+        // Refresh preview after successful save
+        refreshPreview();
       }
     } catch (error) {
       console.error("[EditorWrapper] Save error:", error);
@@ -137,7 +157,7 @@ function EditorContent({
     } finally {
       setIsSaving(false);
     }
-  }, [isSaving, hasChanges, query, page.id, setIsSaving, setHasChanges, setLastSaved]);
+  }, [isSaving, hasChanges, query, page.id, setIsSaving, setHasChanges, setLastSaved, refreshPreview]);
 
   // Auto-save every 30 seconds when there are changes
   useEffect(() => {
@@ -152,8 +172,20 @@ function EditorContent({
     return () => clearInterval(autoSaveInterval);
   }, [hasChanges, isSaving, handleSave]);
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts including Escape to exit preview
   useEditorShortcuts({ onSave: handleSave });
+
+  // Handle Escape key to exit preview mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isPreviewMode) {
+        togglePreviewMode();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isPreviewMode, togglePreviewMode]);
 
   // Warn before leaving with unsaved changes
   useEffect(() => {
@@ -170,7 +202,7 @@ function EditorContent({
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Top Toolbar */}
+      {/* Top Toolbar with Preview Controls */}
       <EditorToolbar
         siteName={site.name}
         pageName={page.name}
@@ -181,22 +213,61 @@ function EditorContent({
         onSave={handleSave}
         isSaving={isSaving}
         hasUnsavedChanges={hasChanges}
+        // Preview props
+        isPreviewMode={isPreviewMode}
+        onTogglePreview={togglePreviewMode}
+        device={device}
+        onDeviceChange={setDevice}
+        showPreviewPanel={showPreviewPanel}
+        onTogglePreviewPanel={togglePreviewPanel}
+        previewUrl={previewUrl}
+        onOpenNewWindow={openInNewWindow}
+        onRefreshPreview={refreshPreview}
       />
 
-      {/* Breadcrumb */}
-      <EditorBreadcrumb />
+      {/* Breadcrumb - hidden in preview mode */}
+      {!isPreviewMode && <EditorBreadcrumb />}
 
       {/* Main Editor Area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Toolbox (Left) */}
-        <EditorToolbox />
+      <div className={cn(
+        "flex-1 flex overflow-hidden",
+        showPreviewPanel && "mr-[50vw]"
+      )}>
+        {isPreviewMode ? (
+          // Full preview mode - shows preview in main area
+          <div className="flex-1 p-4 bg-muted/20">
+            <PreviewFrame
+              url={previewUrl}
+              device={device}
+              refreshKey={previewKey}
+              className="h-full w-full"
+              showDeviceFrame={device !== "full"}
+            />
+          </div>
+        ) : (
+          <>
+            {/* Toolbox (Left) */}
+            <EditorToolbox />
 
-        {/* Canvas (Center) */}
-        <EditorCanvas settings={settings} />
+            {/* Canvas (Center) */}
+            <EditorCanvas settings={settings} />
 
-        {/* Settings (Right) */}
-        <SettingsPanel />
+            {/* Settings (Right) */}
+            <SettingsPanel />
+          </>
+        )}
       </div>
+
+      {/* Side-by-side Preview Panel */}
+      <PreviewPanel
+        isOpen={showPreviewPanel}
+        onClose={togglePreviewPanel}
+        url={previewUrl}
+        device={device}
+        onDeviceChange={setDevice}
+        refreshKey={previewKey}
+        onRefresh={refreshPreview}
+      />
     </div>
   );
 }

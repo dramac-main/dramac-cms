@@ -101,10 +101,8 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
   }, [debouncedSubdomain]);
 
   const onSubmit = (data: FormData) => {
-    if (subdomainStatus === "taken") {
-      toast.error("Please choose a different subdomain");
-      return;
-    }
+    // Don't block submission based on client-side status
+    // Server will definitively check availability with database constraint
 
     startTransition(async () => {
       try {
@@ -117,6 +115,10 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
 
         if (result.error) {
           toast.error(result.error);
+          // If subdomain was taken, reset the status so UI updates
+          if (result.error.includes("subdomain")) {
+            setSubdomainStatus("taken");
+          }
           return;
         }
 
@@ -124,9 +126,16 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
         
         // Navigate based on build mode
         if (data.buildMode === "ai") {
-          router.push(`/dashboard/sites/${result.data?.id}/builder`);
+          router.push(`/dashboard/sites/${result.data?.site?.id}/builder`);
         } else {
-          router.push(`/dashboard/sites/${result.data?.id}/editor`);
+          // Navigate to the editor with the homepage ID
+          const siteId = result.data?.site?.id;
+          const pageId = result.data?.homepage?.id;
+          if (siteId && pageId) {
+            router.push(`/dashboard/sites/${siteId}/editor?pageId=${pageId}`);
+          } else {
+            router.push(`/dashboard/sites/${siteId}`);
+          }
         }
       } catch (error) {
         toast.error("Failed to create site. Please try again.");
