@@ -300,26 +300,26 @@ export default async function AdminHealthPage() {
                 Supabase dashboards.
               </p>
               <div className="flex gap-2 mt-3">
-                <Button variant="outline" size="sm" asChild>
-                  <a
-                    href="https://vercel.com/dashboard"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                <a
+                  href="https://vercel.com/dashboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="outline" size="sm">
                     <Globe className="w-4 h-4 mr-2" />
                     Vercel Dashboard
-                  </a>
-                </Button>
-                <Button variant="outline" size="sm" asChild>
-                  <a
-                    href="https://supabase.com/dashboard"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  </Button>
+                </a>
+                <a
+                  href="https://supabase.com/dashboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="outline" size="sm">
                     <Database className="w-4 h-4 mr-2" />
                     Supabase Dashboard
-                  </a>
-                </Button>
+                  </Button>
+                </a>
               </div>
             </div>
           </div>

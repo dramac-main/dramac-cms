@@ -77,12 +77,12 @@ export function PortalSitesList({ sites }: PortalSitesListProps) {
 
               <div className="flex gap-2 pt-2">
                 {url && site.published && (
-                  <Button variant="outline" size="sm" asChild className="flex-1">
-                    <a href={url} target="_blank" rel="noopener noreferrer">
+                  <a href={url} target="_blank" rel="noopener noreferrer" className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full">
                       <ExternalLink className="mr-2 h-4 w-4" />
                       Visit Site
-                    </a>
-                  </Button>
+                    </Button>
+                  </a>
                 )}
                 <Button variant="ghost" size="sm" asChild className="flex-1">
                   <Link href={`/portal/sites/${site.id}`}>

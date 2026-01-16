@@ -224,9 +224,9 @@ export function CurrentPlanCard({ subscription, usage }: CurrentPlanCardProps) {
             )}
 
             {(!subscription || !subscription.lemonsqueezy_subscription_id || status === "cancelled" || status === "expired") && (
-              <Button asChild>
-                <Link href="#plans">Upgrade Now</Link>
-              </Button>
+              <Link href="#plans">
+                <Button>Upgrade Now</Button>
+              </Link>
             )}
           </div>
         </CardContent>

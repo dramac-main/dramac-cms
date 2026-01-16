@@ -51,12 +51,12 @@ export function PortalSiteDetail({ site }: PortalSiteDetailProps) {
         </div>
 
         {url && site.published && (
-          <Button asChild>
-            <a href={url} target="_blank" rel="noopener noreferrer">
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            <Button>
               <ExternalLink className="mr-2 h-4 w-4" />
               Visit Site
-            </a>
-          </Button>
+            </Button>
+          </a>
         )}
       </div>
 
@@ -124,12 +124,12 @@ export function PortalSiteDetail({ site }: PortalSiteDetailProps) {
           </CardHeader>
           <CardContent className="space-y-2">
             {url && site.published && (
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <a href={url} target="_blank" rel="noopener noreferrer">
+              <a href={url} target="_blank" rel="noopener noreferrer" className="block">
+                <Button variant="outline" className="w-full justify-start">
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Visit Live Site
-                </a>
-              </Button>
+                </Button>
+              </a>
             )}
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link href={`/portal/sites/${site.id}/analytics`}>
