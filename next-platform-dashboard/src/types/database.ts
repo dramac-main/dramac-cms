@@ -21,6 +21,8 @@ export type Database = {
           billing_email: string | null;
           white_label_enabled: boolean;
           custom_branding: Json;
+          description: string | null;
+          website: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -35,6 +37,8 @@ export type Database = {
           billing_email?: string | null;
           white_label_enabled?: boolean;
           custom_branding?: Json;
+          description?: string | null;
+          website?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -49,6 +53,8 @@ export type Database = {
           billing_email?: string | null;
           white_label_enabled?: boolean;
           custom_branding?: Json;
+          description?: string | null;
+          website?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -59,9 +65,12 @@ export type Database = {
           id: string;
           email: string;
           name: string | null;
+          full_name: string | null;
           avatar_url: string | null;
           role: "super_admin" | "admin" | "member";
           agency_id: string | null;
+          job_title: string | null;
+          onboarding_completed: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -69,9 +78,12 @@ export type Database = {
           id: string;
           email: string;
           name?: string | null;
+          full_name?: string | null;
           avatar_url?: string | null;
           role?: "super_admin" | "admin" | "member";
           agency_id?: string | null;
+          job_title?: string | null;
+          onboarding_completed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -79,9 +91,12 @@ export type Database = {
           id?: string;
           email?: string;
           name?: string | null;
+          full_name?: string | null;
           avatar_url?: string | null;
           role?: "super_admin" | "admin" | "member";
           agency_id?: string | null;
+          job_title?: string | null;
+          onboarding_completed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
