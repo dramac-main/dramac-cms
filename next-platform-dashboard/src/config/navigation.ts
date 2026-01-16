@@ -16,6 +16,7 @@ export interface NavItem {
   icon: LucideIcon;
   badge?: string | number;
   disabled?: boolean;
+  dataTour?: string; // For product tour targeting
 }
 
 export interface NavGroup {
@@ -35,11 +36,13 @@ export const mainNavigation: NavGroup[] = [
         title: "Clients",
         href: "/dashboard/clients",
         icon: Users,
+        dataTour: "clients",
       },
       {
         title: "Sites",
         href: "/dashboard/sites",
         icon: Globe,
+        dataTour: "sites",
       },
     ],
   },
@@ -50,6 +53,7 @@ export const mainNavigation: NavGroup[] = [
         title: "Browse Modules",
         href: "/dashboard/marketplace",
         icon: Package,
+        dataTour: "modules",
       },
       {
         title: "My Modules",

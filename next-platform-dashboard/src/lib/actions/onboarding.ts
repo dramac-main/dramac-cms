@@ -1,196 +1,245 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import type { OnboardingStatus, IndustryId } from "@/lib/constants/onboarding";
 
-export async function updateProfileAction(values: {
-  fullName: string;
-  jobTitle?: string;
-}) {
-  try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { error: "Not authenticated" };
-    }
-
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: values.fullName,
-        job_title: values.jobTitle || null,
-        onboarding_completed: false,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", user.id);
-
-    if (error) {
-      console.error("Error updating profile:", error);
-      return { error: error.message };
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error in updateProfileAction:", error);
-    return { error: "An unexpected error occurred" };
+export async function checkOnboardingStatus(): Promise<OnboardingStatus> {
+  const supabase = await createClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { 
+      needsOnboarding: true, 
+      currentStep: 0, 
+      completedSteps: [], 
+      hasAgency: false,
+      hasProfile: false,
+    };
   }
+
+  // Check profile completion
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("name, full_name, onboarding_completed, job_title, agency_id")
+    .eq("id", user.id)
+    .single();
+
+  // Check if user has an agency through membership
+  const { data: agencyMembership } = await supabase
+    .from("agency_members")
+    .select("agency_id, role, agency:agencies(id, name)")
+    .eq("user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+
+  // Also check agency_id on profile as backup
+  const hasAgency = !!(agencyMembership?.agency || profile?.agency_id);
+  const hasProfile = !!(profile?.name || profile?.full_name);
+  const isCompleted = profile?.onboarding_completed === true;
+
+  const completedSteps: string[] = [];
+  if (hasProfile) completedSteps.push("profile");
+  if (hasAgency) completedSteps.push("agency");
+
+  let currentStep = 0;
+  if (hasProfile) currentStep = 1;
+  if (hasAgency) currentStep = 2;
+
+  return {
+    needsOnboarding: !isCompleted,
+    currentStep,
+    completedSteps,
+    hasAgency,
+    hasProfile,
+  };
 }
 
-export async function updateAgencyAction(values: {
+interface ProfileActionData {
+  fullName: string;
+  jobTitle?: string;
+}
+
+export async function updateProfileAction(data: ProfileActionData): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      name: data.fullName,
+      full_name: data.fullName,
+      job_title: data.jobTitle || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
+
+  if (error) return { error: error.message };
+  
+  revalidatePath("/onboarding");
+  return {};
+}
+
+interface AgencyActionData {
   agencyName: string;
   agencyDescription?: string;
   website?: string;
-}) {
-  try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { error: "Not authenticated" };
-    }
+  industry?: IndustryId;
+  teamSize?: string;
+  goals?: string[];
+}
 
-    // Get profile to find agency_id
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("agency_id")
-      .eq("id", user.id)
-      .single();
+export async function updateAgencyAction(data: AgencyActionData): Promise<{ error?: string; agencyId?: string }> {
+  const supabase = await createClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
 
-    if (!profile?.agency_id) {
-      // Create a new agency if none exists
-      const { data: newAgency, error: createError } = await supabase
-        .from("agencies")
-        .insert({
-          name: values.agencyName,
-          description: values.agencyDescription || null,
-          website: values.website || null,
-          owner_id: user.id,
-        })
-        .select()
-        .single();
+  // Check if user already has an agency via membership
+  const { data: existingMembership } = await supabase
+    .from("agency_members")
+    .select("agency_id")
+    .eq("user_id", user.id)
+    .limit(1)
+    .maybeSingle();
 
-      if (createError) {
-        console.error("Error creating agency:", createError);
-        return { error: createError.message };
-      }
+  // Also check profile for agency_id
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user.id)
+    .single();
 
-      // Link the agency to the profile
-      const { error: linkError } = await supabase
-        .from("profiles")
-        .update({
-          agency_id: newAgency.id,
-          onboarding_completed: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id);
+  const existingAgencyId = existingMembership?.agency_id || profile?.agency_id;
 
-      if (linkError) {
-        console.error("Error linking agency to profile:", linkError);
-        return { error: linkError.message };
-      }
-
-      return { success: true, agencyId: newAgency.id };
-    }
-
+  if (existingAgencyId) {
     // Update existing agency
-    const { error: agencyError } = await supabase
+    const { error } = await supabase
       .from("agencies")
       .update({
-        name: values.agencyName,
-        description: values.agencyDescription || null,
-        website: values.website || null,
+        name: data.agencyName,
+        description: data.agencyDescription || null,
+        website: data.website || null,
+        industry: data.industry || null,
+        team_size: data.teamSize || null,
+        goals: data.goals || [],
         updated_at: new Date().toISOString(),
       })
-      .eq("id", profile.agency_id);
+      .eq("id", existingAgencyId);
 
-    if (agencyError) {
-      console.error("Error updating agency:", agencyError);
-      return { error: agencyError.message };
-    }
-
-    // Mark onboarding as complete
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({
-        onboarding_completed: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", user.id);
-
-    if (profileError) {
-      console.error("Error updating profile onboarding status:", profileError);
-      return { error: profileError.message };
-    }
-
-    return { success: true, agencyId: profile.agency_id };
-  } catch (error) {
-    console.error("Error in updateAgencyAction:", error);
-    return { error: "An unexpected error occurred" };
+    if (error) return { error: error.message };
+    return { agencyId: existingAgencyId };
   }
+
+  // Create new agency
+  const { data: agency, error: agencyError } = await supabase
+    .from("agencies")
+    .insert({
+      name: data.agencyName,
+      description: data.agencyDescription || null,
+      website: data.website || null,
+      industry: data.industry || null,
+      team_size: data.teamSize || null,
+      goals: data.goals || [],
+      owner_id: user.id,
+    })
+    .select("id")
+    .single();
+
+  if (agencyError) return { error: agencyError.message };
+
+  // Update profile with agency_id
+  await supabase
+    .from("profiles")
+    .update({
+      agency_id: agency.id,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
+
+  // Check if membership already exists before creating
+  const { data: membershipCheck } = await supabase
+    .from("agency_members")
+    .select("id")
+    .eq("agency_id", agency.id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!membershipCheck) {
+    // Add user as owner member
+    const { error: memberError } = await supabase
+      .from("agency_members")
+      .insert({
+        agency_id: agency.id,
+        user_id: user.id,
+        role: "owner",
+      });
+
+    if (memberError) {
+      console.error("Error creating agency membership:", memberError);
+      // Don't fail the whole operation, agency was created
+    }
+  }
+
+  revalidatePath("/onboarding");
+  return { agencyId: agency.id };
 }
 
-export async function checkOnboardingStatus() {
-  try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { needsOnboarding: false };
-    }
-
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("onboarding_completed, agency_id")
-      .eq("id", user.id)
-      .single();
-
-    if (error) {
-      console.error("Error checking onboarding status:", error);
-      // If profile doesn't exist, they need onboarding
-      return { needsOnboarding: true };
-    }
-
-    // User needs onboarding if:
-    // 1. onboarding_completed is false or null
-    // 2. they don't have an agency_id
-    const needsOnboarding = !profile?.onboarding_completed || !profile?.agency_id;
-
-    return {
-      needsOnboarding,
-      profile,
-    };
-  } catch (error) {
-    console.error("Error in checkOnboardingStatus:", error);
-    return { needsOnboarding: true };
-  }
+interface FirstClientActionData {
+  clientName: string;
+  clientEmail?: string;
+  clientIndustry?: IndustryId;
 }
 
-export async function skipOnboarding() {
-  try {
-    const supabase = await createClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { error: "Not authenticated" };
-    }
+export async function createFirstClientAction(
+  agencyId: string,
+  data: FirstClientActionData
+): Promise<{ error?: string; clientId?: string }> {
+  const supabase = await createClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
 
-    // Mark onboarding as complete even if skipped
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        onboarding_completed: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", user.id);
+  const { data: client, error } = await supabase
+    .from("clients")
+    .insert({
+      agency_id: agencyId,
+      name: data.clientName,
+      email: data.clientEmail || null,
+      industry: data.clientIndustry || null,
+      status: "active",
+    })
+    .select("id")
+    .single();
 
-    if (error) {
-      console.error("Error skipping onboarding:", error);
-      return { error: error.message };
-    }
+  if (error) return { error: error.message };
+  
+  revalidatePath("/onboarding");
+  return { clientId: client.id };
+}
 
-    return { success: true };
-  } catch (error) {
-    console.error("Error in skipOnboarding:", error);
-    return { error: "An unexpected error occurred" };
-  }
+export async function completeOnboardingAction(): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      onboarding_completed: true,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
+
+  if (error) return { error: error.message };
+  
+  revalidatePath("/dashboard");
+  return {};
+}
+
+export async function skipOnboardingAction(): Promise<{ error?: string }> {
+  return completeOnboardingAction();
 }

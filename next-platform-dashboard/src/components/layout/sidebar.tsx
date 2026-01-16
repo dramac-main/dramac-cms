@@ -31,6 +31,7 @@ export function Sidebar({ className }: SidebarProps) {
     <>
       {/* Desktop Sidebar */}
       <aside
+        data-tour="sidebar"
         className={cn(
           "hidden lg:flex h-screen flex-col border-r bg-card transition-all duration-300",
           collapsed ? "w-16" : "w-64",
@@ -171,6 +172,7 @@ function NavItemComponent({
   const content = (
     <Link
       href={item.disabled ? "#" : item.href}
+      data-tour={item.dataTour}
       className={cn(
         "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
         collapsed ? "mx-2 justify-center" : "mx-2",

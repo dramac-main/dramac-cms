@@ -11,8 +11,12 @@ import {
   Building2,
   User,
   ChevronRight,
+  ChevronLeft,
   CheckCircle,
-  ArrowRight,
+  Briefcase,
+  Target,
+  Users,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,15 +28,30 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { updateProfileAction, updateAgencyAction, checkOnboardingStatus } from "@/lib/actions/onboarding";
+import { StepIndicator } from "@/components/onboarding/step-indicator";
+import { IndustrySelector } from "@/components/onboarding/industry-selector";
+import { GoalCards } from "@/components/onboarding/goal-cards";
+import {
+  updateProfileAction,
+  updateAgencyAction,
+  createFirstClientAction,
+  completeOnboardingAction,
+  skipOnboardingAction,
+  checkOnboardingStatus,
+} from "@/lib/actions/onboarding";
+import type { IndustryId } from "@/lib/constants/onboarding";
 import { createClient } from "@/lib/supabase/client";
 
-const steps = [
+const STEPS = [
   { id: "profile", title: "Your Profile", icon: User },
-  { id: "agency", title: "Agency Setup", icon: Building2 },
+  { id: "agency", title: "Agency", icon: Building2 },
+  { id: "goals", title: "Goals", icon: Target },
+  { id: "industry", title: "Industry", icon: Briefcase },
+  { id: "client", title: "First Client", icon: Users },
   { id: "complete", title: "All Set!", icon: CheckCircle },
 ];
 
@@ -47,14 +66,26 @@ const agencySchema = z.object({
   website: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
 
+const clientSchema = z.object({
+  clientName: z.string().min(2, "Client name required"),
+  clientEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+});
+
 type ProfileValues = z.infer<typeof profileSchema>;
 type AgencyValues = z.infer<typeof agencySchema>;
+type ClientValues = z.infer<typeof clientSchema>;
 
 export default function OnboardingPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  
+  // Additional state for goals/industry
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [teamSize, setTeamSize] = useState<string>("");
+  const [selectedIndustry, setSelectedIndustry] = useState<IndustryId | undefined>();
+  const [agencyId, setAgencyId] = useState<string | null>(null);
 
   const profileForm = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
@@ -66,9 +97,14 @@ export default function OnboardingPage() {
     defaultValues: { agencyName: "", agencyDescription: "", website: "" },
   });
 
-  const progress = ((currentStep + 1) / steps.length) * 100;
+  const clientForm = useForm<ClientValues>({
+    resolver: zodResolver(clientSchema),
+    defaultValues: { clientName: "", clientEmail: "" },
+  });
 
-  // Check if user needs onboarding
+  const progress = ((currentStep + 1) / STEPS.length) * 100;
+
+  // Check onboarding status on mount
   useEffect(() => {
     const checkStatus = async () => {
       try {
@@ -83,18 +119,17 @@ export default function OnboardingPage() {
         const result = await checkOnboardingStatus();
         
         if (!result.needsOnboarding) {
-          // Already completed onboarding, redirect to dashboard
           router.push("/dashboard");
           return;
         }
 
-        // Pre-fill name from auth metadata or profile
+        // Pre-fill name from auth metadata
         const userName = user.user_metadata?.full_name || user.user_metadata?.name || "";
         if (userName) {
           profileForm.setValue("fullName", userName);
         }
 
-        // Fetch profile to get existing name and job_title
+        // Fetch existing profile data
         const { data: profile } = await supabase
           .from("profiles")
           .select("name, full_name, job_title, agency_id")
@@ -102,7 +137,6 @@ export default function OnboardingPage() {
           .single();
 
         if (profile) {
-          // Pre-fill profile form with existing data
           if (profile.full_name || profile.name) {
             profileForm.setValue("fullName", profile.full_name || profile.name || "");
           }
@@ -112,22 +146,50 @@ export default function OnboardingPage() {
 
           // If user has an agency, fetch and pre-fill agency data
           if (profile.agency_id) {
+            setAgencyId(profile.agency_id);
+            // Query basic fields that exist - new fields from migration are optional
             const { data: agency } = await supabase
               .from("agencies")
-              .select("name, description, website")
+              .select("*")
               .eq("id", profile.agency_id)
               .single();
 
             if (agency) {
-              agencyForm.setValue("agencyName", agency.name || "");
-              if (agency.description) {
-                agencyForm.setValue("agencyDescription", agency.description);
+              // Type assertion for agency since new columns may not be in types yet
+              const agencyData = agency as {
+                name?: string | null;
+                description?: string | null;
+                website?: string | null;
+                industry?: string | null;
+                team_size?: string | null;
+                goals?: string[] | null;
+              };
+              
+              agencyForm.setValue("agencyName", agencyData.name || "");
+              if (agencyData.description) {
+                agencyForm.setValue("agencyDescription", agencyData.description);
               }
-              if (agency.website) {
-                agencyForm.setValue("website", agency.website);
+              if (agencyData.website) {
+                agencyForm.setValue("website", agencyData.website);
+              }
+              if (agencyData.industry) {
+                setSelectedIndustry(agencyData.industry as IndustryId);
+              }
+              if (agencyData.team_size) {
+                setTeamSize(agencyData.team_size);
+              }
+              if (agencyData.goals && Array.isArray(agencyData.goals)) {
+                setSelectedGoals(agencyData.goals);
               }
             }
           }
+        }
+
+        // Resume from where they left off
+        if (result.hasProfile && result.hasAgency) {
+          setCurrentStep(2); // Goals step
+        } else if (result.hasProfile) {
+          setCurrentStep(1); // Agency step
         }
 
         setIsChecking(false);
@@ -147,8 +209,7 @@ export default function OnboardingPage() {
       if (result.error) throw new Error(result.error);
       setCurrentStep(1);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to update profile";
-      toast.error(errorMessage);
+      toast.error(error instanceof Error ? error.message : "Failed to update profile");
     } finally {
       setIsLoading(false);
     }
@@ -157,20 +218,122 @@ export default function OnboardingPage() {
   const handleAgencySubmit = async (values: AgencyValues) => {
     setIsLoading(true);
     try {
-      const result = await updateAgencyAction(values);
+      const result = await updateAgencyAction({
+        ...values,
+        industry: selectedIndustry,
+        teamSize,
+        goals: selectedGoals,
+      });
       if (result.error) throw new Error(result.error);
+      if (result.agencyId) setAgencyId(result.agencyId);
       setCurrentStep(2);
-      toast.success("Setup complete!");
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to update agency";
-      toast.error(errorMessage);
+      toast.error(error instanceof Error ? error.message : "Failed to create agency");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleComplete = () => {
-    router.push("/dashboard");
+  const handleGoalsNext = async () => {
+    // Save goals and team size to agency
+    if (agencyId) {
+      setIsLoading(true);
+      try {
+        const result = await updateAgencyAction({
+          agencyName: agencyForm.getValues("agencyName"),
+          agencyDescription: agencyForm.getValues("agencyDescription"),
+          website: agencyForm.getValues("website"),
+          industry: selectedIndustry,
+          teamSize,
+          goals: selectedGoals,
+        });
+        if (result.error) throw new Error(result.error);
+      } catch (error: unknown) {
+        toast.error(error instanceof Error ? error.message : "Failed to save goals");
+        setIsLoading(false);
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    setCurrentStep(3);
+  };
+
+  const handleIndustryNext = async () => {
+    // Save industry to agency
+    if (agencyId) {
+      setIsLoading(true);
+      try {
+        const result = await updateAgencyAction({
+          agencyName: agencyForm.getValues("agencyName"),
+          agencyDescription: agencyForm.getValues("agencyDescription"),
+          website: agencyForm.getValues("website"),
+          industry: selectedIndustry,
+          teamSize,
+          goals: selectedGoals,
+        });
+        if (result.error) throw new Error(result.error);
+      } catch (error: unknown) {
+        toast.error(error instanceof Error ? error.message : "Failed to save industry");
+        setIsLoading(false);
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    setCurrentStep(4);
+  };
+
+  const handleClientSubmit = async (values: ClientValues) => {
+    if (!agencyId) {
+      // Skip client creation if no agency
+      setCurrentStep(5);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const result = await createFirstClientAction(agencyId, {
+        clientName: values.clientName,
+        clientEmail: values.clientEmail || undefined,
+        clientIndustry: selectedIndustry,
+      });
+      if (result.error) throw new Error(result.error);
+      setCurrentStep(5);
+      toast.success("Client created!");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Failed to create client");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSkipClient = () => {
+    setCurrentStep(5);
+  };
+
+  const handleComplete = async () => {
+    setIsLoading(true);
+    try {
+      await completeOnboardingAction();
+      router.push("/dashboard?tour=true");
+    } catch (_error) {
+      toast.error("Failed to complete onboarding");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSkipAll = async () => {
+    setIsLoading(true);
+    try {
+      await skipOnboardingAction();
+      router.push("/dashboard");
+    } catch (_error) {
+      toast.error("Failed to skip onboarding");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isChecking) {
@@ -186,60 +349,34 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-background to-muted/20 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
+      <div className="w-full max-w-2xl">
         {/* Progress */}
         <div className="mb-8">
-          <Progress value={progress} className="h-2" />
-          <div className="flex justify-between mt-3">
-            {steps.map((step, index) => (
-              <div
-                key={step.id}
-                className={`flex items-center gap-1.5 text-xs transition-colors ${
-                  index <= currentStep
-                    ? "text-primary font-medium"
-                    : "text-muted-foreground"
-                }`}
-              >
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  index < currentStep 
-                    ? "bg-primary text-primary-foreground" 
-                    : index === currentStep 
-                      ? "bg-primary/20 text-primary" 
-                      : "bg-muted text-muted-foreground"
-                }`}>
-                  {index < currentStep ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <step.icon className="w-3.5 h-3.5" />
-                  )}
-                </div>
-                <span className="hidden sm:inline">{step.title}</span>
-              </div>
-            ))}
-          </div>
+          <Progress value={progress} className="h-2 mb-4" />
+          <StepIndicator steps={STEPS} currentStep={currentStep} />
         </div>
 
         {/* Step 1: Profile */}
         {currentStep === 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Welcome! Let&apos;s get started</CardTitle>
-              <p className="text-muted-foreground">
-                Tell us a bit about yourself
-              </p>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <Sparkles className="h-6 w-6 text-primary" />
+                Welcome to DRAMAC CMS!
+              </CardTitle>
+              <CardDescription>
+                Let&apos;s set up your account. This will only take a minute.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...profileForm}>
-                <form
-                  onSubmit={profileForm.handleSubmit(handleProfileSubmit)}
-                  className="space-y-4"
-                >
+                <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4">
                   <FormField
                     control={profileForm.control}
                     name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                        <FormLabel>Full Name *</FormLabel>
                         <FormControl>
                           <Input placeholder="John Doe" {...field} />
                         </FormControl>
@@ -247,31 +384,30 @@ export default function OnboardingPage() {
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={profileForm.control}
                     name="jobTitle"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Job Title (Optional)</FormLabel>
+                        <FormLabel>Job Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="Founder, Developer, etc." {...field} />
+                          <Input placeholder="Agency Owner, Designer, etc." {...field} />
                         </FormControl>
+                        <FormDescription>Optional but helps us personalize your experience</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <>
-                        Continue
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex justify-between pt-4">
+                    <Button type="button" variant="ghost" onClick={handleSkipAll}>
+                      Skip for now
+                    </Button>
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Continue
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
                 </form>
               </Form>
             </CardContent>
@@ -282,23 +418,23 @@ export default function OnboardingPage() {
         {currentStep === 1 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Set up your agency</CardTitle>
-              <p className="text-muted-foreground">
-                This is where you&apos;ll manage clients and sites
-              </p>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Set Up Your Agency
+              </CardTitle>
+              <CardDescription>
+                Tell us about your agency so we can customize your experience.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...agencyForm}>
-                <form
-                  onSubmit={agencyForm.handleSubmit(handleAgencySubmit)}
-                  className="space-y-4"
-                >
+                <form onSubmit={agencyForm.handleSubmit(handleAgencySubmit)} className="space-y-4">
                   <FormField
                     control={agencyForm.control}
                     name="agencyName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Agency Name</FormLabel>
+                        <FormLabel>Agency Name *</FormLabel>
                         <FormControl>
                           <Input placeholder="My Awesome Agency" {...field} />
                         </FormControl>
@@ -306,17 +442,16 @@ export default function OnboardingPage() {
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={agencyForm.control}
                     name="agencyDescription"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Description (Optional)</FormLabel>
+                        <FormLabel>Description</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="What does your agency do?"
-                            rows={3}
+                            className="resize-none"
                             {...field}
                           />
                         </FormControl>
@@ -324,39 +459,28 @@ export default function OnboardingPage() {
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={agencyForm.control}
                     name="website"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Website (Optional)</FormLabel>
+                        <FormLabel>Website</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://..." {...field} />
+                          <Input placeholder="https://myagency.com" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  <div className="flex gap-3 pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setCurrentStep(0)}
-                      disabled={isLoading}
-                    >
+                  <div className="flex justify-between pt-4">
+                    <Button type="button" variant="outline" onClick={() => setCurrentStep(0)}>
+                      <ChevronLeft className="mr-2 h-4 w-4" />
                       Back
                     </Button>
-                    <Button type="submit" className="flex-1" disabled={isLoading}>
-                      {isLoading ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <>
-                          Continue
-                          <ChevronRight className="w-4 h-4 ml-2" />
-                        </>
-                      )}
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Continue
+                      <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
                   </div>
                 </form>
@@ -365,20 +489,162 @@ export default function OnboardingPage() {
           </Card>
         )}
 
-        {/* Step 3: Complete */}
+        {/* Step 3: Goals */}
         {currentStep === 2 && (
           <Card>
-            <CardContent className="pt-8 pb-6 text-center">
-              <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="w-10 h-10 text-green-600 dark:text-green-500" />
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Your Goals
+              </CardTitle>
+              <CardDescription>
+                Help us understand what you want to achieve.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <GoalCards
+                selectedGoals={selectedGoals}
+                onGoalsChange={setSelectedGoals}
+                teamSize={teamSize}
+                onTeamSizeChange={setTeamSize}
+              />
+              <div className="flex justify-between pt-6">
+                <Button variant="outline" onClick={() => setCurrentStep(1)}>
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+                <Button onClick={handleGoalsNext} disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Continue
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
-              <h1 className="text-2xl font-bold mb-2">You&apos;re all set!</h1>
-              <p className="text-muted-foreground mb-8">
-                Your account is ready. Let&apos;s start building amazing websites.
-              </p>
-              <Button onClick={handleComplete} size="lg" className="w-full max-w-xs">
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 4: Industry */}
+        {currentStep === 3 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Briefcase className="h-5 w-5" />
+                Primary Industry
+              </CardTitle>
+              <CardDescription>
+                What industry do most of your clients belong to? This helps our AI generate better content.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <IndustrySelector value={selectedIndustry} onChange={setSelectedIndustry} />
+              <div className="flex justify-between pt-6">
+                <Button variant="outline" onClick={() => setCurrentStep(2)}>
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+                <Button onClick={handleIndustryNext} disabled={isLoading}>
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Continue
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 5: First Client */}
+        {currentStep === 4 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Add Your First Client
+              </CardTitle>
+              <CardDescription>
+                Create your first client to get started building websites. You can skip this and add clients later.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...clientForm}>
+                <form onSubmit={clientForm.handleSubmit(handleClientSubmit)} className="space-y-4">
+                  <FormField
+                    control={clientForm.control}
+                    name="clientName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Client/Business Name *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Acme Corporation" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={clientForm.control}
+                    name="clientEmail"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Client Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="client@example.com" type="email" {...field} />
+                        </FormControl>
+                        <FormDescription>Optional - for sending invites later</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-between pt-4">
+                    <Button type="button" variant="outline" onClick={() => setCurrentStep(3)}>
+                      <ChevronLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                    <div className="flex gap-2">
+                      <Button type="button" variant="ghost" onClick={handleSkipClient}>
+                        Skip
+                      </Button>
+                      <Button type="submit" disabled={isLoading}>
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Create Client
+                        <ChevronRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step 6: Complete */}
+        {currentStep === 5 && (
+          <Card className="text-center">
+            <CardHeader>
+              <div className="mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mb-4">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+              <CardTitle className="text-2xl">You&apos;re All Set!</CardTitle>
+              <CardDescription className="text-base">
+                Your agency is ready. Start building amazing websites for your clients.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto text-left">
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <p className="text-2xl font-bold text-primary">🚀</p>
+                  <p className="text-sm font-medium">Visual Editor</p>
+                  <p className="text-xs text-muted-foreground">Drag & drop builder</p>
+                </div>
+                <div className="p-4 rounded-lg bg-muted/50">
+                  <p className="text-2xl font-bold text-primary">✨</p>
+                  <p className="text-sm font-medium">AI Builder</p>
+                  <p className="text-xs text-muted-foreground">Generate sites instantly</p>
+                </div>
+              </div>
+              <Button size="lg" onClick={handleComplete} disabled={isLoading} className="mt-6">
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Go to Dashboard
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
           </Card>
