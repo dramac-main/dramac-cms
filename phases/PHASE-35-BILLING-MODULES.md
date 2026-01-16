@@ -1,14 +1,29 @@
 # Phase 35: Billing & Payments - Module Billing
 
+> ⚠️ **DEPRECATED** - This phase has been superseded by **Phase 76A: Module System Architecture Overhaul**
+>
+> **Reason**: Module billing has been consolidated into Phase 76A which uses LemonSqueezy as the primary
+> payment provider (matching agency subscriptions) instead of Stripe. Phase 76A provides:
+> - Unified LemonSqueezy billing across all module purchases
+> - Agency markup pricing (agencies resell modules with profit)
+> - Client-level and site-level billing
+> - Better webhook integration with existing LemonSqueezy handler
+>
+> **See**: `PHASE-76A-MODULE-SYSTEM-ARCHITECTURE-OVERHAUL.md` for the current module billing implementation.
+
+---
+
+# ~~ORIGINAL CONTENT (DEPRECATED)~~
+
 > **AI Model**: Claude Sonnet 4.5 (1x)
 >
 > **⚠️ FIRST**: Read `PHASE-33-BILLING-FOUNDATION.md` and `PHASE-29-MODULE-FOUNDATION.md`
 
 ---
 
-## 🎯 Objective
+## ~~🎯 Objective~~
 
-Integrate Stripe billing for module marketplace - monthly module subscriptions and usage-based billing.
+~~Integrate Stripe billing for module marketplace - monthly module subscriptions and usage-based billing.~~
 
 ---
 

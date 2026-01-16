@@ -1,5 +1,26 @@
 # Phase 79: Agency Module Markup Pricing
 
+> ✅ **CONSOLIDATED** - This phase has been merged into **Phase 76A: Module System Architecture Overhaul**
+>
+> **Status**: The concepts, database schema, and pricing logic from this phase have been incorporated into:
+> - **Phase 76A** - Database schema with `agency_module_subscriptions` table including all markup fields
+> - **Phase 76B** - UI components for agency pricing configuration
+>
+> **What was moved to Phase 76A:**
+> - `markup_type` field ('percentage', 'fixed', 'custom', 'passthrough')
+> - `markup_percentage` field (default 100 = 2x wholesale)
+> - `markup_fixed_amount` field
+> - `custom_price_monthly/yearly` fields
+> - `retail_price_monthly_cached/yearly_cached` calculated fields
+> - LemonSqueezy integration (`lemon_subscription_id`, `lemon_order_id`, `lemon_customer_id`)
+> - Retail price calculation functions
+>
+> **See**: `PHASE-76A-MODULE-SYSTEM-ARCHITECTURE-OVERHAUL.md` for the consolidated implementation.
+
+---
+
+# ~~ORIGINAL CONTENT (REFERENCE ONLY)~~
+
 > **AI Model**: Claude Opus 4.5 (1x)
 >
 > **Priority**: 🔴 CRITICAL
@@ -8,24 +29,24 @@
 
 ---
 
-## 🎯 Objective
+## ~~🎯 Objective~~
 
-Implement a GoHighLevel-style module pricing model where:
-1. **Super Admin** sets wholesale module prices
-2. **Agencies** buy modules at wholesale and add their own markup
-3. **Clients** pay the agency's marked-up price
-4. **Agencies** keep 100% of the markup as profit
+~~Implement a GoHighLevel-style module pricing model where:~~
+1. ~~**Super Admin** sets wholesale module prices~~
+2. ~~**Agencies** buy modules at wholesale and add their own markup~~
+3. ~~**Clients** pay the agency's marked-up price~~
+4. ~~**Agencies** keep 100% of the markup as profit~~
 
-This creates a win-win-win: platform revenue + agency profits + client value.
+~~This creates a win-win-win: platform revenue + agency profits + client value.~~
 
 ---
 
-## 📋 Prerequisites
+## ~~📋 Prerequisites~~
 
-- [ ] LemonSqueezy integration working
-- [ ] Module marketplace functional
-- [ ] Agency subscription system exists
-- [ ] Site module installation working
+~~- [ ] LemonSqueezy integration working~~
+~~- [ ] Module marketplace functional~~
+~~- [ ] Agency subscription system exists~~
+~~- [ ] Site module installation working~~
 
 ---
 

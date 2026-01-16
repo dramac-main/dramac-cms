@@ -24,9 +24,12 @@ This transforms DRAMAC from a consumer of modules to a **module creation platfor
 ## 📋 Prerequisites
 
 - [ ] Super Admin dashboard functional (Phase 78)
-- [ ] Module registry with catalog (Phase 76)
-- [ ] Module pricing system (Phase 79)
+- [ ] Module architecture implemented (Phase 76A) - Database schema, installation hierarchy, LemonSqueezy billing
+- [ ] Module marketplace UI (Phase 76B) - Marketplace, management dashboards, pricing UI
 - [ ] Supabase storage configured
+
+> **Note**: Phase 79 (Markup Pricing) has been consolidated into Phase 76A.
+> Phase 35 (Stripe Module Billing) has been deprecated in favor of LemonSqueezy in Phase 76A.
 
 ---
 
