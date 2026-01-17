@@ -6,7 +6,7 @@
 >
 > **Estimated Time**: 12-15 hours
 >
-> **Status**: 🟡 PARTIALLY COMPLETE - Core infrastructure built, testing/sandbox missing
+> **Status**: � CORE COMPLETE - Testing sandbox added, integration pending
 
 ---
 
@@ -15,7 +15,7 @@
 Create a comprehensive Module Development Studio for Super Admins to:
 1. **Create** new modules with a visual builder ✅
 2. **Edit** existing module code and configurations ✅
-3. **Test** modules in a sandbox environment ⚠️ MISSING
+3. **Test** modules in a sandbox environment ✅ (Isolated preview added)
 4. **Deploy** modules to the marketplace with versioning ✅
 5. **Monitor** module usage and performance ⚠️ PARTIAL
 
@@ -35,100 +35,168 @@ This transforms DRAMAC from a consumer of modules to a **module creation platfor
 
 ---
 
-## ⚠️ CRITICAL GAPS IDENTIFIED (Post-Implementation Review)
+## 🟢 IMPLEMENTED FEATURES
 
-### 🔴 Gap 1: No Module Testing/Sandbox Environment
-**Problem**: Modules can be set to "testing" status but there's NO WAY TO ACTUALLY TEST THEM
-- No sandbox page to render module code
-- No way to inject test data/settings
-- No isolated environment to catch runtime errors
-- Super Admin has to deploy blind
+### ✅ Core Module Development
+- Monaco code editor with TSX/CSS/JSON tabs
+- Module configuration form (name, icon, category, description)
+- Settings schema builder
+- Deploy dialog with version bumping
+- Version history with rollback capability
+- Deployment history with redeploy option
 
-**Solution Required**: 
-- Create `[moduleId]/test/page.tsx` with:
-  - Live component preview with iframe sandbox
-  - Settings editor to configure test data
-  - Console output capture
-  - Error boundary with detailed stack traces
+### ✅ Module Sandbox Testing (Added Jan 2025)
+- **File**: `src/app/(dashboard)/admin/modules/studio/[moduleId]/test/page.tsx`
+- Live HTML/CSS/JS preview in sandboxed iframe
+- Settings editor with JSON validation
+- Module code validation (dependencies, exports, errors)
+- Export preview HTML for debugging
+- Console output capture
 
-### 🔴 Gap 2: No Module Preview in Editor
-**Problem**: When editing module code, you can't see the result
-- Monaco editor exists but no live preview
-- No syntax validation beyond basic bracket matching
-- Can't see how settings affect rendering
+### ✅ Import/Export for VS Code Workflow (Added Jan 2025)
+- **File**: `src/components/admin/modules/module-import-export.tsx`
+- Import module from JSON file upload
+- Import from pasted JSON
+- Export module as downloadable JSON
+- TypeScript/CSS/Schema templates for VS Code development
 
-**Solution Required**:
-- Add `module-preview.tsx` component
-- Integrate with editor for live preview
-- Add TypeScript/JSX error checking
-
-### 🔴 Gap 3: No Module Catalog Integration
-**Problem**: Published modules don't appear in MODULE_CATALOG
-- `module-catalog.ts` is still static
-- Deployed modules exist only in database
-- Sites can't discover/install studio-created modules
-
-**Solution Required**:
-- Create `module-registry.ts` to merge static + dynamic modules
-- Update marketplace to read from registry
-- Add sync function on deployment
-
-### 🔴 Gap 4: VS Code Development Workflow Missing
-**Problem**: User wants to build modules in VS Code with AI, then paste to platform
-- No import/export functionality
-- No TypeScript definition files
-- No local development template
-
-**Solution Required**:
-- Add "Import from File" button
-- Create module template generator
-- Export module as downloadable package
-
-### 🟡 Gap 5: Limited Code Validation
-**Problem**: Only basic bracket matching validation
-- No TypeScript compilation check
-- No React component validation
-- No dependency resolution check
-
-**Solution Required**:
-- Add proper validation service
-- Check for required exports
-- Validate settings schema matches usage
-
-### 🟡 Gap 6: Who Can Test Staging Modules?
-**Problem**: When status="testing", who has access?
-- Currently: Nobody except Super Admin viewing code
-- Should be: Designated test sites or internal preview
-
-**Solution Required**:
-- Add "Test Sites" configuration
-- Allow installing staging modules on test sites only
-- Create internal preview URL for testing
+### ✅ Server-Side Module Loading (Added Jan 2025)
+- **File**: `src/lib/modules/module-registry-server.ts`
+- `getPublishedStudioModules()` - Load published modules from DB
+- `getTestingStudioModules()` - Load testing modules from DB
+- `getAllModules()` - Merge static catalog + published studio modules
+- `getModuleById()` - Find module by ID from any source
 
 ---
 
-## 🔍 Current State Analysis
+## ⚠️ REMAINING GAPS (Post-Implementation Review)
 
-**What Exists (IMPLEMENTED ✅):**
-- `module_source` table with code storage
-- `module_versions` table for version history
-- `module_deployments` table for deployment logs
-- `module_analytics` table for metrics
-- Monaco code editor with TSX/CSS/JSON tabs
-- Module configuration form
-- Deploy dialog with version bumping
-- Studio listing page with stats
-- Create/Edit module pages
-- Version history with rollback
-- Deployment history with redeploy
+### 🔴 Gap 1: Marketplace Integration NOT Connected
+**Problem**: Published Studio modules don't appear in marketplace!
 
-**What's Missing (NOT IMPLEMENTED ❌):**
-- Module sandbox/testing page
-- Live preview component
-- Module registry integration (catalog sync)
-- Import/export functionality
-- Advanced code validation
-- Test site configuration
+**Analysis**:
+| Component | Source | Includes Studio Modules? |
+|-----------|--------|-------------------------|
+| Admin Module Studio | `module_source` table | ✅ Yes |
+| Marketplace Page | `MODULE_CATALOG` (static) | ❌ **NO** |
+| Portal Apps Browse | `modules` table | ❌ **NO** |
+| Renderer/Sites | Unknown | Probably NO |
+
+**Root Cause**:
+- Marketplace uses `moduleRegistry` which reads from static `MODULE_CATALOG`
+- Portal uses `agency_module_subscriptions` + `modules` table
+- Studio modules exist in `module_source` table
+- **TABLES ARE COMPLETELY DISCONNECTED**
+
+**Solution Required**:
+1. Option A: Modify marketplace to call `getAllModules()` from server actions
+2. Option B: Sync published studio modules to `modules` table on deployment
+3. Add server component wrapper for marketplace to fetch dynamic modules
+
+### 🔴 Gap 2: No Real-World Testing Path
+**Problem**: Testing modules cannot be installed on actual sites!
+
+**Current State**:
+- `getTestingStudioModules()` exists but is **NEVER CALLED** anywhere
+- No "test site" concept to install testing modules
+- No way to see testing modules in marketplace/portal
+
+**Solution Required**:
+1. Create "Test Mode" toggle for agencies (Super Admin can enable)
+2. When test mode is on, marketplace shows testing modules with [BETA] badge
+3. Allow installing testing modules on "test sites" only
+4. Create `test_site_configurations` table to track which sites can use testing modules
+
+### 🔴 Gap 3: Module Lifecycle End-to-End Broken
+**Problem**: Full module lifecycle doesn't work:
+
+```
+Create → Edit → Test (✅) → Deploy → Install (❌) → Render (❌)
+```
+
+**Steps Needed**:
+1. Deploy should sync to `modules` table (for agency subscriptions)
+2. OR marketplace should read from `module_source` with status=published
+3. Site renderer needs to load studio module renderCode
+4. Module settings need to flow through to render
+
+### 🟡 Gap 4: Limited Code Validation
+**Problem**: Only basic validation in sandbox
+
+**What's Missing**:
+- No TypeScript compilation check (just renders as HTML)
+- No React component validation
+- No dependency resolution check
+- No security audit (XSS, etc.)
+
+**Solution Required**:
+- Consider using @babel/standalone for actual React parsing
+- Add warning for common security issues
+- Validate renderCode exports a React component
+
+### 🟡 Gap 5: Analytics Not Integrated
+**Problem**: `module_analytics` table exists but nothing writes to it
+
+**What's Missing**:
+- No tracking when modules are viewed
+- No tracking when modules are installed
+- No tracking when modules render on sites
+- Dashboard shows mock data
+
+**Solution Required**:
+- Add analytics hooks to marketplace views
+- Track installations via API
+- Track renders via site renderer
+
+---
+
+## 📊 Testing Workflow Clarification
+
+### Q: "When modules are staged/testing, how can I test them out? Who can test them?"
+
+**CURRENT ANSWER**:
+1. **Super Admin** can test via sandbox page (`/admin/modules/studio/[moduleId]/test`)
+2. **Sandbox provides**: Isolated preview, settings editor, validation
+3. **Sandbox does NOT provide**: Real site context, full render cycle, user flow
+
+**FULL TESTING REQUIRES (NOT YET IMPLEMENTED)**:
+1. Mark a site as "Test Site" via Super Admin
+2. Test sites see testing modules in their marketplace
+3. Agencies in "Test Mode" can see beta modules
+4. Module gets installed normally, just with `source: "studio"` flag
+
+### Q: "Can I build a module in VS Code using my AI agent then paste the code on the platform?"
+
+**ANSWER: YES** ✅
+
+**Workflow**:
+1. Open Module Studio → Create New Module
+2. Click "Import/Export" button → Download templates
+3. Build module in VS Code with AI assistance
+4. Export as JSON (renderCode, styles, settingsSchema)
+5. Click "Import/Export" → Upload JSON or paste
+6. Code populates in editor → Test → Deploy
+
+**Templates Provided**:
+- `ModuleTemplate.tsx` - TypeScript React template
+- `ModuleStyles.css` - CSS template with CSS variables
+- `SettingsSchema.json` - JSON schema template
+
+### Q: "How can I FULLY test the modules?"
+
+**Current Testing Levels**:
+| Level | Available | Description |
+|-------|-----------|-------------|
+| Unit | ✅ | Sandbox preview with settings |
+| Visual | ✅ | Device-responsive preview |
+| Integration | ❌ | Install on real site |
+| E2E | ❌ | Full user flow |
+| Performance | ❌ | Load/render metrics |
+
+**To Achieve Full Testing**:
+1. Fix marketplace integration (Gap 1)
+2. Implement test site system (Gap 2)
+3. Then: Create → Edit → Test → Deploy → Install on Test Site → Verify
 
 ---
 
@@ -142,38 +210,46 @@ This transforms DRAMAC from a consumer of modules to a **module creation platfor
 
 ---
 
-## 📁 Files to Create/Modify
+## 📁 Files Created/Modified
 
 ```
 src/app/(dashboard)/admin/modules/
 ├── studio/
 │   ├── page.tsx                    # ✅ Module studio main page
-│   ├── new/page.tsx               # ✅ Create new module
-│   ├── [moduleId]/page.tsx        # ✅ Edit module
-│   └── [moduleId]/test/page.tsx   # ❌ Test module sandbox
+│   ├── new/page.tsx                # ✅ Create new module
+│   ├── [moduleId]/page.tsx         # ✅ Edit module (+ Import/Export button)
+│   └── [moduleId]/test/page.tsx    # ✅ Test module sandbox
 
 src/lib/modules/
-├── module-builder.ts              # ✅ Module creation logic
-├── module-sandbox.ts              # ❌ Safe execution sandbox
-├── module-deployer.ts             # ✅ Deploy to registry
-├── module-versioning.ts           # ✅ Version management
-├── module-registry.ts             # ❌ Dynamic catalog integration
-├── module-validator.ts            # ❌ Advanced validation
+├── module-builder.ts               # ✅ Module creation logic
+├── module-deployer.ts              # ✅ Deploy to registry
+├── module-versioning.ts            # ✅ Version management
+├── module-registry.ts              # ✅ Static catalog wrapper
+├── module-registry-server.ts       # ✅ Dynamic module loading (server actions)
+├── module-types.ts                 # ✅ Extended with studio fields
 
 src/components/admin/modules/
-├── module-code-editor.tsx         # ✅ Monaco code editor
-├── module-config-form.tsx         # ✅ Module metadata form
-├── module-preview.tsx             # ❌ Live preview
-├── module-test-runner.tsx         # ❌ Run tests
-├── module-deploy-dialog.tsx       # ✅ Deployment confirmation
-├── module-import-export.tsx       # ❌ Import/export functionality
+├── module-code-editor.tsx          # ✅ Monaco code editor
+├── module-config-form.tsx          # ✅ Module metadata form
+├── module-preview.tsx              # ✅ Live preview component
+├── module-deploy-dialog.tsx        # ✅ Deployment confirmation
+├── module-import-export.tsx        # ✅ Import/export functionality
 
-Database:
-├── module_source               # ✅ Module source code
-├── module_versions             # ✅ Version history
-├── module_deployments          # ✅ Deployment logs
-├── module_analytics            # ✅ Usage metrics
-├── module_test_sites           # ❌ Test site configuration
+Database Tables (all exist):
+├── module_source                   # ✅ Module source code
+├── module_versions                 # ✅ Version history
+├── module_deployments              # ✅ Deployment logs
+├── module_analytics                # ✅ Usage metrics (not populated yet)
+```
+
+**Files NOT Created (Pending)**:
+```
+src/lib/modules/
+├── module-validator.ts             # ❌ Advanced validation service
+├── module-catalog-sync.ts          # ❌ Sync studio → modules table
+
+Database Tables (to create):
+├── module_test_sites               # ❌ Test site configuration
 ```
 
 ---
