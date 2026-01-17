@@ -92,13 +92,15 @@ export async function signup(formData: SignupFormData) {
   }
 
   // 3. Create user profile
-  // Note: New users get 'member' role by default
+  // Agency creators get 'admin' role in profiles (which corresponds to agency_owner permissions)
+  // The actual ownership is tracked in agency_members.role = "owner"
+  // Only super_admin can access platform-wide admin features
   // Super admin role must be granted via scripts/create-super-admin.ts
   const { error: profileError } = await supabase.from("profiles").insert({
     id: authData.user.id,
     email: validated.data.email,
     name: validated.data.name,
-    role: "member",
+    role: "admin", // Agency creators are admins of their agency
     agency_id: org.id,
   });
 
@@ -106,11 +108,11 @@ export async function signup(formData: SignupFormData) {
     return { error: "Failed to create user profile" };
   }
 
-  // 4. Create organization membership
+  // 4. Create organization membership (tracks actual ownership)
   const { error: memberError } = await supabase.from("agency_members").insert({
     agency_id: org.id,
     user_id: authData.user.id,
-    role: "owner",
+    role: "owner", // Owner in agency_members table
   });
 
   if (memberError) {
