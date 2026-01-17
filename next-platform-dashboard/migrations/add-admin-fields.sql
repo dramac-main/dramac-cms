@@ -78,8 +78,12 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DE
 -- Enable RLS on audit_logs
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 
+-- Drop policies if they exist (to avoid conflicts)
+DROP POLICY IF EXISTS "Super admins can read audit logs" ON audit_logs;
+DROP POLICY IF EXISTS "Service role can insert audit logs" ON audit_logs;
+
 -- Super admins can read all audit logs
-CREATE POLICY IF NOT EXISTS "Super admins can read audit logs"
+CREATE POLICY "Super admins can read audit logs"
   ON audit_logs FOR SELECT
   USING (
     EXISTS (
@@ -89,7 +93,7 @@ CREATE POLICY IF NOT EXISTS "Super admins can read audit logs"
   );
 
 -- System can insert audit logs (via service role)
-CREATE POLICY IF NOT EXISTS "Service role can insert audit logs"
+CREATE POLICY "Service role can insert audit logs"
   ON audit_logs FOR INSERT
   WITH CHECK (true);
 
