@@ -10,9 +10,7 @@ import {
   Eye, 
   ToggleLeft, 
   ToggleRight,
-  Building2,
-  Users,
-  Globe
+  ExternalLink
 } from "lucide-react";
 import {
   Table,
@@ -32,30 +30,44 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Database } from "@/types/database";
+import { InstallLevelBadge } from "@/components/modules/shared/install-level-badge";
 
-type DatabaseModule = Database["public"]["Tables"]["modules"]["Row"];
+// Module type for v2 modules table
+interface ModuleV2 {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  icon: string;
+  category: string;
+  install_level: string;
+  status: string;
+  wholesale_price_monthly: number;
+  install_count: number;
+  is_featured: boolean;
+  created_at: string;
+}
 
 interface AdminModuleListProps {
-  modules: DatabaseModule[];
+  modules: ModuleV2[];
 }
 
 export function AdminModuleList({ modules }: AdminModuleListProps) {
   const [isToggling, setIsToggling] = useState<string | null>(null);
 
-  const handleToggleStatus = async (module: DatabaseModule) => {
+  const handleToggleStatus = async (module: ModuleV2) => {
     setIsToggling(module.id);
     try {
-      const newStatus = !module.is_active;
-      const response = await fetch(`/api/modules/${module.id}/status`, {
+      const newStatus = module.status === "active" ? "draft" : "active";
+      const response = await fetch(`/api/admin/modules/${module.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_active: newStatus }),
+        body: JSON.stringify({ status: newStatus }),
       });
 
       if (!response.ok) throw new Error("Failed to update status");
       
-      toast.success(`Module ${newStatus ? 'activated' : 'deactivated'}`);
+      toast.success(`Module ${newStatus === "active" ? 'activated' : 'deactivated'}`);
       window.location.reload();
     } catch (error) {
       toast.error("Failed to update module status");
@@ -79,6 +91,29 @@ export function AdminModuleList({ modules }: AdminModuleListProps) {
     );
   }
 
+  const getStatusBadge = (status: string, isFeatured: boolean) => {
+    if (isFeatured && status === "active") {
+      return (
+        <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
+          Featured
+        </Badge>
+      );
+    }
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      active: "default",
+      draft: "secondary",
+      deprecated: "destructive",
+      disabled: "outline",
+      review: "secondary",
+    };
+    return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
+  };
+
+  const formatPrice = (cents: number) => {
+    if (cents === 0) return "Free";
+    return `$${(cents / 100).toFixed(2)}/mo`;
+  };
+
   return (
     <div className="border rounded-lg">
       <Table>
@@ -86,7 +121,9 @@ export function AdminModuleList({ modules }: AdminModuleListProps) {
           <TableRow>
             <TableHead>Module</TableHead>
             <TableHead>Category</TableHead>
-            <TableHead>Price</TableHead>
+            <TableHead>Install Level</TableHead>
+            <TableHead>Wholesale</TableHead>
+            <TableHead>Installs</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
@@ -96,7 +133,7 @@ export function AdminModuleList({ modules }: AdminModuleListProps) {
             <TableRow key={module.id}>
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{module.icon || '📦'}</span>
+                  <span className="text-2xl">{module.icon || "📦"}</span>
                   <div>
                     <Link 
                       href={`/admin/modules/${module.id}`}
@@ -104,24 +141,35 @@ export function AdminModuleList({ modules }: AdminModuleListProps) {
                     >
                       {module.name}
                     </Link>
-                    <p className="text-sm text-muted-foreground line-clamp-1">
+                    <p className="text-sm text-muted-foreground truncate max-w-[200px]">
                       {module.description}
                     </p>
                   </div>
                 </div>
               </TableCell>
+              
               <TableCell>
-                <Badge variant="secondary">{module.category}</Badge>
+                <Badge variant="outline">{module.category}</Badge>
               </TableCell>
+              
               <TableCell>
-                {module.price_monthly === 0 
-                  ? <span className="text-green-600 font-medium">Free</span>
-                  : <span>${(module.price_monthly / 100).toFixed(2)}/mo</span>
-                }
+                <InstallLevelBadge level={module.install_level} />
               </TableCell>
+              
               <TableCell>
-                <StatusBadge isActive={module.is_active} isFeatured={module.is_featured} />
+                <span className="font-medium">
+                  {formatPrice(module.wholesale_price_monthly || 0)}
+                </span>
               </TableCell>
+              
+              <TableCell>
+                <span className="font-medium">{module.install_count || 0}</span>
+              </TableCell>
+              
+              <TableCell>
+                {getStatusBadge(module.status, module.is_featured)}
+              </TableCell>
+              
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -142,9 +190,15 @@ export function AdminModuleList({ modules }: AdminModuleListProps) {
                         Edit Module
                       </Link>
                     </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href={`/marketplace/${module.slug}`} target="_blank">
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        View in Marketplace
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => handleToggleStatus(module)}>
-                      {module.is_active ? (
+                      {module.status === "active" ? (
                         <>
                           <ToggleLeft className="h-4 w-4 mr-2" />
                           Deactivate
@@ -156,9 +210,10 @@ export function AdminModuleList({ modules }: AdminModuleListProps) {
                         </>
                       )}
                     </DropdownMenuItem>
+                    <DropdownMenuSeparator />
                     <DropdownMenuItem className="text-destructive">
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
+                      Delete Module
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -168,29 +223,5 @@ export function AdminModuleList({ modules }: AdminModuleListProps) {
         </TableBody>
       </Table>
     </div>
-  );
-}
-
-function StatusBadge({ isActive, isFeatured }: { isActive: boolean; isFeatured: boolean }) {
-  if (isFeatured && isActive) {
-    return (
-      <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-        Featured
-      </span>
-    );
-  }
-  
-  if (isActive) {
-    return (
-      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-        Active
-      </span>
-    );
-  }
-  
-  return (
-    <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-      Inactive
-    </span>
   );
 }

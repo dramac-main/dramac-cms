@@ -29,9 +29,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     // Get all modules subscribed by the agency
     const { data: agencyModules } = await supabase
-      .from("module_subscriptions")
+      .from("agency_module_subscriptions")
       .select(`
-        module:modules(*)
+        module:modules_v2(*)
       `)
       .eq("agency_id", site.client.agency_id)
       .eq("status", "active");
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     const { data: subscription } = await supabase
-      .from("module_subscriptions")
+      .from("agency_module_subscriptions")
       .select("id")
       .eq("agency_id", site.client.agency_id)
       .eq("module_id", moduleId)

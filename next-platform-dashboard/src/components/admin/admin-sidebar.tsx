@@ -14,12 +14,14 @@ import {
   Activity,
   AlertTriangle,
   ArrowLeft,
+  Package,
 } from "lucide-react";
 
 const adminNav = [
   { name: "Overview", href: "/admin", icon: LayoutDashboard },
   { name: "Agencies", href: "/admin/agencies", icon: Building2 },
   { name: "Users", href: "/admin/users", icon: Users },
+  { name: "Modules", href: "/admin/modules", icon: Package },
   { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { name: "Activity Log", href: "/admin/activity", icon: Activity },

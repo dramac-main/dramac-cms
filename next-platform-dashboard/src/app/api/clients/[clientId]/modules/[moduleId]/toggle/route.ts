@@ -21,11 +21,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid enabled value" }, { status: 400 });
     }
 
-    // Toggle module subscription status using module_subscriptions table
+    // Toggle module subscription status using agency_module_subscriptions table
     const { data: subscription, error } = await supabase
-      .from("module_subscriptions")
+      .from("agency_module_subscriptions")
       .update({ status: enabled ? "active" : "canceled" })
-      .eq("agency_id", clientId)
+      .eq("client_id", clientId)
       .eq("module_id", moduleId)
       .select()
       .single();

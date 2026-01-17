@@ -17,10 +17,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     const { data, error } = await supabase
-      .from("module_subscriptions")
+      .from("agency_module_subscriptions")
       .select(`
         *,
-        module:modules(*)
+        module:modules_v2(*)
       `)
       .eq("agency_id", agencyId)
       .eq("status", "active");
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     // Check if already subscribed
     const { data: existing } = await supabase
-      .from("module_subscriptions")
+      .from("agency_module_subscriptions")
       .select("id, status")
       .eq("agency_id", agencyId)
       .eq("module_id", moduleId)
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (existing) {
       // Reactivate
       const { data, error } = await supabase
-        .from("module_subscriptions")
+        .from("agency_module_subscriptions")
         .update({
           status: "active",
           billing_cycle: billingCycle,
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     // Create new subscription
     const { data, error } = await supabase
-      .from("module_subscriptions")
+      .from("agency_module_subscriptions")
       .insert({
         agency_id: agencyId,
         module_id: moduleId,
