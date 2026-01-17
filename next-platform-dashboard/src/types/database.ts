@@ -1207,6 +1207,180 @@ export type Database = {
         };
         Relationships: [];
       };
+      form_settings: {
+        Row: {
+          id: string;
+          site_id: string;
+          form_id: string;
+          form_name: string;
+          notify_on_submission: boolean;
+          notify_emails: string[];
+          spam_protection: boolean;
+          honeypot_enabled: boolean;
+          rate_limit_per_minute: number;
+          success_message: string;
+          redirect_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          form_id: string;
+          form_name: string;
+          notify_on_submission?: boolean;
+          notify_emails?: string[];
+          spam_protection?: boolean;
+          honeypot_enabled?: boolean;
+          rate_limit_per_minute?: number;
+          success_message?: string;
+          redirect_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          site_id?: string;
+          form_id?: string;
+          form_name?: string;
+          notify_on_submission?: boolean;
+          notify_emails?: string[];
+          spam_protection?: boolean;
+          honeypot_enabled?: boolean;
+          rate_limit_per_minute?: number;
+          success_message?: string;
+          redirect_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "form_settings_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      form_submissions: {
+        Row: {
+          id: string;
+          site_id: string;
+          form_id: string;
+          form_name: string | null;
+          data: Json;
+          status: "new" | "read" | "archived" | "spam";
+          ip_address: string | null;
+          user_agent: string | null;
+          page_url: string | null;
+          referrer: string | null;
+          is_spam: boolean;
+          spam_score: number | null;
+          notified_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          form_id: string;
+          form_name?: string | null;
+          data: Json;
+          status?: "new" | "read" | "archived" | "spam";
+          ip_address?: string | null;
+          user_agent?: string | null;
+          page_url?: string | null;
+          referrer?: string | null;
+          is_spam?: boolean;
+          spam_score?: number | null;
+          notified_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          site_id?: string;
+          form_id?: string;
+          form_name?: string | null;
+          data?: Json;
+          status?: "new" | "read" | "archived" | "spam";
+          ip_address?: string | null;
+          user_agent?: string | null;
+          page_url?: string | null;
+          referrer?: string | null;
+          is_spam?: boolean;
+          spam_score?: number | null;
+          notified_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      form_webhooks: {
+        Row: {
+          id: string;
+          site_id: string;
+          form_id: string | null;
+          name: string;
+          url: string;
+          method: string;
+          headers: Json;
+          is_active: boolean;
+          secret: string | null;
+          last_triggered_at: string | null;
+          last_response_code: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          form_id?: string | null;
+          name: string;
+          url: string;
+          method?: string;
+          headers?: Json;
+          is_active?: boolean;
+          secret?: string | null;
+          last_triggered_at?: string | null;
+          last_response_code?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          site_id?: string;
+          form_id?: string | null;
+          name?: string;
+          url?: string;
+          method?: string;
+          headers?: Json;
+          is_active?: boolean;
+          secret?: string | null;
+          last_triggered_at?: string | null;
+          last_response_code?: number | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "form_webhooks_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -1317,3 +1491,16 @@ export type DbActivityLogUpdate = Database["public"]["Tables"]["activity_log"]["
 export type DbNotificationPreferences = Database["public"]["Tables"]["notification_preferences"]["Row"];
 export type DbNotificationPreferencesInsert = Database["public"]["Tables"]["notification_preferences"]["Insert"];
 export type DbNotificationPreferencesUpdate = Database["public"]["Tables"]["notification_preferences"]["Update"];
+
+// Form Submissions types (Phase 82)
+export type DbFormSettings = Database["public"]["Tables"]["form_settings"]["Row"];
+export type DbFormSettingsInsert = Database["public"]["Tables"]["form_settings"]["Insert"];
+export type DbFormSettingsUpdate = Database["public"]["Tables"]["form_settings"]["Update"];
+
+export type DbFormSubmission = Database["public"]["Tables"]["form_submissions"]["Row"];
+export type DbFormSubmissionInsert = Database["public"]["Tables"]["form_submissions"]["Insert"];
+export type DbFormSubmissionUpdate = Database["public"]["Tables"]["form_submissions"]["Update"];
+
+export type DbFormWebhook = Database["public"]["Tables"]["form_webhooks"]["Row"];
+export type DbFormWebhookInsert = Database["public"]["Tables"]["form_webhooks"]["Insert"];
+export type DbFormWebhookUpdate = Database["public"]["Tables"]["form_webhooks"]["Update"];
