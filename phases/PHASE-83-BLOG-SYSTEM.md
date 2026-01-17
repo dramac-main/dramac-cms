@@ -19,12 +19,40 @@ Create a complete blog/CMS system for sites:
 
 ---
 
+## � User Roles & Access
+
+This phase must support ALL user types with appropriate permissions:
+
+| Role | Access Level | Capabilities |
+|------|--------------|--------------|
+| **Super Admin** | All agencies | Full access to all posts, categories, authors |
+| **Agency Owner** | Own agency | Full access to all agency posts |
+| **Agency Admin** | Own agency | Full access, can publish posts |
+| **Agency Member** | Assigned sites | Can create/edit drafts, cannot publish |
+| **Client Portal** | Own sites only | View-only access to published posts |
+
+### Permission Matrix
+
+| Action | Super Admin | Owner | Admin | Member | Client |
+|--------|-------------|-------|-------|--------|--------|
+| View all posts | ✅ | ✅ Agency | ✅ Agency | ✅ Assigned | ✅ Own |
+| Create post | ✅ | ✅ | ✅ | ✅ (draft) | ❌ |
+| Edit any post | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Edit own posts | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Publish posts | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Delete posts | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Manage categories | ✅ | ✅ | ✅ | ❌ | ❌ |
+| View analytics | ✅ | ✅ | ✅ | ✅ | ✅ Own |
+
+---
+
 ## 📋 Prerequisites
 
 - [ ] Site management working
 - [ ] Media library for featured images
 - [ ] Visual editor foundation
 - [ ] Site publishing system
+- [ ] Permission system (`@/lib/auth/permissions.ts`)
 
 ---
 
@@ -34,6 +62,8 @@ Create a complete blog/CMS system for sites:
 - Site pages with visual editor
 - Media library for images
 - Page publishing
+- Permission helpers in `@/lib/auth/permissions.ts`
+- Client portal at `/portal/`
 
 **What's Missing:**
 - Blog post content type
@@ -42,6 +72,7 @@ Create a complete blog/CMS system for sites:
 - Blog listing page template
 - Post detail page template
 - RSS feed generation
+- Portal blog view for clients
 
 ---
 
@@ -58,15 +89,21 @@ Create a complete blog/CMS system for sites:
 ## 📁 Files to Create
 
 ```
+# Agency Dashboard (staff)
 src/app/(dashboard)/sites/[siteId]/blog/
 ├── page.tsx                    # Posts list
 ├── new/page.tsx               # Create post
 ├── [postId]/page.tsx          # Edit post
 ├── categories/page.tsx        # Manage categories
 
+# Client Portal (clients)
+src/app/portal/blog/
+├── page.tsx                    # Portal blog view
+├── [siteId]/page.tsx           # Site-specific posts
+
 src/lib/blog/
-├── post-service.ts            # Post CRUD
-├── category-service.ts        # Category CRUD
+├── post-service.ts            # Post CRUD (with permissions!)
+├── category-service.ts        # Category CRUD (with permissions!)
 ├── blog-renderer.ts           # Render blog pages
 
 src/components/blog/
@@ -171,6 +208,7 @@ CREATE INDEX idx_blog_posts_status ON blog_posts(status);
 CREATE INDEX idx_blog_posts_published ON blog_posts(published_at DESC);
 CREATE INDEX idx_blog_posts_slug ON blog_posts(site_id, slug);
 CREATE INDEX idx_blog_posts_featured ON blog_posts(site_id, is_featured);
+CREATE INDEX idx_blog_posts_author ON blog_posts(author_id);
 CREATE INDEX idx_blog_categories_site ON blog_categories(site_id);
 CREATE INDEX idx_blog_post_categories_post ON blog_post_categories(post_id);
 CREATE INDEX idx_blog_post_categories_cat ON blog_post_categories(category_id);
@@ -183,6 +221,140 @@ BEGIN
   RETURN GREATEST(1, CEIL(array_length(regexp_split_to_array(content_text, '\s+'), 1) / 200.0));
 END;
 $$ LANGUAGE plpgsql;
+
+-- Enable RLS
+ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE blog_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE blog_post_categories ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for blog_posts
+-- Super admins have full access
+CREATE POLICY "Super admins have full access to blog posts"
+ON blog_posts FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.role = 'super_admin'
+  )
+);
+
+-- Agency members can view posts in their agency
+CREATE POLICY "Agency members can view agency posts"
+ON blog_posts FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM sites
+    JOIN clients ON sites.client_id = clients.id
+    JOIN agency_members ON clients.agency_id = agency_members.agency_id
+    WHERE sites.id = blog_posts.site_id
+    AND agency_members.user_id = auth.uid()
+  )
+);
+
+-- Agency members can create posts (as drafts)
+CREATE POLICY "Agency members can create posts"
+ON blog_posts FOR INSERT
+TO authenticated
+WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM sites
+    JOIN clients ON sites.client_id = clients.id
+    JOIN agency_members ON clients.agency_id = agency_members.agency_id
+    WHERE sites.id = blog_posts.site_id
+    AND agency_members.user_id = auth.uid()
+  )
+);
+
+-- Authors can edit their own posts
+CREATE POLICY "Authors can edit own posts"
+ON blog_posts FOR UPDATE
+TO authenticated
+USING (
+  author_id = auth.uid()
+);
+
+-- Agency owners/admins can edit any post in their agency
+CREATE POLICY "Agency owners/admins can edit any post"
+ON blog_posts FOR UPDATE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM sites
+    JOIN clients ON sites.client_id = clients.id
+    JOIN agency_members ON clients.agency_id = agency_members.agency_id
+    WHERE sites.id = blog_posts.site_id
+    AND agency_members.user_id = auth.uid()
+    AND agency_members.role IN ('owner', 'admin')
+  )
+);
+
+-- Only owners/admins can delete posts
+CREATE POLICY "Agency owners/admins can delete posts"
+ON blog_posts FOR DELETE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM sites
+    JOIN clients ON sites.client_id = clients.id
+    JOIN agency_members ON clients.agency_id = agency_members.agency_id
+    WHERE sites.id = blog_posts.site_id
+    AND agency_members.user_id = auth.uid()
+    AND agency_members.role IN ('owner', 'admin')
+  )
+);
+
+-- RLS Policies for blog_categories
+CREATE POLICY "Super admins have full access to categories"
+ON blog_categories FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.role = 'super_admin'
+  )
+);
+
+CREATE POLICY "Agency members can view categories"
+ON blog_categories FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM sites
+    JOIN clients ON sites.client_id = clients.id
+    JOIN agency_members ON clients.agency_id = agency_members.agency_id
+    WHERE sites.id = blog_categories.site_id
+    AND agency_members.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Agency owners/admins can manage categories"
+ON blog_categories FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM sites
+    JOIN clients ON sites.client_id = clients.id
+    JOIN agency_members ON clients.agency_id = agency_members.agency_id
+    WHERE sites.id = blog_categories.site_id
+    AND agency_members.user_id = auth.uid()
+    AND agency_members.role IN ('owner', 'admin')
+  )
+);
+
+-- RLS for blog_post_categories (junction table)
+CREATE POLICY "Post category access follows post access"
+ON blog_post_categories FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM blog_posts
+    WHERE blog_posts.id = blog_post_categories.post_id
+  )
+);
 ```
 
 ---
@@ -195,7 +367,8 @@ $$ LANGUAGE plpgsql;
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth/session";
+import { getCurrentUserId, getCurrentUserRole, isSuperAdmin } from "@/lib/auth/permissions";
+import { cookies } from "next/headers";
 
 export interface BlogPost {
   id: string;
@@ -232,14 +405,166 @@ export interface PostFilters {
   featured?: boolean;
 }
 
+/**
+ * Get user context for blog access control
+ */
+async function getUserBlogContext(): Promise<{
+  userId: string | null;
+  role: string | null;
+  agencyRole: string | null;
+  accessibleSiteIds: string[] | null; // null = all (super admin)
+  isPortalUser: boolean;
+  portalClientId: string | null;
+}> {
+  const supabase = await createClient();
+  const userId = await getCurrentUserId();
+  const role = await getCurrentUserRole();
+  const cookieStore = await cookies();
+  
+  // Check for portal user (client impersonation)
+  const portalClientId = cookieStore.get("impersonating_client_id")?.value || null;
+  
+  if (portalClientId) {
+    // Portal user - get their accessible sites
+    const { data: client } = await supabase
+      .from("clients")
+      .select("id, has_portal_access")
+      .eq("id", portalClientId)
+      .single();
+    
+    if (!client?.has_portal_access) {
+      return { userId: null, role: null, agencyRole: null, accessibleSiteIds: [], isPortalUser: true, portalClientId };
+    }
+    
+    const { data: sites } = await supabase
+      .from("sites")
+      .select("id")
+      .eq("client_id", portalClientId);
+    
+    return {
+      userId: null,
+      role: "client",
+      agencyRole: null,
+      accessibleSiteIds: sites?.map(s => s.id) || [],
+      isPortalUser: true,
+      portalClientId
+    };
+  }
+  
+  if (!userId) {
+    return { userId: null, role: null, agencyRole: null, accessibleSiteIds: [], isPortalUser: false, portalClientId: null };
+  }
+  
+  // Super admin can see all
+  if (await isSuperAdmin()) {
+    return { userId, role: "super_admin", agencyRole: null, accessibleSiteIds: null, isPortalUser: false, portalClientId: null };
+  }
+  
+  // Get user's agency membership
+  const { data: membership } = await supabase
+    .from("agency_members")
+    .select("agency_id, role")
+    .eq("user_id", userId)
+    .single();
+  
+  if (!membership) {
+    return { userId, role, agencyRole: null, accessibleSiteIds: [], isPortalUser: false, portalClientId: null };
+  }
+  
+  // Get all sites in the agency
+  const { data: sites } = await supabase
+    .from("sites")
+    .select("id, clients!inner(agency_id)")
+    .eq("clients.agency_id", membership.agency_id);
+  
+  return {
+    userId,
+    role,
+    agencyRole: membership.role,
+    accessibleSiteIds: sites?.map(s => s.id) || [],
+    isPortalUser: false,
+    portalClientId: null
+  };
+}
+
+/**
+ * Check if user can access a site's blog
+ */
+async function canAccessSiteBlog(siteId: string): Promise<boolean> {
+  const context = await getUserBlogContext();
+  if (context.accessibleSiteIds === null) return true; // Super admin
+  return context.accessibleSiteIds.includes(siteId);
+}
+
+/**
+ * Check if user can publish posts (not just create drafts)
+ * Agency members can only create drafts
+ */
+async function canPublishPosts(): Promise<boolean> {
+  const context = await getUserBlogContext();
+  if (context.isPortalUser) return false;
+  if (context.agencyRole === "member") return false;
+  return true; // owner, admin, or super_admin
+}
+
+/**
+ * Check if user can edit a specific post
+ * Members can only edit their own posts
+ */
+async function canEditPost(postId: string): Promise<boolean> {
+  const context = await getUserBlogContext();
+  if (context.isPortalUser) return false;
+  if (context.accessibleSiteIds === null) return true; // Super admin
+  if (context.agencyRole === "owner" || context.agencyRole === "admin") return true;
+  
+  // Members can only edit their own posts
+  const supabase = await createClient();
+  const { data: post } = await supabase
+    .from("blog_posts")
+    .select("author_id, site_id")
+    .eq("id", postId)
+    .single();
+  
+  if (!post) return false;
+  if (!context.accessibleSiteIds?.includes(post.site_id)) return false;
+  return post.author_id === context.userId;
+}
+
+/**
+ * Check if user can delete posts
+ */
+async function canDeletePosts(): Promise<boolean> {
+  const context = await getUserBlogContext();
+  if (context.isPortalUser) return false;
+  if (context.agencyRole === "member") return false;
+  return true;
+}
+
+/**
+ * Check if user can manage categories
+ */
+async function canManageCategories(): Promise<boolean> {
+  const context = await getUserBlogContext();
+  if (context.isPortalUser) return false;
+  if (context.agencyRole === "member") return false;
+  return true;
+}
+
 export async function getPosts(
   siteId: string,
   filters: PostFilters = {},
   page = 1,
   limit = 20
 ): Promise<{ posts: BlogPost[]; total: number }> {
+  // Permission check
+  if (!(await canAccessSiteBlog(siteId))) {
+    console.error("[PostService] Access denied for site:", siteId);
+    return { posts: [], total: 0 };
+  }
+  
   const supabase = await createClient();
   const offset = (page - 1) * limit;
+  const context = await getUserBlogContext();
 
   let query = supabase
     .from("blog_posts")
@@ -256,7 +581,10 @@ export async function getPosts(
     .eq("site_id", siteId)
     .order("created_at", { ascending: false });
 
-  if (filters.status) {
+  // Portal users can only see published posts
+  if (context.isPortalUser) {
+    query = query.eq("status", "published");
+  } else if (filters.status) {
     query = query.eq("status", filters.status);
   }
 
@@ -303,11 +631,27 @@ export async function getPost(postId: string): Promise<BlogPost | null> {
   if (error || !data) {
     return null;
   }
+  
+  // Permission check
+  if (!(await canAccessSiteBlog(data.site_id))) {
+    return null;
+  }
+  
+  // Portal users can only view published posts
+  const context = await getUserBlogContext();
+  if (context.isPortalUser && data.status !== "published") {
+    return null;
+  }
 
   return mapToPost(data);
 }
 
 export async function getPostBySlug(siteId: string, slug: string): Promise<BlogPost | null> {
+  // Permission check
+  if (!(await canAccessSiteBlog(siteId))) {
+    return null;
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -350,8 +694,25 @@ export async function createPost(
     scheduledFor?: string;
   }
 ): Promise<{ success: boolean; postId?: string; error?: string }> {
-  const user = await getCurrentUser();
-  if (!user) {
+  // Permission check
+  if (!(await canAccessSiteBlog(siteId))) {
+    return { success: false, error: "Access denied" };
+  }
+  
+  const context = await getUserBlogContext();
+  if (context.isPortalUser) {
+    return { success: false, error: "Portal users cannot create posts" };
+  }
+  
+  // Members can only create drafts
+  let effectiveStatus = post.status || "draft";
+  if (context.agencyRole === "member" && effectiveStatus !== "draft") {
+    effectiveStatus = "draft";
+    console.log("[PostService] Member attempted to publish - forcing draft status");
+  }
+
+  const userId = await getCurrentUserId();
+  if (!userId) {
     return { success: false, error: "Not authenticated" };
   }
 
@@ -383,7 +744,7 @@ export async function createPost(
     .from("blog_posts")
     .insert({
       site_id: siteId,
-      author_id: user.id,
+      author_id: userId,
       title: post.title,
       slug,
       excerpt: post.excerpt,
@@ -394,9 +755,9 @@ export async function createPost(
       meta_title: post.metaTitle || post.title,
       meta_description: post.metaDescription || post.excerpt,
       tags: post.tags || [],
-      status: post.status || "draft",
+      status: effectiveStatus,
       scheduled_for: post.scheduledFor,
-      published_at: post.status === "published" ? new Date().toISOString() : null,
+      published_at: effectiveStatus === "published" ? new Date().toISOString() : null,
       reading_time_minutes: readingTime,
     })
     .select()
@@ -442,6 +803,20 @@ export async function updatePost(
     allowComments: boolean;
   }>
 ): Promise<{ success: boolean; error?: string }> {
+  // Permission check - can user edit this post?
+  if (!(await canEditPost(postId))) {
+    return { success: false, error: "Permission denied: Cannot edit this post" };
+  }
+  
+  const context = await getUserBlogContext();
+  
+  // Members cannot publish - force draft status
+  let effectiveStatus = updates.status;
+  if (context.agencyRole === "member" && updates.status && updates.status !== "draft") {
+    effectiveStatus = "draft";
+    console.log("[PostService] Member attempted to change status - keeping draft");
+  }
+
   const supabase = await createClient();
 
   const updateData: Record<string, unknown> = {
@@ -469,9 +844,9 @@ export async function updatePost(
   if (updates.allowComments !== undefined) updateData.allow_comments = updates.allowComments;
   if (updates.scheduledFor !== undefined) updateData.scheduled_for = updates.scheduledFor;
 
-  if (updates.status !== undefined) {
-    updateData.status = updates.status;
-    if (updates.status === "published") {
+  if (effectiveStatus !== undefined) {
+    updateData.status = effectiveStatus;
+    if (effectiveStatus === "published") {
       updateData.published_at = new Date().toISOString();
     }
   }
@@ -486,8 +861,8 @@ export async function updatePost(
     return { success: false, error: "Failed to update post" };
   }
 
-  // Update categories if provided
-  if (updates.categoryIds !== undefined) {
+  // Update categories if provided (only owner/admin can change)
+  if (updates.categoryIds !== undefined && (await canManageCategories())) {
     // Remove existing
     await supabase.from("blog_post_categories").delete().eq("post_id", postId);
 
@@ -506,7 +881,23 @@ export async function updatePost(
 }
 
 export async function deletePost(postId: string): Promise<{ success: boolean; error?: string }> {
+  // Permission check - only owner/admin can delete
+  if (!(await canDeletePosts())) {
+    return { success: false, error: "Permission denied: Only agency owners/admins can delete posts" };
+  }
+
   const supabase = await createClient();
+
+  // Verify access to the post's site
+  const { data: post } = await supabase
+    .from("blog_posts")
+    .select("site_id")
+    .eq("id", postId)
+    .single();
+  
+  if (!post || !(await canAccessSiteBlog(post.site_id))) {
+    return { success: false, error: "Access denied" };
+  }
 
   const { error } = await supabase.from("blog_posts").delete().eq("id", postId);
 
@@ -515,6 +906,29 @@ export async function deletePost(postId: string): Promise<{ success: boolean; er
   }
 
   return { success: true };
+}
+
+/**
+ * Get accessible sites for portal users' blog view
+ */
+export async function getPortalBlogSites(): Promise<{
+  sites: Array<{ id: string; name: string; domain: string }>;
+}> {
+  const context = await getUserBlogContext();
+  
+  if (!context.isPortalUser || !context.portalClientId) {
+    return { sites: [] };
+  }
+  
+  const supabase = await createClient();
+  
+  const { data: sites } = await supabase
+    .from("sites")
+    .select("id, name, domain")
+    .eq("client_id", context.portalClientId)
+    .order("name");
+  
+  return { sites: sites || [] };
 }
 
 function mapToPost(data: Record<string, unknown>): BlogPost {
@@ -1685,34 +2099,53 @@ export async function generateMetadata({
 - [ ] Post service CRUD operations
 - [ ] Category service operations
 - [ ] Reading time calculation
+- [ ] Permission checks for all user roles
 
 ### Integration Tests
 - [ ] Post creation with categories
 - [ ] Post publishing workflow
 - [ ] Post search works
+- [ ] Member can only create drafts
+- [ ] Portal users can only view published
 
 ### E2E Tests
 - [ ] Create new post
 - [ ] Edit post with rich text
-- [ ] Publish post
+- [ ] Publish post (owner/admin)
 - [ ] View post on public site
 - [ ] Blog listing shows posts
+- [ ] Member cannot publish
+- [ ] Portal user can view blog
 
 ---
 
 ## ✅ Completion Checklist
 
 - [ ] Database schema for blog
-- [ ] Post service (CRUD)
-- [ ] Category service
+- [ ] RLS policies for all tables
+- [ ] Post service with permission checks
+- [ ] Category service with permission checks
 - [ ] Post editor (Tiptap)
 - [ ] Post list component
-- [ ] Posts page
+- [ ] Posts page (agency)
+- [ ] **Portal blog page (client view)**
 - [ ] Create/edit post pages
 - [ ] Public blog listing
 - [ ] Public post detail
 - [ ] SEO metadata
 - [ ] @tiptap packages installed
+
+---
+
+## 🔐 User Role Summary
+
+| Role | View | Create | Edit Own | Edit Any | Publish | Delete | Categories |
+|------|------|--------|----------|----------|---------|--------|------------|
+| Super Admin | ✅ All | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Agency Owner | ✅ Agency | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Agency Admin | ✅ Agency | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Agency Member | ✅ Assigned | ✅ Draft | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Client Portal | ✅ Published | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ---
 

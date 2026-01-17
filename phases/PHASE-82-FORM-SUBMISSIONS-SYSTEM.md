@@ -19,11 +19,34 @@ Create a complete form submission system so agencies can:
 
 ---
 
+## � USER ROLES & ACCESS
+
+### Access Matrix
+
+| Feature | Super Admin | Agency Owner | Agency Admin | Agency Member | Client (Portal) |
+|---------|-------------|--------------|--------------|---------------|-----------------|
+| View all submissions | ✅ (all agencies) | ✅ | ✅ | ✅ (assigned sites) | ✅ (own sites) |
+| Delete submissions | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Export CSV | ✅ | ✅ | ✅ | ✅ | ✅ (limited) |
+| Configure form settings | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Manage webhooks | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Mark as read/spam | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+### Permission Implementation
+- Use `getCurrentUserRole()` from `@/lib/auth/permissions`
+- Site-scoped access (submissions belong to sites)
+- Client portal access via `clients.portal_user_id` link
+- Agency members only see submissions from assigned sites
+
+---
+
 ## 📋 Prerequisites
 
 - [ ] Form components exist in visual editor
 - [ ] Site publishing works
 - [ ] Email service configured (optional for notifications)
+- [ ] Permission system working (`src/lib/auth/permissions.ts`)
+- [ ] Client portal exists (`/portal/`)
 
 ---
 
@@ -33,14 +56,17 @@ Create a complete form submission system so agencies can:
 - Form components in visual editor (inputs, buttons)
 - `form-navigation-settings` phase documents
 - Basic form rendering in published sites
+- Client portal at `/portal/` with impersonation
+- Permission system in `@/lib/auth/permissions.ts`
 
 **What's Missing:**
 - Form submission storage
-- Submissions dashboard
+- Submissions dashboard (agency & portal)
 - Email notifications
 - Export functionality
 - Webhook integrations
 - Spam protection
+- Portal submissions view for clients
 
 ---
 
@@ -57,15 +83,21 @@ Create a complete form submission system so agencies can:
 ## 📁 Files to Create
 
 ```
+# Agency Dashboard (staff)
 src/app/(dashboard)/sites/[siteId]/submissions/
 ├── page.tsx                    # Submissions list
+
+# Client Portal (clients)
+src/app/portal/submissions/
+├── page.tsx                    # Portal submissions view
+├── [siteId]/page.tsx           # Site-specific submissions
 
 src/app/api/forms/
 ├── submit/route.ts             # Public submission endpoint
 ├── export/route.ts             # CSV export
 
 src/lib/forms/
-├── submission-service.ts       # Submission CRUD
+├── submission-service.ts       # Submission CRUD (with permissions!)
 ├── notification-service.ts     # Email notifications
 ├── webhook-service.ts          # Webhook dispatching
 ├── spam-protection.ts          # Basic spam checks
@@ -173,6 +205,132 @@ CREATE INDEX idx_form_submissions_status ON form_submissions(status);
 CREATE INDEX idx_form_submissions_created ON form_submissions(created_at DESC);
 CREATE INDEX idx_form_settings_site ON form_settings(site_id);
 CREATE INDEX idx_form_webhooks_site ON form_webhooks(site_id);
+
+-- Enable RLS
+ALTER TABLE form_submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE form_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE form_webhooks ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for form_submissions
+-- Super admins can do everything
+CREATE POLICY "Super admins have full access to submissions"
+ON form_submissions FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.role = 'super_admin'
+  )
+);
+
+-- Agency members can view submissions for sites in their agency
+CREATE POLICY "Agency members can view their agency submissions"
+ON form_submissions FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM sites
+    JOIN clients ON sites.client_id = clients.id
+    JOIN agency_members ON clients.agency_id = agency_members.agency_id
+    WHERE sites.id = form_submissions.site_id
+    AND agency_members.user_id = auth.uid()
+  )
+);
+
+-- Agency owners/admins can delete submissions
+CREATE POLICY "Agency owners/admins can delete submissions"
+ON form_submissions FOR DELETE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM sites
+    JOIN clients ON sites.client_id = clients.id
+    JOIN agency_members ON clients.agency_id = agency_members.agency_id
+    WHERE sites.id = form_submissions.site_id
+    AND agency_members.user_id = auth.uid()
+    AND agency_members.role IN ('owner', 'admin')
+  )
+);
+
+-- Agency owners/admins can update submissions
+CREATE POLICY "Agency owners/admins can update submissions"
+ON form_submissions FOR UPDATE
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM sites
+    JOIN clients ON sites.client_id = clients.id
+    JOIN agency_members ON clients.agency_id = agency_members.agency_id
+    WHERE sites.id = form_submissions.site_id
+    AND agency_members.user_id = auth.uid()
+  )
+);
+
+-- RLS Policies for form_settings
+CREATE POLICY "Super admins have full access to form settings"
+ON form_settings FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.role = 'super_admin'
+  )
+);
+
+CREATE POLICY "Agency members can view form settings"
+ON form_settings FOR SELECT
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM sites
+    JOIN clients ON sites.client_id = clients.id
+    JOIN agency_members ON clients.agency_id = agency_members.agency_id
+    WHERE sites.id = form_settings.site_id
+    AND agency_members.user_id = auth.uid()
+  )
+);
+
+CREATE POLICY "Agency owners/admins can manage form settings"
+ON form_settings FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM sites
+    JOIN clients ON sites.client_id = clients.id
+    JOIN agency_members ON clients.agency_id = agency_members.agency_id
+    WHERE sites.id = form_settings.site_id
+    AND agency_members.user_id = auth.uid()
+    AND agency_members.role IN ('owner', 'admin')
+  )
+);
+
+-- RLS Policies for form_webhooks
+CREATE POLICY "Super admins have full access to webhooks"
+ON form_webhooks FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM profiles
+    WHERE profiles.id = auth.uid()
+    AND profiles.role = 'super_admin'
+  )
+);
+
+CREATE POLICY "Agency owners/admins can manage webhooks"
+ON form_webhooks FOR ALL
+TO authenticated
+USING (
+  EXISTS (
+    SELECT 1 FROM sites
+    JOIN clients ON sites.client_id = clients.id
+    JOIN agency_members ON clients.agency_id = agency_members.agency_id
+    WHERE sites.id = form_webhooks.site_id
+    AND agency_members.user_id = auth.uid()
+    AND agency_members.role IN ('owner', 'admin')
+  )
+);
 ```
 
 ---
@@ -185,6 +343,8 @@ CREATE INDEX idx_form_webhooks_site ON form_webhooks(site_id);
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserId, getCurrentUserRole, isSuperAdmin, hasPermission, PERMISSIONS } from "@/lib/auth/permissions";
+import { cookies } from "next/headers";
 
 export interface FormSubmission {
   id: string;
@@ -221,12 +381,134 @@ export interface SubmissionFilters {
   search?: string;
 }
 
+/**
+ * Get user context for form submissions access
+ * Returns siteIds user can access based on their role
+ */
+async function getUserSiteContext(): Promise<{
+  userId: string | null;
+  role: string | null;
+  accessibleSiteIds: string[] | null; // null = all sites (super admin)
+  isPortalUser: boolean;
+  portalClientId: string | null;
+}> {
+  const supabase = await createClient();
+  const userId = await getCurrentUserId();
+  const role = await getCurrentUserRole();
+  const cookieStore = await cookies();
+  
+  // Check for portal user (client impersonation)
+  const portalClientId = cookieStore.get("impersonating_client_id")?.value || null;
+  
+  if (portalClientId) {
+    // Portal user - get their accessible sites
+    const { data: client } = await supabase
+      .from("clients")
+      .select("id, has_portal_access")
+      .eq("id", portalClientId)
+      .single();
+    
+    if (!client?.has_portal_access) {
+      return { userId: null, role: null, accessibleSiteIds: [], isPortalUser: true, portalClientId };
+    }
+    
+    // Get sites for this client
+    const { data: sites } = await supabase
+      .from("sites")
+      .select("id")
+      .eq("client_id", portalClientId);
+    
+    return {
+      userId: null,
+      role: "client",
+      accessibleSiteIds: sites?.map(s => s.id) || [],
+      isPortalUser: true,
+      portalClientId
+    };
+  }
+  
+  if (!userId) {
+    return { userId: null, role: null, accessibleSiteIds: [], isPortalUser: false, portalClientId: null };
+  }
+  
+  // Super admin can see all
+  if (await isSuperAdmin()) {
+    return { userId, role: "super_admin", accessibleSiteIds: null, isPortalUser: false, portalClientId: null };
+  }
+  
+  // Get user's agency membership
+  const { data: membership } = await supabase
+    .from("agency_members")
+    .select("agency_id, role")
+    .eq("user_id", userId)
+    .single();
+  
+  if (!membership) {
+    return { userId, role, accessibleSiteIds: [], isPortalUser: false, portalClientId: null };
+  }
+  
+  // For agency members, get all sites in their agency
+  const { data: sites } = await supabase
+    .from("sites")
+    .select("id, clients!inner(agency_id)")
+    .eq("clients.agency_id", membership.agency_id);
+  
+  return {
+    userId,
+    role: membership.role, // owner, admin, or member
+    accessibleSiteIds: sites?.map(s => s.id) || [],
+    isPortalUser: false,
+    portalClientId: null
+  };
+}
+
+/**
+ * Check if user can access a specific site's submissions
+ */
+async function canAccessSite(siteId: string): Promise<boolean> {
+  const context = await getUserSiteContext();
+  
+  if (context.accessibleSiteIds === null) {
+    return true; // Super admin
+  }
+  
+  return context.accessibleSiteIds.includes(siteId);
+}
+
+/**
+ * Check if user can delete submissions
+ * Agency members and portal clients cannot delete
+ */
+async function canDeleteSubmissions(): Promise<boolean> {
+  const context = await getUserSiteContext();
+  
+  if (context.isPortalUser) return false;
+  if (context.role === "member") return false;
+  
+  return context.role === "super_admin" || context.role === "owner" || context.role === "admin";
+}
+
+/**
+ * Check if user can export submissions
+ * Portal users have limited export (own sites only)
+ */
+async function canExportSubmissions(): Promise<boolean> {
+  const context = await getUserSiteContext();
+  return context.userId !== null || context.isPortalUser;
+}
+
 export async function getSubmissions(
   siteId: string,
   filters: SubmissionFilters = {},
   page = 1,
   limit = 50
 ): Promise<{ submissions: FormSubmission[]; total: number }> {
+  // Permission check
+  if (!(await canAccessSite(siteId))) {
+    console.error("[SubmissionService] Access denied for site:", siteId);
+    return { submissions: [], total: 0 };
+  }
+  
   const supabase = await createClient();
   const offset = (page - 1) * limit;
 
@@ -279,6 +561,12 @@ export async function getSubmission(submissionId: string): Promise<FormSubmissio
   if (error || !data) {
     return null;
   }
+  
+  // Permission check - verify user can access this site
+  if (!(await canAccessSite(data.site_id))) {
+    console.error("[SubmissionService] Access denied for submission:", submissionId);
+    return null;
+  }
 
   return mapToSubmission(data);
 }
@@ -288,6 +576,17 @@ export async function updateSubmissionStatus(
   status: "new" | "read" | "archived" | "spam"
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
+
+  // First get the submission to check site access
+  const { data: existing } = await supabase
+    .from("form_submissions")
+    .select("site_id")
+    .eq("id", submissionId)
+    .single();
+  
+  if (!existing || !(await canAccessSite(existing.site_id))) {
+    return { success: false, error: "Access denied" };
+  }
 
   const { error } = await supabase
     .from("form_submissions")
@@ -307,7 +606,23 @@ export async function updateSubmissionStatus(
 export async function deleteSubmission(
   submissionId: string
 ): Promise<{ success: boolean; error?: string }> {
+  // Permission check - only owner/admin can delete
+  if (!(await canDeleteSubmissions())) {
+    return { success: false, error: "Permission denied: Only agency owners/admins can delete submissions" };
+  }
+
   const supabase = await createClient();
+
+  // Verify site access
+  const { data: existing } = await supabase
+    .from("form_submissions")
+    .select("site_id")
+    .eq("id", submissionId)
+    .single();
+  
+  if (!existing || !(await canAccessSite(existing.site_id))) {
+    return { success: false, error: "Access denied" };
+  }
 
   const { error } = await supabase
     .from("form_submissions")
@@ -324,7 +639,26 @@ export async function deleteSubmission(
 export async function deleteSubmissions(
   submissionIds: string[]
 ): Promise<{ success: boolean; error?: string }> {
+  // Permission check - only owner/admin can delete
+  if (!(await canDeleteSubmissions())) {
+    return { success: false, error: "Permission denied: Only agency owners/admins can delete submissions" };
+  }
+
   const supabase = await createClient();
+
+  // Verify all submissions belong to accessible sites
+  const { data: submissions } = await supabase
+    .from("form_submissions")
+    .select("id, site_id")
+    .in("id", submissionIds);
+  
+  if (submissions) {
+    for (const sub of submissions) {
+      if (!(await canAccessSite(sub.site_id))) {
+        return { success: false, error: "Access denied for one or more submissions" };
+      }
+    }
+  }
 
   const { error } = await supabase
     .from("form_submissions")
@@ -342,6 +676,11 @@ export async function getFormSettings(
   siteId: string,
   formId: string
 ): Promise<FormSettings | null> {
+  // Permission check
+  if (!(await canAccessSite(siteId))) {
+    return null;
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -388,6 +727,16 @@ export async function updateFormSettings(
   formId: string,
   settings: Partial<FormSettings>
 ): Promise<{ success: boolean; error?: string }> {
+  // Permission check - portal users cannot change settings
+  const context = await getUserSiteContext();
+  if (context.isPortalUser) {
+    return { success: false, error: "Portal users cannot modify form settings" };
+  }
+  
+  if (!(await canAccessSite(siteId))) {
+    return { success: false, error: "Access denied" };
+  }
+
   const supabase = await createClient();
 
   const { error } = await supabase
@@ -422,6 +771,11 @@ export async function getSubmissionStats(siteId: string): Promise<{
   today: number;
   thisWeek: number;
 }> {
+  // Permission check
+  if (!(await canAccessSite(siteId))) {
+    return { total: 0, new: 0, today: 0, thisWeek: 0 };
+  }
+
   const supabase = await createClient();
 
   const now = new Date();
@@ -458,6 +812,29 @@ export async function getSubmissionStats(siteId: string): Promise<{
     today: todayResult.count || 0,
     thisWeek: weekResult.count || 0,
   };
+}
+
+/**
+ * Get accessible sites for portal users
+ */
+export async function getPortalAccessibleSites(): Promise<{
+  sites: Array<{ id: string; name: string; domain: string }>;
+}> {
+  const context = await getUserSiteContext();
+  
+  if (!context.isPortalUser || !context.portalClientId) {
+    return { sites: [] };
+  }
+  
+  const supabase = await createClient();
+  
+  const { data: sites } = await supabase
+    .from("sites")
+    .select("id, name, domain")
+    .eq("client_id", context.portalClientId)
+    .order("name");
+  
+  return { sites: sites || [] };
 }
 
 function mapToSubmission(data: Record<string, unknown>): FormSubmission {
@@ -1446,10 +1823,305 @@ export default function SubmissionsPage({
 
 ---
 
+### Task 82.7: Portal Submissions Page (Client View)
+
+**File: `src/app/portal/submissions/page.tsx`**
+
+```tsx
+"use client";
+
+import { useState, useEffect } from "react";
+import { Mail, Download, Loader2, Inbox, Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { SubmissionTable } from "@/components/forms/submission-table";
+import { SubmissionDetail } from "@/components/forms/submission-detail";
+import {
+  getSubmissions,
+  getSubmissionStats,
+  getPortalAccessibleSites,
+  type FormSubmission,
+} from "@/lib/forms/submission-service";
+import { toast } from "sonner";
+
+export default function PortalSubmissionsPage() {
+  const [sites, setSites] = useState<Array<{ id: string; name: string; domain: string }>>([]);
+  const [selectedSiteId, setSelectedSiteId] = useState<string>("");
+  const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
+  const [stats, setStats] = useState({ total: 0, new: 0, today: 0, thisWeek: 0 });
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+
+  // Selection (view only for portal users)
+  const [detailSubmission, setDetailSubmission] = useState<FormSubmission | null>(null);
+
+  // Filters
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Load accessible sites on mount
+  useEffect(() => {
+    async function loadSites() {
+      const result = await getPortalAccessibleSites();
+      setSites(result.sites);
+      if (result.sites.length > 0) {
+        setSelectedSiteId(result.sites[0].id);
+      }
+      setLoading(false);
+    }
+    loadSites();
+  }, []);
+
+  // Load submissions when site changes
+  useEffect(() => {
+    if (selectedSiteId) {
+      loadData();
+    }
+  }, [selectedSiteId, page, statusFilter]);
+
+  const loadData = async () => {
+    if (!selectedSiteId) return;
+    
+    setLoading(true);
+
+    const [submissionsResult, statsResult] = await Promise.all([
+      getSubmissions(
+        selectedSiteId,
+        { status: statusFilter === "all" ? undefined : statusFilter },
+        page
+      ),
+      getSubmissionStats(selectedSiteId),
+    ]);
+
+    setSubmissions(submissionsResult.submissions);
+    setTotal(submissionsResult.total);
+    setStats(statsResult);
+    setLoading(false);
+  };
+
+  const handleExport = () => {
+    if (submissions.length === 0) {
+      toast.error("No submissions to export");
+      return;
+    }
+
+    // Get all unique field keys
+    const allKeys = new Set<string>();
+    submissions.forEach((s) => {
+      Object.keys(s.data).forEach((k) => allKeys.add(k));
+    });
+    const headers = ["Date", ...Array.from(allKeys), "Status"];
+
+    // Build CSV rows
+    const rows = submissions.map((s) => {
+      const values = [
+        new Date(s.createdAt).toISOString(),
+        ...Array.from(allKeys).map((k) => {
+          const val = s.data[k];
+          const str = String(val ?? "").replace(/"/g, '""');
+          return `"${str}"`;
+        }),
+        s.status,
+      ];
+      return values.join(",");
+    });
+
+    const csv = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `submissions-${selectedSiteId}-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+    toast.success("Export downloaded");
+  };
+
+  if (sites.length === 0 && !loading) {
+    return (
+      <div className="p-6">
+        <div className="max-w-md mx-auto text-center py-16">
+          <Globe className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">No Sites Available</h2>
+          <p className="text-muted-foreground">
+            You don't have access to any sites yet. Please contact your agency.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="p-6 border-b">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Mail className="h-6 w-6" />
+              Form Submissions
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              View form submissions from your websites
+            </p>
+          </div>
+          <Button variant="outline" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            Export CSV
+          </Button>
+        </div>
+
+        {/* Site Selector */}
+        {sites.length > 1 && (
+          <div className="mb-6">
+            <label className="text-sm font-medium mb-2 block">Select Website</label>
+            <Select value={selectedSiteId} onValueChange={setSelectedSiteId}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Select a site" />
+              </SelectTrigger>
+              <SelectContent>
+                {sites.map((site) => (
+                  <SelectItem key={site.id} value={site.id}>
+                    {site.name}
+                    <span className="text-muted-foreground ml-2">({site.domain})</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Stats */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-sm text-muted-foreground">Total</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-2xl font-bold text-blue-600">{stats.new}</p>
+              <p className="text-sm text-muted-foreground">New</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-2xl font-bold">{stats.today}</p>
+              <p className="text-sm text-muted-foreground">Today</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-2xl font-bold">{stats.thisWeek}</p>
+              <p className="text-sm text-muted-foreground">This Week</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters */}
+        <div className="flex items-center gap-4">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="new">New</SelectItem>
+              <SelectItem value="read">Read</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : submissions.length === 0 ? (
+          <div className="py-16 text-center">
+            <Inbox className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="font-medium mb-2">No submissions yet</h3>
+            <p className="text-sm text-muted-foreground">
+              Submissions will appear here when visitors submit forms on your website.
+            </p>
+          </div>
+        ) : (
+          <SubmissionTable
+            submissions={submissions}
+            selectedIds={[]} // Portal users can't select/delete
+            onSelect={() => {}} // No-op for portal
+            onSelectAll={() => {}} // No-op for portal
+            onView={setDetailSubmission}
+            onRefresh={loadData}
+            readOnly // Add readOnly prop for portal users
+          />
+        )}
+      </div>
+
+      {/* Pagination */}
+      {total > 50 && (
+        <div className="p-4 border-t flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">
+            Showing {(page - 1) * 50 + 1}-{Math.min(page * 50, total)} of {total}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page * 50 >= total}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Panel */}
+      {detailSubmission && (
+        <SubmissionDetail
+          submission={detailSubmission}
+          onClose={() => setDetailSubmission(null)}
+          onUpdate={loadData}
+          readOnly // Portal users can only view
+        />
+      )}
+    </div>
+  );
+}
+```
+
+**Note**: Update `SubmissionTable` and `SubmissionDetail` components to accept a `readOnly` prop that hides delete/bulk actions for portal users.
+
+---
+
 ## 🧪 Testing Checklist
 
 ### Unit Tests
 - [ ] Submission service CRUD operations
+- [ ] Permission checks for all user roles
 - [ ] Spam detection catches common patterns
 - [ ] CSV export formats correctly
 
@@ -1457,29 +2129,46 @@ export default function SubmissionsPage({
 - [ ] Form submission saves to database
 - [ ] Rate limiting blocks excessive submissions
 - [ ] Webhooks trigger on submission
+- [ ] Portal users can only view their sites
 
 ### E2E Tests
 - [ ] Submit form on published site
-- [ ] View submissions in dashboard
+- [ ] View submissions in dashboard (agency)
+- [ ] View submissions in portal (client)
 - [ ] Status changes work
 - [ ] Export downloads correctly
-- [ ] Bulk delete works
+- [ ] Bulk delete works (agency only)
+- [ ] Portal users cannot delete submissions
 
 ---
 
 ## ✅ Completion Checklist
 
 - [ ] Database schema for submissions
-- [ ] Submission service
+- [ ] RLS policies for all tables
+- [ ] Submission service with permission checks
 - [ ] Public submit endpoint
 - [ ] Spam protection
 - [ ] Rate limiting
-- [ ] Submission table component
-- [ ] Submission detail component
-- [ ] Submissions page
-- [ ] CSV export
-- [ ] Webhook support
+- [ ] Submission table component (with readOnly mode)
+- [ ] Submission detail component (with readOnly mode)
+- [ ] Agency submissions page
+- [ ] **Portal submissions page (client view)**
+- [ ] CSV export (all users)
+- [ ] Webhook support (agency only)
 - [ ] Email notifications (optional)
+
+---
+
+## 🔐 User Role Summary
+
+| Role | View | Export | Mark Read | Delete | Settings |
+|------|------|--------|-----------|--------|----------|
+| Super Admin | ✅ All | ✅ | ✅ | ✅ | ✅ |
+| Agency Owner | ✅ Agency | ✅ | ✅ | ✅ | ✅ |
+| Agency Admin | ✅ Agency | ✅ | ✅ | ✅ | ✅ |
+| Agency Member | ✅ Assigned | ✅ | ✅ | ❌ | ❌ |
+| Client Portal | ✅ Own Sites | ✅ | ✅ | ❌ | ❌ |
 
 ---
 

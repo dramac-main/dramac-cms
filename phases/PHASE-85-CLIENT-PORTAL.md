@@ -15,6 +15,34 @@ ENHANCE the existing client portal with:
 2. **Expanded features** - Analytics, support tickets
 3. **Permissions** - Granular access controls
 4. **Better UX** - Professional portal experience
+5. **Feature Integration** - Connect with Phases 81-84 portal views
+
+---
+
+## 👥 Portal User vs Agency Users
+
+This phase focuses on **CLIENT USERS** (the "client" role):
+
+| Aspect | Agency Users | Portal Users (Clients) |
+|--------|--------------|------------------------|
+| Auth | Main Supabase Auth | Separate portal login flow |
+| Dashboard | `/dashboard/` | `/portal/` |
+| Sites | All agency sites | Only their own sites |
+| Editing | Full editor access | View-only (configurable) |
+| Media (Phase 81) | Full media management | View media for their sites |
+| Forms (Phase 82) | Full access | View submissions (read-only) |
+| Blog (Phase 83) | Create/publish posts | View published posts |
+| SEO (Phase 84) | Full SEO editing | View SEO scores |
+
+### Client Permission Levels
+
+| Permission | Description |
+|------------|-------------|
+| `can_view` | Basic access to view their sites |
+| `can_view_analytics` | See traffic/performance data |
+| `can_view_invoices` | Access billing information |
+| `can_edit_content` | Edit pages (limited) |
+| `can_publish` | Publish content changes |
 
 ---
 
@@ -24,6 +52,7 @@ ENHANCE the existing client portal with:
 - [ ] Client management complete
 - [ ] Site management complete
 - [ ] `has_portal_access` column in clients table
+- [ ] Phase 81-84 portal services implemented
 
 ---
 
@@ -38,6 +67,12 @@ ENHANCE the existing client portal with:
 - ✅ `clients` table has `portal_user_id` column
 - ✅ `clients` table has `has_portal_access` boolean
 
+**From Phases 81-84 (portal features added):**
+- ✅ `src/app/portal/media/` - Media library view (Phase 81)
+- ✅ `src/app/portal/submissions/` - Form submissions view (Phase 82)
+- ✅ `src/app/portal/blog/` - Blog posts view (Phase 83)
+- ✅ `src/app/portal/seo/` - SEO scores view (Phase 84)
+
 **What's Missing:**
 - Real Supabase Auth for clients (not cookie impersonation)
 - Portal-specific login page
@@ -45,6 +80,7 @@ ENHANCE the existing client portal with:
 - Client notifications
 - Proper permission enforcement
 - Billing/invoice viewing
+- Integration with Phase 81-84 portal services
 
 ---
 
@@ -1394,36 +1430,60 @@ export default function VerifyPage() {
 ### Unit Tests
 - [ ] Magic link generation/verification
 - [ ] Session cookie handling
-- [ ] Permission checks
+- [ ] Permission checks for all portal features
 
 ### Integration Tests
 - [ ] Client user creation
 - [ ] Login flow (magic link)
 - [ ] Login flow (password)
 - [ ] Support ticket creation
+- [ ] Portal media access (Phase 81)
+- [ ] Portal submissions access (Phase 82)
+- [ ] Portal blog access (Phase 83)
+- [ ] Portal SEO access (Phase 84)
 
 ### E2E Tests
 - [ ] Full login journey
 - [ ] View sites list
 - [ ] Submit support ticket
 - [ ] View analytics (if permitted)
+- [ ] View media library
+- [ ] View form submissions
+- [ ] View blog posts
+- [ ] View SEO scores
 
 ---
 
 ## ✅ Completion Checklist
 
 - [ ] Database schema for client portal
-- [ ] Portal authentication (magic link + password)
+- [ ] RLS policies for portal tables
+- [ ] Portal authentication (Supabase Auth)
 - [ ] Portal layout and navigation
 - [ ] Portal dashboard
 - [ ] Sites listing
 - [ ] Site detail view
 - [ ] Support tickets system
-- [ ] Login page
+- [ ] Login page (magic link + password)
 - [ ] Magic link verification
 - [ ] Permission-based features
-- [ ] bcryptjs installed
+- [ ] **Integration with Phase 81 (Media)**
+- [ ] **Integration with Phase 82 (Submissions)**
+- [ ] **Integration with Phase 83 (Blog)**
+- [ ] **Integration with Phase 84 (SEO)**
 
 ---
 
-**Summary**: Phase 85 completes the Client Portal, giving agency clients self-service access to their sites, analytics, and support - reducing agency workload and improving client experience.
+## 🔐 Portal Features by Phase
+
+| Phase | Portal Route | Client Access |
+|-------|--------------|---------------|
+| 85 | `/portal/` | Dashboard, sites, support |
+| 81 | `/portal/media/` | View media (read-only) |
+| 82 | `/portal/submissions/` | View submissions (read-only) |
+| 83 | `/portal/blog/` | View published posts |
+| 84 | `/portal/seo/` | View SEO scores |
+
+---
+
+**Summary**: Phase 85 completes the Client Portal, giving agency clients self-service access to their sites, analytics, and support - reducing agency workload and improving client experience. The portal integrates all features from Phases 81-84 with appropriate read-only access.

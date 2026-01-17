@@ -18,11 +18,33 @@ Create a comprehensive media library for managing images, videos, and files:
 
 ---
 
+## � USER ROLES & ACCESS
+
+### Access Matrix
+
+| Feature | Super Admin | Agency Owner | Agency Admin | Agency Member | Client |
+|---------|-------------|--------------|--------------|---------------|--------|
+| View all agency media | ✅ | ✅ | ✅ | ✅ (own sites only) | ❌ |
+| Upload media | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Delete media | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Manage folders | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Edit metadata (tags, alt) | ✅ | ✅ | ✅ | ✅ | ❌ |
+| View via portal | N/A | N/A | N/A | N/A | ✅ (own sites) |
+
+### Permission Implementation
+- Use `getCurrentUserRole()` from `@/lib/auth/permissions`
+- Use `hasPermission()` with `PERMISSIONS.EDIT_CONTENT` for uploads
+- Agency members only see media from sites they're assigned to
+- Super admin can access ALL agencies' media (for support)
+
+---
+
 ## 📋 Prerequisites
 
 - [ ] Supabase Storage configured
 - [ ] Visual editor functional
 - [ ] Dashboard layout ready
+- [ ] Permission system working (`src/lib/auth/permissions.ts`)
 
 ---
 
@@ -30,6 +52,8 @@ Create a comprehensive media library for managing images, videos, and files:
 
 **What Exists:**
 - ✅ **`assets` table EXISTS** with: `id`, `site_id`, `agency_id`, `name`, `file_name`, `url`, `storage_path`, `mime_type`, `size`, `width`, `height`, `folder`, `alt_text`
+- ✅ **Permission system** in `src/lib/auth/permissions.ts`
+- ✅ **User roles** defined in `src/types/roles.ts`
 - Basic file upload in page editor
 - Supabase storage bucket exists
 
@@ -40,6 +64,7 @@ Create a comprehensive media library for managing images, videos, and files:
 - Image transformations
 - Search and filtering
 - Media picker dialog
+- Role-based access checks
 
 ---
 
@@ -134,18 +159,45 @@ CREATE TABLE IF NOT EXISTS media_usage (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Indexes
-CREATE INDEX idx_media_files_agency ON media_files(agency_id);
-CREATE INDEX idx_media_files_folder ON media_files(folder_id);
-CREATE INDEX idx_media_files_type ON media_files(file_type);
-CREATE INDEX idx_media_files_tags ON media_files USING GIN(tags);
-CREATE INDEX idx_media_usage_media ON media_usage(media_id);
-CREATE INDEX idx_media_usage_entity ON media_usage(entity_type, entity_id);
+-- Indexes (FIXED - references assets table, not media_files!)
+CREATE INDEX IF NOT EXISTS idx_assets_agency ON assets(agency_id);
+CREATE INDEX IF NOT EXISTS idx_assets_folder ON assets(folder_id);
+CREATE INDEX IF NOT EXISTS idx_assets_type ON assets(mime_type);
+CREATE INDEX IF NOT EXISTS idx_assets_tags ON assets USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_assets_site ON assets(site_id);
+CREATE INDEX IF NOT EXISTS idx_media_folders_agency ON media_folders(agency_id);
+CREATE INDEX IF NOT EXISTS idx_media_usage_asset ON media_usage(asset_id);
+CREATE INDEX IF NOT EXISTS idx_media_usage_entity ON media_usage(entity_type, entity_id);
+
+-- RLS Policies for media_folders
+ALTER TABLE media_folders ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Agency members can view their folders"
+ON media_folders FOR SELECT
+USING (
+  agency_id IN (
+    SELECT agency_id FROM profiles WHERE id = auth.uid()
+    UNION
+    SELECT agency_id FROM agency_members WHERE user_id = auth.uid()
+  )
+  OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin')
+);
+
+CREATE POLICY "Agency admins can manage folders"
+ON media_folders FOR ALL
+USING (
+  agency_id IN (
+    SELECT agency_id FROM profiles WHERE id = auth.uid()
+    UNION
+    SELECT agency_id FROM agency_members WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
+  )
+  OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin')
+);
 ```
 
 ---
 
-### Task 81.2: Media Service
+### Task 81.2: Media Service (WITH PERMISSION CHECKS!)
 
 **File: `src/lib/media/media-service.ts`**
 
@@ -153,10 +205,18 @@ CREATE INDEX idx_media_usage_entity ON media_usage(entity_type, entity_id);
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentUser } from "@/lib/auth/session";
+import { 
+  getCurrentUserRole, 
+  getCurrentUserId, 
+  isSuperAdmin,
+  hasPermission 
+} from "@/lib/auth/permissions";
+import { PERMISSIONS } from "@/types/roles";
 
 export interface MediaFile {
   id: string;
+  siteId: string | null;
+  agencyId: string;
   folderId: string | null;
   fileName: string;
   originalName: string;
@@ -170,6 +230,7 @@ export interface MediaFile {
   altText: string | null;
   caption: string | null;
   tags: string[];
+  uploadedBy: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -187,14 +248,63 @@ export interface MediaFilters {
   fileType?: string;
   search?: string;
   tags?: string[];
+  siteId?: string; // Filter by specific site
 }
 
+/**
+ * Get user's agency ID with role validation
+ */
+async function getUserAgencyContext(): Promise<{
+  userId: string;
+  agencyId: string | null;
+  role: string | null;
+  isSuperAdmin: boolean;
+} | null> {
+  const supabase = await createClient();
+  const userId = await getCurrentUserId();
+  if (!userId) return null;
+
+  const role = await getCurrentUserRole();
+  const superAdmin = await isSuperAdmin();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", userId)
+    .single();
+
+  return {
+    userId,
+    agencyId: profile?.agency_id || null,
+    role,
+    isSuperAdmin: superAdmin,
+  };
+}
+
+/**
+ * Get media files with role-based filtering
+ * - Super admin: Can view ALL agencies' media
+ * - Agency owner/admin: All agency media
+ * - Agency member: Only media from assigned sites
+ */
 export async function getMediaFiles(
   agencyId: string,
   filters: MediaFilters = {},
   page = 1,
   limit = 50
 ): Promise<{ files: MediaFile[]; total: number }> {
+  const context = await getUserAgencyContext();
+  if (!context) {
+    console.error("[MediaService] Not authenticated");
+    return { files: [], total: 0 };
+  }
+
+  // Permission check: Agency member can only view their agency's media
+  if (!context.isSuperAdmin && context.agencyId !== agencyId) {
+    console.error("[MediaService] Access denied - wrong agency");
+    return { files: [], total: 0 };
+  }
+
   const supabase = await createClient();
   const offset = (page - 1) * limit;
 
@@ -203,6 +313,20 @@ export async function getMediaFiles(
     .select("*", { count: "exact" })
     .eq("agency_id", agencyId)
     .order("created_at", { ascending: false });
+
+  // Agency members can only see media from sites they're assigned to
+  if (context.role === "agency_member" && !context.isSuperAdmin) {
+    // Get sites this member has access to
+    const { data: memberSites } = await supabase
+      .from("sites")
+      .select("id")
+      .eq("agency_id", agencyId);
+    
+    const siteIds = memberSites?.map(s => s.id) || [];
+    if (siteIds.length > 0) {
+      query = query.or(`site_id.in.(${siteIds.join(",")}),site_id.is.null`);
+    }
+  }
 
   if (filters.folderId !== undefined) {
     if (filters.folderId === null) {
@@ -213,15 +337,19 @@ export async function getMediaFiles(
   }
 
   if (filters.fileType) {
-    query = query.eq("file_type", filters.fileType);
+    query = query.ilike("mime_type", `${filters.fileType}%`);
   }
 
   if (filters.search) {
-    query = query.or(`original_name.ilike.%${filters.search}%,alt_text.ilike.%${filters.search}%`);
+    query = query.or(`name.ilike.%${filters.search}%,alt_text.ilike.%${filters.search}%`);
   }
 
   if (filters.tags && filters.tags.length > 0) {
     query = query.overlaps("tags", filters.tags);
+  }
+
+  if (filters.siteId) {
+    query = query.eq("site_id", filters.siteId);
   }
 
   query = query.range(offset, offset + limit - 1);
@@ -240,6 +368,14 @@ export async function getMediaFiles(
 }
 
 export async function getMediaFolders(agencyId: string): Promise<MediaFolder[]> {
+  const context = await getUserAgencyContext();
+  if (!context) return [];
+
+  // Permission check
+  if (!context.isSuperAdmin && context.agencyId !== agencyId) {
+    return [];
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -265,11 +401,29 @@ export async function getMediaFolders(agencyId: string): Promise<MediaFolder[]> 
   }));
 }
 
+/**
+ * Create folder - requires EDIT_CONTENT permission
+ * Agency members cannot create folders
+ */
 export async function createFolder(
   agencyId: string,
   name: string,
   parentId?: string
 ): Promise<{ success: boolean; folder?: MediaFolder; error?: string }> {
+  const context = await getUserAgencyContext();
+  if (!context) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  // Permission check - only owner/admin can create folders
+  if (!context.isSuperAdmin && context.agencyId !== agencyId) {
+    return { success: false, error: "Access denied" };
+  }
+
+  if (context.role === "agency_member") {
+    return { success: false, error: "Members cannot create folders" };
+  }
+
   const supabase = await createClient();
 
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
@@ -303,11 +457,35 @@ export async function createFolder(
   };
 }
 
+/**
+ * Update media file metadata
+ * Agency members can update metadata for files they have access to
+ */
 export async function updateMediaFile(
   fileId: string,
   updates: { altText?: string; caption?: string; tags?: string[]; folderId?: string | null }
 ): Promise<{ success: boolean; error?: string }> {
+  const context = await getUserAgencyContext();
+  if (!context) {
+    return { success: false, error: "Not authenticated" };
+  }
+
   const supabase = await createClient();
+
+  // Verify user has access to this file
+  const { data: file } = await supabase
+    .from("assets")
+    .select("agency_id, site_id")
+    .eq("id", fileId)
+    .single();
+
+  if (!file) {
+    return { success: false, error: "File not found" };
+  }
+
+  if (!context.isSuperAdmin && file.agency_id !== context.agencyId) {
+    return { success: false, error: "Access denied" };
+  }
 
   const updateData: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
@@ -330,18 +508,37 @@ export async function updateMediaFile(
   return { success: true };
 }
 
+/**
+ * Delete media file - requires EDIT_CONTENT permission
+ * Agency members CANNOT delete files
+ */
 export async function deleteMediaFile(fileId: string): Promise<{ success: boolean; error?: string }> {
+  const context = await getUserAgencyContext();
+  if (!context) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  // Agency members cannot delete
+  if (context.role === "agency_member" && !context.isSuperAdmin) {
+    return { success: false, error: "Members cannot delete files" };
+  }
+
   const supabase = await createClient();
 
   // Get file info first
   const { data: file } = await supabase
     .from("assets")
-    .select("storage_path")
+    .select("storage_path, agency_id")
     .eq("id", fileId)
     .single();
 
   if (!file) {
     return { success: false, error: "File not found" };
+  }
+
+  // Verify agency access
+  if (!context.isSuperAdmin && file.agency_id !== context.agencyId) {
+    return { success: false, error: "Access denied" };
   }
 
   // Delete from storage
@@ -360,8 +557,35 @@ export async function deleteMediaFile(fileId: string): Promise<{ success: boolea
   return { success: true };
 }
 
+/**
+ * Delete folder - requires admin/owner role
+ */
 export async function deleteFolder(folderId: string): Promise<{ success: boolean; error?: string }> {
+  const context = await getUserAgencyContext();
+  if (!context) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  if (context.role === "agency_member" && !context.isSuperAdmin) {
+    return { success: false, error: "Members cannot delete folders" };
+  }
+
   const supabase = await createClient();
+
+  // Get folder to verify ownership
+  const { data: folder } = await supabase
+    .from("media_folders")
+    .select("agency_id")
+    .eq("id", folderId)
+    .single();
+
+  if (!folder) {
+    return { success: false, error: "Folder not found" };
+  }
+
+  if (!context.isSuperAdmin && folder.agency_id !== context.agencyId) {
+    return { success: false, error: "Access denied" };
+  }
 
   // Check if folder has files
   const { count } = await supabase
@@ -1222,11 +1446,22 @@ import {
   type MediaFile,
   type MediaFolder,
 } from "@/lib/media/media-service";
+import { getUserAgencyAndRole } from "@/lib/media/media-service";
 import { toast } from "sonner";
+
+interface UserContext {
+  agencyId: string;
+  role: string | null;
+  canDelete: boolean;
+  canCreateFolders: boolean;
+}
 
 export default function MediaLibraryPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // User context
+  const [userContext, setUserContext] = useState<UserContext | null>(null);
 
   // State
   const [files, setFiles] = useState<MediaFile[]>([]);
@@ -1246,23 +1481,42 @@ export default function MediaLibraryPage() {
   // Upload sheet
   const [uploadOpen, setUploadOpen] = useState(false);
 
-  // TODO: Get agency ID from session
-  const agencyId = "demo-agency-id";
+  // Load user context on mount
+  useEffect(() => {
+    async function loadUserContext() {
+      const context = await getUserAgencyAndRole();
+      if (!context || !context.agencyId) {
+        router.push("/dashboard");
+        return;
+      }
+      setUserContext({
+        agencyId: context.agencyId,
+        role: context.role,
+        canDelete: context.role !== "agency_member",
+        canCreateFolders: context.role !== "agency_member",
+      });
+    }
+    loadUserContext();
+  }, [router]);
 
   useEffect(() => {
-    loadData();
-  }, [currentFolderId, fileType, search]);
+    if (userContext?.agencyId) {
+      loadData();
+    }
+  }, [currentFolderId, fileType, search, userContext?.agencyId]);
 
   const loadData = async () => {
+    if (!userContext?.agencyId) return;
+    
     setLoading(true);
     
     const [filesResult, foldersData] = await Promise.all([
-      getMediaFiles(agencyId, {
+      getMediaFiles(userContext.agencyId, {
         folderId: currentFolderId,
         fileType: fileType === "all" ? undefined : fileType,
         search: search || undefined,
       }),
-      getMediaFolders(agencyId),
+      getMediaFolders(userContext.agencyId),
     ]);
 
     setFiles(filesResult.files);
@@ -1286,6 +1540,10 @@ export default function MediaLibraryPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!userContext?.canDelete) {
+      toast.error("You don't have permission to delete files");
+      return;
+    }
     const result = await deleteMediaFile(id);
     if (result.success) {
       toast.success("File deleted");
@@ -1299,6 +1557,10 @@ export default function MediaLibraryPage() {
   };
 
   const handleBulkDelete = async () => {
+    if (!userContext?.canDelete) {
+      toast.error("You don't have permission to delete files");
+      return;
+    }
     if (!confirm(`Delete ${selectedIds.length} files?`)) return;
 
     for (const id of selectedIds) {
@@ -1310,10 +1572,16 @@ export default function MediaLibraryPage() {
   };
 
   const handleCreateFolder = async () => {
+    if (!userContext?.canCreateFolders) {
+      toast.error("You don't have permission to create folders");
+      return;
+    }
+    if (!userContext?.agencyId) return;
+    
     const name = prompt("Folder name:");
     if (!name) return;
 
-    const result = await createFolder(agencyId, name, currentFolderId || undefined);
+    const result = await createFolder(userContext.agencyId, name, currentFolderId || undefined);
     if (result.success) {
       toast.success("Folder created");
       loadData();
@@ -1321,6 +1589,15 @@ export default function MediaLibraryPage() {
       toast.error(result.error || "Failed to create folder");
     }
   };
+
+  // Loading state for user context
+  if (!userContext) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex">
@@ -1454,7 +1731,7 @@ export default function MediaLibraryPage() {
               onSelect={handleSelect}
               onSelectAll={handleSelectAll}
               onItemClick={handleItemClick}
-              onDelete={handleDelete}
+              onDelete={userContext.canDelete ? handleDelete : undefined}
             />
           )}
         </div>
@@ -1466,14 +1743,36 @@ export default function MediaLibraryPage() {
           file={detailFile}
           onClose={() => setDetailFile(null)}
           onUpdate={loadData}
-          onDelete={() => {
+          onDelete={userContext.canDelete ? () => {
             setDetailFile(null);
             loadData();
-          }}
+          } : undefined}
+          canDelete={userContext.canDelete}
         />
       )}
     </div>
   );
+}
+```
+
+---
+
+### Task 81.8: Export Helper Function for User Context
+
+Add this exported function to `src/lib/media/media-service.ts`:
+
+```typescript
+/**
+ * Get current user's agency and role for UI permission checks
+ * Used by MediaLibraryPage to determine what actions user can take
+ */
+export async function getUserAgencyAndRole(): Promise<{
+  userId: string;
+  agencyId: string | null;
+  role: string | null;
+  isSuperAdmin: boolean;
+} | null> {
+  return getUserAgencyContext();
 }
 ```
 
@@ -1485,34 +1784,46 @@ export default function MediaLibraryPage() {
 - [ ] Upload service handles various file types
 - [ ] Media service CRUD operations work
 - [ ] File size formatting is correct
+- [ ] Permission checks work correctly for each role
 
 ### Integration Tests
 - [ ] Files upload to Supabase Storage
 - [ ] Database records created correctly
 - [ ] Folders organize files properly
 - [ ] Search and filters work
+- [ ] RLS policies enforce access control
 
 ### E2E Tests
 - [ ] Drag-and-drop upload works
 - [ ] Files display in grid
 - [ ] Details panel shows/edits metadata
-- [ ] Bulk delete works
+- [ ] Bulk delete works (admin/owner only)
 - [ ] Folder navigation works
+- [ ] Agency members can view but not delete
+- [ ] Super admin can access all agencies
+
+### Role-Based Tests
+- [ ] **Super Admin**: Can view/manage ALL agencies' media
+- [ ] **Agency Owner**: Full access to own agency media
+- [ ] **Agency Admin**: Full access to own agency media
+- [ ] **Agency Member**: Can view/upload, cannot delete/create folders
+- [ ] **Client (Portal)**: No direct access (future: read-only via site)
 
 ---
 
 ## ✅ Completion Checklist
 
-- [ ] Database schema for media
-- [ ] Media service (CRUD)
+- [ ] Database schema for media (with RLS policies)
+- [ ] Media service (CRUD with permission checks)
 - [ ] Upload service
 - [ ] Media upload zone component
-- [ ] Media grid component
-- [ ] Media details panel
-- [ ] Media library page
-- [ ] Folder management
+- [ ] Media grid component (role-aware)
+- [ ] Media details panel (role-aware delete)
+- [ ] Media library page (dynamic agency context)
+- [ ] Folder management (admin/owner only)
 - [ ] Search and filtering
 - [ ] react-dropzone package installed
+- [ ] Permission system integrated
 
 ---
 

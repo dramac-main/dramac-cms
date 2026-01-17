@@ -19,12 +19,39 @@ Create a comprehensive SEO management dashboard for sites:
 
 ---
 
+## � User Roles & Access
+
+This phase must support ALL user types with appropriate permissions:
+
+| Role | Access Level | Capabilities |
+|------|--------------|--------------|
+| **Super Admin** | All agencies | Full access to all SEO settings |
+| **Agency Owner** | Own agency | Full access to agency sites' SEO |
+| **Agency Admin** | Own agency | Full access to SEO settings |
+| **Agency Member** | Assigned sites | View SEO scores, limited editing |
+| **Client Portal** | Own sites only | View SEO scores and recommendations |
+
+### Permission Matrix
+
+| Action | Super Admin | Owner | Admin | Member | Client |
+|--------|-------------|-------|-------|--------|--------|
+| View SEO dashboard | ✅ | ✅ Agency | ✅ Agency | ✅ Assigned | ✅ Own |
+| Edit site SEO | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Edit page SEO | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Manage sitemap | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Edit robots.txt | ✅ | ✅ | ✅ | ❌ | ❌ |
+| View analytics codes | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Edit analytics codes | ✅ | ✅ | ✅ | ❌ | ❌ |
+
+---
+
 ## 📋 Prerequisites
 
 - [ ] Site management working
 - [ ] Page system working
 - [ ] Blog system (for blog URLs)
 - [ ] Site publishing
+- [ ] Permission system (`@/lib/auth/permissions.ts`)
 
 ---
 
@@ -35,6 +62,8 @@ Create a comprehensive SEO management dashboard for sites:
 - ✅ `pages` table has: `seo_title`, `seo_description`, `seo_image`
 - ✅ Blog posts have SEO fields
 - ✅ Basic site settings
+- ✅ Permission helpers in `@/lib/auth/permissions.ts`
+- ✅ Client portal at `/portal/`
 
 **What's Missing:**
 - SEO dashboard UI
@@ -43,6 +72,7 @@ Create a comprehensive SEO management dashboard for sites:
 - Robots.txt management
 - SEO score/analysis
 - Social sharing previews
+- Portal SEO view for clients
 
 ---
 
@@ -70,14 +100,20 @@ We will:
 ## 📁 Files to Create
 
 ```
+# Agency Dashboard (staff)
 src/app/(dashboard)/sites/[siteId]/seo/
 ├── page.tsx                    # SEO dashboard
 ├── pages/page.tsx              # Page-by-page SEO
 ├── sitemap/page.tsx            # Sitemap settings
 ├── robots/page.tsx             # Robots.txt editor
 
+# Client Portal (clients)
+src/app/portal/seo/
+├── page.tsx                    # Portal SEO overview
+├── [siteId]/page.tsx           # Site-specific SEO scores
+
 src/lib/seo/
-├── seo-service.ts              # SEO settings CRUD
+├── seo-service.ts              # SEO settings CRUD (with permissions!)
 ├── seo-analyzer.ts             # SEO scoring
 ├── sitemap-generator.ts        # XML sitemap
 
@@ -175,6 +211,8 @@ CREATE INDEX idx_seo_audits_page ON seo_audits(page_id);
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserId, getCurrentUserRole, isSuperAdmin } from "@/lib/auth/permissions";
+import { cookies } from "next/headers";
 
 export interface SiteSeoSettings {
   id: string;
@@ -211,8 +249,133 @@ export interface PageSeo {
   score?: number;
 }
 
-export async function getSiteSeoSettings(siteId: string): Promise<SiteSeoSettings | null> {
+/**
+ * Get user context for SEO access control
+ */
+async function getUserSeoContext(): Promise<{
+  userId: string | null;
+  role: string | null;
+  agencyRole: string | null;
+  accessibleSiteIds: string[] | null; // null = all (super admin)
+  isPortalUser: boolean;
+  portalClientId: string | null;
+}> {
   const supabase = await createClient();
+  const userId = await getCurrentUserId();
+  const role = await getCurrentUserRole();
+  const cookieStore = await cookies();
+  
+  // Check for portal user
+  const portalClientId = cookieStore.get("impersonating_client_id")?.value || null;
+  
+  if (portalClientId) {
+    const { data: client } = await supabase
+      .from("clients")
+      .select("id, has_portal_access")
+      .eq("id", portalClientId)
+      .single();
+    
+    if (!client?.has_portal_access) {
+      return { userId: null, role: null, agencyRole: null, accessibleSiteIds: [], isPortalUser: true, portalClientId };
+    }
+    
+    const { data: sites } = await supabase
+      .from("sites")
+      .select("id")
+      .eq("client_id", portalClientId);
+    
+    return {
+      userId: null,
+      role: "client",
+      agencyRole: null,
+      accessibleSiteIds: sites?.map(s => s.id) || [],
+      isPortalUser: true,
+      portalClientId
+    };
+  }
+  
+  if (!userId) {
+    return { userId: null, role: null, agencyRole: null, accessibleSiteIds: [], isPortalUser: false, portalClientId: null };
+  }
+  
+  if (await isSuperAdmin()) {
+    return { userId, role: "super_admin", agencyRole: null, accessibleSiteIds: null, isPortalUser: false, portalClientId: null };
+  }
+  
+  const { data: membership } = await supabase
+    .from("agency_members")
+    .select("agency_id, role")
+    .eq("user_id", userId)
+    .single();
+  
+  if (!membership) {
+    return { userId, role, agencyRole: null, accessibleSiteIds: [], isPortalUser: false, portalClientId: null };
+  }
+  
+  const { data: sites } = await supabase
+    .from("sites")
+    .select("id, clients!inner(agency_id)")
+    .eq("clients.agency_id", membership.agency_id);
+  
+  return {
+    userId,
+    role,
+    agencyRole: membership.role,
+    accessibleSiteIds: sites?.map(s => s.id) || [],
+    isPortalUser: false,
+    portalClientId: null
+  };
+}
+
+/**
+ * Check if user can access a site's SEO
+ */
+async function canAccessSiteSeo(siteId: string): Promise<boolean> {
+  const context = await getUserSeoContext();
+  if (context.accessibleSiteIds === null) return true; // Super admin
+  return context.accessibleSiteIds.includes(siteId);
+}
+
+/**
+ * Check if user can edit site-level SEO settings
+ * Agency members and portal users cannot edit site SEO
+ */
+async function canEditSiteSeo(): Promise<boolean> {
+  const context = await getUserSeoContext();
+  if (context.isPortalUser) return false;
+  if (context.agencyRole === "member") return false;
+  return true;
+}
+
+/**
+ * Check if user can edit page SEO
+ * Members CAN edit page SEO, but portal users cannot
+ */
+async function canEditPageSeo(): Promise<boolean> {
+  const context = await getUserSeoContext();
+  if (context.isPortalUser) return false;
+  return context.userId !== null; // Any authenticated agency user
+}
+
+/**
+ * Check if user can view analytics codes
+ */
+async function canViewAnalyticsCodes(): Promise<boolean> {
+  const context = await getUserSeoContext();
+  if (context.isPortalUser) return false;
+  if (context.agencyRole === "member") return false;
+  return true;
+}
+
+export async function getSiteSeoSettings(siteId: string): Promise<SiteSeoSettings | null> {
+  // Permission check
+  if (!(await canAccessSiteSeo(siteId))) {
+    console.error("[SEO] Access denied for site:", siteId);
+    return null;
+  }
+
+  const supabase = await createClient();
+  const context = await getUserSeoContext();
 
   const { data, error } = await supabase
     .from("site_seo_settings")
@@ -226,20 +389,23 @@ export async function getSiteSeoSettings(siteId: string): Promise<SiteSeoSetting
   }
 
   if (!data) {
-    // Create default settings
-    const { data: newData } = await supabase
-      .from("site_seo_settings")
-      .insert({ site_id: siteId })
-      .select()
-      .single();
+    // Create default settings (only if allowed)
+    if (await canEditSiteSeo()) {
+      const { data: newData } = await supabase
+        .from("site_seo_settings")
+        .insert({ site_id: siteId })
+        .select()
+        .single();
 
-    if (newData) {
-      return mapToSettings(newData);
+      if (newData) {
+        return mapToSettings(newData, context.agencyRole === "member" || context.isPortalUser);
+      }
     }
     return null;
   }
 
-  return mapToSettings(data);
+  // Hide sensitive analytics codes from members and portal users
+  return mapToSettings(data, context.agencyRole === "member" || context.isPortalUser);
 }
 
 export async function updateSiteSeoSettings(
@@ -261,6 +427,15 @@ export async function updateSiteSeoSettings(
     organizationLogoUrl: string;
   }>
 ): Promise<{ success: boolean; error?: string }> {
+  // Permission check - only owner/admin can update site SEO
+  if (!(await canEditSiteSeo())) {
+    return { success: false, error: "Permission denied: Only agency owners/admins can edit site SEO settings" };
+  }
+  
+  if (!(await canAccessSiteSeo(siteId))) {
+    return { success: false, error: "Access denied" };
+  }
+
   const supabase = await createClient();
 
   const dbUpdates: Record<string, unknown> = {
@@ -295,6 +470,11 @@ export async function updateSiteSeoSettings(
 }
 
 export async function getPagesSeo(siteId: string): Promise<PageSeo[]> {
+  // Permission check
+  if (!(await canAccessSiteSeo(siteId))) {
+    return [];
+  }
+
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -338,7 +518,23 @@ export async function updatePageSeo(
     canonicalUrl: string;
   }>
 ): Promise<{ success: boolean; error?: string }> {
+  // Permission check - members can edit page SEO
+  if (!(await canEditPageSeo())) {
+    return { success: false, error: "Permission denied" };
+  }
+  
   const supabase = await createClient();
+  
+  // Verify user has access to the page's site
+  const { data: page } = await supabase
+    .from("pages")
+    .select("site_id")
+    .eq("id", pageId)
+    .single();
+  
+  if (!page || !(await canAccessSiteSeo(page.site_id))) {
+    return { success: false, error: "Access denied" };
+  }
 
   const dbUpdates: Record<string, unknown> = {};
 
@@ -362,6 +558,51 @@ export async function updatePageSeo(
   }
 
   return { success: true };
+}
+
+/**
+ * Get accessible sites for portal SEO view
+ */
+export async function getPortalSeoSites(): Promise<{
+  sites: Array<{ id: string; name: string; domain: string }>;
+}> {
+  const context = await getUserSeoContext();
+  
+  if (!context.isPortalUser || !context.portalClientId) {
+    return { sites: [] };
+  }
+  
+  const supabase = await createClient();
+  
+  const { data: sites } = await supabase
+    .from("sites")
+    .select("id, name, domain")
+    .eq("client_id", context.portalClientId)
+    .order("name");
+  
+  return { sites: sites || [] };
+}
+
+function mapToSettings(data: Record<string, unknown>, hideSensitive = false): SiteSeoSettings {
+  return {
+    id: data.id as string,
+    siteId: data.site_id as string,
+    defaultTitleTemplate: (data.default_title_template as string) || "{title} | {site}",
+    defaultDescription: data.default_description as string | null,
+    defaultKeywords: (data.default_keywords as string[]) || [],
+    ogImageUrl: data.og_image_url as string | null,
+    twitterCardType: (data.twitter_card_type as "summary" | "summary_large_image") || "summary_large_image",
+    twitterHandle: data.twitter_handle as string | null,
+    // Hide sensitive codes from unauthorized users
+    googleSiteVerification: hideSensitive ? null : (data.google_site_verification as string | null),
+    bingSiteVerification: hideSensitive ? null : (data.bing_site_verification as string | null),
+    googleAnalyticsId: hideSensitive ? null : (data.google_analytics_id as string | null),
+    facebookPixelId: hideSensitive ? null : (data.facebook_pixel_id as string | null),
+    robotsIndex: (data.robots_index as boolean) ?? true,
+    robotsFollow: (data.robots_follow as boolean) ?? true,
+    organizationName: data.organization_name as string | null,
+    organizationLogoUrl: data.organization_logo_url as string | null,
+  };
 }
 
 function mapToSettings(data: Record<string, unknown>): SiteSeoSettings {
@@ -1275,33 +1516,52 @@ Disallow: /_next/
 - [ ] SEO analyzer scoring
 - [ ] Sitemap XML generation
 - [ ] Title template parsing
+- [ ] Permission checks for all user roles
 
 ### Integration Tests
 - [ ] SEO settings save/load
 - [ ] Page SEO updates
 - [ ] Sitemap includes all pages
+- [ ] Members can edit page SEO only
+- [ ] Portal users can only view scores
 
 ### E2E Tests
-- [ ] Update site SEO settings
+- [ ] Update site SEO settings (owner/admin)
 - [ ] View page SEO scores
 - [ ] Access public sitemap.xml
 - [ ] Access public robots.txt
+- [ ] Member cannot edit site SEO
+- [ ] Portal user views SEO scores
 
 ---
 
 ## ✅ Completion Checklist
 
 - [ ] Database schema for SEO
-- [ ] SEO service (CRUD)
+- [ ] RLS policies for SEO tables
+- [ ] SEO service with permission checks
 - [ ] SEO analyzer
 - [ ] Sitemap generator
-- [ ] SEO dashboard page
+- [ ] SEO dashboard page (agency)
+- [ ] **Portal SEO page (client view)**
 - [ ] Social sharing settings
-- [ ] Verification codes
+- [ ] Verification codes (hidden from unauthorized)
 - [ ] Analytics integration
 - [ ] Dynamic sitemap route
 - [ ] Dynamic robots.txt route
 - [ ] Page SEO analysis list
+
+---
+
+## 🔐 User Role Summary
+
+| Role | View SEO | Edit Site SEO | Edit Page SEO | View Analytics | Robots/Sitemap |
+|------|----------|---------------|---------------|----------------|----------------|
+| Super Admin | ✅ All | ✅ | ✅ | ✅ | ✅ |
+| Agency Owner | ✅ Agency | ✅ | ✅ | ✅ | ✅ |
+| Agency Admin | ✅ Agency | ✅ | ✅ | ✅ | ✅ |
+| Agency Member | ✅ Assigned | ❌ | ✅ | ❌ | ❌ |
+| Client Portal | ✅ Own Sites | ❌ | ❌ | ❌ | ❌ |
 
 ---
 
