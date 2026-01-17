@@ -127,12 +127,15 @@ export default function MediaLibraryPage() {
         router.push("/dashboard");
         return;
       }
+      // Super admins have full access regardless of role
+      // Agency members can view/upload but NOT delete/create folders
+      const hasFullAccess = context.isSuperAdmin || context.role !== "agency_member";
       setUserContext({
         userId: context.userId,
         agencyId: context.agencyId,
         role: context.role,
-        canDelete: context.role !== "agency_member",
-        canCreateFolders: context.role !== "agency_member",
+        canDelete: hasFullAccess,
+        canCreateFolders: hasFullAccess,
         isSuperAdmin: context.isSuperAdmin,
       });
     }
