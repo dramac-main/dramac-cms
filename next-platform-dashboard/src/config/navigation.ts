@@ -8,6 +8,7 @@ import {
   Settings,
   HelpCircle,
   Shield,
+  ImageIcon,
   type LucideIcon,
 } from "lucide-react";
 
@@ -44,6 +45,12 @@ export const mainNavigation: NavGroup[] = [
         href: "/dashboard/sites",
         icon: Globe,
         dataTour: "sites",
+      },
+      {
+        title: "Media Library",
+        href: "/media",
+        icon: ImageIcon,
+        dataTour: "media",
       },
     ],
   },
