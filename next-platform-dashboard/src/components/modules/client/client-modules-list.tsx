@@ -158,7 +158,7 @@ export function ClientModulesList({ modules, clientId }: ClientModulesListProps)
                   )}
                 </Button>
                 <Button variant="outline" size="sm" asChild>
-                  <Link href={`/dashboard/clients/${clientId}/modules/${item.module_id}/settings`}>
+                  <Link href={`/dashboard/clients/${clientId}/modules`}>
                     <Settings className="h-4 w-4" />
                   </Link>
                 </Button>

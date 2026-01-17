@@ -135,7 +135,7 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
                 </Link>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <Link href={`/dashboard/modules/${sub.module_id}`}>
+                <Link href="/dashboard/modules/pricing">
                   <Settings className="h-4 w-4" />
                 </Link>
               </Button>

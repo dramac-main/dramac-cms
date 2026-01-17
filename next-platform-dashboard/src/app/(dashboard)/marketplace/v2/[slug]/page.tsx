@@ -268,8 +268,8 @@ export default async function ModuleDetailV2Page({ params }: PageProps) {
                     <span className="font-medium">You're subscribed!</span>
                   </div>
                   <Button variant="outline" className="w-full" asChild>
-                    <Link href={`/dashboard/modules/${mod.id}`}>
-                      Manage Module
+                    <Link href={`/dashboard/modules/subscriptions`}>
+                      Manage Subscriptions
                     </Link>
                   </Button>
                 </div>

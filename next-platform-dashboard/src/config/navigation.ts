@@ -52,13 +52,13 @@ export const mainNavigation: NavGroup[] = [
     items: [
       {
         title: "Browse Modules",
-        href: "/marketplace",
+        href: "/marketplace/v2",
         icon: Package,
         dataTour: "modules",
       },
       {
-        title: "My Modules",
-        href: "/settings/modules",
+        title: "My Subscriptions",
+        href: "/dashboard/modules/subscriptions",
         icon: Puzzle,
       },
     ],

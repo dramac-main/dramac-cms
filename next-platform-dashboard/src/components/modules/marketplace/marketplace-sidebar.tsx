@@ -44,7 +44,7 @@ export function MarketplaceSidebar({ categories, selectedCategory }: Marketplace
         </CardHeader>
         <CardContent className="space-y-1">
           <Link
-            href="/dashboard/modules"
+            href="/dashboard/modules/subscriptions"
             className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted transition-colors"
           >
             <Package className="h-4 w-4" />
