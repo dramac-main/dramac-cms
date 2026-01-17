@@ -14,9 +14,12 @@ export default async function PortalPage() {
   const cookieStore = await cookies();
   const impersonatingClientId = cookieStore.get("impersonating_client_id")?.value;
   
+  console.log("[Portal] impersonatingClientId:", impersonatingClientId);
+  
   if (!impersonatingClientId) {
     // If not impersonating, redirect to dashboard
     // In the future, this would check for actual client portal authentication
+    console.log("[Portal] No impersonation cookie, redirecting to dashboard");
     redirect("/dashboard");
   }
 
@@ -32,7 +35,10 @@ export default async function PortalPage() {
     .eq("id", impersonatingClientId)
     .single();
 
+  console.log("[Portal] Client query result:", { client: client?.name, error: clientError });
+
   if (clientError || !client) {
+    console.log("[Portal] Client not found or error, redirecting to dashboard");
     redirect("/dashboard");
   }
 

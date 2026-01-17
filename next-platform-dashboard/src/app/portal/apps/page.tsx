@@ -2,16 +2,27 @@ import { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Package, ArrowRight } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Grid3x3, Plus, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { AppsGrid } from "@/components/portal/apps/apps-grid";
+import { EmptyAppsState } from "@/components/portal/apps/empty-apps-state";
+import { PortalHeader } from "@/components/portal/portal-header";
 
 export const metadata: Metadata = {
   title: "My Apps | Client Portal",
-  description: "Access your apps and tools",
+  description: "Access your installed apps and modules",
 };
+
+interface ClientInstallation {
+  id: string;
+  installed_at: string;
+  settings: Record<string, unknown>;
+  custom_name: string | null;
+  custom_icon: string | null;
+  module: Record<string, unknown>;
+}
 
 export default async function PortalAppsPage() {
   const cookieStore = await cookies();
@@ -30,78 +41,120 @@ export default async function PortalAppsPage() {
     .eq("id", impersonatingClientId)
     .single();
 
-  if (error || !client || !client.agency_id) {
+  if (error || !client) {
     redirect("/dashboard");
   }
 
-  // Get agency's active module subscriptions
-  const { data: subscriptions } = await supabase
-    .from("module_subscriptions")
-    .select(`
-      id,
-      module:modules(id, slug, name, description, icon, category)
-    `)
-    .eq("agency_id", client.agency_id)
-    .eq("status", "active");
+  // Get impersonating user info
+  const { data: { user } } = await supabase.auth.getUser();
 
-  // Filter to only items with valid modules
-  const installedModules = (subscriptions || []).filter(
-    (item): item is typeof item & { module: NonNullable<typeof item.module> } => 
-      item.module !== null && typeof item.module === "object" && "id" in item.module
-  );
+  // First try to get client-level module installations using type assertion
+  const { data: clientInstallations } = await supabase
+    .from("client_module_installations" as "modules")
+    .select(`
+      *,
+      module:modules(*)
+    `)
+    .eq("client_id", client.id)
+    .eq("is_active", true)
+    .order("installed_at", { ascending: false }) as unknown as { data: ClientInstallation[] | null };
+
+  // Map client installations to module format
+  let installedModules = (clientInstallations || []).map(i => ({
+    ...(i.module as Record<string, unknown>),
+    installation_id: i.id,
+    installed_at: i.installed_at,
+    settings: i.settings || {},
+    custom_name: i.custom_name,
+    custom_icon: i.custom_icon,
+  }));
+
+  // If no client installations, fall back to agency subscriptions (legacy support)
+  if (installedModules.length === 0 && client.agency_id) {
+    // Check agency_module_subscriptions first
+    const { data: subscriptions } = await supabase
+      .from("agency_module_subscriptions" as "module_subscriptions")
+      .select(`
+        id,
+        module:modules(id, slug, name, description, icon, category)
+      `)
+      .eq("agency_id", client.agency_id)
+      .eq("status", "active");
+
+    // Also check legacy module_subscriptions table
+    const { data: legacySubscriptions } = await supabase
+      .from("module_subscriptions")
+      .select(`
+        id,
+        module:modules(id, slug, name, description, icon, category)
+      `)
+      .eq("agency_id", client.agency_id)
+      .eq("status", "active");
+
+    const allSubs = [...(subscriptions || []), ...(legacySubscriptions || [])];
+
+    installedModules = allSubs
+      .filter((item): item is typeof item & { module: NonNullable<typeof item.module> } => 
+        item.module !== null && typeof item.module === "object" && "id" in item.module
+      )
+      .map(item => ({
+        ...(item.module as Record<string, unknown>),
+        installation_id: item.id,
+        installed_at: new Date().toISOString(),
+        settings: {},
+        custom_name: null,
+        custom_icon: null,
+      }));
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">My Apps</h1>
-        <p className="text-muted-foreground mt-1">
-          Access your tools and applications
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <PortalHeader 
+        clientName={client.name} 
+        isImpersonating={true}
+        impersonatorEmail={user?.email}
+      />
+      
+      <main className="container mx-auto px-4 py-8">
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold flex items-center gap-3">
+                <Grid3x3 className="h-8 w-8" />
+                My Apps
+              </h1>
+              <p className="text-muted-foreground">
+                Access your business tools and applications
+              </p>
+            </div>
+            <Button asChild>
+              <Link href="/portal/apps/browse">
+                <Plus className="h-4 w-4 mr-2" />
+                Browse Apps
+              </Link>
+            </Button>
+          </div>
 
-      {installedModules.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {installedModules.map((item) => (
-            <Link key={item.id} href={`/portal/apps/${item.module.slug}`}>
-              <Card className="h-full hover:border-primary transition-colors cursor-pointer group">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">{item.module.icon || '📦'}</span>
-                    <div>
-                      <CardTitle className="group-hover:text-primary transition-colors">
-                        {item.module.name}
-                      </CardTitle>
-                      <Badge variant="secondary" className="mt-1">
-                        {item.module.category}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-4">
-                    {item.module.description}
-                  </p>
-                  <Button variant="ghost" className="p-0 h-auto group-hover:text-primary">
-                    Open App
-                    <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+          {/* Search */}
+          {installedModules.length > 0 && (
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search your apps..."
+                className="pl-10"
+              />
+            </div>
+          )}
+
+          {/* Apps Grid */}
+          {installedModules.length === 0 ? (
+            <EmptyAppsState />
+          ) : (
+            <AppsGrid modules={installedModules as Parameters<typeof AppsGrid>[0]["modules"]} />
+          )}
         </div>
-      ) : (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <Package className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="font-medium mb-1">No apps available</h3>
-            <p className="text-sm text-muted-foreground">
-              Your agency hasn&apos;t set up any apps for you yet. 
-              Contact them to get started.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      </main>
     </div>
   );
 }

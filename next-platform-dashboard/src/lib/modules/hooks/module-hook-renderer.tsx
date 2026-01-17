@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, ReactNode, useState } from "react";
 import { useModules } from "../context";
-import { ModuleSandbox } from "../runtime";
+import { ModuleSandbox } from "../runtime/module-sandbox";
 import type { ModuleHookName } from "../types/module-hooks";
 import type { Module } from "../types";
 
@@ -151,7 +151,7 @@ function ModuleHookComponent({
       settings={settings}
       permissions={module.manifest?.permissions || []}
       context={{ siteId: scopeId || undefined }}
-      onMessage={(type, payload) => {
+      onMessage={(type: string, payload: unknown) => {
         console.log(`[Module ${module.slug}] Message:`, type, payload);
       }}
     />

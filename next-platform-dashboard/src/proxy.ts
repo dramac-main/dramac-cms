@@ -6,9 +6,10 @@ export async function proxy(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
 
-  // Skip for app routes (dashboard, auth, editor, etc), API, and static files
+  // Skip for app routes (dashboard, auth, editor, portal, etc), API, and static files
   if (
     pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/portal") ||
     pathname.startsWith("/login") ||
     pathname.startsWith("/signup") ||
     pathname.startsWith("/forgot-password") ||
@@ -20,6 +21,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/clients") ||
     pathname.startsWith("/marketplace") ||
     pathname.startsWith("/admin") ||
+    pathname.startsWith("/modules") ||
     pathname.startsWith("/test-components") ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
@@ -27,9 +29,10 @@ export async function proxy(request: NextRequest) {
     pathname === "/" ||
     pathname.includes(".")
   ) {
-    // For dashboard, auth, and protected routes - run session update with onboarding check
+    // For dashboard, auth, portal, and protected routes - run session update with onboarding check
     if (
       pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/portal") ||
       pathname.startsWith("/login") ||
       pathname.startsWith("/signup") ||
       pathname.startsWith("/onboarding") ||
@@ -39,6 +42,7 @@ export async function proxy(request: NextRequest) {
       pathname.startsWith("/clients") ||
       pathname.startsWith("/marketplace") ||
       pathname.startsWith("/admin") ||
+      pathname.startsWith("/modules") ||
       pathname.startsWith("/editor")
     ) {
       return await updateSession(request);
