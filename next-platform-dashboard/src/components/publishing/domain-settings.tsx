@@ -1,260 +1,262 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import {
+  Globe,
+  Loader2,
+  Check,
+  AlertCircle,
+  RefreshCw,
+  Trash2,
+  ExternalLink,
+  Shield,
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Globe, Check, X, Loader2, Copy, RefreshCw } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import {
+  setCustomDomain,
+  removeCustomDomain,
+  getDomainStatus,
+  verifyDomain,
+  type DomainStatus,
+} from "@/lib/publishing/domain-service";
+import { DnsInstructions } from "./dns-instructions";
 import { toast } from "sonner";
 
 interface DomainSettingsProps {
   siteId: string;
-  siteSlug: string;
-  currentDomain: string | null;
-  isVerified: boolean;
+  subdomain: string;
+  // Legacy props for backwards compatibility
+  siteSlug?: string;
+  currentDomain?: string | null;
+  isVerified?: boolean;
 }
 
-interface DomainConfig {
-  txtRecord: string;
-  cnameTarget: string;
-}
-
-export function DomainSettings({
-  siteId,
+export function DomainSettings({ 
+  siteId, 
+  subdomain,
   siteSlug,
-  currentDomain,
+  currentDomain: legacyCurrentDomain,
 }: DomainSettingsProps) {
-  const [domain, setDomain] = useState(currentDomain || "");
-  const [config, setConfig] = useState<DomainConfig | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationStatus, setVerificationStatus] = useState<"pending" | "success" | "failed" | null>(null);
+  const [domain, setDomain] = useState("");
+  const [domainStatus, setDomainStatus] = useState<DomainStatus | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "platform.com";
-  const subdomainUrl = `${siteSlug}.${baseDomain}`;
+  // Use subdomain or legacy siteSlug
+  const actualSubdomain = subdomain || siteSlug || "";
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "dramac.app";
+  const defaultUrl = `https://${actualSubdomain}.${baseDomain}`;
+
+  // Load domain status
+  const loadDomainStatus = useCallback(async () => {
+    const status = await getDomainStatus(siteId);
+    setDomainStatus(status);
+    if (status?.domain) {
+      setDomain(status.domain);
+    } else if (legacyCurrentDomain) {
+      setDomain(legacyCurrentDomain);
+    }
+  }, [siteId, legacyCurrentDomain]);
 
   useEffect(() => {
-    // Fetch domain config
-    fetch(`/api/sites/${siteId}/domain`)
-      .then((res) => res.json())
-      .then(setConfig);
-  }, [siteId]);
+    loadDomainStatus();
+  }, [loadDomainStatus]);
+
+  const handleSetDomain = async () => {
+    if (!domain.trim()) {
+      setError("Please enter a domain");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const result = await setCustomDomain(siteId, domain.trim());
+
+    setLoading(false);
+
+    if (result.success) {
+      toast.success("Domain configured! Please add the DNS records.");
+      loadDomainStatus();
+    } else {
+      setError(result.error || "Failed to set domain");
+    }
+  };
+
+  const handleRemoveDomain = async () => {
+    setLoading(true);
+    setError(null);
+
+    const result = await removeCustomDomain(siteId);
+
+    setLoading(false);
+
+    if (result.success) {
+      setDomain("");
+      setDomainStatus(null);
+      toast.success("Custom domain removed");
+    } else {
+      setError(result.error || "Failed to remove domain");
+    }
+  };
 
   const handleVerify = async () => {
-    if (!domain) return;
+    setVerifying(true);
+    setError(null);
 
-    setIsVerifying(true);
-    setVerificationStatus("pending");
+    const result = await verifyDomain(siteId);
 
-    try {
-      const res = await fetch(`/api/sites/${siteId}/domain`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain }),
-      });
+    setVerifying(false);
 
-      const result = await res.json();
-
-      if (result.verified) {
-        setVerificationStatus("success");
-      } else {
-        setVerificationStatus("failed");
-      }
-    } catch {
-      setVerificationStatus("failed");
+    if (result.success && result.verified) {
+      toast.success("Domain verified and SSL activated!");
+      loadDomainStatus();
+    } else {
+      setError(result.error || "Verification failed");
     }
-
-    setIsVerifying(false);
-  };
-
-  const handleSave = async () => {
-    if (!domain) return;
-
-    setIsLoading(true);
-
-    try {
-      const res = await fetch(`/api/sites/${siteId}/domain`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ domain }),
-      });
-
-      const result = await res.json();
-
-      if (result.success) {
-        toast.success("Custom domain saved successfully");
-      } else {
-        toast.error(result.error || "Failed to save domain");
-      }
-    } catch {
-      toast.error("Failed to save domain");
-    }
-
-    setIsLoading(false);
-  };
-
-  const handleRemove = async () => {
-    setIsLoading(true);
-
-    try {
-      const res = await fetch(`/api/sites/${siteId}/domain`, {
-        method: "DELETE",
-      });
-
-      if (res.ok) {
-        setDomain("");
-        setVerificationStatus(null);
-        toast.success("Custom domain removed");
-      }
-    } catch {
-      toast.error("Failed to remove domain");
-    }
-
-    setIsLoading(false);
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success("Copied to clipboard");
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Globe className="h-5 w-5" />
-          Custom Domain
-        </CardTitle>
-        <CardDescription>
-          Connect your own domain to this site
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Default subdomain */}
-        <div className="p-4 rounded-lg bg-muted">
+    <div className="space-y-6">
+      {/* Default Subdomain */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Default URL</CardTitle>
+          <CardDescription>
+            Your site is always accessible at this URL
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex items-center bg-muted rounded-lg px-3 py-2">
+              <Globe className="h-4 w-4 text-muted-foreground mr-2" />
+              <span className="text-sm font-mono">{defaultUrl}</span>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => window.open(defaultUrl, "_blank")}
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Custom Domain */}
+      <Card>
+        <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium">Default URL</p>
-              <p className="text-sm text-muted-foreground">{subdomainUrl}</p>
+              <CardTitle className="text-lg">Custom Domain</CardTitle>
+              <CardDescription>
+                Use your own domain for this site
+              </CardDescription>
             </div>
-            <Badge>Always Active</Badge>
+            {domainStatus?.verified && (
+              <Badge className="bg-green-100 text-green-800">
+                <Check className="h-3 w-3 mr-1" />
+                Verified
+              </Badge>
+            )}
           </div>
-        </div>
-
-        {/* Custom domain input */}
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>Custom Domain</Label>
-            <div className="flex gap-2">
-              <Input
-                placeholder="www.example.com"
-                value={domain}
-                onChange={(e) => setDomain(e.target.value)}
-              />
-              <Button
-                variant="outline"
-                onClick={handleVerify}
-                disabled={!domain || isVerifying}
-              >
-                {isVerifying ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {/* Verification status */}
-          {verificationStatus && (
-            <Alert variant={verificationStatus === "success" ? "default" : "destructive"}>
-              <AlertDescription className="flex items-center gap-2">
-                {verificationStatus === "success" ? (
-                  <>
-                    <Check className="h-4 w-4 text-green-500" />
-                    Domain verified successfully
-                  </>
-                ) : verificationStatus === "failed" ? (
-                  <>
-                    <X className="h-4 w-4" />
-                    Domain verification failed. Please check DNS settings.
-                  </>
-                ) : (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Verifying domain...
-                  </>
-                )}
-              </AlertDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-        </div>
 
-        {/* DNS Configuration */}
-        {config && domain && (
-          <div className="space-y-4 p-4 rounded-lg border">
-            <h4 className="font-medium">DNS Configuration</h4>
-            <p className="text-sm text-muted-foreground">
-              Add one of the following records to your DNS provider:
-            </p>
-
-            {/* CNAME Option */}
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Option 1: CNAME Record</p>
-              <div className="flex items-center gap-2 bg-muted p-2 rounded text-sm font-mono">
-                <span className="text-muted-foreground">CNAME</span>
-                <span className="flex-1">{config.cnameTarget}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(config.cnameTarget)}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
+          {!domainStatus?.configured ? (
+            // Domain input
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="domain">Domain</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="domain"
+                    placeholder="example.com"
+                    value={domain}
+                    onChange={(e) => setDomain(e.target.value)}
+                    disabled={loading}
+                  />
+                  <Button onClick={handleSetDomain} disabled={loading}>
+                    {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Add Domain
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Enter your domain without http:// or www
+                </p>
               </div>
             </div>
-
-            {/* TXT Option */}
-            <div className="space-y-2">
-              <p className="text-sm font-medium">Option 2: TXT Record (for verification)</p>
-              <div className="flex items-center gap-2 bg-muted p-2 rounded text-sm font-mono">
-                <span className="text-muted-foreground">TXT</span>
-                <span className="flex-1 truncate">{config.txtRecord}</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => copyToClipboard(config.txtRecord)}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
+          ) : (
+            // Domain configured
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-mono text-sm">{domainStatus.domain}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {domainStatus.sslActive && (
+                    <Badge variant="outline" className="text-green-600">
+                      <Shield className="h-3 w-3 mr-1" />
+                      SSL
+                    </Badge>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleRemoveDomain}
+                    disabled={loading}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* Action buttons */}
-        <div className="flex gap-2">
-          {currentDomain && (
-            <Button
-              variant="destructive"
-              onClick={handleRemove}
-              disabled={isLoading}
-            >
-              Remove Domain
-            </Button>
+              {!domainStatus.verified && (
+                <>
+                  <Separator />
+
+                  {/* DNS Instructions */}
+                  <DnsInstructions
+                    domain={domainStatus.domain}
+                    records={domainStatus.dnsRecords}
+                  />
+
+                  {/* Verify Button */}
+                  <div className="flex items-center justify-between pt-2">
+                    <p className="text-sm text-muted-foreground">
+                      {domainStatus.lastChecked
+                        ? `Last checked: ${new Date(domainStatus.lastChecked).toLocaleString()}`
+                        : "Not verified yet"}
+                    </p>
+                    <Button onClick={handleVerify} disabled={verifying}>
+                      {verifying ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                      )}
+                      Verify DNS
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
           )}
-          <Button
-            onClick={handleSave}
-            disabled={!domain || verificationStatus !== "success" || isLoading}
-          >
-            {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            {currentDomain ? "Update Domain" : "Connect Domain"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

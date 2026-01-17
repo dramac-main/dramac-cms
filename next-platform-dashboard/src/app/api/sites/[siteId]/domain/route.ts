@@ -5,6 +5,7 @@ import {
   removeCustomDomain,
   verifyDomain,
   generateDomainConfig,
+  getDomainStatus,
 } from "@/lib/publishing/domain-service";
 
 interface RouteParams {
@@ -14,10 +15,13 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   const { siteId } = await params;
   
-  // Return domain configuration info
-  const config = generateDomainConfig(siteId);
+  // Return domain configuration info and status
+  const [config, status] = await Promise.all([
+    generateDomainConfig(siteId),
+    getDomainStatus(siteId),
+  ]);
   
-  return NextResponse.json(config);
+  return NextResponse.json({ config, status });
 }
 
 export async function POST(request: NextRequest, { params }: RouteParams) {
@@ -77,14 +81,19 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-// Verify domain without setting it
+// Verify domain DNS configuration
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { siteId } = await params;
-    const body = await request.json();
-    const { domain } = body;
+    const supabase = await createClient();
 
-    const result = await verifyDomain(domain, siteId);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // verifyDomain now only takes siteId
+    const result = await verifyDomain(siteId);
 
     return NextResponse.json(result);
   } catch (_error) {

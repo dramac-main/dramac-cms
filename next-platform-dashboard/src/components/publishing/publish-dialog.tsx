@@ -1,155 +1,231 @@
 "use client";
 
 import { useState } from "react";
+import { Globe, Loader2, ExternalLink, Copy, Check, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Globe, Loader2, ExternalLink } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { publishSite, unpublishSite } from "@/lib/publishing/publish-service";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface PublishDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
   siteId: string;
   siteName: string;
-  siteSlug: string;
   isPublished: boolean;
+  siteUrl: string;
+  onPublishChange?: (published: boolean) => void;
+  children?: React.ReactNode;
+  // Legacy props for backwards compatibility
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  siteSlug?: string;
   customDomain?: string | null;
-  onPublish: () => Promise<void>;
-  onUnpublish: () => Promise<void>;
+  onPublish?: () => Promise<void>;
+  onUnpublish?: () => Promise<void>;
 }
 
 export function PublishDialog({
-  open,
-  onOpenChange,
+  siteId,
   siteName,
-  siteSlug,
   isPublished,
-  customDomain,
-  onPublish,
-  onUnpublish,
+  siteUrl,
+  onPublishChange,
+  children,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  onPublish: legacyOnPublish,
+  onUnpublish: legacyOnUnpublish,
 }: PublishDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<{ success: boolean; url?: string } | null>(null);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [justPublished, setJustPublished] = useState(false);
 
-  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "platform.com";
-  const liveUrl = customDomain || `${siteSlug}.${baseDomain}`;
+  // Support both controlled and uncontrolled modes
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
 
   const handlePublish = async () => {
-    setIsLoading(true);
+    setLoading(true);
+    setError(null);
+
     try {
-      await onPublish();
-      setResult({ success: true, url: `https://${liveUrl}` });
-    } catch (_error) {
-      setResult({ success: false });
+      if (legacyOnPublish) {
+        await legacyOnPublish();
+        setJustPublished(true);
+        onPublishChange?.(true);
+        toast.success("Site published successfully!");
+      } else {
+        const result = await publishSite(siteId);
+
+        if (result.success) {
+          setJustPublished(true);
+          onPublishChange?.(true);
+          toast.success("Site published successfully!");
+        } else {
+          setError(result.error || "Failed to publish site");
+        }
+      }
+    } catch (err) {
+      setError("Failed to publish site");
     }
-    setIsLoading(false);
+
+    setLoading(false);
   };
 
   const handleUnpublish = async () => {
-    setIsLoading(true);
+    setLoading(true);
+    setError(null);
+
     try {
-      await onUnpublish();
-      setResult(null);
-      onOpenChange(false);
-    } catch (_error) {
-      // Handle error
+      if (legacyOnUnpublish) {
+        await legacyOnUnpublish();
+        setJustPublished(false);
+        onPublishChange?.(false);
+        toast.success("Site unpublished");
+        setOpen(false);
+      } else {
+        const result = await unpublishSite(siteId);
+
+        if (result.success) {
+          setJustPublished(false);
+          onPublishChange?.(false);
+          toast.success("Site unpublished");
+          setOpen(false);
+        } else {
+          setError(result.error || "Failed to unpublish site");
+        }
+      }
+    } catch (err) {
+      setError("Failed to unpublish site");
     }
-    setIsLoading(false);
+
+    setLoading(false);
+  };
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(siteUrl);
+      setCopied(true);
+      toast.success("URL copied!");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy URL");
+    }
+  };
+
+  const handleViewSite = () => {
+    window.open(siteUrl, "_blank", "noopener,noreferrer");
   };
 
   const handleClose = () => {
-    setResult(null);
-    onOpenChange(false);
+    setError(null);
+    setOpen(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent>
+      {children && (
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+      )}
+
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Globe className="h-5 w-5" />
-            {isPublished ? "Site Published" : "Publish Site"}
+            {isPublished || justPublished ? "Site Published!" : "Publish Site"}
           </DialogTitle>
           <DialogDescription>
-            {isPublished
-              ? `${siteName} is live and accessible to visitors.`
-              : `Publish ${siteName} to make it accessible to visitors.`}
+            {isPublished || justPublished
+              ? "Your site is live and accessible to the public."
+              : `Make "${siteName}" accessible to the public.`}
           </DialogDescription>
         </DialogHeader>
 
-        {result?.success ? (
-          <div className="py-6 text-center">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Published Successfully!</h3>
-            <p className="text-muted-foreground mb-4">Your site is now live at:</p>
-            <a
-              href={result.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-primary hover:underline"
-            >
-              {result.url}
-              <ExternalLink className="h-4 w-4" />
-            </a>
-          </div>
-        ) : (
-          <div className="py-4">
-            <div className="rounded-lg border p-4 mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Site URL</span>
-                <Badge variant={isPublished ? "default" : "secondary"}>
-                  {isPublished ? "Live" : "Draft"}
-                </Badge>
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {(isPublished || justPublished) ? (
+          <div className="space-y-4">
+            {/* Site URL */}
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground mb-2">Your site is live at:</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-sm bg-background px-3 py-2 rounded border truncate">
+                  {siteUrl}
+                </code>
+                <Button variant="outline" size="icon" onClick={handleCopyUrl}>
+                  {copied ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
-              <code className="text-sm bg-muted px-2 py-1 rounded">
-                https://{liveUrl}
-              </code>
             </div>
 
-            {!isPublished && (
-              <div className="text-sm text-muted-foreground">
-                <p>Before publishing, make sure:</p>
-                <ul className="list-disc list-inside mt-2 space-y-1">
-                  <li>At least one page is marked as published</li>
-                  <li>Your homepage is set correctly</li>
-                  <li>All content is reviewed and ready</li>
-                </ul>
-              </div>
-            )}
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              <Button className="flex-1" onClick={handleViewSite}>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                View Live Site
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="text-sm">
+                Publishing will make your site available at:
+              </p>
+              <code className="text-sm font-medium block mt-2">{siteUrl}</code>
+            </div>
+
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• All pages will be publicly accessible</li>
+              <li>• Changes made after publishing require re-publishing</li>
+              <li>• You can unpublish at any time</li>
+            </ul>
           </div>
         )}
 
-        <DialogFooter>
-          {result?.success ? (
-            <Button onClick={handleClose}>Done</Button>
-          ) : isPublished ? (
+        <DialogFooter className={cn("gap-2", (isPublished || justPublished) && "sm:justify-between")}>
+          {(isPublished || justPublished) ? (
             <>
-              <Button variant="outline" onClick={handleClose}>
-                Close
-              </Button>
               <Button
-                variant="destructive"
+                variant="outline"
                 onClick={handleUnpublish}
-                disabled={isLoading}
+                disabled={loading}
+                className="text-destructive hover:text-destructive"
               >
-                {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Unpublish Site
               </Button>
+              <Button onClick={handleClose}>Done</Button>
             </>
           ) : (
             <>
               <Button variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button onClick={handlePublish} disabled={isLoading}>
-                {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              <Button onClick={handlePublish} disabled={loading}>
+                {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Publish Now
               </Button>
             </>
