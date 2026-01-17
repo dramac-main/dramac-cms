@@ -48,7 +48,7 @@ export const mainNavigation: NavGroup[] = [
       },
       {
         title: "Media Library",
-        href: "/media",
+        href: "/dashboard/media",
         icon: ImageIcon,
         dataTour: "media",
       },
