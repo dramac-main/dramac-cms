@@ -5,17 +5,19 @@
 > **Priority**: 🔴 CRITICAL
 >
 > **Estimated Time**: 12-15 hours
+>
+> **Status**: 🟡 PARTIALLY COMPLETE - Core infrastructure built, testing/sandbox missing
 
 ---
 
 ## 🎯 Objective
 
 Create a comprehensive Module Development Studio for Super Admins to:
-1. **Create** new modules with a visual builder
-2. **Edit** existing module code and configurations
-3. **Test** modules in a sandbox environment
-4. **Deploy** modules to the marketplace with versioning
-5. **Monitor** module usage and performance
+1. **Create** new modules with a visual builder ✅
+2. **Edit** existing module code and configurations ✅
+3. **Test** modules in a sandbox environment ⚠️ MISSING
+4. **Deploy** modules to the marketplace with versioning ✅
+5. **Monitor** module usage and performance ⚠️ PARTIAL
 
 This transforms DRAMAC from a consumer of modules to a **module creation platform**.
 
@@ -33,22 +35,100 @@ This transforms DRAMAC from a consumer of modules to a **module creation platfor
 
 ---
 
+## ⚠️ CRITICAL GAPS IDENTIFIED (Post-Implementation Review)
+
+### 🔴 Gap 1: No Module Testing/Sandbox Environment
+**Problem**: Modules can be set to "testing" status but there's NO WAY TO ACTUALLY TEST THEM
+- No sandbox page to render module code
+- No way to inject test data/settings
+- No isolated environment to catch runtime errors
+- Super Admin has to deploy blind
+
+**Solution Required**: 
+- Create `[moduleId]/test/page.tsx` with:
+  - Live component preview with iframe sandbox
+  - Settings editor to configure test data
+  - Console output capture
+  - Error boundary with detailed stack traces
+
+### 🔴 Gap 2: No Module Preview in Editor
+**Problem**: When editing module code, you can't see the result
+- Monaco editor exists but no live preview
+- No syntax validation beyond basic bracket matching
+- Can't see how settings affect rendering
+
+**Solution Required**:
+- Add `module-preview.tsx` component
+- Integrate with editor for live preview
+- Add TypeScript/JSX error checking
+
+### 🔴 Gap 3: No Module Catalog Integration
+**Problem**: Published modules don't appear in MODULE_CATALOG
+- `module-catalog.ts` is still static
+- Deployed modules exist only in database
+- Sites can't discover/install studio-created modules
+
+**Solution Required**:
+- Create `module-registry.ts` to merge static + dynamic modules
+- Update marketplace to read from registry
+- Add sync function on deployment
+
+### 🔴 Gap 4: VS Code Development Workflow Missing
+**Problem**: User wants to build modules in VS Code with AI, then paste to platform
+- No import/export functionality
+- No TypeScript definition files
+- No local development template
+
+**Solution Required**:
+- Add "Import from File" button
+- Create module template generator
+- Export module as downloadable package
+
+### 🟡 Gap 5: Limited Code Validation
+**Problem**: Only basic bracket matching validation
+- No TypeScript compilation check
+- No React component validation
+- No dependency resolution check
+
+**Solution Required**:
+- Add proper validation service
+- Check for required exports
+- Validate settings schema matches usage
+
+### 🟡 Gap 6: Who Can Test Staging Modules?
+**Problem**: When status="testing", who has access?
+- Currently: Nobody except Super Admin viewing code
+- Should be: Designated test sites or internal preview
+
+**Solution Required**:
+- Add "Test Sites" configuration
+- Allow installing staging modules on test sites only
+- Create internal preview URL for testing
+
+---
+
 ## 🔍 Current State Analysis
 
-**What Exists:**
-- `MODULE_CATALOG` in `module-catalog.ts` - Static list of modules
-- `moduleRegistry = new Map()` - Empty runtime registry
-- Basic module schema defined
-- Module installation to sites works
+**What Exists (IMPLEMENTED ✅):**
+- `module_source` table with code storage
+- `module_versions` table for version history
+- `module_deployments` table for deployment logs
+- `module_analytics` table for metrics
+- Monaco code editor with TSX/CSS/JSON tabs
+- Module configuration form
+- Deploy dialog with version bumping
+- Studio listing page with stats
+- Create/Edit module pages
+- Version history with rollback
+- Deployment history with redeploy
 
-**What's Missing:**
-- No way to create new modules
-- No visual module builder
-- No code editor for module logic
-- No testing/sandbox environment
-- No deployment workflow
-- No version management
-- No module analytics
+**What's Missing (NOT IMPLEMENTED ❌):**
+- Module sandbox/testing page
+- Live preview component
+- Module registry integration (catalog sync)
+- Import/export functionality
+- Advanced code validation
+- Test site configuration
 
 ---
 
@@ -67,32 +147,33 @@ This transforms DRAMAC from a consumer of modules to a **module creation platfor
 ```
 src/app/(dashboard)/admin/modules/
 ├── studio/
-│   ├── page.tsx                    # Module studio main page
-│   ├── new/page.tsx               # Create new module
-│   ├── [moduleId]/page.tsx        # Edit module
-│   └── [moduleId]/test/page.tsx   # Test module
+│   ├── page.tsx                    # ✅ Module studio main page
+│   ├── new/page.tsx               # ✅ Create new module
+│   ├── [moduleId]/page.tsx        # ✅ Edit module
+│   └── [moduleId]/test/page.tsx   # ❌ Test module sandbox
 
 src/lib/modules/
-├── module-builder.ts              # Module creation logic
-├── module-compiler.ts             # Compile module code
-├── module-sandbox.ts              # Safe execution sandbox
-├── module-deployer.ts             # Deploy to registry
-├── module-versioning.ts           # Version management
+├── module-builder.ts              # ✅ Module creation logic
+├── module-sandbox.ts              # ❌ Safe execution sandbox
+├── module-deployer.ts             # ✅ Deploy to registry
+├── module-versioning.ts           # ✅ Version management
+├── module-registry.ts             # ❌ Dynamic catalog integration
+├── module-validator.ts            # ❌ Advanced validation
 
 src/components/admin/modules/
-├── module-code-editor.tsx         # Monaco code editor
-├── module-schema-builder.tsx      # Visual schema builder
-├── module-config-form.tsx         # Module metadata form
-├── module-preview.tsx             # Live preview
-├── module-test-runner.tsx         # Run tests
-├── module-deploy-dialog.tsx       # Deployment confirmation
-├── module-analytics.tsx           # Usage analytics
+├── module-code-editor.tsx         # ✅ Monaco code editor
+├── module-config-form.tsx         # ✅ Module metadata form
+├── module-preview.tsx             # ❌ Live preview
+├── module-test-runner.tsx         # ❌ Run tests
+├── module-deploy-dialog.tsx       # ✅ Deployment confirmation
+├── module-import-export.tsx       # ❌ Import/export functionality
 
 Database:
-├── module_source               # Module source code
-├── module_versions             # Version history
-├── module_deployments          # Deployment logs
-├── module_analytics            # Usage metrics
+├── module_source               # ✅ Module source code
+├── module_versions             # ✅ Version history
+├── module_deployments          # ✅ Deployment logs
+├── module_analytics            # ✅ Usage metrics
+├── module_test_sites           # ❌ Test site configuration
 ```
 
 ---

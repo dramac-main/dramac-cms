@@ -109,7 +109,7 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
             </Button>
 
             <ul className="space-y-2 text-sm">
-              {module.features.slice(0, 5).map((feature, i) => (
+              {(module.features || []).slice(0, 5).map((feature, i) => (
                 <li key={i} className="flex items-start gap-2">
                   <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
                   <span>{feature}</span>
@@ -146,7 +146,7 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
           <div className="prose dark:prose-invert max-w-none">
             <div
               dangerouslySetInnerHTML={{
-                __html: module.longDescription.replace(/\n/g, "<br />"),
+                __html: (module.longDescription || module.description || "").replace(/\n/g, "<br />"),
               }}
             />
           </div>
@@ -166,7 +166,7 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
 
         <TabsContent value="features" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {module.features.map((feature, i) => (
+            {(module.features || []).map((feature, i) => (
               <Card key={i}>
                 <CardContent className="flex items-start gap-3 pt-4">
                   <Check className="h-5 w-5 text-green-500 shrink-0" />

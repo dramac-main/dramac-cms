@@ -1,6 +1,16 @@
 import { MODULE_CATALOG } from "./module-catalog";
 import type { ModuleDefinition, ModuleCategory, ModuleSearchParams } from "./module-types";
 
+/**
+ * Module Registry - Static module catalog wrapper
+ * 
+ * For dynamic modules from the database, use module-registry-server.ts actions
+ * which can be called from server components.
+ * 
+ * This class provides access to static modules defined in module-catalog.ts.
+ * Dynamic modules (from Module Studio) must be loaded separately via server actions.
+ */
+
 // Populated module registry using catalog
 class ModuleRegistry {
   private modules: Map<string, ModuleDefinition>;

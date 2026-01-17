@@ -34,15 +34,15 @@ export interface ModuleDefinition {
   slug: string;
   name: string;
   description: string;
-  longDescription: string;
+  longDescription?: string;
   version: string;
   icon: string;
-  screenshots: string[];
+  screenshots?: string[];
   category: ModuleCategory;
   tags: string[];
   author: ModuleAuthor;
   pricing: ModulePricing;
-  features: string[];
+  features?: string[];
   requirements?: string[];
   changelog?: ChangelogEntry[];
   rating?: number;
@@ -51,6 +51,13 @@ export interface ModuleDefinition {
   status: "active" | "deprecated" | "beta";
   createdAt: Date;
   updatedAt: Date;
+  // Studio-specific properties (for dynamically built modules)
+  source?: "catalog" | "studio";
+  renderCode?: string;
+  styles?: string;
+  settingsSchema?: Record<string, unknown>;
+  defaultSettings?: Record<string, unknown>;
+  dependencies?: string[];
 }
 
 export interface ChangelogEntry {

@@ -17,6 +17,8 @@ import {
   CheckCircle,
   AlertCircle,
   Code,
+  FlaskConical,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -25,6 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import { ModuleConfigForm } from "@/components/admin/modules/module-config-form";
 import { ModuleCodeEditor } from "@/components/admin/modules/module-code-editor";
 import { ModuleDeployDialog } from "@/components/admin/modules/module-deploy-dialog";
+import { ModuleImportExport, type ModulePackage } from "@/components/admin/modules/module-import-export";
 import {
   getModuleSource,
   updateModule,
@@ -370,6 +373,49 @@ export default function EditModulePage({
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
+            <ModuleImportExport
+              module={{
+                name,
+                slug: module.slug,
+                description,
+                icon,
+                category,
+                version: module.latestVersion || "0.0.1",
+                renderCode,
+                settingsSchema: settingsSchema ? JSON.parse(settingsSchema) : {},
+                styles,
+                defaultSettings: module.defaultSettings,
+                pricingTier,
+                dependencies,
+              }}
+              onImport={(imported: ModulePackage) => {
+                // Apply imported module data
+                setName(imported.name);
+                setDescription(imported.description);
+                setIcon(imported.icon);
+                setCategory(imported.category);
+                setPricingTier(imported.pricingTier || "free");
+                setDependencies(imported.dependencies || []);
+                setRenderCode(imported.renderCode);
+                setStyles(imported.styles);
+                setSettingsSchema(JSON.stringify(imported.settingsSchema || {}, null, 2));
+                setHasChanges(true);
+              }}
+              trigger={
+                <Button variant="outline" size="sm">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import/Export
+                </Button>
+              }
+            />
+            
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/admin/modules/studio/${moduleId}/test`}>
+                <FlaskConical className="h-4 w-4 mr-2" />
+                Test Module
+              </Link>
+            </Button>
+
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" size="sm">
