@@ -13,13 +13,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
 
+// Database role values - profiles.role column
+// NOTE: "agency_owner", "agency_admin", "agency_member" are CONCEPTUAL roles
+// derived from agency_members table, NOT stored in profiles.role
 const roles = [
   { value: "all", label: "All Roles" },
   { value: "super_admin", label: "Super Admin" },
-  { value: "agency_owner", label: "Agency Owner" },
-  { value: "agency_admin", label: "Agency Admin" },
-  { value: "agency_member", label: "Agency Member" },
-  { value: "client", label: "Client" },
+  { value: "admin", label: "Admin" },
+  { value: "member", label: "Member" },
 ];
 
 const statuses = [

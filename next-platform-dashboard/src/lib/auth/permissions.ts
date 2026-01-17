@@ -1,19 +1,86 @@
 import { createClient } from "@/lib/supabase/server";
 import { ROLE_PERMISSIONS, type UserRole } from "@/types/roles";
 
+// Database role type (what's actually stored in profiles.role)
+type DbRole = "super_admin" | "admin" | "member";
+
+// Agency member role type (what's stored in agency_members.role)
+type AgencyMemberRole = "owner" | "admin" | "member";
+
+/**
+ * Get the effective UserRole for permission checking.
+ * 
+ * The database stores:
+ * - profiles.role: "super_admin" | "admin" | "member" (platform-level)
+ * - agency_members.role: "owner" | "admin" | "member" (agency-level)
+ * 
+ * This function maps DB roles to conceptual UserRole for ROLE_PERMISSIONS lookup.
+ * 
+ * IMPORTANT: For super_admin checks, prefer using isSuperAdmin() directly
+ * as it's more efficient (single query).
+ */
 export async function getCurrentUserRole(): Promise<UserRole | null> {
   const supabase = await createClient();
   
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
+  // Get profile first
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, agency_id")
     .eq("id", user.id)
     .single();
 
-  return (profile?.role as UserRole) || null;
+  if (!profile) return null;
+
+  const dbRole = profile.role as DbRole;
+
+  // Platform super_admin takes precedence - fast path
+  if (dbRole === "super_admin") {
+    return "super_admin";
+  }
+
+  // If user has an agency, check their agency role
+  if (profile.agency_id) {
+    // Get agency membership role (separate query since no direct FK from profiles)
+    const { data: membership } = await supabase
+      .from("agency_members")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("agency_id", profile.agency_id)
+      .single();
+
+    if (membership) {
+      const agencyRole = membership.role as AgencyMemberRole;
+      switch (agencyRole) {
+        case "owner":
+          return "agency_owner";
+        case "admin":
+          return "agency_admin";
+        case "member":
+          return "agency_member";
+      }
+    }
+
+    // User has agency_id but no membership - they might be the owner
+    // Check agencies table directly
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("owner_id")
+      .eq("id", profile.agency_id)
+      .single();
+
+    if (agency?.owner_id === user.id) {
+      return "agency_owner";
+    }
+
+    // Has agency but no role - default to member
+    return "agency_member";
+  }
+
+  // No agency - default to lowest role
+  return "agency_member";
 }
 
 export async function hasPermission(permission: string): Promise<boolean> {

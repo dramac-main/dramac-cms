@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
 import { OnboardingRedirect } from "@/components/onboarding/onboarding-redirect";
 import { getProfile } from "@/lib/actions/profile";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({
   children,
@@ -21,6 +22,20 @@ export default async function DashboardLayout({
 
   const isImpersonating = !!impersonatedUser;
 
+  // Check if current user is super_admin for sidebar admin link
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  let isSuperAdmin = false;
+  
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    isSuperAdmin = profile?.role === "super_admin";
+  }
+
   return (
     <TooltipProvider>
       <OnboardingRedirect>
@@ -31,7 +46,7 @@ export default async function DashboardLayout({
               userEmail={impersonatedUser.email}
             />
           )}
-          <Sidebar />
+          <Sidebar isSuperAdmin={isSuperAdmin} />
           <div className={`flex flex-1 flex-col ${isImpersonating ? "pt-10" : ""}`}>
             <Header />
             <main className="flex-1 p-4 lg:p-6">{children}</main>

@@ -17,13 +17,14 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { mainNavigation, bottomNavigation, type NavGroup, type NavItem } from "@/config/navigation";
+import { mainNavigation, bottomNavigation, adminNavigation, type NavGroup, type NavItem } from "@/config/navigation";
 
 interface SidebarProps {
   className?: string;
+  isSuperAdmin?: boolean;
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, isSuperAdmin = false }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
 
@@ -75,6 +76,14 @@ export function Sidebar({ className }: SidebarProps) {
         {/* Bottom Navigation */}
         <div className="border-t py-4">
           <TooltipProvider delayDuration={0}>
+            {/* Admin Panel link - only for super admins */}
+            {isSuperAdmin && (
+              <NavItemComponent
+                item={adminNavigation}
+                collapsed={collapsed}
+                pathname={pathname}
+              />
+            )}
             {bottomNavigation.map((item) => (
               <NavItemComponent
                 key={item.href}
@@ -114,6 +123,14 @@ export function Sidebar({ className }: SidebarProps) {
             ))}
           </nav>
           <div className="border-t py-4">
+            {/* Admin Panel link - only for super admins */}
+            {isSuperAdmin && (
+              <NavItemComponent
+                item={adminNavigation}
+                collapsed={false}
+                pathname={pathname}
+              />
+            )}
             {bottomNavigation.map((item) => (
               <NavItemComponent
                 key={item.href}

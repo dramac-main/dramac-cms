@@ -7,6 +7,7 @@ import {
   CreditCard,
   Settings,
   HelpCircle,
+  Shield,
   type LucideIcon,
 } from "lucide-react";
 
@@ -86,3 +87,10 @@ export const bottomNavigation: NavItem[] = [
     icon: HelpCircle,
   },
 ];
+
+// Admin navigation - only shown to super_admin users
+export const adminNavigation: NavItem = {
+  title: "Admin Panel",
+  href: "/admin",
+  icon: Shield,
+};

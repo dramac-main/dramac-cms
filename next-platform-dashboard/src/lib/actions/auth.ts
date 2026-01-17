@@ -92,11 +92,13 @@ export async function signup(formData: SignupFormData) {
   }
 
   // 3. Create user profile
+  // Note: New users get 'member' role by default
+  // Super admin role must be granted via scripts/create-super-admin.ts
   const { error: profileError } = await supabase.from("profiles").insert({
     id: authData.user.id,
     email: validated.data.email,
     name: validated.data.name,
-    role: "super_admin",
+    role: "member",
     agency_id: org.id,
   });
 

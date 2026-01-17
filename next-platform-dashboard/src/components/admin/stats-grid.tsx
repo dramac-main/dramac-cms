@@ -1,59 +1,23 @@
-import { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { StatsCard } from "./stats-card";
+import type { PlatformStats } from "@/lib/admin/stats-service";
 import { Users, Building2, Globe, DollarSign, Package, Activity } from "lucide-react";
-import { StatsCard } from "@/components/admin/stats-card";
-import { ActivityFeed } from "@/components/admin/activity-feed";
-import { QuickActions } from "@/components/admin/quick-actions";
-import { getPlatformStats, getRecentActivity } from "@/lib/admin/stats-service";
 
-export const metadata: Metadata = {
-  title: "Admin Dashboard | DRAMAC",
-  description: "Platform administration and monitoring",
-};
+interface StatsGridProps {
+  stats: PlatformStats;
+}
 
-export default async function AdminDashboardPage() {
-  const supabase = await createClient();
-  
-  // Verify super admin access
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    redirect("/login");
-  }
+function formatCurrency(cents: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+  }).format(cents / 100);
+}
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "super_admin") {
-    redirect("/dashboard");
-  }
-
-  // Get real stats
-  const stats = await getPlatformStats();
-  const activities = await getRecentActivity();
-
-  // Format currency
-  const formatCurrency = (cents: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-    }).format(cents / 100);
-  };
-
+export function StatsGrid({ stats }: StatsGridProps) {
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Platform overview and management
-        </p>
-      </div>
-
-      {/* Key Metrics */}
+    <div className="space-y-6">
+      {/* Primary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Total Users"
@@ -108,12 +72,6 @@ export default async function AdminDashboardPage() {
               : { value: -stats.system.errorRate, label: "issues detected" }
           }
         />
-      </div>
-
-      {/* Quick Actions + Activity Feed */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <QuickActions />
-        <ActivityFeed activities={activities} />
       </div>
     </div>
   );
