@@ -111,6 +111,36 @@ export async function uploadMediaFile(
 
   const supabase = await createClient();
 
+  // Check if media bucket exists, create if needed
+  const { data: buckets } = await supabase.storage.listBuckets();
+  const mediaBucket = buckets?.find((b) => b.name === "media");
+
+  if (!mediaBucket) {
+    // Try to create bucket
+    const { error: createError } = await supabase.storage.createBucket("media", {
+      public: true,
+      fileSizeLimit: 50 * 1024 * 1024, // 50MB
+      allowedMimeTypes: [
+        "image/*",
+        "video/*",
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "text/*",
+      ],
+    });
+
+    if (createError) {
+      console.error("[UploadService] Failed to create media bucket:", createError);
+      return { 
+        success: false, 
+        error: "Media storage bucket not configured. Please contact support." 
+      };
+    }
+  }
+
   // Generate unique filename
   const uniqueName = generateUniqueFileName(fileName);
   const storagePath = `${agencyId}/${uniqueName}`;
