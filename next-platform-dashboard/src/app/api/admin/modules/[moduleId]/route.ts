@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get subscription stats
-    const { count: subscriptionCount } = await supabase
+    const { count: subscriptionCount } = await (supabase as any)
       .from("agency_module_subscriptions")
       .select("*", { count: "exact", head: true })
       .eq("module_id", moduleId)
@@ -53,15 +53,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Get installation stats
     const [agencyStats, clientStats, siteStats] = await Promise.all([
-      supabase
+      (supabase as any)
         .from("agency_module_installations")
         .select("*", { count: "exact", head: true })
         .eq("module_id", moduleId),
-      supabase
+      (supabase as any)
         .from("client_module_installations")
         .select("*", { count: "exact", head: true })
         .eq("module_id", moduleId),
-      supabase
+      (supabase as any)
         .from("site_module_installations")
         .select("*", { count: "exact", head: true })
         .eq("module_id", moduleId),
@@ -160,7 +160,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check if module has active subscriptions
-    const { count: subscriptionCount } = await supabase
+    const { count: subscriptionCount } = await (supabase as any)
       .from("agency_module_subscriptions")
       .select("*", { count: "exact", head: true })
       .eq("module_id", moduleId)
@@ -173,7 +173,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("modules_v2")
       .delete()
       .eq("id", moduleId);

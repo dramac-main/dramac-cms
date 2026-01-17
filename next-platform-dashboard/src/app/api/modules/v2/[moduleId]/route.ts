@@ -24,7 +24,7 @@ export async function GET(
     }
     
     // Get module
-    const { data: module, error } = await supabase
+    const { data: module, error } = await (supabase as any)
       .from("modules_v2")
       .select(`
         *,
@@ -44,15 +44,15 @@ export async function GET(
     
     // Get installation stats by level
     const [agencyStats, clientStats, siteStats] = await Promise.all([
-      supabase
+      (supabase as any)
         .from("agency_module_installations")
         .select("id", { count: "exact" })
         .eq("module_id", moduleId),
-      supabase
+      (supabase as any)
         .from("client_module_installations")
         .select("id", { count: "exact" })
         .eq("module_id", moduleId),
-      supabase
+      (supabase as any)
         .from("site_module_installations")
         .select("id", { count: "exact" })
         .eq("module_id", moduleId),
@@ -128,7 +128,7 @@ export async function PATCH(
       }
     }
     
-    const { data: module, error } = await supabase
+    const { data: module, error } = await (supabase as any)
       .from("modules_v2")
       .update(updateData)
       .eq("id", moduleId)

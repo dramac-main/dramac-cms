@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("agency_module_subscriptions")
       .select(`
         *,
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Check if already subscribed
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from("agency_module_subscriptions")
       .select("id, status")
       .eq("agency_id", agencyId)
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (existing) {
       // Reactivate
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("agency_module_subscriptions")
         .update({
           status: "active",
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     // Create new subscription
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("agency_module_subscriptions")
       .insert({
         agency_id: agencyId,

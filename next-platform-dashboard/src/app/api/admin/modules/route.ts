@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const installLevel = searchParams.get("install_level");
 
     // Build query
-    let query = supabase
+    let query = (supabase as any)
       .from("modules_v2")
       .select("*")
       .order("created_at", { ascending: false });
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if slug already exists
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from("modules_v2")
       .select("id")
       .eq("slug", slug)
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: module, error } = await supabase
+    const { data: module, error } = await (supabase as any)
       .from("modules_v2")
       .insert({
         slug,

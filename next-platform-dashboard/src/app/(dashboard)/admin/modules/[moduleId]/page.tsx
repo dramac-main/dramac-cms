@@ -59,20 +59,20 @@ export default async function ModuleDetailPage({ params }: PageProps) {
 
   try {
     const [subscriptions, agency, client, site] = await Promise.all([
-      supabase
+      (supabase as any)
         .from("agency_module_subscriptions")
         .select("*", { count: "exact", head: true })
         .eq("module_id", moduleId)
         .eq("status", "active"),
-      supabase
+      (supabase as any)
         .from("agency_module_installations")
         .select("*", { count: "exact", head: true })
         .eq("module_id", moduleId),
-      supabase
+      (supabase as any)
         .from("client_module_installations")
         .select("*", { count: "exact", head: true })
         .eq("module_id", moduleId),
-      supabase
+      (supabase as any)
         .from("site_module_installations")
         .select("*", { count: "exact", head: true })
         .eq("module_id", moduleId),

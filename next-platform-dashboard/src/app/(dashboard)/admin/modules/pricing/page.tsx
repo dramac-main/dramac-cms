@@ -34,7 +34,7 @@ export default async function WholesalePricingPage() {
   }
 
   // Get all modules with their pricing from v2 table
-  const { data: modules } = await supabase
+  const { data: modules } = await (supabase as any)
     .from("modules_v2")
     .select(`
       id, slug, name, icon, category, install_level, status,

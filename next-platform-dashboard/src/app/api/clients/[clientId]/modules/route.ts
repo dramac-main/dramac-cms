@@ -29,7 +29,7 @@ export async function GET(
     }
 
     // Get agency's module subscriptions as available modules
-    const { data: modules, error } = await supabase
+    const { data: modules, error } = await (supabase as any)
       .from("agency_module_subscriptions")
       .select(`
         *,
@@ -74,7 +74,7 @@ export async function POST(
     }
 
     // Verify agency has subscription to this module
-    const { data: subscription, error: subError } = await supabase
+    const { data: subscription, error: subError } = await (supabase as any)
       .from("agency_module_subscriptions")
       .select("id, status")
       .eq("agency_id", agencyId)

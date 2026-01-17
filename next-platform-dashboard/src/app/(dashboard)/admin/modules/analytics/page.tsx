@@ -62,20 +62,20 @@ export default async function ModuleAnalyticsPage() {
 
   try {
     // Total subscriptions
-    const { count: total } = await supabase
+    const { count: total } = await (supabase as any)
       .from("agency_module_subscriptions")
       .select("*", { count: "exact", head: true });
     totalSubscriptions = total || 0;
 
     // Active subscriptions
-    const { count: active } = await supabase
+    const { count: active } = await (supabase as any)
       .from("agency_module_subscriptions")
       .select("*", { count: "exact", head: true })
       .eq("status", "active");
     activeSubscriptions = active || 0;
 
     // Revenue calculation
-    const { data: revenueData } = await supabase
+    const { data: revenueData } = await (supabase as any)
       .from("agency_module_subscriptions")
       .select(`
         module:modules_v2(wholesale_price_monthly)
@@ -96,9 +96,9 @@ export default async function ModuleAnalyticsPage() {
 
   try {
     const [agency, client, site] = await Promise.all([
-      supabase.from("agency_module_installations").select("*", { count: "exact", head: true }),
-      supabase.from("client_module_installations").select("*", { count: "exact", head: true }),
-      supabase.from("site_module_installations").select("*", { count: "exact", head: true }),
+      (supabase as any).from("agency_module_installations").select("*", { count: "exact", head: true }),
+      (supabase as any).from("client_module_installations").select("*", { count: "exact", head: true }),
+      (supabase as any).from("site_module_installations").select("*", { count: "exact", head: true }),
     ]);
     
     agencyInstalls = agency.count || 0;

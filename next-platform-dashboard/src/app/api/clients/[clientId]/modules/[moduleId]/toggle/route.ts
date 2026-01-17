@@ -22,7 +22,7 @@ export async function PATCH(
     }
 
     // Toggle module subscription status using agency_module_subscriptions table
-    const { data: subscription, error } = await supabase
+    const { data: subscription, error } = await (supabase as any)
       .from("agency_module_subscriptions")
       .update({ status: enabled ? "active" : "canceled" })
       .eq("client_id", clientId)

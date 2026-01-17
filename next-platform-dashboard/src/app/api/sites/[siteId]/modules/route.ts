@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     // Get all modules subscribed by the agency
-    const { data: agencyModules } = await supabase
+    const { data: agencyModules } = await (supabase as any)
       .from("agency_module_subscriptions")
       .select(`
         module:modules_v2(*)
@@ -46,10 +46,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .eq("site_id", siteId);
 
     // Create a map of enabled modules
-    const enabledMap = new Map(siteModules?.map((sm) => [sm.module_id, sm]) || []);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const enabledMap = new Map(siteModules?.map((sm: any) => [sm.module_id, sm]) || []);
 
     // Combine data
-    const result = agencyModules?.map((sub) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = agencyModules?.map((sub: any) => ({
       module: sub.module,
       siteModule: enabledMap.get(sub.module?.id || ""),
       isEnabled: enabledMap.has(sub.module?.id || ""),
@@ -97,7 +99,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "Site not found" }, { status: 404 });
     }
 
-    const { data: subscription } = await supabase
+    const { data: subscription } = await (supabase as any)
       .from("agency_module_subscriptions")
       .select("id")
       .eq("agency_id", site.client.agency_id)

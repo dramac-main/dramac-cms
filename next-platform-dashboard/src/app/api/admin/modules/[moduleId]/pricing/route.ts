@@ -84,7 +84,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       updateData.lemon_variant_one_time_id = lemon_variant_one_time_id;
     }
 
-    const { data: module, error } = await supabase
+    const { data: module, error } = await (supabase as any)
       .from("modules_v2")
       .update(updateData)
       .eq("id", moduleId)
