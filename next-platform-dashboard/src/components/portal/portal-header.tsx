@@ -71,11 +71,14 @@ export function PortalHeader({ clientName, isImpersonating, impersonatorEmail }:
           <Badge variant="secondary">Client Portal</Badge>
         </div>
 
-        <nav className="flex items-center gap-4">
-          <Link href="/portal" className="text-sm font-medium hover:underline">
-            My Sites
+        <nav className="flex items-center gap-6">
+          <Link href="/portal" className="text-sm font-medium hover:text-primary transition-colors">
+            Dashboard
           </Link>
-          <Link href="/portal/support" className="text-sm font-medium hover:underline">
+          <Link href="/portal/apps" className="text-sm font-medium hover:text-primary transition-colors">
+            Apps
+          </Link>
+          <Link href="/portal/support" className="text-sm font-medium hover:text-primary transition-colors">
             Support
           </Link>
         </nav>

@@ -64,6 +64,9 @@ This is where **clients use their apps/modules** - like an App Store on their ph
 ## 📁 Files to Create
 
 ```
+src/components/portal/
+├── portal-header.tsx                  # UPDATE - Add Apps navigation link
+
 src/app/(portal)/portal/
 ├── page.tsx                           # Portal dashboard (updated with widgets)
 
@@ -100,6 +103,31 @@ src/app/api/portal/
 ---
 
 ## ✅ Tasks
+
+### Task 76B3.0: Update Portal Navigation (CRITICAL)
+
+**File: `src/components/portal/portal-header.tsx`** (UPDATE)
+
+Add "Apps" link to the portal navigation so clients can access the apps section.
+
+```tsx
+<nav className="flex items-center gap-4">
+  <Link href="/portal" className="text-sm font-medium hover:underline">
+    Dashboard
+  </Link>
+  <Link href="/portal/apps" className="text-sm font-medium hover:underline">
+    Apps
+  </Link>
+  <Link href="/portal" className="text-sm font-medium hover:underline">
+    My Sites
+  </Link>
+  <Link href="/portal/support" className="text-sm font-medium hover:underline">
+    Support
+  </Link>
+</nav>
+```
+
+---
 
 ### Task 76B3.1: Client Apps Grid Page
 
