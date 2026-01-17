@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// Note: This API route requires the client_module_installations table
-// which needs to be created via database migration
-
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ clientId: string }> }
@@ -28,8 +25,21 @@ export async function GET(
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    // Get agency's module subscriptions as available modules
-    const { data: modules, error } = await (supabase as any)
+    // Get client's installed modules
+    const { data: installed, error: installedError } = await (supabase as any)
+      .from("client_module_installations")
+      .select(`
+        *,
+        module:modules_v2(*)
+      `)
+      .eq("client_id", clientId);
+
+    if (installedError) {
+      console.error("Error fetching installed modules:", installedError);
+    }
+
+    // Get agency's available module subscriptions
+    const { data: available, error: availableError } = await (supabase as any)
       .from("agency_module_subscriptions")
       .select(`
         *,
@@ -38,12 +48,14 @@ export async function GET(
       .eq("agency_id", client.agency_id)
       .eq("status", "active");
 
-    if (error) {
-      console.error("Error fetching client modules:", error);
-      return NextResponse.json({ error: "Failed to fetch modules" }, { status: 500 });
+    if (availableError) {
+      console.error("Error fetching available modules:", availableError);
     }
 
-    return NextResponse.json({ modules });
+    return NextResponse.json({ 
+      installed: installed || [],
+      available: available || []
+    });
   } catch (error) {
     console.error("Client modules error:", error);
     return NextResponse.json(
@@ -86,17 +98,53 @@ export async function POST(
       return NextResponse.json({ error: "Agency does not have an active subscription to this module" }, { status: 400 });
     }
 
-    // TODO: Implement full client module installation when table exists
-    console.log("Install module for client:", { clientId, moduleId, agencyId, pricePaid });
+    // Check if already installed
+    const { data: existing } = await (supabase as any)
+      .from("client_module_installations")
+      .select("id")
+      .eq("client_id", clientId)
+      .eq("module_id", moduleId)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json({ error: "Module already installed for this client" }, { status: 400 });
+    }
+
+    // Create the installation
+    const { data: installation, error: installError } = await (supabase as any)
+      .from("client_module_installations")
+      .insert({
+        client_id: clientId,
+        module_id: moduleId,
+        agency_subscription_id: subscription.id,
+        is_enabled: true,
+        billing_status: "active",
+        price_paid: pricePaid || 0,
+        billing_cycle: "monthly",
+        installed_at: new Date().toISOString(),
+        installed_by: user.id,
+        enabled_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (installError) {
+      console.error("Install module error:", installError);
+      return NextResponse.json({ error: "Failed to install module" }, { status: 500 });
+    }
+
+    // Update current_installations count on subscription
+    await (supabase as any)
+      .from("agency_module_subscriptions")
+      .update({ 
+        current_installations: (subscription as any).current_installations + 1,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", subscription.id);
 
     return NextResponse.json({ 
       success: true, 
-      installation: {
-        client_id: clientId,
-        module_id: moduleId,
-        is_enabled: true,
-      },
-      message: "Module subscription verified. Full installation requires database migration."
+      installation
     });
   } catch (error) {
     console.error("Install module error:", error);
