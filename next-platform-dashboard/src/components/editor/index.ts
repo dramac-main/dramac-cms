@@ -36,3 +36,6 @@ export * from "./settings";
 
 // AI Components
 export * from "./ai";
+
+// Responsive / Mobile components
+export * from "./responsive";

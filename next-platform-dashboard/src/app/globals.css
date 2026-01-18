@@ -518,3 +518,49 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* =============================================
+   MOBILE / TOUCH DEVICE UTILITIES
+   ============================================= */
+
+/* Safe area for mobile devices with notch (iPhone X+, etc.) */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-inset-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+.safe-area-inset-left {
+  padding-left: env(safe-area-inset-left, 0);
+}
+
+.safe-area-inset-right {
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Touch optimization - prevents 300ms delay and removes tap highlight */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+/* Allow text selection for inputs */
+.touch-manipulation-input {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent pull-to-refresh on overscroll */
+.overscroll-none {
+  overscroll-behavior: none;
+}
+
+/* Minimum touch target size (44x44px per Apple HIG) */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}
