@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserId, getCurrentUserRole, isSuperAdmin } from "@/lib/auth/permissions";
 import { cookies } from "next/headers";
+import type { Json } from "@/types/database";
 
 export interface BlogPost {
   id: string;
@@ -439,7 +440,7 @@ export async function createPost(
       title: post.title,
       slug,
       excerpt: post.excerpt,
-      content: post.content || {},
+      content: (post.content || {}) as Json,
       content_html: post.contentHtml,
       featured_image_url: post.featuredImageUrl,
       featured_image_alt: post.featuredImageAlt,
