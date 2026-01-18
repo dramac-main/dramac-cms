@@ -5,6 +5,7 @@ import { SiteOverview } from "./site-overview";
 import { SitePagesList } from "./site-pages-list";
 import { SiteSettingsGeneral } from "./site-settings-general";
 import { SiteModulesTab } from "./site-modules-tab";
+import { SiteBlogTab } from "./site-blog-tab";
 import { SiteDangerZone } from "./site-danger-zone";
 import type { Site } from "@/types/site";
 
@@ -27,6 +28,7 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="pages">Pages</TabsTrigger>
+        <TabsTrigger value="blog">Blog</TabsTrigger>
         <TabsTrigger value="settings">Settings</TabsTrigger>
         <TabsTrigger value="modules">Modules</TabsTrigger>
         <TabsTrigger value="danger">Danger Zone</TabsTrigger>
@@ -38,6 +40,10 @@ export function SiteDetailTabs({ site }: SiteDetailTabsProps) {
 
       <TabsContent value="pages">
         <SitePagesList siteId={site.id} pages={site.pages || []} />
+      </TabsContent>
+
+      <TabsContent value="blog">
+        <SiteBlogTab siteId={site.id} />
       </TabsContent>
 
       <TabsContent value="settings">

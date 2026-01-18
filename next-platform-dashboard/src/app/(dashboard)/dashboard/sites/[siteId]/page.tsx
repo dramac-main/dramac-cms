@@ -5,6 +5,7 @@ import { getSite } from "@/lib/actions/sites";
 import { PageHeader } from "@/components/layout/page-header";
 import { SiteOverview } from "@/components/sites/site-overview";
 import { SitePagesList } from "@/components/sites/site-pages-list";
+import { SiteBlogTab } from "@/components/sites/site-blog-tab";
 import { SitePublishButton } from "@/components/sites/site-publish-button";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -69,6 +70,7 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="pages">Pages ({site.pages?.length || 0})</TabsTrigger>
+          <TabsTrigger value="blog">Blog</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -77,6 +79,10 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
 
         <TabsContent value="pages">
           <SitePagesList siteId={site.id} pages={site.pages || []} />
+        </TabsContent>
+
+        <TabsContent value="blog">
+          <SiteBlogTab siteId={site.id} />
         </TabsContent>
       </Tabs>
     </div>
