@@ -117,4 +117,6 @@ export {
 
 export { Alert, AlertTitle, AlertDescription } from "./alert";
 
+export { RateLimitError, RateLimitErrorInline } from "./rate-limit-error";
+
 export { RadioGroup, RadioGroupItem } from "./radio-group";
