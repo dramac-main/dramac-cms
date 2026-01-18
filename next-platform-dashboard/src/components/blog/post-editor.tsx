@@ -55,6 +55,7 @@ export function PostEditor({
   disabled = false,
 }: PostEditorProps) {
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         heading: {

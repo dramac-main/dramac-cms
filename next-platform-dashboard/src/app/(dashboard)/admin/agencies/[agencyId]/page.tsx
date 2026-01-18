@@ -213,7 +213,7 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
               <div>
                 <p className="text-sm text-muted-foreground">Created</p>
                 <p className="font-medium">
-                  {format(new Date(agency.created_at), "PPP")}
+                  {agency.created_at ? format(new Date(agency.created_at), "PPP") : "N/A"}
                 </p>
               </div>
             </div>
