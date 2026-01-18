@@ -257,7 +257,7 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
                 {agency.members.map((member: {
                   id: string;
                   role: string;
-                  invited_at: string;
+                  invited_at: string | null;
                   user: { id: string; name: string | null; email: string; avatar_url: string | null };
                 }) => (
                   <TableRow key={member.id}>
