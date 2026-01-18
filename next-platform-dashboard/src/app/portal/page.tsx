@@ -138,30 +138,34 @@ export default async function PortalDashboard() {
                   : null;
 
                 return (
-                  <Link
+                  <div
                     key={site.id}
-                    href={`/portal/sites/${site.id}`}
                     className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center shrink-0">
-                      <Globe className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium truncate">{site.name}</p>
-                        <Badge variant={site.isPublished ? "default" : "secondary"} className="shrink-0">
-                          {site.isPublished ? "Live" : "Draft"}
-                        </Badge>
+                    <Link
+                      href={`/portal/sites/${site.id}`}
+                      className="flex items-center gap-4 flex-1 min-w-0"
+                    >
+                      <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center shrink-0">
+                        <Globe className="h-8 w-8 text-muted-foreground" />
                       </div>
-                      {domain && (
-                        <p className="text-sm text-muted-foreground truncate">
-                          {domain}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium truncate">{site.name}</p>
+                          <Badge variant={site.isPublished ? "default" : "secondary"} className="shrink-0">
+                            {site.isPublished ? "Live" : "Draft"}
+                          </Badge>
+                        </div>
+                        {domain && (
+                          <p className="text-sm text-muted-foreground truncate">
+                            {domain}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {site.pageCount} pages {site.lastUpdatedAt && `• Updated ${formatDistanceToNow(new Date(site.lastUpdatedAt), { addSuffix: true })}`}
                         </p>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {site.pageCount} pages {site.lastUpdatedAt && `• Updated ${formatDistanceToNow(new Date(site.lastUpdatedAt), { addSuffix: true })}`}
-                      </p>
-                    </div>
+                      </div>
+                    </Link>
                     {url && site.isPublished && (
                       <Button
                         variant="ghost"
@@ -173,12 +177,13 @@ export default async function PortalDashboard() {
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
                         >
                           <ExternalLink className="h-4 w-4 text-muted-foreground" />
                         </a>
                       </Button>
                     )}
-                  </Link>
+                  </div>
                 );
               })}
             </div>

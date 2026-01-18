@@ -154,13 +154,13 @@ export function NewTicketForm({ user, sites }: NewTicketFormProps) {
                 <Label htmlFor="site">Related Site (optional)</Label>
                 <Select
                   value={formData.siteId}
-                  onValueChange={(value) => setFormData({ ...formData, siteId: value })}
+                  onValueChange={(value) => setFormData({ ...formData, siteId: value === "none" ? "" : value })}
                 >
                   <SelectTrigger id="site">
                     <SelectValue placeholder="Select a site (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No specific site</SelectItem>
+                    <SelectItem value="none">No specific site</SelectItem>
                     {sites.map((site) => (
                       <SelectItem key={site.id} value={site.id}>
                         {site.name}

@@ -381,7 +381,6 @@ export async function getPagesSeo(siteId: string): Promise<PageSeo[]> {
       canonical_url
     `)
     .eq("site_id", siteId)
-    .eq("status", "published")
     .order("name");
 
   if (error || !data) {

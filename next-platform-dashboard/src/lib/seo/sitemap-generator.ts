@@ -45,12 +45,11 @@ export async function generateSitemap(
   const changefreq = (site?.sitemap_changefreq || "weekly") as SitemapUrl["changefreq"];
   const includeImages = site?.sitemap_include_images ?? true;
 
-  // Get published pages
+  // Get published pages (all pages are shown in sitemap when site is published)
   const { data: pages } = await supabase
     .from("pages")
     .select("slug, updated_at, robots_index, content, seo_image")
     .eq("site_id", siteId)
-    .eq("status", "published")
     .neq("robots_index", false);
 
   if (pages) {
