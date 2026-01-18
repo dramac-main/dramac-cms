@@ -3,6 +3,13 @@
 ## Overview
 This phase implements comprehensive analytics, real-time monitoring, error tracking, and performance insights for modules. Developers will have full visibility into how their modules perform in production, enabling data-driven optimization and rapid issue resolution.
 
+> ⚠️ **IMPORTANT**: This platform already has some analytics tables:
+> - `module_usage_events` - Basic usage tracking (can be migrated or extended)
+> - `module_error_logs` - Basic error logging (can be migrated or extended)
+> - `module_analytics` - Basic analytics in module studio
+> 
+> This phase creates a MORE COMPREHENSIVE system. Either migrate existing data or run both in parallel during transition.
+
 ## Prerequisites
 - Phase 80 (Module Studio Core) completed
 - Phase 81A (Marketplace Integration) completed
@@ -20,8 +27,11 @@ This phase implements comprehensive analytics, real-time monitoring, error track
 ```sql
 -- migrations/20250117000001_module_analytics_enhanced.sql
 
+-- ⚠️ NOTE: Check if module_usage_events exists and migrate data if needed
+-- SELECT * FROM information_schema.tables WHERE table_name = 'module_usage_events';
+
 -- Real-time module events (partitioned for performance)
-CREATE TABLE module_events (
+CREATE TABLE IF NOT EXISTS module_events (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   module_id UUID NOT NULL REFERENCES module_source(id) ON DELETE CASCADE,
   version_id UUID REFERENCES module_versions(id) ON DELETE SET NULL,
@@ -317,6 +327,82 @@ CREATE INDEX idx_error_groups_module_status ON module_error_groups (module_id, s
 CREATE INDEX idx_error_groups_priority ON module_error_groups (priority, status) WHERE status = 'open';
 
 CREATE INDEX idx_module_alerts_active ON module_alerts (module_id, status) WHERE status = 'active';
+
+-- ============================================================================
+-- 💰 REVENUE TRACKING (CRITICAL FOR BUSINESS MODEL)
+-- ============================================================================
+
+-- Module revenue tracking per agency per period
+CREATE TABLE IF NOT EXISTS module_revenue (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  module_id UUID NOT NULL REFERENCES module_source(id) ON DELETE CASCADE,
+  agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
+  
+  -- Time period
+  period_start DATE NOT NULL,
+  period_end DATE NOT NULL,
+  
+  -- Revenue metrics (in cents)
+  wholesale_revenue BIGINT DEFAULT 0,     -- What platform earned from agency
+  retail_revenue BIGINT DEFAULT 0,        -- What agency charged to clients (if tracked)
+  agency_profit BIGINT DEFAULT 0,         -- retail - wholesale
+  
+  -- Usage metrics
+  total_installs INTEGER DEFAULT 0,       -- New installs in period
+  active_installs INTEGER DEFAULT 0,      -- Active at end of period
+  churned_installs INTEGER DEFAULT 0,     -- Uninstalled in period
+  
+  -- Billing info
+  invoice_id TEXT,                        -- LemonSqueezy or Stripe invoice
+  payment_status TEXT DEFAULT 'pending',  -- pending, paid, failed, refunded
+  paid_at TIMESTAMP WITH TIME ZONE,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  UNIQUE(module_id, agency_id, period_start)
+);
+
+-- Platform-wide revenue summary
+CREATE TABLE IF NOT EXISTS module_revenue_summary (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  
+  -- Time period
+  period_type TEXT NOT NULL,              -- 'daily', 'weekly', 'monthly', 'yearly'
+  period_start DATE NOT NULL,
+  period_end DATE NOT NULL,
+  
+  -- Revenue totals (in cents)
+  total_wholesale_revenue BIGINT DEFAULT 0,
+  total_transactions INTEGER DEFAULT 0,
+  
+  -- Module breakdown
+  modules_with_revenue INTEGER DEFAULT 0,
+  top_modules JSONB DEFAULT '[]',         -- Array of { module_id, revenue, installs }
+  
+  -- Agency breakdown
+  agencies_paying INTEGER DEFAULT 0,
+  top_agencies JSONB DEFAULT '[]',        -- Array of { agency_id, revenue }
+  
+  -- Growth metrics
+  revenue_growth_percent DECIMAL(10, 2),  -- vs previous period
+  new_subscriptions INTEGER DEFAULT 0,
+  churned_subscriptions INTEGER DEFAULT 0,
+  
+  -- Average metrics
+  avg_revenue_per_module DECIMAL(10, 2),
+  avg_revenue_per_agency DECIMAL(10, 2),
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  UNIQUE(period_type, period_start)
+);
+
+-- Indexes for revenue queries
+CREATE INDEX idx_module_revenue_module ON module_revenue (module_id, period_start DESC);
+CREATE INDEX idx_module_revenue_agency ON module_revenue (agency_id, period_start DESC);
+CREATE INDEX idx_module_revenue_status ON module_revenue (payment_status) WHERE payment_status != 'paid';
+CREATE INDEX idx_revenue_summary_period ON module_revenue_summary (period_type, period_start DESC);
 ```
 
 ---
@@ -1111,6 +1197,96 @@ export async function runDailyAggregation(): Promise<void> {
   for (const moduleId of uniqueModuleIds) {
     await aggregateDailyAnalytics(moduleId, yesterday)
   }
+}
+
+// ============================================================================
+// 💰 REVENUE AGGREGATION (CRITICAL FOR BUSINESS)
+// ============================================================================
+
+export async function aggregateMonthlyRevenue(
+  year: number,
+  month: number
+): Promise<void> {
+  const supabase = await createClient()
+  
+  const periodStart = new Date(year, month - 1, 1)
+  const periodEnd = new Date(year, month, 0) // Last day of month
+
+  // Get all agency module subscriptions that were active in this period
+  const { data: subscriptions } = await supabase
+    .from('agency_module_subscriptions')
+    .select(`
+      id,
+      agency_id,
+      module_id,
+      status,
+      wholesale_price:modules_v2(wholesale_price_monthly)
+    `)
+    .eq('status', 'active')
+
+  if (!subscriptions) return
+
+  // Group by module and agency
+  for (const sub of subscriptions) {
+    const wholesalePrice = sub.wholesale_price?.wholesale_price_monthly || 0
+
+    // Count active site installations for this subscription
+    const { count: activeInstalls } = await supabase
+      .from('site_module_installations')
+      .select('*', { count: 'exact', head: true })
+      .eq('module_id', sub.module_id)
+      .eq('status', 'active')
+
+    // Upsert revenue record
+    await supabase
+      .from('module_revenue')
+      .upsert({
+        module_id: sub.module_id,
+        agency_id: sub.agency_id,
+        period_start: periodStart.toISOString().split('T')[0],
+        period_end: periodEnd.toISOString().split('T')[0],
+        wholesale_revenue: wholesalePrice,
+        active_installs: activeInstalls || 0,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'module_id,agency_id,period_start'
+      })
+  }
+
+  // Generate platform summary
+  const { data: revenueData } = await supabase
+    .from('module_revenue')
+    .select('*')
+    .eq('period_start', periodStart.toISOString().split('T')[0])
+
+  if (!revenueData) return
+
+  const totalRevenue = revenueData.reduce((sum, r) => sum + (r.wholesale_revenue || 0), 0)
+  const modulesWithRevenue = new Set(revenueData.filter(r => r.wholesale_revenue > 0).map(r => r.module_id)).size
+  const agenciesPaying = new Set(revenueData.filter(r => r.wholesale_revenue > 0).map(r => r.agency_id)).size
+
+  // Upsert summary
+  await supabase
+    .from('module_revenue_summary')
+    .upsert({
+      period_type: 'monthly',
+      period_start: periodStart.toISOString().split('T')[0],
+      period_end: periodEnd.toISOString().split('T')[0],
+      total_wholesale_revenue: totalRevenue,
+      total_transactions: revenueData.length,
+      modules_with_revenue: modulesWithRevenue,
+      agencies_paying: agenciesPaying,
+      avg_revenue_per_module: modulesWithRevenue > 0 ? totalRevenue / modulesWithRevenue : 0,
+      avg_revenue_per_agency: agenciesPaying > 0 ? totalRevenue / agenciesPaying : 0,
+    }, {
+      onConflict: 'period_type,period_start'
+    })
+}
+
+export async function runMonthlyRevenueAggregation(): Promise<void> {
+  const today = new Date()
+  const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1)
+  await aggregateMonthlyRevenue(lastMonth.getFullYear(), lastMonth.getMonth() + 1)
 }
 ```
 

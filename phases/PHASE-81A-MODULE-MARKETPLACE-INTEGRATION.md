@@ -40,10 +40,12 @@ This phase fixes that completely.
 
 ### Tables Involved
 
+> ⚠️ **CRITICAL**: This platform uses `modules_v2` NOT `modules`. All references below use the correct table.
+
 ```
-module_source (Studio modules)          modules (Catalog modules)
+module_source (Studio modules)          modules_v2 (V2 Catalog - ACTIVE)
 ├── module_id                           ├── id
-├── name                                ├── name
+├── name                                ├── name  
 ├── slug                                ├── slug
 ├── render_code                         ├── package_url
 ├── styles                              ├── manifest_url
@@ -55,26 +57,34 @@ module_source (Studio modules)          modules (Catalog modules)
 
 agency_module_subscriptions
 ├── agency_id
-├── module_id → points to modules.id
+├── module_id → points to modules_v2.id
 └── status
 
-site_modules
+site_module_installations (V2 - Multi-level)
 ├── site_id
-├── module_id → points to modules.id
-└── settings
+├── module_id → points to modules_v2.id
+├── settings
+└── status
 ```
+
+### Existing Infrastructure (DO NOT DUPLICATE)
+
+These files already exist and should be MODIFIED, not recreated:
+- `src/lib/modules/module-registry-server.ts` - Has `getAllModules()` that combines static + DB
+- `src/lib/modules/module-deployer.ts` - Has stub `syncModuleToCatalog()` that needs real implementation
+- `src/lib/modules/services/installation-service.ts` - Full installation logic exists
 
 ---
 
 ## 🔧 Solution Architecture
 
-### Option A: Sync to `modules` Table (RECOMMENDED)
+### Option A: Sync to `modules_v2` Table (RECOMMENDED)
 
 When a module is deployed to production:
-1. Create/update entry in `modules` table
+1. Create/update entry in `modules_v2` table
 2. Set `source = "studio"` to identify it
 3. Store `render_code` and `styles` in `module_source` (still needed)
-4. Existing install flows work unchanged
+4. Existing V2 install flows work unchanged (via `installation-service.ts`)
 
 **Pros**: 
 - Minimal changes to existing code
@@ -92,7 +102,7 @@ All queries hit both `modules` + `module_source` and merge results.
 **Pros**: Single source of truth in `module_source`
 **Cons**: Requires changing every query in the system
 
-### Decision: **Option A - Sync to `modules` Table**
+### Decision: **Option A - Sync to `modules_v2` Table**
 
 ---
 
@@ -117,39 +127,45 @@ src/components/renderer/
 ├── node-renderer.tsx                # MODIFY - Support module components
 
 Database:
-└── modules table                    # ADD columns: source, render_code
+└── modules_v2 table                 # ADD columns: source, studio_module_id, render_code, styles
 ```
 
 ---
 
 ## ✅ Tasks
 
-### Task 81A.1: Extend `modules` Table Schema
+### Task 81A.1: Extend `modules_v2` Table Schema
+
+> ⚠️ **IMPORTANT**: Use `modules_v2` - this is the active V2 module system!
 
 Add columns to support studio modules:
 
 ```sql
--- Migration: add_studio_module_support.sql
-ALTER TABLE modules ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'catalog';
+-- Migration: add_studio_module_support_v2.sql
+
+-- Add source tracking
+ALTER TABLE modules_v2 ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'catalog';
 -- source: 'catalog' (static) or 'studio' (built in studio)
 
-ALTER TABLE modules ADD COLUMN IF NOT EXISTS studio_module_id UUID REFERENCES module_source(id);
--- Links back to module_source for render_code
+-- Link back to module_source for render code
+ALTER TABLE modules_v2 ADD COLUMN IF NOT EXISTS studio_module_id UUID REFERENCES module_source(id) ON DELETE SET NULL;
 
-ALTER TABLE modules ADD COLUMN IF NOT EXISTS render_code TEXT;
--- Cached render code for performance
+-- Cache render code for performance (avoid join on every render)
+ALTER TABLE modules_v2 ADD COLUMN IF NOT EXISTS render_code TEXT;
 
-ALTER TABLE modules ADD COLUMN IF NOT EXISTS styles TEXT;
--- Cached CSS styles
+-- Cache CSS styles
+ALTER TABLE modules_v2 ADD COLUMN IF NOT EXISTS styles TEXT;
 
-ALTER TABLE modules ADD COLUMN IF NOT EXISTS settings_schema JSONB DEFAULT '{}';
--- Settings schema for UI generation
-
-ALTER TABLE modules ADD COLUMN IF NOT EXISTS default_settings JSONB DEFAULT '{}';
--- Default settings values
+-- NOTE: settings_schema and default_settings likely already exist in modules_v2
+-- Check before adding:
+-- ALTER TABLE modules_v2 ADD COLUMN IF NOT EXISTS settings_schema JSONB DEFAULT '{}';
+-- ALTER TABLE modules_v2 ADD COLUMN IF NOT EXISTS default_settings JSONB DEFAULT '{}';
 
 -- Index for source filtering
-CREATE INDEX IF NOT EXISTS idx_modules_source ON modules(source);
+CREATE INDEX IF NOT EXISTS idx_modules_v2_source ON modules_v2(source);
+
+-- Index for studio module lookup
+CREATE INDEX IF NOT EXISTS idx_modules_v2_studio_id ON modules_v2(studio_module_id) WHERE studio_module_id IS NOT NULL;
 ```
 
 ---
@@ -196,9 +212,9 @@ export async function syncStudioModuleToCatalog(
     };
   }
 
-  // Check if already exists in modules table
+  // Check if already exists in modules_v2 table
   const { data: existingModule } = await db
-    .from("modules")
+    .from("modules_v2")
     .select("id")
     .eq("slug", studioModule.slug)
     .single();
@@ -231,7 +247,7 @@ export async function syncStudioModuleToCatalog(
   if (existingModule) {
     // Update existing
     const { error: updateError } = await db
-      .from("modules")
+      .from("modules_v2")
       .update(moduleData)
       .eq("id", existingModule.id);
 
@@ -247,7 +263,7 @@ export async function syncStudioModuleToCatalog(
   } else {
     // Create new
     const { data: newModule, error: insertError } = await db
-      .from("modules")
+      .from("modules_v2")
       .insert({
         ...moduleData,
         created_at: new Date().toISOString(),
@@ -280,7 +296,7 @@ export async function removeFromCatalog(slug: string): Promise<SyncResult> {
   const db = supabase as any;
 
   const { error } = await db
-    .from("modules")
+    .from("modules_v2")
     .update({ 
       is_active: false,
       updated_at: new Date().toISOString(),
@@ -700,9 +716,21 @@ export function SyncDashboard() {
 ## 🔗 Dependencies
 
 - Phase 80 (Module Studio core)
-- `modules` table exists
-- `site_modules` table exists
+- `modules_v2` table exists (NOT the old `modules` table)
+- `site_module_installations` table exists (V2 installation system)
 - `agency_module_subscriptions` table exists
+
+---
+
+## ⚠️ Safety Notes for AI Agent
+
+When implementing this phase:
+
+1. **Always use `modules_v2`** - Never reference the old `modules` table
+2. **Check existing code first** - `module-registry-server.ts` already has `getAllModules()` 
+3. **Don't duplicate services** - Use existing `installation-service.ts` for installs
+4. **Test sync thoroughly** - Module visibility is critical for monetization
+5. **Add IF NOT EXISTS** - All SQL migrations should be idempotent
 
 ---
 

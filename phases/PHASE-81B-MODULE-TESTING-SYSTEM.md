@@ -12,6 +12,17 @@
 
 ---
 
+## ⚠️ Existing Infrastructure Notes
+
+> The platform already has:
+> - `module_source.status` with values: `draft`, `testing`, `published`
+> - A sandbox preview in Module Studio
+> - V2 installation system with `site_module_installations`
+>
+> This phase EXTENDS (not replaces) the existing infrastructure.
+
+---
+
 ## 🎯 Objective
 
 **Create a comprehensive testing system that allows full end-to-end testing of modules before production deployment.**

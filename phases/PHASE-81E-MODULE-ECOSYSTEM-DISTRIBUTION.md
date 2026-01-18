@@ -3,6 +3,12 @@
 ## Overview
 This phase completes the Module Development Studio by implementing a comprehensive module ecosystem: starter templates, community sharing, semantic versioning, security scanning, and a developer SDK. This transforms the Module Studio from a development tool into a full platform for creating, sharing, and monetizing modules.
 
+> ⚠️ **Existing Infrastructure Notes:**
+> - `module_versions` table already exists for version history
+> - `module_source` already has versioning fields (`latest_version`, `published_version`)
+> - Templates will be NEW functionality
+> - Community features will be NEW functionality
+
 ## Prerequisites
 - Phase 80 (Module Studio Core) completed
 - Phase 81A (Marketplace Integration) completed
@@ -22,7 +28,7 @@ This phase completes the Module Development Studio by implementing a comprehensi
 -- migrations/20250117000001_module_templates.sql
 
 -- Module templates for quick-start development
-CREATE TABLE module_templates (
+CREATE TABLE IF NOT EXISTS module_templates (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   
   -- Template metadata

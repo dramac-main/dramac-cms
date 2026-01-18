@@ -218,6 +218,92 @@ CREATE INDEX idx_module_files_module ON module_files(module_source_id);
 CREATE INDEX idx_module_deps_module ON module_dependencies(module_source_id);
 CREATE INDEX idx_module_routes_module ON module_api_routes(module_source_id);
 CREATE INDEX idx_module_storage_module ON module_storage_buckets(module_id, site_id);
+
+-- ============================================================================
+-- 🔗 MODULE WEBHOOKS (External integrations)
+-- ============================================================================
+
+-- Allow modules to receive external webhooks
+CREATE TABLE IF NOT EXISTS module_webhooks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  module_source_id UUID NOT NULL REFERENCES module_source(id) ON DELETE CASCADE,
+  site_id UUID NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+  
+  -- Webhook identification
+  webhook_name TEXT NOT NULL,             -- e.g., 'stripe_payment', 'zapier_trigger'
+  endpoint_path TEXT NOT NULL,            -- e.g., '/webhook/stripe'
+  secret TEXT NOT NULL,                   -- For signature verification
+  
+  -- Configuration
+  allowed_sources TEXT[] DEFAULT '{}',    -- IP whitelist (optional)
+  expected_headers JSONB DEFAULT '{}',    -- Headers to verify
+  
+  -- Status
+  is_active BOOLEAN DEFAULT true,
+  last_triggered_at TIMESTAMP WITH TIME ZONE,
+  trigger_count INTEGER DEFAULT 0,
+  
+  -- Error tracking
+  last_error TEXT,
+  consecutive_failures INTEGER DEFAULT 0,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  UNIQUE(module_source_id, site_id, endpoint_path)
+);
+
+-- Webhook event log (for debugging)
+CREATE TABLE IF NOT EXISTS module_webhook_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  webhook_id UUID NOT NULL REFERENCES module_webhooks(id) ON DELETE CASCADE,
+  
+  -- Request details
+  request_method TEXT NOT NULL,
+  request_headers JSONB,
+  request_body TEXT,
+  request_ip TEXT,
+  
+  -- Response details
+  response_status INTEGER,
+  response_body TEXT,
+  
+  -- Timing
+  processing_time_ms INTEGER,
+  
+  -- Status
+  success BOOLEAN DEFAULT false,
+  error_message TEXT,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- 🔄 MODULE DEPENDENCY RESOLUTION
+-- ============================================================================
+
+-- Track module inter-dependencies
+CREATE TABLE IF NOT EXISTS module_dependencies_graph (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  module_source_id UUID NOT NULL REFERENCES module_source(id) ON DELETE CASCADE,
+  depends_on_module_id UUID NOT NULL REFERENCES module_source(id) ON DELETE CASCADE,
+  
+  dependency_type TEXT NOT NULL DEFAULT 'required', -- 'required', 'optional', 'peer'
+  min_version TEXT,                                 -- Minimum required version
+  max_version TEXT,                                 -- Maximum compatible version
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  UNIQUE(module_source_id, depends_on_module_id),
+  -- Prevent self-dependency
+  CHECK (module_source_id != depends_on_module_id)
+);
+
+-- Indexes for webhooks and dependencies
+CREATE INDEX idx_module_webhooks_site ON module_webhooks(site_id, is_active) WHERE is_active = true;
+CREATE INDEX idx_webhook_logs_webhook ON module_webhook_logs(webhook_id, created_at DESC);
+CREATE INDEX idx_module_deps_graph_module ON module_dependencies_graph(module_source_id);
+CREATE INDEX idx_module_deps_graph_depends ON module_dependencies_graph(depends_on_module_id);
 ```
 
 ---
@@ -938,6 +1024,230 @@ export async function requestPackage(
   // Would create a support ticket or notification
   console.log(`Package request: ${packageName} - ${reason}`);
   return { success: true };
+}
+```
+
+---
+
+### Task 81C.3.5: Module Dependency Resolution Service
+
+**File: `src/lib/modules/module-dependency-resolver.ts`**
+
+```typescript
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+
+export interface DependencyNode {
+  moduleId: string;
+  moduleName: string;
+  version: string;
+  status: 'installed' | 'available' | 'missing' | 'version_mismatch';
+}
+
+export interface DependencyResolutionResult {
+  success: boolean;
+  canInstall: boolean;
+  required: DependencyNode[];
+  optional: DependencyNode[];
+  conflicts: Array<{
+    moduleId: string;
+    reason: string;
+    resolution?: string;
+  }>;
+  installOrder: string[]; // Module IDs in correct install order
+}
+
+/**
+ * Resolve all dependencies for a module before installation
+ * Returns install order and identifies any conflicts
+ */
+export async function resolveDependencies(
+  moduleId: string,
+  siteId: string
+): Promise<DependencyResolutionResult> {
+  const supabase = await createClient();
+  const db = supabase as any;
+
+  const result: DependencyResolutionResult = {
+    success: true,
+    canInstall: true,
+    required: [],
+    optional: [],
+    conflicts: [],
+    installOrder: [],
+  };
+
+  // Get the module's dependencies
+  const { data: deps, error } = await db
+    .from("module_dependencies_graph")
+    .select(`
+      *,
+      depends_on:depends_on_module_id (
+        id, module_id, name, published_version, status
+      )
+    `)
+    .eq("module_source_id", moduleId);
+
+  if (error) {
+    return {
+      ...result,
+      success: false,
+      canInstall: false,
+      conflicts: [{ moduleId, reason: "Failed to load dependencies" }],
+    };
+  }
+
+  // Check installed modules on the site
+  const { data: installedModules } = await db
+    .from("site_module_installations")
+    .select("module_id, version")
+    .eq("site_id", siteId)
+    .eq("status", "active");
+
+  const installedMap = new Map(
+    (installedModules || []).map((m: any) => [m.module_id, m.version])
+  );
+
+  // Process each dependency
+  for (const dep of deps || []) {
+    const depModule = dep.depends_on;
+    const isInstalled = installedMap.has(depModule.module_id);
+    const installedVersion = installedMap.get(depModule.module_id);
+
+    const node: DependencyNode = {
+      moduleId: depModule.module_id,
+      moduleName: depModule.name,
+      version: depModule.published_version,
+      status: 'available',
+    };
+
+    // Check if dependency is published
+    if (depModule.status !== 'published') {
+      node.status = 'missing';
+      result.conflicts.push({
+        moduleId: depModule.module_id,
+        reason: `Required module "${depModule.name}" is not published`,
+      });
+      result.canInstall = dep.dependency_type !== 'required';
+    }
+    // Check version compatibility
+    else if (isInstalled) {
+      if (dep.min_version && compareVersions(installedVersion, dep.min_version) < 0) {
+        node.status = 'version_mismatch';
+        result.conflicts.push({
+          moduleId: depModule.module_id,
+          reason: `Installed version ${installedVersion} is below minimum ${dep.min_version}`,
+          resolution: `Update to version ${dep.min_version} or higher`,
+        });
+        result.canInstall = dep.dependency_type !== 'required';
+      } else {
+        node.status = 'installed';
+      }
+    }
+
+    if (dep.dependency_type === 'required') {
+      result.required.push(node);
+    } else {
+      result.optional.push(node);
+    }
+  }
+
+  // Build installation order (topological sort)
+  result.installOrder = await buildInstallOrder(moduleId, deps || []);
+
+  return result;
+}
+
+/**
+ * Build correct installation order using topological sort
+ */
+async function buildInstallOrder(
+  targetModuleId: string,
+  deps: any[]
+): Promise<string[]> {
+  const order: string[] = [];
+  const visited = new Set<string>();
+
+  function visit(moduleId: string) {
+    if (visited.has(moduleId)) return;
+    visited.add(moduleId);
+
+    // Find deps for this module
+    const moduleDeps = deps.filter(d => 
+      d.module_source_id === moduleId && d.dependency_type === 'required'
+    );
+
+    for (const dep of moduleDeps) {
+      visit(dep.depends_on_module_id);
+    }
+
+    order.push(moduleId);
+  }
+
+  // Start with the target module
+  visit(targetModuleId);
+
+  return order;
+}
+
+/**
+ * Simple semver comparison
+ */
+function compareVersions(a: string, b: string): number {
+  const aParts = (a || '0.0.0').split('.').map(Number);
+  const bParts = (b || '0.0.0').split('.').map(Number);
+
+  for (let i = 0; i < 3; i++) {
+    if (aParts[i] > bParts[i]) return 1;
+    if (aParts[i] < bParts[i]) return -1;
+  }
+  return 0;
+}
+
+/**
+ * Check for circular dependencies
+ */
+export async function checkCircularDependencies(
+  moduleId: string
+): Promise<{ hasCircular: boolean; cycle?: string[] }> {
+  const supabase = await createClient();
+  const db = supabase as any;
+
+  const visited = new Set<string>();
+  const stack = new Set<string>();
+  const path: string[] = [];
+
+  async function dfs(currentId: string): Promise<boolean> {
+    if (stack.has(currentId)) {
+      // Found a cycle
+      path.push(currentId);
+      return true;
+    }
+    if (visited.has(currentId)) return false;
+
+    visited.add(currentId);
+    stack.add(currentId);
+    path.push(currentId);
+
+    const { data: deps } = await db
+      .from("module_dependencies_graph")
+      .select("depends_on_module_id")
+      .eq("module_source_id", currentId);
+
+    for (const dep of deps || []) {
+      if (await dfs(dep.depends_on_module_id)) {
+        return true;
+      }
+    }
+
+    stack.delete(currentId);
+    path.pop();
+    return false;
+  }
+
+  const hasCircular = await dfs(moduleId);
+  return { hasCircular, cycle: hasCircular ? path : undefined };
 }
 ```
 
