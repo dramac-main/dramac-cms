@@ -143,14 +143,19 @@ export const CATEGORY_PATTERNS: Record<ContentCategory, PatternDefinition[]> = {
   
   spam: [
     {
-      pattern: /\b(buy|cheap|discount|free)\s+(now|today|limited)\s*(pills?|viagra|cialis)?\b/gi,
+      pattern: /\b(buy|cheap|discount|free)\s+(now|today|limited|pills?|viagra|cialis)\b/gi,
       severity: "low",
       description: "Spam promotional language",
     },
     {
-      pattern: /\bcasino\s+(online|bonus|free\s+spins)\b/gi,
+      pattern: /\bcasino\s*(online|bonus|free)?/gi,
       severity: "low",
       description: "Casino spam",
+    },
+    {
+      pattern: /\b(online\s+casino|free\s+spins|free\s+bonus)\b/gi,
+      severity: "low",
+      description: "Gambling spam",
     },
     {
       pattern: /\bget\s+rich\s+(quick|fast|now)\b/gi,
@@ -158,7 +163,7 @@ export const CATEGORY_PATTERNS: Record<ContentCategory, PatternDefinition[]> = {
       description: "Get rich quick schemes",
     },
     {
-      pattern: /\b(work\s+from\s+home|make\s+money\s+fast).{0,20}\$\d+/gi,
+      pattern: /\b(work\s+from\s+home|make\s+money\s+fast)/gi,
       severity: "low",
       description: "Work from home scam patterns",
     },
@@ -166,6 +171,11 @@ export const CATEGORY_PATTERNS: Record<ContentCategory, PatternDefinition[]> = {
       pattern: /\bcongratulations\s*!?\s*you('ve)?\s+(won|been\s+selected)\b/gi,
       severity: "low",
       description: "Prize scam language",
+    },
+    {
+      pattern: /\b(win|won)\s+\$?\d+[,\d]*\s*(dollars?|usd|prize)?\b/gi,
+      severity: "low",
+      description: "Prize money scam",
     },
   ],
   
