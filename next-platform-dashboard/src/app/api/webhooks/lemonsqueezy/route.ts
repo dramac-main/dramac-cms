@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { getPlanByVariantId } from "@/config/plans";
+import {
+  handleModuleSubscriptionCreated,
+  handleModuleSubscriptionRenewed,
+  handleModuleSubscriptionCanceled,
+} from "@/lib/payments/module-billing";
 
 // Create Supabase admin client for webhook handling
 const supabaseAdmin = createClient(
@@ -117,13 +122,30 @@ export async function POST(request: NextRequest) {
 async function handleSubscriptionCreated(data: any, meta: any) {
   const attributes = data.attributes;
   const customData = meta.custom_data || {};
-  const { agency_id } = customData;
+  const { agency_id, module_id, type, billing_cycle } = customData;
 
   if (!agency_id) {
     console.error("Missing agency_id in custom data");
     return;
   }
 
+  // Check if this is a module subscription
+  if (type === "module_subscription" && module_id) {
+    await handleModuleSubscriptionCreated(
+      String(data.id),
+      String(attributes.customer_id),
+      agency_id,
+      module_id,
+      billing_cycle || "monthly",
+      String(attributes.variant_id),
+      attributes.renews_at,
+      attributes.order_id ? String(attributes.order_id) : undefined
+    );
+    console.log("Module subscription created:", { agency_id, module_id });
+    return;
+  }
+
+  // Handle agency plan subscription
   // Find plan by variant ID
   const plan = getPlanByVariantId(String(attributes.variant_id));
 
@@ -153,6 +175,23 @@ async function handleSubscriptionCreated(data: any, meta: any) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleSubscriptionUpdated(data: any) {
   const attributes = data.attributes;
+  const subscriptionId = String(data.id);
+
+  // Check if this is a module subscription
+  const { data: moduleSubscription } = await supabaseAdmin
+    .from("agency_module_subscriptions")
+    .select("id")
+    .eq("lemon_subscription_id", subscriptionId)
+    .single();
+
+  if (moduleSubscription) {
+    // Update module subscription
+    await handleModuleSubscriptionRenewed(subscriptionId, attributes.renews_at);
+    console.log("Module subscription updated:", subscriptionId);
+    return;
+  }
+
+  // Handle agency plan subscription
   const plan = getPlanByVariantId(String(attributes.variant_id));
 
   const { error } = await supabaseAdmin
@@ -164,7 +203,7 @@ async function handleSubscriptionUpdated(data: any) {
       plan_id: plan?.id || undefined,
       updated_at: new Date().toISOString(),
     })
-    .eq("lemonsqueezy_subscription_id", String(data.id));
+    .eq("lemonsqueezy_subscription_id", subscriptionId);
 
   if (error) {
     console.error("Error updating subscription:", error);
@@ -176,7 +215,23 @@ async function handleSubscriptionUpdated(data: any) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function handleSubscriptionCancelled(data: any) {
   const attributes = data.attributes;
+  const subscriptionId = String(data.id);
 
+  // Check if this is a module subscription
+  const { data: moduleSubscription } = await supabaseAdmin
+    .from("agency_module_subscriptions")
+    .select("id")
+    .eq("lemon_subscription_id", subscriptionId)
+    .single();
+
+  if (moduleSubscription) {
+    // Cancel module subscription
+    await handleModuleSubscriptionCanceled(subscriptionId);
+    console.log("Module subscription cancelled:", subscriptionId);
+    return;
+  }
+
+  // Handle agency plan subscription
   const { error } = await supabaseAdmin
     .from("subscriptions")
     .update({
@@ -185,7 +240,7 @@ async function handleSubscriptionCancelled(data: any) {
       ends_at: attributes.ends_at,
       updated_at: new Date().toISOString(),
     })
-    .eq("lemonsqueezy_subscription_id", String(data.id));
+    .eq("lemonsqueezy_subscription_id", subscriptionId);
 
   if (error) {
     console.error("Error cancelling subscription:", error);

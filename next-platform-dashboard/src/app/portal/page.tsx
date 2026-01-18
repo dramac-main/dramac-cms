@@ -177,7 +177,6 @@ export default async function PortalDashboard() {
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
                         >
                           <ExternalLink className="h-4 w-4 text-muted-foreground" />
                         </a>

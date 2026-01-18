@@ -65,13 +65,15 @@ This document contains the **ACTUAL** database table names. Phase documents may 
 |------------|-------------|
 | `subscriptions` | Agency plan subscriptions - **Uses LemonSqueezy** |
 | `invoices` | Invoice records - **Uses LemonSqueezy** |
-| `agency_module_subscriptions` | Module subscriptions - **Uses Stripe** |
+| `agency_module_subscriptions` | Module subscriptions - **Uses LemonSqueezy** |
 
-**⚠️ HYBRID BILLING SYSTEM:**
+**⚠️ UNIFIED BILLING SYSTEM (LemonSqueezy Only):**
 | Purpose | Provider | Fields |
 |---------|----------|--------|
 | Agency Plans (Pro, Enterprise) | **LemonSqueezy** | `subscriptions.lemonsqueezy_*` |
-| Module Marketplace | **Stripe** | `agencies.stripe_customer_id`, `agency_module_subscriptions.stripe_*` |
+| Module Marketplace | **LemonSqueezy** | `agency_module_subscriptions.lemon_*` |
+
+**Note:** Stripe is NOT used (not available in Zambia). All billing goes through LemonSqueezy.
 
 ### Blog System
 | Table Name | Description |
@@ -118,9 +120,9 @@ This document contains the **ACTUAL** database table names. Phase documents may 
 
 ## 🔑 Key Field Mappings
 
-### Billing Integration (HYBRID SYSTEM)
+### Billing Integration (LemonSqueezy Only)
 
-**Agency Plan Subscriptions (LemonSqueezy):**
+**Agency Plan Subscriptions:**
 ```
 subscriptions.lemonsqueezy_customer_id      → LemonSqueezy Customer ID
 subscriptions.lemonsqueezy_subscription_id  → LemonSqueezy Subscription ID
@@ -128,11 +130,18 @@ subscriptions.lemonsqueezy_variant_id       → LemonSqueezy Plan Variant
 invoices.lemonsqueezy_order_id              → LemonSqueezy Order ID
 ```
 
-**Module Marketplace (Stripe):**
+**Module Subscriptions:**
 ```
-agencies.stripe_customer_id                         → Stripe Customer ID (for module billing)
-agencies.stripe_subscription_id                     → Legacy/unused
-agency_module_subscriptions.stripe_subscription_id  → Per-module Stripe subscription
+agency_module_subscriptions.lemon_subscription_id  → LemonSqueezy Subscription ID
+agency_module_subscriptions.lemon_customer_id      → LemonSqueezy Customer ID
+agency_module_subscriptions.lemon_order_id         → LemonSqueezy Order ID
+```
+
+**Module LemonSqueezy Products (on `modules_v2`):**
+```
+modules_v2.lemon_product_id          → LemonSqueezy Product ID
+modules_v2.lemon_variant_monthly_id  → Monthly subscription variant
+modules_v2.lemon_variant_yearly_id   → Yearly subscription variant
 ```
 
 ### Module Pricing (on `modules_v2`)

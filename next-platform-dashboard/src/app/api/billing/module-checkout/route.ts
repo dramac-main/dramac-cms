@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { stripe } from "@/lib/stripe/config";
-import { createOrGetCustomer } from "@/lib/stripe/customers";
+import { createModuleCheckout } from "@/lib/payments/module-billing";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,10 +14,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { agencyId, moduleId, billingCycle = "monthly" } = body;
 
-    // Get module pricing
+    // Get module and its LemonSqueezy variant IDs
     const { data: module } = await supabase
       .from("modules_v2")
-      .select("stripe_price_monthly_id, stripe_price_yearly_id, name")
+      .select("lemon_variant_monthly_id, lemon_variant_yearly_id, name, pricing_type")
       .eq("id", moduleId)
       .single();
 
@@ -26,50 +25,53 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Module not found" }, { status: 404 });
     }
 
-    const priceId = billingCycle === "yearly"
-      ? module.stripe_price_yearly_id
-      : module.stripe_price_monthly_id;
+    // If module is free (pricing_type === "free"), just create the subscription directly
+    if (module.pricing_type === "free") {
+      // For free modules, create subscription record directly
+      const { error } = await supabase.from("agency_module_subscriptions").insert({
+        agency_id: agencyId,
+        module_id: moduleId,
+        status: "active",
+        billing_cycle: "free",
+      });
 
-    if (!priceId) {
+      if (error) {
+        return NextResponse.json(
+          { error: "Failed to activate free module" },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ 
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/marketplace?success=true&module=${moduleId}`,
+        free: true 
+      });
+    }
+
+    const variantId = billingCycle === "yearly"
+      ? module.lemon_variant_yearly_id
+      : module.lemon_variant_monthly_id;
+
+    if (!variantId) {
       return NextResponse.json(
-        { error: "Module pricing not configured" },
+        { error: "Module pricing not configured. Please contact support." },
         { status: 400 }
       );
     }
 
-    // Get or create customer
-    const customer = await createOrGetCustomer({
+    // Create LemonSqueezy checkout
+    const checkout = await createModuleCheckout({
       agencyId,
+      moduleId,
+      variantId,
       email: user.email!,
+      userId: user.id,
+      billingCycle,
+      successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/marketplace?success=true&module=${moduleId}`,
+      cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/marketplace?canceled=true`,
     });
 
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create({
-      customer: customer.id,
-      mode: "subscription",
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      subscription_data: {
-        metadata: {
-          agency_id: agencyId,
-          module_id: moduleId,
-          type: "module",
-        },
-      },
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/marketplace?success=true&module=${moduleId}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/marketplace?canceled=true`,
-      metadata: {
-        agency_id: agencyId,
-        module_id: moduleId,
-      },
-    });
-
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: checkout.checkoutUrl });
   } catch (error) {
     console.error("Module checkout error:", error);
     return NextResponse.json(
