@@ -15,7 +15,7 @@ export async function getInstalledModules(siteId: string): Promise<InstalledModu
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("site_modules")
+    .from("site_module_installations")
     .select("*")
     .eq("site_id", siteId)
     .eq("is_enabled", true);
@@ -25,17 +25,17 @@ export async function getInstalledModules(siteId: string): Promise<InstalledModu
     return [];
   }
 
-  return data.map((row) => {
+  return (data || []).map((row) => {
     const module = moduleRegistry.get(row.module_id);
     return {
       id: row.id,
       siteId: row.site_id,
       moduleId: row.module_id,
       module: module!,
-      installedAt: new Date(row.enabled_at),
-      lastUpdatedAt: new Date(row.enabled_at),
+      installedAt: row.installed_at ? new Date(row.installed_at) : new Date(),
+      lastUpdatedAt: row.installed_at ? new Date(row.installed_at) : new Date(), // Use installed_at as updated_at doesn't exist
       settings: (row.settings as Record<string, unknown>) || {},
-      enabled: row.is_enabled,
+      enabled: row.is_enabled ?? false,
       licenseKey: undefined,
     };
   }).filter((m) => m.module); // Filter out modules not in registry
@@ -56,7 +56,7 @@ export async function installModule(
 
   // Check if already installed
   const { data: existing } = await supabase
-    .from("site_modules")
+    .from("site_module_installations")
     .select("id")
     .eq("site_id", siteId)
     .eq("module_id", moduleId)
@@ -66,20 +66,15 @@ export async function installModule(
     return { success: false, error: "Module already installed" };
   }
 
-  // For paid modules, verify license/purchase (future enhancement)
-  // if (module.pricing.type !== "free" && !_licenseKey) {
-  //   return { success: false, error: "License key required for paid modules" };
-  // }
-
   // Install module
   const { data, error } = await supabase
-    .from("site_modules")
+    .from("site_module_installations")
     .insert({
       site_id: siteId,
       module_id: moduleId,
       is_enabled: true,
       settings: {},
-      enabled_at: new Date().toISOString(),
+      installed_at: new Date().toISOString(),
     })
     .select()
     .single();
@@ -96,8 +91,8 @@ export async function installModule(
       siteId: data.site_id,
       moduleId: data.module_id,
       module: module,
-      installedAt: new Date(data.enabled_at),
-      lastUpdatedAt: new Date(data.enabled_at),
+      installedAt: data.installed_at ? new Date(data.installed_at) : new Date(),
+      lastUpdatedAt: data.installed_at ? new Date(data.installed_at) : new Date(), // Use installed_at
       settings: {},
       enabled: true,
       licenseKey: undefined,
@@ -109,7 +104,7 @@ export async function uninstallModule(siteId: string, moduleId: string): Promise
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from("site_modules")
+    .from("site_module_installations")
     .delete()
     .eq("site_id", siteId)
     .eq("module_id", moduleId);
@@ -130,7 +125,7 @@ export async function updateModuleSettings(
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from("site_modules")
+    .from("site_module_installations")
     .update({ settings: settings as unknown as Json })
     .eq("site_id", siteId)
     .eq("module_id", moduleId);
@@ -151,7 +146,7 @@ export async function toggleModule(
   const supabase = await createClient();
 
   const { error } = await supabase
-    .from("site_modules")
+    .from("site_module_installations")
     .update({ is_enabled: enabled })
     .eq("site_id", siteId)
     .eq("module_id", moduleId);
@@ -181,7 +176,7 @@ export async function isModuleInstalled(siteId: string, moduleId: string): Promi
   const supabase = await createClient();
   
   const { data } = await supabase
-    .from("site_modules")
+    .from("site_module_installations")
     .select("id")
     .eq("site_id", siteId)
     .eq("module_id", moduleId)

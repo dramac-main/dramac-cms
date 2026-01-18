@@ -139,8 +139,8 @@ export async function SitesGrid({ filters }: SitesGridProps) {
           <CardContent className="pt-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Badge className={getStatusStyle(site.published)}>
-                  {getStatusLabel(site.published)}
+                <Badge className={getStatusStyle(site.published ?? false)}>
+                  {getStatusLabel(site.published ?? false)}
                 </Badge>
               </div>
               {site.client && (
@@ -151,7 +151,7 @@ export async function SitesGrid({ filters }: SitesGridProps) {
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Updated {formatDistanceToNow(new Date(site.updated_at), { addSuffix: true })}
+              Updated {site.updated_at ? formatDistanceToNow(new Date(site.updated_at), { addSuffix: true }) : "—"}
             </p>
           </CardContent>
         </Card>

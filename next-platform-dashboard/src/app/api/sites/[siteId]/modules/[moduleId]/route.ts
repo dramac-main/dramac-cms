@@ -24,7 +24,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (settings) updates.settings = settings;
 
     const { data, error } = await supabase
-      .from("site_modules")
+      .from("site_module_installations")
       .update(updates)
       .eq("site_id", siteId)
       .eq("module_id", moduleId)
@@ -55,7 +55,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     }
 
     const { error } = await supabase
-      .from("site_modules")
+      .from("site_module_installations")
       .update({ is_enabled: false })
       .eq("site_id", siteId)
       .eq("module_id", moduleId);

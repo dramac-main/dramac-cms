@@ -51,12 +51,11 @@ export async function createSubscription(params: CreateSubscriptionParams) {
   const currentPeriodEnd = subscriptionItem?.current_period_end;
 
   // Store in database
-  await supabase.from("billing_subscriptions").insert({
+  await supabase.from("subscriptions").insert({
     agency_id: agencyId,
     stripe_subscription_id: subscription.id,
     status: subscription.status,
-    billing_cycle: billingCycle,
-    quantity: initialSeats,
+    plan_type: billingCycle === "yearly" ? "yearly" : "monthly",
     current_period_start: currentPeriodStart 
       ? new Date(currentPeriodStart * 1000).toISOString() 
       : null,
@@ -68,31 +67,36 @@ export async function createSubscription(params: CreateSubscriptionParams) {
       : null,
   });
 
+  // Also update agency with subscription ID
+  await supabase
+    .from("agencies")
+    .update({ stripe_subscription_id: subscription.id })
+    .eq("id", agencyId);
+
   return subscription;
 }
 
 export async function updateSeatCount(agencyId: string, newQuantity: number) {
   const supabase = await createClient();
 
-  // Get existing subscription
-  const { data: sub } = await supabase
-    .from("billing_subscriptions")
+  // Get subscription from agency
+  const { data: agency } = await supabase
+    .from("agencies")
     .select("stripe_subscription_id")
-    .eq("agency_id", agencyId)
-    .eq("status", "active")
+    .eq("id", agencyId)
     .single();
 
-  if (!sub?.stripe_subscription_id) {
+  if (!agency?.stripe_subscription_id) {
     throw new Error("No active subscription found");
   }
 
   // Get subscription from Stripe
-  const subscriptionResponse = await stripe.subscriptions.retrieve(sub.stripe_subscription_id);
+  const subscriptionResponse = await stripe.subscriptions.retrieve(agency.stripe_subscription_id);
   const subscription = subscriptionResponse as Stripe.Subscription;
   const itemId = subscription.items.data[0].id;
 
   // Update quantity
-  const updated = await stripe.subscriptions.update(sub.stripe_subscription_id, {
+  const updated = await stripe.subscriptions.update(agency.stripe_subscription_id, {
     items: [
       {
         id: itemId,
@@ -102,55 +106,46 @@ export async function updateSeatCount(agencyId: string, newQuantity: number) {
     proration_behavior: "create_prorations",
   });
 
-  // Update database
-  await supabase
-    .from("billing_subscriptions")
-    .update({
-      quantity: newQuantity,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("stripe_subscription_id", sub.stripe_subscription_id);
-
   return updated;
 }
 
 export async function cancelSubscription(agencyId: string, immediately = false) {
   const supabase = await createClient();
 
-  const { data: sub } = await supabase
-    .from("billing_subscriptions")
+  const { data: agency } = await supabase
+    .from("agencies")
     .select("stripe_subscription_id")
-    .eq("agency_id", agencyId)
+    .eq("id", agencyId)
     .single();
 
-  if (!sub?.stripe_subscription_id) {
+  if (!agency?.stripe_subscription_id) {
     throw new Error("No subscription found");
   }
 
   if (immediately) {
-    const canceled = await stripe.subscriptions.cancel(sub.stripe_subscription_id);
+    const canceled = await stripe.subscriptions.cancel(agency.stripe_subscription_id);
     await supabase
-      .from("billing_subscriptions")
+      .from("subscriptions")
       .update({
         status: "canceled",
         updated_at: new Date().toISOString(),
       })
-      .eq("stripe_subscription_id", sub.stripe_subscription_id);
+      .eq("stripe_subscription_id", agency.stripe_subscription_id);
     return canceled;
   }
 
   // Cancel at period end
-  const updated = await stripe.subscriptions.update(sub.stripe_subscription_id, {
+  const updated = await stripe.subscriptions.update(agency.stripe_subscription_id, {
     cancel_at_period_end: true,
   });
 
   await supabase
-    .from("billing_subscriptions")
+    .from("subscriptions")
     .update({
       cancel_at_period_end: true,
       updated_at: new Date().toISOString(),
     })
-    .eq("stripe_subscription_id", sub.stripe_subscription_id);
+    .eq("stripe_subscription_id", agency.stripe_subscription_id);
 
   return updated;
 }
@@ -159,7 +154,7 @@ export async function getSubscription(agencyId: string) {
   const supabase = await createClient();
 
   const { data } = await supabase
-    .from("billing_subscriptions")
+    .from("subscriptions")
     .select("*")
     .eq("agency_id", agencyId)
     .single();

@@ -16,8 +16,8 @@ export async function subscribeToModule(params: SubscribeToModuleParams) {
 
   // Get module pricing
   const { data: module } = await supabase
-    .from("modules")
-    .select("stripe_price_monthly, stripe_price_yearly, name")
+    .from("modules_v2")
+    .select("stripe_price_monthly_id, stripe_price_yearly_id, name")
     .eq("id", moduleId)
     .single();
 
@@ -26,8 +26,8 @@ export async function subscribeToModule(params: SubscribeToModuleParams) {
   }
 
   const priceId = billingCycle === "yearly"
-    ? module.stripe_price_yearly
-    : module.stripe_price_monthly;
+    ? module.stripe_price_yearly_id
+    : module.stripe_price_monthly_id;
 
   if (!priceId) {
     throw new Error("Module pricing not configured");
@@ -38,7 +38,7 @@ export async function subscribeToModule(params: SubscribeToModuleParams) {
 
   // Check for existing subscription
   const { data: existing } = await supabase
-    .from("module_subscriptions")
+    .from("agency_module_subscriptions")
     .select("stripe_subscription_id")
     .eq("agency_id", agencyId)
     .eq("module_id", moduleId)
@@ -61,7 +61,7 @@ export async function subscribeToModule(params: SubscribeToModuleParams) {
 
   // Store in database
   const periodEnd = (subscription as unknown as Record<string, unknown>).current_period_end as number || Date.now() / 1000;
-  await supabase.from("module_subscriptions").insert({
+  await supabase.from("agency_module_subscriptions").insert({
     agency_id: agencyId,
     module_id: moduleId,
     stripe_subscription_id: subscription.id,
@@ -77,7 +77,7 @@ export async function cancelModuleSubscription(agencyId: string, moduleId: strin
   const supabase = createAdminClient();
 
   const { data: sub } = await supabase
-    .from("module_subscriptions")
+    .from("agency_module_subscriptions")
     .select("stripe_subscription_id")
     .eq("agency_id", agencyId)
     .eq("module_id", moduleId)
@@ -93,7 +93,7 @@ export async function cancelModuleSubscription(agencyId: string, moduleId: strin
   });
 
   await supabase
-    .from("module_subscriptions")
+    .from("agency_module_subscriptions")
     .update({ cancel_at_period_end: true })
     .eq("stripe_subscription_id", sub.stripe_subscription_id);
 }
@@ -102,10 +102,10 @@ export async function getAgencyModuleSubscriptions(agencyId: string) {
   const supabase = createAdminClient();
 
   const { data } = await supabase
-    .from("module_subscriptions")
+    .from("agency_module_subscriptions")
     .select(`
       *,
-      module:modules(id, name, category, icon)
+      module:modules_v2(id, name, category, icon)
     `)
     .eq("agency_id", agencyId);
 

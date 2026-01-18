@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     // Get module info
     const { data: module, error: moduleError } = await supabase
-      .from("modules")
+      .from("modules_v2")
       .select("id, name, slug")
       .eq("id", moduleId)
       .single();

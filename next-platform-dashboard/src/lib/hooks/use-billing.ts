@@ -11,28 +11,21 @@ export function useBilling(agencyId: string) {
   return useQuery({
     queryKey: ["billing", agencyId],
     queryFn: async (): Promise<BillingOverview> => {
-      // Get subscription
-      const { data: subscription } = await supabase
-        .from("billing_subscriptions")
-        .select("*")
-        .eq("agency_id", agencyId)
-        .in("status", ["active", "trialing", "past_due"])
+      // Get subscription and billing info from agencies table
+      const { data: agency } = await supabase
+        .from("agencies")
+        .select("stripe_subscription_id, stripe_customer_id, plan")
+        .eq("id", agencyId)
         .single();
 
-      // Get customer
-      const { data: customer } = await supabase
-        .from("billing_customers")
-        .select("*")
-        .eq("agency_id", agencyId)
-        .single();
-
-      // Get invoices
-      const { data: invoices } = await supabase
-        .from("billing_invoices")
-        .select("*")
-        .eq("agency_id", agencyId)
-        .order("created_at", { ascending: false })
-        .limit(12);
+      // Get subscription details if available
+      const { data: subscription } = agency?.stripe_subscription_id 
+        ? await supabase
+            .from("subscriptions")
+            .select("*")
+            .eq("stripe_subscription_id", agency.stripe_subscription_id)
+            .single()
+        : { data: null };
 
       // Count clients
       const { count: totalClients } = await supabase
@@ -40,11 +33,21 @@ export function useBilling(agencyId: string) {
         .select("*", { count: "exact", head: true })
         .eq("agency_id", agencyId);
 
+      // Build billing customer from agency data
+      const customer: BillingCustomer | null = agency?.stripe_customer_id ? {
+        id: agencyId,
+        agency_id: agencyId,
+        stripe_customer_id: agency.stripe_customer_id,
+        email: "", // Will be fetched from Stripe when needed
+        name: null,
+        created_at: new Date().toISOString(),
+      } : null;
+
       return {
         subscription: subscription as BillingSubscription | null,
-        customer: customer as BillingCustomer | null,
-        invoices: (invoices || []) as BillingInvoice[],
-        currentSeats: subscription?.quantity || 0,
+        customer,
+        invoices: [], // Invoices are fetched from Stripe directly when needed
+        currentSeats: (subscription as BillingSubscription | null)?.quantity || 0,
         totalClients: totalClients || 0,
       };
     },

@@ -122,10 +122,10 @@ export const getSiteByDomain = unstable_cache(
           seoTitle: p.seo_title,
           seoDescription: p.seo_description,
           ogImage: p.seo_image,
-          isHomepage: p.is_homepage,
+          isHomepage: p.is_homepage ?? false,
           published: true, // All fetched pages are published (site is published)
         })),
-      published: site.published,
+      published: site.published ?? false,
       publishedAt: site.published_at,
     };
   },
@@ -186,10 +186,10 @@ export const getSiteBySlug = unstable_cache(
           seoTitle: p.seo_title,
           seoDescription: p.seo_description,
           ogImage: p.seo_image,
-          isHomepage: p.is_homepage,
+          isHomepage: p.is_homepage ?? false,
           published: true, // All fetched pages are published (site is published)
         })),
-      published: site.published,
+      published: site.published ?? false,
       publishedAt: site.published_at,
     };
   },

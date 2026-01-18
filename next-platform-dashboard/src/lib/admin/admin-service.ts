@@ -9,7 +9,7 @@ export interface AdminUser {
   email: string;
   fullName: string | null;
   role: string | null;
-  createdAt: string;
+  createdAt: string | null;
   lastSignIn: string | null;
   agencyId: string | null;
   agencyName: string | null;
@@ -24,7 +24,7 @@ export interface AdminAgency {
   plan: string | null;
   sitesCount: number;
   clientsCount: number;
-  createdAt: string;
+  createdAt: string | null;
 }
 
 export async function getAdminUsers(options: {

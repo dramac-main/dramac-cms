@@ -13,7 +13,7 @@ export interface AuditLogEntry {
   resourceId: string;
   details: Record<string, unknown>;
   ipAddress: string | null;
-  createdAt: string;
+  createdAt: string | null;
 }
 
 export type AuditAction = 
@@ -165,7 +165,7 @@ export async function getAuditLogs(options: {
 
   // Sort by timestamp
   const sortedLogs = logs.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
   );
 
   const offset = (page - 1) * limit;

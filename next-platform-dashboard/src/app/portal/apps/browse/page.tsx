@@ -78,7 +78,7 @@ export default async function BrowseAppsPage() {
 
   // Get already installed modules (from client_module_installations) using type assertion
   const { data: clientInstallations } = await supabase
-    .from("client_module_installations" as "modules")
+    .from("client_module_installations")
     .select("module_id")
     .eq("client_id", client.id) as unknown as { data: { module_id: string }[] | null };
 
@@ -86,23 +86,16 @@ export default async function BrowseAppsPage() {
 
   // Get available modules from agency subscriptions using type assertion
   const { data: availableSubscriptions } = await supabase
-    .from("agency_module_subscriptions" as "module_subscriptions")
+    .from("agency_module_subscriptions")
     .select(`
       *,
-      module:modules(*)
+      module:modules_v2(*)
     `)
     .eq("agency_id", client.agency_id)
     .eq("status", "active") as unknown as { data: Subscription[] | null };
 
-  // Also check legacy module_subscriptions table
-  const { data: legacySubscriptions } = await supabase
-    .from("module_subscriptions")
-    .select(`
-      id,
-      module:modules(id, slug, name, description, icon, category, install_level, wholesale_price_monthly, is_featured)
-    `)
-    .eq("agency_id", client.agency_id)
-    .eq("status", "active");
+  // Legacy module_subscriptions no longer exists, skip it
+  const legacySubscriptions: Subscription[] = [];
 
   // Combine and filter modules
   const allSubscriptions = [

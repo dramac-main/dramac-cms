@@ -23,8 +23,8 @@ interface Page {
   id: string;
   name: string;
   slug: string;
-  is_homepage: boolean;
-  created_at: string;
+  is_homepage: boolean | null;
+  created_at: string | null;
 }
 
 interface SitePagesListProps {
@@ -99,7 +99,9 @@ export function SitePagesList({ siteId, pages }: SitePagesListProps) {
                   {page.slug}
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {formatDistanceToNow(new Date(page.created_at), { addSuffix: true })}
+                  {page.created_at 
+                    ? formatDistanceToNow(new Date(page.created_at), { addSuffix: true })
+                    : "—"}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>

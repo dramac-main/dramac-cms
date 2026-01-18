@@ -89,7 +89,7 @@ export function ClientSitesList({ clientId, sites }: ClientSitesListProps) {
 
               <div className="flex items-center justify-between pt-2">
                 <span className="text-xs text-muted-foreground">
-                  Updated {formatDistanceToNow(new Date(site.updated_at), { addSuffix: true })}
+                  Updated {site.updated_at ? formatDistanceToNow(new Date(site.updated_at), { addSuffix: true }) : "—"}
                 </span>
                 <div className="flex gap-1">
                   <Link href={`/dashboard/sites/${site.id}`}>

@@ -192,7 +192,9 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Joined</p>
                 <p className="font-medium">
-                  {format(new Date(user.created_at), "PPP")}
+                  {user.created_at
+                    ? format(new Date(user.created_at), "PPP")
+                    : "Unknown"}
                 </p>
               </div>
             </div>

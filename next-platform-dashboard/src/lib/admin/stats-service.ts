@@ -43,7 +43,7 @@ export interface RecentActivity {
   id: string;
   type: "signup" | "subscription" | "publish" | "module_install" | "payment";
   message: string;
-  timestamp: string;
+  timestamp: string | null;
   metadata?: Record<string, unknown>;
 }
 
@@ -78,14 +78,14 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", startOfWeek.toISOString()),
     supabase.from("agencies").select("id", { count: "exact", head: true }),
     supabase.from("agencies").select("id", { count: "exact", head: true }).gte("created_at", startOfMonth.toISOString()),
-    supabase.from("site_modules").select("id", { count: "exact", head: true }),
+    supabase.from("site_module_installations").select("id", { count: "exact", head: true }),
     supabase.from("profiles").select("id", { count: "exact", head: true }).lt("created_at", lastMonth.toISOString()),
     supabase.from("agencies").select("id", { count: "exact", head: true }).lt("created_at", lastMonth.toISOString()),
   ]);
 
   // Get module counts for top modules
   const { data: moduleData } = await supabase
-    .from("site_modules")
+    .from("site_module_installations")
     .select("module_id");
 
   // Count module installations
@@ -218,7 +218,7 @@ export async function getRecentActivity(limit = 20): Promise<RecentActivity[]> {
 
   // Sort by timestamp and limit
   return activities
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .sort((a, b) => new Date(b.timestamp || 0).getTime() - new Date(a.timestamp || 0).getTime())
     .slice(0, limit);
 }
 

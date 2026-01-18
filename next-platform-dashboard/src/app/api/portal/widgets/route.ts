@@ -47,10 +47,10 @@ export async function GET(_request: NextRequest) {
 
     // Get installed modules that have widgets using type assertion
     const { data: installations } = await supabase
-      .from("client_module_installations" as "modules")
+      .from("client_module_installations")
       .select(`
         settings,
-        module:modules(id, name, icon, widget_config)
+        module:modules_v2(id, name, icon)
       `)
       .eq("client_id", clientId)
       .eq("is_active", true) as unknown as { data: Installation[] | null };

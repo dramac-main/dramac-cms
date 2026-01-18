@@ -87,7 +87,7 @@ export function AgencyManagementTable({
                 <TableCell className="text-center">{agency.sitesCount}</TableCell>
                 <TableCell className="text-center">{agency.clientsCount}</TableCell>
                 <TableCell>
-                  {formatDistanceToNow(new Date(agency.createdAt), { addSuffix: true })}
+                  {agency.createdAt ? formatDistanceToNow(new Date(agency.createdAt), { addSuffix: true }) : "-"}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>

@@ -11,10 +11,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const supabase = await createClient();
 
     const { data, error } = await supabase
-      .from("site_modules")
+      .from("site_module_installations")
       .select(`
         settings,
-        module:modules(*)
+        module:modules_v2(*)
       `)
       .eq("site_id", siteId)
       .eq("is_enabled", true);

@@ -25,7 +25,7 @@ interface SiteWithPages {
     id: string;
     name: string;
     slug: string;
-    is_homepage: boolean;
+    is_homepage: boolean | null;
   }[];
 }
 

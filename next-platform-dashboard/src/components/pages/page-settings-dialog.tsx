@@ -139,7 +139,7 @@ export function PageSettingsDialog({ page, trigger }: PageSettingsDialogProps) {
                     <FormItem>
                       <FormLabel>URL Slug</FormLabel>
                       <FormControl>
-                        <Input {...field} disabled={page.is_homepage} />
+                        <Input {...field} disabled={page.is_homepage ?? false} />
                       </FormControl>
                       <FormDescription>
                         {page.is_homepage

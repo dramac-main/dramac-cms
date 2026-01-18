@@ -127,7 +127,7 @@ export function ClientOverview({ client }: ClientOverviewProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Created</p>
                 <p className="font-medium">
-                  {format(new Date(client.created_at), "MMM d, yyyy")}
+                  {client.created_at ? format(new Date(client.created_at), "MMM d, yyyy") : "—"}
                 </p>
               </div>
             </div>
@@ -139,7 +139,7 @@ export function ClientOverview({ client }: ClientOverviewProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Last Updated</p>
                 <p className="font-medium">
-                  {format(new Date(client.updated_at), "MMM d, yyyy")}
+                  {client.updated_at ? format(new Date(client.updated_at), "MMM d, yyyy") : "—"}
                 </p>
               </div>
             </div>

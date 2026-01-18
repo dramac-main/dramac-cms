@@ -87,13 +87,13 @@ export async function getPageWithContent(pageId: string): Promise<{
   site_id: string;
   name: string;
   slug: string;
-  is_homepage: boolean;
+  is_homepage: boolean | null;
   seo_title: string | null;
   seo_description: string | null;
   seo_image: string | null;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
+  sort_order: number | null;
+  created_at: string | null;
+  updated_at: string | null;
   content: Record<string, unknown> | null;
   site?: { id: string; name: string; subdomain: string; agency_id: string };
 } | null> {

@@ -50,10 +50,10 @@ export default async function PortalAppsPage() {
 
   // First try to get client-level module installations using type assertion
   const { data: clientInstallations } = await supabase
-    .from("client_module_installations" as "modules")
+    .from("client_module_installations")
     .select(`
       *,
-      module:modules(*)
+      module:modules_v2(*)
     `)
     .eq("client_id", client.id)
     .eq("is_active", true)
@@ -71,27 +71,18 @@ export default async function PortalAppsPage() {
 
   // If no client installations, fall back to agency subscriptions (legacy support)
   if (installedModules.length === 0 && client.agency_id) {
-    // Check agency_module_subscriptions first
+    // Check agency_module_subscriptions
     const { data: subscriptions } = await supabase
-      .from("agency_module_subscriptions" as "module_subscriptions")
+      .from("agency_module_subscriptions")
       .select(`
         id,
-        module:modules(id, slug, name, description, icon, category)
+        module:modules_v2(id, slug, name, description, icon, category)
       `)
       .eq("agency_id", client.agency_id)
       .eq("status", "active");
 
-    // Also check legacy module_subscriptions table
-    const { data: legacySubscriptions } = await supabase
-      .from("module_subscriptions")
-      .select(`
-        id,
-        module:modules(id, slug, name, description, icon, category)
-      `)
-      .eq("agency_id", client.agency_id)
-      .eq("status", "active");
-
-    const allSubs = [...(subscriptions || []), ...(legacySubscriptions || [])];
+    // Map subscription modules
+    const allSubs = subscriptions || [];
 
     installedModules = allSubs
       .filter((item): item is typeof item & { module: NonNullable<typeof item.module> } => 

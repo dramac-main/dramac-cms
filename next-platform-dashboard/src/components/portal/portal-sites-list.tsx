@@ -72,7 +72,7 @@ export function PortalSitesList({ sites }: PortalSitesListProps) {
 
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Calendar className="h-4 w-4" />
-                <span>Updated {formatDistanceToNow(new Date(site.updated_at), { addSuffix: true })}</span>
+                <span>Updated {site.updated_at ? formatDistanceToNow(new Date(site.updated_at), { addSuffix: true }) : "—"}</span>
               </div>
 
               <div className="flex gap-2 pt-2">

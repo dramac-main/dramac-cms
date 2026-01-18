@@ -15,7 +15,7 @@ export interface RecentSite {
   subdomain: string;
   custom_domain: string | null;
   status: string;
-  updated_at: string;
+  updated_at: string | null;
   client?: { name: string } | null;
 }
 
@@ -116,7 +116,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       type: "site_created",
       title: "Site Updated",
       description: `${site.name} was updated`,
-      timestamp: site.updated_at,
+      timestamp: site.updated_at || new Date().toISOString(),
     });
   });
 

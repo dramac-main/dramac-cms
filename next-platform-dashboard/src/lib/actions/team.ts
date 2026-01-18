@@ -9,7 +9,7 @@ interface TeamMember {
   full_name: string | null;
   avatar_url: string | null;
   role: "owner" | "admin" | "member";
-  joined_at: string;
+  joined_at: string | null;
 }
 
 export async function getAgencyTeam(userId: string) {

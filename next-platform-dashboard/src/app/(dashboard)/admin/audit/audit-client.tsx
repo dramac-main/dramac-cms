@@ -250,7 +250,7 @@ export default function AuditLogsClient() {
                   </TableCell>
                   <TableCell>
                     <span className="text-sm text-muted-foreground">
-                      {formatDistanceToNow(new Date(log.createdAt), { addSuffix: true })}
+                      {log.createdAt ? formatDistanceToNow(new Date(log.createdAt), { addSuffix: true }) : "-"}
                     </span>
                   </TableCell>
                 </TableRow>

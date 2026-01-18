@@ -1,5 +1,9 @@
-// Re-export the Page type from database for consistency
-export type { Page, PageInsert, PageUpdate } from "./database";
+// Re-export the Page types from database for consistency
+import type { Tables, TablesInsert, TablesUpdate } from "./database";
+
+export type Page = Tables<"pages">;
+export type PageInsert = TablesInsert<"pages">;
+export type PageUpdate = TablesUpdate<"pages">;
 
 export interface PageContent {
   ROOT: {
@@ -28,13 +32,13 @@ export interface PageWithContent {
   site_id: string;
   name: string;
   slug: string;
-  is_homepage: boolean;
+  is_homepage: boolean | null;
   seo_title: string | null;
   seo_description: string | null;
   seo_image: string | null;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
+  sort_order: number | null;
+  created_at: string | null;
+  updated_at: string | null;
   content: PageContent | null;
 }
 

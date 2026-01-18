@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const supabase = await createClient();
 
   const { data: module } = await supabase
-    .from("modules")
+    .from("modules_v2")
     .select("name, description")
     .eq("id", moduleId)
     .single();
@@ -83,14 +83,14 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
 
   // Get the site module installation using type assertion
   const { data: installation } = await supabase
-    .from("site_module_installations" as "modules")
+    .from("site_module_installations")
     .select(`
       *,
-      module:modules(*)
+      module:modules_v2(*)
     `)
     .eq("site_id", siteId)
     .eq("module_id", moduleId)
-    .eq("is_active", true)
+    .eq("is_enabled", true)
     .single() as unknown as { data: SiteInstallation | null };
 
   if (!installation || !installation.module) {

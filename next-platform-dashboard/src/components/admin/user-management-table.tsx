@@ -83,7 +83,7 @@ export function UserManagementTable({
                 </TableCell>
                 <TableCell>{user.agencyName || "—"}</TableCell>
                 <TableCell>
-                  {formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })}
+                  {user.createdAt ? formatDistanceToNow(new Date(user.createdAt), { addSuffix: true }) : "-"}
                 </TableCell>
                 <TableCell>
                   {user.lastSignIn

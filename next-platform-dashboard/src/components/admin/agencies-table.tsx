@@ -164,7 +164,7 @@ export function AgenciesTable({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {format(new Date(agency.created_at), "MMM d, yyyy")}
+                      {agency.created_at ? format(new Date(agency.created_at), "MMM d, yyyy") : "-"}
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>

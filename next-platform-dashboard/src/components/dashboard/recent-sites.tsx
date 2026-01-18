@@ -101,7 +101,7 @@ export function RecentSites({ sites }: RecentSitesProps) {
                   {site.status}
                 </Badge>
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  {formatDistanceToNow(new Date(site.updated_at), { addSuffix: true })}
+                  {site.updated_at ? formatDistanceToNow(new Date(site.updated_at), { addSuffix: true }) : "-"}
                 </span>
               </div>
             </div>

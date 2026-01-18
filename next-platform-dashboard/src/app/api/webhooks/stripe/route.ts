@@ -71,7 +71,7 @@ async function handleSubscriptionUpdate(
   const currentPeriodStart = subscriptionItem?.current_period_start;
   const currentPeriodEnd = subscriptionItem?.current_period_end;
 
-  await supabase.from("billing_subscriptions").upsert(
+  await supabase.from("subscriptions").upsert(
     {
       agency_id: agencyId,
       stripe_subscription_id: subscription.id,
@@ -100,7 +100,7 @@ async function handleSubscriptionDeleted(
   subscription: Stripe.Subscription
 ) {
   await supabase
-    .from("billing_subscriptions")
+    .from("subscriptions")
     .update({
       status: "canceled",
       updated_at: new Date().toISOString(),
@@ -118,7 +118,7 @@ async function handleInvoicePaid(
   const agencyId = customer.metadata.agency_id;
   if (!agencyId) return;
 
-  await supabase.from("billing_invoices").upsert(
+  await (supabase as any).from("billing_invoices").upsert(
     {
       agency_id: agencyId,
       stripe_invoice_id: invoice.id,
@@ -151,7 +151,7 @@ async function handleInvoiceFailed(
   const agencyId = customer.metadata.agency_id;
   if (!agencyId) return;
 
-  await supabase.from("billing_invoices").upsert(
+  await (supabase as any).from("billing_invoices").upsert(
     {
       agency_id: agencyId,
       stripe_invoice_id: invoice.id,

@@ -14,11 +14,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { agencyId } = body;
 
-    // Get customer ID
+    // Get customer ID - billing_customers table may need to be created
+    // For now, check agencies table for stripe_customer_id
     const { data: customer } = await supabase
-      .from("billing_customers")
+      .from("agencies")
       .select("stripe_customer_id")
-      .eq("agency_id", agencyId)
+      .eq("id", agencyId)
       .single();
 
     if (!customer?.stripe_customer_id) {

@@ -11,16 +11,16 @@ export async function createOrGetCustomer(params: CreateCustomerParams) {
   const { agencyId, email, name } = params;
   const supabase = await createClient();
 
-  // Check if customer already exists
-  const { data: existing } = await supabase
-    .from("billing_customers")
+  // Check if agency already has a Stripe customer
+  const { data: agency } = await supabase
+    .from("agencies")
     .select("stripe_customer_id")
-    .eq("agency_id", agencyId)
+    .eq("id", agencyId)
     .single();
 
-  if (existing?.stripe_customer_id) {
+  if (agency?.stripe_customer_id) {
     // Retrieve and return existing customer
-    const customer = await stripe.customers.retrieve(existing.stripe_customer_id);
+    const customer = await stripe.customers.retrieve(agency.stripe_customer_id);
     return customer;
   }
 
@@ -33,13 +33,11 @@ export async function createOrGetCustomer(params: CreateCustomerParams) {
     },
   });
 
-  // Store in database
-  await supabase.from("billing_customers").insert({
-    agency_id: agencyId,
-    stripe_customer_id: customer.id,
-    email,
-    name,
-  });
+  // Store in agencies table
+  await supabase
+    .from("agencies")
+    .update({ stripe_customer_id: customer.id })
+    .eq("id", agencyId);
 
   return customer;
 }
@@ -47,15 +45,15 @@ export async function createOrGetCustomer(params: CreateCustomerParams) {
 export async function getCustomerByAgency(agencyId: string) {
   const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("billing_customers")
+  const { data: agency } = await supabase
+    .from("agencies")
     .select("stripe_customer_id")
-    .eq("agency_id", agencyId)
+    .eq("id", agencyId)
     .single();
 
-  if (!data?.stripe_customer_id) return null;
+  if (!agency?.stripe_customer_id) return null;
 
-  return stripe.customers.retrieve(data.stripe_customer_id);
+  return stripe.customers.retrieve(agency.stripe_customer_id);
 }
 
 export async function updateCustomer(

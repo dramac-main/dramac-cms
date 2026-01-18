@@ -16,7 +16,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 import { Search, Layout, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import type { Template as DbTemplate } from "@/types/database";
+import type { Database } from "@/types/database";
+
+type DbTemplate = Database["public"]["Tables"]["templates"]["Row"];
 
 interface Template extends Omit<DbTemplate, "content"> {
   content: Record<string, unknown>;

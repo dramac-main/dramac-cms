@@ -43,10 +43,10 @@ export async function GET(_request: NextRequest) {
     // Get installed modules from client_module_installations
     // Using raw query to work around type limitations
     const { data: installations, error } = await supabase
-      .from("client_module_installations" as "modules")
+      .from("client_module_installations")
       .select(`
         *,
-        module:modules(*)
+        module:modules_v2(*)
       `)
       .eq("client_id", clientId)
       .eq("is_active", true)

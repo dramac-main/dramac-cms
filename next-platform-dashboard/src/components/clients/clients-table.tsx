@@ -90,7 +90,7 @@ export async function ClientsTable({ filters }: ClientsTableProps) {
                 </TableCell>
                 <TableCell>{client.site_count}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {formatDistanceToNow(new Date(client.created_at), { addSuffix: true })}
+                  {client.created_at ? formatDistanceToNow(new Date(client.created_at), { addSuffix: true }) : "—"}
                 </TableCell>
                 <TableCell>
                   <ClientActions client={client} />

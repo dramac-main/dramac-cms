@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const supabase = await createClient();
 
   const { data: module } = await supabase
-    .from("modules")
+    .from("modules_v2")
     .select("name, description")
     .eq("slug", slug)
     .single();
@@ -62,10 +62,10 @@ export default async function PortalAppPage({ params }: PageProps) {
 
   // Get the module
   const { data: moduleData, error: moduleError } = await supabase
-    .from("modules")
+    .from("modules_v2")
     .select("*")
     .eq("slug", slug)
-    .eq("is_active", true)
+    .eq("status", "active")
     .single();
 
   if (moduleError || !moduleData) {
@@ -87,7 +87,7 @@ export default async function PortalAppPage({ params }: PageProps) {
 
   // Check if there's a client installation using type assertion
   const { data: clientInstallation } = await supabase
-    .from("client_module_installations" as "modules")
+    .from("client_module_installations")
     .select("*")
     .eq("client_id", clientData.id)
     .eq("module_id", module.id)
@@ -97,27 +97,14 @@ export default async function PortalAppPage({ params }: PageProps) {
   // If no client installation, check agency subscription as fallback
   if (!clientInstallation) {
     const { data: subscription } = await supabase
-      .from("agency_module_subscriptions" as "module_subscriptions")
+      .from("agency_module_subscriptions")
       .select("*")
       .eq("agency_id", clientData.agency_id)
       .eq("module_id", module.id)
       .eq("status", "active")
       .single();
 
-    // Also check legacy table
-    let legacySub = null;
     if (!subscription) {
-      const { data: legacy } = await supabase
-        .from("module_subscriptions")
-        .select("*")
-        .eq("agency_id", clientData.agency_id)
-        .eq("module_id", module.id)
-        .eq("status", "active")
-        .single();
-      legacySub = legacy;
-    }
-
-    if (!subscription && !legacySub) {
       redirect("/portal/apps");
     }
   }

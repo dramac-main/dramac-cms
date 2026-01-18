@@ -47,7 +47,7 @@ export async function GET(
 
     // Get module details
     const { data: module, error } = await supabase
-      .from("modules")
+      .from("modules_v2")
       .select("*")
       .eq("id", moduleId)
       .single();

@@ -36,7 +36,7 @@ export async function PATCH(
 
     // Update module status
     const { data: module, error } = await supabase
-      .from("modules")
+      .from("modules_v2")
       .update({ 
         status,
         updated_at: new Date().toISOString(),

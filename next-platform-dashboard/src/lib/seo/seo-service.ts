@@ -715,10 +715,10 @@ export async function getSiteAudits(
 ): Promise<Array<{
   id: string;
   pageId: string | null;
-  score: number;
+  score: number | null;
   issues: unknown[];
   recommendations: unknown[];
-  createdAt: string;
+  createdAt: string | null;
 }>> {
   if (!(await canAccessSiteSeo(siteId))) {
     return [];
@@ -738,7 +738,7 @@ export async function getSiteAudits(
     pageId: a.page_id,
     score: a.score,
     issues: (a.issues as unknown[]) || [],
-    recommendations: (a.recommendations as unknown[]) || [],
+    recommendations: (a.suggestions as unknown[]) || [],
     createdAt: a.created_at,
   }));
 }

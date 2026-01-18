@@ -203,7 +203,7 @@ export async function importSite(
       for (const moduleData of importData.modules) {
         // Get module ID from slug
         const { data: module } = await supabase
-          .from("modules")
+          .from("modules_v2")
           .select("id")
           .eq("slug", moduleData.moduleSlug)
           .single();
@@ -212,12 +212,12 @@ export async function importSite(
 
         // Upsert site module
         const { error: moduleError } = await supabase
-          .from("site_modules")
+          .from("site_module_installations")
           .upsert({
             site_id: siteId,
             module_id: module.id,
             settings: moduleData.settings as Json,
-            is_enabled: moduleData.isEnabled,
+            installed_at: moduleData.isEnabled ? new Date().toISOString() : null,
           }, {
             onConflict: "site_id,module_id",
           });

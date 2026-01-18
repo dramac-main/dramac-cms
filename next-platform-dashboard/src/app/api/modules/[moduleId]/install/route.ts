@@ -42,7 +42,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     // Check if already installed
     const { data: existing } = await supabase
-      .from("site_modules")
+      .from("site_module_installations")
       .select("id")
       .eq("site_id", siteId)
       .eq("module_id", module.id)
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     // Install module
     const { data, error } = await supabase
-      .from("site_modules")
+      .from("site_module_installations")
       .insert({
         site_id: siteId,
         module_id: module.id,
@@ -109,7 +109,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     // Uninstall module
     const { error } = await supabase
-      .from("site_modules")
+      .from("site_module_installations")
       .delete()
       .eq("site_id", siteId)
       .eq("module_id", moduleId);

@@ -6,11 +6,11 @@ export async function loadSiteModules(siteId: string): Promise<EnabledModule[]> 
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("site_modules")
+    .from("site_module_installations")
     .select(`
       settings,
       is_enabled,
-      module:modules(*)
+      module:modules_v2(*)
     `)
     .eq("site_id", siteId)
     .eq("is_enabled", true);
@@ -21,7 +21,7 @@ export async function loadSiteModules(siteId: string): Promise<EnabledModule[]> 
   }
 
   return data
-    .filter((sm) => sm.module && sm.is_enabled)
+    .filter((sm) => sm.module && (sm.is_enabled ?? false))
     .map((sm) => ({
       module: sm.module as unknown as Module,
       settings: (sm.settings as Record<string, unknown>) || {},

@@ -328,8 +328,8 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
                   id: string;
                   name: string;
                   subdomain: string;
-                  published: boolean;
-                  created_at: string;
+                  published: boolean | null;
+                  created_at: string | null;
                 }) => (
                   <TableRow key={site.id}>
                     <TableCell>
@@ -350,7 +350,7 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {format(new Date(site.created_at), "MMM d, yyyy")}
+                      {site.created_at ? format(new Date(site.created_at), "MMM d, yyyy") : "—"}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -384,7 +384,7 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
                   id: string;
                   name: string;
                   email: string | null;
-                  created_at: string;
+                  created_at: string | null;
                 }) => (
                   <TableRow key={client.id}>
                     <TableCell>
@@ -396,7 +396,7 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
                       </div>
                     </TableCell>
                     <TableCell>
-                      {format(new Date(client.created_at), "MMM d, yyyy")}
+                      {client.created_at ? format(new Date(client.created_at), "MMM d, yyyy") : "—"}
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm">

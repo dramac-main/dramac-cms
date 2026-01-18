@@ -10,7 +10,7 @@ export async function handleModuleSubscriptionUpdate(
   if (type !== "module" || !module_id) return false;
 
   const periodEnd = (subscription as unknown as Record<string, unknown>).current_period_end as number || Date.now() / 1000;
-  await supabase.from("module_subscriptions").upsert(
+  await supabase.from("agency_module_subscriptions").upsert(
     {
       agency_id,
       module_id,
@@ -27,19 +27,19 @@ export async function handleModuleSubscriptionUpdate(
 
   // Enable module for agency if active
   if (subscription.status === "active") {
-    // Verify module is enabled in agency settings
+    // Verify module installation exists for agency
     const { data: existing } = await supabase
-      .from("agency_modules")
+      .from("agency_module_installations")
       .select("id")
       .eq("agency_id", agency_id)
       .eq("module_id", module_id)
       .single();
 
     if (!existing) {
-      await supabase.from("agency_modules").insert({
+      await supabase.from("agency_module_installations").insert({
         agency_id,
         module_id,
-        enabled: true,
+        is_enabled: true,
       });
     }
   }
@@ -56,7 +56,7 @@ export async function handleModuleSubscriptionCanceled(
   if (type !== "module" || !module_id) return false;
 
   await supabase
-    .from("module_subscriptions")
+    .from("agency_module_subscriptions")
     .update({
       status: "canceled",
       updated_at: new Date().toISOString(),

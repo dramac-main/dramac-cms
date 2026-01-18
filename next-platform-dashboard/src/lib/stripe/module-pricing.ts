@@ -14,8 +14,8 @@ export async function getModulePricing(moduleId: string): Promise<ModulePricing 
   const supabase = createAdminClient();
 
   const { data: module } = await supabase
-    .from("modules")
-    .select("id, price_monthly, price_yearly, stripe_price_monthly, stripe_price_yearly")
+    .from("modules_v2")
+    .select("id, wholesale_price_monthly, wholesale_price_yearly, stripe_price_monthly_id, stripe_price_yearly_id")
     .eq("id", moduleId)
     .single();
 
@@ -23,9 +23,9 @@ export async function getModulePricing(moduleId: string): Promise<ModulePricing 
 
   return {
     moduleId: module.id,
-    stripePriceId: module.stripe_price_monthly!,
-    monthlyPrice: module.price_monthly,
-    yearlyPrice: module.price_yearly ?? undefined,
+    stripePriceId: module.stripe_price_monthly_id!,
+    monthlyPrice: module.wholesale_price_monthly ?? 0,
+    yearlyPrice: module.wholesale_price_yearly ?? undefined,
   };
 }
 
@@ -80,11 +80,11 @@ export async function createModuleProduct(module: {
   // Update database with Stripe IDs
   const supabase = createAdminClient();
   await supabase
-    .from("modules")
+    .from("modules_v2")
     .update({
       stripe_product_id: product.id,
-      stripe_price_monthly: monthlyPrice.id,
-      stripe_price_yearly: yearlyPrice?.id,
+      stripe_price_monthly_id: monthlyPrice.id,
+      stripe_price_yearly_id: yearlyPrice?.id,
     })
     .eq("id", module.id);
 

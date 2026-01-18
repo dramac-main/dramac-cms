@@ -93,7 +93,7 @@ export function SiteOverview({ site }: SiteOverviewProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Created</p>
                 <p className="font-medium">
-                  {format(new Date(site.created_at), "MMM d, yyyy")}
+                  {site.created_at ? format(new Date(site.created_at), "MMM d, yyyy") : "—"}
                 </p>
               </div>
             </div>
@@ -106,7 +106,7 @@ export function SiteOverview({ site }: SiteOverviewProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Last Updated</p>
                 <p className="font-medium">
-                  {format(new Date(site.updated_at), "MMM d, yyyy")}
+                  {site.updated_at ? format(new Date(site.updated_at), "MMM d, yyyy") : "—"}
                 </p>
               </div>
             </div>

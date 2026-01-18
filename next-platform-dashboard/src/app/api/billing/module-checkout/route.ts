@@ -17,8 +17,8 @@ export async function POST(request: NextRequest) {
 
     // Get module pricing
     const { data: module } = await supabase
-      .from("modules")
-      .select("stripe_price_monthly, stripe_price_yearly, name")
+      .from("modules_v2")
+      .select("stripe_price_monthly_id, stripe_price_yearly_id, name")
       .eq("id", moduleId)
       .single();
 
@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
     }
 
     const priceId = billingCycle === "yearly"
-      ? module.stripe_price_yearly
-      : module.stripe_price_monthly;
+      ? module.stripe_price_yearly_id
+      : module.stripe_price_monthly_id;
 
     if (!priceId) {
       return NextResponse.json(

@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           .insert({
             page_id: pageId,
             content: JSON.parse(craftJson),
-            version: existingContent.version + 1,
+            version: (existingContent.version ?? 0) + 1,
           });
 
         if (contentError) {

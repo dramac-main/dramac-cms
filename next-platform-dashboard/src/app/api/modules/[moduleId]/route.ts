@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     const { data, error } = await supabase
-      .from("modules")
+      .from("modules_v2")
       .select("*")
       .eq("id", moduleId)
       .single();

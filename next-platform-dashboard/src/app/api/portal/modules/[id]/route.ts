@@ -55,7 +55,7 @@ export async function GET(
 
     // Get the module
     const { data: module, error: moduleError } = await supabase
-      .from("modules")
+      .from("modules_v2")
       .select("*")
       .eq("id", moduleId)
       .single();
@@ -66,7 +66,7 @@ export async function GET(
 
     // Check if there's a client installation using type assertion
     const { data: installation } = await supabase
-      .from("client_module_installations" as "modules")
+      .from("client_module_installations")
       .select("*")
       .eq("client_id", clientId)
       .eq("module_id", moduleId)
@@ -76,7 +76,7 @@ export async function GET(
     // If no client installation, verify agency subscription
     if (!installation && agencyId) {
       const { data: subscription } = await supabase
-        .from("agency_module_subscriptions" as "module_subscriptions")
+        .from("agency_module_subscriptions")
         .select("*")
         .eq("agency_id", agencyId)
         .eq("module_id", moduleId)
@@ -84,18 +84,8 @@ export async function GET(
         .single();
 
       if (!subscription) {
-        // Check legacy table too
-        const { data: legacySub } = await supabase
-          .from("module_subscriptions")
-          .select("*")
-          .eq("agency_id", agencyId)
-          .eq("module_id", moduleId)
-          .eq("status", "active")
-          .single();
-
-        if (!legacySub) {
-          return NextResponse.json({ error: "Access denied" }, { status: 403 });
-        }
+        // Agency doesn't have this module subscribed
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
       }
     }
 

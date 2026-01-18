@@ -8,6 +8,7 @@ import { EditClientDialog } from "@/components/clients/edit-client-dialog";
 import { ImpersonateClientButton } from "@/components/clients/impersonate-client-button";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
+import type { ClientStatus } from "@/types/client";
 
 interface ClientDetailPageProps {
   params: Promise<{ clientId: string }>;
@@ -39,7 +40,7 @@ export default async function ClientDetailPage({ params }: ClientDetailPageProps
         backHref="/dashboard/clients"
       >
         <div className="flex items-center gap-2">
-          <ClientStatusBadge status={client.status} />
+          <ClientStatusBadge status={client.status as ClientStatus} />
           {client.has_portal_access && (
             <ImpersonateClientButton clientId={client.id} clientName={client.name} />
           )}

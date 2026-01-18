@@ -98,19 +98,19 @@ export async function exportSite(siteId: string): Promise<{
           seoTitle: page.seo_title,
           seoDescription: page.seo_description,
           seoImage: page.seo_image,
-          isHomepage: page.is_homepage,
-          sortOrder: page.sort_order,
+          isHomepage: page.is_homepage ?? false,
+          sortOrder: page.sort_order ?? 0,
         };
       })
     );
 
     // 3. Get enabled modules
     const { data: siteModules, error: modulesError } = await supabase
-      .from("site_modules")
+      .from("site_module_installations")
       .select(`
         settings,
-        is_enabled,
-        module:modules(slug)
+        installed_at,
+        module:modules_v2(slug)
       `)
       .eq("site_id", siteId);
 
@@ -135,11 +135,11 @@ export async function exportSite(siteId: string): Promise<{
       modules: (siteModules || []).map((sm) => ({
         moduleSlug: (sm.module as { slug: string } | null)?.slug || "",
         settings: (sm.settings as Record<string, unknown>) || {},
-        isEnabled: sm.is_enabled,
+        isEnabled: !!sm.installed_at,
       })).filter(m => m.moduleSlug),
       metadata: {
         totalPages: pagesWithContent.length,
-        totalModules: siteModules?.filter(m => m.is_enabled).length || 0,
+        totalModules: siteModules?.filter(m => m.installed_at).length || 0,
         exportedBy: user.email || user.id,
       },
     };

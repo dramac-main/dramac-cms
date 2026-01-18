@@ -130,19 +130,19 @@ export async function cloneSite(
     // 5. Clone modules if requested
     if (options.cloneModules) {
       const { data: sourceModules, error: modulesError } = await supabase
-        .from('site_modules')
+        .from('site_module_installations')
         .select('*')
         .eq('site_id', sourceSiteId);
 
       if (!modulesError && sourceModules) {
         for (const mod of sourceModules) {
           const { error: modCreateError } = await supabase
-            .from('site_modules')
+            .from('site_module_installations')
             .insert({
               site_id: newSite.id,
               module_id: mod.module_id,
               settings: mod.settings,
-              is_enabled: mod.is_enabled,
+              installed_at: new Date().toISOString(),
             });
 
           if (!modCreateError) {

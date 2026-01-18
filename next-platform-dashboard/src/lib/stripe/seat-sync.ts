@@ -12,25 +12,23 @@ export async function syncSeatsForAgency(agencyId: string) {
 
   const clientCount = count || 0;
 
-  // Get current subscription
-  const { data: subscription } = await supabase
-    .from("billing_subscriptions")
-    .select("quantity, status")
-    .eq("agency_id", agencyId)
-    .in("status", ["active", "trialing"])
+  // Get current subscription from agencies table
+  const { data: agency } = await supabase
+    .from("agencies")
+    .select("stripe_subscription_id")
+    .eq("id", agencyId)
     .single();
 
   // If no subscription and has clients, they need to subscribe
-  if (!subscription && clientCount > 0) {
+  if (!agency?.stripe_subscription_id && clientCount > 0) {
     // Agency needs to create a subscription - return status without updating
-    // The needs_subscription flag would typically be checked in the UI
     return { needsSubscription: true, clientCount };
   }
 
-  // If subscription exists and seat count differs, update
-  if (subscription && subscription.quantity !== clientCount) {
+  // If subscription exists, sync seat count
+  if (agency?.stripe_subscription_id) {
     await updateSeatCount(agencyId, Math.max(clientCount, 1));
-    return { updated: true, oldCount: subscription.quantity, newCount: clientCount };
+    return { updated: true, newCount: clientCount };
   }
 
   return { synced: true, seatCount: clientCount };

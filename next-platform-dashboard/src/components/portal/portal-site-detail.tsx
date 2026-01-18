@@ -99,7 +99,7 @@ export function PortalSiteDetail({ site }: PortalSiteDetailProps) {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Created</p>
-                  <p className="font-medium">{format(new Date(site.created_at), "MMM d, yyyy")}</p>
+                  <p className="font-medium">{site.created_at ? format(new Date(site.created_at), "MMM d, yyyy") : "—"}</p>
                 </div>
               </div>
 
@@ -109,7 +109,7 @@ export function PortalSiteDetail({ site }: PortalSiteDetailProps) {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Last Updated</p>
-                  <p className="font-medium">{formatDistanceToNow(new Date(site.updated_at), { addSuffix: true })}</p>
+                  <p className="font-medium">{site.updated_at ? formatDistanceToNow(new Date(site.updated_at), { addSuffix: true }) : "—"}</p>
                 </div>
               </div>
             </div>

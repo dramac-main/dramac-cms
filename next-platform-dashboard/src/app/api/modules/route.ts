@@ -15,9 +15,9 @@ export async function GET(request: NextRequest) {
     const featured = searchParams.get("featured");
 
     let query = supabase
-      .from("modules")
+      .from("modules_v2")
       .select("*")
-      .eq("is_active", true)
+      .eq("status", "active")
       .order("is_featured", { ascending: false })
       .order("name");
 

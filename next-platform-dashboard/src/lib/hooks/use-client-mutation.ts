@@ -2,17 +2,20 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
-import { Client } from "@/types";
+import type { Tables, TablesInsert } from "@/types/database";
+
+type Client = Tables<"clients">;
+type ClientInsert = TablesInsert<"clients">;
 
 export function useCreateClient() {
   const queryClient = useQueryClient();
   const supabase = createClient();
 
   return useMutation({
-    mutationFn: async (data: Omit<Client, "id" | "created_at" | "updated_at">) => {
+    mutationFn: async (data: Omit<ClientInsert, "id" | "created_at" | "updated_at">) => {
       const { data: client, error } = await supabase
         .from("clients")
-        .insert(data)
+        .insert(data as ClientInsert)
         .select()
         .single();
 

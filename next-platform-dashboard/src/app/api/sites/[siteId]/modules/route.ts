@@ -38,10 +38,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     // Get modules enabled for this site
     const { data: siteModules } = await supabase
-      .from("site_modules")
+      .from("site_module_installations")
       .select(`
         *,
-        module:modules(*)
+        module:modules_v2(*)
       `)
       .eq("site_id", siteId);
 
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     // Check if already enabled
     const { data: existing } = await supabase
-      .from("site_modules")
+      .from("site_module_installations")
       .select("id")
       .eq("site_id", siteId)
       .eq("module_id", moduleId)
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     if (existing) {
       // Update existing
       const { data, error } = await supabase
-        .from("site_modules")
+        .from("site_module_installations")
         .update({
           is_enabled: true,
           settings,
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     // Create new
     const { data, error } = await supabase
-      .from("site_modules")
+      .from("site_module_installations")
       .insert({
         site_id: siteId,
         module_id: moduleId,

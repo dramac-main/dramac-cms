@@ -76,13 +76,13 @@ export default async function SiteAppsPage({ params }: PageProps) {
 
   // Get site-level module installations using type assertion
   const { data: installations } = await supabase
-    .from("site_module_installations" as "modules")
+    .from("site_module_installations")
     .select(`
       *,
-      module:modules(*)
+      module:modules_v2(*)
     `)
     .eq("site_id", siteId)
-    .eq("is_active", true)
+    .eq("is_enabled", true)
     .order("installed_at", { ascending: false }) as unknown as { data: SiteInstallation[] | null };
 
   const installedModules = (installations || []).map(i => ({

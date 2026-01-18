@@ -134,10 +134,16 @@ export async function updateAgencyAction(data: AgencyActionData): Promise<{ erro
   }
 
   // Create new agency
+  const slug = data.agencyName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") + "-" + Date.now().toString(36);
+
   const { data: agency, error: agencyError } = await supabase
     .from("agencies")
     .insert({
       name: data.agencyName,
+      slug,
       description: data.agencyDescription || null,
       website: data.website || null,
       industry: data.industry || null,

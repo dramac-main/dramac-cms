@@ -10,10 +10,10 @@ export function useModuleSubscriptions(agencyId: string) {
     queryKey: ["module-subscriptions", agencyId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("module_subscriptions")
+        .from("agency_module_subscriptions")
         .select(`
           *,
-          module:modules(id, name, category, icon)
+          module:modules_v2(id, name, category, icon)
         `)
         .eq("agency_id", agencyId);
 
@@ -29,7 +29,7 @@ export function useHasModuleAccess(agencyId: string, moduleId: string) {
     queryKey: ["module-access", agencyId, moduleId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("module_subscriptions")
+        .from("agency_module_subscriptions")
         .select("status")
         .eq("agency_id", agencyId)
         .eq("module_id", moduleId)

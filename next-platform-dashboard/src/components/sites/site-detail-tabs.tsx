@@ -15,8 +15,8 @@ interface SiteDetailTabsProps {
       id: string;
       name: string;
       slug: string;
-      is_homepage: boolean;
-      created_at: string;
+      is_homepage: boolean | null;
+      created_at: string | null;
     }>;
     client?: { id: string; name: string; company: string | null } | null;
   };

@@ -47,7 +47,7 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm">{activity.message}</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
+                    {activity.timestamp ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true }) : "-"}
                   </p>
                 </div>
                 <Badge variant="outline" className="text-xs capitalize shrink-0">

@@ -163,15 +163,20 @@ export default async function PortalDashboard() {
                       </p>
                     </div>
                     {url && site.isPublished && (
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="p-2 hover:bg-muted rounded-full shrink-0"
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        asChild
                       >
-                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                      </a>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                        </a>
+                      </Button>
                     )}
                   </Link>
                 );
