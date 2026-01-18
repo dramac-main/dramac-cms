@@ -23,6 +23,11 @@ export default function SafetyTestPage() {
     setIsChecking(false);
   };
 
+  const loadExample = (example: string) => {
+    setContent(example);
+    setViolations([]);
+  };
+
   // Example violations for testing
   const exampleViolations: SafetyViolation[] = [
     {
@@ -38,13 +43,60 @@ export default function SafetyTestPage() {
   ];
 
   return (
-    <div className="container mx-auto max-w-4xl space-y-8 p-8">
+    <div className="container mx-auto max-w-5xl space-y-8 p-8">
       <div>
         <h1 className="text-3xl font-bold">Phase 60: Content Safety Filter Demo</h1>
         <p className="mt-2 text-muted-foreground">
           Test the content safety filter and UI components
         </p>
       </div>
+
+      {/* Quick Test Examples */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Test Examples</CardTitle>
+          <CardDescription>Click to load example content into the checker</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => loadExample("Welcome to our bakery! We make fresh bread daily.")}
+            >
+              ✅ Safe Content
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => loadExample("Please verify your password to secure your account immediately")}
+            >
+              ⚠️ Phishing
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => loadExample("Try our casino online now! Get free bonus!")}
+            >
+              ⚠️ Spam
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => loadExample('<script>eval("malicious code")</script>')}
+            >
+              🚨 Malware
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => loadExample("How to kill someone in their sleep")}
+            >
+              🚨 Violence
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Live Content Checker */}
       <Card>
@@ -56,7 +108,7 @@ export default function SafetyTestPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <Textarea
-            placeholder="Enter content to check... (try: 'Please verify your password' or 'casino online')"
+            placeholder="Enter content to check, or click an example above..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={4}
@@ -66,7 +118,9 @@ export default function SafetyTestPage() {
           </Button>
           
           {content && violations.length > 0 && (
-            <ContentWarning violations={violations} showDetails />
+            <div className="space-y-2">
+              <ContentWarning violations={violations} showDetails />
+            </div>
           )}
           
           {content && (
@@ -83,7 +137,7 @@ export default function SafetyTestPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
-            <h3 className="mb-2 font-medium">ContentWarning - Low Severity</h3>
+            <h3 className="mb-2 font-medium">ContentWarning - Low Severity (Spam)</h3>
             <ContentWarning
               violations={[
                 {
@@ -97,7 +151,7 @@ export default function SafetyTestPage() {
           </div>
 
           <div>
-            <h3 className="mb-2 font-medium">ContentWarning - Medium Severity</h3>
+            <h3 className="mb-2 font-medium">ContentWarning - Medium Severity (Personal Info)</h3>
             <ContentWarning
               violations={[
                 {
@@ -111,7 +165,7 @@ export default function SafetyTestPage() {
           </div>
 
           <div>
-            <h3 className="mb-2 font-medium">ContentWarning - High Severity</h3>
+            <h3 className="mb-2 font-medium">ContentWarning - High Severity (Phishing)</h3>
             <ContentWarning
               violations={[
                 {
@@ -125,7 +179,7 @@ export default function SafetyTestPage() {
           </div>
 
           <div>
-            <h3 className="mb-2 font-medium">ContentWarning - Critical Severity</h3>
+            <h3 className="mb-2 font-medium">ContentWarning - Critical Severity (Malware)</h3>
             <ContentWarning
               violations={[
                 {
@@ -163,48 +217,91 @@ export default function SafetyTestPage() {
         </CardContent>
       </Card>
 
-      {/* Test Examples */}
+      {/* Categories Reference */}
       <Card>
         <CardHeader>
-          <CardTitle>Test Examples</CardTitle>
-          <CardDescription>Try these example inputs in the checker above</CardDescription>
+          <CardTitle>Safety Categories</CardTitle>
+          <CardDescription>10 content categories with severity levels</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 text-sm">
-            <p>
-              <strong>Phishing:</strong> "Please verify your password to secure your account"
-            </p>
-            <p>
-              <strong>Spam:</strong> "Buy cheap pills now! Limited time offer!"
-            </p>
-            <p>
-              <strong>Malware:</strong> {`<script>eval("code")</script>`}
-            </p>
-            <p>
-              <strong>Violence:</strong> "How to kill someone"
-            </p>
-            <p>
-              <strong>Safe:</strong> "Welcome to our bakery! We make fresh bread daily."
-            </p>
+          <div className="grid gap-3 text-sm">
+            <div className="flex items-center justify-between">
+              <span>Violence</span>
+              <ContentWarningBadge severity="high" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Hate Speech</span>
+              <ContentWarningBadge severity="critical" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Sexual Content</span>
+              <ContentWarningBadge severity="high" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Self-harm</span>
+              <ContentWarningBadge severity="critical" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Illegal Activities</span>
+              <ContentWarningBadge severity="critical" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Spam</span>
+              <ContentWarningBadge severity="low" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Malware</span>
+              <ContentWarningBadge severity="critical" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Phishing</span>
+              <ContentWarningBadge severity="high" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Personal Info</span>
+              <ContentWarningBadge severity="medium" />
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Profanity</span>
+              <ContentWarningBadge severity="low" />
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* API Test */}
+      {/* API Reference */}
       <Card>
         <CardHeader>
-          <CardTitle>API Endpoint Test</CardTitle>
-          <CardDescription>Test the /api/safety/check endpoint</CardDescription>
+          <CardTitle>API Endpoint</CardTitle>
+          <CardDescription>POST /api/safety/check (requires authentication)</CardDescription>
         </CardHeader>
         <CardContent>
-          <code className="block rounded bg-muted p-4 text-sm">
-            POST /api/safety/check
-            <br />
-            Body: {`{ "content": "your content here", "type": "full" }`}
-          </code>
-          <p className="mt-4 text-sm text-muted-foreground">
-            You can test this endpoint using tools like Postman or curl after authentication.
-          </p>
+          <pre className="rounded bg-muted p-4 text-xs overflow-x-auto">
+{`// Request
+POST /api/safety/check
+Content-Type: application/json
+
+{
+  "content": "your content here",
+  "type": "full",  // or "quick" or "prompt"
+  "categories": ["violence", "spam"],  // optional
+  "includeContext": false  // optional
+}
+
+// Response
+{
+  "safe": false,
+  "violations": [
+    {
+      "category": "phishing",
+      "severity": "high",
+      "description": "Account verification phishing"
+    }
+  ],
+  "confidence": 0.5,
+  "processingTime": 2.5
+}`}
+          </pre>
         </CardContent>
       </Card>
     </div>
