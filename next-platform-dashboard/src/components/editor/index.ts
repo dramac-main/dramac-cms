@@ -33,3 +33,6 @@ export * from "./user-components/stats";
 
 // Settings
 export * from "./settings";
+
+// AI Components
+export * from "./ai";
