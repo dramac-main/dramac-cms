@@ -46,15 +46,7 @@ export default async function PortalSitesPage() {
               <Card key={site.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Site Preview Thumbnail */}
                 <div className="h-40 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center relative">
-                  {site.thumbnailUrl ? (
-                    <img
-                      src={site.thumbnailUrl}
-                      alt={site.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <Globe className="h-16 w-16 text-primary/30" />
-                  )}
+                  <Globe className="h-16 w-16 text-primary/30" />
                   <Badge 
                     className="absolute top-3 right-3"
                     variant={site.isPublished ? "default" : "secondary"}
@@ -88,7 +80,7 @@ export default async function PortalSitesPage() {
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Calendar className="h-4 w-4 flex-shrink-0" />
                     <span>
-                      Updated {formatDistanceToNow(new Date(site.lastUpdatedAt), { addSuffix: true })}
+                      Updated {site.lastUpdatedAt ? formatDistanceToNow(new Date(site.lastUpdatedAt), { addSuffix: true }) : "recently"}
                     </span>
                   </div>
 

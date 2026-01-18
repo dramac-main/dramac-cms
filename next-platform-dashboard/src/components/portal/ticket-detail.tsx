@@ -22,7 +22,7 @@ interface TicketDetailProps {
   messages: TicketMessage[];
 }
 
-function getStatusBadge(status: string) {
+function getStatusBadge(status: string | null) {
   const variants: Record<string, { variant: "default" | "secondary" | "outline"; className: string }> = {
     open: { variant: "default", className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100" },
     in_progress: { variant: "default", className: "bg-blue-100 text-blue-800 hover:bg-blue-100" },
@@ -30,16 +30,16 @@ function getStatusBadge(status: string) {
     closed: { variant: "secondary", className: "" },
   };
 
-  const config = variants[status] || variants.open;
+  const config = variants[status || "open"] || variants.open;
 
   return (
     <Badge variant={config.variant} className={config.className}>
-      {status.replace("_", " ")}
+      {(status || "open").replace("_", " ")}
     </Badge>
   );
 }
 
-function getPriorityBadge(priority: string) {
+function getPriorityBadge(priority: string | null) {
   const colors: Record<string, string> = {
     low: "bg-gray-100 text-gray-700",
     normal: "bg-blue-100 text-blue-700",
@@ -48,8 +48,8 @@ function getPriorityBadge(priority: string) {
   };
 
   return (
-    <Badge variant="outline" className={colors[priority] || colors.normal}>
-      {priority}
+    <Badge variant="outline" className={colors[priority || "normal"] || colors.normal}>
+      {priority || "normal"}
     </Badge>
   );
 }
@@ -82,12 +82,11 @@ export function TicketDetail({ user, ticket, messages }: TicketDetailProps) {
 
     const result = await addTicketMessage(
       ticket.id,
-      user.clientId,
-      newMessage.trim(),
       {
+        senderType: "client",
         senderId: user.userId || user.clientId,
         senderName: user.fullName,
-        senderType: "client",
+        message: newMessage.trim(),
       }
     );
 
@@ -126,7 +125,7 @@ export function TicketDetail({ user, ticket, messages }: TicketDetailProps) {
           <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
             <span>{ticket.ticketNumber}</span>
             <span>•</span>
-            <span>{ticket.category}</span>
+            <span>{ticket.category || "general"}</span>
             {ticket.siteName && (
               <>
                 <span>•</span>
@@ -135,7 +134,7 @@ export function TicketDetail({ user, ticket, messages }: TicketDetailProps) {
             )}
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Created {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}
+            Created {ticket.createdAt ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true }) : "recently"}
           </p>
         </div>
 
@@ -192,7 +191,7 @@ export function TicketDetail({ user, ticket, messages }: TicketDetailProps) {
                             {message.senderName}
                           </span>
                           <span className="text-xs text-muted-foreground">
-                            {format(new Date(message.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                            {message.createdAt ? format(new Date(message.createdAt), "MMM d, yyyy 'at' h:mm a") : ""}
                           </span>
                         </div>
                         <div className={`mt-2 p-3 rounded-lg ${

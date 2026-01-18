@@ -81,15 +81,7 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div className="flex items-start gap-4">
           <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-            {site.thumbnailUrl ? (
-              <img
-                src={site.thumbnailUrl}
-                alt={site.name}
-                className="w-full h-full object-cover rounded-lg"
-              />
-            ) : (
-              <Globe className="h-10 w-10 text-muted-foreground" />
-            )}
+            <Globe className="h-10 w-10 text-muted-foreground" />
           </div>
           <div>
             <div className="flex items-center gap-3">
@@ -102,7 +94,7 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
               <p className="text-muted-foreground mt-1">{domain}</p>
             )}
             <p className="text-sm text-muted-foreground mt-2">
-              {site.pageCount} pages • Last updated {formatDistanceToNow(new Date(site.lastUpdatedAt), { addSuffix: true })}
+              {site.pageCount} pages • Last updated {site.lastUpdatedAt ? formatDistanceToNow(new Date(site.lastUpdatedAt), { addSuffix: true }) : "recently"}
             </p>
           </div>
         </div>
@@ -214,7 +206,7 @@ export default async function PortalSiteDetailPage({ params }: PortalSiteDetailP
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Last Updated</p>
                   <p className="mt-1">
-                    {format(new Date(site.lastUpdatedAt), "PPP 'at' p")}
+                    {site.lastUpdatedAt ? format(new Date(site.lastUpdatedAt), "PPP 'at' p") : "N/A"}
                   </p>
                 </div>
                 <div>

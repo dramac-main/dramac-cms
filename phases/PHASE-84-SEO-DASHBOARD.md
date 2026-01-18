@@ -116,16 +116,22 @@ src/lib/seo/
 ├── seo-service.ts              # SEO settings CRUD (with permissions!)
 ├── seo-analyzer.ts             # SEO scoring
 ├── sitemap-generator.ts        # XML sitemap
+├── index.ts                    # Exports barrel file
 
 src/components/seo/
 ├── seo-form.tsx                # SEO settings form
 ├── seo-preview.tsx             # Google/social preview
 ├── seo-score.tsx               # SEO score display
 ├── page-seo-list.tsx           # Page SEO table
+├── index.ts                    # Exports barrel file
 
-src/app/sites/[subdomain]/
+src/app/site/[domain]/          # Note: /site/ not /sites/!
 ├── sitemap.xml/route.ts        # Dynamic sitemap
 ├── robots.txt/route.ts         # Dynamic robots
+
+# Navigation Integration
+src/app/(dashboard)/dashboard/sites/[siteId]/
+├── page.tsx                    # Added SEO button to site detail header
 ```
 
 ---
@@ -134,7 +140,7 @@ src/app/sites/[subdomain]/
 
 ### Task 84.1: Database Schema (EXTEND existing tables!)
 
-**File: `migrations/seo-tables.sql`**
+**File: `migrations/phase-84-seo-tables.sql`**
 
 ```sql
 -- EXTEND existing sites table with advanced SEO fields
@@ -1405,7 +1411,9 @@ export default function SeoPage({
 
 ### Task 84.6: Dynamic Sitemap Route
 
-**File: `src/app/sites/[subdomain]/sitemap.xml/route.ts`**
+**File: `src/app/site/[domain]/sitemap.xml/route.ts`**
+
+> ⚠️ **Note**: Route is at `/site/[domain]/` not `/sites/[subdomain]/` to avoid conflicts with dashboard routes at `/sites/[siteId]/`
 
 ```typescript
 import { NextResponse } from "next/server";
@@ -1419,15 +1427,15 @@ const supabase = createClient(
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ subdomain: string }> }
+  { params }: { params: Promise<{ domain: string }> }
 ) {
-  const { subdomain } = await params;
+  const { domain } = await params;
 
-  // Get site
+  // Get site by custom domain or subdomain
   const { data: site } = await supabase
     .from("sites")
-    .select("id, custom_domain, sitemap_enabled")
-    .eq("subdomain", subdomain)
+    .select("id, custom_domain, subdomain, sitemap_enabled")
+    .or(`custom_domain.eq.${domain},subdomain.eq.${domain}`)
     .eq("is_published", true)
     .single();
 
@@ -1438,7 +1446,7 @@ export async function GET(
   // Determine base URL
   const baseUrl = site.custom_domain
     ? `https://${site.custom_domain}`
-    : `https://${subdomain}.dramac.app`;
+    : `https://${site.subdomain}.dramac.app`;
 
   const sitemap = await generateSitemap(site.id, baseUrl);
 
@@ -1455,11 +1463,14 @@ export async function GET(
 
 ### Task 84.7: Dynamic Robots.txt Route
 
-**File: `src/app/sites/[subdomain]/robots.txt/route.ts`**
+**File: `src/app/site/[domain]/robots.txt/route.ts`**
+
+> ⚠️ **Note**: Route is at `/site/[domain]/` not `/sites/[subdomain]/` to avoid conflicts with dashboard routes at `/sites/[siteId]/`
 
 ```typescript
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getDefaultRobotsTxt } from "@/lib/seo/sitemap-generator";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -1468,15 +1479,15 @@ const supabase = createClient(
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ subdomain: string }> }
+  { params }: { params: Promise<{ domain: string }> }
 ) {
-  const { subdomain } = await params;
+  const { domain } = await params;
 
-  // Get site
+  // Get site by custom domain or subdomain
   const { data: site } = await supabase
     .from("sites")
-    .select("id, robots_txt, custom_domain")
-    .eq("subdomain", subdomain)
+    .select("id, robots_txt, custom_domain, subdomain")
+    .or(`custom_domain.eq.${domain},subdomain.eq.${domain}`)
     .eq("is_published", true)
     .single();
 
@@ -1484,20 +1495,11 @@ export async function GET(
     return new NextResponse("Site not found", { status: 404 });
   }
 
+  // Determine base URL
+  const baseUrl = site.custom_domain || `${site.subdomain}.dramac.app`;
+
   // Use custom robots.txt or generate default
-  const robotsTxt =
-    site.robots_txt ||
-    `# Robots.txt for ${subdomain}
-User-agent: *
-Allow: /
-
-# Sitemap
-Sitemap: https://${site.custom_domain || `${subdomain}.dramac.app`}/sitemap.xml
-
-# Disallow admin paths
-Disallow: /api/
-Disallow: /_next/
-`;
+  const robotsTxt = site.robots_txt || getDefaultRobotsTxt(baseUrl);
 
   return new NextResponse(robotsTxt, {
     headers: {
@@ -1537,19 +1539,27 @@ Disallow: /_next/
 
 ## ✅ Completion Checklist
 
-- [ ] Database schema for SEO
-- [ ] RLS policies for SEO tables
-- [ ] SEO service with permission checks
-- [ ] SEO analyzer
-- [ ] Sitemap generator
-- [ ] SEO dashboard page (agency)
-- [ ] **Portal SEO page (client view)**
-- [ ] Social sharing settings
-- [ ] Verification codes (hidden from unauthorized)
-- [ ] Analytics integration
-- [ ] Dynamic sitemap route
-- [ ] Dynamic robots.txt route
-- [ ] Page SEO analysis list
+- [x] Database schema for SEO (phase-84-seo-tables.sql)
+- [x] RLS policies for SEO tables
+- [x] SEO service with permission checks (getUserSeoContext)
+- [x] SEO analyzer (0-100 scoring)
+- [x] Sitemap generator (XML with images)
+- [x] SEO dashboard page (agency) - `/sites/[siteId]/seo/`
+- [x] **Portal SEO page (client view)** - `/portal/seo/`
+- [x] Page-by-page SEO editor - `/sites/[siteId]/seo/pages`
+- [x] Sitemap settings page - `/sites/[siteId]/seo/sitemap`
+- [x] Robots.txt editor - `/sites/[siteId]/seo/robots`
+- [x] Social sharing settings
+- [x] Verification codes (hidden from unauthorized)
+- [x] Analytics integration
+- [x] Dynamic sitemap route - `/site/[domain]/sitemap.xml`
+- [x] Dynamic robots.txt route - `/site/[domain]/robots.txt`
+- [x] Page SEO analysis list with scores
+- [x] SEO components (form, preview, score, list)
+- [x] Navigation button on site detail page
+- [x] Database types updated in types/database.ts
+- [x] All permission roles implemented
+- [x] Blog SEO integration (already existed)
 
 ---
 
@@ -1562,6 +1572,42 @@ Disallow: /_next/
 | Agency Admin | ✅ Agency | ✅ | ✅ | ✅ | ✅ |
 | Agency Member | ✅ Assigned | ❌ | ✅ | ❌ | ❌ |
 | Client Portal | ✅ Own Sites | ❌ | ❌ | ❌ | ❌ |
+
+---
+
+## 📝 Implementation Notes
+
+### ✅ Completed (January 18, 2026)
+
+**What Was Built:**
+- Full SEO dashboard with tabs (General, Social, Verification, Analytics, Pages)
+- Page-by-page SEO editor with live preview
+- Sitemap configuration page
+- Robots.txt editor
+- SEO scoring algorithm (0-100)
+- Permission-based access control for all user roles
+- Portal SEO view for clients (read-only)
+- Dynamic sitemap.xml generation
+- Dynamic robots.txt serving
+- SEO components library
+- Navigation integration
+
+**Key Decisions:**
+- Used `/site/[domain]/` for public routes (not `/sites/[subdomain]/`) to avoid route conflicts
+- Implemented getUserSeoContext() for unified permission checking
+- Hide analytics codes from members and portal users
+- Allow members to edit page SEO but not site-level settings
+- Blog posts already had SEO fields - no changes needed
+- Sitemap automatically includes blog posts and pages
+
+**Files Created:** 19 files, 5,232+ lines of code
+
+**Database Changes:**
+- Extended sites table with 9 new columns
+- Extended pages table with 7 new columns  
+- Created site_seo_settings table
+- Created seo_audits table
+- Added RLS policies for all user roles
 
 ---
 

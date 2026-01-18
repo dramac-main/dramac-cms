@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { Json } from "@/types/database";
 
 export interface ClientNotification {
   id: string;
@@ -11,7 +12,7 @@ export interface ClientNotification {
   metadata: Record<string, unknown>;
   isRead: boolean;
   readAt: string | null;
-  createdAt: string;
+  createdAt: string | null;
 }
 
 /**
@@ -53,7 +54,7 @@ export async function getClientNotifications(
     message: n.message,
     link: n.link,
     metadata: (n.metadata as Record<string, unknown>) || {},
-    isRead: n.is_read,
+    isRead: n.is_read ?? false,
     readAt: n.read_at,
     createdAt: n.created_at,
   }));
@@ -150,12 +151,13 @@ export async function createNotification(
       title: notification.title,
       message: notification.message,
       link: notification.link || null,
-      metadata: notification.metadata || {},
+      metadata: (notification.metadata || {}) as unknown as Json,
     })
     .select("id")
     .single();
 
-  if (error) {
+  if (error || !data) {
+    console.error("Error creating notification:", error);
     return { success: false, error: "Failed to create notification" };
   }
 
@@ -163,95 +165,28 @@ export async function createNotification(
 }
 
 /**
- * Delete a notification
+ * Delete old notifications (cleanup utility)
  */
-export async function deleteNotification(
-  notificationId: string,
-  clientId: string
-): Promise<{ success: boolean; error?: string }> {
+export async function cleanupOldNotifications(
+  clientId: string,
+  olderThanDays: number = 90
+): Promise<{ success: boolean; deletedCount?: number; error?: string }> {
   const supabase = await createClient();
 
-  const { error } = await supabase
-    .from("client_notifications")
-    .delete()
-    .eq("id", notificationId)
-    .eq("client_id", clientId);
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - olderThanDays);
 
-  if (error) {
-    return { success: false, error: "Failed to delete notification" };
-  }
-
-  return { success: true };
-}
-
-/**
- * Clear all read notifications
- */
-export async function clearReadNotifications(
-  clientId: string
-): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
-
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("client_notifications")
     .delete()
     .eq("client_id", clientId)
-    .eq("is_read", true);
+    .eq("is_read", true)
+    .lt("created_at", cutoffDate.toISOString())
+    .select("id");
 
   if (error) {
-    return { success: false, error: "Failed to clear notifications" };
+    return { success: false, error: "Failed to cleanup notifications" };
   }
 
-  return { success: true };
+  return { success: true, deletedCount: data?.length || 0 };
 }
-
-// Notification type helpers
-export const NotificationTypes = {
-  TICKET_UPDATE: "ticket_update",
-  TICKET_RESOLVED: "ticket_resolved",
-  SITE_PUBLISHED: "site_published",
-  SITE_UPDATED: "site_updated",
-  INVOICE: "invoice",
-  SYSTEM: "system",
-  WELCOME: "welcome",
-} as const;
-
-/**
- * Create common notification types
- */
-export const NotificationTemplates = {
-  ticketReply: (ticketNumber: string, ticketId: string) => ({
-    type: NotificationTypes.TICKET_UPDATE,
-    title: "New reply on your ticket",
-    message: `Your support ticket ${ticketNumber} has a new reply.`,
-    link: `/portal/support/${ticketId}`,
-  }),
-  
-  ticketResolved: (ticketNumber: string, ticketId: string) => ({
-    type: NotificationTypes.TICKET_RESOLVED,
-    title: "Ticket resolved",
-    message: `Your support ticket ${ticketNumber} has been marked as resolved.`,
-    link: `/portal/support/${ticketId}`,
-  }),
-  
-  sitePublished: (siteName: string, siteId: string) => ({
-    type: NotificationTypes.SITE_PUBLISHED,
-    title: "Site published",
-    message: `Your website "${siteName}" has been published and is now live.`,
-    link: `/portal/sites/${siteId}`,
-  }),
-  
-  siteUpdated: (siteName: string, siteId: string) => ({
-    type: NotificationTypes.SITE_UPDATED,
-    title: "Site updated",
-    message: `Your website "${siteName}" has been updated.`,
-    link: `/portal/sites/${siteId}`,
-  }),
-  
-  welcome: (agencyName: string) => ({
-    type: NotificationTypes.WELCOME,
-    title: "Welcome to your portal!",
-    message: `Welcome to your client portal with ${agencyName}. Here you can view your sites, submit support requests, and more.`,
-    link: "/portal",
-  }),
-};

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   description: "Get help with your websites",
 };
 
-function getStatusIcon(status: string) {
+function getStatusIcon(status: string | null) {
   switch (status) {
     case "open":
       return <AlertCircle className="h-4 w-4 text-yellow-600" />;
@@ -28,7 +28,7 @@ function getStatusIcon(status: string) {
   }
 }
 
-function getStatusBadge(status: string) {
+function getStatusBadge(status: string | null) {
   const variants: Record<string, { variant: "default" | "secondary" | "outline"; className: string }> = {
     open: { variant: "default", className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100" },
     in_progress: { variant: "default", className: "bg-blue-100 text-blue-800 hover:bg-blue-100" },
@@ -36,16 +36,16 @@ function getStatusBadge(status: string) {
     closed: { variant: "secondary", className: "" },
   };
 
-  const config = variants[status] || variants.open;
+  const config = variants[status || "open"] || variants.open;
 
   return (
     <Badge variant={config.variant} className={config.className}>
-      {status.replace("_", " ")}
+      {(status || "open").replace("_", " ")}
     </Badge>
   );
 }
 
-function getPriorityBadge(priority: string) {
+function getPriorityBadge(priority: string | null) {
   const colors: Record<string, string> = {
     low: "bg-gray-100 text-gray-700",
     normal: "bg-blue-100 text-blue-700",
@@ -54,8 +54,8 @@ function getPriorityBadge(priority: string) {
   };
 
   return (
-    <Badge variant="outline" className={colors[priority] || colors.normal}>
-      {priority}
+    <Badge variant="outline" className={colors[priority || "normal"] || colors.normal}>
+      {priority || "normal"}
     </Badge>
   );
 }
@@ -153,9 +153,9 @@ export default async function PortalSupportPage() {
                           {ticket.description}
                         </p>
                         <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                          <span>{ticket.category}</span>
+                          <span>{ticket.category || "general"}</span>
                           <span>•</span>
-                          <span>{formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}</span>
+                          <span>{ticket.createdAt ? formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true }) : "recently"}</span>
                           {ticket.siteName && (
                             <>
                               <span>•</span>

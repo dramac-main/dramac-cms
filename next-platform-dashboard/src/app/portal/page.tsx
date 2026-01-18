@@ -143,21 +143,13 @@ export default async function PortalDashboard() {
                     href={`/portal/sites/${site.id}`}
                     className="flex items-center gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
                   >
-                    <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                      {site.thumbnailUrl ? (
-                        <img
-                          src={site.thumbnailUrl}
-                          alt=""
-                          className="w-full h-full object-cover rounded-lg"
-                        />
-                      ) : (
-                        <Globe className="h-8 w-8 text-muted-foreground" />
-                      )}
+                    <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center shrink-0">
+                      <Globe className="h-8 w-8 text-muted-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-medium truncate">{site.name}</p>
-                        <Badge variant={site.isPublished ? "default" : "secondary"} className="flex-shrink-0">
+                        <Badge variant={site.isPublished ? "default" : "secondary"} className="shrink-0">
                           {site.isPublished ? "Live" : "Draft"}
                         </Badge>
                       </div>
@@ -167,7 +159,7 @@ export default async function PortalDashboard() {
                         </p>
                       )}
                       <p className="text-xs text-muted-foreground mt-1">
-                        {site.pageCount} pages • Updated {formatDistanceToNow(new Date(site.lastUpdatedAt), { addSuffix: true })}
+                        {site.pageCount} pages {site.lastUpdatedAt && `• Updated ${formatDistanceToNow(new Date(site.lastUpdatedAt), { addSuffix: true })}`}
                       </p>
                     </div>
                     {url && site.isPublished && (
@@ -176,7 +168,7 @@ export default async function PortalDashboard() {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
-                        className="p-2 hover:bg-muted rounded-full flex-shrink-0"
+                        className="p-2 hover:bg-muted rounded-full shrink-0"
                       >
                         <ExternalLink className="h-4 w-4 text-muted-foreground" />
                       </a>
@@ -226,7 +218,7 @@ export default async function PortalDashboard() {
                       <p className="font-medium truncate">{ticket.subject}</p>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {ticket.ticketNumber} • {ticket.category} • {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}
+                      {ticket.ticketNumber} • {ticket.category || "general"} {ticket.createdAt && `• ${formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}`}
                     </p>
                   </div>
                   <Badge
@@ -247,7 +239,7 @@ export default async function PortalDashboard() {
                         : ""
                     }
                   >
-                    {ticket.status.replace("_", " ")}
+                    {(ticket.status || "open").replace("_", " ")}
                   </Badge>
                 </Link>
               ))}

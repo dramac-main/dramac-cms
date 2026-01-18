@@ -61,16 +61,13 @@ export function NewTicketForm({ user, sites }: NewTicketFormProps) {
         priority: formData.priority as "low" | "normal" | "high" | "urgent",
         siteId: formData.siteId || undefined,
       },
-      {
-        senderId: user.userId || user.clientId,
-        senderName: user.fullName,
-      }
+      user.fullName
     );
 
     setIsSubmitting(false);
 
     if (result.success) {
-      toast.success(`Ticket ${result.ticketNumber} created successfully!`);
+      toast.success(`Ticket created successfully!`);
       router.push(`/portal/support/${result.ticketId}`);
     } else {
       toast.error(result.error || "Failed to create ticket");

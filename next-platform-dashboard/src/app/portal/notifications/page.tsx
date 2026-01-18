@@ -103,7 +103,7 @@ export default async function PortalNotificationsPage() {
                       <div className="flex items-center gap-4 mt-2">
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+                          {notification.createdAt && formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
                         </span>
 
                         {notification.link && (
