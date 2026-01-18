@@ -4,13 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserId, getCurrentUserRole, isSuperAdmin } from "@/lib/auth/permissions";
 import { cookies } from "next/headers";
 
-// Form tables (form_submissions, form_settings, form_webhooks) require Phase 82 migration
-// Using untyped client until types are regenerated after migration
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function getFormClient(): Promise<any> {
-  return createClient();
-}
-
 export interface FormSubmission {
   id: string;
   siteId: string;
@@ -76,7 +69,7 @@ interface UserSiteContext {
  * Returns siteIds user can access based on their role
  */
 async function getUserSiteContext(): Promise<UserSiteContext> {
-  const supabase = await getFormClient();
+  const supabase = await createClient();
   const userId = await getCurrentUserId();
   const role = await getCurrentUserRole();
   const cookieStore = await cookies();
@@ -224,7 +217,7 @@ export async function getSubmissions(
     return { submissions: [], total: 0 };
   }
   
-  const supabase = await getFormClient();
+  const supabase = await createClient();
   const offset = (page - 1) * limit;
 
   // Note: form_submissions table requires Phase 82 migration to be run
@@ -269,7 +262,7 @@ export async function getSubmissions(
  * Get a single submission by ID
  */
 export async function getSubmission(submissionId: string): Promise<FormSubmission | null> {
-  const supabase = await getFormClient();
+  const supabase = await createClient();
 
   // 
   const { data, error } = await supabase
@@ -298,7 +291,7 @@ export async function updateSubmissionStatus(
   submissionId: string,
   status: "new" | "read" | "archived" | "spam"
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await getFormClient();
+  const supabase = await createClient();
 
   // First get the submission to check site access
   // 
@@ -343,7 +336,7 @@ export async function deleteSubmission(
     };
   }
 
-  const supabase = await getFormClient();
+  const supabase = await createClient();
 
   // Verify site access
   // 
@@ -389,7 +382,7 @@ export async function deleteSubmissions(
     return { success: false, error: "No submissions to delete" };
   }
 
-  const supabase = await getFormClient();
+  const supabase = await createClient();
 
   // Verify all submissions belong to accessible sites
   // 
@@ -432,7 +425,7 @@ export async function getFormSettings(
     return null;
   }
 
-  const supabase = await getFormClient();
+  const supabase = await createClient();
 
   // 
   const { data, error } = await supabase
@@ -479,7 +472,7 @@ export async function updateFormSettings(
     return { success: false, error: "Access denied" };
   }
 
-  const supabase = await getFormClient();
+  const supabase = await createClient();
 
   // 
   const { error } = await supabase
@@ -523,7 +516,7 @@ export async function getSubmissionStats(siteId: string): Promise<{
     return { total: 0, new: 0, today: 0, thisWeek: 0 };
   }
 
-  const supabase = await getFormClient();
+  const supabase = await createClient();
 
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -566,7 +559,7 @@ export async function getFormsWithSubmissions(siteId: string): Promise<{
     return { forms: [] };
   }
 
-  const supabase = await getFormClient();
+  const supabase = await createClient();
 
   // Get distinct form IDs with counts
   // 
@@ -597,7 +590,7 @@ export async function getFormsWithSubmissions(siteId: string): Promise<{
 
   const settingsMap = new Map<string, string>();
   for (const setting of settings || []) {
-    settingsMap.set(setting.form_id, setting.form_name);
+    settingsMap.set(setting.form_id, setting.form_name || setting.form_id);
   }
 
   const forms = formIds.map(formId => ({
@@ -624,7 +617,7 @@ export async function getPortalAccessibleSites(): Promise<{
     return { sites: [] };
   }
   
-  const supabase = await getFormClient();
+  const supabase = await createClient();
   
   const { data: sites } = await supabase
     .from("sites")
@@ -648,7 +641,7 @@ export async function getFormWebhooks(siteId: string): Promise<FormWebhook[]> {
     return [];
   }
 
-  const supabase = await getFormClient();
+  const supabase = await createClient();
 
   // 
   const { data, error } = await supabase
@@ -687,7 +680,7 @@ export async function createFormWebhook(
     return { success: false, error: "Access denied" };
   }
 
-  const supabase = await getFormClient();
+  const supabase = await createClient();
 
   // 
   const { data, error } = await supabase
@@ -730,7 +723,7 @@ export async function updateFormWebhook(
     return { success: false, error: "Permission denied" };
   }
 
-  const supabase = await getFormClient();
+  const supabase = await createClient();
 
   // Verify access to the webhook's site
   // 
@@ -776,7 +769,7 @@ export async function deleteFormWebhook(
     return { success: false, error: "Permission denied" };
   }
 
-  const supabase = await getFormClient();
+  const supabase = await createClient();
 
   // Verify access to the webhook's site
   // 

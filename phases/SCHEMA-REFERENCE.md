@@ -63,10 +63,15 @@ This document contains the **ACTUAL** database table names. Phase documents may 
 ### Billing & Subscriptions
 | Table Name | Description |
 |------------|-------------|
-| `subscriptions` | Active subscriptions (NOT `billing_subscriptions`) |
-| `invoices` | Invoice records |
-| **Note:** Stripe customer ID stored on `agencies.stripe_customer_id` |
-| **Note:** Stripe subscription ID stored on `agencies.stripe_subscription_id` |
+| `subscriptions` | Agency plan subscriptions - **Uses LemonSqueezy** |
+| `invoices` | Invoice records - **Uses LemonSqueezy** |
+| `agency_module_subscriptions` | Module subscriptions - **Uses Stripe** |
+
+**⚠️ HYBRID BILLING SYSTEM:**
+| Purpose | Provider | Fields |
+|---------|----------|--------|
+| Agency Plans (Pro, Enterprise) | **LemonSqueezy** | `subscriptions.lemonsqueezy_*` |
+| Module Marketplace | **Stripe** | `agencies.stripe_customer_id`, `agency_module_subscriptions.stripe_*` |
 
 ### Blog System
 | Table Name | Description |
@@ -113,12 +118,21 @@ This document contains the **ACTUAL** database table names. Phase documents may 
 
 ## 🔑 Key Field Mappings
 
-### Stripe Integration
+### Billing Integration (HYBRID SYSTEM)
+
+**Agency Plan Subscriptions (LemonSqueezy):**
 ```
-agencies.stripe_customer_id     → Stripe Customer ID
-agencies.stripe_subscription_id → Stripe Subscription ID
-subscriptions.stripe_price_id   → Stripe Price ID
-subscriptions.status            → 'active', 'canceled', 'past_due', etc.
+subscriptions.lemonsqueezy_customer_id      → LemonSqueezy Customer ID
+subscriptions.lemonsqueezy_subscription_id  → LemonSqueezy Subscription ID
+subscriptions.lemonsqueezy_variant_id       → LemonSqueezy Plan Variant
+invoices.lemonsqueezy_order_id              → LemonSqueezy Order ID
+```
+
+**Module Marketplace (Stripe):**
+```
+agencies.stripe_customer_id                         → Stripe Customer ID (for module billing)
+agencies.stripe_subscription_id                     → Legacy/unused
+agency_module_subscriptions.stripe_subscription_id  → Per-module Stripe subscription
 ```
 
 ### Module Pricing (on `modules_v2`)
