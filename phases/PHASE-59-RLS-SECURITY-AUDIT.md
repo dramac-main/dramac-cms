@@ -6,6 +6,12 @@
 >
 > **Estimated Time**: 3-4 hours
 
+> ⚠️ **SCHEMA WARNING**: This phase contains outdated table names!
+> - `module_subscriptions` → Use `agency_module_subscriptions`
+> - `site_modules` → Use `site_module_installations`
+> 
+> **ALWAYS reference [SCHEMA-REFERENCE.md](SCHEMA-REFERENCE.md) before implementing!**
+
 ---
 
 ## 🎯 Objective
