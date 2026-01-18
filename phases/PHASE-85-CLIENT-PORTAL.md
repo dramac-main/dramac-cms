@@ -68,10 +68,15 @@ This phase focuses on **CLIENT USERS** (the "client" role):
 - ✅ `clients` table has `has_portal_access` boolean
 
 **From Phases 81-84 (portal features added):**
-- ✅ `src/app/portal/media/` - Media library view (Phase 81)
 - ✅ `src/app/portal/submissions/` - Form submissions view (Phase 82)
 - ✅ `src/app/portal/blog/` - Blog posts view (Phase 83)
 - ✅ `src/app/portal/seo/` - SEO scores view (Phase 84)
+
+**Portal Media & Invoices (IMPLEMENTED SEPARATELY):**
+- ✅ `src/app/portal/media/` - Media library view (read-only, filtering by client's sites)
+- ✅ `src/app/portal/invoices/` - Invoices & billing history (LemonSqueezy integration)
+- ✅ `src/lib/portal/portal-media-service.ts` - Portal media data access
+- ✅ `src/lib/portal/portal-billing-service.ts` - Portal billing/invoices service
 
 **What's Missing:**
 - Real Supabase Auth for clients (not cookie impersonation)
@@ -79,8 +84,6 @@ This phase focuses on **CLIENT USERS** (the "client" role):
 - Support ticket system
 - Client notifications
 - Proper permission enforcement
-- Billing/invoice viewing
-- Integration with Phase 81-84 portal services
 
 ---
 
@@ -1467,23 +1470,24 @@ export default function VerifyPage() {
 - [ ] Login page (magic link + password)
 - [ ] Magic link verification
 - [ ] Permission-based features
-- [ ] **Integration with Phase 81 (Media)**
-- [ ] **Integration with Phase 82 (Submissions)**
-- [ ] **Integration with Phase 83 (Blog)**
-- [ ] **Integration with Phase 84 (SEO)**
+- [x] **Portal Media Page** - `src/app/portal/media/page.tsx` (read-only media viewer)
+- [x] **Portal Invoices Page** - `src/app/portal/invoices/page.tsx` (LemonSqueezy billing)
+- [x] **Portal Media Service** - `src/lib/portal/portal-media-service.ts`
+- [x] **Portal Billing Service** - `src/lib/portal/portal-billing-service.ts`
+- [ ] **Integration with Phase 82 (Submissions)** - Already exists
+- [ ] **Integration with Phase 83 (Blog)** - Already exists
+- [ ] **Integration with Phase 84 (SEO)** - Already exists
 
 ---
 
 ## 🔐 Portal Features by Phase
 
-| Phase | Portal Route | Client Access |
-|-------|--------------|---------------|
-| 85 | `/portal/` | Dashboard, sites, support |
-| 81 | `/portal/media/` | View media (read-only) |
-| 82 | `/portal/submissions/` | View submissions (read-only) |
-| 83 | `/portal/blog/` | View published posts |
-| 84 | `/portal/seo/` | View SEO scores |
-
----
-
-**Summary**: Phase 85 completes the Client Portal, giving agency clients self-service access to their sites, analytics, and support - reducing agency workload and improving client experience. The portal integrates all features from Phases 81-84 with appropriate read-only access.
+| Phase | Portal Route | Client Access | Status |
+|-------|--------------|---------------|--------|
+| 85 | `/portal/` | Dashboard, sites, support | ✅ Implemented |
+| 85 | `/portal/media/` | View media (read-only) | ✅ Implemented |
+| 85 | `/portal/invoices/` | View invoices (LemonSqueezy) | ✅ Implemented |
+| 82 | `/portal/submissions/` | View submissions (read-only) | ✅ Implemented |
+| 83 | `/portal/blog/` | View published posts | ✅ Implemented |
+| 84 | `/portal/seo/` | View SEO scores | ✅ Implemented |
+| 76B3 | `/portal/apps/` | View installed modules | ✅ Implemented |
