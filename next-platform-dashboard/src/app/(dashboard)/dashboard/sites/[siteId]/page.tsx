@@ -9,7 +9,7 @@ import { SiteBlogTab } from "@/components/sites/site-blog-tab";
 import { SitePublishButton } from "@/components/sites/site-publish-button";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, Settings, ExternalLink } from "lucide-react";
+import { Pencil, Settings, ExternalLink, Search } from "lucide-react";
 
 interface SiteDetailPageProps {
   params: Promise<{ siteId: string }>;
@@ -51,6 +51,12 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
             </Button>
           </a>
         )}
+        <Link href={`/sites/${site.id}/seo`}>
+          <Button variant="outline">
+            <Search className="mr-2 h-4 w-4" />
+            SEO
+          </Button>
+        </Link>
         <Link href={`/dashboard/sites/${site.id}/settings`}>
           <Button variant="outline">
             <Settings className="mr-2 h-4 w-4" />
