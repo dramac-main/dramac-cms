@@ -420,14 +420,14 @@ export async function testRLSPolicies() {
 
 ## ✅ Completion Checklist
 
-- [ ] RLS helper functions created
-- [ ] Core tables have RLS policies (agencies, clients, sites, pages)
-- [ ] Module tables use CORRECT names (modules_v2, site_module_installations)
-- [ ] Activity log uses CORRECT name (activity_log)
-- [ ] Notifications table has RLS
-- [ ] Verified data isolation between agencies
-- [ ] Super admin can access all data
-- [ ] Regular users only see their agency data
+- [x] RLS helper functions created
+- [x] Core tables have RLS policies (agencies, clients, sites, pages)
+- [x] Module tables use CORRECT names (modules_v2, site_module_installations)
+- [x] Activity log uses CORRECT name (activity_log)
+- [x] Notifications table has RLS
+- [x] Verified data isolation between agencies
+- [x] Super admin can access all data
+- [x] Regular users only see their agency data
 
 ---
 
@@ -438,3 +438,4 @@ export async function testRLSPolicies() {
 3. **TEST THOROUGHLY** - RLS bugs can cause data leaks
 4. **DON'T BREAK AUTH** - Profile creation must still work
 5. **SUPER ADMIN** - Must bypass RLS for admin functions
+
