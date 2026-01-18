@@ -45,23 +45,25 @@ export function SiteBlogTab({ siteId }: SiteBlogTabProps) {
     const supabase = createClient();
 
     try {
-      // Get post counts
+      // Get post counts - using any to bypass type issues temporarily
       const [postsResult, publishedResult, draftsResult, categoriesResult] = await Promise.all([
-        supabase.from("blog_posts")
+        (supabase as any).from("blog_posts")
           .select("id", { count: "exact", head: true })
           .eq("site_id", siteId),
-        supabase.from("blog_posts")
+        (supabase as any).from("blog_posts")
           .select("id", { count: "exact", head: true })
           .eq("site_id", siteId)
           .eq("status", "published"),
-        supabase.from("blog_posts")
+        (supabase as any).from("blog_posts")
           .select("id", { count: "exact", head: true })
           .eq("site_id", siteId)
           .eq("status", "draft"),
-        supabase.from("blog_categories")
+        (supabase as any).from("blog_categories")
           .select("id", { count: "exact", head: true })
           .eq("site_id", siteId),
       ]);
+
+      console.log("Blog stats:", { postsResult, publishedResult, draftsResult, categoriesResult });
 
       setStats({
         totalPosts: postsResult.count || 0,
@@ -71,11 +73,17 @@ export function SiteBlogTab({ siteId }: SiteBlogTabProps) {
       });
 
       // Get recent posts
-      const { data: posts } = await supabase.from("blog_posts")
+      const { data: posts, error } = await (supabase as any).from("blog_posts")
         .select("id, title, status, published_at, created_at")
         .eq("site_id", siteId)
         .order("created_at", { ascending: false })
         .limit(5);
+
+      console.log("Recent posts:", { posts, error });
+
+      if (error) {
+        console.error("Error fetching posts:", error);
+      }
 
       setRecentPosts(posts || []);
     } catch (error) {
