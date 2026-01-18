@@ -1,0 +1,381 @@
+"use client";
+
+import { useState } from "react";
+// useRouter removed - not needed
+import { User, Mail, Phone, Building, Key, Bell, Shield } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
+import { updateClientSettings, changePortalPassword } from "@/lib/portal/portal-auth";
+
+interface SettingsFormData {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+}
+
+interface NotificationSettings {
+  emailNotifications: boolean;
+  ticketUpdates: boolean;
+  siteAlerts: boolean;
+  marketingEmails: boolean;
+}
+
+export default function PortalSettingsPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  
+  const [formData, setFormData] = useState<SettingsFormData>({
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+  });
+
+  const [notifications, setNotifications] = useState<NotificationSettings>({
+    emailNotifications: true,
+    ticketUpdates: true,
+    siteAlerts: true,
+    marketingEmails: false,
+  });
+
+  const [passwords, setPasswords] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  // Load user data on mount
+  useState(() => {
+    // In a real app, this would fetch from the server
+    // For now, we'll simulate with placeholder data
+    setFormData({
+      name: "Client User",
+      email: "client@example.com",
+      phone: "",
+      company: "",
+    });
+  });
+
+  async function handleProfileSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const result = await updateClientSettings({
+        name: formData.name,
+        phone: formData.phone,
+      });
+
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Profile updated successfully");
+      }
+    } catch {
+      toast.error("Failed to update profile");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handlePasswordSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (passwords.newPassword.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+
+    setIsPasswordLoading(true);
+
+    try {
+      const result = await changePortalPassword(passwords.newPassword);
+
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Password changed successfully");
+        setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      }
+    } catch {
+      toast.error("Failed to change password");
+    } finally {
+      setIsPasswordLoading(false);
+    }
+  }
+
+  async function handleNotificationChange(key: keyof NotificationSettings, value: boolean) {
+    setNotifications(prev => ({ ...prev, [key]: value }));
+    // In a real app, this would save to the server
+    toast.success("Notification preference updated");
+  }
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold">Settings</h1>
+        <p className="text-muted-foreground mt-1">
+          Manage your account settings and preferences
+        </p>
+      </div>
+
+      {/* Profile Settings */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <User className="h-5 w-5 text-primary" />
+            <CardTitle>Profile Information</CardTitle>
+          </div>
+          <CardDescription>
+            Update your personal information
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleProfileSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Your name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email Address</Label>
+                <div className="relative">
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    disabled
+                    className="pr-10"
+                  />
+                  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Contact support to change your email
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <div className="relative">
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="(555) 123-4567"
+                  />
+                  <Phone className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company">Company Name</Label>
+                <div className="relative">
+                  <Input
+                    id="company"
+                    value={formData.company}
+                    onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                    placeholder="Your company"
+                  />
+                  <Building className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Password Settings */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Key className="h-5 w-5 text-primary" />
+            <CardTitle>Change Password</CardTitle>
+          </div>
+          <CardDescription>
+            Update your account password
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="currentPassword">Current Password</Label>
+              <Input
+                id="currentPassword"
+                type="password"
+                value={passwords.currentPassword}
+                onChange={(e) => setPasswords(prev => ({ ...prev, currentPassword: e.target.value }))}
+                placeholder="Enter current password"
+              />
+            </div>
+
+            <Separator />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={passwords.newPassword}
+                  onChange={(e) => setPasswords(prev => ({ ...prev, newPassword: e.target.value }))}
+                  placeholder="At least 8 characters"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={passwords.confirmPassword}
+                  onChange={(e) => setPasswords(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  placeholder="Confirm new password"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isPasswordLoading}>
+                {isPasswordLoading ? "Changing..." : "Change Password"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Notification Settings */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Bell className="h-5 w-5 text-primary" />
+            <CardTitle>Notification Preferences</CardTitle>
+          </div>
+          <CardDescription>
+            Choose how you want to receive notifications
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Email Notifications</Label>
+              <p className="text-sm text-muted-foreground">
+                Receive important updates via email
+              </p>
+            </div>
+            <Switch
+              checked={notifications.emailNotifications}
+              onCheckedChange={(checked) => handleNotificationChange("emailNotifications", checked)}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Support Ticket Updates</Label>
+              <p className="text-sm text-muted-foreground">
+                Get notified when your support tickets are updated
+              </p>
+            </div>
+            <Switch
+              checked={notifications.ticketUpdates}
+              onCheckedChange={(checked) => handleNotificationChange("ticketUpdates", checked)}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Site Alerts</Label>
+              <p className="text-sm text-muted-foreground">
+                Receive alerts about your website status
+              </p>
+            </div>
+            <Switch
+              checked={notifications.siteAlerts}
+              onCheckedChange={(checked) => handleNotificationChange("siteAlerts", checked)}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Marketing Emails</Label>
+              <p className="text-sm text-muted-foreground">
+                Receive news, tips, and special offers
+              </p>
+            </div>
+            <Switch
+              checked={notifications.marketingEmails}
+              onCheckedChange={(checked) => handleNotificationChange("marketingEmails", checked)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Account Security */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-primary" />
+            <CardTitle>Account Security</CardTitle>
+          </div>
+          <CardDescription>
+            Additional security options for your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <p className="font-medium">Two-Factor Authentication</p>
+              <p className="text-sm text-muted-foreground">
+                Add an extra layer of security to your account
+              </p>
+            </div>
+            <Button variant="outline" disabled>
+              Coming Soon
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <p className="font-medium">Active Sessions</p>
+              <p className="text-sm text-muted-foreground">
+                Manage your active login sessions
+              </p>
+            </div>
+            <Button variant="outline" disabled>
+              View Sessions
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
