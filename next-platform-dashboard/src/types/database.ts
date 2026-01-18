@@ -231,6 +231,15 @@ export type Database = {
           seo_title: string | null;
           seo_description: string | null;
           seo_image: string | null;
+          google_analytics_id: string | null;
+          facebook_pixel_id: string | null;
+          google_site_verification: string | null;
+          bing_site_verification: string | null;
+          twitter_handle: string | null;
+          robots_txt: string | null;
+          sitemap_enabled: boolean;
+          sitemap_changefreq: string | null;
+          sitemap_include_images: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -251,6 +260,15 @@ export type Database = {
           seo_title?: string | null;
           seo_description?: string | null;
           seo_image?: string | null;
+          google_analytics_id?: string | null;
+          facebook_pixel_id?: string | null;
+          google_site_verification?: string | null;
+          bing_site_verification?: string | null;
+          twitter_handle?: string | null;
+          robots_txt?: string | null;
+          sitemap_enabled?: boolean;
+          sitemap_changefreq?: string | null;
+          sitemap_include_images?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -271,6 +289,15 @@ export type Database = {
           seo_title?: string | null;
           seo_description?: string | null;
           seo_image?: string | null;
+          google_analytics_id?: string | null;
+          facebook_pixel_id?: string | null;
+          google_site_verification?: string | null;
+          bing_site_verification?: string | null;
+          twitter_handle?: string | null;
+          robots_txt?: string | null;
+          sitemap_enabled?: boolean;
+          sitemap_changefreq?: string | null;
+          sitemap_include_images?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -298,9 +325,17 @@ export type Database = {
           name: string;
           slug: string;
           is_homepage: boolean;
+          status: "draft" | "published" | "archived";
           seo_title: string | null;
           seo_description: string | null;
+          seo_keywords: string[] | null;
           seo_image: string | null;
+          og_title: string | null;
+          og_description: string | null;
+          og_image_url: string | null;
+          canonical_url: string | null;
+          robots_index: boolean;
+          robots_follow: boolean;
           sort_order: number;
           created_at: string;
           updated_at: string;
@@ -311,9 +346,17 @@ export type Database = {
           name: string;
           slug: string;
           is_homepage?: boolean;
+          status?: "draft" | "published" | "archived";
           seo_title?: string | null;
           seo_description?: string | null;
+          seo_keywords?: string[] | null;
           seo_image?: string | null;
+          og_title?: string | null;
+          og_description?: string | null;
+          og_image_url?: string | null;
+          canonical_url?: string | null;
+          robots_index?: boolean;
+          robots_follow?: boolean;
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
@@ -324,9 +367,17 @@ export type Database = {
           name?: string;
           slug?: string;
           is_homepage?: boolean;
+          status?: "draft" | "published" | "archived";
           seo_title?: string | null;
           seo_description?: string | null;
+          seo_keywords?: string[] | null;
           seo_image?: string | null;
+          og_title?: string | null;
+          og_description?: string | null;
+          og_image_url?: string | null;
+          canonical_url?: string | null;
+          robots_index?: boolean;
+          robots_follow?: boolean;
           sort_order?: number;
           created_at?: string;
           updated_at?: string;
@@ -366,6 +417,125 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "page_content_page_id_fkey";
+            columns: ["page_id"];
+            isOneToOne: false;
+            referencedRelation: "pages";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      site_seo_settings: {
+        Row: {
+          id: string;
+          site_id: string;
+          default_title_template: string | null;
+          default_description: string | null;
+          default_keywords: string[] | null;
+          og_image_url: string | null;
+          twitter_card_type: string | null;
+          twitter_handle: string | null;
+          google_site_verification: string | null;
+          bing_site_verification: string | null;
+          google_analytics_id: string | null;
+          facebook_pixel_id: string | null;
+          robots_index: boolean;
+          robots_follow: boolean;
+          organization_name: string | null;
+          organization_logo_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          default_title_template?: string | null;
+          default_description?: string | null;
+          default_keywords?: string[] | null;
+          og_image_url?: string | null;
+          twitter_card_type?: string | null;
+          twitter_handle?: string | null;
+          google_site_verification?: string | null;
+          bing_site_verification?: string | null;
+          google_analytics_id?: string | null;
+          facebook_pixel_id?: string | null;
+          robots_index?: boolean;
+          robots_follow?: boolean;
+          organization_name?: string | null;
+          organization_logo_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          site_id?: string;
+          default_title_template?: string | null;
+          default_description?: string | null;
+          default_keywords?: string[] | null;
+          og_image_url?: string | null;
+          twitter_card_type?: string | null;
+          twitter_handle?: string | null;
+          google_site_verification?: string | null;
+          bing_site_verification?: string | null;
+          google_analytics_id?: string | null;
+          facebook_pixel_id?: string | null;
+          robots_index?: boolean;
+          robots_follow?: boolean;
+          organization_name?: string | null;
+          organization_logo_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "site_seo_settings_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: true;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      seo_audits: {
+        Row: {
+          id: string;
+          site_id: string;
+          page_id: string | null;
+          score: number;
+          issues: Json;
+          recommendations: Json;
+          last_analyzed: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          site_id: string;
+          page_id?: string | null;
+          score: number;
+          issues?: Json;
+          recommendations?: Json;
+          last_analyzed?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          site_id?: string;
+          page_id?: string | null;
+          score?: number;
+          issues?: Json;
+          recommendations?: Json;
+          last_analyzed?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "seo_audits_site_id_fkey";
+            columns: ["site_id"];
+            isOneToOne: false;
+            referencedRelation: "sites";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "seo_audits_page_id_fkey";
             columns: ["page_id"];
             isOneToOne: false;
             referencedRelation: "pages";
