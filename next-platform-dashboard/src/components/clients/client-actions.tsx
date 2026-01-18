@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Pencil, Trash2, Eye, Globe } from "lucide-react";
+import { MoreHorizontal, Trash2, Eye, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { deleteClientAction } from "@/lib/actions/clients";
 import { Button } from "@/components/ui/button";
@@ -67,11 +67,7 @@ export function ClientActions({ client }: ClientActionsProps) {
             <Eye className="mr-2 h-4 w-4" />
             View Details
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push(`/dashboard/clients/${client.id}/edit`)}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push(`/dashboard/clients/${client.id}/sites`)}>
+          <DropdownMenuItem onClick={() => router.push(`/dashboard/clients/${client.id}?tab=sites`)}>
             <Globe className="mr-2 h-4 w-4" />
             View Sites
           </DropdownMenuItem>

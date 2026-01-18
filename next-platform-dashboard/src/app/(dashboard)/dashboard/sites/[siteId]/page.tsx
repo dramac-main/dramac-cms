@@ -7,12 +7,15 @@ import { SiteOverview } from "@/components/sites/site-overview";
 import { SitePagesList } from "@/components/sites/site-pages-list";
 import { SiteBlogTab } from "@/components/sites/site-blog-tab";
 import { SitePublishButton } from "@/components/sites/site-publish-button";
+import { CloneSiteDialog } from "@/components/sites/clone-site-dialog";
+import { ExportSiteButton } from "@/components/sites/export-site-button";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, Settings, ExternalLink, Search } from "lucide-react";
+import { Pencil, Settings, ExternalLink, Search, Copy } from "lucide-react";
 
 interface SiteDetailPageProps {
   params: Promise<{ siteId: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }
 
 export async function generateMetadata({
@@ -25,9 +28,12 @@ export async function generateMetadata({
   };
 }
 
-export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
+export default async function SiteDetailPage({ params, searchParams }: SiteDetailPageProps) {
   const { siteId } = await params;
+  const { tab } = await searchParams;
   const site = await getSite(siteId).catch(() => null);
+  const validTabs = ["overview", "pages", "blog"];
+  const defaultTab = tab && validTabs.includes(tab) ? tab : "overview";
 
   if (!site) {
     notFound();
@@ -51,7 +57,7 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
             </Button>
           </a>
         )}
-        <Link href={`/sites/${site.id}/seo`}>
+        <Link href={`/dashboard/sites/${site.id}/seo`}>
           <Button variant="outline">
             <Search className="mr-2 h-4 w-4" />
             SEO
@@ -69,10 +75,22 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
             Open Editor
           </Button>
         </Link>
+        <CloneSiteDialog
+          siteId={site.id}
+          siteName={site.name}
+          clientId={site.client_id}
+          agencyId={site.agency_id}
+        >
+          <Button variant="outline">
+            <Copy className="mr-2 h-4 w-4" />
+            Clone
+          </Button>
+        </CloneSiteDialog>
+        <ExportSiteButton siteId={site.id} siteName={site.name} />
         <SitePublishButton site={site} />
       </PageHeader>
 
-      <Tabs defaultValue="overview" className="space-y-4">
+      <Tabs defaultValue={defaultTab} className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="pages">Pages ({site.pages?.length || 0})</TabsTrigger>

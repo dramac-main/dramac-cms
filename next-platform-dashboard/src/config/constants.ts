@@ -50,10 +50,10 @@ export const PLANS = {
 
 export const NAV_ITEMS = [
   { title: "Dashboard", href: "/dashboard", icon: "layout-dashboard" },
-  { title: "Clients", href: "/clients", icon: "users" },
-  { title: "Sites", href: "/sites", icon: "globe" },
-  { title: "Modules", href: "/modules", icon: "puzzle" },
-  { title: "Billing", href: "/billing", icon: "credit-card" },
+  { title: "Clients", href: "/dashboard/clients", icon: "users" },
+  { title: "Sites", href: "/dashboard/sites", icon: "globe" },
+  { title: "Modules", href: "/dashboard/modules/subscriptions", icon: "puzzle" },
+  { title: "Billing", href: "/dashboard/billing", icon: "credit-card" },
   { title: "Settings", href: "/settings", icon: "settings" },
 ] as const;
 

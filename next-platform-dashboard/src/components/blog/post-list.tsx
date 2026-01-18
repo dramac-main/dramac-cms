@@ -140,7 +140,7 @@ export function PostList({
       <div className="py-16 text-center">
         <p className="text-muted-foreground mb-4">No posts found</p>
         <Button asChild>
-          <Link href={`/sites/${siteId}/blog/new`}>Create your first post</Link>
+          <Link href={`/dashboard/sites/${siteId}/blog/new`}>Create your first post</Link>
         </Button>
       </div>
     );
@@ -186,7 +186,7 @@ export function PostList({
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <Link
-                    href={`/sites/${siteId}/blog/${post.id}`}
+                    href={`/dashboard/sites/${siteId}/blog/${post.id}`}
                     className="font-medium hover:text-primary transition-colors line-clamp-1"
                   >
                     {post.title}
@@ -292,7 +292,7 @@ export function PostList({
                 <DropdownMenuContent align="end">
                   {canEdit && (
                     <DropdownMenuItem asChild>
-                      <Link href={`/sites/${siteId}/blog/${post.id}`}>
+                      <Link href={`/dashboard/sites/${siteId}/blog/${post.id}`}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
                       </Link>
@@ -302,7 +302,7 @@ export function PostList({
                   {post.status === "published" && (
                     <DropdownMenuItem asChild>
                       <a 
-                        href={`/sites/${siteId}/preview/blog/${post.slug}`} 
+                        href={`/dashboard/sites/${siteId}/preview/blog/${post.slug}`} 
                         target="_blank"
                         rel="noopener noreferrer"
                       >

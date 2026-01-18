@@ -176,7 +176,7 @@ export function PostForm({ siteId, post, canPublish = true }: PostFormProps) {
         );
         
         if (!post && result.postId) {
-          router.push(`/sites/${siteId}/blog/${result.postId}`);
+          router.push(`/dashboard/sites/${siteId}/blog/${result.postId}`);
         } else {
           router.refresh();
         }
@@ -211,7 +211,7 @@ export function PostForm({ siteId, post, canPublish = true }: PostFormProps) {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => router.push(`/sites/${siteId}/blog`)}
+              onClick={() => router.push(`/dashboard/sites/${siteId}/blog`)}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Posts

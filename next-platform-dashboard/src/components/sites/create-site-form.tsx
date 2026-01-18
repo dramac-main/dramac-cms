@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { getSiteUrl, getSiteDomain, getBaseDomain } from "@/lib/utils/site-url";
-import { Loader2, Sparkles, PenTool, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Loader2, Sparkles, PenTool, CheckCircle2, XCircle, AlertCircle, Upload } from "lucide-react";
 import { createSiteAction, checkSubdomain } from "@/lib/actions/sites";
 import { toast } from "sonner";
 import {
@@ -31,6 +31,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "@/hooks/use-debounce";
+import { ImportSiteDialog } from "./import-site-dialog";
 import type { Client } from "@/types/client";
 
 const createSiteFormSchema = z.object({
@@ -343,6 +344,17 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
           >
             Cancel
           </Button>
+          {form.watch("client_id") && (
+            <ImportSiteDialog 
+              clientId={form.watch("client_id")}
+              trigger={
+                <Button type="button" variant="outline">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import from File
+                </Button>
+              }
+            />
+          )}
           <Button type="submit" disabled={isPending || subdomainStatus === "taken" || clients.length === 0}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create Site

@@ -24,7 +24,7 @@ export function TemplateGalleryPage() {
       description: "Create a new site to use this template",
       action: {
         label: "Create Site",
-        onClick: () => router.push(`/sites/new?template=${template.id}`),
+        onClick: () => router.push(`/dashboard/sites/new?template=${template.id}`),
       },
     });
   };

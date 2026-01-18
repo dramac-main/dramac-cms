@@ -6,12 +6,14 @@ import { PageHeader } from "@/components/layout/page-header";
 import { SiteSettingsForm } from "@/components/sites/site-settings-form";
 import { SiteDangerZone } from "@/components/sites/site-danger-zone";
 import { SiteModulesTab } from "@/components/sites/site-modules-tab";
+import { BackupList } from "@/components/sites/backup-list";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft } from "lucide-react";
 
 interface SiteSettingsPageProps {
   params: Promise<{ siteId: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }
 
 export async function generateMetadata({
@@ -24,9 +26,12 @@ export async function generateMetadata({
   };
 }
 
-export default async function SiteSettingsPage({ params }: SiteSettingsPageProps) {
+export default async function SiteSettingsPage({ params, searchParams }: SiteSettingsPageProps) {
   const { siteId } = await params;
+  const { tab } = await searchParams;
   const site = await getSite(siteId).catch(() => null);
+  const validTabs = ["general", "domains", "seo", "modules", "backups", "danger"];
+  const defaultTab = tab && validTabs.includes(tab) ? tab : "general";
 
   if (!site) {
     notFound();
@@ -48,12 +53,13 @@ export default async function SiteSettingsPage({ params }: SiteSettingsPageProps
         description={`Configure settings for ${site.name}`}
       />
 
-      <Tabs defaultValue="general" className="space-y-6">
+      <Tabs defaultValue={defaultTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="domains">Domains</TabsTrigger>
           <TabsTrigger value="seo">SEO</TabsTrigger>
           <TabsTrigger value="modules">Modules</TabsTrigger>
+          <TabsTrigger value="backups">Backups</TabsTrigger>
           <TabsTrigger value="danger">Danger Zone</TabsTrigger>
         </TabsList>
 
@@ -71,6 +77,10 @@ export default async function SiteSettingsPage({ params }: SiteSettingsPageProps
 
         <TabsContent value="modules">
           <SiteModulesTab siteId={site.id} />
+        </TabsContent>
+
+        <TabsContent value="backups">
+          <BackupList siteId={site.id} />
         </TabsContent>
 
         <TabsContent value="danger">

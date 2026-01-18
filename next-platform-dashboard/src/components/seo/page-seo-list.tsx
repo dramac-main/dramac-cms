@@ -129,7 +129,7 @@ export function PageSeoList({
                       asChild
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Link href={`/sites/${siteId}/seo/pages?page=${page.pageId}`}>
+                      <Link href={`/dashboard/sites/${siteId}/seo/pages?page=${page.pageId}`}>
                         Edit
                       </Link>
                     </Button>
@@ -172,7 +172,7 @@ export function CompactPageSeoList({
         return (
           <Link
             key={page.pageId}
-            href={`/sites/${siteId}/seo/pages?page=${page.pageId}`}
+            href={`/dashboard/sites/${siteId}/seo/pages?page=${page.pageId}`}
             className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center gap-3">
@@ -197,7 +197,7 @@ export function CompactPageSeoList({
 
       {pages.length > maxItems && (
         <Button variant="outline" className="w-full" asChild>
-          <Link href={`/sites/${siteId}/seo/pages`}>
+          <Link href={`/dashboard/sites/${siteId}/seo/pages`}>
             View all {pages.length} pages
           </Link>
         </Button>

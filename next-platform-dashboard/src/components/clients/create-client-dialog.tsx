@@ -34,10 +34,11 @@ import {
 
 interface CreateClientDialogProps {
   children: React.ReactNode;
+  defaultOpen?: boolean;
 }
 
-export function CreateClientDialog({ children }: CreateClientDialogProps) {
-  const [open, setOpen] = useState(false);
+export function CreateClientDialog({ children, defaultOpen = false }: CreateClientDialogProps) {
+  const [open, setOpen] = useState(defaultOpen);
   const [isPending, setIsPending] = useState(false);
 
   const form = useForm<CreateClientFormData>({

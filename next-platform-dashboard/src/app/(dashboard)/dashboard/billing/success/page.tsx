@@ -31,7 +31,7 @@ export default function BillingSuccessPage() {
               </Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
-              <Link href="/sites/new">
+              <Link href="/dashboard/sites/new">
                 <Sparkles className="w-4 h-4 mr-2" />
                 Create Your First Site
               </Link>

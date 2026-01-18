@@ -99,7 +99,7 @@ export function SiteBlogTab({ siteId }: SiteBlogTabProps) {
             <CardTitle>Recent Posts</CardTitle>
             <CardDescription>Your latest blog posts</CardDescription>
           </div>
-          <Link href={`/sites/${siteId}/blog/new`}>
+          <Link href={`/dashboard/sites/${siteId}/blog/new`}>
             <Button size="sm">
               <Plus className="h-4 w-4 mr-2" />
               New Post
@@ -114,7 +114,7 @@ export function SiteBlogTab({ siteId }: SiteBlogTabProps) {
               <p className="text-sm text-muted-foreground mb-4">
                 Create your first blog post to get started
               </p>
-              <Link href={`/sites/${siteId}/blog/new`}>
+              <Link href={`/dashboard/sites/${siteId}/blog/new`}>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   Create Your First Post
@@ -126,7 +126,7 @@ export function SiteBlogTab({ siteId }: SiteBlogTabProps) {
               {recentPosts.map((post) => (
                 <Link
                   key={post.id}
-                  href={`/sites/${siteId}/blog/${post.id}`}
+                  href={`/dashboard/sites/${siteId}/blog/${post.id}`}
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -146,7 +146,7 @@ export function SiteBlogTab({ siteId }: SiteBlogTabProps) {
                 </Link>
               ))}
               
-              <Link href={`/sites/${siteId}/blog`}>
+              <Link href={`/dashboard/sites/${siteId}/blog`}>
                 <Button variant="ghost" className="w-full">
                   View All Posts
                   <ArrowRight className="h-4 w-4 ml-2" />
@@ -215,7 +215,7 @@ export function SiteBlogTab({ siteId }: SiteBlogTabProps) {
           </CardContent>
         </Card>
 
-        <Link href={`/sites/${siteId}/blog/categories`}>
+        <Link href={`/dashboard/sites/${siteId}/blog/categories`}>
           <Button variant="outline" className="w-full">
             Manage Categories
             <ArrowRight className="h-4 w-4 ml-2" />

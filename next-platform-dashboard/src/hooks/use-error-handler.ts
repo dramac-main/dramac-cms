@@ -135,7 +135,7 @@ export function useErrorHandler(options: UseErrorHandlerOptions = {}): UseErrorH
       if (isAuthError(err)) {
         showAuthErrorToast(() => {
           if (redirectOnAuth) {
-            router.push("/auth/signin");
+            router.push("/login");
           }
         });
       } else if (isValidationError(err)) {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useNode } from "@craftjs/core";
+import { useNode, useEditor } from "@craftjs/core";
+import { useParams } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -17,14 +18,68 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { RegenerateButton } from "../ai/regenerate-button";
+import type { SectionContent } from "@/lib/ai/regeneration-types";
+import { Separator } from "@/components/ui/separator";
 
 export function SectionSettings() {
-  const { actions: { setProp }, props } = useNode((node) => ({
+  const params = useParams();
+  const siteId = params?.siteId as string;
+  
+  const { actions: { setProp }, props, id } = useNode((node) => ({
     props: node.data.props,
+    id: node.id,
   }));
+  
+  const { query } = useEditor();
+
+  // Extract section content for AI regeneration
+  const getSectionContent = (): SectionContent => {
+    try {
+      // Get the node's serialized state which includes children
+      const nodeTree = query.node(id).toSerializedNode();
+      return {
+        type: "section",
+        props: nodeTree.props,
+        // Include any text content from the node
+        text: nodeTree.displayName || "Section",
+      };
+    } catch {
+      return {
+        type: "section",
+        props: props,
+      };
+    }
+  };
+
+  // Handle regeneration - update the section's content
+  const handleRegenerate = (newContent: SectionContent) => {
+    if (newContent.props) {
+      Object.entries(newContent.props).forEach(([key, value]) => {
+        setProp((props: Record<string, unknown>) => {
+          props[key] = value;
+        });
+      });
+    }
+  };
 
   return (
     <div className="space-y-4">
+      {/* AI Section Regeneration */}
+      {siteId && (
+        <>
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-medium">AI Tools</Label>
+            <RegenerateButton
+              sectionContent={getSectionContent()}
+              siteId={siteId}
+              onRegenerate={handleRegenerate}
+            />
+          </div>
+          <Separator />
+        </>
+      )}
+      
       <Accordion type="multiple" defaultValue={["layout", "background", "spacing"]}>
         {/* Layout */}
         <AccordionItem value="layout">

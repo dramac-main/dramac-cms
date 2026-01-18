@@ -11,6 +11,7 @@ import { EditorCanvas } from "./canvas";
 import { SettingsPanel } from "./settings-panel";
 import { PreviewFrame } from "./preview-frame";
 import { PreviewPanel } from "./preview-panel";
+import { MobileToolbar, MobileComponentSheet, MobileSettingsSheet } from "./responsive";
 import { savePageContentAction } from "@/lib/actions/pages";
 import { useEditorShortcuts } from "@/hooks/use-editor-shortcuts";
 import { usePreview } from "@/lib/preview/use-preview";
@@ -97,6 +98,10 @@ function EditorContent({
 }: EditorContentProps) {
   const { actions, query } = useEditor();
   const initialized = useRef(false);
+
+  // Mobile sheet states
+  const [showMobileComponents, setShowMobileComponents] = useState(false);
+  const [showMobileSettings, setShowMobileSettings] = useState(false);
 
   // Preview state management
   const {
@@ -268,6 +273,42 @@ function EditorContent({
         refreshKey={previewKey}
         onRefresh={refreshPreview}
       />
+
+      {/* Mobile Toolbar - auto-shows on touch devices */}
+      <MobileToolbar
+        onAddComponent={() => setShowMobileComponents(true)}
+        onUndo={() => actions.history.undo()}
+        onRedo={() => actions.history.redo()}
+        onPreview={togglePreviewMode}
+        onSave={handleSave}
+        onSettings={() => setShowMobileSettings(true)}
+        onDeviceChange={(d) => setDevice(d as "mobile" | "tablet" | "desktop" | "full")}
+        currentDevice={device}
+        canUndo={query.history.canUndo()}
+        canRedo={query.history.canRedo()}
+        isSaving={isSaving}
+        hasChanges={hasChanges}
+      />
+
+      {/* Mobile Component Sheet */}
+      <MobileComponentSheet
+        open={showMobileComponents}
+        onOpenChange={setShowMobileComponents}
+        components={[]}
+        onSelect={() => {
+          // Component will be handled by drag-drop in toolbox
+          setShowMobileComponents(false);
+        }}
+      />
+
+      {/* Mobile Settings Sheet */}
+      <MobileSettingsSheet
+        open={showMobileSettings}
+        onOpenChange={setShowMobileSettings}
+        title="Component Settings"
+      >
+        <SettingsPanel />
+      </MobileSettingsSheet>
     </div>
   );
 }

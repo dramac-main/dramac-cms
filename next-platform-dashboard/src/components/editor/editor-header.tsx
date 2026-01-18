@@ -192,11 +192,11 @@ export function EditorHeader({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={() => router.push(`/dashboard/sites/${siteId}/pages`)}>
+            <DropdownMenuItem onClick={() => router.push(`/dashboard/sites/${siteId}?tab=pages`)}>
               <FileText className="h-4 w-4 mr-2" />
               All Pages
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push(`/dashboard/sites/${siteId}/pages/${pageId}`)}>
+            <DropdownMenuItem onClick={() => router.push(`/dashboard/sites/${siteId}?tab=pages&edit=${pageId}`)}>
               <Layout className="h-4 w-4 mr-2" />
               Page Settings
             </DropdownMenuItem>

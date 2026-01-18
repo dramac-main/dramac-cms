@@ -20,6 +20,7 @@ interface ClientsPageProps {
     status?: string;
     sortBy?: string;
     sortOrder?: string;
+    create?: string;
   }>;
 }
 
@@ -51,6 +52,7 @@ function parseFilters(params: {
 export default async function ClientsPage({ searchParams }: ClientsPageProps) {
   const params = await searchParams;
   const filters = parseFilters(params);
+  const autoOpenCreate = params.create === "true";
 
   return (
     <div>
@@ -58,7 +60,7 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
         title="Clients"
         description="Manage your client accounts and their websites."
       >
-        <CreateClientDialog>
+        <CreateClientDialog defaultOpen={autoOpenCreate}>
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Add Client

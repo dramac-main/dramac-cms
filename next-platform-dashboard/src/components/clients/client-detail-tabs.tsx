@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientOverview } from "./client-overview";
 import { ClientSitesList } from "./client-sites-list";
@@ -18,8 +19,13 @@ interface ClientDetailTabsProps {
 }
 
 export function ClientDetailTabs({ client }: ClientDetailTabsProps) {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const validTabs = ["overview", "sites", "portal", "activity", "danger"];
+  const defaultTab = tabParam && validTabs.includes(tabParam) ? tabParam : "overview";
+
   return (
-    <Tabs defaultValue="overview" className="space-y-6">
+    <Tabs defaultValue={defaultTab} className="space-y-6">
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="sites">Sites ({client.sites?.length || 0})</TabsTrigger>

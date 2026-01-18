@@ -25,7 +25,7 @@ export default async function RequestDetailPage({ params }: PageProps) {
   
   // Verify super admin
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  if (!user) redirect("/login");
   
   const { data: profile } = await supabase
     .from("profiles")

@@ -56,7 +56,7 @@ export default function NotFound() {
             Sites
           </Link>
           <Link 
-            href="/dashboard/settings" 
+            href="/settings" 
             className="text-primary hover:underline"
           >
             Settings
