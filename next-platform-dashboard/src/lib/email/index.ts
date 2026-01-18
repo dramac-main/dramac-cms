@@ -25,7 +25,15 @@ export type {
 export { isValidEmailType } from "./email-types";
 
 // Client
-export { resend, getResend, EMAIL_FROM, EMAIL_REPLY_TO, isEmailEnabled } from "./resend-client";
+export { 
+  resend, 
+  getResend, 
+  getEmailFrom, 
+  getEmailReplyTo, 
+  EMAIL_FROM, 
+  EMAIL_REPLY_TO, 
+  isEmailEnabled 
+} from "./resend-client";
 
 // Templates
 export { EMAIL_TEMPLATES } from "./templates";

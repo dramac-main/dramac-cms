@@ -5,7 +5,7 @@
  * Handles template rendering, recipient formatting, and error handling.
  */
 
-import { resend, EMAIL_FROM, EMAIL_REPLY_TO, isEmailEnabled } from "./resend-client";
+import { resend, getEmailFrom, getEmailReplyTo, isEmailEnabled } from "./resend-client";
 import { EMAIL_TEMPLATES } from "./templates";
 import type { SendEmailOptions, EmailResult, EmailRecipient } from "./email-types";
 
@@ -53,12 +53,15 @@ export async function sendEmail(options: SendEmailOptions): Promise<EmailResult>
   const text = template.text(options.data);
 
   try {
+    const emailFrom = getEmailFrom();
+    const emailReplyTo = getEmailReplyTo();
+    
     console.log(`[Email] Sending ${options.type} email to ${toEmails.join(", ")}`);
     
     const { data, error } = await resend.emails.send({
-      from: EMAIL_FROM,
+      from: emailFrom,
       to: toEmails,
-      replyTo: EMAIL_REPLY_TO,
+      replyTo: emailReplyTo,
       subject,
       html,
       text,

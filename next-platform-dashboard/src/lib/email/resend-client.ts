@@ -47,5 +47,14 @@ export const resend = {
 };
 
 // Email configuration
+export function getEmailFrom(): string {
+  return process.env.EMAIL_FROM || "Dramac <noreply@dramac.app>";
+}
+
+export function getEmailReplyTo(): string {
+  return process.env.EMAIL_REPLY_TO || "support@dramac.app>";
+}
+
+// Legacy exports (deprecated - use get functions instead)
 export const EMAIL_FROM = process.env.EMAIL_FROM || "Dramac <noreply@dramac.app>";
-export const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || "support@dramac.app";
+export const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || "support@dramac.app>";
