@@ -2,6 +2,13 @@ import { anthropic, DEFAULT_MODEL, GENERATION_CONFIG } from "./config";
 import { buildSystemPrompt, buildUserPrompt, GenerationContext } from "./prompts";
 import { checkPromptSafety, sanitizeGeneratedContent } from "./safety";
 import { checkRateLimit, recordRateLimitedAction } from "@/lib/rate-limit";
+import {
+  checkContent,
+  sanitizeHtml,
+  sanitizePrompt,
+  getHighestSeverity,
+  type ContentCheckResult,
+} from "@/lib/safety";
 
 export interface GeneratedWebsite {
   metadata: {
@@ -24,6 +31,7 @@ export interface GenerationResult {
   website?: GeneratedWebsite;
   error?: string;
   tokensUsed?: number;
+  safetyCheck?: ContentCheckResult;
 }
 
 /**
@@ -44,15 +52,37 @@ export async function generateWebsite(
     }
   }
 
-  // 2. Check content safety
+  // 2. Check content safety with both legacy and new safety systems
   const promptText = `${context.businessDescription} ${context.industry?.name || ""} ${context.targetAudience || ""}`;
-  const safetyCheck = checkPromptSafety(promptText);
   
-  if (!safetyCheck.isAllowed) {
+  // Legacy check (maintains backward compatibility)
+  const legacySafetyCheck = checkPromptSafety(promptText);
+  if (!legacySafetyCheck.isAllowed) {
     return {
       success: false,
-      error: `Content not allowed: ${safetyCheck.reason}`,
+      error: `Content not allowed: ${legacySafetyCheck.reason}`,
     };
+  }
+
+  // New comprehensive safety check
+  const promptSanitization = sanitizePrompt(promptText);
+  const inputSafetyCheck = checkContent(promptSanitization.sanitized, {
+    enabledCategories: ["violence", "hate_speech", "sexual", "self_harm", "illegal", "spam", "malware", "phishing"],
+    severityThreshold: "medium",
+    logViolations: true,
+    autoSanitize: false,
+    includeContext: false,
+  });
+
+  if (!inputSafetyCheck.safe) {
+    const highestSeverity = getHighestSeverity(inputSafetyCheck.violations);
+    if (highestSeverity === "critical" || highestSeverity === "high") {
+      return {
+        success: false,
+        error: "Content request flagged for safety review",
+        safetyCheck: inputSafetyCheck,
+      };
+    }
   }
 
   try {
@@ -85,9 +115,31 @@ export async function generateWebsite(
       throw new Error("Invalid website structure");
     }
 
-    // 3. Sanitize output
-    const sanitizedContent = sanitizeGeneratedContent(JSON.stringify(rawWebsite));
-    const website = JSON.parse(sanitizedContent) as GeneratedWebsite;
+    // 3. Sanitize output with both legacy and new systems
+    const legacySanitized = sanitizeGeneratedContent(JSON.stringify(rawWebsite));
+    let website = JSON.parse(legacySanitized) as GeneratedWebsite;
+
+    // Additional HTML sanitization for any text fields
+    if (website.metadata.title) {
+      website.metadata.title = sanitizeHtml(website.metadata.title);
+    }
+    if (website.metadata.description) {
+      website.metadata.description = sanitizeHtml(website.metadata.description);
+    }
+
+    // Check output safety
+    const outputText = JSON.stringify(website);
+    const outputSafetyCheck = checkContent(outputText, {
+      enabledCategories: ["violence", "hate_speech", "sexual", "self_harm", "illegal", "malware", "phishing"],
+      severityThreshold: "medium",
+      logViolations: true,
+      autoSanitize: true,
+      includeContext: false,
+    });
+
+    if (!outputSafetyCheck.safe) {
+      console.warn("AI output flagged for safety:", outputSafetyCheck.violations);
+    }
 
     const tokensUsed = (response.usage?.input_tokens || 0) + (response.usage?.output_tokens || 0);
 
@@ -103,6 +155,7 @@ export async function generateWebsite(
       success: true,
       website,
       tokensUsed,
+      safetyCheck: outputSafetyCheck,
     };
   } catch (error) {
     console.error("Generation error:", error);
