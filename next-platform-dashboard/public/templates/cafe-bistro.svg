@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" fill="#fef3c7"/>
+  <!-- Header -->
+  <rect x="0" y="0" width="400" height="50" fill="#78350f"/>
+  <text x="30" y="32" font-family="system-ui" font-size="18" font-weight="bold" fill="white">☕ Café & Bistro</text>
+  <!-- Hero with coffee cup -->
+  <circle cx="100" cy="120" r="50" fill="#92400e" opacity="0.3"/>
+  <circle cx="100" cy="120" r="35" fill="#78350f" opacity="0.5"/>
+  <text x="85" y="128" font-family="system-ui" font-size="24" fill="white">☕</text>
+  <!-- Menu items -->
+  <rect x="170" y="80" width="210" height="30" rx="4" fill="white" stroke="#92400e"/>
+  <rect x="180" y="88" width="80" height="6" rx="2" fill="#78350f"/>
+  <rect x="340" y="88" width="30" height="6" rx="2" fill="#92400e"/>
+  <rect x="170" y="120" width="210" height="30" rx="4" fill="white" stroke="#92400e"/>
+  <rect x="180" y="128" width="70" height="6" rx="2" fill="#78350f"/>
+  <rect x="340" y="128" width="30" height="6" rx="2" fill="#92400e"/>
+  <rect x="170" y="160" width="210" height="30" rx="4" fill="white" stroke="#92400e"/>
+  <rect x="180" y="168" width="90" height="6" rx="2" fill="#78350f"/>
+  <rect x="340" y="168" width="30" height="6" rx="2" fill="#92400e"/>
+  <!-- Daily specials banner -->
+  <rect x="20" y="210" width="360" height="35" rx="6" fill="#78350f"/>
+  <text x="130" y="233" font-family="system-ui" font-size="12" font-weight="bold" fill="white">✨ Daily Specials</text>
+  <!-- Footer -->
+  <rect x="0" y="260" width="400" height="40" fill="#92400e" opacity="0.2"/>
+  <rect x="160" y="275" width="80" height="8" rx="4" fill="#78350f" opacity="0.5"/>
+</svg>

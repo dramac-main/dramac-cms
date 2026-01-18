@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" fill="#faf5ff"/>
+  <!-- Header -->
+  <rect x="0" y="0" width="400" height="50" fill="#7c3aed"/>
+  <text x="30" y="32" font-family="system-ui" font-size="18" font-weight="bold" fill="white">💼 Digital Agency</text>
+  <!-- Hero content -->
+  <rect x="30" y="75" width="180" height="14" rx="3" fill="#1e1e1e"/>
+  <rect x="30" y="97" width="160" height="8" rx="2" fill="#1e1e1e" opacity="0.4"/>
+  <rect x="30" y="120" width="100" height="32" rx="6" fill="#7c3aed"/>
+  <text x="45" y="140" font-family="system-ui" font-size="10" font-weight="bold" fill="white">Our Work</text>
+  <!-- Portfolio showcase -->
+  <rect x="240" y="70" width="130" height="90" rx="8" fill="#a855f7" opacity="0.3"/>
+  <rect x="250" y="80" width="50" height="35" rx="4" fill="white" opacity="0.8"/>
+  <rect x="310" y="80" width="50" height="35" rx="4" fill="white" opacity="0.8"/>
+  <rect x="250" y="120" width="110" height="30" rx="4" fill="white" opacity="0.8"/>
+  <!-- Services -->
+  <rect x="30" y="170" width="340" height="50" rx="6" fill="white" stroke="#a855f7"/>
+  <rect x="50" y="185" width="60" height="6" rx="2" fill="#7c3aed"/>
+  <rect x="130" y="185" width="60" height="6" rx="2" fill="#7c3aed"/>
+  <rect x="210" y="185" width="60" height="6" rx="2" fill="#7c3aed"/>
+  <rect x="290" y="185" width="60" height="6" rx="2" fill="#7c3aed"/>
+  <!-- Team -->
+  <rect x="30" y="235" width="340" height="50" rx="6" fill="#7c3aed" opacity="0.1"/>
+  <text x="45" y="255" font-family="system-ui" font-size="10" fill="#7c3aed">Our Team</text>
+  <circle cx="120" cy="262" r="14" fill="#7c3aed" opacity="0.4"/>
+  <circle cx="170" cy="262" r="14" fill="#a855f7" opacity="0.4"/>
+  <circle cx="220" cy="262" r="14" fill="#7c3aed" opacity="0.4"/>
+  <circle cx="270" cy="262" r="14" fill="#a855f7" opacity="0.4"/>
+</svg>

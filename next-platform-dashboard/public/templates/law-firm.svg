@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" fill="#f8fafc"/>
+  <!-- Header -->
+  <rect x="0" y="0" width="400" height="50" fill="#1e3a5f"/>
+  <text x="30" y="32" font-family="system-ui" font-size="18" font-weight="bold" fill="white">⚖️ Law Firm</text>
+  <!-- Scales of justice icon area -->
+  <rect x="250" y="70" width="120" height="90" rx="8" fill="#1e3a5f" opacity="0.1"/>
+  <text x="290" y="125" font-family="system-ui" font-size="36" fill="#1e3a5f" opacity="0.6">⚖️</text>
+  <!-- Hero content -->
+  <rect x="30" y="80" width="200" height="14" rx="3" fill="#1e3a5f"/>
+  <rect x="30" y="102" width="180" height="8" rx="2" fill="#1e1e1e" opacity="0.4"/>
+  <rect x="30" y="125" width="140" height="32" rx="6" fill="#ca8a04"/>
+  <text x="45" y="145" font-family="system-ui" font-size="10" font-weight="bold" fill="white">Free Consultation</text>
+  <!-- Practice areas -->
+  <rect x="30" y="175" width="105" height="50" rx="6" fill="white" stroke="#1e3a5f"/>
+  <rect x="45" y="190" width="75" height="6" rx="2" fill="#1e3a5f"/>
+  <rect x="45" y="203" width="50" height="4" rx="1" fill="#1e1e1e" opacity="0.3"/>
+  <rect x="147" y="175" width="105" height="50" rx="6" fill="white" stroke="#1e3a5f"/>
+  <rect x="162" y="190" width="75" height="6" rx="2" fill="#1e3a5f"/>
+  <rect x="162" y="203" width="50" height="4" rx="1" fill="#1e1e1e" opacity="0.3"/>
+  <rect x="264" y="175" width="105" height="50" rx="6" fill="white" stroke="#1e3a5f"/>
+  <rect x="279" y="190" width="75" height="6" rx="2" fill="#1e3a5f"/>
+  <rect x="279" y="203" width="50" height="4" rx="1" fill="#1e1e1e" opacity="0.3"/>
+  <!-- Attorneys -->
+  <rect x="30" y="240" width="340" height="45" rx="6" fill="#1e3a5f" opacity="0.1"/>
+  <text x="45" y="258" font-family="system-ui" font-size="10" fill="#1e3a5f">Our Attorneys</text>
+  <circle cx="140" cy="262" r="10" fill="#1e3a5f" opacity="0.4"/>
+  <circle cx="175" cy="262" r="10" fill="#ca8a04" opacity="0.4"/>
+  <circle cx="210" cy="262" r="10" fill="#1e3a5f" opacity="0.4"/>
+</svg>

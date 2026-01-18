@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <rect width="400" height="300" fill="#f0fdf4"/>
+  <!-- Header -->
+  <rect x="0" y="0" width="400" height="50" fill="#6366f1"/>
+  <text x="30" y="32" font-family="system-ui" font-size="18" font-weight="bold" fill="white">💻 Tech Startup</text>
+  <!-- Hero -->
+  <rect x="30" y="70" width="180" height="14" rx="3" fill="#1e1e1e"/>
+  <rect x="30" y="92" width="140" height="8" rx="2" fill="#1e1e1e" opacity="0.4"/>
+  <rect x="30" y="115" width="100" height="30" rx="6" fill="#22c55e"/>
+  <text x="50" y="135" font-family="system-ui" font-size="11" font-weight="bold" fill="white">Get Started</text>
+  <!-- Feature cards -->
+  <rect x="30" y="160" width="105" height="60" rx="6" fill="white" stroke="#6366f1"/>
+  <rect x="45" y="175" width="75" height="6" rx="2" fill="#6366f1"/>
+  <rect x="45" y="188" width="60" height="4" rx="1" fill="#1e1e1e" opacity="0.3"/>
+  <rect x="147" y="160" width="105" height="60" rx="6" fill="white" stroke="#6366f1"/>
+  <rect x="162" y="175" width="75" height="6" rx="2" fill="#6366f1"/>
+  <rect x="162" y="188" width="60" height="4" rx="1" fill="#1e1e1e" opacity="0.3"/>
+  <rect x="264" y="160" width="105" height="60" rx="6" fill="white" stroke="#6366f1"/>
+  <rect x="279" y="175" width="75" height="6" rx="2" fill="#6366f1"/>
+  <rect x="279" y="188" width="60" height="4" rx="1" fill="#1e1e1e" opacity="0.3"/>
+  <!-- Pricing -->
+  <rect x="30" y="235" width="340" height="45" rx="6" fill="#6366f1" opacity="0.1"/>
+  <rect x="50" y="250" width="60" height="8" rx="2" fill="#6366f1"/>
+  <rect x="170" y="250" width="60" height="8" rx="2" fill="#22c55e"/>
+  <rect x="290" y="250" width="60" height="8" rx="2" fill="#6366f1"/>
+</svg>
