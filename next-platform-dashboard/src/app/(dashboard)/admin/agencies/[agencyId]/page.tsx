@@ -287,7 +287,7 @@ export default async function AgencyDetailPage({ params }: AgencyDetailPageProps
                       <Badge variant="secondary">{member.role}</Badge>
                     </TableCell>
                     <TableCell>
-                      {format(new Date(member.invited_at), "MMM d, yyyy")}
+                      {member.invited_at ? format(new Date(member.invited_at), "MMM d, yyyy") : "N/A"}
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm" asChild>
