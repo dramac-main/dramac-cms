@@ -10,3 +10,4 @@ export {
   QuickSeoAnalysis 
 } from "./seo-score";
 export { PageSeoList, CompactPageSeoList } from "./page-seo-list";
+export { SitemapPreview } from "./sitemap-preview";
