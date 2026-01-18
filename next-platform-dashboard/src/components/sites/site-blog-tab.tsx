@@ -17,13 +17,6 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { format } from "date-fns";
 
-// Helper to access blog tables that aren't in generated types yet
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function fromTable(supabase: ReturnType<typeof createClient>, tableName: string): any {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (supabase as any).from(tableName);
-}
-
 interface SiteBlogTabProps {
   siteId: string;
 }
@@ -54,18 +47,18 @@ export function SiteBlogTab({ siteId }: SiteBlogTabProps) {
     try {
       // Get post counts
       const [postsResult, publishedResult, draftsResult, categoriesResult] = await Promise.all([
-        fromTable(supabase, "blog_posts")
+        supabase.from("blog_posts")
           .select("id", { count: "exact", head: true })
           .eq("site_id", siteId),
-        fromTable(supabase, "blog_posts")
+        supabase.from("blog_posts")
           .select("id", { count: "exact", head: true })
           .eq("site_id", siteId)
           .eq("status", "published"),
-        fromTable(supabase, "blog_posts")
+        supabase.from("blog_posts")
           .select("id", { count: "exact", head: true })
           .eq("site_id", siteId)
           .eq("status", "draft"),
-        fromTable(supabase, "blog_categories")
+        supabase.from("blog_categories")
           .select("id", { count: "exact", head: true })
           .eq("site_id", siteId),
       ]);
@@ -78,7 +71,7 @@ export function SiteBlogTab({ siteId }: SiteBlogTabProps) {
       });
 
       // Get recent posts
-      const { data: posts } = await fromTable(supabase, "blog_posts")
+      const { data: posts } = await supabase.from("blog_posts")
         .select("id, title, status, published_at, created_at")
         .eq("site_id", siteId)
         .order("created_at", { ascending: false })

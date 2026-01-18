@@ -4,12 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserId, getCurrentUserRole, isSuperAdmin } from "@/lib/auth/permissions";
 import { cookies } from "next/headers";
 
-// Helper to access tables not yet in the generated types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function fromTable(supabase: any, tableName: string) {
-  return supabase.from(tableName);
-}
-
 export interface BlogPost {
   id: string;
   siteId: string;
@@ -191,7 +185,7 @@ async function canEditPost(postId: string): Promise<boolean> {
   
   // Members can only edit their own posts
   const supabase = await createClient();
-  const { data: post } = await fromTable(supabase, "blog_posts")
+  const { data: post } = await supabase.from("blog_posts")
     .select("author_id, site_id")
     .eq("id", postId)
     .single();
@@ -255,7 +249,7 @@ export async function getPosts(
   const offset = (page - 1) * limit;
   const context = await getUserBlogContext();
 
-  let query = fromTable(supabase, "blog_posts")
+  let query = supabase.from("blog_posts")
     .select(
       `
       *,
@@ -286,7 +280,7 @@ export async function getPosts(
 
   if (filters.categoryId) {
     // Filter by category through junction table
-    const { data: postIds } = await fromTable(supabase, "blog_post_categories")
+    const { data: postIds } = await supabase.from("blog_post_categories")
       .select("post_id")
       .eq("category_id", filters.categoryId);
     
@@ -315,7 +309,7 @@ export async function getPosts(
 export async function getPost(postId: string): Promise<BlogPost | null> {
   const supabase = await createClient();
 
-  const { data, error } = await fromTable(supabase, "blog_posts")
+  const { data, error } = await supabase.from("blog_posts")
     .select(
       `
       *,
@@ -354,7 +348,7 @@ export async function getPostBySlug(siteId: string, slug: string): Promise<BlogP
 
   const supabase = await createClient();
 
-  const { data, error } = await fromTable(supabase, "blog_posts")
+  const { data, error } = await supabase.from("blog_posts")
     .select(
       `
       *,
@@ -422,7 +416,7 @@ export async function createPost(
     post.slug || post.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
   // Check for duplicate slug
-  const { data: existing } = await fromTable(supabase, "blog_posts")
+  const { data: existing } = await supabase.from("blog_posts")
     .select("id")
     .eq("site_id", siteId)
     .eq("slug", slug)
@@ -438,7 +432,7 @@ export async function createPost(
     : 0;
   const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
-  const { data, error } = await fromTable(supabase, "blog_posts")
+  const { data, error } = await supabase.from("blog_posts")
     .insert({
       site_id: siteId,
       author_id: userId,
@@ -467,7 +461,7 @@ export async function createPost(
 
   // Add categories
   if (post.categoryIds && post.categoryIds.length > 0) {
-    await fromTable(supabase, "blog_post_categories").insert(
+    await supabase.from("blog_post_categories").insert(
       post.categoryIds.map((catId) => ({
         post_id: data.id,
         category_id: catId,
@@ -547,7 +541,7 @@ export async function updatePost(
     updateData.status = effectiveStatus;
     if (effectiveStatus === "published") {
       // Only set published_at if not already set
-      const { data: existingPost } = await fromTable(supabase, "blog_posts")
+      const { data: existingPost } = await supabase.from("blog_posts")
         .select("published_at")
         .eq("id", postId)
         .single();
@@ -558,7 +552,7 @@ export async function updatePost(
     }
   }
 
-  const { error } = await fromTable(supabase, "blog_posts")
+  const { error } = await supabase.from("blog_posts")
     .update(updateData)
     .eq("id", postId);
 
@@ -570,11 +564,11 @@ export async function updatePost(
   // Update categories if provided (only owner/admin can change)
   if (updates.categoryIds !== undefined && (await canManageCategories())) {
     // Remove existing
-    await fromTable(supabase, "blog_post_categories").delete().eq("post_id", postId);
+    await supabase.from("blog_post_categories").delete().eq("post_id", postId);
 
     // Add new
     if (updates.categoryIds.length > 0) {
-      await fromTable(supabase, "blog_post_categories").insert(
+      await supabase.from("blog_post_categories").insert(
         updates.categoryIds.map((catId) => ({
           post_id: postId,
           category_id: catId,
@@ -595,7 +589,7 @@ export async function deletePost(postId: string): Promise<{ success: boolean; er
   const supabase = await createClient();
 
   // Verify access to the post's site
-  const { data: post } = await fromTable(supabase, "blog_posts")
+  const { data: post } = await supabase.from("blog_posts")
     .select("site_id")
     .eq("id", postId)
     .single();
@@ -604,7 +598,7 @@ export async function deletePost(postId: string): Promise<{ success: boolean; er
     return { success: false, error: "Access denied" };
   }
 
-  const { error } = await fromTable(supabase, "blog_posts").delete().eq("id", postId);
+  const { error } = await supabase.from("blog_posts").delete().eq("id", postId);
 
   if (error) {
     return { success: false, error: "Failed to delete post" };
@@ -655,7 +649,7 @@ export async function getRecentPosts(
 
   const supabase = await createClient();
 
-  const { data } = await fromTable(supabase, "blog_posts")
+  const { data } = await supabase.from("blog_posts")
     .select(
       `
       *,
@@ -689,7 +683,7 @@ export async function getBlogStats(siteId: string): Promise<{
 
   const supabase = await createClient();
 
-  const { data } = await fromTable(supabase, "blog_posts")
+  const { data } = await supabase.from("blog_posts")
     .select("status")
     .eq("site_id", siteId);
 

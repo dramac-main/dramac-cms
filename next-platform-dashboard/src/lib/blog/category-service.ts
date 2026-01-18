@@ -27,12 +27,6 @@ interface BlogCategoryRow {
   updated_at: string;
 }
 
-// Helper to access tables not yet in the generated types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function fromTable(supabase: any, tableName: string) {
-  return supabase.from(tableName);
-}
-
 function mapRowToCategory(row: BlogCategoryRow & { post_count?: { count: number }[] }): BlogCategory {
   return {
     id: row.id,
@@ -50,7 +44,7 @@ function mapRowToCategory(row: BlogCategoryRow & { post_count?: { count: number 
 export async function getCategories(siteId: string): Promise<BlogCategory[]> {
   const supabase = await createClient();
 
-  const { data, error } = await fromTable(supabase, "blog_categories")
+  const { data, error } = await supabase.from("blog_categories")
     .select(`*, post_count:blog_post_categories(count)`)
     .eq("site_id", siteId)
     .order("name");
@@ -66,7 +60,7 @@ export async function getCategories(siteId: string): Promise<BlogCategory[]> {
 export async function getCategory(categoryId: string): Promise<BlogCategory | null> {
   const supabase = await createClient();
 
-  const { data, error } = await fromTable(supabase, "blog_categories")
+  const { data, error } = await supabase.from("blog_categories")
     .select(`*, post_count:blog_post_categories(count)`)
     .eq("id", categoryId)
     .single();
@@ -102,7 +96,7 @@ export async function createCategory(
       .replace(/^-|-$/g, "");
 
   // Check for duplicate slug
-  const { data: existing } = await fromTable(supabase, "blog_categories")
+  const { data: existing } = await supabase.from("blog_categories")
     .select("id")
     .eq("site_id", siteId)
     .eq("slug", slug)
@@ -112,7 +106,7 @@ export async function createCategory(
     return { success: false, error: "A category with this slug already exists" };
   }
 
-  const { data, error } = await fromTable(supabase, "blog_categories")
+  const { data, error } = await supabase.from("blog_categories")
     .insert({
       site_id: siteId,
       name: category.name,
@@ -166,13 +160,13 @@ export async function updateCategory(
 
   // If updating slug, check for duplicates
   if (updates.slug) {
-    const { data: category } = await fromTable(supabase, "blog_categories")
+    const { data: category } = await supabase.from("blog_categories")
       .select("site_id")
       .eq("id", categoryId)
       .single();
 
     if (category) {
-      const { data: existing } = await fromTable(supabase, "blog_categories")
+      const { data: existing } = await supabase.from("blog_categories")
         .select("id")
         .eq("site_id", (category as { site_id: string }).site_id)
         .eq("slug", updates.slug)
@@ -185,7 +179,7 @@ export async function updateCategory(
     }
   }
 
-  const { error } = await fromTable(supabase, "blog_categories")
+  const { error } = await supabase.from("blog_categories")
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
@@ -211,7 +205,7 @@ export async function deleteCategory(
   const supabase = await createClient();
 
   // Check if category has posts
-  const { data: postCategories } = await fromTable(supabase, "blog_post_categories")
+  const { data: postCategories } = await supabase.from("blog_post_categories")
     .select("post_id")
     .eq("category_id", categoryId)
     .limit(1);
@@ -223,7 +217,7 @@ export async function deleteCategory(
     };
   }
 
-  const { error } = await fromTable(supabase, "blog_categories")
+  const { error } = await supabase.from("blog_categories")
     .delete()
     .eq("id", categoryId);
 
@@ -251,7 +245,7 @@ export async function getCategoriesWithStats(
 
   const categoriesWithStats = await Promise.all(
     categories.map(async (cat) => {
-      const { count } = await fromTable(supabase, "blog_post_categories")
+      const { count } = await supabase.from("blog_post_categories")
         .select("post_id, blog_posts!inner(created_at)", { count: "exact", head: true })
         .eq("category_id", cat.id)
         .gte("blog_posts.created_at", thirtyDaysAgo.toISOString());
@@ -282,7 +276,7 @@ export async function updateCategoryColors(
   const errors: string[] = [];
 
   for (const update of updates) {
-    const { error } = await fromTable(supabase, "blog_categories")
+    const { error } = await supabase.from("blog_categories")
       .update({ color: update.color, updated_at: new Date().toISOString() })
       .eq("id", update.id);
 
@@ -314,7 +308,7 @@ export async function reorderCategories(
   const errors: string[] = [];
 
   for (let i = 0; i < orderedIds.length; i++) {
-    const { error } = await fromTable(supabase, "blog_categories")
+    const { error } = await supabase.from("blog_categories")
       .update({ 
         sort_order: i,
         updated_at: new Date().toISOString() 
