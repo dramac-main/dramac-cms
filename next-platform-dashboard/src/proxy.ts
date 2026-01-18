@@ -23,6 +23,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/admin") ||
     pathname.startsWith("/modules") ||
     pathname.startsWith("/test-components") ||
+    pathname.startsWith("/test-safety") ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
