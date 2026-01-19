@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Settings2,
   RefreshCw,
+  TestTube2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,12 @@ export default async function ModuleStudioPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/admin/modules/studio/integration-test">
+              <TestTube2 className="h-4 w-4 mr-2" />
+              Pipeline Test
+            </Link>
+          </Button>
           <Button variant="outline" asChild>
             <Link href="/admin/modules/studio/sync">
               <RefreshCw className="h-4 w-4 mr-2" />
