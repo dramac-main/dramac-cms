@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getModuleById } from "@/lib/modules/module-registry-server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,57 +11,120 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { moduleId, agencyId, billingCycle } = await request.json();
+    const body = await request.json();
+    const { moduleId, moduleSlug, agencyId, billingCycle } = body;
 
-    if (!moduleId || !agencyId) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!moduleId && !moduleSlug) {
+      return NextResponse.json({ error: "Module ID or slug required" }, { status: 400 });
     }
 
-    // Verify user belongs to the agency
+    // Get user's agency if not provided
     const { data: profile } = await supabase
       .from("profiles")
       .select("agency_id, role")
       .eq("id", user.id)
       .single();
 
-    if (profile?.agency_id !== agencyId && profile?.role !== "super_admin") {
+    const targetAgencyId = agencyId || profile?.agency_id;
+    if (!targetAgencyId) {
+      return NextResponse.json({ error: "No agency found" }, { status: 400 });
+    }
+
+    // Verify user belongs to the agency or is admin
+    if (profile?.agency_id !== targetAgencyId && profile?.role !== "super_admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Get module details from modules_v2
-    const { data: module, error: moduleError } = await supabase
-      .from("modules_v2" as any)
-      .select("*")
-      .eq("id", moduleId)
-      .single();
+    // Get module from registry (supports BOTH catalog AND studio modules)
+    const module = await getModuleById(moduleId || moduleSlug);
+    
+    // Also try to get from modules_v2 directly
+    let moduleData = null;
+    if (module) {
+      const { data: v2Module } = await supabase
+        .from("modules_v2" as any)
+        .select("*")
+        .eq("id", module.id)
+        .maybeSingle();
+      moduleData = v2Module as any;
+    }
 
-    if (moduleError || !module) {
+    // If not in modules_v2, it might be a studio module - get pricing from module_source
+    if (!moduleData) {
+      const { data: studioModule } = await (supabase as any)
+        .from("module_source")
+        .select("*")
+        .or(`module_id.eq.${moduleId || moduleSlug},slug.eq.${moduleSlug || moduleId}`)
+        .single();
+      
+      if (studioModule) {
+        moduleData = {
+          id: studioModule.module_id,
+          slug: studioModule.slug,
+          name: studioModule.name,
+          wholesale_price_monthly: 0, // Studio modules are free by default during testing
+          install_count: 0,
+        };
+      }
+    }
+
+    if (!module && !moduleData) {
       return NextResponse.json({ error: "Module not found" }, { status: 404 });
     }
 
-    const mod = module as any;
+    const effectiveModuleId = module?.id || moduleData?.id;
 
     // Check if already subscribed
     const { data: existing } = await supabase
       .from("agency_module_subscriptions" as any)
-      .select("id")
-      .eq("agency_id", agencyId)
-      .eq("module_id", moduleId)
+      .select("id, status")
+      .eq("agency_id", targetAgencyId)
+      .eq("module_id", effectiveModuleId)
       .maybeSingle();
 
-    if (existing) {
-      return NextResponse.json({ error: "Already subscribed to this module" }, { status: 400 });
+    if (existing && (existing as any).status === "active") {
+      return NextResponse.json({ 
+        error: "Already subscribed to this module",
+        subscription: existing
+      }, { status: 400 });
     }
 
-    // For free modules, create subscription directly
-    if (!mod.wholesale_price_monthly || mod.wholesale_price_monthly === 0) {
+    // If there's an inactive subscription, reactivate it
+    if (existing) {
+      const { data: reactivated, error: updateError } = await supabase
+        .from("agency_module_subscriptions" as any)
+        .update({ 
+          status: "active",
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", (existing as any).id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error("Reactivation error:", updateError);
+        return NextResponse.json({ error: "Failed to reactivate subscription" }, { status: 500 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Module subscription reactivated",
+        subscription: reactivated,
+        module: { id: effectiveModuleId, name: moduleData?.name || module?.name }
+      });
+    }
+
+    // For free modules (including testing studio modules), create subscription directly
+    const isFree = !moduleData?.wholesale_price_monthly || moduleData.wholesale_price_monthly === 0;
+    
+    if (isFree) {
       const { data: subscription, error } = await supabase
         .from("agency_module_subscriptions" as any)
         .insert({
-          agency_id: agencyId,
-          module_id: moduleId,
+          agency_id: targetAgencyId,
+          module_id: effectiveModuleId,
           status: "active",
-          billing_cycle: billingCycle || "monthly",
+          billing_cycle: billingCycle || "free",
           markup_type: "percentage",
           markup_percentage: 100, // Default 100% markup
           created_at: new Date().toISOString(),
@@ -73,23 +137,28 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Failed to create subscription" }, { status: 500 });
       }
 
-      // Increment install count
-      await supabase
-        .from("modules_v2" as any)
-        .update({ install_count: (mod.install_count || 0) + 1 })
-        .eq("id", moduleId);
+      // Increment install count if modules_v2 module
+      if (moduleData?.install_count !== undefined) {
+        await supabase
+          .from("modules_v2" as any)
+          .update({ install_count: (moduleData.install_count || 0) + 1 })
+          .eq("id", effectiveModuleId);
+      }
 
-      return NextResponse.json({ success: true, subscription });
+      return NextResponse.json({ 
+        success: true, 
+        message: "Module subscribed successfully!",
+        subscription,
+        module: { id: effectiveModuleId, name: moduleData?.name || module?.name }
+      });
     }
 
     // For paid modules, create LemonSqueezy checkout
-    // TODO: Implement full LemonSqueezy checkout integration
-    // For now, return a placeholder checkout URL
     return NextResponse.json({
-      success: true,
-      message: "Paid module checkout",
-      checkoutUrl: `/api/checkout/lemonsqueezy?module=${moduleId}&agency=${agencyId}`,
-      // In production, this would redirect to LemonSqueezy checkout
+      success: false,
+      requiresPayment: true,
+      message: "This module requires payment",
+      checkoutUrl: `/api/checkout/lemonsqueezy?module=${effectiveModuleId}&agency=${targetAgencyId}`,
     });
   } catch (error) {
     console.error("Subscribe error:", error);
