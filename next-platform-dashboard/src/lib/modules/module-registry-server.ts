@@ -238,6 +238,46 @@ export async function getModuleById(moduleIdOrSlug: string): Promise<ModuleDefin
       .single();
 
     if (!studioError && studioModule) {
+      // Check if user can access testing modules
+      if (studioModule.status === "testing") {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data: profile } = await db
+            .from("profiles")
+            .select("agency_id")
+            .eq("id", user.id)
+            .single();
+          
+          if (profile?.agency_id) {
+            const { data: betaEnrollment } = await db
+              .from("beta_enrollment")
+              .select("*")
+              .eq("agency_id", profile.agency_id)
+              .eq("is_active", true)
+              .single();
+            
+            // If not enrolled in beta, return null (module not found)
+            if (!betaEnrollment) {
+              return null;
+            }
+            
+            // Check tier-specific access
+            if (betaEnrollment.beta_tier === "standard") {
+              const acceptedModules = betaEnrollment.accepted_modules || [];
+              if (!acceptedModules.includes(studioModule.slug)) {
+                return null; // Not opted in
+              }
+            }
+            // Internal/Alpha/Early Access: Allow access
+          } else {
+            return null; // No agency
+          }
+        } else {
+          return null; // Not logged in
+        }
+      }
+
       return {
         id: studioModule.module_id as string,
         name: studioModule.name as string,
@@ -247,7 +287,7 @@ export async function getModuleById(moduleIdOrSlug: string): Promise<ModuleDefin
         category: (studioModule.category as ModuleCategory) || "other",
         version: (studioModule.published_version || studioModule.latest_version || "1.0.0") as string,
         status: studioModule.status === "testing" ? "beta" : "active",
-        tags: studioModule.status === "testing" ? ["testing"] : [],
+        tags: studioModule.status === "testing" ? ["testing", "beta"] : [],
         pricing: {
           type: "free",
           amount: 0,

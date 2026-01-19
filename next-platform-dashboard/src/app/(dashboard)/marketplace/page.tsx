@@ -49,6 +49,45 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
 
   const { data: modules } = await query;
 
+  // Check if user's agency is enrolled in beta program
+  const { data: betaEnrollment } = profile?.agency_id 
+    ? await supabase
+        .from("beta_enrollment" as any)
+        .select("*")
+        .eq("agency_id", profile.agency_id)
+        .eq("is_active", true)
+        .single()
+    : { data: null };
+
+  const isBetaAgency = !!betaEnrollment;
+  const betaTier = betaEnrollment?.beta_tier || "standard";
+
+  // Get testing modules to filter appropriately
+  const { data: testingModules } = await supabase
+    .from("module_source" as any)
+    .select("slug, status")
+    .eq("status", "testing");
+
+  const testingModuleMap = new Map(
+    testingModules?.map((m: any) => [m.slug, m.status]) || []
+  );
+
+  // Filter modules based on beta enrollment
+  let filteredModules = modules || [];
+
+  if (!isBetaAgency) {
+    // Regular users: Filter out ALL testing modules
+    filteredModules = filteredModules.filter((m: any) => !testingModuleMap.has(m.slug));
+  } else if (betaTier === "standard") {
+    // Standard beta tier: Only show opted-in testing modules
+    const acceptedModules = betaEnrollment.accepted_modules || [];
+    filteredModules = filteredModules.filter((m: any) => {
+      if (!testingModuleMap.has(m.slug)) return true; // Published module
+      return acceptedModules.includes(m.slug); // Testing module - check opt-in
+    });
+  }
+  // Internal/Alpha/Early Access: Show all (no additional filtering)
+
   // Get agency's existing subscriptions
   const { data: subscriptions } = profile?.agency_id 
     ? await supabase
@@ -68,11 +107,11 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
 
   const uniqueCategories = [...new Set(categories?.map((c: any) => c.category) || [])];
 
-  // Get featured modules
-  const featuredModules = (modules as any[])?.filter((m: any) => m.is_featured).slice(0, 3) || [];
+  // Get featured modules (from filtered list)
+  const featuredModules = (filteredModules as any[])?.filter((m: any) => m.is_featured).slice(0, 3) || [];
 
-  // Convert modules to expected format (includes source for Studio badge)
-  const formattedModules = (modules as any[] || []).map((m: any) => ({
+  // Convert modules to expected format (includes source AND status for badges)
+  const formattedModules = (filteredModules as any[] || []).map((m: any) => ({
     id: m.id,
     slug: m.slug,
     name: m.name,
@@ -85,6 +124,7 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
     rating_average: m.rating_average,
     is_featured: m.is_featured,
     source: m.source || "catalog", // 'catalog' or 'studio'
+    status: testingModuleMap.has(m.slug) ? "testing" : "published", // Add status for beta badge
   }));
 
   const formatPrice = (cents: number | null) => {

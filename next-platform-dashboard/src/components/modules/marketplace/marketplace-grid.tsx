@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Package, Users, Building2, Globe, Check, Sparkles } from "lucide-react";
+import { Package, Users, Building2, Globe, Check, Sparkles, FlaskConical } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -16,6 +16,7 @@ interface Module {
   rating_average: number | null;
   is_featured: boolean;
   source?: string; // 'catalog' or 'studio'
+  status?: string; // 'published' or 'testing'
 }
 
 interface MarketplaceGridProps {
@@ -86,6 +87,12 @@ export function MarketplaceGrid({ modules, subscribedModuleIds }: MarketplaceGri
                           <Badge variant="secondary" className="text-xs">
                             <Sparkles className="h-3 w-3 mr-1" />
                             Studio
+                          </Badge>
+                        )}
+                        {module.status === "testing" && (
+                          <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700">
+                            <FlaskConical className="h-3 w-3 mr-1" />
+                            Beta
                           </Badge>
                         )}
                       </div>
