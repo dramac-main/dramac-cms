@@ -17,9 +17,8 @@ export function ModuleInstallButton({ moduleId, moduleName, isFree }: ModuleInst
   const router = useRouter();
 
   const handleInstall = async () => {
-    // For now, just redirect to subscriptions page to select a site
-    // In a full implementation, this would open a dialog to select site/client
-    router.push(`/marketplace/subscriptions?install=${moduleId}`);
+    // Redirect to My Subscriptions page with the module pre-selected
+    router.push(`/dashboard/modules/subscriptions?install=${moduleId}`);
   };
 
   return (
