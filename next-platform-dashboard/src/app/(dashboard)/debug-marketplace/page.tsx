@@ -94,6 +94,7 @@ export default async function DebugMarketplacePage() {
                   name: m.name,
                   slug: m.slug,
                   status: m.status,
+                  testing_tier: m.testing_tier || "NOT SET",
                 })), null, 2)
               : "NO TESTING MODULES FOUND"}
           </pre>
