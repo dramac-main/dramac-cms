@@ -2,11 +2,11 @@
 
 ## How It Works
 
-1. **User visits**: `testsite.dramacagency.com`
-2. **DNS**: Wildcard CNAME `*.dramacagency.com` → `cname.vercel-dns.com`
+1. **User visits**: `testsite.sites.dramacagency.com`
+2. **DNS**: Wildcard CNAME `*.sites.dramacagency.com` → `cname.vercel-dns.com`
 3. **Vercel**: Routes to Next.js app
-4. **proxy.ts**: Detects hostname is NOT `app.dramacagency.com`
-5. **Rewrite**: `/site/testsite` (extracts subdomain)
+4. **proxy.ts**: Detects hostname ends with `.sites.dramacagency.com`
+5. **Rewrite**: `/site/testsite` (extracts subdomain before .sites)
 6. **Page**: `src/app/site/[domain]/[[...slug]]/page.tsx`
 7. **Fetch**: Queries `sites` table WHERE `subdomain = 'testsite'` AND `published = true`
 8. **Render**: Returns site content
@@ -26,37 +26,45 @@ Expected result: Sites with subdomain like `'testsite'` (just the subdomain part
 ### Step 2: Check Environment Variables
 In `.env.local`:
 ```
-NEXT_PUBLIC_BASE_DOMAIN=dramacagency.com
 NEXT_PUBLIC_APP_URL=https://app.dramacagency.com
+NEXT_PUBLIC_BASE_DOMAIN=dramacagency.com
+NEXT_PUBLIC_SITES_SUBDOMAIN=sites.dramacagency.com
 ```
 
 ### Step 3: Vercel Domain Setup
 1. Go to Vercel Dashboard
 2. Project Settings → Domains
-3. Add domain: `*.dramacagency.com`
+3. Add domain: `*.sites.dramacagency.com` (NOT `*.dramacagency.com`)
 4. Verify DNS configuration
 
-### Step 4: DNS Cleanup
-Remove these conflicting ALIAS records from Hostinger:
+### Step 4: DNS Configuration in Hostinger
+Add a NEW wildcard CNAME for sites subdomain:
+
+**ADD THIS:**
+- Type: `CNAME`
+- Name: `*.sites` 
+- Target: `cname.vercel-dns.com`
+- TTL: `14400`
+
+**Keep these existing records:**
+- ✅ `app` CNAME → Vercel
+- ✅ `www` CNAME → Vercel
+
+**Remove these conflicting ALIAS records:**
 - ❌ backyardbbq ALIAS
 - ❌ bridgetandnathanielwedding ALIAS
 - ❌ zamsuite ALIAS
 - ❌ jesmic ALIAS
-
-Keep only:
-- ✅ `*` CNAME → `cname.vercel-dns.com`
-- ✅ `app` CNAME → `3548a3df0b30e26a.vercel-dns-017.com`
-- ✅ `www` CNAME → `1d1fc67bdb52700d.vercel-dns-017.com`
 
 ### Step 5: Test Locally
 Edit your `hosts` file to test locally:
 
 **Windows**: `C:\Windows\System32\drivers\etc\hosts`
 ```
-127.0.0.1 testsite.dramacagency.com
+127.0.0.1 testsite.sites.dramacagency.com
 ```
 
-Then visit: `http://testsite.dramacagency.com:3000`
+Then visit: `http://testsite.sites.dramacagency.com:3000`
 
 ### Step 6: Debug Logging
 Check the terminal when a subdomain is accessed. You should see:

@@ -62,8 +62,8 @@ export async function proxy(request: NextRequest) {
   // SUBDOMAIN/CUSTOM DOMAIN ROUTING
   // ========================================
   
-  // Get base domain from env
-  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "localhost:3000";
+  // Get configuration from env
+  const sitesSubdomain = process.env.NEXT_PUBLIC_SITES_SUBDOMAIN || "sites.dramacagency.com";
   const appDomain = process.env.NEXT_PUBLIC_APP_URL || "localhost:3000";
 
   // Parse the app domain host
@@ -77,20 +77,20 @@ export async function proxy(request: NextRequest) {
   // Check if this is the main app domain
   const isAppDomain = hostname === appHost;
   
-  // Check if this is a subdomain of the base domain
-  const isBaseDomainSubdomain = hostname.endsWith(`.${baseDomain}`) && hostname !== baseDomain && !isAppDomain;
+  // Check if this is a subdomain of sites.dramacagency.com (e.g., mysite.sites.dramacagency.com)
+  const isSitesSubdomain = hostname.endsWith(`.${sitesSubdomain}`) && hostname !== sitesSubdomain;
 
-  // Check if this is a custom domain (not our base domain)
-  const isCustomDomain = !hostname.includes(baseDomain) && !hostname.includes("localhost");
+  // Check if this is a custom domain (not our domains)
+  const isCustomDomain = !hostname.includes("dramacagency.com") && !hostname.includes("localhost");
 
   // Log subdomain routing for debugging (only in development)
   if (process.env.NODE_ENV === "development") {
     console.log("[proxy.ts] Routing check:", {
       hostname,
-      baseDomain,
+      sitesSubdomain,
       appHost,
       isAppDomain,
-      isBaseDomainSubdomain,
+      isSitesSubdomain,
       isCustomDomain,
       pathname
     });
@@ -104,12 +104,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // Route subdomains to site renderer (e.g., mysite.dramacagency.com)
-  if (isBaseDomainSubdomain) {
-    const subdomain = hostname.replace(`.${baseDomain}`, "");
+  // Route sites subdomains to site renderer (e.g., mysite.sites.dramacagency.com)
+  if (isSitesSubdomain) {
+    const subdomain = hostname.replace(`.${sitesSubdomain}`, "");
     const url = request.nextUrl.clone();
     url.pathname = `/site/${subdomain}${pathname}`;
-    console.log("[proxy.ts] Subdomain rewrite:", hostname, "→", url.pathname, "(subdomain:", subdomain + ")");
+    console.log("[proxy.ts] Sites subdomain rewrite:", hostname, "→", url.pathname, "(subdomain:", subdomain + ")");
     return NextResponse.rewrite(url);
   }
 
