@@ -80,7 +80,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Module not found" }, { status: 404 });
     }
 
-    const effectiveModuleId = module?.id || moduleData?.id;
+    // Prioritize database ID (UUID) over registry ID (which might be a slug)
+    const effectiveModuleId = moduleData?.id || module?.id;
+    
+    console.log("[Subscribe] Effective module ID:", effectiveModuleId);
 
     // Check if already subscribed
     const { data: existing } = await supabase
