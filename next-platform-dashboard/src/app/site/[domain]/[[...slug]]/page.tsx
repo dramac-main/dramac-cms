@@ -70,21 +70,34 @@ export default async function SitePage({ params }: SitePageProps) {
   const { domain, slug } = await params;
   const pageSlug = slug?.join("/") || "";
 
-  console.log("[SitePage] Request:", { domain, pageSlug });
+  console.log("[SitePage] ====== REQUEST START ======");
+  console.log("[SitePage] Domain param:", domain);
+  console.log("[SitePage] Page slug:", pageSlug);
+  console.log("[SitePage] Full params:", { domain, slug });
 
   // Try custom domain first, then slug (subdomain)
-  const site = await getSiteByDomain(domain) || await getSiteBySlug(domain);
+  const siteByDomain = await getSiteByDomain(domain);
+  console.log("[SitePage] getSiteByDomain result:", { domain, found: !!siteByDomain, siteName: siteByDomain?.name });
   
-  console.log("[SitePage] Site lookup result:", { 
-    domain, 
+  const siteBySlug = await getSiteBySlug(domain);
+  console.log("[SitePage] getSiteBySlug result:", { domain, found: !!siteBySlug, siteName: siteBySlug?.name });
+  
+  const site = siteByDomain || siteBySlug;
+  
+  console.log("[SitePage] Final site:", { 
     found: !!site, 
     published: site?.published,
     siteName: site?.name,
+    siteSlug: site?.slug,
     pageCount: site?.pages?.length 
   });
 
   if (!site || !site.published) {
-    console.error("[SitePage] Site not found or not published:", { domain, siteFound: !!site, published: site?.published });
+    console.error("[SitePage] ❌ Site not found or not published:", { 
+      domain, 
+      siteFound: !!site, 
+      published: site?.published 
+    });
     notFound();
   }
 
