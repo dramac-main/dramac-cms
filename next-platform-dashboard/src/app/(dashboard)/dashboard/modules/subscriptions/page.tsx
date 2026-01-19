@@ -30,18 +30,40 @@ export default async function AgencyModulesPage() {
     redirect("/dashboard");
   }
 
-  // Get agency's subscriptions with module details from modules_v2
+  // Get agency's subscriptions (modules can be in either modules_v2 or module_source)
   const { data: subscriptions } = await supabase
     .from("agency_module_subscriptions" as any)
-    .select(`
-      *,
-      module:modules_v2(*)
-    `)
+    .select("*")
     .eq("agency_id", profile.agency_id)
     .order("created_at", { ascending: false });
 
+  // Enrich subscriptions with module details from both sources
+  const enrichedSubscriptions = await Promise.all(
+    (subscriptions || []).map(async (sub: any) => {
+      // First try modules_v2 (published)
+      const { data: v2Module } = await supabase
+        .from("modules_v2" as any)
+        .select("*")
+        .eq("id", sub.module_id)
+        .single();
+
+      if (v2Module) {
+        return { ...sub, module: v2Module };
+      }
+
+      // Fallback to module_source (testing)
+      const { data: sourceModule } = await supabase
+        .from("module_source" as any)
+        .select("*")
+        .eq("id", sub.module_id)
+        .single();
+
+      return { ...sub, module: sourceModule };
+    })
+  );
+
   // Calculate stats
-  const activeSubscriptions = (subscriptions as any[])?.filter((s: any) => s.status === "active") || [];
+  const activeSubscriptions = enrichedSubscriptions.filter((s: any) => s.status === "active") || [];
   const totalMonthlyCost = activeSubscriptions.reduce((sum: number, sub: any) => {
     return sum + ((sub.module as any)?.wholesale_price_monthly || 0);
   }, 0);
@@ -140,7 +162,7 @@ export default async function AgencyModulesPage() {
           </CardContent>
         </Card>
       ) : (
-        <SubscriptionList subscriptions={subscriptions as any[] || []} />
+        <SubscriptionList subscriptions={enrichedSubscriptions as any[] || []} />
       )}
     </div>
   );
