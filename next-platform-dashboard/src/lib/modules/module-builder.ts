@@ -259,11 +259,54 @@ export async function getModuleSource(moduleId: string): Promise<ModuleSource | 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
 
-  const { data, error } = await db
-    .from("module_source")
-    .select("*")
-    .eq("module_id", moduleId)
-    .single();
+  // Check if moduleId is a UUID or a slug
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(moduleId);
+  
+  let data, error;
+  
+  if (isUUID) {
+    // First try module_source.id
+    const result = await db
+      .from("module_source")
+      .select("*")
+      .eq("id", moduleId)
+      .maybeSingle();
+    
+    if (result.data) {
+      data = result.data;
+    } else {
+      // UUID not in module_source, check if it's a modules_v2.id
+      // and get the linked studio_module_id
+      const v2Result = await db
+        .from("modules_v2")
+        .select("studio_module_id")
+        .eq("id", moduleId)
+        .maybeSingle();
+      
+      if (v2Result.data?.studio_module_id) {
+        // Found! Now get the module_source using the studio_module_id
+        // studio_module_id is the UUID (module_source.id)
+        const sourceResult = await db
+          .from("module_source")
+          .select("*")
+          .eq("id", v2Result.data.studio_module_id)
+          .maybeSingle();
+        data = sourceResult.data;
+        error = sourceResult.error;
+      } else {
+        error = result.error || { message: "Module not found in module_source or modules_v2" };
+      }
+    }
+  } else {
+    // It's a slug, query by module_id
+    const result = await db
+      .from("module_source")
+      .select("*")
+      .eq("module_id", moduleId)
+      .maybeSingle();
+    data = result.data;
+    error = result.error;
+  }
 
   if (error || !data) {
     return null;

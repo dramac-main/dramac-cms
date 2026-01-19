@@ -80,7 +80,10 @@ export function ModuleSubscriptions({ agencyId }: ModuleSubscriptionsProps) {
           </div>
         ) : (
           <div className="space-y-3">
-            {activeSubscriptions.map((sub) => (
+            {activeSubscriptions.map((sub) => {
+              // Handle module which might come as array or object from Supabase
+              const mod = Array.isArray(sub.module) ? sub.module[0] : sub.module;
+              return (
               <div
                 key={sub.id}
                 className="flex items-center justify-between p-4 rounded-lg border"
@@ -90,7 +93,7 @@ export function ModuleSubscriptions({ agencyId }: ModuleSubscriptionsProps) {
                     <Layers className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="font-medium">{sub.module?.name}</p>
+                    <p className="font-medium">{mod?.name}</p>
                     <p className="text-sm text-muted-foreground">
                       {sub.billing_cycle === "yearly" ? "Annual" : "Monthly"} •
                       {sub.current_period_end && `Renews ${formatDate(sub.current_period_end)}`}
@@ -98,7 +101,7 @@ export function ModuleSubscriptions({ agencyId }: ModuleSubscriptionsProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge variant="outline">{sub.module?.category}</Badge>
+                  <Badge variant="outline">{mod?.category}</Badge>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button variant="ghost" size="sm" className="text-destructive">
@@ -109,7 +112,7 @@ export function ModuleSubscriptions({ agencyId }: ModuleSubscriptionsProps) {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Cancel Module Subscription</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to cancel {sub.module?.name}? You&apos;ll still have access until{" "}
+                          Are you sure you want to cancel {mod?.name}? You&apos;ll still have access until{" "}
                           {sub.current_period_end && formatDate(sub.current_period_end)}.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
@@ -126,7 +129,8 @@ export function ModuleSubscriptions({ agencyId }: ModuleSubscriptionsProps) {
                   </AlertDialog>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>

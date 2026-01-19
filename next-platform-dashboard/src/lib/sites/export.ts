@@ -133,7 +133,7 @@ export async function exportSite(siteId: string): Promise<{
       },
       pages: pagesWithContent,
       modules: (siteModules || []).map((sm) => ({
-        moduleSlug: (sm.module as { slug: string } | null)?.slug || "",
+        moduleSlug: (sm.module as unknown as { slug: string } | null)?.slug || "",
         settings: (sm.settings as Record<string, unknown>) || {},
         isEnabled: !!sm.installed_at,
       })).filter(m => m.moduleSlug),

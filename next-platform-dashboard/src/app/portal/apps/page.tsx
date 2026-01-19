@@ -89,7 +89,7 @@ export default async function PortalAppsPage() {
         item.module !== null && typeof item.module === "object" && "id" in item.module
       )
       .map(item => ({
-        ...(item.module as Record<string, unknown>),
+        ...(item.module as unknown as Record<string, unknown>),
         installation_id: item.id,
         installed_at: new Date().toISOString(),
         settings: {},

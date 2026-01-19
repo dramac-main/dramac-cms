@@ -19,6 +19,10 @@ import {
   Code,
   FlaskConical,
   Upload,
+  Package,
+  Route,
+  FileJson,
+  Files,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -28,6 +32,16 @@ import { ModuleConfigForm } from "@/components/admin/modules/module-config-form"
 import { ModuleCodeEditor } from "@/components/admin/modules/module-code-editor";
 import { ModuleDeployDialog } from "@/components/admin/modules/module-deploy-dialog";
 import { ModuleImportExport, type ModulePackage } from "@/components/admin/modules/module-import-export";
+import {
+  MultiFileEditor,
+  DependencyManager,
+  ApiRouteBuilder,
+  ManifestEditor,
+  type ModuleFile,
+  type Dependency,
+  type ApiRoute,
+  type ModuleManifest,
+} from "@/components/admin/modules/advanced-editor";
 import {
   getModuleSource,
   updateModule,
@@ -65,6 +79,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { createClient } from "@/lib/supabase/client";
 
 const statusConfig = {
   draft: {
@@ -148,11 +163,20 @@ export default function EditModulePage({
   const [styles, setStyles] = useState("");
   const [settingsSchema, setSettingsSchema] = useState("{}");
 
+  // Phase 81C: Advanced Editor State
+  const [editorMode, setEditorMode] = useState<"simple" | "advanced">("simple");
+  const [mainTab, setMainTab] = useState("code");
+  const [moduleFiles, setModuleFiles] = useState<ModuleFile[]>([]);
+  const [moduleDeps, setModuleDeps] = useState<Dependency[]>([]);
+  const [apiRoutes, setApiRoutes] = useState<ApiRoute[]>([]);
+  const [manifest, setManifest] = useState<ModuleManifest | null>(null);
+
   // Track if there are unsaved changes
   const [hasChanges, setHasChanges] = useState(false);
 
   const loadModule = useCallback(async () => {
     setLoading(true);
+    const supabase = createClient();
     
     const [data, versionData, deploymentData] = await Promise.all([
       getModuleSource(moduleId),
@@ -172,6 +196,131 @@ export default function EditModulePage({
       setStyles(data.styles || "");
       setSettingsSchema(JSON.stringify(data.settingsSchema || {}, null, 2));
       setHasChanges(false);
+      
+      // Load Phase 81C data - use data.id (UUID) not moduleId (slug)
+      // module_source_id in Phase 81C tables references module_source.id (UUID)
+      const moduleSourceId = data.id;
+      
+      const [filesResult, depsResult, routesResult, manifestResult] = await Promise.all([
+        supabase.from("module_files").select("*").eq("module_source_id", moduleSourceId).order("file_path"),
+        supabase.from("module_dependencies").select("*").eq("module_source_id", moduleSourceId),
+        supabase.from("module_api_routes").select("*").eq("module_source_id", moduleSourceId),
+        supabase.from("module_manifests").select("*").eq("module_source_id", moduleSourceId).maybeSingle(),
+      ]);
+
+      if (filesResult.data) {
+        // Map database file types to UI file types
+        const mapFileType = (dbType: string): ModuleFile["fileType"] => {
+          switch (dbType) {
+            case "typescript":
+            case "javascript":
+              return "component";
+            case "css":
+              return "style";
+            case "json":
+              return "config";
+            case "image":
+            case "svg":
+              return "asset";
+            default:
+              return "other";
+          }
+        };
+        
+        setModuleFiles(filesResult.data.map(f => ({
+          id: f.id,
+          path: f.file_path,
+          content: f.content || "",
+          fileType: mapFileType(f.file_type),
+          isModified: false,
+          isNew: false,
+        })));
+        // If there are files, switch to advanced mode
+        if (filesResult.data.length > 0) {
+          setEditorMode("advanced");
+        }
+      }
+
+      if (depsResult.data) {
+        // Map database dependency fields to UI dependency type
+        const getDependencyType = (d: { is_dev_dependency?: boolean | null; is_peer_dependency?: boolean | null }): Dependency["type"] => {
+          if (d.is_peer_dependency) return "peer";
+          if (d.is_dev_dependency) return "development";
+          return "production";
+        };
+        
+        setModuleDeps(depsResult.data.map(d => ({
+          name: d.package_name,
+          version: d.version || "latest",
+          type: getDependencyType(d),
+          status: "installed" as const,
+        })));
+      }
+
+      if (routesResult.data) {
+        setApiRoutes(routesResult.data.map(r => ({
+          id: r.id,
+          path: r.route_path,
+          method: (r.methods?.[0] || "GET") as ApiRoute["method"],
+          description: r.description || undefined,
+          handler: r.handler_code || "",
+          rateLimit: r.rate_limit_requests ? {
+            requests: r.rate_limit_requests,
+            windowMs: r.rate_limit_window_ms || 60000,
+          } : undefined,
+          cors: r.allowed_origins?.length ? {
+            enabled: true,
+            origins: r.allowed_origins,
+          } : undefined,
+          auth: {
+            required: r.requires_auth ?? true,
+            scopes: [],
+          },
+          isActive: r.is_enabled ?? true,
+          createdAt: r.created_at || undefined,
+          updatedAt: r.updated_at || undefined,
+        })));
+      }
+
+      if (manifestResult.data) {
+        // Database stores raw_manifest as JSONB with the full manifest
+        // If raw_manifest is populated, use it; otherwise build from database columns
+        const rawManifest = manifestResult.data.raw_manifest as Record<string, unknown> | null;
+        
+        if (rawManifest && typeof rawManifest === "object" && Object.keys(rawManifest).length > 0) {
+          // Parse the stored manifest
+          setManifest({
+            name: (rawManifest.name as string) || data.name,
+            version: (rawManifest.version as string) || manifestResult.data.manifest_version || "1.0.0",
+            displayName: (rawManifest.displayName as string) || data.name,
+            description: (rawManifest.description as string) || data.description,
+            author: rawManifest.author as string | undefined,
+            license: rawManifest.license as string | undefined,
+            homepage: rawManifest.homepage as string | undefined,
+            repository: rawManifest.repository as string | undefined,
+            main: (rawManifest.main as string) || manifestResult.data.entry_point || "index.tsx",
+            permissions: ((rawManifest.permissions as string[]) || manifestResult.data.permissions || []) as ModuleManifest["permissions"],
+            dependencies: (rawManifest.dependencies as Record<string, string>) || {},
+            peerDependencies: rawManifest.peerDependencies as Record<string, string> | undefined,
+            settings: rawManifest.settings as ModuleManifest["settings"],
+            hooks: rawManifest.hooks as ModuleManifest["hooks"],
+            slots: rawManifest.slots as ModuleManifest["slots"],
+            events: rawManifest.events as ModuleManifest["events"],
+            minPlatformVersion: rawManifest.minPlatformVersion as string | undefined,
+          });
+        } else {
+          // Build manifest from database columns
+          setManifest({
+            name: data.name,
+            version: manifestResult.data.manifest_version || "1.0.0",
+            displayName: data.name,
+            description: data.description,
+            main: manifestResult.data.entry_point || "index.tsx",
+            permissions: (manifestResult.data.permissions || []) as ModuleManifest["permissions"],
+            dependencies: {},
+          });
+        }
+      }
     }
 
     setVersions(versionData);
@@ -182,6 +331,201 @@ export default function EditModulePage({
   useEffect(() => {
     loadModule();
   }, [loadModule]);
+
+  // Phase 81C: Save module files
+  const handleSaveFiles = useCallback(async (files: ModuleFile[]) => {
+    if (!module?.id) return;
+    const supabase = createClient();
+    const moduleSourceId = module.id;
+    
+    // Map UI file types to database file types
+    const mapToDbFileType = (uiType: ModuleFile["fileType"]): string => {
+      switch (uiType) {
+        case "component": return "typescript";
+        case "style": return "css";
+        case "config": return "json";
+        case "asset": return "image";
+        default: return "typescript";
+      }
+    };
+    
+    for (const file of files) {
+      if (file.isNew) {
+        await supabase.from("module_files").insert({
+          module_source_id: moduleSourceId,
+          file_path: file.path,
+          content: file.content,
+          file_type: mapToDbFileType(file.fileType),
+        });
+      } else if (file.isModified) {
+        await supabase.from("module_files").update({
+          content: file.content,
+          updated_at: new Date().toISOString(),
+        }).eq("id", file.id);
+      }
+    }
+
+    toast.success("Files saved successfully");
+    setHasChanges(true);
+    await loadModule();
+  }, [module?.id, loadModule]);
+
+  // Phase 81C: File operations
+  const handleFileCreate = useCallback(async (path: string, content: string): Promise<ModuleFile> => {
+    if (!module?.id) throw new Error("Module not loaded");
+    const supabase = createClient();
+    const moduleSourceId = module.id;
+    const fileType = path.endsWith(".css") || path.endsWith(".scss") ? "css" 
+      : path.endsWith(".json") ? "json" 
+      : path.endsWith(".ts") || path.endsWith(".tsx") ? "typescript"
+      : path.endsWith(".js") || path.endsWith(".jsx") ? "javascript"
+      : "typescript";
+    
+    const { data, error } = await supabase.from("module_files").insert({
+      module_source_id: moduleSourceId,
+      file_path: path,
+      content,
+      file_type: fileType,
+    }).select().single();
+
+    if (error) throw error;
+
+    // Map back to UI file type
+    const uiFileType: ModuleFile["fileType"] = 
+      fileType === "css" ? "style" 
+      : fileType === "json" ? "config" 
+      : "component";
+
+    return {
+      id: data.id,
+      path: data.file_path,
+      content: data.content || "",
+      fileType: uiFileType,
+    };
+  }, [module?.id]);
+
+  const handleFileDelete = useCallback(async (path: string) => {
+    if (!module?.id) return;
+    const supabase = createClient();
+    await supabase.from("module_files").delete().eq("module_source_id", module.id).eq("file_path", path);
+  }, [module?.id]);
+
+  const handleFileRename = useCallback(async (oldPath: string, newPath: string) => {
+    if (!module?.id) return;
+    const supabase = createClient();
+    await supabase.from("module_files").update({ file_path: newPath }).eq("module_source_id", module.id).eq("file_path", oldPath);
+  }, [module?.id]);
+
+  // Phase 81C: Dependency operations
+  const handleAddDependency = useCallback(async (name: string, version: string, type: Dependency["type"]) => {
+    if (!module?.id) return;
+    const supabase = createClient();
+    const moduleSourceId = module.id;
+    await supabase.from("module_dependencies").insert({
+      module_source_id: moduleSourceId,
+      package_name: name,
+      version,
+      is_dev_dependency: type === "development",
+      is_peer_dependency: type === "peer",
+      cdn_url: `https://esm.sh/${name}@${version}`,
+      cdn_provider: "esm",
+    });
+    toast.success(`Added ${name}@${version}`);
+    await loadModule();
+  }, [module?.id, loadModule]);
+
+  const handleRemoveDependency = useCallback(async (name: string) => {
+    if (!module?.id) return;
+    const supabase = createClient();
+    await supabase.from("module_dependencies").delete().eq("module_source_id", module.id).eq("package_name", name);
+    toast.success(`Removed ${name}`);
+    await loadModule();
+  }, [module?.id, loadModule]);
+
+  const handleUpdateDependency = useCallback(async (name: string, version: string) => {
+    if (!module?.id) return;
+    const supabase = createClient();
+    await supabase.from("module_dependencies").update({ 
+      version,
+      cdn_url: `https://esm.sh/${name}@${version}`,
+    }).eq("module_source_id", module.id).eq("package_name", name);
+    toast.success(`Updated ${name} to ${version}`);
+    await loadModule();
+  }, [module?.id, loadModule]);
+
+  // Phase 81C: API Route operations
+  const handleSaveRoute = useCallback(async (route: ApiRoute) => {
+    if (!module?.id) return;
+    const supabase = createClient();
+    const moduleSourceId = module.id;
+    
+    const routeData = {
+      module_source_id: moduleSourceId,
+      route_path: route.path,
+      methods: [route.method],
+      description: route.description,
+      handler_code: route.handler,
+      requires_auth: route.auth?.required ?? true,
+      rate_limit_requests: route.rateLimit?.requests ?? 100,
+      rate_limit_window_ms: route.rateLimit?.windowMs ?? 60000,
+      allowed_origins: route.cors?.origins ?? [],
+      is_enabled: route.isActive,
+    };
+
+    if (route.id && !route.id.startsWith("new-")) {
+      await supabase.from("module_api_routes").update(routeData).eq("id", route.id);
+      toast.success("API route updated");
+    } else {
+      await supabase.from("module_api_routes").insert(routeData);
+      toast.success("API route created");
+    }
+    await loadModule();
+  }, [module?.id, loadModule]);
+
+  const handleDeleteRoute = useCallback(async (routeId: string) => {
+    const supabase = createClient();
+    await supabase.from("module_api_routes").delete().eq("id", routeId);
+    toast.success("API route deleted");
+    await loadModule();
+  }, [loadModule]);
+
+  // Phase 81C: Manifest operations
+  const handleSaveManifest = useCallback(async (updatedManifest: ModuleManifest) => {
+    if (!module?.id) return;
+    const supabase = createClient();
+    const moduleSourceId = module.id;
+    
+    const { data: existing } = await supabase
+      .from("module_manifests")
+      .select("id")
+      .eq("module_source_id", moduleSourceId)
+      .maybeSingle();
+
+    // Supabase expects a JSON-compatible type. Convert manifest to plain JSON object
+    const rawManifestJson = JSON.parse(JSON.stringify(updatedManifest));
+    
+    const manifestData = {
+      manifest_version: updatedManifest.version,
+      entry_point: updatedManifest.main,
+      permissions: updatedManifest.permissions,
+      raw_manifest: rawManifestJson,
+    };
+
+    if (existing) {
+      await supabase.from("module_manifests").update({
+        ...manifestData,
+        updated_at: new Date().toISOString(),
+      }).eq("module_source_id", moduleSourceId);
+    } else {
+      await supabase.from("module_manifests").insert({
+        module_source_id: moduleSourceId,
+        ...manifestData,
+      });
+    }
+    
+    toast.success("Manifest saved");
+    setManifest(updatedManifest);
+  }, [module?.id]);
 
   const handleFieldChange = useCallback((field: string, value: unknown) => {
     setHasChanges(true);
@@ -599,17 +943,156 @@ export default function EditModulePage({
           </Card>
         </div>
 
-        {/* Right: Code Editor */}
-        <div className="xl:col-span-3 h-[700px]">
-          <ModuleCodeEditor
-            renderCode={renderCode}
-            styles={styles}
-            settingsSchema={settingsSchema}
-            onRenderCodeChange={handleCodeChange(setRenderCode)}
-            onStylesChange={handleCodeChange(setStyles)}
-            onSettingsSchemaChange={handleCodeChange(setSettingsSchema)}
-            onValidate={handleValidate}
-          />
+        {/* Right: Advanced Editor with Tabs */}
+        <div className="xl:col-span-3">
+          <Card className="h-[700px] flex flex-col">
+            <CardHeader className="pb-3 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <Tabs value={mainTab} onValueChange={setMainTab} className="flex-1">
+                  <TabsList>
+                    <TabsTrigger value="code" className="gap-2">
+                      <Code className="h-4 w-4" />
+                      Code
+                    </TabsTrigger>
+                    <TabsTrigger value="files" className="gap-2">
+                      <Files className="h-4 w-4" />
+                      Files
+                      {moduleFiles.length > 0 && (
+                        <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                          {moduleFiles.length}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                    <TabsTrigger value="dependencies" className="gap-2">
+                      <Package className="h-4 w-4" />
+                      Dependencies
+                      {moduleDeps.length > 0 && (
+                        <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                          {moduleDeps.length}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                    <TabsTrigger value="api" className="gap-2">
+                      <Route className="h-4 w-4" />
+                      API Routes
+                      {apiRoutes.length > 0 && (
+                        <Badge variant="secondary" className="ml-1 h-5 px-1.5">
+                          {apiRoutes.length}
+                        </Badge>
+                      )}
+                    </TabsTrigger>
+                    <TabsTrigger value="manifest" className="gap-2">
+                      <FileJson className="h-4 w-4" />
+                      Manifest
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setEditorMode(editorMode === "simple" ? "advanced" : "simple")}
+                      >
+                        {editorMode === "simple" ? "Switch to Advanced" : "Switch to Simple"}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {editorMode === "simple" 
+                        ? "Advanced mode supports multi-file projects" 
+                        : "Simple mode for single-file modules"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-hidden p-0">
+              {/* Code Tab - Simple Editor */}
+              {mainTab === "code" && (
+                <div className="h-full">
+                  <ModuleCodeEditor
+                    renderCode={renderCode}
+                    styles={styles}
+                    settingsSchema={settingsSchema}
+                    onRenderCodeChange={handleCodeChange(setRenderCode)}
+                    onStylesChange={handleCodeChange(setStyles)}
+                    onSettingsSchemaChange={handleCodeChange(setSettingsSchema)}
+                    onValidate={handleValidate}
+                  />
+                </div>
+              )}
+
+              {/* Files Tab - Multi-File Editor */}
+              {mainTab === "files" && (
+                <div className="h-full p-4">
+                  <MultiFileEditor
+                    moduleId={moduleId}
+                    files={moduleFiles}
+                    onSave={handleSaveFiles}
+                    onFileCreate={handleFileCreate}
+                    onFileDelete={handleFileDelete}
+                    onFileRename={handleFileRename}
+                    className="h-full"
+                  />
+                </div>
+              )}
+
+              {/* Dependencies Tab */}
+              {mainTab === "dependencies" && (
+                <div className="h-full overflow-auto p-4">
+                  <DependencyManager
+                    moduleId={moduleId}
+                    dependencies={moduleDeps}
+                    onAdd={handleAddDependency}
+                    onRemove={handleRemoveDependency}
+                    onUpdate={handleUpdateDependency}
+                    className="h-full"
+                  />
+                </div>
+              )}
+
+              {/* API Routes Tab */}
+              {mainTab === "api" && (
+                <div className="h-full overflow-auto p-4">
+                  <ApiRouteBuilder
+                    moduleId={moduleId}
+                    routes={apiRoutes}
+                    onSave={handleSaveRoute}
+                    onDelete={handleDeleteRoute}
+                    className="h-full"
+                  />
+                </div>
+              )}
+
+              {/* Manifest Tab */}
+              {mainTab === "manifest" && (
+                <div className="h-full overflow-auto p-4">
+                  <ManifestEditor
+                    manifest={manifest || {
+                      name: module.slug,
+                      version: module.latestVersion || "0.0.1",
+                      displayName: name,
+                      description: description,
+                      main: "index.tsx",
+                      permissions: [],
+                      dependencies: {},
+                    }}
+                    onChange={(updatedManifest) => {
+                      setManifest(updatedManifest);
+                      setHasChanges(true);
+                    }}
+                    onSave={async () => {
+                      if (manifest) {
+                        await handleSaveManifest(manifest);
+                      }
+                    }}
+                    className="h-full"
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
 

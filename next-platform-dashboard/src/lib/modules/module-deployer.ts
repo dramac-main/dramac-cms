@@ -268,13 +268,45 @@ export async function getDeployments(moduleId: string): Promise<Deployment[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
 
-  const { data: module } = await db
-    .from("module_source")
-    .select("id")
-    .eq("module_id", moduleId)
-    .single();
+  // Check if moduleId is a UUID or a slug
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(moduleId);
 
-  if (!module) {
+  let moduleSourceId: string | null = null;
+  
+  if (isUUID) {
+    // First try module_source.id directly
+    const { data: directModule } = await db
+      .from("module_source")
+      .select("id")
+      .eq("id", moduleId)
+      .maybeSingle();
+    
+    if (directModule) {
+      moduleSourceId = directModule.id;
+    } else {
+      // Check if it's a modules_v2.id and get studio_module_id
+      const { data: v2Module } = await db
+        .from("modules_v2")
+        .select("studio_module_id")
+        .eq("id", moduleId)
+        .maybeSingle();
+      
+      if (v2Module?.studio_module_id) {
+        // studio_module_id is the UUID (module_source.id)
+        moduleSourceId = v2Module.studio_module_id;
+      }
+    }
+  } else {
+    // It's a slug
+    const { data: module } = await db
+      .from("module_source")
+      .select("id")
+      .eq("module_id", moduleId)
+      .maybeSingle();
+    moduleSourceId = module?.id || null;
+  }
+
+  if (!moduleSourceId) {
     return [];
   }
 
@@ -284,7 +316,7 @@ export async function getDeployments(moduleId: string): Promise<Deployment[]> {
       *,
       version:module_versions(version)
     `)
-    .eq("module_source_id", module.id)
+    .eq("module_source_id", moduleSourceId)
     .order("started_at", { ascending: false });
 
   if (error || !data) {
