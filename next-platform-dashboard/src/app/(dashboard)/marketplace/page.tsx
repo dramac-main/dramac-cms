@@ -161,19 +161,19 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
           return false;
         }
         
-        // If user has test sites but no beta enrollment, show all testing modules
-        if (hasTestSites && !isBetaAgency) {
+        // If user has test sites, ALWAYS show all testing modules (regardless of beta enrollment)
+        if (hasTestSites) {
           return true;
         }
         
-        // If user is beta enrolled, apply tier-specific rules
+        // If user is beta enrolled (but no test sites), apply tier-specific rules
         if (isBetaAgency && betaTier === "standard") {
           // Standard tier: only opted-in modules
           const acceptedModules = (betaEnrollment as any)?.accepted_modules || [];
           return acceptedModules.includes(m.slug);
         }
         
-        // Internal/Alpha/Early Access OR test site user: show all testing modules
+        // Internal/Alpha/Early Access: show all testing modules
         return true;
       }
       

@@ -20,6 +20,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/settings") ||
     pathname.startsWith("/clients") ||
     pathname.startsWith("/marketplace") ||
+    pathname.startsWith("/debug-marketplace") ||
     pathname.startsWith("/admin") ||
     pathname.startsWith("/modules") ||
     pathname.startsWith("/test-components") ||
@@ -42,6 +43,7 @@ export async function proxy(request: NextRequest) {
       pathname.startsWith("/settings") ||
       pathname.startsWith("/clients") ||
       pathname.startsWith("/marketplace") ||
+      pathname.startsWith("/debug-marketplace") ||
       pathname.startsWith("/admin") ||
       pathname.startsWith("/modules") ||
       pathname.startsWith("/editor")
