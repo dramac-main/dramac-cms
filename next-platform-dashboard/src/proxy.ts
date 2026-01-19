@@ -7,6 +7,27 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // ========================================
+  // DETERMINE DOMAIN TYPE FIRST
+  // ========================================
+  
+  // Get configuration from env
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+  const appDomain = process.env.NEXT_PUBLIC_APP_URL || "localhost:3000";
+
+  // Parse the app domain host
+  let appHost = appDomain;
+  try {
+    appHost = new URL(appDomain.includes("://") ? appDomain : `https://${appDomain}`).host;
+  } catch {
+    appHost = appDomain;
+  }
+
+  // Check domain type
+  const isAppDomain = hostname === appHost || hostname === "app.dramacagency.com";
+  const isClientSite = hostname.endsWith(`.${baseDomain}`);
+  const isCustomDomain = !isAppDomain && !isClientSite && !hostname.includes("localhost");
+
+  // ========================================
   // PUBLIC ROUTES - No Auth Required
   // ========================================
   
@@ -31,59 +52,9 @@ export async function proxy(request: NextRequest) {
   }
 
   // ========================================
-  // DASHBOARD ROUTES - Session Required
-  // ========================================
-  
-  // Skip for app routes (dashboard, auth, editor, portal, etc)
-  if (
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/portal") ||
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/signup") ||
-    pathname.startsWith("/forgot-password") ||
-    pathname.startsWith("/onboarding") ||
-    pathname.startsWith("/auth") ||
-    pathname.startsWith("/editor") ||
-    pathname.startsWith("/sites") ||
-    pathname.startsWith("/settings") ||
-    pathname.startsWith("/clients") ||
-    pathname.startsWith("/marketplace") ||
-    pathname.startsWith("/debug-marketplace") ||
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/modules") ||
-    pathname.startsWith("/test-components") ||
-    pathname.startsWith("/test-safety") ||
-    pathname === "/"
-  ) {
-    return await updateSession(request);
-  }
-
-  // ========================================
   // SUBDOMAIN/CUSTOM DOMAIN ROUTING
   // ========================================
   
-  // Get configuration from env
-  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
-  const appDomain = process.env.NEXT_PUBLIC_APP_URL || "localhost:3000";
-
-  // Parse the app domain host
-  let appHost = appDomain;
-  try {
-    appHost = new URL(appDomain.includes("://") ? appDomain : `https://${appDomain}`).host;
-  } catch {
-    appHost = appDomain;
-  }
-
-  // Check if this is the main app domain (CMS dashboard)
-  const isAppDomain = hostname === appHost || hostname === "app.dramacagency.com";
-  
-  // Check if this is a client site subdomain (e.g., ten-and-ten.sites.dramacagency.com)
-  const isClientSite = hostname.endsWith(`.${baseDomain}`);
-
-  // Check if this is a custom domain (completely different domain)
-  const isCustomDomain = !isAppDomain && !isClientSite && !hostname.includes("localhost");
-
-  // Log subdomain routing for debugging
   console.log("[proxy.ts] Routing check:", {
     hostname,
     baseDomain,
@@ -110,8 +81,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // For main app routes, run session update
-  return await updateSession(request);
+  // ========================================
+  // DASHBOARD ROUTES - Session Required
+  // ========================================
+  
+  // Only check session for app domain routes
+  if (isAppDomain) {
+    return await updateSession(request);
+  }
+
+  // Fallback - should never reach here
+  return NextResponse.next();
 }
 
 export const config = {
