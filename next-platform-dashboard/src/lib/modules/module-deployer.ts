@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserId, isSuperAdmin } from "@/lib/auth/permissions";
 import { createVersion } from "./module-versioning";
+import { syncStudioModuleToCatalog } from "./module-catalog-sync";
 
 export interface DeploymentResult {
   success: boolean;
@@ -130,9 +131,15 @@ export async function deployModule(
       })
       .eq("id", deployment.id);
 
-    // If production, sync to catalog
+    // If production, sync to catalog for marketplace visibility
     if (environment === "production") {
-      await syncModuleToCatalog(module);
+      const syncResult = await syncStudioModuleToCatalog(moduleId);
+      if (!syncResult.success) {
+        console.error("[Deployer] Catalog sync failed:", syncResult.error);
+        // Don't fail deployment, but log warning - module is deployed but not visible in marketplace
+      } else {
+        console.log(`[Deployer] Module synced to catalog: ${syncResult.action} (${syncResult.catalogModuleId})`);
+      }
     }
 
     // Update analytics
@@ -203,19 +210,22 @@ async function validateModuleForDeployment(
 }
 
 /**
- * Sync module to the catalog (for published modules)
+ * @deprecated Use syncStudioModuleToCatalog from module-catalog-sync.ts instead.
+ * This function is kept for backwards compatibility but actual sync is now
+ * handled by the module-catalog-sync service which properly syncs to modules_v2.
+ * 
+ * Legacy sync to catalog - now handled by syncStudioModuleToCatalog
  */
 async function syncModuleToCatalog(
   module: Record<string, unknown>
 ): Promise<void> {
-  // This would update the module catalog or registry
-  // For now, we log the sync operation
-  console.log(`[Deployer] Syncing module ${module.module_id} to catalog`);
+  // Actual sync is now handled by syncStudioModuleToCatalog called above
+  // This function is kept for any legacy code paths
+  console.log(`[Deployer] Legacy syncModuleToCatalog called for ${module.module_id}`);
   
-  // In a real implementation, this might:
-  // 1. Update a central module registry
-  // 2. Invalidate CDN caches
-  // 3. Send notifications to subscribed sites
+  // Additional post-sync tasks could go here:
+  // 1. Invalidate CDN caches
+  // 2. Send notifications to subscribed sites
   // 4. Update search indexes
 }
 

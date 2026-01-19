@@ -2,6 +2,7 @@ import { SiteData, PageData } from "@/lib/renderer/site-data";
 import { renderCraftJSON } from "./node-renderer";
 import { SiteStyles } from "./site-styles";
 import { SiteHead } from "./site-head";
+import { ModuleInjector } from "./module-injector";
 
 interface SiteRendererProps {
   site: SiteData;
@@ -15,6 +16,9 @@ export function SiteRenderer({ site, page }: SiteRendererProps) {
     <>
       <SiteHead site={site} />
       <SiteStyles site={site} />
+      
+      {/* Inject studio module code (styles + scripts) */}
+      <ModuleInjector siteId={site.id} />
       
       <div className="site-content" data-site-id={site.id} data-page-id={page.id}>
         {content || (

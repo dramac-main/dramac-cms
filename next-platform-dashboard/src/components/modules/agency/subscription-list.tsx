@@ -130,7 +130,7 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" asChild>
-                <Link href={`/marketplace/v2/${sub.module?.slug}`}>
+                <Link href={`/marketplace/${sub.module?.slug}`}>
                   <ExternalLink className="h-4 w-4" />
                 </Link>
               </Button>

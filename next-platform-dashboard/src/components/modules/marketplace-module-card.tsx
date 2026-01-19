@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Star, Download, Loader2, Check, ExternalLink } from "lucide-react";
+import { Star, Download, Loader2, Check, ExternalLink, Sparkles } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,21 +38,22 @@ export function MarketplaceModuleCard({
 
   const isFree = module.pricing.type === "free";
   const isBeta = module.status === "beta";
+  const isStudioModule = module.source === "studio";
 
   return (
     <Card className="group hover:shadow-lg transition-shadow">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{module.icon}</span>
-            <div>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <span className="text-3xl flex-shrink-0">{module.icon}</span>
+            <div className="min-w-0">
               <Link
                 href={`/marketplace/${module.slug}`}
-                className="font-semibold hover:text-primary transition-colors"
+                className="font-semibold hover:text-primary transition-colors block truncate"
               >
                 {module.name}
               </Link>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground truncate">
                 by {module.author.name}
                 {module.author.verified && (
                   <span className="ml-1 text-blue-500">✓</span>
@@ -60,11 +61,19 @@ export function MarketplaceModuleCard({
               </p>
             </div>
           </div>
-          {isBeta && (
-            <Badge variant="secondary" className="text-xs">
-              Beta
-            </Badge>
-          )}
+          <div className="flex flex-col gap-1 flex-shrink-0">
+            {isStudioModule && (
+              <Badge variant="secondary" className="text-xs whitespace-nowrap">
+                <Sparkles className="h-3 w-3 mr-1" />
+                Studio
+              </Badge>
+            )}
+            {isBeta && (
+              <Badge variant="outline" className="text-xs whitespace-nowrap">
+                Beta
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
 

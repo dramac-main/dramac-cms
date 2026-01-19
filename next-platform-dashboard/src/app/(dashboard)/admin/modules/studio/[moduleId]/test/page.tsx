@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Play, RefreshCw, Settings, AlertTriangle, CheckCircle, XCircle, Copy, Download } from "lucide-react";
+import { ArrowLeft, Play, RefreshCw, Settings, AlertTriangle, CheckCircle, XCircle, Copy, Download, Code, Sliders, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -28,6 +31,16 @@ interface ValidationResult {
   warnings: string[];
 }
 
+interface SettingField {
+  type: string;
+  label: string;
+  default?: string | number | boolean;
+  options?: Array<{ label: string; value: string }>;
+  placeholder?: string;
+  min?: number;
+  max?: number;
+}
+
 export default function ModuleTestPage() {
   const params = useParams();
   const router = useRouter();
@@ -36,13 +49,43 @@ export default function ModuleTestPage() {
   const [module, setModule] = useState<ModuleSource | null>(null);
   const [loading, setLoading] = useState(true);
   const [testSettings, setTestSettings] = useState<string>("{}");
+  const [parsedSettings, setParsedSettings] = useState<Record<string, unknown>>({});
+  const [settingsMode, setSettingsMode] = useState<"visual" | "json">("visual");
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [validation, setValidation] = useState<ValidationResult | null>(null);
+  const [autoPreview, setAutoPreview] = useState(true);
+
+  // Sync parsed settings with JSON string
+  const updateSettingsFromParsed = useCallback((newSettings: Record<string, unknown>) => {
+    setParsedSettings(newSettings);
+    setTestSettings(JSON.stringify(newSettings, null, 2));
+    // Auto-update preview if enabled
+    if (autoPreview && module) {
+      const html = generatePreviewHtml(module, newSettings);
+      setPreviewHtml(html);
+    }
+  }, [autoPreview, module]);
+
+  const updateSettingsFromJson = useCallback((json: string) => {
+    setTestSettings(json);
+    try {
+      const parsed = JSON.parse(json);
+      setParsedSettings(parsed);
+      // Auto-update preview if enabled
+      if (autoPreview && module) {
+        const html = generatePreviewHtml(module, parsed);
+        setPreviewHtml(html);
+      }
+    } catch {
+      // Invalid JSON, don't update parsed
+    }
+  }, [autoPreview, module]);
 
   useEffect(() => {
     loadModule();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moduleId]);
 
   async function loadModule() {
@@ -51,11 +94,122 @@ export default function ModuleTestPage() {
     if (data) {
       setModule(data);
       // Initialize test settings with module's default settings
-      setTestSettings(JSON.stringify(data.defaultSettings || {}, null, 2));
+      const defaultSettings = data.defaultSettings || {};
+      setTestSettings(JSON.stringify(defaultSettings, null, 2));
+      setParsedSettings(defaultSettings as Record<string, unknown>);
       // Auto-validate on load
       validateModule(data);
+      // Generate initial preview
+      if (autoPreview) {
+        const html = generatePreviewHtml(data, defaultSettings as Record<string, unknown>);
+        setPreviewHtml(html);
+      }
     }
     setLoading(false);
+  }
+
+  // Render a setting field based on its type
+  function renderSettingField(key: string, schema: SettingField) {
+    const value = parsedSettings[key] ?? schema.default ?? "";
+    
+    const updateValue = (newValue: unknown) => {
+      updateSettingsFromParsed({ ...parsedSettings, [key]: newValue });
+    };
+
+    switch (schema.type) {
+      case "text":
+      case "string":
+        return (
+          <Input
+            value={String(value)}
+            onChange={(e) => updateValue(e.target.value)}
+            placeholder={schema.placeholder || schema.default?.toString()}
+          />
+        );
+        
+      case "textarea":
+        return (
+          <Textarea
+            value={String(value)}
+            onChange={(e) => updateValue(e.target.value)}
+            placeholder={schema.placeholder || schema.default?.toString()}
+            rows={3}
+          />
+        );
+        
+      case "number":
+        return (
+          <Input
+            type="number"
+            value={Number(value)}
+            onChange={(e) => updateValue(Number(e.target.value))}
+            min={schema.min}
+            max={schema.max}
+          />
+        );
+        
+      case "color":
+        return (
+          <div className="flex items-center gap-2">
+            <Input
+              type="color"
+              value={String(value) || "#000000"}
+              onChange={(e) => updateValue(e.target.value)}
+              className="w-12 h-10 p-1 cursor-pointer"
+            />
+            <Input
+              value={String(value)}
+              onChange={(e) => updateValue(e.target.value)}
+              placeholder="#000000"
+              className="flex-1 font-mono text-sm"
+            />
+          </div>
+        );
+        
+      case "boolean":
+      case "switch":
+        return (
+          <Switch
+            checked={Boolean(value)}
+            onCheckedChange={(checked) => updateValue(checked)}
+          />
+        );
+        
+      case "select":
+        return (
+          <Select value={String(value)} onValueChange={(v) => updateValue(v)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select an option" />
+            </SelectTrigger>
+            <SelectContent>
+              {schema.options?.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+        
+      case "url":
+      case "image":
+        return (
+          <Input
+            type="url"
+            value={String(value)}
+            onChange={(e) => updateValue(e.target.value)}
+            placeholder={schema.type === "image" ? "https://example.com/image.jpg" : "https://example.com"}
+          />
+        );
+        
+      default:
+        return (
+          <Input
+            value={String(value)}
+            onChange={(e) => updateValue(e.target.value)}
+          />
+        );
+    }
   }
 
   function validateModule(mod: ModuleSource): ValidationResult {
@@ -228,8 +382,46 @@ export default function ModuleTestPage() {
   }
 
   function generatePreviewHtml(mod: ModuleSource, settings: Record<string, unknown>): string {
-    // Generate a sandboxed HTML document that attempts to render the module
-    // This is a simplified preview - real rendering would need a proper React environment
+    // Transform the module code to work in browser context
+    // Convert "export default function X" to "function X" and capture it
+    let processedCode = mod.renderCode || "";
+    
+    // Extract the function name from export default
+    const exportDefaultFnMatch = processedCode.match(/export\s+default\s+function\s+(\w+)/);
+    const exportDefaultConstMatch = processedCode.match(/export\s+default\s+(\w+)/);
+    
+    let componentName = "ModuleComponent";
+    
+    if (exportDefaultFnMatch) {
+      // export default function ComponentName -> function ComponentName
+      componentName = exportDefaultFnMatch[1];
+      processedCode = processedCode.replace(/export\s+default\s+function/, "function");
+    } else if (exportDefaultConstMatch && !processedCode.includes("export default function")) {
+      // export default ComponentName at the end - remove it
+      componentName = exportDefaultConstMatch[1];
+      processedCode = processedCode.replace(/export\s+default\s+\w+;?\s*$/, "");
+    } else if (processedCode.includes("export default")) {
+      // export default () => or export default { - wrap it
+      processedCode = processedCode.replace(
+        /export\s+default\s+/,
+        "const ModuleComponent = "
+      );
+    }
+    
+    // Also handle named exports used in the code
+    processedCode = processedCode.replace(/export\s+(?!default)/g, "");
+    
+    // Escape backticks and ${} in the code for template literal safety
+    const escapedCode = processedCode
+      .replace(/\\/g, "\\\\")
+      .replace(/`/g, "\\`")
+      .replace(/\$\{/g, "\\${");
+    
+    const escapedStyles = (mod.styles || "")
+      .replace(/\\/g, "\\\\")
+      .replace(/`/g, "\\`")
+      .replace(/\$\{/g, "\\${");
+    
     return `
 <!DOCTYPE html>
 <html>
@@ -237,41 +429,137 @@ export default function ModuleTestPage() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Module Preview: ${mod.name}</title>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"><\/script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; }
-    .error { color: #dc2626; background: #fef2f2; padding: 16px; border-radius: 8px; margin: 16px 0; }
-    .loading { color: #6b7280; text-align: center; padding: 40px; }
-    ${mod.styles || ""}
+    body { 
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+      padding: 20px; 
+      background: #f9fafb;
+      min-height: 100vh;
+    }
+    .preview-container {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    .error { 
+      color: #dc2626; 
+      background: #fef2f2; 
+      padding: 16px; 
+      border-radius: 8px; 
+      margin: 16px 0;
+      border: 1px solid #fecaca;
+    }
+    .error code {
+      display: block;
+      margin-top: 8px;
+      padding: 8px;
+      background: #fff;
+      border-radius: 4px;
+      font-size: 12px;
+      overflow-x: auto;
+    }
+    .loading { 
+      color: #6b7280; 
+      text-align: center; 
+      padding: 40px;
+    }
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #e5e7eb;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    ${escapedStyles}
   </style>
 </head>
 <body>
-  <div id="root"><div class="loading">Loading module...</div></div>
+  <div id="root">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <p>Loading module preview...</p>
+    </div>
+  </div>
   
-  <script type="text/babel">
-    const settings = ${JSON.stringify(settings)};
+  <script type="text/babel" data-presets="react">
+    // Make React hooks available globally
+    const { useState, useEffect, useCallback, useMemo, useRef, useContext, useReducer } = React;
+    
+    // Module settings passed from test configuration
+    const moduleSettings = ${JSON.stringify(settings)};
     
     try {
-      // Module code (wrapped for safety)
-      ${mod.renderCode || "export default function Module() { return <div>Empty module</div>; }"}
+      // ============ MODULE CODE START ============
+      ${escapedCode}
+      // ============ MODULE CODE END ============
       
-      // Find the default export
-      const ModuleComponent = typeof Module !== 'undefined' ? Module : 
-                              typeof default !== 'undefined' ? default : 
-                              () => <div className="error">No default export found</div>;
+      // Determine which component to render
+      const ComponentToRender = typeof ${componentName} !== 'undefined' 
+        ? ${componentName}
+        : typeof ModuleComponent !== 'undefined'
+        ? ModuleComponent
+        : () => (
+            <div className="error">
+              <strong>Component Not Found</strong>
+              <p>Could not find a component to render. Make sure your module exports a default function.</p>
+            </div>
+          );
       
-      // Render
+      // Wrapper component to catch render errors
+      function PreviewWrapper() {
+        const [hasError, setHasError] = React.useState(false);
+        const [errorMsg, setErrorMsg] = React.useState('');
+        
+        if (hasError) {
+          return (
+            <div className="error">
+              <strong>Render Error</strong>
+              <p>{errorMsg}</p>
+            </div>
+          );
+        }
+        
+        try {
+          return (
+            <div className="preview-container">
+              <ComponentToRender settings={moduleSettings} />
+            </div>
+          );
+        } catch (err) {
+          return (
+            <div className="error">
+              <strong>Component Error</strong>
+              <p>{err.message}</p>
+              <code>{err.stack}</code>
+            </div>
+          );
+        }
+      }
+      
+      // Render the module
       const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(<ModuleComponent settings={settings} />);
+      root.render(<PreviewWrapper />);
+      
     } catch (error) {
       document.getElementById('root').innerHTML = 
-        '<div class="error"><strong>Runtime Error:</strong><br/>' + error.message + '</div>';
-      console.error('Module Error:', error);
+        '<div class="error">' +
+        '<strong>JavaScript Error</strong>' +
+        '<p>' + error.message + '</p>' +
+        '<code>' + (error.stack || '').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code>' +
+        '</div>';
+      console.error('Module Preview Error:', error);
     }
-  </script>
+  <\/script>
 </body>
 </html>`;
   }
@@ -404,33 +692,145 @@ export default function ModuleTestPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Test Settings
-              </CardTitle>
-              <CardDescription>
-                Configure the settings to test how your module renders
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Test Settings
+                  </CardTitle>
+                  <CardDescription>
+                    Configure the settings to test how your module renders
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="auto-preview"
+                      checked={autoPreview}
+                      onCheckedChange={setAutoPreview}
+                    />
+                    <Label htmlFor="auto-preview" className="text-sm">
+                      <Eye className="h-4 w-4 inline mr-1" />
+                      Live Preview
+                    </Label>
+                  </div>
+                  <div className="flex border rounded-md">
+                    <Button
+                      variant={settingsMode === "visual" ? "secondary" : "ghost"}
+                      size="sm"
+                      onClick={() => setSettingsMode("visual")}
+                      className="rounded-r-none"
+                    >
+                      <Sliders className="h-4 w-4 mr-1" />
+                      Visual
+                    </Button>
+                    <Button
+                      variant={settingsMode === "json" ? "secondary" : "ghost"}
+                      size="sm"
+                      onClick={() => setSettingsMode("json")}
+                      className="rounded-l-none"
+                    >
+                      <Code className="h-4 w-4 mr-1" />
+                      JSON
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label>Settings JSON</Label>
-                <Textarea
-                  value={testSettings}
-                  onChange={(e) => setTestSettings(e.target.value)}
-                  rows={10}
-                  className="font-mono text-sm"
-                  placeholder="{}"
-                />
-              </div>
-              {module.settingsSchema && Object.keys(module.settingsSchema).length > 0 && (
-                <div>
-                  <Label className="text-muted-foreground">Expected Schema:</Label>
-                  <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-auto">
-                    {JSON.stringify(module.settingsSchema, null, 2)}
-                  </pre>
+              {settingsMode === "visual" ? (
+                // Visual Settings Editor
+                <div className="space-y-4">
+                  {module.settingsSchema && Object.keys(module.settingsSchema as Record<string, SettingField>).length > 0 ? (
+                    Object.entries(module.settingsSchema as Record<string, SettingField>).map(([key, schema]) => (
+                      <div key={key} className="space-y-2">
+                        <Label htmlFor={key} className="flex items-center gap-2">
+                          {schema.label || key}
+                          {schema.type === "color" && (
+                            <span
+                              className="w-4 h-4 rounded border inline-block"
+                              style={{ backgroundColor: String(parsedSettings[key] || schema.default || "#000") }}
+                            />
+                          )}
+                        </Label>
+                        {renderSettingField(key, schema)}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Sliders className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>No settings schema defined</p>
+                      <p className="text-sm mt-1">
+                        Add a settings schema to your module to enable visual editing
+                      </p>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={() => setSettingsMode("json")}
+                        className="mt-2"
+                      >
+                        Switch to JSON mode
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // JSON Settings Editor
+                <div className="space-y-4">
+                  <div>
+                    <Label>Settings JSON</Label>
+                    <Textarea
+                      value={testSettings}
+                      onChange={(e) => updateSettingsFromJson(e.target.value)}
+                      rows={10}
+                      className="font-mono text-sm"
+                      placeholder="{}"
+                    />
+                  </div>
+                  {module.settingsSchema && Object.keys(module.settingsSchema).length > 0 && (
+                    <div>
+                      <Label className="text-muted-foreground">Expected Schema:</Label>
+                      <pre className="text-xs bg-muted p-2 rounded mt-1 overflow-auto max-h-[200px]">
+                        {JSON.stringify(module.settingsSchema, null, 2)}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               )}
+              
+              {/* Quick Actions */}
+              <div className="flex gap-2 pt-2 border-t">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const defaults = module.defaultSettings || {};
+                    updateSettingsFromParsed(defaults as Record<string, unknown>);
+                    toast.success("Reset to default settings");
+                  }}
+                >
+                  Reset to Defaults
+                </Button>
+                {!autoPreview && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      try {
+                        const settings = JSON.parse(testSettings);
+                        const html = generatePreviewHtml(module, settings);
+                        setPreviewHtml(html);
+                        toast.success("Preview updated");
+                      } catch {
+                        toast.error("Invalid JSON in settings");
+                      }
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Update Preview
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
 

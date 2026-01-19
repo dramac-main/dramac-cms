@@ -7,7 +7,8 @@ import {
   DollarSign, 
   MessageSquare, 
   BarChart3,
-  TrendingUp
+  TrendingUp,
+  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -130,7 +131,7 @@ export default async function AdminModulesPage() {
       <ModuleStatsCards stats={stats} />
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link href="/admin/modules/studio">
           <Card className="hover:border-primary transition-colors cursor-pointer h-full">
             <CardHeader>
@@ -140,6 +141,20 @@ export default async function AdminModulesPage() {
               </CardTitle>
               <CardDescription>
                 Create new modules with the visual builder
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </Link>
+        
+        <Link href="/admin/modules/studio/sync">
+          <Card className="hover:border-primary transition-colors cursor-pointer h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <RefreshCw className="h-5 w-5" />
+                Sync Dashboard
+              </CardTitle>
+              <CardDescription>
+                Sync Studio modules to Marketplace
               </CardDescription>
             </CardHeader>
           </Card>

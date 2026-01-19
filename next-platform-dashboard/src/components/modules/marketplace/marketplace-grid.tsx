@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Package, Users, Building2, Globe, Check } from "lucide-react";
+import { Package, Users, Building2, Globe, Check, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -15,6 +15,7 @@ interface Module {
   install_count: number;
   rating_average: number | null;
   is_featured: boolean;
+  source?: string; // 'catalog' or 'studio'
 }
 
 interface MarketplaceGridProps {
@@ -62,17 +63,18 @@ export function MarketplaceGrid({ modules, subscribedModuleIds }: MarketplaceGri
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {modules.map((module) => {
         const isSubscribed = subscribedModuleIds.has(module.id);
+        const isStudioModule = module.source === "studio";
         
         return (
           <Link key={module.id} href={`/marketplace/${module.slug}`}>
             <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer">
               <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{module.icon || "📦"}</span>
-                    <div>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <span className="text-3xl flex-shrink-0">{module.icon || "📦"}</span>
+                    <div className="min-w-0">
                       <CardTitle className="text-lg line-clamp-1">{module.name}</CardTitle>
-                      <div className="flex items-center gap-2 mt-1">
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <Badge 
                           variant="outline" 
                           className={`text-xs ${getInstallLevelColor(module.install_level)}`}
@@ -80,11 +82,17 @@ export function MarketplaceGrid({ modules, subscribedModuleIds }: MarketplaceGri
                           {getInstallLevelIcon(module.install_level)}
                           <span className="ml-1 capitalize">{module.install_level}</span>
                         </Badge>
+                        {isStudioModule && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Sparkles className="h-3 w-3 mr-1" />
+                            Studio
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
                   {isSubscribed && (
-                    <Badge className="bg-green-500 hover:bg-green-600">
+                    <Badge className="bg-green-500 hover:bg-green-600 flex-shrink-0">
                       <Check className="h-3 w-3 mr-1" />
                       Subscribed
                     </Badge>

@@ -1,213 +1,170 @@
-"use client";
+import { Metadata } from "next";
+import { createClient } from "@/lib/supabase/server";
+import { Star } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { MarketplaceGrid } from "@/components/modules/marketplace/marketplace-grid";
+import { MarketplaceSidebar } from "@/components/modules/marketplace/marketplace-sidebar";
+import { MarketplaceHeader } from "@/components/modules/marketplace/marketplace-header";
 
-import { useState, useEffect, useCallback } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { FeaturedModules } from "@/components/modules/featured-modules";
-import { ModuleCategoryFilter } from "@/components/modules/module-marketplace-category-filter";
-import { ModuleGrid } from "@/components/modules/module-grid";
-import { moduleRegistry } from "@/lib/modules/module-registry";
-import type { ModuleDefinition, ModuleCategory, ModulePricingType } from "@/lib/modules/module-types";
-import { toast } from "sonner";
-import { useDebounce } from "@/hooks/use-debounce";
+export const metadata: Metadata = {
+  title: "Module Marketplace | DRAMAC",
+  description: "Browse and subscribe to modules for your agency",
+};
 
-type SortOption = "popular" | "newest" | "price-low" | "price-high" | "rating";
+interface PageProps {
+  searchParams: Promise<{ q?: string; category?: string }>;
+}
 
-export default function MarketplacePage() {
-  const [modules, setModules] = useState<ModuleDefinition[]>([]);
-  const [featuredModules, setFeaturedModules] = useState<ModuleDefinition[]>([]);
-  const [loading, setLoading] = useState(true);
-  
-  // Filters
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState<ModuleCategory | null>(null);
-  const [priceType, setPriceType] = useState<ModulePricingType | "all">("all");
-  const [sort, setSort] = useState<SortOption>("popular");
-  
-  const debouncedSearch = useDebounce(search, 300);
+/**
+ * Unified Module Marketplace
+ * Queries modules_v2 table which includes both catalog and studio modules.
+ */
+export default async function MarketplacePage({ searchParams }: PageProps) {
+  const { q, category } = await searchParams;
+  const supabase = await createClient();
 
-  // Load modules
-  const loadModules = useCallback(() => {
-    setLoading(true);
-    
-    const { modules: results } = moduleRegistry.search({
-      query: debouncedSearch || undefined,
-      category: category || undefined,
-      priceType: priceType === "all" ? undefined : priceType,
-      sort,
-    });
+  // Get current user's agency
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user?.id || "")
+    .single();
 
-    setModules(results);
-    setLoading(false);
-  }, [debouncedSearch, category, priceType, sort]);
+  // Build query for modules_v2 table (includes both catalog and studio modules)
+  let query = supabase
+    .from("modules_v2" as any)
+    .select("*")
+    .eq("status", "active")
+    .order("is_featured", { ascending: false })
+    .order("install_count", { ascending: false });
 
-  // Initial load
-  useEffect(() => {
-    setFeaturedModules(moduleRegistry.getFeatured());
-    loadModules();
-  }, [loadModules]);
+  if (q) {
+    query = query.or(`name.ilike.%${q}%,description.ilike.%${q}%`);
+  }
 
-  // Reload on filter change
-  useEffect(() => {
-    loadModules();
-  }, [debouncedSearch, category, priceType, sort, loadModules]);
+  if (category) {
+    query = query.eq("category", category);
+  }
 
-  const handleInstall = async (moduleId: string) => {
-    // This would call the install API
-    // For now, show a toast
-    const module = moduleRegistry.get(moduleId);
-    if (!module) return;
+  const { data: modules } = await query;
 
-    if (module.pricing.type === "free") {
-      toast.success(`${module.name} installed successfully!`);
-    } else {
-      toast.info(`Redirecting to purchase ${module.name}...`);
-      // Would redirect to LemonSqueezy checkout
-    }
+  // Get agency's existing subscriptions
+  const { data: subscriptions } = profile?.agency_id 
+    ? await supabase
+        .from("agency_module_subscriptions" as any)
+        .select("module_id, status")
+        .eq("agency_id", profile.agency_id)
+        .eq("status", "active")
+    : { data: null };
+
+  const subscribedModuleIds = new Set(subscriptions?.map((s: any) => s.module_id) || []);
+
+  // Get categories for sidebar
+  const { data: categories } = await supabase
+    .from("modules_v2" as any)
+    .select("category")
+    .eq("status", "active");
+
+  const uniqueCategories = [...new Set(categories?.map((c: any) => c.category) || [])];
+
+  // Get featured modules
+  const featuredModules = (modules as any[])?.filter((m: any) => m.is_featured).slice(0, 3) || [];
+
+  // Convert modules to expected format (includes source for Studio badge)
+  const formattedModules = (modules as any[] || []).map((m: any) => ({
+    id: m.id,
+    slug: m.slug,
+    name: m.name,
+    description: m.description,
+    icon: m.icon || "📦",
+    category: m.category,
+    install_level: m.install_level,
+    wholesale_price_monthly: m.wholesale_price_monthly,
+    install_count: m.install_count || 0,
+    rating_average: m.rating_average,
+    is_featured: m.is_featured,
+    source: m.source || "catalog", // 'catalog' or 'studio'
+  }));
+
+  const formatPrice = (cents: number | null) => {
+    if (!cents || cents === 0) return "Free";
+    return `$${(cents / 100).toFixed(2)}/mo`;
   };
 
-  const showFeatured = !search && !category && priceType === "all";
-
   return (
-    <div className="container py-6 max-w-7xl">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Module Marketplace</h1>
-        <p className="text-muted-foreground">
-          Extend your sites with powerful modules
-        </p>
-      </div>
+    <div className="space-y-6">
+      {/* Header with Search */}
+      <MarketplaceHeader searchQuery={q} />
 
-      {/* Search & Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search modules..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        <div className="flex gap-2">
-          <Select value={sort} onValueChange={(v) => setSort(v as SortOption)}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="popular">Most Popular</SelectItem>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="rating">Highest Rated</SelectItem>
-              <SelectItem value="price-low">Price: Low to High</SelectItem>
-              <SelectItem value="price-high">Price: High to Low</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon">
-                <SlidersHorizontal className="h-4 w-4" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Filters</SheetTitle>
-              </SheetHeader>
-              <div className="mt-6 space-y-6">
-                <div>
-                  <Label className="mb-3 block">Price</Label>
-                  <RadioGroup
-                    value={priceType}
-                    onValueChange={(v) => setPriceType(v as ModulePricingType | "all")}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="all" id="all" />
-                      <Label htmlFor="all">All</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="free" id="free" />
-                      <Label htmlFor="free">Free</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="monthly" id="monthly" />
-                      <Label htmlFor="monthly">Monthly</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="one-time" id="one-time" />
-                      <Label htmlFor="one-time">One-time</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    setCategory(null);
-                    setPriceType("all");
-                    setSearch("");
-                  }}
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-
-      {/* Category Filter */}
-      <div className="mb-6">
-        <ModuleCategoryFilter selected={category} onChange={setCategory} />
-      </div>
-
-      {/* Featured Modules */}
-      {showFeatured && (
-        <FeaturedModules
-          modules={featuredModules}
-          onInstall={handleInstall}
+      <div className="flex gap-6">
+        {/* Sidebar */}
+        <MarketplaceSidebar 
+          categories={uniqueCategories as string[]} 
+          selectedCategory={category}
         />
-      )}
 
-      {/* Results Header */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold">
-          {category
-            ? `${category.charAt(0).toUpperCase() + category.slice(1)} Modules`
-            : search
-            ? `Search Results`
-            : "All Modules"}
-        </h2>
-        <span className="text-sm text-muted-foreground">
-          {modules.length} module{modules.length !== 1 ? "s" : ""}
-        </span>
+        {/* Main Content */}
+        <div className="flex-1 space-y-8">
+          {/* Featured Modules (only on home, no search/filter) */}
+          {!q && !category && featuredModules.length > 0 && (
+            <section>
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-500" />
+                Featured Modules
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {featuredModules.map((module: any) => (
+                  <Card 
+                    key={module.id} 
+                    className="border-2 border-yellow-200 dark:border-yellow-800 bg-yellow-50/50 dark:bg-yellow-950/20"
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">{module.icon || "📦"}</span>
+                        <div>
+                          <CardTitle className="text-lg">{module.name}</CardTitle>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-sm font-medium text-primary">
+                              {formatPrice(module.wholesale_price_monthly)}
+                            </span>
+                            {subscribedModuleIds.has(module.id) && (
+                              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                Subscribed
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {module.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* All Modules */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">
+                {category ? `${category} Modules` : q ? `Search Results` : "All Modules"}
+              </h2>
+              <span className="text-muted-foreground">
+                {formattedModules.length} modules
+              </span>
+            </div>
+            <MarketplaceGrid 
+              modules={formattedModules} 
+              subscribedModuleIds={subscribedModuleIds}
+            />
+          </section>
+        </div>
       </div>
-
-      {/* Module Grid */}
-      <ModuleGrid
-        modules={modules}
-        onInstall={handleInstall}
-        loading={loading}
-        emptyMessage={search ? "No modules match your search" : "No modules available"}
-      />
     </div>
   );
 }

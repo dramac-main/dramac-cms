@@ -10,7 +10,8 @@ export type ModuleCategory =
   | "communication"
   | "content"
   | "integrations"
-  | "utilities";
+  | "utilities"
+  | "other";
 
 export type ModulePricingType = "free" | "one-time" | "monthly" | "yearly";
 
@@ -38,7 +39,7 @@ export interface ModuleDefinition {
   version: string;
   icon: string;
   screenshots?: string[];
-  category: ModuleCategory;
+  category: ModuleCategory | "other";
   tags: string[];
   author: ModuleAuthor;
   pricing: ModulePricing;
@@ -48,7 +49,7 @@ export interface ModuleDefinition {
   rating?: number;
   reviewCount?: number;
   installCount?: number;
-  status: "active" | "deprecated" | "beta";
+  status: "active" | "deprecated" | "beta" | "inactive";
   createdAt: Date;
   updatedAt: Date;
   // Studio-specific properties (for dynamically built modules)
@@ -58,6 +59,11 @@ export interface ModuleDefinition {
   settingsSchema?: Record<string, unknown>;
   defaultSettings?: Record<string, unknown>;
   dependencies?: string[];
+  // Additional metadata
+  documentationUrl?: string;
+  supportUrl?: string;
+  isFeatured?: boolean;
+  isPremium?: boolean;
 }
 
 export interface ChangelogEntry {

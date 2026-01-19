@@ -9,6 +9,7 @@ import {
   AlertCircle,
   TrendingUp,
   Settings2,
+  RefreshCw,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -95,12 +96,20 @@ export default async function ModuleStudioPage() {
             Create, edit, and deploy modules for the marketplace
           </p>
         </div>
-        <Button asChild>
-          <Link href="/admin/modules/studio/new">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Module
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/admin/modules/studio/sync">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Sync Dashboard
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/admin/modules/studio/new">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Module
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}

@@ -59,7 +59,7 @@ export const mainNavigation: NavGroup[] = [
     items: [
       {
         title: "Browse Modules",
-        href: "/marketplace/v2",
+        href: "/marketplace",
         icon: Package,
         dataTour: "modules",
       },

@@ -7,21 +7,61 @@ import {
   Check,
   ExternalLink,
   Shield,
+  Code,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getModuleBySlug, formatPrice, MODULE_CATEGORIES } from "@/lib/modules/module-catalog";
+import { getModuleById } from "@/lib/modules/module-registry-server";
+import { MODULE_CATEGORIES } from "@/lib/modules/module-catalog";
+import type { Metadata } from "next";
 
 interface ModuleDetailPageProps {
   params: Promise<{ moduleId: string }>;
 }
 
+// Format price for display
+function formatPrice(pricing: { type: string; amount: number; currency: string }): string {
+  if (pricing.type === "free" || pricing.amount === 0) {
+    return "Free";
+  }
+  
+  const amount = pricing.amount / 100; // Convert cents to dollars
+  const formatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: pricing.currency || "USD",
+  }).format(amount);
+  
+  if (pricing.type === "monthly") {
+    return `${formatted}/mo`;
+  }
+  if (pricing.type === "one-time") {
+    return formatted;
+  }
+  return formatted;
+}
+
+export async function generateMetadata({ params }: ModuleDetailPageProps): Promise<Metadata> {
+  const { moduleId } = await params;
+  const module = await getModuleById(moduleId);
+  
+  if (!module) {
+    return { title: "Module Not Found" };
+  }
+  
+  return {
+    title: `${module.name} - Module Marketplace`,
+    description: module.description,
+  };
+}
+
 export default async function ModuleDetailPage({ params }: ModuleDetailPageProps) {
   const { moduleId } = await params;
-  const module = getModuleBySlug(moduleId);
+  
+  // Fetch module from registry (now includes both catalog AND studio modules)
+  const module = await getModuleById(moduleId);
 
   if (!module) {
     notFound();
@@ -87,6 +127,12 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
             )}
             {module.status === "beta" && (
               <Badge variant="secondary">Beta</Badge>
+            )}
+            {module.source === "studio" && (
+              <Badge variant="outline" className="text-xs">
+                <Code className="h-3 w-3 mr-1" />
+                Studio Module
+              </Badge>
             )}
           </div>
         </div>
