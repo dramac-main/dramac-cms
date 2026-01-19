@@ -27,22 +27,47 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "Site not found" }, { status: 404 });
     }
 
-    // Get all modules subscribed by the agency
-    const { data: agencyModules } = await (supabase as any)
+    // Get all module subscriptions for the agency
+    const { data: subscriptions } = await (supabase as any)
       .from("agency_module_subscriptions")
-      .select(`
-        module:modules_v2(*)
-      `)
+      .select("*")
       .eq("agency_id", site.client.agency_id)
       .eq("status", "active");
+
+    // Enrich subscriptions with module details from both sources
+    const agencyModules = await Promise.all(
+      (subscriptions || []).map(async (sub: any) => {
+        // Try modules_v2 first (published)
+        const { data: v2Module } = await (supabase as any)
+          .from("modules_v2")
+          .select("*")
+          .eq("id", sub.module_id)
+          .single();
+
+        if (v2Module) {
+          return { ...sub, module: v2Module };
+        }
+
+        // Fallback to module_source (testing)
+        const { data: sourceModule } = await (supabase as any)
+          .from("module_source")
+          .select("*")
+          .eq("id", sub.module_id)
+          .single();
+
+        return { ...sub, module: sourceModule };
+      })
+    );
+
+    // Filter to site-level modules only
+    const siteEligibleModules = agencyModules.filter(
+      (sub: any) => sub.module?.install_level === "site"
+    );
 
     // Get modules enabled for this site
     const { data: siteModules } = await supabase
       .from("site_module_installations")
-      .select(`
-        *,
-        module:modules_v2(*)
-      `)
+      .select("*")
       .eq("site_id", siteId);
 
     // Create a map of enabled modules
@@ -51,11 +76,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     // Combine data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = agencyModules?.map((sub: any) => ({
+    const result = siteEligibleModules.map((sub: any) => ({
       module: sub.module,
-      siteModule: enabledMap.get(sub.module?.id || ""),
-      isEnabled: enabledMap.has(sub.module?.id || ""),
-    })) || [];
+      siteModule: enabledMap.get(sub.module?.id || sub.module_id || ""),
+      isEnabled: enabledMap.has(sub.module?.id || sub.module_id || ""),
+    }));
 
     return NextResponse.json(result);
   } catch (error) {
