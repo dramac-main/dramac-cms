@@ -250,26 +250,50 @@ export async function getModuleById(moduleIdOrSlug: string): Promise<ModuleDefin
             .single();
           
           if (profile?.agency_id) {
-            const { data: betaEnrollment } = await db
-              .from("beta_enrollment")
-              .select("*")
-              .eq("agency_id", profile.agency_id)
+            // Check testing_tier: 'internal' modules are dev-only, not accessible via detail page
+            if (studioModule.testing_tier === "internal") {
+              return null; // Internal testing only - not accessible
+            }
+            
+            // Check if user has test sites
+            const { data: testSites } = await db
+              .from("test_site_configuration" as any)
+              .select("site_id")
               .eq("is_active", true)
-              .single();
+              .eq("sites.agency_id", profile.agency_id);
             
-            // If not enrolled in beta, return null (module not found)
-            if (!betaEnrollment) {
-              return null;
-            }
+            const hasTestSites = testSites && testSites.length > 0;
             
-            // Check tier-specific access
-            if ((betaEnrollment as any).beta_tier === "standard") {
-              const acceptedModules = (betaEnrollment as any).accepted_modules || [];
-              if (!acceptedModules.includes(studioModule.slug)) {
-                return null; // Not opted in
+            // Test site users can access beta/public tier modules
+            if (hasTestSites && (studioModule.testing_tier === "beta" || studioModule.testing_tier === "public")) {
+              // Allow access
+            } else {
+              // Check beta enrollment for non-test-site users
+              const { data: betaEnrollment } = await db
+                .from("beta_enrollment")
+                .select("*")
+                .eq("agency_id", profile.agency_id)
+                .eq("is_active", true)
+                .single();
+              
+              // If not enrolled in beta and no test sites, return null
+              if (!betaEnrollment) {
+                return null;
               }
+              
+              // Check tier-specific access
+              if ((betaEnrollment as any).beta_tier === "standard") {
+                // Standard tier: must be opted in AND module must be beta/public tier
+                if (studioModule.testing_tier !== "beta" && studioModule.testing_tier !== "public") {
+                  return null;
+                }
+                const acceptedModules = (betaEnrollment as any).accepted_modules || [];
+                if (!acceptedModules.includes(studioModule.slug)) {
+                  return null; // Not opted in
+                }
+              }
+              // Internal/Alpha/Early Access: Allow access to beta/public tier modules
             }
-            // Internal/Alpha/Early Access: Allow access
           } else {
             return null; // No agency
           }

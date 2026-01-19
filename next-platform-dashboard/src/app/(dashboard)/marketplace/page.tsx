@@ -119,23 +119,26 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
   // Using module_id (uuid) for accurate matching with modules_v2.studio_module_id
   const { data: allModuleSource } = await supabase
     .from("module_source" as any)
-    .select("id, slug, status, module_id");
+    .select("id, slug, status, testing_tier, module_id");
 
   // Create maps for both slug and module_id matching
-  const moduleStatusBySlug = new Map<string, string>();
-  const moduleStatusById = new Map<string, string>();
+  const moduleStatusBySlug = new Map<string, { status: string; testingTier: string | null }>();
+  const moduleStatusById = new Map<string, { status: string; testingTier: string | null }>();
   
   (allModuleSource || []).forEach((m: any) => {
-    moduleStatusBySlug.set(m.slug, m.status);
-    moduleStatusById.set(m.id, m.status);
+    const data = { status: m.status, testingTier: m.testing_tier };
+    moduleStatusBySlug.set(m.slug, data);
+    moduleStatusById.set(m.id, data);
   });
 
   // Filter modules based on beta enrollment and actual module status
   let filteredModules = (allModules || []).filter((m: any) => {
     // Check status - for testing modules we already know the status
-    const statusBySlug = moduleStatusBySlug.get(m.slug);
-    const statusById = m.studio_module_id ? moduleStatusById.get(m.studio_module_id) : null;
-    const actualStatus = m.status === "testing" ? "testing" : (statusById || statusBySlug);
+    const sourceDataBySlug = moduleStatusBySlug.get(m.slug);
+    const sourceDataById = m.studio_module_id ? moduleStatusById.get(m.studio_module_id) : null;
+    const sourceData = sourceDataById || sourceDataBySlug;
+    const actualStatus = m.status === "testing" ? "testing" : (sourceData?.status || m.status);
+    const testingTier = sourceData?.testingTier;
     
     // If it's a studio module, we MUST check its real status from module_source
     if (m.source === "studio" || m.studio_module_id) {
@@ -161,20 +164,34 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
           return false;
         }
         
-        // If user has test sites, ALWAYS show all testing modules (regardless of beta enrollment)
-        if (hasTestSites) {
+        // Check testing_tier: only show 'beta' or 'public' tier to test sites
+        // 'internal' tier modules are hidden from test sites (dev-only)
+        if (testingTier === "internal") {
+          // Internal modules only visible to super admins (which we don't check here)
+          // For now, hide from everyone in marketplace
+          return false;
+        }
+        
+        // If user has test sites, show beta/public testing modules
+        if (hasTestSites && (testingTier === "beta" || testingTier === "public")) {
           return true;
         }
         
         // If user is beta enrolled (but no test sites), apply tier-specific rules
         if (isBetaAgency && betaTier === "standard") {
-          // Standard tier: only opted-in modules
+          // Standard tier: only opted-in modules (and must be beta/public tier)
+          if (testingTier === "internal") return false;
           const acceptedModules = (betaEnrollment as any)?.accepted_modules || [];
           return acceptedModules.includes(m.slug);
         }
         
-        // Internal/Alpha/Early Access: show all testing modules
-        return true;
+        // Internal/Alpha/Early Access: show all beta/public testing modules
+        if (isBetaAgency && (testingTier === "beta" || testingTier === "public")) {
+          return true;
+        }
+        
+        // If no testing_tier set (old data), hide it for safety
+        return false;
       }
       
       // Only show if explicitly published
@@ -228,9 +245,10 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
     source: m.source || "catalog", // 'catalog' or 'studio'
     // Determine actual status for beta badge
     status: (() => {
-      const statusBySlug = moduleStatusBySlug.get(m.slug);
-      const statusById = m.studio_module_id ? moduleStatusById.get(m.studio_module_id) : null;
-      return statusById || statusBySlug || "published";
+      const statusDataBySlug = moduleStatusBySlug.get(m.slug);
+      const statusDataById = m.studio_module_id ? moduleStatusById.get(m.studio_module_id) : null;
+      const statusData = statusDataById || statusDataBySlug;
+      return statusData?.status || m.status || "published";
     })(),
   }));
 

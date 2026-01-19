@@ -33,7 +33,8 @@ export async function deployModule(
   moduleId: string,
   environment: "staging" | "production",
   versionType: "major" | "minor" | "patch",
-  changelog: string
+  changelog: string,
+  testingTier?: "internal" | "beta" | "public"
 ): Promise<DeploymentResult> {
   const isAdmin = await isSuperAdmin();
   if (!isAdmin) {
@@ -113,8 +114,12 @@ export async function deployModule(
       updateData.status = "published";
       updateData.published_version = versionResult.version;
       updateData.published_at = new Date().toISOString();
+      // Clear testing_tier when publishing
+      updateData.testing_tier = null;
     } else {
       updateData.status = "testing";
+      // Set testing_tier for staging deploys (defaults to 'internal' if not specified)
+      updateData.testing_tier = testingTier || "internal";
     }
 
     await db

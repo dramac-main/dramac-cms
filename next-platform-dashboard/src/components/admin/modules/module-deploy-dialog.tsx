@@ -36,6 +36,7 @@ interface ModuleDeployDialogProps {
 
 type Environment = "staging" | "production";
 type VersionType = "patch" | "minor" | "major";
+type TestingTier = "internal" | "beta" | "public";
 
 export function ModuleDeployDialog({
   open,
@@ -47,6 +48,7 @@ export function ModuleDeployDialog({
 }: ModuleDeployDialogProps) {
   const [environment, setEnvironment] = useState<Environment>("staging");
   const [versionType, setVersionType] = useState<VersionType>("patch");
+  const [testingTier, setTestingTier] = useState<TestingTier>("beta");
   const [changelog, setChangelog] = useState("");
   const [deploying, setDeploying] = useState(false);
   const [result, setResult] = useState<{
@@ -83,7 +85,8 @@ export function ModuleDeployDialog({
         moduleId,
         environment,
         versionType,
-        changelog.trim()
+        changelog.trim(),
+        environment === "staging" ? testingTier : undefined
       );
 
       setResult(deployResult);
@@ -185,6 +188,69 @@ export function ModuleDeployDialog({
               </Label>
             </RadioGroup>
           </div>
+
+          {/* Testing Tier (only for staging) */}
+          {environment === "staging" && (
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Testing Visibility</Label>
+              <RadioGroup
+                value={testingTier}
+                onValueChange={(v) => setTestingTier(v as TestingTier)}
+                className="space-y-2"
+              >
+                <Label
+                  htmlFor="tier-internal"
+                  className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                    testingTier === "internal"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary"
+                      : "hover:border-muted-foreground/50"
+                  }`}
+                >
+                  <RadioGroupItem value="internal" id="tier-internal" className="mt-0.5" />
+                  <div className="flex-1">
+                    <div className="font-medium">Internal Only</div>
+                    <div className="text-sm text-muted-foreground">
+                      Hidden from test sites. Only you can see it (for development/debugging)
+                    </div>
+                  </div>
+                </Label>
+
+                <Label
+                  htmlFor="tier-beta"
+                  className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                    testingTier === "beta"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary"
+                      : "hover:border-muted-foreground/50"
+                  }`}
+                >
+                  <RadioGroupItem value="beta" id="tier-beta" className="mt-0.5" />
+                  <div className="flex-1">
+                    <div className="font-medium">Beta Testing 🎯</div>
+                    <div className="text-sm text-muted-foreground">
+                      Visible to test sites and beta users. Ready for real testing
+                    </div>
+                  </div>
+                </Label>
+
+                <Label
+                  htmlFor="tier-public"
+                  className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                    testingTier === "public"
+                      ? "border-primary bg-primary/5 ring-1 ring-primary"
+                      : "hover:border-muted-foreground/50"
+                  }`}
+                >
+                  <RadioGroupItem value="public" id="tier-public" className="mt-0.5" />
+                  <div className="flex-1">
+                    <div className="font-medium">Public Testing</div>
+                    <div className="text-sm text-muted-foreground">
+                      Available for wider testing (reserved for future use)
+                    </div>
+                  </div>
+                </Label>
+              </RadioGroup>
+            </div>
+          )}
 
           {/* Version Type Selection */}
           <div className="space-y-3">
