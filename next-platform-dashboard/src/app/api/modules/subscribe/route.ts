@@ -38,6 +38,8 @@ export async function POST(request: NextRequest) {
     // Get module from registry (supports BOTH catalog AND studio modules)
     const module = await getModuleById(moduleId || moduleSlug);
     
+    console.log("[Subscribe] Module from registry:", module ? { id: module.id, slug: module.slug, name: module.name } : null);
+    
     // Also try to get from modules_v2 directly
     let moduleData = null;
     if (module) {
@@ -47,24 +49,30 @@ export async function POST(request: NextRequest) {
         .eq("id", module.id)
         .maybeSingle();
       moduleData = v2Module as any;
+      console.log("[Subscribe] Module from v2:", moduleData ? { id: moduleData.id } : null);
     }
 
-    // If not in modules_v2, it might be a studio module - get pricing from module_source
+    // If not in modules_v2, it might be a studio module - get from module_source directly
     if (!moduleData) {
       const { data: studioModule } = await (supabase as any)
         .from("module_source")
-        .select("*")
-        .or(`module_id.eq.${moduleId || moduleSlug},slug.eq.${moduleSlug || moduleId}`)
-        .single();
+        .select("id, module_id, slug, name")
+        .or(`slug.eq.${moduleSlug || moduleId}`)
+        .maybeSingle();
+      
+      console.log("[Subscribe] Studio module:", studioModule);
       
       if (studioModule) {
+        // For studio modules, the actual ID is in module_source.id (the primary key)
+        // OR module_id if it exists and is a UUID
         moduleData = {
-          id: studioModule.module_id,
+          id: studioModule.id, // Use the primary key ID from module_source
           slug: studioModule.slug,
           name: studioModule.name,
           wholesale_price_monthly: 0, // Studio modules are free by default during testing
           install_count: 0,
         };
+        console.log("[Subscribe] Using studio module ID:", moduleData.id);
       }
     }
 
