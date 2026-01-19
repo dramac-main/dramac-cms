@@ -9,6 +9,66 @@ This phase completes the Module Development Studio by implementing a comprehensi
 > - Templates will be NEW functionality
 > - Community features will be NEW functionality
 
+---
+
+## ⚠️ CRITICAL: Phase 81B Implementation Notes
+
+**BEFORE IMPLEMENTING THIS PHASE, READ THIS:**
+
+### Database Schema Changes from 81B:
+
+The `module_source` table now has these additional columns:
+```sql
+testing_tier TEXT CHECK (testing_tier IN ('internal', 'beta', 'public')) DEFAULT 'internal'
+install_level TEXT DEFAULT 'site' CHECK (install_level IN ('agency', 'client', 'site'))
+wholesale_price_monthly INTEGER DEFAULT 0
+suggested_retail_monthly INTEGER DEFAULT 0
+```
+
+### FK Constraints REMOVED in 81B:
+- `agency_module_subscriptions.module_id` → NO FK to `modules_v2`
+- `site_module_installations.module_id` → NO FK to `modules_v2`
+
+**Reason:** Module references can be EITHER `modules_v2.id` (published) OR `module_source.id` (testing).
+
+### Module ID Types - CRITICAL:
+| Field | Type | Use For |
+|-------|------|---------|
+| `module_source.id` | UUID | Database FKs, analytics references |
+| `module_source.module_id` | TEXT | Legacy identifier, DON'T USE for FK |
+| `module_source.slug` | TEXT | URLs, display |
+
+### Billing Cycle Constraint:
+The billing_cycle field only accepts: 'monthly', 'yearly', 'one_time' 
+**NOT 'free'** - use 'one_time' with price = 0 for free modules.
+
+### Dual-Table Query Pattern:
+When looking up modules, ALWAYS check both tables:
+```typescript
+// First try modules_v2 (published)
+const { data: module } = await supabase
+  .from("modules_v2")
+  .select("*")
+  .eq("id", moduleId)
+  .single();
+
+// If not found, try module_source (testing/draft)
+if (!module) {
+  const { data: sourceModule } = await supabase
+    .from("module_source")
+    .select("*")
+    .eq("id", moduleId)
+    .single();
+}
+```
+
+### When Creating New Tables:
+- Reference `module_source.id` (UUID) for module tracking
+- DO NOT create FK constraints to `modules_v2` if data might come from module_source
+- Always use UUID type for module_id columns
+
+---
+
 ## Prerequisites
 - Phase 80 (Module Studio Core) completed
 - Phase 81A (Marketplace Integration) completed
@@ -3177,13 +3237,22 @@ function PermissionTable({ permissions }: { permissions: { name: string; descrip
 
 ### 5.1 Create Community Features Database
 
+> ⚠️ **IMPORTANT**: The SQL below references `REFERENCES modules(id)`. This table doesn't exist!
+> You must change ALL occurrences to `REFERENCES module_source(id)` instead.
+> Also, **DO NOT ADD FK CONSTRAINTS** if you want these features to work with both 
+> published (`modules_v2`) AND testing (`module_source`) modules. Instead, use application-level 
+> validation or remove the REFERENCES clause entirely.
+
 ```sql
 -- migrations/20250117000002_module_community.sql
+
+-- ⚠️ CHANGE: Replace `REFERENCES modules(id)` with `REFERENCES module_source(id)`
+-- OR remove FK entirely if you want to support both published and testing modules
 
 -- Module ratings and reviews
 CREATE TABLE module_reviews (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  module_id UUID NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
+  module_id UUID NOT NULL, -- No FK: can reference modules_v2 OR module_source
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),

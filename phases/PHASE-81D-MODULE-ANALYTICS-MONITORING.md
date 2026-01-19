@@ -10,6 +10,42 @@ This phase implements comprehensive analytics, real-time monitoring, error track
 > 
 > This phase creates a MORE COMPREHENSIVE system. Either migrate existing data or run both in parallel during transition.
 
+---
+
+## ⚠️ CRITICAL: Phase 81B Implementation Notes
+
+**BEFORE IMPLEMENTING THIS PHASE, READ THIS:**
+
+### Database Schema Changes from 81B:
+
+The `module_source` table now has these additional columns:
+```sql
+testing_tier TEXT CHECK (testing_tier IN ('internal', 'beta', 'public')) DEFAULT 'internal'
+install_level TEXT DEFAULT 'site' CHECK (install_level IN ('agency', 'client', 'site'))
+wholesale_price_monthly INTEGER DEFAULT 0
+suggested_retail_monthly INTEGER DEFAULT 0
+```
+
+### FK Constraints REMOVED in 81B:
+- `agency_module_subscriptions.module_id` → NO FK to `modules_v2`
+- `site_module_installations.module_id` → NO FK to `modules_v2`
+
+**Reason:** Module references can be EITHER `modules_v2.id` (published) OR `module_source.id` (testing).
+
+### Module ID Types - CRITICAL:
+| Field | Type | Use For |
+|-------|------|---------|
+| `module_source.id` | UUID | Database FKs, analytics references |
+| `module_source.module_id` | TEXT | Legacy identifier, DON'T USE for FK |
+| `module_source.slug` | TEXT | URLs, display |
+
+### When Creating Analytics Tables:
+- Reference `module_source.id` (UUID) for module tracking
+- DO NOT create FK constraints if data might come from both tables
+- Always use UUID type for module_id columns
+
+---
+
 ## Prerequisites
 - Phase 80 (Module Studio Core) completed
 - Phase 81A (Marketplace Integration) completed

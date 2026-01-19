@@ -12,6 +12,47 @@
 
 ---
 
+## ⚠️ CRITICAL: Phase 81B Implementation Notes
+
+**BEFORE IMPLEMENTING THIS PHASE, READ THIS:**
+
+### Database Schema Changes from 81B:
+
+The `module_source` table now has these additional columns:
+```sql
+testing_tier TEXT CHECK (testing_tier IN ('internal', 'beta', 'public')) DEFAULT 'internal'
+install_level TEXT DEFAULT 'site' CHECK (install_level IN ('agency', 'client', 'site'))
+wholesale_price_monthly INTEGER DEFAULT 0
+suggested_retail_monthly INTEGER DEFAULT 0
+```
+
+### FK Constraints REMOVED in 81B:
+- `agency_module_subscriptions.module_id` → NO FK to `modules_v2`
+- `site_module_installations.module_id` → NO FK to `modules_v2`
+
+**Reason:** Subscriptions and installations can reference EITHER:
+- `modules_v2.id` (published modules)
+- `module_source.id` (testing modules)
+
+### Module ID Confusion - IMPORTANT:
+| Field | Type | Use For |
+|-------|------|---------|
+| `module_source.id` | UUID | Database FKs, subscriptions |
+| `module_source.module_id` | TEXT | Legacy identifier, DON'T USE for FK |
+| `module_source.slug` | TEXT | URLs, display |
+
+### Code Pattern - Always Query BOTH Tables:
+```typescript
+// When looking up a module by ID:
+const { data: v2Module } = await supabase.from("modules_v2").select("*").eq("id", id).single();
+if (v2Module) return v2Module;
+
+const { data: sourceModule } = await supabase.from("module_source").select("*").eq("id", id).single();
+return sourceModule;
+```
+
+---
+
 ## 🎯 Objective
 
 **Enable developers to create complex, production-grade modules with:**
