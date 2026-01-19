@@ -32,6 +32,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ModuleConfigureDialog } from "./module-configure-dialog";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   BarChart3,
@@ -54,6 +55,11 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
   const enableMutation = useEnableSiteModule(siteId);
   const disableMutation = useDisableSiteModule(siteId);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [configuringModule, setConfiguringModule] = useState<{
+    id: string;
+    name: string;
+    settings: Record<string, any>;
+  } | null>(null);
 
   const handleToggle = async (moduleId: string, currentlyEnabled: boolean) => {
     setTogglingId(moduleId);
@@ -136,7 +142,15 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
                   </div>
                   <div className="flex items-center gap-3">
                     {isEnabled && (
-                      <Button variant="ghost" size="sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setConfiguringModule({
+                          id: module.id,
+                          name: module.name,
+                          settings: siteModule?.settings || {},
+                        })}
+                      >
                         <Settings className="w-4 h-4 mr-1" />
                         Configure
                       </Button>
@@ -163,6 +177,22 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
           );
         })}
       </div>
+
+      {/* Module Configuration Dialog */}
+      {configuringModule && (
+        <ModuleConfigureDialog
+          open={!!configuringModule}
+          onOpenChange={(open) => !open && setConfiguringModule(null)}
+          moduleId={configuringModule.id}
+          moduleName={configuringModule.name}
+          siteId={siteId}
+          currentSettings={configuringModule.settings}
+          onSuccess={() => {
+            // Refetch modules to update settings
+            window.location.reload();
+          }}
+        />
+      )}
     </div>
   );
 }
