@@ -49,6 +49,44 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
 
   const { data: modules } = await query;
 
+  // ALSO get testing modules directly from module_source
+  // These won't be in modules_v2 until production deploy
+  let testingQuery = supabase
+    .from("module_source" as any)
+    .select("*")
+    .eq("status", "testing");
+
+  if (q) {
+    testingQuery = testingQuery.or(`name.ilike.%${q}%,description.ilike.%${q}%`);
+  }
+
+  if (category) {
+    testingQuery = testingQuery.eq("category", category);
+  }
+
+  const { data: testingModules } = await testingQuery;
+
+  // Convert testing modules to modules_v2 format
+  const formattedTestingModules = (testingModules || []).map((m: any) => ({
+    id: m.id,
+    slug: m.slug,
+    name: m.name,
+    description: m.description,
+    icon: m.icon || "📦",
+    category: m.category || "other",
+    install_level: "site", // Studio modules are site-level
+    wholesale_price_monthly: 0, // Testing modules are free
+    install_count: 0,
+    rating_average: null,
+    is_featured: false,
+    source: "studio",
+    studio_module_id: m.id,
+    status: "testing", // Explicitly mark as testing
+  }));
+
+  // Combine both sources
+  const allModules = [...(modules || []), ...formattedTestingModules];
+
   // Check if user's agency is enrolled in beta program
   const { data: betaEnrollment } = profile?.agency_id 
     ? await supabase
@@ -93,11 +131,11 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
   });
 
   // Filter modules based on beta enrollment and actual module status
-  let filteredModules = (modules || []).filter((m: any) => {
-    // Check status by both slug match and studio_module_id match
+  let filteredModules = (allModules || []).filter((m: any) => {
+    // Check status - for testing modules we already know the status
     const statusBySlug = moduleStatusBySlug.get(m.slug);
     const statusById = m.studio_module_id ? moduleStatusById.get(m.studio_module_id) : null;
-    const actualStatus = statusById || statusBySlug;
+    const actualStatus = m.status === "testing" ? "testing" : (statusById || statusBySlug);
     
     // If it's a studio module, we MUST check its real status from module_source
     if (m.source === "studio" || m.studio_module_id) {
