@@ -25,7 +25,7 @@ interface Subscription {
     icon: string;
     description: string | null;
     category: string;
-    install_level: string;
+    install_level: string | null; // Optional for testing modules
     wholesale_price_monthly: number | null;
     suggested_retail_monthly: number | null;
   };
@@ -103,6 +103,8 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
   const agencyModules = subscriptions.filter(s => s.module?.install_level === "agency");
   const clientModules = subscriptions.filter(s => s.module?.install_level === "client");
   const siteModules = subscriptions.filter(s => s.module?.install_level === "site");
+  // Testing modules may not have install_level set yet
+  const testingModules = subscriptions.filter(s => !s.module?.install_level);
 
   const renderModuleCard = (sub: Subscription) => {
     const retail = calculateRetailPrice(sub);
@@ -173,6 +175,22 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
 
   return (
     <div className="space-y-8">
+      {/* Testing Modules (without install_level) */}
+      {testingModules.length > 0 && (
+        <section>
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Badge variant="outline" className="text-yellow-600 bg-yellow-100">Beta Testing</Badge>
+            Testing Modules
+            <span className="text-sm font-normal text-muted-foreground ml-2">
+              (configure install level in module settings)
+            </span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {testingModules.map(renderModuleCard)}
+          </div>
+        </section>
+      )}
+
       {/* Agency Tools */}
       {agencyModules.length > 0 && (
         <section>
