@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { SiteOverview } from "@/components/sites/site-overview";
 import { SitePagesList } from "@/components/sites/site-pages-list";
 import { SiteBlogTab } from "@/components/sites/site-blog-tab";
+import { SiteModulesTab } from "@/components/sites/site-modules-tab";
 import { SitePublishButton } from "@/components/sites/site-publish-button";
 import { CloneSiteDialog } from "@/components/sites/clone-site-dialog";
 import { ExportSiteButton } from "@/components/sites/export-site-button";
@@ -32,7 +33,7 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
   const { siteId } = await params;
   const { tab } = await searchParams;
   const site = await getSite(siteId).catch(() => null);
-  const validTabs = ["overview", "pages", "blog"];
+  const validTabs = ["overview", "pages", "blog", "modules"];
   const defaultTab = tab && validTabs.includes(tab) ? tab : "overview";
 
   if (!site) {
@@ -95,6 +96,7 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="pages">Pages ({site.pages?.length || 0})</TabsTrigger>
           <TabsTrigger value="blog">Blog</TabsTrigger>
+          <TabsTrigger value="modules">Modules</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -107,6 +109,10 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
 
         <TabsContent value="blog">
           <SiteBlogTab siteId={site.id} />
+        </TabsContent>
+
+        <TabsContent value="modules">
+          <SiteModulesTab siteId={site.id} />
         </TabsContent>
       </Tabs>
     </div>
