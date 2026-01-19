@@ -74,49 +74,37 @@ export async function proxy(request: NextRequest) {
     appHost = appDomain;
   }
 
-  // Skip proxy logic for specific paths that should never be site routes
-  const isStaticOrApi = pathname.startsWith("/api") || 
-                        pathname.startsWith("/_next") || 
-                        pathname.startsWith("/favicon") ||
-                        pathname.includes(".");
-  
-  if (isStaticOrApi) {
-    return NextResponse.next();
-  }
-
   // Check if this is the main app domain (CMS dashboard)
   const isAppDomain = hostname === appHost || hostname === "app.dramacagency.com";
   
-  // Check if this is the root domain (agency site)
+  // Check if this is the root domain (agency site on www or root)
   const isRootDomain = hostname === baseDomain || hostname === `www.${baseDomain}`;
   
-  // CRITICAL: If it's NOT the app domain and NOT the root, treat it as a site subdomain
-  // This allows any subdomain to work without adding to Vercel
-  const shouldRouteToSite = !isAppDomain && !isRootDomain && hostname.includes(baseDomain);
+  // Check if this is a subdomain of base domain (e.g., mysite.dramacagency.com)
+  const isSubdomain = hostname.endsWith(`.${baseDomain}`) && !isAppDomain && !isRootDomain;
+
+  // Check if this is a custom domain (completely different domain)
+  const isCustomDomain = !hostname.includes(baseDomain) && !hostname.includes("localhost");
 
   // Log subdomain routing for debugging
   console.log("[proxy.ts] Routing check:", {
     hostname,
     baseDomain,
-    appHost,
     isAppDomain,
     isRootDomain,
-    shouldRouteToSite,
-    pathname,
-    env: process.env.NODE_ENV
+    isSubdomain,
+    isCustomDomain,
+    pathname
   });
 
-  // Route subdomains to site renderer
-  if (shouldRouteToSite) {
+  // Route subdomains to site renderer (e.g., mysite.dramacagency.com)
+  if (isSubdomain) {
     const subdomain = hostname.replace(`.${baseDomain}`, "");
     const url = request.nextUrl.clone();
     url.pathname = `/site/${subdomain}${pathname}`;
-    console.log("[proxy.ts] Subdomain rewrite:", hostname, "→", url.pathname, "(subdomain:", subdomain + ")");
+    console.log("[proxy.ts] Subdomain rewrite:", hostname, "→", url.pathname);
     return NextResponse.rewrite(url);
   }
-
-  // Check if this is a custom domain (completely different domain)
-  const isCustomDomain = !hostname.includes(baseDomain.replace('www.', '')) && !hostname.includes("localhost");
   
   // Route custom domains to site renderer
   if (isCustomDomain) {
