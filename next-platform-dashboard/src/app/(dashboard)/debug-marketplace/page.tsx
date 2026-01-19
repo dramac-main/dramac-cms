@@ -36,12 +36,12 @@ export default async function DebugMarketplacePage() {
   const { data: testingModules } = await supabase
     .from("module_source" as any)
     .select("*")
-    .eq("status", "testing");
+    .eq("status", "testing") as { data: any[] | null };
 
   const { data: modulesV2 } = await supabase
     .from("modules_v2" as any)
     .select("*")
-    .eq("status", "active");
+    .eq("status", "active") as { data: any[] | null };
 
   return (
     <div className="container py-8 max-w-6xl">
