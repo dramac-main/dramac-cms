@@ -62,31 +62,56 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
   const isBetaAgency = !!betaEnrollment;
   const betaTier = (betaEnrollment as any)?.beta_tier || "standard";
 
-  // Get testing modules to filter appropriately
-  const { data: testingModules } = await supabase
+  // Get ALL modules from module_source to check their real status
+  // Using module_id (uuid) for accurate matching with modules_v2.studio_module_id
+  const { data: allModuleSource } = await supabase
     .from("module_source" as any)
-    .select("slug, status")
-    .eq("status", "testing");
+    .select("id, slug, status, module_id");
 
-  const testingModuleMap = new Map(
-    testingModules?.map((m: any) => [m.slug, m.status]) || []
-  );
+  // Create maps for both slug and module_id matching
+  const moduleStatusBySlug = new Map<string, string>();
+  const moduleStatusById = new Map<string, string>();
+  
+  (allModuleSource || []).forEach((m: any) => {
+    moduleStatusBySlug.set(m.slug, m.status);
+    moduleStatusById.set(m.id, m.status);
+  });
 
-  // Filter modules based on beta enrollment
-  let filteredModules = modules || [];
-
-  if (!isBetaAgency) {
-    // Regular users: Filter out ALL testing modules
-    filteredModules = filteredModules.filter((m: any) => !testingModuleMap.has(m.slug));
-  } else if (betaTier === "standard") {
-    // Standard beta tier: Only show opted-in testing modules
-    const acceptedModules = (betaEnrollment as any)?.accepted_modules || [];
-    filteredModules = filteredModules.filter((m: any) => {
-      if (!testingModuleMap.has(m.slug)) return true; // Published module
-      return acceptedModules.includes(m.slug); // Testing module - check opt-in
-    });
-  }
-  // Internal/Alpha/Early Access: Show all (no additional filtering)
+  // Filter modules based on beta enrollment and actual module status
+  let filteredModules = (modules || []).filter((m: any) => {
+    // Check status by both slug match and studio_module_id match
+    const statusBySlug = moduleStatusBySlug.get(m.slug);
+    const statusById = m.studio_module_id ? moduleStatusById.get(m.studio_module_id) : null;
+    const actualStatus = statusById || statusBySlug;
+    
+    // If it's a studio module (has studio_module_id), check its real status
+    if (m.source === "studio" || m.studio_module_id) {
+      // If the module is in draft status, never show it
+      if (actualStatus === "draft") {
+        return false;
+      }
+      
+      // If module is in testing status, apply beta access rules
+      if (actualStatus === "testing") {
+        if (!isBetaAgency) {
+          // Regular users: cannot see testing modules
+          return false;
+        }
+        
+        if (betaTier === "standard") {
+          // Standard tier: only opted-in modules
+          const acceptedModules = (betaEnrollment as any)?.accepted_modules || [];
+          return acceptedModules.includes(m.slug);
+        }
+        
+        // Internal/Alpha/Early Access: show all testing modules
+        return true;
+      }
+    }
+    
+    // Published modules or non-studio modules: always show
+    return true;
+  });
 
   // Get agency's existing subscriptions
   const { data: subscriptions } = profile?.agency_id 
@@ -124,7 +149,12 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
     rating_average: m.rating_average,
     is_featured: m.is_featured,
     source: m.source || "catalog", // 'catalog' or 'studio'
-    status: testingModuleMap.has(m.slug) ? "testing" : "published", // Add status for beta badge
+    // Determine actual status for beta badge
+    status: (() => {
+      const statusBySlug = moduleStatusBySlug.get(m.slug);
+      const statusById = m.studio_module_id ? moduleStatusById.get(m.studio_module_id) : null;
+      return statusById || statusBySlug || "published";
+    })(),
   }));
 
   const formatPrice = (cents: number | null) => {

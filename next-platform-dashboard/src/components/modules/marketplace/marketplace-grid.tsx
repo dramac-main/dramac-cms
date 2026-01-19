@@ -66,6 +66,11 @@ export function MarketplaceGrid({ modules, subscribedModuleIds }: MarketplaceGri
         const isSubscribed = subscribedModuleIds.has(module.id);
         const isStudioModule = module.source === "studio";
         
+        // Debug logging
+        if (module.status === "testing") {
+          console.log('[Grid] Testing module found:', module.name, module.slug, 'status:', module.status);
+        }
+        
         return (
           <Link key={module.id} href={`/marketplace/${module.slug}`}>
             <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer">
