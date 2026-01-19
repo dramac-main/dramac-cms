@@ -263,8 +263,8 @@ export async function getModuleById(moduleIdOrSlug: string): Promise<ModuleDefin
             }
             
             // Check tier-specific access
-            if (betaEnrollment.beta_tier === "standard") {
-              const acceptedModules = betaEnrollment.accepted_modules || [];
+            if ((betaEnrollment as any).beta_tier === "standard") {
+              const acceptedModules = (betaEnrollment as any).accepted_modules || [];
               if (!acceptedModules.includes(studioModule.slug)) {
                 return null; // Not opted in
               }

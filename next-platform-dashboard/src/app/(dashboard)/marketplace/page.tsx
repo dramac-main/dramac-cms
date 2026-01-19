@@ -60,7 +60,7 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
     : { data: null };
 
   const isBetaAgency = !!betaEnrollment;
-  const betaTier = betaEnrollment?.beta_tier || "standard";
+  const betaTier = (betaEnrollment as any)?.beta_tier || "standard";
 
   // Get testing modules to filter appropriately
   const { data: testingModules } = await supabase
@@ -80,7 +80,7 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
     filteredModules = filteredModules.filter((m: any) => !testingModuleMap.has(m.slug));
   } else if (betaTier === "standard") {
     // Standard beta tier: Only show opted-in testing modules
-    const acceptedModules = betaEnrollment.accepted_modules || [];
+    const acceptedModules = (betaEnrollment as any)?.accepted_modules || [];
     filteredModules = filteredModules.filter((m: any) => {
       if (!testingModuleMap.has(m.slug)) return true; // Published module
       return acceptedModules.includes(m.slug); // Testing module - check opt-in
