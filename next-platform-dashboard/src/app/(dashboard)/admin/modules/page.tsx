@@ -8,7 +8,8 @@ import {
   MessageSquare, 
   BarChart3,
   TrendingUp,
-  RefreshCw
+  RefreshCw,
+  TestTube2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -146,15 +147,15 @@ export default async function AdminModulesPage() {
           </Card>
         </Link>
         
-        <Link href="/admin/modules/studio/sync">
+        <Link href="/admin/modules/testing">
           <Card className="hover:border-primary transition-colors cursor-pointer h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <RefreshCw className="h-5 w-5" />
-                Sync Dashboard
+                <TestTube2 className="h-5 w-5" />
+                Module Testing
               </CardTitle>
               <CardDescription>
-                Sync Studio modules to Marketplace
+                Test sites, beta program, and test runs
               </CardDescription>
             </CardHeader>
           </Card>
