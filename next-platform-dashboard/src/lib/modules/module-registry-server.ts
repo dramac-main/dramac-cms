@@ -252,13 +252,14 @@ export async function getModuleById(moduleIdOrSlug: string): Promise<ModuleDefin
           if (profile?.agency_id) {
             // Check testing_tier: 'internal' modules are dev-only, not accessible via detail page
             if (studioModule.testing_tier === "internal") {
+              console.log(`[ModuleRegistry] Module ${studioModule.slug} is internal tier - not accessible`);
               return null; // Internal testing only - not accessible
             }
             
             // Check if user has test sites
             const { data: testSites } = await db
               .from("test_site_configuration" as any)
-              .select("site_id")
+              .select("site_id, sites!inner(agency_id)")
               .eq("is_active", true)
               .eq("sites.agency_id", profile.agency_id);
             
@@ -266,7 +267,8 @@ export async function getModuleById(moduleIdOrSlug: string): Promise<ModuleDefin
             
             // Test site users can access beta/public tier modules
             if (hasTestSites && (studioModule.testing_tier === "beta" || studioModule.testing_tier === "public")) {
-              // Allow access
+              console.log(`[ModuleRegistry] Test site user accessing ${studioModule.slug} (${studioModule.testing_tier})`);
+              // Allow access - skip to module return
             } else {
               // Check beta enrollment for non-test-site users
               const { data: betaEnrollment } = await db

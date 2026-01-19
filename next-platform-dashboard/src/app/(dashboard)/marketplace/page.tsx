@@ -84,8 +84,10 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
     status: "testing", // Explicitly mark as testing
   }));
 
-  // Combine both sources
-  const allModules = [...(modules || []), ...formattedTestingModules];
+  // Combine both sources - DEDUPLICATE by slug (prefer module_source version for testing modules)
+  const testingModuleSlugs = new Set(formattedTestingModules.map((m: any) => m.slug));
+  const modulesWithoutDuplicates = (modules || []).filter((m: any) => !testingModuleSlugs.has(m.slug));
+  const allModules = [...modulesWithoutDuplicates, ...formattedTestingModules];
 
   // Check if user's agency is enrolled in beta program
   const { data: betaEnrollment } = profile?.agency_id 
