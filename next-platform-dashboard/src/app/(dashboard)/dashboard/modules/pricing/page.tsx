@@ -29,21 +29,44 @@ export default async function ModulePricingPage() {
     redirect("/dashboard");
   }
 
-  // Get agency's subscriptions with module details
+  // Get agency's subscriptions (modules can be in either modules_v2 or module_source)
   const { data: subscriptions } = await supabase
     .from("agency_module_subscriptions" as any)
-    .select(`
-      *,
-      module:modules_v2(*)
-    `)
+    .select("*")
     .eq("agency_id", profile.agency_id)
     .eq("status", "active")
     .order("created_at", { ascending: false });
 
-  // Filter to client/site level modules only (agency modules don't need markup)
-  const resellableModules = (subscriptions as any[] || []).filter((sub: any) => {
+  // Enrich subscriptions with module details from both sources
+  const enrichedSubscriptions = await Promise.all(
+    (subscriptions || []).map(async (sub: any) => {
+      // First try modules_v2 (published)
+      const { data: v2Module } = await supabase
+        .from("modules_v2" as any)
+        .select("*")
+        .eq("id", sub.module_id)
+        .single();
+
+      if (v2Module) {
+        return { ...sub, module: v2Module };
+      }
+
+      // Fallback to module_source (testing)
+      const { data: sourceModule } = await supabase
+        .from("module_source" as any)
+        .select("*")
+        .eq("id", sub.module_id)
+        .single();
+
+      return { ...sub, module: sourceModule };
+    })
+  );
+
+  // Filter to client/site level modules (or testing modules without install_level)
+  const resellableModules = enrichedSubscriptions.filter((sub: any) => {
     const level = (sub.module as any)?.install_level;
-    return level === "client" || level === "site";
+    // Include testing modules (no install_level) and client/site modules
+    return !level || level === "client" || level === "site";
   });
 
   return (
