@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { SubscriptionList } from "@/components/modules/agency/subscription-list";
+import { InstallModulePrompt } from "@/components/modules/install-module-prompt";
 
 export const metadata: Metadata = {
   title: "My Modules | DRAMAC",
@@ -47,6 +48,9 @@ export default async function AgencyModulesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Install Module Prompt */}
+      <InstallModulePrompt />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
