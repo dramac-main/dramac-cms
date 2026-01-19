@@ -84,8 +84,17 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
     const statusById = m.studio_module_id ? moduleStatusById.get(m.studio_module_id) : null;
     const actualStatus = statusById || statusBySlug;
     
-    // If it's a studio module (has studio_module_id), check its real status
+    // If it's a studio module, we MUST check its real status from module_source
     if (m.source === "studio" || m.studio_module_id) {
+      // If we can't find the module in module_source, check if it's published
+      // A studio module in modules_v2 without a matching module_source entry
+      // means it hasn't been properly synced or its source was deleted
+      if (!actualStatus) {
+        // Can't determine status - hide for safety unless it's explicitly published in v2
+        // This shouldn't happen for properly synced modules
+        return false;
+      }
+      
       // If the module is in draft status, never show it
       if (actualStatus === "draft") {
         return false;
@@ -107,9 +116,17 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
         // Internal/Alpha/Early Access: show all testing modules
         return true;
       }
+      
+      // Only show if explicitly published
+      if (actualStatus === "published") {
+        return true;
+      }
+      
+      // Unknown status - hide for safety
+      return false;
     }
     
-    // Published modules or non-studio modules: always show
+    // Non-studio modules (catalog modules): always show
     return true;
   });
 
