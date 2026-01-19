@@ -17,14 +17,25 @@ import Link from "next/link";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 
 export function Header() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading } = useAuth();
 
-  const initials = profile?.name
-    ?.split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2) || "??";
+  // Generate initials from profile name, with better fallback handling
+  const getInitials = () => {
+    if (profile?.name) {
+      const parts = profile.name.trim().split(/\s+/).filter(Boolean);
+      if (parts.length >= 2) {
+        // First and last name: "Drake Machi" -> "DM"
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      } else if (parts.length === 1) {
+        // Single name: take first 2 chars
+        return parts[0].substring(0, 2).toUpperCase();
+      }
+    }
+    // Fallback to email or "U"
+    return user?.email?.substring(0, 2).toUpperCase() || "U";
+  };
+
+  const initials = getInitials();
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 lg:px-6">

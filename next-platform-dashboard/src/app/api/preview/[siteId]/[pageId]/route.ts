@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           name,
           subdomain,
           custom_domain,
-          theme_settings
+          settings
         )
       `)
       .eq("id", pageId)
@@ -55,6 +55,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Return comprehensive page data for Craft.js preview
+    const siteSettings = (page.site as { settings?: Record<string, unknown> } | null)?.settings || {};
+    const themeSettings = (siteSettings as Record<string, unknown>)?.theme || null;
+    
     return NextResponse.json({
       page: {
         id: page.id,
@@ -65,7 +68,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
       site: page.site,
       content: content ? JSON.stringify(content) : null,
-      themeSettings: (page.site as { theme_settings?: Record<string, unknown> } | null)?.theme_settings || null,
+      themeSettings: themeSettings,
     });
   } catch (error) {
     console.error("[Preview API] Error:", error);

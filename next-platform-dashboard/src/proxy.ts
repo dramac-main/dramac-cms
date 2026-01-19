@@ -6,7 +6,35 @@ export async function proxy(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
 
-  // Skip for app routes (dashboard, auth, editor, portal, etc), API, and static files
+  // ========================================
+  // PUBLIC ROUTES - No Auth Required
+  // ========================================
+  
+  // Preview routes - always accessible (for editor preview)
+  if (pathname.startsWith("/preview")) {
+    return NextResponse.next();
+  }
+
+  // Site renderer routes - public facing sites
+  if (pathname.startsWith("/site")) {
+    return NextResponse.next();
+  }
+
+  // Static files, API routes, and Next.js internals
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon") ||
+    pathname.includes(".")
+  ) {
+    return NextResponse.next();
+  }
+
+  // ========================================
+  // DASHBOARD ROUTES - Session Required
+  // ========================================
+  
+  // Skip for app routes (dashboard, auth, editor, portal, etc)
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/portal") ||
@@ -25,32 +53,9 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith("/modules") ||
     pathname.startsWith("/test-components") ||
     pathname.startsWith("/test-safety") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon") ||
-    pathname === "/" ||
-    pathname.includes(".")
+    pathname === "/"
   ) {
-    // For dashboard, auth, portal, and protected routes - run session update with onboarding check
-    if (
-      pathname.startsWith("/dashboard") ||
-      pathname.startsWith("/portal") ||
-      pathname.startsWith("/login") ||
-      pathname.startsWith("/signup") ||
-      pathname.startsWith("/onboarding") ||
-      pathname.startsWith("/auth") ||
-      pathname.startsWith("/sites") ||
-      pathname.startsWith("/settings") ||
-      pathname.startsWith("/clients") ||
-      pathname.startsWith("/marketplace") ||
-      pathname.startsWith("/debug-marketplace") ||
-      pathname.startsWith("/admin") ||
-      pathname.startsWith("/modules") ||
-      pathname.startsWith("/editor")
-    ) {
-      return await updateSession(request);
-    }
-    return NextResponse.next();
+    return await updateSession(request);
   }
 
   // Get base domain from env

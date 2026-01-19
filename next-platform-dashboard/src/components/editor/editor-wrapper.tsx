@@ -47,13 +47,16 @@ export function EditorWrapper({ site, page }: EditorWrapperProps) {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   }, []);
 
+  // Handle nodes change with useCallback to avoid setState during render
+  const handleNodesChange = useCallback(() => {
+    setHasChanges(true);
+  }, []);
+
   return (
     <Editor
       resolver={componentResolver}
       enabled={true}
-      onNodesChange={() => {
-        setHasChanges(true);
-      }}
+      onNodesChange={handleNodesChange}
     >
       <EditorContent
         site={site}
@@ -93,7 +96,7 @@ function EditorContent({
   setIsSaving,
   hasChanges,
   setHasChanges,
-  lastSaved: _lastSaved,
+  lastSaved,
   setLastSaved,
 }: EditorContentProps) {
   const { actions, query } = useEditor();
@@ -238,29 +241,34 @@ function EditorContent({
         "flex-1 flex overflow-hidden",
         showPreviewPanel && "mr-[50vw]"
       )}>
-        {isPreviewMode ? (
-          // Full preview mode - shows preview in main area
-          <div className="flex-1 p-4 bg-muted/20">
-            <PreviewFrame
-              url={previewUrl}
-              device={device}
-              refreshKey={previewKey}
-              className="h-full w-full"
-              showDeviceFrame={device !== "full"}
-            />
-          </div>
-        ) : (
-          <>
-            {/* Toolbox (Left) */}
-            <EditorToolbox />
+        {/* Full preview mode - shows preview in main area */}
+        <div className={cn(
+          "flex-1 p-4 bg-muted/20",
+          !isPreviewMode && "hidden"
+        )}>
+          <PreviewFrame
+            url={previewUrl}
+            device={device}
+            refreshKey={previewKey}
+            className="h-full w-full"
+            showDeviceFrame={device !== "full"}
+          />
+        </div>
 
-            {/* Canvas (Center) */}
-            <EditorCanvas settings={settings} />
+        {/* Editor workspace - hidden during preview but stays mounted */}
+        <div className={cn(
+          "flex-1 flex",
+          isPreviewMode && "hidden"
+        )}>
+          {/* Toolbox (Left) */}
+          <EditorToolbox />
 
-            {/* Settings (Right) */}
-            <SettingsPanel />
-          </>
-        )}
+          {/* Canvas (Center) */}
+          <EditorCanvas settings={settings} />
+
+          {/* Settings (Right) */}
+          <SettingsPanel />
+        </div>
       </div>
 
       {/* Side-by-side Preview Panel */}
