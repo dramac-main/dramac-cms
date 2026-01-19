@@ -63,7 +63,7 @@ export async function proxy(request: NextRequest) {
   // ========================================
   
   // Get configuration from env
-  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "dramacagency.com";
+  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
   const appDomain = process.env.NEXT_PUBLIC_APP_URL || "localhost:3000";
 
   // Parse the app domain host
@@ -77,32 +77,28 @@ export async function proxy(request: NextRequest) {
   // Check if this is the main app domain (CMS dashboard)
   const isAppDomain = hostname === appHost || hostname === "app.dramacagency.com";
   
-  // Check if this is the root domain (agency site on www or root)
-  const isRootDomain = hostname === baseDomain || hostname === `www.${baseDomain}`;
-  
-  // Check if this is a subdomain of base domain (e.g., mysite.dramacagency.com)
-  const isSubdomain = hostname.endsWith(`.${baseDomain}`) && !isAppDomain && !isRootDomain;
+  // Check if this is a client site subdomain (e.g., ten-and-ten.sites.dramacagency.com)
+  const isClientSite = hostname.endsWith(`.${baseDomain}`);
 
   // Check if this is a custom domain (completely different domain)
-  const isCustomDomain = !hostname.includes(baseDomain) && !hostname.includes("localhost");
+  const isCustomDomain = !isAppDomain && !isClientSite && !hostname.includes("localhost");
 
   // Log subdomain routing for debugging
   console.log("[proxy.ts] Routing check:", {
     hostname,
     baseDomain,
     isAppDomain,
-    isRootDomain,
-    isSubdomain,
+    isClientSite,
     isCustomDomain,
     pathname
   });
 
-  // Route subdomains to site renderer (e.g., mysite.dramacagency.com)
-  if (isSubdomain) {
+  // Route client site subdomains to site renderer (e.g., ten-and-ten.sites.dramacagency.com)
+  if (isClientSite) {
     const subdomain = hostname.replace(`.${baseDomain}`, "");
     const url = request.nextUrl.clone();
     url.pathname = `/site/${subdomain}${pathname}`;
-    console.log("[proxy.ts] Subdomain rewrite:", hostname, "→", url.pathname);
+    console.log("[proxy.ts] Client site rewrite:", hostname, "→", url.pathname);
     return NextResponse.rewrite(url);
   }
   
