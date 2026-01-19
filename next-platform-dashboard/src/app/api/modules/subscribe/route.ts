@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
           agency_id: targetAgencyId,
           module_id: effectiveModuleId,
           status: "active",
-          billing_cycle: billingCycle || "free",
+          billing_cycle: billingCycle || "one_time", // Free modules use 'one_time' cycle
           markup_type: "percentage",
           markup_percentage: 100, // Default 100% markup
           created_at: new Date().toISOString(),
