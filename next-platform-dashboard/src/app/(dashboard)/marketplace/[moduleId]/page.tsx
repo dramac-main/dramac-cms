@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getModuleById } from "@/lib/modules/module-registry-server";
 import { MODULE_CATEGORIES } from "@/lib/modules/module-catalog";
+import { ModuleInstallButton } from "@/components/modules/marketplace/module-install-button";
 import type { Metadata } from "next";
 
 interface ModuleDetailPageProps {
@@ -150,9 +151,11 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
             )}
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button className="w-full" size="lg">
-              {isFree ? "Install Module" : "Purchase & Install"}
-            </Button>
+            <ModuleInstallButton 
+              moduleId={module.id}
+              moduleName={module.name}
+              isFree={isFree}
+            />
 
             <ul className="space-y-2 text-sm">
               {(module.features || []).slice(0, 5).map((feature, i) => (
