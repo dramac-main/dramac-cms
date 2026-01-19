@@ -70,10 +70,21 @@ export default async function SitePage({ params }: SitePageProps) {
   const { domain, slug } = await params;
   const pageSlug = slug?.join("/") || "";
 
+  console.log("[SitePage] Request:", { domain, pageSlug });
+
   // Try custom domain first, then slug (subdomain)
   const site = await getSiteByDomain(domain) || await getSiteBySlug(domain);
   
+  console.log("[SitePage] Site lookup result:", { 
+    domain, 
+    found: !!site, 
+    published: site?.published,
+    siteName: site?.name,
+    pageCount: site?.pages?.length 
+  });
+
   if (!site || !site.published) {
+    console.error("[SitePage] Site not found or not published:", { domain, siteFound: !!site, published: site?.published });
     notFound();
   }
 
@@ -82,7 +93,14 @@ export default async function SitePage({ params }: SitePageProps) {
     ? site.pages.find((p) => p.slug === pageSlug)
     : site.pages.find((p) => p.isHomepage);
 
+  console.log("[SitePage] Page lookup result:", {
+    pageSlug: pageSlug || "(homepage)",
+    found: !!page,
+    pageTitle: page?.title
+  });
+
   if (!page) {
+    console.error("[SitePage] Page not found:", { domain, pageSlug, availablePages: site.pages.map(p => p.slug) });
     notFound();
   }
 

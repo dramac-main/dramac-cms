@@ -86,19 +86,18 @@ export async function proxy(request: NextRequest) {
   // Check if this is a custom domain (not our domains)
   const isCustomDomain = !hostname.includes(baseDomain.replace('www.', '')) && !hostname.includes("localhost");
 
-  // Log subdomain routing for debugging (only in development)
-  if (process.env.NODE_ENV === "development") {
-    console.log("[proxy.ts] Routing check:", {
-      hostname,
-      baseDomain,
-      appHost,
-      isAppDomain,
-      isRootDomain,
-      isSubdomain,
-      isCustomDomain,
-      pathname
-    });
-  }
+  // Log subdomain routing for debugging
+  console.log("[proxy.ts] Routing check:", {
+    hostname,
+    baseDomain,
+    appHost,
+    isAppDomain,
+    isRootDomain,
+    isSubdomain,
+    isCustomDomain,
+    pathname,
+    env: process.env.NODE_ENV
+  });
 
   // Route custom domains to site renderer
   if (isCustomDomain) {
