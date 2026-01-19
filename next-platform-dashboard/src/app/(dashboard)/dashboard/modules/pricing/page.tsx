@@ -62,11 +62,12 @@ export default async function ModulePricingPage() {
     })
   );
 
-  // Filter to client/site level modules (or testing modules without install_level)
+  // Filter to ONLY client/site level modules (these are resellable to clients)
+  // Agency modules = internal tools, no markup needed
+  // Modules without install_level = not configured yet, can't price
   const resellableModules = enrichedSubscriptions.filter((sub: any) => {
     const level = (sub.module as any)?.install_level;
-    // Include testing modules (no install_level) and client/site modules
-    return !level || level === "client" || level === "site";
+    return level === "client" || level === "site";
   });
 
   return (

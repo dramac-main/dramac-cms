@@ -9,6 +9,9 @@ import {
   Server,
   Globe,
   GitBranch,
+  Building2,
+  Users,
+  LayoutGrid,
 } from "lucide-react";
 import {
   Dialog,
@@ -37,6 +40,7 @@ interface ModuleDeployDialogProps {
 type Environment = "staging" | "production";
 type VersionType = "patch" | "minor" | "major";
 type TestingTier = "internal" | "beta" | "public";
+type InstallLevel = "agency" | "client" | "site";
 
 export function ModuleDeployDialog({
   open,
@@ -49,6 +53,7 @@ export function ModuleDeployDialog({
   const [environment, setEnvironment] = useState<Environment>("staging");
   const [versionType, setVersionType] = useState<VersionType>("patch");
   const [testingTier, setTestingTier] = useState<TestingTier>("beta");
+  const [installLevel, setInstallLevel] = useState<InstallLevel>("site");
   const [changelog, setChangelog] = useState("");
   const [deploying, setDeploying] = useState(false);
   const [result, setResult] = useState<{
@@ -86,7 +91,8 @@ export function ModuleDeployDialog({
         environment,
         versionType,
         changelog.trim(),
-        environment === "staging" ? testingTier : undefined
+        environment === "staging" ? testingTier : undefined,
+        installLevel
       );
 
       setResult(deployResult);
@@ -251,6 +257,79 @@ export function ModuleDeployDialog({
               </RadioGroup>
             </div>
           )}
+
+          {/* Install Level Selection */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Install Level</Label>
+            <p className="text-xs text-muted-foreground -mt-1">
+              Where can this module be installed?
+            </p>
+            <RadioGroup
+              value={installLevel}
+              onValueChange={(v) => setInstallLevel(v as InstallLevel)}
+              className="space-y-2"
+            >
+              <Label
+                htmlFor="level-agency"
+                className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                  installLevel === "agency"
+                    ? "border-purple-500 bg-purple-50 dark:bg-purple-950 ring-1 ring-purple-500"
+                    : "hover:border-muted-foreground/50"
+                }`}
+              >
+                <RadioGroupItem value="agency" id="level-agency" className="mt-0.5" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-purple-600" />
+                    <span className="font-medium">Agency Tool</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Internal tool for agency use only. No client billing.
+                  </div>
+                </div>
+              </Label>
+
+              <Label
+                htmlFor="level-client"
+                className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                  installLevel === "client"
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-950 ring-1 ring-blue-500"
+                    : "hover:border-muted-foreground/50"
+                }`}
+              >
+                <RadioGroupItem value="client" id="level-client" className="mt-0.5" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-blue-600" />
+                    <span className="font-medium">Client App</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Deploy to clients. Agencies set markup pricing.
+                  </div>
+                </div>
+              </Label>
+
+              <Label
+                htmlFor="level-site"
+                className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                  installLevel === "site"
+                    ? "border-green-500 bg-green-50 dark:bg-green-950 ring-1 ring-green-500"
+                    : "hover:border-muted-foreground/50"
+                }`}
+              >
+                <RadioGroupItem value="site" id="level-site" className="mt-0.5" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <LayoutGrid className="h-4 w-4 text-green-600" />
+                    <span className="font-medium">Site Module</span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Install on websites. Per-site billing with markup.
+                  </div>
+                </div>
+              </Label>
+            </RadioGroup>
+          </div>
 
           {/* Version Type Selection */}
           <div className="space-y-3">

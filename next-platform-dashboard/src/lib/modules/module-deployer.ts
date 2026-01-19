@@ -34,7 +34,8 @@ export async function deployModule(
   environment: "staging" | "production",
   versionType: "major" | "minor" | "patch",
   changelog: string,
-  testingTier?: "internal" | "beta" | "public"
+  testingTier?: "internal" | "beta" | "public",
+  installLevel?: "agency" | "client" | "site"
 ): Promise<DeploymentResult> {
   const isAdmin = await isSuperAdmin();
   if (!isAdmin) {
@@ -120,6 +121,11 @@ export async function deployModule(
       updateData.status = "testing";
       // Set testing_tier for staging deploys (defaults to 'internal' if not specified)
       updateData.testing_tier = testingTier || "internal";
+    }
+
+    // Always update install_level if provided
+    if (installLevel) {
+      updateData.install_level = installLevel;
     }
 
     await db
