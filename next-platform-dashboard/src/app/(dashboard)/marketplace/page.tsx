@@ -59,8 +59,23 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
         .single()
     : { data: null };
 
+  // ALSO check if user's agency has any test sites configured
+  const { data: testSites } = profile?.agency_id
+    ? await supabase
+        .from("test_site_configuration" as any)
+        .select("site_id, sites!inner(agency_id)")
+        .eq("is_active", true)
+        .eq("sites.agency_id", profile.agency_id)
+    : { data: null };
+
+  const hasTestSites = (testSites && testSites.length > 0) || false;
   const isBetaAgency = !!betaEnrollment;
   const betaTier = (betaEnrollment as any)?.beta_tier || "standard";
+
+  // User can see testing modules if:
+  // 1. They're enrolled in beta program, OR
+  // 2. Their agency has test sites configured
+  const canSeeTestingModules = isBetaAgency || hasTestSites;
 
   // Get ALL modules from module_source to check their real status
   // Using module_id (uuid) for accurate matching with modules_v2.studio_module_id
@@ -102,18 +117,25 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
       
       // If module is in testing status, apply beta access rules
       if (actualStatus === "testing") {
-        if (!isBetaAgency) {
-          // Regular users: cannot see testing modules
+        // First check: Can this user see testing modules at all?
+        if (!canSeeTestingModules) {
+          // Regular users with no test sites or beta access: cannot see testing modules
           return false;
         }
         
-        if (betaTier === "standard") {
+        // If user has test sites but no beta enrollment, show all testing modules
+        if (hasTestSites && !isBetaAgency) {
+          return true;
+        }
+        
+        // If user is beta enrolled, apply tier-specific rules
+        if (isBetaAgency && betaTier === "standard") {
           // Standard tier: only opted-in modules
           const acceptedModules = (betaEnrollment as any)?.accepted_modules || [];
           return acceptedModules.includes(m.slug);
         }
         
-        // Internal/Alpha/Early Access: show all testing modules
+        // Internal/Alpha/Early Access OR test site user: show all testing modules
         return true;
       }
       
