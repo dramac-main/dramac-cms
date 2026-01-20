@@ -180,74 +180,20 @@ export default function EditModulePage({
   // Refs to prevent race conditions in React Strict Mode
   const isMountedRef = useRef(true);
   const loadRequestIdRef = useRef(0);
-  const isLoadingRef = useRef(false);
+  const hasLoadedRef = useRef(false);  // Track if data has ever been loaded successfully
+  const isLoadingRef = useRef(false);  // Prevent concurrent loads
 
-  const loadModule = useCallback(async () => {
-    // Prevent concurrent loads
-    if (isLoadingRef.current) {
-      console.log("[ModuleStudio] Already loading, skipping duplicate request");
-      return;
-    }
-    
-    // Track this specific request
-    const requestId = ++loadRequestIdRef.current;
-    isLoadingRef.current = true;
-    
-    console.log("[ModuleStudio] Loading module:", moduleId, "requestId:", requestId);
-    setLoading(true);
-    setLoadError(null);
+  // Load Phase 81C data asynchronously after main content loads
+  const loadPhase81CData = useCallback(async (moduleSourceId: string, moduleData: ModuleSource) => {
+    const supabase = createClient();
     
     try {
-      const supabase = createClient();
-      
-      // Fetch all data in parallel (no timeout race - let server timeout handle it)
-      const [data, versionData, deploymentData] = await Promise.all([
-        getModuleSource(moduleId),
-        getModuleVersions(moduleId),
-        getDeployments(moduleId),
+      const [filesResult, depsResult, routesResult, manifestResult] = await Promise.all([
+        supabase.from("module_files").select("*").eq("module_source_id", moduleSourceId).order("file_path"),
+        supabase.from("module_dependencies").select("*").eq("module_source_id", moduleSourceId),
+        supabase.from("module_api_routes").select("*").eq("module_source_id", moduleSourceId),
+        supabase.from("module_manifests").select("*").eq("module_source_id", moduleSourceId).maybeSingle(),
       ]);
-      
-      // Check if this response is still relevant (component still mounted, no newer request)
-      if (!isMountedRef.current) {
-        console.log("[ModuleStudio] Component unmounted, ignoring response");
-        return;
-      }
-      if (requestId !== loadRequestIdRef.current) {
-        console.log("[ModuleStudio] Stale response (requestId:", requestId, "current:", loadRequestIdRef.current, "), ignoring");
-        return;
-      }
-      
-      console.log("[ModuleStudio] Data loaded:", { 
-        hasModule: !!data, 
-        versionsCount: versionData?.length || 0, 
-        deploymentsCount: deploymentData?.length || 0 
-      });
-
-      if (data) {
-        setModule(data);
-        setName(data.name);
-        setDescription(data.description);
-        setIcon(data.icon);
-        setCategory(data.category);
-        setPricingTier(data.pricingTier);
-        setDependencies(data.dependencies || []);
-        setRenderCode(data.renderCode || "");
-        setStyles(data.styles || "");
-        setSettingsSchema(JSON.stringify(data.settingsSchema || {}, null, 2));
-        setHasChanges(false);
-        
-        // Load Phase 81C data - use data.id (UUID) not moduleId (slug)
-        // module_source_id in Phase 81C tables references module_source.id (UUID)
-        const moduleSourceId = data.id;
-        
-        // These tables might not exist in all environments, so wrap in try-catch
-        try {
-          const [filesResult, depsResult, routesResult, manifestResult] = await Promise.all([
-            supabase.from("module_files").select("*").eq("module_source_id", moduleSourceId).order("file_path"),
-            supabase.from("module_dependencies").select("*").eq("module_source_id", moduleSourceId),
-            supabase.from("module_api_routes").select("*").eq("module_source_id", moduleSourceId),
-            supabase.from("module_manifests").select("*").eq("module_source_id", moduleSourceId).maybeSingle(),
-          ]);
 
       if (filesResult.data) {
         // Map database file types to UI file types
@@ -331,10 +277,10 @@ export default function EditModulePage({
         if (rawManifest && typeof rawManifest === "object" && Object.keys(rawManifest).length > 0) {
           // Parse the stored manifest
           setManifest({
-            name: (rawManifest.name as string) || data.name,
+            name: (rawManifest.name as string) || moduleData.name,
             version: (rawManifest.version as string) || manifestResult.data.manifest_version || "1.0.0",
-            displayName: (rawManifest.displayName as string) || data.name,
-            description: (rawManifest.description as string) || data.description,
+            displayName: (rawManifest.displayName as string) || moduleData.name,
+            description: (rawManifest.description as string) || moduleData.description,
             author: rawManifest.author as string | undefined,
             license: rawManifest.license as string | undefined,
             homepage: rawManifest.homepage as string | undefined,
@@ -352,50 +298,127 @@ export default function EditModulePage({
         } else {
           // Build manifest from database columns
           setManifest({
-            name: data.name,
+            name: moduleData.name,
             version: manifestResult.data.manifest_version || "1.0.0",
-            displayName: data.name,
-            description: data.description,
+            displayName: moduleData.name,
+            description: moduleData.description,
             main: manifestResult.data.entry_point || "index.tsx",
             permissions: (manifestResult.data.permissions || []) as ModuleManifest["permissions"],
             dependencies: {},
           });
         }
       }
-        } catch (phase81cError) {
-          // Phase 81C tables may not exist yet - this is expected
-          console.log("[ModuleStudio] Phase 81C tables not available:", phase81cError);
-        }
+    } catch (phase81cError) {
+      // Phase 81C tables may not exist yet - this is expected
+      console.log("[ModuleStudio] Phase 81C tables not available:", phase81cError);
     }
+  }, []);
 
-    setVersions(versionData);
-    setDeployments(deploymentData);
-    } catch (error) {
-      // Check if component is still mounted and this is the current request
-      if (!isMountedRef.current || requestId !== loadRequestIdRef.current) {
-        console.log("[ModuleStudio] Error for stale request, ignoring");
+  // Main load function
+  const loadModule = useCallback(async () => {
+    // Prevent duplicate loads if already loaded successfully
+    if (hasLoadedRef.current) {
+      console.log("[ModuleStudio] Already loaded successfully, skipping");
+      return;
+    }
+    
+    // Prevent concurrent loads
+    if (isLoadingRef.current) {
+      console.log("[ModuleStudio] Already loading, skipping");
+      return;
+    }
+    
+    // Track this specific request
+    const requestId = ++loadRequestIdRef.current;
+    isLoadingRef.current = true;
+    
+    console.log("[ModuleStudio] Starting load for:", moduleId, "requestId:", requestId);
+    setLoading(true);
+    setLoadError(null);
+    
+    try {
+      // Fetch all data in parallel
+      const [data, versionData, deploymentData] = await Promise.all([
+        getModuleSource(moduleId),
+        getModuleVersions(moduleId),
+        getDeployments(moduleId),
+      ]);
+      
+      // Check if this response is still relevant
+      if (!isMountedRef.current) {
+        console.log("[ModuleStudio] Component unmounted, ignoring response");
+        isLoadingRef.current = false;
+        return;
+      }
+      if (requestId !== loadRequestIdRef.current) {
+        console.log("[ModuleStudio] Stale response, ignoring");
+        isLoadingRef.current = false;
         return;
       }
       
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error("[ModuleStudio] Error loading module:", errorMessage);
-      
-      // Set error state for better UX
-      setLoadError(`Failed to load module: ${errorMessage}`);
-    } finally {
-      // Only update loading state if this is still the current request
-      if (requestId === loadRequestIdRef.current) {
-        console.log("[ModuleStudio] Loading complete for requestId:", requestId);
+      console.log("[ModuleStudio] Data loaded:", { 
+        hasModule: !!data, 
+        versionsCount: versionData?.length || 0, 
+        deploymentsCount: deploymentData?.length || 0 
+      });
+
+      if (data) {
+        // Mark as successfully loaded BEFORE updating state
+        hasLoadedRef.current = true;
+        
+        setModule(data);
+        setName(data.name);
+        setDescription(data.description);
+        setIcon(data.icon);
+        setCategory(data.category);
+        setPricingTier(data.pricingTier);
+        setDependencies(data.dependencies || []);
+        setRenderCode(data.renderCode || "");
+        setStyles(data.styles || "");
+        setSettingsSchema(JSON.stringify(data.settingsSchema || {}, null, 2));
+        setHasChanges(false);
+        setVersions(versionData);
+        setDeployments(deploymentData);
+        setLoading(false);
+        isLoadingRef.current = false;
+        
+        // Load Phase 81C data asynchronously
+        loadPhase81CData(data.id, data);
+      } else {
+        setLoadError("Module not found");
         setLoading(false);
         isLoadingRef.current = false;
       }
+    } catch (err) {
+      if (!isMountedRef.current || requestId !== loadRequestIdRef.current) {
+        console.log("[ModuleStudio] Error for stale request, ignoring");
+        isLoadingRef.current = false;
+        return;
+      }
+      
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      console.error("[ModuleStudio] Error loading module:", errorMessage);
+      setLoadError(`Failed to load module: ${errorMessage}`);
+      setLoading(false);
+      isLoadingRef.current = false;
     }
-  }, [moduleId]);
+  }, [moduleId, loadPhase81CData]);
+
+  // Track the current moduleId to detect actual navigation
+  const previousModuleIdRef = useRef<string | null>(null);
 
   // Effect to load module data - with proper cleanup
   useEffect(() => {
     // Reset mounted ref on mount
     isMountedRef.current = true;
+    
+    // Only reset hasLoadedRef when moduleId ACTUALLY changes (not on hot reload)
+    if (previousModuleIdRef.current !== moduleId) {
+      console.log("[ModuleStudio] moduleId changed from", previousModuleIdRef.current, "to", moduleId);
+      hasLoadedRef.current = false;
+      isLoadingRef.current = false;
+      previousModuleIdRef.current = moduleId;
+    }
     
     // Load the module
     loadModule();
@@ -404,9 +427,9 @@ export default function EditModulePage({
     return () => {
       console.log("[ModuleStudio] Component unmounting, marking as unmounted");
       isMountedRef.current = false;
-      isLoadingRef.current = false;
+      // Don't reset hasLoadedRef here - that's handled when moduleId changes
     };
-  }, [loadModule]);
+  }, [loadModule, moduleId]);
 
   // Phase 81C: Save module files
   const handleSaveFiles = useCallback(async (files: ModuleFile[]) => {
