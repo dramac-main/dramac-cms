@@ -8,8 +8,6 @@ interface Module {
   name: string;
   description?: string | null;
   icon?: string;
-  custom_name?: string | null;
-  custom_icon?: string | null;
 }
 
 interface AppCardProps {
@@ -21,8 +19,8 @@ interface AppCardProps {
 export function AppCard({ module, className, showDescription = false }: AppCardProps) {
   const [isPressed, setIsPressed] = useState(false);
   
-  const displayName = module.custom_name || module.name;
-  const displayIcon = module.custom_icon || module.icon || "📦";
+  const displayName = module.name;
+  const displayIcon = module.icon || "📦";
 
   return (
     <div

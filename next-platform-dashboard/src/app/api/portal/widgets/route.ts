@@ -8,16 +8,6 @@ interface WidgetConfig {
   defaultData?: Record<string, unknown>;
 }
 
-interface Installation {
-  settings: Record<string, unknown>;
-  module: {
-    id: string;
-    name: string;
-    icon: string;
-    widget_config: WidgetConfig | null;
-  } | null;
-}
-
 export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -46,36 +36,41 @@ export async function GET(_request: NextRequest) {
     }
 
     // Get installed modules (separate queries - no FK relationship)
+    // Note: is_enabled is the correct column, not is_active
     const { data: rawInstallations } = await supabase
       .from("client_module_installations")
       .select("module_id, settings")
       .eq("client_id", clientId)
-      .eq("is_active", true);
+      .eq("is_enabled", true);
 
     if (!rawInstallations?.length) {
       return NextResponse.json({ widgets: [] });
     }
 
-    // Fetch modules with widget config
+    // Fetch modules - widget_config doesn't exist on modules_v2
+    // Widget functionality would need to be in the module's manifest JSONB
     const moduleIds = rawInstallations.map((i) => i.module_id);
     const { data: modules } = await supabase
       .from("modules_v2")
-      .select("id, name, icon, widget_config")
+      .select("id, name, icon, manifest")
       .in("id", moduleIds)
       .eq("is_active", true);
 
     const moduleMap = new Map((modules || []).map((m) => [m.id, m]));
 
-    // Build widget data from modules that have widget_config
+    // Build widget data from modules that have widget capability in manifest
     const widgets = rawInstallations
       .map((i) => ({ ...i, module: moduleMap.get(i.module_id) || null }))
       .filter((i) => {
         const mod = i.module;
-        return mod?.widget_config && typeof mod.widget_config === "object";
+        // Check if module has widget config in manifest
+        const manifest = mod?.manifest as Record<string, unknown> | null;
+        return manifest?.widget && typeof manifest.widget === "object";
       })
       .map((i) => {
         const mod = i.module!;
-        const config = mod.widget_config as WidgetConfig;
+        const manifest = mod.manifest as Record<string, unknown>;
+        const config = (manifest.widget || {}) as WidgetConfig;
         
         return {
           moduleId: mod.id,

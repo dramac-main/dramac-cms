@@ -11,26 +11,6 @@ interface PageProps {
   params: Promise<{ siteId: string; moduleId: string }>;
 }
 
-interface SiteInstallation {
-  id: string;
-  settings: Record<string, unknown>;
-  custom_name: string | null;
-  is_active: boolean;
-  module: {
-    id: string;
-    name: string;
-    slug: string;
-    description: string | null;
-    icon: string;
-    category: string;
-    runtime_type?: string;
-    app_url?: string;
-    external_url?: string;
-    entry_component?: string;
-    settings_schema?: Record<string, unknown>;
-  };
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { moduleId } = await params;
   const supabase = await createClient();
@@ -82,9 +62,10 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
   }
 
   // Get the site module installation (separate queries - FK was dropped)
+  // Note: custom_name/is_active don't exist - use is_enabled instead
   const { data: rawInstallation } = await supabase
     .from("site_module_installations")
-    .select("id, module_id, settings, custom_name, is_active")
+    .select("id, module_id, settings")
     .eq("site_id", siteId)
     .eq("module_id", moduleId)
     .eq("is_enabled", true)
@@ -95,16 +76,25 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
   }
 
   // Fetch the module separately
+  // Note: runtime_type, app_url, external_url, entry_component don't exist as columns
+  // They should be in the manifest JSONB field
   const { data: moduleData } = await supabase
     .from("modules_v2")
-    .select("id, name, slug, description, icon, category, runtime_type, app_url, external_url, entry_component, settings_schema")
+    .select("id, name, slug, description, icon, category, manifest, settings_schema")
     .eq("id", moduleId)
-    .eq("is_active", true)
+    .eq("status", "active")
     .single();
 
   if (!moduleData) {
     notFound();
   }
+
+  // Extract runtime info from manifest JSONB
+  const manifest = (moduleData.manifest || {}) as Record<string, unknown>;
+  const externalUrl = manifest.external_url as string | null;
+  const appUrl = manifest.app_url as string | null;
+  const runtimeType = manifest.runtime_type as string | undefined;
+  const entryComponent = manifest.entry_component as string | null;
 
   const installation = {
     ...rawInstallation,
@@ -126,7 +116,7 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
             <span className="text-2xl">{moduleData.icon || "📦"}</span>
             <div>
               <h1 className="font-semibold">
-                {installation.custom_name || moduleData.name}
+                {moduleData.name}
               </h1>
               <p className="text-xs text-muted-foreground">
                 {site.name} • {moduleData.category || "App"}
@@ -141,9 +131,9 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
               <Settings className="h-4 w-4" />
             </Button>
           )}
-          {moduleData.external_url && (
+          {externalUrl && (
             <Button variant="ghost" size="icon" asChild title="Open in New Window">
-              <a href={moduleData.external_url} target="_blank" rel="noopener noreferrer">
+              <a href={externalUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4" />
               </a>
             </Button>
@@ -163,15 +153,14 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
             description: moduleData.description,
             icon: moduleData.icon || "📦",
             slug: moduleData.slug || "",
-            runtime_type: moduleData.runtime_type as "iframe" | "embedded" | "external" | "native" | undefined,
-            app_url: moduleData.app_url || null,
-            external_url: moduleData.external_url || null,
-            entry_component: moduleData.entry_component || null,
+            runtime_type: runtimeType as "iframe" | "embedded" | "external" | "native" | undefined,
+            app_url: appUrl,
+            external_url: externalUrl,
+            entry_component: entryComponent,
           }}
           installation={{
             id: installation.id,
-            settings: installation.settings || {},
-            custom_name: installation.custom_name,
+            settings: (installation.settings || {}) as Record<string, unknown>,
           }}
           clientId={client.id}
           agencyId={client.agency_id || undefined}

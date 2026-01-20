@@ -20,7 +20,6 @@ interface Module {
 interface Installation {
   id: string;
   settings: Record<string, unknown>;
-  custom_name?: string | null;
 }
 
 interface AppLauncherProps {

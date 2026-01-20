@@ -14,20 +14,20 @@ export const metadata: Metadata = {
 };
 
 interface Subscription {
-  markup_type?: string;
-  markup_percentage?: number;
-  markup_fixed_amount?: number;
-  custom_price_monthly?: number;
+  markup_type: string | null;
+  markup_percentage: number | null;
+  markup_fixed_amount: number | null;
+  custom_price_monthly: number | null;
   module: {
     id: string;
     slug: string;
     name: string;
     description: string | null;
-    icon: string;
+    icon: string | null;
     category: string;
-    install_level?: string;
-    wholesale_price_monthly?: number;
-    is_featured?: boolean;
+    install_level: string | null;
+    wholesale_price_monthly: number | null;
+    is_featured: boolean | null;
   } | null;
 }
 

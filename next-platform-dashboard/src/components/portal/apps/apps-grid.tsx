@@ -13,8 +13,6 @@ interface Module {
   installation_id: string;
   installed_at: string;
   settings: Record<string, unknown>;
-  custom_name: string | null;
-  custom_icon: string | null;
 }
 
 interface AppsGridProps {

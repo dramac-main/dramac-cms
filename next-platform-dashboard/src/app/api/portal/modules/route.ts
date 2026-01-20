@@ -2,16 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
-interface ClientInstallation {
-  id: string;
-  module_id: string;
-  installed_at: string;
-  settings: Record<string, unknown>;
-  custom_name: string | null;
-  custom_icon: string | null;
-  module: Record<string, unknown>;
-}
-
 export async function GET(_request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -42,11 +32,12 @@ export async function GET(_request: NextRequest) {
 
     // Get installed modules from client_module_installations
     // Using separate queries to avoid FK relationship issues
+    // Note: custom_name/custom_icon don't exist in schema - use settings JSONB if needed
     const { data: rawInstallations, error: installError } = await supabase
       .from("client_module_installations")
-      .select("id, module_id, installed_at, settings, custom_name, custom_icon")
+      .select("id, module_id, installed_at, settings")
       .eq("client_id", clientId)
-      .eq("is_active", true)
+      .eq("is_enabled", true)
       .order("installed_at", { ascending: false });
 
     if (installError) {
@@ -58,10 +49,8 @@ export async function GET(_request: NextRequest) {
     let modules: Array<{
       id: string;
       module_id: string;
-      installed_at: string;
+      installed_at: string | null;
       settings: Record<string, unknown>;
-      custom_name: string | null;
-      custom_icon: string | null;
       module: Record<string, unknown> | null;
     }> = [];
 
@@ -83,9 +72,7 @@ export async function GET(_request: NextRequest) {
         id: i.id,
         module_id: i.module_id,
         installed_at: i.installed_at,
-        settings: i.settings || {},
-        custom_name: i.custom_name,
-        custom_icon: i.custom_icon,
+        settings: (i.settings || {}) as Record<string, unknown>,
         module: moduleMap.get(i.module_id) || null,
       }));
     }

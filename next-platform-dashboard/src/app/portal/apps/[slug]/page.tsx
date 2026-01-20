@@ -14,23 +14,7 @@ interface PageProps {
 interface ClientInstallation {
   id: string;
   settings: Record<string, unknown>;
-  custom_name: string | null;
-  is_active: boolean;
-}
-
-interface ModuleData {
-  id: string;
-  slug: string;
-  name: string;
-  description: string | null;
-  icon: string;
-  category: string;
-  runtime_type?: string;
-  app_url?: string;
-  external_url?: string;
-  entry_component?: string;
-  settings_schema?: Record<string, unknown>;
-  is_active: boolean;
+  is_enabled: boolean;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -60,10 +44,10 @@ export default async function PortalAppPage({ params }: PageProps) {
 
   const supabase = await createClient();
 
-  // Get the module
+  // Get the module - use only columns that actually exist
   const { data: moduleData, error: moduleError } = await supabase
     .from("modules_v2")
-    .select("*")
+    .select("id, slug, name, description, icon, category, manifest, settings_schema")
     .eq("slug", slug)
     .eq("status", "active")
     .single();
@@ -72,7 +56,12 @@ export default async function PortalAppPage({ params }: PageProps) {
     notFound();
   }
 
-  const module = moduleData as unknown as ModuleData;
+  // Extract runtime info from manifest JSONB
+  const manifest = (moduleData.manifest || {}) as Record<string, unknown>;
+  const externalUrl = manifest.external_url as string | undefined;
+  const appUrl = manifest.app_url as string | undefined;
+  const runtimeType = manifest.runtime_type as string | undefined;
+  const entryComponent = manifest.entry_component as string | undefined;
 
   // Verify client has access through module_subscriptions (via agency)
   const { data: clientData } = await supabase
@@ -86,21 +75,22 @@ export default async function PortalAppPage({ params }: PageProps) {
   }
 
   // Check if there's a client installation using type assertion
+  // Note: use is_enabled not is_active (column name in actual schema)
   const { data: clientInstallation } = await supabase
     .from("client_module_installations")
-    .select("*")
+    .select("id, settings, is_enabled")
     .eq("client_id", clientData.id)
-    .eq("module_id", module.id)
-    .eq("is_active", true)
+    .eq("module_id", moduleData.id)
+    .eq("is_enabled", true)
     .single() as unknown as { data: ClientInstallation | null };
 
   // If no client installation, check agency subscription as fallback
   if (!clientInstallation) {
     const { data: subscription } = await supabase
       .from("agency_module_subscriptions")
-      .select("*")
+      .select("id")
       .eq("agency_id", clientData.agency_id)
-      .eq("module_id", module.id)
+      .eq("module_id", moduleData.id)
       .eq("status", "active")
       .single();
 
@@ -111,9 +101,8 @@ export default async function PortalAppPage({ params }: PageProps) {
 
   // Create installation object for the launcher
   const installation = clientInstallation || {
-    id: module.id,
+    id: moduleData.id,
     settings: {},
-    custom_name: null,
   };
 
   return (
@@ -128,23 +117,23 @@ export default async function PortalAppPage({ params }: PageProps) {
           </Button>
           
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{module.icon || "📦"}</span>
+            <span className="text-2xl">{moduleData.icon || "📦"}</span>
             <div>
-              <h1 className="font-semibold">{installation.custom_name || module.name}</h1>
-              <p className="text-xs text-muted-foreground">{module.category}</p>
+              <h1 className="font-semibold">{moduleData.name}</h1>
+              <p className="text-xs text-muted-foreground">{moduleData.category}</p>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {module.settings_schema && (
+          {moduleData.settings_schema && (
             <Button variant="ghost" size="icon" title="App Settings">
               <Settings className="h-4 w-4" />
             </Button>
           )}
-          {module.external_url && (
+          {externalUrl && (
             <Button variant="ghost" size="icon" asChild title="Open in New Window">
-              <a href={module.external_url} target="_blank" rel="noopener noreferrer">
+              <a href={externalUrl} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-4 w-4" />
               </a>
             </Button>
@@ -159,20 +148,19 @@ export default async function PortalAppPage({ params }: PageProps) {
       <div className="flex-1 overflow-hidden">
         <AppLauncher 
           module={{
-            id: module.id,
-            name: module.name,
-            description: module.description,
-            icon: module.icon,
-            slug: module.slug,
-            runtime_type: module.runtime_type as "iframe" | "embedded" | "external" | "native" | undefined,
-            app_url: module.app_url,
-            external_url: module.external_url,
-            entry_component: module.entry_component,
+            id: moduleData.id,
+            name: moduleData.name,
+            description: moduleData.description,
+            icon: moduleData.icon || "📦",
+            slug: moduleData.slug,
+            runtime_type: runtimeType as "iframe" | "embedded" | "external" | "native" | undefined,
+            app_url: appUrl,
+            external_url: externalUrl,
+            entry_component: entryComponent,
           }}
           installation={{
             id: installation.id,
-            settings: installation.settings || {},
-            custom_name: installation.custom_name,
+            settings: (installation.settings || {}) as Record<string, unknown>,
           }}
           clientId={clientData.id}
           agencyId={clientData.agency_id || undefined}

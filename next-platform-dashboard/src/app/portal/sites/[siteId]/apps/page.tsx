@@ -12,15 +12,6 @@ interface PageProps {
   params: Promise<{ siteId: string }>;
 }
 
-interface SiteInstallation {
-  id: string;
-  installed_at: string;
-  settings: Record<string, unknown>;
-  custom_name: string | null;
-  custom_icon: string | null;
-  module: Record<string, unknown>;
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { siteId } = await params;
   const supabase = await createClient();
@@ -74,36 +65,56 @@ export default async function SiteAppsPage({ params }: PageProps) {
     notFound();
   }
 
+  // Define the module type to match AppsGrid expectations
+  interface InstalledModule {
+    id: string;
+    name: string;
+    description: string | null;
+    icon: string;
+    slug: string;
+    category: string;
+    installation_id: string;
+    installed_at: string;
+    settings: Record<string, unknown>;
+  }
+
   // Get site-level module installations (separate queries - no FK relationship)
+  // Note: custom_name/custom_icon don't exist in schema - removed from select
   const { data: rawInstallations } = await supabase
     .from("site_module_installations")
-    .select("id, module_id, installed_at, settings, custom_name, custom_icon")
+    .select("id, module_id, installed_at, settings")
     .eq("site_id", siteId)
     .eq("is_enabled", true)
     .order("installed_at", { ascending: false });
 
   // Fetch modules separately if there are installations
-  let installedModules: Array<Record<string, unknown>> = [];
+  let installedModules: InstalledModule[] = [];
   if (rawInstallations?.length) {
     const moduleIds = rawInstallations.map((i) => i.module_id);
     const { data: modules } = await supabase
       .from("modules_v2")
-      .select("*")
+      .select("id, name, description, icon, slug, category")
       .in("id", moduleIds)
-      .eq("is_active", true);
+      .eq("status", "active");
 
     const moduleMap = new Map((modules || []).map((m) => [m.id, m]));
     
     installedModules = rawInstallations
       .filter((i) => moduleMap.has(i.module_id))
-      .map((i) => ({
-        ...(moduleMap.get(i.module_id) as Record<string, unknown>),
-        installation_id: i.id,
-        installed_at: i.installed_at,
-        settings: i.settings || {},
-        custom_name: i.custom_name,
-        custom_icon: i.custom_icon,
-      }));
+      .map((i) => {
+        const mod = moduleMap.get(i.module_id)!;
+        return {
+          id: mod.id,
+          name: mod.name,
+          description: mod.description,
+          icon: mod.icon || "📦",
+          slug: mod.slug,
+          category: mod.category,
+          installation_id: i.id,
+          installed_at: i.installed_at || new Date().toISOString(),
+          settings: (i.settings || {}) as Record<string, unknown>,
+        };
+      });
   }
 
   return (
@@ -146,8 +157,8 @@ export default async function SiteAppsPage({ params }: PageProps) {
               showBrowseButton={false}
             />
           ) : (
-            <AppsGrid 
-              modules={installedModules as Parameters<typeof AppsGrid>[0]["modules"]} 
+            <AppsGrid
+              modules={installedModules}
               basePath={`/portal/sites/${siteId}/apps`}
             />
           )}

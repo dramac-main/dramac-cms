@@ -15,15 +15,6 @@ export const metadata: Metadata = {
   description: "Access your installed apps and modules",
 };
 
-interface ClientInstallation {
-  id: string;
-  installed_at: string;
-  settings: Record<string, unknown>;
-  custom_name: string | null;
-  custom_icon: string | null;
-  module: Record<string, unknown>;
-}
-
 export default async function PortalAppsPage() {
   const cookieStore = await cookies();
   const impersonatingClientId = cookieStore.get("impersonating_client_id")?.value;
@@ -48,21 +39,35 @@ export default async function PortalAppsPage() {
   // Get impersonating user info
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Define the module type to match AppsGrid expectations
+  interface InstalledModule {
+    id: string;
+    name: string;
+    description: string | null;
+    icon: string;
+    slug: string;
+    category: string;
+    installation_id: string;
+    installed_at: string;
+    settings: Record<string, unknown>;
+  }
+
   // First try to get client-level module installations (separate queries for safety)
+  // Note: custom_name/custom_icon don't exist in schema - removed from select
   const { data: rawClientInstalls } = await supabase
     .from("client_module_installations")
-    .select("id, module_id, installed_at, settings, custom_name, custom_icon")
+    .select("id, module_id, installed_at, settings")
     .eq("client_id", client.id)
-    .eq("is_active", true)
+    .eq("is_enabled", true)
     .order("installed_at", { ascending: false });
 
   // Fetch modules separately if there are installations
-  let installedModules: Array<Record<string, unknown>> = [];
+  let installedModules: InstalledModule[] = [];
   if (rawClientInstalls?.length) {
     const moduleIds = rawClientInstalls.map((i) => i.module_id);
     const { data: modules } = await supabase
       .from("modules_v2")
-      .select("*")
+      .select("id, name, description, icon, slug, category")
       .in("id", moduleIds)
       .eq("is_active", true);
 
@@ -70,14 +75,20 @@ export default async function PortalAppsPage() {
     
     installedModules = rawClientInstalls
       .filter((i) => moduleMap.has(i.module_id))
-      .map((i) => ({
-        ...(moduleMap.get(i.module_id) as Record<string, unknown>),
-        installation_id: i.id,
-        installed_at: i.installed_at,
-        settings: i.settings || {},
-        custom_name: i.custom_name,
-        custom_icon: i.custom_icon,
-      }));
+      .map((i) => {
+        const mod = moduleMap.get(i.module_id)!;
+        return {
+          id: mod.id,
+          name: mod.name,
+          description: mod.description,
+          icon: mod.icon || "📦",
+          slug: mod.slug,
+          category: mod.category,
+          installation_id: i.id,
+          installed_at: i.installed_at || new Date().toISOString(),
+          settings: (i.settings || {}) as Record<string, unknown>,
+        };
+      });
   }
 
   // If no client installations, fall back to agency subscriptions (legacy support)
@@ -101,14 +112,20 @@ export default async function PortalAppsPage() {
 
       installedModules = rawSubscriptions
         .filter((s) => subModuleMap.has(s.module_id))
-        .map((s) => ({
-          ...(subModuleMap.get(s.module_id) as Record<string, unknown>),
-          installation_id: s.id,
-          installed_at: new Date().toISOString(),
-          settings: {},
-          custom_name: null,
-          custom_icon: null,
-        }));
+        .map((s) => {
+          const mod = subModuleMap.get(s.module_id)!;
+          return {
+            id: mod.id,
+            name: mod.name,
+            description: mod.description,
+            icon: mod.icon || "📦",
+            slug: mod.slug,
+            category: mod.category,
+            installation_id: s.id,
+            installed_at: new Date().toISOString(),
+            settings: {},
+          };
+        });
     }
   }
 
@@ -156,7 +173,7 @@ export default async function PortalAppsPage() {
           {installedModules.length === 0 ? (
             <EmptyAppsState />
           ) : (
-            <AppsGrid modules={installedModules as Parameters<typeof AppsGrid>[0]["modules"]} />
+            <AppsGrid modules={installedModules} />
           )}
         </div>
       </main>
