@@ -70,17 +70,22 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .select("*")
       .eq("site_id", siteId);
 
-    // Create a map of enabled modules
+    // Create a map of ALL module installations (including disabled)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const enabledMap = new Map(siteModules?.map((sm: any) => [sm.module_id, sm]) || []);
+    const installMap = new Map(siteModules?.map((sm: any) => [sm.module_id, sm]) || []);
 
-    // Combine data
+    // Combine data - check actual is_enabled field, not just record existence
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const result = siteEligibleModules.map((sub: any) => ({
-      module: sub.module,
-      siteModule: enabledMap.get(sub.module?.id || sub.module_id || ""),
-      isEnabled: enabledMap.has(sub.module?.id || sub.module_id || ""),
-    }));
+    const result = siteEligibleModules.map((sub: any) => {
+      const moduleId = sub.module?.id || sub.module_id || "";
+      const siteModule = installMap.get(moduleId);
+      return {
+        module: sub.module,
+        siteModule: siteModule || null,
+        // Check actual is_enabled field, not just record existence
+        isEnabled: siteModule?.is_enabled === true,
+      };
+    });
 
     return NextResponse.json(result);
   } catch (error) {
