@@ -5,20 +5,20 @@ import { useEffect, useState, useRef } from "react";
 interface StatItem {
   id?: string;
   value: number;
-  prefix: string;
-  suffix: string;
+  prefix?: string;
+  suffix?: string;
   label: string;
 }
 
-interface StatsData {
-  title: string;
-  subtitle: string;
-  stats: StatItem[];
+interface RenderStatsProps {
+  title?: string;
+  subtitle?: string;
+  stats?: StatItem[];
   columns?: 2 | 3 | 4;
   style?: "default" | "bordered" | "gradient";
   animate?: boolean;
-  backgroundColor: string;
-  textColor: string;
+  backgroundColor?: string;
+  textColor?: string;
 }
 
 // Animated counter hook for client-side rendering
@@ -80,17 +80,16 @@ function AnimatedCounter({
   );
 }
 
-export function RenderStats({ props }: { props: StatsData }) {
-  const { 
-    title = "", 
-    subtitle = "", 
-    stats = [], 
-    columns = 4,
-    style = "default",
-    animate = true,
-    backgroundColor = "#1f2937", 
-    textColor = "#ffffff" 
-  } = props || {};
+export function RenderStats({
+  title = "",
+  subtitle = "",
+  stats = [],
+  columns = 4,
+  style = "default",
+  animate = true,
+  backgroundColor = "#1f2937",
+  textColor = "#ffffff",
+}: RenderStatsProps) {
 
   const columnClasses = {
     2: "grid-cols-2",

@@ -8,24 +8,23 @@ interface FAQItem {
   answer: string;
 }
 
-interface FAQData {
-  title: string;
-  subtitle: string;
-  items: FAQItem[];
+interface RenderFAQProps {
+  title?: string;
+  subtitle?: string;
+  items?: FAQItem[];
   columns?: 1 | 2;
   style?: "accordion" | "cards";
-  backgroundColor: string;
+  backgroundColor?: string;
 }
 
-export function RenderFAQ({ props }: { props: FAQData }) {
-  const { 
-    title = "Frequently Asked Questions", 
-    subtitle = "", 
-    items = [], 
-    columns = 1,
-    style = "accordion",
-    backgroundColor = "#f8fafc" 
-  } = props || {};
+export function RenderFAQ({
+  title = "Frequently Asked Questions",
+  subtitle = "",
+  items = [],
+  columns = 1,
+  style = "accordion",
+  backgroundColor = "#f8fafc",
+}: RenderFAQProps) {
   
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 

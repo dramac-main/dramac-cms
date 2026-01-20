@@ -9,24 +9,23 @@ interface GalleryImage {
   caption?: string;
 }
 
-interface GalleryData {
-  images: GalleryImage[];
-  columns: 2 | 3 | 4;
-  gap: "sm" | "md" | "lg";
-  borderRadius: "none" | "sm" | "md" | "lg" | "full";
-  showCaptions: boolean;
+interface RenderGalleryProps {
+  images?: GalleryImage[];
+  columns?: 2 | 3 | 4;
+  gap?: "sm" | "md" | "lg";
+  borderRadius?: "none" | "sm" | "md" | "lg" | "full";
+  showCaptions?: boolean;
   lightbox?: boolean;
 }
 
-export function RenderGallery({ props }: { props: GalleryData }) {
-  const { 
-    images = [], 
-    columns = 3, 
-    gap = "md", 
-    borderRadius = "md", 
-    showCaptions = false,
-    lightbox = true,
-  } = props || {};
+export function RenderGallery({
+  images = [],
+  columns = 3,
+  gap = "md",
+  borderRadius = "md",
+  showCaptions = false,
+  lightbox = true,
+}: RenderGalleryProps) {
 
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
