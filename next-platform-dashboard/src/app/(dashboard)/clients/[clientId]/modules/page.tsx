@@ -62,30 +62,48 @@ export default async function ClientModulesPage({ params }: PageProps) {
     notFound();
   }
 
-  // Get client's installed modules
-  const { data: installedModules } = await supabase
+  // Get client's installed modules (separate queries - FK was dropped)
+  const { data: rawInstalled } = await supabase
     .from("client_module_installations" as any)
-    .select(`
-      *,
-      module:modules_v2(*)
-    `)
+    .select("*")
     .eq("client_id", clientId);
 
-  const installedModulesList = (installedModules as any[]) || [];
-  const installedModuleIds = new Set(installedModulesList.map((m: any) => m.module_id));
-
-  // Get agency's subscriptions that are available for installation (client-level modules only)
-  const { data: agencySubscriptions } = await supabase
+  // Get agency's subscriptions
+  const { data: rawSubscriptions } = await supabase
     .from("agency_module_subscriptions" as any)
-    .select(`
-      *,
-      module:modules_v2(*)
-    `)
+    .select("*")
     .eq("agency_id", profile.agency_id)
     .eq("status", "active");
 
+  // Fetch all needed modules in one query
+  const allModuleIds = [
+    ...((rawInstalled as any[]) || []).map((i: any) => i.module_id),
+    ...((rawSubscriptions as any[]) || []).map((s: any) => s.module_id),
+  ];
+  const uniqueModuleIds = [...new Set(allModuleIds)];
+
+  let moduleMap = new Map();
+  if (uniqueModuleIds.length > 0) {
+    const { data: modules } = await supabase
+      .from("modules_v2")
+      .select("*")
+      .in("id", uniqueModuleIds);
+    moduleMap = new Map((modules || []).map((m: any) => [m.id, m]));
+  }
+
+  const installedModulesList = ((rawInstalled as any[]) || []).map((i: any) => ({
+    ...i,
+    module: moduleMap.get(i.module_id) || null,
+  }));
+  const installedModuleIds = new Set(installedModulesList.map((m: any) => m.module_id));
+
+  const agencySubscriptions = ((rawSubscriptions as any[]) || []).map((s: any) => ({
+    ...s,
+    module: moduleMap.get(s.module_id) || null,
+  }));
+
   // Filter to client-level modules that aren't already installed
-  const availableSubscriptions = (agencySubscriptions as any[] || []).filter((sub: any) => {
+  const availableSubscriptions = agencySubscriptions.filter((sub: any) => {
     const level = (sub.module as any)?.install_level;
     return level === "client" && !installedModuleIds.has(sub.module_id);
   });

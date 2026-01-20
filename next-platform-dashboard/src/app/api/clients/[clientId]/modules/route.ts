@@ -25,13 +25,10 @@ export async function GET(
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    // Get client's installed modules
-    const { data: installed, error: installedError } = await (supabase as any)
+    // Get client's installed modules (separate queries - FK was dropped)
+    const { data: rawInstalled, error: installedError } = await (supabase as any)
       .from("client_module_installations")
-      .select(`
-        *,
-        module:modules_v2(*)
-      `)
+      .select("*")
       .eq("client_id", clientId);
 
     if (installedError) {
@@ -39,12 +36,9 @@ export async function GET(
     }
 
     // Get agency's available module subscriptions
-    const { data: available, error: availableError } = await (supabase as any)
+    const { data: rawAvailable, error: availableError } = await (supabase as any)
       .from("agency_module_subscriptions")
-      .select(`
-        *,
-        module:modules_v2(*)
-      `)
+      .select("*")
       .eq("agency_id", client.agency_id)
       .eq("status", "active");
 
@@ -52,10 +46,33 @@ export async function GET(
       console.error("Error fetching available modules:", availableError);
     }
 
-    return NextResponse.json({ 
-      installed: installed || [],
-      available: available || []
-    });
+    // Fetch all needed modules in one query
+    const allModuleIds = [
+      ...(rawInstalled || []).map((i: any) => i.module_id),
+      ...(rawAvailable || []).map((s: any) => s.module_id),
+    ];
+    const uniqueModuleIds = [...new Set(allModuleIds)];
+
+    let moduleMap = new Map();
+    if (uniqueModuleIds.length > 0) {
+      const { data: modules } = await (supabase as any)
+        .from("modules_v2")
+        .select("*")
+        .in("id", uniqueModuleIds);
+      moduleMap = new Map((modules || []).map((m: any) => [m.id, m]));
+    }
+
+    const installed = (rawInstalled || []).map((i: any) => ({
+      ...i,
+      module: moduleMap.get(i.module_id) || null,
+    }));
+
+    const available = (rawAvailable || []).map((s: any) => ({
+      ...s,
+      module: moduleMap.get(s.module_id) || null,
+    }));
+
+    return NextResponse.json({ installed, available });
   } catch (error) {
     console.error("Client modules error:", error);
     return NextResponse.json(

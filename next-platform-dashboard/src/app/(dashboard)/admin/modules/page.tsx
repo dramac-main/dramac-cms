@@ -74,16 +74,24 @@ export default async function AdminModulesPage() {
   // Calculate revenue (sum of wholesale prices * active subscriptions)
   let monthlyRevenue = 0;
   try {
-    const { data: revenueData } = await supabase
+    // Fetch subscriptions first (FK was dropped)
+    const { data: subscriptions } = await supabase
       .from("agency_module_subscriptions")
-      .select(`
-        module:modules_v2(wholesale_price_monthly)
-      `)
+      .select("module_id")
       .eq("status", "active");
 
-    monthlyRevenue = revenueData?.reduce((sum: number, sub: { module: { wholesale_price_monthly: number } | null }) => {
-      return sum + (sub.module?.wholesale_price_monthly || 0);
-    }, 0) || 0;
+    if (subscriptions?.length) {
+      const moduleIds = subscriptions.map((s: { module_id: string }) => s.module_id);
+      const { data: modulePrices } = await supabase
+        .from("modules_v2")
+        .select("id, wholesale_price_monthly")
+        .in("id", moduleIds);
+
+      const priceMap = new Map((modulePrices || []).map((m: any) => [m.id, m.wholesale_price_monthly || 0]));
+      monthlyRevenue = subscriptions.reduce((sum: number, sub: { module_id: string }) => {
+        return sum + (priceMap.get(sub.module_id) || 0);
+      }, 0);
+    }
   } catch {
     // Table may not exist yet
   }

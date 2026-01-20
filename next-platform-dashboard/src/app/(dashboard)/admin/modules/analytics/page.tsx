@@ -74,17 +74,24 @@ export default async function ModuleAnalyticsPage() {
       .eq("status", "active");
     activeSubscriptions = active || 0;
 
-    // Revenue calculation
-    const { data: revenueData } = await (supabase as any)
+    // Revenue calculation (separate queries - FK was dropped)
+    const { data: activeSubs } = await (supabase as any)
       .from("agency_module_subscriptions")
-      .select(`
-        module:modules_v2(wholesale_price_monthly)
-      `)
+      .select("module_id")
       .eq("status", "active");
 
-    monthlyRevenue = revenueData?.reduce((sum: number, sub: { module: { wholesale_price_monthly: number } | null }) => {
-      return sum + (sub.module?.wholesale_price_monthly || 0);
-    }, 0) || 0;
+    if (activeSubs?.length) {
+      const moduleIds = activeSubs.map((s: { module_id: string }) => s.module_id);
+      const { data: modulePrices } = await (supabase as any)
+        .from("modules_v2")
+        .select("id, wholesale_price_monthly")
+        .in("id", moduleIds);
+
+      const priceMap = new Map((modulePrices || []).map((m: any) => [m.id, m.wholesale_price_monthly || 0]));
+      monthlyRevenue = activeSubs.reduce((sum: number, sub: { module_id: string }) => {
+        return sum + (priceMap.get(sub.module_id) || 0);
+      }, 0);
+    }
   } catch {
     // Tables may not exist yet
   }

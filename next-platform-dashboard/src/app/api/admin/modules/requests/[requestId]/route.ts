@@ -34,20 +34,32 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Fetch request with agency/profile joins (these FKs still exist)
+    // But fetch resulting_module separately for consistency
     const { data: moduleRequest, error } = await supabase
       .from("module_requests")
       .select(`
         *,
         agency:agencies(id, name, slug),
         submitter:profiles!submitted_by(id, name, email),
-        assigned:profiles!assigned_to(id, name, email),
-        resulting_module:modules_v2!resulting_module_id(id, name, slug)
+        assigned:profiles!assigned_to(id, name, email)
       `)
       .eq("id", requestId)
       .single();
 
     if (error || !moduleRequest) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
+
+    // Fetch resulting module separately if exists
+    let resultingModule = null;
+    if (moduleRequest.resulting_module_id) {
+      const { data: module } = await supabase
+        .from("modules_v2")
+        .select("id, name, slug")
+        .eq("id", moduleRequest.resulting_module_id)
+        .single();
+      resultingModule = module;
     }
 
     // Get vote count
@@ -59,6 +71,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({
       request: {
         ...moduleRequest,
+        resulting_module: resultingModule,
         upvotes: voteCount || moduleRequest.upvotes || 0,
       },
     });

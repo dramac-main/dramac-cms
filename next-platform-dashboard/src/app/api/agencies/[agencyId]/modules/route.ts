@@ -16,18 +16,32 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data, error } = await (supabase as any)
+    // Fetch subscriptions first (FK was dropped for testing modules)
+    const { data: subscriptions, error } = await (supabase as any)
       .from("agency_module_subscriptions")
-      .select(`
-        *,
-        module:modules_v2(*)
-      `)
+      .select("*")
       .eq("agency_id", agencyId)
       .eq("status", "active");
 
     if (error) throw error;
 
-    return NextResponse.json(data);
+    // Fetch modules separately
+    let result = subscriptions || [];
+    if (subscriptions?.length) {
+      const moduleIds = subscriptions.map((s: any) => s.module_id);
+      const { data: modules } = await (supabase as any)
+        .from("modules_v2")
+        .select("*")
+        .in("id", moduleIds);
+
+      const moduleMap = new Map((modules || []).map((m: any) => [m.id, m]));
+      result = subscriptions.map((s: any) => ({
+        ...s,
+        module: moduleMap.get(s.module_id) || null,
+      }));
+    }
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Module subscriptions error:", error);
     return NextResponse.json(
