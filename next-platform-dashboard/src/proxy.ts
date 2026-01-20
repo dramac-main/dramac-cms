@@ -53,33 +53,32 @@ export async function proxy(request: NextRequest) {
   }
 
   // ========================================
-  // SUBDOMAIN/CUSTOM DOMAIN ROUTING
+  // SUBDOMAIN/CUSTOM DOMAIN ROUTING (MUST BE CHECKED FIRST!)
   // ========================================
   
-  console.log("[proxy] Routing check:", {
-    hostname,
-    baseDomain,
-    isLocalhost,
-    isAppDomain,
-    isClientSite,
-    isCustomDomain,
-    pathname
-  });
+  console.log("[proxy] ====== REQUEST START ======");
+  console.log("[proxy] Hostname:", hostname);
+  console.log("[proxy] Pathname:", pathname);
+  console.log("[proxy] Base domain:", baseDomain);
+  console.log("[proxy] Is localhost:", isLocalhost);
+  console.log("[proxy] Is app domain:", isAppDomain);
+  console.log("[proxy] Is client site:", isClientSite);
+  console.log("[proxy] Is custom domain:", isCustomDomain);
 
-  // Route client site subdomains to site renderer (e.g., ten-and-ten.sites.dramacagency.com)
+  // Route client site subdomains FIRST - before any auth checks
   if (isClientSite) {
     const subdomain = hostname.replace(`.${baseDomain}`, "");
     const url = request.nextUrl.clone();
     url.pathname = `/site/${subdomain}${pathname}`;
-    console.log("[proxy] Client site rewrite:", hostname, "→", url.pathname);
+    console.log("[proxy] ✅ Client site rewrite:", hostname, "→", url.pathname);
     return NextResponse.rewrite(url);
   }
   
-  // Route custom domains to site renderer
+  // Route custom domains FIRST - before any auth checks
   if (isCustomDomain) {
     const url = request.nextUrl.clone();
     url.pathname = `/site/${hostname}${pathname}`;
-    console.log("[proxy] Custom domain rewrite:", hostname, "→", url.pathname);
+    console.log("[proxy] ✅ Custom domain rewrite:", hostname, "→", url.pathname);
     return NextResponse.rewrite(url);
   }
 
