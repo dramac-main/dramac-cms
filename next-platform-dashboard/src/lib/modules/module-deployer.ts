@@ -297,13 +297,22 @@ export async function getDeployments(moduleId: string): Promise<Deployment[]> {
       }
     }
   } else {
-    // It's a slug
-    const { data: module } = await db
+    // It's a slug, try module_id first, then slug
+    let result = await db
       .from("module_source")
       .select("id")
       .eq("module_id", moduleId)
       .maybeSingle();
-    moduleSourceId = module?.id || null;
+    
+    if (!result.data) {
+      result = await db
+        .from("module_source")
+        .select("id")
+        .eq("slug", moduleId)
+        .maybeSingle();
+    }
+    
+    moduleSourceId = result.data?.id || null;
   }
 
   if (!moduleSourceId) {

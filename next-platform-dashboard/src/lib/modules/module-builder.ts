@@ -298,12 +298,22 @@ export async function getModuleSource(moduleId: string): Promise<ModuleSource | 
       }
     }
   } else {
-    // It's a slug, query by module_id OR slug
-    const result = await db
+    // It's a slug, try module_id first, then slug
+    let result = await db
       .from("module_source")
       .select("*")
-      .or(`module_id.eq.${moduleId},slug.eq.${moduleId}`)
+      .eq("module_id", moduleId)
       .maybeSingle();
+    
+    if (!result.data) {
+      // Try by slug
+      result = await db
+        .from("module_source")
+        .select("*")
+        .eq("slug", moduleId)
+        .maybeSingle();
+    }
+    
     data = result.data;
     error = result.error;
   }
