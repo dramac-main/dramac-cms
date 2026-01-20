@@ -42,16 +42,9 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Redirect root to dashboard or login
-  async redirects() {
-    return [
-      {
-        source: "/",
-        destination: "/dashboard",
-        permanent: false,
-      },
-    ];
-  },
+  // NOTE: Do NOT add a global redirect from "/" to "/dashboard" here!
+  // That would break subdomain routing. The proxy.ts handles routing
+  // and auth redirects are handled in the middleware.
 };
 
 export default nextConfig;
