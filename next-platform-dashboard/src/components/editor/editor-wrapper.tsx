@@ -42,15 +42,18 @@ export function EditorWrapper({ site, page }: EditorWrapperProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isContentLoaded, setIsContentLoaded] = useState(false);
 
   const handleSettingsChange = useCallback((newSettings: Partial<CanvasSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   }, []);
 
-  // Handle nodes change with useCallback to avoid setState during render
+  // Handle nodes change - only track changes after initial content is loaded
   const handleNodesChange = useCallback(() => {
-    setHasChanges(true);
-  }, []);
+    if (isContentLoaded) {
+      setHasChanges(true);
+    }
+  }, [isContentLoaded]);
 
   return (
     <Editor
@@ -69,6 +72,7 @@ export function EditorWrapper({ site, page }: EditorWrapperProps) {
         setHasChanges={setHasChanges}
         lastSaved={lastSaved}
         setLastSaved={setLastSaved}
+        setIsContentLoaded={setIsContentLoaded}
       />
     </Editor>
   );
@@ -85,6 +89,7 @@ interface EditorContentProps {
   setHasChanges: (changes: boolean) => void;
   lastSaved: Date | null;
   setLastSaved: (date: Date | null) => void;
+  setIsContentLoaded: (loaded: boolean) => void;
 }
 
 function EditorContent({
@@ -98,6 +103,7 @@ function EditorContent({
   setHasChanges,
   lastSaved,
   setLastSaved,
+  setIsContentLoaded,
 }: EditorContentProps) {
   const { actions, query } = useEditor();
   const initialized = useRef(false);
@@ -139,18 +145,28 @@ function EditorContent({
         
         console.log("[EditorContent] Deserializing content...");
         actions.deserialize(serialized);
-        console.log("[EditorContent] Content loaded successfully");
+        
+        // Use setTimeout to ensure the deserialize operation completes
+        // and any onChange events are fired before we mark as loaded
+        setTimeout(() => {
+          setHasChanges(false); // Reset hasChanges after initial load
+          setIsContentLoaded(true); // Now track changes from here on
+          console.log("[EditorContent] Content loaded successfully, hasChanges reset, now tracking changes");
+        }, 100);
+        
         initialized.current = true;
       } catch (error) {
         console.error("[EditorContent] Failed to load page content:", error);
         toast.error("Failed to load page content");
         initialized.current = true; // Mark as initialized to prevent retry loops
+        setIsContentLoaded(true); // Still allow change tracking
       }
     } else if (!page.content) {
-      console.log("[EditorContent] No content to load");
+      console.log("[EditorContent] No content to load, marking as loaded");
       initialized.current = true;
+      setIsContentLoaded(true);
     }
-  }, [page.content, actions, page.id]);
+  }, [page.content, actions, page.id, setHasChanges, setIsContentLoaded]);
 
   // Save handler
   const handleSave = useCallback(async () => {
