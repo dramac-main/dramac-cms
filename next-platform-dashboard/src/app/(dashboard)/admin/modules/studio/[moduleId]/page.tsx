@@ -326,16 +326,15 @@ export default function EditModulePage({
         }
       }
         } catch (phase81cError) {
-          // Phase 81C tables might not exist yet - this is OK
+          // Phase 81C tables may not exist yet - this is expected
           console.log("[ModuleStudio] Phase 81C tables not available:", phase81cError);
         }
-      }
+    }
 
-      setVersions(versionData);
-      setDeployments(deploymentData);
+    setVersions(versionData);
+    setDeployments(deploymentData);
     } catch (error) {
       console.error("[ModuleStudio] Error loading module:", error);
-      toast.error("Failed to load module");
     } finally {
       setLoading(false);
     }
