@@ -10,23 +10,38 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const { siteId } = await context.params;
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    // Fetch installations separately (no FK relationship after migration)
+    const { data: installations, error: installError } = await supabase
       .from("site_module_installations")
-      .select(`
-        settings,
-        module:modules_v2(*)
-      `)
+      .select("module_id, settings")
       .eq("site_id", siteId)
       .eq("is_enabled", true);
 
-    if (error) throw error;
+    if (installError) throw installError;
 
-    const enabledModules = data
-      ?.filter((sm) => sm.module)
-      .map((sm) => ({
-        module: sm.module!,
-        settings: sm.settings || {},
-      })) || [];
+    if (!installations?.length) {
+      return NextResponse.json([]);
+    }
+
+    // Fetch modules separately
+    const moduleIds = installations.map((i) => i.module_id);
+    const { data: modules, error: modulesError } = await supabase
+      .from("modules_v2")
+      .select("*")
+      .in("id", moduleIds)
+      .eq("is_active", true);
+
+    if (modulesError) throw modulesError;
+
+    // Create module map for lookup
+    const moduleMap = new Map(modules?.map((m) => [m.id, m]) || []);
+
+    const enabledModules = installations
+      .filter((inst) => moduleMap.has(inst.module_id))
+      .map((inst) => ({
+        module: moduleMap.get(inst.module_id)!,
+        settings: inst.settings || {},
+      }));
 
     return NextResponse.json(enabledModules);
   } catch (error) {

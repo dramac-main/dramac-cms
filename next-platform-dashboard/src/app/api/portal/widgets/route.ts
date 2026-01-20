@@ -45,23 +45,35 @@ export async function GET(_request: NextRequest) {
       return NextResponse.json({ widgets: [] });
     }
 
-    // Get installed modules that have widgets using type assertion
-    const { data: installations } = await supabase
+    // Get installed modules (separate queries - no FK relationship)
+    const { data: rawInstallations } = await supabase
       .from("client_module_installations")
-      .select(`
-        settings,
-        module:modules_v2(id, name, icon)
-      `)
+      .select("module_id, settings")
       .eq("client_id", clientId)
-      .eq("is_active", true) as unknown as { data: Installation[] | null };
+      .eq("is_active", true);
+
+    if (!rawInstallations?.length) {
+      return NextResponse.json({ widgets: [] });
+    }
+
+    // Fetch modules with widget config
+    const moduleIds = rawInstallations.map((i) => i.module_id);
+    const { data: modules } = await supabase
+      .from("modules_v2")
+      .select("id, name, icon, widget_config")
+      .in("id", moduleIds)
+      .eq("is_active", true);
+
+    const moduleMap = new Map((modules || []).map((m) => [m.id, m]));
 
     // Build widget data from modules that have widget_config
-    const widgets = (installations || [])
-      .filter(i => {
+    const widgets = rawInstallations
+      .map((i) => ({ ...i, module: moduleMap.get(i.module_id) || null }))
+      .filter((i) => {
         const mod = i.module;
         return mod?.widget_config && typeof mod.widget_config === "object";
       })
-      .map(i => {
+      .map((i) => {
         const mod = i.module!;
         const config = mod.widget_config as WidgetConfig;
         

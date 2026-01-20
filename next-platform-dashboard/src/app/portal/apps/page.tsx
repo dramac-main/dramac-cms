@@ -48,54 +48,68 @@ export default async function PortalAppsPage() {
   // Get impersonating user info
   const { data: { user } } = await supabase.auth.getUser();
 
-  // First try to get client-level module installations using type assertion
-  const { data: clientInstallations } = await supabase
+  // First try to get client-level module installations (separate queries for safety)
+  const { data: rawClientInstalls } = await supabase
     .from("client_module_installations")
-    .select(`
-      *,
-      module:modules_v2(*)
-    `)
+    .select("id, module_id, installed_at, settings, custom_name, custom_icon")
     .eq("client_id", client.id)
     .eq("is_active", true)
-    .order("installed_at", { ascending: false }) as unknown as { data: ClientInstallation[] | null };
+    .order("installed_at", { ascending: false });
 
-  // Map client installations to module format
-  let installedModules = (clientInstallations || []).map(i => ({
-    ...(i.module as Record<string, unknown>),
-    installation_id: i.id,
-    installed_at: i.installed_at,
-    settings: i.settings || {},
-    custom_name: i.custom_name,
-    custom_icon: i.custom_icon,
-  }));
+  // Fetch modules separately if there are installations
+  let installedModules: Array<Record<string, unknown>> = [];
+  if (rawClientInstalls?.length) {
+    const moduleIds = rawClientInstalls.map((i) => i.module_id);
+    const { data: modules } = await supabase
+      .from("modules_v2")
+      .select("*")
+      .in("id", moduleIds)
+      .eq("is_active", true);
+
+    const moduleMap = new Map((modules || []).map((m) => [m.id, m]));
+    
+    installedModules = rawClientInstalls
+      .filter((i) => moduleMap.has(i.module_id))
+      .map((i) => ({
+        ...(moduleMap.get(i.module_id) as Record<string, unknown>),
+        installation_id: i.id,
+        installed_at: i.installed_at,
+        settings: i.settings || {},
+        custom_name: i.custom_name,
+        custom_icon: i.custom_icon,
+      }));
+  }
 
   // If no client installations, fall back to agency subscriptions (legacy support)
   if (installedModules.length === 0 && client.agency_id) {
-    // Check agency_module_subscriptions
-    const { data: subscriptions } = await supabase
+    // Check agency_module_subscriptions (separate queries - FK was dropped)
+    const { data: rawSubscriptions } = await supabase
       .from("agency_module_subscriptions")
-      .select(`
-        id,
-        module:modules_v2(id, slug, name, description, icon, category)
-      `)
+      .select("id, module_id")
       .eq("agency_id", client.agency_id)
       .eq("status", "active");
 
-    // Map subscription modules
-    const allSubs = subscriptions || [];
+    if (rawSubscriptions?.length) {
+      const subModuleIds = rawSubscriptions.map((s) => s.module_id);
+      const { data: subModules } = await supabase
+        .from("modules_v2")
+        .select("id, slug, name, description, icon, category")
+        .in("id", subModuleIds)
+        .eq("is_active", true);
 
-    installedModules = allSubs
-      .filter((item): item is typeof item & { module: NonNullable<typeof item.module> } => 
-        item.module !== null && typeof item.module === "object" && "id" in item.module
-      )
-      .map(item => ({
-        ...(item.module as unknown as Record<string, unknown>),
-        installation_id: item.id,
-        installed_at: new Date().toISOString(),
-        settings: {},
-        custom_name: null,
-        custom_icon: null,
-      }));
+      const subModuleMap = new Map((subModules || []).map((m) => [m.id, m]));
+
+      installedModules = rawSubscriptions
+        .filter((s) => subModuleMap.has(s.module_id))
+        .map((s) => ({
+          ...(subModuleMap.get(s.module_id) as Record<string, unknown>),
+          installation_id: s.id,
+          installed_at: new Date().toISOString(),
+          settings: {},
+          custom_name: null,
+          custom_icon: null,
+        }));
+    }
   }
 
   return (

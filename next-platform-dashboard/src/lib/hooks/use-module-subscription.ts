@@ -9,15 +9,29 @@ export function useModuleSubscriptions(agencyId: string) {
   return useQuery({
     queryKey: ["module-subscriptions", agencyId],
     queryFn: async () => {
-      const { data } = await supabase
+      // Fetch subscriptions first (FK was dropped)
+      const { data: subscriptions } = await supabase
         .from("agency_module_subscriptions")
-        .select(`
-          *,
-          module:modules_v2(id, name, category, icon)
-        `)
+        .select("*")
         .eq("agency_id", agencyId);
 
-      return data || [];
+      if (!subscriptions?.length) {
+        return [];
+      }
+
+      // Fetch modules separately
+      const moduleIds = subscriptions.map((s) => s.module_id);
+      const { data: modules } = await supabase
+        .from("modules_v2")
+        .select("id, name, category, icon")
+        .in("id", moduleIds);
+
+      const moduleMap = new Map((modules || []).map((m) => [m.id, m]));
+
+      return subscriptions.map((s) => ({
+        ...s,
+        module: moduleMap.get(s.module_id) || null,
+      }));
     },
   });
 }

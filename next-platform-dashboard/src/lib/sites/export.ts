@@ -104,18 +104,32 @@ export async function exportSite(siteId: string): Promise<{
       })
     );
 
-    // 3. Get enabled modules
-    const { data: siteModules, error: modulesError } = await supabase
+    // 3. Get enabled modules (separate queries - FK was dropped)
+    const { data: rawModuleInstalls, error: modulesError } = await supabase
       .from("site_module_installations")
-      .select(`
-        settings,
-        installed_at,
-        module:modules_v2(slug)
-      `)
+      .select("module_id, settings, installed_at")
       .eq("site_id", siteId);
 
     if (modulesError) {
       return { success: false, error: `Failed to get modules: ${modulesError.message}` };
+    }
+
+    // Fetch module slugs separately
+    let siteModules: Array<{ settings: Record<string, unknown>; installed_at: string | null; module: { slug: string } | null }> = [];
+    if (rawModuleInstalls?.length) {
+      const moduleIds = rawModuleInstalls.map((m) => m.module_id);
+      const { data: modules } = await supabase
+        .from("modules_v2")
+        .select("id, slug")
+        .in("id", moduleIds);
+
+      const moduleMap = new Map((modules || []).map((m) => [m.id, m]));
+
+      siteModules = rawModuleInstalls.map((m) => ({
+        settings: m.settings as Record<string, unknown>,
+        installed_at: m.installed_at,
+        module: moduleMap.get(m.module_id) || null,
+      }));
     }
 
     // 4. Build export data

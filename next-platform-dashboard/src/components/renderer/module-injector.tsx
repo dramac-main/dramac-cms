@@ -40,36 +40,55 @@ export async function ModuleInjector({ siteId }: ModuleInjectorProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
-    // Get all enabled modules for this site from site_module_installations (V2)
-    const { data: siteModules, error } = await db
+    // Get all enabled module installations for this site
+    // Note: We fetch separately because there's no FK relationship between tables
+    const { data: installations, error: installError } = await db
       .from("site_module_installations")
-      .select(`
-        settings,
-        module:modules_v2(
-          id, 
-          slug,
-          name,
-          source, 
-          render_code, 
-          styles,
-          settings_schema,
-          default_settings
-        )
-      `)
+      .select("module_id, settings")
       .eq("site_id", siteId)
-      .eq("status", "active");
+      .eq("is_enabled", true);
 
-    if (error) {
-      console.error("[ModuleInjector] Error fetching site modules:", error);
+    if (installError) {
+      console.error("[ModuleInjector] Error fetching installations:", installError);
       return null;
     }
 
-    if (!siteModules?.length) {
+    if (!installations?.length) {
       return null;
     }
+
+    // Get the module IDs
+    const moduleIds = installations.map((i: { module_id: string }) => i.module_id);
+
+    // Fetch the actual modules from modules_v2
+    const { data: modules, error: modulesError } = await db
+      .from("modules_v2")
+      .select("id, slug, name, source, render_code, styles, settings_schema, default_settings")
+      .in("id", moduleIds)
+      .eq("is_active", true);
+
+    if (modulesError) {
+      console.error("[ModuleInjector] Error fetching modules:", modulesError);
+      return null;
+    }
+
+    if (!modules?.length) {
+      return null;
+    }
+
+    // Create a map for easy lookup
+    const moduleMap = new Map(modules.map((m: SiteModuleData["module"]) => [m?.id, m]));
+
+    // Combine installations with their modules
+    const siteModules: SiteModuleData[] = installations
+      .map((install: { module_id: string; settings: Record<string, unknown> | null }) => ({
+        settings: install.settings,
+        module: moduleMap.get(install.module_id) || null,
+      }))
+      .filter((sm: SiteModuleData) => sm.module !== null);
 
     // Filter for studio modules that have render code
-    const studioModules = (siteModules as SiteModuleData[]).filter(
+    const studioModules = siteModules.filter(
       (sm) => sm.module?.source === "studio" && sm.module?.render_code
     );
 

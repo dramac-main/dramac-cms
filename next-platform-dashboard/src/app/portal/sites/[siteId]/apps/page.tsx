@@ -74,25 +74,37 @@ export default async function SiteAppsPage({ params }: PageProps) {
     notFound();
   }
 
-  // Get site-level module installations using type assertion
-  const { data: installations } = await supabase
+  // Get site-level module installations (separate queries - no FK relationship)
+  const { data: rawInstallations } = await supabase
     .from("site_module_installations")
-    .select(`
-      *,
-      module:modules_v2(*)
-    `)
+    .select("id, module_id, installed_at, settings, custom_name, custom_icon")
     .eq("site_id", siteId)
     .eq("is_enabled", true)
-    .order("installed_at", { ascending: false }) as unknown as { data: SiteInstallation[] | null };
+    .order("installed_at", { ascending: false });
 
-  const installedModules = (installations || []).map(i => ({
-    ...(i.module as Record<string, unknown>),
-    installation_id: i.id,
-    installed_at: i.installed_at,
-    settings: i.settings || {},
-    custom_name: i.custom_name,
-    custom_icon: i.custom_icon,
-  }));
+  // Fetch modules separately if there are installations
+  let installedModules: Array<Record<string, unknown>> = [];
+  if (rawInstallations?.length) {
+    const moduleIds = rawInstallations.map((i) => i.module_id);
+    const { data: modules } = await supabase
+      .from("modules_v2")
+      .select("*")
+      .in("id", moduleIds)
+      .eq("is_active", true);
+
+    const moduleMap = new Map((modules || []).map((m) => [m.id, m]));
+    
+    installedModules = rawInstallations
+      .filter((i) => moduleMap.has(i.module_id))
+      .map((i) => ({
+        ...(moduleMap.get(i.module_id) as Record<string, unknown>),
+        installation_id: i.id,
+        installed_at: i.installed_at,
+        settings: i.settings || {},
+        custom_name: i.custom_name,
+        custom_icon: i.custom_icon,
+      }));
+  }
 
   return (
     <div className="min-h-screen bg-background">

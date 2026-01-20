@@ -525,20 +525,34 @@ export async function getAgencyModuleInstallations(agencyId: string) {
   const supabase = await createClient();
   const db = supabase as AnyClient;
 
-  const { data, error } = await db
+  // Fetch installations first (no FK relationship for some tables)
+  const { data: installations, error: installError } = await db
     .from("agency_module_installations")
-    .select(`
-      *,
-      module:modules_v2(*)
-    `)
+    .select("*")
     .eq("agency_id", agencyId);
 
-  if (error) {
-    console.error("[InstallationService] Get agency installations error:", error);
+  if (installError || !installations?.length) {
+    if (installError) console.error("[InstallationService] Get agency installations error:", installError);
     return [];
   }
 
-  return data || [];
+  // Fetch modules separately
+  const moduleIds = installations.map((i: { module_id: string }) => i.module_id);
+  const { data: modules, error: modulesError } = await db
+    .from("modules_v2")
+    .select("*")
+    .in("id", moduleIds);
+
+  if (modulesError) {
+    console.error("[InstallationService] Get agency modules error:", modulesError);
+    return installations.map((i: Record<string, unknown>) => ({ ...i, module: null }));
+  }
+
+  const moduleMap = new Map((modules || []).map((m: { id: string }) => [m.id, m]));
+  return installations.map((i: { module_id: string }) => ({
+    ...i,
+    module: moduleMap.get(i.module_id) || null,
+  }));
 }
 
 /**
@@ -548,20 +562,34 @@ export async function getClientModuleInstallations(clientId: string) {
   const supabase = await createClient();
   const db = supabase as AnyClient;
 
-  const { data, error } = await db
+  // Fetch installations first
+  const { data: installations, error: installError } = await db
     .from("client_module_installations")
-    .select(`
-      *,
-      module:modules_v2(*)
-    `)
+    .select("*")
     .eq("client_id", clientId);
 
-  if (error) {
-    console.error("[InstallationService] Get client installations error:", error);
+  if (installError || !installations?.length) {
+    if (installError) console.error("[InstallationService] Get client installations error:", installError);
     return [];
   }
 
-  return data || [];
+  // Fetch modules separately
+  const moduleIds = installations.map((i: { module_id: string }) => i.module_id);
+  const { data: modules, error: modulesError } = await db
+    .from("modules_v2")
+    .select("*")
+    .in("id", moduleIds);
+
+  if (modulesError) {
+    console.error("[InstallationService] Get client modules error:", modulesError);
+    return installations.map((i: Record<string, unknown>) => ({ ...i, module: null }));
+  }
+
+  const moduleMap = new Map((modules || []).map((m: { id: string }) => [m.id, m]));
+  return installations.map((i: { module_id: string }) => ({
+    ...i,
+    module: moduleMap.get(i.module_id) || null,
+  }));
 }
 
 /**
@@ -571,20 +599,34 @@ export async function getSiteModuleInstallations(siteId: string) {
   const supabase = await createClient();
   const db = supabase as AnyClient;
 
-  const { data, error } = await db
+  // Fetch installations first (FK was dropped)
+  const { data: installations, error: installError } = await db
     .from("site_module_installations")
-    .select(`
-      *,
-      module:modules_v2(*)
-    `)
+    .select("*")
     .eq("site_id", siteId);
 
-  if (error) {
-    console.error("[InstallationService] Get site installations error:", error);
+  if (installError || !installations?.length) {
+    if (installError) console.error("[InstallationService] Get site installations error:", installError);
     return [];
   }
 
-  return data || [];
+  // Fetch modules separately
+  const moduleIds = installations.map((i: { module_id: string }) => i.module_id);
+  const { data: modules, error: modulesError } = await db
+    .from("modules_v2")
+    .select("*")
+    .in("id", moduleIds);
+
+  if (modulesError) {
+    console.error("[InstallationService] Get site modules error:", modulesError);
+    return installations.map((i: Record<string, unknown>) => ({ ...i, module: null }));
+  }
+
+  const moduleMap = new Map((modules || []).map((m: { id: string }) => [m.id, m]));
+  return installations.map((i: { module_id: string }) => ({
+    ...i,
+    module: moduleMap.get(i.module_id) || null,
+  }));
 }
 
 /**

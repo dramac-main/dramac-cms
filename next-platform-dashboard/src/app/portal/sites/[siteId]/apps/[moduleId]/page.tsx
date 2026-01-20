@@ -81,23 +81,35 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
     notFound();
   }
 
-  // Get the site module installation using type assertion
-  const { data: installation } = await supabase
+  // Get the site module installation (separate queries - FK was dropped)
+  const { data: rawInstallation } = await supabase
     .from("site_module_installations")
-    .select(`
-      *,
-      module:modules_v2(*)
-    `)
+    .select("id, module_id, settings, custom_name, is_active")
     .eq("site_id", siteId)
     .eq("module_id", moduleId)
     .eq("is_enabled", true)
-    .single() as unknown as { data: SiteInstallation | null };
+    .single();
 
-  if (!installation || !installation.module) {
+  if (!rawInstallation) {
     notFound();
   }
 
-  const moduleData = installation.module;
+  // Fetch the module separately
+  const { data: moduleData } = await supabase
+    .from("modules_v2")
+    .select("id, name, slug, description, icon, category, runtime_type, app_url, external_url, entry_component, settings_schema")
+    .eq("id", moduleId)
+    .eq("is_active", true)
+    .single();
+
+  if (!moduleData) {
+    notFound();
+  }
+
+  const installation = {
+    ...rawInstallation,
+    module: moduleData,
+  };
 
   return (
     <div className="min-h-screen flex flex-col">

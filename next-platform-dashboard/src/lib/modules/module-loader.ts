@@ -5,26 +5,39 @@ import type { Module } from "@/types/modules";
 export async function loadSiteModules(siteId: string): Promise<EnabledModule[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // Fetch installations separately (FK was dropped for testing modules)
+  const { data: installations, error: installError } = await supabase
     .from("site_module_installations")
-    .select(`
-      settings,
-      is_enabled,
-      module:modules_v2(*)
-    `)
+    .select("module_id, settings, is_enabled")
     .eq("site_id", siteId)
     .eq("is_enabled", true);
 
-  if (error || !data) {
-    console.error("Failed to load site modules:", error);
+  if (installError || !installations?.length) {
+    if (installError) console.error("Failed to load site module installations:", installError);
     return [];
   }
 
-  return data
-    .filter((sm) => sm.module && (sm.is_enabled ?? false))
-    .map((sm) => ({
-      module: sm.module as unknown as Module,
-      settings: (sm.settings as Record<string, unknown>) || {},
+  // Fetch modules separately
+  const moduleIds = installations.map((i) => i.module_id);
+  const { data: modules, error: modulesError } = await supabase
+    .from("modules_v2")
+    .select("*")
+    .in("id", moduleIds)
+    .eq("is_active", true);
+
+  if (modulesError || !modules) {
+    console.error("Failed to load modules:", modulesError);
+    return [];
+  }
+
+  // Create module map
+  const moduleMap = new Map(modules.map((m) => [m.id, m]));
+
+  return installations
+    .filter((inst) => moduleMap.has(inst.module_id) && (inst.is_enabled ?? false))
+    .map((inst) => ({
+      module: moduleMap.get(inst.module_id) as unknown as Module,
+      settings: (inst.settings as Record<string, unknown>) || {},
     }));
 }
 

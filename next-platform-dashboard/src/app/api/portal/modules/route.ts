@@ -41,35 +41,54 @@ export async function GET(_request: NextRequest) {
     }
 
     // Get installed modules from client_module_installations
-    // Using raw query to work around type limitations
-    const { data: installations, error } = await supabase
+    // Using separate queries to avoid FK relationship issues
+    const { data: rawInstallations, error: installError } = await supabase
       .from("client_module_installations")
-      .select(`
-        *,
-        module:modules_v2(*)
-      `)
+      .select("id, module_id, installed_at, settings, custom_name, custom_icon")
       .eq("client_id", clientId)
       .eq("is_active", true)
-      .order("installed_at", { ascending: false }) as unknown as { 
-        data: ClientInstallation[] | null; 
-        error: Error | null 
-      };
+      .order("installed_at", { ascending: false });
 
-    if (error) {
-      console.error("Fetch modules error:", error);
+    if (installError) {
+      console.error("Fetch installations error:", installError);
       return NextResponse.json({ error: "Failed to fetch modules" }, { status: 500 });
     }
 
-    // Transform the data
-    const modules = (installations || []).map(i => ({
-      id: i.id,
-      module_id: i.module_id,
-      installed_at: i.installed_at,
-      settings: i.settings,
-      custom_name: i.custom_name,
-      custom_icon: i.custom_icon,
-      module: i.module,
-    }));
+    // Fetch modules separately if there are installations
+    let modules: Array<{
+      id: string;
+      module_id: string;
+      installed_at: string;
+      settings: Record<string, unknown>;
+      custom_name: string | null;
+      custom_icon: string | null;
+      module: Record<string, unknown> | null;
+    }> = [];
+
+    if (rawInstallations?.length) {
+      const moduleIds = rawInstallations.map((i) => i.module_id);
+      const { data: moduleData, error: modulesError } = await supabase
+        .from("modules_v2")
+        .select("*")
+        .in("id", moduleIds)
+        .eq("is_active", true);
+
+      if (modulesError) {
+        console.error("Fetch modules error:", modulesError);
+      }
+
+      const moduleMap = new Map((moduleData || []).map((m) => [m.id, m]));
+
+      modules = rawInstallations.map((i) => ({
+        id: i.id,
+        module_id: i.module_id,
+        installed_at: i.installed_at,
+        settings: i.settings || {},
+        custom_name: i.custom_name,
+        custom_icon: i.custom_icon,
+        module: moduleMap.get(i.module_id) || null,
+      }));
+    }
 
     return NextResponse.json({ modules });
   } catch (error) {

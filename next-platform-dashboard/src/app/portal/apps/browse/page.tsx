@@ -84,15 +84,35 @@ export default async function BrowseAppsPage() {
 
   const installedModuleIds = new Set((clientInstallations || []).map(i => i.module_id));
 
-  // Get available modules from agency subscriptions using type assertion
-  const { data: availableSubscriptions } = await supabase
+  // Get available modules from agency subscriptions (separate queries - FK was dropped)
+  const { data: rawSubscriptions } = await supabase
     .from("agency_module_subscriptions")
-    .select(`
-      *,
-      module:modules_v2(*)
-    `)
+    .select("id, module_id, markup_type, markup_percentage, markup_fixed_amount, custom_price_monthly")
     .eq("agency_id", client.agency_id)
-    .eq("status", "active") as unknown as { data: Subscription[] | null };
+    .eq("status", "active");
+
+  // Fetch modules separately
+  let availableSubscriptions: Subscription[] = [];
+  if (rawSubscriptions?.length) {
+    const moduleIds = rawSubscriptions.map((s) => s.module_id);
+    const { data: modules } = await supabase
+      .from("modules_v2")
+      .select("id, slug, name, description, icon, category, install_level, wholesale_price_monthly, is_featured")
+      .in("id", moduleIds)
+      .eq("is_active", true);
+
+    const moduleMap = new Map((modules || []).map((m) => [m.id, m]));
+
+    availableSubscriptions = rawSubscriptions
+      .filter((s) => moduleMap.has(s.module_id))
+      .map((s) => ({
+        markup_type: s.markup_type,
+        markup_percentage: s.markup_percentage,
+        markup_fixed_amount: s.markup_fixed_amount,
+        custom_price_monthly: s.custom_price_monthly,
+        module: moduleMap.get(s.module_id) || null,
+      }));
+  }
 
   // Legacy module_subscriptions no longer exists, skip it
   const legacySubscriptions: Subscription[] = [];

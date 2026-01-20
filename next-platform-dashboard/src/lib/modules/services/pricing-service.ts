@@ -599,19 +599,13 @@ export async function calculateAgencyModuleRevenue(
   const supabase = await createClient();
   const db = supabase as AnyClient;
 
-  // Get all client installations with pricing
-  const { data: clientInstalls } = await db
-    .from("client_module_installations")
-    .select(`
-      module_id,
-      price_paid,
-      client:clients!inner(agency_id),
-      module:modules_v2(name, wholesale_price_monthly)
-    `)
-    .eq("client.agency_id", agencyId)
-    .eq("billing_status", "active");
+  // First get client IDs for this agency
+  const { data: agencyClients } = await db
+    .from("clients")
+    .select("id")
+    .eq("agency_id", agencyId);
 
-  if (!clientInstalls) {
+  if (!agencyClients?.length) {
     return {
       totalWholesale: 0,
       totalRetail: 0,
@@ -619,6 +613,33 @@ export async function calculateAgencyModuleRevenue(
       moduleBreakdown: [],
     };
   }
+
+  const clientIds = agencyClients.map((c: { id: string }) => c.id);
+
+  // Get client installations (separate queries - FK issues)
+  const { data: clientInstalls } = await db
+    .from("client_module_installations")
+    .select("module_id, price_paid")
+    .in("client_id", clientIds)
+    .eq("billing_status", "active");
+
+  if (!clientInstalls?.length) {
+    return {
+      totalWholesale: 0,
+      totalRetail: 0,
+      totalProfit: 0,
+      moduleBreakdown: [],
+    };
+  }
+
+  // Fetch modules separately
+  const moduleIds = [...new Set(clientInstalls.map((i: { module_id: string }) => i.module_id))];
+  const { data: modules } = await db
+    .from("modules_v2")
+    .select("id, name, wholesale_price_monthly")
+    .in("id", moduleIds);
+
+  const moduleMap = new Map((modules || []).map((m: { id: string; name: string; wholesale_price_monthly: number }) => [m.id, m]));
 
   const moduleStats = new Map<
     string,
@@ -631,9 +652,7 @@ export async function calculateAgencyModuleRevenue(
   for (const install of clientInstalls) {
     const moduleId = install.module_id;
     const revenue = install.price_paid || 0;
-    // module is an object from the join
-    const moduleObj = Array.isArray(install.module) ? install.module[0] : install.module;
-    const moduleData = moduleObj as { name?: string; wholesale_price_monthly?: number } | undefined;
+    const moduleData = moduleMap.get(moduleId);
     const wholesale = moduleData?.wholesale_price_monthly || 0;
     const moduleName = moduleData?.name || "Unknown";
 
