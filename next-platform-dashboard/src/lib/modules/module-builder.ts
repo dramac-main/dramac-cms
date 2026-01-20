@@ -7,17 +7,6 @@ import { getCurrentUserId, isSuperAdmin } from "@/lib/auth/permissions";
 // are created by migration but not yet in the generated types.
 // Using 'as any' for now until types are regenerated.
 
-// Timeout helper for server actions
-const withTimeout = <T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((resolve) => setTimeout(() => {
-      console.warn(`[ModuleBuilder] Operation timed out after ${ms}ms`);
-      resolve(fallback);
-    }, ms)),
-  ]);
-};
-
 export interface ModuleDefinition {
   name: string;
   slug: string;
@@ -265,7 +254,9 @@ export async function getModuleSource(moduleId: string): Promise<ModuleSource | 
   try {
     console.log("[ModuleBuilder] getModuleSource called for:", moduleId);
     
-    const isAdmin = await withTimeout(isSuperAdmin(), 5000, false);
+    // Check admin access - no timeout, let it complete naturally
+    // The client-side handles race conditions
+    const isAdmin = await isSuperAdmin();
     if (!isAdmin) {
       console.log("[ModuleBuilder] Not super admin, returning null");
       return null;

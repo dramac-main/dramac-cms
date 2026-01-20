@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, use } from "react";
+import { useState, useEffect, useCallback, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
@@ -177,28 +177,45 @@ export default function EditModulePage({
   // Track loading errors for better UX
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // Refs to prevent race conditions in React Strict Mode
+  const isMountedRef = useRef(true);
+  const loadRequestIdRef = useRef(0);
+  const isLoadingRef = useRef(false);
+
   const loadModule = useCallback(async () => {
-    console.log("[ModuleStudio] Loading module:", moduleId);
+    // Prevent concurrent loads
+    if (isLoadingRef.current) {
+      console.log("[ModuleStudio] Already loading, skipping duplicate request");
+      return;
+    }
+    
+    // Track this specific request
+    const requestId = ++loadRequestIdRef.current;
+    isLoadingRef.current = true;
+    
+    console.log("[ModuleStudio] Loading module:", moduleId, "requestId:", requestId);
     setLoading(true);
     setLoadError(null);
-    
-    // Create a timeout promise to prevent infinite loading
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error("Loading timed out after 15 seconds")), 15000);
-    });
     
     try {
       const supabase = createClient();
       
-      // Race between data fetch and timeout
-      const [data, versionData, deploymentData] = await Promise.race([
-        Promise.all([
-          getModuleSource(moduleId),
-          getModuleVersions(moduleId),
-          getDeployments(moduleId),
-        ]),
-        timeoutPromise.then(() => { throw new Error("timeout"); }),
-      ]) as [Awaited<ReturnType<typeof getModuleSource>>, Awaited<ReturnType<typeof getModuleVersions>>, Awaited<ReturnType<typeof getDeployments>>];
+      // Fetch all data in parallel (no timeout race - let server timeout handle it)
+      const [data, versionData, deploymentData] = await Promise.all([
+        getModuleSource(moduleId),
+        getModuleVersions(moduleId),
+        getDeployments(moduleId),
+      ]);
+      
+      // Check if this response is still relevant (component still mounted, no newer request)
+      if (!isMountedRef.current) {
+        console.log("[ModuleStudio] Component unmounted, ignoring response");
+        return;
+      }
+      if (requestId !== loadRequestIdRef.current) {
+        console.log("[ModuleStudio] Stale response (requestId:", requestId, "current:", loadRequestIdRef.current, "), ignoring");
+        return;
+      }
       
       console.log("[ModuleStudio] Data loaded:", { 
         hasModule: !!data, 
@@ -354,24 +371,41 @@ export default function EditModulePage({
     setVersions(versionData);
     setDeployments(deploymentData);
     } catch (error) {
+      // Check if component is still mounted and this is the current request
+      if (!isMountedRef.current || requestId !== loadRequestIdRef.current) {
+        console.log("[ModuleStudio] Error for stale request, ignoring");
+        return;
+      }
+      
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
       console.error("[ModuleStudio] Error loading module:", errorMessage);
       
       // Set error state for better UX
-      if (errorMessage.includes("timeout")) {
-        setLoadError("Loading timed out. Please refresh the page.");
-        toast.error("Loading timed out. Please refresh the page.");
-      } else {
-        setLoadError(`Failed to load module: ${errorMessage}`);
-      }
+      setLoadError(`Failed to load module: ${errorMessage}`);
     } finally {
-      console.log("[ModuleStudio] Loading complete, setting loading=false");
-      setLoading(false);
+      // Only update loading state if this is still the current request
+      if (requestId === loadRequestIdRef.current) {
+        console.log("[ModuleStudio] Loading complete for requestId:", requestId);
+        setLoading(false);
+        isLoadingRef.current = false;
+      }
     }
   }, [moduleId]);
 
+  // Effect to load module data - with proper cleanup
   useEffect(() => {
+    // Reset mounted ref on mount
+    isMountedRef.current = true;
+    
+    // Load the module
     loadModule();
+    
+    // Cleanup on unmount
+    return () => {
+      console.log("[ModuleStudio] Component unmounting, marking as unmounted");
+      isMountedRef.current = false;
+      isLoadingRef.current = false;
+    };
   }, [loadModule]);
 
   // Phase 81C: Save module files
