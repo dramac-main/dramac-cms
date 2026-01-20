@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { getSiteByDomain, getSiteBySlug, getAllPublishedSites } from "@/lib/renderer/site-data";
 import { RENDERER_DEFAULTS } from "@/lib/renderer/config";
-import { UnifiedSiteRenderer } from "@/components/renderer/unified-site-renderer";
+import { PublishedSiteRenderer } from "@/components/renderer/published-site-renderer";
 import { SiteHead } from "@/components/renderer/site-head";
 import { SiteStyles } from "@/components/renderer/site-styles";
 import { ModuleInjector } from "@/components/renderer/module-injector";
@@ -102,7 +102,7 @@ export default async function SitePage({ params }: SitePageProps) {
       <SiteStyles site={site} />
       <ModuleInjector siteId={site.id} />
       
-      <UnifiedSiteRenderer
+      <PublishedSiteRenderer
         content={contentString}
         themeSettings={site.settings.theme}
         siteId={site.id}
