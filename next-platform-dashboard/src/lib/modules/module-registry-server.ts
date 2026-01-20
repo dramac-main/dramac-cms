@@ -218,24 +218,64 @@ export async function getModuleById(moduleIdOrSlug: string): Promise<ModuleDefin
     const db = supabase as any;
 
     // First check modules_v2 catalog (includes synced studio modules)
-    const { data: catalogModule, error: catalogError } = await db
-      .from("modules_v2")
-      .select("*")
-      .or(`id.eq.${moduleIdOrSlug},slug.eq.${moduleIdOrSlug}`)
-      .eq("status", "active")
-      .single();
+    // Check by id first, then by slug
+    let catalogModule = null;
+    let catalogError = null;
+    
+    // Check if it's a UUID format
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(moduleIdOrSlug);
+    
+    if (isUUID) {
+      const result = await db
+        .from("modules_v2")
+        .select("*")
+        .eq("id", moduleIdOrSlug)
+        .eq("status", "active")
+        .maybeSingle();
+      catalogModule = result.data;
+      catalogError = result.error;
+    }
+    
+    if (!catalogModule) {
+      // Try by slug
+      const result = await db
+        .from("modules_v2")
+        .select("*")
+        .eq("slug", moduleIdOrSlug)
+        .eq("status", "active")
+        .maybeSingle();
+      catalogModule = result.data;
+      catalogError = result.error;
+    }
 
     if (!catalogError && catalogModule) {
       return mapCatalogModuleToDefinition(catalogModule);
     }
 
     // Then check module_source for unsynced studio modules
-    const { data: studioModule, error: studioError } = await db
+    // Try by module_id first, then by slug
+    let studioModule = null;
+    let studioError = null;
+    
+    let result = await db
       .from("module_source")
       .select("*")
-      .or(`module_id.eq.${moduleIdOrSlug},slug.eq.${moduleIdOrSlug}`)
+      .eq("module_id", moduleIdOrSlug)
       .in("status", ["published", "testing"])
-      .single();
+      .maybeSingle();
+    studioModule = result.data;
+    studioError = result.error;
+    
+    if (!studioModule && !studioError) {
+      result = await db
+        .from("module_source")
+        .select("*")
+        .eq("slug", moduleIdOrSlug)
+        .in("status", ["published", "testing"])
+        .maybeSingle();
+      studioModule = result.data;
+      studioError = result.error;
+    }
 
     if (!studioError && studioModule) {
       // Check if user can access testing modules

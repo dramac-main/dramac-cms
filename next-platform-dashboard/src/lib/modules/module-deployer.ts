@@ -297,7 +297,7 @@ export async function getDeployments(moduleId: string): Promise<Deployment[]> {
       }
     }
   } else {
-    // It's a slug, try module_id first, then slug
+    // It's a slug - try both module_id and slug columns
     let result = await db
       .from("module_source")
       .select("id")
@@ -305,13 +305,13 @@ export async function getDeployments(moduleId: string): Promise<Deployment[]> {
       .maybeSingle();
     
     if (!result.data) {
+      // Not found by module_id, try slug
       result = await db
         .from("module_source")
         .select("id")
         .eq("slug", moduleId)
         .maybeSingle();
     }
-    
     moduleSourceId = result.data?.id || null;
   }
 

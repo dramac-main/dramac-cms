@@ -54,12 +54,23 @@ export async function POST(request: NextRequest) {
 
     // If not in modules_v2, it might be a studio module - get from module_source directly
     if (!moduleData) {
-      const { data: studioModule } = await (supabase as any)
+      // Try by slug first
+      let studioResult = await (supabase as any)
         .from("module_source")
         .select("id, module_id, slug, name")
-        .or(`slug.eq.${moduleSlug || moduleId}`)
+        .eq("slug", moduleSlug || moduleId)
         .maybeSingle();
       
+      // If not found by slug, try by module_id
+      if (!studioResult.data) {
+        studioResult = await (supabase as any)
+          .from("module_source")
+          .select("id, module_id, slug, name")
+          .eq("module_id", moduleSlug || moduleId)
+          .maybeSingle();
+      }
+      
+      const studioModule = studioResult.data;
       console.log("[Subscribe] Studio module:", studioModule);
       
       if (studioModule) {
