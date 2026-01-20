@@ -7,6 +7,13 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // ========================================
+  // EARLY LOGGING - Debug all requests
+  // ========================================
+  console.log("[proxy] ====== REQUEST START ======");
+  console.log("[proxy] Hostname:", hostname);
+  console.log("[proxy] Pathname:", pathname);
+
+  // ========================================
   // DETERMINE DOMAIN TYPE FIRST
   // ========================================
   
@@ -28,43 +35,18 @@ export async function proxy(request: NextRequest) {
   const isClientSite = !isLocalhost && hostname.endsWith(`.${baseDomain}`);
   const isCustomDomain = !isAppDomain && !isClientSite && !isLocalhost;
 
-  // ========================================
-  // PUBLIC ROUTES - No Auth Required
-  // ========================================
-  
-  // Preview routes - always accessible (for editor preview)
-  if (pathname.startsWith("/preview")) {
-    return NextResponse.next();
-  }
-
-  // Site renderer routes - public facing sites
-  if (pathname.startsWith("/site")) {
-    return NextResponse.next();
-  }
-
-  // Static files, API routes, and Next.js internals
-  if (
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon") ||
-    pathname.includes(".")
-  ) {
-    return NextResponse.next();
-  }
-
-  // ========================================
-  // SUBDOMAIN/CUSTOM DOMAIN ROUTING (MUST BE CHECKED FIRST!)
-  // ========================================
-  
-  console.log("[proxy] ====== REQUEST START ======");
-  console.log("[proxy] Hostname:", hostname);
-  console.log("[proxy] Pathname:", pathname);
   console.log("[proxy] Base domain:", baseDomain);
+  console.log("[proxy] App host:", appHost);
   console.log("[proxy] Is localhost:", isLocalhost);
   console.log("[proxy] Is app domain:", isAppDomain);
   console.log("[proxy] Is client site:", isClientSite);
   console.log("[proxy] Is custom domain:", isCustomDomain);
 
+  // ========================================
+  // SUBDOMAIN/CUSTOM DOMAIN ROUTING (FIRST!)
+  // Must be checked BEFORE any other routes
+  // ========================================
+  
   // Route client site subdomains FIRST - before any auth checks
   if (isClientSite) {
     const subdomain = hostname.replace(`.${baseDomain}`, "");
@@ -80,6 +62,33 @@ export async function proxy(request: NextRequest) {
     url.pathname = `/site/${hostname}${pathname}`;
     console.log("[proxy] ✅ Custom domain rewrite:", hostname, "→", url.pathname);
     return NextResponse.rewrite(url);
+  }
+
+  // ========================================
+  // PUBLIC ROUTES - No Auth Required
+  // ========================================
+  
+  // Preview routes - always accessible (for editor preview)
+  if (pathname.startsWith("/preview")) {
+    console.log("[proxy] → Preview route, passing through");
+    return NextResponse.next();
+  }
+
+  // Site renderer routes - public facing sites
+  if (pathname.startsWith("/site")) {
+    console.log("[proxy] → Site route, passing through");
+    return NextResponse.next();
+  }
+
+  // Static files, API routes, and Next.js internals
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon") ||
+    pathname.includes(".")
+  ) {
+    console.log("[proxy] → Static/API route, passing through");
+    return NextResponse.next();
   }
 
   // ========================================
