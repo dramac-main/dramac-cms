@@ -2,6 +2,7 @@
 
 import { useNode } from "@craftjs/core";
 import { FooterSettings } from "../settings/footer-settings";
+import { useIsEditorEnabled } from "../hooks/use-editor-mode";
 
 export interface FooterColumn {
   title: string;
@@ -68,6 +69,7 @@ export function Footer({
   const {
     connectors: { connect, drag },
   } = useNode();
+  const isEditorEnabled = useIsEditorEnabled();
 
   return (
     <footer
@@ -92,7 +94,10 @@ export function Footer({
                 <a
                   key={index}
                   href={social.href}
+                  onClick={isEditorEnabled ? (e) => e.preventDefault() : undefined}
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   <span className="text-xs uppercase">{social.platform[0]}</span>
                 </a>
@@ -109,6 +114,7 @@ export function Footer({
                   <li key={linkIndex}>
                     <a
                       href={link.href}
+                      onClick={isEditorEnabled ? (e) => e.preventDefault() : undefined}
                       className="text-sm opacity-70 hover:opacity-100 transition-opacity"
                     >
                       {link.label}

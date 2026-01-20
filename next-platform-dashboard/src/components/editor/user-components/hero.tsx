@@ -2,6 +2,7 @@
 
 import { useNode } from "@craftjs/core";
 import { HeroSettings } from "../settings/hero-settings";
+import { useIsEditorEnabled } from "../hooks/use-editor-mode";
 
 interface HeroProps {
   title?: string;
@@ -20,8 +21,8 @@ interface HeroProps {
 export function Hero({
   title = "Welcome to Our Website",
   subtitle = "Build amazing experiences with our visual editor",
-  buttonText = "Get Started",
-  buttonLink: _buttonLink = "#",
+  buttonText = "See Menu",
+  buttonLink = "#",
   backgroundColor = "#1a1a2e",
   backgroundImage = "",
   textColor = "#ffffff",
@@ -31,6 +32,7 @@ export function Hero({
   overlayOpacity = 50,
 }: HeroProps) {
   const { connectors: { connect, drag } } = useNode();
+  const isEditorEnabled = useIsEditorEnabled();
 
   const alignmentStyles = {
     left: { textAlign: "left" as const, alignItems: "flex-start" },
@@ -63,6 +65,7 @@ export function Hero({
           cursor: pointer;
           font-size: clamp(0.875rem, 2vw, 1rem);
           transition: transform 0.2s, box-shadow 0.2s;
+          text-decoration: none;
         }
         .hero-button:hover {
           transform: translateY(-2px);
@@ -111,9 +114,13 @@ export function Hero({
             {subtitle}
           </p>
           {buttonText && (
-            <button className="hero-button">
+            <a 
+              href={buttonLink}
+              onClick={isEditorEnabled ? (e) => e.preventDefault() : undefined}
+              className="hero-button"
+            >
               {buttonText}
-            </button>
+            </a>
           )}
         </div>
       </section>

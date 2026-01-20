@@ -152,11 +152,6 @@ export function NodeRenderer({ node, nodes, resolveNode }: NodeRendererProps) {
     console.warn(`[NodeRenderer] Unknown component: ${componentName}`);
     return null;
   }
-  
-  // Debug logging for components with arrays
-  if (componentName === 'Team' || componentName === 'FAQ' || componentName === 'Stats') {
-    console.log(`[NodeRenderer] Rendering ${componentName} with props:`, JSON.stringify(node.props, null, 2));
-  }
 
   // Get children
   const childIds = node.nodes || [];

@@ -2,7 +2,10 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { getSiteByDomain, getSiteBySlug, getAllPublishedSites } from "@/lib/renderer/site-data";
 import { RENDERER_DEFAULTS } from "@/lib/renderer/config";
-import { SiteRenderer } from "@/components/renderer/site-renderer";
+import { UnifiedSiteRenderer } from "@/components/renderer/unified-site-renderer";
+import { SiteHead } from "@/components/renderer/site-head";
+import { SiteStyles } from "@/components/renderer/site-styles";
+import { ModuleInjector } from "@/components/renderer/module-injector";
 
 interface SitePageProps {
   params: Promise<{
@@ -70,34 +73,12 @@ export default async function SitePage({ params }: SitePageProps) {
   const { domain, slug } = await params;
   const pageSlug = slug?.join("/") || "";
 
-  console.log("[SitePage] ====== REQUEST START ======");
-  console.log("[SitePage] Domain param:", domain);
-  console.log("[SitePage] Page slug:", pageSlug);
-  console.log("[SitePage] Full params:", { domain, slug });
-
   // Try custom domain first, then slug (subdomain)
   const siteByDomain = await getSiteByDomain(domain);
-  console.log("[SitePage] getSiteByDomain result:", { domain, found: !!siteByDomain, siteName: siteByDomain?.name });
-  
   const siteBySlug = await getSiteBySlug(domain);
-  console.log("[SitePage] getSiteBySlug result:", { domain, found: !!siteBySlug, siteName: siteBySlug?.name });
-  
   const site = siteByDomain || siteBySlug;
-  
-  console.log("[SitePage] Final site:", { 
-    found: !!site, 
-    published: site?.published,
-    siteName: site?.name,
-    siteSlug: site?.slug,
-    pageCount: site?.pages?.length 
-  });
 
   if (!site || !site.published) {
-    console.error("[SitePage] ❌ Site not found or not published:", { 
-      domain, 
-      siteFound: !!site, 
-      published: site?.published 
-    });
     notFound();
   }
 
@@ -106,22 +87,28 @@ export default async function SitePage({ params }: SitePageProps) {
     ? site.pages.find((p) => p.slug === pageSlug)
     : site.pages.find((p) => p.isHomepage);
 
-  console.log("[SitePage] Page lookup result:", {
-    pageSlug: pageSlug || "(homepage)",
-    found: !!page,
-    pageTitle: page?.title
-  });
-
   if (!page) {
-    console.error("[SitePage] Page not found:", { domain, pageSlug, availablePages: site.pages.map(p => p.slug) });
     notFound();
   }
 
+  // Convert content to string if needed (Craft.js expects string JSON)
+  const contentString = typeof page.content === 'string' 
+    ? page.content 
+    : JSON.stringify(page.content);
+
   return (
-    <SiteRenderer
-      site={site}
-      page={page}
-    />
+    <>
+      <SiteHead site={site} />
+      <SiteStyles site={site} />
+      <ModuleInjector siteId={site.id} />
+      
+      <UnifiedSiteRenderer
+        content={contentString}
+        themeSettings={site.settings.theme}
+        siteId={site.id}
+        pageId={page.id}
+      />
+    </>
   );
 }
 

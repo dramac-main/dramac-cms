@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { NavigationSettings } from "../settings/navigation-settings";
+import { useIsEditorEnabled } from "../hooks/use-editor-mode";
 
 export interface NavLink {
   label: string;
@@ -24,17 +25,16 @@ export interface NavigationProps {
 
 const defaultLinks: NavLink[] = [
   { label: "Home", href: "#" },
-  { label: "Features", href: "#features" },
-  { label: "Pricing", href: "#pricing" },
   { label: "About", href: "#about" },
+  { label: "Services", href: "#services" },
   { label: "Contact", href: "#contact" },
 ];
 
 export function Navigation({
   logo = "",
-  logoText = "DRAMAC",
+  logoText = "Logo",
   links = defaultLinks,
-  ctaText = "Get Started",
+  ctaText = "",
   ctaHref = "#",
   backgroundColor = "#ffffff",
   textColor = "",
@@ -46,6 +46,9 @@ export function Navigation({
   const {
     connectors: { connect, drag },
   } = useNode();
+  
+  // Detect if we're in editor mode to conditionally prevent navigation
+  const isEditorEnabled = useIsEditorEnabled();
 
   useEffect(() => {
     const checkWidth = () => {
@@ -98,7 +101,7 @@ export function Navigation({
                 <a
                   key={index}
                   href={link.href}
-                  onClick={(e) => e.preventDefault()}
+                  onClick={isEditorEnabled ? (e) => e.preventDefault() : undefined}
                   style={{ fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none', color: 'inherit', opacity: 0.9 }}
                   onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
                   onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.9')}
@@ -114,7 +117,7 @@ export function Navigation({
             {!isMobile && ctaText && (
               <a
                 href={ctaHref}
-                onClick={(e) => e.preventDefault()}
+                onClick={isEditorEnabled ? (e) => e.preventDefault() : undefined}
                 style={{
                   display: 'inline-flex',
                   padding: '0.5rem 1rem',
@@ -161,7 +164,7 @@ export function Navigation({
                 <a
                   key={index}
                   href={link.href}
-                  onClick={(e) => e.preventDefault()}
+                  onClick={isEditorEnabled ? (e) => e.preventDefault() : undefined}
                   style={{
                     fontSize: '1rem',
                     fontWeight: 500,
@@ -176,7 +179,7 @@ export function Navigation({
               {ctaText && (
                 <a
                   href={ctaHref}
-                  onClick={(e) => e.preventDefault()}
+                  onClick={isEditorEnabled ? (e) => e.preventDefault() : undefined}
                   style={{
                     display: 'inline-block',
                     marginTop: '0.5rem',
