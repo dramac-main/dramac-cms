@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
 
@@ -55,7 +55,7 @@ export async function proxy(request: NextRequest) {
   // SUBDOMAIN/CUSTOM DOMAIN ROUTING
   // ========================================
   
-  console.log("[proxy.ts] Routing check:", {
+  console.log("[middleware] Routing check:", {
     hostname,
     baseDomain,
     isAppDomain,
@@ -69,7 +69,7 @@ export async function proxy(request: NextRequest) {
     const subdomain = hostname.replace(`.${baseDomain}`, "");
     const url = request.nextUrl.clone();
     url.pathname = `/site/${subdomain}${pathname}`;
-    console.log("[proxy.ts] Client site rewrite:", hostname, "→", url.pathname);
+    console.log("[middleware] Client site rewrite:", hostname, "→", url.pathname);
     return NextResponse.rewrite(url);
   }
   
@@ -77,7 +77,7 @@ export async function proxy(request: NextRequest) {
   if (isCustomDomain) {
     const url = request.nextUrl.clone();
     url.pathname = `/site/${hostname}${pathname}`;
-    console.log("[proxy.ts] Custom domain rewrite:", hostname, "→", url.pathname);
+    console.log("[middleware] Custom domain rewrite:", hostname, "→", url.pathname);
     return NextResponse.rewrite(url);
   }
 
