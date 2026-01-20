@@ -176,37 +176,41 @@ export default function EditModulePage({
 
   const loadModule = useCallback(async () => {
     setLoading(true);
-    const supabase = createClient();
     
-    const [data, versionData, deploymentData] = await Promise.all([
-      getModuleSource(moduleId),
-      getModuleVersions(moduleId),
-      getDeployments(moduleId),
-    ]);
-
-    if (data) {
-      setModule(data);
-      setName(data.name);
-      setDescription(data.description);
-      setIcon(data.icon);
-      setCategory(data.category);
-      setPricingTier(data.pricingTier);
-      setDependencies(data.dependencies || []);
-      setRenderCode(data.renderCode || "");
-      setStyles(data.styles || "");
-      setSettingsSchema(JSON.stringify(data.settingsSchema || {}, null, 2));
-      setHasChanges(false);
+    try {
+      const supabase = createClient();
       
-      // Load Phase 81C data - use data.id (UUID) not moduleId (slug)
-      // module_source_id in Phase 81C tables references module_source.id (UUID)
-      const moduleSourceId = data.id;
-      
-      const [filesResult, depsResult, routesResult, manifestResult] = await Promise.all([
-        supabase.from("module_files").select("*").eq("module_source_id", moduleSourceId).order("file_path"),
-        supabase.from("module_dependencies").select("*").eq("module_source_id", moduleSourceId),
-        supabase.from("module_api_routes").select("*").eq("module_source_id", moduleSourceId),
-        supabase.from("module_manifests").select("*").eq("module_source_id", moduleSourceId).maybeSingle(),
+      const [data, versionData, deploymentData] = await Promise.all([
+        getModuleSource(moduleId),
+        getModuleVersions(moduleId),
+        getDeployments(moduleId),
       ]);
+
+      if (data) {
+        setModule(data);
+        setName(data.name);
+        setDescription(data.description);
+        setIcon(data.icon);
+        setCategory(data.category);
+        setPricingTier(data.pricingTier);
+        setDependencies(data.dependencies || []);
+        setRenderCode(data.renderCode || "");
+        setStyles(data.styles || "");
+        setSettingsSchema(JSON.stringify(data.settingsSchema || {}, null, 2));
+        setHasChanges(false);
+        
+        // Load Phase 81C data - use data.id (UUID) not moduleId (slug)
+        // module_source_id in Phase 81C tables references module_source.id (UUID)
+        const moduleSourceId = data.id;
+        
+        // These tables might not exist in all environments, so wrap in try-catch
+        try {
+          const [filesResult, depsResult, routesResult, manifestResult] = await Promise.all([
+            supabase.from("module_files").select("*").eq("module_source_id", moduleSourceId).order("file_path"),
+            supabase.from("module_dependencies").select("*").eq("module_source_id", moduleSourceId),
+            supabase.from("module_api_routes").select("*").eq("module_source_id", moduleSourceId),
+            supabase.from("module_manifests").select("*").eq("module_source_id", moduleSourceId).maybeSingle(),
+          ]);
 
       if (filesResult.data) {
         // Map database file types to UI file types
@@ -321,11 +325,20 @@ export default function EditModulePage({
           });
         }
       }
-    }
+        } catch (phase81cError) {
+          // Phase 81C tables might not exist yet - this is OK
+          console.log("[ModuleStudio] Phase 81C tables not available:", phase81cError);
+        }
+      }
 
-    setVersions(versionData);
-    setDeployments(deploymentData);
-    setLoading(false);
+      setVersions(versionData);
+      setDeployments(deploymentData);
+    } catch (error) {
+      console.error("[ModuleStudio] Error loading module:", error);
+      toast.error("Failed to load module");
+    } finally {
+      setLoading(false);
+    }
   }, [moduleId]);
 
   useEffect(() => {
