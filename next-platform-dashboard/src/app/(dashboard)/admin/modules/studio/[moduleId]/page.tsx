@@ -173,18 +173,38 @@ export default function EditModulePage({
 
   // Track if there are unsaved changes
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Track loading errors for better UX
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const loadModule = useCallback(async () => {
+    console.log("[ModuleStudio] Loading module:", moduleId);
     setLoading(true);
+    setLoadError(null);
+    
+    // Create a timeout promise to prevent infinite loading
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error("Loading timed out after 15 seconds")), 15000);
+    });
     
     try {
       const supabase = createClient();
       
-      const [data, versionData, deploymentData] = await Promise.all([
-        getModuleSource(moduleId),
-        getModuleVersions(moduleId),
-        getDeployments(moduleId),
-      ]);
+      // Race between data fetch and timeout
+      const [data, versionData, deploymentData] = await Promise.race([
+        Promise.all([
+          getModuleSource(moduleId),
+          getModuleVersions(moduleId),
+          getDeployments(moduleId),
+        ]),
+        timeoutPromise.then(() => { throw new Error("timeout"); }),
+      ]) as [Awaited<ReturnType<typeof getModuleSource>>, Awaited<ReturnType<typeof getModuleVersions>>, Awaited<ReturnType<typeof getDeployments>>];
+      
+      console.log("[ModuleStudio] Data loaded:", { 
+        hasModule: !!data, 
+        versionsCount: versionData?.length || 0, 
+        deploymentsCount: deploymentData?.length || 0 
+      });
 
       if (data) {
         setModule(data);
@@ -334,8 +354,18 @@ export default function EditModulePage({
     setVersions(versionData);
     setDeployments(deploymentData);
     } catch (error) {
-      console.error("[ModuleStudio] Error loading module:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      console.error("[ModuleStudio] Error loading module:", errorMessage);
+      
+      // Set error state for better UX
+      if (errorMessage.includes("timeout")) {
+        setLoadError("Loading timed out. Please refresh the page.");
+        toast.error("Loading timed out. Please refresh the page.");
+      } else {
+        setLoadError(`Failed to load module: ${errorMessage}`);
+      }
     } finally {
+      console.log("[ModuleStudio] Loading complete, setting loading=false");
       setLoading(false);
     }
   }, [moduleId]);
@@ -652,6 +682,30 @@ export default function EditModulePage({
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           <p className="text-muted-foreground">Loading module...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if loading failed
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <AlertCircle className="h-12 w-12 text-destructive" />
+        <h2 className="text-xl font-medium">Failed to load module</h2>
+        <p className="text-muted-foreground text-center max-w-md">
+          {loadError}
+        </p>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => loadModule()}>
+            Try Again
+          </Button>
+          <Button asChild>
+            <Link href="/admin/modules/studio">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Studio
+            </Link>
+          </Button>
         </div>
       </div>
     );

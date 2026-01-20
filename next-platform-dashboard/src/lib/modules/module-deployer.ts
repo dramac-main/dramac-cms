@@ -264,87 +264,102 @@ async function updateModuleAnalytics(moduleId: string): Promise<void> {
  * Get deployment history for a module
  */
 export async function getDeployments(moduleId: string): Promise<Deployment[]> {
-  const supabase = await createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
-
-  // Check if moduleId is a UUID or a slug
-  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(moduleId);
-
-  let moduleSourceId: string | null = null;
-  
-  if (isUUID) {
-    // First try module_source.id directly
-    const { data: directModule } = await db
-      .from("module_source")
-      .select("id")
-      .eq("id", moduleId)
-      .maybeSingle();
+  try {
+    console.log("[ModuleDeployer] getDeployments called for:", moduleId);
     
-    if (directModule) {
-      moduleSourceId = directModule.id;
-    } else {
-      // Check if it's a modules_v2.id and get studio_module_id
-      const { data: v2Module } = await db
-        .from("modules_v2")
-        .select("studio_module_id")
+    const supabase = await createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
+    // Check if moduleId is a UUID or a slug
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(moduleId);
+
+    let moduleSourceId: string | null = null;
+    
+    if (isUUID) {
+      // First try module_source.id directly
+      const { data: directModule } = await db
+        .from("module_source")
+        .select("id")
         .eq("id", moduleId)
         .maybeSingle();
       
-      if (v2Module?.studio_module_id) {
-        // studio_module_id is the UUID (module_source.id)
-        moduleSourceId = v2Module.studio_module_id;
+      if (directModule) {
+        moduleSourceId = directModule.id;
+      } else {
+        // Check if it's a modules_v2.id and get studio_module_id
+        const { data: v2Module } = await db
+          .from("modules_v2")
+          .select("studio_module_id")
+          .eq("id", moduleId)
+          .maybeSingle();
+        
+        if (v2Module?.studio_module_id) {
+          // studio_module_id is the UUID (module_source.id)
+          moduleSourceId = v2Module.studio_module_id;
+        }
       }
-    }
-  } else {
-    // It's a slug - try both module_id and slug columns
-    let result = await db
-      .from("module_source")
-      .select("id")
-      .eq("module_id", moduleId)
-      .maybeSingle();
-    
-    if (!result.data) {
-      // Not found by module_id, try slug
-      result = await db
+    } else {
+      // It's a slug - try both module_id and slug columns
+      let result = await db
         .from("module_source")
         .select("id")
-        .eq("slug", moduleId)
+        .eq("module_id", moduleId)
         .maybeSingle();
+      
+      if (!result.data) {
+        // Not found by module_id, try slug
+        result = await db
+          .from("module_source")
+          .select("id")
+          .eq("slug", moduleId)
+          .maybeSingle();
+      }
+      moduleSourceId = result.data?.id || null;
     }
-    moduleSourceId = result.data?.id || null;
-  }
 
-  if (!moduleSourceId) {
+    if (!moduleSourceId) {
+      console.log("[ModuleDeployer] No module found for:", moduleId);
+      return [];
+    }
+
+    const { data, error } = await db
+      .from("module_deployments")
+      .select(`
+        *,
+        version:module_versions(version)
+      `)
+      .eq("module_source_id", moduleSourceId)
+      .order("started_at", { ascending: false });
+
+    if (error) {
+      console.error("[ModuleDeployer] Query error:", error);
+      return [];
+    }
+    
+    if (!data) {
+      return [];
+    }
+
+    console.log("[ModuleDeployer] Found", data.length, "deployments");
+
+    return data.map((d: Record<string, unknown>) => ({
+      id: d.id,
+      moduleSourceId: d.module_source_id,
+      moduleId,
+      versionId: d.version_id,
+      version: (d.version as { version: string })?.version || "unknown",
+      environment: d.environment as Deployment["environment"],
+      status: d.status as Deployment["status"],
+      startedAt: d.started_at,
+      completedAt: d.completed_at,
+      errorMessage: d.error_message,
+      deployedBy: d.deployed_by,
+    }));
+  } catch (err) {
+    console.error("[ModuleDeployer] getDeployments fatal error:", err);
     return [];
   }
-
-  const { data, error } = await db
-    .from("module_deployments")
-    .select(`
-      *,
-      version:module_versions(version)
-    `)
-    .eq("module_source_id", moduleSourceId)
-    .order("started_at", { ascending: false });
-
-  if (error || !data) {
-    return [];
-  }
-
-  return data.map((d: Record<string, unknown>) => ({
-    id: d.id,
-    moduleSourceId: d.module_source_id,
-    moduleId,
-    versionId: d.version_id,
-    version: (d.version as { version: string })?.version || "unknown",
-    environment: d.environment as Deployment["environment"],
-    status: d.status as Deployment["status"],
-    startedAt: d.started_at,
-    completedAt: d.completed_at,
-    errorMessage: d.error_message,
-    deployedBy: d.deployed_by,
-  }));
 }
 
 /**

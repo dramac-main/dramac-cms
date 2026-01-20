@@ -167,88 +167,104 @@ export async function createVersion(
 
 /**
  * Get all versions for a module
+ * Wrapped in try-catch to prevent server action hangs
  */
 export async function getModuleVersions(moduleId: string): Promise<ModuleVersion[]> {
-  const supabase = await createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
-
-  // Check if moduleId is a UUID or a slug
-  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(moduleId);
-
-  let moduleSourceId: string | null = null;
-  
-  if (isUUID) {
-    // First try module_source.id directly
-    const { data: directModule } = await db
-      .from("module_source")
-      .select("id")
-      .eq("id", moduleId)
-      .maybeSingle();
+  try {
+    console.log("[ModuleVersioning] getModuleVersions called for:", moduleId);
     
-    if (directModule) {
-      moduleSourceId = directModule.id;
-    } else {
-      // Check if it's a modules_v2.id and get studio_module_id
-      const { data: v2Module } = await db
-        .from("modules_v2")
-        .select("studio_module_id")
+    const supabase = await createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
+    // Check if moduleId is a UUID or a slug
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(moduleId);
+
+    let moduleSourceId: string | null = null;
+    
+    if (isUUID) {
+      // First try module_source.id directly
+      const { data: directModule } = await db
+        .from("module_source")
+        .select("id")
         .eq("id", moduleId)
         .maybeSingle();
       
-      if (v2Module?.studio_module_id) {
-        // studio_module_id is the UUID (module_source.id)
-        moduleSourceId = v2Module.studio_module_id;
+      if (directModule) {
+        moduleSourceId = directModule.id;
+      } else {
+        // Check if it's a modules_v2.id and get studio_module_id
+        const { data: v2Module } = await db
+          .from("modules_v2")
+          .select("studio_module_id")
+          .eq("id", moduleId)
+          .maybeSingle();
+        
+        if (v2Module?.studio_module_id) {
+          // studio_module_id is the UUID (module_source.id)
+          moduleSourceId = v2Module.studio_module_id;
+        }
       }
-    }
-  } else {
-    // It's a slug - try both module_id and slug columns
-    let result = await db
-      .from("module_source")
-      .select("id")
-      .eq("module_id", moduleId)
-      .maybeSingle();
-    
-    if (!result.data) {
-      // Not found by module_id, try slug
-      result = await db
+    } else {
+      // It's a slug - try both module_id and slug columns
+      let result = await db
         .from("module_source")
         .select("id")
-        .eq("slug", moduleId)
+        .eq("module_id", moduleId)
         .maybeSingle();
+      
+      if (!result.data) {
+        // Not found by module_id, try slug
+        result = await db
+          .from("module_source")
+          .select("id")
+          .eq("slug", moduleId)
+          .maybeSingle();
+      }
+      moduleSourceId = result.data?.id || null;
     }
-    moduleSourceId = result.data?.id || null;
-  }
 
-  if (!moduleSourceId) {
+    if (!moduleSourceId) {
+      console.log("[ModuleVersioning] No module found for:", moduleId);
+      return [];
+    }
+
+    const { data, error } = await db
+      .from("module_versions")
+      .select("*")
+      .eq("module_source_id", moduleSourceId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("[ModuleVersioning] Query error:", error);
+      return [];
+    }
+    
+    if (!data) {
+      return [];
+    }
+
+    console.log("[ModuleVersioning] Found", data.length, "versions");
+    
+    return data.map((v: Record<string, unknown>) => ({
+      id: v.id,
+      moduleSourceId: v.module_source_id,
+      version: v.version,
+      changelog: v.changelog || "",
+      renderCode: v.render_code || "",
+      settingsSchema: v.settings_schema || {},
+      apiRoutes: v.api_routes || [],
+      styles: v.styles || "",
+      defaultSettings: v.default_settings || {},
+      isBreakingChange: v.is_breaking_change || false,
+      minPlatformVersion: v.min_platform_version,
+      createdAt: v.created_at,
+      createdBy: v.created_by,
+    }));
+  } catch (err) {
+    console.error("[ModuleVersioning] getModuleVersions fatal error:", err);
     return [];
   }
-
-  const { data, error } = await db
-    .from("module_versions")
-    .select("*")
-    .eq("module_source_id", moduleSourceId)
-    .order("created_at", { ascending: false });
-
-  if (error || !data) {
-    return [];
-  }
-
-  return data.map((v: Record<string, unknown>) => ({
-    id: v.id,
-    moduleSourceId: v.module_source_id,
-    version: v.version,
-    changelog: v.changelog || "",
-    renderCode: v.render_code || "",
-    settingsSchema: v.settings_schema || {},
-    apiRoutes: v.api_routes || [],
-    styles: v.styles || "",
-    defaultSettings: v.default_settings || {},
-    isBreakingChange: v.is_breaking_change || false,
-    minPlatformVersion: v.min_platform_version,
-    createdAt: v.created_at,
-    createdBy: v.created_by,
-  }));
 }
 
 /**

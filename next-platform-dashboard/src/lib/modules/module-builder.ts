@@ -7,6 +7,17 @@ import { getCurrentUserId, isSuperAdmin } from "@/lib/auth/permissions";
 // are created by migration but not yet in the generated types.
 // Using 'as any' for now until types are regenerated.
 
+// Timeout helper for server actions
+const withTimeout = <T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => {
+      console.warn(`[ModuleBuilder] Operation timed out after ${ms}ms`);
+      resolve(fallback);
+    }, ms)),
+  ]);
+};
+
 export interface ModuleDefinition {
   name: string;
   slug: string;
@@ -248,102 +259,119 @@ export async function getModuleSources(): Promise<ModuleSource[]> {
 
 /**
  * Get a single module source by ID
+ * Wrapped in try-catch to prevent server action hangs
  */
 export async function getModuleSource(moduleId: string): Promise<ModuleSource | null> {
-  const isAdmin = await isSuperAdmin();
-  if (!isAdmin) {
-    return null;
-  }
-
-  const supabase = await createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
-
-  // Check if moduleId is a UUID or a slug
-  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(moduleId);
-  
-  let data, error;
-  
-  if (isUUID) {
-    // First try module_source.id
-    const result = await db
-      .from("module_source")
-      .select("*")
-      .eq("id", moduleId)
-      .maybeSingle();
+  try {
+    console.log("[ModuleBuilder] getModuleSource called for:", moduleId);
     
-    if (result.data) {
-      data = result.data;
-    } else {
-      // UUID not in module_source, check if it's a modules_v2.id
-      // and get the linked studio_module_id
-      const v2Result = await db
-        .from("modules_v2")
-        .select("studio_module_id")
+    const isAdmin = await withTimeout(isSuperAdmin(), 5000, false);
+    if (!isAdmin) {
+      console.log("[ModuleBuilder] Not super admin, returning null");
+      return null;
+    }
+
+    const supabase = await createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+
+    // Check if moduleId is a UUID or a slug
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(moduleId);
+    
+    let data, error;
+    
+    if (isUUID) {
+      // First try module_source.id
+      const result = await db
+        .from("module_source")
+        .select("*")
         .eq("id", moduleId)
         .maybeSingle();
       
-      if (v2Result.data?.studio_module_id) {
-        // Found! Now get the module_source using the studio_module_id
-        // studio_module_id is the UUID (module_source.id)
-        const sourceResult = await db
-          .from("module_source")
-          .select("*")
-          .eq("id", v2Result.data.studio_module_id)
-          .maybeSingle();
-        data = sourceResult.data;
-        error = sourceResult.error;
+      if (result.data) {
+        data = result.data;
       } else {
-        error = result.error || { message: "Module not found in module_source or modules_v2" };
+        // UUID not in module_source, check if it's a modules_v2.id
+        // and get the linked studio_module_id
+        const v2Result = await db
+          .from("modules_v2")
+          .select("studio_module_id")
+          .eq("id", moduleId)
+          .maybeSingle();
+        
+        if (v2Result.data?.studio_module_id) {
+          // Found! Now get the module_source using the studio_module_id
+          // studio_module_id is the UUID (module_source.id)
+          const sourceResult = await db
+            .from("module_source")
+            .select("*")
+            .eq("id", v2Result.data.studio_module_id)
+            .maybeSingle();
+          data = sourceResult.data;
+          error = sourceResult.error;
+        } else {
+          error = result.error || { message: "Module not found in module_source or modules_v2" };
+        }
       }
-    }
-  } else {
-    // It's a slug, try both module_id and slug columns
-    // First try module_id
-    let result = await db
-      .from("module_source")
-      .select("*")
-      .eq("module_id", moduleId)
-      .maybeSingle();
-    
-    if (!result.data && !result.error) {
-      // Not found by module_id, try slug
-      result = await db
+    } else {
+      // It's a slug, try both module_id and slug columns
+      // First try module_id
+      let result = await db
         .from("module_source")
         .select("*")
-        .eq("slug", moduleId)
+        .eq("module_id", moduleId)
         .maybeSingle();
+      
+      if (!result.data && !result.error) {
+        // Not found by module_id, try slug
+        result = await db
+          .from("module_source")
+          .select("*")
+          .eq("slug", moduleId)
+          .maybeSingle();
+      }
+      data = result.data;
+      error = result.error;
     }
-    data = result.data;
-    error = result.error;
-  }
 
-  if (error || !data) {
+    if (error) {
+      console.error("[ModuleBuilder] Query error:", error);
+      return null;
+    }
+    
+    if (!data) {
+      console.log("[ModuleBuilder] No module found for:", moduleId);
+      return null;
+    }
+
+    console.log("[ModuleBuilder] Module found:", data.slug);
+    
+    return {
+      id: data.id,
+      moduleId: data.module_id,
+      name: data.name,
+      slug: data.slug,
+      description: data.description || "",
+      icon: data.icon || "📦",
+      category: data.category || "other",
+      renderCode: data.render_code || "",
+      settingsSchema: data.settings_schema || {},
+      apiRoutes: data.api_routes || [],
+      styles: data.styles || "",
+      defaultSettings: data.default_settings || {},
+      pricingTier: data.pricing_tier || "free",
+      dependencies: data.dependencies || [],
+      status: data.status as ModuleSource["status"],
+      publishedVersion: data.published_version,
+      latestVersion: data.latest_version,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      createdBy: data.created_by,
+    };
+  } catch (err) {
+    console.error("[ModuleBuilder] getModuleSource fatal error:", err);
     return null;
   }
-
-  return {
-    id: data.id,
-    moduleId: data.module_id,
-    name: data.name,
-    slug: data.slug,
-    description: data.description || "",
-    icon: data.icon || "📦",
-    category: data.category || "other",
-    renderCode: data.render_code || "",
-    settingsSchema: data.settings_schema || {},
-    apiRoutes: data.api_routes || [],
-    styles: data.styles || "",
-    defaultSettings: data.default_settings || {},
-    pricingTier: data.pricing_tier || "free",
-    dependencies: data.dependencies || [],
-    status: data.status as ModuleSource["status"],
-    publishedVersion: data.published_version,
-    latestVersion: data.latest_version,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-    createdBy: data.created_by,
-  };
 }
 
 /**
