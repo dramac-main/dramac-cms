@@ -298,11 +298,11 @@ export async function getModuleSource(moduleId: string): Promise<ModuleSource | 
       }
     }
   } else {
-    // It's a slug, query by module_id
+    // It's a slug, query by module_id OR slug
     const result = await db
       .from("module_source")
       .select("*")
-      .eq("module_id", moduleId)
+      .or(`module_id.eq.${moduleId},slug.eq.${moduleId}`)
       .maybeSingle();
     data = result.data;
     error = result.error;
