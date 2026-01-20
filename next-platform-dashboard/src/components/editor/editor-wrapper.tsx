@@ -124,16 +124,30 @@ function EditorContent({
   useEffect(() => {
     if (!initialized.current && page.content) {
       try {
-        const serialized = JSON.stringify(page.content);
+        console.log("[EditorContent] Loading content:", {
+          pageId: page.id,
+          contentType: typeof page.content,
+          hasContent: !!page.content,
+          contentKeys: Object.keys(page.content || {}),
+        });
         
-        // Deserialize saved content
+        // Content should be an object (Craft.js node tree)
+        // We need to serialize it for Craft.js's deserialize function
+        const serialized = typeof page.content === 'string' 
+          ? page.content 
+          : JSON.stringify(page.content);
+        
+        console.log("[EditorContent] Deserializing content...");
         actions.deserialize(serialized);
+        console.log("[EditorContent] Content loaded successfully");
         initialized.current = true;
       } catch (error) {
-        console.error("Failed to load page content:", error);
+        console.error("[EditorContent] Failed to load page content:", error);
         toast.error("Failed to load page content");
+        initialized.current = true; // Mark as initialized to prevent retry loops
       }
     } else if (!page.content) {
+      console.log("[EditorContent] No content to load");
       initialized.current = true;
     }
   }, [page.content, actions, page.id]);

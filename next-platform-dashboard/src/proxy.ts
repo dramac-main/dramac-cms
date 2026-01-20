@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
   const pathname = request.nextUrl.pathname;
 
@@ -23,9 +23,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check domain type
-  const isAppDomain = hostname === appHost || hostname === "app.dramacagency.com";
-  const isClientSite = hostname.endsWith(`.${baseDomain}`);
-  const isCustomDomain = !isAppDomain && !isClientSite && !hostname.includes("localhost");
+  const isLocalhost = hostname.includes("localhost");
+  const isAppDomain = hostname === appHost || hostname === "app.dramacagency.com" || isLocalhost;
+  const isClientSite = !isLocalhost && hostname.endsWith(`.${baseDomain}`);
+  const isCustomDomain = !isAppDomain && !isClientSite && !isLocalhost;
 
   // ========================================
   // PUBLIC ROUTES - No Auth Required
@@ -55,9 +56,10 @@ export async function middleware(request: NextRequest) {
   // SUBDOMAIN/CUSTOM DOMAIN ROUTING
   // ========================================
   
-  console.log("[middleware] Routing check:", {
+  console.log("[proxy] Routing check:", {
     hostname,
     baseDomain,
+    isLocalhost,
     isAppDomain,
     isClientSite,
     isCustomDomain,
@@ -69,7 +71,7 @@ export async function middleware(request: NextRequest) {
     const subdomain = hostname.replace(`.${baseDomain}`, "");
     const url = request.nextUrl.clone();
     url.pathname = `/site/${subdomain}${pathname}`;
-    console.log("[middleware] Client site rewrite:", hostname, "→", url.pathname);
+    console.log("[proxy] Client site rewrite:", hostname, "→", url.pathname);
     return NextResponse.rewrite(url);
   }
   
@@ -77,7 +79,7 @@ export async function middleware(request: NextRequest) {
   if (isCustomDomain) {
     const url = request.nextUrl.clone();
     url.pathname = `/site/${hostname}${pathname}`;
-    console.log("[middleware] Custom domain rewrite:", hostname, "→", url.pathname);
+    console.log("[proxy] Custom domain rewrite:", hostname, "→", url.pathname);
     return NextResponse.rewrite(url);
   }
 
