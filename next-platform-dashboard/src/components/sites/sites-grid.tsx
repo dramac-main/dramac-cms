@@ -61,9 +61,18 @@ export async function SitesGrid({ filters }: SitesGridProps) {
         <Card key={site.id} className="group relative hover:shadow-md transition-shadow">
           {/* Site Preview/Thumbnail */}
           <div className="relative h-40 bg-gradient-to-br from-primary/10 to-primary/5 rounded-t-lg overflow-hidden">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Globe className="h-16 w-16 text-primary/20" />
-            </div>
+            {site.published ? (
+              <img
+                src={`https://api.screenshotone.com/take?access_key=8gVT7LCtbdkNjQ&url=${encodeURIComponent(getSiteUrl(site.subdomain, site.custom_domain))}&viewport_width=1280&viewport_height=720&device_scale_factor=1&format=jpg&image_quality=80&block_ads=true&block_cookie_banners=true&block_banners_by_heuristics=false&block_trackers=true&delay=0&timeout=60&full_page=false&fresh=false`}
+                alt={`${site.name} preview`}
+                className="absolute inset-0 w-full h-full object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Globe className="h-16 w-16 text-primary/20" />
+              </div>
+            )}
             {/* Overlay with actions on hover */}
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
               <Link href={`/dashboard/sites/${site.id}`}>

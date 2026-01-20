@@ -45,10 +45,19 @@ export default async function PortalSitesPage() {
             return (
               <Card key={site.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Site Preview Thumbnail */}
-                <div className="h-40 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center relative">
-                  <Globe className="h-16 w-16 text-primary/30" />
+                <div className="h-40 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center relative overflow-hidden">
+                  {site.isPublished && url ? (
+                    <img
+                      src={`https://api.screenshotone.com/take?access_key=8gVT7LCtbdkNjQ&url=${encodeURIComponent(url)}&viewport_width=1280&viewport_height=720&device_scale_factor=1&format=jpg&image_quality=80&block_ads=true&block_cookie_banners=true&block_banners_by_heuristics=false&block_trackers=true&delay=0&timeout=60&full_page=false&fresh=false`}
+                      alt={`${site.name} preview`}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <Globe className="h-16 w-16 text-primary/30" />
+                  )}
                   <Badge 
-                    className="absolute top-3 right-3"
+                    className="absolute top-3 right-3 z-10"
                     variant={site.isPublished ? "default" : "secondary"}
                   >
                     {site.isPublished ? "Live" : "Draft"}
