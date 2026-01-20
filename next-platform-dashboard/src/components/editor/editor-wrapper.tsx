@@ -43,17 +43,27 @@ export function EditorWrapper({ site, page }: EditorWrapperProps) {
   const [hasChanges, setHasChanges] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isContentLoaded, setIsContentLoaded] = useState(false);
+  
+  // Use ref to track content loaded state for the callback
+  const isContentLoadedRef = useRef(false);
+  
+  // Update ref when state changes
+  useEffect(() => {
+    isContentLoadedRef.current = isContentLoaded;
+  }, [isContentLoaded]);
 
   const handleSettingsChange = useCallback((newSettings: Partial<CanvasSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
   }, []);
 
   // Handle nodes change - only track changes after initial content is loaded
+  // Use ref instead of state to avoid stale closure issues
   const handleNodesChange = useCallback(() => {
-    if (isContentLoaded) {
+    if (isContentLoadedRef.current) {
+      console.log("[EditorWrapper] Change detected, marking as unsaved");
       setHasChanges(true);
     }
-  }, [isContentLoaded]);
+  }, []);
 
   return (
     <Editor
