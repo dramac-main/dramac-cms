@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CraftRenderer } from "./craft-renderer";
+import { ModuleInjector } from "@/components/renderer/module-injector";
 
 interface SitePageProps {
   params: Promise<{
@@ -196,9 +197,13 @@ export default async function SitePage({ params }: SitePageProps) {
 
   // Pass data to client component for Craft.js rendering
   return (
-    <CraftRenderer 
-      content={data.content} 
-      themeSettings={data.themeSettings}
-    />
+    <>
+      <CraftRenderer 
+        content={data.content} 
+        themeSettings={data.themeSettings}
+      />
+      {/* Inject studio modules for this site */}
+      <ModuleInjector siteId={data.site.id} />
+    </>
   );
 }
