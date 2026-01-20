@@ -13,6 +13,7 @@ import { ExportSiteButton } from "@/components/sites/export-site-button";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pencil, Settings, ExternalLink, Search, Copy } from "lucide-react";
+import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 
 interface SiteDetailPageProps {
   params: Promise<{ siteId: string }>;
@@ -44,11 +45,11 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
     <div>
       <PageHeader
         title={site.name}
-        description={`${site.subdomain}.dramac.app`}
+        description={getSiteDomain(site.subdomain, site.custom_domain)}
       >
         {site.published && (
           <a
-            href={`https://${site.subdomain}.dramac.app`}
+            href={getSiteUrl(site.subdomain, site.custom_domain)}
             target="_blank"
             rel="noopener noreferrer"
           >
