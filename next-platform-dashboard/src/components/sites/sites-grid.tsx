@@ -61,7 +61,14 @@ export async function SitesGrid({ filters }: SitesGridProps) {
         <Card key={site.id} className="group relative hover:shadow-md transition-shadow">
           {/* Site Preview/Thumbnail */}
           <div className="relative h-40 bg-gradient-to-br from-primary/10 to-primary/5 rounded-t-lg overflow-hidden">
-            {site.published ? (
+            {site.published && (site as any).screenshot_url ? (
+              <img
+                src={(site as any).screenshot_url}
+                alt={`${site.name} preview`}
+                className="absolute inset-0 w-full h-full object-cover object-top"
+                loading="lazy"
+              />
+            ) : site.published ? (
               <img
                 src={`/api/screenshot?url=${encodeURIComponent(getSiteUrl(site.subdomain, site.custom_domain))}`}
                 alt={`${site.name} preview`}

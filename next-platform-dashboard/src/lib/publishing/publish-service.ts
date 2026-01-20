@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { captureAndStoreSiteScreenshot } from "@/lib/screenshots/screenshot-service";
 
 export interface PublishResult {
   success: boolean;
@@ -70,6 +71,11 @@ export async function publishSite(siteId: string): Promise<PublishResult> {
 
     // Generate site URL
     const siteUrl = `https://${site.subdomain}.${BASE_DOMAIN}`;
+
+    // Capture screenshot in background (don't wait for it)
+    captureAndStoreSiteScreenshot(siteId, siteUrl).catch(err => {
+      console.error('[PublishService] Screenshot capture failed:', err);
+    });
 
     revalidatePath(`/sites/${siteId}`);
 
