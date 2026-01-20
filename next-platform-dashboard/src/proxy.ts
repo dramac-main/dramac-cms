@@ -47,6 +47,13 @@ export async function proxy(request: NextRequest) {
   // Must be checked BEFORE any other routes
   // ========================================
   
+  // For client sites and custom domains, DON'T rewrite API routes
+  // The API routes exist at the app level and should work directly
+  if ((isClientSite || isCustomDomain) && pathname.startsWith("/api")) {
+    console.log("[proxy] → API route on subdomain, passing through");
+    return NextResponse.next();
+  }
+  
   // Route client site subdomains FIRST - before any auth checks
   if (isClientSite) {
     const subdomain = hostname.replace(`.${baseDomain}`, "");
