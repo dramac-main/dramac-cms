@@ -2,44 +2,60 @@ import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface RenderHeroProps {
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
+  // Editor uses these prop names:
+  buttonText?: string;
+  buttonLink?: string;
+  // Legacy prop names (keep for backwards compatibility):
+  primaryButtonText?: string;
+  primaryButtonHref?: string;
+  secondaryButtonText?: string;
+  secondaryButtonHref?: string;
   backgroundImage?: string;
   backgroundColor?: string;
   textColor?: string;
   alignment?: "left" | "center" | "right";
   height?: string;
+  minHeight?: number;
   overlay?: boolean;
   overlayOpacity?: number;
-  primaryButtonText?: string;
-  primaryButtonHref?: string;
-  secondaryButtonText?: string;
-  secondaryButtonHref?: string;
   className?: string;
   children?: ReactNode;
 }
 
 export function RenderHero({
-  title,
-  subtitle,
-  backgroundImage,
-  backgroundColor = "#f8fafc",
-  textColor = "inherit",
-  alignment = "center",
-  height = "500px",
-  overlay = false,
-  overlayOpacity = 50,
+  title = "Welcome to Our Website",
+  subtitle = "Build amazing experiences with our visual editor",
+  // Editor prop names (primary)
+  buttonText,
+  buttonLink,
+  // Legacy prop names (fallback)
   primaryButtonText,
   primaryButtonHref,
   secondaryButtonText,
   secondaryButtonHref,
+  backgroundImage,
+  backgroundColor = "#1a1a2e",
+  textColor = "#ffffff",
+  alignment = "center",
+  height,
+  minHeight = 500,
+  overlay = true,
+  overlayOpacity = 50,
   className,
 }: RenderHeroProps) {
+  // Use editor props if available, fall back to legacy props
+  const mainButtonText = buttonText || primaryButtonText;
+  const mainButtonHref = buttonLink || primaryButtonHref || "#";
+
   const alignmentStyles = {
     left: { alignItems: 'flex-start', textAlign: 'left' as const },
     center: { alignItems: 'center', textAlign: 'center' as const },
     right: { alignItems: 'flex-end', textAlign: 'right' as const },
   };
+
+  const minHeightValue = height || `${minHeight}px`;
 
   return (
     <section
@@ -50,8 +66,8 @@ export function RenderHero({
         flexDirection: 'column',
         justifyContent: 'center',
         padding: '5rem 1.5rem',
-        minHeight: height,
-        backgroundColor: backgroundImage ? undefined : backgroundColor,
+        minHeight: minHeightValue,
+        backgroundColor: backgroundImage ? 'transparent' : backgroundColor,
         backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
@@ -78,15 +94,15 @@ export function RenderHero({
         marginRight: 'auto' 
       }}>
         <h1 style={{ 
-          fontSize: 'clamp(2rem, 5vw, 3.75rem)', 
+          fontSize: 'clamp(1.75rem, 5vw, 3rem)', 
           fontWeight: 700, 
           marginBottom: '1rem',
-          lineHeight: 1.1,
+          lineHeight: 1.2,
         }}>
           {title}
         </h1>
         <p style={{ 
-          fontSize: 'clamp(1rem, 2.5vw, 1.5rem)', 
+          fontSize: 'clamp(1rem, 2.5vw, 1.25rem)', 
           opacity: 0.9, 
           marginBottom: '2rem',
           maxWidth: '42rem',
@@ -94,29 +110,29 @@ export function RenderHero({
           {subtitle}
         </p>
 
-        {(primaryButtonText || secondaryButtonText) && (
+        {(mainButtonText || secondaryButtonText) && (
           <div style={{ 
             display: 'flex', 
             flexWrap: 'wrap', 
             gap: '1rem', 
             justifyContent: alignment === 'center' ? 'center' : alignment === 'right' ? 'flex-end' : 'flex-start',
           }}>
-            {primaryButtonText && (
+            {mainButtonText && (
               <a
-                href={primaryButtonHref || "#"}
+                href={mainButtonHref}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#6366f1',
-                  color: '#ffffff',
+                  padding: '0.75rem 2rem',
+                  backgroundColor: '#ffffff',
+                  color: '#1a1a2e',
                   borderRadius: '0.5rem',
-                  fontWeight: 500,
+                  fontWeight: 600,
                   textDecoration: 'none',
                 }}
               >
-                {primaryButtonText}
+                {mainButtonText}
               </a>
             )}
             {secondaryButtonText && (
@@ -126,10 +142,10 @@ export function RenderHero({
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '0.75rem 1.5rem',
+                  padding: '0.75rem 2rem',
                   border: '1px solid currentColor',
                   borderRadius: '0.5rem',
-                  fontWeight: 500,
+                  fontWeight: 600,
                   textDecoration: 'none',
                   color: 'inherit',
                 }}

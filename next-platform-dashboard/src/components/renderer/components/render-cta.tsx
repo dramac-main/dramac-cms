@@ -1,8 +1,16 @@
 import { cn } from "@/lib/utils";
 
 interface RenderCTAProps {
-  title: string;
-  description: string;
+  title?: string;
+  // Editor uses "subtitle", legacy uses "description"
+  subtitle?: string;
+  description?: string;
+  // Editor prop names:
+  buttonText?: string;
+  buttonLink?: string;
+  buttonBackgroundColor?: string;
+  buttonTextColor?: string;
+  // Legacy prop names:
   primaryButtonText?: string;
   primaryButtonHref?: string;
   secondaryButtonText?: string;
@@ -13,8 +21,15 @@ interface RenderCTAProps {
 }
 
 export function RenderCTA({
-  title,
+  title = "Ready to Get Started?",
+  subtitle,
   description,
+  // Editor props
+  buttonText,
+  buttonLink,
+  buttonBackgroundColor = "#ffffff",
+  buttonTextColor = "#6366f1",
+  // Legacy props
   primaryButtonText,
   primaryButtonHref,
   secondaryButtonText,
@@ -23,6 +38,11 @@ export function RenderCTA({
   textColor = "#ffffff",
   className,
 }: RenderCTAProps) {
+  // Use editor props if available, fall back to legacy props
+  const mainButtonText = buttonText || primaryButtonText;
+  const mainButtonHref = buttonLink || primaryButtonHref || "#";
+  const descText = subtitle || description;
+
   return (
     <section
       className={cn(className)}
@@ -30,52 +50,55 @@ export function RenderCTA({
         backgroundColor, 
         color: textColor,
         padding: '4rem 1.5rem',
+        textAlign: 'center',
       }}
     >
       <div style={{ 
-        maxWidth: '56rem', 
+        maxWidth: '800px', 
         marginLeft: 'auto', 
-        marginRight: 'auto', 
-        textAlign: 'center' 
+        marginRight: 'auto',
+        padding: '0 1rem',
       }}>
         <h2 style={{ 
-          fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', 
+          fontSize: 'clamp(1.5rem, 4vw, 2.25rem)', 
           fontWeight: 700, 
           marginBottom: '1rem' 
         }}>
           {title}
         </h2>
-        <p style={{ 
-          fontSize: '1.25rem', 
-          opacity: 0.9, 
-          marginBottom: '2rem' 
-        }}>
-          {description}
-        </p>
+        {descText && (
+          <p style={{ 
+            fontSize: 'clamp(1rem, 2vw, 1.125rem)', 
+            opacity: 0.9, 
+            marginBottom: '2rem' 
+          }}>
+            {descText}
+          </p>
+        )}
 
-        {(primaryButtonText || secondaryButtonText) && (
+        {(mainButtonText || secondaryButtonText) && (
           <div style={{ 
             display: 'flex', 
             flexWrap: 'wrap', 
             gap: '1rem', 
             justifyContent: 'center' 
           }}>
-            {primaryButtonText && (
+            {mainButtonText && (
               <a
-                href={primaryButtonHref || "#"}
+                href={mainButtonHref}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#ffffff',
-                  color: '#1a1a2e',
+                  padding: '1rem 2.5rem',
+                  backgroundColor: buttonBackgroundColor,
+                  color: buttonTextColor,
                   borderRadius: '0.5rem',
-                  fontWeight: 500,
+                  fontWeight: 600,
                   textDecoration: 'none',
                 }}
               >
-                {primaryButtonText}
+                {mainButtonText}
               </a>
             )}
             {secondaryButtonText && (
@@ -85,10 +108,10 @@ export function RenderCTA({
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  padding: '0.75rem 1.5rem',
+                  padding: '1rem 2.5rem',
                   border: '1px solid rgba(255,255,255,0.5)',
                   borderRadius: '0.5rem',
-                  fontWeight: 500,
+                  fontWeight: 600,
                   textDecoration: 'none',
                   color: 'inherit',
                 }}
