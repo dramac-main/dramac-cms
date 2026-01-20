@@ -19,37 +19,85 @@ export function RenderCTA({
   primaryButtonHref,
   secondaryButtonText,
   secondaryButtonHref,
-  backgroundColor = "#3b82f6",
+  backgroundColor = "#6366f1",
   textColor = "#ffffff",
   className,
 }: RenderCTAProps) {
   return (
     <section
-      className={cn("px-6 py-16", className)}
-      style={{ backgroundColor, color: textColor }}
+      className={cn(className)}
+      style={{ 
+        backgroundColor, 
+        color: textColor,
+        padding: '4rem 1.5rem',
+      }}
     >
-      <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">{title}</h2>
-        <p className="text-xl opacity-90 mb-8">{description}</p>
+      <div style={{ 
+        maxWidth: '56rem', 
+        marginLeft: 'auto', 
+        marginRight: 'auto', 
+        textAlign: 'center' 
+      }}>
+        <h2 style={{ 
+          fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', 
+          fontWeight: 700, 
+          marginBottom: '1rem' 
+        }}>
+          {title}
+        </h2>
+        <p style={{ 
+          fontSize: '1.25rem', 
+          opacity: 0.9, 
+          marginBottom: '2rem' 
+        }}>
+          {description}
+        </p>
 
-        <div className="flex flex-wrap gap-4 justify-center">
-          {primaryButtonText && (
-            <a
-              href={primaryButtonHref || "#"}
-              className="inline-flex items-center justify-center px-6 py-3 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 transition-colors"
-            >
-              {primaryButtonText}
-            </a>
-          )}
-          {secondaryButtonText && (
-            <a
-              href={secondaryButtonHref || "#"}
-              className="inline-flex items-center justify-center px-6 py-3 border border-white/50 rounded-lg font-medium hover:bg-white/10 transition-colors"
-            >
-              {secondaryButtonText}
-            </a>
-          )}
-        </div>
+        {(primaryButtonText || secondaryButtonText) && (
+          <div style={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: '1rem', 
+            justifyContent: 'center' 
+          }}>
+            {primaryButtonText && (
+              <a
+                href={primaryButtonHref || "#"}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#ffffff',
+                  color: '#1a1a2e',
+                  borderRadius: '0.5rem',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                }}
+              >
+                {primaryButtonText}
+              </a>
+            )}
+            {secondaryButtonText && (
+              <a
+                href={secondaryButtonHref || "#"}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.75rem 1.5rem',
+                  border: '1px solid rgba(255,255,255,0.5)',
+                  borderRadius: '0.5rem',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}
+              >
+                {secondaryButtonText}
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );

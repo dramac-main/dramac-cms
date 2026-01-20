@@ -12,6 +12,7 @@ interface RenderNavigationProps {
   ctaText?: string;
   ctaHref?: string;
   backgroundColor?: string;
+  textColor?: string;
   className?: string;
 }
 
@@ -22,28 +23,50 @@ export function RenderNavigation({
   ctaText,
   ctaHref,
   backgroundColor = "#ffffff",
+  textColor,
   className,
 }: RenderNavigationProps) {
   return (
     <header
-      className={cn("px-6 py-4 border-b", className)}
-      style={{ backgroundColor }}
+      className={cn("border-b", className)}
+      style={{ 
+        backgroundColor,
+        color: textColor || undefined,
+      }}
     >
-      <nav className="max-w-6xl mx-auto flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <nav style={{ 
+        maxWidth: '72rem', 
+        marginLeft: 'auto', 
+        marginRight: 'auto', 
+        padding: '1rem 1.5rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <div style={{ flexShrink: 0 }}>
           {logo ? (
-            <img src={logo} alt={logoText} className="h-8" />
+            <img src={logo} alt={logoText} style={{ height: '2rem' }} />
           ) : (
-            <span className="text-xl font-bold">{logoText}</span>
+            <span style={{ fontSize: '1.25rem', fontWeight: 700 }}>{logoText}</span>
           )}
         </div>
 
-        <div className="hidden md:flex items-center gap-6">
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '2rem',
+        }}>
           {links.map((link, index) => (
             <a
               key={index}
               href={link.href}
-              className="text-sm font-medium hover:text-primary transition-colors"
+              style={{ 
+                fontSize: '0.875rem', 
+                fontWeight: 500, 
+                textDecoration: 'none',
+                color: 'inherit',
+                opacity: 0.9,
+              }}
             >
               {link.label}
             </a>
@@ -53,7 +76,18 @@ export function RenderNavigation({
         {ctaText && (
           <a
             href={ctaHref || "#"}
-            className="hidden md:inline-flex items-center justify-center px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0.5rem 1rem',
+              backgroundColor: '#6366f1',
+              color: '#ffffff',
+              borderRadius: '0.5rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              textDecoration: 'none',
+            }}
           >
             {ctaText}
           </a>

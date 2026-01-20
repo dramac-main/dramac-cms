@@ -1,5 +1,3 @@
-import { cn } from "@/lib/utils";
-
 interface RenderButtonProps {
   text: string;
   variant?: "primary" | "secondary" | "outline" | "ghost";
@@ -15,21 +13,29 @@ export function RenderButton({
   size = "md",
   href,
   fullWidth = false,
-  className,
 }: RenderButtonProps) {
-  const baseStyles = "inline-flex items-center justify-center font-medium transition-colors rounded-lg";
-
-  const variantStyles = {
-    primary: "bg-primary text-primary-foreground hover:bg-primary/90",
-    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-    outline: "border border-input bg-background hover:bg-accent",
-    ghost: "hover:bg-accent hover:text-accent-foreground",
+  const baseStyles: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: 500,
+    borderRadius: '0.5rem',
+    textDecoration: 'none',
+    cursor: 'pointer',
+    border: 'none',
   };
 
-  const sizeStyles = {
-    sm: "h-8 px-3 text-sm",
-    md: "h-10 px-4",
-    lg: "h-12 px-6 text-lg",
+  const variantStyles: Record<string, React.CSSProperties> = {
+    primary: { backgroundColor: '#6366f1', color: '#ffffff' },
+    secondary: { backgroundColor: '#64748b', color: '#ffffff' },
+    outline: { backgroundColor: 'transparent', border: '1px solid currentColor', color: 'inherit' },
+    ghost: { backgroundColor: 'transparent', color: 'inherit' },
+  };
+
+  const sizeStyles: Record<string, React.CSSProperties> = {
+    sm: { height: '2rem', padding: '0 0.75rem', fontSize: '0.875rem' },
+    md: { height: '2.5rem', padding: '0 1rem', fontSize: '1rem' },
+    lg: { height: '3rem', padding: '0 1.5rem', fontSize: '1.125rem' },
   };
 
   const Component = href ? "a" : "button";
@@ -37,13 +43,12 @@ export function RenderButton({
   return (
     <Component
       href={href}
-      className={cn(
-        baseStyles,
-        variantStyles[variant],
-        sizeStyles[size],
-        fullWidth && "w-full",
-        className
-      )}
+      style={{
+        ...baseStyles,
+        ...variantStyles[variant],
+        ...sizeStyles[size],
+        width: fullWidth ? '100%' : undefined,
+      }}
     >
       {text}
     </Component>

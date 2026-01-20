@@ -35,49 +35,86 @@ export function RenderHero({
   secondaryButtonHref,
   className,
 }: RenderHeroProps) {
-  const alignMap = {
-    left: "items-start text-left",
-    center: "items-center text-center",
-    right: "items-end text-right",
+  const alignmentStyles = {
+    left: { alignItems: 'flex-start', textAlign: 'left' as const },
+    center: { alignItems: 'center', textAlign: 'center' as const },
+    right: { alignItems: 'flex-end', textAlign: 'right' as const },
   };
 
   return (
     <section
-      className={cn(
-        "relative flex flex-col justify-center px-6 py-20",
-        alignMap[alignment],
-        className
-      )}
+      className={cn(className)}
       style={{
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        padding: '5rem 1.5rem',
         minHeight: height,
         backgroundColor: backgroundImage ? undefined : backgroundColor,
         backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
         color: textColor,
+        ...alignmentStyles[alignment],
       }}
     >
       {overlay && backgroundImage && (
         <div
-          className="absolute inset-0 bg-black"
-          style={{ opacity: overlayOpacity / 100 }}
+          style={{ 
+            position: 'absolute', 
+            inset: 0, 
+            backgroundColor: 'black',
+            opacity: overlayOpacity / 100 
+          }}
         />
       )}
 
-      <div className="relative z-10 max-w-4xl mx-auto">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+      <div style={{ 
+        position: 'relative', 
+        zIndex: 10, 
+        maxWidth: '56rem', 
+        marginLeft: 'auto', 
+        marginRight: 'auto' 
+      }}>
+        <h1 style={{ 
+          fontSize: 'clamp(2rem, 5vw, 3.75rem)', 
+          fontWeight: 700, 
+          marginBottom: '1rem',
+          lineHeight: 1.1,
+        }}>
           {title}
         </h1>
-        <p className="text-xl md:text-2xl opacity-90 mb-8 max-w-2xl">
+        <p style={{ 
+          fontSize: 'clamp(1rem, 2.5vw, 1.5rem)', 
+          opacity: 0.9, 
+          marginBottom: '2rem',
+          maxWidth: '42rem',
+        }}>
           {subtitle}
         </p>
 
         {(primaryButtonText || secondaryButtonText) && (
-          <div className="flex flex-wrap gap-4 justify-center">
+          <div style={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: '1rem', 
+            justifyContent: alignment === 'center' ? 'center' : alignment === 'right' ? 'flex-end' : 'flex-start',
+          }}>
             {primaryButtonText && (
               <a
                 href={primaryButtonHref || "#"}
-                className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#6366f1',
+                  color: '#ffffff',
+                  borderRadius: '0.5rem',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                }}
               >
                 {primaryButtonText}
               </a>
@@ -85,7 +122,17 @@ export function RenderHero({
             {secondaryButtonText && (
               <a
                 href={secondaryButtonHref || "#"}
-                className="inline-flex items-center justify-center px-6 py-3 border border-current rounded-lg font-medium hover:bg-white/10 transition-colors"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.75rem 1.5rem',
+                  border: '1px solid currentColor',
+                  borderRadius: '0.5rem',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  color: 'inherit',
+                }}
               >
                 {secondaryButtonText}
               </a>

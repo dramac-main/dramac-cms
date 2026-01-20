@@ -113,7 +113,17 @@ export function RenderContactForm({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+            style={{
+              width: '100%',
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#6366f1',
+              color: '#ffffff',
+              borderRadius: '0.5rem',
+              fontWeight: 500,
+              border: 'none',
+              cursor: 'pointer',
+              opacity: isSubmitting ? 0.5 : 1,
+            }}
           >
             {isSubmitting ? "Sending..." : submitText}
           </button>
