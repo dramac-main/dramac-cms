@@ -87,7 +87,10 @@ export default async function ModuleAnalyticsPage() {
         .select("id, wholesale_price_monthly")
         .in("id", moduleIds);
 
-      const priceMap = new Map((modulePrices || []).map((m: any) => [m.id, m.wholesale_price_monthly || 0]));
+      const priceMap = new Map<string, number>();
+      (modulePrices || []).forEach((m: { id: string; wholesale_price_monthly: number | null }) => {
+        priceMap.set(m.id, m.wholesale_price_monthly || 0);
+      });
       monthlyRevenue = activeSubs.reduce((sum: number, sub: { module_id: string }) => {
         return sum + (priceMap.get(sub.module_id) || 0);
       }, 0);
