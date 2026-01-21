@@ -51,7 +51,10 @@ function transpileForBrowser(code: string): string {
  * 4. Executes module render code in isolated IIFE
  */
 export async function ModuleInjector({ siteId }: ModuleInjectorProps) {
+  console.log("[ModuleInjector] Starting - siteId:", siteId);
+  
   if (!siteId) {
+    console.log("[ModuleInjector] No siteId provided");
     return null;
   }
 
@@ -59,6 +62,8 @@ export async function ModuleInjector({ siteId }: ModuleInjectorProps) {
     const supabase = await createClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
+
+    console.log("[ModuleInjector] Fetching installations for site:", siteId);
 
     // Get all enabled module installations for this site
     const { data: installations, error: installError } = await db
@@ -72,7 +77,10 @@ export async function ModuleInjector({ siteId }: ModuleInjectorProps) {
       return null;
     }
 
+    console.log("[ModuleInjector] Found installations:", installations?.length || 0);
+
     if (!installations?.length) {
+      console.log("[ModuleInjector] No enabled installations found");
       return null;
     }
 
