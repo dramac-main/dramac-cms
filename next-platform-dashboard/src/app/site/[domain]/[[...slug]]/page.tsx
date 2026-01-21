@@ -40,6 +40,18 @@ export async function generateMetadata({ params }: SitePageProps): Promise<Metad
 async function getSiteData(domain: string, pageSlug: string) {
   const supabase = createAdminClient();
 
+  // Parse domain to extract subdomain if it's a platform subdomain
+  // e.g., "ten-and-ten.sites.dramacagency.com" -> "ten-and-ten"
+  let subdomain = domain;
+  let customDomain = domain;
+  
+  // Check if this is a platform subdomain (*.sites.dramacagency.com)
+  if (domain.endsWith('.sites.dramacagency.com')) {
+    subdomain = domain.split('.')[0]; // Extract first part
+  } else if (domain.endsWith('.dramac.app')) {
+    subdomain = domain.split('.')[0]; // Extract first part
+  }
+
   // Try to find site by custom domain first, then by subdomain
   let siteQuery = supabase
     .from("sites")
@@ -65,18 +77,14 @@ async function getSiteData(domain: string, pageSlug: string) {
     `)
     .eq("published", true);
 
-  // Check if domain looks like a custom domain (has dots) or subdomain
-  if (domain.includes(".")) {
-    siteQuery = siteQuery.eq("custom_domain", domain);
-  } else {
-    siteQuery = siteQuery.eq("subdomain", domain);
-  }
+  // First try by subdomain (most common)
+  siteQuery = siteQuery.eq("subdomain", subdomain);
 
   const { data: site, error: siteError } = await siteQuery.single();
 
   if (siteError || !site) {
-    // Try subdomain if custom domain failed
-    const { data: siteBySubdomain } = await supabase
+    // Try custom domain if subdomain failed
+    const { data: siteByCustomDomain } = await supabase
       .from("sites")
       .select(`
         id,
@@ -98,15 +106,15 @@ async function getSiteData(domain: string, pageSlug: string) {
           )
         )
       `)
-      .eq("subdomain", domain)
+      .eq("custom_domain", customDomain)
       .eq("published", true)
       .single();
 
-    if (!siteBySubdomain) {
+    if (!siteByCustomDomain) {
       return null;
     }
 
-    return processData(siteBySubdomain, pageSlug);
+    return processData(siteByCustomDomain, pageSlug);
   }
 
   return processData(site, pageSlug);
