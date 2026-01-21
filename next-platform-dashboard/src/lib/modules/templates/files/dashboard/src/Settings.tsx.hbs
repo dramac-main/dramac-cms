@@ -1,0 +1,177 @@
+'use client';
+
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@dramac/sdk/ui';
+import { Button } from '@dramac/sdk/ui';
+import { Input } from '@dramac/sdk/ui';
+import { Label } from '@dramac/sdk/ui';
+import { useToast } from '@dramac/sdk/ui';
+import { Save } from 'lucide-react';
+
+interface DashboardSettings {
+  refreshInterval: number;
+  defaultDateRange: string;
+  showKPIs: boolean;
+  enableExport: boolean;
+  chartColors: string[];
+}
+
+export function Settings() {
+  const [settings, setSettings] = useState<DashboardSettings>({
+    refreshInterval: 60,
+    defaultDateRange: '7d',
+    showKPIs: true,
+    enableExport: true,
+    chartColors: ['#6366f1', '#22c55e', '#f59e0b', '#ef4444'],
+  });
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+  
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await fetch('/api/modules/{{moduleId}}/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      toast({ title: 'Settings saved successfully' });
+    } catch (error) {
+      toast({ title: 'Error saving settings', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  }
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{{moduleName}} Settings</h1>
+        <Button onClick={handleSave} disabled={saving}>
+          <Save className="h-4 w-4 mr-2" />
+          {saving ? 'Saving...' : 'Save Settings'}
+        </Button>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Display Settings</CardTitle>
+          <CardDescription>
+            Configure how the dashboard displays data
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="refreshInterval">Auto-refresh interval (seconds)</Label>
+            <Input
+              id="refreshInterval"
+              type="number"
+              value={settings.refreshInterval}
+              onChange={e => setSettings({
+                ...settings,
+                refreshInterval: parseInt(e.target.value) || 60
+              })}
+              min={10}
+              max={3600}
+            />
+            <p className="text-sm text-muted-foreground mt-1">
+              Set to 0 to disable auto-refresh
+            </p>
+          </div>
+          
+          <div>
+            <Label htmlFor="defaultDateRange">Default date range</Label>
+            <select
+              id="defaultDateRange"
+              value={settings.defaultDateRange}
+              onChange={e => setSettings({
+                ...settings,
+                defaultDateRange: e.target.value
+              })}
+              className="w-full mt-1 p-2 border rounded-md"
+            >
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+              <option value="1y">Last year</option>
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="showKPIs"
+              checked={settings.showKPIs}
+              onChange={e => setSettings({
+                ...settings,
+                showKPIs: e.target.checked
+              })}
+            />
+            <Label htmlFor="showKPIs">Show KPI cards</Label>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="enableExport"
+              checked={settings.enableExport}
+              onChange={e => setSettings({
+                ...settings,
+                enableExport: e.target.checked
+              })}
+            />
+            <Label htmlFor="enableExport">Enable data export</Label>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Chart Colors</CardTitle>
+          <CardDescription>
+            Customize the colors used in charts
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-4 gap-4">
+            {settings.chartColors.map((color, index) => (
+              <div key={index}>
+                <Label htmlFor={`color-${index}`}>Color {index + 1}</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    type="color"
+                    id={`color-${index}`}
+                    value={color}
+                    onChange={e => {
+                      const newColors = [...settings.chartColors];
+                      newColors[index] = e.target.value;
+                      setSettings({ ...settings, chartColors: newColors });
+                    }}
+                    className="w-10 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={color}
+                    onChange={e => {
+                      const newColors = [...settings.chartColors];
+                      newColors[index] = e.target.value;
+                      setSettings({ ...settings, chartColors: newColors });
+                    }}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default Settings;

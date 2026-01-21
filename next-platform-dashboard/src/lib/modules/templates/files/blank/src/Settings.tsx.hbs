@@ -1,0 +1,58 @@
+'use client';
+
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@dramac/sdk/ui';
+import { Button } from '@dramac/sdk/ui';
+import { useToast } from '@dramac/sdk/ui';
+import { Save } from 'lucide-react';
+
+export function Settings() {
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+  
+  async function handleSave() {
+    setSaving(true);
+    try {
+      // Add your settings save logic here
+      toast({ title: 'Settings saved successfully' });
+    } catch (error) {
+      toast({ title: 'Error saving settings', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  }
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{{moduleName}} Settings</h1>
+        <Button onClick={handleSave} disabled={saving}>
+          <Save className="h-4 w-4 mr-2" />
+          {saving ? 'Saving...' : 'Save Settings'}
+        </Button>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Module Configuration</CardTitle>
+          <CardDescription>
+            Configure your module settings here
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Add your settings form fields here.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default Settings;

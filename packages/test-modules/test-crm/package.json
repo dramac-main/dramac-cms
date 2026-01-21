@@ -1,0 +1,32 @@
+{
+  "name": "@dramac-modules/test-crm",
+  "version": "1.0.0",
+  "description": "A Dramac module",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "dev": "dramac dev",
+    "build": "dramac build",
+    "validate": "dramac validate",
+    "deploy": "dramac deploy"
+  },
+  "dependencies": {
+    "@dramac/sdk": "^1.0.0"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "typescript": "^5.4.0"
+  },
+  "keywords": [
+    "dramac",
+    "module",
+    "crm"
+  ],
+  "license": "MIT"
+}

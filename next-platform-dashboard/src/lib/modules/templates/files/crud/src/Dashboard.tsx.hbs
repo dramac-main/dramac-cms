@@ -1,0 +1,612 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@dramac/sdk/ui';
+import { Button } from '@dramac/sdk/ui';
+import { Input } from '@dramac/sdk/ui';
+import { Label } from '@dramac/sdk/ui';
+import { Textarea } from '@dramac/sdk/ui';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@dramac/sdk/ui';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from '@dramac/sdk/ui';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@dramac/sdk/ui';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@dramac/sdk/ui';
+import { Badge } from '@dramac/sdk/ui';
+import { useToast } from '@dramac/sdk/ui';
+import { 
+  Plus, 
+  Pencil, 
+  Trash2, 
+  Search, 
+  MoreHorizontal,
+  Download,
+  Upload,
+  RefreshCw,
+  {{#if enableAudit}}
+  History,
+  {{/if}}
+  {{#if enableSoftDelete}}
+  Archive,
+  ArchiveRestore,
+  {{/if}}
+  CheckSquare,
+  Square
+} from 'lucide-react';
+import { PermissionGuard, useModuleAuth } from '@dramac/sdk/auth';
+
+interface {{entityNamePascal}} {
+  id: string;
+  name: string;
+  description: string;
+  status: 'active' | 'inactive' | 'archived';
+  metadata: Record<string, unknown>;
+  {{#if enableSoftDelete}}
+  deleted_at: string | null;
+  {{/if}}
+  created_at: string;
+  updated_at: string;
+}
+
+{{#if enableAudit}}
+interface AuditEntry {
+  id: string;
+  record_id: string;
+  action: string;
+  changes: Record<string, unknown>;
+  performed_by: string;
+  performed_at: string;
+}
+{{/if}}
+
+export function Dashboard() {
+  const [items, setItems] = useState<{{entityNamePascal}}[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [editItem, setEditItem] = useState<{{entityNamePascal}} | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+  {{#if enableSoftDelete}}
+  const [showDeleted, setShowDeleted] = useState(false);
+  {{/if}}
+  {{#if enableAudit}}
+  const [auditHistory, setAuditHistory] = useState<AuditEntry[]>([]);
+  const [showAudit, setShowAudit] = useState(false);
+  const [auditItemId, setAuditItemId] = useState<string | null>(null);
+  {{/if}}
+  
+  const { toast } = useToast();
+  const { hasPermission } = useModuleAuth();
+  
+  const loadItems = useCallback(async () => {
+    try {
+      {{#if enableSoftDelete}}
+      const url = showDeleted 
+        ? '/api/modules/{{moduleId}}/{{entityNamePlural}}?include_deleted=true'
+        : '/api/modules/{{moduleId}}/{{entityNamePlural}}';
+      {{else}}
+      const url = '/api/modules/{{moduleId}}/{{entityNamePlural}}';
+      {{/if}}
+      const response = await fetch(url);
+      const data = await response.json();
+      setItems(data);
+    } catch (error) {
+      toast({ title: 'Error loading data', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  }, [{{#if enableSoftDelete}}showDeleted, {{/if}}toast]);
+  
+  useEffect(() => {
+    loadItems();
+  }, [loadItems]);
+  
+  async function handleSave(formData: Partial<{{entityNamePascal}}>) {
+    try {
+      const method = editItem ? 'PUT' : 'POST';
+      const url = editItem 
+        ? `/api/modules/{{moduleId}}/{{entityNamePlural}}/${editItem.id}`
+        : '/api/modules/{{moduleId}}/{{entityNamePlural}}';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!response.ok) throw new Error('Save failed');
+      
+      toast({ title: `{{entityName}} ${editItem ? 'updated' : 'created'}` });
+      setIsDialogOpen(false);
+      setEditItem(null);
+      loadItems();
+    } catch (error) {
+      toast({ title: 'Error saving {{entityName}}', variant: 'destructive' });
+    }
+  }
+  
+  async function handleDelete(id: string) {
+    try {
+      await fetch(`/api/modules/{{moduleId}}/{{entityNamePlural}}/${id}`, {
+        method: 'DELETE'
+      });
+      toast({ title: '{{entityName}} deleted' });
+      setDeleteItemId(null);
+      loadItems();
+    } catch (error) {
+      toast({ title: 'Error deleting {{entityName}}', variant: 'destructive' });
+    }
+  }
+  
+  async function handleBulkDelete() {
+    if (selectedItems.size === 0) return;
+    
+    try {
+      await fetch('/api/modules/{{moduleId}}/{{entityNamePlural}}/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: Array.from(selectedItems) })
+      });
+      toast({ title: `${selectedItems.size} items deleted` });
+      setSelectedItems(new Set());
+      loadItems();
+    } catch (error) {
+      toast({ title: 'Error deleting items', variant: 'destructive' });
+    }
+  }
+  
+  {{#if enableSoftDelete}}
+  async function handleRestore(id: string) {
+    try {
+      await fetch(`/api/modules/{{moduleId}}/{{entityNamePlural}}/${id}/restore`, {
+        method: 'POST'
+      });
+      toast({ title: '{{entityName}} restored' });
+      loadItems();
+    } catch (error) {
+      toast({ title: 'Error restoring {{entityName}}', variant: 'destructive' });
+    }
+  }
+  {{/if}}
+  
+  {{#if enableAudit}}
+  async function loadAuditHistory(id: string) {
+    try {
+      const response = await fetch(`/api/modules/{{moduleId}}/{{entityNamePlural}}/${id}/audit`);
+      const data = await response.json();
+      setAuditHistory(data);
+      setAuditItemId(id);
+      setShowAudit(true);
+    } catch (error) {
+      toast({ title: 'Error loading audit history', variant: 'destructive' });
+    }
+  }
+  {{/if}}
+  
+  async function handleExport() {
+    try {
+      const response = await fetch('/api/modules/{{moduleId}}/{{entityNamePlural}}/export');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = '{{entityNamePlural}}.csv';
+      a.click();
+      toast({ title: 'Export successful' });
+    } catch (error) {
+      toast({ title: 'Export failed', variant: 'destructive' });
+    }
+  }
+  
+  function toggleSelectAll() {
+    if (selectedItems.size === filteredItems.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(filteredItems.map(i => i.id)));
+    }
+  }
+  
+  function toggleSelect(id: string) {
+    const newSelection = new Set(selectedItems);
+    if (newSelection.has(id)) {
+      newSelection.delete(id);
+    } else {
+      newSelection.add(id);
+    }
+    setSelectedItems(newSelection);
+  }
+  
+  const filteredItems = items.filter(item =>
+    item.name.toLowerCase().includes(search.toLowerCase()) ||
+    item.description?.toLowerCase().includes(search.toLowerCase())
+  );
+  
+  const statusColors = {
+    active: 'bg-green-100 text-green-800',
+    inactive: 'bg-gray-100 text-gray-800',
+    archived: 'bg-yellow-100 text-yellow-800',
+  };
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{{moduleName}}</h1>
+        
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={loadItems}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          
+          <PermissionGuard permission="export">
+            <Button variant="outline" onClick={handleExport}>
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </Button>
+          </PermissionGuard>
+          
+          <PermissionGuard permission="create">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => setEditItem(null)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add {{entityName}}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editItem ? 'Edit' : 'Add'} {{entityName}}
+                  </DialogTitle>
+                </DialogHeader>
+                <ItemForm 
+                  item={editItem} 
+                  onSave={handleSave}
+                  onCancel={() => setIsDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          </PermissionGuard>
+        </div>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4 flex-1">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search {{entityNamePlural}}..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              {{#if enableSoftDelete}}
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="showDeleted"
+                  checked={showDeleted}
+                  onChange={e => setShowDeleted(e.target.checked)}
+                />
+                <Label htmlFor="showDeleted" className="text-sm">
+                  Show deleted
+                </Label>
+              </div>
+              {{/if}}
+            </div>
+            
+            {selectedItems.size > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {selectedItems.size} selected
+                </span>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={handleBulkDelete}
+                >
+                  Delete Selected
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8">Loading...</div>
+          ) : filteredItems.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No {{entityNamePlural}} found
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">
+                    <button onClick={toggleSelectAll}>
+                      {selectedItems.size === filteredItems.length ? (
+                        <CheckSquare className="h-4 w-4" />
+                      ) : (
+                        <Square className="h-4 w-4" />
+                      )}
+                    </button>
+                  </TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredItems.map(item => (
+                  <TableRow 
+                    key={item.id}
+                    className={{{#if enableSoftDelete}}item.deleted_at ? 'opacity-50' : ''{{else}}''{{/if}}}
+                  >
+                    <TableCell>
+                      <button onClick={() => toggleSelect(item.id)}>
+                        {selectedItems.has(item.id) ? (
+                          <CheckSquare className="h-4 w-4" />
+                        ) : (
+                          <Square className="h-4 w-4" />
+                        )}
+                      </button>
+                    </TableCell>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="max-w-[300px] truncate">
+                      {item.description}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={statusColors[item.status]}>
+                        {item.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <PermissionGuard permission="edit">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditItem(item);
+                                setIsDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                          </PermissionGuard>
+                          
+                          {{#if enableAudit}}
+                          <PermissionGuard permission="audit">
+                            <DropdownMenuItem
+                              onClick={() => loadAuditHistory(item.id)}
+                            >
+                              <History className="h-4 w-4 mr-2" />
+                              View History
+                            </DropdownMenuItem>
+                          </PermissionGuard>
+                          {{/if}}
+                          
+                          <DropdownMenuSeparator />
+                          
+                          {{#if enableSoftDelete}}
+                          {item.deleted_at ? (
+                            <PermissionGuard permission="edit">
+                              <DropdownMenuItem
+                                onClick={() => handleRestore(item.id)}
+                              >
+                                <ArchiveRestore className="h-4 w-4 mr-2" />
+                                Restore
+                              </DropdownMenuItem>
+                            </PermissionGuard>
+                          ) : (
+                            <PermissionGuard permission="delete">
+                              <DropdownMenuItem
+                                onClick={() => setDeleteItemId(item.id)}
+                                className="text-red-600"
+                              >
+                                <Archive className="h-4 w-4 mr-2" />
+                                Archive
+                              </DropdownMenuItem>
+                            </PermissionGuard>
+                          )}
+                          {{else}}
+                          <PermissionGuard permission="delete">
+                            <DropdownMenuItem
+                              onClick={() => setDeleteItemId(item.id)}
+                              className="text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </PermissionGuard>
+                          {{/if}}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+      
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteItemId} onOpenChange={() => setDeleteItemId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {{#if enableSoftDelete}}
+              This will archive the {{entityName}}. You can restore it later.
+              {{else}}
+              This action cannot be undone. This will permanently delete the {{entityName}}.
+              {{/if}}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteItemId && handleDelete(deleteItemId)}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {{#if enableSoftDelete}}Archive{{else}}Delete{{/if}}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {{#if enableAudit}}
+      {/* Audit History Dialog */}
+      <Dialog open={showAudit} onOpenChange={setShowAudit}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Audit History</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[400px] overflow-y-auto">
+            {auditHistory.length === 0 ? (
+              <p className="text-center py-4 text-muted-foreground">
+                No history available
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {auditHistory.map(entry => (
+                  <div key={entry.id} className="border-l-2 pl-4 py-2">
+                    <div className="flex items-center justify-between">
+                      <Badge>{entry.action}</Badge>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(entry.performed_at).toLocaleString()}
+                      </span>
+                    </div>
+                    {entry.changes && (
+                      <pre className="mt-2 text-xs bg-muted p-2 rounded overflow-x-auto">
+                        {JSON.stringify(entry.changes, null, 2)}
+                      </pre>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      {{/if}}
+    </div>
+  );
+}
+
+interface ItemFormProps {
+  item: {{entityNamePascal}} | null;
+  onSave: (data: Partial<{{entityNamePascal}}>) => void;
+  onCancel: () => void;
+}
+
+function ItemForm({ item, onSave, onCancel }: ItemFormProps) {
+  const [formData, setFormData] = useState({
+    name: item?.name || '',
+    description: item?.description || '',
+    status: item?.status || 'active',
+  });
+  
+  return (
+    <form
+      onSubmit={e => {
+        e.preventDefault();
+        onSave(formData);
+      }}
+      className="space-y-4"
+    >
+      <div>
+        <Label htmlFor="name">Name *</Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={e => setFormData({ ...formData, name: e.target.value })}
+          required
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
+          value={formData.description}
+          onChange={e => setFormData({ ...formData, description: e.target.value })}
+          rows={3}
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="status">Status</Label>
+        <select
+          id="status"
+          value={formData.status}
+          onChange={e => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' | 'archived' })}
+          className="w-full mt-1 p-2 border rounded-md"
+        >
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="archived">Archived</option>
+        </select>
+      </div>
+      
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">
+          {item ? 'Update' : 'Create'}
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+export default Dashboard;

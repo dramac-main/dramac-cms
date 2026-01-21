@@ -1,0 +1,87 @@
+import React from 'react';
+
+interface DashboardProps {
+  siteId?: string;
+  moduleConfig?: any;
+}
+
+export default function Dashboard({ siteId, moduleConfig }: DashboardProps) {
+  return (
+    <div className="space-y-6">
+      {/* Welcome Card */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Welcome to Test Crm
+        </h2>
+        <p className="text-gray-600">
+          A Dramac module
+        </p>
+      </div>
+
+      {/* Quick Start */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Start</h3>
+        <ul className="space-y-3">
+          <li className="flex items-start gap-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">1</span>
+            <div>
+              <p className="font-medium text-gray-900">Edit Dashboard Component</p>
+              <p className="text-sm text-gray-600">
+                Modify <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">src/Dashboard.tsx</code> to build your UI
+              </p>
+            </div>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">2</span>
+            <div>
+              <p className="font-medium text-gray-900">Define Database Tables</p>
+              <p className="text-sm text-gray-600">
+                Add tables in <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">dramac.config.ts</code>
+              </p>
+            </div>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">3</span>
+            <div>
+              <p className="font-medium text-gray-900">Create API Routes</p>
+              <p className="text-sm text-gray-600">
+                Add handlers in <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">src/api/</code>
+              </p>
+            </div>
+          </li>
+          <li className="flex items-start gap-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">4</span>
+            <div>
+              <p className="font-medium text-gray-900">Validate & Deploy</p>
+              <p className="text-sm text-gray-600">
+                Run <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">dramac validate</code> then{' '}
+                <code className="bg-gray-100 px-1.5 py-0.5 rounded text-sm">dramac deploy</code>
+              </p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      {/* Module Info */}
+      <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+        <h4 className="text-sm font-medium text-gray-700 mb-2">Module Info</h4>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-gray-500">Module ID:</span>
+            <span className="ml-2 font-mono text-gray-900">test-crm</span>
+          </div>
+          <div>
+            <span className="text-gray-500">Category:</span>
+            <span className="ml-2 text-gray-900">crm</span>
+          </div>
+          {siteId && (
+            <div>
+              <span className="text-gray-500">Site ID:</span>
+              <span className="ml-2 font-mono text-gray-900">{siteId}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

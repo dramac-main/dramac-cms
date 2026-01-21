@@ -1,0 +1,56 @@
+import { defineModule } from '@dramac/sdk';
+
+export default defineModule({
+  id: '{{moduleId}}',
+  name: '{{moduleName}}',
+  version: '1.0.0',
+  description: 'Analytics dashboard with charts and metrics',
+  icon: 'BarChart3',
+  category: 'analytics',
+  type: 'app',
+
+  entry: {
+    dashboard: './src/Dashboard.tsx',
+    settings: './src/Settings.tsx',
+  },
+
+  database: {
+    tables: [
+      {
+        name: 'analytics_events',
+        columns: [
+          { name: 'id', type: 'uuid', primaryKey: true },
+          { name: 'site_id', type: 'uuid', nullable: false },
+          { name: 'agency_id', type: 'uuid', nullable: false },
+          { name: 'event_type', type: 'text', nullable: false },
+          { name: 'event_data', type: 'jsonb' },
+          { name: 'value', type: 'numeric' },
+          { name: 'timestamp', type: 'timestamp', default: 'NOW()' }
+        ],
+        rls: [
+          {
+            name: 'site_isolation',
+            operation: 'ALL',
+            using: "site_id = current_setting('app.site_id')::uuid"
+          }
+        ],
+        indexes: [
+          { name: 'idx_analytics_timestamp', columns: ['timestamp'] },
+          { name: 'idx_analytics_event_type', columns: ['event_type'] }
+        ]
+      }
+    ]
+  },
+
+  permissions: [
+    { key: 'view', name: 'View Analytics', category: 'analytics' },
+    { key: 'export', name: 'Export Data', category: 'analytics' },
+    { key: 'manage', name: 'Manage Dashboard', category: 'analytics' }
+  ],
+
+  roles: [
+    { slug: 'admin', name: 'Admin', permissions: ['*'], hierarchyLevel: 100 },
+    { slug: 'analyst', name: 'Analyst', permissions: ['view', 'export'], hierarchyLevel: 50 },
+    { slug: 'viewer', name: 'Viewer', permissions: ['view'], hierarchyLevel: 10, isDefault: true }
+  ]
+});

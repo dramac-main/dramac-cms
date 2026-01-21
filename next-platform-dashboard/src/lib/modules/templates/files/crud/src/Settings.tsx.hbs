@@ -1,0 +1,191 @@
+'use client';
+
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@dramac/sdk/ui';
+import { Button } from '@dramac/sdk/ui';
+import { Input } from '@dramac/sdk/ui';
+import { Label } from '@dramac/sdk/ui';
+import { useToast } from '@dramac/sdk/ui';
+import { Save } from 'lucide-react';
+
+interface CrudSettings {
+  pageSize: number;
+  enableExport: boolean;
+  {{#if enableSoftDelete}}
+  autoDeleteAfterDays: number;
+  {{/if}}
+  {{#if enableAudit}}
+  auditRetentionDays: number;
+  {{/if}}
+  defaultStatus: string;
+}
+
+export function Settings() {
+  const [settings, setSettings] = useState<CrudSettings>({
+    pageSize: 25,
+    enableExport: true,
+    {{#if enableSoftDelete}}
+    autoDeleteAfterDays: 30,
+    {{/if}}
+    {{#if enableAudit}}
+    auditRetentionDays: 90,
+    {{/if}}
+    defaultStatus: 'active',
+  });
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+  
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await fetch('/api/modules/{{moduleId}}/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      toast({ title: 'Settings saved successfully' });
+    } catch (error) {
+      toast({ title: 'Error saving settings', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  }
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{{moduleName}} Settings</h1>
+        <Button onClick={handleSave} disabled={saving}>
+          <Save className="h-4 w-4 mr-2" />
+          {saving ? 'Saving...' : 'Save Settings'}
+        </Button>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Display Settings</CardTitle>
+          <CardDescription>
+            Configure how data is displayed
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="pageSize">Items per page</Label>
+            <Input
+              id="pageSize"
+              type="number"
+              value={settings.pageSize}
+              onChange={e => setSettings({
+                ...settings,
+                pageSize: parseInt(e.target.value) || 25
+              })}
+              min={10}
+              max={100}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="defaultStatus">Default status for new items</Label>
+            <select
+              id="defaultStatus"
+              value={settings.defaultStatus}
+              onChange={e => setSettings({
+                ...settings,
+                defaultStatus: e.target.value
+              })}
+              className="w-full mt-1 p-2 border rounded-md"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="enableExport"
+              checked={settings.enableExport}
+              onChange={e => setSettings({
+                ...settings,
+                enableExport: e.target.checked
+              })}
+            />
+            <Label htmlFor="enableExport">Enable data export</Label>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {{#if enableSoftDelete}}
+      <Card>
+        <CardHeader>
+          <CardTitle>Archive Settings</CardTitle>
+          <CardDescription>
+            Configure soft delete behavior
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="autoDeleteAfterDays">
+              Auto-delete archived items after (days)
+            </Label>
+            <Input
+              id="autoDeleteAfterDays"
+              type="number"
+              value={settings.autoDeleteAfterDays}
+              onChange={e => setSettings({
+                ...settings,
+                autoDeleteAfterDays: parseInt(e.target.value) || 30
+              })}
+              min={0}
+              max={365}
+            />
+            <p className="text-sm text-muted-foreground mt-1">
+              Set to 0 to disable automatic deletion
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+      {{/if}}
+      
+      {{#if enableAudit}}
+      <Card>
+        <CardHeader>
+          <CardTitle>Audit Settings</CardTitle>
+          <CardDescription>
+            Configure audit trail behavior
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="auditRetentionDays">
+              Audit log retention (days)
+            </Label>
+            <Input
+              id="auditRetentionDays"
+              type="number"
+              value={settings.auditRetentionDays}
+              onChange={e => setSettings({
+                ...settings,
+                auditRetentionDays: parseInt(e.target.value) || 90
+              })}
+              min={30}
+              max={365}
+            />
+            <p className="text-sm text-muted-foreground mt-1">
+              How long to keep audit records
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+      {{/if}}
+    </div>
+  );
+}
+
+export default Settings;

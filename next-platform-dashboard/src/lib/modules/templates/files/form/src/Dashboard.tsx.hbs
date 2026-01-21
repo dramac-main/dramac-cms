@@ -1,0 +1,278 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@dramac/sdk/ui';
+import { Button } from '@dramac/sdk/ui';
+import { Input } from '@dramac/sdk/ui';
+import { Label } from '@dramac/sdk/ui';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@dramac/sdk/ui';
+import { useToast } from '@dramac/sdk/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@dramac/sdk/ui';
+import { Badge } from '@dramac/sdk/ui';
+import { 
+  FileEdit, 
+  Send, 
+  Inbox, 
+  CheckCircle, 
+  Clock,
+  Download,
+  Eye 
+} from 'lucide-react';
+
+interface FormSubmission {
+  id: string;
+  form_id: string;
+  data: Record<string, string>;
+  status: 'pending' | 'processed' | 'archived';
+  submitted_by: string;
+  submitted_at: string;
+  processed_at?: string;
+}
+
+// Form field configuration
+const formFields = [
+  {{#each formFieldNames}}
+  { name: '{{this}}', label: '{{toTitleCase this}}', type: 'text', required: true },
+  {{/each}}
+];
+
+export function Dashboard() {
+  const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('form');
+  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
+  
+  useEffect(() => {
+    loadSubmissions();
+  }, []);
+  
+  async function loadSubmissions() {
+    try {
+      const response = await fetch('/api/modules/{{moduleId}}/submissions');
+      const data = await response.json();
+      setSubmissions(data);
+    } catch (error) {
+      toast({ title: 'Error loading submissions', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  }
+  
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    
+    try {
+      const response = await fetch('/api/modules/{{moduleId}}/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: formData }),
+      });
+      
+      if (!response.ok) throw new Error('Submit failed');
+      
+      toast({ title: 'Form submitted successfully' });
+      setFormData({});
+      loadSubmissions();
+    } catch (error) {
+      toast({ title: 'Error submitting form', variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+  
+  async function handleExport() {
+    try {
+      const response = await fetch('/api/modules/{{moduleId}}/submissions/export');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'submissions.csv';
+      a.click();
+      toast({ title: 'Export successful' });
+    } catch (error) {
+      toast({ title: 'Export failed', variant: 'destructive' });
+    }
+  }
+  
+  const pendingCount = submissions.filter(s => s.status === 'pending').length;
+  const processedCount = submissions.filter(s => s.status === 'processed').length;
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{{moduleName}}</h1>
+        <Button variant="outline" onClick={handleExport}>
+          <Download className="h-4 w-4 mr-2" />
+          Export
+        </Button>
+      </div>
+      
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Submissions</CardTitle>
+            <Inbox className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{submissions.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <Clock className="h-4 w-4 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingCount}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Processed</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{processedCount}</div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="form">
+            <FileEdit className="h-4 w-4 mr-2" />
+            Form
+          </TabsTrigger>
+          <TabsTrigger value="submissions">
+            <Inbox className="h-4 w-4 mr-2" />
+            Submissions
+            {pendingCount > 0 && (
+              <Badge variant="destructive" className="ml-2">
+                {pendingCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="form" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Submit Form</CardTitle>
+              <CardDescription>
+                Fill out the form below to submit
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {formFields.map(field => (
+                  <div key={field.name}>
+                    <Label htmlFor={field.name}>
+                      {field.label}
+                      {field.required && <span className="text-red-500 ml-1">*</span>}
+                    </Label>
+                    <Input
+                      id={field.name}
+                      type={field.type}
+                      value={formData[field.name] || ''}
+                      onChange={e => setFormData({
+                        ...formData,
+                        [field.name]: e.target.value
+                      })}
+                      required={field.required}
+                    />
+                  </div>
+                ))}
+                
+                <Button type="submit" disabled={submitting}>
+                  <Send className="h-4 w-4 mr-2" />
+                  {submitting ? 'Submitting...' : 'Submit'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="submissions" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Submissions</CardTitle>
+              <CardDescription>
+                View and manage form submissions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-8">Loading...</div>
+              ) : submissions.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No submissions yet
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      {{#each formFieldNames}}
+                      <TableHead>{{toTitleCase this}}</TableHead>
+                      {{/each}}
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {submissions.map(submission => (
+                      <TableRow key={submission.id}>
+                        <TableCell>
+                          {new Date(submission.submitted_at).toLocaleDateString()}
+                        </TableCell>
+                        {{#each formFieldNames}}
+                        <TableCell>{submission.data.{{this}}}</TableCell>
+                        {{/each}}
+                        <TableCell>
+                          <Badge
+                            variant={
+                              submission.status === 'processed' ? 'default' :
+                              submission.status === 'pending' ? 'secondary' :
+                              'outline'
+                            }
+                          >
+                            {submission.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="icon">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+export default Dashboard;

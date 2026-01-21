@@ -1,0 +1,130 @@
+import { createHandler } from '@dramac/sdk';
+
+/**
+ * API Routes for {{itemNamePlural}}
+ * Auto-generated from data-list template
+ */
+
+// GET /api/modules/{{moduleId}}/{{itemNamePlural}}
+export const get = createHandler(async (req, ctx) => {
+  const { searchParams } = new URL(req.url);
+  const page = parseInt(searchParams.get('page') || '1');
+  const limit = parseInt(searchParams.get('limit') || '10');
+  const search = searchParams.get('search') || '';
+  
+  let query = ctx.db.from('{{itemNamePlural}}').select('*');
+  
+  // Apply search filter if provided
+  if (search) {
+    query = query.or(
+      {{#each fieldNames}}
+      '{{this}}.ilike.%${search}%'{{#unless @last}},{{/unless}}
+      {{/each}}
+    );
+  }
+  
+  // Apply pagination
+  const offset = (page - 1) * limit;
+  query = query.range(offset, offset + limit - 1);
+  
+  const { data, error, count } = await query;
+  
+  if (error) throw error;
+  
+  return {
+    data,
+    pagination: {
+      page,
+      limit,
+      total: count || 0,
+      totalPages: Math.ceil((count || 0) / limit)
+    }
+  };
+});
+
+// POST /api/modules/{{moduleId}}/{{itemNamePlural}}
+export const post = createHandler(async (req, ctx) => {
+  const body = await req.json();
+  
+  const { data, error } = await ctx.db
+    .from('{{itemNamePlural}}')
+    .insert({
+      ...body,
+      site_id: ctx.siteId,
+      agency_id: ctx.agencyId,
+      created_by: ctx.userId,
+      created_at: new Date().toISOString(),
+    })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  
+  return data;
+});
+
+// GET /api/modules/{{moduleId}}/{{itemNamePlural}}/:id
+export const getById = createHandler(async (req, ctx) => {
+  const { data, error } = await ctx.db
+    .from('{{itemNamePlural}}')
+    .select('*')
+    .eq('id', ctx.params.id)
+    .single();
+  
+  if (error) throw error;
+  if (!data) {
+    throw new Error('{{itemName}} not found');
+  }
+  
+  return data;
+});
+
+// PUT /api/modules/{{moduleId}}/{{itemNamePlural}}/:id
+export const put = createHandler(async (req, ctx) => {
+  const body = await req.json();
+  
+  const { data, error } = await ctx.db
+    .from('{{itemNamePlural}}')
+    .update({
+      ...body,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', ctx.params.id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  
+  return data;
+});
+
+// DELETE /api/modules/{{moduleId}}/{{itemNamePlural}}/:id
+export const del = createHandler(async (req, ctx) => {
+  const { error } = await ctx.db
+    .from('{{itemNamePlural}}')
+    .delete()
+    .eq('id', ctx.params.id);
+  
+  if (error) throw error;
+  
+  return { success: true };
+});
+
+// PATCH /api/modules/{{moduleId}}/{{itemNamePlural}}/:id
+export const patch = createHandler(async (req, ctx) => {
+  const body = await req.json();
+  
+  const { data, error } = await ctx.db
+    .from('{{itemNamePlural}}')
+    .update({
+      ...body,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', ctx.params.id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  
+  return data;
+});

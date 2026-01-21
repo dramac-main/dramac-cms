@@ -1,0 +1,116 @@
+'use client';
+
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@dramac/sdk/ui';
+import { Button } from '@dramac/sdk/ui';
+import { Input } from '@dramac/sdk/ui';
+import { Label } from '@dramac/sdk/ui';
+import { useToast } from '@dramac/sdk/ui';
+import { Save } from 'lucide-react';
+
+interface Settings {
+  pageSize: number;
+  enableExport: boolean;
+  dateFormat: string;
+}
+
+export function Settings() {
+  const [settings, setSettings] = useState<Settings>({
+    pageSize: 10,
+    enableExport: true,
+    dateFormat: 'MM/dd/yyyy',
+  });
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+  
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await fetch('/api/modules/{{moduleId}}/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      toast({ title: 'Settings saved successfully' });
+    } catch (error) {
+      toast({ title: 'Error saving settings', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  }
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{{moduleName}} Settings</h1>
+        <Button onClick={handleSave} disabled={saving}>
+          <Save className="h-4 w-4 mr-2" />
+          {saving ? 'Saving...' : 'Save Settings'}
+        </Button>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Display Settings</CardTitle>
+          <CardDescription>
+            Configure how {{itemNamePlural}} are displayed
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="pageSize">Items per page</Label>
+            <Input
+              id="pageSize"
+              type="number"
+              value={settings.pageSize}
+              onChange={e => setSettings({
+                ...settings,
+                pageSize: parseInt(e.target.value) || 10
+              })}
+              min={5}
+              max={100}
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="enableExport"
+              checked={settings.enableExport}
+              onChange={e => setSettings({
+                ...settings,
+                enableExport: e.target.checked
+              })}
+            />
+            <Label htmlFor="enableExport">Enable data export</Label>
+          </div>
+          
+          <div>
+            <Label htmlFor="dateFormat">Date format</Label>
+            <select
+              id="dateFormat"
+              value={settings.dateFormat}
+              onChange={e => setSettings({
+                ...settings,
+                dateFormat: e.target.value
+              })}
+              className="w-full mt-1 p-2 border rounded-md"
+            >
+              <option value="MM/dd/yyyy">MM/DD/YYYY</option>
+              <option value="dd/MM/yyyy">DD/MM/YYYY</option>
+              <option value="yyyy-MM-dd">YYYY-MM-DD</option>
+            </select>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default Settings;

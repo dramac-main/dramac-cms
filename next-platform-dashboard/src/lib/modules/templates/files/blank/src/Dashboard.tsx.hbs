@@ -1,0 +1,45 @@
+'use client';
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@dramac/sdk/ui';
+
+export function Dashboard() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{{moduleName}}</h1>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Welcome to {{moduleName}}</CardTitle>
+          <CardDescription>
+            {{description}}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground">
+            Start building your module by editing this dashboard component.
+          </p>
+          
+          <div className="mt-4 p-4 bg-muted rounded-lg">
+            <h3 className="font-medium mb-2">Getting Started</h3>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• Edit <code>src/Dashboard.tsx</code> to customize this page</li>
+              <li>• Add database tables in <code>dramac.config.ts</code></li>
+              <li>• Create API routes in <code>src/api/</code></li>
+              <li>• Add settings in <code>src/Settings.tsx</code></li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default Dashboard;

@@ -1,0 +1,26 @@
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import Dashboard from './Dashboard';
+
+// Development entry point
+const container = document.getElementById('root');
+if (container) {
+  const root = createRoot(container);
+  root.render(
+    <React.StrictMode>
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <h1 className="text-xl font-semibold text-gray-900">Test Crm</h1>
+          <p className="text-sm text-gray-500">Development Preview</p>
+        </header>
+        <main className="p-6">
+          <Dashboard />
+        </main>
+      </div>
+    </React.StrictMode>
+  );
+}
+
+// Export components for Dramac runtime
+export { default as Dashboard } from './Dashboard';
+export { default as Settings } from './Settings';

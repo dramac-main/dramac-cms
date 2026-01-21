@@ -1,0 +1,260 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@dramac/sdk/ui';
+import { Button } from '@dramac/sdk/ui';
+import { Input } from '@dramac/sdk/ui';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@dramac/sdk/ui';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@dramac/sdk/ui';
+import { Label } from '@dramac/sdk/ui';
+import { useToast } from '@dramac/sdk/ui';
+import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { PermissionGuard, useModuleAuth } from '@dramac/sdk/auth';
+
+interface {{itemNamePascal}} {
+  id: string;
+  {{#each fieldNames}}
+  {{this}}: string;
+  {{/each}}
+  created_at: string;
+}
+
+export function Dashboard() {
+  const [items, setItems] = useState<{{itemNamePascal}}[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [editItem, setEditItem] = useState<{{itemNamePascal}} | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
+  const { toast } = useToast();
+  const { hasPermission } = useModuleAuth();
+  
+  useEffect(() => {
+    loadItems();
+  }, []);
+  
+  async function loadItems() {
+    try {
+      const response = await fetch('/api/modules/{{moduleId}}/{{itemNamePlural}}');
+      const data = await response.json();
+      setItems(data);
+    } catch (error) {
+      toast({ title: 'Error loading {{itemNamePlural}}', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  }
+  
+  async function handleSave(formData: Partial<{{itemNamePascal}}>) {
+    try {
+      const method = editItem ? 'PUT' : 'POST';
+      const url = editItem 
+        ? `/api/modules/{{moduleId}}/{{itemNamePlural}}/${editItem.id}`
+        : '/api/modules/{{moduleId}}/{{itemNamePlural}}';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      if (!response.ok) throw new Error('Save failed');
+      
+      toast({ title: `{{itemName}} ${editItem ? 'updated' : 'created'}` });
+      setIsDialogOpen(false);
+      setEditItem(null);
+      loadItems();
+    } catch (error) {
+      toast({ title: 'Error saving {{itemName}}', variant: 'destructive' });
+    }
+  }
+  
+  async function handleDelete(id: string) {
+    if (!confirm('Are you sure you want to delete this {{itemName}}?')) return;
+    
+    try {
+      await fetch(`/api/modules/{{moduleId}}/{{itemNamePlural}}/${id}`, {
+        method: 'DELETE'
+      });
+      toast({ title: '{{itemName}} deleted' });
+      loadItems();
+    } catch (error) {
+      toast({ title: 'Error deleting {{itemName}}', variant: 'destructive' });
+    }
+  }
+  
+  const filteredItems = items.filter(item =>
+    Object.values(item).some(val =>
+      String(val).toLowerCase().includes(search.toLowerCase())
+    )
+  );
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{{moduleName}}</h1>
+        
+        <PermissionGuard permission="create">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setEditItem(null)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add {{itemName}}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  {editItem ? 'Edit' : 'Add'} {{itemName}}
+                </DialogTitle>
+              </DialogHeader>
+              <ItemForm 
+                item={editItem} 
+                onSave={handleSave}
+                onCancel={() => setIsDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </PermissionGuard>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search {{itemNamePlural}}..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8">Loading...</div>
+          ) : filteredItems.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No {{itemNamePlural}} found
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {{#each fieldNames}}
+                  <TableHead>{{toTitleCase this}}</TableHead>
+                  {{/each}}
+                  <TableHead>Created</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredItems.map(item => (
+                  <TableRow key={item.id}>
+                    {{#each fieldNames}}
+                    <TableCell>{item.{{this}}}</TableCell>
+                    {{/each}}
+                    <TableCell>
+                      {new Date(item.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <PermissionGuard permission="edit">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setEditItem(item);
+                              setIsDialogOpen(true);
+                            }}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </PermissionGuard>
+                        <PermissionGuard permission="delete">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </PermissionGuard>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+interface ItemFormProps {
+  item: {{itemNamePascal}} | null;
+  onSave: (data: Partial<{{itemNamePascal}}>) => void;
+  onCancel: () => void;
+}
+
+function ItemForm({ item, onSave, onCancel }: ItemFormProps) {
+  const [formData, setFormData] = useState({
+    {{#each fieldNames}}
+    {{this}}: item?.{{this}} || '',
+    {{/each}}
+  });
+  
+  return (
+    <form
+      onSubmit={e => {
+        e.preventDefault();
+        onSave(formData);
+      }}
+      className="space-y-4"
+    >
+      {{#each fieldNames}}
+      <div>
+        <Label htmlFor="{{this}}">{{toTitleCase this}}</Label>
+        <Input
+          id="{{this}}"
+          value={formData.{{this}}}
+          onChange={e => setFormData({ ...formData, {{this}}: e.target.value })}
+        />
+      </div>
+      {{/each}}
+      
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit">
+          {item ? 'Update' : 'Create'}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+export default Dashboard;

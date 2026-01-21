@@ -1,0 +1,155 @@
+'use client';
+
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@dramac/sdk/ui';
+import { Button } from '@dramac/sdk/ui';
+import { Input } from '@dramac/sdk/ui';
+import { Label } from '@dramac/sdk/ui';
+import { useToast } from '@dramac/sdk/ui';
+import { Save } from 'lucide-react';
+
+interface FormSettings {
+  submitButtonText: string;
+  successMessage: string;
+  enableEmailNotifications: boolean;
+  notificationEmail: string;
+  requireAuthentication: boolean;
+}
+
+export function Settings() {
+  const [settings, setSettings] = useState<FormSettings>({
+    submitButtonText: 'Submit',
+    successMessage: 'Thank you for your submission!',
+    enableEmailNotifications: true,
+    notificationEmail: '',
+    requireAuthentication: false,
+  });
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+  
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await fetch('/api/modules/{{moduleId}}/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      toast({ title: 'Settings saved successfully' });
+    } catch (error) {
+      toast({ title: 'Error saving settings', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  }
+  
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">{{moduleName}} Settings</h1>
+        <Button onClick={handleSave} disabled={saving}>
+          <Save className="h-4 w-4 mr-2" />
+          {saving ? 'Saving...' : 'Save Settings'}
+        </Button>
+      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Form Settings</CardTitle>
+          <CardDescription>
+            Configure how the form behaves
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="submitButtonText">Submit button text</Label>
+            <Input
+              id="submitButtonText"
+              value={settings.submitButtonText}
+              onChange={e => setSettings({
+                ...settings,
+                submitButtonText: e.target.value
+              })}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="successMessage">Success message</Label>
+            <Input
+              id="successMessage"
+              value={settings.successMessage}
+              onChange={e => setSettings({
+                ...settings,
+                successMessage: e.target.value
+              })}
+            />
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="requireAuthentication"
+              checked={settings.requireAuthentication}
+              onChange={e => setSettings({
+                ...settings,
+                requireAuthentication: e.target.checked
+              })}
+            />
+            <Label htmlFor="requireAuthentication">
+              Require authentication to submit
+            </Label>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Notifications</CardTitle>
+          <CardDescription>
+            Configure email notifications for new submissions
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="enableEmailNotifications"
+              checked={settings.enableEmailNotifications}
+              onChange={e => setSettings({
+                ...settings,
+                enableEmailNotifications: e.target.checked
+              })}
+            />
+            <Label htmlFor="enableEmailNotifications">
+              Send email notifications for new submissions
+            </Label>
+          </div>
+          
+          {settings.enableEmailNotifications && (
+            <div>
+              <Label htmlFor="notificationEmail">Notification email</Label>
+              <Input
+                id="notificationEmail"
+                type="email"
+                value={settings.notificationEmail}
+                onChange={e => setSettings({
+                  ...settings,
+                  notificationEmail: e.target.value
+                })}
+                placeholder="admin@example.com"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default Settings;

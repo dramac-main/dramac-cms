@@ -1,0 +1,30 @@
+import { defineModule } from '@dramac/sdk';
+
+export default defineModule({
+  id: '{{moduleId}}',
+  name: '{{moduleName}}',
+  version: '1.0.0',
+  description: '{{description}}',
+  icon: 'Box',
+  category: 'utility',
+  type: 'app',
+
+  entry: {
+    dashboard: './src/Dashboard.tsx',
+    settings: './src/Settings.tsx',
+  },
+
+  database: {
+    tables: []
+  },
+
+  permissions: [
+    { key: 'view', name: 'View Module', category: 'general' },
+    { key: 'manage', name: 'Manage Module', category: 'general' }
+  ],
+
+  roles: [
+    { slug: 'admin', name: 'Admin', permissions: ['*'], hierarchyLevel: 100 },
+    { slug: 'viewer', name: 'Viewer', permissions: ['view'], hierarchyLevel: 10, isDefault: true }
+  ]
+});

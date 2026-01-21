@@ -1,0 +1,75 @@
+# Test Crm
+
+A Dramac module
+
+## Installation
+
+This module can be installed from the Dramac Marketplace.
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+dramac dev
+
+# Build for production
+dramac build
+
+# Validate configuration
+dramac validate
+
+# Deploy to marketplace
+dramac deploy
+```
+
+## Project Structure
+
+```
+test-crm/
+├── dramac.config.ts    # Module configuration
+├── package.json
+├── tsconfig.json
+├── index.html          # Dev server entry
+├── src/
+│   ├── main.tsx        # Entry point
+│   ├── Dashboard.tsx   # Main dashboard component
+│   ├── Settings.tsx    # Settings panel
+│   ├── components/     # Reusable components
+│   └── api/            # API routes
+└── README.md
+```
+
+## Configuration
+
+Edit `dramac.config.ts` to configure:
+
+- **Database tables**: Define your module's data schema
+- **Permissions**: Access control for module features
+- **Roles**: Default roles for module users
+- **Entry points**: Dashboard, settings, and embed components
+
+## API Routes
+
+API routes are defined in `src/api/`. Each file exports handlers for HTTP methods:
+
+```typescript
+// src/api/items.ts
+export async function get(ctx) {
+  const { data } = await ctx.db.from('items').select();
+  return { items: data };
+}
+
+export async function post(ctx) {
+  const { data } = await ctx.db.from('items').insert(ctx.body);
+  return { item: data };
+}
+```
+
+Routes are available at `/api/modules/test-crm/[route]`.
+
+## License
+
+MIT © 2026
