@@ -1,16 +1,18 @@
 /**
  * Module Database Provisioner
  * 
- * Phase EM-10: Database provisioning for modules with database capabilities
+ * Phase EM-10 & EM-11: Database provisioning for modules with database capabilities
  * 
  * This module handles:
  * - Creating module tables with proper prefixes
  * - Setting up RLS policies
  * - Creating indexes and triggers
  * - Deprovisioning when modules are deleted
+ * - Registering module databases in the registry (EM-11)
  * 
- * IMPORTANT: This file only contains the provisioning logic and type definitions.
- * The actual database operations are delegated to EM-11 for full implementation.
+ * Uses exec_ddl function for DDL operations (EM-11 migration required)
+ * 
+ * @see phases/enterprise-modules/PHASE-EM-11-DATABASE-PER-MODULE.md
  */
 'use server'
 
@@ -187,6 +189,16 @@ export async function provisionModuleDatabase(
       })
       .eq('id', moduleId)
 
+    // Register in module_database_registry (EM-11)
+    await registerModuleInRegistry(db, {
+      moduleId,
+      shortId,
+      usesSchema: dbIsolation === 'schema',
+      schemaName: dbIsolation === 'schema' ? `mod_${shortId}` : null,
+      tableNames: resources.tables.map(t => t.name),
+      fullTableNames: tablesCreated
+    })
+
     console.log(`[ModuleDB] Provisioned ${tablesCreated.length} tables for module ${moduleId}`)
 
     return { 
@@ -201,6 +213,41 @@ export async function provisionModuleDatabase(
       success: false, 
       error: error instanceof Error ? error.message : 'Database provisioning failed' 
     }
+  }
+}
+
+/**
+ * Register module database in the registry (EM-11)
+ */
+async function registerModuleInRegistry(
+  db: UntypedSupabaseClient,
+  info: {
+    moduleId: string
+    shortId: string
+    usesSchema: boolean
+    schemaName: string | null
+    tableNames: string[]
+    fullTableNames: string[]
+  }
+): Promise<void> {
+  try {
+    await db
+      .from('module_database_registry')
+      .upsert({
+        module_id: info.moduleId,
+        module_short_id: info.shortId,
+        uses_schema: info.usesSchema,
+        schema_name: info.schemaName,
+        table_names: info.tableNames,
+        full_table_names: info.fullTableNames,
+        status: 'active',
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'module_short_id'
+      })
+  } catch (error) {
+    console.warn('[ModuleDB] Failed to register in database registry:', error)
+    // Non-fatal - provisioning still succeeded
   }
 }
 
@@ -259,6 +306,9 @@ export async function deprovisionModuleDatabase(
       }
     }
 
+    // Remove from registry (EM-11)
+    await removeFromRegistry(db, shortId)
+
     console.log(`[ModuleDB] Deprovisioned resources for module ${moduleId}`)
 
     return { 
@@ -273,6 +323,24 @@ export async function deprovisionModuleDatabase(
       success: false, 
       error: error instanceof Error ? error.message : 'Database deprovisioning failed'
     }
+  }
+}
+
+/**
+ * Remove module from database registry (EM-11)
+ */
+async function removeFromRegistry(
+  db: UntypedSupabaseClient,
+  shortId: string
+): Promise<void> {
+  try {
+    await db
+      .from('module_database_registry')
+      .delete()
+      .eq('module_short_id', shortId)
+  } catch (error) {
+    console.warn('[ModuleDB] Failed to remove from database registry:', error)
+    // Non-fatal
   }
 }
 
