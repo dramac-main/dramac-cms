@@ -61,7 +61,29 @@ import { cn } from "@/lib/utils";
 
 // Dynamic import for Monaco Editor
 const Editor = dynamic(
-  () => import("@monaco-editor/react").then((mod) => mod.default),
+  () => import("@monaco-editor/react").then((mod) => {
+    // Configure Monaco to use CDN instead of local files
+    if (typeof window !== 'undefined') {
+      (window as any).MonacoEnvironment = {
+        getWorkerUrl: function (_moduleId: any, label: string) {
+          if (label === 'json') {
+            return 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/language/json/json.worker.js';
+          }
+          if (label === 'css' || label === 'scss' || label === 'less') {
+            return 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/language/css/css.worker.js';
+          }
+          if (label === 'html' || label === 'handlebars' || label === 'razor') {
+            return 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/language/html/html.worker.js';
+          }
+          if (label === 'typescript' || label === 'javascript') {
+            return 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/language/typescript/ts.worker.js';
+          }
+          return 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/editor/editor.worker.js';
+        }
+      };
+    }
+    return mod.default;
+  }),
   {
     ssr: false,
     loading: () => (

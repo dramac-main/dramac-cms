@@ -37,6 +37,10 @@ const nextConfig: NextConfig = {
             key: "Referrer-Policy",
             value: "origin-when-cross-origin",
           },
+          {
+            key: "Content-Security-Policy",
+            value: "worker-src 'self' blob: https://cdn.jsdelivr.net;",
+          },
         ],
       },
     ];
