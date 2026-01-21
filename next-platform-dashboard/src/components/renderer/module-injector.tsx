@@ -169,6 +169,9 @@ export async function ModuleInjector({ siteId }: ModuleInjectorProps) {
       
       const transpiledCode = transpileForBrowser(mod.render_code || "");
       
+      // Log the transpiled code for debugging
+      console.log(`[ModuleInjector] Transpiled code for ${mod.slug}:`, transpiledCode.substring(0, 200));
+      
       return `
 (function() {
   "use strict";
