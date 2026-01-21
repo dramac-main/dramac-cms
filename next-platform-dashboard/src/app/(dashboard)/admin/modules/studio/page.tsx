@@ -11,6 +11,7 @@ import {
   Settings2,
   RefreshCw,
   TestTube2,
+  Sparkles,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -108,6 +109,12 @@ export default async function ModuleStudioPage() {
             <Link href="/admin/modules/studio/sync">
               <RefreshCw className="h-4 w-4 mr-2" />
               Sync Dashboard
+            </Link>
+          </Button>
+          <Button variant="secondary" asChild>
+            <Link href="/admin/modules/studio/ai-builder">
+              <Sparkles className="h-4 w-4 mr-2" />
+              AI Builder
             </Link>
           </Button>
           <Button asChild>
