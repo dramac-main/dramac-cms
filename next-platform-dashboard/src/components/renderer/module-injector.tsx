@@ -23,22 +23,38 @@ interface SiteModuleData {
  * Removes TypeScript syntax and converts ES6 exports.
  */
 function transpileForBrowser(code: string): string {
-  return code
-    // Remove TypeScript type annotations
-    .replace(/:\s*\w+(\[\])?(\s*[,\)=])/g, "$2")
-    .replace(/:\s*\w+(\[\])?(\s*{)/g, "$2")
-    .replace(/<\w+>/g, "")
+  // Remove TypeScript-specific syntax
+  let result = code
+    // Remove interface declarations
     .replace(/interface\s+\w+\s*{[^}]*}/g, "")
+    // Remove type declarations
     .replace(/type\s+\w+\s*=\s*[^;]+;/g, "")
-    // Convert exports to browser-compatible format
-    .replace(/export\s+default\s+function\s+(\w+)/g, "var ModuleComponent = function $1")
-    .replace(/export\s+default\s+/g, "var ModuleComponent = ")
-    .replace(/export\s+function\s+(\w+)/g, "var $1 = function")
-    .replace(/export\s+const\s+(\w+)/g, "var $1")
-    .replace(/export\s+{[^}]*}/g, "")
+    // Remove generic type parameters
+    .replace(/<[\w\s,|&]+>/g, "")
     // Remove import statements
-    .replace(/import\s+.*?from\s+['"][^'"]+['"];?\n?/g, "")
-    .replace(/import\s+['"][^'"]+['"];?\n?/g, "");
+    .replace(/import\s+.*?from\s+['"][^'"]+['"];?\s*/g, "")
+    .replace(/import\s+['"][^'"]+['"];?\s*/g, "");
+
+  // Handle export default patterns (preserve function name if present)
+  if (result.includes("export default function")) {
+    result = result.replace(
+      /export\s+default\s+function\s+(\w+)/g,
+      "var ModuleComponent = function $1"
+    );
+  } else if (result.includes("export default")) {
+    result = result.replace(
+      /export\s+default\s+/g,
+      "var ModuleComponent = "
+    );
+  }
+
+  // Handle other export patterns
+  result = result
+    .replace(/export\s+function\s+(\w+)/g, "var $1 = function $1")
+    .replace(/export\s+const\s+(\w+)/g, "var $1")
+    .replace(/export\s+\{[^}]*\}/g, "");
+
+  return result;
 }
 
 /**
