@@ -91,8 +91,7 @@ export async function ModuleInjector({ siteId }: ModuleInjectorProps) {
     const { data: v2Modules, error: v2Error } = await db
       .from("modules_v2")
       .select("id, slug, name, source, render_code, styles, settings_schema, default_settings")
-      .in("id", moduleIds)
-      .eq("is_active", true);
+      .in("id", moduleIds);
 
     if (v2Error) {
       console.error("[ModuleInjector] Error fetching modules_v2:", v2Error);
