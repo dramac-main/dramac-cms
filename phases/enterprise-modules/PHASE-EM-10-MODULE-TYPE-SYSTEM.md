@@ -7,6 +7,21 @@
 
 ---
 
+## 🔗 Relationship to Other Phases
+
+**This phase ONLY defines the type system and capabilities schema.**
+
+| Related Phase | Responsibility |
+|---------------|----------------|
+| **EM-10 (This)** | Defines `ModuleType`, `ModuleCapabilities`, validation logic |
+| **EM-11** | Implements database provisioning (uses capabilities from EM-10) |
+| **EM-12** | Implements API gateway (uses capabilities from EM-10) |
+
+**DO NOT** duplicate database provisioner code here - that belongs in EM-11.
+**DO NOT** duplicate API gateway code here - that belongs in EM-12.
+
+---
+
 ## 🎯 Objective
 
 Implement a comprehensive module classification and capability system that supports:

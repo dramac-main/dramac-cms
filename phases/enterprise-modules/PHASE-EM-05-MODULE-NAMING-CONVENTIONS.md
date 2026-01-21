@@ -7,6 +7,27 @@
 
 ---
 
+## 🔗 Integration with Other Phases
+
+This phase creates utilities used by many other phases:
+
+| Phase | How It Uses EM-05 |
+|-------|-------------------|
+| **EM-01** | `syncModuleToMarketplace()` stores `short_id` in modules_v2 |
+| **EM-10** | Module type system determines isolation level (widget/app/system) |
+| **EM-11** | Database provisioner uses `getModuleSchemaName()` to create schemas |
+| **EM-12** | API gateway uses module naming for route prefixes |
+| **EM-50+** | All enterprise modules use schema naming for tables |
+
+**Files Created:**
+- `src/lib/modules/module-naming.ts` - Core naming utilities (NEW)
+
+**Database Tables:**
+- `module_database_registry` - Tracks all module database objects
+- `reserved_table_names` - Prevents platform table conflicts
+
+---
+
 ## 🎯 Objective
 
 Establish a **bulletproof naming convention** for module database objects that:

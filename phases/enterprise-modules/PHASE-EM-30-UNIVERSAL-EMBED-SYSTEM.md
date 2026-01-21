@@ -7,6 +7,18 @@
 
 ---
 
+## 🔗 Key Dependencies from Previous Phases
+
+This phase builds on functions implemented in earlier phases:
+
+| Function | From Phase | Purpose |
+|----------|------------|---------|
+| `loadStudioModuleForRender()` | EM-01 | Loads module render code from modules_v2 or module_source |
+| `loadSiteModulesForRender()` | EM-01 | Loads all enabled modules for a site |
+| `ModuleType` enum | EM-10 | Determines module capabilities and isolation level |
+
+---
+
 ## 🎯 Objective
 
 Create a **Universal Embedding System** that allows modules to work on ANY website - whether built on DRAMAC or not. This is critical for making modules truly valuable as standalone products.
