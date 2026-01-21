@@ -206,6 +206,13 @@ export async function ModuleInjector({ siteId }: ModuleInjectorProps) {
 
     return (
       <>
+        {/* Debug info */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `console.log('[ModuleInjector] Component loaded - siteId: ${siteId}');`
+          }}
+        />
+        
         {/* Module Styles */}
         {styles && (
           <style 
