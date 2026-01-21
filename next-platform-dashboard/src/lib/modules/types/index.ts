@@ -19,6 +19,9 @@ export * from "./module-hooks";
 // Pricing types
 export * from "./module-pricing";
 
+// Module Types V2 - Enterprise Module System (EM-10)
+export * from "./module-types-v2";
+
 // Convenience alias - ModuleHookName is the same as ModuleHook
 export { type ModuleHook as ModuleHookName } from "./module-manifest";
 

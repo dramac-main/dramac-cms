@@ -3,11 +3,23 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Loader2, Code, Info } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Code, Info, Database, Settings2, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModuleConfigForm } from "@/components/admin/modules/module-config-form";
 import { ModuleCodeEditor } from "@/components/admin/modules/module-code-editor";
+import { ModuleTypeSelector } from "@/components/admin/modules/module-type-selector";
+import { DatabaseSchemaBuilder } from "@/components/admin/modules/database-schema-builder";
 import { createModule, validateModuleCode } from "@/lib/modules/module-builder";
+import { 
+  getDefaultCapabilities, 
+  getDefaultIsolation, 
+  getDefaultResources,
+  type ModuleType, 
+  type ModuleCapabilities,
+  type DatabaseIsolation,
+  type ModuleTable
+} from "@/lib/modules/types/module-types-v2";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -103,6 +115,7 @@ const DEFAULT_STYLES = `/* Module Custom Styles */
 export default function CreateModulePage() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("basics");
 
   // Form state
   const [name, setName] = useState("");
@@ -112,6 +125,12 @@ export default function CreateModulePage() {
   const [category, setCategory] = useState("other");
   const [pricingTier, setPricingTier] = useState("free");
   const [dependencies, setDependencies] = useState<string[]>([]);
+
+  // Phase EM-10: Module Type System state
+  const [moduleType, setModuleType] = useState<ModuleType>("widget");
+  const [capabilities, setCapabilities] = useState<ModuleCapabilities>(getDefaultCapabilities("widget"));
+  const [dbIsolation, setDbIsolation] = useState<DatabaseIsolation>(getDefaultIsolation("widget"));
+  const [tables, setTables] = useState<ModuleTable[]>([]);
 
   // Code state
   const [renderCode, setRenderCode] = useState(DEFAULT_RENDER_CODE);
@@ -204,6 +223,17 @@ export default function CreateModulePage() {
         styles,
         defaultSettings: {},
         dependencies,
+        // Phase EM-10: Module Type System
+        moduleType,
+        dbIsolation,
+        capabilities,
+        resources: capabilities.has_database ? {
+          tables,
+          storage_buckets: [],
+          edge_functions: [],
+          scheduled_jobs: [],
+          webhooks: []
+        } : getDefaultResources(),
       });
 
       if (result.success) {
@@ -255,20 +285,36 @@ export default function CreateModulePage() {
         </Button>
       </div>
 
-      {/* Help Alert */}
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          Modules are reusable components that can be installed on sites. 
-          The render code defines how your module looks, the settings schema defines
-          what options users can configure, and styles add custom CSS.
-        </AlertDescription>
-      </Alert>
+      {/* Tabbed Interface */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="basics" className="flex items-center gap-2">
+            <Settings2 className="h-4 w-4" />
+            Basics
+          </TabsTrigger>
+          <TabsTrigger value="type" className="flex items-center gap-2">
+            <Layers className="h-4 w-4" />
+            Type & Capabilities
+          </TabsTrigger>
+          <TabsTrigger value="database" className="flex items-center gap-2" disabled={!capabilities.has_database}>
+            <Database className="h-4 w-4" />
+            Database
+          </TabsTrigger>
+          <TabsTrigger value="code" className="flex items-center gap-2">
+            <Code className="h-4 w-4" />
+            Code
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Left: Configuration */}
-        <div>
+        {/* Tab: Basics */}
+        <TabsContent value="basics" className="mt-6">
+          <Alert className="mb-6">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Configure the basic information for your module. The name and slug are required.
+            </AlertDescription>
+          </Alert>
+          
           <ModuleConfigForm
             name={name}
             slug={slug}
@@ -280,21 +326,86 @@ export default function CreateModulePage() {
             onChange={handleFieldChange}
             isNew
           />
-        </div>
+        </TabsContent>
 
-        {/* Right: Code Editor */}
-        <div className="h-[700px]">
-          <ModuleCodeEditor
-            renderCode={renderCode}
-            styles={styles}
-            settingsSchema={settingsSchema}
-            onRenderCodeChange={setRenderCode}
-            onStylesChange={setStyles}
-            onSettingsSchemaChange={setSettingsSchema}
-            onValidate={handleValidate}
+        {/* Tab: Type & Capabilities */}
+        <TabsContent value="type" className="mt-6">
+          <Alert className="mb-6">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Select the type of module you&apos;re building. This determines the default capabilities
+              and how the module is deployed. More complex types support more features.
+            </AlertDescription>
+          </Alert>
+          
+          <ModuleTypeSelector
+            selectedType={moduleType}
+            capabilities={capabilities}
+            dbIsolation={dbIsolation}
+            onTypeChange={setModuleType}
+            onCapabilitiesChange={setCapabilities}
+            onIsolationChange={setDbIsolation}
+            showAdvanced={capabilities.has_database}
           />
-        </div>
-      </div>
+        </TabsContent>
+
+        {/* Tab: Database */}
+        <TabsContent value="database" className="mt-6">
+          {capabilities.has_database ? (
+            <>
+              <Alert className="mb-6">
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Define the database tables your module needs. Tables will be created with a 
+                  unique prefix (mod_[id]_) to prevent conflicts. Common columns like id, 
+                  created_at, and updated_at are added automatically.
+                </AlertDescription>
+              </Alert>
+              
+              <DatabaseSchemaBuilder
+                tables={tables}
+                onChange={setTables}
+                shortId={slug ? slug.replace(/[^a-z0-9]/gi, '').substring(0, 8).toLowerCase() : undefined}
+              />
+            </>
+          ) : (
+            <div className="text-center py-16 border-2 border-dashed rounded-lg">
+              <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="font-medium text-lg mb-2">Database Not Enabled</h3>
+              <p className="text-muted-foreground max-w-md mx-auto mb-4">
+                Enable the &quot;Database&quot; capability in the Type &amp; Capabilities tab to define 
+                database tables for this module.
+              </p>
+              <Button variant="outline" onClick={() => setActiveTab("type")}>
+                Configure Capabilities
+              </Button>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Tab: Code */}
+        <TabsContent value="code" className="mt-6">
+          <Alert className="mb-6">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Write the render code for your module. The code defines how your module looks,
+              the settings schema defines configuration options, and styles add custom CSS.
+            </AlertDescription>
+          </Alert>
+          
+          <div className="h-175">
+            <ModuleCodeEditor
+              renderCode={renderCode}
+              styles={styles}
+              settingsSchema={settingsSchema}
+              onRenderCodeChange={setRenderCode}
+              onStylesChange={setStyles}
+              onSettingsSchemaChange={setSettingsSchema}
+              onValidate={handleValidate}
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

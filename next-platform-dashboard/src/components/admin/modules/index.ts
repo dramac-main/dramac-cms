@@ -6,6 +6,10 @@ export { ModulePreview } from "./module-preview";
 export { ModuleImportExport } from "./module-import-export";
 export type { ModulePackage } from "./module-import-export";
 
+// Module Type System Components (Phase EM-10)
+export { ModuleTypeSelector } from "./module-type-selector";
+export { DatabaseSchemaBuilder } from "./database-schema-builder";
+
 // Advanced Editor Components (Phase 81C)
 export {
   MultiFileEditor,
@@ -39,3 +43,4 @@ export { TestResultsViewer, TestResultsSummary, TestResultsCompact } from "./tes
 export { BetaModuleBadge, ModuleStatusBadge, BetaTierBadge, TestingBadge } from "./beta-module-badge";
 export { TestSitesManagement } from "./test-sites-management";
 export { BetaProgramManagement } from "./beta-program-management";
+

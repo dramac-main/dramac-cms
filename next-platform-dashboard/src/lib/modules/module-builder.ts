@@ -2,6 +2,13 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserId, isSuperAdmin } from "@/lib/auth/permissions";
+import type { 
+  ModuleType, 
+  ModuleCapabilities, 
+  ModuleResources, 
+  ModuleRequirements,
+  DatabaseIsolation 
+} from "./types/module-types-v2";
 
 // Note: module_source, module_versions, module_deployments, module_analytics tables
 // are created by migration but not yet in the generated types.
@@ -24,6 +31,12 @@ export interface ModuleDefinition {
   styles: string;
   defaultSettings: Record<string, unknown>;
   dependencies: string[];
+  // Phase EM-10: Enterprise Module Type System
+  moduleType?: ModuleType;
+  dbIsolation?: DatabaseIsolation;
+  capabilities?: Partial<ModuleCapabilities>;
+  resources?: Partial<ModuleResources>;
+  requirements?: Partial<ModuleRequirements>;
 }
 
 export interface ModuleSource {
@@ -51,6 +64,13 @@ export interface ModuleSource {
   createdAt: string;
   updatedAt: string;
   createdBy: string | null;
+  // Phase EM-10: Enterprise Module Type System
+  shortId?: string;
+  moduleType?: ModuleType;
+  dbIsolation?: DatabaseIsolation;
+  capabilities?: ModuleCapabilities;
+  resources?: ModuleResources;
+  requirements?: ModuleRequirements;
 }
 
 /**
@@ -116,6 +136,35 @@ export async function createModule(
       latest_version: "0.0.1",
       created_by: userId,
       updated_by: userId,
+      // Phase EM-10: Enterprise Module Type System
+      module_type: definition.moduleType || "widget",
+      db_isolation: definition.dbIsolation || "none",
+      capabilities: definition.capabilities || {
+        has_database: false,
+        has_api: false,
+        has_webhooks: false,
+        has_oauth: false,
+        has_multi_page: false,
+        has_roles: false,
+        has_workflows: false,
+        has_reporting: false,
+        embeddable: true,
+        standalone: false,
+        requires_setup: false
+      },
+      resources: definition.resources || {
+        tables: [],
+        storage_buckets: [],
+        edge_functions: [],
+        scheduled_jobs: [],
+        webhooks: []
+      },
+      requirements: definition.requirements || {
+        min_platform_version: "1.0.0",
+        required_permissions: [],
+        required_integrations: [],
+        required_modules: []
+      },
     })
     .select()
     .single();
@@ -185,6 +234,12 @@ export async function updateModule(
   if (updates.styles !== undefined) updateData.styles = updates.styles;
   if (updates.defaultSettings !== undefined) updateData.default_settings = updates.defaultSettings;
   if (updates.dependencies !== undefined) updateData.dependencies = updates.dependencies;
+  // Phase EM-10: Enterprise Module Type System
+  if (updates.moduleType !== undefined) updateData.module_type = updates.moduleType;
+  if (updates.dbIsolation !== undefined) updateData.db_isolation = updates.dbIsolation;
+  if (updates.capabilities !== undefined) updateData.capabilities = updates.capabilities;
+  if (updates.resources !== undefined) updateData.resources = updates.resources;
+  if (updates.requirements !== undefined) updateData.requirements = updates.requirements;
 
   const { error } = await db
     .from("module_source")
