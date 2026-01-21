@@ -16,11 +16,12 @@
 - `migrations/phase-em05-module-naming.sql` - ✅ **APPLIED TO DATABASE** (2026-01-21)
 
 **Database Objects Created:**
-- Helper Functions: `check_table_exists`, `get_module_tables`, `get_module_schemas`, `exec_sql`, `is_name_reserved`
+- Helper Functions: `check_table_exists`, `get_module_tables`, `get_module_schemas`, `exec_sql`, `is_name_reserved`, `extract_module_short_id`, `is_valid_module_short_id`
 - Registry Table: `module_database_registry` (tracks module database objects)
-- Reserved Names: `reserved_table_names` (47 platform reserved names)
+- Reserved Names: `reserved_table_names` (52 platform reserved names across 11 categories)
 - Views: `module_database_overview`, `orphaned_module_tables`
-- Utility Functions: `get_module_database_status`, `cleanup_orphaned_module_tables`
+- Management Functions: `get_module_database_status`, `cleanup_orphaned_module_tables`
+- Auto-update Trigger: `tr_module_db_registry_updated` (maintains updated_at timestamp)
 
 ---
 
