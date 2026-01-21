@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 interface ModuleInjectorProps {
   siteId: string;
@@ -59,7 +59,7 @@ export async function ModuleInjector({ siteId }: ModuleInjectorProps) {
   }
 
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any;
 
