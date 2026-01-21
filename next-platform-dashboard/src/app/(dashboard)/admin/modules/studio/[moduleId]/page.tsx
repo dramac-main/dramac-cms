@@ -247,23 +247,23 @@ export default function EditModulePage({
       if (routesResult.data) {
         setApiRoutes(routesResult.data.map(r => ({
           id: r.id,
-          path: r.route_path,
-          method: (r.methods?.[0] || "GET") as ApiRoute["method"],
+          path: r.path,
+          method: (r.method || "GET") as ApiRoute["method"],
           description: r.description || undefined,
           handler: r.handler_code || "",
-          rateLimit: r.rate_limit_requests ? {
-            requests: r.rate_limit_requests,
-            windowMs: r.rate_limit_window_ms || 60000,
+          rateLimit: r.rate_limit_per_minute ? {
+            requests: r.rate_limit_per_minute,
+            windowMs: 60000,
           } : undefined,
-          cors: r.allowed_origins?.length ? {
-            enabled: true,
-            origins: r.allowed_origins,
-          } : undefined,
+          cors: {
+            enabled: false,
+            origins: [],
+          },
           auth: {
             required: r.requires_auth ?? true,
-            scopes: [],
+            scopes: r.required_scopes || [],
           },
-          isActive: r.is_enabled ?? true,
+          isActive: r.is_active ?? true,
           createdAt: r.created_at || undefined,
           updatedAt: r.updated_at || undefined,
         })));
@@ -559,16 +559,17 @@ export default function EditModulePage({
     const moduleSourceId = module.id;
     
     const routeData = {
-      module_source_id: moduleSourceId,
-      route_path: route.path,
-      methods: [route.method],
+      module_id: moduleSourceId,
+      path: route.path,
+      method: route.method,
       description: route.description,
       handler_code: route.handler,
+      handler_type: 'function' as const,
       requires_auth: route.auth?.required ?? true,
-      rate_limit_requests: route.rateLimit?.requests ?? 100,
-      rate_limit_window_ms: route.rateLimit?.windowMs ?? 60000,
-      allowed_origins: route.cors?.origins ?? [],
-      is_enabled: route.isActive,
+      required_scopes: route.auth?.scopes ?? [],
+      rate_limit_per_minute: route.rateLimit?.requests ?? 60,
+      cache_ttl_seconds: 0,
+      is_active: route.isActive,
     };
 
     if (route.id && !route.id.startsWith("new-")) {
