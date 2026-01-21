@@ -1,0 +1,2266 @@
+export_result
+"=== DRAMAC CMS DATABASE EXPORT ===
+Exported at: 2026-01-21 08:24:16.521725+00
+
+=== EXISTING TABLES ===
+activity_log, agencies, agency_members, agency_module_installations, agency_module_subscriptions, assets, audit_logs, beta_enrollment, blog_categories, blog_post_categories, blog_posts, client_module_installations, client_notifications, client_site_permissions, clients, form_settings, form_submissions, form_webhooks, invoices, media_folders, media_usage, module_analytics, module_api_routes, module_data, module_dependencies, module_dependencies_graph, module_deployments, module_error_logs, module_events, module_files, module_manifests, module_request_votes, module_requests, module_reviews, module_secrets, module_source, module_storage_buckets, module_test_results, module_test_runs, module_usage_events, module_versions, module_webhook_logs, module_webhooks, modules_v2, notification_preferences, notifications, page_content, pages, profiles, rate_limits, seo_audits, site_module_installations, site_seo_settings, sites, subscriptions, support_tickets, templates, test_site_configuration, ticket_messages
+
+=== TABLE ROW COUNTS ===
+activity_log: 1
+agencies: 1
+agency_members: 1
+agency_module_installations: 1
+agency_module_subscriptions: 1
+assets: 1
+audit_logs: 1
+beta_enrollment: 1
+blog_categories: 1
+blog_post_categories: 1
+blog_posts: 1
+client_module_installations: 1
+client_notifications: 1
+client_site_permissions: 1
+clients: 1
+form_settings: 1
+form_submissions: 1
+form_webhooks: 1
+invoices: 1
+media_folders: 1
+media_usage: 1
+module_analytics: 1
+module_api_routes: 1
+module_data: 1
+module_dependencies: 1
+module_dependencies_graph: 1
+module_deployments: 1
+module_error_logs: 1
+module_events: 1
+module_files: 1
+module_manifests: 1
+module_request_votes: 1
+module_requests: 1
+module_reviews: 1
+module_secrets: 1
+module_source: 1
+module_storage_buckets: 1
+module_test_results: 1
+module_test_runs: 1
+module_usage_events: 1
+module_versions: 1
+module_webhook_logs: 1
+module_webhooks: 1
+modules_v2: 1
+notification_preferences: 1
+notifications: 1
+page_content: 1
+pages: 1
+profiles: 1
+rate_limits: 1
+seo_audits: 1
+site_module_installations: 1
+site_seo_settings: 1
+sites: 1
+subscriptions: 1
+support_tickets: 1
+templates: 1
+test_site_configuration: 1
+ticket_messages: 1
+
+=== AGENCIES DATA ===
+[
+    {
+        ""id"": ""c86c7c61-97f8-428a-839a-22f7a03ef86d"",
+        ""name"": ""Dramac A"",
+        ""plan"": ""starter"",
+        ""slug"": ""dramac-marketing-agency-mkcyx2yd"",
+        ""goals"": [
+            ""grow-agency""
+        ],
+        ""status"": ""active"",
+        ""website"": null,
+        ""industry"": ""technology"",
+        ""owner_id"": ""e9270737-2278-4693-8cbf-b84a44ea736e"",
+        ""team_size"": ""small"",
+        ""created_at"": ""2026-01-13T19:11:42.776217+00:00"",
+        ""updated_at"": ""2026-01-16T18:29:15.099768+00:00"",
+        ""description"": null,
+        ""billing_email"": null,
+        ""custom_branding"": {
+            ""logo_url"": ""https://nfirsqmyxmmtbignofgb.supabase.co/storage/v1/object/public/branding/c86c7c61-97f8-428a-839a-22f7a03ef86d/logo-1768508713133.png"",
+            ""primary_color"": ""#6366f1"",
+            ""secondary_color"": ""#8b5cf6""
+        },
+        ""stripe_customer_id"": null,
+        ""white_label_enabled"": false,
+        ""stripe_subscription_id"": null
+    },
+    {
+        ""id"": ""26ddfe9c-576b-443e-8eb7-78c692d7feae"",
+        ""name"": ""test"",
+        ""plan"": ""starter"",
+        ""slug"": ""test-mke0eeso"",
+        ""goals"": [
+        ],
+        ""status"": ""active"",
+        ""website"": null,
+        ""industry"": null,
+        ""owner_id"": ""665b621f-6a4c-4e4c-b086-9131565285e5"",
+        ""team_size"": null,
+        ""created_at"": ""2026-01-14T12:40:55.993069+00:00"",
+        ""updated_at"": ""2026-01-17T15:10:15.982081+00:00"",
+        ""description"": null,
+        ""billing_email"": null,
+        ""custom_branding"": {
+        },
+        ""stripe_customer_id"": null,
+        ""white_label_enabled"": false,
+        ""stripe_subscription_id"": null
+    },
+    {
+        ""id"": ""a73566ff-26ba-46c2-8b33-cae6ad88797f"",
+        ""name"": ""Dramac Agency"",
+        ""plan"": ""starter"",
+        ""slug"": ""dramac-agency-mkgtcw6s"",
+        ""goals"": [
+        ],
+        ""status"": ""active"",
+        ""website"": null,
+        ""industry"": null,
+        ""owner_id"": ""df82b8d4-de49-4b3f-ac09-f905ede794a8"",
+        ""team_size"": null,
+        ""created_at"": ""2026-01-16T11:47:06.201943+00:00"",
+        ""updated_at"": ""2026-01-16T11:47:06.201943+00:00"",
+        ""description"": null,
+        ""billing_email"": null,
+        ""custom_branding"": {
+        },
+        ""stripe_customer_id"": null,
+        ""white_label_enabled"": false,
+        ""stripe_subscription_id"": null
+    },
+    {
+        ""id"": ""53e907ba-4b34-45de-883e-76f2695afca3"",
+        ""name"": ""Dramac Marketing Agency"",
+        ""plan"": ""starter"",
+        ""slug"": ""dramac-marketing-agency-mkh1e2zl"",
+        ""goals"": [
+        ],
+        ""status"": ""active"",
+        ""website"": null,
+        ""industry"": null,
+        ""owner_id"": ""6653df45-e574-4153-99d8-c17aa67261e7"",
+        ""team_size"": null,
+        ""created_at"": ""2026-01-16T15:31:58.97959+00:00"",
+        ""updated_at"": ""2026-01-17T15:10:44.63124+00:00"",
+        ""description"": null,
+        ""billing_email"": null,
+        ""custom_branding"": {
+        },
+        ""stripe_customer_id"": null,
+        ""white_label_enabled"": false,
+        ""stripe_subscription_id"": null
+    },
+    {
+        ""id"": ""e7104682-ae5d-4654-8f4c-33654d270669"",
+        ""name"": ""Clientoo"",
+        ""plan"": ""starter"",
+        ""slug"": ""clientoo-mkig4qnx"",
+        ""goals"": [
+            ""grow-agency""
+        ],
+        ""status"": ""active"",
+        ""website"": null,
+        ""industry"": ""technology"",
+        ""owner_id"": ""cfa354a5-f58e-485e-afd0-2082dfc9a3ca"",
+        ""team_size"": ""small"",
+        ""created_at"": ""2026-01-17T15:12:24.050505+00:00"",
+        ""updated_at"": ""2026-01-17T15:16:05.381082+00:00"",
+        ""description"": null,
+        ""billing_email"": null,
+        ""custom_branding"": {
+        },
+        ""stripe_customer_id"": null,
+        ""white_label_enabled"": false,
+        ""stripe_subscription_id"": null
+    }
+]
+
+=== PROFILES DATA ===
+[
+    {
+        ""id"": ""e9270737-2278-4693-8cbf-b84a44ea736e"",
+        ""name"": ""Drake Machiko"",
+        ""role"": ""super_admin"",
+        ""email"": ""drakemacchiko@gmail.com"",
+        ""agency_id"": ""c86c7c61-97f8-428a-839a-22f7a03ef86d"",
+        ""full_name"": ""Dra Mac"",
+        ""job_title"": ""Owner"",
+        ""avatar_url"": ""https://nfirsqmyxmmtbignofgb.supabase.co/storage/v1/object/public/avatars/e9270737-2278-4693-8cbf-b84a44ea736e/1768504602310.jpg"",
+        ""created_at"": ""2026-01-13T19:11:43.506679+00:00"",
+        ""deleted_at"": null,
+        ""updated_at"": ""2026-01-17T10:34:31.088404+00:00"",
+        ""last_sign_in_at"": null,
+        ""onboarding_completed"": true
+    },
+    {
+        ""id"": ""665b621f-6a4c-4e4c-b086-9131565285e5"",
+        ""name"": ""test"",
+        ""role"": ""member"",
+        ""email"": ""ochachel88@gmail.com"",
+        ""agency_id"": ""26ddfe9c-576b-443e-8eb7-78c692d7feae"",
+        ""full_name"": null,
+        ""job_title"": null,
+        ""avatar_url"": null,
+        ""created_at"": ""2026-01-14T12:40:56.238486+00:00"",
+        ""deleted_at"": null,
+        ""updated_at"": ""2026-01-17T10:31:32.859928+00:00"",
+        ""last_sign_in_at"": null,
+        ""onboarding_completed"": true
+    },
+    {
+        ""id"": ""df82b8d4-de49-4b3f-ac09-f905ede794a8"",
+        ""name"": ""Dra Mac"",
+        ""role"": ""admin"",
+        ""email"": ""drake@dramacagency.com"",
+        ""agency_id"": ""a73566ff-26ba-46c2-8b33-cae6ad88797f"",
+        ""full_name"": null,
+        ""job_title"": null,
+        ""avatar_url"": null,
+        ""created_at"": ""2026-01-16T11:47:06.594856+00:00"",
+        ""deleted_at"": null,
+        ""updated_at"": ""2026-01-17T13:41:27.663672+00:00"",
+        ""last_sign_in_at"": null,
+        ""onboarding_completed"": true
+    },
+    {
+        ""id"": ""6653df45-e574-4153-99d8-c17aa67261e7"",
+        ""name"": ""Drake Machi"",
+        ""role"": ""member"",
+        ""email"": ""info@dramacagency.com"",
+        ""agency_id"": ""53e907ba-4b34-45de-883e-76f2695afca3"",
+        ""full_name"": null,
+        ""job_title"": null,
+        ""avatar_url"": null,
+        ""created_at"": ""2026-01-16T15:31:59.393787+00:00"",
+        ""deleted_at"": null,
+        ""updated_at"": ""2026-01-17T10:31:32.859928+00:00"",
+        ""last_sign_in_at"": null,
+        ""onboarding_completed"": true
+    },
+    {
+        ""id"": ""cfa354a5-f58e-485e-afd0-2082dfc9a3ca"",
+        ""name"": ""Dram Client"",
+        ""role"": ""admin"",
+        ""email"": ""client@dramacagency.com"",
+        ""agency_id"": ""e7104682-ae5d-4654-8f4c-33654d270669"",
+        ""full_name"": ""Dram Client"",
+        ""job_title"": ""Owner"",
+        ""avatar_url"": null,
+        ""created_at"": ""2026-01-17T15:12:24.601729+00:00"",
+        ""deleted_at"": null,
+        ""updated_at"": ""2026-01-17T15:17:03.929061+00:00"",
+        ""last_sign_in_at"": null,
+        ""onboarding_completed"": true
+    }
+]
+
+=== AGENCY_MEMBERS DATA ===
+[
+    {
+        ""id"": ""34faf4d3-b0ff-4ab5-9e5a-8c2eb3a3716d"",
+        ""role"": ""owner"",
+        ""user_id"": ""e9270737-2278-4693-8cbf-b84a44ea736e"",
+        ""agency_id"": ""c86c7c61-97f8-428a-839a-22f7a03ef86d"",
+        ""invited_at"": ""2026-01-13T19:11:43.9241+00:00"",
+        ""accepted_at"": null,
+        ""permissions"": {
+        }
+    },
+    {
+        ""id"": ""bdd92c20-dcab-4c70-8a9b-a2497a2191ae"",
+        ""role"": ""owner"",
+        ""user_id"": ""665b621f-6a4c-4e4c-b086-9131565285e5"",
+        ""agency_id"": ""26ddfe9c-576b-443e-8eb7-78c692d7feae"",
+        ""invited_at"": ""2026-01-14T12:40:56.663241+00:00"",
+        ""accepted_at"": null,
+        ""permissions"": {
+        }
+    },
+    {
+        ""id"": ""cd1be81a-648e-4c9c-92a4-8ddca5e82e5f"",
+        ""role"": ""owner"",
+        ""user_id"": ""df82b8d4-de49-4b3f-ac09-f905ede794a8"",
+        ""agency_id"": ""a73566ff-26ba-46c2-8b33-cae6ad88797f"",
+        ""invited_at"": ""2026-01-16T11:47:06.956805+00:00"",
+        ""accepted_at"": null,
+        ""permissions"": {
+        }
+    },
+    {
+        ""id"": ""5d42bdb9-47cf-4d5a-91ee-46a320c904eb"",
+        ""role"": ""owner"",
+        ""user_id"": ""6653df45-e574-4153-99d8-c17aa67261e7"",
+        ""agency_id"": ""53e907ba-4b34-45de-883e-76f2695afca3"",
+        ""invited_at"": ""2026-01-16T15:31:59.779104+00:00"",
+        ""accepted_at"": null,
+        ""permissions"": {
+        }
+    },
+    {
+        ""id"": ""fac51916-77ec-48b9-877d-3767e12293a6"",
+        ""role"": ""owner"",
+        ""user_id"": ""cfa354a5-f58e-485e-afd0-2082dfc9a3ca"",
+        ""agency_id"": ""e7104682-ae5d-4654-8f4c-33654d270669"",
+        ""invited_at"": ""2026-01-17T15:12:25.106737+00:00"",
+        ""accepted_at"": null,
+        ""permissions"": {
+        }
+    }
+]
+
+=== CLIENTS DATA ===
+[
+    {
+        ""id"": ""d9720a66-41dc-40a5-896e-7692a1fa0cc7"",
+        ""name"": ""test"",
+        ""tags"": [
+        ],
+        ""email"": ""ochachel88@gmail.com"",
+        ""notes"": """",
+        ""phone"": """",
+        ""status"": ""active"",
+        ""company"": ""asdfasdf"",
+        ""industry"": null,
+        ""agency_id"": ""26ddfe9c-576b-443e-8eb7-78c692d7feae"",
+        ""created_at"": ""2026-01-14T12:42:30.67001+00:00"",
+        ""updated_at"": ""2026-01-14T12:42:30.67001+00:00"",
+        ""portal_user_id"": null,
+        ""seat_paused_at"": null,
+        ""can_edit_content"": false,
+        ""can_view_invoices"": true,
+        ""has_portal_access"": false,
+        ""portal_last_login"": null,
+        ""seat_activated_at"": ""2026-01-14T12:42:30.67001+00:00"",
+        ""can_view_analytics"": true,
+        ""stripe_subscription_item_id"": null
+    },
+    {
+        ""id"": ""44e23cb4-d942-46c9-adb4-4e73ca354b9a"",
+        ""name"": ""John"",
+        ""tags"": [
+        ],
+        ""email"": """",
+        ""notes"": """",
+        ""phone"": """",
+        ""status"": ""active"",
+        ""company"": ""Ten & Ten"",
+        ""industry"": null,
+        ""agency_id"": ""53e907ba-4b34-45de-883e-76f2695afca3"",
+        ""created_at"": ""2026-01-16T16:12:26.310079+00:00"",
+        ""updated_at"": ""2026-01-16T16:12:26.310079+00:00"",
+        ""portal_user_id"": null,
+        ""seat_paused_at"": null,
+        ""can_edit_content"": false,
+        ""can_view_invoices"": true,
+        ""has_portal_access"": false,
+        ""portal_last_login"": null,
+        ""seat_activated_at"": ""2026-01-16T16:12:26.310079+00:00"",
+        ""can_view_analytics"": true,
+        ""stripe_subscription_item_id"": null
+    },
+    {
+        ""id"": ""8c410904-e4d0-4c66-bf73-c3ebfed5b983"",
+        ""name"": ""Tens and Tens"",
+        ""tags"": [
+        ],
+        ""email"": ""info@dramacagency.com"",
+        ""notes"": """",
+        ""phone"": """",
+        ""status"": ""active"",
+        ""company"": ""Tens and Tens"",
+        ""industry"": ""technology"",
+        ""agency_id"": ""c86c7c61-97f8-428a-839a-22f7a03ef86d"",
+        ""created_at"": ""2026-01-16T18:29:27.410567+00:00"",
+        ""updated_at"": ""2026-01-17T14:54:03.279138+00:00"",
+        ""portal_user_id"": null,
+        ""seat_paused_at"": null,
+        ""can_edit_content"": false,
+        ""can_view_invoices"": true,
+        ""has_portal_access"": true,
+        ""portal_last_login"": null,
+        ""seat_activated_at"": ""2026-01-16T18:29:27.410567+00:00"",
+        ""can_view_analytics"": true,
+        ""stripe_subscription_item_id"": null
+    },
+    {
+        ""id"": ""2f3814e7-97e5-45d8-a051-072aa125d003"",
+        ""name"": ""Foodies"",
+        ""tags"": [
+        ],
+        ""email"": ""foodies@dramacagency.com"",
+        ""notes"": null,
+        ""phone"": null,
+        ""status"": ""active"",
+        ""company"": null,
+        ""industry"": ""technology"",
+        ""agency_id"": ""e7104682-ae5d-4654-8f4c-33654d270669"",
+        ""created_at"": ""2026-01-17T15:17:00.207437+00:00"",
+        ""updated_at"": ""2026-01-17T15:17:32.455255+00:00"",
+        ""portal_user_id"": null,
+        ""seat_paused_at"": null,
+        ""can_edit_content"": false,
+        ""can_view_invoices"": true,
+        ""has_portal_access"": true,
+        ""portal_last_login"": null,
+        ""seat_activated_at"": ""2026-01-17T15:17:00.207437+00:00"",
+        ""can_view_analytics"": true,
+        ""stripe_subscription_item_id"": null
+    }
+]
+
+=== SITES DATA ===
+[
+    {
+        ""id"": ""6543133b-55ce-46b3-a685-4d4a400d3a19"",
+        ""name"": ""asdfasdf"",
+        ""settings"": {
+        },
+        ""agency_id"": ""26ddfe9c-576b-443e-8eb7-78c692d7feae"",
+        ""client_id"": ""d9720a66-41dc-40a5-896e-7692a1fa0cc7"",
+        ""published"": false,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""subdomain"": ""testaja"",
+        ""created_at"": ""2026-01-14T12:43:06.994249+00:00"",
+        ""robots_txt"": null,
+        ""updated_at"": ""2026-01-14T12:43:06.994249+00:00"",
+        ""published_at"": null,
+        ""custom_domain"": null,
+        ""twitter_handle"": null,
+        ""seo_description"": null,
+        ""sitemap_enabled"": true,
+        ""facebook_pixel_id"": null,
+        ""sitemap_changefreq"": ""weekly"",
+        ""domain_last_checked"": null,
+        ""google_analytics_id"": null,
+        ""bing_site_verification"": null,
+        ""custom_domain_verified"": false,
+        ""sitemap_include_images"": true,
+        ""google_site_verification"": null,
+        ""domain_verification_token"": null
+    },
+    {
+        ""id"": ""dcf2be07-ac3d-49c3-b52c-cc27b3da2366"",
+        ""name"": ""asdfasdf"",
+        ""settings"": {
+        },
+        ""agency_id"": ""26ddfe9c-576b-443e-8eb7-78c692d7feae"",
+        ""client_id"": ""d9720a66-41dc-40a5-896e-7692a1fa0cc7"",
+        ""published"": false,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""subdomain"": ""testajaasdf"",
+        ""created_at"": ""2026-01-14T12:43:14.485829+00:00"",
+        ""robots_txt"": null,
+        ""updated_at"": ""2026-01-14T12:43:14.485829+00:00"",
+        ""published_at"": null,
+        ""custom_domain"": null,
+        ""twitter_handle"": null,
+        ""seo_description"": null,
+        ""sitemap_enabled"": true,
+        ""facebook_pixel_id"": null,
+        ""sitemap_changefreq"": ""weekly"",
+        ""domain_last_checked"": null,
+        ""google_analytics_id"": null,
+        ""bing_site_verification"": null,
+        ""custom_domain_verified"": false,
+        ""sitemap_include_images"": true,
+        ""google_site_verification"": null,
+        ""domain_verification_token"": null
+    },
+    {
+        ""id"": ""1158c561-0372-4d29-8eb1-6ed70502cda0"",
+        ""name"": ""Ten and Ten"",
+        ""settings"": {
+        },
+        ""agency_id"": ""53e907ba-4b34-45de-883e-76f2695afca3"",
+        ""client_id"": ""44e23cb4-d942-46c9-adb4-4e73ca354b9a"",
+        ""published"": false,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""subdomain"": ""ten"",
+        ""created_at"": ""2026-01-16T16:13:28.883981+00:00"",
+        ""robots_txt"": null,
+        ""updated_at"": ""2026-01-16T16:13:28.883981+00:00"",
+        ""published_at"": null,
+        ""custom_domain"": null,
+        ""twitter_handle"": null,
+        ""seo_description"": null,
+        ""sitemap_enabled"": true,
+        ""facebook_pixel_id"": null,
+        ""sitemap_changefreq"": ""weekly"",
+        ""domain_last_checked"": null,
+        ""google_analytics_id"": null,
+        ""bing_site_verification"": null,
+        ""custom_domain_verified"": false,
+        ""sitemap_include_images"": true,
+        ""google_site_verification"": null,
+        ""domain_verification_token"": null
+    },
+    {
+        ""id"": ""ab9728d6-02c7-4176-b5cb-20008c89a01b"",
+        ""name"": ""Ten and Ten"",
+        ""settings"": {
+        },
+        ""agency_id"": ""c86c7c61-97f8-428a-839a-22f7a03ef86d"",
+        ""client_id"": ""8c410904-e4d0-4c66-bf73-c3ebfed5b983"",
+        ""published"": true,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""subdomain"": ""ten-and-ten"",
+        ""created_at"": ""2026-01-16T19:39:10.731117+00:00"",
+        ""robots_txt"": null,
+        ""updated_at"": ""2026-01-20T05:53:10.464194+00:00"",
+        ""published_at"": ""2026-01-20T05:53:10.39+00:00"",
+        ""custom_domain"": null,
+        ""twitter_handle"": null,
+        ""seo_description"": null,
+        ""sitemap_enabled"": true,
+        ""facebook_pixel_id"": null,
+        ""sitemap_changefreq"": ""weekly"",
+        ""domain_last_checked"": null,
+        ""google_analytics_id"": null,
+        ""bing_site_verification"": null,
+        ""custom_domain_verified"": false,
+        ""sitemap_include_images"": true,
+        ""google_site_verification"": null,
+        ""domain_verification_token"": null
+    },
+    {
+        ""id"": ""130ff86a-494c-4d1d-95e5-2a6155073170"",
+        ""name"": ""Foodies Web"",
+        ""settings"": {
+            ""description"": ""Where food is made!""
+        },
+        ""agency_id"": ""e7104682-ae5d-4654-8f4c-33654d270669"",
+        ""client_id"": ""2f3814e7-97e5-45d8-a051-072aa125d003"",
+        ""published"": false,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""subdomain"": ""foodies-web"",
+        ""created_at"": ""2026-01-19T06:20:02.979268+00:00"",
+        ""robots_txt"": null,
+        ""updated_at"": ""2026-01-19T06:20:02.979268+00:00"",
+        ""published_at"": null,
+        ""custom_domain"": null,
+        ""twitter_handle"": null,
+        ""seo_description"": null,
+        ""sitemap_enabled"": true,
+        ""facebook_pixel_id"": null,
+        ""sitemap_changefreq"": ""weekly"",
+        ""domain_last_checked"": null,
+        ""google_analytics_id"": null,
+        ""bing_site_verification"": null,
+        ""custom_domain_verified"": false,
+        ""sitemap_include_images"": true,
+        ""google_site_verification"": null,
+        ""domain_verification_token"": null
+    },
+    {
+        ""id"": ""2aabbb2d-0593-42a9-872e-58ff44773d3c"",
+        ""name"": ""xFoodies"",
+        ""settings"": {
+        },
+        ""agency_id"": ""e7104682-ae5d-4654-8f4c-33654d270669"",
+        ""client_id"": ""2f3814e7-97e5-45d8-a051-072aa125d003"",
+        ""published"": true,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""subdomain"": ""xfoodies"",
+        ""created_at"": ""2026-01-19T22:40:11.831414+00:00"",
+        ""robots_txt"": null,
+        ""updated_at"": ""2026-01-20T10:38:28.698858+00:00"",
+        ""published_at"": ""2026-01-20T10:38:28.541+00:00"",
+        ""custom_domain"": null,
+        ""twitter_handle"": null,
+        ""seo_description"": null,
+        ""sitemap_enabled"": true,
+        ""facebook_pixel_id"": null,
+        ""sitemap_changefreq"": ""weekly"",
+        ""domain_last_checked"": null,
+        ""google_analytics_id"": null,
+        ""bing_site_verification"": null,
+        ""custom_domain_verified"": false,
+        ""sitemap_include_images"": true,
+        ""google_site_verification"": null,
+        ""domain_verification_token"": null
+    },
+    {
+        ""id"": ""fead8626-8375-4ca2-8498-ac3578afa888"",
+        ""name"": ""VMP"",
+        ""settings"": {
+        },
+        ""agency_id"": ""e7104682-ae5d-4654-8f4c-33654d270669"",
+        ""client_id"": ""2f3814e7-97e5-45d8-a051-072aa125d003"",
+        ""published"": true,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""subdomain"": ""vmp"",
+        ""created_at"": ""2026-01-20T11:01:39.869515+00:00"",
+        ""robots_txt"": null,
+        ""updated_at"": ""2026-01-20T16:46:09.73429+00:00"",
+        ""published_at"": ""2026-01-20T16:46:09.662+00:00"",
+        ""custom_domain"": null,
+        ""twitter_handle"": null,
+        ""seo_description"": null,
+        ""sitemap_enabled"": true,
+        ""facebook_pixel_id"": null,
+        ""sitemap_changefreq"": ""weekly"",
+        ""domain_last_checked"": null,
+        ""google_analytics_id"": null,
+        ""bing_site_verification"": null,
+        ""custom_domain_verified"": false,
+        ""sitemap_include_images"": true,
+        ""google_site_verification"": null,
+        ""domain_verification_token"": null
+    }
+]
+
+=== PAGES DATA ===
+[
+    {
+        ""id"": ""178f78c0-3bfd-482e-87c4-9733342691da"",
+        ""name"": ""Home"",
+        ""slug"": ""/"",
+        ""site_id"": ""6543133b-55ce-46b3-a685-4d4a400d3a19"",
+        ""og_title"": null,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""created_at"": ""2026-01-14T12:43:07.12674+00:00"",
+        ""sort_order"": 0,
+        ""updated_at"": ""2026-01-14T12:43:07.12674+00:00"",
+        ""is_homepage"": true,
+        ""og_image_url"": null,
+        ""robots_index"": true,
+        ""seo_keywords"": null,
+        ""canonical_url"": null,
+        ""robots_follow"": true,
+        ""og_description"": null,
+        ""seo_description"": null
+    },
+    {
+        ""id"": ""6bee83ee-f0f8-44f4-9ac8-90a9af3fd70d"",
+        ""name"": ""Home"",
+        ""slug"": ""/"",
+        ""site_id"": ""dcf2be07-ac3d-49c3-b52c-cc27b3da2366"",
+        ""og_title"": null,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""created_at"": ""2026-01-14T12:43:14.615917+00:00"",
+        ""sort_order"": 0,
+        ""updated_at"": ""2026-01-14T12:43:14.615917+00:00"",
+        ""is_homepage"": true,
+        ""og_image_url"": null,
+        ""robots_index"": true,
+        ""seo_keywords"": null,
+        ""canonical_url"": null,
+        ""robots_follow"": true,
+        ""og_description"": null,
+        ""seo_description"": null
+    },
+    {
+        ""id"": ""5e10bddd-101f-41b3-9936-ea597c96c71c"",
+        ""name"": ""Home"",
+        ""slug"": ""/"",
+        ""site_id"": ""1158c561-0372-4d29-8eb1-6ed70502cda0"",
+        ""og_title"": null,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""created_at"": ""2026-01-16T16:13:29.190746+00:00"",
+        ""sort_order"": 0,
+        ""updated_at"": ""2026-01-16T16:13:29.190746+00:00"",
+        ""is_homepage"": true,
+        ""og_image_url"": null,
+        ""robots_index"": true,
+        ""seo_keywords"": null,
+        ""canonical_url"": null,
+        ""robots_follow"": true,
+        ""og_description"": null,
+        ""seo_description"": null
+    },
+    {
+        ""id"": ""05fc7642-b5f6-4613-ac88-33e09ad98f15"",
+        ""name"": ""Home"",
+        ""slug"": ""/"",
+        ""site_id"": ""ab9728d6-02c7-4176-b5cb-20008c89a01b"",
+        ""og_title"": null,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""created_at"": ""2026-01-16T19:39:11.033523+00:00"",
+        ""sort_order"": 0,
+        ""updated_at"": ""2026-01-16T19:39:11.033523+00:00"",
+        ""is_homepage"": true,
+        ""og_image_url"": null,
+        ""robots_index"": true,
+        ""seo_keywords"": null,
+        ""canonical_url"": null,
+        ""robots_follow"": true,
+        ""og_description"": null,
+        ""seo_description"": null
+    },
+    {
+        ""id"": ""81830630-a22e-4c5d-be52-8b1afb45ded2"",
+        ""name"": ""Home"",
+        ""slug"": ""/"",
+        ""site_id"": ""130ff86a-494c-4d1d-95e5-2a6155073170"",
+        ""og_title"": null,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""created_at"": ""2026-01-19T06:20:03.142142+00:00"",
+        ""sort_order"": 0,
+        ""updated_at"": ""2026-01-19T06:20:03.142142+00:00"",
+        ""is_homepage"": true,
+        ""og_image_url"": null,
+        ""robots_index"": true,
+        ""seo_keywords"": null,
+        ""canonical_url"": null,
+        ""robots_follow"": true,
+        ""og_description"": null,
+        ""seo_description"": null
+    },
+    {
+        ""id"": ""28888514-3161-4c23-92e5-f4eca53e70c6"",
+        ""name"": ""Home"",
+        ""slug"": ""/"",
+        ""site_id"": ""2aabbb2d-0593-42a9-872e-58ff44773d3c"",
+        ""og_title"": null,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""created_at"": ""2026-01-19T22:40:12.00889+00:00"",
+        ""sort_order"": 0,
+        ""updated_at"": ""2026-01-19T22:40:12.00889+00:00"",
+        ""is_homepage"": true,
+        ""og_image_url"": null,
+        ""robots_index"": true,
+        ""seo_keywords"": null,
+        ""canonical_url"": null,
+        ""robots_follow"": true,
+        ""og_description"": null,
+        ""seo_description"": null
+    },
+    {
+        ""id"": ""4431d12e-e44b-45e0-bfa8-601e458bc34e"",
+        ""name"": ""Home"",
+        ""slug"": ""/"",
+        ""site_id"": ""fead8626-8375-4ca2-8498-ac3578afa888"",
+        ""og_title"": null,
+        ""seo_image"": null,
+        ""seo_title"": null,
+        ""created_at"": ""2026-01-20T11:01:40.020673+00:00"",
+        ""sort_order"": 0,
+        ""updated_at"": ""2026-01-20T11:01:40.020673+00:00"",
+        ""is_homepage"": true,
+        ""og_image_url"": null,
+        ""robots_index"": true,
+        ""seo_keywords"": null,
+        ""canonical_url"": null,
+        ""robots_follow"": true,
+        ""og_description"": null,
+        ""seo_description"": null
+    }
+]
+
+=== PAGE_CONTENT DATA ===
+[
+    {
+        ""id"": ""14fab0d4-b6d5-421b-81ec-51b6ad15f29e"",
+        ""content"": {
+            ""ROOT"": {
+                ""type"": {
+                    ""resolvedName"": ""Root""
+                },
+                ""nodes"": [
+                    ""ZRDa1mv8PX"",
+                    ""gyQXM5m8qb"",
+                    ""ZcnBNBtTkj""
+                ],
+                ""props"": {
+                    ""padding"": 0,
+                    ""backgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""isCanvas"": true,
+                ""displayName"": ""Page"",
+                ""linkedNodes"": {
+                }
+            },
+            ""3jVBVtmkN1"": {
+                ""type"": {
+                    ""resolvedName"": ""Navigation""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""logo"": """",
+                    ""links"": [
+                        {
+                            ""href"": ""#"",
+                            ""label"": ""Home""
+                        },
+                        {
+                            ""href"": ""#features"",
+                            ""label"": ""Features""
+                        },
+                        {
+                            ""href"": ""#pricing"",
+                            ""label"": ""Pricing""
+                        },
+                        {
+                            ""href"": ""#about"",
+                            ""label"": ""About""
+                        },
+                        {
+                            ""href"": ""#contact"",
+                            ""label"": ""Contact""
+                        }
+                    ],
+                    ""sticky"": false,
+                    ""ctaHref"": ""#"",
+                    ""ctaText"": ""Get Started"",
+                    ""logoText"": ""DRAMAC"",
+                    ""textColor"": """",
+                    ""backgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Navigation"",
+                ""linkedNodes"": {
+                }
+            },
+            ""5sN8HvQ8pv"": {
+                ""type"": {
+                    ""resolvedName"": ""Footer""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""columns"": [
+                        {
+                            ""links"": [
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Features""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Pricing""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Integrations""
+                                }
+                            ],
+                            ""title"": ""Product""
+                        },
+                        {
+                            ""links"": [
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""About""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Blog""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Careers""
+                                }
+                            ],
+                            ""title"": ""Company""
+                        },
+                        {
+                            ""links"": [
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Help Center""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Contact""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Status""
+                                }
+                            ],
+                            ""title"": ""Support""
+                        }
+                    ],
+                    ""tagline"": ""Build beautiful websites with ease"",
+                    ""logoText"": ""DRAMAC"",
+                    ""copyright"": ""© 2026 DRAMAC. All rights reserved."",
+                    ""textColor"": ""#ffffff"",
+                    ""socialLinks"": [
+                        {
+                            ""href"": ""#"",
+                            ""platform"": ""twitter""
+                        },
+                        {
+                            ""href"": ""#"",
+                            ""platform"": ""facebook""
+                        },
+                        {
+                            ""href"": ""#"",
+                            ""platform"": ""linkedin""
+                        }
+                    ],
+                    ""backgroundColor"": ""#1a1a2e""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Footer"",
+                ""linkedNodes"": {
+                }
+            },
+            ""6Q9VEsiKRL"": {
+                ""type"": {
+                    ""resolvedName"": ""Navigation""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""logo"": """",
+                    ""links"": [
+                        {
+                            ""href"": ""#"",
+                            ""label"": ""Home""
+                        },
+                        {
+                            ""href"": ""#features"",
+                            ""label"": ""Features""
+                        },
+                        {
+                            ""href"": ""#pricing"",
+                            ""label"": ""Pricing""
+                        },
+                        {
+                            ""href"": ""#about"",
+                            ""label"": ""About""
+                        },
+                        {
+                            ""href"": ""#contact"",
+                            ""label"": ""Contact""
+                        }
+                    ],
+                    ""sticky"": false,
+                    ""ctaHref"": ""#"",
+                    ""ctaText"": ""Get Started"",
+                    ""logoText"": ""DRAMAC"",
+                    ""textColor"": """",
+                    ""backgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Navigation"",
+                ""linkedNodes"": {
+                }
+            },
+            ""7OuCHttNHu"": {
+                ""type"": {
+                    ""resolvedName"": ""CTA""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Ready to Get Started?"",
+                    ""subtitle"": ""Join thousands of satisfied customers today"",
+                    ""textColor"": ""#ffffff"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""Start Free Trial"",
+                    ""backgroundColor"": ""#6366f1"",
+                    ""buttonTextColor"": ""#6366f1"",
+                    ""buttonBackgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""CTA"",
+                ""linkedNodes"": {
+                }
+            },
+            ""7qkMJUOW1Y"": {
+                ""type"": {
+                    ""resolvedName"": ""Navigation""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""logo"": """",
+                    ""links"": [
+                        {
+                            ""href"": ""#"",
+                            ""label"": ""Home""
+                        },
+                        {
+                            ""href"": ""#features"",
+                            ""label"": ""Features""
+                        },
+                        {
+                            ""href"": ""#pricing"",
+                            ""label"": ""Pricing""
+                        },
+                        {
+                            ""href"": ""#about"",
+                            ""label"": ""About""
+                        },
+                        {
+                            ""href"": ""#contact"",
+                            ""label"": ""Contact""
+                        }
+                    ],
+                    ""sticky"": false,
+                    ""ctaHref"": ""#"",
+                    ""ctaText"": ""Get Started"",
+                    ""logoText"": ""DRAMAC"",
+                    ""textColor"": """",
+                    ""backgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Navigation"",
+                ""linkedNodes"": {
+                }
+            },
+            ""8S03WnbRuV"": {
+                ""type"": {
+                    ""resolvedName"": ""Features""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Our Features"",
+                    ""columns"": 3,
+                    ""features"": [
+                        {
+                            ""icon"": ""⚡"",
+                            ""title"": ""Fast Performance"",
+                            ""description"": ""Lightning-fast load times for your website""
+                        },
+                        {
+                            ""icon"": ""🎨"",
+                            ""title"": ""Beautiful Design"",
+                            ""description"": ""Modern and customizable design options""
+                        },
+                        {
+                            ""icon"": ""🔧"",
+                            ""title"": ""Easy to Use"",
+                            ""description"": ""Intuitive drag-and-drop interface""
+                        }
+                    ],
+                    ""subtitle"": ""Everything you need to build amazing websites"",
+                    ""iconColor"": ""#6366f1"",
+                    ""backgroundColor"": ""#f9fafb""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Features"",
+                ""linkedNodes"": {
+                }
+            },
+            ""G0CN-5_3xM"": {
+                ""type"": {
+                    ""resolvedName"": ""Navigation""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""logo"": """",
+                    ""links"": [
+                        {
+                            ""href"": ""#"",
+                            ""label"": ""Home""
+                        },
+                        {
+                            ""href"": ""#features"",
+                            ""label"": ""Features""
+                        },
+                        {
+                            ""href"": ""#pricing"",
+                            ""label"": ""Pricing""
+                        },
+                        {
+                            ""href"": ""#about"",
+                            ""label"": ""About""
+                        },
+                        {
+                            ""href"": ""#contact"",
+                            ""label"": ""Contact""
+                        }
+                    ],
+                    ""sticky"": false,
+                    ""ctaHref"": ""#"",
+                    ""ctaText"": ""Get Started"",
+                    ""logoText"": ""DRAMAC"",
+                    ""textColor"": """",
+                    ""backgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Navigation"",
+                ""linkedNodes"": {
+                }
+            },
+            ""Gz6U8wlYmm"": {
+                ""type"": {
+                    ""resolvedName"": ""Hero""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Welcome to Our Website"",
+                    ""overlay"": true,
+                    ""subtitle"": ""Build amazing experiences with our visual editor"",
+                    ""alignment"": ""center"",
+                    ""minHeight"": 500,
+                    ""textColor"": ""#ffffff"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""Get Started"",
+                    ""overlayOpacity"": 50,
+                    ""backgroundColor"": ""#1a1a2e"",
+                    ""backgroundImage"": """"
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Hero"",
+                ""linkedNodes"": {
+                }
+            },
+            ""LFN29DNFHJ"": {
+                ""type"": {
+                    ""resolvedName"": ""CTA""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Ready to Get Started?"",
+                    ""subtitle"": ""Join thousands of satisfied customers today"",
+                    ""textColor"": ""#ffffff"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""Start Free Trial"",
+                    ""backgroundColor"": ""#6366f1"",
+                    ""buttonTextColor"": ""#6366f1"",
+                    ""buttonBackgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""CTA"",
+                ""linkedNodes"": {
+                }
+            },
+            ""PriY2wrhZ7"": {
+                ""type"": {
+                    ""resolvedName"": ""Hero""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Welcome to Our Website"",
+                    ""overlay"": true,
+                    ""subtitle"": ""Build amazing experiences with our visual editor"",
+                    ""alignment"": ""center"",
+                    ""minHeight"": 500,
+                    ""textColor"": ""#ffffff"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""Get Started"",
+                    ""overlayOpacity"": 50,
+                    ""backgroundColor"": ""#1a1a2e"",
+                    ""backgroundImage"": """"
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Hero"",
+                ""linkedNodes"": {
+                }
+            },
+            ""WbId2O2Yq_"": {
+                ""type"": {
+                    ""resolvedName"": ""Hero""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Welcome to Our Website"",
+                    ""overlay"": true,
+                    ""subtitle"": ""Build amazing experiences with our visual editor"",
+                    ""alignment"": ""center"",
+                    ""minHeight"": 500,
+                    ""textColor"": ""#ffffff"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""Get Started"",
+                    ""overlayOpacity"": 50,
+                    ""backgroundColor"": ""#1a1a2e"",
+                    ""backgroundImage"": """"
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Hero"",
+                ""linkedNodes"": {
+                }
+            },
+            ""ZI3l4C21JN"": {
+                ""type"": {
+                    ""resolvedName"": ""Hero""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Welcome to Our Website"",
+                    ""overlay"": true,
+                    ""subtitle"": ""Build amazing experiences with our visual editor"",
+                    ""alignment"": ""center"",
+                    ""minHeight"": 500,
+                    ""textColor"": ""#ffffff"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""Get Started"",
+                    ""overlayOpacity"": 50,
+                    ""backgroundColor"": ""#1a1a2e"",
+                    ""backgroundImage"": """"
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Hero"",
+                ""linkedNodes"": {
+                }
+            },
+            ""ZRDa1mv8PX"": {
+                ""type"": {
+                    ""resolvedName"": ""Navigation""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""logo"": """",
+                    ""links"": [
+                        {
+                            ""href"": ""#"",
+                            ""label"": ""Home""
+                        },
+                        {
+                            ""href"": ""#features"",
+                            ""label"": ""Features""
+                        },
+                        {
+                            ""href"": ""#pricing"",
+                            ""label"": ""Pricing""
+                        },
+                        {
+                            ""href"": ""#about"",
+                            ""label"": ""About""
+                        },
+                        {
+                            ""href"": ""#contact"",
+                            ""label"": ""Contact""
+                        }
+                    ],
+                    ""sticky"": false,
+                    ""ctaHref"": ""#"",
+                    ""ctaText"": ""Get Started"",
+                    ""logoText"": ""DRAMAC"",
+                    ""textColor"": """",
+                    ""backgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Navigation"",
+                ""linkedNodes"": {
+                }
+            },
+            ""ZcnBNBtTkj"": {
+                ""type"": {
+                    ""resolvedName"": ""CTA""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Ready to Get Started?"",
+                    ""subtitle"": ""Join thousands of satisfied customers today"",
+                    ""textColor"": ""#ffffff"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""Start Free Trial"",
+                    ""backgroundColor"": ""#6366f1"",
+                    ""buttonTextColor"": ""#6366f1"",
+                    ""buttonBackgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""CTA"",
+                ""linkedNodes"": {
+                }
+            },
+            ""Zmou2PpYDv"": {
+                ""type"": {
+                    ""resolvedName"": ""Navigation""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""logo"": """",
+                    ""links"": [
+                        {
+                            ""href"": ""#"",
+                            ""label"": ""Home""
+                        },
+                        {
+                            ""href"": ""#features"",
+                            ""label"": ""Features""
+                        },
+                        {
+                            ""href"": ""#pricing"",
+                            ""label"": ""Pricing""
+                        },
+                        {
+                            ""href"": ""#about"",
+                            ""label"": ""About""
+                        },
+                        {
+                            ""href"": ""#contact"",
+                            ""label"": ""Contact""
+                        }
+                    ],
+                    ""sticky"": false,
+                    ""ctaHref"": ""#"",
+                    ""ctaText"": ""Get Started"",
+                    ""logoText"": ""DRAMAC"",
+                    ""textColor"": """",
+                    ""backgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Navigation"",
+                ""linkedNodes"": {
+                }
+            },
+            ""dny91YPf2E"": {
+                ""type"": {
+                    ""resolvedName"": ""Features""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Our Features"",
+                    ""columns"": 3,
+                    ""features"": [
+                        {
+                            ""icon"": ""⚡"",
+                            ""title"": ""Fast Performance"",
+                            ""description"": ""Lightning-fast load times for your website""
+                        },
+                        {
+                            ""icon"": ""🎨"",
+                            ""title"": ""Beautiful Design"",
+                            ""description"": ""Modern and customizable design options""
+                        },
+                        {
+                            ""icon"": ""🔧"",
+                            ""title"": ""Easy to Use"",
+                            ""description"": ""Intuitive drag-and-drop interface""
+                        }
+                    ],
+                    ""subtitle"": ""Everything you need to build amazing websites"",
+                    ""iconColor"": ""#6366f1"",
+                    ""backgroundColor"": ""#f9fafb""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Features"",
+                ""linkedNodes"": {
+                }
+            },
+            ""gyQXM5m8qb"": {
+                ""type"": {
+                    ""resolvedName"": ""Hero""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Welcome to Our Website"",
+                    ""overlay"": true,
+                    ""subtitle"": ""Build amazing experiences with our visual editor"",
+                    ""alignment"": ""center"",
+                    ""minHeight"": 500,
+                    ""textColor"": ""#ffffff"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""Get Started"",
+                    ""overlayOpacity"": 50,
+                    ""backgroundColor"": ""#1a1a2e"",
+                    ""backgroundImage"": """"
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Hero"",
+                ""linkedNodes"": {
+                }
+            },
+            ""hFLuwfjrXa"": {
+                ""type"": {
+                    ""resolvedName"": ""Hero""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Welcome to Our Website"",
+                    ""overlay"": true,
+                    ""subtitle"": ""Build amazing experiences with our visual editor"",
+                    ""alignment"": ""center"",
+                    ""minHeight"": 500,
+                    ""textColor"": ""#ffffff"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""Get Started"",
+                    ""overlayOpacity"": 50,
+                    ""backgroundColor"": ""#1a1a2e"",
+                    ""backgroundImage"": """"
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Hero"",
+                ""linkedNodes"": {
+                }
+            },
+            ""ifux-senK5"": {
+                ""type"": {
+                    ""resolvedName"": ""CTA""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Ready to Get Started?"",
+                    ""subtitle"": ""Join thousands of satisfied customers today"",
+                    ""textColor"": ""#ffffff"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""Start Free Trial"",
+                    ""backgroundColor"": ""#6366f1"",
+                    ""buttonTextColor"": ""#6366f1"",
+                    ""buttonBackgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""CTA"",
+                ""linkedNodes"": {
+                }
+            },
+            ""p3PQs8kNJ0"": {
+                ""type"": {
+                    ""resolvedName"": ""Navigation""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""logo"": """",
+                    ""links"": [
+                        {
+                            ""href"": ""#"",
+                            ""label"": ""Home""
+                        },
+                        {
+                            ""href"": ""#features"",
+                            ""label"": ""Features""
+                        },
+                        {
+                            ""href"": ""#pricing"",
+                            ""label"": ""Pricing""
+                        },
+                        {
+                            ""href"": ""#about"",
+                            ""label"": ""About""
+                        },
+                        {
+                            ""href"": ""#contact"",
+                            ""label"": ""Contact""
+                        }
+                    ],
+                    ""sticky"": false,
+                    ""ctaHref"": ""#"",
+                    ""ctaText"": ""Get Started"",
+                    ""logoText"": ""DRAMAC"",
+                    ""textColor"": """",
+                    ""backgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Navigation"",
+                ""linkedNodes"": {
+                }
+            },
+            ""wilQUvalcV"": {
+                ""type"": {
+                    ""resolvedName"": ""Hero""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Welcome to Our Website"",
+                    ""overlay"": true,
+                    ""subtitle"": ""Build amazing experiences with our visual editor"",
+                    ""alignment"": ""center"",
+                    ""minHeight"": 500,
+                    ""textColor"": ""#ffffff"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""Get Started"",
+                    ""overlayOpacity"": 50,
+                    ""backgroundColor"": ""#1a1a2e"",
+                    ""backgroundImage"": """"
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Hero"",
+                ""linkedNodes"": {
+                }
+            }
+        },
+        ""page_id"": ""05fc7642-b5f6-4613-ac88-33e09ad98f15"",
+        ""version"": 1,
+        ""updated_at"": ""2026-01-20T06:05:24.244915+00:00""
+    },
+    {
+        ""id"": ""3e188499-ce4b-4086-817e-25c18eada031"",
+        ""content"": {
+            ""ROOT"": {
+                ""type"": {
+                    ""resolvedName"": ""Root""
+                },
+                ""nodes"": [
+                    ""D1jzARCFR-"",
+                    ""RGX-B88Q6T"",
+                    ""6q5dGHPlpd"",
+                    ""OrjX5IWTOU"",
+                    ""FMNeLDFZ_P"",
+                    ""TSBdjpTeJO""
+                ],
+                ""props"": {
+                    ""padding"": 0,
+                    ""backgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""isCanvas"": true,
+                ""displayName"": ""Page"",
+                ""linkedNodes"": {
+                }
+            },
+            ""6q5dGHPlpd"": {
+                ""type"": {
+                    ""resolvedName"": ""Team""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""style"": ""cards"",
+                    ""title"": ""Meet Our Team"",
+                    ""columns"": 3,
+                    ""members"": [
+                        {
+                            ""id"": ""1"",
+                            ""bio"": ""With over 15 years of industry experience, Sarah leads our vision and strategy."",
+                            ""name"": ""Sarah Johnson"",
+                            ""role"": ""CEO & Founder"",
+                            ""image"": ""https://placehold.co/300x300?text=SJ"",
+                            ""twitter"": ""#"",
+                            ""linkedin"": ""#""
+                        },
+                        {
+                            ""id"": ""2"",
+                            ""bio"": ""Michael brings technical excellence and innovation to everything we build."",
+                            ""name"": ""Michael Chen"",
+                            ""role"": ""CTO"",
+                            ""image"": ""https://placehold.co/300x300?text=MC"",
+                            ""linkedin"": ""#""
+                        },
+                        {
+                            ""id"": ""3"",
+                            ""bio"": ""Emily transforms ideas into beautiful, user-centered designs."",
+                            ""name"": ""Emily Rodriguez"",
+                            ""role"": ""Design Director"",
+                            ""image"": ""https://placehold.co/300x300?text=ER"",
+                            ""twitter"": ""#"",
+                            ""linkedin"": ""#""
+                        }
+                    ],
+                    ""showBio"": true,
+                    ""subtitle"": ""The passionate people behind our success"",
+                    ""showSocial"": true
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Team"",
+                ""linkedNodes"": {
+                }
+            },
+            ""D1jzARCFR-"": {
+                ""type"": {
+                    ""resolvedName"": ""Navbar""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""logo"": """",
+                    ""links"": [
+                        {
+                            ""href"": ""/"",
+                            ""label"": ""Home""
+                        },
+                        {
+                            ""href"": ""/about"",
+                            ""label"": ""About""
+                        },
+                        {
+                            ""href"": ""/services"",
+                            ""label"": ""Services""
+                        },
+                        {
+                            ""href"": ""/contact"",
+                            ""label"": ""Contact""
+                        }
+                    ],
+                    ""sticky"": false,
+                    ""logoText"": ""Logo"",
+                    ""textColor"": ""#1f2937"",
+                    ""backgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Navbar"",
+                ""linkedNodes"": {
+                }
+            },
+            ""FMNeLDFZ_P"": {
+                ""type"": {
+                    ""resolvedName"": ""Newsletter""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Subscribe to Our Newsletter"",
+                    ""layout"": ""inline"",
+                    ""subtitle"": ""Get the latest updates delivered to your inbox"",
+                    ""textColor"": ""#ffffff"",
+                    ""buttonText"": ""Subscribe"",
+                    ""placeholder"": ""Enter your email"",
+                    ""backgroundColor"": ""#001820""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Newsletter"",
+                ""linkedNodes"": {
+                }
+            },
+            ""OrjX5IWTOU"": {
+                ""type"": {
+                    ""resolvedName"": ""FAQ""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""items"": [
+                        {
+                            ""id"": ""1"",
+                            ""answer"": ""We offer a comprehensive range of services including web design, development, SEO optimization, and digital marketing solutions tailored to your business needs."",
+                            ""question"": ""What services do you offer?""
+                        },
+                        {
+                            ""id"": ""2"",
+                            ""answer"": ""Project timelines vary based on complexity. A simple website typically takes 2-4 weeks, while more complex projects may take 2-3 months. We'll provide a detailed timeline during our initial consultation."",
+                            ""question"": ""How long does a typical project take?""
+                        },
+                        {
+                            ""id"": ""3"",
+                            ""answer"": ""Yes! We offer various support and maintenance packages to ensure your website stays updated, secure, and performing optimally after launch."",
+                            ""question"": ""Do you offer ongoing support?""
+                        },
+                        {
+                            ""id"": ""4"",
+                            ""answer"": ""Our pricing is project-based and depends on your specific requirements. We offer transparent quotes with no hidden fees. Contact us for a free consultation and custom quote."",
+                            ""question"": ""What is your pricing structure?""
+                        }
+                    ],
+                    ""style"": ""accordion"",
+                    ""title"": ""Frequently Asked Questions"",
+                    ""columns"": 1,
+                    ""subtitle"": ""Find answers to common questions about our services"",
+                    ""backgroundColor"": ""#f8fafc""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""FAQ"",
+                ""linkedNodes"": {
+                }
+            },
+            ""RGX-B88Q6T"": {
+                ""type"": {
+                    ""resolvedName"": ""Hero""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""What's On The Menu?"",
+                    ""overlay"": true,
+                    ""subtitle"": ""Build amazing experiences with our visual editor"",
+                    ""alignment"": ""center"",
+                    ""minHeight"": 500,
+                    ""textColor"": ""#ffffff"",
+                    ""buttonHref"": ""https://www.dramacagency.com/"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""See Menu"",
+                    ""overlayOpacity"": 50,
+                    ""backgroundColor"": ""#1a1a2e"",
+                    ""backgroundImage"": ""https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?q=80&w=685&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Hero"",
+                ""linkedNodes"": {
+                }
+            },
+            ""TSBdjpTeJO"": {
+                ""type"": {
+                    ""resolvedName"": ""Footer""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""columns"": [
+                        {
+                            ""links"": [
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Features""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Pricing""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Integrations""
+                                }
+                            ],
+                            ""title"": ""Product""
+                        },
+                        {
+                            ""links"": [
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""About""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Blog""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Careers""
+                                }
+                            ],
+                            ""title"": ""Company""
+                        },
+                        {
+                            ""links"": [
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Help Center""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Contact""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Status""
+                                }
+                            ],
+                            ""title"": ""Support""
+                        }
+                    ],
+                    ""tagline"": ""Build beautiful websites with ease"",
+                    ""logoText"": ""DRAMAC"",
+                    ""copyright"": ""© 2026 DRAMAC. All rights reserved."",
+                    ""textColor"": ""#ffffff"",
+                    ""socialLinks"": [
+                        {
+                            ""href"": ""#"",
+                            ""platform"": ""twitter""
+                        },
+                        {
+                            ""href"": ""#"",
+                            ""platform"": ""facebook""
+                        },
+                        {
+                            ""href"": ""#"",
+                            ""platform"": ""linkedin""
+                        }
+                    ],
+                    ""backgroundColor"": ""#001820""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Footer"",
+                ""linkedNodes"": {
+                }
+            }
+        },
+        ""page_id"": ""28888514-3161-4c23-92e5-f4eca53e70c6"",
+        ""version"": 1,
+        ""updated_at"": ""2026-01-20T10:38:05.490546+00:00""
+    },
+    {
+        ""id"": ""ee2543e2-42e9-40d9-8f7f-f94ed346e7a3"",
+        ""content"": {
+            ""ROOT"": {
+                ""type"": {
+                    ""resolvedName"": ""Root""
+                },
+                ""nodes"": [
+                    ""u0o5huyP8m"",
+                    ""mJm6LxU1Aa"",
+                    ""lQGtPLJL2T"",
+                    ""4VuhoSznUB"",
+                    ""Rz2tcI_p_d""
+                ],
+                ""props"": {
+                    ""padding"": 0,
+                    ""backgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""isCanvas"": true,
+                ""displayName"": ""Page"",
+                ""linkedNodes"": {
+                }
+            },
+            ""4VuhoSznUB"": {
+                ""type"": {
+                    ""resolvedName"": ""Stats""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""stats"": [
+                        {
+                            ""id"": ""1"",
+                            ""label"": ""Happy Clients"",
+                            ""value"": 500,
+                            ""prefix"": """",
+                            ""suffix"": ""+""
+                        },
+                        {
+                            ""id"": ""2"",
+                            ""label"": ""Projects Completed"",
+                            ""value"": 1200,
+                            ""prefix"": """",
+                            ""suffix"": """"
+                        },
+                        {
+                            ""id"": ""3"",
+                            ""label"": ""Client Satisfaction"",
+                            ""value"": 98,
+                            ""prefix"": """",
+                            ""suffix"": ""%""
+                        },
+                        {
+                            ""id"": ""4"",
+                            ""label"": ""Years Experience"",
+                            ""value"": 15,
+                            ""prefix"": """",
+                            ""suffix"": ""+""
+                        }
+                    ],
+                    ""style"": ""default"",
+                    ""title"": """",
+                    ""animate"": true,
+                    ""columns"": 4,
+                    ""subtitle"": """",
+                    ""textColor"": ""#ffffff"",
+                    ""backgroundColor"": ""#1f2937""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Stats"",
+                ""linkedNodes"": {
+                }
+            },
+            ""Rz2tcI_p_d"": {
+                ""type"": {
+                    ""resolvedName"": ""Footer""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""columns"": [
+                        {
+                            ""links"": [
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Features""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Pricing""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Integrations""
+                                }
+                            ],
+                            ""title"": ""Product""
+                        },
+                        {
+                            ""links"": [
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""About""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Blog""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Careers""
+                                }
+                            ],
+                            ""title"": ""Company""
+                        },
+                        {
+                            ""links"": [
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Help Center""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Contact""
+                                },
+                                {
+                                    ""href"": ""#"",
+                                    ""label"": ""Status""
+                                }
+                            ],
+                            ""title"": ""Support""
+                        }
+                    ],
+                    ""tagline"": ""Build beautiful websites with ease"",
+                    ""logoText"": ""DRAMAC"",
+                    ""copyright"": ""© 2026 DRAMAC. All rights reserved."",
+                    ""textColor"": ""#ffffff"",
+                    ""socialLinks"": [
+                        {
+                            ""href"": ""#"",
+                            ""platform"": ""twitter""
+                        },
+                        {
+                            ""href"": ""#"",
+                            ""platform"": ""facebook""
+                        },
+                        {
+                            ""href"": ""#"",
+                            ""platform"": ""linkedin""
+                        }
+                    ],
+                    ""backgroundColor"": ""#1a1a2e""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Footer"",
+                ""linkedNodes"": {
+                }
+            },
+            ""lQGtPLJL2T"": {
+                ""type"": {
+                    ""resolvedName"": ""Team""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""style"": ""cards"",
+                    ""title"": ""Meet Our Team"",
+                    ""columns"": 3,
+                    ""members"": [
+                        {
+                            ""id"": ""1"",
+                            ""bio"": ""With over 15 years of industry experience, Sarah leads our vision and strategy."",
+                            ""name"": ""Sarah Johnson"",
+                            ""role"": ""CEO & Founder"",
+                            ""image"": ""https://placehold.co/300x300?text=SJ"",
+                            ""twitter"": ""#"",
+                            ""linkedin"": ""#""
+                        },
+                        {
+                            ""id"": ""2"",
+                            ""bio"": ""Michael brings technical excellence and innovation to everything we build."",
+                            ""name"": ""Michael Chen"",
+                            ""role"": ""CTO"",
+                            ""image"": ""https://placehold.co/300x300?text=MC"",
+                            ""linkedin"": ""#""
+                        },
+                        {
+                            ""id"": ""3"",
+                            ""bio"": ""Emily transforms ideas into beautiful, user-centered designs."",
+                            ""name"": ""Emily Rodriguez"",
+                            ""role"": ""Design Director"",
+                            ""image"": ""https://placehold.co/300x300?text=ER"",
+                            ""twitter"": ""#"",
+                            ""linkedin"": ""#""
+                        }
+                    ],
+                    ""showBio"": true,
+                    ""subtitle"": ""The passionate people behind our success"",
+                    ""showSocial"": true
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Team"",
+                ""linkedNodes"": {
+                }
+            },
+            ""mJm6LxU1Aa"": {
+                ""type"": {
+                    ""resolvedName"": ""Hero""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""title"": ""Muscle Up!"",
+                    ""height"": ""min-h-screen"",
+                    ""overlay"": true,
+                    ""subtitle"": ""Build amazing experiences with our visual editor"",
+                    ""alignment"": ""center"",
+                    ""minHeight"": 500,
+                    ""textColor"": ""#ffffff"",
+                    ""buttonHref"": ""https://images.unsplash.com/photo-1577221084712-45b0445d2b00?q=80&w=698&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"",
+                    ""buttonLink"": ""#"",
+                    ""buttonText"": ""Get Started"",
+                    ""overlayOpacity"": 50,
+                    ""backgroundColor"": ""#1a1a2e"",
+                    ""backgroundImage"": ""https://images.unsplash.com/photo-1577221084712-45b0445d2b00?q=80&w=698&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Hero"",
+                ""linkedNodes"": {
+                }
+            },
+            ""u0o5huyP8m"": {
+                ""type"": {
+                    ""resolvedName"": ""Navigation""
+                },
+                ""nodes"": [
+                ],
+                ""props"": {
+                    ""logo"": """",
+                    ""links"": [
+                        {
+                            ""href"": ""#"",
+                            ""label"": ""Home""
+                        },
+                        {
+                            ""href"": ""#about"",
+                            ""label"": ""About""
+                        },
+                        {
+                            ""href"": ""#services"",
+                            ""label"": ""Services""
+                        },
+                        {
+                            ""href"": ""#contact"",
+                            ""label"": ""Contact""
+                        }
+                    ],
+                    ""sticky"": false,
+                    ""ctaHref"": ""#"",
+                    ""ctaText"": ""Get Started"",
+                    ""logoText"": ""DRAMAC"",
+                    ""textColor"": """",
+                    ""backgroundColor"": ""#ffffff""
+                },
+                ""custom"": {
+                },
+                ""hidden"": false,
+                ""parent"": ""ROOT"",
+                ""isCanvas"": false,
+                ""displayName"": ""Navigation"",
+                ""linkedNodes"": {
+                }
+            }
+        },
+        ""page_id"": ""4431d12e-e44b-45e0-bfa8-601e458bc34e"",
+        ""version"": 1,
+        ""updated_at"": ""2026-01-20T11:06:44.276875+00:00""
+    }
+]
+
+=== ASSETS DATA ===
+[
+    {
+        ""id"": ""647777b2-fc51-40ae-8000-bd0bd04bcd35"",
+        ""url"": ""https://nfirsqmyxmmtbignofgb.supabase.co/storage/v1/object/public/media/c86c7c61-97f8-428a-839a-22f7a03ef86d/3138f109-7221-4e06-b932-27c56509856b.png"",
+        ""name"": ""DM LOGO.png"",
+        ""size"": 14003,
+        ""tags"": [
+        ],
+        ""width"": null,
+        ""folder"": ""uploads"",
+        ""height"": null,
+        ""caption"": null,
+        ""site_id"": null,
+        ""alt_text"": null,
+        ""agency_id"": ""c86c7c61-97f8-428a-839a-22f7a03ef86d"",
+        ""file_name"": ""3138f109-7221-4e06-b932-27c56509856b.png"",
+        ""file_type"": ""image"",
+        ""folder_id"": null,
+        ""mime_type"": ""image/png"",
+        ""created_at"": ""2026-01-17T22:40:28.245254+00:00"",
+        ""updated_at"": ""2026-01-17T22:40:28.245254+00:00"",
+        ""uploaded_by"": ""e9270737-2278-4693-8cbf-b84a44ea736e"",
+        ""storage_path"": ""c86c7c61-97f8-428a-839a-22f7a03ef86d/3138f109-7221-4e06-b932-27c56509856b.png"",
+        ""optimized_url"": null,
+        ""original_name"": ""DM LOGO.png"",
+        ""thumbnail_url"": null
+    }
+]
+
+=== AUTH.USERS METADATA ===
+[
+    {
+        ""id"": ""e9270737-2278-4693-8cbf-b84a44ea736e"",
+        ""email"": ""drakemacchiko@gmail.com"",
+        ""created_at"": ""2026-01-13T18:38:00.076601+00:00"",
+        ""updated_at"": ""2026-01-21T08:21:09.358632+00:00"",
+        ""email_confirmed_at"": ""2026-01-13T19:19:40.309285+00:00""
+    },
+    {
+        ""id"": ""665b621f-6a4c-4e4c-b086-9131565285e5"",
+        ""email"": ""ochachel88@gmail.com"",
+        ""created_at"": ""2026-01-14T12:40:55.194343+00:00"",
+        ""updated_at"": ""2026-01-14T12:41:26.887145+00:00"",
+        ""email_confirmed_at"": ""2026-01-14T12:41:21.808939+00:00""
+    },
+    {
+        ""id"": ""df82b8d4-de49-4b3f-ac09-f905ede794a8"",
+        ""email"": ""drake@dramacagency.com"",
+        ""created_at"": ""2026-01-16T11:47:05.61139+00:00"",
+        ""updated_at"": ""2026-01-19T05:51:21.501634+00:00"",
+        ""email_confirmed_at"": ""2026-01-16T11:47:31.38263+00:00""
+    },
+    {
+        ""id"": ""6653df45-e574-4153-99d8-c17aa67261e7"",
+        ""email"": ""info@dramacagency.com"",
+        ""created_at"": ""2026-01-16T15:31:57.855728+00:00"",
+        ""updated_at"": ""2026-01-16T16:33:36.440042+00:00"",
+        ""email_confirmed_at"": ""2026-01-16T15:34:31.155473+00:00""
+    },
+    {
+        ""id"": ""cfa354a5-f58e-485e-afd0-2082dfc9a3ca"",
+        ""email"": ""client@dramacagency.com"",
+        ""created_at"": ""2026-01-17T15:12:22.744733+00:00"",
+        ""updated_at"": ""2026-01-20T17:26:45.620592+00:00"",
+        ""email_confirmed_at"": ""2026-01-17T15:13:40.675725+00:00""
+    }
+]
+
+=== END OF EXPORT ==="
