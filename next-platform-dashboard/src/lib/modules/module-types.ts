@@ -1,4 +1,10 @@
-export type ModuleCategory =
+// Re-export ModuleCategory from the extended categories module
+// This maintains backward compatibility while using the new extended categories
+export type { ModuleCategory } from './module-categories';
+import type { ModuleCategory } from './module-categories';
+
+// Legacy category type for backward compatibility
+export type LegacyModuleCategory =
   | "analytics"
   | "seo"
   | "ecommerce"
