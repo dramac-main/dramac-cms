@@ -15,8 +15,11 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { getCurrentUserId, isSuperAdmin } from '@/lib/auth/permissions'
+import { getCurrentUserId } from '@/lib/auth/permissions'
 import type { EdgeFunction, ModuleCapabilities, DatabaseIsolation } from '../types/module-types-v2'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type UntypedSupabaseClient = any
 
 // =============================================================
 // TYPES
@@ -70,6 +73,8 @@ export async function routeModuleAPI(
 ): Promise<ModuleAPIResponse> {
   const startTime = Date.now()
   const supabase = await createClient()
+  // Cast to untyped client for columns added by migration
+  const db = supabase as UntypedSupabaseClient
   const userId = await getCurrentUserId()
 
   try {
@@ -77,7 +82,7 @@ export async function routeModuleAPI(
     // First try modules_v2 (published modules), then module_source (studio modules)
     let module: ModuleInfo | null = null
     
-    const { data: publishedModule } = await supabase
+    const { data: publishedModule } = await db
       .from('modules_v2')
       .select('id, short_id, capabilities, resources, db_isolation')
       .eq('id', request.moduleId)
@@ -87,7 +92,7 @@ export async function routeModuleAPI(
     if (publishedModule) {
       module = publishedModule as ModuleInfo
     } else {
-      const { data: sourceModule } = await supabase
+      const { data: sourceModule } = await db
         .from('module_source')
         .select('id, short_id, capabilities, resources, db_isolation')
         .eq('id', request.moduleId)
@@ -402,6 +407,8 @@ function createLimitedDBInterface(
 ): LimitedDB {
   const shortId = module.short_id
   const isolation = module.db_isolation || 'none'
+  // Cast to untyped for dynamic table access
+  const db = supabase as UntypedSupabaseClient
   
   return {
     /**
@@ -423,7 +430,7 @@ function createLimitedDBInterface(
         }
       }
       
-      return supabase.from(fullTableName)
+      return db.from(fullTableName)
     },
     
     /**
@@ -437,7 +444,7 @@ function createLimitedDBInterface(
         throw new Error(`Access denied: Cannot call function '${fnName}'. Only module-specific functions are allowed.`)
       }
       
-      return supabase.rpc(fnName, params as Record<string, unknown>)
+      return db.rpc(fnName, params as Record<string, unknown>)
     }
   }
 }
@@ -453,9 +460,10 @@ export async function listModuleAPIRoutes(
   moduleId: string
 ): Promise<EdgeFunction[]> {
   const supabase = await createClient()
+  const db = supabase as UntypedSupabaseClient
   
   // Try modules_v2 first
-  const { data: publishedModule } = await supabase
+  const { data: publishedModule } = await db
     .from('modules_v2')
     .select('resources')
     .eq('id', moduleId)
@@ -466,7 +474,7 @@ export async function listModuleAPIRoutes(
   }
 
   // Try module_source
-  const { data: sourceModule } = await supabase
+  const { data: sourceModule } = await db
     .from('module_source')
     .select('resources')
     .eq('id', moduleId)
@@ -490,7 +498,7 @@ export async function hasModuleAPIRoute(
 /**
  * Validate an API route configuration
  */
-export function validateAPIRoute(route: EdgeFunction): { valid: boolean; errors: string[] } {
+export async function validateAPIRoute(route: EdgeFunction): Promise<{ valid: boolean; errors: string[] }> {
   const errors: string[] = []
 
   if (!route.name) {

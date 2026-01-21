@@ -25,6 +25,9 @@ import type {
   DatabaseIsolation
 } from '../types/module-types-v2'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type UntypedSupabaseClient = any
+
 // =============================================================
 // TYPES
 // =============================================================
@@ -79,9 +82,11 @@ export async function provisionModuleDatabase(
   }
 
   const supabase = await createClient()
+  // Cast to untyped client for columns added by migration
+  const db = supabase as UntypedSupabaseClient
   
   // Get module short_id
-  const { data: moduleInfo, error: moduleError } = await supabase
+  const { data: moduleInfo, error: moduleError } = await db
     .from('module_source')
     .select('id, short_id, db_isolation')
     .eq('id', moduleId)
@@ -101,7 +106,7 @@ export async function provisionModuleDatabase(
       const schemaName = `mod_${shortId}`
       const createSchemaSql = `CREATE SCHEMA IF NOT EXISTS ${schemaName}`
       
-      const { error: schemaError } = await supabase.rpc('execute_ddl', { 
+      const { error: schemaError } = await db.rpc('execute_ddl', { 
         sql_statement: createSchemaSql 
       })
       
@@ -121,7 +126,7 @@ export async function provisionModuleDatabase(
       const createSql = generateCreateTableSQL(fullTableName, table)
       
       // Execute via RPC
-      const { error } = await supabase.rpc('execute_ddl', { 
+      const { error } = await db.rpc('execute_ddl', { 
         sql_statement: createSql 
       })
       
@@ -135,12 +140,12 @@ export async function provisionModuleDatabase(
 
       // Enable RLS
       const rlsEnableSql = `ALTER TABLE ${fullTableName} ENABLE ROW LEVEL SECURITY`
-      await supabase.rpc('execute_ddl', { sql_statement: rlsEnableSql })
+      await db.rpc('execute_ddl', { sql_statement: rlsEnableSql })
 
       // Create RLS policies
       for (const policy of table.rls_policies) {
         const policySql = generateRLSPolicySQL(fullTableName, policy)
-        const { error: policyError } = await supabase.rpc('execute_ddl', { 
+        const { error: policyError } = await db.rpc('execute_ddl', { 
           sql_statement: policySql 
         })
         if (policyError) {
@@ -152,7 +157,7 @@ export async function provisionModuleDatabase(
       for (const indexCol of table.indexes) {
         const indexName = `idx_${shortId}_${table.name}_${indexCol.replace(/,/g, '_')}`
         const indexSql = `CREATE INDEX IF NOT EXISTS ${indexName} ON ${fullTableName}(${indexCol})`
-        await supabase.rpc('execute_ddl', { sql_statement: indexSql })
+        await db.rpc('execute_ddl', { sql_statement: indexSql })
       }
 
       // Create updated_at trigger
@@ -162,7 +167,7 @@ export async function provisionModuleDatabase(
           FOR EACH ROW
           EXECUTE FUNCTION update_updated_at_column()
       `
-      await supabase.rpc('execute_ddl', { sql_statement: triggerSql })
+      await db.rpc('execute_ddl', { sql_statement: triggerSql })
     }
 
     // Update module_source with provisioned resources
@@ -174,7 +179,7 @@ export async function provisionModuleDatabase(
       }))
     }
 
-    await supabase
+    await db
       .from('module_source')
       .update({
         resources: updatedResources,
@@ -211,9 +216,10 @@ export async function deprovisionModuleDatabase(
   }
 
   const supabase = await createClient()
+  const db = supabase as UntypedSupabaseClient
 
   // Get module info
-  const { data: moduleInfo, error: moduleError } = await supabase
+  const { data: moduleInfo, error: moduleError } = await db
     .from('module_source')
     .select('id, short_id, db_isolation, resources')
     .eq('id', moduleId)
@@ -231,7 +237,7 @@ export async function deprovisionModuleDatabase(
     // If schema isolation, drop the entire schema
     if (dbIsolation === 'schema') {
       const schemaName = `mod_${shortId}`
-      const { error } = await supabase.rpc('execute_ddl', {
+      const { error } = await db.rpc('execute_ddl', {
         sql_statement: `DROP SCHEMA IF EXISTS ${schemaName} CASCADE`
       })
       
@@ -243,7 +249,7 @@ export async function deprovisionModuleDatabase(
       for (const table of resources.tables) {
         const tableName = table.actual_name || getFullTableName(shortId, table.name, dbIsolation || 'tables')
         
-        const { error } = await supabase.rpc('execute_ddl', {
+        const { error } = await db.rpc('execute_ddl', {
           sql_statement: `DROP TABLE IF EXISTS ${tableName} CASCADE`
         })
         
@@ -277,8 +283,9 @@ export async function isModuleDatabaseProvisioned(
   moduleId: string
 ): Promise<boolean> {
   const supabase = await createClient()
+  const db = supabase as UntypedSupabaseClient
   
-  const { data: module } = await supabase
+  const { data: module } = await db
     .from('module_source')
     .select('resources')
     .eq('id', moduleId)
@@ -299,8 +306,9 @@ export async function getModuleDatabaseInfo(
   moduleId: string
 ): Promise<{ tables: string[]; schema?: string } | null> {
   const supabase = await createClient()
+  const db = supabase as UntypedSupabaseClient
   
-  const { data: module } = await supabase
+  const { data: module } = await db
     .from('module_source')
     .select('short_id, db_isolation, resources')
     .eq('id', moduleId)
