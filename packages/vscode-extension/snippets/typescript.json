@@ -1,0 +1,252 @@
+{
+  "Dramac Module Config": {
+    "prefix": "dramac-config",
+    "body": [
+      "import { defineModule } from '@dramac/sdk';",
+      "",
+      "export default defineModule({",
+      "  id: '${1:module-id}',",
+      "  name: '${2:Module Name}',",
+      "  version: '${3:1.0.0}',",
+      "  description: '${4:Module description}',",
+      "  category: '${5|custom,crm,finance,booking,inventory,hr|}',",
+      "",
+      "  // Database tables",
+      "  tables: [",
+      "    {",
+      "      name: '${6:items}',",
+      "      columns: [",
+      "        { name: 'id', type: 'uuid', primaryKey: true, defaultValue: 'gen_random_uuid()' },",
+      "        { name: '${7:name}', type: 'text', nullable: false },",
+      "        { name: 'site_id', type: 'uuid', references: { table: 'sites', column: 'id' } },",
+      "        { name: 'created_at', type: 'timestamptz', defaultValue: 'now()' },",
+      "        { name: 'updated_at', type: 'timestamptz', defaultValue: 'now()' },",
+      "      ],",
+      "      rls: true,",
+      "    },",
+      "  ],",
+      "",
+      "  // Permissions",
+      "  permissions: [",
+      "    {",
+      "      id: 'module.view_${8:items}',",
+      "      name: 'View ${2}',",
+      "      description: 'View ${6} in the module',",
+      "      roles: ['admin', 'site_admin', 'site_user'],",
+      "    },",
+      "    {",
+      "      id: 'module.manage_${8}',",
+      "      name: 'Manage ${2}',",
+      "      description: 'Create, edit, and delete ${6}',",
+      "      roles: ['admin', 'site_admin'],",
+      "    },",
+      "  ],",
+      "",
+      "  // Entry points",
+      "  entryPoints: {",
+      "    dashboard: './src/Dashboard',",
+      "    settings: './src/Settings',",
+      "  },",
+      "",
+      "  // Lifecycle hooks",
+      "  hooks: {",
+      "    onInstall: async (ctx) => {",
+      "      console.log('Module installed for site:', ctx.siteId);",
+      "    },",
+      "    onUninstall: async (ctx) => {",
+      "      console.log('Module uninstalled from site:', ctx.siteId);",
+      "    },",
+      "  },",
+      "});",
+      ""
+    ],
+    "description": "Create a complete Dramac module configuration"
+  },
+  "Dramac Table Definition": {
+    "prefix": "dramac-table",
+    "body": [
+      "{",
+      "  name: '${1:table_name}',",
+      "  columns: [",
+      "    { name: 'id', type: 'uuid', primaryKey: true, defaultValue: 'gen_random_uuid()' },",
+      "    { name: '${2:column_name}', type: '${3|text,integer,boolean,timestamp,uuid,jsonb|}', nullable: ${4|false,true|} },",
+      "    { name: 'site_id', type: 'uuid', references: { table: 'sites', column: 'id' } },",
+      "    { name: 'created_at', type: 'timestamptz', defaultValue: 'now()' },",
+      "    { name: 'updated_at', type: 'timestamptz', defaultValue: 'now()' },",
+      "  ],",
+      "  indexes: [",
+      "    { columns: ['site_id', '${2}'] },",
+      "  ],",
+      "  rls: true,",
+      "},"
+    ],
+    "description": "Create a Dramac table definition"
+  },
+  "Dramac Permission": {
+    "prefix": "dramac-permission",
+    "body": [
+      "{",
+      "  id: 'module.${1:action}',",
+      "  name: '${2:Permission Name}',",
+      "  description: '${3:Permission description}',",
+      "  roles: [${4|'admin'\\, 'site_admin'\\, 'site_user','admin'\\, 'site_admin','admin'|}],",
+      "},"
+    ],
+    "description": "Create a Dramac permission definition"
+  },
+  "Dramac Column": {
+    "prefix": "dramac-column",
+    "body": [
+      "{ name: '${1:column_name}', type: '${2|text,integer,bigint,boolean,timestamp,timestamptz,uuid,jsonb,numeric,date|}', nullable: ${3|true,false|}${4:, defaultValue: '${5}'} },"
+    ],
+    "description": "Create a Dramac table column"
+  },
+  "Dramac Foreign Key Column": {
+    "prefix": "dramac-fk",
+    "body": [
+      "{ name: '${1:column_name}', type: 'uuid', references: { table: '${2:table_name}', column: '${3:id}' }, onDelete: '${4|CASCADE,SET NULL,RESTRICT|}' },"
+    ],
+    "description": "Create a foreign key column"
+  },
+  "Dramac Module Client": {
+    "prefix": "dramac-client",
+    "body": [
+      "import { createModuleClient } from '@dramac/sdk/database';",
+      "",
+      "const client = createModuleClient({",
+      "  moduleId: '${1:module-id}',",
+      "  supabase: ${2:supabaseClient},",
+      "  siteId: ${3:siteId},",
+      "});",
+      "",
+      "// Query data",
+      "const { data, error } = await client.query('${4:table}', {",
+      "  select: '${5:*}',",
+      "  filter: { ${6:column}: ${7:value} },",
+      "});",
+      ""
+    ],
+    "description": "Create a module database client"
+  },
+  "Dramac Query": {
+    "prefix": "dramac-query",
+    "body": [
+      "const { data, error } = await client.query('${1:table}', {",
+      "  select: '${2:*}',",
+      "  filter: { ${3:column}: ${4:value} },",
+      "  orderBy: { column: '${5:created_at}', direction: '${6|desc,asc|}' },",
+      "  limit: ${7:50},",
+      "});"
+    ],
+    "description": "Create a database query"
+  },
+  "Dramac Insert": {
+    "prefix": "dramac-insert",
+    "body": [
+      "const { data, error } = await client.insert('${1:table}', {",
+      "  ${2:column}: ${3:value},",
+      "});"
+    ],
+    "description": "Insert a record"
+  },
+  "Dramac Update": {
+    "prefix": "dramac-update",
+    "body": [
+      "const { data, error } = await client.update('${1:table}', '${2:id}', {",
+      "  ${3:column}: ${4:value},",
+      "});"
+    ],
+    "description": "Update a record"
+  },
+  "Dramac Delete": {
+    "prefix": "dramac-delete",
+    "body": [
+      "const { error } = await client.delete('${1:table}', '${2:id}');"
+    ],
+    "description": "Delete a record"
+  },
+  "Dramac API Handler": {
+    "prefix": "dramac-api",
+    "body": [
+      "import { createHandler } from '@dramac/sdk';",
+      "import { z } from 'zod';",
+      "",
+      "const ${1:inputSchema} = z.object({",
+      "  ${2:field}: z.${3|string(),number(),boolean(),array(z.string())|},",
+      "});",
+      "",
+      "export const ${4:handler} = createHandler({",
+      "  method: '${5|GET,POST,PUT,DELETE|}',",
+      "  input: ${1},",
+      "  handler: async (ctx, input) => {",
+      "    ${6:// Handler logic}",
+      "    return { success: true };",
+      "  },",
+      "});",
+      ""
+    ],
+    "description": "Create an API route handler"
+  },
+  "Dramac Webhook Handler": {
+    "prefix": "dramac-webhook",
+    "body": [
+      "import { createHandler } from '@dramac/sdk';",
+      "",
+      "export const webhookHandler = createHandler({",
+      "  method: 'POST',",
+      "  handler: async (ctx, input) => {",
+      "    const event = ctx.event;",
+      "    ",
+      "    switch (event.type) {",
+      "      case '${1:event.type}':",
+      "        // Handle event",
+      "        break;",
+      "    }",
+      "    ",
+      "    return { received: true };",
+      "  },",
+      "});",
+      ""
+    ],
+    "description": "Create a webhook handler"
+  },
+  "Dramac Background Job": {
+    "prefix": "dramac-job",
+    "body": [
+      "import { defineJob } from '@dramac/sdk';",
+      "",
+      "export const ${1:jobName} = defineJob({",
+      "  name: '${2:job-name}',",
+      "  schedule: '${3:0 * * * *}', // Every hour",
+      "  handler: async (ctx) => {",
+      "    ${4:// Job logic}",
+      "    console.log('Job executed for site:', ctx.siteId);",
+      "  },",
+      "});",
+      ""
+    ],
+    "description": "Create a background job"
+  },
+  "Dramac Migration": {
+    "prefix": "dramac-migration",
+    "body": [
+      "import { defineMigration } from '@dramac/sdk/database';",
+      "",
+      "export default defineMigration({",
+      "  version: '${1:1.0.1}',",
+      "  name: '${2:migration_name}',",
+      "  up: async (ctx) => {",
+      "    ${3:// Up migration}",
+      "    await ctx.sql`",
+      "      ${4:-- SQL statements}",
+      "    `;",
+      "  },",
+      "  down: async (ctx) => {",
+      "    ${5:// Down migration}",
+      "  },",
+      "});",
+      ""
+    ],
+    "description": "Create a database migration"
+  }
+}

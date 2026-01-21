@@ -1,0 +1,222 @@
+{
+  "name": "dramac-modules",
+  "displayName": "Dramac Modules",
+  "description": "Build Dramac modules with IntelliSense, snippets, and live preview",
+  "version": "1.0.0",
+  "publisher": "dramac",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dramac-main/dramac-vscode.git"
+  },
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other",
+    "Snippets",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "dramac",
+    "modules",
+    "cms",
+    "platform",
+    "typescript"
+  ],
+  "activationEvents": [
+    "workspaceContains:dramac.config.ts",
+    "workspaceContains:dramac.config.js"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dramac.createModule",
+        "title": "Dramac: Create New Module",
+        "category": "Dramac"
+      },
+      {
+        "command": "dramac.startDevServer",
+        "title": "Dramac: Start Dev Server",
+        "category": "Dramac"
+      },
+      {
+        "command": "dramac.stopDevServer",
+        "title": "Dramac: Stop Dev Server",
+        "category": "Dramac"
+      },
+      {
+        "command": "dramac.deployModule",
+        "title": "Dramac: Deploy Module",
+        "category": "Dramac"
+      },
+      {
+        "command": "dramac.validateModule",
+        "title": "Dramac: Validate Module",
+        "category": "Dramac"
+      },
+      {
+        "command": "dramac.generateTable",
+        "title": "Dramac: Generate Database Table",
+        "category": "Dramac"
+      },
+      {
+        "command": "dramac.generateComponent",
+        "title": "Dramac: Generate Component",
+        "category": "Dramac"
+      },
+      {
+        "command": "dramac.generateApiRoute",
+        "title": "Dramac: Generate API Route",
+        "category": "Dramac"
+      },
+      {
+        "command": "dramac.openDocs",
+        "title": "Dramac: Open Documentation",
+        "category": "Dramac"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "typescript",
+        "path": "./snippets/typescript.json"
+      },
+      {
+        "language": "typescriptreact",
+        "path": "./snippets/typescriptreact.json"
+      }
+    ],
+    "jsonValidation": [
+      {
+        "fileMatch": "dramac.config.json",
+        "url": "./schemas/dramac-config.json"
+      }
+    ],
+    "languages": [
+      {
+        "id": "dramac-config",
+        "aliases": ["Dramac Config"],
+        "filenames": ["dramac.config.ts", "dramac.config.js"]
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "dramacModuleExplorer",
+          "name": "Dramac Module",
+          "when": "workspaceContains:dramac.config.ts || workspaceContains:dramac.config.js",
+          "icon": "images/dramac-icon.svg"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "dramacModuleExplorer",
+        "contents": "No Dramac module found in this workspace.\n[Create New Module](command:dramac.createModule)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "dramac.startDevServer",
+          "when": "view == dramacModuleExplorer",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "dramac.generateComponent",
+          "when": "explorerResourceIsFolder && resourceFilename == 'components'",
+          "group": "dramac@1"
+        },
+        {
+          "command": "dramac.generateApiRoute",
+          "when": "explorerResourceIsFolder && resourceFilename == 'api'",
+          "group": "dramac@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Dramac Modules",
+      "properties": {
+        "dramac.devServer.port": {
+          "type": "number",
+          "default": 3001,
+          "description": "Port for the local development server"
+        },
+        "dramac.devServer.openBrowser": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open browser when starting dev server"
+        },
+        "dramac.api.url": {
+          "type": "string",
+          "default": "https://api.dramac.io",
+          "description": "Dramac API URL"
+        },
+        "dramac.api.key": {
+          "type": "string",
+          "default": "",
+          "description": "Dramac API key for deployments"
+        },
+        "dramac.telemetry.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable anonymous usage telemetry"
+        }
+      }
+    },
+    "problemMatchers": [
+      {
+        "name": "dramac",
+        "owner": "dramac",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^(.*):(\\d+):(\\d+):\\s+(error|warning):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      }
+    ],
+    "taskDefinitions": [
+      {
+        "type": "dramac",
+        "required": ["task"],
+        "properties": {
+          "task": {
+            "type": "string",
+            "description": "The Dramac task to run"
+          }
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.3",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0",
+    "@vscode/test-electron": "^2.3.6",
+    "@vscode/vsce": "^2.22.0",
+    "eslint": "^8.52.0",
+    "glob": "^10.3.10",
+    "mocha": "^10.2.0",
+    "typescript": "^5.2.2"
+  }
+}
