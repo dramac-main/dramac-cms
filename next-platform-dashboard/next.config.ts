@@ -23,7 +23,8 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/(.*)",
+        // Apply security headers to all routes except embed
+        source: "/((?!embed).*)",
         headers: [
           {
             key: "X-Frame-Options",
