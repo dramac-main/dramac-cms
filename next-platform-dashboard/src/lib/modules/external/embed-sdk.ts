@@ -549,8 +549,8 @@ interface DramacSDK {
     private processQueue(): void {
       while (commandQueue.length > 0) {
         const cmd = commandQueue.shift();
-        if (cmd && cmd.method in this && typeof (this as Record<string, unknown>)[cmd.method] === 'function') {
-          ((this as Record<string, (...args: unknown[]) => void>)[cmd.method] as (...args: unknown[]) => void)(...cmd.args);
+        if (cmd && cmd.method in this && typeof (this as any)[cmd.method] === 'function') {
+          (this as any)[cmd.method](...cmd.args);
         }
       }
     }

@@ -179,7 +179,7 @@ export class OAuthService {
     scopes?: string[];
     isActive?: boolean;
   }): Promise<OAuthClient> {
-    const updateData: Record<string, string | string[]> = {};
+    const updateData: Record<string, string | string[] | boolean> = {};
     
     if (updates.name) updateData.name = updates.name;
     if (updates.redirectUris) {
