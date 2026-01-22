@@ -48,6 +48,11 @@ export interface ModuleListItem {
   is_featured: boolean;
   author_name: string | null;
   author_verified: boolean | null;
+  // Badge-related fields
+  source?: string | null;           // 'catalog' or 'studio'
+  status?: string | null;           // 'active', 'testing', 'published', etc.
+  install_level?: string | null;    // 'platform', 'agency', 'client', 'site'
+  studio_module_id?: string | null; // For studio modules
   screenshots: string[];
   published_at: string | null;
 }
@@ -109,7 +114,104 @@ export interface ModuleDetails extends ModuleListItem {
 // ============================================================================
 
 /**
+ * Check if current user's agency is enrolled in beta program
+ */
+async function checkBetaEnrollment(supabase: ReturnType<typeof createClient>): Promise<{
+  isBeta: boolean;
+  hasTestSites: boolean;
+}> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { isBeta: false, hasTestSites: false };
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('agency_id')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.agency_id) return { isBeta: false, hasTestSites: false };
+
+    // Check beta enrollment
+    const { data: betaEnrollment } = await supabase
+      .from('beta_enrollment')
+      .select('id, is_active')
+      .eq('agency_id', profile.agency_id)
+      .eq('is_active', true)
+      .single();
+
+    // Check test sites
+    const { data: testSites } = await supabase
+      .from('test_site_configuration')
+      .select('site_id, sites!inner(agency_id)')
+      .eq('is_active', true)
+      .eq('sites.agency_id', profile.agency_id)
+      .limit(1);
+
+    return {
+      isBeta: !!betaEnrollment,
+      hasTestSites: (testSites && testSites.length > 0) || false
+    };
+  } catch {
+    return { isBeta: false, hasTestSites: false };
+  }
+}
+
+/**
+ * Fetch testing modules from module_source for beta users
+ */
+async function fetchTestingModules(
+  supabase: ReturnType<typeof createClient>,
+  filters: MarketplaceFilters
+): Promise<ModuleListItem[]> {
+  const { query, categories } = filters;
+
+  let testingQuery = supabase
+    .from('module_source')
+    .select('*')
+    .eq('status', 'testing')
+    .in('testing_tier', ['beta', 'public']); // Only beta/public tier, not internal
+
+  if (query && query.trim()) {
+    testingQuery = testingQuery.or(`name.ilike.%${query}%,description.ilike.%${query}%`);
+  }
+
+  if (categories && categories.length > 0) {
+    testingQuery = testingQuery.in('category', categories);
+  }
+
+  const { data: testingModules } = await testingQuery;
+
+  // Convert to ModuleListItem format
+  return (testingModules || []).map((m: any) => ({
+    id: m.id,
+    slug: m.slug,
+    name: m.name,
+    description: m.description,
+    icon: m.icon || '📦',
+    category: m.category || 'other',
+    module_type: m.module_type || 'widget',
+    pricing_type: 'free', // Testing modules are free
+    wholesale_price_monthly: 0,
+    wholesale_price_yearly: 0,
+    rating_average: null,
+    rating_count: null,
+    install_count: 0,
+    is_featured: false,
+    author_name: m.author_name || 'DRAMAC Studio',
+    author_verified: true,
+    source: 'studio',
+    status: 'testing', // Important for Beta badge
+    install_level: 'site',
+    studio_module_id: m.id,
+    screenshots: [],
+    published_at: m.created_at
+  }));
+}
+
+/**
  * Search marketplace modules with filters, full-text search, and pagination
+ * Includes testing/beta modules for enrolled agencies
  */
 export async function searchMarketplace(
   filters: MarketplaceFilters
@@ -129,14 +231,19 @@ export async function searchMarketplace(
     limit = 20
   } = filters;
 
-  // Build base query
+  // Check beta enrollment for testing modules access
+  const { isBeta, hasTestSites } = await checkBetaEnrollment(supabase);
+  const canSeeTestingModules = isBeta || hasTestSites;
+
+  // Build base query - include source, status, install_level for badges
   let dbQuery = supabase
     .from('modules_v2')
     .select(`
       id, slug, name, description, icon, category, module_type,
       pricing_type, wholesale_price_monthly, wholesale_price_yearly,
       rating_average, rating_count, install_count, is_featured,
-      author_name, author_verified, screenshots, published_at
+      author_name, author_verified, screenshots, published_at,
+      source, status, install_level, studio_module_id
     `, { count: 'exact' })
     .eq('status', 'active');
 
@@ -227,15 +334,55 @@ export async function searchMarketplace(
     throw error;
   }
 
+  // Merge testing modules if user has access
+  let allModules = (data || []) as ModuleListItem[];
+  let totalCount = count || 0;
+
+  if (canSeeTestingModules) {
+    const testingModules = await fetchTestingModules(supabase, filters);
+    
+    // Deduplicate by slug (prefer testing version if exists in both)
+    const testingSlugs = new Set(testingModules.map(m => m.slug));
+    const filteredModules = allModules.filter(m => !testingSlugs.has(m.slug));
+    
+    // Apply price filter to testing modules (they're all free)
+    let filteredTestingModules = testingModules;
+    if (priceRange === 'paid') {
+      filteredTestingModules = []; // Testing modules are free, exclude if paid filter
+    }
+    
+    // Combine and sort
+    allModules = [...filteredModules, ...filteredTestingModules];
+    totalCount = allModules.length;
+    
+    // Re-apply sorting after merge
+    if (sortBy === 'popular' || sortBy === 'relevance') {
+      allModules.sort((a, b) => {
+        if (a.is_featured !== b.is_featured) return a.is_featured ? -1 : 1;
+        return (b.install_count || 0) - (a.install_count || 0);
+      });
+    } else if (sortBy === 'newest') {
+      allModules.sort((a, b) => {
+        const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+        const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
+        return dateB - dateA;
+      });
+    }
+    
+    // Apply pagination to merged results
+    const offset = (page - 1) * limit;
+    allModules = allModules.slice(offset, offset + limit);
+  }
+
   // Get facets for filters
   const facets = await getSearchFacets(supabase);
 
   return {
-    modules: (data || []) as ModuleListItem[],
-    total: count || 0,
+    modules: allModules,
+    total: totalCount,
     page,
     limit,
-    totalPages: Math.ceil((count || 0) / limit),
+    totalPages: Math.ceil(totalCount / limit),
     facets
   };
 }

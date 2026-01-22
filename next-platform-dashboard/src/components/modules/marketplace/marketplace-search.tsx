@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,51 +21,30 @@ import {
 } from '@/lib/modules/marketplace-search';
 import { EnhancedModuleCard } from './enhanced-module-card';
 
-// Custom debounce hook
-function useDebouncedCallback<T extends (...args: Parameters<T>) => void>(
-  callback: T,
-  delay: number
-): T {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const callbackRef = useRef(callback);
-  
-  // Update callback ref when callback changes
-  useEffect(() => {
-    callbackRef.current = callback;
-  }, [callback]);
-  
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-  
-  return useCallback((...args: Parameters<T>) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    timeoutRef.current = setTimeout(() => {
-      callbackRef.current(...args);
-    }, delay);
-  }, [delay]) as T;
-}
-
 interface MarketplaceSearchProps {
   initialFilters?: MarketplaceFilters;
-  subscribedModuleIds?: Set<string>;
+  subscribedModuleIds?: string[];
 }
 
+/**
+ * MarketplaceSearch Component
+ * 
+ * IMPORTANT: This component is carefully designed to avoid infinite render loops.
+ * - Uses window.history.replaceState() instead of router.replace() to avoid triggering re-renders
+ * - All search triggers are debounced
+ * - Initial search runs exactly once on mount
+ */
 export function MarketplaceSearch({ 
   initialFilters,
-  subscribedModuleIds = new Set() 
+  subscribedModuleIds = [] 
 }: MarketplaceSearchProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [filters, setFilters] = useState<MarketplaceFilters>({
+  // Convert to Set for O(1) lookups (created once via useMemo pattern)
+  const subscribedSet = new Set(subscribedModuleIds);
+  
+  // Initialize filters from URL or props (only once)
+  const [filters, setFilters] = useState<MarketplaceFilters>(() => ({
     query: searchParams.get('q') || initialFilters?.query || '',
     categories: (searchParams.get('category')?.split(',').filter(Boolean) || initialFilters?.categories || []) as MarketplaceFilters['categories'],
     priceRange: (searchParams.get('price') as MarketplaceFilters['priceRange']) || initialFilters?.priceRange || 'all',
@@ -73,73 +52,143 @@ export function MarketplaceSearch({
     moduleType: (searchParams.get('type') as MarketplaceFilters['moduleType']) || initialFilters?.moduleType || 'all',
     page: parseInt(searchParams.get('page') || '1') || 1,
     limit: 20
-  });
+  }));
   
   const [results, setResults] = useState<MarketplaceSearchResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Refs for cleanup and preventing duplicate searches
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasSearchedRef = useRef(false);
+  const lastFiltersRef = useRef<string>('');
 
-  // Debounced search
-  const debouncedSearch = useDebouncedCallback(async (f: MarketplaceFilters) => {
+  // Serialize filters for comparison
+  const serializeFilters = (f: MarketplaceFilters): string => {
+    return JSON.stringify({
+      query: f.query || '',
+      categories: f.categories || [],
+      priceRange: f.priceRange || 'all',
+      sortBy: f.sortBy || 'popular',
+      moduleType: f.moduleType || 'all',
+      page: f.page || 1
+    });
+  };
+
+  // Perform search with current filters
+  const doSearch = async (searchFilters: MarketplaceFilters) => {
+    // Serialize and check if we already searched with these exact filters
+    const serialized = serializeFilters(searchFilters);
+    if (serialized === lastFiltersRef.current && hasSearchedRef.current) {
+      return; // Skip duplicate search
+    }
+    lastFiltersRef.current = serialized;
+
+    // Cancel any in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     setLoading(true);
     try {
-      const data = await searchMarketplace(f);
+      const data = await searchMarketplace(searchFilters);
       setResults(data);
+      hasSearchedRef.current = true;
     } catch (error) {
-      console.error('Search error:', error);
+      if ((error as Error).name !== 'AbortError') {
+        console.error('Search error:', error);
+      }
     } finally {
       setLoading(false);
     }
-  }, 300);
+  };
 
-  // Update URL when filters change
+  // Initial search on mount - runs exactly once
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (filters.query) params.set('q', filters.query);
-    if (filters.categories && filters.categories.length > 0) {
-      params.set('category', filters.categories.join(','));
-    }
-    if (filters.priceRange && filters.priceRange !== 'all') {
-      params.set('price', filters.priceRange);
-    }
-    if (filters.sortBy && filters.sortBy !== 'popular') {
-      params.set('sort', filters.sortBy);
-    }
-    if (filters.moduleType && filters.moduleType !== 'all') {
-      params.set('type', filters.moduleType);
-    }
-    if (filters.page && filters.page > 1) {
-      params.set('page', filters.page.toString());
-    }
+    doSearch(filters);
     
-    const queryString = params.toString();
-    const newUrl = queryString ? `?${queryString}` : window.location.pathname;
-    router.replace(newUrl, { scroll: false });
-  }, [filters, router]);
+    return () => {
+      // Cleanup on unmount
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps = mount only
 
-  useEffect(() => {
-    debouncedSearch(filters);
-  }, [filters, debouncedSearch]);
-
+  // Update filter and trigger debounced search
   const updateFilter = <K extends keyof MarketplaceFilters>(
     key: K, 
     value: MarketplaceFilters[K]
   ) => {
-    setFilters(prev => ({ ...prev, [key]: value, page: key === 'page' ? value as number : 1 }));
-  };
-
-  const toggleCategory = (category: string) => {
     setFilters(prev => {
-      const cats = prev.categories || [];
-      const newCats = cats.includes(category as typeof cats[number])
-        ? cats.filter(c => c !== category)
-        : [...cats, category as typeof cats[number]];
-      return { ...prev, categories: newCats, page: 1 };
+      const newFilters = { 
+        ...prev, 
+        [key]: value, 
+        // Reset page to 1 when changing other filters
+        page: key === 'page' ? (value as number) : 1 
+      };
+      
+      // Clear previous debounce
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      
+      // Debounce the search (300ms for typing, immediate for other filters)
+      const delay = key === 'query' ? 300 : 50;
+      debounceTimerRef.current = setTimeout(() => {
+        doSearch(newFilters);
+        updateUrlSilently(newFilters);
+      }, delay);
+      
+      return newFilters;
     });
   };
 
+  // Update URL without triggering re-render (uses native history API)
+  const updateUrlSilently = (f: MarketplaceFilters) => {
+    const params = new URLSearchParams();
+    if (f.query) params.set('q', f.query);
+    if (f.categories && f.categories.length > 0) {
+      params.set('category', f.categories.join(','));
+    }
+    if (f.priceRange && f.priceRange !== 'all') {
+      params.set('price', f.priceRange);
+    }
+    if (f.sortBy && f.sortBy !== 'popular') {
+      params.set('sort', f.sortBy);
+    }
+    if (f.moduleType && f.moduleType !== 'all') {
+      params.set('type', f.moduleType);
+    }
+    if (f.page && f.page > 1) {
+      params.set('page', f.page.toString());
+    }
+    
+    const queryString = params.toString();
+    const newUrl = queryString 
+      ? `${window.location.pathname}?${queryString}` 
+      : window.location.pathname;
+    
+    // Use native history API to avoid React re-render
+    window.history.replaceState(null, '', newUrl);
+  };
+
+  const toggleCategory = (category: string) => {
+    const cats = filters.categories || [];
+    const newCats = cats.includes(category as typeof cats[number])
+      ? cats.filter(c => c !== category)
+      : [...cats, category as typeof cats[number]];
+    updateFilter('categories', newCats);
+  };
+
   const clearFilters = () => {
-    setFilters({
+    const newFilters: MarketplaceFilters = {
       query: '',
       categories: [],
       priceRange: 'all',
@@ -147,7 +196,15 @@ export function MarketplaceSearch({
       moduleType: 'all',
       page: 1,
       limit: 20
-    });
+    };
+    setFilters(newFilters);
+    
+    // Clear debounce and search immediately
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    doSearch(newFilters);
+    updateUrlSilently(newFilters);
   };
 
   const hasActiveFilters = 
@@ -348,7 +405,7 @@ export function MarketplaceSearch({
             <EnhancedModuleCard 
               key={module.id} 
               module={module} 
-              isSubscribed={subscribedModuleIds.has(module.id)}
+              isSubscribed={subscribedSet.has(module.id)}
             />
           ))}
         </div>

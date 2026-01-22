@@ -96,7 +96,7 @@ export default async function CollectionPage({ params }: PageProps) {
     <div className="container mx-auto py-6 space-y-8">
       {/* Back Button */}
       <Button variant="ghost" size="sm" asChild>
-        <Link href="/marketplace/search">
+        <Link href="/marketplace">
           <ChevronLeft className="mr-1 h-4 w-4" />
           Back to Marketplace
         </Link>

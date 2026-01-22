@@ -5,12 +5,12 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ChevronRight, Sparkles, TrendingUp, Clock, Star, Gift, Building2 } from 'lucide-react';
+import { ChevronRight, Sparkles, TrendingUp, Clock, Star, Gift, Building2, Package, Layers } from 'lucide-react';
 import { getFeaturedCollections, type ModuleCollection } from '@/lib/modules/marketplace-search';
 import { EnhancedModuleCard } from './enhanced-module-card';
 
 interface FeaturedCollectionsProps {
-  subscribedModuleIds?: Set<string>;
+  subscribedModuleIds?: string[];
   maxCollections?: number;
   maxModulesPerCollection?: number;
 }
@@ -25,13 +25,16 @@ const COLLECTION_ICONS: Record<string, React.ReactNode> = {
 };
 
 export function FeaturedCollections({ 
-  subscribedModuleIds = new Set(),
+  subscribedModuleIds = [],
   maxCollections = 6,
   maxModulesPerCollection = 4
 }: FeaturedCollectionsProps) {
   const [collections, setCollections] = useState<ModuleCollection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Convert to Set for O(1) lookups
+  const subscribedSet = new Set(subscribedModuleIds);
 
   useEffect(() => {
     async function loadCollections() {
@@ -81,8 +84,34 @@ export function FeaturedCollections({
     );
   }
 
-  if (collections.length === 0) {
-    return null;
+  // Check if all collections are empty (no modules linked)
+  const hasAnyModules = collections.some(c => 
+    c.items && c.items.length > 0 && c.items.some(item => item.module)
+  );
+
+  if (collections.length === 0 || !hasAnyModules) {
+    return (
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="rounded-full bg-muted p-4 mb-4">
+            <Layers className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">Collections Coming Soon</h3>
+          <p className="text-sm text-muted-foreground max-w-md mb-6">
+            We&apos;re curating featured collections of modules to help you discover the best tools for your agency.
+            In the meantime, browse all modules using the search tab above.
+          </p>
+          <div className="flex gap-3">
+            <Button variant="outline" asChild>
+              <Link href="/marketplace">
+                <Package className="h-4 w-4 mr-2" />
+                Browse All Modules
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -129,7 +158,7 @@ export function FeaturedCollections({
                 <EnhancedModuleCard
                   key={module.id}
                   module={module}
-                  isSubscribed={subscribedModuleIds.has(module.id)}
+                  isSubscribed={subscribedSet.has(module.id)}
                 />
               ))}
             </div>
@@ -145,15 +174,16 @@ export function FeaturedCollections({
  */
 interface CollectionSectionProps {
   collection: ModuleCollection;
-  subscribedModuleIds?: Set<string>;
+  subscribedModuleIds?: string[];
   maxModules?: number;
 }
 
 export function CollectionSection({ 
   collection, 
-  subscribedModuleIds = new Set(),
+  subscribedModuleIds = [],
   maxModules = 4
 }: CollectionSectionProps) {
+  const subscribedSet = new Set(subscribedModuleIds);
   const modules = collection.items
     .map(item => item.module)
     .filter(Boolean)
@@ -191,7 +221,7 @@ export function CollectionSection({
             <EnhancedModuleCard
               key={module.id}
               module={module}
-              isSubscribed={subscribedModuleIds.has(module.id)}
+              isSubscribed={subscribedSet.has(module.id)}
             />
           ))}
         </div>
