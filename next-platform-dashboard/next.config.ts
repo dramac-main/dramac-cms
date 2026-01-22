@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Headers for security
+  // Headers for security and CORS
   async headers() {
     return [
       {
@@ -41,6 +41,28 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy",
             value: "worker-src 'self' blob: https://cdn.jsdelivr.net;",
+          },
+        ],
+      },
+      {
+        // CORS and frame options for embed routes
+        source: "/embed/:path*",
+        headers: [
+          {
+            key: "Access-Control-Allow-Origin",
+            value: "*",
+          },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET, OPTIONS",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors *; default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; img-src * data: blob:; font-src * data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com;",
           },
         ],
       },
