@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +29,9 @@ interface MarketplaceSearchProps {
  * MarketplaceSearch Component
  * 
  * IMPORTANT: This component is carefully designed to avoid infinite render loops.
- * - Uses window.history.replaceState() instead of router.replace() to avoid triggering re-renders
+ * - Does NOT use useSearchParams() hook (causes re-renders on URL changes)
+ * - Reads URL params once on mount using window.location
+ * - Uses window.history.replaceState() to update URL without React re-renders
  * - All search triggers are debounced
  * - Initial search runs exactly once on mount
  */
@@ -38,21 +39,37 @@ export function MarketplaceSearch({
   initialFilters,
   subscribedModuleIds = [] 
 }: MarketplaceSearchProps) {
-  const searchParams = useSearchParams();
+  // Read URL params ONCE on mount without subscribing to changes
+  const getInitialFiltersFromUrl = (): MarketplaceFilters => {
+    if (typeof window === 'undefined') {
+      return {
+        query: initialFilters?.query || '',
+        categories: initialFilters?.categories || [],
+        priceRange: initialFilters?.priceRange || 'all',
+        sortBy: initialFilters?.sortBy || 'popular',
+        moduleType: initialFilters?.moduleType || 'all',
+        page: initialFilters?.page || 1,
+        limit: 20
+      };
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    return {
+      query: params.get('q') || initialFilters?.query || '',
+      categories: (params.get('category')?.split(',').filter(Boolean) || initialFilters?.categories || []) as MarketplaceFilters['categories'],
+      priceRange: (params.get('price') as MarketplaceFilters['priceRange']) || initialFilters?.priceRange || 'all',
+      sortBy: (params.get('sort') as MarketplaceFilters['sortBy']) || initialFilters?.sortBy || 'popular',
+      moduleType: (params.get('type') as MarketplaceFilters['moduleType']) || initialFilters?.moduleType || 'all',
+      page: parseInt(params.get('page') || '1') || initialFilters?.page || 1,
+      limit: 20
+    };
+  };
   
   // Convert to Set for O(1) lookups (created once via useMemo pattern)
   const subscribedSet = new Set(subscribedModuleIds);
   
-  // Initialize filters from URL or props (only once)
-  const [filters, setFilters] = useState<MarketplaceFilters>(() => ({
-    query: searchParams.get('q') || initialFilters?.query || '',
-    categories: (searchParams.get('category')?.split(',').filter(Boolean) || initialFilters?.categories || []) as MarketplaceFilters['categories'],
-    priceRange: (searchParams.get('price') as MarketplaceFilters['priceRange']) || initialFilters?.priceRange || 'all',
-    sortBy: (searchParams.get('sort') as MarketplaceFilters['sortBy']) || initialFilters?.sortBy || 'popular',
-    moduleType: (searchParams.get('type') as MarketplaceFilters['moduleType']) || initialFilters?.moduleType || 'all',
-    page: parseInt(searchParams.get('page') || '1') || 1,
-    limit: 20
-  }));
+  // Initialize filters from URL or props (only once, no subscription)
+  const [filters, setFilters] = useState<MarketplaceFilters>(getInitialFiltersFromUrl);
   
   const [results, setResults] = useState<MarketplaceSearchResult | null>(null);
   const [loading, setLoading] = useState(true);
