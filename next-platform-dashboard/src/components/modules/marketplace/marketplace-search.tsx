@@ -20,6 +20,10 @@ import {
 } from '@/lib/modules/marketplace-search';
 import { EnhancedModuleCard } from './enhanced-module-card';
 
+// Module-level flag to prevent multiple instances from racing
+let globalSearchLock = false;
+let globalSearchPromise: Promise<any> | null = null;
+
 interface MarketplaceSearchProps {
   initialFilters?: MarketplaceFilters;
   subscribedModuleIds?: string[];
@@ -80,6 +84,7 @@ export function MarketplaceSearch({
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasSearchedRef = useRef(false);
   const lastFiltersRef = useRef<string>('');
+  const isMountedRef = useRef(false); // Track if we've mounted before
 
   // Serialize filters for comparison
   const serializeFilters = (f: MarketplaceFilters): string => {
@@ -100,7 +105,16 @@ export function MarketplaceSearch({
     if (serialized === lastFiltersRef.current && hasSearchedRef.current) {
       return; // Skip duplicate search
     }
+    
+    // Global lock to prevent concurrent searches from multiple renders/mounts
+    if (globalSearchLock && globalSearchPromise) {
+      console.log('[MarketplaceSearch] Search already in progress, waiting...');
+      await globalSearchPromise;
+      return;
+    }
+    
     lastFiltersRef.current = serialized;
+    globalSearchLock = true;
 
     // Cancel any in-flight request
     if (abortControllerRef.current) {
@@ -109,21 +123,35 @@ export function MarketplaceSearch({
     abortControllerRef.current = new AbortController();
 
     setLoading(true);
-    try {
-      const data = await searchMarketplace(searchFilters);
-      setResults(data);
-      hasSearchedRef.current = true;
-    } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        console.error('Search error:', error);
+    
+    globalSearchPromise = (async () => {
+      try {
+        const data = await searchMarketplace(searchFilters);
+        setResults(data);
+        hasSearchedRef.current = true;
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Search error:', error);
+        }
+      } finally {
+        setLoading(false);
+        globalSearchLock = false;
+        globalSearchPromise = null;
       }
-    } finally {
-      setLoading(false);
-    }
+    })();
+    
+    await globalSearchPromise;
   };
 
-  // Initial search on mount - runs exactly once
+  // Initial search on mount - runs exactly once per component lifetime
   useEffect(() => {
+    // Guard against multiple mounts (Suspense/Tabs can cause remounts)
+    if (isMountedRef.current) {
+      console.warn('[MarketplaceSearch] Component remounted - skipping duplicate initial search');
+      return;
+    }
+    
+    isMountedRef.current = true;
     doSearch(filters);
     
     return () => {
