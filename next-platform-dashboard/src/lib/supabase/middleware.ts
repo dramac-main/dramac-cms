@@ -38,12 +38,12 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Define public routes that don't require authentication
-  const publicRoutes = ["/login", "/signup", "/forgot-password", "/reset-password", "/auth/callback"];
+  const publicRoutes = ["/login", "/signup", "/forgot-password", "/reset-password", "/auth/callback", "/embed"];
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route)
   );
 
-  // Redirect unauthenticated users to login (except for API and public routes)
+  // Redirect unauthenticated users to login (except for API, embed, and public routes)
   if (!user && !isPublicRoute && !pathname.startsWith("/api")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
