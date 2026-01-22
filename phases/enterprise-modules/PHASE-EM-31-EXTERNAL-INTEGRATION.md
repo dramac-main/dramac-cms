@@ -3,7 +3,7 @@
 > **Priority**: 🟡 MEDIUM
 > **Estimated Time**: 10-12 hours
 > **Prerequisites**: EM-30 (Universal Embed), EM-12 (API Gateway)
-> **Status**: 📋 READY TO IMPLEMENT
+> **Status**: ✅ IMPLEMENTED (January 22, 2026)
 
 ---
 
@@ -1398,16 +1398,42 @@ export class WebhookService {
 
 ## ✅ Verification Checklist
 
-- [ ] Domain allowlist works
-- [ ] Domain verification (DNS/meta) works
-- [ ] Embed SDK loads on external sites
-- [ ] Widget opens/closes correctly
-- [ ] PostMessage communication works
-- [ ] OAuth flow completes
-- [ ] Access tokens validate
-- [ ] CORS headers are correct
-- [ ] Rate limiting works
-- [ ] Webhooks deliver
+- [x] Domain allowlist works
+- [x] Domain verification (DNS/meta) works
+- [x] Embed SDK loads on external sites
+- [x] Widget opens/closes correctly
+- [x] PostMessage communication works
+- [x] OAuth flow completes
+- [x] Access tokens validate
+- [x] CORS headers are correct
+- [x] Rate limiting works
+- [x] Webhooks deliver
+
+---
+
+## 📁 Implementation Files
+
+### Database Migration
+- [em-31-external-domains.sql](../../next-platform-dashboard/migrations/em-31-external-domains.sql)
+
+### Core Services
+- [domain-service.ts](../../next-platform-dashboard/src/lib/modules/external/domain-service.ts)
+- [oauth-service.ts](../../next-platform-dashboard/src/lib/modules/external/oauth-service.ts)
+- [cors-middleware.ts](../../next-platform-dashboard/src/lib/modules/external/cors-middleware.ts)
+- [webhook-service.ts](../../next-platform-dashboard/src/lib/modules/external/webhook-service.ts)
+- [embed-sdk.ts](../../next-platform-dashboard/src/lib/modules/external/embed-sdk.ts)
+- [index.ts](../../next-platform-dashboard/src/lib/modules/external/index.ts)
+
+### API Routes
+- `/api/embed/verify` - Verify embed origin
+- `/api/modules/[moduleId]/external/domains` - Domain management
+- `/api/modules/[moduleId]/external/domains/[domainId]` - Single domain operations
+- `/api/modules/[moduleId]/external/domains/[domainId]/verify` - Domain verification
+- `/api/modules/[moduleId]/external/oauth/clients` - OAuth client management
+- `/api/modules/[moduleId]/external/oauth/token` - OAuth token exchange
+- `/api/modules/[moduleId]/external/webhooks` - Webhook management
+- `/api/modules/[moduleId]/external/webhooks/[webhookId]` - Single webhook operations
+- `/api/modules/[moduleId]/external/webhooks/[webhookId]/test` - Webhook testing
 
 ---
 
