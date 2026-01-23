@@ -2,14 +2,15 @@
 
 **Last Updated**: January 23, 2026  
 **Current Phase**: Wave 3 Distribution COMPLETE - Ready for Wave 4 or 5  
-**Status**: ✅ EM-33 API-Only Mode Complete - Wave 3 Distribution 100% Done!
+**Status**: ✅ EM-33 API-Only Mode Complete & DEPLOYED - Wave 3 Distribution 100% Done!
 
 ## Current Work Focus
 
-### Just Completed: EM-33 API-Only Mode
+### Just Completed: EM-33 API-Only Mode ✅ DEPLOYED
 **Completed**: January 23, 2026  
 **Status**: ✅ 16 OF 34 PHASES COMPLETE (47%)  
-**Wave 3 Distribution**: 100% COMPLETE (6/6 phases)
+**Wave 3 Distribution**: 100% COMPLETE (6/6 phases)  
+**Database Migration**: ✅ Successfully deployed to production
 
 **What was built:**
 - REST API generator for module data access
@@ -21,7 +22,7 @@
 - Request logging and usage analytics
 
 **Files Created:**
-- `migrations/em-33-api-mode.sql` - Database schema for API consumers, webhooks, deliveries
+- `migrations/em-33-api-mode-schema.sql` - Database schema (6 tables, idempotent, RLS policies)
 - `src/lib/modules/api-mode/rest-api-generator.ts` - Dynamic REST API with scoped access
 - `src/lib/modules/api-mode/graphql-generator.ts` - GraphQL schema and resolver generation
 - `src/lib/modules/api-mode/sdk-generator.ts` - Client SDK code generation

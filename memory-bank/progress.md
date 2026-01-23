@@ -57,8 +57,9 @@
 - ✅ Domain settings UI component
 - ✅ API routes for domain management
 
-### API-Only Mode (EM-33 ✅)
-**Completed**: January 23, 2026
+### API-Only Mode (EM-33 ✅ DEPLOYED)
+**Completed**: January 23, 2026  
+**Database Migration**: ✅ Successfully deployed to production
 - ✅ REST API generator for module data access
 - ✅ GraphQL API with query/mutation support
 - ✅ API consumer management (keys, scopes, rate limits)
@@ -70,6 +71,10 @@
 - ✅ Webhook event delivery with HMAC signing
 - ✅ Webhook retry logic with exponential backoff
 - ✅ Webhook delivery history and statistics
+- ✅ Database schema with 6 tables (idempotent migration)
+- ✅ RLS policies using can_access_site() function
+- ✅ 12 API routes for full API management
+- ✅ 7 core library services
 
 ### Supporting Features
 - ✅ **Email system** - Resend integration with templates
