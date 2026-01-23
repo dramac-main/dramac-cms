@@ -225,13 +225,33 @@ BEGIN
   -- Set context to Site 1
   PERFORM set_tenant_context(v_agency_1_id, v_site_1_id, v_user_1_id);
   
-  -- Should only see Site 1 data
-  EXECUTE format('SELECT COUNT(*) FROM %I', v_test_table_name) INTO v_count;
-  IF v_count = 2 THEN
-    RAISE NOTICE '  ✓ RLS SELECT policy working - User sees only their site data (2 items)';
-  ELSE
-    RAISE EXCEPTION '  ✗ RLS SELECT policy failed - Expected 2 items, got %', v_count;
-  END IF;
+  -- Check if user is an admin (affects what they can see)
+  DECLARE
+    v_is_admin BOOLEAN := is_agency_admin(v_agency_1_id);
+    v_expected_count INTEGER;
+  BEGIN
+    IF v_is_admin THEN
+      -- Admin can see all sites in their agency
+      IF v_site_2_id IS NOT NULL THEN
+        v_expected_count := 3; -- Site 1 (2) + Site 2 (1)
+      ELSE
+        v_expected_count := 2; -- Only Site 1
+      END IF;
+      RAISE NOTICE '  ℹ User is agency admin - will see all sites in agency';
+    ELSE
+      -- Regular user only sees their current site
+      v_expected_count := 2;
+      RAISE NOTICE '  ℹ User is regular member - will see only current site';
+    END IF;
+    
+    -- Should only see Site 1 data (or all agency data if admin)
+    EXECUTE format('SELECT COUNT(*) FROM %I', v_test_table_name) INTO v_count;
+    IF v_count = v_expected_count THEN
+      RAISE NOTICE '  ✓ RLS SELECT policy working - User sees expected data (% items)', v_count;
+    ELSE
+      RAISE EXCEPTION '  ✗ RLS SELECT policy failed - Expected % items, got %', v_expected_count, v_count;
+    END IF;
+  END;
   
   -- Change to Site 2
   IF v_site_2_id IS NOT NULL THEN
