@@ -1,7 +1,7 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: January 23, 2026  
-**Overall Completion**: 56% (19 of 34 enterprise phases complete)
+**Overall Completion**: 59% (20 of 34 enterprise phases complete)
 
 ## ✅ What Works (Completed Features)
 
@@ -79,7 +79,7 @@
 - ✅ API middleware for tenant validation
 - ✅ Migration tested and deployed successfully
 
-### Module Versioning & Rollback (EM-41 ✅) ⚡ NEW!
+### Module Versioning & Rollback (EM-41 ✅)
 **Completed**: January 23, 2026
 - ✅ Semantic versioning enforcement with semver parsing
 - ✅ Version history tracking (draft, published, deprecated, yanked)
@@ -94,41 +94,42 @@
 
 **Files**: 4 service files, 2 UI components, 10 API routes, 1 SQL migration
 
+### Module Marketplace 2.0 (EM-42 ✅) ⚡ NEW!
+**Completed**: January 23, 2026  
+**Migration**: ✅ Deployed (em-42-marketplace-2-schema.sql)  
+**Git Commit**: 888b897 (24 files, 4493 insertions)  
+**TypeScript**: ✅ Zero errors verified
+
+- ✅ Reviews and ratings system with pros/cons, voting, reporting
+- ✅ Developer responses to reviews with timestamp
+- ✅ Developer profiles with portfolios, social links, verification badges
+- ✅ Advanced search with filters (category, price, rating, tags, developer)
+- ✅ Featured modules system with placement scheduling
+- ✅ Personalized recommendations engine
+- ✅ Trending modules based on view tracking
+- ✅ Module view analytics with engagement metrics
+- ✅ Review helpful voting system
+- ✅ Content moderation reporting
+- ✅ 13 API routes for reviews, search, developers, analytics
+- ✅ 3 React components (ModuleCard, ReviewList, ReviewForm)
+- ✅ Developer profile page with tabs and stats
+- ✅ Review moderation and reporting
+- ✅ Developer profiles with portfolios
+- ✅ Developer verification badges
+- ✅ Advanced search with faceted filtering
+- ✅ Featured modules and collections
+- ✅ Module recommendations engine (similar, popular, personalized)
+- ✅ View tracking and engagement analytics
+- ✅ Trending modules calculation
+- ✅ Search history for personalization
+
+**Files**: 3 service files, 3 UI components, 13 API routes, 1 SQL migration (482 lines)
+
 **Integration Notes**:
-- Extends existing `module_versions` table with version parsing
-- New tables: `module_migrations`, `site_module_versions`, `module_data_backups`, `module_migration_runs`
-- Helper functions: `parse_semver()`, `compare_semver()`, `version_satisfies()`
-- Compatible with existing module_source and modules_v2 tables
-
-**Files**: 10 TypeScript files, 1 SQL migration (422 lines), comprehensive documentation
-- ✅ Webhook delivery history and statistics
-- ✅ Database schema with 6 tables (idempotent migration)
-- ✅ RLS policies using can_access_site() function
-- ✅ 12 API routes for full API management
-- ✅ 7 core library services
-
-### Supporting Features
-- ✅ **Email system** - Resend integration with templates
-- ✅ **Rate limiting** - API throttling
-- ✅ **Error handling** - Standardized error responses
-- ✅ **TypeScript** - Full type safety
-- ✅ **Server Actions** - Next.js 15 mutations
-
-### Multi-Tenant Architecture (EM-40 ✅ NEW)
-**Completed**: January 25, 2026
-- ✅ Agency → Client → Site hierarchy
-- ✅ RLS (Row-Level Security) at database level
-- ✅ `set_tenant_context()` function for session context
-- ✅ `user_has_site_access()` verification function
-- ✅ Tenant context management (server + client)
-- ✅ API middleware for tenant validation
-- ✅ Module data access with auto tenant filtering
-- ✅ Agency-level admin data access
-- ✅ Cross-module access with permission registry
-- ✅ Data export/import with tenant isolation
-- ✅ Site cloning between sites in same agency
-- ✅ React hooks: `useTenant()`, `useRequireSite()`, `useIsAdmin()`
-- ✅ TenantProvider component for client apps
+- Enhanced `module_reviews` with pros/cons, developer_response
+- New tables: `developer_profiles`, `review_votes`, `featured_modules`, `module_collections`, `user_search_history`, `module_views`, `moderation_reports`
+- Trigger: `update_module_rating_stats()` for live aggregation
+- RPC: `get_trending_modules()` for efficient trending calculation
 
 ## 🚧 What's Left to Build
 
@@ -161,18 +162,32 @@
 
 **Status**: COMPLETE! All distribution features built.
 
-### Wave 4: Enterprise Features - 1 of 4 Complete (25%)
+### Wave 4: Enterprise Features - 3 of 4 Complete (75%) ⚡ NEW!
 - ✅ EM-40: Multi-Tenant ✅ **COMPLETE** (Deployed Jan 25, 2026)
   - Backend infrastructure for data isolation
   - Agency → Client → Site hierarchy with RLS
   - Tenant-aware data access layers
   - Cross-module permissions system
   - Migration tested and verified
-- ⬜ EM-41: Versioning & Rollback (~6 hours)
-- ⬜ EM-42: Marketplace V2 (~8 hours)
+- ✅ EM-41: Versioning & Rollback ✅ **COMPLETE** (Jan 23, 2026)
+  - Semantic versioning with semver parsing
+  - Version history tracking and state management
+  - Database migration system with up/down
+  - Safe rollback with data backups
+  - Dependency constraint validation
+- ✅ EM-42: Marketplace 2.0 ✅ **COMPLETE** (Jan 23, 2026) ⚡ NEW!
+  - Reviews/ratings with voting & developer responses
+  - Developer profiles with portfolios
+  - Advanced search with faceted filtering
+  - Featured modules and collections
+  - Recommendations engine (similar, popular, personalized)
+  - View tracking and engagement analytics
 - ⬜ EM-43: Revenue Dashboard (~6 hours)
+  - Earnings tracking and payouts
+  - Sales analytics and reporting
+  - Payout management
 
-**Next Up**: EM-41 Versioning & Rollback (enables safe module updates)
+**Next Up**: EM-43 Revenue Dashboard (final Wave 4 phase!)
 
 **Why needed**: Scaling to multiple agencies and module versions
 
@@ -204,40 +219,37 @@
 | **Foundation (Wave 1)** | 7 | 0 | 0 | 7 |
 | **Developer Tools (Wave 2)** | 4 | 0 | 0 | 4 |
 | **Distribution (Wave 3)** | 6 | 0 | 0 | 6 |
-| **Enterprise (Wave 4)** | 1 | 0 | 3 | 4 |
+| **Enterprise (Wave 4)** | 3 | 0 | 1 | 4 |
 | **Business Modules (Wave 5)** | 0 | 0 | 7 | 7 |
 | **Industry Verticals (Wave 6)** | 0 | 0 | 6 | 6 |
-| **TOTAL** | **18** | **0** | **16** | **34** |
+| **TOTAL** | **20** | **0** | **14** | **34** |
 
-**Progress**: 18 complete, 0 in progress, 16 remaining = **53% complete**
+**Progress**: 20 complete, 0 in progress, 14 remaining = **59% complete**
 
 ## 🎯 Recommended Next Steps
 
-### Option A: Build Business Modules (EM-50 CRM) - RECOMMENDED
+### Option A: Finish Wave 4 (EM-43 Revenue Dashboard) - RECOMMENDED
+**Timeline**: 1-2 days  
+**Effort**: ~6 hours
+
+Complete the final Enterprise phase before moving to Business Modules.
+
+**Pros:**
+- Only 1 phase remaining in Wave 4
+- Enables developer earnings tracking
+- Revenue foundation before building paid modules
+
+### Option B: Build Business Modules (EM-50 CRM)
 **Timeline**: 1 week  
 **Effort**: ~10 hours
 
-Build the flagship CRM module immediately - all infrastructure complete!
+Build the flagship CRM module - all infrastructure complete!
 
 **Pros:**
-- Foundation + Distribution DONE - no workarounds needed
+- Foundation + Distribution DONE
 - Fastest path to revenue
 - Tangible product demo
 - Validates market demand
-
-**Cons:**
-- Enterprise features not yet built
-
-### Option B: Enterprise Features (Wave 4)
-**Timeline**: 2-3 weeks  
-**Effort**: ~28 hours
-
-Build EM-40 Multi-Tenant, EM-41 Versioning, EM-42 Marketplace V2, EM-43 Revenue Dashboard.
-
-**Pros:**
-- Prepares platform for scale
-- Version control for modules
-- Revenue tracking ready
 
 **Cons:**
 - Delays revenue-generating modules

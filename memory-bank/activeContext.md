@@ -1,12 +1,72 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 23, 2026  
-**Current Phase**: EM-41 Module Versioning & Rollback ✅ COMPLETE  
-**Status**: ✅ 19 OF 34 PHASES (56%) - TypeScript Verified
+**Current Phase**: EM-42 Module Marketplace 2.0 ✅ COMPLETE & COMMITTED  
+**Status**: ✅ 20 OF 34 PHASES (59%) - Migration Deployed, TypeScript Verified, Code Committed
 
 ## Current Work Focus
 
-### ✅ COMPLETED: EM-41 Module Versioning & Rollback (January 23, 2026)
+### ✅ COMPLETED: EM-42 Module Marketplace 2.0 (January 23, 2026)
+**Status**: ✅ COMPLETE - Migration deployed, all services implemented, committed to main  
+**Wave 4 Enterprise**: 3/4 COMPLETE (75%)  
+**TypeScript Compilation**: ✅ Zero errors  
+**Database Migration**: ✅ Deployed successfully (em-42-marketplace-2-schema.sql)  
+**Git Commit**: 888b897 - 24 files, 4493 insertions
+
+**What was built:**
+- Comprehensive reviews and ratings system with voting and developer responses
+- Developer profiles with portfolios, social links, verification badges
+- Advanced search and filtering with faceted search and sorting
+- Featured modules and collections with scheduling
+- Module recommendations engine (similarity-based, popular, personalized)
+- View tracking and analytics for engagement metrics
+
+**Files Created:**
+- `migrations/em-42-marketplace-2-schema.sql` - Extended module_reviews, new tables for developer_profiles, review_votes, featured_modules, user_search_history, module_views, moderation_reports
+- `src/lib/marketplace/review-service.ts` - Review CRUD, voting, developer responses, moderation reports
+- `src/lib/marketplace/search-service.ts` - Advanced search with filters, recommendations, trending
+- `src/lib/marketplace/developer-service.ts` - Developer profile management, modules, reviews
+- `src/lib/marketplace/index.ts` - Module exports
+- `src/components/marketplace/ModuleCard.tsx` - Rich module card with rating, developer, pricing
+- `src/components/marketplace/ReviewList.tsx` - Review display with stats, sorting, voting
+- `src/components/marketplace/ReviewForm.tsx` - Review creation/editing with pros/cons chips
+- `src/app/(dashboard)/marketplace/developers/[slug]/page.tsx` - Developer profile page with tabs
+- `src/app/api/modules/[moduleId]/reviews/route.ts` - GET/POST reviews
+- `src/app/api/modules/[moduleId]/reviews/[reviewId]/route.ts` - PATCH/DELETE review
+- `src/app/api/modules/[moduleId]/reviews/[reviewId]/vote/route.ts` - Vote on review
+- `src/app/api/modules/[moduleId]/reviews/[reviewId]/response/route.ts` - Developer response
+- `src/app/api/modules/[moduleId]/reviews/[reviewId]/report/route.ts` - Report review
+- `src/app/api/modules/[moduleId]/view/route.ts` - View tracking
+- `src/app/api/marketplace/search/route.ts` - Search with filters
+- `src/app/api/marketplace/featured/route.ts` - Featured modules
+- `src/app/api/marketplace/recommendations/route.ts` - Personalized recommendations
+- `src/app/api/marketplace/trending/route.ts` - Trending modules
+- `src/app/api/marketplace/categories/route.ts` - Category listing
+- `src/app/api/marketplace/developers/route.ts` - Developer profile CRUD
+- `src/app/api/marketplace/developers/[slug]/route.ts` - Developer by slug
+
+**Key Features:**
+1. **ReviewService** - `createReview()`, `updateReview()`, `deleteReview()`, `getModuleReviews()`, `getReviewStats()`, `addDeveloperResponse()`, `voteReview()`, `reportReview()`
+2. **SearchService** - `searchModules()`, `getFeaturedModules()`, `getRecommendations()`, `getTrendingModules()`, `logSearch()`, `logModuleView()`, `getCategories()`
+3. **DeveloperService** - `getDeveloperBySlug()`, `createDeveloperProfile()`, `updateDeveloperProfile()`, `getDeveloperModules()`, `getDeveloperReviews()`, `getTopDevelopers()`
+4. **Database Functions** - `get_trending_modules()` RPC, triggers for rating/review count updates
+5. **UI Components** - ModuleCard with developer badges, ReviewList with distribution chart, ReviewForm with pros/cons
+6. **API Routes** - Complete REST API for reviews, search, recommendations, developers
+
+**Database Schema Extensions:**
+- Enhanced `module_reviews` with user_id, pros, cons, developer_response, developer_responded_at
+- New `developer_profiles` table for marketplace developer identities
+- New `review_votes` table for helpful/not_helpful voting
+- New `featured_modules` table for curated module lists
+- New `module_collections` table for thematic groupings
+- New `user_search_history` table for personalized recommendations
+- New `module_views` table for engagement tracking
+- New `moderation_reports` table for content moderation
+- Trigger `update_module_rating_stats()` for keeping rating_average/review_count in sync
+
+---
+
+### ✅ Previously: EM-41 Module Versioning & Rollback (January 23, 2026)
 **Status**: ✅ COMPLETE - All services and UI implemented  
 **Wave 4 Enterprise**: 2/4 COMPLETE (50%)  
 **TypeScript Compilation**: ✅ Zero errors
@@ -18,45 +78,6 @@
 - Safe rollback mechanism with data backups
 - Breaking change detection and upgrade path calculation
 - Dependency constraint validation
-
-**Files Created:**
-- `migrations/em-41-versioning-schema.sql` - Extended module_versions table, new tables for migrations, backups, version tracking
-- `src/lib/modules/versioning/version-service.ts` - Version management with semver support
-- `src/lib/modules/versioning/migration-service.ts` - Database migration execution and backup management
-- `src/lib/modules/versioning/rollback-service.ts` - Rollback planning and execution
-- `src/lib/modules/versioning/index.ts` - Module exports
-- `src/components/modules/UpgradeFlow.tsx` - Step-by-step upgrade wizard UI
-- `src/components/modules/RollbackUI.tsx` - Rollback interface with version selection
-- `src/app/api/modules/[moduleId]/versions/route.ts` - Version CRUD API
-- `src/app/api/modules/[moduleId]/versions/upgrade-plan/route.ts` - Upgrade planning API
-- `src/app/api/modules/[moduleId]/versions/backup/route.ts` - Backup creation API
-- `src/app/api/modules/[moduleId]/versions/migrate/route.ts` - Migration execution API
-- `src/app/api/modules/[moduleId]/versions/verify/route.ts` - Installation verification API
-- `src/app/api/modules/[moduleId]/versions/rollback-points/route.ts` - Available rollback versions API
-- `src/app/api/modules/[moduleId]/versions/rollback-plan/route.ts` - Rollback planning API
-- `src/app/api/modules/[moduleId]/versions/rollback/route.ts` - Rollback execution API
-- `src/app/api/modules/[moduleId]/versions/[versionId]/publish/route.ts` - Version publishing API
-- `src/app/api/modules/[moduleId]/versions/[versionId]/deprecate/route.ts` - Version deprecation API
-
-**Key Features:**
-1. **VersionService** - `parseVersion()`, `compareVersions()`, `satisfiesConstraint()`, `incrementVersion()`, `getUpgradePath()`
-2. **MigrationService** - `createBackup()`, `runMigrations()`, `restoreFromBackup()`, `getMigrationHistory()`
-3. **RollbackService** - `createRollbackPlan()`, `executeRollback()`, `getRollbackPoints()`, `rollbackToPrevious()`
-4. **Database Functions** - `parse_semver()`, `compare_semver()`, `version_satisfies()`, `get_active_module_version()`
-5. **UI Components** - Multi-step upgrade wizard, rollback point selection, progress tracking
-6. **API Routes** - Complete REST API for version management, migrations, and rollbacks
-
-**Database Schema Extensions:**
-- Extended `module_versions` with version_major/minor/patch, status, dependencies, bundle info
-- New `module_migrations` table for tracking database migrations per module
-- New `site_module_versions` table for tracking installed versions per site
-- New `module_data_backups` table for rollback data storage
-- New `module_migration_runs` table for migration execution logging
-- Helper functions for semver parsing and comparison
-
----
-
-### ✅ Previously: EM-40 Multi-Tenant Architecture (January 25, 2026)
 **Status**: ✅ COMPLETE - Migration deployed successfully  
 **Wave 4 Enterprise**: 1/4 COMPLETE (25%)  
 **Database Migration**: ✅ Deployed and tested
