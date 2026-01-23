@@ -290,13 +290,13 @@ BEGIN
   ', 'site_delete_' || v_full_table, v_full_table);
   
   -- Admin bypass: Agency admins can access all sites in their agency
-  -- Note: auth.is_agency_admin() takes only agency_id, gets user from auth.uid()
+  -- Note: is_agency_admin() is in public schema, takes only agency_id, gets user from auth.uid()
   EXECUTE format('
     CREATE POLICY %I ON %I
     FOR ALL
     USING (
       agency_id = current_agency_id()
-      AND auth.is_agency_admin(agency_id)
+      AND is_agency_admin(agency_id)
     )
   ', 'admin_all_' || v_full_table, v_full_table);
   
