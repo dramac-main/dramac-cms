@@ -53,8 +53,8 @@ DROP POLICY IF EXISTS "Users can view their agency's access logs" ON module_acce
 CREATE POLICY "Users can view their agency's access logs" ON module_access_logs
   FOR SELECT USING (
     agency_id IN (
-      SELECT agency_id FROM agency_users 
-      WHERE user_id = auth.uid() AND status = 'active'
+      SELECT agency_id FROM agency_members 
+      WHERE user_id = auth.uid()
     )
   );
 
@@ -132,11 +132,10 @@ DECLARE
   v_has_access BOOLEAN;
 BEGIN
   SELECT EXISTS (
-    SELECT 1 FROM agency_users au
-    JOIN sites s ON s.agency_id = au.agency_id
-    WHERE au.user_id = p_user_id
+    SELECT 1 FROM agency_members am
+    JOIN sites s ON s.agency_id = am.agency_id
+    WHERE am.user_id = p_user_id
       AND s.id = p_site_id
-      AND au.status = 'active'
   ) INTO v_has_access;
   
   RETURN v_has_access;
@@ -150,11 +149,10 @@ DECLARE
   v_is_admin BOOLEAN;
 BEGIN
   SELECT EXISTS (
-    SELECT 1 FROM agency_users
+    SELECT 1 FROM agency_members
     WHERE user_id = p_user_id
       AND agency_id = p_agency_id
       AND role IN ('owner', 'admin')
-      AND status = 'active'
   ) INTO v_is_admin;
   
   RETURN v_is_admin;
@@ -168,10 +166,9 @@ DECLARE
   v_in_agency BOOLEAN;
 BEGIN
   SELECT EXISTS (
-    SELECT 1 FROM agency_users
+    SELECT 1 FROM agency_members
     WHERE user_id = p_user_id
       AND agency_id = p_agency_id
-      AND status = 'active'
   ) INTO v_in_agency;
   
   RETURN v_in_agency;
@@ -185,9 +182,8 @@ DECLARE
   v_agency_id UUID;
 BEGIN
   SELECT agency_id INTO v_agency_id
-  FROM agency_users
+  FROM agency_members
   WHERE user_id = p_user_id
-    AND status = 'active'
   LIMIT 1;
   
   RETURN v_agency_id;
@@ -201,10 +197,9 @@ DECLARE
   v_role TEXT;
 BEGIN
   SELECT role INTO v_role
-  FROM agency_users
+  FROM agency_members
   WHERE user_id = p_user_id
-    AND agency_id = p_agency_id
-    AND status = 'active';
+    AND agency_id = p_agency_id;
   
   RETURN v_role;
 END;

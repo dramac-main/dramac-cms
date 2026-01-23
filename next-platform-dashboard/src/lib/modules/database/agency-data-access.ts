@@ -332,10 +332,9 @@ export function createAgencyDataAccess(
       
       // Total users
       const { count: totalUsers } = await (supabase as any)
-        .from('agency_users')
+        .from('agency_members')
         .select('user_id', { count: 'exact', head: true })
-        .eq('agency_id', context.agencyId)
-        .eq('status', 'active');
+        .eq('agency_id', context.agencyId);
       
       return {
         totalSites: totalSites || 0,

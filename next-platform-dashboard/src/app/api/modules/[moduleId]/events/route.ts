@@ -326,10 +326,10 @@ async function verifyModuleAccess(
   siteId: string,
   userId: string
 ): Promise<boolean> {
-  // Check if user has agency access - use type assertion for agency_users table
+  // Check if user has agency access - use type assertion for agency_members table
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: access } = await (supabase as any)
-    .from("agency_users")
+    .from("agency_members")
     .select("role")
     .eq("user_id", userId)
     .single();

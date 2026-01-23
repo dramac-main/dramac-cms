@@ -119,10 +119,9 @@ export function TenantProvider({ children, initialSiteId }: TenantProviderProps)
       
       // Get agency membership
       const { data: membership, error: membershipError } = await supabase
-        .from('agency_users')
+        .from('agency_members')
         .select('agency_id, role')
         .eq('user_id', user.id)
-        .eq('status', 'active')
         .single();
       
       if (membershipError) {
