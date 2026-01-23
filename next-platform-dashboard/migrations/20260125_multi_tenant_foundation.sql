@@ -59,22 +59,27 @@ CREATE POLICY "Users can view their agency's access logs" ON module_access_logs
   );
 
 -- ============================================================================
--- MODULE DATABASE REGISTRY TABLE
+-- MODULE DATABASE REGISTRY TABLE (Use existing from EM-05)
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS module_database_registry (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  module_id UUID NOT NULL,
-  table_name TEXT NOT NULL,
-  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'migrating', 'deprecated')),
-  schema_version INTEGER DEFAULT 1,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(module_id, table_name)
-);
+-- Table already exists from phase-em05-module-naming.sql
+-- Ensure it has columns needed for multi-tenant tracking
 
-CREATE INDEX IF NOT EXISTS idx_module_db_registry_module ON module_database_registry(module_id);
-CREATE INDEX IF NOT EXISTS idx_module_db_registry_table ON module_database_registry(table_name);
+-- Add status column if it doesn't exist (for tracking table lifecycle)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'module_database_registry' 
+    AND column_name = 'status'
+  ) THEN
+    ALTER TABLE module_database_registry 
+    ADD COLUMN status TEXT DEFAULT 'active' 
+    CHECK (status IN ('active', 'inactive', 'migrating', 'deprecated'));
+  END IF;
+END $$;
+
+-- Indexes already created by EM-05 migration
 
 -- ============================================================================
 -- TENANT CONTEXT FUNCTIONS
@@ -308,10 +313,28 @@ BEGIN
     )
   ', 'admin_all_' || v_full_table, v_full_table);
   
-  -- Register table in module database registry
-  INSERT INTO module_database_registry (module_id, table_name, status)
-  VALUES (p_module_id, v_full_table, 'active')
-  ON CONFLICT (module_id, table_name) DO UPDATE SET 
+  -- Register table in module database registry (using existing EM-05 schema)
+  -- Note: This updates table_names array, not a singular table_name column
+  INSERT INTO module_database_registry (
+    module_id, 
+    module_short_id,
+    table_names,
+    uses_schema,
+    status
+  )
+  VALUES (
+    p_module_id, 
+    substring(p_module_id::TEXT from 1 for 8), -- First 8 chars as short_id
+    ARRAY[v_full_table]::TEXT[],
+    false,
+    'active'
+  )
+  ON CONFLICT (module_id) DO UPDATE SET 
+    table_names = CASE 
+      WHEN v_full_table = ANY(module_database_registry.table_names) 
+      THEN module_database_registry.table_names
+      ELSE array_append(module_database_registry.table_names, v_full_table)
+    END,
     status = 'active',
     updated_at = NOW();
   
@@ -333,10 +356,17 @@ BEGIN
     RAISE EXCEPTION 'Table name must follow pattern: mod_{8char}_{table}';
   END IF;
   
-  -- Mark as inactive in registry first
+  -- Remove table from table_names array in registry
   UPDATE module_database_registry 
-  SET status = 'inactive', updated_at = NOW()
-  WHERE module_id = p_module_id AND table_name = p_table_name;
+  SET 
+    table_names = array_remove(table_names, p_table_name),
+    status = CASE 
+      WHEN array_length(array_remove(table_names, p_table_name), 1) = 0 THEN 'inactive'
+      ELSE status
+    END,
+    updated_at = NOW()
+  WHERE module_id = p_module_id 
+    AND p_table_name = ANY(table_names);
   
   -- Drop the table
   EXECUTE format('DROP TABLE IF EXISTS %I CASCADE', p_table_name);
