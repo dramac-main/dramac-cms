@@ -174,6 +174,34 @@ export async function POST(request: Request) {
 - Session stored in cookies
 - Middleware refreshes sessions
 
+**Routing Architecture (Multi-Tenant):**
+The platform uses a two-tier routing system:
+
+1. **Tier 1: Domain Router (`src/proxy.ts`)** - Executes FIRST
+   - Detects subdomain requests (`*.sites.dramacagency.com`)
+   - Detects custom domain requests (e.g., `example.com`)
+   - Rewrites to `/site/[domain]` routes
+   - Passes through public routes without auth
+   - Only checks auth for app domain routes
+
+2. **Tier 2: Auth Middleware (`src/lib/supabase/middleware.ts`)** - Executes SECOND
+   - Only called for app domain requests
+   - Checks session and redirects to login if needed
+   - Handles onboarding flow
+
+**⚠️ CRITICAL**: `middleware.ts` (root) must call `proxy()` from `src/proxy.ts`
+```typescript
+// middleware.ts - CORRECT
+export async function middleware(request: NextRequest) {
+  return await proxy(request);
+}
+
+// middleware.ts - WRONG (causes subdomain auth issues)
+export async function middleware(request: NextRequest) {
+  return await updateSession(request);
+}
+```
+
 **Public Routes (No Auth Required):**
 Routes that should be accessible without login (defined in `src/lib/supabase/middleware.ts`):
 - `/login`, `/signup`, `/forgot-password`, `/reset-password` - Auth pages
@@ -183,8 +211,6 @@ Routes that should be accessible without login (defined in `src/lib/supabase/mid
 - `/blog` - **PUBLIC BLOG PAGES** (`/blog/[subdomain]/[slug]`)
 - `/preview` - Page preview routes
 - `/api/*` - API routes (handle their own auth)
-
-⚠️ **IMPORTANT**: When adding new public-facing routes, add them to `publicRoutes` array!
 
 **Authorization Levels:**
 1. **Super Admin** - Platform management

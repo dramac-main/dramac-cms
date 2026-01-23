@@ -1,16 +1,13 @@
 import { type NextRequest } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+import { proxy } from "@/proxy";
 
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
-
-  // Skip auth for embed routes - CORS handled in next.config.ts
-  if (pathname.startsWith('/embed/')) {
-    return null;
-  }
-
-  // For all other routes, use the Supabase session middleware
-  return await updateSession(request);
+  // Use the proxy routing which handles:
+  // 1. Client site subdomains (*.sites.dramacagency.com) - rewrite to /site/[subdomain]
+  // 2. Custom domains - rewrite to /site/[domain]
+  // 3. Public routes (/site, /blog, /preview) - no auth required
+  // 4. Dashboard routes - auth required via updateSession()
+  return await proxy(request);
 }
 
 export const config = {

@@ -257,11 +257,18 @@ Build the flagship CRM module - all infrastructure complete!
 
 ## 🐛 Known Issues
 
+### ✅ FIXED: Middleware Routing Bug - FINAL FIX (January 23, 2026)
+**Issue**: Client sites at subdomains and custom domains were requiring login  
+**Root Cause**: `middleware.ts` was NOT using `proxy.ts` routing at all - was calling `updateSession()` directly  
+**Fix**: Changed `middleware.ts` to call `proxy()` function which handles subdomain routing BEFORE auth checks  
+**Status**: ✅ Fixed and verified  
+**Note**: The `proxy.ts` file had the correct routing logic all along, but it wasn't being executed!
+
 ### ✅ FIXED: Public Site Access Bug (January 23, 2026)
 **Issue**: Client sites at `/site/[domain]` were requiring login  
 **Root Cause**: Middleware's `publicRoutes` array was missing `/site`, `/blog`, `/preview`  
 **Fix**: Added missing routes to `src/lib/supabase/middleware.ts`  
-**Status**: ✅ Fixed and verified
+**Status**: ✅ Fixed (but was superseded by proxy.ts fix above)
 
 ### Technical Debt
 1. **Rate Limiting** - Uses in-memory cache, needs Redis for production

@@ -1,50 +1,68 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 23, 2026  
-**Current Phase**: Middleware Fix for Public Site Access  
-**Status**: ✅ 20 OF 34 PHASES (59%) - Bug Fix Applied, TypeScript Verified
+**Current Phase**: Middleware Routing Bug Fix - FINAL FIX  
+**Status**: ✅ 20 OF 34 PHASES (59%) - Critical Routing Bug Fixed, TypeScript Verified
 
 ## Current Work Focus
 
-### ✅ COMPLETED: Public Site Access Bug Fix (January 23, 2026)
-**Status**: ✅ FIXED - Middleware now allows unauthenticated access to public client sites  
+### ✅ COMPLETED: Middleware Routing Bug - FINAL FIX (January 23, 2026)
+**Status**: ✅ FIXED - middleware.ts now properly uses proxy.ts routing  
 **TypeScript Compilation**: ✅ Zero errors  
-**Issue**: Client sites at `/site/[domain]` were requiring login due to missing public routes
+**Root Cause**: middleware.ts was NOT using the proxy.ts routing logic at all!
 
-**Root Cause:**
-The middleware's `publicRoutes` array in `src/lib/supabase/middleware.ts` was missing critical public-facing routes:
-- `/site` - Published client websites
-- `/blog` - Public blog pages  
-- `/preview` - Page preview functionality
+**The Real Problem:**
+The project has TWO middleware systems:
+1. `middleware.ts` (root) - Was only calling `updateSession()` directly
+2. `src/proxy.ts` - Has the ACTUAL routing logic for subdomains and custom domains
 
-**Fix Applied:**
-Updated `publicRoutes` from:
+**What Was Happening:**
+- `middleware.ts` was completely bypassing `proxy.ts`
+- All requests went straight to auth checks via `updateSession()`
+- The subdomain/custom domain routing in `proxy.ts` was never executed
+- Client sites couldn't be accessed without login
+
+**The Fix:**
+Changed `middleware.ts` from:
 ```typescript
-const publicRoutes = ["/login", "/signup", "/forgot-password", "/reset-password", "/auth/callback", "/embed"];
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  if (pathname.startsWith('/embed/')) {
+    return null;
+  }
+  return await updateSession(request);
+}
 ```
 
 To:
 ```typescript
-const publicRoutes = [
-  "/login", 
-  "/signup", 
-  "/forgot-password", 
-  "/reset-password", 
-  "/auth/callback", 
-  "/embed",
-  "/site",     // Public client sites - /site/[domain]/[...slug]
-  "/blog",     // Public blog pages - /blog/[subdomain]/[slug]
-  "/preview",  // Preview pages - /preview/[siteId]/[pageId]
-];
+export async function middleware(request: NextRequest) {
+  return await proxy(request);
+}
 ```
 
-**Files Modified:**
-- `src/lib/supabase/middleware.ts` - Added `/site`, `/blog`, `/preview` to publicRoutes
+**How proxy.ts Works:**
+1. **First**: Detects subdomain/custom domain routing
+   - Client sites: `*.sites.dramacagency.com` → rewrite to `/site/[subdomain]`
+   - Custom domains: `example.com` → rewrite to `/site/[domain]`
+2. **Second**: Handles public routes (`/preview`, `/site`, API routes)
+3. **Third**: Only calls `updateSession()` for app domain routes
+4. **Result**: Client sites are accessible without auth!
 
-**Why This Works:**
-- Public client sites use `createAdminClient()` for data fetching (bypasses RLS)
-- The middleware was incorrectly requiring auth for these public routes
-- Now unauthenticated users can access published sites without being redirected to login
+**Files Modified:**
+- `middleware.ts` - Now calls `proxy()` function instead of directly calling `updateSession()`
+
+**Previous Partial Fix (Didn't Work):**
+- Earlier we added `/site`, `/blog`, `/preview` to `publicRoutes` in `src/lib/supabase/middleware.ts`
+- This didn't work because the middleware wasn't even reaching that code
+- The proxy routing needs to happen FIRST to rewrite subdomain URLs
+
+**Why This Is The Correct Fix:**
+- The `proxy.ts` was designed to handle all routing logic
+- It checks domain type BEFORE auth
+- It rewrites subdomain URLs to `/site/[domain]` paths
+- It only calls auth middleware for app domain routes
+- This is the Next.js 15/16 recommended pattern for multi-tenant routing
 
 ---
 
