@@ -8,7 +8,8 @@
 
 ### Recently Completed: EM-32 Custom Domain Support
 **Completed**: January 23, 2026  
-**Status**: ✅ 15 OF 34 PHASES COMPLETE (44%)
+**Status**: ✅ 15 OF 34 PHASES COMPLETE (44%)  
+**Migration Fixed**: Uses `site_module_installations` table (verified against actual DB schema)
 
 **What was built:**
 - Custom domain mapping to modules
@@ -26,6 +27,13 @@
 - `src/lib/modules/domains/index.ts` - Module exports
 - `src/components/modules/domains/DomainSettings.tsx` - UI component
 - `src/app/api/modules/[moduleId]/domains/` - API routes for CRUD operations
+- `scripts/check-schema.ts` - Database schema verification utility
+
+**Schema Fix Applied:**
+- Initial migration referenced `site_modules` table (doesn't exist)
+- Verified actual DB has `site_module_installations` table
+- Updated all references: migration SQL, TypeScript services, API routes, edge router, middleware
+- Migration now runs successfully ✅
 
 **Key Features:**
 1. **Domain Management** - Add, verify, delete custom domains
@@ -102,6 +110,8 @@ Optional: Complete Wave 3 (EM-33 API-Only Mode ~4 hours)
 - Use foreign key constraints with CASCADE
 - Index frequently queried columns
 - Use Postgres functions for domain lookup
+- **Verify actual DB schema** before writing migrations (use `scripts/check-schema.ts`)
+- Current module table: `site_module_installations` (not `site_modules`)
 
 ## Important Files & Locations
 
@@ -118,9 +128,10 @@ Optional: Complete Wave 3 (EM-33 API-Only Mode ~4 hours)
 - **Settings**: `/api/modules/[moduleId]/domains/[domainId]/settings`
 
 ### Database (EM-32)
-- **Migration**: `migrations/em-32-custom-domains.sql`
+- **Migration**: `migrations/em-32-custom-domains.sql` ✅ Successfully migrated
 - **Tables**: `module_custom_domains`, `domain_dns_records`, `domain_ssl_certificates`, `domain_request_logs`
 - **Functions**: `get_module_by_domain()`, `increment_domain_stats()`, `get_domains_for_ssl_renewal()`
+- **FK Reference**: Uses `site_module_installations` table (verified against production DB)
 
 ### External Integration (EM-31)
 - **Domain Service**: `src/lib/modules/external/domain-service.ts`
