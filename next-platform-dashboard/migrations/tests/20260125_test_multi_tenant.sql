@@ -24,6 +24,19 @@ BEGIN
   RAISE NOTICE '';
 
   -- ============================================================================
+  -- CLEANUP FROM PREVIOUS RUNS
+  -- ============================================================================
+  RAISE NOTICE 'Cleaning up any leftover test data...';
+  BEGIN
+    EXECUTE format('DROP TABLE IF EXISTS %I CASCADE', v_test_table_name);
+    DELETE FROM module_database_registry WHERE module_id = v_test_module_id;
+    RAISE NOTICE '  ✓ Cleanup complete';
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE '  ⚠ Cleanup warning: %', SQLERRM;
+  END;
+  RAISE NOTICE '';
+
+  -- ============================================================================
   -- TEST 1: Get Test Data from Database
   -- ============================================================================
   RAISE NOTICE 'TEST 1: Setting up test data...';
