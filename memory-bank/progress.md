@@ -1,7 +1,7 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: January 23, 2026  
-**Overall Completion**: 44% (15 of 34 enterprise phases complete)
+**Overall Completion**: 47% (16 of 34 enterprise phases complete)
 
 ## ✅ What Works (Completed Features)
 
@@ -57,6 +57,20 @@
 - ✅ Domain settings UI component
 - ✅ API routes for domain management
 
+### API-Only Mode (EM-33 ✅)
+**Completed**: January 23, 2026
+- ✅ REST API generator for module data access
+- ✅ GraphQL API with query/mutation support
+- ✅ API consumer management (keys, scopes, rate limits)
+- ✅ IP whitelisting for API consumers
+- ✅ Request logging with response time tracking
+- ✅ Usage statistics and analytics
+- ✅ SDK generators (TypeScript, JavaScript, Python)
+- ✅ API documentation generators (OpenAPI 3.0, Markdown, Postman)
+- ✅ Webhook event delivery with HMAC signing
+- ✅ Webhook retry logic with exponential backoff
+- ✅ Webhook delivery history and statistics
+
 ### Supporting Features
 - ✅ **Email system** - Resend integration with templates
 - ✅ **Rate limiting** - API throttling
@@ -85,15 +99,15 @@
 
 **Status**: All developer tools built! Full VS Code extension, CLI with 8 commands, 3 module templates, and AI builder.
 
-### Wave 3: Distribution - 5/6 Complete (83%)
+### Wave 3: Distribution - ✅ 100% COMPLETE (6/6)
 - ✅ EM-02: Marketplace Enhancement
 - ✅ EM-03: Analytics Foundation
 - ✅ EM-30: Universal Embed
 - ✅ EM-31: External Integration
-- ✅ EM-32: Custom Domains (**NEW - Completed Jan 23, 2026**)
-- ⬜ EM-33: API-Only Mode (~4 hours)
+- ✅ EM-32: Custom Domains
+- ✅ EM-33: API-Only Mode (**NEW - Completed Jan 23, 2026**)
 
-**Status**: 83% complete, only EM-33 remaining (optional)
+**Status**: COMPLETE! All distribution features built.
 
 ### Wave 4: Enterprise Features - 0 of 4 Complete
 - ⬜ EM-40: Multi-Tenant (~8 hours)
@@ -130,48 +144,32 @@
 |----------|----------|-------------|-------------|-------|
 | **Foundation (Wave 1)** | 7 | 0 | 0 | 7 |
 | **Developer Tools (Wave 2)** | 4 | 0 | 0 | 4 |
-| **Distribution (Wave 3)** | 3 | 1 | 2 | 6 |
+| **Distribution (Wave 3)** | 6 | 0 | 0 | 6 |
 | **Enterprise (Wave 4)** | 0 | 0 | 4 | 4 |
 | **Business Modules (Wave 5)** | 0 | 0 | 7 | 7 |
 | **Industry Verticals (Wave 6)** | 0 | 0 | 6 | 6 |
-| **TOTAL** | **14** | **1** | **19** | **34** |
+| **TOTAL** | **17** | **0** | **17** | **34** |
 
-**Progress**: 14 complete, 1 in progress (EM-31), 19 remaining = **~41% complete**
+**Progress**: 17 complete, 0 in progress, 17 remaining = **50% complete**
 
 ## 🎯 Recommended Next Steps
 
-### Option A: Complete Wave 3 Distribution
-**Timeline**: 1-2 days  
-**Effort**: ~9 hours remaining (EM-32 + EM-33)
-
-Finish EM-31 (current), then build EM-32 Custom Domains and EM-33 API-Only Mode.
-
-**Pros:**
-- Complete the distribution layer
-- Modules fully embeddable anywhere
-- Foundation + tools + distribution complete
-
-**Cons:**
-- Still delays business modules
-- May not be immediately needed
-
-### Option B: Jump to Business Modules (EM-50 CRM)
+### Option A: Build Business Modules (EM-50 CRM) - RECOMMENDED
 **Timeline**: 1 week  
 **Effort**: ~10 hours
 
-Build the flagship CRM module immediately - foundation is already complete!
+Build the flagship CRM module immediately - all infrastructure complete!
 
 **Pros:**
-- Foundation DONE - no workarounds needed
+- Foundation + Distribution DONE - no workarounds needed
 - Fastest path to revenue
 - Tangible product demo
 - Validates market demand
 
 **Cons:**
-- Some distribution features incomplete
-- API-only mode not ready
+- Enterprise features not yet built
 
-### Option C: Enterprise Features (Wave 4)
+### Option B: Enterprise Features (Wave 4)
 **Timeline**: 2-3 weeks  
 **Effort**: ~28 hours
 

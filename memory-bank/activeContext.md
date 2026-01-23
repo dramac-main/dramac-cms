@@ -1,15 +1,54 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 23, 2026  
-**Current Phase**: Ready for Wave 5 Business Modules  
-**Status**: ✅ EM-32 Custom Domains Complete - Ready for Business Modules
+**Current Phase**: Wave 3 Distribution COMPLETE - Ready for Wave 4 or 5  
+**Status**: ✅ EM-33 API-Only Mode Complete - Wave 3 Distribution 100% Done!
 
 ## Current Work Focus
 
-### Recently Completed: EM-32 Custom Domain Support
+### Just Completed: EM-33 API-Only Mode
 **Completed**: January 23, 2026  
-**Status**: ✅ 15 OF 34 PHASES COMPLETE (44%)  
-**Migration Fixed**: Uses `site_module_installations` table (verified against actual DB schema)
+**Status**: ✅ 16 OF 34 PHASES COMPLETE (47%)  
+**Wave 3 Distribution**: 100% COMPLETE (6/6 phases)
+
+**What was built:**
+- REST API generator for module data access
+- GraphQL API with query/mutation support
+- SDK generators (TypeScript, JavaScript, Python)
+- API documentation generators (OpenAPI, Markdown, Postman)
+- API consumer management (keys, rate limits, IP whitelisting)
+- Webhook event delivery system with HMAC signing
+- Request logging and usage analytics
+
+**Files Created:**
+- `migrations/em-33-api-mode.sql` - Database schema for API consumers, webhooks, deliveries
+- `src/lib/modules/api-mode/rest-api-generator.ts` - Dynamic REST API with scoped access
+- `src/lib/modules/api-mode/graphql-generator.ts` - GraphQL schema and resolver generation
+- `src/lib/modules/api-mode/sdk-generator.ts` - Client SDK code generation
+- `src/lib/modules/api-mode/docs-generator.ts` - API documentation generation
+- `src/lib/modules/api-mode/consumer-service.ts` - API key management and rate limiting
+- `src/lib/modules/api-mode/webhook-delivery.ts` - Webhook delivery with retry logic
+- `src/lib/modules/api-mode/index.ts` - Module exports
+- API Routes:
+  - `src/app/api/modules/[moduleId]/data/[...path]/route.ts` - REST data endpoints
+  - `src/app/api/modules/[moduleId]/graphql/route.ts` - GraphQL endpoint
+  - `src/app/api/modules/[moduleId]/sdk/route.ts` - SDK download
+  - `src/app/api/modules/[moduleId]/docs/route.ts` - Documentation endpoint
+  - `src/app/api/modules/[moduleId]/api-consumers/` - Consumer management routes
+  - `src/app/api/modules/[moduleId]/webhooks/` - Webhook management routes
+
+**Key Features:**
+1. **API Consumer Management** - Create consumers with API keys, scopes, rate limits
+2. **Scoped Access** - Limit endpoints, require specific scopes
+3. **Rate Limiting** - Per-minute and per-day limits with sliding window
+4. **IP Whitelisting** - Optional allowed IP restrictions
+5. **Request Logging** - All API requests logged with response times
+6. **Webhook Delivery** - Event-based notifications with retry and HMAC signing
+7. **SDK Generation** - TypeScript, JavaScript, Python client libraries
+8. **Documentation** - OpenAPI 3.0, Markdown, Postman collections
+
+### Previously Completed: EM-32 Custom Domain Support
+**Completed**: January 23, 2026
 
 **What was built:**
 - Custom domain mapping to modules
@@ -57,10 +96,10 @@
 ## Next Steps
 
 ### Current Status Summary
-**15 of 34 phases complete (44%)**
+**16 of 34 phases complete (47%)**
 - ✅ Wave 1: Foundation (6/6) - 100% COMPLETE
 - ✅ Wave 2: Developer Tools (4/4) - 100% COMPLETE
-- ✅ Wave 3: Distribution (5/6) - 83% COMPLETE (EM-33 remaining)
+- ✅ Wave 3: Distribution (6/6) - 100% COMPLETE
 - ⬜ Wave 4: Enterprise (0/4)
 - ⬜ Wave 5: Business Modules (0/7) - **READY TO BUILD**
 - ⬜ Wave 6: Industry Verticals (0/6)
@@ -71,8 +110,6 @@ All infrastructure is complete! Time to build revenue-generating modules:
 1. 🎯 **EM-50: CRM Module** - RECOMMENDED FIRST (~10 hours)
 2. 🎯 **EM-51: Booking Module** - High Demand (~8 hours)
 3. 🎯 **EM-55: Accounting Module** - Invoicing (~8 hours)
-
-Optional: Complete Wave 3 (EM-33 API-Only Mode ~4 hours)
 
 ## Recent Decisions
 
