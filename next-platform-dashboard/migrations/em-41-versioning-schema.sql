@@ -77,7 +77,7 @@ WHERE version_major IS NULL;
 -- =============================================================
 CREATE TABLE IF NOT EXISTS module_migrations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  module_id UUID NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
+  module_id UUID NOT NULL REFERENCES module_source(id) ON DELETE CASCADE,
   
   -- Version range
   from_version TEXT,                   -- null for initial
