@@ -60,7 +60,7 @@ export async function corsMiddleware(
   }
 
   // Check if origin is allowed
-  const { allowed, domain, rateLimit } = await checkOriginAllowed(config.moduleId, origin);
+  const { allowed, domain } = await checkOriginAllowed(config.moduleId, origin);
 
   // Handle preflight requests
   if (request.method === 'OPTIONS') {

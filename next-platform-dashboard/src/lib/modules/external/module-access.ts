@@ -9,7 +9,7 @@ import { cookies } from 'next/headers';
 export async function getModuleAndVerifyAccess(
   moduleId: string,
   userId: string
-): Promise<{ module: any; member: any } | { error: string }> {
+): Promise<{ module: { id: string; site_id: string; name: string; slug: string }; member: { user_id: string; site_id: string; role: string } } | { error: string }> {
   const cookieStore = await cookies();
   
   const supabase = createServerClient(
