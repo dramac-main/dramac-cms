@@ -48,6 +48,44 @@
 
 ### Custom Domain Support (EM-32 ✅)
 **Completed**: January 23, 2026
+- ✅ Domain creation and verification system
+- ✅ CNAME and proxy modes
+- ✅ SSL/TLS certificate management integration
+- ✅ Domain validation checks
+- ✅ Domain migration tools
+- ✅ Subdomain support
+
+### API-Only Mode (EM-33 ✅)
+**Completed**: January 24, 2026
+- ✅ API-only site type support
+- ✅ REST API endpoint generation per module
+- ✅ GraphQL endpoint support
+- ✅ API key authentication
+- ✅ Rate limiting per API key
+- ✅ API documentation generation
+- ✅ CORS configuration for headless mode
+
+### Multi-Tenant Architecture (EM-40 ✅)
+**Completed**: January 25, 2026 ⚡ NEW!
+- ✅ Agency → Client → Site tenant hierarchy
+- ✅ Complete data isolation with RLS
+- ✅ Tenant context management (server + client)
+- ✅ Module database with tenant-aware access
+- ✅ Agency-level admin cross-site queries
+- ✅ Cross-module access control with permissions
+- ✅ Data export/import with tenant isolation
+- ✅ Site cloning functionality
+- ✅ React hooks: useTenant(), useRequireSite(), useIsAdmin()
+- ✅ API middleware for tenant validation
+- ✅ Migration tested and deployed successfully
+
+**Files**: 10 TypeScript files, 1 SQL migration (422 lines), comprehensive documentation
+
+**Integration Notes**:
+- Uses existing `agency_members` table (not agency_users)
+- Compatible with phase-59 RLS helpers (reuses is_agency_admin)
+- Works with EM-05 module_database_registry (table_names array)
+- All functions tested with real database migration
 - ✅ Custom domain mapping to modules
 - ✅ DNS verification (CNAME and TXT methods)
 - ✅ SSL certificate provisioning structure
@@ -131,10 +169,17 @@
 **Status**: COMPLETE! All distribution features built.
 
 ### Wave 4: Enterprise Features - 1 of 4 Complete (25%)
-- ✅ EM-40: Multi-Tenant (**NEW - Completed Jan 25, 2026**)
+- ✅ EM-40: Multi-Tenant ✅ **COMPLETE** (Deployed Jan 25, 2026)
+  - Backend infrastructure for data isolation
+  - Agency → Client → Site hierarchy with RLS
+  - Tenant-aware data access layers
+  - Cross-module permissions system
+  - Migration tested and verified
 - ⬜ EM-41: Versioning & Rollback (~6 hours)
 - ⬜ EM-42: Marketplace V2 (~8 hours)
 - ⬜ EM-43: Revenue Dashboard (~6 hours)
+
+**Next Up**: EM-41 Versioning & Rollback (enables safe module updates)
 
 **Why needed**: Scaling to multiple agencies and module versions
 
