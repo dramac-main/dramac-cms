@@ -130,7 +130,10 @@ $$ LANGUAGE plpgsql STABLE;
 -- VERIFY TENANT ACCESS FUNCTIONS
 -- ============================================================================
 
--- Check if user has access to a site
+-- NOTE: Most helper functions already exist from phase-59-rls-helpers.sql
+-- We only add new ones needed specifically for multi-tenant module architecture
+
+-- Check if user has access to a site (NEW - not in phase-59)
 CREATE OR REPLACE FUNCTION user_has_site_access(p_user_id UUID, p_site_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
@@ -147,24 +150,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
--- Check if user is agency admin
-CREATE OR REPLACE FUNCTION is_agency_admin(p_user_id UUID, p_agency_id UUID)
-RETURNS BOOLEAN AS $$
-DECLARE
-  v_is_admin BOOLEAN;
-BEGIN
-  SELECT EXISTS (
-    SELECT 1 FROM agency_members
-    WHERE user_id = p_user_id
-      AND agency_id = p_agency_id
-      AND role IN ('owner', 'admin')
-  ) INTO v_is_admin;
-  
-  RETURN v_is_admin;
-END;
-$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
-
--- Check if user belongs to agency
+-- Check if user belongs to agency (NEW - not in phase-59)
 CREATE OR REPLACE FUNCTION user_in_agency(p_user_id UUID, p_agency_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
@@ -180,7 +166,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
--- Get user's agency ID
+-- Get user's agency ID (NEW - not in phase-59)
 CREATE OR REPLACE FUNCTION get_user_agency_id(p_user_id UUID)
 RETURNS UUID AS $$
 DECLARE
@@ -195,7 +181,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
 
--- Get user's role in agency
+-- Get user's role in agency (NEW - not in phase-59)
 CREATE OR REPLACE FUNCTION get_user_agency_role(p_user_id UUID, p_agency_id UUID)
 RETURNS TEXT AS $$
 DECLARE
