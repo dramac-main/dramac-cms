@@ -1,7 +1,7 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: January 23, 2026  
-**Overall Completion**: 41% (14 of 34 enterprise phases complete)
+**Overall Completion**: 44% (15 of 34 enterprise phases complete)
 
 ## ✅ What Works (Completed Features)
 
@@ -46,6 +46,17 @@
 - ✅ External request logging
 - ✅ Rate limiting
 
+### Custom Domain Support (EM-32 ✅)
+**Completed**: January 23, 2026
+- ✅ Custom domain mapping to modules
+- ✅ DNS verification (CNAME and TXT methods)
+- ✅ SSL certificate provisioning structure
+- ✅ White-label branding (logo, favicon, colors, CSS)
+- ✅ Edge router with caching
+- ✅ Domain analytics and request logging
+- ✅ Domain settings UI component
+- ✅ API routes for domain management
+
 ### Supporting Features
 - ✅ **Email system** - Resend integration with templates
 - ✅ **Rate limiting** - API throttling
@@ -74,15 +85,15 @@
 
 **Status**: All developer tools built! Full VS Code extension, CLI with 8 commands, 3 module templates, and AI builder.
 
-### Wave 3: Distribution - 4/6 Complete
+### Wave 3: Distribution - 5/6 Complete (83%)
 - ✅ EM-02: Marketplace Enhancement
 - ✅ EM-03: Analytics Foundation
 - ✅ EM-30: Universal Embed
 - ✅ EM-31: External Integration
-- ⬜ EM-32: Custom Domains (~5 hours)
+- ✅ EM-32: Custom Domains (**NEW - Completed Jan 23, 2026**)
 - ⬜ EM-33: API-Only Mode (~4 hours)
 
-**Status**: 67% complete, only 2 optional phases remaining in Wave 3
+**Status**: 83% complete, only EM-33 remaining (optional)
 
 ### Wave 4: Enterprise Features - 0 of 4 Complete
 - ⬜ EM-40: Multi-Tenant (~8 hours)
