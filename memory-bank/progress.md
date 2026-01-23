@@ -257,6 +257,12 @@ Build the flagship CRM module - all infrastructure complete!
 
 ## 🐛 Known Issues
 
+### ✅ FIXED: Public Site Access Bug (January 23, 2026)
+**Issue**: Client sites at `/site/[domain]` were requiring login  
+**Root Cause**: Middleware's `publicRoutes` array was missing `/site`, `/blog`, `/preview`  
+**Fix**: Added missing routes to `src/lib/supabase/middleware.ts`  
+**Status**: ✅ Fixed and verified
+
 ### Technical Debt
 1. **Rate Limiting** - Uses in-memory cache, needs Redis for production
 2. **Webhook Queue** - No background job system, webhooks may fail

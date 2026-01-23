@@ -1,68 +1,50 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 23, 2026  
-**Current Phase**: EM-42 Module Marketplace 2.0 ✅ COMPLETE & COMMITTED  
-**Status**: ✅ 20 OF 34 PHASES (59%) - Migration Deployed, TypeScript Verified, Code Committed
+**Current Phase**: Middleware Fix for Public Site Access  
+**Status**: ✅ 20 OF 34 PHASES (59%) - Bug Fix Applied, TypeScript Verified
 
 ## Current Work Focus
 
-### ✅ COMPLETED: EM-42 Module Marketplace 2.0 (January 23, 2026)
-**Status**: ✅ COMPLETE - Migration deployed, all services implemented, committed to main  
-**Wave 4 Enterprise**: 3/4 COMPLETE (75%)  
+### ✅ COMPLETED: Public Site Access Bug Fix (January 23, 2026)
+**Status**: ✅ FIXED - Middleware now allows unauthenticated access to public client sites  
 **TypeScript Compilation**: ✅ Zero errors  
-**Database Migration**: ✅ Deployed successfully (em-42-marketplace-2-schema.sql)  
-**Git Commit**: 888b897 - 24 files, 4493 insertions
+**Issue**: Client sites at `/site/[domain]` were requiring login due to missing public routes
 
-**What was built:**
-- Comprehensive reviews and ratings system with voting and developer responses
-- Developer profiles with portfolios, social links, verification badges
-- Advanced search and filtering with faceted search and sorting
-- Featured modules and collections with scheduling
-- Module recommendations engine (similarity-based, popular, personalized)
-- View tracking and analytics for engagement metrics
+**Root Cause:**
+The middleware's `publicRoutes` array in `src/lib/supabase/middleware.ts` was missing critical public-facing routes:
+- `/site` - Published client websites
+- `/blog` - Public blog pages  
+- `/preview` - Page preview functionality
 
-**Files Created:**
-- `migrations/em-42-marketplace-2-schema.sql` - Extended module_reviews, new tables for developer_profiles, review_votes, featured_modules, user_search_history, module_views, moderation_reports
-- `src/lib/marketplace/review-service.ts` - Review CRUD, voting, developer responses, moderation reports
-- `src/lib/marketplace/search-service.ts` - Advanced search with filters, recommendations, trending
-- `src/lib/marketplace/developer-service.ts` - Developer profile management, modules, reviews
-- `src/lib/marketplace/index.ts` - Module exports
-- `src/components/marketplace/ModuleCard.tsx` - Rich module card with rating, developer, pricing
-- `src/components/marketplace/ReviewList.tsx` - Review display with stats, sorting, voting
-- `src/components/marketplace/ReviewForm.tsx` - Review creation/editing with pros/cons chips
-- `src/app/(dashboard)/marketplace/developers/[slug]/page.tsx` - Developer profile page with tabs
-- `src/app/api/modules/[moduleId]/reviews/route.ts` - GET/POST reviews
-- `src/app/api/modules/[moduleId]/reviews/[reviewId]/route.ts` - PATCH/DELETE review
-- `src/app/api/modules/[moduleId]/reviews/[reviewId]/vote/route.ts` - Vote on review
-- `src/app/api/modules/[moduleId]/reviews/[reviewId]/response/route.ts` - Developer response
-- `src/app/api/modules/[moduleId]/reviews/[reviewId]/report/route.ts` - Report review
-- `src/app/api/modules/[moduleId]/view/route.ts` - View tracking
-- `src/app/api/marketplace/search/route.ts` - Search with filters
-- `src/app/api/marketplace/featured/route.ts` - Featured modules
-- `src/app/api/marketplace/recommendations/route.ts` - Personalized recommendations
-- `src/app/api/marketplace/trending/route.ts` - Trending modules
-- `src/app/api/marketplace/categories/route.ts` - Category listing
-- `src/app/api/marketplace/developers/route.ts` - Developer profile CRUD
-- `src/app/api/marketplace/developers/[slug]/route.ts` - Developer by slug
+**Fix Applied:**
+Updated `publicRoutes` from:
+```typescript
+const publicRoutes = ["/login", "/signup", "/forgot-password", "/reset-password", "/auth/callback", "/embed"];
+```
 
-**Key Features:**
-1. **ReviewService** - `createReview()`, `updateReview()`, `deleteReview()`, `getModuleReviews()`, `getReviewStats()`, `addDeveloperResponse()`, `voteReview()`, `reportReview()`
-2. **SearchService** - `searchModules()`, `getFeaturedModules()`, `getRecommendations()`, `getTrendingModules()`, `logSearch()`, `logModuleView()`, `getCategories()`
-3. **DeveloperService** - `getDeveloperBySlug()`, `createDeveloperProfile()`, `updateDeveloperProfile()`, `getDeveloperModules()`, `getDeveloperReviews()`, `getTopDevelopers()`
-4. **Database Functions** - `get_trending_modules()` RPC, triggers for rating/review count updates
-5. **UI Components** - ModuleCard with developer badges, ReviewList with distribution chart, ReviewForm with pros/cons
-6. **API Routes** - Complete REST API for reviews, search, recommendations, developers
+To:
+```typescript
+const publicRoutes = [
+  "/login", 
+  "/signup", 
+  "/forgot-password", 
+  "/reset-password", 
+  "/auth/callback", 
+  "/embed",
+  "/site",     // Public client sites - /site/[domain]/[...slug]
+  "/blog",     // Public blog pages - /blog/[subdomain]/[slug]
+  "/preview",  // Preview pages - /preview/[siteId]/[pageId]
+];
+```
 
-**Database Schema Extensions:**
-- Enhanced `module_reviews` with user_id, pros, cons, developer_response, developer_responded_at
-- New `developer_profiles` table for marketplace developer identities
-- New `review_votes` table for helpful/not_helpful voting
-- New `featured_modules` table for curated module lists
-- New `module_collections` table for thematic groupings
-- New `user_search_history` table for personalized recommendations
-- New `module_views` table for engagement tracking
-- New `moderation_reports` table for content moderation
-- Trigger `update_module_rating_stats()` for keeping rating_average/review_count in sync
+**Files Modified:**
+- `src/lib/supabase/middleware.ts` - Added `/site`, `/blog`, `/preview` to publicRoutes
+
+**Why This Works:**
+- Public client sites use `createAdminClient()` for data fetching (bypasses RLS)
+- The middleware was incorrectly requiring auth for these public routes
+- Now unauthenticated users can access published sites without being redirected to login
 
 ---
 

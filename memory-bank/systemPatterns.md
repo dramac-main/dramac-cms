@@ -174,6 +174,18 @@ export async function POST(request: Request) {
 - Session stored in cookies
 - Middleware refreshes sessions
 
+**Public Routes (No Auth Required):**
+Routes that should be accessible without login (defined in `src/lib/supabase/middleware.ts`):
+- `/login`, `/signup`, `/forgot-password`, `/reset-password` - Auth pages
+- `/auth/callback` - OAuth callback
+- `/embed` - Module embed routes
+- `/site` - **PUBLIC CLIENT SITES** (`/site/[domain]/[...slug]`)
+- `/blog` - **PUBLIC BLOG PAGES** (`/blog/[subdomain]/[slug]`)
+- `/preview` - Page preview routes
+- `/api/*` - API routes (handle their own auth)
+
+⚠️ **IMPORTANT**: When adding new public-facing routes, add them to `publicRoutes` array!
+
 **Authorization Levels:**
 1. **Super Admin** - Platform management
 2. **Agency Owner** - Full agency access

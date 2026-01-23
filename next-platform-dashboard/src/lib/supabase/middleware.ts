@@ -38,7 +38,18 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Define public routes that don't require authentication
-  const publicRoutes = ["/login", "/signup", "/forgot-password", "/reset-password", "/auth/callback", "/embed"];
+  // These include auth pages, embed routes, and PUBLIC-FACING client sites/blogs
+  const publicRoutes = [
+    "/login", 
+    "/signup", 
+    "/forgot-password", 
+    "/reset-password", 
+    "/auth/callback", 
+    "/embed",
+    "/site",     // Public client sites - /site/[domain]/[...slug]
+    "/blog",     // Public blog pages - /blog/[subdomain]/[slug]
+    "/preview",  // Preview pages - /preview/[siteId]/[pageId]
+  ];
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route)
   );
