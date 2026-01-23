@@ -1,12 +1,62 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: January 25, 2026  
-**Current Phase**: EM-40 Multi-Tenant Architecture ✅ COMPLETE AND DEPLOYED  
-**Status**: ✅ 17 OF 34 PHASES (50%) - Migration Tested and Verified
+**Last Updated**: January 23, 2026  
+**Current Phase**: EM-41 Module Versioning & Rollback ✅ COMPLETE  
+**Status**: ✅ 19 OF 34 PHASES (56%) - TypeScript Verified
 
 ## Current Work Focus
 
-### ✅ COMPLETED: EM-40 Multi-Tenant Architecture (January 25, 2026)
+### ✅ COMPLETED: EM-41 Module Versioning & Rollback (January 23, 2026)
+**Status**: ✅ COMPLETE - All services and UI implemented  
+**Wave 4 Enterprise**: 2/4 COMPLETE (50%)  
+**TypeScript Compilation**: ✅ Zero errors
+
+**What was built:**
+- Comprehensive semantic versioning enforcement with semver parsing
+- Version history tracking with publish/deprecate/yank states
+- Database migration versioning system with up/down migrations
+- Safe rollback mechanism with data backups
+- Breaking change detection and upgrade path calculation
+- Dependency constraint validation
+
+**Files Created:**
+- `migrations/em-41-versioning-schema.sql` - Extended module_versions table, new tables for migrations, backups, version tracking
+- `src/lib/modules/versioning/version-service.ts` - Version management with semver support
+- `src/lib/modules/versioning/migration-service.ts` - Database migration execution and backup management
+- `src/lib/modules/versioning/rollback-service.ts` - Rollback planning and execution
+- `src/lib/modules/versioning/index.ts` - Module exports
+- `src/components/modules/UpgradeFlow.tsx` - Step-by-step upgrade wizard UI
+- `src/components/modules/RollbackUI.tsx` - Rollback interface with version selection
+- `src/app/api/modules/[moduleId]/versions/route.ts` - Version CRUD API
+- `src/app/api/modules/[moduleId]/versions/upgrade-plan/route.ts` - Upgrade planning API
+- `src/app/api/modules/[moduleId]/versions/backup/route.ts` - Backup creation API
+- `src/app/api/modules/[moduleId]/versions/migrate/route.ts` - Migration execution API
+- `src/app/api/modules/[moduleId]/versions/verify/route.ts` - Installation verification API
+- `src/app/api/modules/[moduleId]/versions/rollback-points/route.ts` - Available rollback versions API
+- `src/app/api/modules/[moduleId]/versions/rollback-plan/route.ts` - Rollback planning API
+- `src/app/api/modules/[moduleId]/versions/rollback/route.ts` - Rollback execution API
+- `src/app/api/modules/[moduleId]/versions/[versionId]/publish/route.ts` - Version publishing API
+- `src/app/api/modules/[moduleId]/versions/[versionId]/deprecate/route.ts` - Version deprecation API
+
+**Key Features:**
+1. **VersionService** - `parseVersion()`, `compareVersions()`, `satisfiesConstraint()`, `incrementVersion()`, `getUpgradePath()`
+2. **MigrationService** - `createBackup()`, `runMigrations()`, `restoreFromBackup()`, `getMigrationHistory()`
+3. **RollbackService** - `createRollbackPlan()`, `executeRollback()`, `getRollbackPoints()`, `rollbackToPrevious()`
+4. **Database Functions** - `parse_semver()`, `compare_semver()`, `version_satisfies()`, `get_active_module_version()`
+5. **UI Components** - Multi-step upgrade wizard, rollback point selection, progress tracking
+6. **API Routes** - Complete REST API for version management, migrations, and rollbacks
+
+**Database Schema Extensions:**
+- Extended `module_versions` with version_major/minor/patch, status, dependencies, bundle info
+- New `module_migrations` table for tracking database migrations per module
+- New `site_module_versions` table for tracking installed versions per site
+- New `module_data_backups` table for rollback data storage
+- New `module_migration_runs` table for migration execution logging
+- Helper functions for semver parsing and comparison
+
+---
+
+### ✅ Previously: EM-40 Multi-Tenant Architecture (January 25, 2026)
 **Status**: ✅ COMPLETE - Migration deployed successfully  
 **Wave 4 Enterprise**: 1/4 COMPLETE (25%)  
 **Database Migration**: ✅ Deployed and tested

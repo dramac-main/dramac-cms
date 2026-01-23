@@ -1,7 +1,7 @@
 # Progress: What Works & What's Left
 
-**Last Updated**: January 25, 2026  
-**Overall Completion**: 53% (18 of 34 enterprise phases complete)
+**Last Updated**: January 23, 2026  
+**Overall Completion**: 56% (19 of 34 enterprise phases complete)
 
 ## ✅ What Works (Completed Features)
 
@@ -66,7 +66,7 @@
 - ✅ CORS configuration for headless mode
 
 ### Multi-Tenant Architecture (EM-40 ✅)
-**Completed**: January 25, 2026 ⚡ NEW!
+**Completed**: January 25, 2026
 - ✅ Agency → Client → Site tenant hierarchy
 - ✅ Complete data isolation with RLS
 - ✅ Tenant context management (server + client)
@@ -79,35 +79,28 @@
 - ✅ API middleware for tenant validation
 - ✅ Migration tested and deployed successfully
 
-**Files**: 10 TypeScript files, 1 SQL migration (422 lines), comprehensive documentation
+### Module Versioning & Rollback (EM-41 ✅) ⚡ NEW!
+**Completed**: January 23, 2026
+- ✅ Semantic versioning enforcement with semver parsing
+- ✅ Version history tracking (draft, published, deprecated, yanked)
+- ✅ Database migration versioning (up/down migrations)
+- ✅ Safe rollback mechanism with data backups
+- ✅ Breaking change detection and upgrade path calculation
+- ✅ Dependency constraint validation (^, ~, >=, <=, >, <)
+- ✅ Upgrade Flow UI with step-by-step wizard
+- ✅ Rollback UI with version selection
+- ✅ Migration execution logging
+- ✅ Pre-upgrade backup creation
+
+**Files**: 4 service files, 2 UI components, 10 API routes, 1 SQL migration
 
 **Integration Notes**:
-- Uses existing `agency_members` table (not agency_users)
-- Compatible with phase-59 RLS helpers (reuses is_agency_admin)
-- Works with EM-05 module_database_registry (table_names array)
-- All functions tested with real database migration
-- ✅ Custom domain mapping to modules
-- ✅ DNS verification (CNAME and TXT methods)
-- ✅ SSL certificate provisioning structure
-- ✅ White-label branding (logo, favicon, colors, CSS)
-- ✅ Edge router with caching
-- ✅ Domain analytics and request logging
-- ✅ Domain settings UI component
-- ✅ API routes for domain management
+- Extends existing `module_versions` table with version parsing
+- New tables: `module_migrations`, `site_module_versions`, `module_data_backups`, `module_migration_runs`
+- Helper functions: `parse_semver()`, `compare_semver()`, `version_satisfies()`
+- Compatible with existing module_source and modules_v2 tables
 
-### API-Only Mode (EM-33 ✅ DEPLOYED)
-**Completed**: January 23, 2026  
-**Database Migration**: ✅ Successfully deployed to production
-- ✅ REST API generator for module data access
-- ✅ GraphQL API with query/mutation support
-- ✅ API consumer management (keys, scopes, rate limits)
-- ✅ IP whitelisting for API consumers
-- ✅ Request logging with response time tracking
-- ✅ Usage statistics and analytics
-- ✅ SDK generators (TypeScript, JavaScript, Python)
-- ✅ API documentation generators (OpenAPI 3.0, Markdown, Postman)
-- ✅ Webhook event delivery with HMAC signing
-- ✅ Webhook retry logic with exponential backoff
+**Files**: 10 TypeScript files, 1 SQL migration (422 lines), comprehensive documentation
 - ✅ Webhook delivery history and statistics
 - ✅ Database schema with 6 tables (idempotent migration)
 - ✅ RLS policies using can_access_site() function
