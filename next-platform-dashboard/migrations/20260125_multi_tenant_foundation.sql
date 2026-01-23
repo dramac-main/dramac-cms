@@ -302,28 +302,35 @@ BEGIN
   
   -- Register table in module database registry (using existing EM-05 schema)
   -- Note: This updates table_names array, not a singular table_name column
-  INSERT INTO module_database_registry (
-    module_id, 
-    module_short_id,
-    table_names,
-    uses_schema,
-    status
-  )
-  VALUES (
-    p_module_id, 
-    substring(p_module_id::TEXT from 1 for 8), -- First 8 chars as short_id
-    ARRAY[v_full_table]::TEXT[],
-    false,
-    'active'
-  )
-  ON CONFLICT (module_id) DO UPDATE SET 
-    table_names = CASE 
-      WHEN v_full_table = ANY(module_database_registry.table_names) 
-      THEN module_database_registry.table_names
-      ELSE array_append(module_database_registry.table_names, v_full_table)
-    END,
-    status = 'active',
-    updated_at = NOW();
+  -- Check if module already has a registry entry
+  IF EXISTS (SELECT 1 FROM module_database_registry WHERE module_id = p_module_id) THEN
+    -- Update existing entry - append table if not already present
+    UPDATE module_database_registry
+    SET table_names = CASE 
+          WHEN v_full_table = ANY(table_names) 
+          THEN table_names
+          ELSE array_append(table_names, v_full_table)
+        END,
+        status = 'active',
+        updated_at = NOW()
+    WHERE module_id = p_module_id;
+  ELSE
+    -- Insert new entry
+    INSERT INTO module_database_registry (
+      module_id, 
+      module_short_id,
+      table_names,
+      uses_schema,
+      status
+    )
+    VALUES (
+      p_module_id, 
+      substring(p_module_id::TEXT from 1 for 8),
+      ARRAY[v_full_table]::TEXT[],
+      false,
+      'active'
+    );
+  END IF;
   
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
