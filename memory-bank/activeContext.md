@@ -1,83 +1,62 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 23, 2026  
-**Current Phase**: Middleware Routing Bug Fix - FINAL FIX  
-**Status**: ✅ 20 OF 34 PHASES (59%) - Critical Routing Bug Fixed, TypeScript Verified
+**Current Phase**: EM-43 Revenue Dashboard - COMPLETE  
+**Status**: ✅ 21 OF 34 PHASES (62%) - Wave 4 Enterprise Features COMPLETE!
 
 ## Current Work Focus
 
-### ✅ COMPLETED: Middleware Routing Bug - FINAL FIX (January 23, 2026)
-**Status**: ✅ FIXED - middleware.ts now properly uses proxy.ts routing  
-**TypeScript Compilation**: ✅ Zero errors  
-**Root Cause**: middleware.ts was NOT using the proxy.ts routing logic at all!
-
-**The Real Problem:**
-The project has TWO middleware systems:
-1. `middleware.ts` (root) - Was only calling `updateSession()` directly
-2. `src/proxy.ts` - Has the ACTUAL routing logic for subdomains and custom domains
-
-**What Was Happening:**
-- `middleware.ts` was completely bypassing `proxy.ts`
-- All requests went straight to auth checks via `updateSession()`
-- The subdomain/custom domain routing in `proxy.ts` was never executed
-- Client sites couldn't be accessed without login
-
-**The Fix:**
-Changed `middleware.ts` from:
-```typescript
-export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
-  if (pathname.startsWith('/embed/')) {
-    return null;
-  }
-  return await updateSession(request);
-}
-```
-
-To:
-```typescript
-export async function middleware(request: NextRequest) {
-  return await proxy(request);
-}
-```
-
-**How proxy.ts Works:**
-1. **First**: Detects subdomain/custom domain routing
-   - Client sites: `*.sites.dramacagency.com` → rewrite to `/site/[subdomain]`
-   - Custom domains: `example.com` → rewrite to `/site/[domain]`
-2. **Second**: Handles public routes (`/preview`, `/site`, API routes)
-3. **Third**: Only calls `updateSession()` for app domain routes
-4. **Result**: Client sites are accessible without auth!
-
-**Files Modified:**
-- `middleware.ts` - Now calls `proxy()` function instead of directly calling `updateSession()`
-
-**Previous Partial Fix (Didn't Work):**
-- Earlier we added `/site`, `/blog`, `/preview` to `publicRoutes` in `src/lib/supabase/middleware.ts`
-- This didn't work because the middleware wasn't even reaching that code
-- The proxy routing needs to happen FIRST to rewrite subdomain URLs
-
-**Why This Is The Correct Fix:**
-- The `proxy.ts` was designed to handle all routing logic
-- It checks domain type BEFORE auth
-- It rewrites subdomain URLs to `/site/[domain]` paths
-- It only calls auth middleware for app domain routes
-- This is the Next.js 15/16 recommended pattern for multi-tenant routing
-
----
-
-### ✅ Previously: EM-41 Module Versioning & Rollback (January 23, 2026)
-**Status**: ✅ COMPLETE - All services and UI implemented  
-**Wave 4 Enterprise**: 2/4 COMPLETE (50%)  
+### ✅ COMPLETED: EM-43 Revenue Sharing Dashboard (January 23, 2026)
+**Status**: ✅ COMPLETE - Full revenue dashboard implemented  
+**Wave 4 Enterprise**: 4/4 COMPLETE (100%) - Wave 4 FINISHED!  
 **TypeScript Compilation**: ✅ Zero errors
 
 **What was built:**
-- Comprehensive semantic versioning enforcement with semver parsing
-- Version history tracking with publish/deprecate/yank states
-- Database migration versioning system with up/down migrations
-- Safe rollback mechanism with data backups
-- Breaking change detection and upgrade path calculation
-- Dependency constraint validation
+
+**Database Schema (em-43-revenue-schema.sql - 528 lines):**
+- `developer_payout_accounts` - Stripe Connect integration, balances, tax info
+- `module_revenue_config` - Pricing (free/one-time/subscription/usage-based), revenue split
+- `module_sales` - Transaction records with platform/developer amounts
+- `developer_payouts` - Payout requests and processing status
+- `payout_line_items` - Detailed breakdown per payout
+- `module_usage_records` - Usage-based billing tracking
+- `revenue_analytics_daily` - Pre-aggregated analytics cache
+- RLS policies for all tables with service role bypass
+- Triggers for automatic balance updates
+
+**Services:**
+- `revenue-service.ts` - Sales recording, refunds, earnings summary, analytics
+- `payout-service.ts` - Stripe Connect onboarding, payouts, statements
+
+**React Hook:**
+- `use-revenue-data.ts` - Data fetching with TanStack Query, export, payout requests
+
+**Components:**
+- `RevenueChart.tsx` - Recharts area chart with tooltips
+
+**Dashboard Page:**
+- Summary cards (total earnings, pending balance, this month, paid out)
+- Revenue over time chart
+- Top performing modules
+- Revenue by country
+- Sales history table
+- Payout history with statement downloads
+- Stripe Connect onboarding integration
+- Export functionality
+
+**API Routes (6 endpoints):**
+- `GET /api/developer/revenue` - Fetch all revenue data
+- `GET /api/developer/revenue/export` - Export CSV
+- `GET|POST /api/developer/payouts` - List/request payouts
+- `GET|PATCH /api/developer/payout-account` - Account settings
+- `GET|POST /api/developer/stripe-connect` - Stripe Connect onboarding
+- `GET /api/developer/statements/[payoutId]` - Generate statement
+
+---
+
+### ✅ Previously: Middleware Routing Bug Fix (January 23, 2026)
+**Status**: ✅ FIXED - middleware.ts now properly uses proxy.ts routing  
+**Root Cause**: middleware.ts was NOT using the proxy.ts routing logic at all!
 **Status**: ✅ COMPLETE - Migration deployed successfully  
 **Wave 4 Enterprise**: 1/4 COMPLETE (25%)  
 **Database Migration**: ✅ Deployed and tested
