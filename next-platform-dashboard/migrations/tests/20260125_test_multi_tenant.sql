@@ -13,7 +13,7 @@ DECLARE
   v_site_3_id UUID;
   v_user_1_id UUID;
   v_user_2_id UUID;
-  v_test_module_id UUID := gen_random_uuid();
+  v_test_module_id UUID := '00000000-0000-0000-0000-000000000001'::UUID; -- FIXED UUID for testing
   v_test_table_name TEXT := 'mod_' || substring(v_test_module_id::TEXT from 1 for 8) || '_test_items';
   v_result BOOLEAN;
   v_count INTEGER;
