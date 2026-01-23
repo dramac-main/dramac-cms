@@ -1,7 +1,7 @@
 # Progress: What Works & What's Left
 
-**Last Updated**: January 23, 2026  
-**Overall Completion**: 47% (16 of 34 enterprise phases complete)
+**Last Updated**: January 25, 2026  
+**Overall Completion**: 50% (17 of 34 enterprise phases complete)
 
 ## ✅ What Works (Completed Features)
 
@@ -83,6 +83,22 @@
 - ✅ **TypeScript** - Full type safety
 - ✅ **Server Actions** - Next.js 15 mutations
 
+### Multi-Tenant Architecture (EM-40 ✅ NEW)
+**Completed**: January 25, 2026
+- ✅ Agency → Client → Site hierarchy
+- ✅ RLS (Row-Level Security) at database level
+- ✅ `set_tenant_context()` function for session context
+- ✅ `user_has_site_access()` verification function
+- ✅ Tenant context management (server + client)
+- ✅ API middleware for tenant validation
+- ✅ Module data access with auto tenant filtering
+- ✅ Agency-level admin data access
+- ✅ Cross-module access with permission registry
+- ✅ Data export/import with tenant isolation
+- ✅ Site cloning between sites in same agency
+- ✅ React hooks: `useTenant()`, `useRequireSite()`, `useIsAdmin()`
+- ✅ TenantProvider component for client apps
+
 ## 🚧 What's Left to Build
 
 ### Wave 1: Core Platform - ✅ COMPLETE (7/7)
@@ -110,12 +126,12 @@
 - ✅ EM-30: Universal Embed
 - ✅ EM-31: External Integration
 - ✅ EM-32: Custom Domains
-- ✅ EM-33: API-Only Mode (**NEW - Completed Jan 23, 2026**)
+- ✅ EM-33: API-Only Mode
 
 **Status**: COMPLETE! All distribution features built.
 
-### Wave 4: Enterprise Features - 0 of 4 Complete
-- ⬜ EM-40: Multi-Tenant (~8 hours)
+### Wave 4: Enterprise Features - 1 of 4 Complete (25%)
+- ✅ EM-40: Multi-Tenant (**NEW - Completed Jan 25, 2026**)
 - ⬜ EM-41: Versioning & Rollback (~6 hours)
 - ⬜ EM-42: Marketplace V2 (~8 hours)
 - ⬜ EM-43: Revenue Dashboard (~6 hours)

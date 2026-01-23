@@ -1,54 +1,55 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: January 23, 2026  
-**Current Phase**: Wave 3 Distribution COMPLETE - Ready for Wave 4 or 5  
-**Status**: ✅ EM-33 API-Only Mode Complete & DEPLOYED - Wave 3 Distribution 100% Done!
+**Last Updated**: January 25, 2026  
+**Current Phase**: EM-40 Multi-Tenant Architecture COMPLETE  
+**Status**: ✅ EM-40 Multi-Tenant Complete - 17 OF 34 PHASES (50%)
 
 ## Current Work Focus
 
-### Just Completed: EM-33 API-Only Mode ✅ DEPLOYED
-**Completed**: January 23, 2026  
-**Status**: ✅ 16 OF 34 PHASES COMPLETE (47%)  
-**Wave 3 Distribution**: 100% COMPLETE (6/6 phases)  
-**Database Migration**: ✅ Successfully deployed to production
+### Just Completed: EM-40 Multi-Tenant Architecture ✅
+**Completed**: January 25, 2026  
+**Status**: ✅ 17 OF 34 PHASES COMPLETE (50%)  
+**Wave 4 Enterprise**: 1/4 COMPLETE (25%)  
+**Database Migration**: Ready to deploy
 
 **What was built:**
-- REST API generator for module data access
-- GraphQL API with query/mutation support
-- SDK generators (TypeScript, JavaScript, Python)
-- API documentation generators (OpenAPI, Markdown, Postman)
-- API consumer management (keys, rate limits, IP whitelisting)
-- Webhook event delivery system with HMAC signing
-- Request logging and usage analytics
+- Complete data isolation with Agency → Client → Site hierarchy
+- RLS (Row-Level Security) enforcement at database level
+- Tenant context management for server and client
+- Cross-module access control with permission registry
+- Data export/import with tenant isolation
+- React hooks and provider for tenant context
+- Agency-level admin data access
 
 **Files Created:**
-- `migrations/em-33-api-mode-schema.sql` - Database schema (6 tables, idempotent, RLS policies)
-- `src/lib/modules/api-mode/rest-api-generator.ts` - Dynamic REST API with scoped access
-- `src/lib/modules/api-mode/graphql-generator.ts` - GraphQL schema and resolver generation
-- `src/lib/modules/api-mode/sdk-generator.ts` - Client SDK code generation
-- `src/lib/modules/api-mode/docs-generator.ts` - API documentation generation
-- `src/lib/modules/api-mode/consumer-service.ts` - API key management and rate limiting
-- `src/lib/modules/api-mode/webhook-delivery.ts` - Webhook delivery with retry logic
-- `src/lib/modules/api-mode/index.ts` - Module exports
-- API Routes:
-  - `src/app/api/modules/[moduleId]/data/[...path]/route.ts` - REST data endpoints
-  - `src/app/api/modules/[moduleId]/graphql/route.ts` - GraphQL endpoint
-  - `src/app/api/modules/[moduleId]/sdk/route.ts` - SDK download
-  - `src/app/api/modules/[moduleId]/docs/route.ts` - Documentation endpoint
-  - `src/app/api/modules/[moduleId]/api-consumers/` - Consumer management routes
-  - `src/app/api/modules/[moduleId]/webhooks/` - Webhook management routes
+- `migrations/20260125_multi_tenant_foundation.sql` - Database schema with RLS functions
+- `src/lib/multi-tenant/tenant-context.ts` - Server-side tenant context management
+- `src/lib/multi-tenant/middleware.ts` - API middleware for tenant validation
+- `src/lib/multi-tenant/hooks.tsx` - React hooks and TenantProvider
+- `src/lib/multi-tenant/index.ts` - Module exports
+- `src/lib/modules/database/tenant-data-access.ts` - Tenant-isolated data access
+- `src/lib/modules/database/agency-data-access.ts` - Agency-level admin access
+- `src/lib/modules/database/cross-module-access.ts` - Cross-module data access with permissions
+- `src/lib/modules/database/tenant-data-export.ts` - Data export/import functionality
+- Updated `src/lib/modules/database/index.ts` - Added new exports
 
 **Key Features:**
-1. **API Consumer Management** - Create consumers with API keys, scopes, rate limits
-2. **Scoped Access** - Limit endpoints, require specific scopes
-3. **Rate Limiting** - Per-minute and per-day limits with sliding window
-4. **IP Whitelisting** - Optional allowed IP restrictions
-5. **Request Logging** - All API requests logged with response times
-6. **Webhook Delivery** - Event-based notifications with retry and HMAC signing
-7. **SDK Generation** - TypeScript, JavaScript, Python client libraries
-8. **Documentation** - OpenAPI 3.0, Markdown, Postman collections
+1. **Tenant Context** - `getTenantContext()`, `getFullTenantContext()`, `setDatabaseContext()`
+2. **RLS Functions** - `set_tenant_context()`, `current_agency_id()`, `current_site_id()`, `user_has_site_access()`
+3. **Module Data Access** - CRUD with automatic tenant filtering, pagination, soft delete
+4. **Agency Admin Access** - Cross-site queries, stats, aggregations for admins
+5. **Cross-Module Access** - Controlled data sharing with permission registry and audit logging
+6. **Data Export/Import** - Full export with metadata, import with merge strategies
+7. **Site Cloning** - Copy module data between sites in same agency
+8. **React Hooks** - `useTenant()`, `useRequireSite()`, `useIsAdmin()`, `useTenantQuery()`
 
-### Previously Completed: EM-32 Custom Domain Support
+**Technical Notes:**
+- Uses `AnySupabaseClient` type cast to handle dynamic table names not in Supabase types
+- All module tables use `mod_<prefix>_<tablename>` naming pattern
+- RLS policies auto-created via `create_module_table()` function
+- Cross-module permissions defined in code, extendable via database
+
+### Previously Completed: EM-33 API-Only Mode ✅ DEPLOYED
 **Completed**: January 23, 2026
 
 **What was built:**
@@ -97,11 +98,11 @@
 ## Next Steps
 
 ### Current Status Summary
-**16 of 34 phases complete (47%)**
+**17 of 34 phases complete (50%)**
 - ✅ Wave 1: Foundation (6/6) - 100% COMPLETE
 - ✅ Wave 2: Developer Tools (4/4) - 100% COMPLETE
 - ✅ Wave 3: Distribution (6/6) - 100% COMPLETE
-- ⬜ Wave 4: Enterprise (0/4)
+- 🔄 Wave 4: Enterprise (1/4) - EM-40 Complete
 - ⬜ Wave 5: Business Modules (0/7) - **READY TO BUILD**
 - ⬜ Wave 6: Industry Verticals (0/6)
 
