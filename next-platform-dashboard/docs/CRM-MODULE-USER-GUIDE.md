@@ -5,11 +5,22 @@
 **Route**: `/dashboard/{siteId}/crm`  
 **Type**: Built-in Platform Module (No Module Studio required)
 
+# CRM Module - User Guide
+
+**Module ID**: `crmmod01`  
+**Status**: ✅ Production Ready  
+**Route**: `/dashboard/{siteId}/crm`  
+**Type**: Built-in Platform Module (No Module Studio required)
+
 ## Quick Start
 
-### Step 1: Access the CRM Dashboard
+### Step 1: Access the CRM
 
-Navigate to: `http://localhost:3000/dashboard/{your-site-id}/crm`
+1. **Navigate to a site**: Go to Sites → Click on any site
+2. **Click the CRM tab**: You'll see tabs at the top: Overview, Pages, Blog, Modules, **CRM**
+3. **Open CRM Dashboard**: Click "Open CRM Dashboard" button
+
+**Or use direct URL**: `http://localhost:3000/dashboard/{your-site-id}/crm`
 
 **That's it!** The CRM automatically initializes on first access:
 - Creates a default "Sales Pipeline"
