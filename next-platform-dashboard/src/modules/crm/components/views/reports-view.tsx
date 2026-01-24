@@ -7,7 +7,7 @@
  */
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { useCRM } from '../../context/crm-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   TrendingUp,
@@ -40,7 +40,7 @@ import {
   Download
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Deal, Contact, Company, Activity as CRMActivity } from '../../types/crm-types'
+import type { Deal, Activity as CRMActivity } from '../../types/crm-types'
 
 // ============================================================================
 // HELPERS

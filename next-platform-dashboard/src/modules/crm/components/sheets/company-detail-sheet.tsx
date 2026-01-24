@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Sheet,
@@ -46,8 +46,7 @@ import {
   ExternalLink,
   User
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { Company, CompanyUpdate, CompanyStatus, CompanyType } from '../../types/crm-types'
+import type { CompanyUpdate, CompanyStatus, CompanyType, Contact } from '../../types/crm-types'
 
 interface CompanyDetailSheetProps {
   companyId: string | null
@@ -66,11 +65,10 @@ function formatCurrency(value: number | null | undefined): string {
 }
 
 // Contact card within company
-function ContactCard({ contact }: { contact: any }) {
+function ContactCard({ contact }: { contact: Contact }) {
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50">
       <Avatar className="h-10 w-10">
-        <AvatarImage src={contact.avatar_url} />
         <AvatarFallback>
           {contact.first_name?.[0]}{contact.last_name?.[0]}
         </AvatarFallback>

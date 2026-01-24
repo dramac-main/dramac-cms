@@ -12,10 +12,10 @@ import { useCRM, useContactActivities } from '../../context/crm-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
+
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Sheet,
@@ -47,7 +47,7 @@ import {
   ExternalLink
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Contact, ContactUpdate, ContactStatus, LeadStatus } from '../../types/crm-types'
+import type { ContactUpdate, ContactStatus, Activity } from '../../types/crm-types'
 import { CreateActivityDialog } from '../dialogs/create-activity-dialog'
 
 interface ContactDetailSheetProps {
@@ -57,7 +57,7 @@ interface ContactDetailSheetProps {
 }
 
 // Activity timeline item
-function ActivityItem({ activity }: { activity: any }) {
+function ActivityItem({ activity }: { activity: Activity }) {
   const getIcon = () => {
     switch (activity.activity_type) {
       case 'call': return <Phone className="h-3 w-3" />
@@ -98,7 +98,7 @@ export function ContactDetailSheet({
   onOpenChange
 }: ContactDetailSheetProps) {
   const { contacts, companies, editContact, removeContact } = useCRM()
-  const { activities, isLoading: activitiesLoading } = useContactActivities(contactId || '')
+  const { activities } = useContactActivities(contactId || '')
   
   // State
   const [isEditing, setIsEditing] = useState(false)

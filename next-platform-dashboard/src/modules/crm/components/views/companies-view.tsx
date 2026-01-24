@@ -97,7 +97,6 @@ export function CompaniesView() {
   const [typeFilter, setTypeFilter] = useState<string>('all')
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null)
-  const [editingCompanyId, setEditingCompanyId] = useState<string | null>(null)
 
   // Filtered companies
   const filteredCompanies = useMemo(() => {
@@ -325,7 +324,7 @@ export function CompaniesView() {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation()
-                        setEditingCompanyId(company.id)
+                        setSelectedCompanyId(company.id)
                       }}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit

@@ -44,7 +44,7 @@ import {
   Plus,
   AlertTriangle
 } from 'lucide-react'
-import type { Pipeline, PipelineStage } from '../../types/crm-types'
+import type { Pipeline } from '../../types/crm-types'
 
 interface PipelineSettingsDialogProps {
   open: boolean
@@ -252,7 +252,7 @@ export function PipelineSettingsDialog({
                 </div>
                 
                 <div className="space-y-2">
-                  {pipelineStages.map((stage, index) => (
+                  {pipelineStages.map((stage, _index) => (
                     <div 
                       key={stage.id}
                       className="flex items-center gap-3 p-2 rounded-md bg-muted/50"

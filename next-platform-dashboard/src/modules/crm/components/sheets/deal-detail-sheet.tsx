@@ -49,8 +49,7 @@ import {
   Mail,
   FileText
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import type { Deal, DealUpdate, DealStatus, PipelineStage } from '../../types/crm-types'
+import type { DealUpdate, PipelineStage, Activity } from '../../types/crm-types'
 import { CreateActivityDialog } from '../dialogs/create-activity-dialog'
 
 interface DealDetailSheetProps {
@@ -70,7 +69,7 @@ function formatCurrency(value: number | null | undefined): string {
 }
 
 // Activity timeline item
-function ActivityItem({ activity }: { activity: any }) {
+function ActivityItem({ activity }: { activity: Activity }) {
   const getIcon = () => {
     switch (activity.activity_type) {
       case 'call': return <Phone className="h-3 w-3" />
@@ -109,8 +108,8 @@ export function DealDetailSheet({
   open,
   onOpenChange
 }: DealDetailSheetProps) {
-  const { deals, contacts, companies, pipelines, editDeal, removeDeal, moveDeal, getStages } = useCRM()
-  const { activities, isLoading: activitiesLoading } = useDealActivities(dealId || '')
+  const { deals, contacts, companies, pipelines, editDeal, removeDeal, getStages } = useCRM()
+  const { activities } = useDealActivities(dealId || '')
   
   // State
   const [isEditing, setIsEditing] = useState(false)

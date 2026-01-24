@@ -22,7 +22,6 @@ import {
   Activity, 
   BarChart3,
   Search,
-  Settings,
   Plus,
   RefreshCw
 } from 'lucide-react'
@@ -57,24 +56,19 @@ function CRMDashboardContent() {
     contacts, 
     companies, 
     deals, 
-    pipelines,
     activities,
-    isLoading, 
     error, 
     refresh,
-    search,
-    siteId
+    search
   } = useCRM()
   
   const [activeTab, setActiveTab] = useState('deals')
   const [searchQuery, setSearchQuery] = useState('')
-  const [isSearching, setIsSearching] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Calculate summary stats
   const openDeals = deals.filter(d => d.status === 'open')
   const totalPipelineValue = openDeals.reduce((sum, d) => sum + (d.amount || 0), 0)
-  const recentActivities = activities.slice(0, 5)
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -84,13 +78,12 @@ function CRMDashboardContent() {
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
-    setIsSearching(true)
     try {
       const results = await search(searchQuery)
       console.log('Search results:', results)
       // TODO: Show search results in a modal or dropdown
-    } finally {
-      setIsSearching(false)
+    } catch (error) {
+      console.error('Search error:', error)
     }
   }
 

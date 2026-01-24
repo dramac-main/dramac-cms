@@ -32,12 +32,10 @@ import {
   Calendar, 
   User, 
   Building2,
-  MoreHorizontal,
   GripVertical,
   TrendingUp,
   Settings,
-  Settings2,
-  Trash2
+  Settings2
 } from 'lucide-react'
 import { CreateDealDialog } from '../dialogs/create-deal-dialog'
 import { CreatePipelineDialog } from '../dialogs/create-pipeline-dialog'

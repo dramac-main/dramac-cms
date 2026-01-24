@@ -80,7 +80,7 @@ function getLeadStatusColor(status?: string | null): string {
 // ============================================================================
 
 export function ContactsView() {
-  const { contacts, companies, removeContact, isLoading } = useCRM()
+  const { contacts, removeContact, isLoading } = useCRM()
   
   // State
   const [search, setSearch] = useState('')
