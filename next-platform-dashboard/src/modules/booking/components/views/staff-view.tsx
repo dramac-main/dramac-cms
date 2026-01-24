@@ -130,7 +130,8 @@ export function StaffView({ onStaffClick, onCreateClick, onEditClick }: StaffVie
   }
   
   return (
-    <Card>
+    <div className="p-6">
+      <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Staff Members</CardTitle>
@@ -469,5 +470,6 @@ export function StaffView({ onStaffClick, onCreateClick, onEditClick }: StaffVie
         </div>
       </CardContent>
     </Card>
+    </div>
   )
 }

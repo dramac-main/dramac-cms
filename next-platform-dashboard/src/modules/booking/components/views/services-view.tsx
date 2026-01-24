@@ -148,7 +148,8 @@ export function ServicesView({ onServiceClick, onCreateClick, onEditClick }: Ser
   }
   
   return (
-    <Card>
+    <div className="p-6">
+      <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Services</CardTitle>
@@ -343,5 +344,6 @@ export function ServicesView({ onServiceClick, onCreateClick, onEditClick }: Ser
         </div>
       </CardContent>
     </Card>
+    </div>
   )
 }

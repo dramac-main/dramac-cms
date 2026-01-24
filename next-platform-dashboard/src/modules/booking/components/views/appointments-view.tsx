@@ -255,7 +255,8 @@ export function AppointmentsView({ onAppointmentClick }: AppointmentsViewProps) 
   }
   
   return (
-    <Card>
+    <div className="p-6">
+      <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Appointments</CardTitle>
@@ -500,5 +501,6 @@ export function AppointmentsView({ onAppointmentClick }: AppointmentsViewProps) 
         </div>
       </CardContent>
     </Card>
+    </div>
   )
 }

@@ -152,7 +152,8 @@ export function CalendarView({ onAppointmentClick, onSlotClick }: CalendarViewPr
   }
   
   return (
-    <Card className="h-full">
+    <div className="p-6 h-full">
+      <Card className="h-full">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -414,5 +415,6 @@ export function CalendarView({ onAppointmentClick, onSlotClick }: CalendarViewPr
         )}
       </CardContent>
     </Card>
+    </div>
   )
 }
