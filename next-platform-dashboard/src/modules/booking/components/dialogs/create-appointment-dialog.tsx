@@ -154,15 +154,22 @@ export function CreateAppointmentDialog({
       const duration = selectedService?.duration_minutes || 60
       endDateTime.setMinutes(endDateTime.getMinutes() + duration)
       
-      // Determine status based on service require_confirmation and settings
-      // If service requires confirmation, always start as pending
-      // Otherwise, respect settings.auto_confirm
-      let appointmentStatus: 'pending' | 'confirmed' = 'pending'
+      // Determine status based on service require_confirmation setting
+      // LOGIC:
+      // 1. If service requires confirmation → always 'pending' (needs manual approval)
+      // 2. If service does NOT require confirmation:
+      //    - Default to 'confirmed' (auto-confirm by default)
+      //    - Unless settings.auto_confirm is explicitly false
+      let appointmentStatus: 'pending' | 'confirmed' = 'confirmed'  // Default to confirmed
+      
       if (selectedService?.require_confirmation) {
+        // Service explicitly requires confirmation
         appointmentStatus = 'pending'
-      } else if (settings?.auto_confirm) {
-        appointmentStatus = 'confirmed'
+      } else if (settings && settings.auto_confirm === false) {
+        // Settings explicitly disable auto-confirm
+        appointmentStatus = 'pending'
       }
+      // Otherwise stays 'confirmed' (the default)
       
       await addAppointment({
         service_id: serviceId,
