@@ -7,7 +7,7 @@
 ## Current Work Focus
 
 ### ✅ COMPLETE: Phase EM-50 CRM Module (January 24, 2026)
-**Status**: ✅ DEPLOYED & COMMITTED (Commit: 489b1b3)
+**Status**: ✅ DEPLOYED & COMMITTED (Commits: 489b1b3, 8042312, eb2fc23, 5f3466d)
 
 **What was built:**
 
@@ -22,11 +22,18 @@
 - Complete RLS policies with site-based isolation using `public.can_access_site()`
 - Service role bypass policies
 - Auto-update timestamps triggers
-- `mod_crmmod01_init_site()` function to create default pipeline/stages
+- Auto-initialization via `initializeCRMForSite()` in CRMProvider
+
+**Navigation & Discoverability:**
+- ✅ Added CRM tab to site detail page (alongside Overview, Pages, Blog, Modules)
+- ✅ Created `SiteCRMTab` component with overview, features grid, and quick start guide
+- ✅ Users can discover CRM by: Sites → Click Site → CRM Tab → Open CRM Dashboard
+- ✅ No more manual URL typing required - proper UI navigation flow
+- Route: `/dashboard/{siteId}/crm` or via site tabs
 
 **TypeScript Status:**
 - ✅ Zero compilation errors
-- ✅ All 42 files compile successfully
+- ✅ All 43 files compile successfully (including SiteCRMTab)
 
 **Key Patterns Established:**
 - `getModuleClient()` returns `supabase as any` for dynamic module tables
@@ -34,26 +41,31 @@
 - Local `FormData` interfaces in dialogs keep all fields as strings, convert in handleSubmit
 - Sheet components use `|| undefined` to convert null to undefined for props
 - RLS policies use `public.can_access_site()` not `auth.can_access_site()`
+- Auto-initialization pattern: CRMProvider useEffect checks for pipelines, creates if missing
 
-**Files Created/Modified (42 files):**
+**Files Created/Modified (43 files):**
 - `migrations/em-50-crm-module-schema.sql` - Database schema ✅ APPLIED
 - `docs/PHASE-EM-50-CRM-SUMMARY.md` - Implementation guide
+- `docs/CRM-MODULE-USER-GUIDE.md` - User documentation
 - `src/modules/crm/actions/crm-actions.ts` - Server actions (992 lines)
 - `src/modules/crm/types/crm-types.ts` - Type definitions (526 lines)
-- `src/modules/crm/context/crm-context.tsx` - React context
+- `src/modules/crm/context/crm-context.tsx` - React context with auto-init
 - `src/modules/crm/components/crm-dashboard.tsx` - Main dashboard
 - `src/modules/crm/components/dialogs/*.tsx` - 4 create dialogs
 - `src/modules/crm/components/sheets/*.tsx` - 3 detail sheets
 - `src/modules/crm/components/views/*.tsx` - 7 list views
 - `src/app/api/modules/crm/**/*.ts` - 12 API routes
 - `src/app/dashboard/[siteId]/crm/page.tsx` - Dashboard page
+- `src/components/sites/site-crm-tab.tsx` - Site navigation tab component ✅ NEW
+- `src/app/(dashboard)/dashboard/sites/[siteId]/page.tsx` - Added CRM tab
 
 **How to Use:**
-1. Navigate to `/dashboard/{site-id}/crm`
-2. Initialize site: `SELECT mod_crmmod01_init_site('your-site-uuid');`
-3. Module creates default "Sales Pipeline" with 6 stages
-4. Start creating contacts, companies, and deals
-5. Use Kanban board to manage deal pipeline
+1. Go to Sites → Click on any site
+2. Click the "CRM" tab in the site detail tabs
+3. Click "Open CRM Dashboard"
+4. CRM auto-initializes with default "Sales Pipeline" + 6 stages
+5. Start creating contacts, companies, and deals
+6. Use Kanban board to manage deal pipeline
 
 **Next Phase:** EM-51 Booking Module or other Wave 5 business modules
 

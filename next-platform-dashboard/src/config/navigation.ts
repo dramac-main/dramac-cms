@@ -9,6 +9,7 @@ import {
   HelpCircle,
   Shield,
   ImageIcon,
+  Building2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -45,6 +46,12 @@ export const mainNavigation: NavGroup[] = [
         href: "/dashboard/sites",
         icon: Globe,
         dataTour: "sites",
+      },
+      {
+        title: "CRM",
+        href: "/dashboard/crm",
+        icon: Building2,
+        dataTour: "crm",
       },
       {
         title: "Media Library",
