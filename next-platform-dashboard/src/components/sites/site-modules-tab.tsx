@@ -142,18 +142,33 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
                   </div>
                   <div className="flex items-center gap-3">
                     {isEnabled && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setConfiguringModule({
-                          id: module.id,
-                          name: module.name,
-                          settings: siteModule?.settings || {},
-                        })}
-                      >
-                        <Settings className="w-4 h-4 mr-1" />
-                        Configure
-                      </Button>
+                      <>
+                        {/* Open button for modules with dashboards */}
+                        {(module.slug === 'booking' || module.slug === 'crm') && (
+                          <Button 
+                            variant="default" 
+                            size="sm"
+                            asChild
+                          >
+                            <Link href={`/dashboard/${siteId}/${module.slug}`}>
+                              <ExternalLink className="w-4 h-4 mr-1" />
+                              Open
+                            </Link>
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setConfiguringModule({
+                            id: module.id,
+                            name: module.name,
+                            settings: siteModule?.settings || {},
+                          })}
+                        >
+                          <Settings className="w-4 h-4 mr-1" />
+                          Configure
+                        </Button>
+                      </>
                     )}
                     <Switch
                       checked={isEnabled}
