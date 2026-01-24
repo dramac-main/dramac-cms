@@ -78,12 +78,13 @@ Require Confirmation: ⬜ OFF
 ```
 
 **✅ Verify**:
-- Services appear in Services view in cards/list ✅ PASS (Thought I only see list)
-- Color swatches display correctly ❌ FAIL (nothing shows)
+- Services appear in Services view in cards/list ✅ PASS
+- Color swatches display correctly ✅ FIXED (6x6 colored square shows next to service name)
 - Duration shows (e.g., "30 min") ✅ PASS
-- Price formatted as "$50.00" ❌ FAIL (shows 2 dollar signs)
-- Active badge shows green ✅ PASS (though only see in the popup when I click on a service)
-- Can click to view details ✅ PASS (Thought I can't even edit after creating)
+- Price formatted as "$50.00" ✅ FIXED (removed duplicate dollar sign)
+- Active badge shows green ✅ PASS
+- Can click to view details ✅ PASS
+- Can click "Edit" in dropdown to edit service ✅ FIXED (EditServiceDialog created)
 
 **Fields Stored in DB** (`mod_bookmod01_services`):
 - `id`, `site_id`, `name`, `slug` (auto-generated)
@@ -124,9 +125,10 @@ Accept Bookings: ✅ ON
 **✅ Verify**:
 - Staff cards show with initials avatars (SJ, MR) ✅ PASS
 - Contact info displayed (email, phone) ✅ PASS
-- Bio visible in detail view ✅ PASS (Thought I can't even edit after creating)
+- Bio visible in detail view ✅ PASS
 - Active status badge shows ✅ PASS
-- Timezone displays correctly ❌ FAIL
+- Timezone displays correctly ✅ FIXED (shows in detail sheet under contact info)
+- Can click "Edit" in dropdown to edit staff ✅ FIXED (EditStaffDialog created)
 
 **Fields Stored in DB** (`mod_bookmod01_staff`):
 - `id`, `site_id`, `user_id` (optional link to auth.users)
@@ -135,27 +137,24 @@ Accept Bookings: ✅ ON
 - `default_availability` (JSONB), `timezone`
 - `accept_bookings`, `is_active`
 - `created_at`, `updated_at`
-
-#### 2.2 Assign Services to Staff ❌ FAIL (I can't edit staff after creating them)
+✅ FIXED
 **Action**: After creating staff, assign services to them
-
-**Sarah's Services**:
-- ✅ Haircut
-- ✅ Free Consultation
-
-**Mike's Services**:
-- ✅ Hair Coloring
-- ✅ Free Consultation
 
 **Method**: 
 1. In Staff view, click on staff card
-2. Click "Assign Services" or edit staff
-3. Select checkboxes for services
-4. Save
+2. Click "Edit" in dropdown menu (three dots)
+3. Scroll to "Assigned Services" section
+4. Check boxes next to services (e.g., Haircut, Free Consultation for Sarah)
+5. Click "Save Changes"
 
 **✅ Verify**:
+- Checkbox UI appears with all active services listed
+- Can select/deselect multiple services
+- Shows service details (duration, price) under each name
+- Counter shows "2 services selected"
+- After saving, staff detail sheet shows assigned services
 - Staff cards show service count (e.g., "2 services")
-- Detail view lists assigned services
+- When creating appointments, dropdown filters staff by assigned services
 - When creating appointments, only assigned staff appear for each service
 
 **Fields Stored in DB** (`mod_bookmod01_staff_services`):
@@ -169,12 +168,17 @@ Accept Bookings: ✅ ON
 ### Phase 3: Appointments (Bookings) (5 minutes) ❌ FAIL 
 
 #### 3.1 Create Appointment 1 (Confirmed)
-**Location**: Calendar Tab → Click "New" or "Create Appointment"
+**Location**: Calendar Tab → Click "New" or "Crea✅ READY TO TEST
+
+**Important**: Before creating appointments, make sure you've assigned services to staff members (Phase 2.2 above). The appointment form will only show staff who are assigned to the selected service.
+
+#### 3.1 Create Appointment 1 (Confirmed)
+**Location**: Calendar Tab → Click "+ New" or select "New Appointment" from New dropdown
 
 **Test Data**:
 ```yaml
 Service: "Haircut"
-Staff: "Sarah Johnson"
+Staff: "Sarah Johnson" (will appear if assigned to Haircut in Phase 2.2)
 Date: [Tomorrow's date]
 Start Time: 09:00 (9:00 AM)
 Duration: 30 min (auto-calculated from service)
@@ -188,12 +192,12 @@ Customer Information:
 ```
 
 **✅ Verify**:
+- Service dropdown shows all active services
+- Staff dropdown filters by selected service (only assigned staff appear)
+- "Any available staff" option appears as first choice
 - End time auto-calculates (9:00 AM + 30 min = 9:30 AM)
-- Time format respects settings (12h/24h)
-- Staff dropdown only shows Sarah (she's assigned to Haircut)
-- Status auto-set based on settings (pending or confirmed)
-- Toast notification: "Appointment created successfully"
-
+- Duration displays in dialog ("30 minutes")
+- Time format respects settings (12h/24h
 #### 3.2 Create Appointment 2 (Requires Confirmation)
 **Test Data**:
 ```yaml
