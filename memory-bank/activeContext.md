@@ -46,8 +46,7 @@ Module becomes accessible to site
 
 #### Database Schema
 - `migrations/em-52-ecommerce-module-schema.sql` - 11 tables with RLS policies, indexes, triggers
-- `migrations/em-52-register-ecommerce-module.sql` - Module registration in modules_v2
-- `migrations/em-52-subscribe-agency-to-ecommerce.sql` - Helper for agency subscription
+- `migrations/em-52-register-ecommerce-module.sql` - Module registration in modules_v2 (marketplace)
 
 #### TypeScript Implementation
 - `src/modules/ecommerce/types/ecommerce-types.ts` (~400 lines) - Full type definitions

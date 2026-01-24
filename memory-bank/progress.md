@@ -18,7 +18,6 @@ Full e-commerce module with product catalog, variants, shopping cart, checkout, 
 |------|---------|
 | `migrations/em-52-ecommerce-module-schema.sql` | Database schema with 11 tables ✅ RAN |
 | `migrations/em-52-register-ecommerce-module.sql` | Register in modules_v2 ✅ RAN |
-| `migrations/em-52-subscribe-agency-to-ecommerce.sql` | Agency subscription helper (dev only) |
 | `src/lib/modules/module-catalog.ts` | Added e-commerce entry ✅ |
 | `src/modules/ecommerce/types/ecommerce-types.ts` | TypeScript definitions ✅ |
 | `src/modules/ecommerce/actions/ecommerce-actions.ts` | Server actions (25+ functions) ✅ |
