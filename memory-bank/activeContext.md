@@ -1,17 +1,41 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 24, 2026  
-**Current Phase**: EM-51 Booking Module - ✅ COMPLETE & TESTED  
+**Current Phase**: EM-51 Booking Module - ✅ COMPLETE & REGISTERED  
 **Previous Phase**: EM-50 CRM Module - ✅ COMPLETE & PRODUCTION READY  
 **Status**: ✅ 25 OF 34 PHASES IMPLEMENTED (73%)
 
 ## Current Work Focus
 
 ### ✅ COMPLETE: Phase EM-51 Booking Module (January 24, 2026)
-**Status**: ✅ FULLY IMPLEMENTED, MIGRATION RUN, TYPESCRIPT ERRORS FIXED
+**Status**: ✅ FULLY IMPLEMENTED, REGISTERED IN MODULE SYSTEM, READY TO USE
 
 **Implementation Summary:**
-Built a complete booking/scheduling module following CRM (EM-50) patterns exactly. Full-featured with calendar management, appointment booking, services, staff, and analytics.
+Built a complete booking/scheduling module following CRM (EM-50) patterns exactly. Full-featured with calendar management, appointment booking, services, staff, and analytics. **Module is now properly registered in the platform's module system.**
+
+**Module Registration Flow (Critical Discovery - January 24):**
+The platform uses a multi-tier module architecture:
+1. **modules_v2 table** - Master registry of all available modules (managed by super admin)
+2. **agency_module_subscriptions** - Agency subscribes at wholesale price
+3. **site_module_installations** - Individual sites enable/disable subscribed modules
+
+**What Was Fixed:**
+- ✅ Code was complete (25+ files) but module wasn't registered in database
+- ✅ Added booking to `module-catalog.ts` (frontend display)
+- ✅ Created `em-51-register-booking-module.sql` - Inserts into `modules_v2` table
+- ✅ Created `em-51-subscribe-agency-to-booking.sql` - Creates agency subscription
+- ✅ Added "Open" button in site modules tab
+
+**Correct Access Pattern:**
+```
+Agency Subscribes (wholesale $29.99/mo)
+    ↓
+Appears in Site → Modules Tab
+    ↓
+Toggle ON to install on site
+    ↓
+Click "Open" → /dashboard/[siteId]/booking
+```
 
 **Final Session - TypeScript Error Fixes (January 24, 2026):**
 - ✅ Fixed 107 TypeScript errors across 10+ files

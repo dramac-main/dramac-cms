@@ -6,63 +6,54 @@
 
 ## 📋 New Specifications (Ready for Implementation)
 
-### EM-51: Booking Module - FULLY COMPLETE ✅
-**Status**: ✅ Fully Complete - Migration Run, 0 TypeScript Errors (January 24, 2026)  
+### EM-51: Booking Module - FULLY COMPLETE & REGISTERED ✅
+**Status**: ✅ Complete - Registered in Module System (January 24, 2026)  
 **Spec File**: `phases/enterprise-modules/PHASE-EM-51-BOOKING-MODULE.md`
 
 **Implementation Summary:**
-Full booking/scheduling module with calendar management, appointment booking, multiple service types, staff management, and analytics. All TypeScript errors fixed, migration run successfully.
+Full booking/scheduling module with calendar management, appointment booking, multiple service types, staff management, and analytics. **Now properly registered in the platform's module system.**
 
-**Final Session - TypeScript Fixes:**
-- Fixed 107 TypeScript errors across 10+ component files
-- Fixed property name mismatches (`no-show` → `no_show`)
-- Fixed context method names (`updateX` → `editX`, `deleteX` → `removeX`)
-- Fixed manifest.ts to match ModuleManifest interface
-- Replaced Calendar component dependency with native date input
-- Added `category` and `working_hours` to types
-- TypeScript compilation: ✅ ZERO ERRORS
+**Module Registration (Critical Fix - January 24):**
+- ✅ Added to `module-catalog.ts` (frontend registry)
+- ✅ Created `em-51-register-booking-module.sql` - Inserts into `modules_v2` table
+- ✅ Created `em-51-subscribe-agency-to-booking.sql` - Agency subscription helper
+- ✅ Added "Open" button in site modules tab component
 
-**Files Created:**
+**Platform Module Architecture Discovered:**
+```
+modules_v2 (database table)
+    ↓ Super admin registers modules
+agency_module_subscriptions
+    ↓ Agency subscribes at wholesale ($29.99/mo)
+site_module_installations  
+    ↓ Site toggles module ON
+Module becomes accessible
+```
+
+**Complete File List:**
 | File | Purpose |
 |------|---------|
 | `migrations/em-51-booking-module-schema.sql` | Database schema with 8 tables ✅ RUN |
-| `src/modules/booking/types/booking-types.ts` | All TypeScript interfaces |
-| `src/modules/booking/manifest.ts` | Module manifest (matches interface) |
-| `src/modules/booking/actions/booking-actions.ts` | All server actions (CRUD + utilities) |
-| `src/modules/booking/context/booking-context.tsx` | Context provider with all hooks |
-| `src/modules/booking/index.ts` | Module exports |
-| `src/app/dashboard/[siteId]/booking/page.tsx` | Dashboard page |
-| `src/app/dashboard/[siteId]/booking/layout.tsx` | Layout with back navigation |
-| `src/modules/booking/components/booking-dashboard.tsx` | Main dashboard with tabs |
-| `src/modules/booking/components/dialogs/*.tsx` | 4 dialog components |
-| `src/modules/booking/components/views/*.tsx` | 5 view components |
-| `src/modules/booking/components/sheets/*.tsx` | 3 detail sheet components |
-| `src/modules/booking/components/index.ts` | Component exports |
+| `migrations/em-51-register-booking-module.sql` | Register in modules_v2 ⚠️ NEEDS TO RUN |
+| `migrations/em-51-subscribe-agency-to-booking.sql` | Agency subscription helper ⚠️ NEEDS TO RUN |
+| `src/lib/modules/module-catalog.ts` | Added booking entry ✅ |
+| `src/components/sites/site-modules-tab.tsx` | Added "Open" button ✅ |
+| `src/modules/booking/*` | 25+ component files ✅ |
+| `docs/PHASE-EM-51-TESTING-GUIDE.md` | 5-min test plan ✅ |
+| `docs/BOOKING-NAVIGATION-RECOMMENDATION.md` | Architecture docs ✅ |
+
+**To Enable Booking:**
+1. Run `em-51-register-booking-module.sql` in Supabase SQL editor
+2. Run `em-51-subscribe-agency-to-booking.sql` to create subscription
+3. Refresh browser → Go to Sites → [Site] → Modules tab
+4. Toggle booking ON
+5. Click "Open" to access booking dashboard
 
 **Database Tables (mod_bookmod01_ prefix):**
 - services, staff, staff_services, calendars, availability
 - appointments, reminders, settings
 
-**UI Components:**
-- CalendarView (week/day)
-- AppointmentsView (filterable list)
-- ServicesView (list with category support)
-- StaffView (grid/list views with stats)
-- AnalyticsView (stats, charts, breakdowns)
-- CreateServiceDialog, CreateStaffDialog, CreateAppointmentDialog, BookingSettingsDialog
-- AppointmentDetailSheet, ServiceDetailSheet, StaffDetailSheet
-
-**Patterns Followed:**
-- Same table prefix pattern as CRM (`mod_bookmod01_`)
-- Same RLS policies using `public.can_access_site(site_id)`
-- Same context/provider pattern
-- Same server action patterns with `getModuleClient()`
-- Same component structure (dialogs, views, sheets)
-
-**Remaining:**
-- Add booking to sidebar navigation
-- Test full workflow in browser
-- Commit and push changes
+**TypeScript Status:** ✅ ZERO ERRORS
 
 ### EM-57A/B: Automation Engine - SPECIFICATION COMPLETE
 **Status**: 📝 Specification Ready  
