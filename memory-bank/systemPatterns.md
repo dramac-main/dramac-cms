@@ -76,6 +76,26 @@ Platform
 
 ### 2. Module Architecture
 
+**Module Marketplace Flow (IMPORTANT):**
+```
+modules_v2 (Marketplace catalog - registered by platform admin)
+    ↓ 
+    Browse at /marketplace/v2
+    ↓
+agency_module_subscriptions
+    ↓ Agency subscribes via:
+    │   - POST /api/modules/subscribe (free modules)
+    │   - POST /api/modules/{moduleId}/purchase (paid modules)
+    │   - Stores wholesale_price, markup settings
+    ↓
+site_module_installations
+    ↓ Agency enables on specific sites via:
+    │   - Site > Modules tab > Toggle ON
+    │   - Creates installation record
+    ↓
+Module becomes accessible to site
+```
+
 **Module Lifecycle:**
 ```
 Create → Build → Test → Deploy → Publish → Install → Render

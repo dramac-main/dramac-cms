@@ -1,11 +1,221 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: January 24, 2026  
-**Current Phase**: EM-51 Booking Module - ✅ COMPLETE & DOCUMENTED  
-**Previous Phase**: EM-50 CRM Module - ✅ COMPLETE & PRODUCTION READY  
-**Status**: ✅ 25 OF 34 PHASES IMPLEMENTED (73%)
+**Last Updated**: January 25, 2026  
+**Current Phase**: EM-52 E-Commerce Module - ✅ FULLY IMPLEMENTED & TYPE-CHECKED  
+**Previous Phase**: EM-51 Booking Module - ✅ COMPLETE & DOCUMENTED  
+**Status**: ✅ 26 OF 34 PHASES IMPLEMENTED (76%)
 
 ## Current Work Focus
+
+### ✅ COMPLETE: Phase EM-52 E-Commerce Module Implementation (January 25, 2026)
+
+**Achievement**: Fully implemented comprehensive E-Commerce module with product catalog, shopping cart, checkout, and order management with multi-provider payment support (Paddle, Flutterwave, Pesapal, DPO Pay for Zambian market). **All TypeScript errors fixed. Zero errors on `tsc --noEmit`.**
+
+**IMPORTANT - Module Marketplace Flow (Correct Pattern):**
+```
+modules_v2 (marketplace catalog)
+    ↓ Module registered via SQL or studio
+agency_module_subscriptions
+    ↓ Agency subscribes via /api/modules/subscribe or /api/modules/{moduleId}/purchase
+site_module_installations
+    ↓ Agency enables module on specific sites
+Module becomes accessible to site
+```
+
+**Key APIs for Module Lifecycle:**
+- `POST /api/modules/subscribe` - Subscribe agency to module
+- `POST /api/modules/{moduleId}/purchase` - Purchase paid module
+- `src/lib/modules/services/installation-service.ts` - Handles site installations
+- `src/app/api/sites/[siteId]/modules/route.ts` - Manage site modules
+
+**TypeScript Fixes Applied (January 25):**
+1. Added `CreateOrderInput` type to ecommerce-types.ts
+2. Added `enabled` flag to all payment config types (Paddle, Flutterwave, Pesapal, DPO)
+3. Added `store_url`, `manual_payment_instructions` to EcommerceSettings
+4. Added `secret_hash` alias to FlutterwaveConfig
+5. Fixed `getCategory(siteId, id)` call signature in categories route
+6. Fixed `getProduct(siteId, productId)` call signature in products route
+7. Fixed `getOrder(siteId, orderId)` call signature in orders route
+8. Fixed `mergeGuestCartToUser(sessionId, userId, siteId)` call signature in cart route
+9. Fixed all webhook handlers to pass siteId to update functions
+10. Added `updateOrder()` generic function for flexible order updates
+11. Added `createOrderFromCart()` function for checkout flow
+12. Fixed all implicit any types with proper type annotations
+
+**Files Created:**
+
+#### Database Schema
+- `migrations/em-52-ecommerce-module-schema.sql` - 11 tables with RLS policies, indexes, triggers
+- `migrations/em-52-register-ecommerce-module.sql` - Module registration in modules_v2
+- `migrations/em-52-subscribe-agency-to-ecommerce.sql` - Helper for agency subscription
+
+#### TypeScript Implementation
+- `src/modules/ecommerce/types/ecommerce-types.ts` (~400 lines) - Full type definitions
+- `src/modules/ecommerce/actions/ecommerce-actions.ts` (~1200 lines) - All server actions
+- `src/modules/ecommerce/manifest.ts` (~500 lines) - Module manifest with permissions
+- `src/modules/ecommerce/context/ecommerce-context.tsx` (~450 lines) - React context & hooks
+- `src/modules/ecommerce/index.ts` (~130 lines) - Module exports
+- `src/modules/ecommerce/widgets/StorefrontWidget.tsx` (~900 lines) - Embeddable storefront
+
+#### API Routes
+- `src/app/api/modules/ecommerce/products/route.ts` - Product catalog API
+- `src/app/api/modules/ecommerce/categories/route.ts` - Category API
+- `src/app/api/modules/ecommerce/cart/route.ts` - Cart operations API
+- `src/app/api/modules/ecommerce/checkout/route.ts` - Checkout flow API
+- `src/app/api/modules/ecommerce/orders/route.ts` - Order management API
+- `src/app/api/modules/ecommerce/webhooks/payment/route.ts` - Payment webhooks (all providers)
+
+#### Module Registration
+- `src/lib/modules/module-catalog.ts` - Added E-Commerce module definition
+
+**Database Tables (11 total with `mod_ecommod01_` prefix):**
+1. `mod_ecommod01_categories` - Product categories (name, slug, parent_id, SEO)
+2. `mod_ecommod01_products` - Product catalog (name, base_price, quantity, status)
+3. `mod_ecommod01_product_categories` - Many-to-many product/category links
+4. `mod_ecommod01_product_options` - Variant options (size, color, etc.)
+5. `mod_ecommod01_product_variants` - SKU combinations with pricing
+6. `mod_ecommod01_discounts` - Coupon codes with validation rules
+7. `mod_ecommod01_carts` - Shopping carts with guest/user sessions
+8. `mod_ecommod01_cart_items` - Cart line items
+9. `mod_ecommod01_orders` - Order records with payment status
+10. `mod_ecommod01_order_items` - Order line items
+11. `mod_ecommod01_settings` - Store configuration & payment provider settings
+
+**Payment Providers (Zambian Market Focus):**
+- **Paddle**: Global payments (credit cards, PayPal) - already used in platform
+- **Flutterwave**: Primary African provider (cards + mobile money)
+- **Pesapal**: Secondary African provider (MTN, Airtel mobile money)
+- **DPO Pay**: Zambian local payments (banks + mobile money)
+- **Manual**: For offline/bank transfer payments
+
+**Server Actions (25+ functions):**
+- Categories: getCategories, getCategory, createCategory, updateCategory, deleteCategory
+- Products: getProducts, getProduct, createProduct, updateProduct, deleteProduct, duplicateProduct
+- Variants: getProductVariants, createProductVariant, updateProductVariant, deleteProductVariant
+- Options: getProductOptions, createProductOption, updateProductOption, deleteProductOption
+- Cart: getOrCreateCart, addCartItem, updateCartItemQuantity, removeCartItem, clearCart, mergeGuestCartToUser
+- Orders: getOrders, getOrder, createOrderFromCart, updateOrderStatus, markOrderDelivered
+- Discounts: getDiscounts, createDiscount, validateDiscountCode, applyDiscountToCart
+- Analytics: getSalesAnalytics, getTopProducts, getLowStockProducts
+- Settings: getEcommerceSettings, updateEcommerceSettings, initializeEcommerceForSite
+
+**Context Hooks:**
+- `useEcommerce()` - Full context access
+- `useProducts()` - Product CRUD
+- `useOrders()` - Order management
+- `useCategories()` - Category management
+- `useDiscounts()` - Discount/coupon management
+- `useEcommerceSettings()` - Store settings
+- `useInventory()` - Inventory tracking
+- `useEcommerceAnalytics()` - Sales analytics
+
+**StorefrontWidget Features:**
+- CartProvider context with cart persistence
+- Product grid/list views with pagination
+- Category filtering and search
+- Variant selection (size, color, etc.)
+- Cart drawer with quantity controls
+- Discount code application
+- Responsive design (light/dark themes)
+- Configurable columns, colors, layout
+
+**API Endpoints:**
+- `GET /api/modules/ecommerce/products` - List/search products
+- `GET /api/modules/ecommerce/categories` - List categories
+- `GET/POST /api/modules/ecommerce/cart` - Cart operations
+- `POST /api/modules/ecommerce/checkout` - Initialize checkout
+- `GET/PATCH /api/modules/ecommerce/orders` - Order management
+- `POST /api/modules/ecommerce/webhooks/payment` - Payment webhooks
+
+---
+
+### Previous: EM-52 Phase Document Cleanup (January 24, 2026)
+**Achievement**: Performed comprehensive cleanup of PHASE-EM-52-ECOMMERCE-MODULE.md to align with platform conventions and Zambian market requirements.
+
+**Issues Fixed:**
+1. ✅ **Table prefix corrected**: `mod_ecom_` → `mod_ecommod01_` (8-char shortId pattern)
+2. ✅ **Removed class-based services**: ProductService, CartService, OrderService classes removed
+3. ✅ **Added server actions pattern**: Proper `'use server'` directive implementation
+4. ✅ **Fixed imports**: Changed `@supabase/supabase-js` to `@/lib/supabase/server`
+5. ✅ **Removed non-existent functions**: Eliminated `setTenantContext` references
+6. ✅ **Corrected file paths**: Changed `src/lib/modules/` to `src/modules/`
+7. ✅ **Added missing structures**: manifest.ts, EcommerceProvider context, index.ts
+8. ✅ **Removed duplicate/corrupted sections**: ~1600 lines of old code removed
+9. ✅ **CRITICAL: Fixed payment providers for Zambian market**:
+   - ❌ Removed Stripe (not optimal for Zambia)
+   - ✅ Added Paddle (for global SaaS - already used in platform)
+   - ✅ Added Pesapal (for African markets with cards + mobile money)
+   - ✅ Added DPO Pay (for Zambian market with local payments)
+   - ✅ Support for MTN Mobile Money, Airtel Money, Zamtel Kwacha
+
+**Payment Provider Architecture:**
+```
+Platform SaaS Billing: LemonSqueezy → Paddle (EM-59A migration)
+   ↓ (Supports Zambian payouts via Payoneer/Wise)
+
+E-Commerce Stores Payment Options:
+├── Paddle: Global customers (credit cards, PayPal)
+├── Pesapal: African markets (cards + MTN/Airtel mobile money)
+└── DPO Pay: Zambian customers (local banks + mobile money)
+```
+
+**Why These Providers:**
+- **Paddle**: Already integrated in platform (EM-59A), supports global payments, Zambian payouts
+- **Pesapal**: Popular in East/Southern Africa, supports mobile money (MTN, Airtel)
+- **DPO Pay**: Leading gateway in Zambia, local payment methods, ZMW currency support
+- **Mobile Money**: Critical for Zambia where cash/mobile money dominates (MTN Mobile Money, Airtel Money, Zamtel Kwacha)
+
+**Database Schema Updates:**
+```sql
+-- Payment provider tracking
+payment_provider TEXT CHECK (payment_provider IN ('paddle', 'pesapal', 'dpo', 'manual'))
+payment_transaction_id TEXT  -- Provider-specific transaction ID
+
+-- Settings table
+paddle_config JSONB   -- Global SaaS/subscription payments
+pesapal_config JSONB  -- African markets (cards + mobile money)
+dpo_config JSONB      -- Zambian market (local payments)
+```
+
+**New Document Structure (8 Tasks):**
+- Task 1: Database Schema (3 hours) - 10+ tables with `mod_ecommod01_` prefix
+- Task 2: Types Definition (1 hour) - `ecommerce-types.ts`
+- Task 3: Server Actions (4 hours) - `ecommerce-actions.ts` with CRUD operations
+- Task 4: Module Manifest (30 min) - `manifest.ts` with ModuleManifest type
+- Task 5: Context Provider (2 hours) - `EcommerceProvider` + hooks
+- Task 6: Module Index (15 min) - `index.ts` exports
+- Task 7: Storefront Widget (3 hours) - `StorefrontWidget.tsx` with cart drawer
+- Task 8: API Routes (2 hours) - products, cart, checkout, webhooks
+
+**Key E-Commerce Patterns:**
+```typescript
+// Server actions pattern (Task 3)
+'use server'
+import { createClient } from '@/lib/supabase/server'
+const ECOMMERCE_SHORT_ID = 'ecommod01'
+const TABLE_PREFIX = `mod_${ECOMMERCE_SHORT_ID}`
+
+// Context hooks (Task 5)
+export function useEcommerce()
+export function useProducts()
+export function useCart()
+export function useOrders()
+```
+
+**Database Tables:**
+1. `mod_ecommod01_categories` - Product categories
+2. `mod_ecommod01_products` - Product catalog
+3. `mod_ecommod01_product_categories` - Many-to-many
+4. `mod_ecommod01_product_options` - Color, size, etc.
+5. `mod_ecommod01_product_variants` - SKU combinations
+6. `mod_ecommod01_discounts` - Coupon codes
+7. `mod_ecommod01_carts` - Shopping carts
+8. `mod_ecommod01_cart_items` - Cart line items
+9. `mod_ecommod01_orders` - Order records
+10. `mod_ecommod01_order_items` - Order line items
+11. `mod_ecommod01_settings` - Store configuration
+
+---
 
 ### ✅ COMPLETE: Comprehensive Testing Guide Created (January 24, 2026)
 **Achievement**: Performed deep line-by-line scan of entire platform implementation and created production-accurate testing guide.
@@ -709,6 +919,42 @@ All infrastructure is complete! Time to build revenue-generating modules:
 **None currently** - EM-32 is complete and functional.
 
 ## Production Readiness Notes
+
+### Payment Providers for E-Commerce Module (EM-52)
+
+**Platform Billing (SaaS/Subscriptions):**
+- **Current**: LemonSqueezy (doesn't support Zambian payouts)
+- **Migrating to**: Paddle (EM-59A/EM-59B) - supports Zambian payouts via Payoneer/Wise
+
+**E-Commerce Customer Payments (EM-52):**
+Priority order for Zambian market:
+
+1. **Paddle** - Global SaaS billing (already in platform from EM-59A)
+2. **Flutterwave** - PRIMARY African e-commerce gateway
+   - Largest African payment provider (30+ countries including Zambia)
+   - All payment methods: Cards (Visa/Mastercard), Mobile Money (MTN/Airtel/Zamtel), Bank Transfers, USSD
+   - Native ZMW (Zambian Kwacha) support
+   - Best developer experience, official SDKs, webhooks
+   - Settlement to Zambian accounts
+3. **Pesapal** - Secondary African option (backup/regional)
+4. **DPO Pay** - Zambian local backup (optional)
+
+**Why Flutterwave is Primary:**
+- Market leader with proven scale across Africa
+- Comprehensive payment methods (critical for Zambian customers)
+- Superior technical implementation (webhooks use `verif-hash` header)
+- Native ZMW support essential for local pricing
+- Better settlement options for Zambian merchants
+
+**Database Schema:**
+```sql
+payment_provider TEXT CHECK (payment_provider IN ('paddle', 'flutterwave', 'pesapal', 'dpo', 'manual'))
+payment_transaction_id TEXT
+paddle_config JSONB
+flutterwave_config JSONB
+pesapal_config JSONB
+dpo_config JSONB
+```
 
 ### For Custom Domains (EM-32)
 1. **SSL Provider** - Need actual Let's Encrypt/ACME or Cloudflare integration

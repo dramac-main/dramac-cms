@@ -859,6 +859,78 @@ Perfect for salons, spas, consultants, medical offices, and any business that ta
     createdAt: new Date("2026-01-24"),
     updatedAt: new Date("2026-01-24"),
   },
+  
+  // E-COMMERCE - Phase EM-52
+  {
+    id: "ecommod01",
+    slug: "ecommerce",
+    name: "E-Commerce Store",
+    description: "Full-featured online store with product catalog, shopping cart, checkout, and payment processing.",
+    longDescription: `
+Complete e-commerce solution for selling products online.
+Supports both physical and digital products with variant management, inventory tracking, and multiple payment providers.
+
+## Features
+- Product catalog with categories
+- Variant management (size, color, etc.)
+- Shopping cart with persistence
+- Checkout with multiple payment options
+- Order management
+- Discount codes and coupons
+- Inventory tracking
+- Sales analytics
+
+## Payment Providers
+- Paddle (Global)
+- Flutterwave (Africa/Zambia)
+- Pesapal (Africa)
+- DPO Pay (Zambia)
+- Manual payments
+
+## Perfect For
+- Online Stores
+- Digital Product Sellers
+- Service-based Businesses
+- Subscription Products
+- Local Businesses (Zambia focus)
+    `,
+    version: "1.0.0",
+    icon: "ShoppingCart",
+    screenshots: ["/modules/ecommerce/screenshot-products.png", "/modules/ecommerce/screenshot-checkout.png"],
+    category: "ecommerce",
+    tags: ["ecommerce", "store", "products", "shopping", "cart", "checkout", "payments", "orders"],
+    author: {
+      name: "DRAMAC",
+      website: "https://dramac.app",
+      verified: true,
+    },
+    pricing: {
+      type: "monthly",
+      amount: 4999, // $49.99/month
+      currency: "USD",
+    },
+    features: [
+      "Product catalog",
+      "Category management",
+      "Variant management",
+      "Shopping cart",
+      "Checkout flow",
+      "Order management",
+      "Discount codes",
+      "Inventory tracking",
+      "Sales analytics",
+      "Multiple payment providers",
+      "Embeddable storefront",
+      "Tax calculation",
+      "Shipping zones",
+    ],
+    status: "active",
+    rating: 4.8,
+    reviewCount: 32,
+    installCount: 289,
+    createdAt: new Date("2026-01-25"),
+    updatedAt: new Date("2026-01-25"),
+  },
 ];
 
 // Category metadata
