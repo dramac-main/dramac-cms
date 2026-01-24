@@ -8,8 +8,11 @@
 
 import { Suspense } from 'react'
 import { Metadata } from 'next'
+import Link from 'next/link'
 import { CRMDashboard } from '@/modules/crm/components/crm-dashboard'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'CRM | DRAMAC',
@@ -42,8 +45,21 @@ export default async function CRMPage({ params }: CRMPageProps) {
   const { siteId } = await params
   
   return (
-    <Suspense fallback={<CRMLoadingSkeleton />}>
-      <CRMDashboard siteId={siteId} />
-    </Suspense>
+    <div className="flex flex-col h-full">
+      {/* Back Navigation */}
+      <div className="border-b px-6 py-3">
+        <Link href={`/dashboard/sites/${siteId}?tab=crm`}>
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Site
+          </Button>
+        </Link>
+      </div>
+      
+      {/* CRM Dashboard */}
+      <Suspense fallback={<CRMLoadingSkeleton />}>
+        <CRMDashboard siteId={siteId} />
+      </Suspense>
+    </div>
   )
 }

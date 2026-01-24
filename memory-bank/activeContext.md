@@ -17,6 +17,7 @@
 - ✅ All React component errors resolved
 - ✅ Fixed "Create Pipeline" button - was non-functional with empty onClick handler
 - ✅ Added `CreatePipelineDialog` component for creating new pipelines
+- ✅ Added back navigation to CRM dashboards (agency & site-level)
 - ✅ User tested and confirmed working
 
 **What was built:**
@@ -39,6 +40,7 @@
 - ✅ **Site-Level Access**: CRM tab on site detail pages (alongside Overview, Pages, Blog, Modules)
 - ✅ **Agency CRM Dashboard**: `/dashboard/crm` - Overview with site selector and aggregated stats
 - ✅ **Site CRM Dashboard**: `/dashboard/{siteId}/crm` - Full CRM interface per site
+- ✅ **Back Navigation**: "Back to Dashboard" (agency) and "Back to Site" (site-level) buttons
 - ✅ **Dual Access Patterns**:
   1. Sidebar → CRM → View all sites → Click site → Site CRM
   2. Sites → Click site → CRM tab → Site CRM
