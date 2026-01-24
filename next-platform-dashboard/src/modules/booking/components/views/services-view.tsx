@@ -235,13 +235,20 @@ export function ServicesView({ onServiceClick, onCreateClick, onEditClick }: Ser
                     onClick={() => onServiceClick?.(service)}
                   >
                     <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{service.name}</span>
-                        {service.description && (
-                          <span className="text-sm text-muted-foreground line-clamp-1">
-                            {service.description}
-                          </span>
-                        )}
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="h-6 w-6 rounded flex-shrink-0 border border-border"
+                          style={{ backgroundColor: service.color }}
+                          title={service.color}
+                        />
+                        <div className="flex flex-col">
+                          <span className="font-medium">{service.name}</span>
+                          {service.description && (
+                            <span className="text-sm text-muted-foreground line-clamp-1">
+                              {service.description}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -261,8 +268,7 @@ export function ServicesView({ onServiceClick, onCreateClick, onEditClick }: Ser
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1 font-medium">
-                        <DollarSign className="h-3 w-3 text-muted-foreground" />
+                      <div className="font-medium">
                         {formatPrice(service.price ?? 0, service.currency || 'USD')}
                       </div>
                     </TableCell>

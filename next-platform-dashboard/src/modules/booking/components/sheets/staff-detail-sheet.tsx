@@ -58,26 +58,35 @@ export function StaffDetailSheet({
 }: StaffDetailSheetProps) {
   const { appointments, services, editStaff, removeStaff } = useBooking()
   
-  if (!staffMember) return null
-  
-  // Get staff's services
-  const staffServices = staffMember.services || []
+  // Get staff's services - ALWAYS call hooks in same order
+  const staffServices = useMemo(() => {
+    return staffMember?.services || []
+  }, [staffMember?.services])
   
   // Get appointment stats for this staff
   const staffAppointments = useMemo(() => {
+    if (!staffMember) return []
     return appointments.filter((a) => a.staff_id === staffMember.id)
-  }, [appointments, staffMember.id])
+  }, [appointments, staffMember])
   
-  const completedCount = staffAppointments.filter((a) => a.status === 'completed').length
-  const upcomingCount = staffAppointments.filter(
-    (a) => a.status === 'confirmed' || a.status === 'pending'
-  ).length
-  const totalCount = staffAppointments.length
+  // Calculate stats
+  const { completedCount, upcomingCount, totalCount, completionRate } = useMemo(() => {
+    const completed = staffAppointments.filter((a) => a.status === 'completed').length
+    const upcoming = staffAppointments.filter(
+      (a) => a.status === 'confirmed' || a.status === 'pending'
+    ).length
+    const total = staffAppointments.length
+    const rate = total > 0 ? Math.round((completed / total) * 100) : 0
+    
+    return {
+      completedCount: completed,
+      upcomingCount: upcoming,
+      totalCount: total,
+      completionRate: rate
+    }
+  }, [staffAppointments])
   
-  // Calculate completion rate
-  const completionRate = totalCount > 0
-    ? Math.round((completedCount / totalCount) * 100)
-    : 0
+  if (!staffMember) return null
   
   const handleToggleStatus = async () => {
     try {
@@ -177,6 +186,12 @@ export function StaffDetailSheet({
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">No phone provided</p>
+              )}
+              {staffMember.timezone && (
+                <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">{staffMember.timezone}</span>
+                </div>
               )}
             </div>
           </div>

@@ -220,15 +220,15 @@ export function CreateAppointmentDialog({
             <div className="grid gap-2">
               <Label htmlFor="staff">Staff Member</Label>
               <Select 
-                value={staffId} 
-                onValueChange={setStaffId}
+                value={staffId || "none"} 
+                onValueChange={(v) => setStaffId(v === "none" ? "" : v)}
                 disabled={availableStaff.length === 0}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select staff (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Any available staff</SelectItem>
+                  <SelectItem value="none">Any available staff</SelectItem>
                   {availableStaff.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}

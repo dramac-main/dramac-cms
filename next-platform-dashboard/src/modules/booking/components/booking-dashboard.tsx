@@ -42,7 +42,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { CreateServiceDialog } from './dialogs/create-service-dialog'
+import { EditServiceDialog } from './dialogs/edit-service-dialog'
 import { CreateStaffDialog } from './dialogs/create-staff-dialog'
+import { EditStaffDialog } from './dialogs/edit-staff-dialog'
 import { CreateAppointmentDialog } from './dialogs/create-appointment-dialog'
 import { BookingSettingsDialog } from './dialogs/booking-settings-dialog'
 import type { BookingView, BookingSettings, Appointment, Service, Staff } from '../types/booking-types'
@@ -84,6 +86,10 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [selectedService, setSelectedService] = useState<Service | null>(null)
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null)
+  
+  // Edit dialogs state
+  const [serviceToEdit, setServiceToEdit] = useState<Service | null>(null)
+  const [staffToEdit, setStaffToEdit] = useState<Staff | null>(null)
 
   // Set initial view from URL
   useEffect(() => {
@@ -298,12 +304,20 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
               <ServicesView 
                 onServiceClick={setSelectedService}
                 onCreateClick={() => setShowCreateService(true)}
+                onEditClick={(service) => {
+                  setSelectedService(null)
+                  setServiceToEdit(service)
+                }}
               />
             </TabsContent>
             <TabsContent value="staff" className="h-full m-0">
               <StaffView 
                 onStaffClick={setSelectedStaff}
                 onCreateClick={() => setShowCreateStaff(true)}
+                onEditClick={(staff) => {
+                  setSelectedStaff(null)
+                  setStaffToEdit(staff)
+                }}
               />
             </TabsContent>
             <TabsContent value="analytics" className="h-full m-0">
@@ -318,9 +332,19 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
         open={showCreateService}
         onOpenChange={setShowCreateService}
       />
+      <EditServiceDialog
+        service={serviceToEdit}
+        open={!!serviceToEdit}
+        onOpenChange={(open) => !open && setServiceToEdit(null)}
+      />
       <CreateStaffDialog
         open={showCreateStaff}
         onOpenChange={setShowCreateStaff}
+      />
+      <EditStaffDialog
+        staff={staffToEdit}
+        open={!!staffToEdit}
+        onOpenChange={(open) => !open && setStaffToEdit(null)}
       />
       <CreateAppointmentDialog
         open={showCreateAppointment}
@@ -341,11 +365,19 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
         service={selectedService}
         open={!!selectedService}
         onOpenChange={(open) => !open && setSelectedService(null)}
+        onEdit={(service) => {
+          setSelectedService(null)
+          setServiceToEdit(service)
+        }}
       />
       <StaffDetailSheet
         staffMember={selectedStaff}
         open={!!selectedStaff}
         onOpenChange={(open) => !open && setSelectedStaff(null)}
+        onEdit={(staff) => {
+          setSelectedStaff(null)
+          setStaffToEdit(staff)
+        }}
       />
     </div>
   )
