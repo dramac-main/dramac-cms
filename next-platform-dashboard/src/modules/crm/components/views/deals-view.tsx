@@ -20,6 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { 
   Plus, 
   DollarSign, 
@@ -32,6 +38,7 @@ import {
   Settings
 } from 'lucide-react'
 import { CreateDealDialog } from '../dialogs/create-deal-dialog'
+import { CreatePipelineDialog } from '../dialogs/create-pipeline-dialog'
 import { DealDetailSheet } from '../sheets/deal-detail-sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -227,6 +234,7 @@ export function DealsView() {
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [createDialogStageId, setCreateDialogStageId] = useState<string | undefined>()
+  const [createPipelineDialogOpen, setCreatePipelineDialogOpen] = useState(false)
   const [draggedDeal, setDraggedDeal] = useState<Deal | null>(null)
   const [dragOverStageId, setDragOverStageId] = useState<string | null>(null)
 
@@ -319,10 +327,17 @@ export function DealsView() {
       <div className="flex flex-col items-center justify-center h-[50vh] gap-4">
         <TrendingUp className="h-12 w-12 text-muted-foreground" />
         <p className="text-muted-foreground">No pipeline found. Create one to get started.</p>
-        <Button onClick={() => {}}>
+        <Button onClick={() => setCreatePipelineDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Create Pipeline
         </Button>
+        
+        {/* Pipeline Dialog */}
+        <CreatePipelineDialog
+          open={createPipelineDialogOpen}
+          onOpenChange={setCreatePipelineDialogOpen}
+          onSuccess={(pipelineId) => setSelectedPipelineId(pipelineId)}
+        />
       </div>
     )
   }
@@ -369,10 +384,20 @@ export function DealsView() {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Settings className="h-4 w-4 mr-2" />
-            Settings
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setCreatePipelineDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Pipeline
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button onClick={() => handleAddDeal()}>
             <Plus className="h-4 w-4 mr-2" />
             Add Deal
@@ -413,6 +438,12 @@ export function DealsView() {
         }}
         defaultPipelineId={currentPipeline.id}
         defaultStageId={createDialogStageId}
+      />
+
+      <CreatePipelineDialog
+        open={createPipelineDialogOpen}
+        onOpenChange={setCreatePipelineDialogOpen}
+        onSuccess={(pipelineId) => setSelectedPipelineId(pipelineId)}
       />
 
       {selectedDealId && (
