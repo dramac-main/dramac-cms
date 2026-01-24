@@ -154,6 +154,16 @@ export function CreateAppointmentDialog({
       const duration = selectedService?.duration_minutes || 60
       endDateTime.setMinutes(endDateTime.getMinutes() + duration)
       
+      // Determine status based on service require_confirmation and settings
+      // If service requires confirmation, always start as pending
+      // Otherwise, respect settings.auto_confirm
+      let appointmentStatus: 'pending' | 'confirmed' = 'pending'
+      if (selectedService?.require_confirmation) {
+        appointmentStatus = 'pending'
+      } else if (settings?.auto_confirm) {
+        appointmentStatus = 'confirmed'
+      }
+      
       await addAppointment({
         service_id: serviceId,
         staff_id: staffId || undefined,
@@ -164,7 +174,7 @@ export function CreateAppointmentDialog({
         start_time: startDateTime.toISOString(),
         end_time: endDateTime.toISOString(),
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        status: settings?.auto_confirm ? 'confirmed' : 'pending',
+        status: appointmentStatus,
         payment_status: 'not_required',
         metadata: {},
         custom_fields: {}
