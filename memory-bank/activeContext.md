@@ -1,13 +1,13 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 24, 2026  
-**Current Phase**: EM-50 CRM Module - Code Complete, Migration Created, Ready for Database Apply  
+**Current Phase**: EM-50 CRM Module - ✅ COMPLETE & DEPLOYED  
 **Status**: ✅ 23 OF 34 PHASES IMPLEMENTED (68%)
 
 ## Current Work Focus
 
-### ✅ NEW: Phase EM-50 CRM Module (January 24, 2026)
-**Status**: ✅ Code Complete + Database Migration Created
+### ✅ COMPLETE: Phase EM-50 CRM Module (January 24, 2026)
+**Status**: ✅ DEPLOYED & COMMITTED (Commit: 489b1b3)
 
 **What was built:**
 
@@ -15,48 +15,47 @@
 - `src/modules/crm/` - Complete CRM module directory
 - Types, Actions, Context, Components, API routes
 
-**Database Migration Created:**
-- `migrations/em-50-crm-module-schema.sql` - 400+ lines
+**Database Migration Applied:**
+- `migrations/em-50-crm-module-schema.sql` - ✅ SUCCESSFULLY APPLIED
 - Tables: contacts, companies, deals, pipelines, pipeline_stages, activities, tags, custom_fields
 - All tables use `mod_crmmod01_` prefix per EM-05 naming conventions
-- Complete RLS policies with site-based isolation
+- Complete RLS policies with site-based isolation using `public.can_access_site()`
 - Service role bypass policies
 - Auto-update timestamps triggers
 - `mod_crmmod01_init_site()` function to create default pipeline/stages
 
-**TypeScript Fixes Applied:**
-1. **crm-actions.ts** - Added `getModuleClient()` helper with `as any` cast for dynamic tables
-2. **crm-types.ts** - Added type exports (ContactStatus, LeadStatus, CompanyStatus, CompanyType, DealStatus)
-3. **All API routes (12 files)** - Fixed function signatures to match action functions
-4. **Dialog components** - Created local FormData interfaces to avoid type mismatches with form inputs
-5. **Sheet components** - Fixed field names (account_type not company_type, address_line_1 not address_line1)
-6. **View components** - Removed invalid props, fixed prop names
-7. **Context** - Added getStages method
+**TypeScript Status:**
+- ✅ Zero compilation errors
+- ✅ All 42 files compile successfully
 
 **Key Patterns Established:**
 - `getModuleClient()` returns `supabase as any` for dynamic module tables
 - `TABLE_PREFIX = 'mod_crmmod01'` constant for dynamic table names
 - Local `FormData` interfaces in dialogs keep all fields as strings, convert in handleSubmit
 - Sheet components use `|| undefined` to convert null to undefined for props
+- RLS policies use `public.can_access_site()` not `auth.can_access_site()`
 
-**Files Created/Modified:**
-- `migrations/em-50-crm-module-schema.sql` - Database schema (NEW)
-- `src/modules/crm/actions/crm-actions.ts` - Server actions
-- `src/modules/crm/types/crm-types.ts` - Type definitions
+**Files Created/Modified (42 files):**
+- `migrations/em-50-crm-module-schema.sql` - Database schema ✅ APPLIED
+- `docs/PHASE-EM-50-CRM-SUMMARY.md` - Implementation guide
+- `src/modules/crm/actions/crm-actions.ts` - Server actions (992 lines)
+- `src/modules/crm/types/crm-types.ts` - Type definitions (526 lines)
 - `src/modules/crm/context/crm-context.tsx` - React context
 - `src/modules/crm/components/crm-dashboard.tsx` - Main dashboard
-- `src/modules/crm/components/dialogs/*.tsx` - Create dialogs
-- `src/modules/crm/components/sheets/*.tsx` - Detail sheets
-- `src/modules/crm/components/views/*.tsx` - List views
+- `src/modules/crm/components/dialogs/*.tsx` - 4 create dialogs
+- `src/modules/crm/components/sheets/*.tsx` - 3 detail sheets
+- `src/modules/crm/components/views/*.tsx` - 7 list views
 - `src/app/api/modules/crm/**/*.ts` - 12 API routes
 - `src/app/dashboard/[siteId]/crm/page.tsx` - Dashboard page
 
-**Next Steps:**
-- Apply database migration to Supabase
-- Initialize site with `SELECT mod_crmmod01_init_site('site-uuid-here')`
-- Test CRM module in browser
-- Test CRUD operations
-- Test pipeline Kanban board
+**How to Use:**
+1. Navigate to `/dashboard/{site-id}/crm`
+2. Initialize site: `SELECT mod_crmmod01_init_site('your-site-uuid');`
+3. Module creates default "Sales Pipeline" with 6 stages
+4. Start creating contacts, companies, and deals
+5. Use Kanban board to manage deal pipeline
+
+**Next Phase:** EM-51 Booking Module or other Wave 5 business modules
 
 ---
 
