@@ -1,10 +1,34 @@
 # Progress: What Works & What's Left
 
-**Last Updated**: January 25, 2026  
+**Last Updated**: January 25, 2026 (Marketplace Collections Seeded)  
 **Overall Completion**: 76% (26 of 34 enterprise phases complete)  
 **New Phases Specified**: 5 additional phases (EM-51, EM-52, EM-57, EM-58, EM-59 with A/B parts)
 
 ## 📋 Recently Implemented
+
+### Marketplace Collections Fix - COMPLETE ✅
+**Status**: ✅ Fixed (January 25, 2026)  
+**Issue**: Marketplace showing "Collections Coming Soon" - no modules linked to collections
+
+**Solution:**
+- Created SQL seeding migration `em-52-seed-module-collections.sql`
+- Created TypeScript seeding script `seed-module-collections.ts`
+- Linked booking + ecommerce modules to 4 collections each (8 total links)
+- Marketplace now displays modules properly in Browse Collections tab
+
+**Collections Seeded:**
+| Collection | Modules | Status |
+|------------|---------|--------|
+| Featured | 6 modules | ✅ Has booking + ecommerce |
+| New Releases | 5 modules | ✅ Has ecommerce |
+| Top Rated | 6 modules | ✅ Has booking + ecommerce |
+| Most Popular | 5 modules | ✅ Has booking |
+| Free Essentials | 2 modules | ✅ Populated |
+| Enterprise Suite | 6 modules | ✅ Has booking + ecommerce |
+
+**Total**: 30 module-collection links (8 new + 22 existing)
+
+---
 
 ### EM-52: E-Commerce Module - FULLY IMPLEMENTED ✅
 **Status**: ✅ Complete (January 25, 2026)  

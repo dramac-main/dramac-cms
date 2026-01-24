@@ -1,11 +1,57 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: January 25, 2026  
-**Current Phase**: EM-52 E-Commerce Module - ✅ FULLY IMPLEMENTED & TYPE-CHECKED  
+**Last Updated**: January 25, 2026 (Marketplace Collections Fix)  
+**Current Phase**: EM-52 E-Commerce Module - ✅ COMPLETE WITH MARKETPLACE SEEDED  
 **Previous Phase**: EM-51 Booking Module - ✅ COMPLETE & DOCUMENTED  
 **Status**: ✅ 26 OF 34 PHASES IMPLEMENTED (76%)
 
 ## Current Work Focus
+
+### ✅ COMPLETE: Phase EM-52 Marketplace Collections Fix (January 25, 2026)
+
+**Issue Resolved**: Marketplace "stuck loading modules" - collections were empty, showing "Collections Coming Soon" message.
+
+**Root Cause**: The `module_collection_items` table was empty. While collections existed (featured, new-releases, top-rated, etc.) and modules were registered (booking, ecommerce), they were not linked together.
+
+**Solution Implemented:**
+1. Created `migrations/em-52-seed-module-collections.sql` - SQL script to link modules to collections
+2. Created `scripts/seed-module-collections.ts` - TypeScript script to programmatically seed collections
+3. Installed `tsx` dev dependency to run TypeScript scripts
+4. Executed seeding script successfully
+
+**Seeding Results:**
+```
+✅ Featured             6 modules (booking, ecommerce + others)
+✅ New Releases         5 modules (ecommerce + others)
+✅ Top Rated            6 modules (booking, ecommerce + others)
+✅ Most Popular         5 modules (booking + others)
+✅ Free Essentials      2 modules
+✅ Enterprise Suite     6 modules (booking, ecommerce + others)
+
+Total: 8 new module-collection links created
+```
+
+**Module Collection Assignments:**
+- **Booking Module**: Featured, Top Rated, Most Popular, Enterprise Suite
+- **E-Commerce Module**: Featured, New Releases, Top Rated, Enterprise Suite
+
+**Files Created:**
+- `migrations/em-52-seed-module-collections.sql` - SQL seeding script
+- `scripts/seed-module-collections.ts` - TypeScript seeding script (uses Supabase client)
+- Added `tsx@4.21.0` to devDependencies
+
+**Verification:**
+- ✅ TypeScript check: `tsc --noEmit` - **ZERO ERRORS**
+- ✅ Collections now have 30 module links total
+- ✅ Marketplace Browse Collections tab now displays modules properly
+
+**Key Learnings:**
+- Marketplace uses `module_collections` + `module_collection_items` junction table
+- Collections query: `getFeaturedCollections()` in `marketplace-search.ts`
+- FeaturedCollections component handles empty state with "Collections Coming Soon" message
+- Seeding is idempotent - can run multiple times without duplicates
+
+---
 
 ### ✅ COMPLETE: Phase EM-52 E-Commerce Module Implementation (January 25, 2026)
 
