@@ -1,103 +1,92 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 24, 2026  
-**Current Phase**: EM-50 CRM Module - ✅ COMPLETE & DEPLOYED  
+**Current Phase**: EM-50 CRM Module - ✅ COMPLETE & FULLY FUNCTIONAL  
 **Status**: ✅ 23 OF 34 PHASES IMPLEMENTED (68%)
 
 ## Current Work Focus
 
 ### ✅ COMPLETE: Phase EM-50 CRM Module (January 24, 2026)
-**Status**: ✅ FULLY FUNCTIONAL & TESTED (Commits: 489b1b3, 8042312, eb2fc23, 5f3466d, f26be02, a977a22, d45ba37, c15757d)
+**Status**: ✅ FULLY FUNCTIONAL & TESTED (All bugs fixed, UI complete)
 
-**Critical Bugs Fixed (January 24, 2026):**
-- ✅ Fixed missing `is_active` column in `mod_crmmod01_pipelines` table (migration applied)
+**Latest Session Fixes (January 24, 2026 - Session 2):**
+- ✅ Fixed duplicate pipeline stages bug (12 stages → 6 stages)
+  - Root cause: `initializeCRMForSite()` was creating stages twice
+  - Fix: Removed redundant stage creation since `createPipeline()` already handles it
+- ✅ Fixed missing `deal_rotting_days` column (blocking pipeline creation)
+  - Updated migration `em-50-crm-add-is-active-column.sql` to also add `deal_rotting_days`
+- ✅ Fixed contact detail sheet Select error (empty value crash)
+  - Changed `value=""` to `value="none"` in company Select
+- ✅ Added full Pipeline Settings UI to CRM:
+  - New `PipelineSettingsDialog` component for editing/deleting pipelines
+  - Added `removePipeline` and `removeStage` to CRM context
+  - Settings dropdown now has "Pipeline Settings" option
+  - Can edit pipeline name, description, rotting days, default status
+  - Can delete pipeline (with confirmation, shows affected deals count)
+  - Shows pipeline stages overview
+
+**Critical Bugs Fixed (Session 1):**
+- ✅ Fixed missing `is_active` column in `mod_crmmod01_pipelines` table
 - ✅ Fixed React Select empty string value errors in all CRM dialogs
-- ✅ Updated form submission handlers to properly handle optional fields
-- ✅ All 500 Internal Server Errors resolved
-- ✅ All React component errors resolved
-- ✅ Fixed "Create Pipeline" button - was non-functional with empty onClick handler
-- ✅ Added `CreatePipelineDialog` component for creating new pipelines
-- ✅ Added back navigation to CRM dashboards (agency & site-level)
-- ✅ User tested and confirmed working
+- ✅ Fixed "Create Pipeline" button - was non-functional
+- ✅ Added back navigation to CRM dashboards
 
-**What was built:**
+**CRM Module Architecture:**
 
-**Module Structure:**
-- `src/modules/crm/` - Complete CRM module directory
-- Types, Actions, Context, Components, API routes
+**Context (crm-context.tsx) - Full CRUD:**
+- ✅ Contacts: add, edit, remove
+- ✅ Companies: add, edit, remove  
+- ✅ Deals: add, edit, remove, move (Kanban drag-drop)
+- ✅ Activities: add, edit, remove
+- ✅ Pipelines: add, edit, **remove** (NEW!)
+- ✅ Stages: add, edit, **remove** (NEW!)
+- ✅ Tags: add, remove
+- ✅ Search: global search
 
-**Database Migration Applied:**
-- `migrations/em-50-crm-module-schema.sql` - ✅ SUCCESSFULLY APPLIED
-- Tables: contacts, companies, deals, pipelines, pipeline_stages, activities, tags, custom_fields
-- All tables use `mod_crmmod01_` prefix per EM-05 naming conventions
-- Complete RLS policies with site-based isolation using `public.can_access_site()`
-- Service role bypass policies
-- Auto-update timestamps triggers
-- Auto-initialization via `initializeCRMForSite()` in CRMProvider
+**Dialogs (6 total):**
+- `CreateContactDialog` - Create contacts
+- `CreateCompanyDialog` - Create companies
+- `CreateDealDialog` - Create deals with pipeline/stage selection
+- `CreateActivityDialog` - Log activities (calls, emails, meetings)
+- `CreatePipelineDialog` - Create new pipelines
+- `PipelineSettingsDialog` - Edit/delete pipelines (NEW!)
 
-**Navigation & Discoverability:**
-- ✅ **Agency-Level Access**: Added CRM to main sidebar navigation (between Sites and Media Library)
-- ✅ **Site-Level Access**: CRM tab on site detail pages (alongside Overview, Pages, Blog, Modules)
-- ✅ **Agency CRM Dashboard**: `/dashboard/crm` - Overview with site selector and aggregated stats
-- ✅ **Site CRM Dashboard**: `/dashboard/{siteId}/crm` - Full CRM interface per site
-- ✅ **Back Navigation**: "Back to Dashboard" (agency) and "Back to Site" (site-level) buttons
-- ✅ **Dual Access Patterns**:
-  1. Sidebar → CRM → View all sites → Click site → Site CRM
-  2. Sites → Click site → CRM tab → Site CRM
-- ✅ No more manual URL typing - full UI navigation flow
+**Views (5 main views):**
+- `DealsView` - Kanban board with drag-drop, pipeline selector, settings
+- `ContactsView` - Contact list with search/filter
+- `CompaniesView` - Company list
+- `ActivitiesView` - Activity timeline
+- `ReportsView` - Pipeline funnel, performance metrics
 
-**Data Architecture:**
-- CRM data is **site-scoped** (all tables have `site_id` column)
-- Each site has isolated CRM data via RLS policies
-- Agency view shows overview + links to individual site CRMs
-- Future: Can implement agency-level aggregation using `agency-data-access.ts` pattern
+**Detail Sheets (3):**
+- `ContactDetailSheet` - View/edit contact details
+- `CompanyDetailSheet` - View/edit company details  
+- `DealDetailSheet` - View/edit deal details
 
-**TypeScript Status:**
-- ✅ Zero compilation errors
-- ✅ All 45 files compile successfully (including agency dashboard)
+**Database Tables (8):**
+All prefixed with `mod_crmmod01_`:
+- `contacts` - Contact records
+- `companies` - Company/account records
+- `deals` - Deal/opportunity records
+- `pipelines` - Sales pipelines
+- `pipeline_stages` - Pipeline stages (Lead, Qualified, Proposal, etc.)
+- `activities` - Activity log (calls, emails, meetings, tasks)
+- `tags` - Custom tags
+- `custom_fields` - Custom field definitions
 
-**Key Patterns Established:**
-- `getModuleClient()` returns `supabase as any` for dynamic module tables
-- `TABLE_PREFIX = 'mod_crmmod01'` constant for dynamic table names
-- Local `FormData` interfaces in dialogs keep all fields as strings, convert in handleSubmit
-- Sheet components use `|| undefined` to convert null to undefined for props
-- RLS policies use `public.can_access_site()` not `auth.can_access_site()`
-- Auto-initialization pattern: CRMProvider useEffect checks for pipelines, creates if missing
-- Agency-level navigation pattern: Main nav link + site-specific access
-
-**Files Created/Modified (48 files):**
-- `migrations/em-50-crm-module-schema.sql` - Database schema ✅ APPLIED
-- `migrations/em-50-crm-add-is-active-column.sql` - Bug fix migration ✅ APPLIED
-- `docs/PHASE-EM-50-CRM-SUMMARY.md` - Implementation guide
-- `docs/CRM-MODULE-USER-GUIDE.md` - User documentation
-- `docs/CRM-REAL-WORLD-WORKFLOW.md` - Real-world usage guide
-- `docs/PHASE-EM-50-CRITICAL-FIXES.md` - Bug fix documentation
-- `src/modules/crm/actions/crm-actions.ts` - Server actions (992 lines)
-- `src/modules/crm/types/crm-types.ts` - Type definitions (526 lines)
-- `src/modules/crm/context/crm-context.tsx` - React context with auto-init
-- `src/modules/crm/components/crm-dashboard.tsx` - Main dashboard
-- `src/modules/crm/components/dialogs/*.tsx` - 5 create dialogs (incl. pipeline)
-- `src/modules/crm/components/sheets/*.tsx` - 3 detail sheets
-- `src/modules/crm/components/views/*.tsx` - 7 list views
-- `src/app/api/modules/crm/**/*.ts` - 12 API routes
-- `src/app/dashboard/[siteId]/crm/page.tsx` - Site-level CRM page
-- `src/app/(dashboard)/dashboard/crm/page.tsx` - Agency-level CRM page ✅ NEW
-- `src/components/crm/agency-crm-dashboard.tsx` - Agency dashboard component ✅ NEW
-- `src/components/sites/site-crm-tab.tsx` - Site navigation tab component
-- `src/app/(dashboard)/dashboard/sites/[siteId]/page.tsx` - Added CRM tab
-- `src/config/navigation.ts` - Added CRM to main sidebar ✅ NEW
+**Navigation:**
+- Sidebar: CRM link (agency overview)
+- Site tabs: CRM tab (site-specific CRM)
+- Back buttons: "Back to Dashboard" / "Back to Site"
 
 **How to Use:**
+1. Click "CRM" in sidebar → Agency overview
+2. Click any site → Site CRM dashboard
+3. Settings → Pipeline Settings → Edit/Delete pipelines
+4. Deals tab → Kanban board → Drag deals between stages
+5. Create contacts, companies, deals via "+" buttons
 
-**Agency-Level (Overview):**
-1. Click "CRM" in the sidebar
-2. View aggregated stats across all sites
-3. Use site selector to filter or jump to specific site's CRM
-4. Click on any site card to access its full CRM
-
-**Site-Level (Full CRM):**
-1. Go to Sites → Click on any site
-2. Click the "CRM" tab OR use sidebar CRM → select site
+**Next Phase:** EM-51 Booking Module or other Wave 5 business modules
 3. CRM auto-initializes with default "Sales Pipeline" + 6 stages
 4. Start creating contacts, companies, and deals
 5. Use Kanban board to manage deal pipeline

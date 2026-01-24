@@ -35,10 +35,13 @@ import {
   MoreHorizontal,
   GripVertical,
   TrendingUp,
-  Settings
+  Settings,
+  Settings2,
+  Trash2
 } from 'lucide-react'
 import { CreateDealDialog } from '../dialogs/create-deal-dialog'
 import { CreatePipelineDialog } from '../dialogs/create-pipeline-dialog'
+import { PipelineSettingsDialog } from '../dialogs/pipeline-settings-dialog'
 import { DealDetailSheet } from '../sheets/deal-detail-sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -235,6 +238,7 @@ export function DealsView() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [createDialogStageId, setCreateDialogStageId] = useState<string | undefined>()
   const [createPipelineDialogOpen, setCreatePipelineDialogOpen] = useState(false)
+  const [pipelineSettingsOpen, setPipelineSettingsOpen] = useState(false)
   const [draggedDeal, setDraggedDeal] = useState<Deal | null>(null)
   const [dragOverStageId, setDragOverStageId] = useState<string | null>(null)
 
@@ -392,6 +396,10 @@ export function DealsView() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setPipelineSettingsOpen(true)}>
+                <Settings2 className="h-4 w-4 mr-2" />
+                Pipeline Settings
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setCreatePipelineDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Pipeline
@@ -444,6 +452,13 @@ export function DealsView() {
         open={createPipelineDialogOpen}
         onOpenChange={setCreatePipelineDialogOpen}
         onSuccess={(pipelineId) => setSelectedPipelineId(pipelineId)}
+      />
+
+      <PipelineSettingsDialog
+        open={pipelineSettingsOpen}
+        onOpenChange={setPipelineSettingsOpen}
+        pipeline={currentPipeline}
+        onPipelineDeleted={() => setSelectedPipelineId(null)}
       />
 
       {selectedDealId && (

@@ -104,7 +104,8 @@
 
 **Implemented Features:**
 - ✅ Complete CRM system (Contacts, Companies, Deals, Activities)
-- ✅ Pipeline management with stages
+- ✅ Pipeline management with stages (create, edit, delete)
+- ✅ Pipeline Settings dialog (edit name, rotting days, delete with confirmation)
 - ✅ Custom fields and tags
 - ✅ Site-scoped data with RLS policies
 - ✅ Agency-level overview dashboard
@@ -113,23 +114,27 @@
 - ✅ Auto-initialization on first access
 - ✅ 12 API routes with proper authentication
 - ✅ Real-world workflow documentation
+- ✅ Full CRUD for all entities (including pipelines and stages)
 
 **Database:**
 - ✅ 8 tables with `mod_crmmod01_` prefix
 - ✅ Complete RLS policies using `public.can_access_site()`
 - ✅ Auto-update triggers for timestamps
 - ✅ Migration successfully applied
-- ✅ Bug fix migration applied (is_active column)
+- ✅ Bug fix migration applied (is_active + deal_rotting_days columns)
 
 **Critical Issues Resolved:**
 - ✅ Fixed missing `is_active` column (500 errors)
+- ✅ Fixed missing `deal_rotting_days` column (pipeline creation blocked)
+- ✅ Fixed duplicate stage creation (12 stages → 6)
 - ✅ Fixed React Select empty string values
 - ✅ Updated form handlers for optional fields
+- ✅ Added Pipeline Settings UI with delete functionality
 - ✅ User tested and confirmed working
 
 **Components:**
-- ✅ 47 files total (types, actions, context, components, API, docs)
-- ✅ 7 list views, 4 create dialogs, 3 detail sheets
+- ✅ 50+ files total (types, actions, context, components, API, docs)
+- ✅ 5 list views, 6 dialogs (including PipelineSettingsDialog), 3 detail sheets
 - ✅ Agency dashboard with site selector
 - ✅ Full TypeScript with zero errors
 

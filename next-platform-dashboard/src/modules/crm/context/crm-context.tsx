@@ -14,8 +14,8 @@ import {
   createCompany, updateCompany, deleteCompany,
   createDeal, updateDeal, deleteDeal, moveDealToStage,
   createActivity, updateActivity, deleteActivity,
-  createPipeline, updatePipeline,
-  createPipelineStage, updatePipelineStage,
+  createPipeline, updatePipeline, deletePipeline,
+  createPipelineStage, updatePipelineStage, deletePipelineStage,
   createTag, deleteTag,
   globalSearch,
   initializeCRMForSite
@@ -75,8 +75,10 @@ interface CRMContextType {
   // Pipeline actions
   addPipeline: (data: Partial<PipelineInput>) => Promise<Pipeline>
   editPipeline: (id: string, data: PipelineUpdate) => Promise<Pipeline>
+  removePipeline: (id: string) => Promise<void>
   addStage: (pipelineId: string, data: Partial<PipelineStageInput>) => Promise<PipelineStage>
   editStage: (id: string, data: PipelineStageUpdate) => Promise<PipelineStage>
+  removeStage: (id: string) => Promise<void>
   getStages: (pipelineId: string) => Promise<PipelineStage[]>
   
   // Tag actions
@@ -375,6 +377,19 @@ export function CRMProvider({ children, siteId, settings = {} }: CRMProviderProp
     return stage
   }, [siteId])
 
+  const removePipeline = useCallback(async (id: string): Promise<void> => {
+    await deletePipeline(siteId, id)
+    setPipelines(prev => prev.filter(p => p.id !== id))
+    setStages(prev => prev.filter(s => s.pipeline_id !== id))
+    // Also remove deals from deleted pipeline
+    setDeals(prev => prev.filter(d => d.pipeline_id !== id))
+  }, [siteId])
+
+  const removeStage = useCallback(async (id: string): Promise<void> => {
+    await deletePipelineStage(siteId, id)
+    setStages(prev => prev.filter(s => s.id !== id))
+  }, [siteId])
+
   const getStagesForPipeline = useCallback(async (pipelineId: string): Promise<PipelineStage[]> => {
     // Return stages from state filtered by pipeline ID
     // This avoids a server call since we already have stages loaded
@@ -447,8 +462,10 @@ export function CRMProvider({ children, siteId, settings = {} }: CRMProviderProp
     // Pipeline actions
     addPipeline,
     editPipeline,
+    removePipeline,
     addStage,
     editStage,
+    removeStage,
     getStages: getStagesForPipeline,
     
     // Tag actions
