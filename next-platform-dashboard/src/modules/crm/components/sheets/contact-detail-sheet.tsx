@@ -350,14 +350,14 @@ export function ContactDetailSheet({
                     <Building2 className="h-4 w-4 text-muted-foreground" />
                     {isEditing ? (
                       <Select
-                        value={formData.company_id || ''}
-                        onValueChange={(v) => handleChange('company_id', v || undefined)}
+                        value={formData.company_id || 'none'}
+                        onValueChange={(v) => handleChange('company_id', v === 'none' ? undefined : v)}
                       >
                         <SelectTrigger className="flex-1">
                           <SelectValue placeholder="Select company" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {companies.map(c => (
                             <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                           ))}
