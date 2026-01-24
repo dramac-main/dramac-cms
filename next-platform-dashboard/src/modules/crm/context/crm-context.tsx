@@ -535,8 +535,9 @@ export function usePipelineDeals(pipelineId: string | null) {
     ? stages.filter(s => s.pipeline_id === pipelineId).sort((a, b) => a.position - b.position)
     : []
   
+  // Include ALL deals (open, won, lost) so they're visible in their stages
   const pipelineDeals = pipelineId
-    ? deals.filter(d => d.pipeline_id === pipelineId && d.status === 'open')
+    ? deals.filter(d => d.pipeline_id === pipelineId)
     : []
   
   const dealsByStage = new Map<string, Deal[]>()

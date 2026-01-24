@@ -254,9 +254,9 @@ export function DealsView() {
   // Get pipeline data
   const { pipelineStages, pipelineDeals, dealsByStage } = usePipelineDeals(currentPipeline?.id || null)
 
-  // Pipeline summary
+  // Pipeline summary (only count open deals for value metrics)
   const pipelineSummary = useMemo(() => {
-    const openDeals = pipelineDeals
+    const openDeals = pipelineDeals.filter(d => d.status === 'open')
     return {
       totalDeals: openDeals.length,
       totalValue: openDeals.reduce((sum, d) => sum + (d.amount || 0), 0),
