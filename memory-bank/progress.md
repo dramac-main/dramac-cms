@@ -1,7 +1,70 @@
 # Progress: What Works & What's Left
 
-**Last Updated**: January 23, 2026  
-**Overall Completion**: 62% (21 of 34 enterprise phases complete)
+**Last Updated**: January 24, 2026  
+**Overall Completion**: 62% (21 of 34 enterprise phases complete)  
+**New Phases Specified**: 4 additional phases (EM-57, EM-58, EM-59 with A/B parts)
+
+## 📋 New Specifications (Ready for Implementation)
+
+### EM-57A/B: Automation Engine - SPECIFICATION COMPLETE
+**Status**: 📝 Specification Ready  
+**Files**: `phases/enterprise-modules/PHASE-EM-57A-AUTOMATION-ENGINE.md`, `PHASE-EM-57B-AUTOMATION-ENGINE.md`
+
+**Decision**: Build custom automation engine instead of n8n
+- n8n embed license costs ~$50,000/year (rejected)
+- Custom solution provides full control, no licensing fees
+- Uses existing `module_events` system for triggers
+
+**Specified Features:**
+- Visual workflow builder with drag-and-drop
+- 100+ pre-built nodes (triggers, actions, logic, integrations)
+- Event-driven architecture
+- Execution engine with retry, error handling, parallel execution
+- Workflow templates and marketplace
+
+### EM-58A/B: AI Agents - SPECIFICATION COMPLETE
+**Status**: 📝 Specification Ready  
+**Files**: `phases/enterprise-modules/PHASE-EM-58A-AI-AGENTS.md`, `PHASE-EM-58B-AI-AGENTS.md`
+
+**Specified Features:**
+- 14 database tables for agent system
+- 5 core agent types: assistant, specialist, orchestrator, analyst, guardian
+- Agent runtime with ReAct loop (Reason → Act → Observe)
+- Memory system: short-term, long-term, episodic, semantic
+- Tool system with 20+ built-in tools
+- LLM provider abstraction (OpenAI, Anthropic, more)
+- Pre-built templates: Lead Qualifier, Customer Health Monitor, Support Triage
+- Agent marketplace for sharing
+- Pricing tiers with usage limits
+
+### EM-59A/B: Paddle Billing - SPECIFICATION COMPLETE
+**Status**: 📝 Specification Ready  
+**Files**: `phases/enterprise-modules/PHASE-EM-59A-PADDLE-BILLING.md`, `PHASE-EM-59B-PADDLE-BILLING.md`
+
+**Decision**: Replace LemonSqueezy with Paddle
+- LemonSqueezy doesn't support payouts to Zambia banks
+- Paddle → Payoneer/Wise → Zambia Bank (working solution)
+
+**Simple Hybrid Pricing Model:**
+| Plan | Price | Modules | Automation Runs | AI Actions |
+|------|-------|---------|-----------------|------------|
+| Starter | $29/mo | 3 | 1,000/mo | 500/mo |
+| Pro | $99/mo | 10 | 10,000/mo | 5,000/mo |
+| Enterprise | Custom | Unlimited | Unlimited | Unlimited |
+
+**Overage Rates:**
+- Automation runs: $0.001/run (Starter), $0.0005/run (Pro)
+- AI actions: $0.005/action (Starter), $0.0025/action (Pro)
+- API calls: $0.0001/call (Starter), $0.00005/call (Pro)
+
+**Files That Need Updates:**
+- `src/types/billing.ts` - Add Paddle types
+- `src/lib/actions/billing.ts` - Replace LemonSqueezy
+- `src/lib/modules/services/pricing-service.ts` - Replace `lemon_*` with `paddle_*`
+- `src/components/billing/*.tsx` - Update UI components
+- New: `src/lib/paddle/` directory with all Paddle services
+
+---
 
 ## ✅ What Works (Completed Features)
 
@@ -228,7 +291,7 @@
 **Why needed**: Scaling to multiple agencies and module versions
 
 ### Wave 5: Business Modules (MONEY MAKERS) - 0 of 7 Complete
-- ⬜ EM-50: CRM Module (~10 hours)
+- ⬜ EM-50: CRM Module (~10 hours) - **RECOMMENDED FIRST**
 - ⬜ EM-51: Booking Module (~8 hours)
 - ⬜ EM-52: E-Commerce Module (~12 hours)
 - ⬜ EM-53: Live Chat Module (~6 hours)
@@ -238,7 +301,17 @@
 
 **Why important**: These generate revenue and provide real value
 
-### Wave 6: Industry Verticals - 0 of 6 Complete
+### Wave 6: Platform Automation & AI - SPECIFICATIONS READY
+- 📝 EM-57A/B: Automation Engine (~3-4 weeks) - **SPEC COMPLETE**
+- 📝 EM-58A/B: AI Agents (~4-5 weeks) - **SPEC COMPLETE**
+- 📝 EM-59A/B: Paddle Billing (~2-3 weeks) - **SPEC COMPLETE**
+
+**Decision**: These are game-changers for SaaS revenue
+- Automation: $29-99/mo value-add to every plan
+- AI Agents: Major differentiator vs competitors
+- Paddle: Enables payouts to Zambia (replaces LemonSqueezy)
+
+### Wave 7: Industry Verticals - 0 of 6 Complete
 - ⬜ EM-60: Hotel Management (~12 hours)
 - ⬜ EM-61: Restaurant POS (~12 hours)
 - ⬜ EM-62: Healthcare (~10 hours)
@@ -264,16 +337,64 @@
 
 ## 🎯 Recommended Next Steps
 
-### Option A: Finish Wave 4 (EM-43 Revenue Dashboard) - RECOMMENDED
-**Timeline**: 1-2 days  
-**Effort**: ~6 hours
+### PRIORITY ORDER (Recommended Path)
 
-Complete the final Enterprise phase before moving to Business Modules.
+#### 1. EM-50: CRM Module - START HERE
+**Timeline**: 1-2 weeks  
+**Effort**: ~10 hours
 
-**Pros:**
-- Only 1 phase remaining in Wave 4
-- Enables developer earnings tracking
-- Revenue foundation before building paid modules
+Build the flagship CRM module - all infrastructure complete!
+
+**Why First:**
+- Revenue-generating module
+- Proves platform value to customers
+- Foundation for automation triggers (leads, contacts, deals)
+- Required for AI Agents to have something to work with
+
+#### 2. EM-57: Automation Engine
+**Timeline**: 3-4 weeks  
+**Effort**: Major feature
+**Specification**: ✅ Complete (PHASE-EM-57A/B)
+
+Build custom workflow automation engine.
+
+**Why Second:**
+- CRM provides triggers (new lead, deal closed, etc.)
+- Automation makes CRM 10x more valuable
+- Major value-add to every pricing tier
+
+#### 3. EM-58: AI Agents
+**Timeline**: 4-5 weeks  
+**Effort**: Major feature
+**Specification**: ✅ Complete (PHASE-EM-58A/B)
+
+Build autonomous AI agents.
+
+**Why Third:**
+- Automation provides execution layer for agents
+- CRM provides context (leads, customers, deals)
+- Biggest revenue differentiator vs competitors
+
+#### 4. EM-59: Paddle Billing (Can be parallel)
+**Timeline**: 2-3 weeks  
+**Effort**: Medium
+**Specification**: ✅ Complete (PHASE-EM-59A/B)
+
+Replace LemonSqueezy with Paddle.
+
+**Why Needed:**
+- LemonSqueezy doesn't pay to Zambia banks
+- Paddle → Payoneer/Wise → Zambia works
+- Enables usage-based billing for automation/AI
+
+### Implementation Order Summary
+```
+CRM Module → Automation Engine → AI Agents → Other Modules
+     ↓              ↓                ↓
+  Provides      Provides          Provides
+  triggers     execution       intelligence
+              capability
+```
 
 ### Option B: Build Business Modules (EM-50 CRM)
 **Timeline**: 1 week  

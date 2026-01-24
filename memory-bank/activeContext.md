@@ -1,12 +1,53 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: January 23, 2026  
-**Current Phase**: EM-43 Revenue Dashboard - COMPLETE  
-**Status**: ✅ 21 OF 34 PHASES (62%) - Wave 4 Enterprise Features COMPLETE!
+**Last Updated**: January 24, 2026  
+**Current Phase**: EM-59 Paddle Billing - SPECIFICATION COMPLETE  
+**Status**: ✅ 21 OF 34 PHASES IMPLEMENTED (62%) + 4 NEW PHASES SPECIFIED
 
 ## Current Work Focus
 
-### ✅ COMPLETED: EM-43 Revenue Sharing Dashboard (January 23, 2026)
+### ✅ NEW: Major Platform Features Specified (January 24, 2026)
+
+**Four major new phases fully documented:**
+
+1. **EM-57A/B: Automation Engine** - SPECIFICATION COMPLETE
+   - Custom workflow automation (chose NOT to use n8n due to $50K/year embed cost)
+   - Visual workflow builder with drag-and-drop
+   - 100+ pre-built nodes (triggers, actions, logic, integrations)
+   - Event-driven architecture using existing `module_events` system
+   - Execution engine with retry, error handling, parallel execution
+
+2. **EM-58A/B: AI Agents** - SPECIFICATION COMPLETE
+   - Autonomous AI agents for sales, support, analytics
+   - Multi-agent orchestration with ReAct loop
+   - Memory system (short-term, long-term, episodic, semantic)
+   - Tool system with built-in + custom tools
+   - LLM provider abstraction (OpenAI, Anthropic)
+   - Agent marketplace and templates
+   - Pricing: Free (1 agent), Starter (5 agents), Pro (unlimited)
+
+3. **EM-59A/B: Paddle Billing** - SPECIFICATION COMPLETE
+   - **Replaces LemonSqueezy** (doesn't support Zambia bank payouts)
+   - Paddle → Payoneer/Wise → Zambia Bank (payout solution)
+   - Simple Hybrid Pricing Model implemented:
+     - **Starter**: $29/mo - 3 modules, 1,000 automation runs, 500 AI actions
+     - **Pro**: $99/mo - 10 modules, 10,000 automation runs, 5,000 AI actions
+     - **Enterprise**: Custom pricing, unlimited everything
+   - Usage-based overage billing
+   - Complete webhook handlers
+   - Dunning & payment recovery
+   - Migration plan from LemonSqueezy
+
+**Key Decisions Made:**
+- ❌ n8n rejected ($50K/year embed cost too high)
+- ✅ Custom automation engine (full control, no licensing)
+- ✅ Paddle over LemonSqueezy (Zambia payout support via Payoneer/Wise)
+- ✅ Simple Hybrid Pricing (base subscription + usage overage)
+- ✅ AI Agents as major revenue differentiator
+
+---
+
+### ✅ Previously: EM-43 Revenue Sharing Dashboard (January 23, 2026)
 **Status**: ✅ COMPLETE - Full revenue dashboard implemented  
 **Wave 4 Enterprise**: 4/4 COMPLETE (100%) - Wave 4 FINISHED!  
 **TypeScript Compilation**: ✅ Zero errors

@@ -1,6 +1,6 @@
 # Tech Context: Technologies & Setup
 
-**Last Updated**: January 23, 2026
+**Last Updated**: January 24, 2026
 
 ## Technology Stack
 
@@ -38,13 +38,18 @@
 - **Zod**: 4.3.5 (schema validation)
 
 ### Billing & Payments
-- **LemonSqueezy**: 4.0.0 (subscription billing)
-- **Stripe**: 20.1.2 + @stripe/stripe-js 8.6.1 (payment processing)
+- **Paddle**: (planned) - Merchant of Record, usage-based billing
+  - Replaces LemonSqueezy (doesn't support Zambia payouts)
+  - Payout route: Paddle → Payoneer/Wise → Zambia Bank
+- **LemonSqueezy**: 4.0.0 (current, to be replaced)
+- **Stripe**: 20.1.2 + @stripe/stripe-js 8.6.1 (payment processing for marketplace)
 
 ### AI & Automation
 - **AI SDK**: 6.0.33 (Vercel AI SDK)
 - **@ai-sdk/anthropic**: 3.0.12 (Claude integration)
 - **@anthropic-ai/sdk**: 0.71.2 (Anthropic API)
+- **Custom Automation Engine**: (planned) - EM-57 specification complete
+- **AI Agents System**: (planned) - EM-58 specification complete
 
 ### Communication
 - **Resend**: 6.7.0 (transactional emails)
