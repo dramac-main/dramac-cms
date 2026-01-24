@@ -8,17 +8,18 @@ import { useRouter } from "next/navigation";
 
 interface ModuleInstallButtonProps {
   moduleId: string;
+  moduleSlug: string;
   moduleName: string;
   isFree: boolean;
 }
 
-export function ModuleInstallButton({ moduleId, moduleName, isFree }: ModuleInstallButtonProps) {
+export function ModuleInstallButton({ moduleId, moduleSlug, moduleName, isFree }: ModuleInstallButtonProps) {
   const [isInstalling, setIsInstalling] = useState(false);
   const router = useRouter();
 
   const handleInstall = async () => {
-    // Redirect to My Subscriptions page with the module pre-selected
-    router.push(`/dashboard/modules/subscriptions?install=${moduleId}`);
+    // Redirect to My Subscriptions page with the module slug pre-selected
+    router.push(`/dashboard/modules/subscriptions?install=${moduleSlug}`);
   };
 
   return (

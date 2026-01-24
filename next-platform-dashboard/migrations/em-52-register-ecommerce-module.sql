@@ -60,7 +60,7 @@ VALUES (
 - Service-based Businesses
 - Subscription Products
 - Local Businesses (Zambia focus)',
-    'ShoppingCart',
+    '🛒',
     'ecommerce',
     ARRAY['ecommerce', 'store', 'products', 'shopping', 'cart', 'checkout', 'payments', 'orders'],
     'site',

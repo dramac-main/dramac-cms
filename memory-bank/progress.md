@@ -1,10 +1,41 @@
 # Progress: What Works & What's Left
 
-**Last Updated**: January 25, 2026 (Marketplace Collections Seeded)  
+**Last Updated**: January 25, 2026 (Module Icons & Install ID Fixed)  
 **Overall Completion**: 76% (26 of 34 enterprise phases complete)  
 **New Phases Specified**: 5 additional phases (EM-51, EM-52, EM-57, EM-58, EM-59 with A/B parts)
 
 ## 📋 Recently Implemented
+
+### Module Icon & Install ID Fixes - COMPLETE ✅
+**Status**: ✅ Fixed (January 25, 2026)  
+**Issues**: Module icons showing as text ("Calendar", "ShoppingCart"), install prompt showing UUID instead of module name
+
+**Root Causes:**
+- Module registration used text strings instead of emojis for icons
+- Install button passing moduleId (UUID) instead of moduleSlug to install prompt
+
+**Solution:**
+- Updated booking module registration: `'Calendar'` → `'📅'`
+- Created database update script to fix existing modules
+- Updated ModuleInstallButton to accept and use moduleSlug parameter
+- Install prompt now shows "booking" instead of long UUID
+
+**Files Created/Modified:**
+| File | Purpose | Status |
+|------|---------|--------|
+| `migrations/em-52-fix-module-icons.sql` | SQL update for icons | ✅ Created |
+| `scripts/fix-module-icons.ts` | Script to update database | ✅ Created & Run |
+| `migrations/em-51-register-booking-module.sql` | Fixed icon emoji | ✅ Updated |
+| `src/components/modules/marketplace/module-install-button.tsx` | Pass slug param | ✅ Updated |
+| `src/app/(dashboard)/marketplace/[moduleId]/page.tsx` | Pass slug to button | ✅ Updated |
+
+**Results:**
+- ✅ Booking icon: 📅 (calendar emoji)
+- ✅ E-Commerce icon: 🛒 (shopping cart emoji)
+- ✅ Install prompt: Shows "booking" instead of UUID
+- ✅ TypeScript: Zero errors
+
+---
 
 ### Marketplace Collections Fix - COMPLETE ✅
 **Status**: ✅ Fixed (January 25, 2026)  

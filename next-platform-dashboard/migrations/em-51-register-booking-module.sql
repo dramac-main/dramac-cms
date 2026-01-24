@@ -53,7 +53,7 @@ INSERT INTO public.modules_v2 (
 - Fitness Studios
 - Event Venues
 - Professional Services',
-  'Calendar',
+  '📅',
   'business',
   ARRAY['booking', 'appointments', 'calendar', 'scheduling', 'reservations', 'services', 'crm'],
   'site', -- Site-level installation

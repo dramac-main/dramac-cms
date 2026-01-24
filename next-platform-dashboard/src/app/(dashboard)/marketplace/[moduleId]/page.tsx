@@ -153,6 +153,7 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
           <CardContent className="space-y-4">
             <ModuleInstallButton 
               moduleId={module.id}
+              moduleSlug={module.slug}
               moduleName={module.name}
               isFree={isFree}
             />

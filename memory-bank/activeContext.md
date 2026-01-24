@@ -1,11 +1,56 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: January 25, 2026 (Marketplace Collections Fix)  
-**Current Phase**: EM-52 E-Commerce Module - ✅ COMPLETE WITH MARKETPLACE SEEDED  
+**Last Updated**: January 25, 2026 (Module Icon & Install ID Fix)  
+**Current Phase**: EM-52 E-Commerce Module - ✅ COMPLETE WITH ICONS FIXED  
 **Previous Phase**: EM-51 Booking Module - ✅ COMPLETE & DOCUMENTED  
 **Status**: ✅ 26 OF 34 PHASES IMPLEMENTED (76%)
 
 ## Current Work Focus
+
+### ✅ COMPLETE: Module Icon & Install ID Fixes (January 25, 2026)
+
+**Issues Resolved:**
+1. **Module icons showing as text**: "Calendar" and "ShoppingCart" displayed instead of emoji icons
+2. **Module ID showing in install prompt**: UUID displayed instead of module name in installation dialog
+
+**Root Causes:**
+1. Module registration SQLs used text strings ("Calendar", "ShoppingCart") instead of emojis (📅, 🛒)
+2. ModuleInstallButton was passing `moduleId` (UUID) to install prompt instead of `moduleSlug`
+
+**Solutions Implemented:**
+1. **Fixed module registration SQLs:**
+   - Updated `em-51-register-booking-module.sql`: Changed icon from 'Calendar' to '📅'
+   - E-Commerce already had '🛒' emoji in registration
+
+2. **Created database update script:**
+   - `migrations/em-52-fix-module-icons.sql` - SQL to update existing modules
+   - `scripts/fix-module-icons.ts` - TypeScript script to update database
+   - Successfully updated both modules in database
+
+3. **Fixed install flow:**
+   - Updated `ModuleInstallButton` component to accept and use `moduleSlug` parameter
+   - Updated marketplace detail page to pass both `moduleId` and `moduleSlug`
+   - Now install prompt shows readable slug (e.g., "booking") instead of UUID
+
+**Files Modified:**
+- `migrations/em-51-register-booking-module.sql` - Icon emoji fix
+- `migrations/em-52-fix-module-icons.sql` - Database update SQL (new)
+- `scripts/fix-module-icons.ts` - Database update script (new)
+- `src/components/modules/marketplace/module-install-button.tsx` - Added moduleSlug param
+- `src/app/(dashboard)/marketplace/[moduleId]/page.tsx` - Pass moduleSlug to button
+
+**Verification:**
+- ✅ Database updated: Booking icon = 📅, E-Commerce icon = 🛒
+- ✅ TypeScript check: `tsc --noEmit` - **ZERO ERRORS**
+- ✅ Marketplace displays: Emoji icons visible in module cards
+- ✅ Install prompt: Shows "booking" instead of "45536a50-766d-4d06-8e5d-db16bf9dc73b"
+
+**Key Learning:**
+- Module icons in `modules_v2` table should be **emojis**, not text strings
+- Icon examples: 📅 (calendar), 🛒 (shopping cart), 💬 (chat), 📊 (analytics)
+- Install flow needs both `moduleId` (for API calls) and `moduleSlug` (for user display)
+
+---
 
 ### ✅ COMPLETE: Phase EM-52 Marketplace Collections Fix (January 25, 2026)
 
