@@ -7,7 +7,7 @@
 ## Current Work Focus
 
 ### ✅ COMPLETE: Phase EM-50 CRM Module (January 24, 2026)
-**Status**: ✅ DEPLOYED & COMMITTED (Commits: 489b1b3, 8042312, eb2fc23, 5f3466d)
+**Status**: ✅ DEPLOYED & COMMITTED (Commits: 489b1b3, 8042312, eb2fc23, 5f3466d, f26be02)
 
 **What was built:**
 
@@ -25,15 +25,24 @@
 - Auto-initialization via `initializeCRMForSite()` in CRMProvider
 
 **Navigation & Discoverability:**
-- ✅ Added CRM tab to site detail page (alongside Overview, Pages, Blog, Modules)
-- ✅ Created `SiteCRMTab` component with overview, features grid, and quick start guide
-- ✅ Users can discover CRM by: Sites → Click Site → CRM Tab → Open CRM Dashboard
-- ✅ No more manual URL typing required - proper UI navigation flow
-- Route: `/dashboard/{siteId}/crm` or via site tabs
+- ✅ **Agency-Level Access**: Added CRM to main sidebar navigation (between Sites and Media Library)
+- ✅ **Site-Level Access**: CRM tab on site detail pages (alongside Overview, Pages, Blog, Modules)
+- ✅ **Agency CRM Dashboard**: `/dashboard/crm` - Overview with site selector and aggregated stats
+- ✅ **Site CRM Dashboard**: `/dashboard/{siteId}/crm` - Full CRM interface per site
+- ✅ **Dual Access Patterns**:
+  1. Sidebar → CRM → View all sites → Click site → Site CRM
+  2. Sites → Click site → CRM tab → Site CRM
+- ✅ No more manual URL typing - full UI navigation flow
+
+**Data Architecture:**
+- CRM data is **site-scoped** (all tables have `site_id` column)
+- Each site has isolated CRM data via RLS policies
+- Agency view shows overview + links to individual site CRMs
+- Future: Can implement agency-level aggregation using `agency-data-access.ts` pattern
 
 **TypeScript Status:**
 - ✅ Zero compilation errors
-- ✅ All 43 files compile successfully (including SiteCRMTab)
+- ✅ All 45 files compile successfully (including agency dashboard)
 
 **Key Patterns Established:**
 - `getModuleClient()` returns `supabase as any` for dynamic module tables
@@ -42,8 +51,9 @@
 - Sheet components use `|| undefined` to convert null to undefined for props
 - RLS policies use `public.can_access_site()` not `auth.can_access_site()`
 - Auto-initialization pattern: CRMProvider useEffect checks for pipelines, creates if missing
+- Agency-level navigation pattern: Main nav link + site-specific access
 
-**Files Created/Modified (43 files):**
+**Files Created/Modified (45 files):**
 - `migrations/em-50-crm-module-schema.sql` - Database schema ✅ APPLIED
 - `docs/PHASE-EM-50-CRM-SUMMARY.md` - Implementation guide
 - `docs/CRM-MODULE-USER-GUIDE.md` - User documentation
@@ -55,17 +65,32 @@
 - `src/modules/crm/components/sheets/*.tsx` - 3 detail sheets
 - `src/modules/crm/components/views/*.tsx` - 7 list views
 - `src/app/api/modules/crm/**/*.ts` - 12 API routes
-- `src/app/dashboard/[siteId]/crm/page.tsx` - Dashboard page
-- `src/components/sites/site-crm-tab.tsx` - Site navigation tab component ✅ NEW
+- `src/app/dashboard/[siteId]/crm/page.tsx` - Site-level CRM page
+- `src/app/(dashboard)/dashboard/crm/page.tsx` - Agency-level CRM page ✅ NEW
+- `src/components/crm/agency-crm-dashboard.tsx` - Agency dashboard component ✅ NEW
+- `src/components/sites/site-crm-tab.tsx` - Site navigation tab component
 - `src/app/(dashboard)/dashboard/sites/[siteId]/page.tsx` - Added CRM tab
+- `src/config/navigation.ts` - Added CRM to main sidebar ✅ NEW
 
 **How to Use:**
+
+**Agency-Level (Overview):**
+1. Click "CRM" in the sidebar
+2. View aggregated stats across all sites
+3. Use site selector to filter or jump to specific site's CRM
+4. Click on any site card to access its full CRM
+
+**Site-Level (Full CRM):**
 1. Go to Sites → Click on any site
-2. Click the "CRM" tab in the site detail tabs
-3. Click "Open CRM Dashboard"
-4. CRM auto-initializes with default "Sales Pipeline" + 6 stages
-5. Start creating contacts, companies, and deals
-6. Use Kanban board to manage deal pipeline
+2. Click the "CRM" tab OR use sidebar CRM → select site
+3. CRM auto-initializes with default "Sales Pipeline" + 6 stages
+4. Start creating contacts, companies, and deals
+5. Use Kanban board to manage deal pipeline
+
+**Navigation Patterns:**
+- **Pattern 1**: Sidebar → CRM → Agency overview → Select/click site → Site CRM
+- **Pattern 2**: Sites → Click site → CRM tab → Site CRM  
+- **Pattern 3**: Direct URL: `/dashboard/crm` (agency) or `/dashboard/{siteId}/crm` (site)
 
 **Next Phase:** EM-51 Booking Module or other Wave 5 business modules
 
