@@ -170,18 +170,67 @@ export async function deleteService(siteId: string, serviceId: string): Promise<
 export async function getStaff(siteId: string): Promise<Staff[]> {
   const supabase = await getModuleClient()
   
-  const { data, error } = await supabase
+  // Fetch staff members
+  const { data: staffData, error: staffError } = await supabase
     .from(`${TABLE_PREFIX}_staff`)
     .select('*')
     .eq('site_id', siteId)
     .order('name', { ascending: true })
   
-  if (error) {
-    console.error('[Booking] getStaff error:', error)
-    throw new Error(error.message)
+  if (staffError) {
+    console.error('[Booking] getStaff error:', staffError)
+    throw new Error(staffError.message)
   }
   
-  return (data || []) as Staff[]
+  if (!staffData || staffData.length === 0) return []
+  
+  // Fetch all staff service assignments for this site
+  const { data: assignmentsData, error: assignmentsError } = await supabase
+    .from(`${TABLE_PREFIX}_staff_services`)
+    .select(`
+      staff_id,
+      service_id,
+      custom_price,
+      custom_duration_minutes
+    `)
+    .eq('site_id', siteId)
+  
+  if (assignmentsError) {
+    console.error('[Booking] getStaff assignments error:', assignmentsError)
+    // Continue without assignments rather than failing
+  }
+  
+  // Fetch all services for this site
+  const { data: servicesData, error: servicesError } = await supabase
+    .from(`${TABLE_PREFIX}_services`)
+    .select('*')
+    .eq('site_id', siteId)
+  
+  if (servicesError) {
+    console.error('[Booking] getStaff services error:', servicesError)
+  }
+  
+  // Create a map of staff_id to services
+  const staffServicesMap = new Map<string, Service[]>()
+  
+  if (assignmentsData && servicesData) {
+    const servicesById = new Map(servicesData.map((s: any) => [s.id, s]))
+    
+    assignmentsData.forEach((assignment: any) => {
+      const service = servicesById.get(assignment.service_id)
+      if (service) {
+        const staffServices = staffServicesMap.get(assignment.staff_id) || []
+        staffServices.push(service as Service)
+        staffServicesMap.set(assignment.staff_id, staffServices)
+      }
+    })
+  }
+  
+  // Enrich staff with their assigned services
+  return staffData.map((staff: any) => ({
+    ...staff,
+    services: staffServicesMap.get(staff.id) || []
+  })) as Staff[]
 }
 
 export async function getStaffMember(siteId: string, staffId: string): Promise<Staff | null> {
@@ -252,7 +301,36 @@ export async function updateStaff(
     throw new Error(error.message)
   }
   
-  return data as Staff
+  // Fetch staff with services to return complete data
+  const { data: assignmentsData } = await supabase
+    .from(`${TABLE_PREFIX}_staff_services`)
+    .select(`
+      service_id,
+      custom_price,
+      custom_duration_minutes
+    `)
+    .eq('site_id', siteId)
+    .eq('staff_id', staffId)
+  
+  // Fetch the actual services
+  let services: Service[] = []
+  if (assignmentsData && assignmentsData.length > 0) {
+    const serviceIds = assignmentsData.map((a: any) => a.service_id)
+    const { data: servicesData } = await supabase
+      .from(`${TABLE_PREFIX}_services`)
+      .select('*')
+      .in('id', serviceIds)
+      .eq('site_id', siteId)
+    
+    if (servicesData) {
+      services = servicesData as Service[]
+    }
+  }
+  
+  return {
+    ...data,
+    services
+  } as Staff
 }
 
 export async function deleteStaff(siteId: string, staffId: string): Promise<void> {

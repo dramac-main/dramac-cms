@@ -199,6 +199,7 @@ export function BookingProvider({ children, siteId, settings: initialSettings }:
   
   const editStaff = useCallback(async (id: string, updates: StaffUpdate): Promise<Staff> => {
     const staffMember = await updateStaff(siteId, id, updates)
+    // Update staff in state with full data including services
     setStaff(prev => prev.map(s => s.id === id ? staffMember : s))
     return staffMember
   }, [siteId])
