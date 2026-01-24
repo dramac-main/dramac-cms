@@ -197,7 +197,9 @@ Customer Information:
 - "Any available staff" option appears as first choice
 - End time auto-calculates (9:00 AM + 30 min = 9:30 AM)
 - Duration displays in dialog ("30 minutes")
-- Time format respects settings (12h/24h
+- Time format respects settings (12h/24h)
+- **Status auto-set to "confirmed"** (Haircut has require_confirmation: OFF)
+- Toast notification: "Appointment created successfully"
 #### 3.2 Create Appointment 2 (Requires Confirmation)
 **Test Data**:
 ```yaml
@@ -216,9 +218,11 @@ Customer Information:
 ```
 
 **✅ Verify**:
-- Status set to "pending" (because service requires_confirmation is ON)
+- **Status set to "pending"** (because Hair Coloring has require_confirmation: ON)
 - Duration shows "90 minutes" in dialog
 - End time correctly calculated (10:00 + 90min = 11:30)
+- Status badge displays yellow/orange for pending
+- Service-level confirmation requirement overrides settings
 
 #### 3.3 Create Appointment 3 (Free Service)
 **Test Data**:
@@ -231,7 +235,8 @@ Customer Name: "Alice Wong"
 Customer Email: "alice@example.com"
 ```
 
-**✅ Verify**:
+****Status set to "confirmed"** (Free Consultation has require_confirmation: OFF)
+- ✅ Verify**:
 - Price shows $0.00
 - Appointment created without payment requirement
 
