@@ -302,14 +302,17 @@ export async function assignStaffToService(
 ): Promise<StaffService> {
   const supabase = await getModuleClient()
   
+  // Use upsert to handle cases where assignment already exists
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_staff_services`)
-    .insert({
+    .upsert({
       site_id: siteId,
       staff_id: staffId,
       service_id: serviceId,
       custom_price: options?.custom_price || null,
       custom_duration_minutes: options?.custom_duration_minutes || null
+    }, {
+      onConflict: 'staff_id,service_id'
     })
     .select()
     .single()
