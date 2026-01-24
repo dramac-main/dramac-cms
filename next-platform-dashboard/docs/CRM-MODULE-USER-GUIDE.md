@@ -2,30 +2,24 @@
 
 **Module ID**: `crmmod01`  
 **Status**: ✅ Production Ready  
-**Route**: `/dashboard/{siteId}/crm`
+**Route**: `/dashboard/{siteId}/crm`  
+**Type**: Built-in Platform Module (No Module Studio required)
 
 ## Quick Start
 
-### Step 1: Initialize CRM for Your Site
-
-Before using the CRM, you need to initialize it for your site:
-
-1. Get your site ID from the URL when viewing your site in the dashboard
-2. Run this SQL command in Supabase SQL Editor:
-
-```sql
-SELECT mod_crmmod01_init_site('your-site-uuid-here');
-```
-
-This creates:
-- A default "Sales Pipeline"
-- 6 pipeline stages: Lead → Qualified → Proposal → Negotiation → Won → Lost
-
-### Step 2: Access the CRM Dashboard
+### Step 1: Access the CRM Dashboard
 
 Navigate to: `http://localhost:3000/dashboard/{your-site-id}/crm`
 
+**That's it!** The CRM automatically initializes on first access:
+- Creates a default "Sales Pipeline"
+- Adds 6 pipeline stages: Lead → Qualified → Proposal → Negotiation → Won → Lost
+- Sets up all necessary database tables
+
+### Step 2: Start Using the CRM
+
 You'll see the CRM dashboard with:
+
 - **Key Metrics** (top cards):
   - Total Contacts
   - Active Deals
@@ -309,9 +303,17 @@ You'll see the CRM dashboard with:
 
 ## Troubleshooting
 
-### "No data found" message
+### CRM initializes automatically
 
-**Solution**: Initialize the CRM for your site:
+The CRM automatically sets up when you first visit `/dashboard/{siteId}/crm`. If you see any issues:
+
+**Check:**
+- You have access to the site (at least Member role)
+- Site ID in the URL is correct
+- Database migration was applied successfully
+
+**Manual initialization (if needed):**
+If auto-initialization fails, you can manually run:
 ```sql
 SELECT mod_crmmod01_init_site('your-site-id');
 ```
