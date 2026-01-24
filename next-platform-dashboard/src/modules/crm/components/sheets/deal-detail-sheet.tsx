@@ -249,14 +249,16 @@ export function DealDetailSheet({
             <div className="flex items-start justify-between">
               <div>
                 <SheetTitle className="text-xl">{deal.name}</SheetTitle>
-                <SheetDescription className="flex items-center gap-2 mt-1">
+                <SheetDescription>
                   <span className="text-2xl font-bold text-foreground">
                     {formatCurrency(deal.amount || 0)}
                   </span>
+                </SheetDescription>
+                <div className="flex items-center gap-2 mt-1">
                   <Badge className={statusColors[deal.status]}>
                     {deal.status}
                   </Badge>
-                </SheetDescription>
+                </div>
               </div>
             </div>
             
@@ -450,14 +452,14 @@ export function DealDetailSheet({
                     </Label>
                     {isEditing ? (
                       <Select
-                        value={formData.contact_id || ''}
-                        onValueChange={(v) => handleChange('contact_id', v || undefined)}
+                        value={formData.contact_id || 'none'}
+                        onValueChange={(v) => handleChange('contact_id', v === 'none' ? undefined : v)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {contacts.map(c => (
                             <SelectItem key={c.id} value={c.id}>
                               {c.first_name} {c.last_name}
@@ -482,14 +484,14 @@ export function DealDetailSheet({
                     </Label>
                     {isEditing ? (
                       <Select
-                        value={formData.company_id || ''}
-                        onValueChange={(v) => handleChange('company_id', v || undefined)}
+                        value={formData.company_id || 'none'}
+                        onValueChange={(v) => handleChange('company_id', v === 'none' ? undefined : v)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">None</SelectItem>
+                          <SelectItem value="none">None</SelectItem>
                           {companies.map(c => (
                             <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                           ))}
