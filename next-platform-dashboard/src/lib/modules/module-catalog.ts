@@ -796,6 +796,69 @@ Trigger Zapier automations from form submissions, page views, and custom events.
     createdAt: new Date("2024-03-01"),
     updatedAt: new Date("2024-06-01"),
   },
+  
+  // BUSINESS & CRM - 21st module
+  {
+    id: "bookmod01",
+    slug: "booking",
+    name: "Booking & Scheduling",
+    description: "Appointment scheduling, calendar management, and online booking system.",
+    longDescription: `
+Complete booking and appointment management system for service-based businesses.
+Perfect for salons, spas, consultants, medical offices, and any business that takes appointments.
+
+## Features
+- Service management with pricing and duration
+- Staff scheduling and availability
+- Customer appointment booking
+- Calendar views (week, day, month)
+- Automated reminders (email/SMS)
+- Payment integration ready
+- Analytics and reporting
+- Customer management
+
+## Perfect For
+- Salons & Spas
+- Medical & Dental Offices
+- Consultants & Coaches
+- Fitness Studios
+- Event Venues
+- Professional Services
+    `,
+    version: "1.0.0",
+    icon: "Calendar",
+    screenshots: ["/modules/booking/screenshot-calendar.png", "/modules/booking/screenshot-appointments.png"],
+    category: "content",
+    tags: ["booking", "appointments", "calendar", "scheduling", "reservations", "services"],
+    author: {
+      name: "DRAMAC",
+      website: "https://dramac.app",
+      verified: true,
+    },
+    pricing: {
+      type: "monthly",
+      amount: 2999, // $29.99/month
+      currency: "USD",
+    },
+    features: [
+      "Service management",
+      "Staff scheduling",
+      "Calendar booking",
+      "Appointment management",
+      "Email/SMS reminders",
+      "Customer portal",
+      "Analytics dashboard",
+      "Payment ready",
+      "Availability rules",
+      "Buffer time settings",
+    ],
+    status: "active",
+    rating: 4.9,
+    reviewCount: 45,
+    installCount: 567,
+    createdAt: new Date("2026-01-24"),
+    updatedAt: new Date("2026-01-24"),
+  },
 ];
 
 // Category metadata
