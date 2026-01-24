@@ -975,29 +975,13 @@ export async function initializeCRMForSite(siteId: string): Promise<{ success: b
     const pipelines = await getPipelines(siteId)
     
     if (pipelines.length === 0) {
-      // Create default pipeline
-      const pipeline = await createPipeline(siteId, {
+      // Create default pipeline with stages
+      // Note: createPipeline automatically creates default stages
+      await createPipeline(siteId, {
         name: 'Sales Pipeline',
         description: 'Default sales pipeline',
         is_default: true
       })
-      
-      // Create default stages
-      const defaultStages = [
-        { name: 'Lead', color: '#94a3b8', position: 0, probability: 10, stage_type: 'open' as const },
-        { name: 'Qualified', color: '#3b82f6', position: 1, probability: 25, stage_type: 'open' as const },
-        { name: 'Proposal', color: '#8b5cf6', position: 2, probability: 50, stage_type: 'open' as const },
-        { name: 'Negotiation', color: '#f59e0b', position: 3, probability: 75, stage_type: 'open' as const },
-        { name: 'Won', color: '#22c55e', position: 4, probability: 100, stage_type: 'won' as const },
-        { name: 'Lost', color: '#ef4444', position: 5, probability: 0, stage_type: 'lost' as const }
-      ]
-      
-      // Create all stages
-      await Promise.all(
-        defaultStages.map(stage => 
-          createPipelineStage(siteId, pipeline.id, stage)
-        )
-      )
     }
     
     return { success: true }
