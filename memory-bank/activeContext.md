@@ -1,11 +1,71 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: January 25, 2026 (Module Icon & Install ID Fix)  
-**Current Phase**: EM-52 E-Commerce Module - ✅ COMPLETE WITH ICONS FIXED  
+**Last Updated**: January 25, 2026 (Vercel Deployment Fix)  
+**Current Phase**: EM-52 E-Commerce Module - ✅ COMPLETE WITH DEPLOYMENT FIX  
 **Previous Phase**: EM-51 Booking Module - ✅ COMPLETE & DOCUMENTED  
 **Status**: ✅ 26 OF 34 PHASES IMPLEMENTED (76%)
 
 ## Current Work Focus
+
+### ✅ COMPLETE: Vercel Deployment Fix (January 25, 2026)
+
+**Issue Reported**: Marketplace empty on Vercel deployment with `AbortError: signal is aborted without reason` in browser console.
+
+**Root Causes:**
+1. **Missing Environment Variables**: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` not configured in Vercel project settings
+2. **Client Initialization Timeout**: Supabase auth lock acquisition timing out in serverless environment
+3. **Silent Failures**: Errors not properly logged, making debugging difficult
+
+**Solutions Implemented:**
+
+1. **Environment Variable Validation** (`src/lib/supabase/client.ts`):
+   ```typescript
+   // Added explicit validation with clear error messages
+   if (!supabaseUrl || !supabaseAnonKey) {
+     console.error('[Supabase Client] Missing environment variables');
+     throw new Error('Missing Supabase environment variables...');
+   }
+   ```
+
+2. **Enhanced Client Configuration**:
+   - Added PKCE flow configuration
+   - Enabled session persistence and auto-refresh
+   - Added client info headers for debugging
+
+3. **Comprehensive Error Logging** (`src/lib/modules/marketplace-search.ts`):
+   - Wrapped `searchMarketplace()` in try-catch with detailed logging
+   - Wrapped `getFeaturedCollections()` in try-catch with detailed logging
+   - Log includes: message, details, hint, code for all errors
+
+4. **Created Troubleshooting Guide** (`docs/VERCEL-DEPLOYMENT-FIX.md`):
+   - Step-by-step instructions for setting Vercel environment variables
+   - Common errors and solutions table
+   - Debugging tips for browser console and Vercel logs
+
+**Files Modified:**
+- `src/lib/supabase/client.ts` - Environment validation and client config (42 lines)
+- `src/lib/modules/marketplace-search.ts` - Enhanced error logging with try-catch
+- `docs/VERCEL-DEPLOYMENT-FIX.md` - Complete troubleshooting guide (new, 269 lines)
+
+**Verification:**
+- ✅ TypeScript check: `tsc --noEmit` - **ZERO ERRORS**
+- ✅ Committed: 476207a
+- ✅ Pushed to GitHub successfully
+
+**User Action Required:**
+User must configure environment variables in Vercel dashboard:
+1. Go to Vercel project → Settings → Environment Variables
+2. Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+3. Redeploy the application
+
+**Key Learnings:**
+- Vercel requires explicit environment variable configuration (not auto-loaded from `.env.local`)
+- `NEXT_PUBLIC_` prefix is REQUIRED for client-side access
+- Supabase browser client needs proper configuration for serverless environments
+- Always validate env vars at client initialization, not query time
+- Detailed error logging is critical for debugging production issues
+
+---
 
 ### ✅ COMPLETE: Module Icon & Install ID Fixes (January 25, 2026)
 
