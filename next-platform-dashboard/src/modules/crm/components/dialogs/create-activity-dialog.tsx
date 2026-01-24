@@ -131,10 +131,10 @@ export function CreateActivityDialog({
         activity_type: formData.activity_type,
         subject: formData.subject || undefined,
         description: formData.description || undefined,
-        contact_id: formData.contact_id || undefined,
-        deal_id: formData.deal_id || undefined,
-        company_id: formData.company_id || undefined,
-        outcome: formData.outcome || undefined,
+        contact_id: formData.contact_id && formData.contact_id !== 'none' ? formData.contact_id : undefined,
+        deal_id: formData.deal_id && formData.deal_id !== 'none' ? formData.deal_id : undefined,
+        company_id: formData.company_id && formData.company_id !== 'none' ? formData.company_id : undefined,
+        outcome: formData.outcome && formData.outcome !== 'not_specified' ? formData.outcome : undefined,
         call_duration_seconds: formData.call_duration_seconds ? parseInt(formData.call_duration_seconds) : undefined,
         task_due_date: formData.task_due_date || undefined,
         task_completed: formData.task_completed
@@ -246,7 +246,7 @@ export function CreateActivityDialog({
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {contacts.map(contact => (
                     <SelectItem key={contact.id} value={contact.id}>
                       {contact.first_name} {contact.last_name}
@@ -267,7 +267,7 @@ export function CreateActivityDialog({
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {deals.map(deal => (
                     <SelectItem key={deal.id} value={deal.id}>
                       {deal.name}
@@ -288,7 +288,7 @@ export function CreateActivityDialog({
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {companies.map(company => (
                     <SelectItem key={company.id} value={company.id}>
                       {company.name}
@@ -355,7 +355,7 @@ export function CreateActivityDialog({
                 <SelectValue placeholder="Select outcome" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Not specified</SelectItem>
+                <SelectItem value="not_specified">Not specified</SelectItem>
                 <SelectItem value="positive">Positive</SelectItem>
                 <SelectItem value="negative">Negative</SelectItem>
                 <SelectItem value="neutral">Neutral</SelectItem>

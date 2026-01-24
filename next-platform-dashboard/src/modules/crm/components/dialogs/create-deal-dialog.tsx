@@ -178,8 +178,8 @@ export function CreateDealDialog({
         amount: formData.amount ? parseFloat(formData.amount) : undefined,
         pipeline_id: formData.pipeline_id || undefined,
         stage_id: formData.stage_id || undefined,
-        contact_id: formData.contact_id || undefined,
-        company_id: formData.company_id || undefined,
+        contact_id: formData.contact_id && formData.contact_id !== 'none' ? formData.contact_id : undefined,
+        company_id: formData.company_id && formData.company_id !== 'none' ? formData.company_id : undefined,
         status: formData.status,
         probability: parseFloat(formData.probability) || 0,
         expected_close_date: formData.expected_close_date || undefined,
@@ -316,7 +316,7 @@ export function CreateDealDialog({
                   <SelectValue placeholder="Select contact" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {contacts.map(contact => (
                     <SelectItem key={contact.id} value={contact.id}>
                       {contact.first_name} {contact.last_name}
@@ -336,7 +336,7 @@ export function CreateDealDialog({
                   <SelectValue placeholder="Select company" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {companies.map(company => (
                     <SelectItem key={company.id} value={company.id}>
                       {company.name}

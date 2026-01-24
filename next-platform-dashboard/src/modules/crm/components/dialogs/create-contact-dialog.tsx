@@ -124,10 +124,10 @@ export function CreateContactDialog({
         phone: formData.phone || undefined,
         mobile: formData.mobile || undefined,
         job_title: formData.job_title || undefined,
-        company_id: formData.company_id || undefined,
+        company_id: formData.company_id && formData.company_id !== 'none' ? formData.company_id : undefined,
         status: formData.status,
         lead_status: formData.lead_status,
-        source: formData.source || undefined,
+        source: formData.source && formData.source !== 'not_specified' ? formData.source : undefined,
         custom_fields: {},
         tags: [],
         lead_score: 0
@@ -243,7 +243,7 @@ export function CreateContactDialog({
                 <SelectValue placeholder="Select a company" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
+                <SelectItem value="none">None</SelectItem>
                 {companies.map(company => (
                   <SelectItem key={company.id} value={company.id}>
                     {company.name}
@@ -305,7 +305,7 @@ export function CreateContactDialog({
                 <SelectValue placeholder="Select source" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Not specified</SelectItem>
+                <SelectItem value="not_specified">Not specified</SelectItem>
                 <SelectItem value="website">Website</SelectItem>
                 <SelectItem value="referral">Referral</SelectItem>
                 <SelectItem value="linkedin">LinkedIn</SelectItem>

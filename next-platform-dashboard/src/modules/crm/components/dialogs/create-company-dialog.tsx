@@ -115,7 +115,7 @@ export function CreateCompanyDialog({
         name: formData.name,
         domain: formData.domain || null,
         description: formData.description || null,
-        industry: formData.industry || null,
+        industry: formData.industry && formData.industry !== 'not_specified' ? formData.industry : null,
         account_type: formData.account_type,
         status: formData.status,
         employee_count: formData.employee_count ? parseInt(formData.employee_count) : null,
@@ -206,7 +206,7 @@ export function CreateCompanyDialog({
                   <SelectValue placeholder="Select industry" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Not specified</SelectItem>
+                  <SelectItem value="not_specified">Not specified</SelectItem>
                   <SelectItem value="technology">Technology</SelectItem>
                   <SelectItem value="healthcare">Healthcare</SelectItem>
                   <SelectItem value="finance">Finance</SelectItem>

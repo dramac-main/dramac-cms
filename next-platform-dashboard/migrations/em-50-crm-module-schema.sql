@@ -123,6 +123,7 @@ CREATE TABLE IF NOT EXISTS mod_crmmod01_pipelines (
   name TEXT NOT NULL,
   description TEXT,
   is_default BOOLEAN NOT NULL DEFAULT false,
+  is_active BOOLEAN NOT NULL DEFAULT true,
   
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
