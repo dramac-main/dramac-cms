@@ -9,6 +9,47 @@
 
 ---
 
+## ⚠️ CRITICAL IMPLEMENTATION NOTES
+
+Before implementing, ensure the following:
+
+### Required Dependencies (add to package.json)
+
+```json
+{
+  "dependencies": {
+    "@dnd-kit/core": "^6.1.0",
+    "@dnd-kit/sortable": "^8.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "recharts": "^2.15.0"
+  }
+}
+```
+
+### Platform Patterns to Follow
+
+1. **Components**: All components use `"use client"` directive at the top
+2. **Server Actions**: Import from `@/modules/automation/actions/workflow-actions`
+3. **UI Components**: Use shadcn/ui from `@/components/ui/*`
+4. **Toast Notifications**: Use `toast` from `sonner`
+5. **Module Pattern**: Follow `src/modules/automation/` structure like CRM/Booking/Ecommerce
+
+### File Location Convention
+
+```
+src/modules/automation/           # NOT src/components/automation/
+├── actions/                      # Server actions
+├── components/                   # UI components  
+│   └── workflow-builder/         # Builder components
+├── context/                      # React contexts
+├── hooks/                        # Custom hooks
+├── lib/                          # Utilities & registries
+├── types/                        # TypeScript types
+└── index.ts                      # Module exports
+```
+
+---
+
 ## 📋 Document Overview
 
 This is **Part B** of the Automation Engine specification. It covers:

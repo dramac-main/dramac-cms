@@ -2,10 +2,22 @@
 
 > **Priority**: 🔴 CRITICAL (Platform Game-Changer)
 > **Estimated Time**: 2-3 weeks
-> **Prerequisites**: EM-01, EM-10, EM-11, EM-12, EM-13, EM-33
+> **Prerequisites**: EM-01, EM-10, EM-11, EM-12, EM-13, EM-33, Phase-59 RLS Helpers
 > **Status**: 📋 READY TO IMPLEMENT
 > **Module Type**: System
 > **Phase Split**: This is Part A of 2 (Core Infrastructure)
+
+---
+
+## ⚠️ CRITICAL IMPLEMENTATION NOTES
+
+Before implementing, ensure the following platform patterns are followed:
+
+1. **RLS Functions**: Use `auth.can_access_site(site_id)` from `phase-59-rls-helpers.sql` (NOT `user_has_site_access`)
+2. **CRM Tables**: Use `mod_crmmod01_*` prefix (NOT `crm_*`) per EM-05 conventions
+3. **Events**: Integrate with existing `src/lib/modules/module-events.ts` using `emitEvent()` function
+4. **Server Actions**: Follow existing pattern in `src/modules/*/actions/*-actions.ts`
+5. **Supabase Client**: Use `await createClient()` from `@/lib/supabase/server`
 
 ---
 
@@ -601,32 +613,32 @@ CREATE POLICY "Service role bypass" ON automation_webhook_endpoints
   FOR ALL USING (auth.role() = 'service_role');
 
 -- ============================================================================
--- RLS POLICIES (Using existing user_has_site_access() from EM-40)
+-- RLS POLICIES (Using existing auth.can_access_site() from Phase-59)
 -- ============================================================================
--- Note: user_has_site_access(site_id) is defined in phase-59-rls-helpers.sql
--- It checks if current user has access to the site via agency_members
+-- Note: auth.can_access_site(site_id) is defined in phase-59-rls-helpers.sql
+-- It checks if current user has access to the site via their agency membership
 
 CREATE POLICY "Users can access their site's workflows" ON automation_workflows
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their site's steps" ON workflow_steps
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM automation_workflows w 
       WHERE w.id = workflow_steps.workflow_id 
-      AND user_has_site_access(w.site_id)
+      AND auth.can_access_site(w.site_id)
     )
   );
 
 CREATE POLICY "Users can access their site's executions" ON workflow_executions
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their site's step logs" ON step_execution_logs
   FOR ALL USING (
     EXISTS (
       SELECT 1 FROM workflow_executions e 
       WHERE e.id = step_execution_logs.execution_id 
-      AND user_has_site_access(e.site_id)
+      AND auth.can_access_site(e.site_id)
     )
   );
 
@@ -635,24 +647,24 @@ CREATE POLICY "Users can access their site's variables" ON workflow_variables
     EXISTS (
       SELECT 1 FROM automation_workflows w 
       WHERE w.id = workflow_variables.workflow_id 
-      AND user_has_site_access(w.site_id)
+      AND auth.can_access_site(w.site_id)
     )
   );
 
 CREATE POLICY "Users can access their site's subscriptions" ON event_subscriptions
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their site's events" ON automation_events_log
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their site's jobs" ON scheduled_jobs
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their site's connections" ON automation_connections
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their site's webhook endpoints" ON automation_webhook_endpoints
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 -- ============================================================================
 -- HELPER FUNCTIONS
@@ -712,6 +724,31 @@ $$ LANGUAGE plpgsql;
 
 ## 🎯 Event Types Registry
 
+### Integration with Existing module-events.ts
+
+> ⚠️ **IMPORTANT**: The automation engine MUST integrate with the existing event system 
+> defined in `src/lib/modules/module-events.ts` (Phase EM-33).
+>
+> The existing system uses patterns like:
+> - `module:installed`, `module:settings_changed`
+> - `data:created`, `data:updated`, `data:deleted`
+> - `user:action`, `user:form_submitted`
+>
+> The automation-specific events below EXTEND the existing system and are emitted 
+> using the `emitEvent()` function from module-events.ts:
+>
+> ```typescript
+> import { emitEvent } from '@/lib/modules/module-events';
+> 
+> // Emit automation event
+> await emitEvent(
+>   automationModuleId,  // source module
+>   siteId,
+>   'crm.contact.created',  // event name
+>   { contactId, email, firstName }  // payload
+> );
+> ```
+
 ### Standard Platform Events
 
 The automation engine listens to events from ALL installed modules. Here's the event registry:
@@ -721,6 +758,9 @@ The automation engine listens to events from ALL installed modules. Here's the e
 
 /**
  * Platform Event Type Registry
+ * 
+ * IMPORTANT: These event names are EXTENSIONS of the core module-events.ts system.
+ * The automation engine subscribes to events via the existing emitEvent() infrastructure.
  * 
  * Naming Convention: {module}.{entity}.{action}
  * 
@@ -1427,6 +1467,24 @@ export type ActionType = keyof typeof ACTION_REGISTRY;
 ---
 
 ## 🔧 Core Services Implementation
+
+> ⚠️ **IMPLEMENTATION NOTE**: While this document shows class-based services for clarity,
+> the actual implementation should use **Server Actions** pattern as established in the 
+> platform. The classes below can be converted to standalone async functions with 
+> the `"use server"` directive. See `src/modules/crm/actions/crm-actions.ts` as the 
+> reference implementation.
+>
+> **Example conversion:**
+> ```typescript
+> // Class-based (as shown in docs)
+> class EventListenerService {
+>   async processPendingEvents(siteId: string) { ... }
+> }
+> 
+> // Server Actions pattern (preferred implementation)
+> 'use server'
+> export async function processPendingEvents(siteId: string) { ... }
+> ```
 
 ### 1. Event Listener Service
 
@@ -2342,7 +2400,7 @@ export class ActionExecutor {
     switch (action) {
       case 'create_contact': {
         const { data, error } = await supabase
-          .from('crm_contacts')  // Adjust table name based on your CRM schema
+          .from(`mod_crmmod01_contacts`)  // Uses module-prefixed table per EM-05
           .insert({
             site_id: siteId,
             email: config.email,
@@ -2364,7 +2422,7 @@ export class ActionExecutor {
 
       case 'update_contact': {
         const { data, error } = await supabase
-          .from('crm_contacts')
+          .from(`mod_crmmod01_contacts`)
           .update(config.fields as Record<string, unknown>)
           .eq('id', config.contact_id)
           .eq('site_id', siteId)
@@ -2379,7 +2437,7 @@ export class ActionExecutor {
 
       case 'add_tag': {
         const { data: contact, error: fetchError } = await supabase
-          .from('crm_contacts')
+          .from(`mod_crmmod01_contacts`)
           .select('tags')
           .eq('id', config.contact_id)
           .eq('site_id', siteId)
@@ -2394,7 +2452,7 @@ export class ActionExecutor {
         );
 
         const { error } = await supabase
-          .from('crm_contacts')
+          .from(`mod_crmmod01_contacts`)
           .update({ tags })
           .eq('id', config.contact_id);
 
@@ -2406,7 +2464,7 @@ export class ActionExecutor {
 
       case 'create_deal': {
         const { data, error } = await supabase
-          .from('crm_deals')
+          .from(`mod_crmmod01_deals`)  // Uses module-prefixed table per EM-05
           .insert({
             site_id: siteId,
             title: config.title,
@@ -2426,7 +2484,7 @@ export class ActionExecutor {
 
       case 'move_deal_stage': {
         const { data, error } = await supabase
-          .from('crm_deals')
+          .from(`mod_crmmod01_deals`)  // Uses module-prefixed table per EM-05
           .update({ stage: config.stage })
           .eq('id', config.deal_id)
           .eq('site_id', siteId)
@@ -2441,7 +2499,7 @@ export class ActionExecutor {
 
       case 'create_task': {
         const { data, error } = await supabase
-          .from('crm_tasks')
+          .from(`mod_crmmod01_tasks`)  // Uses module-prefixed table per EM-05
           .insert({
             site_id: siteId,
             title: config.title,
@@ -2462,7 +2520,7 @@ export class ActionExecutor {
 
       case 'log_activity': {
         const { data, error } = await supabase
-          .from('crm_activities')
+          .from(`mod_crmmod01_activities`)  // Uses module-prefixed table per EM-05
           .insert({
             site_id: siteId,
             contact_id: config.contact_id,
@@ -3566,15 +3624,21 @@ export async function getConnections(siteId: string) {
 
 ## 📁 File Structure
 
+> **Note**: Follows the established module pattern used by CRM, Booking, and E-Commerce modules.
+
 ```
 src/modules/automation/
 ├── actions/
-│   └── workflow-actions.ts        # Server actions (CRUD, execution)
+│   └── automation-actions.ts      # Server actions (CRUD, execution)
 ├── components/
 │   ├── workflow-list.tsx          # List of workflows
 │   ├── workflow-card.tsx          # Workflow summary card
 │   ├── execution-log.tsx          # Execution history table
 │   └── connection-card.tsx        # Connection card
+├── context/
+│   └── automation-context.tsx     # Automation React context
+├── hooks/
+│   └── use-workflow-builder.ts    # Workflow builder state
 ├── lib/
 │   ├── event-types.ts             # Event type registry
 │   └── action-types.ts            # Action type registry
@@ -3582,10 +3646,12 @@ src/modules/automation/
 │   ├── event-listener.ts          # Event listener service
 │   ├── execution-engine.ts        # Workflow execution engine
 │   └── action-executor.ts         # Action executor
-└── types/
-    └── automation.ts              # TypeScript types
+├── types/
+│   └── automation-types.ts        # TypeScript types
+├── index.ts                       # Module exports
+└── manifest.ts                    # Module manifest (per EM-01)
 
-migrations/
+next-platform-dashboard/migrations/
 └── em-57-automation-engine.sql    # Database schema
 ```
 
