@@ -1,6 +1,6 @@
 # Automation Engine Testing Guide
 
-**Phase EM-57B Complete** | **January 26, 2026**
+**Phase EM-57 Complete** | **January 26, 2026** | **Marketplace Integrated**
 
 This guide provides step-by-step real-world walkthroughs to test all automation features with exact field values.
 
@@ -12,10 +12,59 @@ This guide provides step-by-step real-world walkthroughs to test all automation 
 - Dashboard running: `pnpm dev` in `next-platform-dashboard/`
 - Supabase running: `npx supabase start`
 - At least one site created in your account
+- Automation module subscribed (see Setup below)
 
-**Test Environment:**
-- Navigate to: `http://localhost:3000/dashboard/[siteId]/automation`
-- Replace `[siteId]` with your actual site ID
+---
+
+## 📦 Module Setup (First Time)
+
+The Automation module is now in the marketplace and must be subscribed before testing.
+
+### Step 1: Subscribe to Automation Module
+
+1. **Navigate to Marketplace**
+   - Go to: `http://localhost:3000/marketplace`
+   - Or click **"Browse Modules"** in the sidebar
+
+2. **Find Automation Module**
+   - Look for **"Automation Engine"** card with ⚡ icon
+   - Or search: "automation"
+   - Status should show: **FREE** (for testing)
+
+3. **Subscribe**
+   - Click on the Automation Engine card
+   - Click **"Subscribe"** button
+   - No payment required (module is free for testing)
+   - Confirmation: "Successfully subscribed to Automation Engine"
+
+### Step 2: Enable on a Site
+
+1. **Go to Site Details**
+   - Navigate to: `http://localhost:3000/dashboard/sites`
+   - Click on any site you want to test with
+
+2. **Enable Module**
+   - Click the **"Modules"** tab
+   - Find **"Automation Engine"** in the list
+   - Toggle the switch to **ON** (enable)
+   - Status should change to "Enabled"
+
+3. **Open Automation Dashboard**
+   - Click the **"Open"** button next to Automation Engine
+   - Or navigate to: `http://localhost:3000/dashboard/[siteId]/automation`
+   - Replace `[siteId]` with your actual site ID
+
+✅ **You're now ready to test!**
+
+---
+
+## 🧪 Test Environment
+
+- **Main Dashboard**: `http://localhost:3000/dashboard/[siteId]/automation`
+- **Workflows List**: `http://localhost:3000/dashboard/[siteId]/automation/workflows`
+- **Templates**: `http://localhost:3000/dashboard/[siteId]/automation/templates`
+- **Analytics**: `http://localhost:3000/dashboard/[siteId]/automation/analytics`
+- **Connections**: `http://localhost:3000/dashboard/[siteId]/automation/connections`
 
 ---
 
@@ -23,69 +72,104 @@ This guide provides step-by-step real-world walkthroughs to test all automation 
 
 **Goal:** Create a workflow that sends a welcome email when a new contact is created in CRM.
 
+### Understanding the Workflow Builder
+
+Before we start, here's how the workflow builder is laid out:
+
+**Left Panel** (Sidebar):
+- **Top**: Trigger configuration with tabs (Event, Schedule, Webhook, Manual)
+- **Bottom**: Actions palette with draggable actions organized by category
+
+**Center**: Canvas where you build your workflow by dragging actions
+
+**Right Panel** (appears when you click a step): Step configuration panel with detailed settings
+
+**Top Bar**: Workflow name, status badges, and action buttons (Settings, Test Run, Save)
+
+---
+
 ### Step 1: Create the Workflow
 
 1. Go to **Automation Dashboard** (`/dashboard/[siteId]/automation`)
-2. Click **"Create Workflow"** button
-3. Fill in the form:
+2. Click **"New Workflow"** or **"Create Workflow"** button
+3. A dialog will appear. Fill in the form:
    ```
    Name: Welcome New Contacts
    Description: Send welcome email to new CRM contacts
    ```
 4. Click **"Continue"**
+5. The workflow builder will open with your new workflow
 
 ### Step 2: Configure Event Trigger
 
-1. In the workflow builder, click **"Configure Trigger"**
-2. Select trigger type: **"Event Trigger"**
-3. Fill in event configuration:
-   ```
-   Event Type: crm.contact_created
-   Source Module: crm
-   Filter Conditions: (leave empty for now)
-   ```
-4. Click **"Save Trigger"**
+The trigger panel is already visible on the left side of the workflow builder.
+
+1. In the **Trigger** section (left panel), the **"Event"** tab should already be selected
+2. Click the **"Event Type"** dropdown (it says "Select an event...")
+3. Scroll down to the **"👤 CRM"** section
+4. Select **"Contact created"** from the list (this is `crm.contact.created`)
+5. (Optional) In the **"Filter (Optional)"** field, you can add JSON conditions to filter which contacts trigger the workflow
+   - For now, leave this empty to trigger for all new contacts
+6. The trigger is automatically saved as you make changes
 
 ### Step 3: Add Email Step
 
-1. Click **"+ Add Step"** button
-2. Select step type: **"Action"**
-3. Select action: **"Send Email"**
-4. Configure the email step:
-   ```
-   Step Name: Send Welcome Email
-   
-   To Email: {{trigger.email}}
-   To Name: {{trigger.name}}
-   From Name: DRAMAC CRM Team
-   
-   Subject: Welcome to DRAMAC! 👋
-   
-   Body:
-   Hi {{trigger.name}},
-   
-   Welcome to DRAMAC! We're excited to have you join us.
-   
-   Your contact details:
-   - Email: {{trigger.email}}
-   - Phone: {{trigger.phone}}
-   
-   Best regards,
-   The DRAMAC Team
-   ```
-5. Configure error handling:
-   ```
-   On Error: retry
-   Max Retries: 3
-   Retry Delay: 60 seconds
-   ```
-6. Click **"Save Step"**
+Now we'll add an action to send a welcome email.
 
-### Step 4: Activate Workflow
+1. Look at the **"Actions"** panel on the left side (below the Trigger section)
+2. Scroll down to the **"📧 Communication"** category
+3. Find **"📧 Send Email"** in the list
+4. **Drag** the "Send Email" action from the panel and **drop** it onto the canvas (the center area with "Drag actions here to build your workflow")
+5. The action will appear as a step card on the canvas
+6. **Click on the step card** you just added
+7. The **Step Config Panel** will open on the right side
+8. Configure the email step with these values:
 
-1. Click **"Save Workflow"** (top right)
-2. Toggle the **"Active"** switch to enable the workflow
-3. Verify status shows **"Active"** badge
+   **Basic Info:**
+   - **Name**: `Send Welcome Email` (replace default name)
+   - **Description**: `Sends welcome email to new contacts` (optional)
+
+   **Email Settings (scroll down in the config panel):**
+   - **To**: `{{trigger.email}}` (this uses the contact's email from the trigger)
+   - **Subject**: `Welcome to DRAMAC! 👋`
+   - **Body**: 
+     ```
+     Hi {{trigger.first_name}},
+     
+     Welcome to DRAMAC! We're excited to have you join us.
+     
+     Your contact details:
+     - Email: {{trigger.email}}
+     - Phone: {{trigger.phone}}
+     
+     Best regards,
+     The DRAMAC Team
+     ```
+   - **From Name**: `DRAMAC CRM Team`
+   - **Reply To**: Leave blank (optional)
+
+9. The step configuration is automatically saved as you type
+10. Click the **X** or close button to close the config panel
+
+### Step 4: Save and Activate Workflow
+
+1. Look at the **top left** of the workflow builder - you'll see a **"Back"** button to return to the automation dashboard
+2. Look at the **top right** of the workflow builder
+3. Click the **"Save Workflow"** button (has a save icon 💾)
+4. A toast notification will appear: "Workflow saved successfully"
+5. To activate the workflow, click the **"Settings"** button (gear icon ⚙️)
+6. In the settings panel on the right, find the **"Active"** section
+7. Click the button to change it from **"Inactive"** to **"Active"**
+8. The workflow status badge at the top should now show a green **"Active"** badge
+9. Click **"Save Workflow"** again to save the active status
+10. The active status will now persist (fixed in latest update!)
+
+**Alternative: Activate from Workflows List**
+1. Navigate to **All Workflows** (`/dashboard/[siteId]/automation/workflows`)
+2. Find your workflow in the list
+3. Click the **⋮** (three dots) menu on the right
+4. Select **"Activate"** from the dropdown
+5. The status badge will change from "Paused" to "Active"
 
 ### Step 5: Test the Workflow
 
@@ -104,20 +188,41 @@ This guide provides step-by-step real-world walkthroughs to test all automation 
 ### Step 6: Verify Execution
 
 1. Return to **Automation Dashboard**
-2. Click **"View Executions"** or go to `/dashboard/[siteId]/automation/executions`
+2. Click **"Executions"** button in Quick Actions or go to `/dashboard/[siteId]/automation/executions`
 3. You should see a new execution with:
    ```
    Workflow: Welcome New Contacts
    Status: Completed (green)
-   Trigger: crm.contact_created
+   Trigger: Event
    Duration: ~2-5 seconds
+   Steps: 1/1
    ```
-4. Click on the execution to see detailed logs
-5. Verify the email step shows:
-   ```
-   Status: completed
-   Input: { email: "john.doe@example.com", name: "John Doe", ... }
-   Output: { success: true, message_id: "..." }
+4. Click **"View Details"** button on the execution row
+5. The execution detail page will show:
+   - **Execution Status**: Completed with green badge
+   - **Trigger Type**: Event Trigger
+   - **Duration**: Actual execution time in seconds
+   - **Steps**: 1/1 completed
+   - **Trigger Data**: Full JSON of the contact that was created
+   - **Step Execution Logs**: Detailed log for the "Send Welcome Email" step
+6. Expand the step log to see:
+   - **Input Data**: Email configuration with resolved variables ({{trigger.email}}, etc.)
+   - **Output Data**: Email sending result with success status
+   - **Duration**: How long the step took to execute
+   - **Status**: Completed with green checkmark icon
+7. Verify the email step shows:
+   ```json
+   Input: { 
+     "to": "john.doe@example.com", 
+     "subject": "Welcome to DRAMAC! 👋",
+     "body": "Hi John,\n\nWelcome to DRAMAC!...",
+     "from_name": "DRAMAC CRM Team"
+   }
+   Output: { 
+     "success": true, 
+     "message_id": "msg_abc123...",
+     "provider": "resend"
+   }
    ```
 
 ---
@@ -200,53 +305,56 @@ This guide provides step-by-step real-world walkthroughs to test all automation 
 
 ### Step 3: Configure Trigger
 
-1. Set trigger type: **"Event Trigger"**
-2. Configure:
+The trigger panel is already visible on the left side.
+
+1. In the **Trigger** section (left panel), ensure **"Event"** tab is selected
+2. Click the **"Event Type"** dropdown
+3. Scroll to **"👤 CRM"** section
+4. Select **"Deal stage_changed"** (this is `crm.deal.stage_changed`)
+5. In the **"Filter (Optional)"** field, enter:
+   ```json
+   {"new_stage": "proposal_sent"}
    ```
-   Event Type: crm.deal_stage_changed
-   Source Module: crm
-   Filter Conditions:
-   {
-     "new_stage": "proposal_sent"
-   }
-   ```
+   This ensures the workflow only triggers when deals move to "Proposal Sent" stage
+6. The trigger is automatically saved
 
 ### Step 4: Add Condition Step
 
-1. Add step: **"Condition"**
-2. Configure condition:
-   ```
-   Step Name: Check Deal Value
-   
-   Condition Type: greater_than
-   Left Value: {{trigger.deal_value}}
-   Right Value: 10000
-   ```
-3. This ensures we only notify for deals over $10k
+1. In the **Actions** panel (left side), scroll to **"🔀 Flow Control"**
+2. **Drag** the **"Condition (If/Else)"** action onto the canvas
+3. **Click** the condition step card on the canvas
+4. In the **Step Config Panel** (right side), configure:
+   - **Name**: `Check Deal Value`
+   - Add a condition:
+     - **Field**: `{{trigger.deal_value}}`
+     - **Operator**: `greater_than` (select from dropdown)
+     - **Value**: `10000`
+5. This ensures we only notify for deals over $10k
+6. Close the config panel
 
 ### Step 5: Add Slack Notification
-
-1. Add step: **"Send Notification"**
-2. Select notification type: **"Slack"**
-3. Configure:
-   ```
-   Step Name: Notify Sales Team
-   
-   Connection: Team Slack Workspace
-   Channel: #sales-notifications
-   
-   Message:
-   🎯 High-Value Proposal Sent!
-   
-   Deal: {{trigger.deal_name}}
-   Value: ${{trigger.deal_value}}
-   Company: {{trigger.company_name}}
-   Owner: {{trigger.owner_name}}
-   
-   Stage: Proposal Sent → Negotiation
-   
-   [View Deal](https://app.dramac.com/crm/deals/{{trigger.deal_id}})
-   ```
+In the **Actions** panel, scroll to **"📧 Communication"**
+2. **Drag** the **"Send to Slack"** action onto the canvas (below the condition)
+3. **Click** the Slack notification step
+4. In the **Step Config Panel**, configure:
+   - **Name**: `Notify Sales Team`
+   - **Webhook URL**: Your Slack webhook URL (or select from connections)
+   - **Channel**: `#sales-notifications`
+   - **Message**:
+     ```
+     🎯 High-Value Proposal Sent!
+     
+     Deal: {{trigger.deal_name}}
+     Value: ${{trigger.deal_value}}
+     Company: {{trigger.company_name}}
+     Owner: {{trigger.owner_name}}
+     
+     Stage: Proposal Sent → Negotiation
+     
+     [View Deal](https://app.dramac.com/crm/deals/{{trigger.deal_id}})
+     ```
+5. Close the config panel
+6. Click **"Save Workflow"** at the top
 4. Click **"Save Step"**
 
 ### Step 6: Test Workflow
@@ -841,6 +949,87 @@ Expected output:
 ---
 
 ## Troubleshooting Common Issues
+
+### Issue: Create Workflow dialog doesn't appear
+
+**Symptoms:**
+- Clicking "New Workflow" or "Create Workflow" button does nothing
+- No dialog/popup appears
+
+**Check:**
+1. Browser console for JavaScript errors
+2. Button is clickable (not disabled)
+3. Dialog component loaded correctly
+
+**Solution:**
+1. Hard refresh browser (Ctrl+Shift+R / Cmd+Shift+R)
+2. Check console errors - may indicate missing component
+3. Verify CreateWorkflowButton and CreateWorkflowDialog are exported from automation module
+4. Try clearing browser cache
+
+### Issue: Can't find Automation in marketplace
+
+**Check:**
+1. Module is registered in `modules_v2` table
+2. Status is `active`
+3. Run the registration migration: `em-57-register-automation-module.sql`
+
+**Solution:**
+```sql
+-- Check module exists
+SELECT id, name, slug, status 
+FROM modules_v2 
+WHERE slug = 'automation';
+
+-- If missing, run migration
+-- migrations/em-57-register-automation-module.sql
+```
+
+### Issue: "Subscribe" button doesn't work
+
+**Check:**
+1. You're logged in with an agency account
+2. Module pricing_type is set (should be "free" for testing)
+3. No existing subscription conflicts
+
+**Solution:**
+```sql
+-- Check existing subscriptions
+SELECT * FROM agency_module_subscriptions 
+WHERE agency_id = 'your-agency-id' 
+  AND module_slug = 'automation';
+
+-- Make module free if needed
+npx tsx scripts/make-module-free-for-testing.ts automation
+```
+
+### Issue: Module not appearing in Site > Modules tab
+
+**Check:**
+1. Agency has subscribed to the module
+2. `agency_module_subscriptions` record exists
+3. Module status is "active"
+
+**Solution:**
+```sql
+-- Check subscription
+SELECT ams.*, m.name, m.status
+FROM agency_module_subscriptions ams
+JOIN modules_v2 m ON m.slug = ams.module_slug
+WHERE ams.agency_id = 'your-agency-id'
+  AND ams.module_slug = 'automation';
+```
+
+### Issue: "Open" button doesn't appear after enabling
+
+**Check:**
+1. Module slug is `automation` (exactly)
+2. `site-modules-tab.tsx` includes automation in Open button logic
+3. Browser cache (try hard refresh: Ctrl+Shift+R)
+
+**Solution:**
+- Verify line 147 in `site-modules-tab.tsx` includes `|| module.slug === 'automation'`
+- Clear browser cache and refresh
 
 ### Issue: Workflow doesn't trigger
 

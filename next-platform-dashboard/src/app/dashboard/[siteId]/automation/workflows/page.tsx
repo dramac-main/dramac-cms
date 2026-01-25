@@ -11,8 +11,7 @@ import { Metadata } from "next"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -22,25 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { 
-  ArrowLeft, 
-  Plus, 
-  Search,
-  Zap,
-  MoreHorizontal,
-  PlayCircle,
-  PauseCircle,
-  Settings,
-  Trash2,
-  Copy
-} from "lucide-react"
+import { ArrowLeft, Plus, Search } from "lucide-react"
+import { WorkflowListCard } from "@/modules/automation/components/workflow-list-card"
 
 export const metadata: Metadata = {
   title: "Workflows | Automation | DRAMAC",
@@ -59,11 +41,6 @@ interface Workflow {
   trigger_type: string
   created_at: string
   updated_at: string
-}
-
-// Helper to get display status from is_active boolean
-function getWorkflowStatus(workflow: Workflow): "active" | "paused" {
-  return workflow.is_active ? "active" : "paused"
 }
 
 // ============================================================================
@@ -122,96 +99,6 @@ function LoadingSkeleton() {
         <Skeleton key={i} className="h-24" />
       ))}
     </div>
-  )
-}
-
-function WorkflowCard({ workflow, siteId }: { workflow: Workflow; siteId: string }) {
-  const status = getWorkflowStatus(workflow)
-  
-  const statusBadge = {
-    active: <Badge className="bg-green-500">Active</Badge>,
-    paused: <Badge variant="secondary">Paused</Badge>,
-  }
-
-  const triggerLabels: Record<string, string> = {
-    event: "Event Trigger",
-    schedule: "Scheduled",
-    webhook: "Webhook",
-    manual: "Manual"
-  }
-
-  return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-primary/10 rounded-lg">
-              <Zap className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Link 
-                  href={`/dashboard/${siteId}/automation/workflows/${workflow.id}`}
-                  className="text-lg font-medium hover:underline"
-                >
-                  {workflow.name}
-                </Link>
-                {statusBadge[status]}
-              </div>
-              {workflow.description && (
-                <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                  {workflow.description}
-                </p>
-              )}
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>{triggerLabels[workflow.trigger_type] || workflow.trigger_type}</span>
-                <span>•</span>
-                <span>Created {new Date(workflow.created_at).toLocaleDateString()}</span>
-                <span>•</span>
-                <span>Updated {new Date(workflow.updated_at).toLocaleDateString()}</span>
-              </div>
-            </div>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href={`/dashboard/${siteId}/automation/workflows/${workflow.id}`}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Edit
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Copy className="h-4 w-4 mr-2" />
-                Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                {workflow.is_active ? (
-                  <>
-                    <PauseCircle className="h-4 w-4 mr-2" />
-                    Pause
-                  </>
-                ) : (
-                  <>
-                    <PlayCircle className="h-4 w-4 mr-2" />
-                    Activate
-                  </>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </CardContent>
-    </Card>
   )
 }
 
@@ -281,7 +168,7 @@ async function WorkflowsListContent({ siteId }: { siteId: string }) {
       ) : (
         <div className="space-y-4">
           {workflows.map((workflow) => (
-            <WorkflowCard 
+            <WorkflowListCard 
               key={workflow.id} 
               workflow={workflow} 
               siteId={siteId} 

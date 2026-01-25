@@ -13,6 +13,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { executeWorkflow } from './execution-engine'
 import type { AutomationEventLog, EventSubscription } from '../types/automation-types'
 
 // ============================================================================
@@ -186,7 +187,8 @@ export async function queueWorkflowExecution(
  * Log an event for automation processing
  * 
  * Call this function when emitting events that should trigger automations.
- * This creates a record in automation_events_log that will be processed.
+ * This creates a record in automation_events_log and IMMEDIATELY processes it
+ * to trigger any matching workflows.
  */
 export async function logAutomationEvent(
   siteId: string,
@@ -198,9 +200,10 @@ export async function logAutomationEvent(
     sourceEntityId?: string
     sourceEventId?: string
   } = {}
-): Promise<{ success: boolean; eventId?: string; error?: string }> {
+): Promise<{ success: boolean; eventId?: string; workflowsTriggered?: number; error?: string }> {
   const supabase = await createClient() as AutomationDB
   
+  // Log the event
   const { data, error } = await supabase
     .from('automation_events_log')
     .insert({
@@ -213,14 +216,125 @@ export async function logAutomationEvent(
       source_event_id: options.sourceEventId || null,
       processed: false,
     })
-    .select('id')
+    .select('*')
     .single()
   
   if (error) {
+    console.error('[Automation] Failed to log event:', error)
     return { success: false, error: error.message }
   }
   
-  return { success: true, eventId: data.id }
+  // IMMEDIATELY process the event to trigger workflows
+  try {
+    const result = await processEventImmediately(siteId, data as AutomationEventLog)
+    
+    // Mark as processed
+    await supabase
+      .from('automation_events_log')
+      .update({
+        processed: true,
+        processed_at: new Date().toISOString(),
+        workflows_triggered: result.workflowsTriggered,
+      })
+      .eq('id', data.id)
+    
+    console.log(`[Automation] Event ${eventType} processed: ${result.workflowsTriggered} workflows triggered`)
+    
+    return { 
+      success: true, 
+      eventId: data.id, 
+      workflowsTriggered: result.workflowsTriggered 
+    }
+  } catch (processError) {
+    console.error('[Automation] Failed to process event:', processError)
+    // Event is still logged, just not processed - will be picked up by batch processor
+    return { success: true, eventId: data.id, workflowsTriggered: 0 }
+  }
+}
+
+/**
+ * Process a single event immediately (inline)
+ * Called right after logging for real-time workflow triggering
+ */
+async function processEventImmediately(
+  siteId: string,
+  event: AutomationEventLog
+): Promise<{ workflowsTriggered: number }> {
+  const supabase = await createClient() as AutomationDB
+  
+  // Find workflows subscribed to this event type that are active
+  const { data: subscriptions, error } = await supabase
+    .from('automation_event_subscriptions')
+    .select(`
+      *,
+      workflow:automation_workflows(id, name, is_active, site_id)
+    `)
+    .eq('site_id', siteId)
+    .eq('event_type', event.event_type)
+    .eq('is_active', true)
+  
+  if (error || !subscriptions?.length) {
+    console.log(`[Automation] No active subscriptions found for ${event.event_type}`)
+    return { workflowsTriggered: 0 }
+  }
+  
+  let triggeredCount = 0
+  
+  for (const sub of subscriptions) {
+    const subscription = sub as EventSubscription & { workflow: { id: string; name: string; is_active: boolean; site_id: string } | null }
+    const workflow = subscription.workflow
+    
+    // Skip if workflow is inactive
+    if (!workflow?.is_active) {
+      console.log(`[Automation] Skipping inactive workflow: ${workflow?.name}`)
+      continue
+    }
+    
+    // Check event filter (if any)
+    if (subscription.event_filter && Object.keys(subscription.event_filter).length > 0) {
+      if (!matchesFilter(event.payload, subscription.event_filter)) {
+        console.log(`[Automation] Event doesn't match filter for workflow: ${workflow.name}`)
+        continue
+      }
+    }
+    
+    // Queue workflow execution
+    console.log(`[Automation] Triggering workflow: ${workflow.name} for event ${event.event_type}`)
+    
+    const executionId = await queueWorkflowExecution(
+      workflow.id,
+      siteId,
+      'event',
+      event.id,
+      event.payload
+    )
+    
+    // CRITICAL: Actually execute the workflow (don't just queue it!)
+    console.log(`[Automation] Executing workflow ${workflow.name} (execution: ${executionId})`)
+    try {
+      // Execute in background - don't await to avoid blocking the CRM action
+      executeWorkflow(executionId).then(() => {
+        console.log(`[Automation] ✅ Workflow ${workflow.name} completed`)
+      }).catch((execError) => {
+        console.error(`[Automation] ❌ Workflow ${workflow.name} failed:`, execError)
+      })
+    } catch (execError) {
+      console.error(`[Automation] Failed to start workflow execution:`, execError)
+    }
+    
+    triggeredCount++
+    
+    // Update subscription stats
+    await supabase
+      .from('automation_event_subscriptions')
+      .update({
+        events_received: (subscription.events_received || 0) + 1,
+        last_event_at: new Date().toISOString(),
+      })
+      .eq('id', subscription.id)
+  }
+  
+  return { workflowsTriggered: triggeredCount }
 }
 
 // ============================================================================

@@ -114,9 +114,17 @@ export function useWorkflowBuilder(
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
-  // Refs for auto-save
+  // Refs for auto-save and callbacks
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
   const pendingChangesRef = useRef<WorkflowUpdate | null>(null)
+  const onErrorRef = useRef(onError)
+  const onSaveRef = useRef(onSave)
+  
+  // Keep refs updated
+  useEffect(() => {
+    onErrorRef.current = onError
+    onSaveRef.current = onSave
+  }, [onError, onSave])
 
   // ============================================================================
   // LOAD WORKFLOW
@@ -144,11 +152,11 @@ export function useWorkflowBuilder(
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load workflow'
       setError(message)
-      onError?.(message)
+      onErrorRef.current?.(message)
     } finally {
       setIsLoading(false)
     }
-  }, [onError])
+  }, []) // No dependencies - uses refs for callbacks
 
   // Load workflow on mount if ID provided
   useEffect(() => {
@@ -227,12 +235,13 @@ export function useWorkflowBuilder(
       let savedWorkflow: Workflow
 
       if (workflow.id) {
-        // Update existing workflow
+        // Update existing workflow - include is_active!
         const result = await updateWorkflow(workflow.id, {
           name: workflow.name,
           description: workflow.description || undefined,
           trigger_type: workflow.trigger_type,
           trigger_config: workflow.trigger_config,
+          is_active: workflow.is_active,
         })
         
         if (!result.success || !result.data) {
@@ -257,18 +266,18 @@ export function useWorkflowBuilder(
       setWorkflow(savedWorkflow)
       setIsDirty(false)
       pendingChangesRef.current = null
-      onSave?.(savedWorkflow)
+      onSaveRef.current?.(savedWorkflow)
       
       return true
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save workflow'
       setError(message)
-      onError?.(message)
+      onErrorRef.current?.(message)
       return false
     } finally {
       setIsSaving(false)
     }
-  }, [workflow, siteId, onSave, onError])
+  }, [workflow, siteId]) // Removed onSave, onError - using refs
 
   // ============================================================================
   // STEP ACTIONS
@@ -339,7 +348,10 @@ export function useWorkflowBuilder(
   }, [workflow, steps.length, saveWorkflow])
 
   const updateStep = useCallback(async (stepId: string, updates: WorkflowStepUpdate) => {
-    // Optimistic update
+    // Skip server update for temporary steps (not yet saved to DB)
+    const isTempStep = stepId.startsWith('temp-')
+    
+    // Optimistic update (always do this even for temp steps)
     setSteps(prev => prev.map(s => 
       s.id === stepId ? { ...s, ...updates } : s
     ))
@@ -349,6 +361,12 @@ export function useWorkflowBuilder(
       prev?.id === stepId ? { ...prev, ...updates } : prev
     )
 
+    // Don't call server for temporary steps - they don't exist in DB yet
+    if (isTempStep) {
+      console.log('[Workflow Builder] Skipping server update for temporary step:', stepId)
+      return
+    }
+
     // Convert updates to server format (null -> undefined for optional fields)
     const serverUpdates: Partial<{
       action_type: string
@@ -356,9 +374,14 @@ export function useWorkflowBuilder(
       position: number
       condition_config: Record<string, unknown>
       delay_config: Record<string, unknown>
+      name: string
+      description: string
+      is_active: boolean
       on_error: 'fail' | 'continue' | 'retry' | 'branch'
       max_retries: number
       retry_delay_seconds: number
+      input_mapping: Record<string, unknown>
+      output_key: string
     }> = {}
     
     if (updates.action_type) serverUpdates.action_type = updates.action_type
@@ -366,9 +389,14 @@ export function useWorkflowBuilder(
     if (updates.position !== undefined) serverUpdates.position = updates.position
     if (updates.condition_config) serverUpdates.condition_config = updates.condition_config as Record<string, unknown>
     if (updates.delay_config) serverUpdates.delay_config = updates.delay_config as Record<string, unknown>
+    if (updates.name !== undefined) serverUpdates.name = updates.name || ''
+    if (updates.description !== undefined) serverUpdates.description = updates.description || ''
+    if (updates.is_active !== undefined) serverUpdates.is_active = updates.is_active
     if (updates.on_error) serverUpdates.on_error = updates.on_error
     if (updates.max_retries !== undefined) serverUpdates.max_retries = updates.max_retries
     if (updates.retry_delay_seconds !== undefined) serverUpdates.retry_delay_seconds = updates.retry_delay_seconds
+    if (updates.input_mapping) serverUpdates.input_mapping = updates.input_mapping
+    if (updates.output_key !== undefined) serverUpdates.output_key = updates.output_key || ''
 
     try {
       const result = await updateWorkflowStep(stepId, serverUpdates)

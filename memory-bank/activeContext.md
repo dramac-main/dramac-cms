@@ -1,13 +1,427 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: January 26, 2026 (Phase EM-57B COMPLETE - Ready for Production)  
-**Current Phase**: EM-57B Automation Engine Dashboard UI - ✅ COMPLETE (Tested & Documented)  
-**Next Phase**: EM-58A/B Analytics Platform or EM-59A/B White-Label Infrastructure  
+**Last Updated**: January 26, 2026 (Phase EM-57 COMPLETE - All Systems Verified)  
+**Current Phase**: EM-57 Automation Module - ✅ FULLY COMPLETE & VERIFIED  
+**Next Phase**: EM-51 Booking Module or EM-52 E-Commerce Module  
 **Status**: ✅ 28 OF 34 PHASES IMPLEMENTED (82%)
+
+## ✅ AUTOMATION MODULE - FULLY VERIFIED WORKING
+
+### Complete Event Pipeline Confirmation
+
+**All triggers, events, and execution fully working as of January 26, 2026:**
+
+| Component | Status | Verification |
+|-----------|--------|--------------|
+| Event Emission (CRM) | ✅ WORKING | `logAutomationEvent()` called in all CRM actions |
+| Event Logging | ✅ WORKING | Events stored in `automation_events_log` |
+| Event Subscriptions | ✅ WORKING | Created when workflow activated with event trigger |
+| Workflow Triggering | ✅ WORKING | `processEventImmediately()` finds matching workflows |
+| Execution Queuing | ✅ WORKING | `queueWorkflowExecution()` creates execution records |
+| Workflow Execution | ✅ WORKING | `executeWorkflow()` runs all steps |
+| Step Logging | ✅ WORKING | `step_execution_logs` records input/output |
+| Executions List UI | ✅ WORKING | Shows all executions with status, stats |
+| Execution Detail UI | ✅ WORKING | Shows step logs, trigger data, errors |
+| Execution Count | ✅ WORKING | Dashboard shows accurate counts per workflow |
+
+### Complete CRM Event Integration
+
+```typescript
+// All CRM events currently emitting:
+- crm.contact.created    ✅
+- crm.contact.updated    ✅  
+- crm.contact.deleted    ✅
+- crm.deal.created       ✅
+- crm.deal.updated       ✅
+- crm.deal.deleted       ✅
+- crm.deal.stage_changed ✅
+- crm.deal.won           ✅
+- crm.deal.lost          ✅
+```
+
+### Key Code Locations
+
+1. **Event Emission:** `src/modules/crm/actions/crm-actions.ts`
+2. **Event Processing:** `src/modules/automation/services/event-processor.ts`
+3. **Workflow Execution:** `src/modules/automation/services/execution-engine.ts`
+4. **Subscription Management:** `src/modules/automation/actions/automation-actions.ts`
+5. **Executions UI:** `src/app/dashboard/[siteId]/automation/executions/`
+
+---
 
 ## Current Work Focus
 
-### ✅ COMPLETE: Phase EM-57B Automation Engine Dashboard UI (January 26, 2026)
+### ✅ COMPLETE: Execution Detail Page Implementation (January 26, 2026)
+
+**User Issue Reported:**
+"Good, but I can't view details of the executions" - Clicking "View Details" on execution rows returned 404 error.
+
+**Root Cause:**
+The `/automation/executions/page.tsx` was created with "View Details" buttons linking to `/executions/[executionId]`, but that detail page didn't exist.
+
+**Solution Implemented:**
+
+Created comprehensive execution detail page showing:
+1. **Execution Overview Card**
+   - Workflow name and description
+   - Status badge with icon
+   - Trigger type, duration, steps completed, start time
+   
+2. **Error Display** (if failed)
+   - Error message in red card
+   - Error details (JSON)
+   - Stack trace (collapsible)
+   
+3. **Trigger Data Card**
+   - Full JSON payload that triggered the workflow
+   - Syntax-highlighted code block
+   
+4. **Step Execution Logs** (main feature)
+   - Each step shows: position, name, status icon, duration
+   - Collapsible input/output data sections
+   - Error messages with stack traces for failed steps
+   - Color-coded status icons (green=completed, red=failed, blue=running, etc.)
+   
+5. **Workflow Variables Card**
+   - Shows all variables available during execution
+   - Only displayed if variables exist
+
+**Technical Implementation:**
+- Queries `workflow_executions` with nested `step_execution_logs` join
+- Queries `workflow_steps` to get step metadata (type, action_type, config)
+- Sorts step logs by position for correct display order
+- Uses Collapsible components for input/output data
+- Proper TypeScript types for all data structures
+- Handles null/undefined gracefully
+- Uses Suspense for loading states
+
+**Files Created:**
+- `src/app/dashboard/[siteId]/automation/executions/[executionId]/page.tsx` (617 lines)
+
+**Files Modified:**
+- `docs/AUTOMATION-TESTING-GUIDE.md` (Updated Step 6 with detail page verification)
+
+**Data Flow:**
+```
+1. User clicks "View Details" on execution row
+2. Navigate to /automation/executions/[executionId]
+3. Page fetches execution with step_logs via Supabase join
+4. Displays execution metadata, trigger data, step logs
+5. User can expand input/output for each step
+6. User can see error details if any step failed
+```
+
+---
+
+### ✅ COMPLETE: Execution Pipeline & UI Fix (January 26, 2026)
+
+**User Issues Reported:**
+1. "It's like it ran but on the workflow card itself, it says zero execution"
+2. "I don't see anywhere in nav where it says executions"
+
+**Deep Scan Performed:**
+Traced the complete execution flow:
+1. Event triggers → `processEventImmediately()` → `queueWorkflowExecution()`
+2. `queueWorkflowExecution()` creates DB record with `status: 'pending'`
+3. **ROOT CAUSE**: `executeWorkflow()` was NEVER called to run the steps!
+4. Workflow cards hardcoded `execution_count: 0`
+5. No `/automation/executions` page existed
+
+**Solutions Implemented:**
+
+1. **Fixed Execution Flow** (`event-processor.ts`)
+   - Added `import { executeWorkflow } from './execution-engine'`
+   - Modified `processEventImmediately()` to call `executeWorkflow(executionId)` after queuing
+   - Now fires `.then()/.catch()` for async execution with logging
+
+2. **Created Executions Page** (NEW FILE)
+   - `src/app/dashboard/[siteId]/automation/executions/page.tsx` (412 lines)
+   - Shows all workflow executions with status, duration, timestamps
+   - Stats cards: Total, Completed, Failed, Running
+   - Status badges with icons
+   - Click to view execution details (links to future detail page)
+   - Filter by status
+   - Responsive design
+
+3. **Fixed Execution Count** (`automation/page.tsx`)
+   - `getWorkflows()` now queries `workflow_executions` table
+   - Aggregates execution count per workflow
+   - Gets last executed timestamp
+   - No more hardcoded zeros!
+
+4. **Added Navigation** (`automation/page.tsx`)
+   - Added "Executions" button to Quick Actions
+   - Uses `History` icon from lucide-react
+   - Links to `/dashboard/[siteId]/automation/executions`
+
+**Files Modified:**
+- `src/modules/automation/lib/event-processor.ts` (Added executeWorkflow call)
+- `src/app/dashboard/[siteId]/automation/page.tsx` (Execution count query + nav button)
+
+**Files Created:**
+- `src/app/dashboard/[siteId]/automation/executions/page.tsx` (412 lines)
+
+**Event → Execution Flow (Now Complete):**
+```
+1. CRM createContact() calls logAutomationEvent()
+2. processEventImmediately() finds matching subscription
+3. queueWorkflowExecution() creates execution record ✅
+4. executeWorkflow(executionId) runs the workflow steps ✅
+5. Dashboard queries execution counts from workflow_executions ✅
+6. User can view all executions at /automation/executions ✅
+```
+
+---
+
+### ✅ COMPLETE: Event Trigger Pipeline Fix (January 26, 2026)
+
+**User Issue Reported:**
+"When I create a new contact in CRM, nothing triggers" - the automation workflow "Welcome New Contacts" with event trigger `crm.contact.created` doesn't fire when a contact is actually created.
+
+**Deep Scan Performed:**
+Traced the complete flow from UI to database:
+1. User clicks "Add Contact" → `create-contact-dialog.tsx`
+2. Dialog calls `addContact()` from `crm-context.tsx`
+3. Context calls `createContact(siteId, data)` from `crm-actions.ts`
+4. Server action calls `logAutomationEvent()` from `event-processor.ts`
+5. `logAutomationEvent()` → `processEventImmediately()` → finds subscriptions → queues execution
+
+**ROOT CAUSE FOUND:**
+The `updateWorkflow()` function (called when saving from workflow builder) only updates the database record with `is_active: true`. It does NOT create event subscriptions in `automation_event_subscriptions` table.
+
+Event subscriptions were ONLY created when `activateWorkflow()` was explicitly called from the workflows list page 3-dot menu - not when saving via the builder.
+
+**Solution Implemented:**
+Modified `updateWorkflow()` in `automation-actions.ts` to:
+1. Check if `is_active` is changing to `true`
+2. If workflow is event-triggered, create subscription in `automation_event_subscriptions`
+3. If workflow is deactivated, set `is_active: false` on subscriptions
+
+**Files Modified:**
+- `src/modules/automation/actions/automation-actions.ts` (updateWorkflow subscription creation)
+- `src/modules/crm/actions/crm-actions.ts` (added logging for debugging)
+
+**Event Flow (Now Complete):**
+```
+1. User toggles Active ON in workflow builder settings
+2. User clicks "Save Workflow"
+3. Hook calls updateWorkflow() with is_active: true
+4. updateWorkflow() updates DB AND creates event subscription ✅
+5. User creates contact in CRM
+6. createContact() calls logAutomationEvent()
+7. processEventImmediately() finds matching subscription
+8. queueWorkflowExecution() creates execution record
+9. Workflow executes
+```
+
+---
+
+### ✅ COMPLETE: Workflow Activation & Navigation Fixes (January 26, 2026)
+
+**User Issues Reported:**
+1. Workflow doesn't stay active when saved - reverts to inactive
+2. On automation page, all workflows show "Paused"
+3. The 3-dot menu options (Activate/Pause/Delete) don't work
+4. No way to navigate back to automation dashboard from workflow builder
+
+**Root Causes Identified:**
+
+1. **`saveWorkflow` didn't include `is_active`**
+   - Hook only saved: `name`, `description`, `trigger_type`, `trigger_config`
+   - `is_active` was updated in local state but NOT sent to server
+
+2. **Dropdown menu items were placeholders**
+   - `WorkflowCard` in workflows list page had DropdownMenuItem without onClick handlers
+   - Clicking "Activate", "Pause", "Delete" did nothing
+
+3. **No back navigation**
+   - Workflow builder had no way to return to automation dashboard
+
+**Solutions Implemented:**
+
+1. **Fix `is_active` persistence** (`use-workflow-builder.ts`)
+   - Added `is_active: workflow.is_active` to updateWorkflow call
+   - Now when user toggles Active in Settings and clicks Save, it persists
+
+2. **Create `WorkflowListCard` client component** (NEW FILE)
+   - Replaced server component `WorkflowCard` with interactive client component
+   - Implemented `handleToggleActive()` - calls `activateWorkflow()`/`pauseWorkflow()`
+   - Implemented `handleDelete()` with confirmation dialog
+   - Added loading states and proper error handling
+   - Uses `router.refresh()` to reload page after changes
+
+3. **Add back navigation** (`workflow-builder.tsx`)
+   - Added `ArrowLeft` icon and Link component
+   - "Back" button navigates to `/dashboard/${siteId}/automation`
+   - Positioned in top-left header area
+
+**Files Modified:**
+- `src/modules/automation/hooks/use-workflow-builder.ts` (Added is_active to save)
+- `src/modules/automation/components/workflow-builder/workflow-builder.tsx` (Back nav)
+- `src/app/dashboard/[siteId]/automation/workflows/page.tsx` (Use new component)
+- `docs/AUTOMATION-TESTING-GUIDE.md` (Updated Step 4)
+
+**Files Created:**
+- `src/modules/automation/components/workflow-list-card.tsx` (243 lines)
+
+**TypeScript Status**: ✅ PASSES
+
+---
+
+### ✅ COMPLETE: JSON Coercion Error Fix (January 26, 2026)
+
+**User Issue**: "Cannot coerce the result to a single JSON object" error when editing step configuration fields
+
+**Root Cause Analysis:**
+1. When user adds a step via drag-and-drop, step gets temporary ID (`temp-${Date.now()}`)
+2. If user immediately clicks the step and edits fields, `updateStep` tries to update the temp ID
+3. Supabase `.single()` call fails because temp ID doesn't exist in database
+4. Error message "Cannot coerce the result to a single JSON object" shown
+
+**Solution Implemented:**
+1. **Hook Fix** (`use-workflow-builder.ts`):
+   - Added check: `if (stepId.startsWith('temp-'))` to skip server update
+   - Temp steps still get optimistic UI update
+   - Console logs for debugging: "Skipping server update for temporary step"
+
+2. **Server Action Fix** (`automation-actions.ts`):
+   - Added validation: Reject temp IDs at server level too
+   - Changed `.single()` to `.maybeSingle()` for graceful handling
+   - Added null check: Return "Step not found" instead of cryptic error
+
+**Files Modified:**
+- `src/modules/automation/hooks/use-workflow-builder.ts` (Added temp ID check)
+- `src/modules/automation/actions/automation-actions.ts` (maybeSingle + validation)
+
+**TypeScript Status**: ✅ PASSES - All changes compile correctly
+
+---
+
+### ✅ COMPLETE: Phase EM-57 Automation Module Marketplace Integration (January 26, 2026)
+
+**What Was Missing (Identified by User):**
+The Automation module code was complete, but it was NOT integrated into the module marketplace system. This meant:
+- Agencies couldn't subscribe to it in the marketplace
+- Couldn't be installed on client sites
+- Didn't appear in site modules tab
+- No "Open" button to access the automation dashboard
+
+**Marketplace Integration Added:**
+
+1. **Created Migration Script** (`em-57-register-automation-module.sql`)
+   - Registers automation in `modules_v2` table
+   - Pricing: $39.99/month wholesale, $59.99/month suggested retail
+   - Install level: "site" (site-level installation like booking/ecommerce)
+   - Category: "business"
+   - 15+ feature flags
+   - Complete settings schema with 7 configurable options
+   - Full manifest with routes and hooks
+
+2. **Updated Site Modules Tab** (`site-modules-tab.tsx`)
+   - Added `automation` to the "Open" button logic
+   - Added `Zap` icon to the icon map for automation
+   - Now when automation is enabled on a site, the "Open" button appears
+
+**Agency Workflow (Now Complete):**
+1. Agency browses `/marketplace`
+2. Subscribes to Automation module ($39.99/month wholesale)
+3. Sets markup pricing for clients
+4. Goes to Site > Modules tab
+5. Enables Automation module for specific site
+6. Clicks "Open" to access `/dashboard/[siteId]/automation`
+
+**Files Modified:**
+- `migrations/em-57-register-automation-module.sql` (NEW - 210 lines)
+- `components/sites/site-modules-tab.tsx` (Added automation support)
+- `docs/AUTOMATION-TESTING-GUIDE.md` (Added marketplace setup section)
+
+**Module Status:**
+- ✅ Registered in marketplace (modules_v2)
+- ✅ Made FREE for testing ($0 wholesale)
+- ✅ Subscription workflow functional
+- ✅ Site installation working
+- ✅ "Open" button integrated
+
+**UX Enhancement - Create Workflow Dialog (January 25, 2026):**
+
+**User Issue**: "I can't see anything" when clicking Create Workflow button
+
+**Root Cause Analysis:**
+- Testing guide described a dialog/popup flow for creating workflows
+- Actual implementation jumped straight to WorkflowBuilder with "Untitled Workflow"
+- Mismatch between documented UX and actual UX caused confusion
+
+**Solution Implemented:**
+1. Created `CreateWorkflowDialog` component (Dialog with name/description form)
+2. Created `CreateWorkflowButton` wrapper component (Client-side state management)
+3. Updated automation dashboard to use new dialog button
+4. Dialog creates workflow via API, then navigates to builder
+5. Updated testing guide to match actual UX flow
+
+**Files Created:**
+- `src/modules/automation/components/create-workflow-dialog.tsx` (175 lines)
+- `src/modules/automation/components/create-workflow-button.tsx` (50 lines)
+
+**Files Modified:**
+- `src/app/dashboard/[siteId]/automation/page.tsx` (Use CreateWorkflowButton)
+- `src/modules/automation/index.ts` (Export new components)
+- `docs/AUTOMATION-TESTING-GUIDE.md` (Updated Step 1, added troubleshooting)
+
+**New UX Flow:**
+1. User clicks "New Workflow" or "Create Workflow" button
+2. Dialog appears with form fields (Name*, Description)
+3. User fills in details and clicks "Continue"
+4. Workflow created via `createWorkflow()` server action
+5. User navigated to `/dashboard/[siteId]/automation/workflows/{id}`
+6. WorkflowBuilder loads with the named workflow ready to configure
+
+**TypeScript Status**: ✅ PASSES - All type definitions correct
+
+**Testing Guide Corrections (January 25, 2026):**
+
+**User Feedback**: "I can't do step 2" - testing guide didn't match actual UI
+
+**Issues Found**:
+1. Guide said "click Configure Trigger" but there's no such button
+2. Guide said "Select trigger type: Event Trigger" but trigger panel always visible
+3. Guide said "Click Save Trigger" but changes auto-save
+4. Guide said "Click + Add Step" but actions are dragged from palette
+5. Multiple steps had outdated button-click instructions
+
+**Analysis**:
+- TriggerPanel component is ALWAYS visible on left side
+- Tabs for Event/Schedule/Webhook/Manual - no button to "configure"
+- Event Type dropdown immediately available
+- ActionPalette uses drag-and-drop, not button clicks
+- StepConfigPanel opens when clicking a step card
+- All changes auto-save - no explicit "Save" buttons per field
+
+**Files Corrected**:
+- `docs/AUTOMATION-TESTING-GUIDE.md` - 6 major corrections
+  - Added "Understanding the Workflow Builder" section
+  - Updated Step 2: Configure Event Trigger (removed non-existent buttons)
+  - Updated Step 3: Add Email Step (changed to drag-and-drop)
+  - Updated Step 4: Save and Activate (clarified Settings panel)
+  - Updated Scenario 3: CRM Deal notifications (removed old steps)
+  - Aligned all instructions with actual WorkflowBuilder UI
+
+**Result**: Testing guide now matches implementation perfectly
+- ✅ Can be subscribed and installed
+- ✅ "Open" button works from Site > Modules tab
+
+**Critical Bug Fix (January 26, 2026):**
+- ✅ FIXED: "Maximum update depth exceeded" error when clicking Create Workflow
+- **Root Cause**: Callback functions (`onError`, `onSave`) created inline caused infinite re-renders
+- **Solution Applied**:
+  1. Used refs for callbacks in `use-workflow-builder.ts` to ensure stability
+  2. Memoized error handler in `workflow-builder.tsx`
+  3. Removed `asChild` from DropdownMenuTrigger in `workflow-canvas.tsx` (React 19 + Radix UI ref composition issue)
+
+**TypeScript Status**: ✅ ZERO ERRORS - `tsc --noEmit` passes
+
+---
+
+### Previously Complete: Phase EM-57B Automation Engine Dashboard UI (January 26, 2026)
 
 **Implementation Status**: ✅ FULLY COMPLETE & PRODUCTION READY  
 **TypeScript Status**: ✅ ZERO ERRORS - Build Passes  

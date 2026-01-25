@@ -170,6 +170,9 @@ export {
 export { TemplateGallery } from './components/template-gallery'
 export { AnalyticsDashboard } from './components/analytics-dashboard'
 export { ConnectionSetup, type ServiceConnection } from './components/connection-setup'
+export { CreateWorkflowDialog } from './components/create-workflow-dialog'
+export { CreateWorkflowButton } from './components/create-workflow-button'
+export { WorkflowListCard } from './components/workflow-list-card'
 
 // Hooks
 export { useWorkflowBuilder } from './hooks/use-workflow-builder'

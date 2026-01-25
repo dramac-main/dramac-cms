@@ -1,6 +1,6 @@
 # System Patterns: DRAMAC Architecture
 
-**Last Updated**: January 23, 2026
+**Last Updated**: January 26, 2026
 
 ## Architecture Overview
 
@@ -476,6 +476,195 @@ Form → onSubmit → Server Action → Validation → Supabase → RLS Check �
 - Error rates by module
 - Page load times
 - Database query performance
+
+---
+
+## 🔔 AUTOMATION EVENT INTEGRATION (CRITICAL FOR NEW MODULES)
+
+**IMPORTANT:** All new modules that create/update/delete data MUST emit automation events.
+
+### Required Event Integration Pattern
+
+When building a new module (CRM, Booking, E-commerce, etc.), you MUST:
+
+1. **Import the event processor:**
+```typescript
+import { logAutomationEvent } from '@/modules/automation/services/event-processor'
+```
+
+2. **Emit events in all CRUD operations:**
+```typescript
+// After creating a record
+await logAutomationEvent(siteId, 'module.entity.created', {
+  id: newRecord.id,
+  ...newRecord,  // All relevant fields for automation use
+}, {
+  sourceModule: 'module_name',
+  sourceEntityType: 'entity_type',
+  sourceEntityId: newRecord.id
+})
+
+// After updating a record  
+await logAutomationEvent(siteId, 'module.entity.updated', {
+  id: record.id,
+  ...updatedFields,
+  previous: oldValues  // Include previous values for comparisons
+})
+
+// After deleting a record
+await logAutomationEvent(siteId, 'module.entity.deleted', {
+  id: recordId,
+  ...deletedRecord
+})
+```
+
+### Event Naming Convention
+
+**Format:** `{module}.{entity}.{action}`
+
+**Examples:**
+- CRM: `crm.contact.created`, `crm.deal.stage_changed`, `crm.deal.won`
+- Booking: `booking.appointment.created`, `booking.appointment.confirmed`
+- E-commerce: `ecommerce.order.created`, `ecommerce.cart.abandoned`
+- Forms: `form.submitted`, `form.field_updated`
+
+### Automation Event Flow (FULLY WORKING ✅)
+
+```
+1. Module Action (e.g., createContact())
+   ↓
+2. logAutomationEvent(siteId, 'crm.contact.created', payload)
+   ↓
+3. Creates record in automation_events_log
+   ↓
+4. processEventImmediately() - finds matching subscriptions
+   ↓
+5. queueWorkflowExecution() - creates execution record
+   ↓
+6. executeWorkflow() - runs workflow steps (ASYNC)
+   ↓
+7. Updates workflow_executions & step_execution_logs
+```
+
+### Event Registry Location
+
+All supported events are defined in:
+`src/modules/automation/lib/event-types.ts`
+
+**When adding a new module, ADD its events to the EVENT_REGISTRY:**
+```typescript
+export const EVENT_REGISTRY = {
+  // ... existing events
+  
+  'new_module': {
+    'entity.created': {
+      id: 'new_module.entity.created',
+      category: 'New Module',
+      name: 'Entity Created',
+      description: 'Triggered when a new entity is created',
+      trigger_label: 'When entity is created',
+      payload_schema: {
+        id: 'string',
+        name: 'string',
+        // ... other fields
+      }
+    }
+  }
+}
+```
+
+### Current Working Integrations
+
+| Module | Events Emitting | Status |
+|--------|-----------------|--------|
+| CRM | contact.created, contact.updated, contact.deleted, deal.created, deal.updated, deal.deleted, deal.stage_changed, deal.won, deal.lost | ✅ WORKING |
+| Booking | appointment.created, appointment.confirmed, appointment.cancelled | ⏳ To implement |
+| E-commerce | order.created, order.paid, cart.abandoned | ⏳ To implement |
+| Forms | form.submitted | ⏳ To implement |
+
+### Phase Document Requirements
+
+**ALL future phase documents (EM-50+) MUST include:**
+
+1. **Events to Emit Section:**
+   ```markdown
+   ## Automation Events
+   
+   This module emits the following automation events:
+   - `module.entity.created` - When X is created
+   - `module.entity.updated` - When X is updated
+   - etc.
+   ```
+
+2. **Event Payload Schema:**
+   ```markdown
+   ### Event Payloads
+   
+   #### module.entity.created
+   {
+     "id": "uuid",
+     "field1": "string",
+     "field2": "number"
+   }
+   ```
+
+3. **Integration Code:**
+   - Import statement
+   - logAutomationEvent calls in each action
+   - EVENT_REGISTRY updates
+
+---
+
+## 📊 DATABASE SCHEMA REFERENCE (CRITICAL FOR MIGRATIONS)
+
+**IMPORTANT:** All new migrations MUST be aware of the current schema to avoid conflicts.
+
+### Current Automation Tables (EM-57)
+
+```sql
+-- Core workflow tables
+automation_workflows          -- Workflow definitions
+workflow_steps               -- Steps in each workflow
+workflow_executions          -- Execution history
+step_execution_logs          -- Detailed step logs
+
+-- Event system
+automation_events_log        -- All emitted events
+automation_event_subscriptions -- Workflow subscriptions to events
+
+-- Configuration
+automation_connections       -- External service connections
+automation_webhooks          -- Incoming webhook endpoints
+workflow_variables           -- Persistent variables
+```
+
+### Key Relationships
+
+```
+automation_workflows (1) → (N) workflow_steps
+automation_workflows (1) → (N) workflow_executions
+automation_workflows (1) → (N) automation_event_subscriptions
+workflow_executions (1) → (N) step_execution_logs
+sites (1) → (N) automation_workflows
+```
+
+### Schema Versioning
+
+When writing migrations:
+1. Check existing tables: `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`
+2. Use `IF NOT EXISTS` for creates
+3. Use `IF EXISTS` for drops/alters
+4. Reference this file for current schema state
+
+### Migration File Naming
+
+**Format:** `{date}_{description}.sql` or `em-{phase}-{description}.sql`
+
+**Examples:**
+- `20260126_add_booking_events.sql`
+- `em-51-booking-module.sql`
+
+---
 
 ## Development Workflow
 

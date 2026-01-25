@@ -16,13 +16,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { 
-  ArrowLeft, 
-  Plus, 
+  ArrowLeft,
   Zap, 
   Activity, 
   CheckCircle2, 
   XCircle, 
-  Clock,
   FileCode,
   Plug,
   BarChart3,
@@ -30,7 +28,8 @@ import {
   MoreHorizontal,
   PlayCircle,
   PauseCircle,
-  Settings
+  Settings,
+  History
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -39,6 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { CreateWorkflowButton } from "@/modules/automation/components/create-workflow-button"
 
 export const metadata: Metadata = {
   title: "Automation | DRAMAC",
@@ -100,7 +100,26 @@ async function getWorkflows(siteId: string): Promise<Workflow[]> {
     return []
   }
 
-  // Add execution stats (would normally come from a join or separate query)
+  // Fetch execution counts for each workflow
+  const workflowIds = (data || []).map(w => w.id)
+  
+  // Get execution counts per workflow
+  const { data: executionData } = await supabase
+    .from("workflow_executions")
+    .select("workflow_id, created_at")
+    .eq("site_id", siteId)
+    .in("workflow_id", workflowIds.length > 0 ? workflowIds : ['none'])
+    .order("created_at", { ascending: false })
+  
+  // Aggregate execution counts and last executed timestamps
+  const executionStats: Record<string, { count: number; lastExecuted: string | null }> = {}
+  for (const exec of (executionData || [])) {
+    if (!executionStats[exec.workflow_id]) {
+      executionStats[exec.workflow_id] = { count: 0, lastExecuted: exec.created_at }
+    }
+    executionStats[exec.workflow_id].count++
+  }
+
   return (data || []).map((w): Workflow => ({
     id: w.id,
     name: w.name,
@@ -109,8 +128,8 @@ async function getWorkflows(siteId: string): Promise<Workflow[]> {
     trigger_type: w.trigger_type ?? 'manual',
     created_at: w.created_at ?? new Date().toISOString(),
     updated_at: w.updated_at ?? new Date().toISOString(),
-    execution_count: 0,
-    last_executed_at: null
+    execution_count: executionStats[w.id]?.count || 0,
+    last_executed_at: executionStats[w.id]?.lastExecuted || null
   }))
 }
 
@@ -330,10 +349,11 @@ async function AutomationDashboardContent({ siteId }: { siteId: string }) {
 
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-2">
-        <Link href={`/dashboard/${siteId}/automation/workflows/new`}>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            New Workflow
+        <CreateWorkflowButton siteId={siteId} />
+        <Link href={`/dashboard/${siteId}/automation/executions`}>
+          <Button variant="outline">
+            <History className="h-4 w-4 mr-2" />
+            Executions
           </Button>
         </Link>
         <Link href={`/dashboard/${siteId}/automation/templates`}>
@@ -382,12 +402,7 @@ async function AutomationDashboardContent({ siteId }: { siteId: string }) {
                 Create your first automation workflow to get started.
               </p>
               <div className="flex gap-2 justify-center">
-                <Link href={`/dashboard/${siteId}/automation/workflows/new`}>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Workflow
-                  </Button>
-                </Link>
+                <CreateWorkflowButton siteId={siteId} />
                 <Link href={`/dashboard/${siteId}/automation/templates`}>
                   <Button variant="outline">
                     <FileCode className="h-4 w-4 mr-2" />

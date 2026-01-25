@@ -188,6 +188,13 @@ export async function updateWorkflow(
   try {
     const supabase = await createClient()
     
+    // Get current workflow state to check if activation state is changing
+    const { data: currentWorkflow } = await supabase
+      .from('automation_workflows')
+      .select('is_active, trigger_type, trigger_config, site_id')
+      .eq('id', workflowId)
+      .single()
+    
     // Transform data to match DB schema
     const updateData: Record<string, unknown> = {}
     if (data.name !== undefined) updateData.name = data.name
@@ -205,6 +212,48 @@ export async function updateWorkflow(
     
     if (error) {
       return { success: false, error: error.message }
+    }
+    
+    // CRITICAL: Handle event subscription when workflow becomes active
+    // This ensures subscriptions are created whether activated via UI toggle or save button
+    const triggerConfig = (data.trigger_config || currentWorkflow?.trigger_config) as TriggerConfig
+    const triggerType = data.trigger_type || currentWorkflow?.trigger_type
+    const siteId = currentWorkflow?.site_id
+    
+    if (data.is_active === true && siteId) {
+      // Workflow is being activated - create event subscription if needed
+      if (triggerType === 'event' && triggerConfig?.event_type) {
+        console.log(`[Automation] Creating event subscription for ${triggerConfig.event_type}`)
+        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: subError } = await (supabase as any)
+          .from('automation_event_subscriptions')
+          .upsert({
+            site_id: siteId,
+            workflow_id: workflowId,
+            event_type: triggerConfig.event_type,
+            source_module: null,
+            event_filter: triggerConfig.event_filter || {},
+            is_active: true,
+          }, {
+            onConflict: 'workflow_id,event_type,source_module'
+          })
+        
+        if (subError) {
+          console.error('[Automation] Failed to create event subscription:', subError)
+        } else {
+          console.log(`[Automation] ✅ Subscription created for ${triggerConfig.event_type}`)
+        }
+      }
+    } else if (data.is_active === false && siteId) {
+      // Workflow is being deactivated - deactivate event subscriptions
+      console.log(`[Automation] Deactivating event subscriptions for workflow ${workflowId}`)
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from('automation_event_subscriptions')
+        .update({ is_active: false })
+        .eq('workflow_id', workflowId)
     }
     
     revalidatePath('/automation')
@@ -296,8 +345,33 @@ export async function activateWorkflow(
       return { success: false, error: updateError.message }
     }
     
-    // If scheduled trigger, create scheduled job
     const triggerConfig = workflow.trigger_config as TriggerConfig
+    
+    // Handle event-based triggers: create event subscription
+    // Use 'any' cast because automation_event_subscriptions may not be in generated types
+    if (workflow.trigger_type === 'event' && triggerConfig?.event_type) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: subError } = await (supabase as any)
+        .from('automation_event_subscriptions')
+        .upsert({
+          site_id: workflow.site_id,
+          workflow_id: workflowId,
+          event_type: triggerConfig.event_type,
+          source_module: null, // Must include for unique constraint
+          event_filter: triggerConfig.event_filter || {},
+          is_active: true,
+        }, {
+          onConflict: 'workflow_id,event_type,source_module'
+        })
+      
+      if (subError) {
+        console.error('[Automation] Failed to create event subscription:', subError)
+      } else {
+        console.log(`[Automation] Created subscription for ${triggerConfig.event_type}`)
+      }
+    }
+    
+    // Handle scheduled triggers: create scheduled job
     if (workflow.trigger_type === 'schedule' && triggerConfig?.cron) {
       await supabase
         .from('automation_scheduled_jobs')
@@ -352,6 +426,14 @@ export async function pauseWorkflow(
     // Pause any scheduled jobs
     await supabase
       .from('automation_scheduled_jobs')
+      .update({ is_active: false })
+      .eq('workflow_id', workflowId)
+    
+    // Pause any event subscriptions
+    // Use 'any' cast because automation_event_subscriptions may not be in generated types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from('automation_event_subscriptions')
       .update({ is_active: false })
       .eq('workflow_id', workflowId)
     
@@ -483,12 +565,21 @@ export async function updateWorkflowStep(
     condition_config: Record<string, unknown>
     delay_config: Record<string, unknown>
     name: string
+    description: string
+    is_active: boolean
     on_error: 'fail' | 'continue' | 'retry' | 'branch'
     max_retries: number
     retry_delay_seconds: number
+    input_mapping: Record<string, unknown>
+    output_key: string
   }>
 ): Promise<{ success: boolean; data?: WorkflowStep; error?: string }> {
   try {
+    // Validate step ID format - reject temporary IDs
+    if (stepId.startsWith('temp-')) {
+      return { success: false, error: 'Cannot update temporary step - please wait for step to be created' }
+    }
+
     const supabase = await createClient()
     
     // Build update object with proper type casting
@@ -498,20 +589,29 @@ export async function updateWorkflowStep(
     if (data.position !== undefined) updateData.position = data.position
     if (data.condition_config !== undefined) updateData.condition_config = data.condition_config as unknown as Json
     if (data.delay_config !== undefined) updateData.delay_config = data.delay_config as unknown as Json
-    if (data.name !== undefined) updateData.name = data.name
+    if (data.name !== undefined) updateData.name = data.name || null
+    if (data.description !== undefined) updateData.description = data.description || null
+    if (data.is_active !== undefined) updateData.is_active = data.is_active
     if (data.on_error !== undefined) updateData.on_error = data.on_error
     if (data.max_retries !== undefined) updateData.max_retries = data.max_retries
     if (data.retry_delay_seconds !== undefined) updateData.retry_delay_seconds = data.retry_delay_seconds
+    if (data.input_mapping !== undefined) updateData.input_mapping = data.input_mapping as unknown as Json
+    if (data.output_key !== undefined) updateData.output_key = data.output_key || null
     
+    // Use maybeSingle to avoid error when step doesn't exist
     const { data: step, error } = await supabase
       .from('workflow_steps')
       .update(updateData)
       .eq('id', stepId)
       .select('*')
-      .single()
+      .maybeSingle()
     
     if (error) {
       return { success: false, error: error.message }
+    }
+    
+    if (!step) {
+      return { success: false, error: `Step not found: ${stepId}` }
     }
     
     revalidatePath('/automation')

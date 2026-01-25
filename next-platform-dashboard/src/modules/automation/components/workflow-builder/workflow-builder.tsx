@@ -25,6 +25,7 @@ import {
   DragEndEvent,
   closestCenter
 } from "@dnd-kit/core"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -36,7 +37,8 @@ import {
   AlertCircle, 
   CheckCircle,
   Settings,
-  Undo2
+  Undo2,
+  ArrowLeft
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -68,6 +70,11 @@ export function WorkflowBuilder({
   onSave,
   onClose 
 }: WorkflowBuilderProps) {
+  // Memoize error handler to prevent unnecessary re-renders
+  const handleError = useCallback((err: string) => {
+    toast.error(err)
+  }, [])
+
   const {
     workflow,
     steps,
@@ -87,7 +94,7 @@ export function WorkflowBuilder({
     resetBuilder: _resetBuilder,
   } = useWorkflowBuilder(workflowId, siteId, {
     onSave: onSave as ((workflow: unknown) => void) | undefined,
-    onError: (err) => toast.error(err),
+    onError: handleError,
   })
 
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -220,6 +227,13 @@ export function WorkflowBuilder({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-background">
           <div className="flex items-center gap-4">
+            <Link href={`/dashboard/${siteId}/automation`}>
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            </Link>
+            <div className="h-6 border-l" />
             <Input
               type="text"
               value={workflow?.name || "Untitled Workflow"}

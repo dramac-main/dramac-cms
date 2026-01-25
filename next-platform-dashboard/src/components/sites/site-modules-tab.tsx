@@ -30,6 +30,7 @@ import {
   Globe,
   Users,
   Calendar,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { ModuleConfigureDialog } from "./module-configure-dialog";
@@ -43,6 +44,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Globe,
   Users,
   Calendar,
+  Zap,
   Package,
 };
 
@@ -144,7 +146,7 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
                     {isEnabled && (
                       <>
                         {/* Open button for modules with dashboards */}
-                        {(module.slug === 'booking' || module.slug === 'crm' || module.slug === 'ecommerce') && (
+                        {(module.slug === 'booking' || module.slug === 'crm' || module.slug === 'ecommerce' || module.slug === 'automation') && (
                           <Button 
                             variant="default" 
                             size="sm"

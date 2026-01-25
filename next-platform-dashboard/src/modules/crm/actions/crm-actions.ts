@@ -2,6 +2,7 @@
  * CRM Module Server Actions
  * 
  * Phase EM-50: CRM Module - Enterprise Ready
+ * Phase EM-57: Added event emission for automation triggers
  * 
  * Server-side actions for CRUD operations on CRM entities
  * Uses schema isolation per EM-05 naming conventions
@@ -9,6 +10,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { logAutomationEvent } from '@/modules/automation/services/event-processor'
 import type { 
   Contact, ContactInput, ContactUpdate,
   Company, CompanyInput, CompanyUpdate,
@@ -120,11 +122,54 @@ export async function createContact(siteId: string, input: Partial<ContactInput>
     .single()
   
   if (error) throw new Error(error.message)
-  return data as Contact
+  
+  const contact = data as Contact
+  
+  // Emit automation event for contact created
+  console.log('[CRM] Contact created, emitting automation event:', {
+    siteId,
+    eventType: 'crm.contact.created',
+    contactId: contact.id,
+    email: contact.email,
+  })
+  
+  try {
+    const eventResult = await logAutomationEvent(siteId, 'crm.contact.created', {
+      id: contact.id,
+      first_name: contact.first_name,
+      last_name: contact.last_name,
+      email: contact.email,
+      phone: contact.phone,
+      company_id: contact.company_id,
+      lead_status: contact.lead_status,
+      source: contact.source,
+      tags: contact.tags,
+      created_at: contact.created_at,
+    }, {
+      sourceModule: 'crm',
+      sourceEntityType: 'contact',
+      sourceEntityId: contact.id,
+    })
+    
+    console.log('[CRM] Automation event result:', eventResult)
+  } catch (automationError) {
+    // Don't fail the contact creation if automation fails
+    console.error('[CRM] Failed to emit automation event:', automationError)
+  }
+  
+  return contact
 }
 
 export async function updateContact(siteId: string, id: string, input: ContactUpdate): Promise<Contact> {
   const supabase = await getModuleClient()
+  
+  // Get the original contact for comparison
+  const { data: original } = await supabase
+    .from(`${TABLE_PREFIX}_contacts`)
+    .select('*')
+    .eq('site_id', siteId)
+    .eq('id', id)
+    .single()
   
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_contacts`)
@@ -135,11 +180,39 @@ export async function updateContact(siteId: string, id: string, input: ContactUp
     .single()
   
   if (error) throw new Error(error.message)
-  return data as Contact
+  
+  const contact = data as Contact
+  
+  // Emit automation event for contact updated
+  await logAutomationEvent(siteId, 'crm.contact.updated', {
+    id: contact.id,
+    first_name: contact.first_name,
+    last_name: contact.last_name,
+    email: contact.email,
+    phone: contact.phone,
+    lead_status: contact.lead_status,
+    previous_lead_status: original?.lead_status,
+    changes: input,
+    updated_at: contact.updated_at,
+  }, {
+    sourceModule: 'crm',
+    sourceEntityType: 'contact',
+    sourceEntityId: contact.id,
+  })
+  
+  return contact
 }
 
 export async function deleteContact(siteId: string, id: string): Promise<void> {
   const supabase = await getModuleClient()
+  
+  // Get contact before deletion for event data
+  const { data: contact } = await supabase
+    .from(`${TABLE_PREFIX}_contacts`)
+    .select('*')
+    .eq('site_id', siteId)
+    .eq('id', id)
+    .single()
   
   const { error } = await supabase
     .from(`${TABLE_PREFIX}_contacts`)
@@ -148,6 +221,20 @@ export async function deleteContact(siteId: string, id: string): Promise<void> {
     .eq('id', id)
   
   if (error) throw new Error(error.message)
+  
+  // Emit automation event for contact deleted
+  if (contact) {
+    await logAutomationEvent(siteId, 'crm.contact.deleted', {
+      id: contact.id,
+      first_name: contact.first_name,
+      last_name: contact.last_name,
+      email: contact.email,
+    }, {
+      sourceModule: 'crm',
+      sourceEntityType: 'contact',
+      sourceEntityId: id,
+    })
+  }
 }
 
 // ============================================================================
@@ -317,11 +404,40 @@ export async function createDeal(siteId: string, input: Partial<DealInput>): Pro
     .single()
   
   if (error) throw new Error(error.message)
-  return data as Deal
+  
+  const deal = data as Deal
+  
+  // Emit automation event for deal created
+  await logAutomationEvent(siteId, 'crm.deal.created', {
+    id: deal.id,
+    name: deal.name,
+    amount: deal.amount,
+    currency: deal.currency,
+    status: deal.status,
+    stage_id: deal.stage_id,
+    contact_id: deal.contact_id,
+    company_id: deal.company_id,
+    pipeline_id: deal.pipeline_id,
+    created_at: deal.created_at,
+  }, {
+    sourceModule: 'crm',
+    sourceEntityType: 'deal',
+    sourceEntityId: deal.id,
+  })
+  
+  return deal
 }
 
 export async function updateDeal(siteId: string, id: string, input: DealUpdate): Promise<Deal> {
   const supabase = await getModuleClient()
+  
+  // Get original for comparison
+  const { data: original } = await supabase
+    .from(`${TABLE_PREFIX}_deals`)
+    .select('*')
+    .eq('site_id', siteId)
+    .eq('id', id)
+    .single()
   
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_deals`)
@@ -332,11 +448,38 @@ export async function updateDeal(siteId: string, id: string, input: DealUpdate):
     .single()
   
   if (error) throw new Error(error.message)
-  return data as Deal
+  
+  const deal = data as Deal
+  
+  // Emit automation event for deal updated
+  await logAutomationEvent(siteId, 'crm.deal.updated', {
+    id: deal.id,
+    name: deal.name,
+    amount: deal.amount,
+    status: deal.status,
+    stage_id: deal.stage_id,
+    previous_stage_id: original?.stage_id,
+    changes: input,
+    updated_at: deal.updated_at,
+  }, {
+    sourceModule: 'crm',
+    sourceEntityType: 'deal',
+    sourceEntityId: deal.id,
+  })
+  
+  return deal
 }
 
 export async function deleteDeal(siteId: string, id: string): Promise<void> {
   const supabase = await getModuleClient()
+  
+  // Get deal before deletion
+  const { data: deal } = await supabase
+    .from(`${TABLE_PREFIX}_deals`)
+    .select('*')
+    .eq('site_id', siteId)
+    .eq('id', id)
+    .single()
   
   const { error } = await supabase
     .from(`${TABLE_PREFIX}_deals`)
@@ -345,15 +488,39 @@ export async function deleteDeal(siteId: string, id: string): Promise<void> {
     .eq('id', id)
   
   if (error) throw new Error(error.message)
+  
+  // Emit automation event for deal deleted
+  if (deal) {
+    await logAutomationEvent(siteId, 'crm.deal.deleted', {
+      id: deal.id,
+      name: deal.name,
+      amount: deal.amount,
+    }, {
+      sourceModule: 'crm',
+      sourceEntityType: 'deal',
+      sourceEntityId: id,
+    })
+  }
 }
 
 export async function moveDealToStage(siteId: string, dealId: string, stageId: string): Promise<Deal> {
   const supabase = await getModuleClient()
   
-  // First, get the stage to check if it's a won/lost stage
-  const { data: stage } = await supabase
+  // Get the deal BEFORE update for comparison
+  const { data: originalDeal } = await supabase
+    .from(`${TABLE_PREFIX}_deals`)
+    .select(`
+      *,
+      stage:${TABLE_PREFIX}_pipeline_stages(id, name)
+    `)
+    .eq('site_id', siteId)
+    .eq('id', dealId)
+    .single()
+  
+  // Get the new stage details
+  const { data: newStage } = await supabase
     .from(`${TABLE_PREFIX}_pipeline_stages`)
-    .select('probability, stage_type')
+    .select('id, name, probability, stage_type')
     .eq('id', stageId)
     .single()
   
@@ -361,13 +528,13 @@ export async function moveDealToStage(siteId: string, dealId: string, stageId: s
     stage_id: stageId,
   }
   
-  if (stage) {
-    updateData.probability = stage.probability
+  if (newStage) {
+    updateData.probability = newStage.probability
     
-    if (stage.stage_type === 'won') {
+    if (newStage.stage_type === 'won') {
       updateData.status = 'won'
       updateData.actual_close_date = new Date().toISOString().split('T')[0]
-    } else if (stage.stage_type === 'lost') {
+    } else if (newStage.stage_type === 'lost') {
       updateData.status = 'lost'
       updateData.actual_close_date = new Date().toISOString().split('T')[0]
     } else {
@@ -390,7 +557,62 @@ export async function moveDealToStage(siteId: string, dealId: string, stageId: s
     .single()
   
   if (error) throw new Error(error.message)
-  return data as Deal
+  
+  const deal = data as Deal
+  
+  // Emit automation event for deal stage changed
+  await logAutomationEvent(siteId, 'crm.deal.stage_changed', {
+    id: deal.id,
+    name: deal.name,
+    amount: deal.amount,
+    currency: deal.currency,
+    status: deal.status,
+    // Previous stage info
+    previous_stage_id: originalDeal?.stage_id,
+    previous_stage_name: originalDeal?.stage?.name,
+    // New stage info
+    new_stage_id: stageId,
+    new_stage_name: newStage?.name,
+    stage_type: newStage?.stage_type,
+    // Associated entities
+    contact_id: deal.contact_id,
+    company_id: deal.company_id,
+    pipeline_id: deal.pipeline_id,
+  }, {
+    sourceModule: 'crm',
+    sourceEntityType: 'deal',
+    sourceEntityId: deal.id,
+  })
+  
+  // Also emit deal won/lost events if applicable
+  if (newStage?.stage_type === 'won') {
+    await logAutomationEvent(siteId, 'crm.deal.won', {
+      id: deal.id,
+      name: deal.name,
+      amount: deal.amount,
+      currency: deal.currency,
+      contact_id: deal.contact_id,
+      company_id: deal.company_id,
+    }, {
+      sourceModule: 'crm',
+      sourceEntityType: 'deal',
+      sourceEntityId: deal.id,
+    })
+  } else if (newStage?.stage_type === 'lost') {
+    await logAutomationEvent(siteId, 'crm.deal.lost', {
+      id: deal.id,
+      name: deal.name,
+      amount: deal.amount,
+      contact_id: deal.contact_id,
+      company_id: deal.company_id,
+    }, {
+      sourceModule: 'crm',
+      sourceEntityType: 'deal',
+      sourceEntityId: deal.id,
+    })
+  }
+  
+  return deal
 }
 
 // ============================================================================
