@@ -17,6 +17,8 @@
 - The site-modules-tab.tsx only showed "Open" button for `booking` and `crm` slugs, not `ecommerce`
 - Booking module had 20+ components; E-Commerce only had 2 (StorefrontWidget + context)
 
+**Second Issue Found**: Product creation failing with "invalid input syntax for type uuid: \"\"" - agencyId was empty string.
+
 **Solution Implemented - Full E-Commerce Dashboard UI:**
 
 **1. Dashboard Components Created:**
@@ -86,14 +88,24 @@ src/app/dashboard/[siteId]/ecommerce/
 └── page.tsx
 ```
 
-**Files Modified (1 file):**
+**Files Modified (3 files):**
 - `src/components/sites/site-modules-tab.tsx` - Added ecommerce to Open button condition
+- `src/app/dashboard/[siteId]/ecommerce/page.tsx` - Fetch site to get agencyId
+- `src/modules/ecommerce/components/ecommerce-dashboard.tsx` - Accept agencyId prop directly
+
+**Bug Fixes:**
+- **Product creation error**: Page wasn't fetching site data before mounting dashboard
+- **Solution**: Import `getSite()` action and pass `site.agency_id` to dashboard
+- **Pattern**: E-Commerce needs agencyId for create operations (unlike Booking which only needs siteId)
+- **Root cause**: E-Commerce dashboard was setting `agencyId = settings?.agency_id || ''` resulting in empty string
 
 **Key Learning:**
 - Module implementation requires BOTH backend (actions, types, context) AND frontend (dashboard UI, views, dialogs, page route)
 - The "Open" button is manually gated by slug in site-modules-tab.tsx
 - Deep scanning across entire codebase is essential to understand complete implementation status
 - Booking module is the pattern to follow for other modules
+- Always fetch site data in page route to get agencyId before mounting module dashboards
+- E-Commerce module stores both site_id AND agency_id (unlike Booking which only stores site_id)
 
 ---
 

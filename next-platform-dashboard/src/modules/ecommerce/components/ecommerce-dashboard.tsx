@@ -58,6 +58,7 @@ export type EcommerceView = 'products' | 'orders' | 'categories' | 'discounts' |
 
 interface EcommerceDashboardProps {
   siteId: string
+  agencyId: string
   settings?: EcommerceSettings | null
   initialView?: string
 }
@@ -382,10 +383,7 @@ function EcommerceDashboardContent({ initialView }: { initialView?: string }) {
 // MAIN DASHBOARD WRAPPER
 // ============================================================================
 
-export function EcommerceDashboard({ siteId, settings, initialView }: EcommerceDashboardProps) {
-  // TODO: Get agencyId from site settings or user context
-  const agencyId = settings?.agency_id || ''
-  
+export function EcommerceDashboard({ siteId, agencyId, settings, initialView }: EcommerceDashboardProps) {
   return (
     <EcommerceProvider siteId={siteId} agencyId={agencyId}>
       <EcommerceDashboardContent initialView={initialView} />

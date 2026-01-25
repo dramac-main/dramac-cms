@@ -13,6 +13,7 @@ import { EcommerceDashboard } from '@/modules/ecommerce/components/ecommerce-das
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import { getSite } from '@/lib/actions/sites'
 
 export const metadata: Metadata = {
   title: 'E-Commerce | DRAMAC',
@@ -46,6 +47,17 @@ export default async function EcommercePage({ params, searchParams }: EcommerceP
   const { siteId } = await params
   const { view } = await searchParams
   
+  // Fetch site with agency_id
+  const site = await getSite(siteId)
+  
+  if (!site) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-destructive">Site not found</p>
+      </div>
+    )
+  }
+  
   return (
     <div className="flex flex-col h-full">
       {/* Back Navigation */}
@@ -60,7 +72,7 @@ export default async function EcommercePage({ params, searchParams }: EcommerceP
       
       {/* E-Commerce Dashboard */}
       <Suspense fallback={<EcommerceLoadingSkeleton />}>
-        <EcommerceDashboard siteId={siteId} initialView={view} />
+        <EcommerceDashboard siteId={siteId} agencyId={site.agency_id} initialView={view} />
       </Suspense>
     </div>
   )
