@@ -9,6 +9,9 @@
 
 import { useState, useMemo } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
+import type { Product, ProductStatus } from '../../types/ecommerce-types'
+import { CreateProductDialog } from '../dialogs/create-product-dialog'
+import { EditProductDialog } from '../dialogs/edit-product-dialog'
 import { 
   Package, 
   Plus, 
@@ -49,7 +52,6 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import type { Product, ProductStatus } from '../../types/ecommerce-types'
 
 interface ProductsViewProps {
   searchQuery?: string
@@ -61,6 +63,8 @@ export function ProductsView({ searchQuery = '', onCreateProduct }: ProductsView
   const [statusFilter, setStatusFilter] = useState<ProductStatus | 'all'>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [showEditDialog, setShowEditDialog] = useState(false)
 
   // Filter products
   const filteredProducts = useMemo(() => {
@@ -284,7 +288,12 @@ export function ProductsView({ searchQuery = '', onCreateProduct }: ProductsView
                             <Eye className="h-4 w-4 mr-2" />
                             View
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEditingProduct(product)
+                              setShowEditDialog(true)
+                            }}
+                          >
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
@@ -314,6 +323,12 @@ export function ProductsView({ searchQuery = '', onCreateProduct }: ProductsView
           </Table>
         </div>
       )}
+
+      <EditProductDialog 
+        product={editingProduct}
+        open={showEditDialog} 
+        onOpenChange={setShowEditDialog}
+      />
     </div>
   )
 }

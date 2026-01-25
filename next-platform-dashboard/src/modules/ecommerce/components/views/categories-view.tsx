@@ -9,6 +9,8 @@
 
 import { useState, useMemo } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
+import type { Category } from '../../types/ecommerce-types'
+import { EditCategoryDialog } from '../dialogs/edit-category-dialog'
 import { 
   FolderTree, 
   Plus, 
@@ -38,7 +40,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-import type { Category } from '../../types/ecommerce-types'
 
 interface CategoriesViewProps {
   searchQuery?: string
@@ -48,6 +49,8 @@ interface CategoriesViewProps {
 export function CategoriesView({ searchQuery = '', onCreateCategory }: CategoriesViewProps) {
   const { categories, products, isLoading, removeCategory } = useEcommerce()
   const [expandedCategories, setExpandedCategories] = useState<string[]>([])
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [showEditDialog, setShowEditDialog] = useState(false)
 
   // Filter categories
   const filteredCategories = useMemo(() => {
@@ -153,7 +156,12 @@ export function CategoriesView({ searchQuery = '', onCreateCategory }: Categorie
                   <Eye className="h-4 w-4 mr-2" />
                   View Products
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setEditingCategory(category)
+                    setShowEditDialog(true)
+                  }}
+                >
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
                 </DropdownMenuItem>
@@ -224,6 +232,12 @@ export function CategoriesView({ searchQuery = '', onCreateCategory }: Categorie
               </TableRow>
             </TableHeader>
             <TableBody>
+
+      <EditCategoryDialog 
+        category={editingCategory}
+        open={showEditDialog} 
+        onOpenChange={setShowEditDialog}
+      />
               {rootCategories.map(category => renderCategory(category))}
             </TableBody>
           </Table>

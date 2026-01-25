@@ -1,13 +1,13 @@
 /**
- * Create Product Dialog
+ * Edit Product Dialog
  * 
  * Phase EM-52: E-Commerce Module
  */
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
-import { Loader2, Plus, Upload, X } from 'lucide-react'
+import { Loader2, Upload, X } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -29,15 +29,16 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
-import type { ProductInput, ProductStatus } from '../../types/ecommerce-types'
+import type { Product, ProductStatus } from '../../types/ecommerce-types'
 
-interface CreateProductDialogProps {
+interface EditProductDialogProps {
+  product: Product | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
 
-export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogProps) {
-  const { addProduct, categories, siteId, agencyId } = useEcommerce()
+export function EditProductDialog({ product, open, onOpenChange }: EditProductDialogProps) {
+  const { editProduct, categories } = useEcommerce()
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   // Form state
@@ -53,6 +54,23 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
   const [status, setStatus] = useState<ProductStatus>('draft')
   const [imageUrl, setImageUrl] = useState('')
 
+  // Load product data when dialog opens
+  useEffect(() => {
+    if (open && product) {
+      setName(product.name)
+      setSlug(product.slug)
+      setDescription(product.description || '')
+      setShortDescription(product.short_description || '')
+      setBasePrice((product.base_price / 100).toFixed(2))
+      setCompareAtPrice(product.compare_at_price ? (product.compare_at_price / 100).toFixed(2) : '')
+      setSku(product.sku || '')
+      setTrackInventory(product.track_inventory)
+      setQuantity(product.quantity?.toString() || '0')
+      setStatus(product.status)
+      setImageUrl(product.images?.[0] || '')
+    }
+  }, [open, product])
+
   const generateSlug = (value: string) => {
     return value
       .toLowerCase()
@@ -62,27 +80,16 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
 
   const handleNameChange = (value: string) => {
     setName(value)
+    // Only auto-generate slug if it matches the previous generated slug
     if (!slug || slug === generateSlug(name)) {
       setSlug(generateSlug(value))
     }
   }
 
-  const resetForm = () => {
-    setName('')
-    setSlug('')
-    setDescription('')
-    setShortDescription('')
-    setBasePrice('')
-    setCompareAtPrice('')
-    setSku('')
-    setTrackInventory(true)
-    setQuantity('0')
-    setImageUrl('')
-    setStatus('draft')
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!product) return
     
     if (!name.trim()) {
       toast.error('Product name is required')
@@ -97,53 +104,40 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
     setIsSubmitting(true)
 
     try {
-      const productData: ProductInput = {
-        site_id: siteId,
-        agency_id: agencyId,
+      const updateData = {
         name: name.trim(),
         slug: slug || generateSlug(name),
-        description: description || null,
-        short_description: shortDescription || null,
+        description: description || undefined,
+        short_description: shortDescription || undefined,
         base_price: Math.round(parseFloat(basePrice) * 100),
         compare_at_price: compareAtPrice ? Math.round(parseFloat(compareAtPrice) * 100) : null,
-        cost_price: null,
-        tax_class: 'standard',
-        is_taxable: true,
-        sku: sku || null,
-        barcode: null,
+        sku: sku || undefined,
         track_inventory: trackInventory,
         quantity: parseInt(quantity) || 0,
-        low_stock_threshold: 5,
-        weight: null,
-        weight_unit: 'kg',
         status,
-        is_featured: false,
-        seo_title: null,
-        seo_description: null,
-        images: imageUrl ? [imageUrl] : [],
-        metadata: {},
-        created_by: null,
+        images: imageUrl ? [imageUrl] : []
       }
 
-      await addProduct(productData)
-      toast.success('Product created successfully')
-      resetForm()
+      await editProduct(product.id, updateData)
+      toast.success('Product updated successfully')
       onOpenChange(false)
     } catch (error) {
-      toast.error('Failed to create product')
+      toast.error('Failed to update product')
       console.error(error)
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  if (!product) return null
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
+          <DialogTitle>Edit Product</DialogTitle>
           <DialogDescription>
-            Create a new product for your store
+            Update product details
           </DialogDescription>
         </DialogHeader>
 
@@ -155,7 +149,7 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
               <div className="relative w-full h-48 border rounded-lg overflow-hidden bg-muted">
                 <img 
                   src={imageUrl} 
-                  alt={name || 'Product'}
+                  alt={name}
                   className="w-full h-full object-cover"
                 />
                 <Button
@@ -332,13 +326,10 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating...
+                  Updating...
                 </>
               ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Product
-                </>
+                'Update Product'
               )}
             </Button>
           </DialogFooter>

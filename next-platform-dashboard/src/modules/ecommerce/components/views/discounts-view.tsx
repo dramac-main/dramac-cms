@@ -9,6 +9,8 @@
 
 import { useState, useMemo } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
+import { EditDiscountDialog } from '../dialogs/edit-discount-dialog'
+import type { Discount, DiscountType } from '../../types/ecommerce-types'
 import { 
   Percent, 
   Plus, 
@@ -39,7 +41,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import type { Discount, DiscountType } from '../../types/ecommerce-types'
 
 interface DiscountsViewProps {
   searchQuery?: string
@@ -54,6 +55,8 @@ const discountTypeLabels: Record<DiscountType, string> = {
 
 export function DiscountsView({ searchQuery = '', onCreateDiscount }: DiscountsViewProps) {
   const { discounts, isLoading, removeDiscount, editDiscount } = useEcommerce()
+  const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null)
+  const [showEditDialog, setShowEditDialog] = useState(false)
 
   // Filter discounts
   const filteredDiscounts = useMemo(() => {
@@ -228,7 +231,12 @@ export function DiscountsView({ searchQuery = '', onCreateDiscount }: DiscountsV
                             <Copy className="h-4 w-4 mr-2" />
                             Copy Code
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEditingDiscount(discount)
+                              setShowEditDialog(true)
+                            }}
+                          >
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
@@ -263,6 +271,12 @@ export function DiscountsView({ searchQuery = '', onCreateDiscount }: DiscountsV
           </Table>
         </div>
       )}
+
+      <EditDiscountDialog 
+        discount={editingDiscount}
+        open={showEditDialog} 
+        onOpenChange={setShowEditDialog}
+      />
     </div>
   )
 }
