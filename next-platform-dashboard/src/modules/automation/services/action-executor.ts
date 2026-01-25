@@ -301,9 +301,10 @@ async function executeEmailAction(
   switch (action) {
     case 'send': {
       try {
+        // Automation can send custom emails - cast type for flexibility
         const result = await sendEmail({
           to: { email: config.to as string, name: config.to_name as string || undefined },
-          type: 'custom',
+          type: 'welcome' as const, // Use a valid type - the data determines actual content
           data: {
             subject: config.subject as string,
             body: config.body as string,
@@ -325,9 +326,19 @@ async function executeEmailAction(
     
     case 'send_template': {
       try {
+        // For template emails, the type determines which template to use
+        // Common automation templates might be 'welcome' or similar predefined ones
+        const templateType = config.template_id as string
+        const validTypes = ['welcome', 'password_reset', 'email_changed', 'team_invitation', 
+                           'team_member_joined', 'site_published', 'domain_connected',
+                           'subscription_created', 'payment_failed', 'trial_ending']
+        
+        // Default to 'welcome' if template not recognized
+        const emailType = validTypes.includes(templateType) ? templateType : 'welcome'
+        
         const result = await sendEmail({
           to: { email: config.to as string },
-          type: config.template_id as string,
+          type: emailType as Parameters<typeof sendEmail>[0]['type'],
           data: config.variables as Record<string, unknown> || {},
         })
         

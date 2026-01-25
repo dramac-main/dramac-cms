@@ -25,8 +25,12 @@ import type {
   WorkflowStep, 
   WorkflowExecution, 
   AutomationConnection,
-  WebhookEndpoint 
+  WebhookEndpoint,
+  TriggerConfig
 } from '../types/automation-types'
+
+// Type helper for Supabase Json compatibility
+type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 // ============================================================================
 // WORKFLOW CRUD OPERATIONS
@@ -47,16 +51,19 @@ export async function createWorkflow(
   try {
     const supabase = await createClient()
     
+    // Generate slug from name
+    const slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    
     const { data: workflow, error } = await supabase
       .from('automation_workflows')
       .insert({
         site_id: siteId,
         name: data.name,
-        description: data.description,
+        description: data.description || null,
+        slug: `${slug}-${Date.now().toString(36)}`,
         trigger_type: data.trigger_type,
-        trigger_config: data.trigger_config,
-        status: 'draft',
-        version: 1,
+        trigger_config: data.trigger_config as unknown as Json,
+        is_active: false,
       })
       .select('*')
       .single()
@@ -67,15 +74,15 @@ export async function createWorkflow(
     }
     
     // Emit event for other modules
-    await emitEvent({
+    await emitEvent(
+      'automation',
       siteId,
-      source: 'automation',
-      type: 'automation.workflow_created',
-      payload: { workflow_id: workflow.id, name: workflow.name },
-    })
+      'automation.workflow_created',
+      { workflow_id: workflow.id, name: workflow.name }
+    )
     
     revalidatePath('/automation')
-    return { success: true, data: workflow as Workflow }
+    return { success: true, data: workflow as unknown as Workflow }
   } catch (error) {
     console.error('[Automation] Create workflow exception:', error)
     return { 
@@ -104,7 +111,7 @@ export async function getWorkflow(
       return { success: false, error: error.message }
     }
     
-    return { success: true, data: workflow as Workflow }
+    return { success: true, data: workflow as unknown as Workflow }
   } catch (error) {
     return { 
       success: false, 
@@ -119,7 +126,7 @@ export async function getWorkflow(
 export async function getWorkflows(
   siteId: string,
   options?: { 
-    status?: Workflow['status']
+    is_active?: boolean
     trigger_type?: string
     limit?: number
     offset?: number
@@ -134,8 +141,8 @@ export async function getWorkflows(
       .eq('site_id', siteId)
       .order('created_at', { ascending: false })
     
-    if (options?.status) {
-      query = query.eq('status', options.status)
+    if (options?.is_active !== undefined) {
+      query = query.eq('is_active', options.is_active)
     }
     
     if (options?.trigger_type) {
@@ -156,7 +163,7 @@ export async function getWorkflows(
       return { success: false, error: error.message }
     }
     
-    return { success: true, data: data as Workflow[], count: count || 0 }
+    return { success: true, data: data as unknown as Workflow[], count: count || 0 }
   } catch (error) {
     return { 
       success: false, 
@@ -174,16 +181,24 @@ export async function updateWorkflow(
     name: string
     description: string
     trigger_type: Workflow['trigger_type']
-    trigger_config: Workflow['trigger_config']
-    status: Workflow['status']
+    trigger_config: TriggerConfig
+    is_active: boolean
   }>
 ): Promise<{ success: boolean; data?: Workflow; error?: string }> {
   try {
     const supabase = await createClient()
     
+    // Transform data to match DB schema
+    const updateData: Record<string, unknown> = {}
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.description !== undefined) updateData.description = data.description
+    if (data.trigger_type !== undefined) updateData.trigger_type = data.trigger_type
+    if (data.trigger_config !== undefined) updateData.trigger_config = data.trigger_config as unknown as Json
+    if (data.is_active !== undefined) updateData.is_active = data.is_active
+    
     const { data: workflow, error } = await supabase
       .from('automation_workflows')
-      .update(data)
+      .update(updateData)
       .eq('id', workflowId)
       .select('*')
       .single()
@@ -193,7 +208,7 @@ export async function updateWorkflow(
     }
     
     revalidatePath('/automation')
-    return { success: true, data: workflow as Workflow }
+    return { success: true, data: workflow as unknown as Workflow }
   } catch (error) {
     return { 
       success: false, 
@@ -228,12 +243,12 @@ export async function deleteWorkflow(
     }
     
     if (workflow) {
-      await emitEvent({
-        siteId: workflow.site_id,
-        source: 'automation',
-        type: 'automation.workflow_deleted',
-        payload: { workflow_id: workflowId, name: workflow.name },
-      })
+      await emitEvent(
+        'automation',
+        workflow.site_id,
+        'automation.workflow_deleted',
+        { workflow_id: workflowId, name: workflow.name }
+      )
     }
     
     revalidatePath('/automation')
@@ -271,10 +286,10 @@ export async function activateWorkflow(
       return { success: false, error: 'Workflow must have at least one step to activate' }
     }
     
-    // Update status to active
+    // Update is_active to true
     const { error: updateError } = await supabase
       .from('automation_workflows')
-      .update({ status: 'active' })
+      .update({ is_active: true })
       .eq('id', workflowId)
     
     if (updateError) {
@@ -282,24 +297,27 @@ export async function activateWorkflow(
     }
     
     // If scheduled trigger, create scheduled job
-    if (workflow.trigger_type === 'scheduled' && workflow.trigger_config?.schedule) {
+    const triggerConfig = workflow.trigger_config as TriggerConfig
+    if (workflow.trigger_type === 'schedule' && triggerConfig?.cron) {
       await supabase
         .from('automation_scheduled_jobs')
         .upsert({
           site_id: workflow.site_id,
           workflow_id: workflowId,
-          schedule_cron: workflow.trigger_config.schedule,
-          next_run_at: calculateNextRun(workflow.trigger_config.schedule),
-          status: 'scheduled',
+          cron_expression: triggerConfig.cron,
+          next_run_at: calculateNextRun(triggerConfig.cron),
+          is_active: true,
+        }, {
+          onConflict: 'workflow_id'
         })
     }
     
-    await emitEvent({
-      siteId: workflow.site_id,
-      source: 'automation',
-      type: 'automation.workflow_activated',
-      payload: { workflow_id: workflowId, name: workflow.name },
-    })
+    await emitEvent(
+      'automation',
+      workflow.site_id,
+      'automation.workflow_activated',
+      { workflow_id: workflowId, name: workflow.name }
+    )
     
     revalidatePath('/automation')
     return { success: true }
@@ -322,7 +340,7 @@ export async function pauseWorkflow(
     
     const { data: workflow, error } = await supabase
       .from('automation_workflows')
-      .update({ status: 'paused' })
+      .update({ is_active: false })
       .eq('id', workflowId)
       .select('site_id, name')
       .single()
@@ -334,15 +352,15 @@ export async function pauseWorkflow(
     // Pause any scheduled jobs
     await supabase
       .from('automation_scheduled_jobs')
-      .update({ status: 'paused' })
+      .update({ is_active: false })
       .eq('workflow_id', workflowId)
     
-    await emitEvent({
-      siteId: workflow.site_id,
-      source: 'automation',
-      type: 'automation.workflow_paused',
-      payload: { workflow_id: workflowId, name: workflow.name },
-    })
+    await emitEvent(
+      'automation',
+      workflow.site_id,
+      'automation.workflow_paused',
+      { workflow_id: workflowId, name: workflow.name }
+    )
     
     revalidatePath('/automation')
     return { success: true }
@@ -364,41 +382,49 @@ export async function pauseWorkflow(
 export async function createWorkflowStep(
   workflowId: string,
   data: {
-    action_type: string
-    action_config: Record<string, unknown>
-    step_order?: number
-    condition_config?: WorkflowStep['condition_config']
-    delay_config?: WorkflowStep['delay_config']
-    error_handling?: WorkflowStep['error_handling']
+    step_type?: string
+    action_type?: string
+    action_config?: Record<string, unknown>
+    position?: number
+    condition_config?: Record<string, unknown>
+    delay_config?: Record<string, unknown>
+    name?: string
+    on_error?: 'fail' | 'continue' | 'retry' | 'branch'
+    max_retries?: number
+    retry_delay_seconds?: number
   }
 ): Promise<{ success: boolean; data?: WorkflowStep; error?: string }> {
   try {
     const supabase = await createClient()
     
-    // Get max step order if not provided
-    let stepOrder = data.step_order
-    if (stepOrder === undefined) {
+    // Get max position if not provided
+    let position = data.position
+    if (position === undefined) {
       const { data: maxStep } = await supabase
         .from('workflow_steps')
-        .select('step_order')
+        .select('position')
         .eq('workflow_id', workflowId)
-        .order('step_order', { ascending: false })
+        .order('position', { ascending: false })
         .limit(1)
         .single()
       
-      stepOrder = maxStep ? maxStep.step_order + 1 : 1
+      position = maxStep ? maxStep.position + 1 : 1
     }
     
     const { data: step, error } = await supabase
       .from('workflow_steps')
       .insert({
         workflow_id: workflowId,
-        action_type: data.action_type,
-        action_config: data.action_config,
-        step_order: stepOrder,
-        condition_config: data.condition_config || null,
-        delay_config: data.delay_config || null,
-        error_handling: data.error_handling || { on_error: 'continue', max_retries: 0 },
+        step_type: data.step_type || 'action',
+        action_type: data.action_type || null,
+        action_config: (data.action_config || {}) as unknown as Json,
+        position,
+        condition_config: (data.condition_config || {}) as unknown as Json,
+        delay_config: (data.delay_config || {}) as unknown as Json,
+        name: data.name || null,
+        on_error: data.on_error || 'continue',
+        max_retries: data.max_retries || 0,
+        retry_delay_seconds: data.retry_delay_seconds || 60,
       })
       .select('*')
       .single()
@@ -408,7 +434,7 @@ export async function createWorkflowStep(
     }
     
     revalidatePath('/automation')
-    return { success: true, data: step as WorkflowStep }
+    return { success: true, data: step as unknown as WorkflowStep }
   } catch (error) {
     return { 
       success: false, 
@@ -430,13 +456,13 @@ export async function getWorkflowSteps(
       .from('workflow_steps')
       .select('*')
       .eq('workflow_id', workflowId)
-      .order('step_order', { ascending: true })
+      .order('position', { ascending: true })
     
     if (error) {
       return { success: false, error: error.message }
     }
     
-    return { success: true, data: steps as WorkflowStep[] }
+    return { success: true, data: steps as unknown as WorkflowStep[] }
   } catch (error) {
     return { 
       success: false, 
@@ -453,18 +479,33 @@ export async function updateWorkflowStep(
   data: Partial<{
     action_type: string
     action_config: Record<string, unknown>
-    step_order: number
-    condition_config: WorkflowStep['condition_config']
-    delay_config: WorkflowStep['delay_config']
-    error_handling: WorkflowStep['error_handling']
+    position: number
+    condition_config: Record<string, unknown>
+    delay_config: Record<string, unknown>
+    name: string
+    on_error: 'fail' | 'continue' | 'retry' | 'branch'
+    max_retries: number
+    retry_delay_seconds: number
   }>
 ): Promise<{ success: boolean; data?: WorkflowStep; error?: string }> {
   try {
     const supabase = await createClient()
     
+    // Build update object with proper type casting
+    const updateData: Record<string, unknown> = {}
+    if (data.action_type !== undefined) updateData.action_type = data.action_type
+    if (data.action_config !== undefined) updateData.action_config = data.action_config as unknown as Json
+    if (data.position !== undefined) updateData.position = data.position
+    if (data.condition_config !== undefined) updateData.condition_config = data.condition_config as unknown as Json
+    if (data.delay_config !== undefined) updateData.delay_config = data.delay_config as unknown as Json
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.on_error !== undefined) updateData.on_error = data.on_error
+    if (data.max_retries !== undefined) updateData.max_retries = data.max_retries
+    if (data.retry_delay_seconds !== undefined) updateData.retry_delay_seconds = data.retry_delay_seconds
+    
     const { data: step, error } = await supabase
       .from('workflow_steps')
-      .update(data)
+      .update(updateData)
       .eq('id', stepId)
       .select('*')
       .single()
@@ -474,7 +515,7 @@ export async function updateWorkflowStep(
     }
     
     revalidatePath('/automation')
-    return { success: true, data: step as WorkflowStep }
+    return { success: true, data: step as unknown as WorkflowStep }
   } catch (error) {
     return { 
       success: false, 
@@ -521,16 +562,16 @@ export async function reorderWorkflowSteps(
   try {
     const supabase = await createClient()
     
-    // Update each step with new order
+    // Update each step with new position
     const updates = stepIds.map((stepId, index) => ({
       id: stepId,
-      step_order: index + 1,
+      position: index + 1,
     }))
     
     for (const update of updates) {
       const { error } = await supabase
         .from('workflow_steps')
-        .update({ step_order: update.step_order })
+        .update({ position: update.position })
         .eq('id', update.id)
         .eq('workflow_id', workflowId)
       
@@ -591,7 +632,7 @@ export async function getWorkflowExecutions(
       return { success: false, error: error.message }
     }
     
-    return { success: true, data: data as WorkflowExecution[], count: count || 0 }
+    return { success: true, data: data as unknown as WorkflowExecution[], count: count || 0 }
   } catch (error) {
     return { 
       success: false, 
@@ -607,7 +648,8 @@ export async function getExecutionDetails(
   executionId: string
 ): Promise<{ 
   success: boolean
-  data?: WorkflowExecution & { step_logs: unknown[] }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: WorkflowExecution & { step_logs: any[] }
   error?: string 
 }> {
   try {
@@ -629,9 +671,10 @@ export async function getExecutionDetails(
     return { 
       success: true, 
       data: {
-        ...execution,
-        step_logs: execution.step_execution_logs || [],
-      } as WorkflowExecution & { step_logs: unknown[] },
+        ...(execution as unknown as WorkflowExecution),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        step_logs: (execution.step_execution_logs || []) as any[],
+      },
     }
   } catch (error) {
     return { 
@@ -699,10 +742,12 @@ export async function retryExecution(
       .insert({
         site_id: original.site_id,
         workflow_id: original.workflow_id,
+        trigger_type: original.trigger_type,
         trigger_data: original.trigger_data,
         status: 'pending',
         context: {},
-        retry_of: executionId,
+        parent_execution_id: executionId,
+        attempt_number: (original.attempt_number || 1) + 1,
       })
       .select('id')
       .single()
@@ -734,7 +779,7 @@ export async function triggerWorkflow(
     // Get workflow to validate it's active or in test mode
     const { data: workflow, error: fetchError } = await supabase
       .from('automation_workflows')
-      .select('site_id, status')
+      .select('site_id, is_active, trigger_type')
       .eq('id', workflowId)
       .single()
     
@@ -742,19 +787,17 @@ export async function triggerWorkflow(
       return { success: false, error: 'Workflow not found' }
     }
     
-    if (workflow.status !== 'active' && workflow.status !== 'draft') {
-      return { success: false, error: 'Workflow is not active' }
-    }
-    
+    // Allow manual trigger even if not active (for testing)
     // Create execution
     const { data: execution, error: createError } = await supabase
       .from('workflow_executions')
       .insert({
         site_id: workflow.site_id,
         workflow_id: workflowId,
-        trigger_data: triggerData || {},
+        trigger_type: 'manual',
+        trigger_data: (triggerData || {}) as unknown as Json,
         status: 'pending',
-        context: {},
+        context: {} as unknown as Json,
       })
       .select('id')
       .single()
@@ -797,7 +840,7 @@ export async function createConnection(
         site_id: siteId,
         service_type: data.service_type,
         name: data.name,
-        credentials: data.credentials,
+        credentials: data.credentials as unknown as Json,
         status: 'active',
       })
       .select('id, site_id, service_type, name, status, created_at, updated_at')
@@ -808,7 +851,7 @@ export async function createConnection(
     }
     
     revalidatePath('/automation/settings')
-    return { success: true, data: connection as AutomationConnection }
+    return { success: true, data: connection as unknown as AutomationConnection }
   } catch (error) {
     return { 
       success: false, 
@@ -837,7 +880,7 @@ export async function getConnections(
       return { success: false, error: error.message }
     }
     
-    return { success: true, data: connections as AutomationConnection[] }
+    return { success: true, data: connections as unknown as AutomationConnection[] }
   } catch (error) {
     return { 
       success: false, 
@@ -854,15 +897,20 @@ export async function updateConnection(
   data: Partial<{
     name: string
     credentials: Record<string, unknown>
-    status: 'active' | 'inactive' | 'error'
+    status: 'active' | 'expired' | 'revoked' | 'error'
   }>
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient()
     
+    const updateData: Record<string, unknown> = {}
+    if (data.name !== undefined) updateData.name = data.name
+    if (data.credentials !== undefined) updateData.credentials = data.credentials as unknown as Json
+    if (data.status !== undefined) updateData.status = data.status
+    
     const { error } = await supabase
       .from('automation_connections')
-      .update(data)
+      .update(updateData)
       .eq('id', connectionId)
     
     if (error) {
@@ -926,10 +974,15 @@ export async function testConnection(
       return { success: false, error: 'Connection not found' }
     }
     
+    const credentials = connection.credentials as Record<string, unknown> | null
+    
     // Test based on service type
     switch (connection.service_type) {
       case 'slack': {
-        const webhookUrl = connection.credentials.webhook_url as string
+        if (!credentials?.webhook_url) {
+          return { success: false, error: 'Webhook URL not configured' }
+        }
+        const webhookUrl = credentials.webhook_url as string
         const response = await fetch(webhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -942,7 +995,10 @@ export async function testConnection(
       }
       
       case 'discord': {
-        const webhookUrl = connection.credentials.webhook_url as string
+        if (!credentials?.webhook_url) {
+          return { success: false, error: 'Webhook URL not configured' }
+        }
+        const webhookUrl = credentials.webhook_url as string
         const response = await fetch(webhookUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -957,7 +1013,7 @@ export async function testConnection(
       // Add more service tests as needed
       default:
         // Generic test - just verify credentials exist
-        if (!connection.credentials || Object.keys(connection.credentials).length === 0) {
+        if (!credentials || Object.keys(credentials).length === 0) {
           return { success: false, error: 'No credentials configured' }
         }
     }
@@ -967,7 +1023,7 @@ export async function testConnection(
       .from('automation_connections')
       .update({ 
         status: 'active',
-        updated_at: new Date().toISOString(),
+        last_used_at: new Date().toISOString(),
       })
       .eq('id', connectionId)
     
@@ -989,19 +1045,26 @@ export async function testConnection(
  */
 export async function createWebhookEndpoint(
   siteId: string,
-  workflowId: string,
-  options?: { name?: string }
+  workflowId: string
 ): Promise<{ success: boolean; data?: WebhookEndpoint; error?: string }> {
   try {
     const supabase = await createClient()
+    
+    // Generate endpoint path and secret using database functions
+    const { data: pathData } = await supabase.rpc('generate_webhook_path')
+    const { data: secretData } = await supabase.rpc('generate_webhook_secret')
+    
+    const endpointPath = pathData || `wh_${Date.now().toString(36)}`
+    const secretKey = secretData || `whsec_${Date.now().toString(36)}`
     
     const { data: endpoint, error } = await supabase
       .from('automation_webhook_endpoints')
       .insert({
         site_id: siteId,
         workflow_id: workflowId,
-        name: options?.name || 'Webhook Endpoint',
-        // webhook_path and webhook_secret are auto-generated by database
+        endpoint_path: endpointPath,
+        secret_key: secretKey,
+        is_active: true,
       })
       .select('*')
       .single()
@@ -1011,7 +1074,7 @@ export async function createWebhookEndpoint(
     }
     
     revalidatePath('/automation')
-    return { success: true, data: endpoint as WebhookEndpoint }
+    return { success: true, data: endpoint as unknown as WebhookEndpoint }
   } catch (error) {
     return { 
       success: false, 
@@ -1031,14 +1094,14 @@ export async function getWebhookEndpoints(
     
     const { data: endpoints, error } = await supabase
       .from('automation_webhook_endpoints')
-      .select('id, site_id, workflow_id, name, webhook_path, is_active, created_at')
+      .select('id, site_id, workflow_id, endpoint_path, is_active, total_calls, last_called_at, created_at')
       .eq('workflow_id', workflowId)
     
     if (error) {
       return { success: false, error: error.message }
     }
     
-    return { success: true, data: endpoints as WebhookEndpoint[] }
+    return { success: true, data: endpoints as unknown as WebhookEndpoint[] }
   } catch (error) {
     return { 
       success: false, 
@@ -1097,10 +1160,10 @@ export async function subscribeToEvent(
         site_id: siteId,
         workflow_id: workflowId,
         event_type: eventType,
-        filters: filters || {},
+        event_filter: (filters || {}) as unknown as Json,
         is_active: true,
       }, {
-        onConflict: 'workflow_id,event_type',
+        onConflict: 'workflow_id,event_type,source_module',
       })
     
     if (error) {
@@ -1179,7 +1242,7 @@ export async function getAutomationStats(
       .from('automation_workflows')
       .select('*', { count: 'exact', head: true })
       .eq('site_id', siteId)
-      .eq('status', 'active')
+      .eq('is_active', true)
     
     // Get execution counts
     const { count: totalExecutions } = await supabase
@@ -1257,3 +1320,317 @@ function calculateNextRun(cronExpression: string): string {
   
   return nextRun.toISOString()
 }
+
+// ============================================================================
+// PHASE EM-57B: ANALYTICS & TEMPLATES
+// ============================================================================
+
+/**
+ * Get detailed automation analytics for the analytics dashboard
+ */
+export async function getAutomationAnalytics(
+  siteId: string,
+  timeRange: string = '30d'
+): Promise<{ 
+  success: boolean
+  data?: {
+    overview: {
+      totalExecutions: number
+      successfulExecutions: number
+      failedExecutions: number
+      successRate: number
+      averageExecutionTime: number
+      totalWorkflows: number
+      activeWorkflows: number
+      executionTrend: number
+    }
+    executionsByDay: Array<{
+      date: string
+      total: number
+      successful: number
+      failed: number
+    }>
+    topWorkflows: Array<{
+      id: string
+      name: string
+      executions: number
+      successRate: number
+    }>
+    recentFailures: Array<{
+      id: string
+      workflowName: string
+      errorMessage: string
+      timestamp: string
+    }>
+    executionsByHour: Array<{
+      hour: number
+      executions: number
+    }>
+    categoryDistribution: Array<{
+      category: string
+      count: number
+    }>
+  }
+  error?: string 
+}> {
+  try {
+    const supabase = await createClient()
+    
+    // Calculate date range
+    const days = parseInt(timeRange.replace('d', ''), 10) || 30
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - days)
+    
+    const previousStartDate = new Date(startDate)
+    previousStartDate.setDate(previousStartDate.getDate() - days)
+    
+    // Get workflow counts
+    const { count: totalWorkflows } = await supabase
+      .from('automation_workflows')
+      .select('*', { count: 'exact', head: true })
+      .eq('site_id', siteId)
+    
+    const { count: activeWorkflows } = await supabase
+      .from('automation_workflows')
+      .select('*', { count: 'exact', head: true })
+      .eq('site_id', siteId)
+      .eq('is_active', true)
+    
+    // Get execution statistics for current period
+    const { data: executions } = await supabase
+      .from('workflow_executions')
+      .select('id, status, started_at, completed_at, workflow_id, error')
+      .eq('site_id', siteId)
+      .gte('started_at', startDate.toISOString())
+      .order('started_at', { ascending: false })
+    
+    type ExecutionRow = {
+      id: string
+      status: string
+      started_at: string | null
+      completed_at: string | null
+      workflow_id: string
+      error: string | null
+    }
+    
+    const executionList = (executions || []) as ExecutionRow[]
+    const totalExecutions = executionList.length
+    const successfulExecutions = executionList.filter(e => e.status === 'completed').length
+    const failedExecutions = executionList.filter(e => e.status === 'failed').length
+    const successRate = totalExecutions > 0 ? (successfulExecutions / totalExecutions) * 100 : 0
+    
+    // Calculate average execution time
+    const completedExecutions = executionList.filter(e => e.completed_at && e.started_at)
+    const avgTime = completedExecutions.length > 0
+      ? completedExecutions.reduce((sum, e) => {
+          return sum + (new Date(e.completed_at!).getTime() - new Date(e.started_at!).getTime())
+        }, 0) / completedExecutions.length
+      : 0
+    
+    // Get previous period count for trend
+    const { count: previousExecutions } = await supabase
+      .from('workflow_executions')
+      .select('*', { count: 'exact', head: true })
+      .eq('site_id', siteId)
+      .gte('started_at', previousStartDate.toISOString())
+      .lt('started_at', startDate.toISOString())
+    
+    const executionTrend = previousExecutions && previousExecutions > 0
+      ? ((totalExecutions - previousExecutions) / previousExecutions) * 100
+      : 0
+    
+    // Executions by day
+    const executionsByDay: Array<{ date: string; total: number; successful: number; failed: number }> = []
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date()
+      date.setDate(date.getDate() - i)
+      const dateStr = date.toISOString().split('T')[0]
+      
+      const dayExecutions = executionList.filter(e => 
+        e.started_at?.startsWith(dateStr)
+      )
+      
+      executionsByDay.push({
+        date: dateStr,
+        total: dayExecutions.length,
+        successful: dayExecutions.filter(e => e.status === 'completed').length,
+        failed: dayExecutions.filter(e => e.status === 'failed').length
+      })
+    }
+    
+    // Top workflows
+    const { data: workflows } = await supabase
+      .from('automation_workflows')
+      .select('id, name')
+      .eq('site_id', siteId)
+    
+    type WorkflowRow = { id: string; name: string }
+    const workflowList = (workflows || []) as WorkflowRow[]
+    
+    const workflowStats = workflowList.map(w => {
+      const wfExecutions = executionList.filter(e => e.workflow_id === w.id)
+      const wfSuccess = wfExecutions.filter(e => e.status === 'completed').length
+      return {
+        id: w.id,
+        name: w.name,
+        executions: wfExecutions.length,
+        successRate: wfExecutions.length > 0 ? (wfSuccess / wfExecutions.length) * 100 : 0
+      }
+    }).sort((a, b) => b.executions - a.executions).slice(0, 10)
+    
+    // Recent failures
+    const recentFailures = executionList
+      .filter(e => e.status === 'failed')
+      .slice(0, 10)
+      .map(e => {
+        const workflow = workflowList.find(w => w.id === e.workflow_id)
+        return {
+          id: e.id,
+          workflowName: workflow?.name || 'Unknown',
+          errorMessage: e.error || 'Unknown error',
+          timestamp: e.started_at || ''
+        }
+      })
+    
+    // Executions by hour
+    const executionsByHour = Array.from({ length: 24 }, (_, hour) => ({
+      hour,
+      executions: executionList.filter(e => {
+        if (!e.started_at) return false
+        const execHour = new Date(e.started_at).getHours()
+        return execHour === hour
+      }).length
+    }))
+    
+    // Category distribution (from workflows)
+    const { data: workflowCategories } = await supabase
+      .from('automation_workflows')
+      .select('category')
+      .eq('site_id', siteId)
+    
+    const categoryCounts: Record<string, number> = {}
+    for (const wf of workflowCategories || []) {
+      const cat = (wf.category as string) || 'general'
+      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1
+    }
+    
+    const categoryDistribution = Object.entries(categoryCounts)
+      .map(([category, count]) => ({ category, count }))
+      .sort((a, b) => b.count - a.count)
+    
+    return {
+      success: true,
+      data: {
+        overview: {
+          totalExecutions,
+          successfulExecutions,
+          failedExecutions,
+          successRate,
+          averageExecutionTime: avgTime,
+          totalWorkflows: totalWorkflows || 0,
+          activeWorkflows: activeWorkflows || 0,
+          executionTrend
+        },
+        executionsByDay,
+        topWorkflows: workflowStats,
+        recentFailures,
+        executionsByHour,
+        categoryDistribution
+      }
+    }
+  } catch (error) {
+    console.error('[Automation] Analytics error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch analytics'
+    }
+  }
+}
+
+/**
+ * Create a workflow from a template
+ */
+export async function createWorkflowFromTemplate(
+  siteId: string,
+  template: {
+    name: string
+    description: string
+    trigger: { type: string; config: Record<string, unknown> }
+    steps: Array<{
+      name: string
+      step_type: string
+      action_type?: string
+      config: Record<string, unknown>
+    }>
+  }
+): Promise<{ success: boolean; data?: Workflow; error?: string }> {
+  try {
+    const supabase = await createClient()
+    
+    // Generate slug from name
+    const slug = template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+    
+    // Create the workflow
+    const { data: workflow, error: workflowError } = await supabase
+      .from('automation_workflows')
+      .insert({
+        site_id: siteId,
+        name: template.name,
+        description: template.description,
+        slug: `${slug}-${Date.now().toString(36)}`,
+        trigger_type: template.trigger.type,
+        trigger_config: template.trigger.config as unknown as Json,
+        is_active: false,
+      })
+      .select('*')
+      .single()
+    
+    if (workflowError) {
+      console.error('[Automation] Create workflow from template error:', workflowError)
+      return { success: false, error: workflowError.message }
+    }
+    
+    // Create the steps
+    const stepsToInsert = template.steps.map((step, index) => ({
+      workflow_id: workflow.id,
+      name: step.name,
+      step_type: step.step_type,
+      action_type: step.action_type || null,
+      action_config: step.config as unknown as Json,
+      position: index + 1,
+    }))
+    
+    const { error: stepsError } = await supabase
+      .from('workflow_steps')
+      .insert(stepsToInsert)
+    
+    if (stepsError) {
+      console.error('[Automation] Create steps from template error:', stepsError)
+      // Delete the workflow if steps failed
+      await supabase.from('automation_workflows').delete().eq('id', workflow.id)
+      return { success: false, error: stepsError.message }
+    }
+    
+    // Emit event
+    await emitEvent(
+      'automation',
+      siteId,
+      'automation.workflow_created',
+      { 
+        workflow_id: workflow.id, 
+        name: workflow.name,
+        from_template: true 
+      }
+    )
+    
+    revalidatePath('/automation')
+    return { success: true, data: workflow as unknown as Workflow }
+  } catch (error) {
+    console.error('[Automation] Create workflow from template exception:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create workflow'
+    }
+  }
+}
+

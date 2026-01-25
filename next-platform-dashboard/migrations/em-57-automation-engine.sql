@@ -189,11 +189,20 @@ CREATE TABLE IF NOT EXISTS workflow_steps (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Add self-referencing foreign key for error branch
-ALTER TABLE workflow_steps 
-ADD CONSTRAINT fk_error_branch 
-FOREIGN KEY (error_branch_step_id) 
-REFERENCES workflow_steps(id) ON DELETE SET NULL;
+-- Add self-referencing foreign key for error branch (only if it doesn't exist)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'fk_error_branch' 
+    AND conrelid = 'workflow_steps'::regclass
+  ) THEN
+    ALTER TABLE workflow_steps 
+    ADD CONSTRAINT fk_error_branch 
+    FOREIGN KEY (error_branch_step_id) 
+    REFERENCES workflow_steps(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
 -- Workflow Executions
 CREATE TABLE IF NOT EXISTS workflow_executions (

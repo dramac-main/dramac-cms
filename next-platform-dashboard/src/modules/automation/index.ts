@@ -114,6 +114,10 @@ export {
   
   // Statistics
   getAutomationStats,
+  
+  // Phase EM-57B additions
+  getAutomationAnalytics,
+  createWorkflowFromTemplate,
 } from './actions/automation-actions'
 
 // ============================================================================
@@ -138,3 +142,47 @@ export {
 export {
   executeAction,
 } from './services/action-executor'
+
+// ============================================================================
+// PHASE EM-57B: VISUAL BUILDER & ADVANCED FEATURES
+// ============================================================================
+
+// Workflow Templates
+export {
+  WORKFLOW_TEMPLATES,
+  getTemplateById,
+  getTemplateCategories,
+  getTemplatesByCategory,
+  searchTemplates,
+  type WorkflowTemplate,
+} from './lib/templates'
+
+// Visual Builder Components
+export {
+  WorkflowBuilder,
+  TriggerPanel,
+  ActionPalette,
+  WorkflowCanvas,
+  StepConfigPanel,
+} from './components/workflow-builder'
+
+// Additional UI Components
+export { TemplateGallery } from './components/template-gallery'
+export { AnalyticsDashboard } from './components/analytics-dashboard'
+export { ConnectionSetup, type ServiceConnection } from './components/connection-setup'
+
+// Hooks
+export { useWorkflowBuilder } from './hooks/use-workflow-builder'
+
+// AI Actions Service
+export {
+  generateText,
+  summarizeText,
+  classifyText,
+  extractData,
+  analyzeSentiment,
+  moderateContent,
+  translateText,
+  suggestWorkflowImprovements,
+  type AIActionResult,
+} from './services/ai-actions'

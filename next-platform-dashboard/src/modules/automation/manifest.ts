@@ -9,13 +9,32 @@
  * Module ID: automation (short_id: autom01)
  */
 
-import type { ModuleManifest } from '@/lib/modules/types'
-
 // ============================================================================
-// MODULE METADATA
+// MODULE METADATA (custom structure for automation module)
 // ============================================================================
 
-export const moduleMetadata: ModuleMetadata = {
+interface AutomationModuleMetadata {
+  id: string
+  shortId: string
+  name: string
+  description: string
+  version: string
+  author: string
+  category: string
+  tags: string[]
+  minimumPlatformVersion: string
+  capabilities: string[]
+  dependencies: string[]
+  optionalDependencies: string[]
+  hooks: {
+    onInstall: string
+    onUninstall: string
+    onActivate: string
+    onDeactivate: string
+  }
+}
+
+export const moduleMetadata: AutomationModuleMetadata = {
   id: 'automation',
   shortId: 'autom01',
   name: 'Automation Engine',
@@ -59,10 +78,79 @@ export const moduleMetadata: ModuleMetadata = {
 }
 
 // ============================================================================
-// MODULE MANIFEST
+// AUTOMATION MODULE MANIFEST (custom extended structure)
 // ============================================================================
 
-export const automationManifest: ModuleManifest = {
+interface AutomationNavigationItem {
+  name: string
+  href: string
+}
+
+interface AutomationNavigationGroup {
+  name: string
+  href: string
+  icon: string
+  badge: string | null
+  children: AutomationNavigationItem[]
+}
+
+interface AutomationPermission {
+  key: string
+  name: string
+  description: string
+}
+
+interface AutomationEvent {
+  type: string
+  description: string
+}
+
+interface AutomationTrigger {
+  type: string
+  description: string
+}
+
+interface AutomationAction {
+  type: string
+  description: string
+}
+
+interface AutomationApiRoute {
+  path: string
+  method: string
+  description: string
+}
+
+interface AutomationWidget {
+  id: string
+  name: string
+  component: string
+  defaultSize: { width: number; height: number }
+}
+
+interface AutomationManifest extends AutomationModuleMetadata {
+  tables: string[]
+  navigation: AutomationNavigationGroup[]
+  permissions: AutomationPermission[]
+  settingsSchema: {
+    type: string
+    properties: Record<string, {
+      type: string
+      title: string
+      description: string
+      default: number | boolean
+      minimum?: number
+      maximum?: number
+    }>
+  }
+  events: AutomationEvent[]
+  triggers: AutomationTrigger[]
+  actions: AutomationAction[]
+  apiRoutes: AutomationApiRoute[]
+  widgets: AutomationWidget[]
+}
+
+export const automationManifest: AutomationManifest = {
   ...moduleMetadata,
   
   // Database tables (created via migrations)
