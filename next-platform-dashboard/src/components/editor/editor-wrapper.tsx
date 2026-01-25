@@ -12,6 +12,7 @@ import { SettingsPanel } from "./settings-panel";
 import { PreviewFrame } from "./preview-frame";
 import { PreviewPanel } from "./preview-panel";
 import { MobileToolbar, MobileComponentSheet, MobileSettingsSheet } from "./responsive";
+import { EditorProvider } from "./editor-context";
 import { savePageContentAction } from "@/lib/actions/pages";
 import { useEditorShortcuts } from "@/hooks/use-editor-shortcuts";
 import { usePreview } from "@/lib/preview/use-preview";
@@ -66,25 +67,27 @@ export function EditorWrapper({ site, page }: EditorWrapperProps) {
   }, []);
 
   return (
-    <Editor
-      resolver={componentResolver}
-      enabled={true}
-      onNodesChange={handleNodesChange}
-    >
-      <EditorContent
-        site={site}
-        page={page}
-        settings={settings}
-        onSettingsChange={handleSettingsChange}
-        isSaving={isSaving}
-        setIsSaving={setIsSaving}
-        hasChanges={hasChanges}
-        setHasChanges={setHasChanges}
-        lastSaved={lastSaved}
-        setLastSaved={setLastSaved}
-        setIsContentLoaded={setIsContentLoaded}
-      />
-    </Editor>
+    <EditorProvider site={site}>
+      <Editor
+        resolver={componentResolver}
+        enabled={true}
+        onNodesChange={handleNodesChange}
+      >
+        <EditorContent
+          site={site}
+          page={page}
+          settings={settings}
+          onSettingsChange={handleSettingsChange}
+          isSaving={isSaving}
+          setIsSaving={setIsSaving}
+          hasChanges={hasChanges}
+          setHasChanges={setHasChanges}
+          lastSaved={lastSaved}
+          setLastSaved={setLastSaved}
+          setIsContentLoaded={setIsContentLoaded}
+        />
+      </Editor>
+    </EditorProvider>
   );
 }
 

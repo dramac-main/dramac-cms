@@ -25,8 +25,7 @@ import type {
   Category, CategoryInput, CategoryUpdate,
   Order, OrderFilters,
   Discount, DiscountInput, DiscountUpdate,
-  EcommerceSettings, EcommerceSettingsUpdate,
-  PaginatedResponse
+  EcommerceSettings, EcommerceSettingsUpdate
 } from '../types/ecommerce-types'
 
 // ============================================================================

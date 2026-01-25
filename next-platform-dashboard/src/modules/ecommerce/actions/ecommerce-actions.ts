@@ -17,7 +17,7 @@ import type {
   ProductVariant, ProductVariantInput, ProductVariantUpdate,
   ProductOption, ProductOptionInput,
   Cart, CartItem,
-  Order, OrderItem, OrderFilters,
+  Order, OrderFilters,
   Discount, DiscountInput, DiscountUpdate,
   EcommerceSettings, EcommerceSettingsUpdate,
   PaginatedResponse,
@@ -37,6 +37,7 @@ async function getModuleClient() {
   const supabase = await createClient()
   // Use 'as any' to bypass TypeScript's strict table type checking
   // Module tables are dynamically created and not in the generated types
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return supabase as any
 }
 

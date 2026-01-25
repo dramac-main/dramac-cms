@@ -8,6 +8,7 @@
  * 
  * FOLLOWS BOOKING WIDGET PATTERN
  */
+/* eslint-disable @next/next/no-img-element */
 'use client'
 
 import React, { useState, useEffect, createContext, useContext, useCallback, ReactNode } from 'react'
@@ -80,7 +81,7 @@ export function CartProvider({
   sessionId, 
   userId,
   taxRate = 0,
-  currency = 'USD'
+  currency: _currency 
 }: CartProviderProps) {
   const [cart, setCart] = useState<Cart | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -497,7 +498,7 @@ function ProductCard({ product, primaryColor, isDark, currency }: ProductCardPro
     setAdding(true)
     try {
       await addItem(product.id, selectedVariant, 1)
-    } catch (err) {
+    } catch (_err) {
       // Error handled in context
     } finally {
       setAdding(false)

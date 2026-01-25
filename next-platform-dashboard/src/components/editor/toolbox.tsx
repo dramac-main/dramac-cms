@@ -3,6 +3,7 @@
 import { useEditor, Element } from "@craftjs/core";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { componentRegistry } from "./resolver";
+import { useEditorContextOptional, MODULE_COMPONENT_CATEGORIES } from "./editor-context";
 
 // Legacy components
 import { Container } from "./user-components/container";
@@ -41,6 +42,16 @@ import { FormField } from "./user-components/form-field";
 import { Image } from "./user-components/image";
 import { Button } from "./user-components/button";
 
+// E-Commerce Module Components (Phase EM-52)
+import {
+  ProductGrid,
+  ProductCard,
+  CartWidget,
+  FeaturedProducts,
+  AddToCartButton,
+  CategoryMenu,
+} from "./user-components/ecommerce";
+
 import {
   LayoutGrid,
   LayoutList,
@@ -70,6 +81,13 @@ import {
   Share2,
   FileInput,
   TextCursor,
+  // E-Commerce icons
+  ShoppingBag,
+  Package,
+  ShoppingCart,
+  Star,
+  Plus,
+  FolderTree,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -101,6 +119,13 @@ const iconMap: Record<string, React.ElementType> = {
   Share2,
   FileInput,
   TextCursor,
+  // E-Commerce icons
+  ShoppingBag,
+  Package,
+  ShoppingCart,
+  Star,
+  Plus,
+  FolderTree,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -140,17 +165,25 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   FormField,
   ImageNew: Image,
   ButtonNew: Button,
+  // E-Commerce Module Components (Phase EM-52)
+  ProductGrid,
+  ProductCard,
+  CartWidget,
+  FeaturedProducts,
+  AddToCartButton,
+  CategoryMenu,
 };
 
 // Canvas-enabled components (can have children dropped into them)
 const canvasComponents = ["Container", "Section", "Columns", "Card", "Form"];
 
 // Group components by category
-const categories = ["navigation", "layout", "sections", "forms", "typography", "buttons", "media"];
+const categories = ["navigation", "layout", "ecommerce", "sections", "forms", "typography", "buttons", "media"];
 
 const categoryLabels: Record<string, string> = {
   navigation: "Navigation",
   layout: "Layout",
+  ecommerce: "E-Commerce",
   sections: "Sections",
   forms: "Forms",
   typography: "Typography",
@@ -160,6 +193,15 @@ const categoryLabels: Record<string, string> = {
 
 export function EditorToolbox() {
   const { connectors } = useEditor();
+  const editorContext = useEditorContextOptional();
+
+  // Helper to check if a category requires a module to be installed
+  const isCategoryAvailable = (category: string): boolean => {
+    const requiredModule = MODULE_COMPONENT_CATEGORIES[category];
+    if (!requiredModule) return true; // No module required
+    if (!editorContext) return true; // No context = show all (fallback for testing)
+    return editorContext.isModuleInstalled(requiredModule);
+  };
 
   return (
     <div className="w-64 border-r bg-background">
@@ -170,6 +212,9 @@ export function EditorToolbox() {
       <ScrollArea className="h-[calc(100vh-180px)]">
         <div className="p-4 space-y-6">
           {categories.map((category) => {
+            // Skip categories that require modules not installed
+            if (!isCategoryAvailable(category)) return null;
+            
             const items = componentRegistry.filter((c) => c.category === category);
             if (items.length === 0) return null;
 

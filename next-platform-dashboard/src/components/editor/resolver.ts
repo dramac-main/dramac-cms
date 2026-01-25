@@ -36,6 +36,16 @@ import { FormField } from "./user-components/form-field";
 import { Image } from "./user-components/image";
 import { Button } from "./user-components/button";
 
+// E-Commerce Module Components (Phase EM-52)
+import {
+  ProductGrid,
+  ProductCard,
+  CartWidget,
+  FeaturedProducts,
+  AddToCartButton,
+  CategoryMenu,
+} from "./user-components/ecommerce";
+
 // Map of all user components for Craft.js resolver
 export const componentResolver = {
   // Legacy components
@@ -75,6 +85,13 @@ export const componentResolver = {
   FormField,
   ImageNew: Image,
   ButtonNew: Button,
+  // E-Commerce Module Components (Phase EM-52)
+  ProductGrid,
+  ProductCard,
+  CartWidget,
+  FeaturedProducts,
+  AddToCartButton,
+  CategoryMenu,
 };
 
 // Component metadata for toolbox
@@ -366,5 +383,55 @@ export const componentRegistry = [
     category: "sections" as const,
     icon: "TrendingUp",
     component: Stats,
+  },
+  
+  // ===== E-COMMERCE COMPONENTS (Phase EM-52) =====
+  {
+    name: "ProductGrid",
+    displayName: "Product Grid",
+    description: "Display products in a grid layout",
+    category: "ecommerce" as const,
+    icon: "ShoppingBag",
+    component: ProductGrid,
+  },
+  {
+    name: "ProductCard",
+    displayName: "Product Card",
+    description: "Single product display card",
+    category: "ecommerce" as const,
+    icon: "Package",
+    component: ProductCard,
+  },
+  {
+    name: "CartWidget",
+    displayName: "Cart Widget",
+    description: "Shopping cart icon with count",
+    category: "ecommerce" as const,
+    icon: "ShoppingCart",
+    component: CartWidget,
+  },
+  {
+    name: "FeaturedProducts",
+    displayName: "Featured Products",
+    description: "Showcase featured products section",
+    category: "ecommerce" as const,
+    icon: "Star",
+    component: FeaturedProducts,
+  },
+  {
+    name: "AddToCartButton",
+    displayName: "Add to Cart Button",
+    description: "Standalone add to cart button",
+    category: "ecommerce" as const,
+    icon: "Plus",
+    component: AddToCartButton,
+  },
+  {
+    name: "CategoryMenu",
+    displayName: "Category Menu",
+    description: "Product category navigation",
+    category: "ecommerce" as const,
+    icon: "FolderTree",
+    component: CategoryMenu,
   },
 ];

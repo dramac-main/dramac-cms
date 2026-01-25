@@ -11,7 +11,6 @@ import { createClient } from '@/lib/supabase/server'
 import {
   getOrders,
   getOrder,
-  updateOrderStatus,
   updateOrder
 } from '@/modules/ecommerce/actions/ecommerce-actions'
 
@@ -73,7 +72,9 @@ export async function GET(request: NextRequest) {
     const result = await getOrders(
       siteId,
       {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         status: status as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payment_status: paymentStatus as any,
         customer_id: customerId,
         date_from: startDate,
@@ -131,6 +132,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Build update object
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: Record<string, any> = {}
     
     if (status) {

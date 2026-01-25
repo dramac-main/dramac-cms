@@ -17,9 +17,7 @@ import {
 } from '@/modules/ecommerce/actions/ecommerce-actions'
 import type {
   PaddleConfig,
-  FlutterwaveConfig,
-  PesapalConfig,
-  DpoConfig
+  FlutterwaveConfig
 } from '@/modules/ecommerce/types/ecommerce-types'
 
 export const dynamic = 'force-dynamic'
@@ -89,6 +87,7 @@ export async function GET(request: NextRequest) {
 
     // Get order to find site_id
     const supabase = await createClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
       .from('mod_ecommod01_orders')
       .select('site_id')
@@ -105,7 +104,7 @@ export async function GET(request: NextRequest) {
     switch (provider) {
       case 'flutterwave': {
         const status = searchParams.get('status')
-        const txRef = searchParams.get('tx_ref')
+        const _txRef = searchParams.get('tx_ref')
         const transactionId = searchParams.get('transaction_id')
         
         if (status === 'successful' && transactionId) {
@@ -121,7 +120,7 @@ export async function GET(request: NextRequest) {
       
       case 'pesapal': {
         const pesapalTransactionId = searchParams.get('pesapal_transaction_tracking_id')
-        const merchantReference = searchParams.get('pesapal_merchant_reference')
+        const _merchantReference = searchParams.get('pesapal_merchant_reference')
         
         if (pesapalTransactionId) {
           // Query Pesapal for payment status
@@ -174,6 +173,7 @@ async function handlePaddleWebhook(body: string, signature: string | null): Prom
 
     // Get order to find site settings for verification
     const supabase = await createClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
       .from('mod_ecommod01_orders')
       .select('site_id')
@@ -258,6 +258,7 @@ async function handleFlutterwaveWebhook(body: string, signature: string | null):
 
     // Get order to find site settings for verification
     const supabase = await createClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
       .from('mod_ecommod01_orders')
       .select('site_id')
@@ -322,6 +323,7 @@ async function handlePesapalWebhook(body: string, params: URLSearchParams): Prom
 
     // Get order
     const supabase = await createClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
       .from('mod_ecommod01_orders')
       .select('site_id')
@@ -373,6 +375,7 @@ async function handleDpoWebhook(body: string, params: URLSearchParams): Promise<
 
     // Get order
     const supabase = await createClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
       .from('mod_ecommod01_orders')
       .select('site_id')

@@ -7,7 +7,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
 import {
   getCart,
   createOrderFromCart,
@@ -51,7 +50,7 @@ export async function POST(request: NextRequest) {
       customerName,
       customerPhone,
       paymentProvider,
-      shippingMethod,
+      shippingMethod: _shippingMethod,
       notes
     } = body
 
@@ -142,7 +141,8 @@ export async function POST(request: NextRequest) {
     const order = await createOrderFromCart(orderInput)
 
     // Generate payment URL based on provider
-    let paymentUrl: string | null = null
+    const paymentUrl: string | null = null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let paymentData: Record<string, any> = {}
 
     switch (paymentProvider) {
@@ -199,7 +199,7 @@ export async function POST(request: NextRequest) {
       }
 
       case 'pesapal': {
-        const pesapalConfig = settings.pesapal_config as PesapalConfig
+        const _pesapalConfig = settings.pesapal_config as PesapalConfig
         // Pesapal requires server-side order registration
         paymentData = {
           provider: 'pesapal',

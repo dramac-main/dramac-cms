@@ -7,7 +7,7 @@
  */
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ProductsView } from './views/products-view'
 import { OrdersView } from './views/orders-view'
@@ -44,7 +44,7 @@ import { CreateProductDialog } from './dialogs/create-product-dialog'
 import { CreateCategoryDialog } from './dialogs/create-category-dialog'
 import { CreateDiscountDialog } from './dialogs/create-discount-dialog'
 import { EcommerceSettingsDialog } from './dialogs/ecommerce-settings-dialog'
-import type { EcommerceSettings, Product, Order, Category, Discount } from '../types/ecommerce-types'
+import type { EcommerceSettings } from '../types/ecommerce-types'
 
 // ============================================================================
 // VIEW TYPE
@@ -78,7 +78,15 @@ function EcommerceDashboardContent({ initialView }: { initialView?: string }) {
     refresh
   } = useEcommerce()
   
-  const [activeView, setActiveView] = useState<EcommerceView>('products')
+  const [activeView, setActiveView] = useState<EcommerceView>(() => {
+    if (initialView) {
+      const view = initialView as EcommerceView
+      if (['products', 'orders', 'categories', 'discounts', 'analytics'].includes(view)) {
+        return view
+      }
+    }
+    return 'products'
+  })
   const [searchQuery, setSearchQuery] = useState('')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showCreateProduct, setShowCreateProduct] = useState(false)
@@ -86,23 +94,13 @@ function EcommerceDashboardContent({ initialView }: { initialView?: string }) {
   const [showCreateDiscount, setShowCreateDiscount] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
 
-  // Set initial view from URL
-  useEffect(() => {
-    if (initialView) {
-      const view = initialView as EcommerceView
-      if (['products', 'orders', 'categories', 'discounts', 'analytics'].includes(view)) {
-        setActiveView(view)
-      }
-    }
-  }, [initialView])
-
   // Calculate summary stats
   const activeProducts = products.filter(p => p.status === 'active')
   const draftProducts = products.filter(p => p.status === 'draft')
   const lowStockProducts = products.filter(p => p.track_inventory && p.quantity <= p.low_stock_threshold)
   
   const pendingOrders = orders.filter(o => o.status === 'pending')
-  const processingOrders = orders.filter(o => o.status === 'processing')
+  const _processingOrders = orders.filter(o => o.status === 'processing')
   
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -245,7 +243,7 @@ function EcommerceDashboardContent({ initialView }: { initialView?: string }) {
                   <DollarSign className="h-5 w-5 text-green-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Today's Revenue</p>
+                  <p className="text-sm text-muted-foreground">Today&apos;s Revenue</p>
                   <span className="text-2xl font-bold">
                     ${(todayRevenue / 100).toFixed(2)}
                   </span>
@@ -383,7 +381,7 @@ function EcommerceDashboardContent({ initialView }: { initialView?: string }) {
 // MAIN DASHBOARD WRAPPER
 // ============================================================================
 
-export function EcommerceDashboard({ siteId, agencyId, settings, initialView }: EcommerceDashboardProps) {
+export function EcommerceDashboard({ siteId, agencyId, settings: _settings, initialView }: EcommerceDashboardProps) {
   return (
     <EcommerceProvider siteId={siteId} agencyId={agencyId}>
       <EcommerceDashboardContent initialView={initialView} />

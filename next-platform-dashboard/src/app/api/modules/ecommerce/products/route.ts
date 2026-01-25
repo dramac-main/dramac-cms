@@ -7,8 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { getProducts, getProduct, getCategories } from '@/modules/ecommerce/actions/ecommerce-actions'
+import { getProducts, getProduct } from '@/modules/ecommerce/actions/ecommerce-actions'
 
 export const dynamic = 'force-dynamic'
 

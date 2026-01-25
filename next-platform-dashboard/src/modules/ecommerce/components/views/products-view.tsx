@@ -5,20 +5,18 @@
  * 
  * Displays the product catalog with filtering and management
  */
+/* eslint-disable @next/next/no-img-element */
 'use client'
 
 import { useState, useMemo } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
 import type { Product, ProductStatus } from '../../types/ecommerce-types'
-import { CreateProductDialog } from '../dialogs/create-product-dialog'
 import { EditProductDialog } from '../dialogs/edit-product-dialog'
 import { ViewProductDialog } from '../dialogs/view-product-dialog'
 import { toast } from 'sonner'
 import { 
   Package, 
   Plus, 
-  Search, 
-  Filter, 
   MoreHorizontal,
   Edit,
   Trash2,
@@ -28,7 +26,6 @@ import {
   ImageOff
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -156,7 +153,7 @@ export function ProductsView({ searchQuery = '', onCreateProduct }: ProductsView
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ProductStatus | 'all')}>
-            <SelectTrigger className="w-[150px]">
+            <SelectTrigger className="w-36">
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
             <SelectContent>
