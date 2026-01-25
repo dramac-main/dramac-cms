@@ -1,0 +1,275 @@
+/**
+ * Analytics View Component
+ * 
+ * Phase EM-52: E-Commerce Module
+ * 
+ * Displays sales analytics and reports
+ */
+'use client'
+
+import { useMemo } from 'react'
+import { useEcommerce } from '../../context/ecommerce-context'
+import { 
+  BarChart3, 
+  TrendingUp, 
+  TrendingDown,
+  DollarSign,
+  ShoppingCart,
+  Package,
+  Users
+} from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+
+export function AnalyticsView() {
+  const { orders, products, isLoading } = useEcommerce()
+
+  // Calculate analytics
+  const analytics = useMemo(() => {
+    const now = new Date()
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const thisWeekStart = new Date(today)
+    thisWeekStart.setDate(today.getDate() - today.getDay())
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0)
+
+    // Today's orders
+    const todayOrders = orders.filter(o => new Date(o.created_at) >= today)
+    const todayRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0)
+
+    // This week's orders
+    const weekOrders = orders.filter(o => new Date(o.created_at) >= thisWeekStart)
+    const weekRevenue = weekOrders.reduce((sum, o) => sum + o.total, 0)
+
+    // This month's orders
+    const monthOrders = orders.filter(o => new Date(o.created_at) >= thisMonthStart)
+    const monthRevenue = monthOrders.reduce((sum, o) => sum + o.total, 0)
+
+    // Last month's orders (for comparison)
+    const lastMonthOrders = orders.filter(o => {
+      const date = new Date(o.created_at)
+      return date >= lastMonthStart && date <= lastMonthEnd
+    })
+    const lastMonthRevenue = lastMonthOrders.reduce((sum, o) => sum + o.total, 0)
+
+    // Growth calculation
+    const monthGrowth = lastMonthRevenue > 0 
+      ? ((monthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 
+      : 0
+
+    // Product stats
+    const activeProducts = products.filter(p => p.status === 'active').length
+    const lowStockProducts = products.filter(p => p.track_inventory && p.quantity <= p.low_stock_threshold).length
+
+    // Average order value
+    const avgOrderValue = monthOrders.length > 0 
+      ? monthRevenue / monthOrders.length 
+      : 0
+
+    // Top selling products (simplified)
+    const productSales = new Map<string, { name: string; count: number; revenue: number }>()
+    orders.forEach(order => {
+      order.items?.forEach(item => {
+        const current = productSales.get(item.product_id || 'unknown') || { name: item.product_name, count: 0, revenue: 0 }
+        productSales.set(item.product_id || 'unknown', {
+          name: item.product_name,
+          count: current.count + item.quantity,
+          revenue: current.revenue + item.total_price
+        })
+      })
+    })
+    const topProducts = Array.from(productSales.values())
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5)
+
+    return {
+      todayRevenue,
+      todayOrders: todayOrders.length,
+      weekRevenue,
+      weekOrders: weekOrders.length,
+      monthRevenue,
+      monthOrders: monthOrders.length,
+      monthGrowth,
+      avgOrderValue,
+      activeProducts,
+      lowStockProducts,
+      totalOrders: orders.length,
+      topProducts,
+    }
+  }, [orders, products])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Revenue Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Today's Revenue</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold">${(analytics.todayRevenue / 100).toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">{analytics.todayOrders} orders</p>
+              </div>
+              <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/30">
+                <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>This Week</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold">${(analytics.weekRevenue / 100).toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">{analytics.weekOrders} orders</p>
+              </div>
+              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                <ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>This Month</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold">${(analytics.monthRevenue / 100).toFixed(2)}</p>
+                <div className="flex items-center gap-1">
+                  {analytics.monthGrowth >= 0 ? (
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 text-red-500" />
+                  )}
+                  <span className={cn(
+                    "text-sm font-medium",
+                    analytics.monthGrowth >= 0 ? "text-green-500" : "text-red-500"
+                  )}>
+                    {analytics.monthGrowth >= 0 ? '+' : ''}{analytics.monthGrowth.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+              <div className="p-3 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                <BarChart3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Avg. Order Value</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold">${(analytics.avgOrderValue / 100).toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">{analytics.monthOrders} orders this month</p>
+              </div>
+              <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30">
+                <Users className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Active Products</span>
+                <Badge variant="secondary">{analytics.activeProducts}</Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Low Stock Items</span>
+                <Badge variant={analytics.lowStockProducts > 0 ? "destructive" : "secondary"}>
+                  {analytics.lowStockProducts}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Orders</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Total Orders</span>
+                <Badge variant="secondary">{analytics.totalOrders}</Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">This Month</span>
+                <Badge variant="secondary">{analytics.monthOrders}</Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Top Products</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {analytics.topProducts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No sales data yet</p>
+            ) : (
+              <div className="space-y-2">
+                {analytics.topProducts.slice(0, 3).map((product, index) => (
+                  <div key={index} className="flex justify-between items-center text-sm">
+                    <span className="truncate flex-1 mr-2">{product.name}</span>
+                    <Badge variant="outline">${(product.revenue / 100).toFixed(0)}</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Placeholder for Charts */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Sales Over Time</CardTitle>
+          <CardDescription>Revenue trends for the past 30 days</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64 flex items-center justify-center bg-muted/50 rounded-lg">
+            <div className="text-center">
+              <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground">Charts coming soon</p>
+              <p className="text-sm text-muted-foreground">Install a charting library like Recharts for visualizations</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

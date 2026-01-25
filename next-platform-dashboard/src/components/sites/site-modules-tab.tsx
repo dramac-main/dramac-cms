@@ -144,7 +144,7 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
                     {isEnabled && (
                       <>
                         {/* Open button for modules with dashboards */}
-                        {(module.slug === 'booking' || module.slug === 'crm') && (
+                        {(module.slug === 'booking' || module.slug === 'crm' || module.slug === 'ecommerce') && (
                           <Button 
                             variant="default" 
                             size="sm"

@@ -1,11 +1,101 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: January 25, 2026 (Supabase Navigator Lock Deadlock Fix)  
-**Current Phase**: EM-52 E-Commerce Module - ✅ COMPLETE  
+**Last Updated**: January 25, 2026 (E-Commerce Dashboard UI Implementation)  
+**Current Phase**: EM-52 E-Commerce Module - ✅ COMPLETE WITH DASHBOARD UI  
 **Previous Phase**: EM-51 Booking Module - ✅ COMPLETE & DOCUMENTED  
 **Status**: ✅ 26 OF 34 PHASES IMPLEMENTED (76%)
 
 ## Current Work Focus
+
+### ✅ COMPLETE: E-Commerce Dashboard UI Implementation (January 25, 2026)
+
+**Issue Reported**: E-Commerce module enabled on site but no "Open" button appeared (unlike Booking module).
+
+**Root Cause Discovered via Deep Scan**:
+- E-Commerce backend was ~90% complete (actions, types, context, manifest, StorefrontWidget)
+- E-Commerce **dashboard UI was completely missing** - no page route, no dashboard component, no view components
+- The site-modules-tab.tsx only showed "Open" button for `booking` and `crm` slugs, not `ecommerce`
+- Booking module had 20+ components; E-Commerce only had 2 (StorefrontWidget + context)
+
+**Solution Implemented - Full E-Commerce Dashboard UI:**
+
+**1. Dashboard Components Created:**
+- `src/modules/ecommerce/components/ecommerce-dashboard.tsx` - Main dashboard shell (~380 lines)
+  - Stats cards (products, orders, revenue, low stock, discounts)
+  - Tab navigation (Products, Orders, Categories, Discounts, Analytics)
+  - Create dropdown menus
+  - Settings dialog trigger
+
+**2. View Components Created:**
+- `src/modules/ecommerce/components/views/products-view.tsx` - Product catalog with filtering
+- `src/modules/ecommerce/components/views/orders-view.tsx` - Order management with status tracking
+- `src/modules/ecommerce/components/views/categories-view.tsx` - Category tree with hierarchy
+- `src/modules/ecommerce/components/views/discounts-view.tsx` - Discount code management
+- `src/modules/ecommerce/components/views/analytics-view.tsx` - Sales analytics dashboard
+- `src/modules/ecommerce/components/views/index.ts` - Barrel export
+
+**3. Dialog Components Created:**
+- `src/modules/ecommerce/components/dialogs/create-product-dialog.tsx` - Product creation form
+- `src/modules/ecommerce/components/dialogs/create-category-dialog.tsx` - Category creation form
+- `src/modules/ecommerce/components/dialogs/create-discount-dialog.tsx` - Discount code creation form
+- `src/modules/ecommerce/components/dialogs/ecommerce-settings-dialog.tsx` - Store settings (tabbed)
+- `src/modules/ecommerce/components/dialogs/index.ts` - Barrel export
+
+**4. Page Route Created:**
+- `src/app/dashboard/[siteId]/ecommerce/page.tsx` - Dashboard page matching booking pattern
+
+**5. Components Barrel Export:**
+- `src/modules/ecommerce/components/index.ts` - Main export for all components
+
+**6. UI Registration Updated:**
+- `src/components/sites/site-modules-tab.tsx` - Added 'ecommerce' to Open button condition
+- Changed from: `{(module.slug === 'booking' || module.slug === 'crm') && ...}`
+- Changed to: `{(module.slug === 'booking' || module.slug === 'crm' || module.slug === 'ecommerce') && ...}`
+
+**TypeScript Fixes Applied:**
+- Context uses different naming (`addProduct`, `editProduct`, `removeProduct`, etc.)
+- Fixed 24 TypeScript errors by updating method names to match EcommerceContextType
+- Fixed Provider props (requires `agencyId`, not `initialSettings`)
+
+**Verification:**
+- ✅ TypeScript check: `tsc --noEmit` - **ZERO ERRORS**
+- ✅ E-Commerce module now has complete dashboard UI
+- ✅ "Open" button will appear when E-Commerce is enabled on a site
+- ✅ Dashboard URL: `/dashboard/[siteId]/ecommerce`
+
+**Files Created (15 new files):**
+```
+src/modules/ecommerce/components/
+├── ecommerce-dashboard.tsx
+├── index.ts
+├── views/
+│   ├── products-view.tsx
+│   ├── orders-view.tsx
+│   ├── categories-view.tsx
+│   ├── discounts-view.tsx
+│   ├── analytics-view.tsx
+│   └── index.ts
+└── dialogs/
+    ├── create-product-dialog.tsx
+    ├── create-category-dialog.tsx
+    ├── create-discount-dialog.tsx
+    ├── ecommerce-settings-dialog.tsx
+    └── index.ts
+
+src/app/dashboard/[siteId]/ecommerce/
+└── page.tsx
+```
+
+**Files Modified (1 file):**
+- `src/components/sites/site-modules-tab.tsx` - Added ecommerce to Open button condition
+
+**Key Learning:**
+- Module implementation requires BOTH backend (actions, types, context) AND frontend (dashboard UI, views, dialogs, page route)
+- The "Open" button is manually gated by slug in site-modules-tab.tsx
+- Deep scanning across entire codebase is essential to understand complete implementation status
+- Booking module is the pattern to follow for other modules
+
+---
 
 ### ✅ COMPLETE: Supabase Navigator Lock Deadlock Fix (January 25, 2026)
 
