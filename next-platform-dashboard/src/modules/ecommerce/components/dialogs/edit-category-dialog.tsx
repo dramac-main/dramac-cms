@@ -173,12 +173,12 @@ export function EditCategoryDialog({ category, open, onOpenChange }: EditCategor
 
             <div className="space-y-2">
               <Label htmlFor="parent">Parent Category</Label>
-              <Select value={parentId} onValueChange={setParentId}>
+              <Select value={parentId || 'none'} onValueChange={(value) => setParentId(value === 'none' ? '' : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="No parent (top-level)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No parent (top-level)</SelectItem>
+                  <SelectItem value="none">No parent (top-level)</SelectItem>
                   {availableParentCategories.map(cat => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
