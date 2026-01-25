@@ -12,6 +12,8 @@ import { useEcommerce } from '../../context/ecommerce-context'
 import type { Product, ProductStatus } from '../../types/ecommerce-types'
 import { CreateProductDialog } from '../dialogs/create-product-dialog'
 import { EditProductDialog } from '../dialogs/edit-product-dialog'
+import { ViewProductDialog } from '../dialogs/view-product-dialog'
+import { toast } from 'sonner'
 import { 
   Package, 
   Plus, 
@@ -59,12 +61,14 @@ interface ProductsViewProps {
 }
 
 export function ProductsView({ searchQuery = '', onCreateProduct }: ProductsViewProps) {
-  const { products, categories, isLoading, removeProduct, editProduct } = useEcommerce()
+  const { products, categories, isLoading, removeProduct, editProduct, copyProduct } = useEcommerce()
   const [statusFilter, setStatusFilter] = useState<ProductStatus | 'all'>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [showEditDialog, setShowEditDialog] = useState(false)
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null)
+  const [showViewDialog, setShowViewDialog] = useState(false)
 
   // Filter products
   const filteredProducts = useMemo(() => {
@@ -112,6 +116,21 @@ export function ProductsView({ searchQuery = '', onCreateProduct }: ProductsView
 
   const handleArchiveProduct = async (product: Product) => {
     await editProduct(product.id, { status: 'archived' })
+  }
+
+  const handleDuplicateProduct = async (productId: string) => {
+    try {
+      const duplicated = await copyProduct(productId)
+      toast.success(`Product duplicated: ${duplicated.name}`)
+    } catch (error) {
+      console.error('Error duplicating product:', error)
+      toast.error('Failed to duplicate product')
+    }
+  }
+
+  const handleViewProduct = (product: Product) => {
+    setViewingProduct(product)
+    setShowViewDialog(true)
   }
 
   const getStatusBadge = (status: ProductStatus) => {
@@ -214,8 +233,12 @@ export function ProductsView({ searchQuery = '', onCreateProduct }: ProductsView
               {filteredProducts.map(product => {
                 const statusBadge = getStatusBadge(product.status)
                 return (
-                  <TableRow key={product.id}>
-                    <TableCell>
+                  <TableRow 
+                    key={product.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleViewProduct(product)}
+                  >
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selectedProducts.includes(product.id)}
                         onCheckedChange={(checked) => handleSelectProduct(product.id, checked as boolean)}
@@ -276,7 +299,7 @@ export function ProductsView({ searchQuery = '', onCreateProduct }: ProductsView
                         <span className="text-muted-foreground">∞</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
@@ -284,7 +307,9 @@ export function ProductsView({ searchQuery = '', onCreateProduct }: ProductsView
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleViewProduct(product)}
+                          >
                             <Eye className="h-4 w-4 mr-2" />
                             View
                           </DropdownMenuItem>
@@ -297,7 +322,9 @@ export function ProductsView({ searchQuery = '', onCreateProduct }: ProductsView
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDuplicateProduct(product.id)}
+                          >
                             <Copy className="h-4 w-4 mr-2" />
                             Duplicate
                           </DropdownMenuItem>
@@ -323,6 +350,28 @@ export function ProductsView({ searchQuery = '', onCreateProduct }: ProductsView
           </Table>
         </div>
       )}
+
+      <ViewProductDialog 
+        product={viewingProduct}
+        open={showViewDialog} 
+        onOpenChange={setShowViewDialog}
+        onEdit={() => {
+          setShowViewDialog(false)
+          setEditingProduct(viewingProduct)
+          setShowEditDialog(true)
+        }}
+      />
+
+      <ViewProductDialog 
+        product={viewingProduct}
+        open={showViewDialog} 
+        onOpenChange={setShowViewDialog}
+        onEdit={() => {
+          setShowViewDialog(false)
+          setEditingProduct(viewingProduct)
+          setShowEditDialog(true)
+        }}
+      />
 
       <EditProductDialog 
         product={editingProduct}
