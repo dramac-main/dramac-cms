@@ -216,9 +216,8 @@ async function fetchTestingModules(
 export async function searchMarketplace(
   filters: MarketplaceFilters
 ): Promise<MarketplaceSearchResult> {
-  try {
-    const supabase = createClient();
-    const {
+  const supabase = createClient();
+  const {
     query,
     categories,
     priceRange = 'all',
@@ -386,15 +385,6 @@ export async function searchMarketplace(
     totalPages: Math.ceil(totalCount / limit),
     facets
   };
-  } catch (error) {
-    console.error('[MarketplaceSearch] Error:', {
-      message: error instanceof Error ? error.message : String(error),
-      details: error instanceof Error && 'details' in error ? (error as any).details : undefined,
-      hint: error instanceof Error && 'hint' in error ? (error as any).hint : undefined,
-      code: error instanceof Error && 'code' in error ? (error as any).code : undefined
-    });
-    throw error;
-  }
 }
 
 /**
@@ -465,50 +455,40 @@ async function getSearchFacets(supabase: ReturnType<typeof createClient>): Promi
  * Get all visible featured collections with their modules
  */
 export async function getFeaturedCollections(): Promise<ModuleCollection[]> {
-  try {
-    const supabase = createClient();
-    
-    // Use type assertion for new table (will be created by migration)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error } = await (supabase as any)
-      .from('module_collections')
-      .select(`
-        id, slug, name, description, icon, banner_image, display_order, is_visible,
-        items:module_collection_items(
-          module:modules_v2(
-            id, slug, name, description, icon, category, module_type,
-            pricing_type, wholesale_price_monthly, wholesale_price_yearly,
-            rating_average, rating_count, install_count, is_featured,
-            author_name, author_verified, screenshots, published_at
-          )
+  const supabase = createClient();
+  
+  // Use type assertion for new table (will be created by migration)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('module_collections')
+    .select(`
+      id, slug, name, description, icon, banner_image, display_order, is_visible,
+      items:module_collection_items(
+        module:modules_v2(
+          id, slug, name, description, icon, category, module_type,
+          pricing_type, wholesale_price_monthly, wholesale_price_yearly,
+          rating_average, rating_count, install_count, is_featured,
+          author_name, author_verified, screenshots, published_at
         )
-      `)
-      .eq('is_visible', true)
-      .order('display_order');
+      )
+    `)
+    .eq('is_visible', true)
+    .order('display_order');
 
-    if (error) {
-      console.error('[MarketplaceSearch] Error fetching collections:', error);
-      throw error;
-    }
-
-    // Filter out null modules and transform
-    return ((data as ModuleCollection[]) || []).map(collection => ({
-      ...collection,
-      items: (collection.items || [])
-        .filter((item: { module: ModuleListItem | null }) => item.module !== null)
-        .map((item: { module: ModuleListItem }) => ({
-          module: item.module
-        }))
-    }));
-  } catch (error) {
-    console.error('[MarketplaceSearch] Error fetching collections:', {
-      message: error instanceof Error ? error.message : String(error),
-      details: error instanceof Error && 'details' in error ? (error as any).details : undefined,
-      hint: error instanceof Error && 'hint' in error ? (error as any).hint : undefined,
-      code: error instanceof Error && 'code' in error ? (error as any).code : undefined
-    });
+  if (error) {
+    console.error('[MarketplaceSearch] Error fetching collections:', error);
     throw error;
   }
+
+  // Filter out null modules and transform
+  return ((data as ModuleCollection[]) || []).map(collection => ({
+    ...collection,
+    items: (collection.items || [])
+      .filter((item: { module: ModuleListItem | null }) => item.module !== null)
+      .map((item: { module: ModuleListItem }) => ({
+        module: item.module
+      }))
+  }));
 }
 
 /**
