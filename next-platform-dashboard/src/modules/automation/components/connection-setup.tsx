@@ -249,30 +249,30 @@ const SERVICE_DEFINITIONS: ServiceDefinition[] = [
   },
   // Payments
   {
-    id: "stripe",
-    name: "Stripe",
-    description: "Process payments and manage subscriptions",
+    id: "paddle",
+    name: "Paddle",
+    description: "Billing & subscription management (Zambia-compatible payouts)",
     icon: "💳",
     category: "Payments",
     authType: "api_key",
     requiredFields: [
       {
         key: "api_key",
-        label: "Secret Key",
+        label: "API Key",
         type: "password",
         required: true,
-        placeholder: "sk_live_xxxxxxxxxxxxxxxxxxxx",
-        helpText: "Use your live or test secret key"
+        placeholder: "pdl_live_xxxxxxxxxxxxxxxxxxxx",
+        helpText: "Your Paddle API key from dashboard"
       },
       {
         key: "webhook_secret",
         label: "Webhook Secret",
         type: "password",
         required: false,
-        placeholder: "whsec_xxxxxxxxxxxxxxxxxxxx"
+        placeholder: "pdl_whk_xxxxxxxxxxxxxxxxxxxx"
       }
     ],
-    docsUrl: "https://stripe.com/docs/api"
+    docsUrl: "https://developer.paddle.com/api-reference"
   },
   // Storage
   {

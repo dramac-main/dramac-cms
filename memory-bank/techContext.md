@@ -38,18 +38,25 @@
 - **Zod**: 4.3.5 (schema validation)
 
 ### Billing & Payments
-- **Paddle**: (planned) - Merchant of Record, usage-based billing
-  - Replaces LemonSqueezy (doesn't support Zambia payouts)
+- **Paddle**: (Phase EM-59) - Merchant of Record, usage-based billing ⭐ PREFERRED
+  - Primary billing provider for DRAMAC platform
+  - Supports Zambia payouts via Payoneer/Wise
   - Payout route: Paddle → Payoneer/Wise → Zambia Bank
-- **LemonSqueezy**: 4.0.0 (current, to be replaced)
-- **Stripe**: 20.1.2 + @stripe/stripe-js 8.6.1 (payment processing for marketplace)
+  - Features: Hybrid pricing (subscription + usage overage), dunning, tax compliance
+- **LemonSqueezy**: 4.0.0 (DEPRECATED - to be replaced by Paddle)
+  - Does NOT support Zambia payouts
+  - Will be removed after Paddle migration
+- **Stripe**: (NOT USED for platform billing)
+  - Only mentioned in legacy code/database types
+  - May be used by E-commerce module for client stores (optional)
+  - NOT for DRAMAC platform subscription billing
 
 ### AI & Automation
 - **AI SDK**: 6.0.33 (Vercel AI SDK)
 - **@ai-sdk/anthropic**: 3.0.12 (Claude integration)
 - **@anthropic-ai/sdk**: 0.71.2 (Anthropic API)
-- **Custom Automation Engine**: (planned) - EM-57 specification complete
-- **AI Agents System**: (planned) - EM-58 specification complete
+- **Automation Engine**: ✅ COMPLETE (EM-57) - Workflows, triggers, event processing
+- **AI Agents System**: (Phase EM-58) - Intelligent agents with memory, tools, goals
 
 ### Communication
 - **Resend**: 6.7.0 (transactional emails)
@@ -121,17 +128,23 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 **Optional:**
 ```env
-# LemonSqueezy
-LEMONSQUEEZY_API_KEY=
-LEMONSQUEEZY_STORE_ID=
-LEMONSQUEEZY_WEBHOOK_SECRET=
+# Paddle (PRIMARY billing - Zambia-compatible)
+PADDLE_API_KEY=pdl_live_xxx
+PADDLE_WEBHOOK_SECRET=pdl_whk_xxx
+PADDLE_ENVIRONMENT=production
+NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=xxx
+
+# LemonSqueezy (DEPRECATED - being replaced by Paddle)
+# LEMONSQUEEZY_API_KEY=
+# LEMONSQUEEZY_STORE_ID=
+# LEMONSQUEEZY_WEBHOOK_SECRET=
 
 # Resend (Email)
 RESEND_API_KEY=
 
-# Stripe (Alternative billing)
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
+# Stripe (NOT for platform billing - optional for E-commerce client stores only)
+# STRIPE_SECRET_KEY=
+# STRIPE_WEBHOOK_SECRET=
 
 # Anthropic AI
 ANTHROPIC_API_KEY=

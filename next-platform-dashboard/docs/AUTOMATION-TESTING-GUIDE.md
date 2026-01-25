@@ -880,10 +880,11 @@ Expected output:
    - Test: Send test email
    - Verify: Email received
 
-5. **Stripe**
-   - API Key (test mode)
-   - Test: Fetch customer list
+5. **Paddle** (Platform Billing)
+   - API Key (test mode - sandbox)
+   - Test: Fetch subscription list
    - Verify: Connection successful
+   - Note: Paddle is used for platform billing (Zambia-compatible payouts via Payoneer/Wise)
 
 6. **Custom Webhook**
    - URL, Method, Headers

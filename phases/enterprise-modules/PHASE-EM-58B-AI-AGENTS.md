@@ -2777,7 +2777,30 @@ Respond with ONLY the number of your choice and brief reasoning.
 
 ---
 
-*Document Version: 1.0*  
+## 📊 Billing Integration Note
+
+This module's usage must be tracked for billing (see EM-59):
+
+```typescript
+// Track AI usage in billing system
+await incrementUsage(agencyId, siteId, {
+  ai_actions: 1,  // Each agent execution = 1 AI action
+});
+```
+
+The AI Agent Pack add-on ($49/month) provides:
+- 5,000 extra AI actions/month
+- Priority AI queue
+- Access to advanced models (GPT-4, Claude 3)
+
+Usage overage rates:
+- Starter: $0.005 per AI action
+- Pro: $0.0025 per AI action (50% discount)
+
+---
+
+*Document Version: 1.1*  
 *Created: 2026-01-24*  
+*Updated: 2026-01-26 (Added billing integration note)*  
 *Phase Status: Specification Complete*  
-*Related: PHASE-EM-58A-AI-AGENTS.md, PHASE-EM-57A-AUTOMATION-ENGINE.md*
+*Related: PHASE-EM-58A-AI-AGENTS.md, PHASE-EM-57A-AUTOMATION-ENGINE.md, PHASE-EM-59A-PADDLE-BILLING.md*

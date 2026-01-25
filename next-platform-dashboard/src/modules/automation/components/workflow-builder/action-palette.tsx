@@ -85,7 +85,7 @@ const ACTION_CATEGORIES = [
       { id: "webhook.send", name: "HTTP Request", icon: "🌐", description: "Call external API" },
       { id: "integration.google_sheets", name: "Google Sheets", icon: "📊", description: "Add row to sheet" },
       { id: "integration.airtable", name: "Airtable", icon: "📋", description: "Create Airtable record" },
-      { id: "integration.stripe", name: "Stripe", icon: "💳", description: "Stripe operations" },
+      { id: "integration.paddle", name: "Paddle", icon: "💳", description: "Paddle billing operations" },
     ],
   },
   {

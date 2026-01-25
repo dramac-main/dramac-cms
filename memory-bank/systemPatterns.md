@@ -9,7 +9,7 @@
 - **Backend**: Next.js Server Actions, API Routes
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth with RLS policies
-- **Billing**: LemonSqueezy
+- **Billing**: Paddle (Phase EM-59) - Zambia-compatible via Payoneer/Wise
 - **Hosting**: Vercel (platform), Supabase (data)
 - **UI**: Radix UI, Tailwind CSS, Framer Motion
 - **State**: Zustand, TanStack Query

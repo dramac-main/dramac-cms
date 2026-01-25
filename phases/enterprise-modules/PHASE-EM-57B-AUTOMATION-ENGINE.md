@@ -618,7 +618,7 @@ const ACTION_CATEGORIES = [
       { id: "webhook.send", name: "HTTP Request", icon: "🌐" },
       { id: "integration.google_sheets", name: "Google Sheets", icon: "📊" },
       { id: "integration.airtable", name: "Airtable", icon: "📋" },
-      { id: "integration.stripe", name: "Stripe", icon: "💳" },
+      { id: "integration.paddle", name: "Paddle", icon: "💳" },
     ],
   },
   {
@@ -2622,12 +2622,12 @@ const AVAILABLE_INTEGRATIONS = [
     ],
   },
   {
-    id: "stripe",
-    name: "Stripe",
+    id: "paddle",
+    name: "Paddle",
     icon: "💳",
-    description: "Create customers, subscriptions, and invoices",
+    description: "Billing & subscription management (Zambia-compatible)",
     fields: [
-      { key: "secret_key", label: "Secret Key", type: "password", placeholder: "sk_..." },
+      { key: "api_key", label: "API Key", type: "password", placeholder: "pdl_live_..." },
     ],
   },
   {
@@ -3173,7 +3173,7 @@ src/modules/automation/
 - [ ] Implement SendGrid
 - [ ] Implement Google Sheets (OAuth)
 - [ ] Implement Airtable
-- [ ] Implement Stripe
+- [ ] Implement Paddle (billing - Zambia-compatible)
 - [ ] Build connection management UI
 
 ### AI Features
@@ -3229,7 +3229,7 @@ The Automation Engine (EM-57A + EM-57B) transforms DRAMAC from a collection of t
 ✅ **Visual Workflow Builder** - Drag-and-drop interface for creating automations
 ✅ **Event-Driven Architecture** - React to events from ANY installed module
 ✅ **Pre-Built Templates** - 10+ templates covering common use cases
-✅ **External Integrations** - Connect to Slack, Twilio, Stripe, and more
+✅ **External Integrations** - Connect to Slack, Twilio, Paddle, and more
 ✅ **AI-Powered Actions** - Generate text, classify data, extract information
 ✅ **Analytics Dashboard** - Track performance and identify issues
 ✅ **Flexible Pricing** - Free tier to Enterprise with clear upgrade path

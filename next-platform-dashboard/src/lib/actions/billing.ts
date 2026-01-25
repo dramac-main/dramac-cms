@@ -1,3 +1,15 @@
+/**
+ * DEPRECATED: LemonSqueezy Billing Actions
+ * 
+ * ⚠️ WARNING: This file uses LemonSqueezy which does NOT support Zambia payouts.
+ * 
+ * This file will be replaced during Phase EM-59 implementation with Paddle billing.
+ * 
+ * NEW IMPLEMENTATION: @/lib/paddle/billing-actions.ts (to be created in EM-59)
+ * 
+ * @see phases/enterprise-modules/PHASE-EM-59A-PADDLE-BILLING.md
+ * @deprecated Will be replaced with Paddle billing in EM-59
+ */
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -12,6 +24,7 @@ import {
 import { getPlanById, getVariantId } from "@/config/plans";
 import type { BillingInterval, Subscription, Invoice } from "@/types/payments";
 
+/** @deprecated Use Paddle subscription functions from EM-59 */
 export async function getAgencySubscription(userId: string): Promise<Subscription | null> {
   const supabase = await createClient();
 

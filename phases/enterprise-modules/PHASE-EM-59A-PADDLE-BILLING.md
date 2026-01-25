@@ -1965,6 +1965,211 @@ async function sendPaymentFailedEmail(agencyId: string): Promise<void> {
 
 ## Migration from LemonSqueezy
 
+### ⚠️ CRITICAL: Database Cleanup Required
+
+**The existing codebase has MULTIPLE conflicting billing tables that MUST be cleaned up:**
+
+| Existing Table | Source File | Issue |
+|----------------|-------------|-------|
+| `billing_customers` | billing.sql | Has `stripe_customer_id` column |
+| `billing_subscriptions` | billing.sql | Has `stripe_subscription_id` column |
+| `billing_invoices` | billing.sql | Has `stripe_invoice_id` column |
+| `billing_usage` | billing.sql | Has `stripe_subscription_item_id` column |
+| `subscriptions` | billing-lemonsqueezy.sql | Has `lemonsqueezy_*` columns |
+| `invoices` | billing-lemonsqueezy.sql | Has `lemonsqueezy_order_id` column |
+
+**After EM-59 migration is complete and verified, run this cleanup migration:**
+
+```sql
+-- migrations/em-59-cleanup-old-billing.sql
+-- ============================================================================
+-- CLEANUP: Remove Old Billing Tables After Paddle Migration
+-- RUN ONLY AFTER: All data migrated to paddle_* tables and verified
+-- ============================================================================
+
+-- Step 1: Backup data first (if needed)
+-- CREATE TABLE billing_customers_backup AS SELECT * FROM billing_customers;
+-- CREATE TABLE billing_subscriptions_backup AS SELECT * FROM billing_subscriptions;
+-- CREATE TABLE subscriptions_backup AS SELECT * FROM subscriptions;
+
+-- Step 2: Drop old Stripe billing tables
+DROP TABLE IF EXISTS billing_usage CASCADE;
+DROP TABLE IF EXISTS billing_invoices CASCADE;
+DROP TABLE IF EXISTS billing_subscriptions CASCADE;
+DROP TABLE IF EXISTS billing_customers CASCADE;
+
+-- Step 3: Drop old LemonSqueezy tables
+DROP TABLE IF EXISTS invoices CASCADE;
+DROP TABLE IF EXISTS subscriptions CASCADE;
+
+-- Step 4: Clean up any remaining stripe/lemonsqueezy columns
+-- (These may exist in other tables - check and clean)
+-- ALTER TABLE modules_v2 DROP COLUMN IF EXISTS lemon_product_id;
+-- ALTER TABLE modules_v2 DROP COLUMN IF EXISTS lemon_variant_monthly_id;
+-- ALTER TABLE modules_v2 DROP COLUMN IF EXISTS lemon_variant_yearly_id;
+
+-- Step 5: Verify cleanup
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'billing_customers') THEN
+    RAISE EXCEPTION 'billing_customers table still exists!';
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'subscriptions') THEN
+    RAISE EXCEPTION 'subscriptions table still exists!';
+  END IF;
+  RAISE NOTICE 'Old billing tables successfully cleaned up';
+END $$;
+```
+
+### TypeScript Types Update Required
+
+**The following TypeScript files must be updated when implementing EM-59:**
+
+1. **Delete or Deprecate:**
+   - `src/types/billing.ts` - Contains Stripe types (DELETE after migration)
+   - `src/types/payments.ts` - Contains LemonSqueezy types (DELETE after migration)
+
+2. **Create New:**
+   - `src/types/paddle.ts` - New Paddle types (provided below)
+
+3. **Regenerate:**
+   - `src/types/supabase.ts` - Run `npx supabase gen types typescript` after migration
+
+**New Paddle Types File:**
+
+```typescript
+// src/types/paddle.ts
+// DRAMAC CMS - Paddle Billing Types
+// Created as part of EM-59 migration
+
+export type PaddleSubscriptionStatus = 
+  | 'trialing'
+  | 'active'
+  | 'past_due'
+  | 'paused'
+  | 'canceled';
+
+export type BillingCycle = 'monthly' | 'yearly';
+export type PlanType = 'starter' | 'pro' | 'enterprise' | 'addon';
+
+export interface PaddleCustomer {
+  id: string;
+  agency_id: string;
+  paddle_customer_id: string;
+  email: string;
+  name: string | null;
+  address_country: string | null;
+  address_postal_code: string | null;
+  marketing_consent: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaddleSubscription {
+  id: string;
+  agency_id: string;
+  customer_id: string;
+  paddle_subscription_id: string;
+  paddle_product_id: string;
+  paddle_price_id: string;
+  plan_type: PlanType;
+  billing_cycle: BillingCycle;
+  status: PaddleSubscriptionStatus;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  trial_end: string | null;
+  canceled_at: string | null;
+  paused_at: string | null;
+  cancel_at_period_end: boolean;
+  cancellation_reason: string | null;
+  unit_price: number;
+  currency: string;
+  included_automation_runs: number;
+  included_ai_actions: number;
+  included_api_calls: number;
+  discount_id: string | null;
+  discount_percentage: number | null;
+  discount_ends_at: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaddleTransaction {
+  id: string;
+  agency_id: string;
+  subscription_id: string | null;
+  paddle_transaction_id: string;
+  paddle_invoice_id: string | null;
+  paddle_invoice_number: string | null;
+  origin: 'subscription_recurring' | 'subscription_charge' | 'web' | 'api';
+  status: 'draft' | 'ready' | 'billed' | 'paid' | 'completed' | 'canceled' | 'past_due';
+  subtotal: number;
+  tax: number;
+  total: number;
+  currency: string;
+  invoice_url: string | null;
+  receipt_url: string | null;
+  billed_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UsageStats {
+  automation_runs: number;
+  ai_actions: number;
+  api_calls: number;
+  included_automation_runs: number;
+  included_ai_actions: number;
+  included_api_calls: number;
+  overage_automation_runs: number;
+  overage_ai_actions: number;
+  overage_api_calls: number;
+  period_start: string;
+  period_end: string;
+}
+
+export interface PaddleProduct {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  plan_type: PlanType;
+  billing_cycle: BillingCycle | 'one_time';
+  price_cents: number;
+  currency: string;
+  included_automation_runs: number;
+  included_ai_actions: number;
+  included_api_calls: number;
+  max_modules: number | null;
+  max_sites: number | null;
+  max_team_members: number | null;
+  features: string[];
+  is_active: boolean;
+}
+
+export interface BillingOverview {
+  subscription: PaddleSubscription | null;
+  customer: PaddleCustomer | null;
+  transactions: PaddleTransaction[];
+  usage: UsageStats | null;
+  products: PaddleProduct[];
+}
+```
+
+### Code Files That Must Be Updated
+
+**During EM-59 implementation, these files need modification:**
+
+| File | Current State | Required Change |
+|------|---------------|-----------------|
+| `src/lib/payments/lemonsqueezy.ts` | LemonSqueezy SDK | Replace with `src/lib/paddle/client.ts` |
+| `src/lib/actions/billing.ts` | Uses lemonsqueezy functions | Rewrite for Paddle |
+| `src/modules/automation/components/connection-setup.tsx` | Has Stripe service | Replace with Paddle |
+| `src/modules/automation/components/workflow-builder/action-palette.tsx` | Has integration.stripe | Replace with integration.paddle |
+| `src/config/plans.ts` | LemonSqueezy variant IDs | Update for Paddle price IDs |
+
 ### Migration Plan
 
 ```markdown
@@ -1976,6 +2181,7 @@ async function sendPaymentFailedEmail(agencyId: string): Promise<void> {
 - [ ] Set up Payoneer/Wise for payouts
 - [ ] Deploy database migration
 - [ ] Deploy new billing code (inactive)
+- [ ] Update TypeScript types (create paddle.ts)
 
 ### Phase 2: Testing (Week 2)
 - [ ] Test checkout flow in Paddle sandbox
@@ -2104,6 +2310,108 @@ Part B will cover:
 
 ---
 
+## 🔔 Automation Event Integration (CRITICAL)
+
+### Events This Module MUST Emit
+
+Billing events must be emitted to enable automation workflows (e.g., "When subscription is canceled, send retention email"):
+
+```typescript
+// Required import in all billing action files
+import { logAutomationEvent } from '@/modules/automation/services/event-processor'
+```
+
+### Events to Emit
+
+| Event | Trigger | Payload |
+|-------|---------|---------|
+| `billing.subscription.created` | New subscription started | `{ subscription_id, agency_id, plan_type, billing_cycle }` |
+| `billing.subscription.upgraded` | Plan upgrade | `{ subscription_id, old_plan, new_plan }` |
+| `billing.subscription.downgraded` | Plan downgrade | `{ subscription_id, old_plan, new_plan }` |
+| `billing.subscription.canceled` | Subscription canceled | `{ subscription_id, agency_id, reason }` |
+| `billing.subscription.renewed` | Subscription renewed | `{ subscription_id, amount, next_period_end }` |
+| `billing.payment.succeeded` | Payment successful | `{ transaction_id, amount, currency }` |
+| `billing.payment.failed` | Payment failed | `{ transaction_id, agency_id, error_code, retry_count }` |
+| `billing.trial.started` | Trial begun | `{ subscription_id, trial_end }` |
+| `billing.trial.ending` | Trial ending soon (3 days) | `{ subscription_id, days_remaining }` |
+| `billing.usage.threshold` | Usage hit threshold (80%) | `{ agency_id, usage_type, percentage }` |
+| `billing.usage.exceeded` | Usage exceeded included | `{ agency_id, usage_type, overage_amount }` |
+
+### Integration Code Example
+
+```typescript
+// In webhook handler after subscription.created
+await logAutomationEvent(siteId, 'billing.subscription.created', {
+  subscription_id: subscription.paddle_subscription_id,
+  agency_id: subscription.agency_id,
+  plan_type: subscription.plan_type,
+  billing_cycle: subscription.billing_cycle,
+  amount: subscription.unit_price,
+})
+
+// After payment fails
+await logAutomationEvent(siteId, 'billing.payment.failed', {
+  transaction_id: transaction.paddle_transaction_id,
+  agency_id: transaction.agency_id,
+  error_code: transaction.error_code,
+  retry_count: transaction.retry_count,
+})
+```
+
+### EVENT_REGISTRY Addition
+
+Add to `src/modules/automation/lib/event-types.ts`:
+
+```typescript
+'billing': {
+  'subscription.created': {
+    id: 'billing.subscription.created',
+    category: 'Billing',
+    name: 'Subscription Created',
+    description: 'Triggered when a new subscription is created',
+    trigger_label: 'When subscription is created',
+    payload_schema: { subscription_id: 'string', plan_type: 'string' }
+  },
+  'subscription.canceled': {
+    id: 'billing.subscription.canceled',
+    category: 'Billing',
+    name: 'Subscription Canceled',
+    description: 'Triggered when subscription is canceled',
+    trigger_label: 'When subscription is canceled',
+    payload_schema: { subscription_id: 'string', reason: 'string' }
+  },
+  'payment.failed': {
+    id: 'billing.payment.failed',
+    category: 'Billing',
+    name: 'Payment Failed',
+    description: 'Triggered when a payment fails',
+    trigger_label: 'When payment fails',
+    payload_schema: { transaction_id: 'string', error_code: 'string' }
+  },
+  // ... add all events
+}
+```
+
+---
+
+## 📊 Current Database Schema Reference
+
+When writing the EM-59 migration, be aware of these existing tables:
+
+**Existing Billing Tables (to be deprecated):**
+- `subscriptions` - Old subscription tracking (LemonSqueezy)
+- `invoices` - Old invoice table
+
+**Automation Engine (EM-57) - For Event Integration:**
+- `automation_events_log` - Where billing events will be logged
+- `automation_event_subscriptions` - For triggering workflows on billing events
+
+**RLS Helper Functions (Phase-59) - Use These:**
+- `auth.get_current_agency_id()` - Get user's agency
+- `auth.is_agency_member(agency_id)` - Check agency membership
+
+---
+
 ## Quick Reference
 
 ### Files to Update (Hybrid Model)
@@ -2137,6 +2445,7 @@ When implementing the hybrid pricing model, these files need updates:
 
 ---
 
-*Document Version: 1.0*  
+*Document Version: 1.1*  
 *Created: 2026-01-24*  
+*Updated: 2026-01-26 (Added automation event integration, database schema reference)*  
 *Phase Status: Specification Complete*

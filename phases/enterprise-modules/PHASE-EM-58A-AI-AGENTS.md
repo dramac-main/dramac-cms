@@ -785,24 +785,25 @@ CREATE POLICY "Service role bypass" ON ai_llm_providers FOR ALL USING (auth.role
 CREATE POLICY "Service role bypass" ON ai_usage_tracking FOR ALL USING (auth.role() = 'service_role');
 CREATE POLICY "Service role bypass" ON ai_usage_daily FOR ALL USING (auth.role() = 'service_role');
 
--- User policies using existing helper
+-- User policies using existing RLS helper from phase-59-rls-helpers.sql
+-- IMPORTANT: Use auth.can_access_site() NOT user_has_site_access()
 CREATE POLICY "Users can access their site's agents" ON ai_agents 
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their agent goals" ON ai_agent_goals
   FOR ALL USING (EXISTS (
     SELECT 1 FROM ai_agents a WHERE a.id = ai_agent_goals.agent_id 
-    AND user_has_site_access(a.site_id)
+    AND auth.can_access_site(a.site_id)
   ));
 
 CREATE POLICY "Users can access their site's conversations" ON ai_agent_conversations
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their site's memories" ON ai_agent_memories
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their site's episodes" ON ai_agent_episodes
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 -- Tools are global (read-only for users)
 CREATE POLICY "Users can read active tools" ON ai_agent_tools
@@ -811,29 +812,29 @@ CREATE POLICY "Users can read active tools" ON ai_agent_tools
 CREATE POLICY "Users can access their agent tool calls" ON ai_agent_tool_calls
   FOR ALL USING (EXISTS (
     SELECT 1 FROM ai_agents a WHERE a.id = ai_agent_tool_calls.agent_id 
-    AND user_has_site_access(a.site_id)
+    AND auth.can_access_site(a.site_id)
   ));
 
 CREATE POLICY "Users can access their site's executions" ON ai_agent_executions
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their execution steps" ON ai_agent_execution_steps
   FOR ALL USING (EXISTS (
     SELECT 1 FROM ai_agent_executions e WHERE e.id = ai_agent_execution_steps.execution_id 
-    AND user_has_site_access(e.site_id)
+    AND auth.can_access_site(e.site_id)
   ));
 
 CREATE POLICY "Users can access their site's approvals" ON ai_agent_approvals
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their site's LLM providers" ON ai_llm_providers
-  FOR ALL USING (site_id IS NULL OR user_has_site_access(site_id));
+  FOR ALL USING (site_id IS NULL OR auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their site's usage" ON ai_usage_tracking
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 CREATE POLICY "Users can access their site's daily usage" ON ai_usage_daily
-  FOR ALL USING (user_has_site_access(site_id));
+  FOR ALL USING (auth.can_access_site(site_id));
 
 -- ============================================================================
 -- FUNCTIONS
@@ -2680,6 +2681,103 @@ src/lib/ai-agents/
 
 ---
 
-*Document Version: 1.0*  
+## 🔔 Automation Event Integration (CRITICAL)
+
+### Events This Module MUST Emit
+
+AI Agents must emit automation events to integrate with the automation engine (EM-57):
+
+```typescript
+// Required import in all agent action files
+import { logAutomationEvent } from '@/modules/automation/services/event-processor'
+```
+
+### Events to Emit
+
+| Event | Trigger | Payload |
+|-------|---------|---------|
+| `ai.agent.created` | New agent created | `{ id, name, type, domain }` |
+| `ai.agent.updated` | Agent configuration changed | `{ id, changes }` |
+| `ai.agent.deleted` | Agent removed | `{ id, name }` |
+| `ai.agent.activated` | Agent enabled | `{ id, name }` |
+| `ai.agent.deactivated` | Agent disabled | `{ id, name }` |
+| `ai.execution.started` | Agent run begins | `{ execution_id, agent_id, trigger_type }` |
+| `ai.execution.completed` | Agent run finishes successfully | `{ execution_id, agent_id, actions_taken, tokens_used }` |
+| `ai.execution.failed` | Agent run fails | `{ execution_id, agent_id, error }` |
+| `ai.approval.requested` | Human approval needed | `{ approval_id, agent_id, action_type, risk_level }` |
+| `ai.approval.resolved` | Approval granted/denied | `{ approval_id, approved, resolved_by }` |
+
+### Integration Code Example
+
+```typescript
+// After creating an agent
+await logAutomationEvent(siteId, 'ai.agent.created', {
+  id: newAgent.id,
+  name: newAgent.name,
+  type: newAgent.agent_type,
+  domain: newAgent.domain,
+}, {
+  sourceModule: 'ai_agents',
+  sourceEntityType: 'agent',
+  sourceEntityId: newAgent.id
+})
+
+// After agent execution completes
+await logAutomationEvent(siteId, 'ai.execution.completed', {
+  execution_id: execution.id,
+  agent_id: execution.agent_id,
+  actions_taken: execution.actions_taken,
+  tokens_used: execution.tokens_total,
+  duration_ms: execution.duration_ms,
+})
+```
+
+### EVENT_REGISTRY Addition
+
+Add to `src/modules/automation/lib/event-types.ts`:
+
+```typescript
+'ai_agents': {
+  'agent.created': {
+    id: 'ai.agent.created',
+    category: 'AI Agents',
+    name: 'Agent Created',
+    description: 'Triggered when a new AI agent is created',
+    trigger_label: 'When AI agent is created',
+    payload_schema: { id: 'string', name: 'string', type: 'string', domain: 'string' }
+  },
+  'execution.completed': {
+    id: 'ai.execution.completed',
+    category: 'AI Agents',
+    name: 'Agent Execution Completed',
+    description: 'Triggered when an AI agent completes a run',
+    trigger_label: 'When AI agent completes execution',
+    payload_schema: { execution_id: 'string', agent_id: 'string', tokens_used: 'number' }
+  },
+  // ... add all events
+}
+```
+
+---
+
+## 📊 Current Database Schema Reference
+
+When writing the EM-58 migration, be aware of these existing tables:
+
+**Automation Engine (EM-57) - Already Exists:**
+- `automation_workflows`, `workflow_steps`, `workflow_executions`
+- `step_execution_logs`, `automation_events_log`
+- `automation_event_subscriptions`, `automation_connections`
+
+**RLS Helper Functions (Phase-59) - Use These:**
+- `auth.can_access_site(site_id)` - Check site access
+- `auth.get_current_agency_id()` - Get user's agency
+- `auth.is_agency_admin(agency_id)` - Check admin role
+- `auth.is_super_admin()` - Check super admin
+
+---
+
+*Document Version: 1.1*  
 *Created: 2026-01-24*  
+*Updated: 2026-01-26 (Added automation event integration)*  
 *Phase Status: Specification Complete*

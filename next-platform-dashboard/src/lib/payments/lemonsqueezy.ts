@@ -1,3 +1,18 @@
+/**
+ * DEPRECATED: LemonSqueezy Payment Integration
+ * 
+ * ⚠️ WARNING: LemonSqueezy does NOT support Zambia payouts.
+ * 
+ * This file will be replaced during Phase EM-59 with Paddle integration.
+ * Do NOT use for new implementations.
+ * 
+ * NEW IMPLEMENTATION: @/lib/paddle/client.ts (to be created in EM-59)
+ * 
+ * Paddle payout route: Paddle → Payoneer/Wise → Zambia Bank
+ * 
+ * @see phases/enterprise-modules/PHASE-EM-59A-PADDLE-BILLING.md
+ * @deprecated Will be replaced with Paddle in EM-59
+ */
 import {
   lemonSqueezySetup,
   createCheckout,

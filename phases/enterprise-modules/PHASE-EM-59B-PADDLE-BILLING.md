@@ -2165,6 +2165,38 @@ When implementing the Simple Hybrid pricing model, these existing files need upd
 
 ---
 
+## 🔔 Automation Event Integration Reminder
+
+**CRITICAL**: All webhook handlers must emit automation events!
+
+In `src/lib/paddle/webhook-handlers.ts`, ensure each handler calls:
+
+```typescript
+import { logAutomationEvent } from '@/modules/automation/services/event-processor'
+
+// Example: After processing subscription.created webhook
+await logAutomationEvent(
+  null, // site_id null for agency-level billing events
+  'billing.subscription.created',
+  eventPayload,
+  {
+    sourceModule: 'billing',
+    sourceEntityType: 'subscription',
+    sourceEntityId: subscription.id,
+    agencyId: subscription.agency_id // For agency-level events
+  }
+)
+```
+
+This enables automation workflows like:
+- "When payment fails, send retention email"
+- "When trial ends, send conversion reminder"
+- "When usage exceeds 80%, send alert"
+
+See PHASE-EM-59A for the complete list of billing events to emit.
+
+---
+
 ## Summary
 
 This completes the Paddle billing integration specification. Key features:
@@ -2199,8 +2231,14 @@ This completes the Paddle billing integration specification. Key features:
    - Paddle → Payoneer/Wise → Local Bank
    - Complete payout setup instructions
 
+7. **Automation Integration** 
+   - Billing events emit to automation engine
+   - Enables automated billing workflows
+
 ---
 
-*Document Version: 1.0*  
+*Document Version: 1.1*  
 *Created: 2026-01-24*  
-*Phase Status: Specification Complete*
+*Updated: 2026-01-26 (Added automation event integration reminder)*  
+*Phase Status: Specification Complete*  
+*Related: PHASE-EM-59A-PADDLE-BILLING.md, PHASE-EM-57A-AUTOMATION-ENGINE.md*
