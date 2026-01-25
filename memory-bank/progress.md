@@ -1,44 +1,80 @@
 # Progress: What Works & What's Left
 
-**Last Updated**: January 25, 2026 (Vercel Deployment Fix)  
+**Last Updated**: January 25, 2026 (Supabase Navigator Lock Fix)  
 **Overall Completion**: 76% (26 of 34 enterprise phases complete)  
 **New Phases Specified**: 5 additional phases (EM-51, EM-52, EM-57, EM-58, EM-59 with A/B parts)
 
 ## 📋 Recently Implemented
 
-### Vercel Deployment Fix - COMPLETE ✅
+### Module Studio Linking Fix - COMPLETE ✅
+**Status**: ✅ Fixed (January 25, 2026)  
+**Issue**: Module Studio showed `hasModule: false` - couldn't edit booking/ecommerce modules
+
+**Root Cause:**
+Modules existed in `modules_v2` (marketplace) but had no entry in `module_source` (dev studio). The `studio_module_id` foreign key was NULL.
+
+**Solution:**
+Created `module_source` entries with starter code and linked them via `studio_module_id`:
+```
+modules_v2.studio_module_id → module_source.id
+```
+
+**Files Created:**
+| File | Purpose | Status |
+|------|---------|--------|
+| `migrations/em-52-create-module-studio-sources.sql` | SQL migration | ✅ Created |
+| `scripts/link-modules-to-studio.ts` | Linking script | ✅ Created & Run |
+
+**Results:**
+- ✅ Booking module_source: `b40715c8-0933-4f75-b205-1dbd514d7da9`
+- ✅ E-Commerce module_source: `977fc403-2681-4772-b7b6-95903807ba73`
+- ✅ Both modules now editable in Module Studio
+- ✅ Module Studio URLs: `/admin/modules/studio/{id}`
+
+**Key Architecture:**
+- **Marketplace** (`modules_v2`): End-user discovery & installation
+- **Module Studio** (`module_source`): Developer editing environment
+- **Link**: `studio_module_id` enables editing of marketplace modules
+
+---
+
+### Supabase Navigator Lock Deadlock Fix - COMPLETE ✅
 **Status**: ✅ Fixed (January 25, 2026)  
 **Issue**: Marketplace empty on Vercel with `AbortError: signal is aborted without reason`
 
-**Root Causes:**
-- Missing environment variables in Vercel project settings
-- Supabase client initialization timing out in serverless environment
-- Silent error failures making debugging difficult
+**Actual Root Cause:**
+The Supabase `GoTrueClient` uses the **Navigator Locks API** (`navigator.locks`) which can cause deadlocks in production - especially on mobile browsers, after app resume from background, or with multiple tabs. This is a **known Supabase bug**: [GitHub Issue #1594](https://github.com/supabase/supabase-js/issues/1594)
 
-**Solution:**
-- Added environment variable validation in Supabase client with clear error messages
-- Enhanced client configuration (PKCE flow, session persistence, client info headers)
-- Wrapped marketplace search functions in try-catch with detailed error logging
-- Created comprehensive troubleshooting guide `VERCEL-DEPLOYMENT-FIX.md`
+**Solution:** Implemented `noOpLock` workaround that skips the lock mechanism entirely:
+```typescript
+const noOpLock = async <T>(_name: string, _acquireTimeout: number, fn: () => Promise<T>): Promise<T> => {
+  return await fn();
+};
 
-**Files Created/Modified:**
+export function createClient() {
+  return createBrowserClient<Database>(url, key, { auth: { lock: noOpLock } });
+}
+```
+
+**Files Modified:**
 | File | Purpose | Status |
 |------|---------|--------|
-| `src/lib/supabase/client.ts` | Env validation & client config | ✅ Updated (42 lines) |
-| `src/lib/modules/marketplace-search.ts` | Enhanced error logging | ✅ Updated |
-| `docs/VERCEL-DEPLOYMENT-FIX.md` | Troubleshooting guide | ✅ Created (269 lines) |
+| `src/lib/supabase/client.ts` | noOpLock workaround | ✅ Updated (40 lines) |
 
-**User Action Required:**
-- Set `NEXT_PUBLIC_SUPABASE_URL` in Vercel project settings
-- Set `NEXT_PUBLIC_SUPABASE_ANON_KEY` in Vercel project settings
-- Redeploy application after setting environment variables
+**Trade-offs (all preferable to complete deadlock):**
+- Multiple tabs may refresh tokens simultaneously (minor redundancy)
+- Rare race conditions in session state (recoverable by re-login)
 
 **Results:**
-- ✅ Clear error messages when env vars missing
-- ✅ Detailed error logging for debugging production issues
-- ✅ Comprehensive troubleshooting documentation
+- ✅ Bypasses Navigator Locks API to prevent deadlocks
+- ✅ Workaround tested by multiple users in production without issues
 - ✅ TypeScript: Zero errors
-- ✅ Committed: 476207a, Pushed to GitHub
+- ✅ Committed: d1f9f64, Pushed to GitHub
+
+**Key Learnings:**
+- Don't assume missing env vars - verify first! (User had them already set)
+- `AbortError: signal is aborted without reason` in `_acquireLock` = Navigator Locks issue
+- Always check GitHub issues for known bugs before implementing custom fixes
 
 ---
 
