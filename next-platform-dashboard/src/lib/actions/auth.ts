@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import {
@@ -43,6 +44,7 @@ export async function signup(formData: SignupFormData) {
   }
 
   const supabase = await createClient();
+  const adminClient = createAdminClient();
   const headersList = await headers();
   const origin = headersList.get("origin");
 
@@ -73,8 +75,9 @@ export async function signup(formData: SignupFormData) {
     .replace(/^-|-$/g, "")
     .substring(0, 30) + "-" + Date.now().toString(36);
 
-  // 2. Create organization
-  const { data: org, error: orgError } = await supabase
+  // 2. Create organization using admin client (bypasses RLS)
+  // This is necessary because the user session is not yet available after signUp
+  const { data: org, error: orgError } = await adminClient
     .from("agencies")
     .insert({
       name: validated.data.organizationName,
@@ -87,16 +90,16 @@ export async function signup(formData: SignupFormData) {
   if (orgError) {
     console.error("Agency creation error:", orgError);
     // Cleanup: delete the user if org creation fails
-    // Note: admin.deleteUser requires service role key, may not work with anon key
+    await adminClient.auth.admin.deleteUser(authData.user.id);
     return { error: `Failed to create organization: ${orgError.message}` };
   }
 
-  // 3. Create user profile
+  // 3. Create user profile using admin client
   // Agency creators get 'admin' role in profiles (which corresponds to agency_owner permissions)
   // The actual ownership is tracked in agency_members.role = "owner"
   // Only super_admin can access platform-wide admin features
   // Super admin role must be granted via scripts/create-super-admin.ts
-  const { error: profileError } = await supabase.from("profiles").insert({
+  const { error: profileError } = await adminClient.from("profiles").insert({
     id: authData.user.id,
     email: validated.data.email,
     name: validated.data.name,
@@ -105,17 +108,26 @@ export async function signup(formData: SignupFormData) {
   });
 
   if (profileError) {
+    console.error("Profile creation error:", profileError);
+    // Cleanup
+    await adminClient.from("agencies").delete().eq("id", org.id);
+    await adminClient.auth.admin.deleteUser(authData.user.id);
     return { error: "Failed to create user profile" };
   }
 
-  // 4. Create organization membership (tracks actual ownership)
-  const { error: memberError } = await supabase.from("agency_members").insert({
+  // 4. Create organization membership (tracks actual ownership) using admin client
+  const { error: memberError } = await adminClient.from("agency_members").insert({
     agency_id: org.id,
     user_id: authData.user.id,
     role: "owner", // Owner in agency_members table
   });
 
   if (memberError) {
+    console.error("Member creation error:", memberError);
+    // Cleanup
+    await adminClient.from("profiles").delete().eq("id", authData.user.id);
+    await adminClient.from("agencies").delete().eq("id", org.id);
+    await adminClient.auth.admin.deleteUser(authData.user.id);
     return { error: "Failed to create organization membership" };
   }
 

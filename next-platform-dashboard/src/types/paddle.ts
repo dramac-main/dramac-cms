@@ -55,7 +55,7 @@ export interface PaddleCustomer {
   address_city: string | null;
   address_line1: string | null;
   tax_identifier: string | null;
-  marketing_consent: boolean;
+  marketing_consent: boolean | null;
   created_at: string;
   updated_at: string;
 }
@@ -78,10 +78,10 @@ export interface PaddleSubscription {
   cancel_at_period_end: boolean;
   cancellation_reason: string | null;
   unit_price: number;
-  currency: string;
-  included_automation_runs: number;
-  included_ai_actions: number;
-  included_api_calls: number;
+  currency: string | null;
+  included_automation_runs: number | null;
+  included_ai_actions: number | null;
+  included_api_calls: number | null;
   discount_id: string | null;
   discount_percentage: number | null;
   discount_ends_at: string | null;
@@ -97,12 +97,12 @@ export interface PaddleTransaction {
   paddle_transaction_id: string;
   paddle_invoice_id: string | null;
   paddle_invoice_number: string | null;
-  origin: TransactionOrigin;
+  origin: TransactionOrigin | null;
   status: TransactionStatus;
   subtotal: number;
   tax: number;
   total: number;
-  currency: string;
+  currency: string | null;
   tax_rate: number | null;
   tax_rates: unknown[];
   line_items: unknown[];
@@ -114,8 +114,8 @@ export interface PaddleTransaction {
   receipt_url: string | null;
   billed_at: string | null;
   completed_at: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 // ============================================================================
@@ -199,12 +199,12 @@ export interface PaddleProduct {
   paddle_product_id: string | null;
   paddle_price_id: string | null;
   plan_type: PlanType;
-  billing_cycle: BillingCycle | 'one_time';
+  billing_cycle: BillingCycle | 'one_time' | null;
   price_cents: number;
-  currency: string;
-  included_automation_runs: number;
-  included_ai_actions: number;
-  included_api_calls: number;
+  currency: string | null;
+  included_automation_runs: number | null;
+  included_ai_actions: number | null;
+  included_api_calls: number | null;
   max_modules: number | null;
   max_sites: number | null;
   max_team_members: number | null;
@@ -212,10 +212,10 @@ export interface PaddleProduct {
   overage_rate_automation: number | null;
   overage_rate_ai: number | null;
   overage_rate_api: number | null;
-  is_active: boolean;
-  display_order: number;
-  created_at: string;
-  updated_at: string;
+  is_active: boolean | null;
+  display_order: number | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface PricingTier {

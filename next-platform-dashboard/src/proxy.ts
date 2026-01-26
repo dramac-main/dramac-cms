@@ -87,6 +87,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Public marketing pages
+  if (pathname === "/pricing" || pathname.startsWith("/pricing/")) {
+    console.log("[proxy] → Public pricing page, passing through");
+    return NextResponse.next();
+  }
+
   // Static files, API routes, and Next.js internals
   if (
     pathname.startsWith("/api") ||

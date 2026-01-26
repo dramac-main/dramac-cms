@@ -159,6 +159,45 @@ export const EVENT_REGISTRY = {
   },
   
   // =========================================================
+  // BILLING MODULE (EM-59A - Paddle Billing)
+  // Tables: paddle_subscriptions, paddle_transactions, usage_*, etc.
+  // =========================================================
+  billing: {
+    subscription: {
+      created: 'billing.subscription.created',
+      activated: 'billing.subscription.activated',
+      updated: 'billing.subscription.updated',
+      cancelled: 'billing.subscription.cancelled',
+      paused: 'billing.subscription.paused',
+      resumed: 'billing.subscription.resumed',
+      past_due: 'billing.subscription.past_due',
+      trial_started: 'billing.subscription.trial_started',
+      trial_ended: 'billing.subscription.trial_ended',
+      plan_changed: 'billing.subscription.plan_changed',
+    },
+    payment: {
+      completed: 'billing.payment.completed',
+      failed: 'billing.payment.failed',
+      refunded: 'billing.payment.refunded',
+      disputed: 'billing.payment.disputed',
+    },
+    invoice: {
+      created: 'billing.invoice.created',
+      paid: 'billing.invoice.paid',
+      overdue: 'billing.invoice.overdue',
+    },
+    usage: {
+      threshold_reached: 'billing.usage.threshold_reached',
+      limit_exceeded: 'billing.usage.limit_exceeded',
+      overage_incurred: 'billing.usage.overage_incurred',
+    },
+    customer: {
+      created: 'billing.customer.created',
+      updated: 'billing.customer.updated',
+    },
+  },
+  
+  // =========================================================
   // SYSTEM EVENTS
   // =========================================================
   system: {
@@ -211,6 +250,7 @@ export type EventType =
   | `form.${string}.${string}`
   | `accounting.${string}.${string}`
   | `ecommerce.${string}.${string}`
+  | `billing.${string}.${string}`
   | `system.${string}.${string}`
   | `automation.${string}.${string}`
   | string  // Allow custom events
@@ -225,6 +265,7 @@ export const EVENT_CATEGORIES = [
   { id: 'form', name: 'Forms', icon: '📝', description: 'Form submission and creation events' },
   { id: 'accounting', name: 'Accounting', icon: '💰', description: 'Invoice, payment, and expense events' },
   { id: 'ecommerce', name: 'E-Commerce', icon: '🛒', description: 'Order, cart, and product events' },
+  { id: 'billing', name: 'Billing', icon: '💳', description: 'Subscription, payment, and usage events' },
   { id: 'system', name: 'System', icon: '⚙️', description: 'Webhook, schedule, and module events' },
   { id: 'automation', name: 'Automation', icon: '⚡', description: 'Workflow execution events' },
 ] as const
@@ -293,6 +334,32 @@ export function getAllEventDefinitions(): EventDefinition[] {
     { id: EVENT_REGISTRY.ecommerce.cart.abandoned, category: 'ecommerce', entity: 'cart', action: 'abandoned', name: 'Cart Abandoned', description: 'Triggered when a cart is abandoned' },
     { id: EVENT_REGISTRY.ecommerce.product.low_stock, category: 'ecommerce', entity: 'product', action: 'low_stock', name: 'Low Stock Alert', description: 'Triggered when product stock is low' },
     { id: EVENT_REGISTRY.ecommerce.product.out_of_stock, category: 'ecommerce', entity: 'product', action: 'out_of_stock', name: 'Out of Stock', description: 'Triggered when a product is out of stock' },
+  )
+  
+  // Billing Events (Paddle - EM-59A)
+  events.push(
+    { id: EVENT_REGISTRY.billing.subscription.created, category: 'billing', entity: 'subscription', action: 'created', name: 'Subscription Created', description: 'Triggered when a new subscription is created' },
+    { id: EVENT_REGISTRY.billing.subscription.activated, category: 'billing', entity: 'subscription', action: 'activated', name: 'Subscription Activated', description: 'Triggered when a subscription becomes active' },
+    { id: EVENT_REGISTRY.billing.subscription.updated, category: 'billing', entity: 'subscription', action: 'updated', name: 'Subscription Updated', description: 'Triggered when a subscription is updated' },
+    { id: EVENT_REGISTRY.billing.subscription.cancelled, category: 'billing', entity: 'subscription', action: 'cancelled', name: 'Subscription Cancelled', description: 'Triggered when a subscription is cancelled' },
+    { id: EVENT_REGISTRY.billing.subscription.paused, category: 'billing', entity: 'subscription', action: 'paused', name: 'Subscription Paused', description: 'Triggered when a subscription is paused' },
+    { id: EVENT_REGISTRY.billing.subscription.resumed, category: 'billing', entity: 'subscription', action: 'resumed', name: 'Subscription Resumed', description: 'Triggered when a paused subscription is resumed' },
+    { id: EVENT_REGISTRY.billing.subscription.past_due, category: 'billing', entity: 'subscription', action: 'past_due', name: 'Subscription Past Due', description: 'Triggered when a subscription payment is past due' },
+    { id: EVENT_REGISTRY.billing.subscription.trial_started, category: 'billing', entity: 'subscription', action: 'trial_started', name: 'Trial Started', description: 'Triggered when a trial period starts' },
+    { id: EVENT_REGISTRY.billing.subscription.trial_ended, category: 'billing', entity: 'subscription', action: 'trial_ended', name: 'Trial Ended', description: 'Triggered when a trial period ends' },
+    { id: EVENT_REGISTRY.billing.subscription.plan_changed, category: 'billing', entity: 'subscription', action: 'plan_changed', name: 'Plan Changed', description: 'Triggered when a subscription plan is upgraded or downgraded' },
+    { id: EVENT_REGISTRY.billing.payment.completed, category: 'billing', entity: 'payment', action: 'completed', name: 'Payment Completed', description: 'Triggered when a payment is successfully processed' },
+    { id: EVENT_REGISTRY.billing.payment.failed, category: 'billing', entity: 'payment', action: 'failed', name: 'Payment Failed', description: 'Triggered when a payment fails' },
+    { id: EVENT_REGISTRY.billing.payment.refunded, category: 'billing', entity: 'payment', action: 'refunded', name: 'Payment Refunded', description: 'Triggered when a payment is refunded' },
+    { id: EVENT_REGISTRY.billing.payment.disputed, category: 'billing', entity: 'payment', action: 'disputed', name: 'Payment Disputed', description: 'Triggered when a payment is disputed (chargeback)' },
+    { id: EVENT_REGISTRY.billing.invoice.created, category: 'billing', entity: 'invoice', action: 'created', name: 'Invoice Created', description: 'Triggered when an invoice is created' },
+    { id: EVENT_REGISTRY.billing.invoice.paid, category: 'billing', entity: 'invoice', action: 'paid', name: 'Invoice Paid', description: 'Triggered when an invoice is paid' },
+    { id: EVENT_REGISTRY.billing.invoice.overdue, category: 'billing', entity: 'invoice', action: 'overdue', name: 'Invoice Overdue', description: 'Triggered when an invoice becomes overdue' },
+    { id: EVENT_REGISTRY.billing.usage.threshold_reached, category: 'billing', entity: 'usage', action: 'threshold_reached', name: 'Usage Threshold Reached', description: 'Triggered when usage reaches a warning threshold (e.g., 80%)' },
+    { id: EVENT_REGISTRY.billing.usage.limit_exceeded, category: 'billing', entity: 'usage', action: 'limit_exceeded', name: 'Usage Limit Exceeded', description: 'Triggered when usage exceeds the plan limit' },
+    { id: EVENT_REGISTRY.billing.usage.overage_incurred, category: 'billing', entity: 'usage', action: 'overage_incurred', name: 'Overage Incurred', description: 'Triggered when overage charges are incurred' },
+    { id: EVENT_REGISTRY.billing.customer.created, category: 'billing', entity: 'customer', action: 'created', name: 'Billing Customer Created', description: 'Triggered when a Paddle customer is created' },
+    { id: EVENT_REGISTRY.billing.customer.updated, category: 'billing', entity: 'customer', action: 'updated', name: 'Billing Customer Updated', description: 'Triggered when a Paddle customer is updated' },
   )
   
   // System Events
