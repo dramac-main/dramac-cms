@@ -1,10 +1,50 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: January 26, 2026  
-**Current Phase**: EM-59B Paddle Billing Integration - UI, Portal & Operations ✅ COMPLETE  
+**Last Updated**: January 27, 2026  
+**Current Phase**: EM-59B Paddle Billing Integration - CSP & Page Consolidation ✅ COMPLETE  
 **Status**: ✅ 21 OF 34 PHASES (62%) - TypeScript Verified
 
 ## Current Work Focus
+
+### ✅ COMPLETED: EM-59B Paddle Billing - CSP Fix & Page Consolidation (January 27, 2026)
+**Status**: ✅ COMPLETE - Paddle checkout now working  
+**Wave 5 Business**: 2/3 BILLING COMPLETE (66%)  
+**TypeScript Compilation**: ✅ Zero errors
+
+**Critical Bug Fixes Applied (January 27, 2026):**
+
+1. **CSP (Content Security Policy) Fix** - Paddle checkout iframe was being blocked:
+   - Root cause: `next.config.ts` had restrictive CSP that blocked Paddle iframe/scripts
+   - Old CSP: `"worker-src 'self' blob: https://cdn.jsdelivr.net;"` + `X-Frame-Options: DENY`
+   - Fixed: Added permissive CSP for billing routes (`/pricing`, `/dashboard/billing`, `/settings/billing`)
+   - New CSP allows: `https://*.paddle.com`, `https://sandbox-buy.paddle.com`, `https://cdn.paddle.com`
+   - Frame-src, script-src, connect-src, img-src, style-src, font-src all configured for Paddle
+
+2. **Billing Pages Consolidated** - Removed old LemonSqueezy code from billing pages:
+   - `/settings/billing/page.tsx` - Updated to use Paddle components:
+     - `PaddleSubscriptionCard` (was SubscriptionCard)
+     - `UsageDashboard` (was UsageCard)
+     - `PaddleInvoiceHistory` (was InvoiceHistory)
+     - Removed `PaymentMethods` (handled by Paddle portal)
+   - `/dashboard/billing/page.tsx` - Updated to use Paddle components:
+     - Removed `LemonSqueezyInvoiceHistory`
+     - Removed `ensureFreeSubscription`, `getAgencySubscription` from LemonSqueezy
+     - Added Paddle components with proper Suspense boundaries
+     - Added "View Plans" button linking to /pricing
+
+3. **Billing Architecture Cleanup**:
+   - Main billing page: `/settings/billing` (owner access required)
+   - Dashboard billing: `/dashboard/billing` (simplified overview)
+   - Admin billing: `/admin/billing` (admin metrics dashboard)
+   - Pricing page: `/pricing` (public, opens Paddle checkout)
+   - Old LemonSqueezy components kept but marked deprecated
+
+**Files Modified:**
+- `next.config.ts` - Added Paddle-permissive CSP for billing routes
+- `src/app/(dashboard)/settings/billing/page.tsx` - Use Paddle components
+- `src/app/(dashboard)/dashboard/billing/page.tsx` - Use Paddle components
+
+---
 
 ### ✅ COMPLETED: EM-59B Paddle Billing Integration - Final Fixes (January 26, 2026)
 **Status**: ✅ COMPLETE - All issues fixed and tested  

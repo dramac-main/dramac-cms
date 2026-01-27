@@ -1,11 +1,19 @@
+/**
+ * Settings Billing Page
+ * 
+ * Phase EM-59B: Paddle Billing Integration
+ * 
+ * Primary billing management page for users.
+ * Uses Paddle-powered components for subscription management.
+ */
+
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { SubscriptionCard } from "@/components/billing/subscription-card";
-import { UsageCard } from "@/components/billing/usage-card";
-import { InvoiceHistory } from "@/components/billing/invoice-history";
+import { PaddleSubscriptionCard } from "@/components/billing/paddle-subscription-card";
+import { UsageDashboard } from "@/components/billing/usage-dashboard";
+import { PaddleInvoiceHistory } from "@/components/billing/paddle-invoice-history";
 import { ModuleSubscriptions } from "@/components/billing/module-subscriptions";
-import { PaymentMethods } from "@/components/billing/payment-methods";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default async function BillingPage() {
@@ -36,24 +44,20 @@ export default async function BillingPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Suspense fallback={<Skeleton className="h-[280px]" />}>
-          <SubscriptionCard agencyId={member.agency_id} />
+          <PaddleSubscriptionCard agencyId={member.agency_id} />
         </Suspense>
 
         <Suspense fallback={<Skeleton className="h-[280px]" />}>
-          <UsageCard agencyId={member.agency_id} />
+          <UsageDashboard agencyId={member.agency_id} />
         </Suspense>
       </div>
-
-      <Suspense fallback={<Skeleton className="h-[200px]" />}>
-        <PaymentMethods agencyId={member.agency_id} />
-      </Suspense>
 
       <Suspense fallback={<Skeleton className="h-[300px]" />}>
         <ModuleSubscriptions agencyId={member.agency_id} />
       </Suspense>
 
       <Suspense fallback={<Skeleton className="h-[400px]" />}>
-        <InvoiceHistory agencyId={member.agency_id} />
+        <PaddleInvoiceHistory />
       </Suspense>
     </div>
   );
