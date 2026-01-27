@@ -78,8 +78,10 @@ export function PaddleSubscriptionCard({ agencyId, className }: PaddleSubscripti
     try {
       const res = await fetch('/api/billing/paddle/subscription');
       if (res.ok) {
-        const data = await res.json();
-        setSubscription(data.subscription || data);
+        const response = await res.json();
+        // API returns { success: true, data: subscription } where data can be null
+        const subscriptionData = response.data || response.subscription || null;
+        setSubscription(subscriptionData);
         setError(null);
       } else {
         const errorData = await res.json();
@@ -262,7 +264,15 @@ export function PaddleSubscriptionCard({ agencyId, className }: PaddleSubscripti
 // Status Badge Sub-Component
 // ============================================================================
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: { status?: string | null }) {
+  if (!status) {
+    return (
+      <Badge variant="secondary">
+        unknown
+      </Badge>
+    );
+  }
+  
   const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
     active: 'default',
     trialing: 'secondary',

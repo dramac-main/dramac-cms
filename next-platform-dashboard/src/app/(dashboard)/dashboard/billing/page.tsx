@@ -4,7 +4,7 @@
  * Phase EM-59B: Paddle Billing Integration
  * 
  * Billing overview page in the dashboard area.
- * Redirects to the main settings/billing page for unified experience.
+ * Shows subscription status and handles success/cancelled redirects from Paddle.
  */
 
 import { Metadata } from "next";
@@ -17,16 +17,25 @@ import { UsageDashboard } from "@/components/billing/usage-dashboard";
 import { PaddleInvoiceHistory } from "@/components/billing/paddle-invoice-history";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { CreditCard } from "lucide-react";
+import { CreditCard, CheckCircle2, XCircle } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Billing | DRAMAC",
   description: "Manage your subscription and view billing history",
 };
 
-export default async function BillingPage() {
+interface BillingPageProps {
+  searchParams: Promise<{ success?: string; cancelled?: string }>;
+}
+
+export default async function BillingPage({ searchParams }: BillingPageProps) {
+  const params = await searchParams;
+  const showSuccess = params.success === 'true';
+  const showCancelled = params.cancelled === 'true';
+  
   const session = await getSession();
   if (!session) {
     redirect("/login");
@@ -47,6 +56,34 @@ export default async function BillingPage() {
 
   return (
     <div className="container py-8">
+      {/* Success Alert - shown after successful Paddle checkout */}
+      {showSuccess && (
+        <Alert className="mb-6 border-green-500 bg-green-50 dark:bg-green-950">
+          <CheckCircle2 className="h-5 w-5 text-green-600" />
+          <AlertTitle className="text-green-800 dark:text-green-200">
+            Payment Successful!
+          </AlertTitle>
+          <AlertDescription className="text-green-700 dark:text-green-300">
+            Thank you for your subscription! Your account has been upgraded. 
+            It may take a few moments for all features to become available.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {/* Cancelled Alert - shown if user cancelled checkout */}
+      {showCancelled && (
+        <Alert className="mb-6 border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+          <XCircle className="h-5 w-5 text-yellow-600" />
+          <AlertTitle className="text-yellow-800 dark:text-yellow-200">
+            Checkout Cancelled
+          </AlertTitle>
+          <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+            Your checkout was cancelled. No charges were made. 
+            You can try again anytime from the pricing page.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Billing & Subscription</h1>

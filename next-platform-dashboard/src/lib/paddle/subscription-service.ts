@@ -69,8 +69,10 @@ export class SubscriptionService {
 
   /**
    * Get subscription for an agency
+   * First checks local database, then falls back to Paddle API if no record exists
    */
   async getSubscription(agencyId: string): Promise<SubscriptionDetails | null> {
+    // First, try to get from local database
     const { data, error } = await this.supabase.from('paddle_subscriptions')
       .select('*')
       .eq('agency_id', agencyId)
@@ -79,28 +81,177 @@ export class SubscriptionService {
     
     if (error) {
       console.error('[Paddle] Error fetching subscription:', error);
+    }
+    
+    // If found in database, return it
+    if (data) {
+      return {
+        id: data.id,
+        paddleSubscriptionId: data.paddle_subscription_id,
+        planType: data.plan_type,
+        billingCycle: data.billing_cycle ?? 'monthly',
+        status: data.status,
+        currentPeriodStart: new Date(data.current_period_start ?? Date.now()),
+        currentPeriodEnd: new Date(data.current_period_end ?? Date.now()),
+        cancelAtPeriodEnd: data.cancel_at_period_end ?? false,
+        unitPrice: data.unit_price,
+        currency: data.currency ?? 'USD',
+        includedUsage: {
+          automationRuns: data.included_automation_runs ?? 0,
+          aiActions: data.included_ai_actions ?? 0,
+          apiCalls: data.included_api_calls ?? 0,
+        },
+      };
+    }
+    
+    // No local record - try to fetch from Paddle API directly
+    // This handles the case where webhooks haven't been received yet
+    const syncedSubscription = await this.syncSubscriptionFromPaddle(agencyId);
+    return syncedSubscription;
+  }
+
+  /**
+   * Sync subscription from Paddle API
+   * Fetches active subscriptions for the customer and syncs to local database
+   */
+  async syncSubscriptionFromPaddle(agencyId: string): Promise<SubscriptionDetails | null> {
+    if (!paddle) {
+      console.warn('[Paddle] Paddle not configured, cannot sync from API');
       return null;
     }
     
-    if (!data) return null;
-    
-    return {
-      id: data.id,
-      paddleSubscriptionId: data.paddle_subscription_id,
-      planType: data.plan_type,
-      billingCycle: data.billing_cycle ?? 'monthly',
-      status: data.status,
-      currentPeriodStart: new Date(data.current_period_start ?? Date.now()),
-      currentPeriodEnd: new Date(data.current_period_end ?? Date.now()),
-      cancelAtPeriodEnd: data.cancel_at_period_end ?? false,
-      unitPrice: data.unit_price,
-      currency: data.currency ?? 'USD',
-      includedUsage: {
-        automationRuns: data.included_automation_runs ?? 0,
-        aiActions: data.included_ai_actions ?? 0,
-        apiCalls: data.included_api_calls ?? 0,
-      },
-    };
+    try {
+      // Get customer from local database (need both the internal ID and paddle ID)
+      const { data: customer } = await this.supabase.from('paddle_customers')
+        .select('id, paddle_customer_id')
+        .eq('agency_id', agencyId)
+        .maybeSingle();
+      
+      if (!customer?.paddle_customer_id) {
+        console.log('[Paddle] No customer found for agency:', agencyId);
+        return null;
+      }
+      
+      console.log('[Paddle] Syncing subscriptions for customer:', customer.paddle_customer_id);
+      
+      // Fetch subscriptions from Paddle API
+      const subscriptionCollection = await paddle.subscriptions.list({
+        customerId: [customer.paddle_customer_id],
+        status: ['active', 'trialing', 'past_due'],
+      });
+      
+      // Get the first subscription from the iterator
+      let paddleSub = null;
+      for await (const sub of subscriptionCollection) {
+        paddleSub = sub;
+        break; // Just get the first one
+      }
+      
+      if (!paddleSub) {
+        console.log('[Paddle] No active subscriptions found in Paddle');
+        return null;
+      }
+      
+      console.log('[Paddle] Found subscription in Paddle:', paddleSub.id, paddleSub.status);
+      
+      // Determine plan type from price ID
+      const priceId = paddleSub.items?.[0]?.price?.id || '';
+      const productId = paddleSub.items?.[0]?.price?.productId || '';
+      const planType = this.getPlanTypeFromPriceId(priceId);
+      const billingCycle = this.getBillingCycleFromPriceId(priceId);
+      const planConfig = getPlanConfig(planType, billingCycle);
+      
+      // Extract unit price (in smallest currency unit, e.g., cents)
+      const unitPrice = parseInt(paddleSub.items?.[0]?.price?.unitPrice?.amount || '0', 10);
+      const currency = paddleSub.currencyCode || 'USD';
+      
+      // Save to local database - use correct column names from schema
+      const { data: insertedSub, error: insertError } = await this.supabase
+        .from('paddle_subscriptions')
+        .upsert({
+          agency_id: agencyId,
+          customer_id: customer.id, // Use the internal UUID, not the paddle ID
+          paddle_subscription_id: paddleSub.id,
+          paddle_product_id: productId,
+          paddle_price_id: priceId,
+          plan_type: planType,
+          billing_cycle: billingCycle,
+          status: paddleSub.status,
+          unit_price: unitPrice,
+          currency: currency,
+          current_period_start: paddleSub.currentBillingPeriod?.startsAt,
+          current_period_end: paddleSub.currentBillingPeriod?.endsAt,
+          cancel_at_period_end: paddleSub.scheduledChange?.action === 'cancel',
+          included_automation_runs: planConfig?.includedUsage?.automationRuns ?? 0,
+          included_ai_actions: planConfig?.includedUsage?.aiActions ?? 0,
+          included_api_calls: planConfig?.includedUsage?.apiCalls ?? 0,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'paddle_subscription_id',
+        })
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('[Paddle] Error saving synced subscription:', insertError);
+        // Still return the data from Paddle even if save fails
+      } else {
+        console.log('[Paddle] Successfully synced subscription to database:', insertedSub?.id);
+      }
+      
+      // Also update agency subscription status
+      await this.supabase
+        .from('agencies')
+        .update({
+          subscription_status: paddleSub.status,
+          subscription_plan: planType,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', agencyId);
+      
+      return {
+        id: insertedSub?.id || paddleSub.id,
+        paddleSubscriptionId: paddleSub.id,
+        planType: planType,
+        billingCycle: billingCycle,
+        status: paddleSub.status,
+        currentPeriodStart: new Date(paddleSub.currentBillingPeriod?.startsAt || Date.now()),
+        currentPeriodEnd: new Date(paddleSub.currentBillingPeriod?.endsAt || Date.now()),
+        cancelAtPeriodEnd: paddleSub.scheduledChange?.action === 'cancel',
+        unitPrice: unitPrice,
+        currency: currency,
+        includedUsage: {
+          automationRuns: planConfig?.includedUsage?.automationRuns ?? 0,
+          aiActions: planConfig?.includedUsage?.aiActions ?? 0,
+          apiCalls: planConfig?.includedUsage?.apiCalls ?? 0,
+        },
+      };
+    } catch (err) {
+      console.error('[Paddle] Error syncing subscription from Paddle:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Determine plan type from Paddle price ID
+   */
+  private getPlanTypeFromPriceId(priceId: string): 'starter' | 'pro' {
+    const starterPrices = [
+      process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY,
+      process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY,
+    ];
+    return starterPrices.includes(priceId) ? 'starter' : 'pro';
+  }
+
+  /**
+   * Determine billing cycle from Paddle price ID
+   */
+  private getBillingCycleFromPriceId(priceId: string): 'monthly' | 'yearly' {
+    const yearlyPrices = [
+      process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY,
+      process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_YEARLY,
+    ];
+    return yearlyPrices.includes(priceId) ? 'yearly' : 'monthly';
   }
 
   /**

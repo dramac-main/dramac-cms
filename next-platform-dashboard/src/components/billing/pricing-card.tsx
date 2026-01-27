@@ -77,8 +77,12 @@ export function PricingCard({
     : 0;
   
   const handleSubscribe = async () => {
+    console.log('[PricingCard] handleSubscribe called for plan:', plan.id);
+    console.log('[PricingCard] Current state:', { agencyId, email, priceId, billingCycle });
+    
     if (!agencyId || !email) {
       // Redirect to signup/login
+      console.log('[PricingCard] No agencyId or email, redirecting to signup');
       window.location.href = '/signup?plan=' + plan.id;
       return;
     }

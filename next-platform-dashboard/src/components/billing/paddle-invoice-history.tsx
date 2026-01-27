@@ -205,7 +205,15 @@ export function PaddleInvoiceHistory({ className }: PaddleInvoiceHistoryProps) {
 // Status Badge Sub-Component
 // ============================================================================
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status }: { status?: string | null }) {
+  if (!status) {
+    return (
+      <Badge variant="secondary">
+        unknown
+      </Badge>
+    );
+  }
+  
   const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
     paid: 'default',
     completed: 'default',

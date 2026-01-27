@@ -24,6 +24,7 @@
  */
 
 import { paddle, PADDLE_IDS, OVERAGE_RATES } from './client';
+import { subscriptionService } from './subscription-service';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { UsageStats } from '@/types/paddle';
 
@@ -138,14 +139,10 @@ export class UsageTracker {
    * Get current period usage for an agency
    */
   async getCurrentUsage(agencyId: string): Promise<UsageReport | null> {
-    // Get subscription with included limits
-    const { data: sub, error: subError } = await this.supabase.from('paddle_subscriptions')
-      .select('*')
-      .eq('agency_id', agencyId)
-      .in('status', ['active', 'trialing', 'past_due'])
-      .maybeSingle();
+    // Get subscription using the service (includes Paddle API fallback)
+    const subscription = await subscriptionService.getSubscription(agencyId);
     
-    if (subError || !sub) {
+    if (!subscription) {
       console.error('[UsageTracker] No active subscription found');
       return null;
     }
@@ -160,10 +157,10 @@ export class UsageTracker {
       api_calls: 0,
     };
     
-    // Use default values for nullable fields
-    const includedAutomation = sub.included_automation_runs ?? 0;
-    const includedAi = sub.included_ai_actions ?? 0;
-    const includedApi = sub.included_api_calls ?? 0;
+    // Use subscription data for included limits
+    const includedAutomation = subscription.includedUsage.automationRuns;
+    const includedAi = subscription.includedUsage.aiActions;
+    const includedApi = subscription.includedUsage.apiCalls;
     
     // Calculate overages
     const overageAutomation = Math.max(0,
@@ -174,7 +171,7 @@ export class UsageTracker {
       currentUsage.api_calls - includedApi);
     
     // Get overage rates based on plan
-    const rates = OVERAGE_RATES[sub.plan_type as keyof typeof OVERAGE_RATES] || OVERAGE_RATES.starter;
+    const rates = OVERAGE_RATES[subscription.planType as keyof typeof OVERAGE_RATES] || OVERAGE_RATES.starter;
     
     // Calculate overage cost in cents
     const overageCost = Math.round((
@@ -194,8 +191,8 @@ export class UsageTracker {
       overageAiActions: overageAi,
       overageApiCalls: overageApi,
       overageCostCents: overageCost,
-      periodStart: new Date(sub.current_period_start ?? Date.now()),
-      periodEnd: new Date(sub.current_period_end ?? Date.now()),
+      periodStart: subscription.currentPeriodStart,
+      periodEnd: subscription.currentPeriodEnd,
       percentUsed: {
         automationRuns: includedAutomation > 0
           ? (currentUsage.automation_runs / includedAutomation) * 100
