@@ -155,6 +155,24 @@ export interface OpenCheckoutParams {
  * Open Paddle checkout overlay for subscription
  */
 export async function openPaddleCheckout(params: OpenCheckoutParams): Promise<void> {
+  console.log('[Paddle.js] Opening checkout with params:', {
+    priceId: params.priceId,
+    agencyId: params.agencyId,
+    email: params.email,
+    customerId: params.customerId,
+  });
+  
+  // Validate required params
+  if (!params.priceId || params.priceId.trim() === '') {
+    throw new Error('Invalid priceId: Price ID is required');
+  }
+  if (!params.agencyId) {
+    throw new Error('Invalid agencyId: Agency ID is required');
+  }
+  if (!params.email && !params.customerId) {
+    throw new Error('Either email or customerId is required');
+  }
+  
   const paddle = await getPaddle();
   
   const checkoutOptions: any = {
@@ -178,6 +196,8 @@ export async function openPaddleCheckout(params: OpenCheckoutParams): Promise<vo
   if (params.discountCode) {
     checkoutOptions.discountCode = params.discountCode;
   }
+  
+  console.log('[Paddle.js] Checkout options:', JSON.stringify(checkoutOptions, null, 2));
   
   await paddle.Checkout.open(checkoutOptions);
 }

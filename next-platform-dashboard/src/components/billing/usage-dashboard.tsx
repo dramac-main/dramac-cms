@@ -66,9 +66,27 @@ export function UsageDashboard({ agencyId, className }: UsageDashboardProps) {
       try {
         const res = await fetch(`/api/billing/paddle/usage?agencyId=${agencyId}`);
         if (!res.ok) throw new Error('Failed to fetch usage');
-        const data = await res.json();
-        setUsage(data);
-        setError(null);
+        const response = await res.json();
+        
+        // API returns { success: true, data: { current: usage } }
+        // Extract the current usage data from the response
+        if (response.success && response.data?.current) {
+          const currentUsage = response.data.current;
+          // Ensure percentUsed exists with defaults
+          setUsage({
+            ...currentUsage,
+            percentUsed: currentUsage.percentUsed || {
+              automationRuns: 0,
+              aiActions: 0,
+              apiCalls: 0,
+            },
+          });
+        } else if (response.data === null) {
+          // No active subscription
+          setError('No active subscription found');
+        } else {
+          setError(response.message || 'Failed to fetch usage data');
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
@@ -140,26 +158,26 @@ export function UsageDashboard({ agencyId, className }: UsageDashboardProps) {
         <UsageCard
           title="Automation Runs"
           icon={<Zap className="w-5 h-5" />}
-          used={usage.automationRuns}
-          included={usage.includedAutomationRuns}
-          overage={usage.overageAutomationRuns}
-          percent={usage.percentUsed.automationRuns}
+          used={usage.automationRuns ?? 0}
+          included={usage.includedAutomationRuns ?? 0}
+          overage={usage.overageAutomationRuns ?? 0}
+          percent={usage.percentUsed?.automationRuns ?? 0}
         />
         <UsageCard
           title="AI Actions"
           icon={<Bot className="w-5 h-5" />}
-          used={usage.aiActions}
-          included={usage.includedAiActions}
-          overage={usage.overageAiActions}
-          percent={usage.percentUsed.aiActions}
+          used={usage.aiActions ?? 0}
+          included={usage.includedAiActions ?? 0}
+          overage={usage.overageAiActions ?? 0}
+          percent={usage.percentUsed?.aiActions ?? 0}
         />
         <UsageCard
           title="API Calls"
           icon={<Webhook className="w-5 h-5" />}
-          used={usage.apiCalls}
-          included={usage.includedApiCalls}
-          overage={usage.overageApiCalls}
-          percent={usage.percentUsed.apiCalls}
+          used={usage.apiCalls ?? 0}
+          included={usage.includedApiCalls ?? 0}
+          overage={usage.overageApiCalls ?? 0}
+          percent={usage.percentUsed?.apiCalls ?? 0}
         />
       </div>
       

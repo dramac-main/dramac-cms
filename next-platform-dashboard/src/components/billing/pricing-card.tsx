@@ -83,6 +83,21 @@ export function PricingCard({
       return;
     }
     
+    // Validate priceId before attempting checkout
+    if (!priceId || priceId.trim() === '') {
+      console.error('[PricingCard] Missing priceId for plan:', plan.id, 'cycle:', billingCycle);
+      alert('Configuration error: Price ID not found. Please contact support.');
+      return;
+    }
+    
+    console.log('[PricingCard] Opening checkout:', { 
+      plan: plan.id, 
+      priceId, 
+      billingCycle, 
+      agencyId, 
+      email 
+    });
+    
     setLoading(true);
     try {
       await openPaddleCheckout({
@@ -92,7 +107,8 @@ export function PricingCard({
       });
       onSelect?.(plan.id);
     } catch (error) {
-      console.error('Checkout error:', error);
+      console.error('[PricingCard] Checkout error:', error);
+      alert('Failed to open checkout. Please try again.');
     } finally {
       setLoading(false);
     }
