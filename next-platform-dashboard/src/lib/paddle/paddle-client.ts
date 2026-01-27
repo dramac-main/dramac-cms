@@ -193,13 +193,25 @@ export async function openPaddleCheckout(params: OpenCheckoutParams): Promise<vo
   
   const paddle = await getPaddle();
   
+  // Build checkout options
+  // Note: Paddle requires certain URLs to be set either in dashboard or checkout options
+  const baseUrl = window.location.origin;
+  
   const checkoutOptions: any = {
     items: [{ priceId: params.priceId, quantity: 1 }],
     customData: {
       agency_id: params.agencyId,
     },
     settings: {
-      successUrl: params.successUrl || `${window.location.origin}/dashboard/billing?success=true`,
+      displayMode: 'overlay',
+      theme: 'light',
+      locale: 'en',
+      // URLs for checkout flow
+      successUrl: params.successUrl || `${baseUrl}/dashboard/billing?success=true`,
+      // Add allowed frame origins for localhost
+      frameTarget: 'self',
+      frameInitialHeight: 450,
+      allowLogout: true,
     },
   };
   

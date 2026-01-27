@@ -7,7 +7,27 @@
 - Verify your email address
 - Complete business information
 
-### 1.2 Get API Keys & Client-Side Tokens
+### 1.2 Configure Default Checkout URL (REQUIRED!)
+
+⚠️ **CRITICAL**: This step is required before checkout will work!
+
+Without this setting, you'll see the error: `transaction_default_checkout_url_not_set`
+
+1. Go to **Checkout** → **Settings** (or **Checkout** → **Checkout Settings**)
+2. Find **"Default payment link"** or **"Default checkout URL"**
+3. Set it to your application URL:
+   - **For Development**: `http://localhost:3000`
+   - **For Production**: `https://app.dramacagency.com`
+4. Click **Save**
+
+Alternatively, in some Paddle versions:
+1. Go to **Settings** → **Checkout** → **Payment Links**
+2. Enable **"Default payment link"**
+3. Enter your checkout URL
+
+**Why is this needed?** Paddle's checkout iframe needs to know where to redirect users after payment or if there's an error. This URL acts as a fallback.
+
+### 1.3 Get API Keys & Client-Side Tokens
 
 #### Server-Side API Key (for backend)
 1. Go to **Developer Tools** → **Authentication**
