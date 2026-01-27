@@ -98,11 +98,15 @@ async function initializePaddleInstance(): Promise<Paddle> {
 // ============================================================================
 
 function handlePaddleEvent(event: any): void {
-  console.log('[Paddle.js] Event:', event.name, event.data);
+  // Log full event object for debugging
+  console.log('[Paddle.js] Event received:', event);
+  console.log('[Paddle.js] Event name:', event?.name);
+  console.log('[Paddle.js] Event data:', event?.data);
+  console.log('[Paddle.js] Event error:', event?.error);
   
-  switch (event.name) {
+  switch (event?.name) {
     case 'checkout.loaded':
-      console.log('[Paddle.js] Checkout loaded');
+      console.log('[Paddle.js] Checkout loaded successfully');
       break;
     
     case 'checkout.completed':
@@ -122,9 +126,17 @@ function handlePaddleEvent(event: any): void {
       break;
     
     case 'checkout.error':
-      console.error('[Paddle.js] Checkout error:', event.data);
+      // Log all available error info
+      console.error('[Paddle.js] Checkout error event:', {
+        name: event?.name,
+        data: event?.data,
+        error: event?.error,
+        detail: event?.detail,
+        message: event?.message,
+        fullEvent: JSON.stringify(event, null, 2),
+      });
       window.dispatchEvent(new CustomEvent('paddle:checkout:error', {
-        detail: event.data,
+        detail: event.data || event.error || event,
       }));
       break;
     
@@ -135,6 +147,12 @@ function handlePaddleEvent(event: any): void {
     case 'checkout.payment.selected':
       console.log('[Paddle.js] Payment method selected');
       break;
+    
+    default:
+      // Log any unknown events
+      if (event?.name) {
+        console.log('[Paddle.js] Unknown event:', event.name, event);
+      }
   }
 }
 
@@ -199,7 +217,18 @@ export async function openPaddleCheckout(params: OpenCheckoutParams): Promise<vo
   
   console.log('[Paddle.js] Checkout options:', JSON.stringify(checkoutOptions, null, 2));
   
-  await paddle.Checkout.open(checkoutOptions);
+  try {
+    await paddle.Checkout.open(checkoutOptions);
+  } catch (checkoutError: any) {
+    console.error('[Paddle.js] Checkout.open() threw error:', {
+      message: checkoutError?.message,
+      code: checkoutError?.code,
+      detail: checkoutError?.detail,
+      errors: checkoutError?.errors,
+      fullError: checkoutError,
+    });
+    throw checkoutError;
+  }
 }
 
 /**

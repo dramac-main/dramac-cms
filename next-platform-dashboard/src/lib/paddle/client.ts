@@ -24,6 +24,9 @@ if (!process.env.PADDLE_API_KEY) {
   console.warn('[Paddle] PADDLE_API_KEY not set - billing features will be disabled');
 }
 
+// Determine environment from either variable (support both naming conventions)
+const paddleEnvironment = process.env.NEXT_PUBLIC_PADDLE_ENVIRONMENT || process.env.PADDLE_ENVIRONMENT || 'sandbox';
+
 // ============================================================================
 // Paddle Client
 // ============================================================================
@@ -34,7 +37,7 @@ if (!process.env.PADDLE_API_KEY) {
  */
 export const paddle = process.env.PADDLE_API_KEY
   ? new Paddle(process.env.PADDLE_API_KEY, {
-      environment: process.env.PADDLE_ENVIRONMENT === 'sandbox'
+      environment: paddleEnvironment === 'sandbox'
         ? Environment.sandbox
         : Environment.production
     })
@@ -48,7 +51,7 @@ export const isPaddleConfigured = !!process.env.PADDLE_API_KEY;
 /**
  * Check if using sandbox environment
  */
-export const isPaddleSandbox = process.env.PADDLE_ENVIRONMENT === 'sandbox';
+export const isPaddleSandbox = paddleEnvironment === 'sandbox';
 
 // ============================================================================
 // Product & Price IDs
