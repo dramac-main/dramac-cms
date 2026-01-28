@@ -2,3 +2,7 @@ export * from "./dashboard-stats";
 export * from "./quick-actions";
 export * from "./recent-sites";
 export * from "./recent-activity";
+export * from "./enhanced-metrics";
+export * from "./recent-clients";
+export * from "./module-subscriptions";
+export * from "./welcome-card";

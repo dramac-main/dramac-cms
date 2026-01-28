@@ -13,6 +13,7 @@ interface CardProps {
   shadow?: "none" | "sm" | "md" | "lg" | "xl";
   borderWidth?: number;
   borderColor?: string;
+  useThemeColors?: boolean;
 }
 
 const shadowMap = {
@@ -25,26 +26,31 @@ const shadowMap = {
 
 export function Card({
   children,
-  backgroundColor = "#ffffff",
+  backgroundColor = "",
   borderRadius = 8,
   padding = 24,
   shadow = "md",
   borderWidth = 1,
-  borderColor = "#e5e7eb",
+  borderColor = "",
+  useThemeColors = true,
 }: CardProps) {
   const { connectors: { connect, drag } } = useNode();
+
+  // Resolve colors using theme variables
+  const resolvedBgColor = backgroundColor || (useThemeColors ? "var(--card, #ffffff)" : "#ffffff");
+  const resolvedBorderColor = borderColor || (useThemeColors ? "var(--border, #e5e7eb)" : "#e5e7eb");
 
   return (
     <div
       ref={(ref) => { if (ref) connect(drag(ref)); }}
       style={{
-        backgroundColor,
-        borderRadius: `${borderRadius}px`,
+        backgroundColor: resolvedBgColor,
+        borderRadius: `var(--radius, ${borderRadius}px)`,
         padding: `${padding}px`,
         boxShadow: shadowMap[shadow],
         borderWidth: `${borderWidth}px`,
         borderStyle: "solid",
-        borderColor,
+        borderColor: resolvedBorderColor,
       }}
     >
       {children || (
@@ -61,12 +67,13 @@ export function Card({
 Card.craft = {
   displayName: "Card",
   props: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "",
     borderRadius: 8,
     padding: 24,
     shadow: "md",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "",
+    useThemeColors: true,
   },
   related: {
     settings: CardSettings,

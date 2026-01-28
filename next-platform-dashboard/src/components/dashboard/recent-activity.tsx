@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Globe, FileText, User, Eye, Activity } from "lucide-react";
+import { Globe, FileText, User, Eye, Activity, Puzzle, Inbox } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { ActivityItem } from "@/lib/actions/dashboard";
 
@@ -14,13 +14,17 @@ const activityIcons = {
   site_published: Eye,
   page_created: FileText,
   client_created: User,
+  module_installed: Puzzle,
+  form_submission: Inbox,
 };
 
 const activityColors = {
-  site_created: "bg-purple-100 text-purple-600",
-  site_published: "bg-green-100 text-green-600",
-  page_created: "bg-blue-100 text-blue-600",
-  client_created: "bg-orange-100 text-orange-600",
+  site_created: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
+  site_published: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
+  page_created: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+  client_created: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
+  module_installed: "bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400",
+  form_submission: "bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400",
 };
 
 interface RecentActivityProps {

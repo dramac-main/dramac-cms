@@ -19,6 +19,7 @@ export interface TestimonialsProps {
   testimonials?: Testimonial[];
   backgroundColor?: string;
   textColor?: string;
+  useThemeColors?: boolean;
 }
 
 const defaultTestimonials: Testimonial[] = [
@@ -47,12 +48,17 @@ export function Testimonials({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   layout = "grid",
   testimonials = defaultTestimonials,
-  backgroundColor = "#f8fafc",
+  backgroundColor = "",
   textColor = "",
+  useThemeColors = true,
 }: TestimonialsProps) {
   const {
     connectors: { connect, drag },
   } = useNode();
+
+  // Resolve colors using theme variables
+  const resolvedBgColor = backgroundColor || (useThemeColors ? "var(--muted, #f8fafc)" : "#f8fafc");
+  const resolvedTextColor = textColor || (useThemeColors ? "var(--foreground, inherit)" : "inherit");
 
   return (
     <section
@@ -62,7 +68,7 @@ export function Testimonials({
         }
       }}
       className="py-16 px-8"
-      style={{ backgroundColor, color: textColor }}
+      style={{ backgroundColor: resolvedBgColor, color: resolvedTextColor }}
     >
       <div className="max-w-6xl mx-auto">
         {/* Header */}
@@ -106,8 +112,9 @@ Testimonials.craft = {
     title: "What Our Clients Say",
     layout: "grid",
     testimonials: defaultTestimonials,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "",
     textColor: "",
+    useThemeColors: true,
   },
   related: {
     settings: TestimonialsSettings,

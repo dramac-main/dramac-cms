@@ -3,6 +3,9 @@
 import { useNode } from "@craftjs/core";
 import { FeaturesSettings } from "../settings/features-settings";
 
+// Brand colors from design system
+const DEFAULT_PRIMARY = "#8b5cf6";
+
 interface Feature {
   icon: string;
   title: string;
@@ -16,6 +19,7 @@ interface FeaturesProps {
   columns?: 2 | 3 | 4;
   backgroundColor?: string;
   iconColor?: string;
+  useThemeColors?: boolean;
 }
 
 const defaultFeatures: Feature[] = [
@@ -30,9 +34,13 @@ export function Features({
   features = defaultFeatures,
   columns = 3,
   backgroundColor = "#f9fafb",
-  iconColor = "#6366f1",
+  iconColor = "",
+  useThemeColors = true,
 }: FeaturesProps) {
   const { connectors: { connect, drag } } = useNode();
+
+  // Resolve icon color using theme variable
+  const resolvedIconColor = iconColor || (useThemeColors ? `var(--primary, ${DEFAULT_PRIMARY})` : DEFAULT_PRIMARY);
 
   // Generate responsive grid template based on columns
   const getGridStyle = () => {
@@ -51,10 +59,11 @@ export function Features({
           font-size: clamp(1.5rem, 4vw, 2.25rem);
           font-weight: bold;
           margin-bottom: 1rem;
+          font-family: var(--heading-font-family, inherit);
         }
         .features-subtitle {
           font-size: clamp(1rem, 2vw, 1.125rem);
-          color: #6b7280;
+          color: var(--muted-foreground, #6b7280);
         }
         .feature-card {
           text-align: center;
@@ -68,9 +77,10 @@ export function Features({
           font-size: clamp(1rem, 2vw, 1.25rem);
           font-weight: 600;
           margin-bottom: 0.5rem;
+          font-family: var(--heading-font-family, inherit);
         }
         .feature-description {
-          color: #6b7280;
+          color: var(--muted-foreground, #6b7280);
           font-size: clamp(0.875rem, 1.5vw, 1rem);
           line-height: 1.6;
         }
@@ -100,7 +110,7 @@ export function Features({
           <div style={getGridStyle()}>
             {features.map((feature, index) => (
               <div key={index} className="feature-card">
-                <div className="feature-icon" style={{ color: iconColor }}>
+                <div className="feature-icon" style={{ color: resolvedIconColor }}>
                   {feature.icon}
                 </div>
                 <h3 className="feature-title">
@@ -126,7 +136,8 @@ Features.craft = {
     features: defaultFeatures,
     columns: 3,
     backgroundColor: "#f9fafb",
-    iconColor: "#6366f1",
+    iconColor: "",
+    useThemeColors: true,
   },
   related: {
     settings: FeaturesSettings,

@@ -15,9 +15,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { ThemeSwitch } from "@/components/ui/theme-switch";
 
 export function Header() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile } = useAuth();
 
   // Generate initials from profile name, with better fallback handling
   const getInitials = () => {
@@ -46,6 +47,9 @@ export function Header() {
 
       {/* Right side - actions */}
       <div className="flex items-center gap-2">
+        {/* Theme Switch */}
+        <ThemeSwitch />
+
         {/* Notifications */}
         <NotificationBell />
 

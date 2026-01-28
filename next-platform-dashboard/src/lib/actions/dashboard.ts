@@ -9,6 +9,34 @@ export interface DashboardStats {
   totalPages: number;
 }
 
+// Enhanced metrics for the dashboard
+export interface EnhancedMetrics {
+  moduleInstallations: number;
+  totalAssets: number;
+  formSubmissions: number;
+  blogPosts: number;
+  teamMembers: number;
+  activeWorkflows: number;
+}
+
+// Module subscription info
+export interface ModuleSubscriptionInfo {
+  id: string;
+  moduleName: string;
+  status: string;
+  installedAt: string | null;
+}
+
+// Recent client info
+export interface RecentClient {
+  id: string;
+  name: string;
+  company: string | null;
+  email: string | null;
+  createdAt: string | null;
+  siteCount: number;
+}
+
 export interface RecentSite {
   id: string;
   name: string;
@@ -21,37 +49,56 @@ export interface RecentSite {
 
 export interface ActivityItem {
   id: string;
-  type: "site_created" | "site_published" | "page_created" | "client_created";
+  type: "site_created" | "site_published" | "page_created" | "client_created" | "module_installed" | "form_submission";
   title: string;
   description: string;
   timestamp: string;
 }
 
 export interface DashboardData {
-  user: { email: string } | null;
+  user: { email: string; name?: string } | null;
   stats: DashboardStats;
+  enhancedMetrics: EnhancedMetrics;
   recentSites: RecentSite[];
+  recentClients: RecentClient[];
   recentActivity: ActivityItem[];
+  moduleSubscriptions: ModuleSubscriptionInfo[];
+  agencyName: string | null;
+  subscriptionPlan: string | null;
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
   const supabase = await createClient();
 
+  const emptyResponse: DashboardData = {
+    user: null,
+    stats: { totalClients: 0, totalSites: 0, publishedSites: 0, totalPages: 0 },
+    enhancedMetrics: { 
+      moduleInstallations: 0, 
+      totalAssets: 0, 
+      formSubmissions: 0, 
+      blogPosts: 0, 
+      teamMembers: 0, 
+      activeWorkflows: 0 
+    },
+    recentSites: [],
+    recentClients: [],
+    recentActivity: [],
+    moduleSubscriptions: [],
+    agencyName: null,
+    subscriptionPlan: null,
+  };
+
   // Get current user
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return {
-      user: null,
-      stats: { totalClients: 0, totalSites: 0, publishedSites: 0, totalPages: 0 },
-      recentSites: [],
-      recentActivity: [],
-    };
+    return emptyResponse;
   }
 
-  // Get agency ID
+  // Get profile with agency info
   const { data: profile } = await supabase
     .from("profiles")
-    .select("agency_id")
+    .select("agency_id, full_name")
     .eq("id", user.id)
     .single();
 
@@ -59,15 +106,28 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   if (!agencyId) {
     return {
-      user: { email: user.email || "" },
-      stats: { totalClients: 0, totalSites: 0, publishedSites: 0, totalPages: 0 },
-      recentSites: [],
-      recentActivity: [],
+      ...emptyResponse,
+      user: { email: user.email || "", name: profile?.full_name || undefined },
     };
   }
 
-  // Get counts in parallel
-  const [clientsResult, sitesResult, publishedSitesResult, pagesResult] = await Promise.all([
+  // Get agency details
+  const { data: agency } = await supabase
+    .from("agencies")
+    .select("name, plan, subscription_plan")
+    .eq("id", agencyId)
+    .single();
+
+  // Get all counts in parallel for performance
+  const [
+    clientsResult, 
+    sitesResult, 
+    publishedSitesResult, 
+    pagesResult,
+    moduleInstallsResult,
+    assetsResult,
+    teamMembersResult,
+  ] = await Promise.all([
     supabase
       .from("clients")
       .select("id", { count: "exact", head: true })
@@ -85,7 +145,55 @@ export async function getDashboardData(): Promise<DashboardData> {
       .from("pages")
       .select("id, site:sites!inner(agency_id)", { count: "exact", head: true })
       .eq("site.agency_id", agencyId),
+    supabase
+      .from("agency_module_installations")
+      .select("id", { count: "exact", head: true })
+      .eq("agency_id", agencyId)
+      .eq("is_enabled", true),
+    supabase
+      .from("assets")
+      .select("id", { count: "exact", head: true })
+      .eq("agency_id", agencyId),
+    supabase
+      .from("agency_members")
+      .select("id", { count: "exact", head: true })
+      .eq("agency_id", agencyId),
   ]);
+
+  // Get site IDs for querying related data
+  const { data: siteIds } = await supabase
+    .from("sites")
+    .select("id")
+    .eq("agency_id", agencyId);
+  
+  const siteIdList = siteIds?.map(s => s.id) || [];
+
+  // Get form submissions, blog posts, and workflows counts
+  let formSubmissions = 0;
+  let blogPosts = 0;
+  let activeWorkflows = 0;
+
+  if (siteIdList.length > 0) {
+    const [formResult, blogResult, workflowResult] = await Promise.all([
+      supabase
+        .from("form_submissions")
+        .select("id", { count: "exact", head: true })
+        .in("site_id", siteIdList),
+      supabase
+        .from("blog_posts")
+        .select("id", { count: "exact", head: true })
+        .in("site_id", siteIdList),
+      supabase
+        .from("automation_workflows")
+        .select("id", { count: "exact", head: true })
+        .in("site_id", siteIdList)
+        .eq("is_active", true),
+    ]);
+    
+    formSubmissions = formResult.count || 0;
+    blogPosts = blogResult.count || 0;
+    activeWorkflows = workflowResult.count || 0;
+  }
 
   // Get recent sites
   const { data: recentSitesData } = await supabase
@@ -95,7 +203,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     .order("updated_at", { ascending: false })
     .limit(5);
 
-  // Transform sites to match interface (convert published boolean to status string)
   const recentSites: RecentSite[] = (recentSitesData || []).map((site) => ({
     id: site.id,
     name: site.name,
@@ -104,6 +211,43 @@ export async function getDashboardData(): Promise<DashboardData> {
     status: site.published ? "published" : "draft",
     updated_at: site.updated_at,
     client: site.client,
+  }));
+
+  // Get recent clients
+  const { data: recentClientsData } = await supabase
+    .from("clients")
+    .select("id, name, company, email, created_at, sites:sites(count)")
+    .eq("agency_id", agencyId)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  const recentClients: RecentClient[] = (recentClientsData || []).map((client) => ({
+    id: client.id,
+    name: client.name,
+    company: client.company,
+    email: client.email,
+    createdAt: client.created_at,
+    siteCount: (client.sites as unknown as { count: number }[])?.[0]?.count || 0,
+  }));
+
+  // Get module subscriptions
+  const { data: moduleSubsData } = await supabase
+    .from("agency_module_installations")
+    .select(`
+      id,
+      installed_at,
+      is_enabled,
+      module:modules_v2(name, status)
+    `)
+    .eq("agency_id", agencyId)
+    .eq("is_enabled", true)
+    .limit(5);
+
+  const moduleSubscriptions: ModuleSubscriptionInfo[] = (moduleSubsData || []).map((sub) => ({
+    id: sub.id,
+    moduleName: (sub.module as unknown as { name: string; status: string })?.name || "Unknown Module",
+    status: sub.is_enabled ? "active" : "inactive",
+    installedAt: sub.installed_at,
   }));
 
   // Build activity from recent data
@@ -140,18 +284,63 @@ export async function getDashboardData(): Promise<DashboardData> {
     });
   });
 
+  // Get recent clients as activity
+  recentClients.slice(0, 2).forEach((client) => {
+    if (client.createdAt) {
+      activities.push({
+        id: `client-${client.id}`,
+        type: "client_created",
+        title: "New Client Added",
+        description: `${client.name} was added`,
+        timestamp: client.createdAt,
+      });
+    }
+  });
+
+  // Get recent form submissions as activity
+  if (siteIdList.length > 0) {
+    const { data: recentForms } = await supabase
+      .from("form_submissions")
+      .select("id, form_id, created_at, site:sites(name)")
+      .in("site_id", siteIdList)
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    recentForms?.forEach((form) => {
+      activities.push({
+        id: `form-${form.id}`,
+        type: "form_submission",
+        title: "Form Submission",
+        description: `New submission on ${(form.site as unknown as { name: string })?.name || "a site"}`,
+        timestamp: form.created_at || new Date().toISOString(),
+      });
+    });
+  }
+
   // Sort activities by timestamp
   activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   return {
-    user: { email: user.email || "" },
+    user: { email: user.email || "", name: profile?.full_name || undefined },
     stats: {
       totalClients: clientsResult.count || 0,
       totalSites: sitesResult.count || 0,
       publishedSites: publishedSitesResult.count || 0,
       totalPages: pagesResult.count || 0,
     },
+    enhancedMetrics: {
+      moduleInstallations: moduleInstallsResult.count || 0,
+      totalAssets: assetsResult.count || 0,
+      formSubmissions,
+      blogPosts,
+      teamMembers: teamMembersResult.count || 0,
+      activeWorkflows,
+    },
     recentSites,
-    recentActivity: activities.slice(0, 8),
+    recentClients,
+    recentActivity: activities.slice(0, 10),
+    moduleSubscriptions,
+    agencyName: agency?.name || null,
+    subscriptionPlan: agency?.subscription_plan || agency?.plan || null,
   };
 }

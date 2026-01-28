@@ -4,6 +4,10 @@ import { useNode } from "@craftjs/core";
 import { HeroSettings } from "../settings/hero-settings";
 import { useIsEditorEnabled } from "../hooks/use-editor-mode";
 
+// Brand colors from design system
+const DEFAULT_PRIMARY = "#8b5cf6";
+const DEFAULT_BACKGROUND = "#0f0d1a";
+
 interface HeroProps {
   title?: string;
   subtitle?: string;
@@ -16,6 +20,7 @@ interface HeroProps {
   minHeight?: number;
   overlay?: boolean;
   overlayOpacity?: number;
+  useThemeColors?: boolean;
 }
 
 export function Hero({
@@ -23,13 +28,14 @@ export function Hero({
   subtitle = "Build amazing experiences with our visual editor",
   buttonText = "See Menu",
   buttonLink = "#",
-  backgroundColor = "#1a1a2e",
+  backgroundColor = "",
   backgroundImage = "",
   textColor = "#ffffff",
   alignment = "center",
   minHeight = 500,
   overlay = true,
   overlayOpacity = 50,
+  useThemeColors = true,
 }: HeroProps) {
   const { connectors: { connect, drag } } = useNode();
   const isEditorEnabled = useIsEditorEnabled();
@@ -40,6 +46,9 @@ export function Hero({
     right: { textAlign: "right" as const, alignItems: "flex-end" },
   };
 
+  // Use theme background if no custom color set
+  const resolvedBgColor = backgroundColor || (useThemeColors ? `var(--theme-background, ${DEFAULT_BACKGROUND})` : DEFAULT_BACKGROUND);
+
   return (
     <>
       <style>{`
@@ -48,6 +57,7 @@ export function Hero({
           font-weight: bold;
           margin-bottom: 1rem;
           line-height: 1.2;
+          font-family: var(--heading-font-family, inherit);
         }
         .hero-subtitle {
           font-size: clamp(1rem, 2.5vw, 1.25rem);
@@ -57,9 +67,9 @@ export function Hero({
         .hero-button {
           display: inline-block;
           padding: 0.75rem 2rem;
-          background-color: #ffffff;
-          color: #1a1a2e;
-          border-radius: 0.5rem;
+          background-color: var(--primary, ${DEFAULT_PRIMARY});
+          color: var(--primary-foreground, #ffffff);
+          border-radius: var(--radius, 0.5rem);
           font-weight: 600;
           border: none;
           cursor: pointer;
@@ -88,7 +98,7 @@ export function Hero({
           alignItems: alignmentStyles[alignment].alignItems,
           textAlign: alignmentStyles[alignment].textAlign,
           minHeight: `${minHeight}px`,
-          backgroundColor: backgroundImage ? "transparent" : backgroundColor,
+          backgroundColor: backgroundImage ? "transparent" : resolvedBgColor,
           backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
           backgroundSize: "cover",
           backgroundPosition: "center",
@@ -135,13 +145,14 @@ Hero.craft = {
     subtitle: "Build amazing experiences with our visual editor",
     buttonText: "Get Started",
     buttonLink: "#",
-    backgroundColor: "#1a1a2e",
+    backgroundColor: "",
     backgroundImage: "",
     textColor: "#ffffff",
     alignment: "center",
     minHeight: 500,
     overlay: true,
     overlayOpacity: 50,
+    useThemeColors: true,
   },
   related: {
     settings: HeroSettings,

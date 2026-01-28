@@ -12,13 +12,18 @@ interface ButtonProps {
   textColor?: string;
   borderRadius?: number;
   fullWidth?: boolean;
+  useThemeColors?: boolean;
 }
 
+// Default fallback colors (used when theme not available)
+const DEFAULT_PRIMARY = "#8b5cf6"; // Violet from brand
+const DEFAULT_SECONDARY = "#14b8a6"; // Teal from brand
+
 const variantStyles = {
-  primary: { backgroundColor: "#6366f1", color: "#ffffff", border: "none" },
+  primary: { backgroundColor: DEFAULT_PRIMARY, color: "#ffffff", border: "none" },
   secondary: { backgroundColor: "#f3f4f6", color: "#1f2937", border: "none" },
   outline: { backgroundColor: "transparent", color: "#1f2937", border: "1px solid #d1d5db" },
-  ghost: { backgroundColor: "transparent", color: "#6366f1", border: "none" },
+  ghost: { backgroundColor: "transparent", color: DEFAULT_PRIMARY, border: "none" },
 };
 
 const sizeStyles = {
@@ -36,11 +41,27 @@ export function Button({
   textColor,
   borderRadius = 6,
   fullWidth = false,
+  useThemeColors = true,
 }: ButtonProps) {
   const { connectors: { connect, drag } } = useNode();
 
   const baseStyle = variantStyles[variant];
   const sizeStyle = sizeStyles[size];
+
+  // Determine colors - use theme CSS variables if useThemeColors is enabled
+  const getBackgroundColor = () => {
+    if (backgroundColor) return backgroundColor;
+    if (useThemeColors && variant === "primary") return "var(--primary, " + DEFAULT_PRIMARY + ")";
+    if (useThemeColors && variant === "ghost") return "transparent";
+    return baseStyle.backgroundColor;
+  };
+
+  const getTextColor = () => {
+    if (textColor) return textColor;
+    if (useThemeColors && variant === "primary") return "var(--primary-foreground, #ffffff)";
+    if (useThemeColors && variant === "ghost") return "var(--primary, " + DEFAULT_PRIMARY + ")";
+    return baseStyle.color;
+  };
 
   return (
     <button
@@ -49,8 +70,8 @@ export function Button({
       style={{
         ...baseStyle,
         ...sizeStyle,
-        backgroundColor: backgroundColor || baseStyle.backgroundColor,
-        color: textColor || baseStyle.color,
+        backgroundColor: getBackgroundColor(),
+        color: getTextColor(),
         borderRadius: `${borderRadius}px`,
         fontWeight: 600,
         cursor: "pointer",
@@ -58,7 +79,7 @@ export function Button({
         alignItems: "center",
         justifyContent: "center",
         width: fullWidth ? "100%" : "auto",
-        transition: "opacity 0.2s",
+        transition: "opacity 0.2s, transform 0.2s",
       }}
     >
       {text}
@@ -77,6 +98,7 @@ Button.craft = {
     textColor: "",
     borderRadius: 6,
     fullWidth: false,
+    useThemeColors: true,
   },
   related: {
     settings: ButtonSettingsNew,

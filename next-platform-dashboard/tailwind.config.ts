@@ -10,6 +10,7 @@ import tailwindcssAnimate from "tailwindcss-animate";
  * Color shades (50-950) are available for all brand colors:
  * - primary, secondary, accent (brand colors)
  * - success, warning, danger, info (status colors)
+ * - gray (neutral grays with purple undertone for dark mode)
  * 
  * @see src/config/brand for the centralized color definitions
  */
@@ -71,6 +72,21 @@ const config: Config = {
         danger: generateColorScale("danger"),
         info: generateColorScale("info"),
         
+        // Gray scale with purple undertone for dark mode harmony
+        gray: {
+          50: "#fafafa",
+          100: "#f4f4f5",
+          200: "#e4e4e7",
+          300: "#d4d4d8",
+          400: "#a1a1aa",
+          500: "#71717a",
+          600: "#52525b",
+          700: "#3f3f46",
+          800: "#27272a",
+          900: "#18181b",
+          950: "#09090b",
+        },
+        
         // Component colors (card, popover, muted)
         muted: {
           DEFAULT: "hsl(var(--color-muted))",
@@ -84,15 +100,37 @@ const config: Config = {
           DEFAULT: "hsl(var(--color-popover))",
           foreground: "hsl(var(--color-popover-foreground))",
         },
+        
+        // Semantic surface colors for analytics dashboard
+        surface: {
+          DEFAULT: "hsl(var(--color-card))",
+          elevated: "hsl(var(--color-popover))",
+          hover: "hsl(var(--color-muted))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        "2xl": "1rem",
+        "3xl": "1.5rem",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
         mono: ["var(--font-mono)"],
+        display: ["var(--font-display)", "var(--font-sans)"],
+      },
+      boxShadow: {
+        glow: "0 0 40px rgba(139, 92, 246, 0.3)",
+        "glow-light": "0 0 40px rgba(139, 92, 246, 0.15)",
+      },
+      backgroundImage: {
+        "gradient-primary": "linear-gradient(135deg, #7c3aed 0%, #a78bfa 50%, #c4b5fd 100%)",
+        "gradient-premium": "linear-gradient(145deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%)",
+        "gradient-stat": "linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)",
+        "gradient-sidebar-active": "linear-gradient(90deg, rgba(139,92,246,0.2) 0%, transparent 100%)",
+        "gradient-chart-purple": "linear-gradient(180deg, rgba(139,92,246,0.4) 0%, rgba(139,92,246,0.05) 100%)",
+        "gradient-chart-teal": "linear-gradient(180deg, rgba(20,184,166,0.3) 0%, rgba(20,184,166,0.02) 100%)",
       },
       keyframes: {
         "accordion-down": {

@@ -32,16 +32,16 @@ import {
 // =============================================================================
 
 /**
- * Primary brand color - Indigo
+ * Primary brand color - Violet/Purple spectrum
  * Used for: Primary buttons, links, active states, focus rings
  */
-const PRIMARY_HEX: HexColor = '#6366f1';
+const PRIMARY_HEX: HexColor = '#8b5cf6';
 
 /**
- * Secondary brand color - Violet  
- * Used for: Secondary buttons, highlights, accents
+ * Secondary brand color - Teal/Cyan spectrum
+ * Used for: Charts, accents, success states
  */
-const SECONDARY_HEX: HexColor = '#8b5cf6';
+const SECONDARY_HEX: HexColor = '#14b8a6';
 
 /**
  * Accent brand color - Pink
@@ -154,7 +154,7 @@ export const statusColors: StatusColors = {
  * Light theme neutral colors.
  */
 export const lightNeutrals: NeutralColors = {
-  background: createColorValue('#ffffff'),
+  background: createColorValue('#f8fafc'),
   foreground: createColorValue('#0f172a'),
   card: {
     DEFAULT: createColorValue('#ffffff'),
@@ -166,7 +166,7 @@ export const lightNeutrals: NeutralColors = {
   },
   muted: {
     DEFAULT: createColorValue('#f1f5f9'),
-    foreground: createColorValue('#64748b'),
+    foreground: createColorValue('#475569'),
   },
   border: createColorValue('#e2e8f0'),
   input: createColorValue('#e2e8f0'),
@@ -179,24 +179,25 @@ export const lightNeutrals: NeutralColors = {
 
 /**
  * Dark theme neutral colors.
+ * Deep purple-tinted backgrounds for dark mode harmony.
  */
 export const darkNeutrals: NeutralColors = {
-  background: createColorValue('#0f172a'),
-  foreground: createColorValue('#f8fafc'),
+  background: createColorValue('#0c0a14'),
+  foreground: createColorValue('#ffffff'),
   card: {
-    DEFAULT: createColorValue('#1e293b'),
-    foreground: createColorValue('#f8fafc'),
+    DEFAULT: createColorValue('#13101c'),
+    foreground: createColorValue('#ffffff'),
   },
   popover: {
-    DEFAULT: createColorValue('#1e293b'),
-    foreground: createColorValue('#f8fafc'),
+    DEFAULT: createColorValue('#1a1625'),
+    foreground: createColorValue('#ffffff'),
   },
   muted: {
-    DEFAULT: createColorValue('#334155'),
-    foreground: createColorValue('#94a3b8'),
+    DEFAULT: createColorValue('#231e30'),
+    foreground: createColorValue('#a1a1aa'),
   },
-  border: createColorValue('#334155'),
-  input: createColorValue('#334155'),
+  border: createColorValue('#2a2438'),
+  input: createColorValue('#2a2438'),
   ring: primaryScale[400],
 };
 

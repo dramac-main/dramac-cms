@@ -3,6 +3,9 @@
 import { useNode } from "@craftjs/core";
 import { CTASettings } from "../settings/cta-settings";
 
+// Brand colors from design system
+const DEFAULT_PRIMARY = "#8b5cf6";
+
 interface CTAProps {
   title?: string;
   subtitle?: string;
@@ -12,6 +15,7 @@ interface CTAProps {
   textColor?: string;
   buttonBackgroundColor?: string;
   buttonTextColor?: string;
+  useThemeColors?: boolean;
 }
 
 export function CTA({
@@ -19,12 +23,17 @@ export function CTA({
   subtitle = "Join thousands of satisfied customers today",
   buttonText = "Start Free Trial",
   buttonLink: _buttonLink = "#",
-  backgroundColor = "#6366f1",
+  backgroundColor = "",
   textColor = "#ffffff",
   buttonBackgroundColor = "#ffffff",
-  buttonTextColor = "#6366f1",
+  buttonTextColor = "",
+  useThemeColors = true,
 }: CTAProps) {
   const { connectors: { connect, drag } } = useNode();
+
+  // Resolve colors using theme variables with fallbacks
+  const resolvedBgColor = backgroundColor || (useThemeColors ? `var(--primary, ${DEFAULT_PRIMARY})` : DEFAULT_PRIMARY);
+  const resolvedBtnTextColor = buttonTextColor || (useThemeColors ? `var(--primary, ${DEFAULT_PRIMARY})` : DEFAULT_PRIMARY);
 
   return (
     <>
@@ -37,6 +46,7 @@ export function CTA({
           font-size: clamp(1.5rem, 4vw, 2.25rem);
           font-weight: bold;
           margin-bottom: 1rem;
+          font-family: var(--heading-font-family, inherit);
         }
         .cta-subtitle {
           font-size: clamp(1rem, 2vw, 1.125rem);
@@ -46,7 +56,7 @@ export function CTA({
         .cta-button {
           display: inline-block;
           padding: 1rem 2.5rem;
-          border-radius: 0.5rem;
+          border-radius: var(--radius, 0.5rem);
           font-weight: 600;
           font-size: clamp(0.875rem, 2vw, 1.125rem);
           border: none;
@@ -67,7 +77,7 @@ export function CTA({
         className="cta-section"
         ref={(ref) => { if (ref) connect(drag(ref)); }}
         style={{
-          backgroundColor,
+          backgroundColor: resolvedBgColor,
           color: textColor,
         }}
       >
@@ -83,7 +93,7 @@ export function CTA({
               className="cta-button"
               style={{
                 backgroundColor: buttonBackgroundColor,
-                color: buttonTextColor,
+                color: resolvedBtnTextColor,
               }}
             >
               {buttonText}
@@ -102,10 +112,11 @@ CTA.craft = {
     subtitle: "Join thousands of satisfied customers today",
     buttonText: "Start Free Trial",
     buttonLink: "#",
-    backgroundColor: "#6366f1",
+    backgroundColor: "",
     textColor: "#ffffff",
     buttonBackgroundColor: "#ffffff",
-    buttonTextColor: "#6366f1",
+    buttonTextColor: "",
+    useThemeColors: true,
   },
   related: {
     settings: CTASettings,

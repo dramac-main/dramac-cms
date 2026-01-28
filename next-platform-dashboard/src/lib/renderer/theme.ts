@@ -10,10 +10,11 @@ export interface ThemeSettings {
   spacing?: string;
 }
 
+// Updated to use brand colors from design system
 const DEFAULT_THEME: Required<ThemeSettings> = {
-  primaryColor: "#3b82f6",
-  secondaryColor: "#64748b",
-  accentColor: "#f59e0b",
+  primaryColor: "#8b5cf6", // Violet - brand primary
+  secondaryColor: "#14b8a6", // Teal - brand secondary
+  accentColor: "#ec4899", // Pink - brand accent
   backgroundColor: "#ffffff",
   foregroundColor: "#0f172a",
   fontFamily: "system-ui, -apple-system, sans-serif",
