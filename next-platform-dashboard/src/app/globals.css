@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../styles/brand-variables.css";
 
 @plugin "tailwindcss-animate";
 
@@ -6,55 +7,15 @@
 
 /* =============================================
    DESIGN TOKENS
+   
+   Core design tokens are now generated from the brand system.
+   Color scales (50-950) are defined in brand-variables.css.
+   
+   @see src/config/brand for centralized brand configuration
+   @see src/styles/brand-variables.css for generated CSS variables
    ============================================= */
 
 :root {
-  /* ---------------------------------------------
-     COLORS - Brand
-     --------------------------------------------- */
-  --color-primary: 238 76% 68%;
-  --color-primary-foreground: 0 0% 100%;
-
-  --color-secondary: 258 90% 66%;
-  --color-secondary-foreground: 0 0% 100%;
-
-  --color-accent: 330 81% 60%;
-  --color-accent-foreground: 0 0% 100%;
-
-  /* ---------------------------------------------
-     COLORS - Semantic
-     --------------------------------------------- */
-  --color-success: 142 71% 45%;
-  --color-success-foreground: 0 0% 100%;
-
-  --color-warning: 38 92% 50%;
-  --color-warning-foreground: 0 0% 100%;
-
-  --color-danger: 0 84% 60%;
-  --color-danger-foreground: 0 0% 100%;
-
-  --color-info: 199 89% 48%;
-  --color-info-foreground: 0 0% 100%;
-
-  /* ---------------------------------------------
-     COLORS - Neutral (Light Mode)
-     --------------------------------------------- */
-  --color-background: 0 0% 100%;
-  --color-foreground: 222.2 84% 4.9%;
-
-  --color-card: 0 0% 100%;
-  --color-card-foreground: 222.2 84% 4.9%;
-
-  --color-popover: 0 0% 100%;
-  --color-popover-foreground: 222.2 84% 4.9%;
-
-  --color-muted: 210 40% 96.1%;
-  --color-muted-foreground: 215.4 16.3% 46.9%;
-
-  --color-border: 214.3 31.8% 91.4%;
-  --color-input: 214.3 31.8% 91.4%;
-  --color-ring: 238 76% 68%;
-
   /* ---------------------------------------------
      SPACING SCALE
      --------------------------------------------- */

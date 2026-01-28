@@ -1,5 +1,17 @@
-export const APP_NAME = "DRAMAC";
-export const APP_DESCRIPTION = "Build beautiful websites for your clients";
+/**
+ * DRAMAC CMS Application Constants
+ * 
+ * This file re-exports brand constants for backward compatibility.
+ * For new code, prefer importing directly from '@/config/brand'.
+ * 
+ * @see src/config/brand for the centralized brand configuration
+ */
+
+// Re-export brand constants for backward compatibility
+export { APP_NAME, APP_DESCRIPTION, APP_DOMAIN, APP_URL } from './brand';
+
+// Re-export identity for direct access
+export { identity as BRAND_IDENTITY } from './brand';
 
 export const PLANS = {
   starter: {

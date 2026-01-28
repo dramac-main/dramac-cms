@@ -1,6 +1,41 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 
+/**
+ * DRAMAC CMS Tailwind Configuration
+ * 
+ * Colors are defined via CSS variables set in globals.css and
+ * generated from the brand configuration in src/config/brand.
+ * 
+ * Color shades (50-950) are available for all brand colors:
+ * - primary, secondary, accent (brand colors)
+ * - success, warning, danger, info (status colors)
+ * 
+ * @see src/config/brand for the centralized color definitions
+ */
+
+/**
+ * Generate color scale with all shades (50-950).
+ * Maps CSS variables to Tailwind color utilities.
+ */
+function generateColorScale(name: string) {
+  return {
+    50: `hsl(var(--color-${name}-50))`,
+    100: `hsl(var(--color-${name}-100))`,
+    200: `hsl(var(--color-${name}-200))`,
+    300: `hsl(var(--color-${name}-300))`,
+    400: `hsl(var(--color-${name}-400))`,
+    500: `hsl(var(--color-${name}-500))`,
+    600: `hsl(var(--color-${name}-600))`,
+    700: `hsl(var(--color-${name}-700))`,
+    800: `hsl(var(--color-${name}-800))`,
+    900: `hsl(var(--color-${name}-900))`,
+    950: `hsl(var(--color-${name}-950))`,
+    DEFAULT: `hsl(var(--color-${name}))`,
+    foreground: `hsl(var(--color-${name}-foreground))`,
+  };
+}
+
 const config: Config = {
   darkMode: ["class", "html"],
   content: [
@@ -18,39 +53,25 @@ const config: Config = {
     },
     extend: {
       colors: {
+        // Neutral colors (single value)
         border: "hsl(var(--color-border))",
         input: "hsl(var(--color-input))",
         ring: "hsl(var(--color-ring))",
         background: "hsl(var(--color-background))",
         foreground: "hsl(var(--color-foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--color-primary))",
-          foreground: "hsl(var(--color-primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--color-secondary))",
-          foreground: "hsl(var(--color-secondary-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--color-accent))",
-          foreground: "hsl(var(--color-accent-foreground))",
-        },
-        success: {
-          DEFAULT: "hsl(var(--color-success))",
-          foreground: "hsl(var(--color-success-foreground))",
-        },
-        warning: {
-          DEFAULT: "hsl(var(--color-warning))",
-          foreground: "hsl(var(--color-warning-foreground))",
-        },
-        danger: {
-          DEFAULT: "hsl(var(--color-danger))",
-          foreground: "hsl(var(--color-danger-foreground))",
-        },
-        info: {
-          DEFAULT: "hsl(var(--color-info))",
-          foreground: "hsl(var(--color-info-foreground))",
-        },
+        
+        // Brand colors with full scale (50-950)
+        primary: generateColorScale("primary"),
+        secondary: generateColorScale("secondary"),
+        accent: generateColorScale("accent"),
+        
+        // Status colors with full scale (50-950)
+        success: generateColorScale("success"),
+        warning: generateColorScale("warning"),
+        danger: generateColorScale("danger"),
+        info: generateColorScale("info"),
+        
+        // Component colors (card, popover, muted)
         muted: {
           DEFAULT: "hsl(var(--color-muted))",
           foreground: "hsl(var(--color-muted-foreground))",
