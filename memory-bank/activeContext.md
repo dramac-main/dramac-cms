@@ -1,10 +1,250 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 28, 2026  
-**Current Phase**: Enhanced Dashboard with Real Data ✅ COMPLETE  
-**Status**: ✅ 22 OF 34 PHASES (65%) - TypeScript Verified
+**Current Phase**: Phase EM-58B AI Agents Templates, UI & Analytics ✅ COMPLETE  
+**Status**: ✅ 24 OF 34 PHASES (71%) - ✅ Zero TypeScript Errors
 
 ## Current Work Focus
+
+### ✅ COMPLETED: Phase EM-58B AI Agents - Templates, UI & Analytics (January 28, 2026)
+**Status**: ✅ COMPLETE - Full AI agent marketplace, analytics, and billing UI ready  
+**TypeScript Compilation**: ✅ Zero errors - Production ready  
+**Quality Assurance**: ✅ All 27 files pass TypeScript strict mode  
+
+**What Was Built:**
+
+1. **Database Migration** (`migrations/em-58b-ai-agents-marketplace.sql`):
+   - 6 new tables for marketplace/templates:
+     - `ai_agent_templates` - Pre-built agent template library
+     - `ai_agent_marketplace` - Published marketplace listings
+     - `ai_agent_reviews` - User reviews and ratings
+     - `ai_agent_installations` - Track installed agents
+     - `ai_usage_limits` - Tier-based usage limits
+     - `ai_usage_overage` - Overage tracking for billing
+   - RLS policies for secure access
+   - Seed data with 12 initial templates
+
+2. **Agent Templates Library** (`src/lib/ai-agents/templates/`):
+   - 12 pre-built agent templates:
+     - Sales: Lead Qualifier, SDR Agent
+     - Marketing: Email Campaign Manager
+     - Support: Support Triage, FAQ Answerer
+     - Customer Success: Customer Health Monitor, Onboarding Assistant
+     - Operations: Data Cleaner, Report Generator, Meeting Scheduler, Follow-up Reminder
+     - Security: Security Guardian
+   - Template utilities: getTemplateById, getTemplatesByCategory, getFreeTemplates
+
+3. **Agent Builder UI** (`src/components/ai-agents/agent-builder/`):
+   - 10 comprehensive builder components:
+     - AgentBuilder.tsx - Main orchestrator with 7-tab interface
+     - AgentIdentity.tsx - Name, avatar, type, domain, template selection
+     - AgentPersonality.tsx - System prompt, few-shot examples
+     - AgentGoals.tsx - Goals with metrics and priorities
+     - AgentTriggers.tsx - Event triggers, schedules, conditions
+     - AgentTools.tsx - Tool access with category wildcards
+     - AgentConstraints.tsx - Rules and boundaries
+     - AgentSettings.tsx - LLM provider/model, temperature
+     - AgentPreview.tsx - Live preview sidebar
+     - AgentTestPanel.tsx - Test scenarios and results
+
+4. **Agent Marketplace** (`src/components/ai-agents/marketplace/`):
+   - AgentMarketplace.tsx - Browse and search agents
+   - AgentDetails.tsx - Detailed view with reviews and install
+   - Category filtering, sorting, ratings display
+   - Install flow with loading states
+
+5. **Agent Analytics** (`src/components/ai-agents/analytics/`):
+   - AgentAnalytics.tsx - Comprehensive analytics dashboard:
+     - Total executions, success rate, avg duration stats
+     - Active agents, tokens used, cost tracking
+     - Execution history table with status badges
+     - Agent performance comparison
+     - Time range filtering (24h, 7d, 30d, 90d)
+
+6. **Usage Tracking & Billing** (`src/lib/ai-agents/billing/`):
+   - usage-tracker.ts - Complete usage tracking system:
+     - 5 pricing tiers (Free, Starter, Professional, Business, Enterprise)
+     - Token limits, execution limits, model access
+     - Overage calculation and billing
+     - Cost estimation per model
+   - UsageDashboard.tsx - Usage visualization:
+     - Progress bars for tokens and executions
+     - Near-limit and over-limit warnings
+     - Upgrade dialog with plan comparison
+
+7. **Testing Framework** (`src/lib/ai-agents/testing/`):
+   - test-utils.ts - Comprehensive testing utilities:
+     - TestScenario, TestResult, TestReport types
+     - generateStandardScenarios() for agent-type-specific tests
+     - AgentTester class with runScenario, runAllScenarios
+     - Configuration validation
+   - AgentTestRunner.tsx - Test UI component:
+     - Run all tests with progress indicator
+     - Validation results table
+     - Detailed test results with assertions
+
+8. **Main Page Component** (`src/components/ai-agents/AIAgentsPage.tsx`):
+   - Unified dashboard with 5 tabs:
+     - My Agents: Agent list + builder
+     - Marketplace: Browse and install
+     - Analytics: Performance monitoring
+     - Testing: Run validation tests
+     - Usage: Billing and limits
+
+**Tier Pricing Structure:**
+| Tier         | Monthly | Tokens/mo | Executions/mo | Agents | Models               |
+|--------------|---------|-----------|---------------|--------|----------------------|
+| Free         | $0      | 50K       | 100           | 2      | GPT-4o-mini          |
+| Starter      | $29     | 500K      | 1,000         | 5      | GPT-4o-mini, GPT-4o  |
+| Professional | $99     | 2M        | 5,000         | 15     | + Claude 3.5 Sonnet  |
+| Business     | $299    | 10M       | 25,000        | 50     | + Claude Opus        |
+| Enterprise   | Custom  | Unlimited | Unlimited     | ∞      | All + Fine-tuning    |
+
+---
+
+### ✅ COMPLETED: Phase EM-58A AI Agents - Core Infrastructure (January 28, 2026)
+**Status**: ✅ COMPLETE - Full AI agent infrastructure ready for integration  
+**TypeScript Compilation**: ✅ Zero errors  
+
+**What Was Built:**
+
+1. **Database Migration** (`migrations/em-58-ai-agents.sql`):
+   - 13 new tables for AI agents:
+     - `ai_agents` - Agent configuration and settings
+     - `ai_agent_goals` - Agent objectives and priorities
+     - `ai_agent_conversations` - Conversation history
+     - `ai_agent_memories` - Long-term memory with embeddings
+     - `ai_agent_episodes` - Episodic learning records
+     - `ai_agent_tools` - Agent tool assignments
+     - `ai_agent_tools_catalog` - Available tools registry (17 built-in)
+     - `ai_agent_tool_calls` - Tool execution history
+     - `ai_agent_executions` - Execution runs
+     - `ai_agent_execution_steps` - Step-by-step execution log
+     - `ai_agent_approvals` - Human-in-the-loop approvals
+     - `ai_llm_providers` - LLM provider configuration
+     - `ai_usage_tracking` - Token/cost tracking
+     - `ai_usage_daily` - Daily usage aggregation
+   - RLS policies using `auth.can_access_site()` helper
+   - Semantic memory search with pgvector embeddings
+   - Triggers for usage tracking aggregation
+
+2. **Core Type System** (`src/lib/ai-agents/types.ts`):
+   - Complete TypeScript types for all agent components
+   - `AgentConfig`, `AgentType` (task, assistant, autonomous, workflow)
+   - `ExecutionStatus`, `Memory`, `MemoryType`
+   - `ToolDefinition`, `ToolExecutionResult`
+   - `ThoughtResult`, `ExecutionResult`, `ApprovalRequest`
+
+3. **LLM Provider Abstraction** (`src/lib/ai-agents/llm/`):
+   - `provider.ts` - Base LLM interface with streaming support
+   - `providers/openai.ts` - OpenAI GPT-4o integration
+   - `providers/anthropic.ts` - Anthropic Claude 3.5 Sonnet integration
+   - `factory.ts` - Provider factory for dynamic instantiation
+   - `embeddings.ts` - Text embedding service (OpenAI text-embedding-3-small)
+   - Cost tracking per model (input/output token rates)
+
+4. **Memory System** (`src/lib/ai-agents/memory/`):
+   - `memory-manager.ts` - Full memory management:
+     - Short-term conversation history
+     - Long-term semantic memories with embedding search
+     - Episodic learning from successful executions
+     - Memory consolidation and cleanup
+   - Retrieves memories by recency, relevance, and importance
+
+5. **Tool System** (`src/lib/ai-agents/tools/`):
+   - `types.ts` - Tool definitions and results
+   - `executor.ts` - Tool execution engine with:
+     - Rate limiting (per-minute and per-hour)
+     - Input validation
+     - Permission checking
+     - Audit logging to database
+   - `built-in/crm-tools.ts` - CRM tools (get, search, create, update, add note)
+   - `built-in/system-tools.ts` - System tools (wait, notify, trigger workflow, get time)
+   - `built-in/data-tools.ts` - Data query tools (query, aggregate)
+
+6. **Agent Runtime** (`src/lib/ai-agents/runtime/`):
+   - `agent-executor.ts` - ReAct (Reasoning + Acting) execution loop:
+     - Think step: LLM generates reasoning and action decision
+     - Act step: Execute tool and observe result
+     - Context management with memory retrieval
+     - Step tracking and token counting
+     - Handles max steps and token limits
+
+7. **Security & Approvals** (`src/lib/ai-agents/security/`):
+   - `permissions.ts` - Permission checking:
+     - Tool-to-permission mapping
+     - Wildcard pattern matching
+     - Risk level assessment
+     - Approval requirement logic
+   - `approvals.ts` - Human-in-the-loop system:
+     - Create approval requests for dangerous actions
+     - Approve/deny/expire workflow
+     - Notification to site admins
+
+8. **Server Actions** (`src/lib/ai-agents/`):
+   - `actions.ts` - Agent CRUD operations:
+     - `createAgent`, `updateAgent`, `deleteAgent`
+     - `getAgents`, `getAgent`, `getAgentBySlug`
+     - Goal management, conversation history
+     - Automation event logging
+   - `execution-actions.ts` - Execution management:
+     - `triggerAgent` (manual), `triggerAgentFromWorkflow`, `triggerAgentFromSchedule`
+     - `sendMessageToAgent` (chat mode)
+     - Execution history and statistics
+     - Usage tracking by agent and site
+
+9. **Automation Events Integration** (`src/modules/automation/lib/event-types.ts`):
+   - Added `ai_agent` category to EVENT_REGISTRY
+   - 19 new events:
+     - Agent lifecycle: created, updated, deleted, activated, deactivated
+     - Execution: started, completed, failed, cancelled, waiting_approval
+     - Approval: requested, approved, denied, expired
+     - Tool: called, succeeded, failed
+     - Memory: stored, consolidated
+   - Added to EVENT_CATEGORIES with 🤖 icon
+
+**Architecture Summary:**
+```
+src/lib/ai-agents/
+├── index.ts              # Main exports
+├── types.ts              # Core type definitions
+├── actions.ts            # Agent CRUD server actions
+├── execution-actions.ts  # Execution management
+├── llm/
+│   ├── provider.ts       # LLM interface
+│   ├── providers/
+│   │   ├── openai.ts     # OpenAI GPT-4o
+│   │   └── anthropic.ts  # Claude 3.5 Sonnet
+│   ├── factory.ts        # Provider factory
+│   ├── embeddings.ts     # Embedding service
+│   └── index.ts
+├── memory/
+│   ├── memory-manager.ts # Memory operations
+│   └── index.ts
+├── tools/
+│   ├── types.ts          # Tool types
+│   ├── executor.ts       # Tool execution
+│   ├── built-in/
+│   │   ├── crm-tools.ts
+│   │   ├── system-tools.ts
+│   │   └── data-tools.ts
+│   └── index.ts
+├── runtime/
+│   ├── agent-executor.ts # ReAct loop
+│   └── index.ts
+└── security/
+    ├── permissions.ts    # Permission checking
+    ├── approvals.ts      # Approval workflow
+    └── index.ts
+```
+
+**Integration Points:**
+- Uses `logAutomationEvent()` from EM-57 for event tracking
+- Uses `auth.can_access_site()` RLS helper from phase-59
+- Compatible with existing Supabase patterns
+- Server Actions pattern throughout
+
+---
 
 ### ✅ COMPLETED: Enhanced Dashboard with Real Data (January 28, 2026)
 **Status**: ✅ COMPLETE - Dashboard now uses real platform data instead of fake samples  

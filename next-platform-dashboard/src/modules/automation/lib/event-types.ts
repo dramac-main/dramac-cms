@@ -238,6 +238,42 @@ export const EVENT_REGISTRY = {
       skipped: 'automation.step.skipped',
     },
   },
+  
+  // =========================================================
+  // AI AGENTS EVENTS (EM-58A)
+  // Tables: ai_agents, ai_agent_executions, ai_agent_approvals, etc.
+  // =========================================================
+  ai_agent: {
+    agent: {
+      created: 'ai_agent.agent.created',
+      updated: 'ai_agent.agent.updated',
+      deleted: 'ai_agent.agent.deleted',
+      activated: 'ai_agent.agent.activated',
+      deactivated: 'ai_agent.agent.deactivated',
+    },
+    execution: {
+      started: 'ai_agent.execution.started',
+      completed: 'ai_agent.execution.completed',
+      failed: 'ai_agent.execution.failed',
+      cancelled: 'ai_agent.execution.cancelled',
+      waiting_approval: 'ai_agent.execution.waiting_approval',
+    },
+    approval: {
+      requested: 'ai_agent.approval.requested',
+      approved: 'ai_agent.approval.approved',
+      denied: 'ai_agent.approval.denied',
+      expired: 'ai_agent.approval.expired',
+    },
+    tool: {
+      called: 'ai_agent.tool.called',
+      succeeded: 'ai_agent.tool.succeeded',
+      failed: 'ai_agent.tool.failed',
+    },
+    memory: {
+      stored: 'ai_agent.memory.stored',
+      consolidated: 'ai_agent.memory.consolidated',
+    },
+  },
 } as const
 
 // ============================================================================
@@ -253,6 +289,7 @@ export type EventType =
   | `billing.${string}.${string}`
   | `system.${string}.${string}`
   | `automation.${string}.${string}`
+  | `ai_agent.${string}.${string}`
   | string  // Allow custom events
 
 // ============================================================================
@@ -268,6 +305,7 @@ export const EVENT_CATEGORIES = [
   { id: 'billing', name: 'Billing', icon: '💳', description: 'Subscription, payment, and usage events' },
   { id: 'system', name: 'System', icon: '⚙️', description: 'Webhook, schedule, and module events' },
   { id: 'automation', name: 'Automation', icon: '⚡', description: 'Workflow execution events' },
+  { id: 'ai_agent', name: 'AI Agents', icon: '🤖', description: 'AI agent execution and approval events' },
 ] as const
 
 // ============================================================================
@@ -368,6 +406,29 @@ export function getAllEventDefinitions(): EventDefinition[] {
     { id: EVENT_REGISTRY.system.schedule.triggered, category: 'system', entity: 'schedule', action: 'triggered', name: 'Schedule Triggered', description: 'Triggered on a scheduled time' },
     { id: EVENT_REGISTRY.system.module.installed, category: 'system', entity: 'module', action: 'installed', name: 'Module Installed', description: 'Triggered when a module is installed' },
     { id: EVENT_REGISTRY.system.user.created, category: 'system', entity: 'user', action: 'created', name: 'User Created', description: 'Triggered when a new user is created' },
+  )
+  
+  // AI Agent Events (EM-58A)
+  events.push(
+    { id: EVENT_REGISTRY.ai_agent.agent.created, category: 'ai_agent', entity: 'agent', action: 'created', name: 'AI Agent Created', description: 'Triggered when a new AI agent is created' },
+    { id: EVENT_REGISTRY.ai_agent.agent.updated, category: 'ai_agent', entity: 'agent', action: 'updated', name: 'AI Agent Updated', description: 'Triggered when an AI agent is updated' },
+    { id: EVENT_REGISTRY.ai_agent.agent.deleted, category: 'ai_agent', entity: 'agent', action: 'deleted', name: 'AI Agent Deleted', description: 'Triggered when an AI agent is deleted' },
+    { id: EVENT_REGISTRY.ai_agent.agent.activated, category: 'ai_agent', entity: 'agent', action: 'activated', name: 'AI Agent Activated', description: 'Triggered when an AI agent is activated' },
+    { id: EVENT_REGISTRY.ai_agent.agent.deactivated, category: 'ai_agent', entity: 'agent', action: 'deactivated', name: 'AI Agent Deactivated', description: 'Triggered when an AI agent is deactivated' },
+    { id: EVENT_REGISTRY.ai_agent.execution.started, category: 'ai_agent', entity: 'execution', action: 'started', name: 'Agent Execution Started', description: 'Triggered when an AI agent starts execution' },
+    { id: EVENT_REGISTRY.ai_agent.execution.completed, category: 'ai_agent', entity: 'execution', action: 'completed', name: 'Agent Execution Completed', description: 'Triggered when an AI agent completes execution' },
+    { id: EVENT_REGISTRY.ai_agent.execution.failed, category: 'ai_agent', entity: 'execution', action: 'failed', name: 'Agent Execution Failed', description: 'Triggered when an AI agent execution fails' },
+    { id: EVENT_REGISTRY.ai_agent.execution.cancelled, category: 'ai_agent', entity: 'execution', action: 'cancelled', name: 'Agent Execution Cancelled', description: 'Triggered when an AI agent execution is cancelled' },
+    { id: EVENT_REGISTRY.ai_agent.execution.waiting_approval, category: 'ai_agent', entity: 'execution', action: 'waiting_approval', name: 'Agent Waiting for Approval', description: 'Triggered when an agent is waiting for human approval' },
+    { id: EVENT_REGISTRY.ai_agent.approval.requested, category: 'ai_agent', entity: 'approval', action: 'requested', name: 'Approval Requested', description: 'Triggered when an agent requests human approval' },
+    { id: EVENT_REGISTRY.ai_agent.approval.approved, category: 'ai_agent', entity: 'approval', action: 'approved', name: 'Action Approved', description: 'Triggered when a pending action is approved' },
+    { id: EVENT_REGISTRY.ai_agent.approval.denied, category: 'ai_agent', entity: 'approval', action: 'denied', name: 'Action Denied', description: 'Triggered when a pending action is denied' },
+    { id: EVENT_REGISTRY.ai_agent.approval.expired, category: 'ai_agent', entity: 'approval', action: 'expired', name: 'Approval Expired', description: 'Triggered when a pending approval expires' },
+    { id: EVENT_REGISTRY.ai_agent.tool.called, category: 'ai_agent', entity: 'tool', action: 'called', name: 'Tool Called', description: 'Triggered when an agent calls a tool' },
+    { id: EVENT_REGISTRY.ai_agent.tool.succeeded, category: 'ai_agent', entity: 'tool', action: 'succeeded', name: 'Tool Succeeded', description: 'Triggered when a tool execution succeeds' },
+    { id: EVENT_REGISTRY.ai_agent.tool.failed, category: 'ai_agent', entity: 'tool', action: 'failed', name: 'Tool Failed', description: 'Triggered when a tool execution fails' },
+    { id: EVENT_REGISTRY.ai_agent.memory.stored, category: 'ai_agent', entity: 'memory', action: 'stored', name: 'Memory Stored', description: 'Triggered when agent stores a memory' },
+    { id: EVENT_REGISTRY.ai_agent.memory.consolidated, category: 'ai_agent', entity: 'memory', action: 'consolidated', name: 'Memory Consolidated', description: 'Triggered when agent memories are consolidated' },
   )
   
   return events
