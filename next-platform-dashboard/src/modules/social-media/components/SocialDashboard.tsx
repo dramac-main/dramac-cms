@@ -1,0 +1,493 @@
+'use client'
+
+/**
+ * Social Dashboard Component
+ * 
+ * Phase EM-54: Social Media Management Module
+ * Main dashboard overview like Hootsuite/Sprout Social
+ */
+
+import { useState } from 'react'
+import {
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Eye,
+  MessageCircle,
+  Heart,
+  Share2,
+  Calendar,
+  Clock,
+  Plus,
+  ArrowRight,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
+import type { 
+  SocialAccount, 
+  SocialPost,
+  SocialPlatform,
+  AnalyticsOverview,
+} from '../types'
+import { PLATFORM_CONFIGS } from '../types'
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+interface SocialDashboardProps {
+  accounts: SocialAccount[]
+  scheduledPosts: SocialPost[]
+  recentPosts: SocialPost[]
+  analytics: AnalyticsOverview | null
+  inboxCount: number
+  pendingApprovals: number
+  onCreatePost: () => void
+  onViewCalendar: () => void
+  onViewInbox: () => void
+  onViewAnalytics: () => void
+  onRefresh: () => void
+  isLoading?: boolean
+}
+
+interface StatCardProps {
+  title: string
+  value: string | number
+  change?: number
+  icon: React.ReactNode
+  trend?: 'up' | 'down' | 'neutral'
+}
+
+// ============================================================================
+// STAT CARD
+// ============================================================================
+
+function StatCard({ title, value, change, icon, trend }: StatCardProps) {
+  return (
+    <Card>
+      <CardContent className="pt-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">{title}</p>
+            <p className="text-2xl font-bold">{value.toLocaleString()}</p>
+            {change !== undefined && (
+              <div className={cn(
+                'flex items-center gap-1 text-xs',
+                trend === 'up' ? 'text-green-600' : 
+                trend === 'down' ? 'text-red-600' : 
+                'text-muted-foreground'
+              )}>
+                {trend === 'up' && <TrendingUp className="h-3 w-3" />}
+                {trend === 'down' && <TrendingDown className="h-3 w-3" />}
+                <span>{change > 0 ? '+' : ''}{change.toFixed(1)}%</span>
+                <span className="text-muted-foreground">vs last period</span>
+              </div>
+            )}
+          </div>
+          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            {icon}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+// ============================================================================
+// COMPONENT
+// ============================================================================
+
+export function SocialDashboard({
+  accounts,
+  scheduledPosts,
+  recentPosts,
+  analytics,
+  inboxCount,
+  pendingApprovals,
+  onCreatePost,
+  onViewCalendar,
+  onViewInbox,
+  onViewAnalytics,
+  onRefresh,
+  isLoading = false,
+}: SocialDashboardProps) {
+  const [dateRange, setDateRange] = useState('7d')
+
+  // Helper functions
+  const getPlatformIcon = (platform: SocialPlatform) => {
+    return PLATFORM_CONFIGS[platform]?.icon || '📱'
+  }
+
+  const getPlatformColor = (platform: SocialPlatform) => {
+    return PLATFORM_CONFIGS[platform]?.color || '#6B7280'
+  }
+
+  const formatNumber = (num: number): string => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+    return num.toString()
+  }
+
+  const getStatusColor = (status: SocialAccount['status']) => {
+    switch (status) {
+      case 'active': return 'bg-green-500'
+      case 'expired': return 'bg-yellow-500'
+      case 'error': return 'bg-red-500'
+      default: return 'bg-gray-500'
+    }
+  }
+
+  // Calculate totals
+  const totalFollowers = accounts.reduce((sum, a) => sum + (a.followersCount || 0), 0)
+  const activeAccounts = accounts.filter(a => a.status === 'active').length
+  const upcomingPosts = scheduledPosts.filter(p => p.status === 'scheduled').length
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Social Media Dashboard</h1>
+          <p className="text-muted-foreground">
+            Manage your social presence across {accounts.length} connected accounts
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Select value={dateRange} onValueChange={setDateRange}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Date range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7d">Last 7 days</SelectItem>
+              <SelectItem value="14d">Last 14 days</SelectItem>
+              <SelectItem value="30d">Last 30 days</SelectItem>
+              <SelectItem value="90d">Last 90 days</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon" onClick={onRefresh} disabled={isLoading}>
+            <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+          </Button>
+          <Button onClick={onCreatePost}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Post
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Total Followers"
+          value={formatNumber(totalFollowers)}
+          change={analytics?.followerGrowth}
+          icon={<Users className="h-6 w-6 text-primary" />}
+          trend={analytics?.followerGrowth ? (analytics.followerGrowth > 0 ? 'up' : 'down') : undefined}
+        />
+        <StatCard
+          title="Impressions"
+          value={formatNumber(analytics?.totalImpressions || 0)}
+          change={analytics?.impressionChange}
+          icon={<Eye className="h-6 w-6 text-primary" />}
+          trend={analytics?.impressionChange ? (analytics.impressionChange > 0 ? 'up' : 'down') : undefined}
+        />
+        <StatCard
+          title="Engagements"
+          value={formatNumber(analytics?.totalEngagements || 0)}
+          change={analytics?.engagementChange}
+          icon={<Heart className="h-6 w-6 text-primary" />}
+          trend={analytics?.engagementChange ? (analytics.engagementChange > 0 ? 'up' : 'down') : undefined}
+        />
+        <StatCard
+          title="Engagement Rate"
+          value={`${(analytics?.avgEngagementRate || 0).toFixed(2)}%`}
+          icon={<TrendingUp className="h-6 w-6 text-primary" />}
+        />
+      </div>
+
+      {/* Quick Actions & Alerts */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Pending Items */}
+        <Card className={cn(inboxCount > 0 && 'border-primary/50')}>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <MessageCircle className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-medium">Inbox</p>
+                  <p className="text-sm text-muted-foreground">
+                    {inboxCount} unread message{inboxCount !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={onViewInbox}>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className={cn(pendingApprovals > 0 && 'border-yellow-500/50')}>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                  <AlertCircle className="h-5 w-5 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="font-medium">Pending Approval</p>
+                  <p className="text-sm text-muted-foreground">
+                    {pendingApprovals} post{pendingApprovals !== 1 ? 's' : ''} awaiting review
+                  </p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={onViewCalendar}>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-medium">Scheduled</p>
+                  <p className="text-sm text-muted-foreground">
+                    {upcomingPosts} upcoming post{upcomingPosts !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              <Button variant="ghost" size="sm" onClick={onViewCalendar}>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Connected Accounts & Upcoming Posts */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Connected Accounts */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Connected Accounts</CardTitle>
+            <CardDescription>
+              {activeAccounts} of {accounts.length} accounts active
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {accounts.slice(0, 5).map(account => (
+                <div
+                  key={account.id}
+                  className="flex items-center justify-between p-3 rounded-lg border"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <Avatar>
+                        <AvatarImage src={account.accountAvatar || undefined} />
+                        <AvatarFallback style={{ backgroundColor: getPlatformColor(account.platform) }}>
+                          {getPlatformIcon(account.platform)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className={cn(
+                        'absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background',
+                        getStatusColor(account.status)
+                      )} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{account.accountName}</p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {account.platform}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-sm">
+                      {formatNumber(account.followersCount || 0)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">followers</p>
+                  </div>
+                </div>
+              ))}
+              {accounts.length > 5 && (
+                <Button variant="ghost" className="w-full">
+                  View all {accounts.length} accounts
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Upcoming Posts */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-lg">Upcoming Posts</CardTitle>
+              <CardDescription>
+                Next {Math.min(scheduledPosts.length, 5)} scheduled posts
+              </CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={onViewCalendar}>
+              View Calendar
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {scheduledPosts.length === 0 ? (
+              <div className="text-center py-8">
+                <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">No scheduled posts</p>
+                <Button variant="link" onClick={onCreatePost}>
+                  Create your first post
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {scheduledPosts.slice(0, 5).map(post => (
+                  <div
+                    key={post.id}
+                    className="flex items-start gap-3 p-3 rounded-lg border"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm line-clamp-2">{post.content}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex -space-x-1">
+                          {post.targetAccounts?.slice(0, 3).map((accountId, i) => {
+                            const account = accounts.find(a => a.id === accountId)
+                            if (!account) return null
+                            return (
+                              <div
+                                key={i}
+                                className="h-5 w-5 rounded-full border-2 border-background flex items-center justify-center text-xs"
+                                style={{ backgroundColor: getPlatformColor(account.platform) }}
+                              >
+                                {getPlatformIcon(account.platform)}
+                              </div>
+                            )
+                          })}
+                        </div>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {post.scheduledAt 
+                            ? new Date(post.scheduledAt).toLocaleString()
+                            : 'Not scheduled'
+                          }
+                        </span>
+                      </div>
+                    </div>
+                    {post.media && post.media.length > 0 && post.media[0].thumbnailUrl && (
+                      <img
+                        src={post.media[0].thumbnailUrl}
+                        alt=""
+                        className="h-16 w-16 rounded object-cover flex-shrink-0"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Posts Performance */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-lg">Recent Posts Performance</CardTitle>
+            <CardDescription>
+              How your latest posts are performing
+            </CardDescription>
+          </div>
+          <Button variant="outline" size="sm" onClick={onViewAnalytics}>
+            View Analytics
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {recentPosts.length === 0 ? (
+            <div className="text-center py-8">
+              <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+              <p className="text-muted-foreground">No published posts yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {recentPosts.slice(0, 5).map(post => {
+                const account = accounts.find(a => a.id === post.accountId)
+                const impressions = (post as any).impressions || 0
+                const engagements = (post as any).engagements || 0
+                const engagementRate = impressions > 0 ? (engagements / impressions) * 100 : 0
+                
+                return (
+                  <div
+                    key={post.id}
+                    className="flex items-center gap-4 p-3 rounded-lg border"
+                  >
+                    {/* Platform */}
+                    {account && (
+                      <div
+                        className="h-10 w-10 rounded-full flex items-center justify-center text-lg flex-shrink-0"
+                        style={{ backgroundColor: getPlatformColor(account.platform) + '20' }}
+                      >
+                        {getPlatformIcon(account.platform)}
+                      </div>
+                    )}
+                    
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm line-clamp-1">{post.content}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {post.publishedAt 
+                          ? new Date(post.publishedAt).toLocaleDateString()
+                          : 'Not published'
+                        }
+                      </p>
+                    </div>
+                    
+                    {/* Stats */}
+                    <div className="flex items-center gap-6 text-sm">
+                      <div className="text-center">
+                        <p className="font-medium">{formatNumber(impressions)}</p>
+                        <p className="text-xs text-muted-foreground">Impressions</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="font-medium">{formatNumber(engagements)}</p>
+                        <p className="text-xs text-muted-foreground">Engagements</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="font-medium">{engagementRate.toFixed(1)}%</p>
+                        <p className="text-xs text-muted-foreground">Eng. Rate</p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+export default SocialDashboard
