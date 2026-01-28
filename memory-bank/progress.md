@@ -32,6 +32,8 @@
 - ✅ AI content ideas and caption generation tables
 - ✅ Competitor tracking and brand monitoring
 - ✅ Saved replies for customer support efficiency
+- ✅ **Site Detail Page Integration** (Social button + tab)
+- ✅ **SiteSocialTab component** for quick access from site overview
 
 **Files Created:**
 - `migrations/em-54-social-media.sql` - 25 tables with RLS
@@ -41,6 +43,7 @@
 - `src/modules/social-media/components/` - 4 UI components
 - `src/app/dashboard/[siteId]/social/` - 4 app route pages
 - `src/components/ui/calendar.tsx` - Calendar component
+- `src/components/sites/site-social-tab.tsx` - Site social tab component (NEW)
 
 ### AI Agents System - FULLY VERIFIED ✅ (January 28, 2026)
 **Status**: ✅ All 3 phases verified complete with deep platform scan  

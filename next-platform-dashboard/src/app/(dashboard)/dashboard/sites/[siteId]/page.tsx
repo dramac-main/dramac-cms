@@ -8,12 +8,13 @@ import { SitePagesList } from "@/components/sites/site-pages-list";
 import { SiteBlogTab } from "@/components/sites/site-blog-tab";
 import { SiteModulesTab } from "@/components/sites/site-modules-tab";
 import { SiteCRMTab } from "@/components/sites/site-crm-tab";
+import { SiteSocialTab } from "@/components/sites/site-social-tab";
 import { SitePublishButton } from "@/components/sites/site-publish-button";
 import { CloneSiteDialog } from "@/components/sites/clone-site-dialog";
 import { ExportSiteButton } from "@/components/sites/export-site-button";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, Settings, ExternalLink, Search, Copy, Bot, Zap } from "lucide-react";
+import { Pencil, Settings, ExternalLink, Search, Copy, Bot, Zap, Share2 } from "lucide-react";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 
 interface SiteDetailPageProps {
@@ -35,7 +36,7 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
   const { siteId } = await params;
   const { tab } = await searchParams;
   const site = await getSite(siteId).catch(() => null);
-  const validTabs = ["overview", "pages", "blog", "modules", "crm"];
+  const validTabs = ["overview", "pages", "blog", "modules", "crm", "social"];
   const defaultTab = tab && validTabs.includes(tab) ? tab : "overview";
 
   if (!site) {
@@ -78,6 +79,12 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
             AI Agents
           </Button>
         </Link>
+        <Link href={`/dashboard/${site.id}/social`}>
+          <Button variant="outline">
+            <Share2 className="mr-2 h-4 w-4" />
+            Social
+          </Button>
+        </Link>
         <Link href={`/dashboard/sites/${site.id}/settings`}>
           <Button variant="outline">
             <Settings className="mr-2 h-4 w-4" />
@@ -112,6 +119,7 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
           <TabsTrigger value="blog">Blog</TabsTrigger>
           <TabsTrigger value="modules">Modules</TabsTrigger>
           <TabsTrigger value="crm">CRM</TabsTrigger>
+          <TabsTrigger value="social">Social</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -132,6 +140,10 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
 
         <TabsContent value="crm">
           <SiteCRMTab siteId={site.id} />
+        </TabsContent>
+
+        <TabsContent value="social">
+          <SiteSocialTab siteId={site.id} />
         </TabsContent>
       </Tabs>
     </div>
