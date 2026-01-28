@@ -33,6 +33,7 @@ export {
 // Agent execution actions
 export {
   triggerAgent,
+  startAgentExecution,
   triggerAgentFromWorkflow,
   triggerAgentFromSchedule,
   sendMessageToAgent,

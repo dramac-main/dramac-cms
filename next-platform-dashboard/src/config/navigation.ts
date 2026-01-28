@@ -10,6 +10,7 @@ import {
   Shield,
   ImageIcon,
   Building2,
+  Bot,
   type LucideIcon,
 } from "lucide-react";
 

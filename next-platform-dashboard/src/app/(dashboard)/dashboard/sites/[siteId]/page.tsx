@@ -13,7 +13,7 @@ import { CloneSiteDialog } from "@/components/sites/clone-site-dialog";
 import { ExportSiteButton } from "@/components/sites/export-site-button";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, Settings, ExternalLink, Search, Copy } from "lucide-react";
+import { Pencil, Settings, ExternalLink, Search, Copy, Bot, Zap } from "lucide-react";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 
 interface SiteDetailPageProps {
@@ -64,6 +64,18 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
           <Button variant="outline">
             <Search className="mr-2 h-4 w-4" />
             SEO
+          </Button>
+        </Link>
+        <Link href={`/dashboard/${site.id}/automation`}>
+          <Button variant="outline">
+            <Zap className="mr-2 h-4 w-4" />
+            Automation
+          </Button>
+        </Link>
+        <Link href={`/dashboard/${site.id}/ai-agents`}>
+          <Button variant="outline">
+            <Bot className="mr-2 h-4 w-4" />
+            AI Agents
           </Button>
         </Link>
         <Link href={`/dashboard/sites/${site.id}/settings`}>

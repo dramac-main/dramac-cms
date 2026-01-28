@@ -71,6 +71,10 @@ export async function triggerAgent(
 }
 
 /**
+ * Alias for triggerAgent - Start agent execution (API compatible)
+ */
+export const startAgentExecution = triggerAgent
+/**
  * Trigger agent from automation workflow
  */
 export async function triggerAgentFromWorkflow(

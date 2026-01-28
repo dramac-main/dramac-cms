@@ -1163,3 +1163,6 @@ export const getFreeTemplates = (): AgentTemplate[] => {
 export const getPremiumTemplates = (): AgentTemplate[] => {
   return agentTemplates.filter(t => t.isPremium);
 };
+
+// Legacy alias for backwards compatibility
+export const AGENT_TEMPLATES = agentTemplates;
