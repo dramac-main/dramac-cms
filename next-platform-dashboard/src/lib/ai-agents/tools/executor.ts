@@ -7,8 +7,6 @@
  * rate limiting, and logging.
  */
 
-'use server'
-
 import { createClient } from '@/lib/supabase/server'
 import type { ToolResult, ToolContext } from '../types'
 import type { ToolDefinitionConfig, OpenAITool, JSONSchema } from './types'

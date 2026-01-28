@@ -4,8 +4,6 @@
  * Phase EM-58A: AI Agents - Core Infrastructure
  */
 
-'use server'
-
 import { createClient } from '@/lib/supabase/server'
 import type { AgentConfig, RiskLevel } from '../types'
 
