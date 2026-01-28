@@ -182,6 +182,144 @@ export {
 } from './css-generator';
 
 // =============================================================================
+// RESPONSIVE EXPORTS
+// =============================================================================
+
+export {
+  // Fluid typography
+  fluidType,
+  fluidTypeScale,
+  fluidSpacing,
+  
+  // Container queries
+  containerSizes,
+  containerQuery,
+  containerStyles,
+  
+  // Breakpoint utilities
+  getBreakpointPx,
+  mediaQuery,
+  mediaQueryMax,
+  mediaQueryBetween,
+  isBreakpointActive,
+  getCurrentBreakpoint,
+  
+  // Responsive values
+  getResponsiveValue,
+  responsiveCssVars,
+  
+  // Aspect ratios
+  aspectRatios,
+  
+  // Viewport units
+  safeViewportUnits,
+  
+  // Grid utilities
+  gridColumns,
+  responsiveGridCss,
+  
+  // Types
+  type FluidTypeConfig,
+  type ResponsiveValue,
+  type ContainerSize,
+  type BreakpointKey,
+} from './responsive';
+
+// =============================================================================
+// ANIMATION EXPORTS
+// =============================================================================
+
+export {
+  // Timing
+  durations as animationDurations,
+  easings as animationEasings,
+  
+  // Transitions
+  transitions,
+  transitionToCss,
+  
+  // Keyframes
+  keyframes,
+  animations,
+  
+  // Stagger
+  staggerDelay,
+  staggerCssVars,
+  
+  // Reduced motion
+  reducedMotionStyles,
+  prefersReducedMotion,
+  safeAnimation,
+  
+  // CSS generation
+  generateKeyframesCss,
+  generateAnimationVars,
+  
+  // Types
+  type AnimationConfig,
+  type TransitionConfig,
+  type StaggerConfig,
+} from './animations';
+
+// =============================================================================
+// ACCESSIBILITY EXPORTS
+// =============================================================================
+
+export {
+  // Focus styles
+  defaultFocusRing,
+  focusRingCss,
+  focusVisibleStyles,
+  
+  // Screen reader
+  visuallyHidden,
+  srOnlyClass,
+  announceToScreenReader,
+  
+  // Skip links
+  defaultSkipLinks,
+  skipLinkStyles,
+  
+  // Keyboard navigation
+  Keys,
+  isActivationKey,
+  isArrowKey,
+  getFocusableElements,
+  trapFocus,
+  
+  // Contrast
+  contrastRequirements,
+  isLargeText,
+  
+  // Reduced motion/transparency
+  reducedMotionStyles as a11yReducedMotionStyles,
+  reducedTransparencyStyles,
+  
+  // ARIA helpers
+  generateAriaId,
+  ariaRoles,
+  
+  // Touch targets
+  touchTargetSizes,
+  touchTargetStyles,
+  
+  // Form accessibility
+  getFieldAccessibility,
+  
+  // Types
+  type FocusRingConfig,
+  type SkipLinkConfig,
+} from './accessibility';
+
+// =============================================================================
+// HOOK EXPORTS (Client-side only)
+// =============================================================================
+
+// Note: Hooks are exported from a separate file to avoid 'use client' directive
+// issues when importing from index.ts in server components.
+// Import hooks directly: import { useBrand } from '@/config/brand/hooks';
+
+// =============================================================================
 // UNIFIED BRAND OBJECT
 // =============================================================================
 

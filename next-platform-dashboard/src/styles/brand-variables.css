@@ -1,138 +1,101 @@
 /* =============================================================================
    DRAMAC CMS BRAND DESIGN TOKENS
    Generated from src/config/brand
-   
-   This file contains CSS custom properties for all brand colors with full
-   color scales (50-950) for maximum design flexibility.
-   
-   To regenerate: npx tsx scripts/generate-brand-css.ts
-   
-   @see src/config/brand for color definitions
+   DO NOT EDIT DIRECTLY - Modify brand config files instead
    ============================================================================= */
 
 :root {
-  /* ==========================================================================
-     PRIMARY COLOR SCALE (Indigo)
-     ========================================================================== */
-  --color-primary-50: 226 100% 97%;
-  --color-primary-100: 226 100% 94%;
-  --color-primary-200: 228 96% 86%;
-  --color-primary-300: 230 94% 77%;
-  --color-primary-400: 234 89% 66%;
+  --color-primary-50: 239 21% 97%;
+  --color-primary-100: 239 29% 94%;
+  --color-primary-200: 239 42% 86%;
+  --color-primary-300: 239 59% 77%;
+  --color-primary-400: 239 71% 66%;
   --color-primary-500: 239 84% 55%;
-  --color-primary-600: 243 75% 47%;
-  --color-primary-700: 245 58% 39%;
-  --color-primary-800: 244 47% 32%;
-  --color-primary-900: 242 47% 24%;
-  --color-primary-950: 244 47% 14%;
+  --color-primary-600: 239 84% 47%;
+  --color-primary-700: 239 80% 39%;
+  --color-primary-800: 239 76% 32%;
+  --color-primary-900: 239 71% 24%;
+  --color-primary-950: 239 67% 14%;
   --color-primary: 239 84% 55%;
-  --color-primary-foreground: 0 0% 100%;
-
-  /* ==========================================================================
-     SECONDARY COLOR SCALE (Violet)
-     ========================================================================== */
-  --color-secondary-50: 270 100% 97%;
-  --color-secondary-100: 269 100% 94%;
-  --color-secondary-200: 269 100% 86%;
-  --color-secondary-300: 269 97% 77%;
-  --color-secondary-400: 270 95% 66%;
-  --color-secondary-500: 271 91% 55%;
-  --color-secondary-600: 271 81% 47%;
-  --color-secondary-700: 272 72% 39%;
-  --color-secondary-800: 273 67% 32%;
-  --color-secondary-900: 274 67% 24%;
-  --color-secondary-950: 274 67% 14%;
-  --color-secondary: 271 91% 55%;
-  --color-secondary-foreground: 0 0% 100%;
-
-  /* ==========================================================================
-     ACCENT COLOR SCALE (Pink)
-     ========================================================================== */
-  --color-accent-50: 327 73% 97%;
-  --color-accent-100: 326 78% 94%;
-  --color-accent-200: 326 85% 86%;
-  --color-accent-300: 327 87% 77%;
-  --color-accent-400: 329 86% 66%;
+  --color-secondary-50: 258 23% 97%;
+  --color-secondary-100: 258 31% 94%;
+  --color-secondary-200: 258 45% 86%;
+  --color-secondary-300: 258 63% 77%;
+  --color-secondary-400: 258 77% 66%;
+  --color-secondary-500: 258 90% 55%;
+  --color-secondary-600: 258 90% 47%;
+  --color-secondary-700: 258 86% 39%;
+  --color-secondary-800: 258 81% 32%;
+  --color-secondary-900: 258 77% 24%;
+  --color-secondary-950: 258 72% 14%;
+  --color-secondary: 258 90% 55%;
+  --color-accent-50: 330 20% 97%;
+  --color-accent-100: 330 28% 94%;
+  --color-accent-200: 330 41% 86%;
+  --color-accent-300: 330 57% 77%;
+  --color-accent-400: 330 69% 66%;
   --color-accent-500: 330 81% 55%;
-  --color-accent-600: 333 71% 47%;
-  --color-accent-700: 335 64% 39%;
-  --color-accent-800: 336 60% 32%;
-  --color-accent-900: 336 57% 24%;
-  --color-accent-950: 336 54% 14%;
+  --color-accent-600: 330 81% 47%;
+  --color-accent-700: 330 77% 39%;
+  --color-accent-800: 330 73% 32%;
+  --color-accent-900: 330 69% 24%;
+  --color-accent-950: 330 65% 14%;
   --color-accent: 330 81% 55%;
-  --color-accent-foreground: 0 0% 100%;
-
-  /* ==========================================================================
-     SUCCESS COLOR SCALE (Emerald)
-     ========================================================================== */
-  --color-success-50: 152 81% 97%;
-  --color-success-100: 149 80% 94%;
-  --color-success-200: 152 76% 86%;
-  --color-success-300: 156 72% 77%;
-  --color-success-400: 158 64% 66%;
+  --color-success-50: 160 21% 97%;
+  --color-success-100: 160 29% 94%;
+  --color-success-200: 160 42% 86%;
+  --color-success-300: 160 59% 77%;
+  --color-success-400: 160 71% 66%;
   --color-success-500: 160 84% 55%;
-  --color-success-600: 161 94% 47%;
-  --color-success-700: 163 94% 39%;
-  --color-success-800: 163 88% 32%;
-  --color-success-900: 164 86% 24%;
-  --color-success-950: 166 86% 14%;
+  --color-success-600: 160 84% 47%;
+  --color-success-700: 160 80% 39%;
+  --color-success-800: 160 76% 32%;
+  --color-success-900: 160 71% 24%;
+  --color-success-950: 160 67% 14%;
   --color-success: 160 84% 55%;
-  --color-success-foreground: 0 0% 100%;
-
-  /* ==========================================================================
-     WARNING COLOR SCALE (Amber)
-     ========================================================================== */
-  --color-warning-50: 48 100% 97%;
-  --color-warning-100: 48 96% 94%;
-  --color-warning-200: 48 97% 86%;
-  --color-warning-300: 46 97% 77%;
-  --color-warning-400: 43 96% 66%;
+  --color-warning-50: 38 23% 97%;
+  --color-warning-100: 38 32% 94%;
+  --color-warning-200: 38 46% 86%;
+  --color-warning-300: 38 64% 77%;
+  --color-warning-400: 38 78% 66%;
   --color-warning-500: 38 92% 55%;
-  --color-warning-600: 32 95% 47%;
-  --color-warning-700: 26 90% 39%;
-  --color-warning-800: 23 83% 32%;
-  --color-warning-900: 22 78% 24%;
-  --color-warning-950: 21 74% 14%;
+  --color-warning-600: 38 92% 47%;
+  --color-warning-700: 38 87% 39%;
+  --color-warning-800: 38 83% 32%;
+  --color-warning-900: 38 78% 24%;
+  --color-warning-950: 38 74% 14%;
   --color-warning: 38 92% 55%;
-  --color-warning-foreground: 0 0% 0%;
-
-  /* ==========================================================================
-     DANGER COLOR SCALE (Red)
-     ========================================================================== */
-  --color-danger-50: 0 86% 97%;
-  --color-danger-100: 0 93% 94%;
-  --color-danger-200: 0 96% 86%;
-  --color-danger-300: 0 94% 77%;
-  --color-danger-400: 0 91% 66%;
+  --color-danger-50: 0 21% 97%;
+  --color-danger-100: 0 29% 94%;
+  --color-danger-200: 0 42% 86%;
+  --color-danger-300: 0 59% 77%;
+  --color-danger-400: 0 71% 66%;
   --color-danger-500: 0 84% 55%;
-  --color-danger-600: 0 72% 47%;
-  --color-danger-700: 0 64% 39%;
-  --color-danger-800: 0 60% 32%;
-  --color-danger-900: 0 63% 24%;
-  --color-danger-950: 0 63% 14%;
+  --color-danger-600: 0 84% 47%;
+  --color-danger-700: 0 80% 39%;
+  --color-danger-800: 0 76% 32%;
+  --color-danger-900: 0 71% 24%;
+  --color-danger-950: 0 67% 14%;
   --color-danger: 0 84% 55%;
-  --color-danger-foreground: 0 0% 100%;
-
-  /* ==========================================================================
-     INFO COLOR SCALE (Sky Blue)
-     ========================================================================== */
-  --color-info-50: 204 100% 97%;
-  --color-info-100: 204 94% 94%;
-  --color-info-200: 201 94% 86%;
-  --color-info-300: 199 95% 77%;
-  --color-info-400: 198 93% 66%;
+  --color-info-50: 199 22% 97%;
+  --color-info-100: 199 31% 94%;
+  --color-info-200: 199 45% 86%;
+  --color-info-300: 199 62% 77%;
+  --color-info-400: 199 76% 66%;
   --color-info-500: 199 89% 55%;
-  --color-info-600: 200 98% 47%;
-  --color-info-700: 201 96% 39%;
-  --color-info-800: 201 90% 32%;
-  --color-info-900: 202 80% 24%;
-  --color-info-950: 204 80% 14%;
+  --color-info-600: 199 89% 47%;
+  --color-info-700: 199 85% 39%;
+  --color-info-800: 199 80% 32%;
+  --color-info-900: 199 76% 24%;
+  --color-info-950: 199 71% 14%;
   --color-info: 199 89% 55%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-secondary-foreground: 0 0% 100%;
+  --color-accent-foreground: 0 0% 100%;
+  --color-success-foreground: 0 0% 100%;
+  --color-warning-foreground: 0 0% 0%;
+  --color-danger-foreground: 0 0% 100%;
   --color-info-foreground: 0 0% 100%;
-
-  /* ==========================================================================
-     NEUTRAL COLORS - LIGHT THEME
-     ========================================================================== */
   --color-background: 0 0% 100%;
   --color-foreground: 222 47% 11%;
   --color-card: 0 0% 100%;
@@ -144,22 +107,123 @@
   --color-border: 214 32% 91%;
   --color-input: 214 32% 91%;
   --color-ring: 239 84% 55%;
+  --spacing-0: 0;
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-7: 1.75rem;
+  --spacing-8: 2rem;
+  --spacing-9: 2.25rem;
+  --spacing-10: 2.5rem;
+  --spacing-11: 2.75rem;
+  --spacing-12: 3rem;
+  --spacing-14: 3.5rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+  --spacing-28: 7rem;
+  --spacing-32: 8rem;
+  --spacing-36: 9rem;
+  --spacing-40: 10rem;
+  --spacing-44: 11rem;
+  --spacing-48: 12rem;
+  --spacing-52: 13rem;
+  --spacing-56: 14rem;
+  --spacing-60: 15rem;
+  --spacing-64: 16rem;
+  --spacing-72: 18rem;
+  --spacing-80: 20rem;
+  --spacing-96: 24rem;
+  --spacing-px: 1px;
+  --spacing-0-5: 0.125rem;
+  --spacing-1-5: 0.375rem;
+  --spacing-2-5: 0.625rem;
+  --spacing-3-5: 0.875rem;
+  --radius-none: 0;
+  --radius-sm: 0.125rem;
+  --radius-DEFAULT: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+  --radius-full: 9999px;
+  --radius: 0.625rem;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-DEFAULT: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+  --shadow-none: none;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-size-xs: 0.75rem;
+  --line-height-xs: 1rem;
+  --font-size-sm: 0.875rem;
+  --line-height-sm: 1.25rem;
+  --font-size-base: 1rem;
+  --line-height-base: 1.5rem;
+  --font-size-lg: 1.125rem;
+  --line-height-lg: 1.75rem;
+  --font-size-xl: 1.25rem;
+  --line-height-xl: 1.75rem;
+  --font-size-2xl: 1.5rem;
+  --line-height-2xl: 2rem;
+  --font-size-3xl: 1.875rem;
+  --line-height-3xl: 2.25rem;
+  --font-size-4xl: 2.25rem;
+  --line-height-4xl: 2.5rem;
+  --font-size-5xl: 3rem;
+  --line-height-5xl: 1;
+  --font-size-6xl: 3.75rem;
+  --line-height-6xl: 1;
+  --font-size-7xl: 4.5rem;
+  --line-height-7xl: 1;
+  --font-size-8xl: 6rem;
+  --line-height-8xl: 1;
+  --font-size-9xl: 8rem;
+  --line-height-9xl: 1;
+  --font-weight-thin: 100;
+  --font-weight-extralight: 200;
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
 }
 
-/* =============================================================================
-   DARK THEME OVERRIDES
-   ============================================================================= */
-
 .dark {
+  --color-primary: 239 84% 55%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-secondary: 258 90% 55%;
+  --color-secondary-foreground: 0 0% 100%;
+  --color-accent: 330 81% 55%;
+  --color-accent-foreground: 0 0% 100%;
+  --color-success: 160 84% 55%;
+  --color-success-foreground: 0 0% 100%;
+  --color-warning: 38 92% 55%;
+  --color-warning-foreground: 0 0% 0%;
+  --color-danger: 0 84% 55%;
+  --color-danger-foreground: 0 0% 100%;
+  --color-info: 199 89% 55%;
+  --color-info-foreground: 0 0% 100%;
   --color-background: 222 47% 11%;
   --color-foreground: 210 40% 98%;
   --color-card: 217 33% 17%;
   --color-card-foreground: 210 40% 98%;
   --color-popover: 217 33% 17%;
   --color-popover-foreground: 210 40% 98%;
-  --color-muted: 217 33% 17%;
+  --color-muted: 215 25% 27%;
   --color-muted-foreground: 215 20% 65%;
-  --color-border: 217 33% 17%;
-  --color-input: 217 33% 17%;
-  --color-ring: 234 89% 66%;
+  --color-border: 215 25% 27%;
+  --color-input: 215 25% 27%;
+  --color-ring: 239 71% 66%;
 }

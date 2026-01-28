@@ -285,20 +285,145 @@ export function useSocial() {
 // =============================================================================
 
 /**
- * Hook for accessing responsive breakpoints.
+ * Hook for responsive breakpoint detection.
+ * Returns current breakpoint and utilities for responsive design.
  * 
  * @example
  * ```tsx
- * function ResponsiveComponent() {
- *   const { breakpoints, containerMaxWidths } = useResponsive();
- *   // Use for responsive logic
+ * function ResponsiveNav() {
+ *   const { isMobile, isTablet, isDesktop, breakpoint } = useResponsive();
+ *   return isMobile ? <MobileNav /> : <DesktopNav />;
  * }
  * ```
  */
 export function useResponsive() {
+  const [breakpoint, setBreakpoint] = useState<'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl'>('md');
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+    
+    const updateBreakpoint = () => {
+      const width = window.innerWidth;
+      if (width >= 1536) setBreakpoint('2xl');
+      else if (width >= 1280) setBreakpoint('xl');
+      else if (width >= 1024) setBreakpoint('lg');
+      else if (width >= 768) setBreakpoint('md');
+      else if (width >= 640) setBreakpoint('sm');
+      else setBreakpoint('xs');
+    };
+    
+    updateBreakpoint();
+    window.addEventListener('resize', updateBreakpoint);
+    return () => window.removeEventListener('resize', updateBreakpoint);
+  }, []);
+  
   return useMemo(() => ({
+    breakpoint,
     breakpoints: brand.breakpoints,
-  }), []);
+    // Convenience booleans
+    isMobile: breakpoint === 'xs' || breakpoint === 'sm',
+    isTablet: breakpoint === 'md',
+    isDesktop: breakpoint === 'lg' || breakpoint === 'xl' || breakpoint === '2xl',
+    // Specific breakpoint checks
+    isXs: breakpoint === 'xs',
+    isSm: breakpoint === 'sm',
+    isMd: breakpoint === 'md',
+    isLg: breakpoint === 'lg',
+    isXl: breakpoint === 'xl',
+    is2xl: breakpoint === '2xl',
+    // Min-width checks
+    smUp: ['sm', 'md', 'lg', 'xl', '2xl'].includes(breakpoint),
+    mdUp: ['md', 'lg', 'xl', '2xl'].includes(breakpoint),
+    lgUp: ['lg', 'xl', '2xl'].includes(breakpoint),
+    xlUp: ['xl', '2xl'].includes(breakpoint),
+    // SSR safety
+    mounted,
+  }), [breakpoint, mounted]);
+}
+
+/**
+ * Hook for media query matching.
+ * 
+ * @example
+ * ```tsx
+ * function DarkModeAware() {
+ *   const isDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+ *   return <div>{isDarkMode ? 'Dark' : 'Light'}</div>;
+ * }
+ * ```
+ */
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+  
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    setMatches(media.matches);
+    
+    const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
+    media.addEventListener('change', handler);
+    return () => media.removeEventListener('change', handler);
+  }, [query]);
+  
+  return matches;
+}
+
+// =============================================================================
+// ACCESSIBILITY HOOKS
+// =============================================================================
+
+/**
+ * Hook for respecting user motion preferences.
+ * 
+ * @example
+ * ```tsx
+ * function AnimatedComponent() {
+ *   const { prefersReducedMotion, getAnimation } = useMotion();
+ *   return (
+ *     <div style={{ animation: getAnimation('fadeIn 0.3s ease') }}>
+ *       Content
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
+export function useMotion() {
+  const prefersReducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  
+  const getAnimation = useCallback((animation: string): string => {
+    return prefersReducedMotion ? 'none' : animation;
+  }, [prefersReducedMotion]);
+  
+  const getTransition = useCallback((transition: string): string => {
+    return prefersReducedMotion ? 'none' : transition;
+  }, [prefersReducedMotion]);
+  
+  const getDuration = useCallback((duration: number): number => {
+    return prefersReducedMotion ? 0 : duration;
+  }, [prefersReducedMotion]);
+  
+  return {
+    prefersReducedMotion,
+    getAnimation,
+    getTransition,
+    getDuration,
+  };
+}
+
+/**
+ * Hook for high contrast mode detection.
+ */
+export function useHighContrast() {
+  const prefersHighContrast = useMediaQuery('(prefers-contrast: more)');
+  return { prefersHighContrast };
+}
+
+/**
+ * Hook for color scheme preference.
+ */
+export function useColorSchemePreference() {
+  const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
+  return { prefersDark, prefersLight: !prefersDark };
 }
 
 // =============================================================================
