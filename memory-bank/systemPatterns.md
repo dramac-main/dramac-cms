@@ -364,6 +364,64 @@ Form → onSubmit → Server Action → Validation → Supabase → RLS Check �
 8. Redirect to configuration
 ```
 
+### 11. Brand System Architecture (Enterprise)
+
+**Location:** `src/config/brand/`
+
+**Purpose:** Centralized, type-safe configuration for all branding, theming, colors, typography, and SEO. Supports white-labeling for agencies.
+
+**File Structure:**
+```
+src/config/brand/
+├── index.ts              # Main exports (import from here)
+├── types.ts              # TypeScript type definitions
+├── identity.ts           # Brand name, tagline, SEO, social, analytics
+├── tokens.ts             # Typography, spacing, borders, shadows
+├── hooks.ts              # React hooks for theme-aware access
+├── css-generator.ts      # Generate CSS variables programmatically
+└── colors/
+    ├── index.ts          # Color scales and semantic colors
+    └── utils.ts          # Color manipulation (lighten, darken, contrast)
+```
+
+**Color System:**
+- HSL-based with CSS variables for runtime theming
+- Full 11-shade scales (50-950) matching Tailwind convention
+- Brand colors: `primary`, `secondary`, `accent`
+- Status colors: `success`, `warning`, `danger`, `info`
+- Access via Tailwind: `bg-primary-500`, `text-danger-100`
+
+**React Hook Usage:**
+```typescript
+import { useBrand, useColors, useIdentity, useLogo } from '@/config/brand/hooks';
+
+// Get everything
+const { identity, colors, tokens, theme } = useBrand();
+
+// Get specific parts
+const { primary, secondary } = useColors();
+const { name, tagline, copyright } = useIdentity();
+const logoSrc = useLogo(); // Returns theme-aware logo path
+```
+
+**White-Label Support:**
+```typescript
+import { createSiteConfig, mergeSiteConfig } from '@/config/brand';
+
+// Agency-specific override
+const agencyConfig: PartialSiteConfig = {
+  identity: { name: 'Agency Brand', tagline: 'Custom tagline' },
+  colors: { primary: { base: { hex: '#ff0000' } } }
+};
+const customConfig = mergeSiteConfig(agencyConfig);
+```
+
+**CSS Variable Generation:**
+```typescript
+import { generateBrandCss } from '@/config/brand';
+const css = generateBrandCss(); // Returns complete CSS variable definitions
+```
+
 ## Critical Implementation Paths
 
 ### Path 1: Module Installation
