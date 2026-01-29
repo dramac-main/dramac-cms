@@ -4,6 +4,26 @@
 **Current Phase**: Phase EM-54 Social Media Module - COMPLETE  
 **Status**: ✅ 26 OF 34 PHASES (76%) - ✅ Zero TypeScript Errors - ✅ Build Passing - ✅ All Features Implemented
 
+## ⚠️ CRITICAL ISSUES RESOLVED
+
+### Vercel Build Fix (January 29, 2026 - 22:23 UTC)
+**Issue**: Build failed with "Server Actions must be async functions" error
+- `getRoleDefaults` was exported from `team-actions.ts` (has `'use server'` directive)
+- Next.js requires all exports from Server Action files to be async
+- But `getRoleDefaults` is a pure utility function, doesn't need to be async
+
+**Solution**: Created `lib/team-utils.ts` and moved `getRoleDefaults` there
+- Utility functions should NOT be in Server Action files
+- Updated imports in `team-actions.ts` and `SocialSettingsPage.tsx`
+- Build now passes ✅
+
+**Files Changed**:
+- NEW: `src/modules/social-media/lib/team-utils.ts` (pure utility)
+- UPDATED: `team-actions.ts` (removed function, added import)
+- UPDATED: `SocialSettingsPage.tsx` (updated import path)
+
+**Commit**: db83da7 - "fix(social-media): Move getRoleDefaults to utils to fix Vercel build"
+
 ## ⚠️ CRITICAL WORKFLOW REMINDER
 
 **Dev Server: Run in EXTERNAL terminal, NOT through Copilot!**
@@ -33,10 +53,14 @@ components (8 files), types (877 lines), and 3 database migrations.
 
 2. **team-actions.ts** - Team permissions + approval workflows
    - `getTeamPermissions`, `getUserPermission`, `upsertTeamPermission`
-   - `deleteTeamPermission`, `checkPermission`, `getRoleDefaults`
+   - `deleteTeamPermission`, `checkPermission`
    - `getApprovalWorkflows`, `createApprovalWorkflow`, `updateApprovalWorkflow`
    - `deleteApprovalWorkflow`, `getPendingApprovals`, `createApprovalRequest`
    - Role defaults: admin, manager, publisher, creator, viewer
+
+3. **lib/team-utils.ts** - Pure utility functions (non-async)
+   - `getRoleDefaults(role)` - Returns default permissions for each role
+   - Separated from Server Actions to avoid build errors
 
 **NEW Pages & Components Created:**
 1. **Analytics Page** (`/social/analytics`)
