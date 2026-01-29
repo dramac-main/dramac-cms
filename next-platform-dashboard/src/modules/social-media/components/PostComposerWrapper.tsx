@@ -45,8 +45,10 @@ export function PostComposerWrapper({
     const postId = editId || duplicateId
 
     if (postId) {
-      // Using async IIFE to avoid setState during render
-      const loadPost = async () => {
+      // Set loading state first, then use async IIFE
+      setIsLoading(true)
+      
+      ;(async () => {
         const result = await getPost(postId)
         if (result.post) {
           setInitialData({
@@ -60,9 +62,7 @@ export function PostComposerWrapper({
           }
         }
         setIsLoading(false)
-      }
-      setIsLoading(true)
-      loadPost()
+      })()
     }
 
     // Check for date param (from calendar)
