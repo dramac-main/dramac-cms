@@ -24,6 +24,7 @@ This document walks through the **complete user journey** for DRAMAC's Social Me
 | Content Calendar | `/dashboard/sites/{siteId}/social/calendar` | Schedule posts |
 | Post Composer | `/dashboard/sites/{siteId}/social/compose` | Create new post |
 | Social Inbox | `/dashboard/sites/{siteId}/social/inbox` | Messages/comments |
+| Account Management | `/dashboard/sites/{siteId}/social/accounts` | Connect/manage accounts |
 | Site Settings | `/dashboard/sites/{siteId}/settings` | Site config |
 
 ### Key Source Files
@@ -34,10 +35,15 @@ This document walks through the **complete user journey** for DRAMAC's Social Me
 | `src/app/(dashboard)/dashboard/sites/[siteId]/social/calendar/page.tsx` | Calendar page |
 | `src/app/(dashboard)/dashboard/sites/[siteId]/social/compose/page.tsx` | Composer page |
 | `src/app/(dashboard)/dashboard/sites/[siteId]/social/inbox/page.tsx` | Inbox page |
+| `src/app/(dashboard)/dashboard/sites/[siteId]/social/accounts/page.tsx` | Accounts page |
 | `src/modules/social-media/components/SocialDashboard.tsx` | Dashboard UI |
+| `src/modules/social-media/components/SocialDashboardWrapper.tsx` | Dashboard client wrapper |
 | `src/modules/social-media/components/ContentCalendar.tsx` | Calendar UI |
+| `src/modules/social-media/components/ContentCalendarWrapper.tsx` | Calendar client wrapper |
 | `src/modules/social-media/components/PostComposer.tsx` | Composer UI |
+| `src/modules/social-media/components/PostComposerWrapper.tsx` | Composer client wrapper |
 | `src/modules/social-media/components/SocialInbox.tsx` | Inbox UI |
+| `src/modules/social-media/components/SocialInboxWrapper.tsx` | Inbox client wrapper |
 | `src/modules/social-media/actions/account-actions.ts` | Account CRUD |
 | `src/modules/social-media/actions/post-actions.ts` | Post CRUD |
 | `src/modules/social-media/actions/analytics-actions.ts` | Analytics data |
@@ -983,12 +989,14 @@ Clicking a day shows all scheduled posts:
 
 | Feature | Status | Source File | Notes |
 |---------|--------|-------------|-------|
-| Dashboard | ✅ Complete | `components/SocialDashboard.tsx` | With analytics overview |
-| Account Connection | ⚠️ Mock Only | `actions/account-actions.ts` | OAuth flow not implemented |
-| Post Composer | ✅ Complete | `components/PostComposer.tsx` | Multi-platform support |
-| Content Calendar | ✅ Complete | `components/ContentCalendar.tsx` | Month/week/list views |
-| Social Inbox | ✅ Complete | `components/SocialInbox.tsx` | With saved replies |
+| Dashboard | ✅ Complete | `components/SocialDashboard.tsx` | With analytics overview + wrapper |
+| Account Management | ✅ Complete | `social/accounts/page.tsx` | View, connect, manage accounts |
+| Post Composer | ✅ Complete | `components/PostComposer.tsx` | Multi-platform support + wrapper |
+| Content Calendar | ✅ Complete | `components/ContentCalendar.tsx` | Month/week/list views + wrapper |
+| Social Inbox | ✅ Complete | `components/SocialInbox.tsx` | With saved replies + wrapper |
+| Layout Navigation | ✅ Complete | `social/layout.tsx` | With active tab highlighting |
 | Analytics | ✅ Complete | `actions/analytics-actions.ts` | With charts and trends |
+| Account Connection | ⚠️ Mock Only | `actions/account-actions.ts` | OAuth flow not implemented |
 | Campaigns | 🔄 Partial | `types/index.ts` | Basic structure only |
 | Team Permissions | 🔄 Partial | `types/index.ts` | Database tables ready |
 | CRM Integration | 📋 Planned | - | Hooks available |
@@ -1000,7 +1008,7 @@ Clicking a day shows all scheduled posts:
 ## 🔧 Known Issues & Next Steps
 
 ### Current Issues
-1. **OAuth Not Implemented**: Account connection uses mock data
+1. **OAuth Not Implemented**: Account connection uses mock data (buttons show "coming soon" alert)
 2. **Publishing Not Live**: Posts saved to DB but not sent to platforms
 3. **Analytics Mock Data**: Real API integration needed
 4. **Inbox Mock Data**: Not receiving real messages from platforms
@@ -1033,13 +1041,16 @@ src/modules/social-media/
 │   ├── ContentCalendarWrapper.tsx # Client wrapper
 │   ├── PostComposer.tsx        # Post creation UI
 │   ├── PostComposerWrapper.tsx # Client wrapper
-│   └── SocialInbox.tsx         # Unified inbox UI
+│   ├── SocialInbox.tsx         # Unified inbox UI
+│   └── SocialInboxWrapper.tsx  # Client wrapper (NEW)
 └── types/
     └── index.ts                # TypeScript types
 
 src/app/(dashboard)/dashboard/sites/[siteId]/social/
-├── layout.tsx                  # Social nav + auth check
+├── layout.tsx                  # Social nav + auth check (with active states)
 ├── page.tsx                    # Dashboard route
+├── accounts/
+│   └── page.tsx               # Account management route (NEW)
 ├── calendar/
 │   └── page.tsx               # Calendar route
 ├── compose/

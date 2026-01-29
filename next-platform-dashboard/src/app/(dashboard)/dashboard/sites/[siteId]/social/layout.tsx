@@ -18,10 +18,15 @@ import {
   Calendar, 
   Send, 
   Inbox, 
-  BarChart3, 
-  Settings,
-  Plus
+  Users,
+  Plus,
+  BarChart3,
+  Megaphone,
+  CheckCircle,
+  Settings
 } from 'lucide-react'
+import { headers } from 'next/headers'
+import { cn } from '@/lib/utils'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -39,23 +44,43 @@ function NavSkeleton() {
 }
 
 async function SocialNav({ siteId }: { siteId: string }) {
+  // Get current path to highlight active tab
+  const headersList = await headers()
+  const pathname = headersList.get('x-pathname') || headersList.get('x-invoke-path') || ''
+  
   const navItems = [
-    { href: `/dashboard/sites/${siteId}/social`, label: 'Dashboard', icon: LayoutDashboard },
+    { href: `/dashboard/sites/${siteId}/social`, label: 'Dashboard', icon: LayoutDashboard, exact: true },
     { href: `/dashboard/sites/${siteId}/social/calendar`, label: 'Calendar', icon: Calendar },
     { href: `/dashboard/sites/${siteId}/social/compose`, label: 'Compose', icon: Send },
     { href: `/dashboard/sites/${siteId}/social/inbox`, label: 'Inbox', icon: Inbox },
+    { href: `/dashboard/sites/${siteId}/social/accounts`, label: 'Accounts', icon: Users },
+    { href: `/dashboard/sites/${siteId}/social/analytics`, label: 'Analytics', icon: BarChart3 },
+    { href: `/dashboard/sites/${siteId}/social/campaigns`, label: 'Campaigns', icon: Megaphone },
+    { href: `/dashboard/sites/${siteId}/social/approvals`, label: 'Approvals', icon: CheckCircle },
+    { href: `/dashboard/sites/${siteId}/social/settings`, label: 'Settings', icon: Settings },
   ]
 
   return (
     <nav className="flex items-center gap-1">
-      {navItems.map((item) => (
-        <Link key={item.href} href={item.href}>
-          <Button variant="ghost" size="sm" className="gap-2">
-            <item.icon className="h-4 w-4" />
-            {item.label}
-          </Button>
-        </Link>
-      ))}
+      {navItems.map((item) => {
+        // Determine if this nav item is active
+        const isActive = item.exact 
+          ? pathname === item.href || pathname.endsWith('/social')
+          : pathname.startsWith(item.href)
+        
+        return (
+          <Link key={item.href} href={item.href}>
+            <Button 
+              variant={isActive ? 'secondary' : 'ghost'} 
+              size="sm" 
+              className={cn('gap-2', isActive && 'bg-secondary')}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </Button>
+          </Link>
+        )
+      })}
     </nav>
   )
 }

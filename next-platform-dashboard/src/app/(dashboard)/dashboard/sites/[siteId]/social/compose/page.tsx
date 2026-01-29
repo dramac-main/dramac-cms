@@ -56,8 +56,10 @@ export default async function ComposePage({ params }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <Suspense fallback={<ComposerSkeleton />}>
-      <ComposerContent siteId={siteId} userId={user?.id || ''} />
-    </Suspense>
+    <div className="container py-6">
+      <Suspense fallback={<ComposerSkeleton />}>
+        <ComposerContent siteId={siteId} userId={user?.id || ''} />
+      </Suspense>
+    </div>
   )
 }

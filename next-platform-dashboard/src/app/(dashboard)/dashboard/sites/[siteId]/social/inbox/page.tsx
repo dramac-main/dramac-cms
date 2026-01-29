@@ -6,7 +6,8 @@
  */
 
 import { Suspense } from 'react'
-import { SocialInbox } from '@/modules/social-media/components'
+import { createClient } from '@/lib/supabase/server'
+import { SocialInboxWrapper } from '@/modules/social-media/components'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { getInboxItems, getSavedReplies } from '@/modules/social-media/actions/inbox-actions'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -15,7 +16,7 @@ interface PageProps {
   params: Promise<{ siteId: string }>
 }
 
-async function InboxContent({ siteId }: { siteId: string }) {
+async function InboxContent({ siteId, userId }: { siteId: string; userId: string }) {
   const [accountsResult, inboxResult, repliesResult] = await Promise.all([
     getSocialAccounts(siteId),
     getInboxItems(siteId),
@@ -27,17 +28,12 @@ async function InboxContent({ siteId }: { siteId: string }) {
   const savedReplies = repliesResult.replies || []
 
   return (
-    <SocialInbox
+    <SocialInboxWrapper
+      siteId={siteId}
       items={items}
       accounts={accounts}
       savedReplies={savedReplies}
-      onReply={async () => {}}
-      onMarkAsRead={async () => {}}
-      onArchive={async () => {}}
-      onAssign={async () => {}}
-      onFlag={async () => {}}
-      onMarkAsSpam={async () => {}}
-      onRefresh={() => {}}
+      userId={userId}
     />
   )
 }
@@ -77,10 +73,14 @@ export default async function InboxPage({ params }: PageProps) {
   const { siteId } = await params
   
   // Layout handles auth and module access check
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <Suspense fallback={<InboxSkeleton />}>
-      <InboxContent siteId={siteId} />
-    </Suspense>
+    <div className="container py-6">
+      <Suspense fallback={<InboxSkeleton />}>
+        <InboxContent siteId={siteId} userId={user?.id || ''} />
+      </Suspense>
+    </div>
   )
 }

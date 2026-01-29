@@ -16,7 +16,30 @@
 - ✅ **Client portal** - Separate interface for end-users
 - ✅ **Media library** - Asset management with Supabase Storage
 
-### Module Access Control System (January 29, 2026) ✅ NEW
+### Social Media Module Feature Expansion (January 29, 2026) ✅ NEW
+**Status**: All internal features implemented (without external API integrations)
+
+**NEW Action Files:**
+1. **campaign-actions.ts** - Full campaign CRUD + analytics
+   - getCampaigns, getCampaign, createCampaign, updateCampaign
+   - deleteCampaign, archiveCampaign, pauseCampaign, resumeCampaign
+   - getCampaignPosts, addPostToCampaign, getCampaignAnalytics
+
+2. **team-actions.ts** - Team permissions + approval workflows
+   - getTeamPermissions, upsertTeamPermission, deleteTeamPermission
+   - getApprovalWorkflows, createApprovalWorkflow, updateApprovalWorkflow
+   - Role defaults: admin, manager, publisher, creator, viewer
+
+**NEW Pages (4 new routes):**
+- `/social/analytics` - SocialAnalyticsPage with stats, heatmap, best times
+- `/social/campaigns` - CampaignsPageWrapper with full campaign management
+- `/social/approvals` - ApprovalsPageWrapper for pending post approvals
+- `/social/settings` - SocialSettingsPage with team/workflows/general tabs
+
+**Updated Navigation:**
+- layout.tsx now has 9 nav items: Dashboard, Calendar, Compose, Inbox, Accounts, Analytics, Campaigns, Approvals, Settings
+
+### Module Access Control System (January 29, 2026) ✅
 **Issue**: Module tabs/buttons showing before subscription
 **Solution**: Created `getSiteEnabledModules()` and `isModuleEnabledForSite()` server actions
 **Result**: Proper module gating - UI only shows after subscription + site enable

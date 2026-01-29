@@ -13,3 +13,10 @@ export { SocialDashboardWrapper } from './SocialDashboardWrapper'
 export { ContentCalendar } from './ContentCalendar'
 export { ContentCalendarWrapper } from './ContentCalendarWrapper'
 export { SocialInbox } from './SocialInbox'
+export { SocialInboxWrapper } from './SocialInboxWrapper'
+
+// Additional page components
+export { SocialAnalyticsPage } from './SocialAnalyticsPage'
+export { CampaignsPageWrapper } from './CampaignsPageWrapper'
+export { ApprovalsPageWrapper } from './ApprovalsPageWrapper'
+export { SocialSettingsPage } from './SocialSettingsPage'
