@@ -6,9 +6,6 @@
  */
 
 import { Suspense } from 'react'
-import { redirect, notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { isModuleEnabledForSite } from '@/lib/actions/sites'
 import { SocialDashboardWrapper } from '@/modules/social-media/components/SocialDashboardWrapper'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { getPosts } from '@/modules/social-media/actions/post-actions'
@@ -86,19 +83,7 @@ function DashboardSkeleton() {
 export default async function SocialMediaPage({ params }: PageProps) {
   const { siteId } = await params
   
-  // Auth check
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Module access check - redirect to modules tab if not enabled
-  const hasAccess = await isModuleEnabledForSite(siteId, 'social-media')
-  if (!hasAccess) {
-    redirect(`/dashboard/sites/${siteId}?tab=modules`)
-  }
+  // Layout handles auth and module access check
 
   return (
     <div className="container py-6">

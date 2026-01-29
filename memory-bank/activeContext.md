@@ -1,7 +1,7 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 29, 2026  
-**Current Phase**: Phase EM-54 Social Media Module - Module Access Controls Complete  
+**Current Phase**: Phase EM-54 Social Media Module - Navigation & CRM Access Controls  
 **Status**: ✅ 26 OF 34 PHASES (76%) - ✅ Zero TypeScript Errors - ✅ Build Passing
 
 ## ⚠️ CRITICAL WORKFLOW REMINDER
@@ -15,7 +15,53 @@
 
 ## Current Work Focus
 
-### ✅ COMPLETE: Module Access Control Implementation (January 29, 2026)
+### ✅ COMPLETE: Social Media Navigation & CRM Access Control (January 29, 2026)
+**Status**: ✅ RESOLVED - Proper navigation tabs for Social, access control for CRM
+
+#### Issue Found: Missing Navigation in Social Media Module
+**Problem**: User couldn't find Calendar/Scheduling features - only saw dashboard
+**Root Cause**: Social Media module had no visible navigation tabs (unlike CRM which has tabs)
+**Solution**: Created layout.tsx with proper tab navigation
+
+#### Solution Implemented
+
+**1. Social Media Layout with Navigation** (`social/layout.tsx`):
+```typescript
+// Navigation tabs: Dashboard, Calendar, Compose, Inbox
+const navItems = [
+  { href: `/dashboard/sites/${siteId}/social`, label: 'Dashboard', icon: LayoutDashboard },
+  { href: `/dashboard/sites/${siteId}/social/calendar`, label: 'Calendar', icon: Calendar },
+  { href: `/dashboard/sites/${siteId}/social/compose`, label: 'Compose', icon: Send },
+  { href: `/dashboard/sites/${siteId}/social/inbox`, label: 'Inbox', icon: Inbox },
+]
+```
+- Sticky header with Back button, title, "New Post" quick action
+- Auth and module access checks (centralized for all child pages)
+- Consistent navigation across all social pages
+
+**2. Simplified Social Sub-pages**:
+- `page.tsx` - Removed duplicate auth/access checks (layout handles)
+- `calendar/page.tsx` - Simplified, relies on layout for auth
+- `compose/page.tsx` - Simplified, relies on layout for auth
+- `inbox/page.tsx` - Simplified, relies on layout for auth
+
+**3. CRM Module Access Control** (`crm-module/layout.tsx`):
+- Added proper access control (was missing before!)
+- Auth check → redirect to `/login` if not authenticated
+- Site verification → 404 if site doesn't exist
+- Module access check → redirect to `?tab=modules` if CRM not enabled
+- Uses `isModuleEnabledForSite(siteId, 'crm')` function
+
+**4. Testing Script** (`scripts/make-modules-free-for-testing.sql`):
+- Makes both Social Media AND CRM modules free for testing
+- Includes instructions for installing modules on sites
+- Includes restore script to revert pricing after testing
+
+**TypeScript**: ✅ Zero errors (`tsc --noEmit` exit code 0)
+
+---
+
+### Previous: Module Access Control Implementation (January 29, 2026)
 **Status**: ✅ RESOLVED - Module tabs/buttons now respect subscription status
 
 #### Issue Found: Modules Visible Without Subscription

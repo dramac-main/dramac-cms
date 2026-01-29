@@ -6,9 +6,6 @@
  */
 
 import { Suspense } from 'react'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { isModuleEnabledForSite } from '@/lib/actions/sites'
 import { SocialInbox } from '@/modules/social-media/components'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { getInboxItems, getSavedReplies } from '@/modules/social-media/actions/inbox-actions'
@@ -79,25 +76,11 @@ function InboxSkeleton() {
 export default async function InboxPage({ params }: PageProps) {
   const { siteId } = await params
   
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Module access check
-  const hasAccess = await isModuleEnabledForSite(siteId, 'social-media')
-  if (!hasAccess) {
-    redirect(`/dashboard/sites/${siteId}?tab=modules`)
-  }
+  // Layout handles auth and module access check
 
   return (
-    <div className="container py-6">
-      <h1 className="text-2xl font-bold mb-6">Social Inbox</h1>
-      <Suspense fallback={<InboxSkeleton />}>
-        <InboxContent siteId={siteId} />
-      </Suspense>
-    </div>
+    <Suspense fallback={<InboxSkeleton />}>
+      <InboxContent siteId={siteId} />
+    </Suspense>
   )
 }

@@ -6,15 +6,10 @@
  */
 
 import { Suspense } from 'react'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { isModuleEnabledForSite } from '@/lib/actions/sites'
 import { PostComposerWrapper } from '@/modules/social-media/components'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
-import { ChevronLeft } from 'lucide-react'
 
 interface PageProps {
   params: Promise<{ siteId: string }>
@@ -56,33 +51,13 @@ function ComposerSkeleton() {
 export default async function ComposePage({ params }: PageProps) {
   const { siteId } = await params
   
+  // Layout handles auth and module access check
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Module access check
-  const hasAccess = await isModuleEnabledForSite(siteId, 'social-media')
-  if (!hasAccess) {
-    redirect(`/dashboard/sites/${siteId}?tab=modules`)
-  }
 
   return (
-    <div className="container py-6">
-      <div className="mb-6 flex items-center gap-4">
-        <Link href={`/dashboard/sites/${siteId}/social`}>
-          <Button variant="ghost" size="sm">
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
-        </Link>
-        <h1 className="text-2xl font-bold">Create Post</h1>
-      </div>
-      <Suspense fallback={<ComposerSkeleton />}>
-        <ComposerContent siteId={siteId} userId={user.id} />
-      </Suspense>
-    </div>
+    <Suspense fallback={<ComposerSkeleton />}>
+      <ComposerContent siteId={siteId} userId={user?.id || ''} />
+    </Suspense>
   )
 }

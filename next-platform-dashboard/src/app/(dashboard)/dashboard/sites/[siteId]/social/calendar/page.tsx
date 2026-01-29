@@ -6,9 +6,7 @@
  */
 
 import { Suspense } from 'react'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { isModuleEnabledForSite } from '@/lib/actions/sites'
 import { ContentCalendarWrapper } from '@/modules/social-media/components'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { getPosts } from '@/modules/social-media/actions/post-actions'
@@ -55,23 +53,14 @@ function CalendarSkeleton() {
 export default async function CalendarPage({ params }: PageProps) {
   const { siteId } = await params
   
+  // Layout handles auth and module access check
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Module access check
-  const hasAccess = await isModuleEnabledForSite(siteId, 'social-media')
-  if (!hasAccess) {
-    redirect(`/dashboard/sites/${siteId}?tab=modules`)
-  }
 
   return (
     <div className="container py-6">
       <Suspense fallback={<CalendarSkeleton />}>
-        <CalendarContent siteId={siteId} userId={user.id} />
+        <CalendarContent siteId={siteId} userId={user?.id || ''} />
       </Suspense>
     </div>
   )
