@@ -8,25 +8,39 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { PostComposer } from '@/modules/social-media/components'
+import { PostComposerWrapper } from '@/modules/social-media/components'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
 
 interface PageProps {
   params: Promise<{ siteId: string }>
 }
 
-async function ComposerContent({ siteId }: { siteId: string }) {
+async function ComposerContent({ siteId, userId }: { siteId: string; userId: string }) {
+  const supabase = await createClient()
+  
+  // Get tenant ID from site
+  const { data: site } = await supabase
+    .from('sites')
+    .select('agency_id, client:clients(agency_id)')
+    .eq('id', siteId)
+    .single()
+  
+  const tenantId = site?.agency_id || (site?.client as { agency_id: string } | null)?.agency_id || ''
+  
   const accountsResult = await getSocialAccounts(siteId)
   const accounts = accountsResult.accounts || []
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <PostComposer
-        accounts={accounts}
-        onSubmit={async () => {}}
-      />
-    </div>
+    <PostComposerWrapper
+      siteId={siteId}
+      tenantId={tenantId}
+      userId={userId}
+      accounts={accounts}
+    />
   )
 }
 
@@ -50,9 +64,17 @@ export default async function ComposePage({ params }: PageProps) {
 
   return (
     <div className="container py-6">
-      <h1 className="text-2xl font-bold mb-6">Create Post</h1>
+      <div className="mb-6 flex items-center gap-4">
+        <Link href={`/dashboard/sites/${siteId}/social`}>
+          <Button variant="ghost" size="sm">
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+        </Link>
+        <h1 className="text-2xl font-bold">Create Post</h1>
+      </div>
       <Suspense fallback={<ComposerSkeleton />}>
-        <ComposerContent siteId={siteId} />
+        <ComposerContent siteId={siteId} userId={user.id} />
       </Suspense>
     </div>
   )

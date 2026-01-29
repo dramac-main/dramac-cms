@@ -1,7 +1,7 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 29, 2026  
-**Current Phase**: Investigating 404 Errors on Sites/Dashboard Pages  
+**Current Phase**: Phase EM-54 Social Media Module - TypeScript Fixes Complete  
 **Status**: ✅ 26 OF 34 PHASES (76%) - ✅ Zero TypeScript Errors - ✅ Build Passing
 
 ## ⚠️ CRITICAL WORKFLOW REMINDER
@@ -14,6 +14,57 @@
 ---
 
 ## Current Work Focus
+
+### ✅ COMPLETE: Phase EM-54 Social Media Module - Client Wrapper Fixes (January 29, 2026)
+**Status**: ✅ RESOLVED - All TypeScript errors fixed, wrappers properly implemented
+
+#### Architecture Decision: Social Media Module Placement
+**Module Level**: Site-level (social accounts belong to sites, not agencies)
+**Marketplace Status**: Needs registration in `modules_v2` table
+**URL Pattern**: `/dashboard/sites/${siteId}/social/*`
+
+#### Client Wrapper Pattern (Server → Client Components)
+**Problem**: Server Components cannot pass function handlers to Client Components
+**Solution**: Created client wrapper components that handle navigation/actions internally
+
+**Files Created:**
+1. `ContentCalendarWrapper.tsx` - Wraps ContentCalendar with:
+   - Props: `siteId`, `posts`, `accounts`, `userId`
+   - Handlers: `handleCreatePost`, `handleEditPost`, `handleDeletePost`, `handleDuplicatePost`, `handleApprovePost`, `handleRejectPost`, `handlePublishNow`
+   - Uses `useRouter` for navigation, calls action functions with proper signatures
+
+2. `PostComposerWrapper.tsx` - Wraps PostComposer with:
+   - Props: `siteId`, `tenantId`, `userId`, `accounts`
+   - Handles edit/duplicate via URL params
+   - Properly calls `createPost(siteId, tenantId, userId, data)` and `updatePost(postId, siteId, updates)`
+
+**Function Signature Fixes:**
+- `deletePost(postId, siteId)` - added siteId
+- `approvePost(postId, siteId, userId, notes?)` - added siteId, userId
+- `rejectPost(postId, siteId, userId, reason)` - all 4 params required
+- `publishPostNow(postId, siteId)` - renamed from `publishPost`, added siteId
+- `updatePost(postId, siteId, updates)` - siteId as 2nd arg, removed invalid `status` field
+
+**Page Updates:**
+- `calendar/page.tsx` - Passes `userId` to ContentCalendarWrapper
+- `compose/page.tsx` - Already passing `siteId`, `tenantId`, `userId`
+
+#### Migration Files Created (Not Yet Applied)
+1. `em-54-social-media-flat-tables.sql`:
+   - Creates 13 tables with flat naming (`social_*` instead of `mod_social.*`)
+   - PostgREST requires flat table names in public schema
+   - Full RLS policies for tenant isolation
+   - 8 updated_at triggers
+
+2. `em-54-register-social-media-module.sql`:
+   - Registers module in `modules_v2` marketplace table
+   - Pricing: $49.99/mo wholesale, $79.99/mo suggested retail
+   - 18 features listed
+   - Category: marketing, install_level: site
+
+**TypeScript**: ✅ Zero errors (`tsc --noEmit` exit code 0)
+
+---
 
 ### ✅ COMPLETE: Critical Bug Fixes (January 29, 2026)
 **Status**: ✅ RESOLVED - All major issues fixed

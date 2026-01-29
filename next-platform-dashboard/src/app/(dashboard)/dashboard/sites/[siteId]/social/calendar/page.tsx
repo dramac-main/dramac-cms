@@ -8,7 +8,7 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { ContentCalendar } from '@/modules/social-media/components'
+import { ContentCalendarWrapper } from '@/modules/social-media/components'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { getPosts } from '@/modules/social-media/actions/post-actions'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -17,7 +17,7 @@ interface PageProps {
   params: Promise<{ siteId: string }>
 }
 
-async function CalendarContent({ siteId }: { siteId: string }) {
+async function CalendarContent({ siteId, userId }: { siteId: string; userId: string }) {
   const [accountsResult, postsResult] = await Promise.all([
     getSocialAccounts(siteId),
     getPosts(siteId, { limit: 500 }), // Get all posts for calendar
@@ -27,13 +27,11 @@ async function CalendarContent({ siteId }: { siteId: string }) {
   const posts = postsResult.posts || []
 
   return (
-    <ContentCalendar
+    <ContentCalendarWrapper
+      siteId={siteId}
       posts={posts}
       accounts={accounts}
-      onCreatePost={() => {}}
-      onEditPost={() => {}}
-      onDeletePost={() => {}}
-      onDuplicatePost={() => {}}
+      userId={userId}
     />
   )
 }
@@ -66,7 +64,7 @@ export default async function CalendarPage({ params }: PageProps) {
   return (
     <div className="container py-6">
       <Suspense fallback={<CalendarSkeleton />}>
-        <CalendarContent siteId={siteId} />
+        <CalendarContent siteId={siteId} userId={user.id} />
       </Suspense>
     </div>
   )

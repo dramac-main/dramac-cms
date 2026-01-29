@@ -187,6 +187,67 @@ export async function POST(request: Request) {
 }
 ```
 
+### 4B. Server→Client Component Wrapper Pattern (NEW)
+
+**Problem:**
+Next.js Server Components cannot pass function handlers to Client Components. This error occurs:
+```
+Error: Event handlers cannot be passed to Client Component props.
+  <SomeComponent onSubmit={function} ...>
+```
+
+**Solution: Client Wrapper Pattern**
+Create a client wrapper component that:
+1. Accepts data props from Server Component
+2. Handles navigation and actions internally using hooks
+3. Calls server actions directly (not via props)
+
+**Implementation:**
+```typescript
+// ❌ WRONG: Server page passing handlers
+// src/app/(dashboard)/page.tsx
+export default async function Page() {
+  const data = await fetchData()
+  return <ClientComponent 
+    data={data}
+    onSubmit={handleSubmit} // Error! Can't pass functions
+  />
+}
+
+// ✅ CORRECT: Use client wrapper
+// src/components/ClientComponentWrapper.tsx
+'use client'
+import { useRouter } from 'next/navigation'
+import { serverAction } from '@/actions/someAction'
+
+export function ClientComponentWrapper({ data, siteId, userId }) {
+  const router = useRouter()
+  
+  const handleSubmit = async (values) => {
+    const result = await serverAction(siteId, userId, values) // Call server action
+    if (!result.error) router.refresh()
+  }
+  
+  return <ClientComponent data={data} onSubmit={handleSubmit} />
+}
+
+// src/app/(dashboard)/page.tsx
+export default async function Page() {
+  const data = await fetchData()
+  return <ClientComponentWrapper data={data} siteId={id} userId={userId} />
+}
+```
+
+**Key Points:**
+- Server Components: Fetch data, pass to wrappers (no functions!)
+- Client Wrappers: Handle navigation (`useRouter`), call server actions
+- Server Actions: Accept full parameters (IDs from wrapper props)
+
+**Examples in Codebase:**
+- `ContentCalendarWrapper.tsx` - Wraps ContentCalendar
+- `PostComposerWrapper.tsx` - Wraps PostComposer
+- `SocialDashboardWrapper.tsx` - Wraps SocialDashboard
+
 ### 5. Authentication & Authorization
 
 **Authentication:**

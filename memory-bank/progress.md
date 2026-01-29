@@ -1,6 +1,6 @@
 # Progress: What Works & What's Left
 
-**Last Updated**: January 28, 2026  
+**Last Updated**: January 29, 2026  
 **Overall Completion**: 76% (26 of 34 enterprise phases complete)
 
 ## ✅ What Works (Completed Features)
@@ -15,6 +15,16 @@
 - ✅ **Page rendering** - Published sites accessible
 - ✅ **Client portal** - Separate interface for end-users
 - ✅ **Media library** - Asset management with Supabase Storage
+
+### Social Media Module Client Wrappers (January 29, 2026) ✅ NEW
+**Issue**: TypeScript errors in wrapper components due to function signature mismatches
+**Solution**: Fixed all function signatures in ContentCalendarWrapper and PostComposerWrapper
+**Result**: Zero TypeScript errors, proper Server→Client component pattern
+
+**Pattern Established:**
+- Server Components: Fetch data, pass to Client wrappers
+- Client Wrappers: Handle navigation (`useRouter`), call server actions
+- Server Actions: Accept full parameters (postId, siteId, userId, etc.)
 
 ### Critical Bug Fixes (January 29, 2026) ✅
 **Issues Fixed**:
