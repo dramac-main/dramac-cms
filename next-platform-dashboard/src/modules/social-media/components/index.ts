@@ -8,5 +8,6 @@
 // Main components
 export { PostComposer } from './PostComposer'
 export { SocialDashboard } from './SocialDashboard'
+export { SocialDashboardWrapper } from './SocialDashboardWrapper'
 export { ContentCalendar } from './ContentCalendar'
 export { SocialInbox } from './SocialInbox'

@@ -16,6 +16,13 @@
 - ✅ **Client portal** - Separate interface for end-users
 - ✅ **Media library** - Asset management with Supabase Storage
 
+### Critical Bug Fixes (January 29, 2026) ✅
+**Issues Fixed**:
+1. AI Agents: `type` column → `agent_type` (schema mismatch)
+2. Social Media: `mod_social.tablename` → `social_tablename` (PostgREST compatibility)
+3. Social Page: Server→Client function passing error (created wrapper component)
+**Result**: All dashboard features now functional
+
 ### Routing Architecture Fix (January 29, 2026) ✅
 **Issue**: 404 errors on dashboard pages due to route conflict
 **Solution**: Moved module routes from `src/app/dashboard/[siteId]/` into `(dashboard)` layout group

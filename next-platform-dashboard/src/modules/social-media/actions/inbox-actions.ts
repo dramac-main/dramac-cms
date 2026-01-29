@@ -39,7 +39,7 @@ export async function getInboxItems(
     const supabase = await createClient()
     
     let query = (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .select('*', { count: 'exact' })
       .eq('site_id', siteId)
       .order('platform_created_at', { ascending: false })
@@ -107,7 +107,7 @@ export async function getInboxCounts(
     const supabase = await createClient()
     
     let baseQuery = (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .select('status', { count: 'exact' })
       .eq('site_id', siteId)
     
@@ -161,7 +161,7 @@ export async function markAsRead(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .update({
         status: 'read',
         updated_at: new Date().toISOString(),
@@ -193,7 +193,7 @@ export async function replyToItem(
     
     // Get the item
     const { data: item, error: fetchError } = await (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .select('*, platform_created_at')
       .eq('id', itemId)
       .single()
@@ -208,7 +208,7 @@ export async function replyToItem(
     
     // Update item with reply
     const { error } = await (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .update({
         status: 'replied',
         response_text: replyText,
@@ -244,7 +244,7 @@ export async function assignItem(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .update({
         assigned_to: assigneeId,
         assigned_at: assigneeId ? new Date().toISOString() : null,
@@ -274,7 +274,7 @@ export async function updatePriority(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .update({
         priority,
         updated_at: new Date().toISOString(),
@@ -302,7 +302,7 @@ export async function archiveItem(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .update({
         status: 'archived',
         updated_at: new Date().toISOString(),
@@ -330,7 +330,7 @@ export async function markAsSpam(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .update({
         status: 'spam',
         updated_at: new Date().toISOString(),
@@ -358,7 +358,7 @@ export async function flagItem(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .update({
         status: 'flagged',
         updated_at: new Date().toISOString(),
@@ -388,7 +388,7 @@ export async function addTags(
     
     // Get current tags
     const { data: item } = await (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .select('tags')
       .eq('id', itemId)
       .single()
@@ -397,7 +397,7 @@ export async function addTags(
     const newTags = [...new Set([...currentTags, ...tags])]
     
     const { error } = await (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .update({
         tags: newTags,
         updated_at: new Date().toISOString(),
@@ -429,7 +429,7 @@ export async function getSavedReplies(
     const supabase = await createClient()
     
     const { data, error } = await (supabase as any)
-      .from('mod_social.saved_replies')
+      .from('social_saved_replies')
       .select('*')
       .eq('site_id', siteId)
       .order('usage_count', { ascending: false })
@@ -462,7 +462,7 @@ export async function createSavedReply(
     const supabase = await createClient()
     
     const { data: reply, error } = await (supabase as any)
-      .from('mod_social.saved_replies')
+      .from('social_saved_replies')
       .insert({
         site_id: siteId,
         tenant_id: tenantId,
@@ -496,13 +496,13 @@ export async function useSavedReply(
     
     // Get current count
     const { data: reply } = await (supabase as any)
-      .from('mod_social.saved_replies')
+      .from('social_saved_replies')
       .select('usage_count')
       .eq('id', replyId)
       .single()
     
     const { error } = await (supabase as any)
-      .from('mod_social.saved_replies')
+      .from('social_saved_replies')
       .update({
         usage_count: (reply?.usage_count || 0) + 1,
         last_used_at: new Date().toISOString(),
@@ -528,7 +528,7 @@ export async function deleteSavedReply(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.saved_replies')
+      .from('social_saved_replies')
       .delete()
       .eq('id', replyId)
     
@@ -556,7 +556,7 @@ export async function bulkArchive(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .update({
         status: 'archived',
         updated_at: new Date().toISOString(),
@@ -584,7 +584,7 @@ export async function bulkMarkAsRead(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.inbox_items')
+      .from('social_inbox_items')
       .update({
         status: 'read',
         updated_at: new Date().toISOString(),

@@ -39,7 +39,7 @@ export async function getAgents(
     .order('created_at', { ascending: false })
   
   if (options.type) {
-    query = query.eq('type', options.type)
+    query = query.eq('agent_type', options.type)
   }
   
   if (options.active !== undefined) {
@@ -143,7 +143,7 @@ export async function createAgent(
       site_id: siteId,
       name: config.name,
       slug,
-      type: config.type,
+      agent_type: config.type,
       description: config.description || '',
       system_prompt: config.systemPrompt,
       model_provider: config.modelProvider || 'openai',
@@ -426,7 +426,7 @@ function mapAgent(data: Record<string, unknown>): AgentConfig {
     name: data.name as string,
     slug: data.slug as string,
     description: data.description as string | undefined,
-    agentType: (data.type as AgentType) || 'assistant',
+    agentType: (data.agent_type as AgentType) || 'assistant',
     capabilities: (data.capabilities as string[]) || [],
     systemPrompt: data.system_prompt as string,
     goals,

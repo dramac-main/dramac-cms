@@ -56,7 +56,7 @@ export async function getAnalyticsOverview(
     
     // Get accounts for site
     let accountsQuery = (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .select('id, platform, followers_count, engagement_rate')
       .eq('site_id', siteId)
       .eq('status', 'active')
@@ -93,7 +93,7 @@ export async function getAnalyticsOverview(
     
     // Get daily analytics
     const { data: dailyData } = await (supabase as any)
-      .from('mod_social.analytics_daily')
+      .from('social_analytics_daily')
       .select('*')
       .in('account_id', accountIds)
       .gte('date', startDate)
@@ -178,7 +178,7 @@ export async function getDailyAnalytics(
     const supabase = await createClient()
     
     const { data, error } = await (supabase as any)
-      .from('mod_social.analytics_daily')
+      .from('social_analytics_daily')
       .select('*')
       .in('account_id', accountIds)
       .gte('date', startDate)
@@ -204,7 +204,7 @@ export async function getPostAnalytics(
     const supabase = await createClient()
     
     const { data, error } = await (supabase as any)
-      .from('mod_social.post_analytics')
+      .from('social_post_analytics')
       .select('*')
       .eq('post_id', postId)
     
@@ -247,7 +247,7 @@ export async function getTopPosts(
     const limit = options?.limit || 10
     
     let query = (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .select(`
         id,
         content,
@@ -316,7 +316,7 @@ export async function getOptimalTimes(
     const supabase = await createClient()
     
     const { data, error } = await (supabase as any)
-      .from('mod_social.optimal_times')
+      .from('social_optimal_times')
       .select('*')
       .eq('account_id', accountId)
       .order('combined_score', { ascending: false })
@@ -354,7 +354,7 @@ export async function getBestTimesToPost(
     
     // Get accounts
     let accountsQuery = (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .select('id')
       .eq('site_id', siteId)
       .eq('status', 'active')
@@ -377,7 +377,7 @@ export async function getBestTimesToPost(
     
     // Get optimal times for all accounts
     const { data: times } = await (supabase as any)
-      .from('mod_social.optimal_times')
+      .from('social_optimal_times')
       .select('*')
       .in('account_id', accountIds)
     
@@ -436,7 +436,7 @@ export async function recalculateOptimalTimes(
     
     // Call the database function
     const { error } = await (supabase as any)
-      .rpc('mod_social.calculate_optimal_times', { p_account_id: accountId })
+      .rpc('calculate_social_optimal_times', { p_account_id: accountId })
     
     if (error) throw error
     
@@ -472,7 +472,7 @@ export async function generateReportData(
     
     // Get accounts
     let accountsQuery = (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .select('*')
       .eq('site_id', siteId)
       .eq('status', 'active')
@@ -490,7 +490,7 @@ export async function generateReportData(
     
     // Get daily analytics
     const { data: dailyData } = await (supabase as any)
-      .from('mod_social.analytics_daily')
+      .from('social_analytics_daily')
       .select('*')
       .in('account_id', accountIds)
       .gte('date', options.startDate)
@@ -499,7 +499,7 @@ export async function generateReportData(
     
     // Get posts in date range
     const { data: posts } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .select('*')
       .eq('site_id', siteId)
       .eq('status', 'published')
@@ -597,7 +597,7 @@ export async function syncAnalytics(
     
     // Get account
     const { data: account, error: fetchError } = await (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .select('*')
       .eq('id', accountId)
       .single()
@@ -612,7 +612,7 @@ export async function syncAnalytics(
     
     // Upsert today's analytics with placeholder data
     await (supabase as any)
-      .from('mod_social.analytics_daily')
+      .from('social_analytics_daily')
       .upsert({
         account_id: accountId,
         date: today,
@@ -632,7 +632,7 @@ export async function syncAnalytics(
     
     // Update account sync timestamp
     await (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .update({ last_synced_at: new Date().toISOString() })
       .eq('id', accountId)
     

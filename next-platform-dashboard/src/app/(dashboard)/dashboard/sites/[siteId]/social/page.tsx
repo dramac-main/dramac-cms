@@ -8,7 +8,7 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { SocialDashboard } from '@/modules/social-media/components'
+import { SocialDashboardWrapper } from '@/modules/social-media/components/SocialDashboardWrapper'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { getPosts } from '@/modules/social-media/actions/post-actions'
 import { getAnalyticsOverview } from '@/modules/social-media/actions/analytics-actions'
@@ -45,21 +45,16 @@ async function SocialDashboardContent({ siteId }: { siteId: string }) {
   const pendingResult = await getPosts(siteId, { status: 'pending_approval' })
   const pendingApprovals = pendingResult.posts?.length || 0
 
+  // Pass data to client wrapper - no functions passed from server to client
   return (
-    <SocialDashboard
+    <SocialDashboardWrapper
+      siteId={siteId}
       accounts={accounts}
       scheduledPosts={scheduledPosts}
       recentPosts={recentPosts}
       analytics={analytics}
       inboxCount={inboxCounts.new}
       pendingApprovals={pendingApprovals}
-      onCreatePost={() => {
-        // Client-side navigation handled by client wrapper
-      }}
-      onViewCalendar={() => {}}
-      onViewInbox={() => {}}
-      onViewAnalytics={() => {}}
-      onRefresh={() => {}}
     />
   )
 }

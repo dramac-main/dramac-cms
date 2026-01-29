@@ -40,7 +40,7 @@ export async function getPosts(
     const supabase = await createClient()
     
     let query = (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .select('*', { count: 'exact' })
       .eq('site_id', siteId)
       .order('created_at', { ascending: false })
@@ -98,7 +98,7 @@ export async function getPost(
     const supabase = await createClient()
     
     const { data, error } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .select('*')
       .eq('id', postId)
       .single()
@@ -146,7 +146,7 @@ export async function createPost(
     }
     
     const { data: post, error } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .insert({
         site_id: siteId,
         tenant_id: tenantId,
@@ -228,7 +228,7 @@ export async function updatePost(
     }
     
     const { data: post, error } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .update(updateData)
       .eq('id', postId)
       .select()
@@ -258,7 +258,7 @@ export async function deletePost(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .delete()
       .eq('id', postId)
     
@@ -292,7 +292,7 @@ export async function schedulePost(
     
     // Check if post requires approval
     const { data: post } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .select('requires_approval')
       .eq('id', postId)
       .single()
@@ -300,7 +300,7 @@ export async function schedulePost(
     const status = post?.requires_approval ? 'pending_approval' : 'scheduled'
     
     const { error } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .update({
         scheduled_at: scheduledAt,
         timezone: timezone || 'UTC',
@@ -337,7 +337,7 @@ export async function publishPostNow(
     
     // Get post with accounts
     const { data: post, error: fetchError } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .select('*, target_accounts')
       .eq('id', postId)
       .single()
@@ -347,7 +347,7 @@ export async function publishPostNow(
     
     // Update status to publishing
     await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .update({ status: 'publishing' })
       .eq('id', postId)
     
@@ -355,7 +355,7 @@ export async function publishPostNow(
     
     // Get account details for each target account
     const { data: accounts } = await (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .select('*')
       .in('id', post.target_accounts)
     
@@ -376,7 +376,7 @@ export async function publishPostNow(
         
         // Log the publish attempt
         await (supabase as any)
-          .from('mod_social.publish_log')
+          .from('social_publish_log')
           .insert({
             post_id: postId,
             account_id: account.id,
@@ -395,7 +395,7 @@ export async function publishPostNow(
         
         // Log the failure
         await (supabase as any)
-          .from('mod_social.publish_log')
+          .from('social_publish_log')
           .insert({
             post_id: postId,
             account_id: account.id,
@@ -417,7 +417,7 @@ export async function publishPostNow(
     
     // Update post with results
     await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .update({
         status: finalStatus,
         published_at: new Date().toISOString(),
@@ -448,7 +448,7 @@ export async function addToQueue(
     
     // Get next available slot from queue
     const { data: nextSlot } = await (supabase as any)
-      .rpc('mod_social.get_next_queue_slot', { p_queue_id: queueId })
+      .rpc('get_social_next_queue_slot', { p_queue_id: queueId })
     
     if (!nextSlot) {
       return { success: false, scheduledAt: null, error: 'No available slots in queue' }
@@ -456,7 +456,7 @@ export async function addToQueue(
     
     // Schedule the post
     const { error } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .update({
         scheduled_at: nextSlot,
         status: 'scheduled',
@@ -494,7 +494,7 @@ export async function approvePost(
     
     // Get post to check if it has scheduled time
     const { data: post } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .select('scheduled_at')
       .eq('id', postId)
       .single()
@@ -502,7 +502,7 @@ export async function approvePost(
     const newStatus: PostStatus = post?.scheduled_at ? 'scheduled' : 'approved'
     
     const { error } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .update({
         status: newStatus,
         approved_by: userId,
@@ -515,7 +515,7 @@ export async function approvePost(
     
     // Update approval request if exists
     await (supabase as any)
-      .from('mod_social.approval_requests')
+      .from('social_approval_requests')
       .update({
         status: 'approved',
         decided_by: userId,
@@ -547,7 +547,7 @@ export async function rejectPost(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .update({
         status: 'draft',
         rejection_reason: reason,
@@ -559,7 +559,7 @@ export async function rejectPost(
     
     // Update approval request
     await (supabase as any)
-      .from('mod_social.approval_requests')
+      .from('social_approval_requests')
       .update({
         status: 'rejected',
         decided_by: userId,
@@ -615,7 +615,7 @@ export async function bulkDeletePosts(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .delete()
       .in('id', postIds)
     
@@ -645,7 +645,7 @@ export async function duplicatePost(
     
     // Get original post
     const { data: original, error: fetchError } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .select('*')
       .eq('id', postId)
       .single()
@@ -655,7 +655,7 @@ export async function duplicatePost(
     
     // Create duplicate
     const { data: newPost, error: insertError } = await (supabase as any)
-      .from('mod_social.posts')
+      .from('social_posts')
       .insert({
         site_id: siteId,
         tenant_id: tenantId,

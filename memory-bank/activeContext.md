@@ -15,6 +15,34 @@
 
 ## Current Work Focus
 
+### ✅ COMPLETE: Critical Bug Fixes (January 29, 2026)
+**Status**: ✅ RESOLVED - All major issues fixed
+
+#### Issue 1: AI Agents "column ai_agents.type does not exist"
+**Root Cause**: Code used `type` column but database uses `agent_type`
+**Fix Applied**:
+- Changed `query.eq('type', ...)` to `query.eq('agent_type', ...)`
+- Changed insert `.insert({ type: ...})` to `.insert({ agent_type: ...})`
+- Changed `mapAgent` to read `data.agent_type` instead of `data.type`
+
+#### Issue 2: Social Media "Could not find table mod_social.accounts"
+**Root Cause**: Code used schema-qualified names (`mod_social.accounts`) but PostgREST doesn't support schemas
+**Fix Applied**:
+- Changed all table references from `mod_social.tablename` to `social_tablename` pattern
+- Tables: `social_accounts`, `social_posts`, `social_analytics_daily`, `social_post_analytics`, `social_optimal_times`, `social_inbox_items`, `social_approval_requests`, `social_saved_replies`, `social_publish_log`
+
+#### Issue 3: "Event handlers cannot be passed to Client Component props"
+**Root Cause**: Server Component passing function handlers to Client Component
+**Fix Applied**:
+- Created `SocialDashboardWrapper.tsx` client component
+- Wrapper handles navigation callbacks internally using `useRouter`
+- Server page now passes only data props (no functions)
+
+**TypeScript**: ✅ Zero errors
+**Files Modified**: 7 files
+
+---
+
 ### ✅ COMPLETE: Fix 404 Routing Errors (January 29, 2026)
 **Issue**: 404 errors on `/dashboard/sites` and other pages due to route conflicts
 **Status**: ✅ RESOLVED

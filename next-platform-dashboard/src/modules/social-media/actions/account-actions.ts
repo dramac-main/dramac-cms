@@ -33,7 +33,7 @@ export async function getSocialAccounts(
     const supabase = await createClient()
     
     let query = (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .select('*')
       .eq('site_id', siteId)
       .order('created_at', { ascending: false })
@@ -67,7 +67,7 @@ export async function getSocialAccount(
     const supabase = await createClient()
     
     const { data, error } = await (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .select('*')
       .eq('id', accountId)
       .single()
@@ -106,7 +106,7 @@ export async function createSocialAccount(
     const supabase = await createClient()
     
     const { data: account, error } = await (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .insert({
         site_id: siteId,
         tenant_id: tenantId,
@@ -159,7 +159,7 @@ export async function updateAccountStatus(
     }
     
     const { error: updateError } = await (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .update(updateData)
       .eq('id', accountId)
     
@@ -183,7 +183,7 @@ export async function refreshAccountToken(
     
     // Get account
     const { data: account, error: fetchError } = await (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .select('*')
       .eq('id', accountId)
       .single()
@@ -196,7 +196,7 @@ export async function refreshAccountToken(
     // For now, just mark as needing reconnection
     
     await (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .update({
         status: 'expired',
         last_error: 'Token refresh required - please reconnect',
@@ -222,7 +222,7 @@ export async function disconnectSocialAccount(
     const supabase = await createClient()
     
     const { error } = await (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .delete()
       .eq('id', accountId)
     
@@ -247,7 +247,7 @@ export async function syncAccountStats(
     
     // Get account
     const { data: account, error: fetchError } = await (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .select('*')
       .eq('id', accountId)
       .single()
@@ -259,7 +259,7 @@ export async function syncAccountStats(
     // For now, just update sync timestamp
     
     await (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .update({
         last_synced_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -288,7 +288,7 @@ export async function getAccountHealth(
     const supabase = await createClient()
     
     const { data: account, error } = await (supabase as any)
-      .from('mod_social.accounts')
+      .from('social_accounts')
       .select('*')
       .eq('id', accountId)
       .single()
