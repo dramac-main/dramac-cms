@@ -1,7 +1,7 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 29, 2026  
-**Current Phase**: Phase EM-54 Social Media Module - TypeScript Fixes Complete  
+**Current Phase**: Phase EM-54 Social Media Module - Module Access Controls Complete  
 **Status**: ✅ 26 OF 34 PHASES (76%) - ✅ Zero TypeScript Errors - ✅ Build Passing
 
 ## ⚠️ CRITICAL WORKFLOW REMINDER
@@ -14,6 +14,59 @@
 ---
 
 ## Current Work Focus
+
+### ✅ COMPLETE: Module Access Control Implementation (January 29, 2026)
+**Status**: ✅ RESOLVED - Module tabs/buttons now respect subscription status
+
+#### Issue Found: Modules Visible Without Subscription
+**Problem**: Social and CRM tabs were showing on site detail page even without subscription
+**Root Cause**: Tabs/buttons were hardcoded without checking module installation status
+**Expected Behavior**: Module UI should only appear after subscription → enable on site
+
+#### Module Marketplace Flow (CRITICAL UNDERSTANDING)
+```
+1. modules_v2 (Marketplace catalog)
+       ↓ Agency subscribes (free or paid)
+2. agency_module_subscriptions (status: 'active')
+       ↓ Agency enables on specific site  
+3. site_module_installations (is_enabled: true)
+       ↓ ONLY THEN
+4. Module UI appears + routes become accessible
+```
+
+#### Solution Implemented
+
+**1. Server Action for Module Access Check** (`src/lib/actions/sites.ts`):
+```typescript
+export async function getSiteEnabledModules(siteId: string): Promise<Set<string>>
+export async function isModuleEnabledForSite(siteId: string, moduleSlug: string): Promise<boolean>
+```
+- Checks agency subscription AND site installation
+- Returns set of enabled module slugs
+
+**2. Site Detail Page Updates** (`src/app/(dashboard)/dashboard/sites/[siteId]/page.tsx`):
+- Conditionally shows tabs: `{hasSocial && <TabsTrigger value="social">Social</TabsTrigger>}`
+- Conditionally shows buttons: `{hasSocial && <Link href=".../social"><Button>Social</Button></Link>}`
+- Module checks: `hasCRM`, `hasSocial`, `hasAutomation`, `hasAIAgents`
+
+**3. Route Guards on All Social Pages**:
+- `/social/page.tsx` - Added `isModuleEnabledForSite(siteId, 'social-media')` check
+- `/social/calendar/page.tsx` - Added access guard
+- `/social/compose/page.tsx` - Added access guard
+- `/social/inbox/page.tsx` - Added access guard
+- Redirect to `?tab=modules` if not enabled (prompts to enable)
+
+**4. Module Dashboard Links** (`src/components/sites/site-modules-tab.tsx`):
+- Added `social-media` and `ai-agents` to modules with "Open" button
+- Proper URL mapping: `social-media` → `/social`, `ai-agents` → `/ai-agents`
+
+#### Scripts Created for Testing
+- `scripts/make-social-media-free.sql` - Makes module free for testing
+- `scripts/test-social-media-module.sql` - Comprehensive testing queries
+
+**TypeScript**: ✅ Zero errors (`tsc --noEmit` exit code 0)
+
+---
 
 ### ✅ COMPLETE: Phase EM-54 Social Media Module - Client Wrapper Fixes (January 29, 2026)
 **Status**: ✅ RESOLVED - All TypeScript errors fixed, wrappers properly implemented

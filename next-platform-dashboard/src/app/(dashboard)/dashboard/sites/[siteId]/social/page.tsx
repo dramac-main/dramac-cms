@@ -6,8 +6,9 @@
  */
 
 import { Suspense } from 'react'
-import { redirect } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isModuleEnabledForSite } from '@/lib/actions/sites'
 import { SocialDashboardWrapper } from '@/modules/social-media/components/SocialDashboardWrapper'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { getPosts } from '@/modules/social-media/actions/post-actions'
@@ -91,6 +92,12 @@ export default async function SocialMediaPage({ params }: PageProps) {
   
   if (!user) {
     redirect('/login')
+  }
+
+  // Module access check - redirect to modules tab if not enabled
+  const hasAccess = await isModuleEnabledForSite(siteId, 'social-media')
+  if (!hasAccess) {
+    redirect(`/dashboard/sites/${siteId}?tab=modules`)
   }
 
   return (

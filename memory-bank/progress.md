@@ -16,7 +16,23 @@
 - ✅ **Client portal** - Separate interface for end-users
 - ✅ **Media library** - Asset management with Supabase Storage
 
-### Social Media Module Client Wrappers (January 29, 2026) ✅ NEW
+### Module Access Control System (January 29, 2026) ✅ NEW
+**Issue**: Module tabs/buttons showing before subscription
+**Solution**: Created `getSiteEnabledModules()` and `isModuleEnabledForSite()` server actions
+**Result**: Proper module gating - UI only shows after subscription + site enable
+
+**Implementation:**
+- Site detail page conditionally shows tabs/buttons based on enabled modules
+- All module routes have access guards (redirect to `?tab=modules` if not enabled)
+- Module marketplace flow enforced: `modules_v2` → `agency_module_subscriptions` → `site_module_installations`
+
+**Files Modified:**
+- `src/lib/actions/sites.ts` - Added module check functions
+- `src/app/(dashboard)/dashboard/sites/[siteId]/page.tsx` - Conditional UI
+- `src/app/(dashboard)/dashboard/sites/[siteId]/social/*.tsx` - Route guards
+- `src/components/sites/site-modules-tab.tsx` - Added social-media/ai-agents to Open button
+
+### Social Media Module Client Wrappers (January 29, 2026) ✅
 **Issue**: TypeScript errors in wrapper components due to function signature mismatches
 **Solution**: Fixed all function signatures in ContentCalendarWrapper and PostComposerWrapper
 **Result**: Zero TypeScript errors, proper Server→Client component pattern

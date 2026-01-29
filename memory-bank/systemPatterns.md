@@ -96,6 +96,26 @@ site_module_installations
 Module becomes accessible to site
 ```
 
+**Module Access Control Pattern (January 29, 2026):**
+```typescript
+// Server-side check for module access
+import { getSiteEnabledModules, isModuleEnabledForSite } from '@/lib/actions/sites'
+
+// In site detail page - conditional UI
+const enabledModules = await getSiteEnabledModules(siteId)
+const hasSocial = enabledModules.has('social-media')
+{hasSocial && <TabsTrigger value="social">Social</TabsTrigger>}
+
+// In module route pages - access guard
+const hasAccess = await isModuleEnabledForSite(siteId, 'social-media')
+if (!hasAccess) redirect(`/dashboard/sites/${siteId}?tab=modules`)
+```
+
+**Key Files:**
+- `src/lib/actions/sites.ts` - `getSiteEnabledModules()`, `isModuleEnabledForSite()`
+- `src/app/(dashboard)/dashboard/sites/[siteId]/page.tsx` - Conditional tabs/buttons
+- Module routes - Access guards redirect to modules tab if not enabled
+
 **Module Lifecycle:**
 ```
 Create → Build → Test → Deploy → Publish → Install → Render

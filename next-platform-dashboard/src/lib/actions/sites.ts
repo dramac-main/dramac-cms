@@ -248,3 +248,77 @@ export async function publishSiteAction(siteId: string, publish: boolean) {
   revalidatePath(`/dashboard/sites/${siteId}`);
   return { success: true, data };
 }
+
+/**
+ * Get enabled modules for a site
+ * Returns a map of module slugs that are enabled for the site
+ */
+export async function getSiteEnabledModules(siteId: string): Promise<Set<string>> {
+  const supabase = await createClient();
+
+  // Get site with client info to check agency
+  const { data: site } = await supabase
+    .from("sites")
+    .select("client:clients(agency_id)")
+    .eq("id", siteId)
+    .single();
+
+  if (!site?.client?.agency_id) {
+    return new Set();
+  }
+
+  const agencyId = site.client.agency_id;
+
+  // Get all module subscriptions for the agency
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: subscriptions } = await (supabase as any)
+    .from("agency_module_subscriptions")
+    .select("module_id")
+    .eq("agency_id", agencyId)
+    .eq("status", "active");
+
+  if (!subscriptions?.length) {
+    return new Set();
+  }
+
+  // Get modules enabled for this site
+  const { data: siteModules } = await supabase
+    .from("site_module_installations")
+    .select("module_id")
+    .eq("site_id", siteId)
+    .eq("is_enabled", true);
+
+  if (!siteModules?.length) {
+    return new Set();
+  }
+
+  // Get module slugs for enabled modules
+  const enabledModuleIds = new Set(siteModules.map((sm) => sm.module_id));
+  
+  // Get slugs for these modules from modules_v2
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: modules } = await (supabase as any)
+    .from("modules_v2")
+    .select("id, slug")
+    .in("id", Array.from(enabledModuleIds));
+
+  const enabledSlugs = new Set<string>();
+  if (modules) {
+    for (const mod of modules) {
+      enabledSlugs.add(mod.slug);
+    }
+  }
+
+  return enabledSlugs;
+}
+
+/**
+ * Check if a specific module is enabled for a site
+ */
+export async function isModuleEnabledForSite(
+  siteId: string,
+  moduleSlug: string
+): Promise<boolean> {
+  const enabledModules = await getSiteEnabledModules(siteId);
+  return enabledModules.has(moduleSlug);
+}

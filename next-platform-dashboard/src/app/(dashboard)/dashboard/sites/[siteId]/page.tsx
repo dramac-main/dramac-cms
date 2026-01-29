@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getSite } from "@/lib/actions/sites";
+import { getSite, getSiteEnabledModules } from "@/lib/actions/sites";
 import { PageHeader } from "@/components/layout/page-header";
 import { SiteOverview } from "@/components/sites/site-overview";
 import { SitePagesList } from "@/components/sites/site-pages-list";
@@ -14,7 +14,7 @@ import { CloneSiteDialog } from "@/components/sites/clone-site-dialog";
 import { ExportSiteButton } from "@/components/sites/export-site-button";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, Settings, ExternalLink, Search, Copy, Bot, Zap, Share2 } from "lucide-react";
+import { Pencil, Settings, ExternalLink, Search, Copy, Bot, Zap, Share2, Users } from "lucide-react";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 
 interface SiteDetailPageProps {
@@ -36,12 +36,24 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
   const { siteId } = await params;
   const { tab } = await searchParams;
   const site = await getSite(siteId).catch(() => null);
-  const validTabs = ["overview", "pages", "blog", "modules", "crm", "social"];
-  const defaultTab = tab && validTabs.includes(tab) ? tab : "overview";
-
+  
   if (!site) {
     notFound();
   }
+
+  // Get enabled modules for this site
+  const enabledModules = await getSiteEnabledModules(siteId);
+  const hasCRM = enabledModules.has("crm");
+  const hasSocial = enabledModules.has("social-media");
+  const hasAutomation = enabledModules.has("automation");
+  const hasAIAgents = enabledModules.has("ai-agents");
+  
+  // Build valid tabs list based on enabled modules
+  const validTabs = ["overview", "pages", "blog", "modules"];
+  if (hasCRM) validTabs.push("crm");
+  if (hasSocial) validTabs.push("social");
+  
+  const defaultTab = tab && validTabs.includes(tab) ? tab : "overview";
 
   return (
     <div>
@@ -67,24 +79,38 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
             SEO
           </Button>
         </Link>
-        <Link href={`/dashboard/sites/${site.id}/automation`}>
-          <Button variant="outline">
-            <Zap className="mr-2 h-4 w-4" />
-            Automation
-          </Button>
-        </Link>
-        <Link href={`/dashboard/sites/${site.id}/ai-agents`}>
-          <Button variant="outline">
-            <Bot className="mr-2 h-4 w-4" />
-            AI Agents
-          </Button>
-        </Link>
-        <Link href={`/dashboard/sites/${site.id}/social`}>
-          <Button variant="outline">
-            <Share2 className="mr-2 h-4 w-4" />
-            Social
-          </Button>
-        </Link>
+        {hasAutomation && (
+          <Link href={`/dashboard/sites/${site.id}/automation`}>
+            <Button variant="outline">
+              <Zap className="mr-2 h-4 w-4" />
+              Automation
+            </Button>
+          </Link>
+        )}
+        {hasAIAgents && (
+          <Link href={`/dashboard/sites/${site.id}/ai-agents`}>
+            <Button variant="outline">
+              <Bot className="mr-2 h-4 w-4" />
+              AI Agents
+            </Button>
+          </Link>
+        )}
+        {hasSocial && (
+          <Link href={`/dashboard/sites/${site.id}/social`}>
+            <Button variant="outline">
+              <Share2 className="mr-2 h-4 w-4" />
+              Social
+            </Button>
+          </Link>
+        )}
+        {hasCRM && (
+          <Link href={`/dashboard/sites/${site.id}/crm-module`}>
+            <Button variant="outline">
+              <Users className="mr-2 h-4 w-4" />
+              CRM
+            </Button>
+          </Link>
+        )}
         <Link href={`/dashboard/sites/${site.id}/settings`}>
           <Button variant="outline">
             <Settings className="mr-2 h-4 w-4" />
@@ -118,8 +144,8 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
           <TabsTrigger value="pages">Pages ({site.pages?.length || 0})</TabsTrigger>
           <TabsTrigger value="blog">Blog</TabsTrigger>
           <TabsTrigger value="modules">Modules</TabsTrigger>
-          <TabsTrigger value="crm">CRM</TabsTrigger>
-          <TabsTrigger value="social">Social</TabsTrigger>
+          {hasCRM && <TabsTrigger value="crm">CRM</TabsTrigger>}
+          {hasSocial && <TabsTrigger value="social">Social</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="overview">
@@ -138,13 +164,17 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
           <SiteModulesTab siteId={site.id} />
         </TabsContent>
 
-        <TabsContent value="crm">
-          <SiteCRMTab siteId={site.id} />
-        </TabsContent>
+        {hasCRM && (
+          <TabsContent value="crm">
+            <SiteCRMTab siteId={site.id} />
+          </TabsContent>
+        )}
 
-        <TabsContent value="social">
-          <SiteSocialTab siteId={site.id} />
-        </TabsContent>
+        {hasSocial && (
+          <TabsContent value="social">
+            <SiteSocialTab siteId={site.id} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

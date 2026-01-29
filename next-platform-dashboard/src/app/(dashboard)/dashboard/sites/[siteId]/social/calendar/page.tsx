@@ -8,6 +8,7 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isModuleEnabledForSite } from '@/lib/actions/sites'
 import { ContentCalendarWrapper } from '@/modules/social-media/components'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { getPosts } from '@/modules/social-media/actions/post-actions'
@@ -59,6 +60,12 @@ export default async function CalendarPage({ params }: PageProps) {
   
   if (!user) {
     redirect('/login')
+  }
+
+  // Module access check
+  const hasAccess = await isModuleEnabledForSite(siteId, 'social-media')
+  if (!hasAccess) {
+    redirect(`/dashboard/sites/${siteId}?tab=modules`)
   }
 
   return (
