@@ -56,9 +56,9 @@ import {
   deleteTeamPermission,
   createApprovalWorkflow,
   updateApprovalWorkflow,
-  deleteApprovalWorkflow,
-  getRoleDefaults
+  deleteApprovalWorkflow
 } from '../actions/team-actions'
+import { getRoleDefaults } from '../lib/team-utils'
 import type { TeamPermission, ApprovalWorkflow, TeamRole } from '../types'
 import { toast } from 'sonner'
 
