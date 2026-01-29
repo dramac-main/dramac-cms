@@ -67,19 +67,19 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
             SEO
           </Button>
         </Link>
-        <Link href={`/dashboard/${site.id}/automation`}>
+        <Link href={`/dashboard/sites/${site.id}/automation`}>
           <Button variant="outline">
             <Zap className="mr-2 h-4 w-4" />
             Automation
           </Button>
         </Link>
-        <Link href={`/dashboard/${site.id}/ai-agents`}>
+        <Link href={`/dashboard/sites/${site.id}/ai-agents`}>
           <Button variant="outline">
             <Bot className="mr-2 h-4 w-4" />
             AI Agents
           </Button>
         </Link>
-        <Link href={`/dashboard/${site.id}/social`}>
+        <Link href={`/dashboard/sites/${site.id}/social`}>
           <Button variant="outline">
             <Share2 className="mr-2 h-4 w-4" />
             Social

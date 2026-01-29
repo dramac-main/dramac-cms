@@ -152,7 +152,7 @@ export function WorkflowListCard({ workflow, siteId }: WorkflowListCardProps) {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Link 
-                    href={`/dashboard/${siteId}/automation/workflows/${workflow.id}`}
+                    href={`/dashboard/sites/${siteId}/automation/workflows/${workflow.id}`}
                     className="text-lg font-medium hover:underline"
                   >
                     {workflow.name}
@@ -185,7 +185,7 @@ export function WorkflowListCard({ workflow, siteId }: WorkflowListCardProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/${siteId}/automation/workflows/${workflow.id}`}>
+                  <Link href={`/dashboard/sites/${siteId}/automation/workflows/${workflow.id}`}>
                     <Settings className="h-4 w-4 mr-2" />
                     Edit
                   </Link>

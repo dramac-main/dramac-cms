@@ -1,6 +1,35 @@
 # Tech Context: Technologies & Setup
 
-**Last Updated**: January 24, 2026
+**Last Updated**: January 29, 2026
+
+## ⚠️ CRITICAL: Development Workflow
+
+### Dev Server Management
+**ALWAYS run the dev server in an EXTERNAL/SEPARATE terminal (PowerShell, VS Code terminal, etc.)** - NOT through Copilot commands!
+
+**Why?**
+- Running `pnpm dev` through Copilot terminal commands causes interference
+- Background processes get killed when running other commands
+- Lock file conflicts occur with multiple terminal sessions
+- Copilot commands can interrupt the running server
+
+**Correct Workflow:**
+1. User starts `pnpm dev` in their own external terminal
+2. Copilot focuses on code edits, TypeScript checks, git commands
+3. User monitors the dev server output separately
+4. When testing routes, user checks in browser while Copilot checks terminal output
+
+**Commands Copilot CAN run:**
+- `npx tsc --noEmit --skipLibCheck` - TypeScript checking
+- `git add`, `git commit`, `git push` - Version control
+- `pnpm install` - Package installation
+- File reading/editing operations
+
+**Commands Copilot should AVOID running in background:**
+- `pnpm dev` / `npx next dev` - Dev server (user runs externally)
+- Long-running processes that need persistent terminals
+
+---
 
 ## Technology Stack
 

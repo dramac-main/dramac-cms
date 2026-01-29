@@ -16,6 +16,11 @@
 - ✅ **Client portal** - Separate interface for end-users
 - ✅ **Media library** - Asset management with Supabase Storage
 
+### Routing Architecture Fix (January 29, 2026) ✅
+**Issue**: 404 errors on dashboard pages due to route conflict
+**Solution**: Moved module routes from `src/app/dashboard/[siteId]/` into `(dashboard)` layout group
+**Result**: All dashboard routes now work correctly, no 404 errors
+
 ### Social Media Management Module (EM-54 ✅) - COMPLETE
 **Completed**: January 28, 2026  
 **TypeScript Status**: ✅ Zero errors - Production ready  

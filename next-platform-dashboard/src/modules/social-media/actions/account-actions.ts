@@ -129,7 +129,7 @@ export async function createSocialAccount(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/accounts`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/accounts`)
     return { account, error: null }
   } catch (error) {
     console.error('[Social] Error creating account:', error)
@@ -228,7 +228,7 @@ export async function disconnectSocialAccount(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/accounts`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/accounts`)
     return { success: true, error: null }
   } catch (err) {
     console.error('[Social] Error disconnecting account:', err)

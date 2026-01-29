@@ -179,7 +179,7 @@ export async function createAgent(
     { sourceModule: 'ai_agents' }
   )
   
-  revalidatePath(`/dashboard/${siteId}/ai-agents`)
+  revalidatePath(`/dashboard/sites/${siteId}/ai-agents`)
   
   return mapAgent(agent)
 }
@@ -236,7 +236,7 @@ export async function updateAgent(
     { sourceModule: 'ai_agents' }
   )
   
-  revalidatePath(`/dashboard/${data.site_id}/ai-agents`)
+  revalidatePath(`/dashboard/sites/${data.site_id}/ai-agents`)
   
   return mapAgent(data)
 }
@@ -270,7 +270,7 @@ export async function deleteAgent(agentId: string): Promise<void> {
       { sourceModule: 'ai_agents' }
     )
     
-    revalidatePath(`/dashboard/${agent.site_id}/ai-agents`)
+    revalidatePath(`/dashboard/sites/${agent.site_id}/ai-agents`)
   }
 }
 
@@ -299,7 +299,7 @@ export async function toggleAgentActive(
     { sourceModule: 'ai_agents' }
   )
   
-  revalidatePath(`/dashboard/${data.site_id}/ai-agents`)
+  revalidatePath(`/dashboard/sites/${data.site_id}/ai-agents`)
 }
 
 // ============================================================================

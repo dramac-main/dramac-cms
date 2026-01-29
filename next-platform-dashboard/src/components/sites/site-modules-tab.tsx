@@ -152,7 +152,7 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
                             size="sm"
                             asChild
                           >
-                            <Link href={`/dashboard/${siteId}/${module.slug}`}>
+                            <Link href={`/dashboard/sites/${siteId}/${module.slug === 'crm' ? 'crm-module' : module.slug}`}>
                               <ExternalLink className="w-4 h-4 mr-1" />
                               Open
                             </Link>

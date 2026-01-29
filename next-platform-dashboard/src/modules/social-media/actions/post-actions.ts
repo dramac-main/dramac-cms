@@ -172,8 +172,8 @@ export async function createPost(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/posts`)
-    revalidatePath(`/dashboard/${siteId}/social/calendar`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/posts`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/calendar`)
     
     return { post, error: null }
   } catch (error) {
@@ -236,9 +236,9 @@ export async function updatePost(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/posts`)
-    revalidatePath(`/dashboard/${siteId}/social/posts/${postId}`)
-    revalidatePath(`/dashboard/${siteId}/social/calendar`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/posts`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/posts/${postId}`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/calendar`)
     
     return { post, error: null }
   } catch (error) {
@@ -264,8 +264,8 @@ export async function deletePost(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/posts`)
-    revalidatePath(`/dashboard/${siteId}/social/calendar`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/posts`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/calendar`)
     
     return { success: true, error: null }
   } catch (error) {
@@ -311,8 +311,8 @@ export async function schedulePost(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/posts`)
-    revalidatePath(`/dashboard/${siteId}/social/calendar`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/posts`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/calendar`)
     
     return { success: true, error: null }
   } catch (error) {
@@ -426,7 +426,7 @@ export async function publishPostNow(
       })
       .eq('id', postId)
     
-    revalidatePath(`/dashboard/${siteId}/social/posts`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/posts`)
     
     return { success: allSucceeded || someSucceeded, results, error: null }
   } catch (error) {
@@ -466,8 +466,8 @@ export async function addToQueue(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/posts`)
-    revalidatePath(`/dashboard/${siteId}/social/calendar`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/posts`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/calendar`)
     
     return { success: true, scheduledAt: nextSlot, error: null }
   } catch (error) {
@@ -525,7 +525,7 @@ export async function approvePost(
       .eq('post_id', postId)
       .eq('status', 'pending')
     
-    revalidatePath(`/dashboard/${siteId}/social/posts`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/posts`)
     
     return { success: true, error: null }
   } catch (error) {
@@ -569,7 +569,7 @@ export async function rejectPost(
       .eq('post_id', postId)
       .eq('status', 'pending')
     
-    revalidatePath(`/dashboard/${siteId}/social/posts`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/posts`)
     
     return { success: true, error: null }
   } catch (error) {
@@ -621,8 +621,8 @@ export async function bulkDeletePosts(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/posts`)
-    revalidatePath(`/dashboard/${siteId}/social/calendar`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/posts`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/calendar`)
     
     return { successCount: postIds.length, failCount: 0, error: null }
   } catch (error) {
@@ -679,7 +679,7 @@ export async function duplicatePost(
     
     if (insertError) throw insertError
     
-    revalidatePath(`/dashboard/${siteId}/social/posts`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/posts`)
     
     return { post: newPost, error: null }
   } catch (error) {

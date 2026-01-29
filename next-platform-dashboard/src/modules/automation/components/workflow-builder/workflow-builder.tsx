@@ -227,7 +227,7 @@ export function WorkflowBuilder({
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-background">
           <div className="flex items-center gap-4">
-            <Link href={`/dashboard/${siteId}/automation`}>
+            <Link href={`/dashboard/sites/${siteId}/automation`}>
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back

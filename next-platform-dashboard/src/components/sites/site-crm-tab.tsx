@@ -21,7 +21,7 @@ export function SiteCRMTab({ siteId }: SiteCRMTabProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Link href={`/dashboard/${siteId}/crm`}>
+          <Link href={`/dashboard/sites/${siteId}/crm-module`}>
             <Button size="lg" className="w-full sm:w-auto">
               Open CRM Dashboard
               <ArrowRight className="ml-2 h-4 w-4" />

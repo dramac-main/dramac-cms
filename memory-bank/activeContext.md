@@ -1,10 +1,44 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: January 28, 2026  
-**Current Phase**: Phase EM-54 Social Media Management Module COMPLETE ✅  
+**Last Updated**: January 29, 2026  
+**Current Phase**: Investigating 404 Errors on Sites/Dashboard Pages  
 **Status**: ✅ 26 OF 34 PHASES (76%) - ✅ Zero TypeScript Errors - ✅ Build Passing
 
+## ⚠️ CRITICAL WORKFLOW REMINDER
+
+**Dev Server: Run in EXTERNAL terminal, NOT through Copilot!**
+- User runs `pnpm dev` in their own PowerShell/terminal
+- Copilot focuses on code edits, TypeScript checks, git commands
+- See `techContext.md` for full details
+
+---
+
 ## Current Work Focus
+
+### ✅ COMPLETE: Fix 404 Routing Errors (January 29, 2026)
+**Issue**: 404 errors on `/dashboard/sites` and other pages due to route conflicts
+**Status**: ✅ RESOLVED
+
+**Root Cause:**
+- Routes at `src/app/dashboard/[siteId]/` (outside layout group) were catching ALL `/dashboard/*` paths
+- When accessing `/dashboard/sites`, Next.js matched it as `[siteId]=sites` causing 404
+- Module routes (ai-agents, automation, social, etc.) existed outside the `(dashboard)` layout group
+
+**Fix Applied:**
+1. **Moved Module Routes** - Relocated all module routes from `src/app/dashboard/[siteId]/` to `src/app/(dashboard)/dashboard/sites/[siteId]/`
+2. **Updated Path References** - Fixed 50+ files with hardcoded paths:
+   - Changed `/dashboard/${siteId}/ai-agents` → `/dashboard/sites/${siteId}/ai-agents`
+   - Changed `/dashboard/${siteId}/automation` → `/dashboard/sites/${siteId}/automation`
+   - Changed `/dashboard/${siteId}/social` → `/dashboard/sites/${siteId}/social`
+   - Updated all revalidatePath calls in actions
+3. **TypeScript Verification** - ✅ Zero errors after cleanup
+
+**Files Modified:**
+- Moved: `ai-agents/`, `automation/`, `booking/`, `crm/`, `ecommerce/`, `social/` directories
+- Updated: 15+ component files, 10+ action files, multiple layout/page files
+- Pattern: All `/dashboard/${id}/module` → `/dashboard/sites/${id}/module`
+
+---
 
 ### ✅ COMPLETE: Phase EM-54 Social Media Integration (January 28, 2026)
 **Status**: ✅ COMPLETE - Site detail page integration + Comprehensive Testing Guide  

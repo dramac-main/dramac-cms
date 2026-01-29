@@ -79,7 +79,7 @@ export function CreateWorkflowDialog({
       toast.success("Workflow created successfully")
       
       // Navigate to the workflow builder
-      router.push(`/dashboard/${siteId}/automation/workflows/${result.data.id}`)
+      router.push(`/dashboard/sites/${siteId}/automation/workflows/${result.data.id}`)
       
       // Close dialog and reset form
       onOpenChange(false)

@@ -171,7 +171,7 @@ export async function markAsRead(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/inbox`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
     return { success: true, error: null }
   } catch (error) {
     console.error('[Social] Error marking as read:', error)
@@ -224,7 +224,7 @@ export async function replyToItem(
     // Platform-specific reply logic would go here
     // (e.g., posting comment reply via Facebook API)
     
-    revalidatePath(`/dashboard/${siteId}/social/inbox`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
     return { success: true, error: null }
   } catch (error) {
     console.error('[Social] Error replying to item:', error)
@@ -254,7 +254,7 @@ export async function assignItem(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/inbox`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
     return { success: true, error: null }
   } catch (error) {
     console.error('[Social] Error assigning item:', error)
@@ -283,7 +283,7 @@ export async function updatePriority(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/inbox`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
     return { success: true, error: null }
   } catch (error) {
     console.error('[Social] Error updating priority:', error)
@@ -311,7 +311,7 @@ export async function archiveItem(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/inbox`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
     return { success: true, error: null }
   } catch (error) {
     console.error('[Social] Error archiving item:', error)
@@ -339,7 +339,7 @@ export async function markAsSpam(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/inbox`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
     return { success: true, error: null }
   } catch (error) {
     console.error('[Social] Error marking as spam:', error)
@@ -367,7 +367,7 @@ export async function flagItem(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/inbox`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
     return { success: true, error: null }
   } catch (error) {
     console.error('[Social] Error flagging item:', error)
@@ -406,7 +406,7 @@ export async function addTags(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/inbox`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
     return { success: true, error: null }
   } catch (error) {
     console.error('[Social] Error adding tags:', error)
@@ -565,7 +565,7 @@ export async function bulkArchive(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/inbox`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
     return { successCount: itemIds.length, error: null }
   } catch (error) {
     console.error('[Social] Error bulk archiving:', error)
@@ -594,7 +594,7 @@ export async function bulkMarkAsRead(
     
     if (error) throw error
     
-    revalidatePath(`/dashboard/${siteId}/social/inbox`)
+    revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
     return { successCount: itemIds.length, error: null }
   } catch (error) {
     console.error('[Social] Error bulk marking as read:', error)

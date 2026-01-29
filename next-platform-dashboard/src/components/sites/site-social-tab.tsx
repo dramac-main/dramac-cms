@@ -21,7 +21,7 @@ export function SiteSocialTab({ siteId }: SiteSocialTabProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Link href={`/dashboard/${siteId}/social`}>
+          <Link href={`/dashboard/sites/${siteId}/social`}>
             <Button size="lg" className="w-full sm:w-auto">
               Open Social Dashboard
               <ArrowRight className="ml-2 h-4 w-4" />
