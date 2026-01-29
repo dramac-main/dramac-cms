@@ -12,7 +12,42 @@ This document walks through the **complete user journey** for DRAMAC's Social Me
 
 ---
 
-## 📋 Table of Contents
+## �️ FILE LOCATIONS QUICK REFERENCE
+
+### Key Routes (Browser URLs)
+| Feature | URL | Notes |
+|---------|-----|-------|
+| Marketplace | `/marketplace` | Browse/subscribe to modules |
+| Site Dashboard | `/dashboard/sites/{siteId}` | Main site control |
+| Modules Tab | `/dashboard/sites/{siteId}?tab=modules` | Enable/disable modules |
+| Social Dashboard | `/dashboard/sites/{siteId}/social` | Main social home |
+| Content Calendar | `/dashboard/sites/{siteId}/social/calendar` | Schedule posts |
+| Post Composer | `/dashboard/sites/{siteId}/social/compose` | Create new post |
+| Social Inbox | `/dashboard/sites/{siteId}/social/inbox` | Messages/comments |
+| Site Settings | `/dashboard/sites/{siteId}/settings` | Site config |
+
+### Key Source Files
+| File | Purpose |
+|------|---------|
+| `src/app/(dashboard)/dashboard/sites/[siteId]/social/layout.tsx` | Social nav & auth |
+| `src/app/(dashboard)/dashboard/sites/[siteId]/social/page.tsx` | Dashboard page |
+| `src/app/(dashboard)/dashboard/sites/[siteId]/social/calendar/page.tsx` | Calendar page |
+| `src/app/(dashboard)/dashboard/sites/[siteId]/social/compose/page.tsx` | Composer page |
+| `src/app/(dashboard)/dashboard/sites/[siteId]/social/inbox/page.tsx` | Inbox page |
+| `src/modules/social-media/components/SocialDashboard.tsx` | Dashboard UI |
+| `src/modules/social-media/components/ContentCalendar.tsx` | Calendar UI |
+| `src/modules/social-media/components/PostComposer.tsx` | Composer UI |
+| `src/modules/social-media/components/SocialInbox.tsx` | Inbox UI |
+| `src/modules/social-media/actions/account-actions.ts` | Account CRUD |
+| `src/modules/social-media/actions/post-actions.ts` | Post CRUD |
+| `src/modules/social-media/actions/analytics-actions.ts` | Analytics data |
+| `src/modules/social-media/actions/inbox-actions.ts` | Inbox data |
+| `src/components/sites/site-modules-tab.tsx` | Module toggle UI |
+| `src/lib/actions/sites.ts` | `getSiteEnabledModules()` |
+
+---
+
+## �📋 Table of Contents
 
 1. [Module Installation](#1-module-installation)
 2. [First-Time Setup](#2-first-time-setup)
@@ -76,9 +111,34 @@ VALUES ('site-uuid', 'social-media-module-uuid', true, NOW());
 | Site Modules | `/dashboard/sites/{siteId}?tab=modules` | Enable for site |
 | Enter Module | `/dashboard/sites/{siteId}/social` | Social dashboard |
 
+### 📍 WHERE TO FIND IT (Source Code)
+
+| Feature | File Location |
+|---------|---------------|
+| **Marketplace Page** | `src/app/(dashboard)/marketplace/page.tsx` |
+| **Module Subscribe Logic** | `src/hooks/use-site-modules.ts` → `useEnableSiteModule()` |
+| **Site Modules Tab** | `src/components/sites/site-modules-tab.tsx` |
+| **Module Toggle Switch** | `site-modules-tab.tsx` line ~65 → `handleToggle()` |
+| **Module Access Check** | `src/lib/actions/sites.ts` → `isModuleEnabledForSite()` |
+| **Social Button on Site Page** | `src/app/(dashboard)/dashboard/sites/[siteId]/page.tsx` line ~85-100 |
+
+**To make module FREE for testing**, run in Supabase SQL Editor:
+```sql
+UPDATE modules_v2 SET pricing_type = 'free', base_price = 0 WHERE slug = 'social-media';
+```
+
 ---
 
 ## 2. First-Time Setup
+
+### 📍 WHERE TO FIND IT
+
+| Feature | File Location |
+|---------|---------------|
+| **Social Layout (Nav + Auth)** | `src/app/(dashboard)/dashboard/sites/[siteId]/social/layout.tsx` |
+| **Dashboard Page** | `src/app/(dashboard)/dashboard/sites/[siteId]/social/page.tsx` |
+| **Dashboard Component** | `src/modules/social-media/components/SocialDashboard.tsx` |
+| **Onboarding UI (no accounts)** | `SocialDashboard.tsx` lines 135-200 |
 
 ### What the User Sees
 
@@ -122,6 +182,21 @@ The module tracks onboarding progress:
 ---
 
 ## 3. Connecting Social Accounts
+
+### 📍 WHERE TO FIND IT
+
+| Feature | File Location |
+|---------|---------------|
+| **Account Actions (CRUD)** | `src/modules/social-media/actions/account-actions.ts` |
+| **Create Account** | `account-actions.ts` → `createSocialAccount()` |
+| **Get All Accounts** | `account-actions.ts` → `getSocialAccounts()` |
+| **Update Account Status** | `account-actions.ts` → `updateAccountStatus()` |
+| **Disconnect Account** | `account-actions.ts` → `disconnectSocialAccount()` |
+| **Refresh Token** | `account-actions.ts` → `refreshAccountToken()` |
+| **Account Types/Platforms** | `src/modules/social-media/types/index.ts` |
+| **Platform Config (icons/colors)** | `types/index.ts` → `PLATFORM_CONFIGS` |
+
+**Database Table**: `social_accounts`
 
 ### OAuth Flow (Platform-by-Platform)
 
@@ -201,6 +276,25 @@ The module tracks onboarding progress:
 ---
 
 ## 4. Creating Your First Post
+
+### 📍 WHERE TO FIND IT
+
+| Feature | File Location |
+|---------|---------------|
+| **Compose Page Route** | `src/app/(dashboard)/dashboard/sites/[siteId]/social/compose/page.tsx` |
+| **Post Composer Component** | `src/modules/social-media/components/PostComposer.tsx` |
+| **Post Composer Wrapper** | `src/modules/social-media/components/PostComposerWrapper.tsx` |
+| **Post Actions (CRUD)** | `src/modules/social-media/actions/post-actions.ts` |
+| **Create Post** | `post-actions.ts` → `createPost()` |
+| **Update Post** | `post-actions.ts` → `updatePost()` |
+| **Delete Post** | `post-actions.ts` → `deletePost()` |
+| **Publish Post** | `post-actions.ts` → `publishPost()` |
+| **Schedule Post** | `post-actions.ts` → `schedulePost()` |
+| **Character Limits** | `PostComposer.tsx` → `PLATFORM_LIMITS` constant |
+
+**Database Table**: `social_posts`
+
+**URL**: `/dashboard/sites/{siteId}/social/compose`
 
 ### Post Composer (Like Hootsuite/Sprout Social)
 
@@ -292,6 +386,20 @@ The module tracks onboarding progress:
 
 ## 5. Using the Content Calendar
 
+### 📍 WHERE TO FIND IT
+
+| Feature | File Location |
+|---------|---------------|
+| **Calendar Page Route** | `src/app/(dashboard)/dashboard/sites/[siteId]/social/calendar/page.tsx` |
+| **Calendar Component** | `src/modules/social-media/components/ContentCalendar.tsx` |
+| **Calendar Wrapper** | `src/modules/social-media/components/ContentCalendarWrapper.tsx` |
+| **Get Posts for Calendar** | `post-actions.ts` → `getPosts(siteId, { limit: 500 })` |
+| **Reschedule Post** | `post-actions.ts` → `updatePost()` with new `scheduled_at` |
+
+**Database Table**: `social_posts` (uses `scheduled_at` field)
+
+**URL**: `/dashboard/sites/{siteId}/social/calendar`
+
 ### Calendar View (Like Hootsuite)
 
 ```
@@ -373,6 +481,24 @@ Clicking a day shows all scheduled posts:
 ---
 
 ## 6. Managing the Social Inbox
+
+### 📍 WHERE TO FIND IT
+
+| Feature | File Location |
+|---------|---------------|
+| **Inbox Page Route** | `src/app/(dashboard)/dashboard/sites/[siteId]/social/inbox/page.tsx` |
+| **Inbox Component** | `src/modules/social-media/components/SocialInbox.tsx` |
+| **Inbox Actions** | `src/modules/social-media/actions/inbox-actions.ts` |
+| **Get Inbox Items** | `inbox-actions.ts` → `getInboxItems()` |
+| **Get Inbox Counts** | `inbox-actions.ts` → `getInboxCounts()` |
+| **Get Saved Replies** | `inbox-actions.ts` → `getSavedReplies()` |
+| **Reply to Message** | `inbox-actions.ts` → `replyToInboxItem()` |
+| **Mark as Read** | `inbox-actions.ts` → `markInboxItemRead()` |
+| **Archive Item** | `inbox-actions.ts` → `archiveInboxItem()` |
+
+**Database Tables**: `social_inbox_items`, `social_saved_replies`
+
+**URL**: `/dashboard/sites/{siteId}/social/inbox`
 
 ### Unified Inbox (Like Sprout Social Smart Inbox)
 
@@ -459,6 +585,22 @@ Clicking a day shows all scheduled posts:
 ---
 
 ## 7. Viewing Analytics
+
+### 📍 WHERE TO FIND IT
+
+| Feature | File Location |
+|---------|---------------|
+| **Analytics Actions** | `src/modules/social-media/actions/analytics-actions.ts` |
+| **Get Analytics Overview** | `analytics-actions.ts` → `getAnalyticsOverview()` |
+| **Get Account Analytics** | `analytics-actions.ts` → `getAccountAnalytics()` |
+| **Get Post Analytics** | `analytics-actions.ts` → `getPostAnalytics()` |
+| **Get Best Times** | `analytics-actions.ts` → `getBestTimes()` |
+| **Analytics Display** | `SocialDashboard.tsx` → stats cards at top |
+| **StatCard Component** | `SocialDashboard.tsx` → `StatCard` function |
+
+**Database Tables**: `social_analytics_daily`, `social_post_analytics`, `social_best_times`
+
+**Note**: Analytics are displayed on the main Dashboard page (`/dashboard/sites/{siteId}/social`)
 
 ### Analytics Dashboard (Like Sprout Social)
 
@@ -581,9 +723,35 @@ Clicking a day shows all scheduled posts:
 5. **UTM Parameters**: Automatic UTM tagging for links
 6. **Campaign Reports**: Exportable performance reports
 
+### 📍 WHERE TO FIND IT (Campaigns)
+
+| Feature | File Location |
+|---------|---------------|
+| **Campaign Types** | `src/modules/social-media/types/index.ts` → `Campaign` |
+| **Campaign Status** | `types/index.ts` → `CampaignStatus` type |
+| **Campaign Goals** | `types/index.ts` → `CampaignGoals` type |
+
+**Database Table**: `social_campaigns`
+
+**Note**: Campaign UI is partially implemented. Posts can be assigned to campaigns via the `campaign_id` field.
+
 ---
 
 ## 9. Team Collaboration
+
+### 📍 WHERE TO FIND IT (Team/Approvals)
+
+| Feature | File Location |
+|---------|---------------|
+| **Team Permissions Types** | `src/modules/social-media/types/index.ts` → `TeamPermissions` |
+| **Pending Approvals Count** | `post-actions.ts` → `getPosts(siteId, { status: 'pending_approval' })` |
+| **Approve Post** | `post-actions.ts` → `approvePost()` |
+| **Reject Post** | `post-actions.ts` → `rejectPost()` |
+| **Post Status** | `types/index.ts` → `PostStatus` includes `pending_approval` |
+
+**Database Table**: `social_team_permissions`
+
+**Note**: Team permissions are database-ready but UI not fully implemented yet.
 
 ### Approval Workflows (Like Sprout Social)
 
@@ -631,6 +799,26 @@ Clicking a day shows all scheduled posts:
 ---
 
 ## 10. Integration with Other Modules
+
+### 📍 WHERE TO FIND IT (Integrations)
+
+| Integration | Related Module Routes |
+|-------------|----------------------|
+| **CRM Module** | `/dashboard/sites/{siteId}/crm-module` |
+| **Automation Module** | `/dashboard/sites/{siteId}/automation` |
+| **AI Agents Module** | `/dashboard/sites/{siteId}/ai-agents` |
+| **Booking Module** | `/dashboard/sites/{siteId}/booking` |
+| **Blog** | `/dashboard/sites/{siteId}?tab=blog` |
+
+| Feature | File Location |
+|---------|---------------|
+| **Module Events (Triggers)** | `src/modules/social-media/manifest.ts` → `MODULE_EVENTS` |
+| **Module Actions** | `manifest.ts` → `MODULE_ACTIONS` |
+| **Module Navigation** | `manifest.ts` → `MODULE_NAVIGATION` |
+| **Module Permissions** | `manifest.ts` → `MODULE_PERMISSIONS` |
+| **Module Metadata** | `manifest.ts` → `moduleMetadata` |
+
+**Note**: Cross-module integrations are defined but require both modules to be enabled on the site.
 
 ### CRM Integration
 
@@ -793,19 +981,19 @@ Clicking a day shows all scheduled posts:
 
 ## ✅ Implementation Status
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| Dashboard | ✅ Complete | With analytics overview |
-| Account Connection | ⚠️ Mock Only | OAuth flow not implemented |
-| Post Composer | ✅ Complete | Multi-platform support |
-| Content Calendar | ✅ Complete | Month/week/list views |
-| Social Inbox | ✅ Complete | With saved replies |
-| Analytics | ✅ Complete | With charts and trends |
-| Campaigns | 🔄 Partial | Basic structure only |
-| Team Permissions | 🔄 Partial | Database tables ready |
-| CRM Integration | 📋 Planned | Hooks available |
-| Automation Integration | 📋 Planned | Triggers defined |
-| AI Agents Integration | 📋 Planned | Agent types defined |
+| Feature | Status | Source File | Notes |
+|---------|--------|-------------|-------|
+| Dashboard | ✅ Complete | `components/SocialDashboard.tsx` | With analytics overview |
+| Account Connection | ⚠️ Mock Only | `actions/account-actions.ts` | OAuth flow not implemented |
+| Post Composer | ✅ Complete | `components/PostComposer.tsx` | Multi-platform support |
+| Content Calendar | ✅ Complete | `components/ContentCalendar.tsx` | Month/week/list views |
+| Social Inbox | ✅ Complete | `components/SocialInbox.tsx` | With saved replies |
+| Analytics | ✅ Complete | `actions/analytics-actions.ts` | With charts and trends |
+| Campaigns | 🔄 Partial | `types/index.ts` | Basic structure only |
+| Team Permissions | 🔄 Partial | `types/index.ts` | Database tables ready |
+| CRM Integration | 📋 Planned | - | Hooks available |
+| Automation Integration | 📋 Planned | `manifest.ts` | Triggers defined |
+| AI Agents Integration | 📋 Planned | - | Agent types defined |
 
 ---
 
@@ -826,12 +1014,52 @@ Clicking a day shows all scheduled posts:
 
 ---
 
+## 📁 Complete File Structure
+
+```
+src/modules/social-media/
+├── index.ts                    # Module exports
+├── manifest.ts                 # Module metadata, events, actions
+├── actions/
+│   ├── account-actions.ts      # Account CRUD operations
+│   ├── post-actions.ts         # Post CRUD operations
+│   ├── analytics-actions.ts    # Analytics data fetching
+│   └── inbox-actions.ts        # Inbox/messaging operations
+├── components/
+│   ├── index.ts                # Component exports
+│   ├── SocialDashboard.tsx     # Main dashboard UI
+│   ├── SocialDashboardWrapper.tsx # Client wrapper
+│   ├── ContentCalendar.tsx     # Calendar UI
+│   ├── ContentCalendarWrapper.tsx # Client wrapper
+│   ├── PostComposer.tsx        # Post creation UI
+│   ├── PostComposerWrapper.tsx # Client wrapper
+│   └── SocialInbox.tsx         # Unified inbox UI
+└── types/
+    └── index.ts                # TypeScript types
+
+src/app/(dashboard)/dashboard/sites/[siteId]/social/
+├── layout.tsx                  # Social nav + auth check
+├── page.tsx                    # Dashboard route
+├── calendar/
+│   └── page.tsx               # Calendar route
+├── compose/
+│   └── page.tsx               # Composer route
+└── inbox/
+    └── page.tsx               # Inbox route
+```
+
+---
+
 ## 📞 Support & Documentation
 
-- **Testing Guide**: `docs/PHASE-EM-54-TESTING-GUIDE.md`
-- **Database Schema**: `migrations/em-54-social-media-flat-tables.sql`
-- **Component Source**: `src/modules/social-media/components/`
-- **Server Actions**: `src/modules/social-media/actions/`
+| Resource | Location |
+|----------|----------|
+| **Phase Doc** | `phases/enterprise-modules/PHASE-EM-54-SOCIAL-MEDIA-MODULE.md` |
+| **Database Schema** | `migrations/em-54-social-media-flat-tables.sql` |
+| **Module Source** | `src/modules/social-media/` |
+| **Route Pages** | `src/app/(dashboard)/dashboard/sites/[siteId]/social/` |
+| **Module Types** | `src/modules/social-media/types/index.ts` |
+| **Module Manifest** | `src/modules/social-media/manifest.ts` |
 
 ---
 
