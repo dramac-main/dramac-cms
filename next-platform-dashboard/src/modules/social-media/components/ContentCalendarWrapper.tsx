@@ -28,7 +28,7 @@ export function ContentCalendarWrapper({
   userId = '',
 }: ContentCalendarWrapperProps) {
   const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const [_isLoading, setIsLoading] = useState(false)
 
   const handleCreatePost = useCallback((date?: Date) => {
     const params = date ? `?date=${date.toISOString()}` : ''

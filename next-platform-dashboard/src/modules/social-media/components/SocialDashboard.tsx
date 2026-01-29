@@ -157,6 +157,131 @@ export function SocialDashboard({
   const activeAccounts = accounts.filter(a => a.status === 'active').length
   const upcomingPosts = scheduledPosts.filter(p => p.status === 'scheduled').length
 
+  // Show onboarding if no accounts connected
+  if (accounts.length === 0) {
+    return (
+      <div className="space-y-6">
+        {/* Welcome Card */}
+        <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+          <CardHeader className="text-center pb-2">
+            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <Share2 className="h-8 w-8 text-primary" />
+            </div>
+            <CardTitle className="text-2xl">Welcome to Social Media Management!</CardTitle>
+            <CardDescription className="text-base max-w-xl mx-auto">
+              Connect your social accounts to start scheduling posts, tracking analytics, 
+              and managing all your social media from one dashboard.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="grid gap-4 md:grid-cols-3 max-w-3xl mx-auto">
+              <div className="text-center p-4 rounded-lg bg-background/50">
+                <Calendar className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                <h3 className="font-medium">Schedule Posts</h3>
+                <p className="text-sm text-muted-foreground">Plan content weeks in advance</p>
+              </div>
+              <div className="text-center p-4 rounded-lg bg-background/50">
+                <TrendingUp className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                <h3 className="font-medium">Track Analytics</h3>
+                <p className="text-sm text-muted-foreground">Monitor growth & engagement</p>
+              </div>
+              <div className="text-center p-4 rounded-lg bg-background/50">
+                <MessageCircle className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                <h3 className="font-medium">Unified Inbox</h3>
+                <p className="text-sm text-muted-foreground">Respond to all messages</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Connect Accounts CTA */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Connect Your First Account
+            </CardTitle>
+            <CardDescription>
+              Choose a platform to get started. You can connect more accounts later.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+              {[
+                { name: 'Facebook', icon: '📘', color: '#1877F2', desc: 'Pages & Groups' },
+                { name: 'Instagram', icon: '📷', color: '#E4405F', desc: 'Business & Creator' },
+                { name: 'Twitter/X', icon: '🐦', color: '#1DA1F2', desc: 'Posts & Threads' },
+                { name: 'LinkedIn', icon: '💼', color: '#0A66C2', desc: 'Profile & Company' },
+                { name: 'TikTok', icon: '🎵', color: '#000000', desc: 'Videos & Analytics' },
+              ].map((platform) => (
+                <Button
+                  key={platform.name}
+                  variant="outline"
+                  className="h-auto flex-col py-4 hover:border-primary/50"
+                  onClick={() => {
+                    // TODO: Implement OAuth connection
+                    alert(`Connect ${platform.name} - OAuth coming soon!`)
+                  }}
+                >
+                  <span className="text-2xl mb-1">{platform.icon}</span>
+                  <span className="font-medium">{platform.name}</span>
+                  <span className="text-xs text-muted-foreground">{platform.desc}</span>
+                </Button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground text-center mt-4">
+              More platforms: YouTube, Pinterest, Threads, Bluesky, Mastodon
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Quick Start Guide */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Start Guide</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex gap-4 items-start">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold">
+                  1
+                </div>
+                <div>
+                  <h4 className="font-medium">Connect social accounts</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Click on a platform above to connect via OAuth. Your credentials are secure and never stored.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-4 items-start">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground text-sm font-semibold">
+                  2
+                </div>
+                <div>
+                  <h4 className="font-medium text-muted-foreground">Create your first post</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Use the post composer to create content for multiple platforms at once.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-4 items-start">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground text-sm font-semibold">
+                  3
+                </div>
+                <div>
+                  <h4 className="font-medium text-muted-foreground">Schedule and publish</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Use the content calendar to plan posts ahead and publish at optimal times.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -169,7 +294,7 @@ export function SocialDashboard({
         </div>
         <div className="flex items-center gap-3">
           <Select value={dateRange} onValueChange={setDateRange}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-35">
               <SelectValue placeholder="Date range" />
             </SelectTrigger>
             <SelectContent>

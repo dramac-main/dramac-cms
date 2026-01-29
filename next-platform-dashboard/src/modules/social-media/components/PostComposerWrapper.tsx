@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useState, useEffect } from 'react'
 import { PostComposer } from './PostComposer'
 import { createPost, updatePost, getPost } from '../actions/post-actions'
-import type { SocialAccount, SocialPost, PostMedia, SocialPlatform } from '../types'
+import type { SocialAccount, PostMedia, SocialPlatform } from '../types'
 import { toast } from 'sonner'
 
 interface PostComposerWrapperProps {
@@ -45,8 +45,9 @@ export function PostComposerWrapper({
     const postId = editId || duplicateId
 
     if (postId) {
-      setIsLoading(true)
-      getPost(postId).then(result => {
+      // Using async IIFE to avoid setState during render
+      const loadPost = async () => {
+        const result = await getPost(postId)
         if (result.post) {
           setInitialData({
             content: result.post.content,
@@ -59,7 +60,9 @@ export function PostComposerWrapper({
           }
         }
         setIsLoading(false)
-      })
+      }
+      setIsLoading(true)
+      loadPost()
     }
 
     // Check for date param (from calendar)
