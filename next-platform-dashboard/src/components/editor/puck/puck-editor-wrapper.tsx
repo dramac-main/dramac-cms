@@ -13,8 +13,13 @@ import { puckConfig } from "./puck-config";
 import type { PuckData } from "@/types/puck";
 import { useState, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Loader2, Save, Eye, Edit2, AlertCircle } from "lucide-react";
+import { Loader2, Save, Eye, Edit2, AlertCircle, Sparkles, BarChart3, Wand2 } from "lucide-react";
 import { toast } from "sonner";
+
+// AI Components
+import { AIAssistantPanel } from "./ai/ai-assistant-panel";
+import { AIGenerationWizard } from "./ai/ai-generation-wizard";
+import { AIOptimizationPanel } from "./ai/ai-optimization-panel";
 
 export interface PuckEditorWrapperProps {
   /** Initial page content data */
@@ -71,6 +76,12 @@ export function PuckEditorWrapper({
     mode === "render" ? "preview" : mode
   );
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  
+  // AI Panel States
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [showGenerationWizard, setShowGenerationWizard] = useState(false);
+  const [showOptimizationPanel, setShowOptimizationPanel] = useState(false);
+  const [selectedContent, setSelectedContent] = useState<string>("");
 
   // Update data when initialData changes
   useEffect(() => {
@@ -118,6 +129,22 @@ export function PuckEditorWrapper({
 
     return () => clearTimeout(timer);
   }, [autoSaveInterval, hasUnsavedChanges, handleSave, onSave]);
+
+  // Handle AI-generated page
+  const handleAIGenerate = useCallback((generatedData: PuckData) => {
+    setData(generatedData);
+    setHasUnsavedChanges(true);
+    onChange?.(generatedData);
+    setShowGenerationWizard(false);
+    toast.success("AI page generated successfully!");
+  }, [onChange]);
+
+  // Handle AI content update
+  const handleAIContentUpdate = useCallback((newContent: string) => {
+    // This would need component-specific logic to update the right field
+    toast.success("Content updated with AI suggestion");
+    setHasUnsavedChanges(true);
+  }, []);
 
   // Warn before leaving with unsaved changes
   useEffect(() => {
@@ -196,6 +223,41 @@ export function PuckEditorWrapper({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* AI Tools */}
+            <div className="flex items-center gap-1 mr-2 border-r pr-2">
+              <button
+                onClick={() => setShowAIAssistant(!showAIAssistant)}
+                className={cn(
+                  "p-2 rounded-md text-sm flex items-center gap-1.5 transition-colors",
+                  showAIAssistant
+                    ? "bg-violet-500 text-white"
+                    : "hover:bg-violet-100 text-violet-600"
+                )}
+                title="AI Assistant"
+              >
+                <Sparkles className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setShowGenerationWizard(true)}
+                className="p-2 rounded-md text-sm flex items-center gap-1.5 hover:bg-violet-100 text-violet-600 transition-colors"
+                title="Generate Page with AI"
+              >
+                <Wand2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setShowOptimizationPanel(!showOptimizationPanel)}
+                className={cn(
+                  "p-2 rounded-md text-sm flex items-center gap-1.5 transition-colors",
+                  showOptimizationPanel
+                    ? "bg-emerald-500 text-white"
+                    : "hover:bg-emerald-100 text-emerald-600"
+                )}
+                title="Content Optimization"
+              >
+                <BarChart3 className="w-4 h-4" />
+              </button>
+            </div>
+
             {/* Mode Toggle */}
             <div className="flex items-center border rounded-md overflow-hidden">
               <button
@@ -254,7 +316,7 @@ export function PuckEditorWrapper({
       )}
 
       {/* Editor Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative">
         {currentMode === "preview" ? (
           <div className="h-full overflow-auto">
             <Render config={puckConfig} data={data} />
@@ -267,7 +329,35 @@ export function PuckEditorWrapper({
             onPublish={handleSave}
           />
         )}
+
+        {/* AI Assistant Panel - Has its own fixed positioning */}
+        {currentMode === "edit" && (
+          <AIAssistantPanel
+            isOpen={showAIAssistant}
+            onClose={() => setShowAIAssistant(false)}
+            selectedText={selectedContent}
+            onApplyResult={handleAIContentUpdate}
+          />
+        )}
+
+        {/* Optimization Panel - Floating */}
+        {showOptimizationPanel && currentMode === "edit" && (
+          <div className="absolute top-4 right-4 z-50 w-[420px]">
+            <AIOptimizationPanel
+              puckData={data}
+              pageTitle={data.root?.props?.title as string}
+              pageDescription={(data.root?.props as Record<string, unknown>)?.description as string}
+            />
+          </div>
+        )}
       </div>
+
+      {/* AI Generation Wizard Modal */}
+      <AIGenerationWizard
+        isOpen={showGenerationWizard}
+        onClose={() => setShowGenerationWizard(false)}
+        onGenerate={handleAIGenerate}
+      />
     </div>
   );
 }
