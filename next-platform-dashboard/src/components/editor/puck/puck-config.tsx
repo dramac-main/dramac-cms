@@ -39,6 +39,47 @@ import type {
   NewsletterProps,
   ProductGridProps,
   ProductCardProps,
+  // Advanced Layout Types (PHASE-ED-02A)
+  GridProps,
+  FlexboxProps,
+  TabsContainerProps,
+  AccordionContainerProps,
+  ModalTriggerProps,
+  DrawerTriggerProps,
+  AspectRatioProps,
+  StackProps,
+  StickyContainerProps,
+  ScrollAreaProps,
+  // Content Types (PHASE-ED-02B)
+  RichTextProps,
+  QuoteProps,
+  CodeBlockProps,
+  ListProps,
+  TableProps,
+  BadgeProps,
+  AlertProps,
+  ProgressProps,
+  TooltipWrapperProps,
+  TimelineProps,
+  PricingTableProps,
+  CounterProps,
+  AvatarProps,
+  AvatarGroupProps,
+  IconProps,
+  // Advanced Form Types (PHASE-ED-02C)
+  MultiStepFormProps,
+  RatingInputProps,
+  FileUploadProps,
+  DatePickerInputProps,
+  RangeSliderProps,
+  SwitchInputProps,
+  CheckboxGroupProps,
+  RadioGroupProps,
+  SearchInputProps,
+  PasswordInputProps,
+  OTPInputProps,
+  SelectInputProps,
+  TagInputProps,
 } from "@/types/puck";
 import { cn } from "@/lib/utils";
 
@@ -95,6 +136,56 @@ import {
   ProductGridRender,
   ProductCardRender,
 } from "./components/ecommerce";
+
+// Advanced Layout Components (PHASE-ED-02A)
+import {
+  GridRender,
+  FlexboxRender,
+  TabsContainerRender,
+  AccordionContainerRender,
+  ModalTriggerRender,
+  DrawerTriggerRender,
+  AspectRatioRender,
+  StackRender,
+  StickyContainerRender,
+  ScrollAreaRender,
+} from "./components/layout-advanced";
+
+// Content Components (PHASE-ED-02B)
+import {
+  RichTextRender,
+  QuoteRender,
+  CodeBlockRender,
+  ListRender,
+  TableRender,
+  BadgeRender,
+  AlertRender,
+  ProgressRender,
+  TooltipWrapperRender,
+  TimelineRender,
+  PricingTableRender,
+  CounterRender,
+  AvatarRender,
+  AvatarGroupRender,
+  IconRender,
+} from "./components/content";
+
+// Advanced Form Components (PHASE-ED-02C)
+import {
+  MultiStepFormRender,
+  RatingInputRender,
+  FileUploadRender,
+  DatePickerInputRender,
+  RangeSliderRender,
+  SwitchInputRender,
+  CheckboxGroupRender,
+  RadioGroupRender,
+  SearchInputRender,
+  PasswordInputRender,
+  OTPInputRender,
+  SelectInputRender,
+  TagInputRender,
+} from "./components/forms-advanced";
 
 // Standard field options
 const alignmentOptions = [
@@ -166,9 +257,17 @@ export const puckConfig: Config = {
       title: "Layout",
       components: ["Section", "Container", "Columns", "Card", "Spacer", "Divider"],
     },
+    layoutAdvanced: {
+      title: "Advanced Layout",
+      components: ["Grid", "Flexbox", "TabsContainer", "AccordionContainer", "ModalTrigger", "DrawerTrigger", "AspectRatio", "Stack", "StickyContainer", "ScrollArea"],
+    },
     typography: {
       title: "Typography",
       components: ["Heading", "Text"],
+    },
+    content: {
+      title: "Content",
+      components: ["RichText", "Quote", "CodeBlock", "List", "Table", "Badge", "Alert", "Progress", "TooltipWrapper", "Timeline", "PricingTable", "Counter", "Avatar", "AvatarGroup", "Icon"],
     },
     buttons: {
       title: "Buttons",
@@ -189,6 +288,10 @@ export const puckConfig: Config = {
     forms: {
       title: "Forms",
       components: ["Form", "FormField", "ContactForm", "Newsletter"],
+    },
+    formsAdvanced: {
+      title: "Advanced Forms",
+      components: ["MultiStepForm", "RatingInput", "FileUpload", "DatePickerInput", "RangeSlider", "SwitchInput", "CheckboxGroup", "RadioGroup", "SearchInput", "PasswordInput", "OTPInput", "SelectInput", "TagInput"],
     },
     ecommerce: {
       title: "E-Commerce",
@@ -1203,6 +1306,1420 @@ export const puckConfig: Config = {
         imageAspect: "square",
       } as ProductCardProps,
       render: ProductCardRender as any,
+    },
+
+    // ============================================
+    // ADVANCED LAYOUT COMPONENTS (PHASE-ED-02A)
+    // ============================================
+
+    Grid: {
+      label: "Grid",
+      fields: {
+        columns: { type: "number", label: "Columns" },
+        rows: { type: "number", label: "Rows" },
+        gap: {
+          type: "select",
+          label: "Gap",
+          options: [
+            { label: "None", value: "none" },
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "md" },
+            { label: "Large", value: "lg" },
+          ],
+        },
+        autoFlow: {
+          type: "select",
+          label: "Auto Flow",
+          options: [
+            { label: "Row", value: "row" },
+            { label: "Column", value: "column" },
+            { label: "Dense", value: "dense" },
+          ],
+        },
+        alignItems: {
+          type: "select",
+          label: "Align Items",
+          options: [
+            { label: "Start", value: "start" },
+            { label: "Center", value: "center" },
+            { label: "End", value: "end" },
+            { label: "Stretch", value: "stretch" },
+          ],
+        },
+        justifyItems: {
+          type: "select",
+          label: "Justify Items",
+          options: [
+            { label: "Start", value: "start" },
+            { label: "Center", value: "center" },
+            { label: "End", value: "end" },
+            { label: "Stretch", value: "stretch" },
+          ],
+        },
+      },
+      defaultProps: {
+        columns: 3,
+        rows: undefined,
+        gap: "md",
+        autoFlow: "row",
+        alignItems: "stretch",
+        justifyItems: "stretch",
+      } as GridProps,
+      render: GridRender as any,
+    },
+
+    Flexbox: {
+      label: "Flexbox",
+      fields: {
+        direction: {
+          type: "select",
+          label: "Direction",
+          options: [
+            { label: "Row", value: "row" },
+            { label: "Row Reverse", value: "row-reverse" },
+            { label: "Column", value: "column" },
+            { label: "Column Reverse", value: "column-reverse" },
+          ],
+        },
+        wrap: {
+          type: "select",
+          label: "Wrap",
+          options: [
+            { label: "No Wrap", value: "nowrap" },
+            { label: "Wrap", value: "wrap" },
+            { label: "Wrap Reverse", value: "wrap-reverse" },
+          ],
+        },
+        justifyContent: {
+          type: "select",
+          label: "Justify Content",
+          options: [
+            { label: "Start", value: "start" },
+            { label: "Center", value: "center" },
+            { label: "End", value: "end" },
+            { label: "Space Between", value: "between" },
+            { label: "Space Around", value: "around" },
+            { label: "Space Evenly", value: "evenly" },
+          ],
+        },
+        alignItems: {
+          type: "select",
+          label: "Align Items",
+          options: [
+            { label: "Start", value: "start" },
+            { label: "Center", value: "center" },
+            { label: "End", value: "end" },
+            { label: "Stretch", value: "stretch" },
+            { label: "Baseline", value: "baseline" },
+          ],
+        },
+        gap: {
+          type: "select",
+          label: "Gap",
+          options: paddingOptions,
+        },
+      },
+      defaultProps: {
+        direction: "row",
+        wrap: "nowrap",
+        justifyContent: "start",
+        alignItems: "start",
+        gap: "md",
+      } as FlexboxProps,
+      render: FlexboxRender as any,
+    },
+
+    TabsContainer: {
+      label: "Tabs Container",
+      fields: {
+        tabs: {
+          type: "array",
+          label: "Tabs",
+          arrayFields: {
+            id: { type: "text", label: "ID" },
+            label: { type: "text", label: "Label" },
+          },
+        },
+        defaultTab: { type: "number", label: "Default Tab Index" },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Underline", value: "underline" },
+            { label: "Pills", value: "pills" },
+            { label: "Boxed", value: "boxed" },
+          ],
+        },
+        orientation: {
+          type: "select",
+          label: "Orientation",
+          options: [
+            { label: "Horizontal", value: "horizontal" },
+            { label: "Vertical", value: "vertical" },
+          ],
+        },
+      },
+      defaultProps: {
+        tabs: [
+          { id: "tab1", label: "Tab 1" },
+          { id: "tab2", label: "Tab 2" },
+          { id: "tab3", label: "Tab 3" },
+        ],
+        defaultTab: 0,
+        variant: "underline",
+        orientation: "horizontal",
+      } as TabsContainerProps,
+      render: TabsContainerRender as any,
+    },
+
+    AccordionContainer: {
+      label: "Accordion Container",
+      fields: {
+        items: {
+          type: "array",
+          label: "Items",
+          arrayFields: {
+            id: { type: "text", label: "ID" },
+            title: { type: "text", label: "Title" },
+          },
+        },
+        multiple: { type: "toggle", label: "Allow Multiple Open" },
+        defaultOpen: { type: "number", label: "Default Open Index" },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Default", value: "default" },
+            { label: "Bordered", value: "bordered" },
+            { label: "Separated", value: "separated" },
+          ],
+        },
+        iconPosition: {
+          type: "select",
+          label: "Icon Position",
+          options: [
+            { label: "Left", value: "left" },
+            { label: "Right", value: "right" },
+          ],
+        },
+      },
+      defaultProps: {
+        items: [
+          { id: "item1", title: "Item 1" },
+          { id: "item2", title: "Item 2" },
+          { id: "item3", title: "Item 3" },
+        ],
+        multiple: false,
+        defaultOpen: 0,
+        variant: "default",
+        iconPosition: "right",
+      } as AccordionContainerProps,
+      render: AccordionContainerRender as any,
+    },
+
+    ModalTrigger: {
+      label: "Modal Trigger",
+      fields: {
+        triggerText: { type: "text", label: "Trigger Text" },
+        modalTitle: { type: "text", label: "Modal Title" },
+        size: {
+          type: "select",
+          label: "Size",
+          options: [
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "md" },
+            { label: "Large", value: "lg" },
+            { label: "Extra Large", value: "xl" },
+            { label: "Full", value: "full" },
+          ],
+        },
+        closeOnOverlay: { type: "toggle", label: "Close on Overlay Click" },
+        closeOnEscape: { type: "toggle", label: "Close on Escape" },
+        showCloseButton: { type: "toggle", label: "Show Close Button" },
+      },
+      defaultProps: {
+        triggerText: "Open Modal",
+        modalTitle: "Modal Title",
+        size: "md",
+        closeOnOverlay: true,
+        closeOnEscape: true,
+        showCloseButton: true,
+      } as ModalTriggerProps,
+      render: ModalTriggerRender as any,
+    },
+
+    DrawerTrigger: {
+      label: "Drawer Trigger",
+      fields: {
+        triggerText: { type: "text", label: "Trigger Text" },
+        drawerTitle: { type: "text", label: "Drawer Title" },
+        position: {
+          type: "select",
+          label: "Position",
+          options: [
+            { label: "Left", value: "left" },
+            { label: "Right", value: "right" },
+            { label: "Top", value: "top" },
+            { label: "Bottom", value: "bottom" },
+          ],
+        },
+        size: {
+          type: "select",
+          label: "Size",
+          options: [
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "md" },
+            { label: "Large", value: "lg" },
+            { label: "Full", value: "full" },
+          ],
+        },
+        overlay: { type: "toggle", label: "Show Overlay" },
+        closeOnOverlay: { type: "toggle", label: "Close on Overlay Click" },
+      },
+      defaultProps: {
+        triggerText: "Open Drawer",
+        drawerTitle: "Drawer Title",
+        position: "right",
+        size: "md",
+        overlay: true,
+        closeOnOverlay: true,
+      } as DrawerTriggerProps,
+      render: DrawerTriggerRender as any,
+    },
+
+    AspectRatio: {
+      label: "Aspect Ratio",
+      fields: {
+        ratio: {
+          type: "select",
+          label: "Ratio",
+          options: [
+            { label: "1:1 (Square)", value: "1:1" },
+            { label: "4:3", value: "4:3" },
+            { label: "16:9", value: "16:9" },
+            { label: "21:9", value: "21:9" },
+            { label: "3:2", value: "3:2" },
+            { label: "2:3 (Portrait)", value: "2:3" },
+            { label: "Custom", value: "custom" },
+          ],
+        },
+        customRatio: { type: "number", label: "Custom Ratio (width/height)" },
+        maxWidth: { type: "text", label: "Max Width" },
+      },
+      defaultProps: {
+        ratio: "16:9",
+        customRatio: undefined,
+        maxWidth: "100%",
+      } as AspectRatioProps,
+      render: AspectRatioRender as any,
+    },
+
+    Stack: {
+      label: "Stack",
+      fields: {
+        direction: {
+          type: "select",
+          label: "Direction",
+          options: [
+            { label: "Vertical", value: "vertical" },
+            { label: "Horizontal", value: "horizontal" },
+          ],
+        },
+        gap: {
+          type: "select",
+          label: "Gap",
+          options: paddingOptions,
+        },
+        align: {
+          type: "select",
+          label: "Align",
+          options: [
+            { label: "Start", value: "start" },
+            { label: "Center", value: "center" },
+            { label: "End", value: "end" },
+            { label: "Stretch", value: "stretch" },
+          ],
+        },
+        justify: {
+          type: "select",
+          label: "Justify",
+          options: [
+            { label: "Start", value: "start" },
+            { label: "Center", value: "center" },
+            { label: "End", value: "end" },
+            { label: "Between", value: "between" },
+          ],
+        },
+        wrap: { type: "toggle", label: "Wrap" },
+        divider: { type: "toggle", label: "Show Dividers" },
+      },
+      defaultProps: {
+        direction: "vertical",
+        gap: "md",
+        align: "stretch",
+        justify: "start",
+        wrap: false,
+        divider: false,
+      } as StackProps,
+      render: StackRender as any,
+    },
+
+    StickyContainer: {
+      label: "Sticky Container",
+      fields: {
+        position: {
+          type: "select",
+          label: "Sticky Position",
+          options: [
+            { label: "Top", value: "top" },
+            { label: "Bottom", value: "bottom" },
+          ],
+        },
+        offset: { type: "number", label: "Offset (px)" },
+        zIndex: { type: "number", label: "Z-Index" },
+      },
+      defaultProps: {
+        position: "top",
+        offset: 0,
+        zIndex: 50,
+      } as StickyContainerProps,
+      render: StickyContainerRender as any,
+    },
+
+    ScrollArea: {
+      label: "Scroll Area",
+      fields: {
+        maxHeight: { type: "text", label: "Max Height" },
+        maxWidth: { type: "text", label: "Max Width" },
+        scrollbarStyle: {
+          type: "select",
+          label: "Scrollbar Style",
+          options: [
+            { label: "Default", value: "default" },
+            { label: "Thin", value: "thin" },
+            { label: "Hidden", value: "hidden" },
+          ],
+        },
+        scrollDirection: {
+          type: "select",
+          label: "Scroll Direction",
+          options: [
+            { label: "Vertical", value: "vertical" },
+            { label: "Horizontal", value: "horizontal" },
+            { label: "Both", value: "both" },
+          ],
+        },
+      },
+      defaultProps: {
+        maxHeight: "400px",
+        maxWidth: "100%",
+        scrollbarStyle: "default",
+        scrollDirection: "vertical",
+      } as ScrollAreaProps,
+      render: ScrollAreaRender as any,
+    },
+
+    // ============================================
+    // CONTENT COMPONENTS (PHASE-ED-02B)
+    // ============================================
+
+    RichText: {
+      label: "Rich Text",
+      fields: {
+        content: { type: "textarea", label: "HTML Content" },
+        typography: {
+          type: "select",
+          label: "Typography Style",
+          options: [
+            { label: "Prose", value: "prose" },
+            { label: "Compact", value: "compact" },
+            { label: "Large", value: "large" },
+          ],
+        },
+        preserveWhitespace: { type: "toggle", label: "Preserve Whitespace" },
+      },
+      defaultProps: {
+        content: "<p>Enter your rich text content here...</p>",
+        typography: "prose",
+        preserveWhitespace: false,
+      } as RichTextProps,
+      render: RichTextRender as any,
+    },
+
+    Quote: {
+      label: "Quote",
+      fields: {
+        text: { type: "textarea", label: "Quote Text" },
+        author: { type: "text", label: "Author" },
+        authorTitle: { type: "text", label: "Author Title" },
+        authorImage: { type: "text", label: "Author Image URL" },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Default", value: "default" },
+            { label: "Large", value: "large" },
+            { label: "Card", value: "card" },
+            { label: "Border", value: "border" },
+          ],
+        },
+        alignment: {
+          type: "select",
+          label: "Alignment",
+          options: alignmentOptions,
+        },
+      },
+      defaultProps: {
+        text: "This is an inspiring quote.",
+        author: "Author Name",
+        authorTitle: "Title",
+        authorImage: "",
+        variant: "default",
+        alignment: "left",
+      } as QuoteProps,
+      render: QuoteRender as any,
+    },
+
+    CodeBlock: {
+      label: "Code Block",
+      fields: {
+        code: { type: "textarea", label: "Code" },
+        language: {
+          type: "select",
+          label: "Language",
+          options: [
+            { label: "JavaScript", value: "javascript" },
+            { label: "TypeScript", value: "typescript" },
+            { label: "Python", value: "python" },
+            { label: "HTML", value: "html" },
+            { label: "CSS", value: "css" },
+            { label: "JSON", value: "json" },
+            { label: "Bash", value: "bash" },
+            { label: "Plain Text", value: "text" },
+          ],
+        },
+        showLineNumbers: { type: "toggle", label: "Show Line Numbers" },
+        showCopyButton: { type: "toggle", label: "Show Copy Button" },
+        title: { type: "text", label: "Title/Filename" },
+        highlightLines: { type: "text", label: "Highlight Lines (e.g., 1,3,5-7)" },
+      },
+      defaultProps: {
+        code: "console.log('Hello, World!');",
+        language: "javascript",
+        showLineNumbers: true,
+        showCopyButton: true,
+        title: "",
+        highlightLines: "",
+      } as CodeBlockProps,
+      render: CodeBlockRender as any,
+    },
+
+    List: {
+      label: "List",
+      fields: {
+        items: {
+          type: "array",
+          label: "List Items",
+          arrayFields: {
+            text: { type: "text", label: "Item Text" },
+          },
+        },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Unordered", value: "unordered" },
+            { label: "Ordered", value: "ordered" },
+            { label: "Check", value: "check" },
+            { label: "Arrow", value: "arrow" },
+            { label: "Custom Icon", value: "custom" },
+          ],
+        },
+        size: {
+          type: "select",
+          label: "Size",
+          options: sizeOptions,
+        },
+        spacing: {
+          type: "select",
+          label: "Spacing",
+          options: [
+            { label: "Compact", value: "compact" },
+            { label: "Normal", value: "normal" },
+            { label: "Relaxed", value: "relaxed" },
+          ],
+        },
+      },
+      defaultProps: {
+        items: [
+          { text: "First item" },
+          { text: "Second item" },
+          { text: "Third item" },
+        ],
+        variant: "unordered",
+        size: "md",
+        spacing: "normal",
+      } as ListProps,
+      render: ListRender as any,
+    },
+
+    Table: {
+      label: "Table",
+      fields: {
+        headers: {
+          type: "array",
+          label: "Headers",
+          arrayFields: {
+            text: { type: "text", label: "Header Text" },
+          },
+        },
+        rows: { type: "textarea", label: "Rows (JSON array)" },
+        striped: { type: "toggle", label: "Striped Rows" },
+        bordered: { type: "toggle", label: "Bordered" },
+        hoverable: { type: "toggle", label: "Hoverable Rows" },
+        compact: { type: "toggle", label: "Compact" },
+      },
+      defaultProps: {
+        headers: [
+          { key: "col1", label: "Column 1" },
+          { key: "col2", label: "Column 2" },
+          { key: "col3", label: "Column 3" },
+        ],
+        rows: [
+          { col1: "Data 1", col2: "Data 2", col3: "Data 3" },
+          { col1: "Data 4", col2: "Data 5", col3: "Data 6" },
+        ],
+        striped: true,
+        bordered: false,
+        hoverable: true,
+        compact: false,
+      } as TableProps,
+      render: TableRender as any,
+    },
+
+    Badge: {
+      label: "Badge",
+      fields: {
+        text: { type: "text", label: "Text" },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Default", value: "default" },
+            { label: "Secondary", value: "secondary" },
+            { label: "Success", value: "success" },
+            { label: "Warning", value: "warning" },
+            { label: "Error", value: "error" },
+            { label: "Info", value: "info" },
+            { label: "Outline", value: "outline" },
+          ],
+        },
+        size: {
+          type: "select",
+          label: "Size",
+          options: sizeOptions,
+        },
+        rounded: { type: "toggle", label: "Pill Shape" },
+        dot: { type: "toggle", label: "Show Dot" },
+        removable: { type: "toggle", label: "Removable" },
+      },
+      defaultProps: {
+        text: "Badge",
+        variant: "default",
+        size: "md",
+        rounded: false,
+        dot: false,
+        removable: false,
+      } as BadgeProps,
+      render: BadgeRender as any,
+    },
+
+    Alert: {
+      label: "Alert",
+      fields: {
+        title: { type: "text", label: "Title" },
+        message: { type: "textarea", label: "Message" },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Info", value: "info" },
+            { label: "Success", value: "success" },
+            { label: "Warning", value: "warning" },
+            { label: "Error", value: "error" },
+          ],
+        },
+        dismissible: { type: "toggle", label: "Dismissible" },
+        showIcon: { type: "toggle", label: "Show Icon" },
+      },
+      defaultProps: {
+        title: "Alert Title",
+        message: "This is an alert message.",
+        variant: "info",
+        dismissible: false,
+        showIcon: true,
+      } as AlertProps,
+      render: AlertRender as any,
+    },
+
+    Progress: {
+      label: "Progress",
+      fields: {
+        value: { type: "number", label: "Value" },
+        max: { type: "number", label: "Max" },
+        label: { type: "text", label: "Label" },
+        showValue: { type: "toggle", label: "Show Value" },
+        size: {
+          type: "select",
+          label: "Size",
+          options: sizeOptions,
+        },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Default", value: "default" },
+            { label: "Success", value: "success" },
+            { label: "Warning", value: "warning" },
+            { label: "Error", value: "error" },
+            { label: "Gradient", value: "gradient" },
+          ],
+        },
+        animated: { type: "toggle", label: "Animated" },
+        striped: { type: "toggle", label: "Striped" },
+      },
+      defaultProps: {
+        value: 60,
+        max: 100,
+        label: "",
+        showValue: true,
+        size: "md",
+        variant: "default",
+        animated: false,
+        striped: false,
+      } as ProgressProps,
+      render: ProgressRender as any,
+    },
+
+    TooltipWrapper: {
+      label: "Tooltip Wrapper",
+      fields: {
+        content: { type: "textarea", label: "Tooltip Content" },
+        position: {
+          type: "select",
+          label: "Position",
+          options: [
+            { label: "Top", value: "top" },
+            { label: "Bottom", value: "bottom" },
+            { label: "Left", value: "left" },
+            { label: "Right", value: "right" },
+          ],
+        },
+        delay: { type: "number", label: "Delay (ms)" },
+      },
+      defaultProps: {
+        content: "Tooltip content",
+        position: "top",
+        delay: 0,
+      } as TooltipWrapperProps,
+      render: TooltipWrapperRender as any,
+    },
+
+    Timeline: {
+      label: "Timeline",
+      fields: {
+        items: {
+          type: "array",
+          label: "Timeline Items",
+          arrayFields: {
+            title: { type: "text", label: "Title" },
+            description: { type: "textarea", label: "Description" },
+            date: { type: "text", label: "Date" },
+          },
+        },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Default", value: "default" },
+            { label: "Alternating", value: "alternating" },
+            { label: "Compact", value: "compact" },
+          ],
+        },
+        lineColor: { type: "text", label: "Line Color" },
+      },
+      defaultProps: {
+        items: [
+          { title: "Event 1", description: "Description for event 1", date: "2024-01-01" },
+          { title: "Event 2", description: "Description for event 2", date: "2024-02-01" },
+          { title: "Event 3", description: "Description for event 3", date: "2024-03-01" },
+        ],
+        variant: "default",
+        lineColor: "",
+      } as TimelineProps,
+      render: TimelineRender as any,
+    },
+
+    PricingTable: {
+      label: "Pricing Table",
+      fields: {
+        plans: {
+          type: "array",
+          label: "Plans",
+          arrayFields: {
+            name: { type: "text", label: "Plan Name" },
+            price: { type: "text", label: "Price" },
+            period: { type: "text", label: "Period" },
+            description: { type: "textarea", label: "Description" },
+            highlighted: { type: "toggle", label: "Highlighted" },
+          },
+        },
+        currency: { type: "text", label: "Currency Symbol" },
+        columns: { type: "number", label: "Columns" },
+      },
+      defaultProps: {
+        plans: [
+          { name: "Basic", price: "9", period: "/month", description: "For individuals", features: ["Feature 1", "Feature 2"], highlighted: false },
+          { name: "Pro", price: "29", period: "/month", description: "For teams", features: ["Everything in Basic", "Feature 3", "Feature 4"], highlighted: true },
+          { name: "Enterprise", price: "99", period: "/month", description: "For organizations", features: ["Everything in Pro", "Feature 5", "Feature 6"], highlighted: false },
+        ],
+        currency: "$",
+        columns: 3,
+      } as PricingTableProps,
+      render: PricingTableRender as any,
+    },
+
+    Counter: {
+      label: "Counter",
+      fields: {
+        endValue: { type: "number", label: "End Value" },
+        startValue: { type: "number", label: "Start Value" },
+        duration: { type: "number", label: "Duration (ms)" },
+        prefix: { type: "text", label: "Prefix" },
+        suffix: { type: "text", label: "Suffix" },
+        decimals: { type: "number", label: "Decimal Places" },
+        separator: { type: "text", label: "Thousands Separator" },
+        label: { type: "text", label: "Label" },
+        size: {
+          type: "select",
+          label: "Size",
+          options: sizeOptions,
+        },
+      },
+      defaultProps: {
+        endValue: 1000,
+        startValue: 0,
+        duration: 2000,
+        prefix: "",
+        suffix: "",
+        decimals: 0,
+        separator: ",",
+        label: "",
+        size: "md",
+      } as CounterProps,
+      render: CounterRender as any,
+    },
+
+    Avatar: {
+      label: "Avatar",
+      fields: {
+        src: { type: "text", label: "Image URL" },
+        alt: { type: "text", label: "Alt Text" },
+        fallback: { type: "text", label: "Fallback Initials" },
+        size: {
+          type: "select",
+          label: "Size",
+          options: [
+            { label: "Extra Small", value: "xs" },
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "md" },
+            { label: "Large", value: "lg" },
+            { label: "Extra Large", value: "xl" },
+          ],
+        },
+        shape: {
+          type: "select",
+          label: "Shape",
+          options: [
+            { label: "Circle", value: "circle" },
+            { label: "Square", value: "square" },
+            { label: "Rounded", value: "rounded" },
+          ],
+        },
+        status: {
+          type: "select",
+          label: "Status",
+          options: [
+            { label: "None", value: "" },
+            { label: "Online", value: "online" },
+            { label: "Offline", value: "offline" },
+            { label: "Away", value: "away" },
+            { label: "Busy", value: "busy" },
+          ],
+        },
+      },
+      defaultProps: {
+        src: "",
+        alt: "Avatar",
+        fallback: "U",
+        size: "md",
+        shape: "circle",
+        status: undefined,
+      } as AvatarProps,
+      render: AvatarRender as any,
+    },
+
+    AvatarGroup: {
+      label: "Avatar Group",
+      fields: {
+        avatars: {
+          type: "array",
+          label: "Avatars",
+          arrayFields: {
+            src: { type: "text", label: "Image URL" },
+            alt: { type: "text", label: "Alt Text" },
+            fallback: { type: "text", label: "Fallback" },
+          },
+        },
+        max: { type: "number", label: "Max Display" },
+        size: {
+          type: "select",
+          label: "Size",
+          options: sizeOptions,
+        },
+        overlap: {
+          type: "select",
+          label: "Overlap",
+          options: [
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "md" },
+            { label: "Large", value: "lg" },
+          ],
+        },
+      },
+      defaultProps: {
+        avatars: [
+          { src: "", alt: "User 1", fallback: "U1" },
+          { src: "", alt: "User 2", fallback: "U2" },
+          { src: "", alt: "User 3", fallback: "U3" },
+        ],
+        max: 5,
+        size: "md",
+        overlap: "md",
+      } as AvatarGroupProps,
+      render: AvatarGroupRender as any,
+    },
+
+    Icon: {
+      label: "Icon",
+      fields: {
+        name: {
+          type: "select",
+          label: "Icon",
+          options: [
+            { label: "Star", value: "star" },
+            { label: "Heart", value: "heart" },
+            { label: "Check", value: "check" },
+            { label: "X", value: "x" },
+            { label: "Arrow Right", value: "arrow-right" },
+            { label: "Arrow Left", value: "arrow-left" },
+            { label: "Mail", value: "mail" },
+            { label: "Phone", value: "phone" },
+            { label: "Settings", value: "settings" },
+            { label: "User", value: "user" },
+          ],
+        },
+        size: { type: "number", label: "Size (px)" },
+        color: { type: "text", label: "Color" },
+        strokeWidth: { type: "number", label: "Stroke Width" },
+      },
+      defaultProps: {
+        name: "star",
+        size: 24,
+        color: "currentColor",
+        strokeWidth: 2,
+      } as IconProps,
+      render: IconRender as any,
+    },
+
+    // ============================================
+    // ADVANCED FORM COMPONENTS (PHASE-ED-02C)
+    // ============================================
+
+    MultiStepForm: {
+      label: "Multi-Step Form",
+      fields: {
+        steps: {
+          type: "array",
+          label: "Steps",
+          arrayFields: {
+            id: { type: "text", label: "Step ID" },
+            title: { type: "text", label: "Step Title" },
+            description: { type: "textarea", label: "Description" },
+          },
+        },
+        showProgress: { type: "toggle", label: "Show Progress" },
+        progressVariant: {
+          type: "select",
+          label: "Progress Variant",
+          options: [
+            { label: "Steps", value: "steps" },
+            { label: "Bar", value: "bar" },
+            { label: "Dots", value: "dots" },
+          ],
+        },
+        allowSkip: { type: "toggle", label: "Allow Skip" },
+        submitText: { type: "text", label: "Submit Button Text" },
+        nextText: { type: "text", label: "Next Button Text" },
+        prevText: { type: "text", label: "Previous Button Text" },
+      },
+      defaultProps: {
+        steps: [
+          { id: "step1", title: "Step 1", description: "Basic information" },
+          { id: "step2", title: "Step 2", description: "Additional details" },
+          { id: "step3", title: "Step 3", description: "Confirmation" },
+        ],
+        currentStep: 0,
+        showProgress: true,
+        progressVariant: "steps",
+        allowSkip: false,
+        submitText: "Submit",
+        nextText: "Next",
+        prevText: "Previous",
+      } as MultiStepFormProps,
+      render: MultiStepFormRender as any,
+    },
+
+    RatingInput: {
+      label: "Rating Input",
+      fields: {
+        name: { type: "text", label: "Field Name" },
+        label: { type: "text", label: "Label" },
+        maxRating: { type: "number", label: "Max Rating" },
+        defaultValue: { type: "number", label: "Default Value" },
+        size: {
+          type: "select",
+          label: "Size",
+          options: sizeOptions,
+        },
+        icon: {
+          type: "select",
+          label: "Icon",
+          options: [
+            { label: "Star", value: "star" },
+            { label: "Heart", value: "heart" },
+            { label: "Circle", value: "circle" },
+          ],
+        },
+        color: { type: "text", label: "Color" },
+        allowHalf: { type: "toggle", label: "Allow Half Rating" },
+        readonly: { type: "toggle", label: "Read Only" },
+        showValue: { type: "toggle", label: "Show Value" },
+      },
+      defaultProps: {
+        name: "rating",
+        label: "Rating",
+        maxRating: 5,
+        defaultValue: 0,
+        size: "md",
+        icon: "star",
+        color: "#facc15",
+        allowHalf: false,
+        readonly: false,
+        showValue: false,
+      } as RatingInputProps,
+      render: RatingInputRender as any,
+    },
+
+    FileUpload: {
+      label: "File Upload",
+      fields: {
+        name: { type: "text", label: "Field Name" },
+        label: { type: "text", label: "Label" },
+        accept: { type: "text", label: "Accepted Types" },
+        multiple: { type: "toggle", label: "Multiple Files" },
+        maxSize: { type: "number", label: "Max Size (MB)" },
+        maxFiles: { type: "number", label: "Max Files" },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Dropzone", value: "dropzone" },
+            { label: "Button", value: "button" },
+            { label: "Avatar", value: "avatar" },
+          ],
+        },
+        showPreview: { type: "toggle", label: "Show Preview" },
+        helpText: { type: "text", label: "Help Text" },
+        required: { type: "toggle", label: "Required" },
+      },
+      defaultProps: {
+        name: "file",
+        label: "Upload File",
+        accept: "image/*",
+        multiple: false,
+        maxSize: 5,
+        maxFiles: 5,
+        variant: "dropzone",
+        showPreview: true,
+        helpText: "",
+        required: false,
+      } as FileUploadProps,
+      render: FileUploadRender as any,
+    },
+
+    DatePickerInput: {
+      label: "Date Picker",
+      fields: {
+        name: { type: "text", label: "Field Name" },
+        label: { type: "text", label: "Label" },
+        placeholder: { type: "text", label: "Placeholder" },
+        format: { type: "text", label: "Format" },
+        minDate: { type: "text", label: "Min Date (YYYY-MM-DD)" },
+        maxDate: { type: "text", label: "Max Date (YYYY-MM-DD)" },
+        showTime: { type: "toggle", label: "Show Time" },
+        required: { type: "toggle", label: "Required" },
+        helpText: { type: "text", label: "Help Text" },
+      },
+      defaultProps: {
+        name: "date",
+        label: "Select Date",
+        placeholder: "Select date",
+        format: "YYYY-MM-DD",
+        minDate: "",
+        maxDate: "",
+        showTime: false,
+        required: false,
+        helpText: "",
+      } as DatePickerInputProps,
+      render: DatePickerInputRender as any,
+    },
+
+    RangeSlider: {
+      label: "Range Slider",
+      fields: {
+        name: { type: "text", label: "Field Name" },
+        label: { type: "text", label: "Label" },
+        min: { type: "number", label: "Min Value" },
+        max: { type: "number", label: "Max Value" },
+        step: { type: "number", label: "Step" },
+        defaultValue: { type: "number", label: "Default Value" },
+        showValue: { type: "toggle", label: "Show Value" },
+        showMinMax: { type: "toggle", label: "Show Min/Max" },
+        unit: { type: "text", label: "Unit" },
+      },
+      defaultProps: {
+        name: "range",
+        label: "Range",
+        min: 0,
+        max: 100,
+        step: 1,
+        defaultValue: 50,
+        showValue: true,
+        showMinMax: true,
+        unit: "",
+      } as RangeSliderProps,
+      render: RangeSliderRender as any,
+    },
+
+    SwitchInput: {
+      label: "Switch",
+      fields: {
+        name: { type: "text", label: "Field Name" },
+        label: { type: "text", label: "Label" },
+        description: { type: "text", label: "Description" },
+        defaultChecked: { type: "toggle", label: "Default Checked" },
+        size: {
+          type: "select",
+          label: "Size",
+          options: sizeOptions,
+        },
+        labelPosition: {
+          type: "select",
+          label: "Label Position",
+          options: [
+            { label: "Left", value: "left" },
+            { label: "Right", value: "right" },
+          ],
+        },
+        required: { type: "toggle", label: "Required" },
+      },
+      defaultProps: {
+        name: "switch",
+        label: "Enable feature",
+        description: "",
+        defaultChecked: false,
+        size: "md",
+        labelPosition: "right",
+        required: false,
+      } as SwitchInputProps,
+      render: SwitchInputRender as any,
+    },
+
+    CheckboxGroup: {
+      label: "Checkbox Group",
+      fields: {
+        name: { type: "text", label: "Field Name" },
+        label: { type: "text", label: "Label" },
+        options: {
+          type: "array",
+          label: "Options",
+          arrayFields: {
+            value: { type: "text", label: "Value" },
+            label: { type: "text", label: "Label" },
+            description: { type: "text", label: "Description" },
+          },
+        },
+        orientation: {
+          type: "select",
+          label: "Orientation",
+          options: [
+            { label: "Vertical", value: "vertical" },
+            { label: "Horizontal", value: "horizontal" },
+          ],
+        },
+        required: { type: "toggle", label: "Required" },
+        helpText: { type: "text", label: "Help Text" },
+      },
+      defaultProps: {
+        name: "checkboxes",
+        label: "Select Options",
+        options: [
+          { value: "option1", label: "Option 1" },
+          { value: "option2", label: "Option 2" },
+          { value: "option3", label: "Option 3" },
+        ],
+        defaultValue: [],
+        orientation: "vertical",
+        required: false,
+        helpText: "",
+      } as CheckboxGroupProps,
+      render: CheckboxGroupRender as any,
+    },
+
+    RadioGroup: {
+      label: "Radio Group",
+      fields: {
+        name: { type: "text", label: "Field Name" },
+        label: { type: "text", label: "Label" },
+        options: {
+          type: "array",
+          label: "Options",
+          arrayFields: {
+            value: { type: "text", label: "Value" },
+            label: { type: "text", label: "Label" },
+            description: { type: "text", label: "Description" },
+          },
+        },
+        orientation: {
+          type: "select",
+          label: "Orientation",
+          options: [
+            { label: "Vertical", value: "vertical" },
+            { label: "Horizontal", value: "horizontal" },
+          ],
+        },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Default", value: "default" },
+            { label: "Cards", value: "cards" },
+            { label: "Buttons", value: "buttons" },
+          ],
+        },
+        required: { type: "toggle", label: "Required" },
+        helpText: { type: "text", label: "Help Text" },
+      },
+      defaultProps: {
+        name: "radio",
+        label: "Select One",
+        options: [
+          { value: "option1", label: "Option 1" },
+          { value: "option2", label: "Option 2" },
+          { value: "option3", label: "Option 3" },
+        ],
+        defaultValue: "",
+        orientation: "vertical",
+        variant: "default",
+        required: false,
+        helpText: "",
+      } as RadioGroupProps,
+      render: RadioGroupRender as any,
+    },
+
+    SearchInput: {
+      label: "Search Input",
+      fields: {
+        name: { type: "text", label: "Field Name" },
+        placeholder: { type: "text", label: "Placeholder" },
+        size: {
+          type: "select",
+          label: "Size",
+          options: sizeOptions,
+        },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Default", value: "default" },
+            { label: "Filled", value: "filled" },
+            { label: "Outline", value: "outline" },
+          ],
+        },
+        showClearButton: { type: "toggle", label: "Show Clear Button" },
+        showSearchIcon: { type: "toggle", label: "Show Search Icon" },
+        iconPosition: {
+          type: "select",
+          label: "Icon Position",
+          options: [
+            { label: "Left", value: "left" },
+            { label: "Right", value: "right" },
+          ],
+        },
+      },
+      defaultProps: {
+        name: "search",
+        placeholder: "Search...",
+        size: "md",
+        variant: "default",
+        showClearButton: true,
+        showSearchIcon: true,
+        iconPosition: "left",
+      } as SearchInputProps,
+      render: SearchInputRender as any,
+    },
+
+    PasswordInput: {
+      label: "Password Input",
+      fields: {
+        name: { type: "text", label: "Field Name" },
+        label: { type: "text", label: "Label" },
+        placeholder: { type: "text", label: "Placeholder" },
+        showToggle: { type: "toggle", label: "Show Toggle" },
+        showStrength: { type: "toggle", label: "Show Strength" },
+        required: { type: "toggle", label: "Required" },
+        helpText: { type: "text", label: "Help Text" },
+        minLength: { type: "number", label: "Min Length" },
+      },
+      defaultProps: {
+        name: "password",
+        label: "Password",
+        placeholder: "Enter password",
+        showToggle: true,
+        showStrength: false,
+        required: false,
+        helpText: "",
+        minLength: 8,
+      } as PasswordInputProps,
+      render: PasswordInputRender as any,
+    },
+
+    OTPInput: {
+      label: "OTP Input",
+      fields: {
+        name: { type: "text", label: "Field Name" },
+        label: { type: "text", label: "Label" },
+        length: { type: "number", label: "Length" },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Boxes", value: "boxes" },
+            { label: "Underline", value: "underline" },
+          ],
+        },
+        autoFocus: { type: "toggle", label: "Auto Focus" },
+        helpText: { type: "text", label: "Help Text" },
+        type: {
+          type: "select",
+          label: "Input Type",
+          options: [
+            { label: "Number", value: "number" },
+            { label: "Text", value: "text" },
+          ],
+        },
+      },
+      defaultProps: {
+        name: "otp",
+        label: "Enter OTP",
+        length: 6,
+        variant: "boxes",
+        autoFocus: true,
+        helpText: "",
+        type: "number",
+      } as OTPInputProps,
+      render: OTPInputRender as any,
+    },
+
+    SelectInput: {
+      label: "Select Input",
+      fields: {
+        name: { type: "text", label: "Field Name" },
+        label: { type: "text", label: "Label" },
+        options: {
+          type: "array",
+          label: "Options",
+          arrayFields: {
+            value: { type: "text", label: "Value" },
+            label: { type: "text", label: "Label" },
+          },
+        },
+        placeholder: { type: "text", label: "Placeholder" },
+        multiple: { type: "toggle", label: "Multiple" },
+        searchable: { type: "toggle", label: "Searchable" },
+        clearable: { type: "toggle", label: "Clearable" },
+        required: { type: "toggle", label: "Required" },
+        helpText: { type: "text", label: "Help Text" },
+      },
+      defaultProps: {
+        name: "select",
+        label: "Select",
+        options: [
+          { value: "option1", label: "Option 1" },
+          { value: "option2", label: "Option 2" },
+          { value: "option3", label: "Option 3" },
+        ],
+        placeholder: "Select an option",
+        multiple: false,
+        searchable: false,
+        clearable: true,
+        required: false,
+        helpText: "",
+      } as SelectInputProps,
+      render: SelectInputRender as any,
+    },
+
+    TagInput: {
+      label: "Tag Input",
+      fields: {
+        name: { type: "text", label: "Field Name" },
+        label: { type: "text", label: "Label" },
+        placeholder: { type: "text", label: "Placeholder" },
+        maxTags: { type: "number", label: "Max Tags" },
+        allowDuplicates: { type: "toggle", label: "Allow Duplicates" },
+        suggestions: {
+          type: "array",
+          label: "Suggestions",
+          arrayFields: {
+            value: { type: "text", label: "Value" },
+          },
+        },
+        required: { type: "toggle", label: "Required" },
+        helpText: { type: "text", label: "Help Text" },
+      },
+      defaultProps: {
+        name: "tags",
+        label: "Tags",
+        placeholder: "Add a tag...",
+        defaultTags: [],
+        maxTags: 10,
+        allowDuplicates: false,
+        suggestions: [],
+        required: false,
+        helpText: "",
+      } as TagInputProps,
+      render: TagInputRender as any,
     },
   },
 };
