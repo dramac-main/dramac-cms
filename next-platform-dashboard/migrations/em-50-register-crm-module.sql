@@ -48,11 +48,11 @@ INSERT INTO public.modules_v2 (
   ],
   'https://docs.dramac.dev/modules/crm',
   'https://support.dramac.dev',
-  'published'
+  'active'
 ) ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description,
-  status = 'published',
+  status = 'active',
   current_version = EXCLUDED.current_version,
   updated_at = now();
 
