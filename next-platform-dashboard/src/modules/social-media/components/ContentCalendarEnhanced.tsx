@@ -22,13 +22,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+
 import {
   Popover,
   PopoverContent,
@@ -59,8 +53,8 @@ interface ContentCalendarEnhancedProps {
   onDeletePost: (postId: string) => void
   onDuplicatePost: (post: SocialPost) => void
   onReschedulePost?: (postId: string, newDate: Date) => void
-  onApprovePost?: (postId: string) => void
-  onRejectPost?: (postId: string) => void
+  _onApprovePost?: (postId: string) => void
+  _onRejectPost?: (postId: string) => void
   onPublishNow?: (postId: string) => void
   className?: string
 }
@@ -129,8 +123,8 @@ export function ContentCalendarEnhanced({
   onDeletePost,
   onDuplicatePost,
   onReschedulePost,
-  onApprovePost,
-  onRejectPost,
+  _onApprovePost,
+  _onRejectPost,
   onPublishNow,
   className,
 }: ContentCalendarEnhancedProps) {

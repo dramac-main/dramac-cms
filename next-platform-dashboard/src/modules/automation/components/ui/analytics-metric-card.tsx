@@ -6,7 +6,6 @@ import {
   TrendingUp, 
   TrendingDown, 
   Minus,
-  Loader2,
   Info
 } from "lucide-react"
 import { cn } from "@/lib/utils"

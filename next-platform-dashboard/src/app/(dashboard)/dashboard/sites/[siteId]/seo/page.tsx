@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useCallback, use } from "react";
 import Link from "next/link";
 import {
   Search,
@@ -47,11 +47,7 @@ export default function SeoPage({
   const [canEdit, setCanEdit] = useState(false);
   const [siteName, setSiteName] = useState("");
 
-  useEffect(() => {
-    loadData();
-  }, [siteId]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [seoSettings, pagesData, editPermission, siteInfo] = await Promise.all([
@@ -69,7 +65,11 @@ export default function SeoPage({
       toast.error("Failed to load SEO settings");
     }
     setLoading(false);
-  };
+  }, [siteId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSave = async () => {
     if (!settings || !canEdit) return;

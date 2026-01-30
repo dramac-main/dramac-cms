@@ -34,7 +34,6 @@ import {
 import { Calendar } from '@/components/ui/calendar'
 import { 
   Calendar as CalendarIcon,
-  Download,
   Upload,
   RefreshCw,
   MoreHorizontal,
@@ -43,7 +42,6 @@ import {
   FileJson,
   ChevronRight,
   Home,
-  Filter,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'

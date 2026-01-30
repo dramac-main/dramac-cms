@@ -107,7 +107,7 @@ export function AgentPersonality({
       <div>
         <Label className="text-base font-semibold">System Prompt *</Label>
         <p className="text-sm text-muted-foreground mb-3">
-          Core instructions that guide the agent's behavior. Use markdown for structure.
+          Core instructions that guide the agent&apos;s behavior. Use markdown for structure.
         </p>
         
         <Textarea

@@ -18,7 +18,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuCheckboxItem,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -100,11 +99,11 @@ interface FilterChipProps {
   onUpdate: (filter: FilterValue) => void
 }
 
-function FilterChip({ filter, filterOptions, onRemove, onUpdate }: FilterChipProps) {
+function FilterChip({ filter, filterOptions, onRemove, onUpdate: _onUpdate }: FilterChipProps) {
   const option = filterOptions.find(o => o.field === filter.field)
-  if (!option) return null
 
   const displayValue = useMemo(() => {
+    if (!option) return ''
     if (Array.isArray(filter.value)) {
       return filter.value.length > 2 
         ? `${filter.value.length} selected`
@@ -115,7 +114,9 @@ function FilterChip({ filter, filterOptions, onRemove, onUpdate }: FilterChipPro
       return opt?.label || String(filter.value)
     }
     return String(filter.value)
-  }, [filter.value, option.options])
+  }, [filter.value, option])
+
+  if (!option) return null
 
   return (
     <motion.div
@@ -326,7 +327,7 @@ interface SavedFiltersDropdownProps {
 function SavedFiltersDropdown({ 
   savedFilters, 
   onApply, 
-  onDelete, 
+  onDelete: _onDelete, 
   currentFilters,
   onSave 
 }: SavedFiltersDropdownProps) {

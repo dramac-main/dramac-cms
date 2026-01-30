@@ -65,7 +65,7 @@ const DashboardGrid = React.forwardRef<HTMLDivElement, DashboardGridProps>(
     children,
     ...props 
   }, ref) => {
-    const gridColsClass = cn(
+    const _gridColsClass = cn(
       "grid",
       cols.default && `grid-cols-${cols.default}`,
       cols.sm && `sm:grid-cols-${cols.sm}`,

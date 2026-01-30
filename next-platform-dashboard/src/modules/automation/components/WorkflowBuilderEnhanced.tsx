@@ -51,12 +51,10 @@ import { toast } from "sonner"
 import {
   Plus,
   Search,
-  ChevronRight,
   Loader2,
   Play,
   Square,
   Settings,
-  X,
 } from "lucide-react"
 
 import { useWorkflowBuilder } from "../hooks/use-workflow-builder"
@@ -94,7 +92,7 @@ function SortableStepItem({
   step,
   isSelected,
   isFirst,
-  isLast,
+  isLast: _isLast,
   onSelect,
   onDelete,
   onDuplicate,
@@ -186,7 +184,7 @@ export function WorkflowBuilderEnhanced({
   workflowId,
   siteId,
   onSave,
-  onClose,
+  onClose: _onClose,
 }: WorkflowBuilderEnhancedProps) {
   // Error handler
   const handleError = useCallback((err: string) => {
@@ -201,7 +199,7 @@ export function WorkflowBuilderEnhanced({
     isDirty,
     isLoading,
     isSaving,
-    error,
+    error: _error,
     setTrigger,
     updateWorkflowData,
     saveWorkflow,
@@ -220,7 +218,7 @@ export function WorkflowBuilderEnhanced({
   const [activeId, setActiveId] = useState<string | null>(null)
   const [showTriggerPanel, setShowTriggerPanel] = useState(false)
   const [showActionSearch, setShowActionSearch] = useState(false)
-  const [showMiniMap, setShowMiniMap] = useState(true)
+  const [showMiniMap, _setShowMiniMap] = useState(true)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const canvasRef = useRef<HTMLDivElement>(null)
 
@@ -232,6 +230,15 @@ export function WorkflowBuilderEnhanced({
       },
     })
   )
+
+  // Handle save - declared before useEffect that uses it
+  const handleSave = useCallback(async () => {
+    const success = await saveWorkflow()
+    if (success) {
+      setLastSaved(new Date())
+      toast.success("Workflow saved successfully")
+    }
+  }, [saveWorkflow])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -255,7 +262,7 @@ export function WorkflowBuilderEnhanced({
 
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
-  }, [selectStep])
+  }, [selectStep, handleSave])
 
   // Handle trigger changes
   const handleTriggerChange = useCallback(
@@ -314,15 +321,6 @@ export function WorkflowBuilderEnhanced({
     },
     [steps, addStep, reorderSteps]
   )
-
-  // Handle save
-  const handleSave = async () => {
-    const success = await saveWorkflow()
-    if (success) {
-      setLastSaved(new Date())
-      toast.success("Workflow saved successfully")
-    }
-  }
 
   // Handle action selection from search palette
   const handleActionSelect = useCallback(

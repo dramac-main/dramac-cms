@@ -7,7 +7,6 @@
  */
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Table,
@@ -47,15 +46,11 @@ import {
   ArrowUp,
   ArrowDown,
   ExternalLink,
-  Star,
-  StarOff,
-  MessageSquare,
-  Calendar,
   Copy,
   UserPlus,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Contact, LeadStatus, ContactStatus } from '../../types/crm-types'
+import type { Contact, LeadStatus } from '../../types/crm-types'
 
 // =============================================================================
 // TYPES

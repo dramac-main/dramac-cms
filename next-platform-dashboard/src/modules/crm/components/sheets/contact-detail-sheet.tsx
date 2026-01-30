@@ -44,7 +44,6 @@ import {
   Calendar,
   Activity as ActivityIcon,
   FileText,
-  ExternalLink
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ContactUpdate, ContactStatus, Activity } from '../../types/crm-types'

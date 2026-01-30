@@ -1,11 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Package, Zap, MessageSquare, ShoppingCart, Calendar, Bot, LucideIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 
 // =============================================================================
 // MODULE USAGE WIDGET
@@ -110,19 +109,19 @@ const ModuleUsageWidget = React.forwardRef<HTMLDivElement, ModuleUsageWidgetProp
         >
           <Package className="h-10 w-10 text-muted-foreground/50 mb-3" />
           <p className="text-sm text-muted-foreground">No modules installed yet</p>
-          <a 
+          <Link 
             href="/marketplace/v2" 
             className="text-sm text-primary hover:underline mt-1"
           >
             Browse Marketplace
-          </a>
+          </Link>
         </div>
       );
     }
 
     return (
       <div ref={ref} className={cn("space-y-4", className)} {...props}>
-        {displayModules.map((module, index) => {
+        {displayModules.map((module, _index) => {
           const category = module.category.toLowerCase();
           const Icon = moduleIcons[category] || moduleIcons.default;
           const colors = moduleColors[category] || moduleColors.default;

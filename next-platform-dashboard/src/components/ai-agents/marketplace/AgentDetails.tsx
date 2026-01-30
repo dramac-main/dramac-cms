@@ -18,7 +18,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { 
   Star, 
   Download, 
@@ -27,8 +26,7 @@ import {
   Wrench, 
   Shield,
   Crown,
-  User,
-  Calendar
+  User
 } from 'lucide-react';
 
 interface AgentDetailsProps {

@@ -19,7 +19,7 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Star, Download, Filter, Crown } from 'lucide-react';
+import { Search, Star, Download, Crown } from 'lucide-react';
 
 interface MarketplaceAgent {
   id: string;
@@ -164,7 +164,7 @@ interface AgentMarketplaceProps {
 }
 
 export function AgentMarketplace({ 
-  siteId, 
+  siteId: _siteId, 
   onInstall, 
   onViewDetails 
 }: AgentMarketplaceProps) {

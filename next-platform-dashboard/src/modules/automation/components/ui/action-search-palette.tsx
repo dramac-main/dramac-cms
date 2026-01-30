@@ -10,13 +10,10 @@
 "use client"
 
 import { useState, useCallback, useMemo, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Command,
   CommandEmpty,
@@ -29,17 +26,13 @@ import {
 import {
   Search,
   History,
-  Star,
-  Zap,
   Mail,
   User,
   Database,
   GitBranch,
-  Timer,
   Repeat,
   Webhook,
   Bot,
-  Clock,
   ChevronRight,
 } from "lucide-react"
 
@@ -182,18 +175,20 @@ export function ActionSearchPalette({
   onOpenChange,
   onSelectAction,
   recentActions = [],
-  favoriteActions = [],
+  favoriteActions: _favoriteActions = [],
 }: ActionSearchPaletteProps) {
   const [search, setSearch] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
-  // Reset search when dialog opens
-  useEffect(() => {
-    if (open) {
+  // Handle open change with reset logic
+  const handleOpenChange = useCallback((isOpen: boolean) => {
+    if (isOpen) {
+      // Reset state when opening
       setSearch("")
       setSelectedCategory(null)
     }
-  }, [open])
+    onOpenChange(isOpen)
+  }, [onOpenChange])
 
   // Filter actions based on search and category
   const filteredActions = useMemo(() => {
@@ -231,9 +226,9 @@ export function ActionSearchPalette({
   const handleSelect = useCallback(
     (action: ActionItem) => {
       onSelectAction(action)
-      onOpenChange(false)
+      handleOpenChange(false)
     },
-    [onSelectAction, onOpenChange]
+    [onSelectAction, handleOpenChange]
   )
 
   // Keyboard shortcut to open
@@ -241,16 +236,16 @@ export function ActionSearchPalette({
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        onOpenChange(!open)
+        handleOpenChange(!open)
       }
     }
 
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
-  }, [open, onOpenChange])
+  }, [open, handleOpenChange])
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="p-0 gap-0 max-w-[640px]">
         <Command className="rounded-lg border-0" shouldFilter={false}>
           <div className="flex items-center border-b px-3">

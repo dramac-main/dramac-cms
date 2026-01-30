@@ -9,7 +9,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AgentConfig } from '@/lib/ai-agents/types';
-import { Bot, Zap, Calendar, Wrench, Shield, Target } from 'lucide-react';
+import { Bot, Zap, Wrench, Shield, Target } from 'lucide-react';
 
 interface AgentPreviewProps {
   agent: Partial<AgentConfig>;

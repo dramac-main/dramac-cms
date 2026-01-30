@@ -18,8 +18,6 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Map,
-  ZoomIn,
-  ZoomOut,
   Maximize2,
   Minimize2,
   Zap,

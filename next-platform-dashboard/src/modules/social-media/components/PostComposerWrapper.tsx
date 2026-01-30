@@ -38,6 +38,27 @@ export function PostComposerWrapper({
   const [editingPostId, setEditingPostId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  // Load post data for edit/duplicate
+  const loadPost = useCallback(async (postId: string, isEdit: boolean) => {
+    setIsLoading(true)
+    try {
+      const result = await getPost(postId)
+      if (result.post) {
+        setInitialData({
+          content: result.post.content,
+          media: result.post.media,
+          targetAccounts: result.post.targetAccounts,
+          scheduledAt: result.post.scheduledAt || undefined,
+        })
+        if (isEdit) {
+          setEditingPostId(postId)
+        }
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   // Check for edit or duplicate params
   useEffect(() => {
     const editId = searchParams.get('edit')
@@ -45,24 +66,7 @@ export function PostComposerWrapper({
     const postId = editId || duplicateId
 
     if (postId) {
-      // Set loading state first, then use async IIFE
-      setIsLoading(true)
-      
-      ;(async () => {
-        const result = await getPost(postId)
-        if (result.post) {
-          setInitialData({
-            content: result.post.content,
-            media: result.post.media,
-            targetAccounts: result.post.targetAccounts,
-            scheduledAt: result.post.scheduledAt || undefined,
-          })
-          if (editId) {
-            setEditingPostId(editId)
-          }
-        }
-        setIsLoading(false)
-      })()
+      loadPost(postId, !!editId)
     }
 
     // Check for date param (from calendar)
@@ -74,7 +78,7 @@ export function PostComposerWrapper({
         scheduledAt: dateParam,
       }))
     }
-  }, [searchParams])
+  }, [searchParams, loadPost])
 
   const handleSubmit = useCallback(async (post: {
     content: string

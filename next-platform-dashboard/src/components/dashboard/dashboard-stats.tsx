@@ -124,7 +124,7 @@ export function DashboardStats({ stats, className, animated = true }: DashboardS
         className={cn("grid gap-4 md:grid-cols-2 lg:grid-cols-4", className)}
         {...containerProps}
       >
-        {statItems.map((item, index) => {
+        {statItems.map((item, _index) => {
           const Icon = item.icon;
           const value = stats[item.key];
           const trend = item.getTrend?.(value, stats);

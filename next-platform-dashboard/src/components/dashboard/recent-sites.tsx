@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getSiteUrl, getSiteDomain, getBaseDomain } from "@/lib/utils/site-url";
+import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Globe, ArrowRight, ExternalLink } from "lucide-react";

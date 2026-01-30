@@ -36,7 +36,6 @@ import {
   Save,
   Play,
   Loader2,
-  Check,
   AlertCircle,
   MoreVertical,
   Undo2,

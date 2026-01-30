@@ -4,7 +4,7 @@
  * Phase EM-58C: AI Agents - Real-World Integration
  */
 
-import { Suspense } from "react"
+import { Suspense, useMemo } from "react"
 import { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react"
@@ -81,7 +81,9 @@ async function getPendingApprovals(siteId: string): Promise<Approval[]> {
 }
 
 function ApprovalCard({ approval, siteId }: { approval: Approval; siteId: string }) {
-  const isExpiringSoon = new Date(approval.expires_at).getTime() - Date.now() < 3600000 // 1 hour
+  const isExpiringSoon = useMemo(() => {
+    return new Date(approval.expires_at).getTime() - Date.now() < 3600000 // 1 hour
+  }, [approval.expires_at])
 
   return (
     <Card className={isExpiringSoon ? 'border-amber-500' : ''}>

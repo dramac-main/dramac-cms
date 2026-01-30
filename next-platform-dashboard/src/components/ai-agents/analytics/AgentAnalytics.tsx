@@ -30,7 +30,6 @@ import { Progress } from '@/components/ui/progress';
 import {
   Bot,
   TrendingUp,
-  TrendingDown,
   Clock,
   Zap,
   CheckCircle,
@@ -197,12 +196,28 @@ interface AgentAnalyticsProps {
   onAgentClick?: (agentId: string) => void;
 }
 
-export function AgentAnalytics({ siteId, onAgentClick }: AgentAnalyticsProps) {
+export function AgentAnalytics({ siteId: _siteId, onAgentClick }: AgentAnalyticsProps) {
   const [timeRange, setTimeRange] = useState('7d');
-  const [stats, setStats] = useState<AgentStats>(MOCK_STATS);
-  const [executions, setExecutions] = useState<ExecutionRecord[]>(MOCK_EXECUTIONS);
-  const [performance, setPerformance] = useState<AgentPerformance[]>(MOCK_PERFORMANCE);
+  const [stats, _setStats] = useState<AgentStats>(MOCK_STATS);
+  const [executions, _setExecutions] = useState<ExecutionRecord[]>(MOCK_EXECUTIONS);
+  const [performance, _setPerformance] = useState<AgentPerformance[]>(MOCK_PERFORMANCE);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadData = async () => {
+      setIsLoading(true);
+      // In production, fetch real data here
+      await new Promise(resolve => setTimeout(resolve, 500));
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, [timeRange]);
 
   const refreshData = async () => {
     setIsLoading(true);
@@ -210,10 +225,6 @@ export function AgentAnalytics({ siteId, onAgentClick }: AgentAnalyticsProps) {
     await new Promise(resolve => setTimeout(resolve, 500));
     setIsLoading(false);
   };
-
-  useEffect(() => {
-    refreshData();
-  }, [timeRange]);
 
   const formatDuration = (seconds: number) => {
     if (seconds < 1) return `${Math.round(seconds * 1000)}ms`;

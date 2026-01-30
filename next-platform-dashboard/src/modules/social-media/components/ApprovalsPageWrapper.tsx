@@ -11,9 +11,7 @@ import { useRouter } from 'next/navigation'
 import { 
   Card, 
   CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+  CardHeader 
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -30,14 +28,12 @@ import {
   CheckCircle, 
   XCircle, 
   Clock, 
-  MessageSquare,
   Calendar,
   User,
   Image,
   AlertCircle
 } from 'lucide-react'
 import { approvePost, rejectPost } from '../actions/post-actions'
-import { PLATFORM_CONFIGS } from '../types'
 import type { SocialPost } from '../types'
 import { toast } from 'sonner'
 
@@ -45,14 +41,14 @@ interface ApprovalsPageWrapperProps {
   siteId: string
   userId: string
   pendingPosts: SocialPost[]
-  totalPending: number
+  totalPending?: number
 }
 
 export function ApprovalsPageWrapper({
   siteId,
   userId,
   pendingPosts,
-  totalPending,
+  totalPending: _totalPending,
 }: ApprovalsPageWrapperProps) {
   const router = useRouter()
   const [posts, setPosts] = useState(pendingPosts)
@@ -65,7 +61,7 @@ export function ApprovalsPageWrapper({
     setIsProcessing(true)
     
     try {
-      const { success, error } = await approvePost(postId, siteId, userId)
+      const { success: _success, error } = await approvePost(postId, siteId, userId)
       
       if (error) throw new Error(error)
       
@@ -88,7 +84,7 @@ export function ApprovalsPageWrapper({
     setIsProcessing(true)
     
     try {
-      const { success, error } = await rejectPost(selectedPost.id, siteId, userId, rejectReason)
+      const { success: _success2, error } = await rejectPost(selectedPost.id, siteId, userId, rejectReason)
       
       if (error) throw new Error(error)
       
@@ -209,7 +205,7 @@ function ApprovalCard({
   isProcessing: boolean
 }) {
   // Get platform icons for target accounts
-  const platforms = new Set<string>()
+  const _platforms = new Set<string>()
   // In real implementation, we'd look up account platforms
   // For now, show a generic indicator
   

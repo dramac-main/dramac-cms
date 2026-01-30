@@ -46,7 +46,7 @@ export function AIAgentsPage({
   const [agents, setAgents] = useState<AgentConfig[]>(initialAgents);
   const [selectedAgent, setSelectedAgent] = useState<AgentConfig | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [detailsAgentId, setDetailsAgentId] = useState<string | null>(null);
+  const [_detailsAgentId, setDetailsAgentId] = useState<string | null>(null);
 
   const handleSaveAgent = async (agent: Partial<AgentConfig>) => {
     // In production, this would save to the database

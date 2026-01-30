@@ -98,7 +98,7 @@ export function AgentBuilder({
     });
   }, [siteId]);
 
-  const handleTest = useCallback(async (scenario?: string) => {
+  const handleTest = useCallback(async (_scenario?: string) => {
     setIsTesting(true);
     try {
       // Simulate test for now - in production this would call the agent executor
@@ -127,7 +127,7 @@ export function AgentBuilder({
     } finally {
       setIsTesting(false);
     }
-  }, [agent]);
+  }, []);
 
   const handleSave = useCallback(async (activate: boolean) => {
     setIsSaving(true);

@@ -32,7 +32,7 @@ const DateInput = React.forwardRef<HTMLButtonElement, DateInputProps>(
       clearable = true,
       minDate,
       maxDate,
-      dateFormat = "PPP", // "January 29, 2026"
+      dateFormat: _dateFormat = "PPP", // "January 29, 2026"
       className,
     },
     ref

@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, RefreshCw, Download, Settings, Plus, LucideIcon } from "lucide-react";
+import { Calendar, RefreshCw, Download, LucideIcon } from "lucide-react";
 
 // =============================================================================
 // DASHBOARD HEADER

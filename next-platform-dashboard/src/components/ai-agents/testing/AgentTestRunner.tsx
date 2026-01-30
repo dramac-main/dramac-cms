@@ -37,7 +37,7 @@ import {
 import type { AgentConfig } from '@/lib/ai-agents/types';
 import { 
   AgentTester, 
-  TestScenario, 
+  TestScenario as _TestScenario, 
   TestResult, 
   TestReport,
   generateStandardScenarios 

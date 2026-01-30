@@ -20,7 +20,6 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { 
   Trash2, 
   GripVertical, 

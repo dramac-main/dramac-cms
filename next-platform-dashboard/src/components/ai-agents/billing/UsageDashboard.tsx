@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,13 +21,12 @@ import {
 import {
   Zap,
   Bot,
-  Wrench,
   Crown,
   Check,
   AlertTriangle,
   TrendingUp
 } from 'lucide-react';
-import { UsageTier, TIER_LIMITS, TIER_PRICING, UsageStats, UsageLimits } from '@/lib/ai-agents/billing/usage-tracker';
+import { UsageTier, TIER_PRICING, UsageStats, UsageLimits } from '@/lib/ai-agents/billing/usage-tracker';
 
 interface UsageDashboardProps {
   siteId: string;
@@ -94,7 +93,7 @@ const TIER_DISPLAY_NAMES: Record<UsageTier, string> = {
 };
 
 export function UsageDashboard({ 
-  siteId, 
+  siteId: _siteId, 
   currentTier, 
   usage, 
   limits,
@@ -102,7 +101,7 @@ export function UsageDashboard({
 }: UsageDashboardProps) {
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
-  const [selectedTier, setSelectedTier] = useState<UsageTier | null>(null);
+  const [_selectedTier, _setSelectedTier] = useState<UsageTier | null>(null);
 
   const tokenPercent = limits.monthlyTokenLimit > 0 
     ? Math.min(100, (usage.tokensUsed / limits.monthlyTokenLimit) * 100)

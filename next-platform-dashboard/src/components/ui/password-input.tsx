@@ -67,7 +67,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
 
     const strength = calculateStrength(currentValue);
     const strengthInfo = getStrengthLabel(strength);
-    const metRequirements = defaultRequirements.filter((req) => req.test(currentValue));
+    const _metRequirements = defaultRequirements.filter((req) => req.test(currentValue));
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (!isControlled) {

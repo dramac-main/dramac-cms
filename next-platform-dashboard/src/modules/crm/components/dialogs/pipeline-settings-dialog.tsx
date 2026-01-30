@@ -41,7 +41,6 @@ import {
   Settings2, 
   Trash2, 
   GripVertical,
-  Plus,
   AlertTriangle
 } from 'lucide-react'
 import type { Pipeline } from '../../types/crm-types'

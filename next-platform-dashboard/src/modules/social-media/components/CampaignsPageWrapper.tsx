@@ -46,7 +46,6 @@ import {
   Pause,
   Play,
   Archive,
-  BarChart3,
   Eye,
   Heart,
   MousePointer,
@@ -68,7 +67,7 @@ interface CampaignsPageWrapperProps {
   tenantId: string
   userId: string
   initialCampaigns: Campaign[]
-  totalCampaigns: number
+  totalCampaigns?: number
 }
 
 const STATUS_COLORS: Record<CampaignStatus, string> = {
@@ -94,7 +93,7 @@ export function CampaignsPageWrapper({
   tenantId,
   userId,
   initialCampaigns,
-  totalCampaigns,
+  totalCampaigns: _totalCampaigns,
 }: CampaignsPageWrapperProps) {
   const router = useRouter()
   const [campaigns, setCampaigns] = useState(initialCampaigns)

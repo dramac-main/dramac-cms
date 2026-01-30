@@ -21,7 +21,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 // UI Components
 import { 
-  AnalyticsMetricCard,
   ExecutionsMetricCard,
   SuccessRateMetricCard,
   AvgDurationMetricCard,
@@ -97,7 +96,7 @@ function LoadingSkeleton() {
 }
 
 export function AnalyticsDashboardEnhanced({
-  workspaceId,
+  workspaceId: _workspaceId,
   executions: initialExecutions = [],
   workflows: initialWorkflows = [],
   analytics: initialAnalytics,

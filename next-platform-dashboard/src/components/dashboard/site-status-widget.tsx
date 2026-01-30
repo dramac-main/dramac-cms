@@ -3,8 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Globe, Eye, FileEdit, AlertCircle, Clock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Eye, FileEdit, AlertCircle, Clock } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 // =============================================================================

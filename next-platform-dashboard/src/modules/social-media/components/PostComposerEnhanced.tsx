@@ -13,8 +13,6 @@ import {
   Send,
   Clock,
   X,
-  Sparkles,
-  Eye,
   ChevronRight,
   AlertCircle,
   CheckCircle2,
@@ -26,7 +24,6 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Tooltip,
   TooltipContent,

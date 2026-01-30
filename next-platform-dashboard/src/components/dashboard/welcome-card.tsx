@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, ArrowUpRight, Lightbulb, TrendingUp, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { useMemo } from "react";
+import { useState } from "react";
 
 interface WelcomeCardProps {
   userName?: string;
@@ -65,10 +65,8 @@ export function WelcomeCard({
   const planColor = planColors[plan] || planColors.free;
   const { greeting, emoji } = getGreeting();
 
-  // Pick a random tip on mount
-  const randomTip = useMemo(() => {
-    return quickTips[Math.floor(Math.random() * quickTips.length)];
-  }, []);
+  // Pick a random tip on mount using lazy initialization
+  const [randomTip] = useState(() => quickTips[Math.floor(Math.random() * quickTips.length)]);
 
   return (
     <motion.div

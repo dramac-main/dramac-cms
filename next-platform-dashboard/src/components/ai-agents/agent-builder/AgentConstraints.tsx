@@ -132,9 +132,9 @@ export function AgentConstraints({ constraints, onChange }: AgentConstraintsProp
           💡 Tips for Effective Constraints
         </h4>
         <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-          <li>• Be specific - "Never delete contacts" is clearer than "Be careful"</li>
+          <li>• Be specific - &quot;Never delete contacts&quot; is clearer than &quot;Be careful&quot;</li>
           <li>• Include approval requirements for risky actions</li>
-          <li>• Set limits on quantities (e.g., "Max 10 emails per day")</li>
+          <li>• Set limits on quantities (e.g., &quot;Max 10 emails per day&quot;)</li>
           <li>• Define escalation paths for edge cases</li>
         </ul>
       </div>
