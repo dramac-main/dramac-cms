@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { use } from "react";
-import { Editor, Frame, Element } from "@craftjs/core";
-import { componentResolver } from "@/components/editor/resolver";
-import { Root } from "@/components/editor/user-components/root";
+import { Render } from "@puckeditor/core";
+import "@puckeditor/core/puck.css";
+import { puckConfig } from "@/components/editor/puck/puck-config";
+import { detectContentFormat, migrateCraftToPuck, isPuckFormat } from "@/lib/migration/craft-to-puck";
+import type { PuckData } from "@/types/puck";
 import { Loader2, AlertTriangle, FileText } from "lucide-react";
 
 interface PreviewPageProps {
@@ -127,6 +129,36 @@ export default function PreviewPage({ params }: PreviewPageProps) {
     }
   }
 
+  // Parse and convert content to Puck format
+  let puckData: PuckData;
+  try {
+    const parsedContent = typeof data.content === "string" 
+      ? JSON.parse(data.content) 
+      : data.content;
+    
+    // Check if already Puck format
+    if (isPuckFormat(parsedContent)) {
+      puckData = parsedContent as PuckData;
+    } else {
+      // Migrate from Craft.js format
+      const detection = detectContentFormat(parsedContent);
+      if (detection.format === "craft") {
+        const migrationResult = migrateCraftToPuck(parsedContent);
+        if (migrationResult.success && migrationResult.data) {
+          puckData = migrationResult.data;
+        } else {
+          console.error("[Preview] Migration failed:", migrationResult.errors);
+          puckData = { content: [], root: { props: { title: "" } } };
+        }
+      } else {
+        puckData = { content: [], root: { props: { title: "" } } };
+      }
+    }
+  } catch (e) {
+    console.error("[Preview] Failed to parse content:", e);
+    puckData = { content: [], root: { props: { title: "" } } };
+  }
+
   return (
     <>
       {/* Document title update */}
@@ -135,18 +167,10 @@ export default function PreviewPage({ params }: PreviewPageProps) {
       )}
 
       <div
-        className="min-h-screen bg-white"
+        className="min-h-screen bg-white puck-preview"
         style={themeVars as React.CSSProperties}
       >
-        <Editor
-          resolver={componentResolver}
-          enabled={false}
-          onRender={({ render }) => render}
-        >
-          <Frame data={data.content}>
-            <Element is={Root} canvas />
-          </Frame>
-        </Editor>
+        <Render config={puckConfig} data={puckData} />
       </div>
     </>
   );

@@ -1,8 +1,50 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 30, 2026  
-**Current Phase**: PHASE-ED-04 Critical Puck Editor Fixes (Master Build Prompt V2.1)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + ED-01A/ED-01B/ED-02A/ED-02B/ED-02C/ED-03/ED-04 - ✅ Zero TypeScript Errors - ✅ Build Passing
+**Current Phase**: PHASE-ED-05 Preview & Renderer Migration (Master Build Prompt V2.1)  
+**Status**: ✅ 40 OF 40 PHASES (100%) + ED-01A/ED-01B/ED-02A/ED-02B/ED-02C/ED-03/ED-04/ED-05 - ✅ Zero TypeScript Errors - ✅ Build Passing
+
+## 🚀 PHASE-ED-05: Preview & Renderer Migration to Puck (January 30, 2026)
+
+### Critical Discovery: Preview & Published Sites Still Used Craft.js!
+
+**Problem**: While PHASE-ED-03 connected the editor to Puck, the preview page and published site renderers were STILL using Craft.js. This meant:
+- Users couldn't preview pages (content format mismatch)
+- Published sites wouldn't render Puck content
+- Dark mode was still not fully working
+
+### What Was Fixed
+
+1. **Preview Page Migration** (`src/app/preview/[siteId]/[pageId]/page.tsx`)
+   - Removed `@craftjs/core` imports
+   - Now uses Puck's `<Render>` component
+   - Added content format detection and migration
+   - Handles both Puck and legacy Craft.js content
+
+2. **Created Universal Puck Renderer** (`src/components/renderer/puck-site-renderer.tsx`)
+   - New shared renderer component
+   - Handles format conversion (Craft → Puck)
+   - Theme settings support
+   - Empty state handling
+
+3. **Updated Published Site Renderer** (`src/app/site/[domain]/[[...slug]]/craft-renderer.tsx`)
+   - Now uses `PuckSiteRenderer` internally
+   - Backward compatible naming
+
+4. **Updated Published Site Renderer** (`src/components/renderer/published-site-renderer.tsx`)
+   - Now re-exports `PuckSiteRenderer`
+   - Backward compatible API
+
+### Files Changed
+
+- `src/app/preview/[siteId]/[pageId]/page.tsx` - Converted from Craft.js to Puck
+- `src/components/renderer/puck-site-renderer.tsx` - NEW universal renderer
+- `src/app/site/[domain]/[[...slug]]/craft-renderer.tsx` - Uses PuckSiteRenderer
+- `src/components/renderer/published-site-renderer.tsx` - Uses PuckSiteRenderer
+
+### Build Status: ✅ PASSING
+
+---
 
 ## 🚀 PHASE-ED-04: Critical Puck Editor Fixes (January 30, 2026)
 
