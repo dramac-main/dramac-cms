@@ -448,8 +448,8 @@ export function SocialInbox({
                         variant="secondary" 
                         className={cn(
                           'mt-3',
-                          selectedItem.sentiment === 'positive' && 'bg-green-100 text-green-800',
-                          selectedItem.sentiment === 'negative' && 'bg-red-100 text-red-800'
+                          selectedItem.sentiment === 'positive' && 'bg-success-100 dark:bg-success-900/30 text-success-800 dark:text-success-300',
+                          selectedItem.sentiment === 'negative' && 'bg-danger-100 dark:bg-danger-900/30 text-danger-800 dark:text-danger-300'
                         )}
                       >
                         {selectedItem.sentiment}

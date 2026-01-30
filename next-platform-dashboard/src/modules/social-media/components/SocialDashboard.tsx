@@ -141,10 +141,10 @@ export function SocialDashboard({
 
   const getStatusColor = (status: SocialAccount['status']) => {
     switch (status) {
-      case 'active': return 'bg-green-500'
-      case 'expired': return 'bg-yellow-500'
-      case 'error': return 'bg-red-500'
-      default: return 'bg-gray-500'
+      case 'active': return 'bg-success-500'
+      case 'expired': return 'bg-warning-500'
+      case 'error': return 'bg-danger-500'
+      default: return 'bg-muted-foreground'
     }
   }
 
@@ -172,17 +172,17 @@ export function SocialDashboard({
           <CardContent className="pt-4">
             <div className="grid gap-4 md:grid-cols-3 max-w-3xl mx-auto">
               <div className="text-center p-4 rounded-lg bg-background/50">
-                <Calendar className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                <Calendar className="h-8 w-8 mx-auto mb-2 text-info" />
                 <h3 className="font-medium">Schedule Posts</h3>
                 <p className="text-sm text-muted-foreground">Plan content weeks in advance</p>
               </div>
               <div className="text-center p-4 rounded-lg bg-background/50">
-                <TrendingUp className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                <TrendingUp className="h-8 w-8 mx-auto mb-2 text-success" />
                 <h3 className="font-medium">Track Analytics</h3>
                 <p className="text-sm text-muted-foreground">Monitor growth & engagement</p>
               </div>
               <div className="text-center p-4 rounded-lg bg-background/50">
-                <MessageCircle className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                <MessageCircle className="h-8 w-8 mx-auto mb-2 text-primary" />
                 <h3 className="font-medium">Unified Inbox</h3>
                 <p className="text-sm text-muted-foreground">Respond to all messages</p>
               </div>
@@ -347,8 +347,8 @@ export function SocialDashboard({
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <MessageCircle className="h-5 w-5 text-blue-600" />
+                <div className="h-10 w-10 rounded-full bg-info-100 dark:bg-info-900/30 flex items-center justify-center">
+                  <MessageCircle className="h-5 w-5 text-info-600 dark:text-info-400" />
                 </div>
                 <div>
                   <p className="font-medium">Inbox</p>
@@ -364,12 +364,12 @@ export function SocialDashboard({
           </CardContent>
         </Card>
 
-        <Card className={cn(pendingApprovals > 0 && 'border-yellow-500/50')}>
+        <Card className={cn(pendingApprovals > 0 && 'border-warning/50')}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                  <AlertCircle className="h-5 w-5 text-yellow-600" />
+                <div className="h-10 w-10 rounded-full bg-warning-100 dark:bg-warning-900/30 flex items-center justify-center">
+                  <AlertCircle className="h-5 w-5 text-warning-600 dark:text-warning-400" />
                 </div>
                 <div>
                   <p className="font-medium">Pending Approval</p>

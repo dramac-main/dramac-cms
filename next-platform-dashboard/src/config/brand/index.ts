@@ -262,6 +262,37 @@ export {
 } from './animations';
 
 // =============================================================================
+// SEMANTIC COLOR EXPORTS
+// =============================================================================
+
+export {
+  // Status colors
+  statusColors as semanticStatusColors,
+  brandColors as semanticBrandColors,
+  
+  // Utility functions
+  getStatusClasses,
+  getBrandClasses,
+  mapToStatusType,
+  getStatusStyle,
+  
+  // Avatar colors
+  avatarColors,
+  getAvatarColor,
+  
+  // Chart colors
+  chartColors,
+  chartColorArray,
+  getChartColor,
+  
+  // Types
+  type StatusType,
+  type BrandColorType,
+  type IntensityLevel,
+  type SemanticColorClasses,
+} from './semantic-colors';
+
+// =============================================================================
 // ACCESSIBILITY EXPORTS
 // =============================================================================
 

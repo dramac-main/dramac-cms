@@ -467,14 +467,14 @@ function WorkflowCard({
   return (
     <div className="flex items-center justify-between p-4 border rounded-lg">
       <div className="flex items-center gap-4">
-        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${workflow.isActive ? 'bg-green-100' : 'bg-muted'}`}>
-          <GitBranch className={`h-5 w-5 ${workflow.isActive ? 'text-green-600' : ''}`} />
+        <div className={`h-10 w-10 rounded-full flex items-center justify-center ${workflow.isActive ? 'bg-success-100 dark:bg-success-900/30' : 'bg-muted'}`}>
+          <GitBranch className={`h-5 w-5 ${workflow.isActive ? 'text-success-600 dark:text-success-400' : ''}`} />
         </div>
         <div>
           <div className="flex items-center gap-2">
             <p className="font-medium">{workflow.name}</p>
             {workflow.isActive ? (
-              <Badge variant="outline" className="text-green-600 border-green-600">Active</Badge>
+              <Badge variant="outline" className="text-success-600 border-success-600 dark:text-success-400 dark:border-success-400">Active</Badge>
             ) : (
               <Badge variant="secondary">Inactive</Badge>
             )}

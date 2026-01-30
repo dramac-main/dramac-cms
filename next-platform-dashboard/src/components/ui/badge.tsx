@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { mapToStatusType, getStatusClasses, type StatusType, type IntensityLevel } from "@/config/brand/semantic-colors";
 
 const badgeVariants = cva(
   "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -40,4 +41,69 @@ function Badge({ className, variant, ...props }: BadgeProps) {
   );
 }
 
-export { Badge, badgeVariants };
+// =============================================================================
+// STATUS BADGE
+// =============================================================================
+
+export interface StatusBadgeProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** 
+   * Status string that will be auto-mapped to a semantic color.
+   * Examples: 'active', 'pending', 'failed', 'completed', etc.
+   */
+  status: string;
+  /** 
+   * Color intensity level.
+   * - subtle: Light background (default for badges)
+   * - moderate: Medium background with border
+   * - strong: Full color background
+   */
+  intensity?: IntensityLevel;
+  /** Override the display text (defaults to the status) */
+  label?: string;
+}
+
+/**
+ * StatusBadge - Automatically styled badge based on status string.
+ * 
+ * Maps common status strings to semantic colors:
+ * - Success: active, completed, confirmed, published, approved
+ * - Warning: pending, scheduled, processing, draft, paused
+ * - Danger: error, failed, cancelled, rejected, expired
+ * - Info: new, updated, modified
+ * - Neutral: everything else
+ * 
+ * @example
+ * ```tsx
+ * <StatusBadge status="active" />
+ * <StatusBadge status="pending" intensity="subtle" />
+ * <StatusBadge status="FAILED" label="Error" />
+ * ```
+ */
+function StatusBadge({ 
+  status, 
+  intensity = 'subtle',
+  label,
+  className, 
+  ...props 
+}: StatusBadgeProps) {
+  const statusType = mapToStatusType(status);
+  const statusClasses = getStatusClasses(statusType, intensity);
+  
+  // Capitalize first letter for display
+  const displayLabel = label ?? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase().replace(/_/g, ' ');
+  
+  return (
+    <div 
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
+        statusClasses,
+        className
+      )} 
+      {...props}
+    >
+      {displayLabel}
+    </div>
+  );
+}
+
+export { Badge, StatusBadge, badgeVariants };
