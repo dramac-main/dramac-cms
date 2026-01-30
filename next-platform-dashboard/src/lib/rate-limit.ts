@@ -19,6 +19,11 @@ export const RATE_LIMITS = {
   siteCreation: { maxRequests: 20, windowMs: 24 * 60 * 60 * 1000 }, // 20/day
   pageCreation: { maxRequests: 100, windowMs: 24 * 60 * 60 * 1000 }, // 100/day
   export: { maxRequests: 10, windowMs: 60 * 60 * 1000 },          // 10/hour
+  // AI Editor operations (PHASE-ED-05)
+  aiEditor: { maxRequests: 100, windowMs: 60 * 60 * 1000 },       // 100/hour
+  aiPageGeneration: { maxRequests: 20, windowMs: 60 * 60 * 1000 }, // 20/hour
+  aiComponentGeneration: { maxRequests: 50, windowMs: 60 * 60 * 1000 }, // 50/hour
+  aiOptimization: { maxRequests: 30, windowMs: 60 * 60 * 1000 },  // 30/hour
 } as const;
 
 export type RateLimitType = keyof typeof RATE_LIMITS;
