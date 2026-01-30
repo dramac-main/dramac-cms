@@ -19,6 +19,7 @@ import {
   Activity,
   Download,
   Filter,
+  LucideIcon,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
   description: "View platform activity and audit logs",
 };
 
-const actionIcons: Record<string, React.ElementType> = {
+const actionIcons: Record<string, LucideIcon> = {
   "user.created": UserPlus,
   "user.updated": Settings,
   "agency.created": Building2,
