@@ -537,7 +537,7 @@ export default async function ExecutionDetailPage({
       <div className="border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
         <div className="p-6">
           <div className="flex items-center gap-4">
-            <Link href={`/dashboard/${siteId}/automation/executions`}>
+            <Link href={`/dashboard/sites/${siteId}/automation/executions`}>
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-4 w-4" />
               </Button>

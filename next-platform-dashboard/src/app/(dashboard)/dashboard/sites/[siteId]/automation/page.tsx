@@ -253,7 +253,7 @@ function WorkflowRow({ workflow, siteId }: { workflow: Workflow; siteId: string 
         <div>
           <div className="flex items-center gap-2">
             <Link 
-              href={`/dashboard/${siteId}/automation/workflows/${workflow.id}`}
+              href={`/dashboard/sites/${siteId}/automation/workflows/${workflow.id}`}
               className="font-medium hover:underline"
             >
               {workflow.name}
@@ -282,7 +282,7 @@ function WorkflowRow({ workflow, siteId }: { workflow: Workflow; siteId: string 
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild>
-              <Link href={`/dashboard/${siteId}/automation/workflows/${workflow.id}`}>
+              <Link href={`/dashboard/sites/${siteId}/automation/workflows/${workflow.id}`}>
                 <Settings className="h-4 w-4 mr-2" />
                 Edit
               </Link>
@@ -350,25 +350,25 @@ async function AutomationDashboardContent({ siteId }: { siteId: string }) {
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-2">
         <CreateWorkflowButton siteId={siteId} />
-        <Link href={`/dashboard/${siteId}/automation/executions`}>
+        <Link href={`/dashboard/sites/${siteId}/automation/executions`}>
           <Button variant="outline">
             <History className="h-4 w-4 mr-2" />
             Executions
           </Button>
         </Link>
-        <Link href={`/dashboard/${siteId}/automation/templates`}>
+        <Link href={`/dashboard/sites/${siteId}/automation/templates`}>
           <Button variant="outline">
             <Library className="h-4 w-4 mr-2" />
             Templates
           </Button>
         </Link>
-        <Link href={`/dashboard/${siteId}/automation/analytics`}>
+        <Link href={`/dashboard/sites/${siteId}/automation/analytics`}>
           <Button variant="outline">
             <BarChart3 className="h-4 w-4 mr-2" />
             Analytics
           </Button>
         </Link>
-        <Link href={`/dashboard/${siteId}/automation/connections`}>
+        <Link href={`/dashboard/sites/${siteId}/automation/connections`}>
           <Button variant="outline">
             <Plug className="h-4 w-4 mr-2" />
             Connections
@@ -386,7 +386,7 @@ async function AutomationDashboardContent({ siteId }: { siteId: string }) {
             </CardDescription>
           </div>
           {workflows.length > 0 && (
-            <Link href={`/dashboard/${siteId}/automation/workflows`}>
+            <Link href={`/dashboard/sites/${siteId}/automation/workflows`}>
               <Button variant="ghost" size="sm">
                 View All
               </Button>
@@ -403,7 +403,7 @@ async function AutomationDashboardContent({ siteId }: { siteId: string }) {
               </p>
               <div className="flex gap-2 justify-center">
                 <CreateWorkflowButton siteId={siteId} />
-                <Link href={`/dashboard/${siteId}/automation/templates`}>
+                <Link href={`/dashboard/sites/${siteId}/automation/templates`}>
                   <Button variant="outline">
                     <FileCode className="h-4 w-4 mr-2" />
                     Browse Templates

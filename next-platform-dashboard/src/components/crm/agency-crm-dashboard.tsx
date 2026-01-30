@@ -272,7 +272,7 @@ export function AgencyCRMDashboard({ agencyId, sites }: AgencyCRMDashboardProps)
                   {sites.slice(0, 5).map((site) => (
                     <Link
                       key={site.id}
-                      href={`/dashboard/${site.id}/crm`}
+                      href={`/dashboard/sites/${site.id}/crm`}
                       className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
                     >
                       <div className="flex items-center gap-3">

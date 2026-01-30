@@ -47,7 +47,7 @@ export default async function UsagePage({ params }: UsagePageProps) {
       {/* Header */}
       <div className="flex items-center gap-2 mb-2">
         <Link 
-          href={`/dashboard/${siteId}/ai-agents`}
+          href={`/dashboard/sites/${siteId}/ai-agents`}
           className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
         >
           <ArrowLeft className="h-4 w-4" />

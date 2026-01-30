@@ -133,7 +133,7 @@ async function WorkflowsListContent({ siteId }: { siteId: string }) {
             <SelectItem value="name">Name</SelectItem>
           </SelectContent>
         </Select>
-        <Link href={`/dashboard/${siteId}/automation/workflows/new`}>
+        <Link href={`/dashboard/sites/${siteId}/automation/workflows/new`}>
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             New Workflow
@@ -151,13 +151,13 @@ async function WorkflowsListContent({ siteId }: { siteId: string }) {
               Create your first workflow or try a template to get started.
             </p>
             <div className="flex gap-2 justify-center">
-              <Link href={`/dashboard/${siteId}/automation/workflows/new`}>
+              <Link href={`/dashboard/sites/${siteId}/automation/workflows/new`}>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   Create Workflow
                 </Button>
               </Link>
-              <Link href={`/dashboard/${siteId}/automation/templates`}>
+              <Link href={`/dashboard/sites/${siteId}/automation/templates`}>
                 <Button variant="outline">
                   Browse Templates
                 </Button>
@@ -195,7 +195,7 @@ export default async function WorkflowsPage({ params }: WorkflowsPageProps) {
     <div className="flex flex-col h-full">
       {/* Navigation */}
       <div className="border-b px-6 py-3 flex items-center justify-between">
-        <Link href={`/dashboard/${siteId}/automation`}>
+        <Link href={`/dashboard/sites/${siteId}/automation`}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Automation

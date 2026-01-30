@@ -276,7 +276,7 @@ function ExecutionRow({ execution, siteId }: { execution: Execution; siteId: str
             {execution.steps_completed}/{execution.steps_total} steps
           </div>
         </div>
-        <Link href={`/dashboard/${siteId}/automation/executions/${execution.id}`}>
+        <Link href={`/dashboard/sites/${siteId}/automation/executions/${execution.id}`}>
           <Button variant="outline" size="sm">
             View Details
           </Button>
@@ -324,7 +324,7 @@ async function ExecutionsContent({
               <p className="text-muted-foreground mb-4">
                 Workflow executions will appear here when workflows are triggered.
               </p>
-              <Link href={`/dashboard/${siteId}/automation`}>
+              <Link href={`/dashboard/sites/${siteId}/automation`}>
                 <Button variant="outline">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Automation
@@ -369,7 +369,7 @@ export default async function ExecutionsPage({
         <div className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href={`/dashboard/${siteId}/automation`}>
+              <Link href={`/dashboard/sites/${siteId}/automation`}>
                 <Button variant="ghost" size="icon">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>

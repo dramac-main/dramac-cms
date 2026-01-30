@@ -48,7 +48,7 @@ export default async function AgentDetailPage({ params }: AgentDetailPageProps) 
   async function handleDelete() {
     'use server'
     await deleteAgent(agentId)
-    redirect(`/dashboard/${siteId}/ai-agents`)
+    redirect(`/dashboard/sites/${siteId}/ai-agents`)
   }
 
   return (
@@ -58,7 +58,7 @@ export default async function AgentDetailPage({ params }: AgentDetailPageProps) 
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Link 
-              href={`/dashboard/${siteId}/ai-agents`}
+              href={`/dashboard/sites/${siteId}/ai-agents`}
               className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -78,7 +78,7 @@ export default async function AgentDetailPage({ params }: AgentDetailPageProps) 
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/dashboard/${siteId}/ai-agents/${agentId}/executions`}>
+            <Link href={`/dashboard/sites/${siteId}/ai-agents/${agentId}/executions`}>
               <History className="h-4 w-4 mr-2" /> Execution History
             </Link>
           </Button>
@@ -192,7 +192,7 @@ export default async function AgentDetailPage({ params }: AgentDetailPageProps) 
               onSave={async () => {
                 'use server'
                 // Handle save
-                redirect(`/dashboard/${siteId}/ai-agents/${agentId}`)
+                redirect(`/dashboard/sites/${siteId}/ai-agents/${agentId}`)
               }}
             />
           </TabsContent>

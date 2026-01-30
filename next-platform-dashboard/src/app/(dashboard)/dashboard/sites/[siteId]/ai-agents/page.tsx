@@ -300,7 +300,7 @@ function AgentCard({ agent, siteId }: { agent: Agent; siteId: string }) {
             </div>
             <div>
               <Link 
-                href={`/dashboard/${siteId}/ai-agents/${agent.id}`}
+                href={`/dashboard/sites/${siteId}/ai-agents/${agent.id}`}
                 className="font-semibold hover:underline"
               >
                 {agent.name}
@@ -327,7 +327,7 @@ function AgentCard({ agent, siteId }: { agent: Agent; siteId: string }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={`/dashboard/${siteId}/ai-agents/${agent.id}`}>
+                <Link href={`/dashboard/sites/${siteId}/ai-agents/${agent.id}`}>
                   <Settings className="h-4 w-4 mr-2" /> Configure
                 </Link>
               </DropdownMenuItem>
@@ -409,7 +409,7 @@ async function AIAgentsContent({ siteId }: { siteId: string }) {
           </p>
         </div>
         <Button asChild>
-          <Link href={`/dashboard/${siteId}/ai-agents/new`}>
+          <Link href={`/dashboard/sites/${siteId}/ai-agents/new`}>
             <Plus className="h-4 w-4 mr-2" /> Create Agent
           </Link>
         </Button>
@@ -456,7 +456,7 @@ async function AIAgentsContent({ siteId }: { siteId: string }) {
               </div>
             </div>
             <Button variant="outline" asChild>
-              <Link href={`/dashboard/${siteId}/ai-agents/approvals`}>
+              <Link href={`/dashboard/sites/${siteId}/ai-agents/approvals`}>
                 Review Now
               </Link>
             </Button>
@@ -467,22 +467,22 @@ async function AIAgentsContent({ siteId }: { siteId: string }) {
       {/* Quick Links */}
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" asChild>
-          <Link href={`/dashboard/${siteId}/ai-agents/marketplace`}>
+          <Link href={`/dashboard/sites/${siteId}/ai-agents/marketplace`}>
             <Store className="h-4 w-4 mr-2" /> Agent Marketplace
           </Link>
         </Button>
         <Button variant="outline" asChild>
-          <Link href={`/dashboard/${siteId}/ai-agents/analytics`}>
+          <Link href={`/dashboard/sites/${siteId}/ai-agents/analytics`}>
             <BarChart3 className="h-4 w-4 mr-2" /> Analytics
           </Link>
         </Button>
         <Button variant="outline" asChild>
-          <Link href={`/dashboard/${siteId}/ai-agents/testing`}>
+          <Link href={`/dashboard/sites/${siteId}/ai-agents/testing`}>
             <TestTube className="h-4 w-4 mr-2" /> Testing
           </Link>
         </Button>
         <Button variant="outline" asChild>
-          <Link href={`/dashboard/${siteId}/ai-agents/usage`}>
+          <Link href={`/dashboard/sites/${siteId}/ai-agents/usage`}>
             <CreditCard className="h-4 w-4 mr-2" /> Usage & Billing
           </Link>
         </Button>
@@ -493,7 +493,7 @@ async function AIAgentsContent({ siteId }: { siteId: string }) {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">My Agents</h2>
           <Link 
-            href={`/dashboard/${siteId}/ai-agents/all`}
+            href={`/dashboard/sites/${siteId}/ai-agents/all`}
             className="text-sm text-primary hover:underline"
           >
             View All
@@ -510,12 +510,12 @@ async function AIAgentsContent({ siteId }: { siteId: string }) {
               </p>
               <div className="flex gap-2">
                 <Button asChild>
-                  <Link href={`/dashboard/${siteId}/ai-agents/new`}>
+                  <Link href={`/dashboard/sites/${siteId}/ai-agents/new`}>
                     <Plus className="h-4 w-4 mr-2" /> Create Agent
                   </Link>
                 </Button>
                 <Button variant="outline" asChild>
-                  <Link href={`/dashboard/${siteId}/ai-agents/marketplace`}>
+                  <Link href={`/dashboard/sites/${siteId}/ai-agents/marketplace`}>
                     <Store className="h-4 w-4 mr-2" /> Browse Marketplace
                   </Link>
                 </Button>

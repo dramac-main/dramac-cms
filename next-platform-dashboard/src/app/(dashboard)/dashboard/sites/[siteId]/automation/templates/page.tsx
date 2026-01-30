@@ -32,7 +32,7 @@ export default async function TemplatesPage({ params }: TemplatesPageProps) {
     <div className="flex flex-col h-full">
       {/* Navigation */}
       <div className="border-b px-6 py-3 flex items-center justify-between">
-        <Link href={`/dashboard/${siteId}/automation`}>
+        <Link href={`/dashboard/sites/${siteId}/automation`}>
           <Button variant="ghost" size="sm">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Automation
