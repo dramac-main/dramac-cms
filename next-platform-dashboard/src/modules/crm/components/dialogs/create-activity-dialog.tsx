@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { toast } from 'sonner'
-import { Loader2, Phone, Mail, Calendar, CheckCircle2, FileText, MessageSquare } from 'lucide-react'
+import { Loader2, Phone, Mail, Calendar, CheckCircle2, FileText, MessageSquare, LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { ActivityType } from '../../types/crm-types'
 
@@ -58,7 +58,7 @@ interface CreateActivityDialogProps {
   onSuccess?: (activityId: string) => void
 }
 
-const activityTypes: Array<{ value: ActivityType; label: string; icon: React.ElementType }> = [
+const activityTypes: Array<{ value: ActivityType; label: string; icon: LucideIcon }> = [
   { value: 'call', label: 'Call', icon: Phone },
   { value: 'email', label: 'Email', icon: Mail },
   { value: 'meeting', label: 'Meeting', icon: Calendar },

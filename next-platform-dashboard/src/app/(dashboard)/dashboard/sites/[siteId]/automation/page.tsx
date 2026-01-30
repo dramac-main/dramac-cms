@@ -29,7 +29,8 @@ import {
   PlayCircle,
   PauseCircle,
   Settings,
-  History
+  History,
+  LucideIcon
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -202,7 +203,7 @@ function StatCard({
 }: { 
   title: string
   value: string | number
-  icon: React.ElementType
+  icon: LucideIcon
   color: "blue" | "green" | "yellow" | "red"
 }) {
   const colorClasses = {

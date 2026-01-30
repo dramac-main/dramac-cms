@@ -54,7 +54,8 @@ import {
   AlertTriangle,
   RefreshCw,
   ArrowRight,
-  BarChart3
+  BarChart3,
+  LucideIcon
 } from "lucide-react"
 import { getAutomationAnalytics } from "../actions/automation-actions"
 
@@ -145,7 +146,7 @@ function formatNumber(num: number): string {
 // SUB-COMPONENTS
 // ============================================================================
 
-function StatCard({ 
+function StatCard({
   title, 
   value, 
   trend, 
@@ -156,7 +157,7 @@ function StatCard({
   title: string
   value: string | number
   trend?: number
-  icon: React.ElementType
+  icon: LucideIcon
   color?: "primary" | "success" | "error" | "warning"
   description?: string
 }) {

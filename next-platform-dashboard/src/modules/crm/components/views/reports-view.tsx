@@ -37,7 +37,8 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  Download
+  Download,
+  LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Deal, Activity as CRMActivity } from '../../types/crm-types'
@@ -67,7 +68,7 @@ interface StatCardProps {
   title: string
   value: string | number
   description?: string
-  icon: React.ElementType
+  icon: LucideIcon
   trend?: {
     value: number
     positive: boolean

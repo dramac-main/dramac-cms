@@ -7,9 +7,10 @@ import {
   Globe,
   Settings,
   Activity,
+  LucideIcon,
 } from "lucide-react";
 
-const actionIcons: Record<string, React.ElementType> = {
+const actionIcons: Record<string, LucideIcon> = {
   "user.created": UserPlus,
   "user.updated": Settings,
   "agency.created": Building2,

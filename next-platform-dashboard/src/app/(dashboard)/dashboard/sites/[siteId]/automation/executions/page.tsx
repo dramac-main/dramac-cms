@@ -22,7 +22,8 @@ import {
   Loader2,
   RefreshCw,
   Zap,
-  Filter
+  Filter,
+  LucideIcon
 } from "lucide-react"
 import {
   Select,
@@ -181,7 +182,7 @@ function StatCard({
 }: { 
   title: string
   value: number
-  icon: React.ElementType
+  icon: LucideIcon
   color: "blue" | "green" | "yellow" | "red"
 }) {
   const colorClasses = {

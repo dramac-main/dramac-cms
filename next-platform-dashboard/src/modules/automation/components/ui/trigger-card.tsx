@@ -30,6 +30,7 @@ import {
   ChevronDown,
   CheckCircle2,
   AlertCircle,
+  LucideIcon,
 } from "lucide-react"
 import type { TriggerConfig, TriggerType } from "../../types/automation-types"
 
@@ -54,7 +55,7 @@ interface TriggerCardProps {
 const TRIGGER_TYPE_CONFIG: Record<
   TriggerType,
   {
-    icon: React.ElementType
+    icon: LucideIcon
     color: string
     bgColor: string
     borderColor: string

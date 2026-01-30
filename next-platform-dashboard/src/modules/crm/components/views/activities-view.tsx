@@ -33,7 +33,8 @@ import {
   Clock,
   User,
   MoreHorizontal,
-  Filter
+  Filter,
+  LucideIcon,
 } from 'lucide-react'
 import { CreateActivityDialog } from '../dialogs/create-activity-dialog'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -67,7 +68,7 @@ function formatRelativeTime(dateString: string): string {
   return formatDateTime(dateString)
 }
 
-const activityIcons: Record<ActivityType, React.ElementType> = {
+const activityIcons: Record<ActivityType, LucideIcon> = {
   call: Phone,
   email: Mail,
   meeting: Calendar,

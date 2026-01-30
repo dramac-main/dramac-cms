@@ -30,6 +30,7 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
+  LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Appointment, AppointmentStatus } from '../../types/booking-types'
@@ -40,7 +41,7 @@ interface StatCardProps {
   title: string
   value: string | number
   description?: string
-  icon: React.ElementType
+  icon: LucideIcon
   trend?: {
     value: number
     isPositive: boolean

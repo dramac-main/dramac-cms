@@ -40,6 +40,7 @@ import {
   StopCircle,
   Webhook,
   Bot,
+  LucideIcon,
 } from "lucide-react"
 
 // ============================================================================
@@ -72,7 +73,7 @@ interface WorkflowStepCardProps {
 // STEP TYPE CONFIGURATION
 // ============================================================================
 
-const STEP_TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; bgColor: string }> = {
+const STEP_TYPE_CONFIG: Record<string, { icon: LucideIcon; color: string; bgColor: string }> = {
   condition: { icon: GitBranch, color: "text-amber-500", bgColor: "bg-amber-500/10" },
   delay: { icon: Timer, color: "text-blue-500", bgColor: "bg-blue-500/10" },
   loop: { icon: Repeat, color: "text-purple-500", bgColor: "bg-purple-500/10" },
@@ -82,7 +83,7 @@ const STEP_TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string;
   action: { icon: Zap, color: "text-primary", bgColor: "bg-primary/10" },
 }
 
-const ACTION_TYPE_CONFIG: Record<string, { icon: React.ElementType; color: string; bgColor: string }> = {
+const ACTION_TYPE_CONFIG: Record<string, { icon: LucideIcon; color: string; bgColor: string }> = {
   crm: { icon: User, color: "text-emerald-500", bgColor: "bg-emerald-500/10" },
   email: { icon: Mail, color: "text-blue-500", bgColor: "bg-blue-500/10" },
   notification: { icon: Zap, color: "text-violet-500", bgColor: "bg-violet-500/10" },

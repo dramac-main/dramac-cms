@@ -88,10 +88,11 @@ import {
   Star,
   Plus,
   FolderTree,
+  LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const iconMap: Record<string, React.ElementType> = {
+const iconMap: Record<string, LucideIcon> = {
   LayoutGrid,
   LayoutList,
   Columns3,

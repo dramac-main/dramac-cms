@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Eye, FileEdit, AlertCircle, Clock } from "lucide-react";
+import { Eye, FileEdit, AlertCircle, Clock, LucideIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 // =============================================================================
@@ -24,7 +24,7 @@ export interface SiteStatusWidgetProps extends React.HTMLAttributes<HTMLDivEleme
 }
 
 interface StatusItemProps {
-  icon: React.ElementType;
+  icon: LucideIcon;
   label: string;
   value: number;
   color: string;

@@ -17,6 +17,7 @@ import {
   X,
   ChevronRight,
   Bell,
+  LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -69,7 +70,7 @@ export interface AvailabilityAlertProps {
 // =============================================================================
 
 const issueConfig: Record<AvailabilityIssue['type'], {
-  icon: React.ElementType
+  icon: LucideIcon
   title: string
 }> = {
   overbooking: {

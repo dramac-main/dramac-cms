@@ -34,7 +34,8 @@ import {
   BarChart3,
   Clock,
   Download,
-  RefreshCw
+  RefreshCw,
+  LucideIcon,
 } from 'lucide-react'
 import { PLATFORM_CONFIGS } from '../types'
 import type { SocialAccount } from '../types'
@@ -89,7 +90,7 @@ function StatCard({
   title: string
   value: number | string
   change?: number
-  icon: React.ElementType
+  icon: LucideIcon
   suffix?: string
 }) {
   const isPositive = change && change >= 0

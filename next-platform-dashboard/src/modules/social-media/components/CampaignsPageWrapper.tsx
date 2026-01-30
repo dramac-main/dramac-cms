@@ -49,7 +49,8 @@ import {
   Eye,
   Heart,
   MousePointer,
-  Hash
+  Hash,
+  LucideIcon,
 } from 'lucide-react'
 import { 
   createCampaign, 
@@ -667,7 +668,7 @@ function GoalProgress({
   label: string
   current: number
   target: number
-  icon: React.ElementType
+  icon: LucideIcon
 }) {
   const percentage = Math.min(100, Math.round((current / target) * 100))
   

@@ -25,6 +25,7 @@ import {
   Timer,
   Repeat,
   StopCircle,
+  LucideIcon,
 } from "lucide-react"
 import type { WorkflowStep } from "../../types/automation-types"
 
@@ -56,7 +57,7 @@ const STEP_TYPE_COLORS: Record<string, string> = {
   action: "bg-primary",
 }
 
-const STEP_TYPE_ICONS: Record<string, React.ElementType> = {
+const STEP_TYPE_ICONS: Record<string, LucideIcon> = {
   condition: GitBranch,
   delay: Timer,
   loop: Repeat,

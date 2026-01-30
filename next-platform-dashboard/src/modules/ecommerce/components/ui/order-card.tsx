@@ -20,7 +20,8 @@ import {
   Package,
   CreditCard,
   User,
-  ChevronRight
+  ChevronRight,
+  LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -70,7 +71,7 @@ export interface OrderCardProps {
 // STATUS CONFIG
 // =============================================================================
 
-const orderStatusConfig: Record<OrderStatus, { label: string; className: string; icon: React.ElementType }> = {
+const orderStatusConfig: Record<OrderStatus, { label: string; className: string; icon: LucideIcon }> = {
   pending: { 
     label: 'Pending', 
     className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',

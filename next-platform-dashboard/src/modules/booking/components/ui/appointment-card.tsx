@@ -23,6 +23,7 @@ import {
   RefreshCw,
   CreditCard,
   AlertCircle,
+  LucideIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
@@ -107,7 +108,7 @@ const statusConfig: Record<AppointmentStatus, {
 
 const paymentStatusConfig: Record<PaymentStatus, {
   label: string
-  icon: React.ElementType
+  icon: LucideIcon
   className: string
 }> = {
   pending: {
