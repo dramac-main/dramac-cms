@@ -456,6 +456,72 @@ export interface CategoryMenuProps {
   showCount?: boolean;
 }
 
+// Additional E-commerce Component Props (PHASE-ED-03)
+export interface ProductCategoriesProps {
+  title?: string;
+  subtitle?: string;
+  categories?: Array<{
+    name: string;
+    image?: string;
+    href?: string;
+    productCount?: number;
+  }>;
+  columns?: 2 | 3 | 4;
+  layout?: "grid" | "carousel";
+  showProductCount?: boolean;
+}
+
+export interface CartSummaryProps {
+  showItemCount?: boolean;
+  showSubtotal?: boolean;
+  checkoutButtonText?: string;
+  emptyCartText?: string;
+  backgroundColor?: string;
+}
+
+export interface ProductFiltersProps {
+  showPriceFilter?: boolean;
+  showCategoryFilter?: boolean;
+  showRatingFilter?: boolean;
+  showSortOptions?: boolean;
+  priceRanges?: Array<{ label: string; min: number; max: number }>;
+  categories?: string[];
+}
+
+export interface ProductQuickViewProps {
+  productName?: string;
+  productImage?: string;
+  price?: number;
+  salePrice?: number;
+  description?: string;
+  rating?: number;
+  showQuantitySelector?: boolean;
+  showSizeSelector?: boolean;
+  sizes?: string[];
+}
+
+export interface FeaturedProductsBannerProps {
+  title?: string;
+  subtitle?: string;
+  layout?: "banner" | "carousel" | "grid";
+  products?: Array<{
+    name: string;
+    image?: string;
+    price?: number;
+    salePrice?: number;
+    badge?: string;
+    href?: string;
+  }>;
+  showBadges?: boolean;
+}
+
+export interface CartIconProps {
+  count?: number;
+  showCount?: boolean;
+  size?: "sm" | "md" | "lg";
+  variant?: "default" | "outline" | "ghost";
+}
+
 // ============================================
 // Field Type Helpers
 // ============================================

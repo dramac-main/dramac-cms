@@ -1,8 +1,51 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 30, 2026  
-**Current Phase**: PHASE-ED-02A, ED-02B, ED-02C Component Library Expansion (Master Build Prompt V2.1)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + ED-01A/ED-01B/ED-02A/ED-02B/ED-02C - ✅ Zero TypeScript Errors - ✅ Build Passing
+**Current Phase**: PHASE-ED-03 Puck Editor Route Connection (Master Build Prompt V2.1)  
+**Status**: ✅ 40 OF 40 PHASES (100%) + ED-01A/ED-01B/ED-02A/ED-02B/ED-02C/ED-03 - ✅ Zero TypeScript Errors - ✅ Build Passing
+
+## 🚀 PHASE-ED-03: Puck Editor Route Connection (January 30, 2026)
+
+### Critical Fix - Editor Now Uses Puck Instead of Craft.js
+
+**Problem Discovered**: The Puck infrastructure (components, config, wrapper) was built in ED-01A/01B/02A/02B/02C but was NEVER connected to the actual editor route. The editor page was still using the Craft.js `EditorWrapper`.
+
+**Root Cause**: 
+- Editor route: `/dashboard/sites/[siteId]/editor` → `EditorWrapper` → Craft.js
+- Puck wrapper existed at `src/components/editor/puck/puck-editor-wrapper.tsx` but was unused
+
+### What Was Built - PHASE-ED-03: Complete Editor Integration
+
+1. **PuckEditorIntegrated Component** (`src/components/editor/puck-editor-integrated.tsx`)
+   - Replaces the Craft.js `EditorWrapper` with full Puck editor
+   - Auto-migration: Detects Craft.js content and converts to Puck format
+   - Shows migration notice when content was migrated from old format
+   - Full keyboard shortcuts (Ctrl+S save, Ctrl+P preview, Escape exit preview)
+   - Auto-save every 60 seconds when there are changes
+   - Preview mode with device switching (mobile/tablet/desktop)
+   - Integrates with existing preview infrastructure (`usePreview` hook)
+   - Warning before leaving with unsaved changes
+
+2. **Editor Route Update** (`src/app/(dashboard)/dashboard/sites/[siteId]/editor/page.tsx`)
+   - Now imports and uses `PuckEditorIntegrated` instead of `EditorWrapper`
+   - All 63 Puck components now accessible in the visual editor
+
+### Technical Details
+
+**Files Created:**
+- `src/components/editor/puck-editor-integrated.tsx` (NEW - 380 lines)
+
+**Files Modified:**
+- `src/app/(dashboard)/dashboard/sites/[siteId]/editor/page.tsx` (import and component change)
+
+**Integration Points:**
+- Uses `puckConfig` from `./puck/puck-config` (63 components)
+- Uses `detectContentFormat`, `migrateCraftToPuck`, `isPuckFormat` from `@/lib/migration/craft-to-puck`
+- Uses `savePageContentAction` from `@/lib/actions/pages`
+- Uses `usePreview` from `@/lib/preview/use-preview`
+- Uses `EditorProvider` from `./editor-context`
+
+---
 
 ## 🚀 PHASE-ED-02A, ED-02B, ED-02C: Component Library Expansion (January 30, 2026)
 

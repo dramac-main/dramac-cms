@@ -39,6 +39,12 @@ import type {
   NewsletterProps,
   ProductGridProps,
   ProductCardProps,
+  ProductCategoriesProps,
+  CartSummaryProps,
+  ProductFiltersProps,
+  ProductQuickViewProps,
+  FeaturedProductsBannerProps,
+  CartIconProps,
   // Advanced Layout Types (PHASE-ED-02A)
   GridProps,
   FlexboxProps,
@@ -135,6 +141,12 @@ import {
 import {
   ProductGridRender,
   ProductCardRender,
+  ProductCategoriesRender,
+  CartSummaryRender,
+  ProductFiltersRender,
+  ProductQuickViewRender,
+  FeaturedProductsRender,
+  CartIconRender,
 } from "./components/ecommerce";
 
 // Advanced Layout Components (PHASE-ED-02A)
@@ -295,7 +307,7 @@ export const puckConfig: Config = {
     },
     ecommerce: {
       title: "E-Commerce",
-      components: ["ProductGrid", "ProductCard"],
+      components: ["ProductGrid", "ProductCard", "ProductCategories", "CartSummary", "ProductFilters", "ProductQuickView", "FeaturedProducts", "CartIcon"],
     },
   },
 
@@ -387,7 +399,7 @@ export const puckConfig: Config = {
             { label: "Stretch", value: "stretch" },
           ],
         },
-        reverseOnMobile: { type: "toggle", label: "Reverse on Mobile" },
+        reverseOnMobile: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Reverse on Mobile" },
       },
       defaultProps: {
         columns: 2,
@@ -427,7 +439,7 @@ export const puckConfig: Config = {
           ],
         },
         backgroundColor: { type: "text", label: "Background Color" },
-        border: { type: "toggle", label: "Show Border" },
+        border: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Border" },
       },
       defaultProps: {
         padding: "md",
@@ -574,8 +586,8 @@ export const puckConfig: Config = {
           label: "Size",
           options: sizeOptions,
         },
-        fullWidth: { type: "toggle", label: "Full Width" },
-        openInNewTab: { type: "toggle", label: "Open in New Tab" },
+        fullWidth: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Full Width" },
+        openInNewTab: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Open in New Tab" },
       },
       defaultProps: {
         text: "Click me",
@@ -663,10 +675,10 @@ export const puckConfig: Config = {
             { label: "File", value: "file" },
           ],
         },
-        autoplay: { type: "toggle", label: "Autoplay" },
-        muted: { type: "toggle", label: "Muted" },
-        loop: { type: "toggle", label: "Loop" },
-        controls: { type: "toggle", label: "Show Controls" },
+        autoplay: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Autoplay" },
+        muted: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Muted" },
+        loop: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Loop" },
+        controls: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Controls" },
         aspectRatio: {
           type: "select",
           label: "Aspect Ratio",
@@ -740,7 +752,7 @@ export const puckConfig: Config = {
           options: alignmentOptions,
         },
         minHeight: { type: "number", label: "Min Height (px)" },
-        overlay: { type: "toggle", label: "Show Overlay" },
+        overlay: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Overlay" },
         overlayOpacity: { type: "number", label: "Overlay Opacity (%)" },
       },
       defaultProps: {
@@ -842,7 +854,7 @@ export const puckConfig: Config = {
             { label: "3 Columns", value: 3 },
           ],
         },
-        showAvatar: { type: "toggle", label: "Show Avatar" },
+        showAvatar: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Avatar" },
       },
       defaultProps: {
         title: "What Our Customers Say",
@@ -996,7 +1008,7 @@ export const puckConfig: Config = {
             { label: "Auto", value: "auto" },
           ],
         },
-        lightbox: { type: "toggle", label: "Enable Lightbox" },
+        lightbox: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Enable Lightbox" },
       },
       defaultProps: {
         images: [],
@@ -1025,7 +1037,7 @@ export const puckConfig: Config = {
             href: { type: "text", label: "URL" },
           },
         },
-        sticky: { type: "toggle", label: "Sticky" },
+        sticky: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Sticky" },
         backgroundColor: { type: "text", label: "Background Color" },
         textColor: { type: "text", label: "Text Color" },
       },
@@ -1171,7 +1183,7 @@ export const puckConfig: Config = {
           ],
         },
         placeholder: { type: "text", label: "Placeholder" },
-        required: { type: "toggle", label: "Required" },
+        required: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Required" },
       },
       defaultProps: {
         name: "field",
@@ -1265,8 +1277,8 @@ export const puckConfig: Config = {
             { label: "Descending", value: "desc" },
           ],
         },
-        showPrice: { type: "toggle", label: "Show Price" },
-        showAddToCart: { type: "toggle", label: "Show Add to Cart" },
+        showPrice: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Price" },
+        showAddToCart: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Add to Cart" },
       },
       defaultProps: {
         siteId: "",
@@ -1285,9 +1297,9 @@ export const puckConfig: Config = {
       label: "Product Card",
       fields: {
         productId: { type: "text", label: "Product ID" },
-        showDescription: { type: "toggle", label: "Show Description" },
-        showPrice: { type: "toggle", label: "Show Price" },
-        showAddToCart: { type: "toggle", label: "Show Add to Cart" },
+        showDescription: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Description" },
+        showPrice: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Price" },
+        showAddToCart: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Add to Cart" },
         imageAspect: {
           type: "select",
           label: "Image Aspect",
@@ -1306,6 +1318,174 @@ export const puckConfig: Config = {
         imageAspect: "square",
       } as ProductCardProps,
       render: ProductCardRender as any,
+    },
+
+    ProductCategories: {
+      label: "Product Categories",
+      fields: {
+        title: { type: "text", label: "Title" },
+        subtitle: { type: "textarea", label: "Subtitle" },
+        columns: {
+          type: "select",
+          label: "Columns",
+          options: [
+            { label: "2 Columns", value: 2 },
+            { label: "3 Columns", value: 3 },
+            { label: "4 Columns", value: 4 },
+          ],
+        },
+        showProductCount: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Product Count" },
+        categories: {
+          type: "array",
+          label: "Categories",
+          arrayFields: {
+            name: { type: "text", label: "Name" },
+            image: { type: "text", label: "Image URL" },
+            href: { type: "text", label: "Link URL" },
+            productCount: { type: "number", label: "Product Count" },
+          },
+        },
+      },
+      defaultProps: {
+        title: "Shop by Category",
+        subtitle: "Browse our collections",
+        columns: 4,
+        showProductCount: true,
+        categories: [],
+      } as ProductCategoriesProps,
+      render: ProductCategoriesRender as any,
+    },
+
+    CartSummary: {
+      label: "Cart Summary",
+      fields: {
+        showItemCount: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Item Count" },
+        showSubtotal: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Subtotal" },
+        checkoutButtonText: { type: "text", label: "Checkout Button Text" },
+        emptyCartText: { type: "text", label: "Empty Cart Text" },
+        backgroundColor: { type: "text", label: "Background Color" },
+      },
+      defaultProps: {
+        showItemCount: true,
+        showSubtotal: true,
+        checkoutButtonText: "Checkout",
+        emptyCartText: "Your cart is empty",
+        backgroundColor: "",
+      } as CartSummaryProps,
+      render: CartSummaryRender as any,
+    },
+
+    ProductFilters: {
+      label: "Product Filters",
+      fields: {
+        showPriceFilter: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Price Filter" },
+        showCategoryFilter: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Category Filter" },
+        showRatingFilter: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Rating Filter" },
+        showSortOptions: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Sort Options" },
+      },
+      defaultProps: {
+        showPriceFilter: true,
+        showCategoryFilter: true,
+        showRatingFilter: true,
+        showSortOptions: true,
+      } as ProductFiltersProps,
+      render: ProductFiltersRender as any,
+    },
+
+    ProductQuickView: {
+      label: "Product Quick View",
+      fields: {
+        productName: { type: "text", label: "Product Name" },
+        productImage: { type: "text", label: "Product Image URL" },
+        price: { type: "number", label: "Price" },
+        salePrice: { type: "number", label: "Sale Price" },
+        description: { type: "textarea", label: "Description" },
+        rating: { type: "number", label: "Rating (0-5)" },
+        showQuantitySelector: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Quantity Selector" },
+        showSizeSelector: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Size Selector" },
+      },
+      defaultProps: {
+        productName: "Product Name",
+        productImage: "",
+        price: 99.99,
+        salePrice: 0,
+        description: "This is a detailed product description that explains all the features and benefits.",
+        rating: 4.5,
+        showQuantitySelector: true,
+        showSizeSelector: true,
+      } as ProductQuickViewProps,
+      render: ProductQuickViewRender as any,
+    },
+
+    FeaturedProducts: {
+      label: "Featured Products",
+      fields: {
+        title: { type: "text", label: "Title" },
+        subtitle: { type: "textarea", label: "Subtitle" },
+        layout: {
+          type: "select",
+          label: "Layout",
+          options: [
+            { label: "Grid", value: "grid" },
+            { label: "Banner", value: "banner" },
+            { label: "Carousel", value: "carousel" },
+          ],
+        },
+        showBadges: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Badges" },
+        products: {
+          type: "array",
+          label: "Products",
+          arrayFields: {
+            name: { type: "text", label: "Name" },
+            image: { type: "text", label: "Image URL" },
+            price: { type: "number", label: "Price" },
+            salePrice: { type: "number", label: "Sale Price" },
+            badge: { type: "text", label: "Badge (Hot, New, Sale)" },
+            href: { type: "text", label: "Link URL" },
+          },
+        },
+      },
+      defaultProps: {
+        title: "Featured Products",
+        subtitle: "Discover our top picks",
+        layout: "grid",
+        showBadges: true,
+        products: [],
+      } as FeaturedProductsBannerProps,
+      render: FeaturedProductsRender as any,
+    },
+
+    CartIcon: {
+      label: "Cart Icon",
+      fields: {
+        count: { type: "number", label: "Item Count" },
+        showCount: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Count Badge" },
+        size: {
+          type: "select",
+          label: "Size",
+          options: [
+            { label: "Small", value: "sm" },
+            { label: "Medium", value: "md" },
+            { label: "Large", value: "lg" },
+          ],
+        },
+        variant: {
+          type: "select",
+          label: "Variant",
+          options: [
+            { label: "Default", value: "default" },
+            { label: "Outline", value: "outline" },
+            { label: "Ghost", value: "ghost" },
+          ],
+        },
+      },
+      defaultProps: {
+        count: 3,
+        showCount: true,
+        size: "md",
+        variant: "default",
+      } as CartIconProps,
+      render: CartIconRender as any,
     },
 
     // ============================================
@@ -1483,7 +1663,7 @@ export const puckConfig: Config = {
             title: { type: "text", label: "Title" },
           },
         },
-        multiple: { type: "toggle", label: "Allow Multiple Open" },
+        multiple: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Allow Multiple Open" },
         defaultOpen: { type: "number", label: "Default Open Index" },
         variant: {
           type: "select",
@@ -1533,9 +1713,9 @@ export const puckConfig: Config = {
             { label: "Full", value: "full" },
           ],
         },
-        closeOnOverlay: { type: "toggle", label: "Close on Overlay Click" },
-        closeOnEscape: { type: "toggle", label: "Close on Escape" },
-        showCloseButton: { type: "toggle", label: "Show Close Button" },
+        closeOnOverlay: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Close on Overlay Click" },
+        closeOnEscape: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Close on Escape" },
+        showCloseButton: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Close Button" },
       },
       defaultProps: {
         triggerText: "Open Modal",
@@ -1573,8 +1753,8 @@ export const puckConfig: Config = {
             { label: "Full", value: "full" },
           ],
         },
-        overlay: { type: "toggle", label: "Show Overlay" },
-        closeOnOverlay: { type: "toggle", label: "Close on Overlay Click" },
+        overlay: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Overlay" },
+        closeOnOverlay: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Close on Overlay Click" },
       },
       defaultProps: {
         triggerText: "Open Drawer",
@@ -1650,8 +1830,8 @@ export const puckConfig: Config = {
             { label: "Between", value: "between" },
           ],
         },
-        wrap: { type: "toggle", label: "Wrap" },
-        divider: { type: "toggle", label: "Show Dividers" },
+        wrap: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Wrap" },
+        divider: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Dividers" },
       },
       defaultProps: {
         direction: "vertical",
@@ -1736,7 +1916,7 @@ export const puckConfig: Config = {
             { label: "Large", value: "large" },
           ],
         },
-        preserveWhitespace: { type: "toggle", label: "Preserve Whitespace" },
+        preserveWhitespace: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Preserve Whitespace" },
       },
       defaultProps: {
         content: "<p>Enter your rich text content here...</p>",
@@ -1798,8 +1978,8 @@ export const puckConfig: Config = {
             { label: "Plain Text", value: "text" },
           ],
         },
-        showLineNumbers: { type: "toggle", label: "Show Line Numbers" },
-        showCopyButton: { type: "toggle", label: "Show Copy Button" },
+        showLineNumbers: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Line Numbers" },
+        showCopyButton: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Copy Button" },
         title: { type: "text", label: "Title/Filename" },
         highlightLines: { type: "text", label: "Highlight Lines (e.g., 1,3,5-7)" },
       },
@@ -1874,10 +2054,10 @@ export const puckConfig: Config = {
           },
         },
         rows: { type: "textarea", label: "Rows (JSON array)" },
-        striped: { type: "toggle", label: "Striped Rows" },
-        bordered: { type: "toggle", label: "Bordered" },
-        hoverable: { type: "toggle", label: "Hoverable Rows" },
-        compact: { type: "toggle", label: "Compact" },
+        striped: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Striped Rows" },
+        bordered: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Bordered" },
+        hoverable: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Hoverable Rows" },
+        compact: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Compact" },
       },
       defaultProps: {
         headers: [
@@ -1919,9 +2099,9 @@ export const puckConfig: Config = {
           label: "Size",
           options: sizeOptions,
         },
-        rounded: { type: "toggle", label: "Pill Shape" },
-        dot: { type: "toggle", label: "Show Dot" },
-        removable: { type: "toggle", label: "Removable" },
+        rounded: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Pill Shape" },
+        dot: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Dot" },
+        removable: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Removable" },
       },
       defaultProps: {
         text: "Badge",
@@ -1949,8 +2129,8 @@ export const puckConfig: Config = {
             { label: "Error", value: "error" },
           ],
         },
-        dismissible: { type: "toggle", label: "Dismissible" },
-        showIcon: { type: "toggle", label: "Show Icon" },
+        dismissible: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Dismissible" },
+        showIcon: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Icon" },
       },
       defaultProps: {
         title: "Alert Title",
@@ -1968,7 +2148,7 @@ export const puckConfig: Config = {
         value: { type: "number", label: "Value" },
         max: { type: "number", label: "Max" },
         label: { type: "text", label: "Label" },
-        showValue: { type: "toggle", label: "Show Value" },
+        showValue: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Value" },
         size: {
           type: "select",
           label: "Size",
@@ -1985,8 +2165,8 @@ export const puckConfig: Config = {
             { label: "Gradient", value: "gradient" },
           ],
         },
-        animated: { type: "toggle", label: "Animated" },
-        striped: { type: "toggle", label: "Striped" },
+        animated: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Animated" },
+        striped: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Striped" },
       },
       defaultProps: {
         value: 60,
@@ -2071,7 +2251,7 @@ export const puckConfig: Config = {
             price: { type: "text", label: "Price" },
             period: { type: "text", label: "Period" },
             description: { type: "textarea", label: "Description" },
-            highlighted: { type: "toggle", label: "Highlighted" },
+            highlighted: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Highlighted" },
           },
         },
         currency: { type: "text", label: "Currency Symbol" },
@@ -2258,7 +2438,7 @@ export const puckConfig: Config = {
             description: { type: "textarea", label: "Description" },
           },
         },
-        showProgress: { type: "toggle", label: "Show Progress" },
+        showProgress: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Progress" },
         progressVariant: {
           type: "select",
           label: "Progress Variant",
@@ -2268,7 +2448,7 @@ export const puckConfig: Config = {
             { label: "Dots", value: "dots" },
           ],
         },
-        allowSkip: { type: "toggle", label: "Allow Skip" },
+        allowSkip: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Allow Skip" },
         submitText: { type: "text", label: "Submit Button Text" },
         nextText: { type: "text", label: "Next Button Text" },
         prevText: { type: "text", label: "Previous Button Text" },
@@ -2312,9 +2492,9 @@ export const puckConfig: Config = {
           ],
         },
         color: { type: "text", label: "Color" },
-        allowHalf: { type: "toggle", label: "Allow Half Rating" },
-        readonly: { type: "toggle", label: "Read Only" },
-        showValue: { type: "toggle", label: "Show Value" },
+        allowHalf: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Allow Half Rating" },
+        readonly: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Read Only" },
+        showValue: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Value" },
       },
       defaultProps: {
         name: "rating",
@@ -2337,7 +2517,7 @@ export const puckConfig: Config = {
         name: { type: "text", label: "Field Name" },
         label: { type: "text", label: "Label" },
         accept: { type: "text", label: "Accepted Types" },
-        multiple: { type: "toggle", label: "Multiple Files" },
+        multiple: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Multiple Files" },
         maxSize: { type: "number", label: "Max Size (MB)" },
         maxFiles: { type: "number", label: "Max Files" },
         variant: {
@@ -2349,9 +2529,9 @@ export const puckConfig: Config = {
             { label: "Avatar", value: "avatar" },
           ],
         },
-        showPreview: { type: "toggle", label: "Show Preview" },
+        showPreview: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Preview" },
         helpText: { type: "text", label: "Help Text" },
-        required: { type: "toggle", label: "Required" },
+        required: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Required" },
       },
       defaultProps: {
         name: "file",
@@ -2377,8 +2557,8 @@ export const puckConfig: Config = {
         format: { type: "text", label: "Format" },
         minDate: { type: "text", label: "Min Date (YYYY-MM-DD)" },
         maxDate: { type: "text", label: "Max Date (YYYY-MM-DD)" },
-        showTime: { type: "toggle", label: "Show Time" },
-        required: { type: "toggle", label: "Required" },
+        showTime: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Time" },
+        required: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Required" },
         helpText: { type: "text", label: "Help Text" },
       },
       defaultProps: {
@@ -2404,8 +2584,8 @@ export const puckConfig: Config = {
         max: { type: "number", label: "Max Value" },
         step: { type: "number", label: "Step" },
         defaultValue: { type: "number", label: "Default Value" },
-        showValue: { type: "toggle", label: "Show Value" },
-        showMinMax: { type: "toggle", label: "Show Min/Max" },
+        showValue: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Value" },
+        showMinMax: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Min/Max" },
         unit: { type: "text", label: "Unit" },
       },
       defaultProps: {
@@ -2428,7 +2608,7 @@ export const puckConfig: Config = {
         name: { type: "text", label: "Field Name" },
         label: { type: "text", label: "Label" },
         description: { type: "text", label: "Description" },
-        defaultChecked: { type: "toggle", label: "Default Checked" },
+        defaultChecked: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Default Checked" },
         size: {
           type: "select",
           label: "Size",
@@ -2442,7 +2622,7 @@ export const puckConfig: Config = {
             { label: "Right", value: "right" },
           ],
         },
-        required: { type: "toggle", label: "Required" },
+        required: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Required" },
       },
       defaultProps: {
         name: "switch",
@@ -2478,7 +2658,7 @@ export const puckConfig: Config = {
             { label: "Horizontal", value: "horizontal" },
           ],
         },
-        required: { type: "toggle", label: "Required" },
+        required: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Required" },
         helpText: { type: "text", label: "Help Text" },
       },
       defaultProps: {
@@ -2528,7 +2708,7 @@ export const puckConfig: Config = {
             { label: "Buttons", value: "buttons" },
           ],
         },
-        required: { type: "toggle", label: "Required" },
+        required: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Required" },
         helpText: { type: "text", label: "Help Text" },
       },
       defaultProps: {
@@ -2567,8 +2747,8 @@ export const puckConfig: Config = {
             { label: "Outline", value: "outline" },
           ],
         },
-        showClearButton: { type: "toggle", label: "Show Clear Button" },
-        showSearchIcon: { type: "toggle", label: "Show Search Icon" },
+        showClearButton: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Clear Button" },
+        showSearchIcon: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Search Icon" },
         iconPosition: {
           type: "select",
           label: "Icon Position",
@@ -2596,9 +2776,9 @@ export const puckConfig: Config = {
         name: { type: "text", label: "Field Name" },
         label: { type: "text", label: "Label" },
         placeholder: { type: "text", label: "Placeholder" },
-        showToggle: { type: "toggle", label: "Show Toggle" },
-        showStrength: { type: "toggle", label: "Show Strength" },
-        required: { type: "toggle", label: "Required" },
+        showToggle: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Toggle" },
+        showStrength: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Strength" },
+        required: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Required" },
         helpText: { type: "text", label: "Help Text" },
         minLength: { type: "number", label: "Min Length" },
       },
@@ -2629,7 +2809,7 @@ export const puckConfig: Config = {
             { label: "Underline", value: "underline" },
           ],
         },
-        autoFocus: { type: "toggle", label: "Auto Focus" },
+        autoFocus: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Auto Focus" },
         helpText: { type: "text", label: "Help Text" },
         type: {
           type: "select",
@@ -2666,10 +2846,10 @@ export const puckConfig: Config = {
           },
         },
         placeholder: { type: "text", label: "Placeholder" },
-        multiple: { type: "toggle", label: "Multiple" },
-        searchable: { type: "toggle", label: "Searchable" },
-        clearable: { type: "toggle", label: "Clearable" },
-        required: { type: "toggle", label: "Required" },
+        multiple: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Multiple" },
+        searchable: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Searchable" },
+        clearable: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Clearable" },
+        required: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Required" },
         helpText: { type: "text", label: "Help Text" },
       },
       defaultProps: {
@@ -2697,7 +2877,7 @@ export const puckConfig: Config = {
         label: { type: "text", label: "Label" },
         placeholder: { type: "text", label: "Placeholder" },
         maxTags: { type: "number", label: "Max Tags" },
-        allowDuplicates: { type: "toggle", label: "Allow Duplicates" },
+        allowDuplicates: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Allow Duplicates" },
         suggestions: {
           type: "array",
           label: "Suggestions",
@@ -2705,7 +2885,7 @@ export const puckConfig: Config = {
             value: { type: "text", label: "Value" },
           },
         },
-        required: { type: "toggle", label: "Required" },
+        required: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Required" },
         helpText: { type: "text", label: "Help Text" },
       },
       defaultProps: {
@@ -2725,3 +2905,4 @@ export const puckConfig: Config = {
 };
 
 export default puckConfig;
+

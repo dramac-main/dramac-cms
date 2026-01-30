@@ -63,6 +63,12 @@ export {
 export {
   ProductGridRender,
   ProductCardRender,
+  ProductCategoriesRender,
+  CartSummaryRender,
+  ProductFiltersRender,
+  ProductQuickViewRender,
+  FeaturedProductsRender,
+  CartIconRender,
 } from "./ecommerce";
 
 // Advanced Layout Components (PHASE-ED-02A)

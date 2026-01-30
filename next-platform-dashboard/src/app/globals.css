@@ -996,3 +996,204 @@ html.theme-transition *::after {
     max-height: 100dvh;
   }
 }
+
+/* =============================================
+   PUCK EDITOR DARK MODE OVERRIDES
+   Ensures Puck editor respects dark mode theme
+   ============================================= */
+
+/* Puck Editor Root */
+.dark [class*="Puck"] {
+  color-scheme: dark;
+}
+
+/* Puck Sidebar/Panel Background */
+.dark .Puck,
+.dark [class*="Puck-"] {
+  --puck-color-white: hsl(var(--background));
+  --puck-color-grey-01: hsl(var(--background));
+  --puck-color-grey-02: hsl(var(--muted));
+  --puck-color-grey-03: hsl(var(--border));
+  --puck-color-grey-04: hsl(var(--muted-foreground));
+  --puck-color-grey-05: hsl(var(--foreground));
+  --puck-color-black: hsl(var(--foreground));
+  --puck-color-azure-01: hsl(var(--primary) / 0.1);
+  --puck-color-azure-02: hsl(var(--primary) / 0.2);
+  --puck-color-azure-03: hsl(var(--primary) / 0.4);
+  --puck-color-azure-04: hsl(var(--primary) / 0.6);
+  --puck-color-azure-05: hsl(var(--primary));
+  --puck-color-azure-06: hsl(var(--primary));
+  --puck-color-azure-07: hsl(var(--primary) / 0.8);
+  --puck-color-azure-08: hsl(var(--primary) / 0.6);
+  --puck-color-azure-09: hsl(var(--primary) / 0.4);
+}
+
+/* Puck Left Panel (Component List) */
+.dark [class*="Puck-leftSideBar"],
+.dark [class*="leftSideBar"],
+.dark [class*="ComponentList"] {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Puck Right Panel (Fields Panel) */
+.dark [class*="Puck-rightSideBar"],
+.dark [class*="rightSideBar"],
+.dark [class*="Puck-fields"] {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Puck Header */
+.dark [class*="Puck-header"],
+.dark [class*="PuckHeader"] {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Puck Field Inputs */
+.dark [class*="Puck"] input,
+.dark [class*="Puck"] textarea,
+.dark [class*="Puck"] select {
+  background-color: hsl(var(--background)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark [class*="Puck"] input:focus,
+.dark [class*="Puck"] textarea:focus,
+.dark [class*="Puck"] select:focus {
+  border-color: hsl(var(--primary)) !important;
+  outline-color: hsl(var(--primary)) !important;
+}
+
+/* Puck Field Labels */
+.dark [class*="Puck"] label,
+.dark [class*="FieldLabel"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Puck Buttons */
+.dark [class*="Puck"] button {
+  color: hsl(var(--foreground));
+}
+
+.dark [class*="Puck"] button:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+/* Puck Component Item */
+.dark [class*="ComponentListItem"],
+.dark [class*="Puck-componentItem"] {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark [class*="ComponentListItem"]:hover,
+.dark [class*="Puck-componentItem"]:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+/* Puck Canvas Frame */
+.dark [class*="Puck-frame"],
+.dark [class*="PuckFrame"],
+.dark [class*="Puck-canvas"] {
+  background-color: hsl(var(--muted) / 0.5) !important;
+}
+
+/* Puck Draggable Items */
+.dark [class*="Draggable"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+/* Puck Dropdown Menus */
+.dark [class*="Puck"] [role="menu"],
+.dark [class*="Puck"] [role="listbox"] {
+  background-color: hsl(var(--popover)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark [class*="Puck"] [role="menuitem"],
+.dark [class*="Puck"] [role="option"] {
+  color: hsl(var(--popover-foreground)) !important;
+}
+
+.dark [class*="Puck"] [role="menuitem"]:hover,
+.dark [class*="Puck"] [role="option"]:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+/* Puck Section Headers */
+.dark [class*="SectionHeader"],
+.dark [class*="Puck-sectionTitle"] {
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Puck Array Field Items */
+.dark [class*="ArrayField"],
+.dark [class*="ArrayFieldItem"] {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Puck Toggle/Radio Fields */
+.dark [class*="Puck"] [role="radio"],
+.dark [class*="Puck"] [role="checkbox"] {
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark [class*="Puck"] [role="radio"][aria-checked="true"],
+.dark [class*="Puck"] [role="checkbox"][aria-checked="true"] {
+  background-color: hsl(var(--primary)) !important;
+  border-color: hsl(var(--primary)) !important;
+}
+
+/* Puck Scrollbars */
+.dark [class*="Puck"]::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark [class*="Puck"]::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+.dark [class*="Puck"]::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+.dark [class*="Puck"]::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Puck Preview Canvas Content */
+.dark .Puck iframe {
+  background-color: hsl(var(--background));
+}
+
+/* Puck Empty State */
+.dark [class*="Puck-emptyState"],
+.dark [class*="EmptyState"] {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Puck Category Accordion */
+.dark [class*="CategoryAccordion"],
+.dark [class*="Puck-category"] {
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark [class*="CategoryAccordion"] button,
+.dark [class*="Puck-categoryHeader"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Puck Icons in Dark Mode */
+.dark [class*="Puck"] svg {
+  color: currentColor;
+}
+

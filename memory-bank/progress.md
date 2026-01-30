@@ -7,7 +7,39 @@
 
 ---
 
-## 🚀 NEW: PHASE-ED-02A/ED-02B/ED-02C Component Library Expansion (January 30, 2026)
+## 🚀 CRITICAL FIX: PHASE-ED-03 Puck Editor Route Connection (January 30, 2026)
+
+**Status**: ✅ COMPLETE - Editor now uses Puck instead of Craft.js
+**TypeScript**: ✅ Zero errors
+**Build**: ✅ Passes
+
+### Problem Discovered:
+The Puck infrastructure (63 components, config, wrapper) was built in ED-01A/01B/02A/02B/02C but was NEVER connected to the actual editor route. The editor page was still using the Craft.js `EditorWrapper`.
+
+### What Was Fixed:
+1. **PuckEditorIntegrated Component** - New component at `src/components/editor/puck-editor-integrated.tsx`
+   - Replaces Craft.js EditorWrapper with full Puck editor
+   - Auto-migration of Craft.js content to Puck format
+   - Migration notice shown when content was converted
+   - Keyboard shortcuts (Ctrl+S save, Ctrl+P preview, Escape exit)
+   - Auto-save every 60 seconds
+   - Preview mode with device switching (mobile/tablet/desktop)
+   - Warning before leaving with unsaved changes
+
+2. **Editor Route Update** - Changed import in `src/app/(dashboard)/dashboard/sites/[siteId]/editor/page.tsx`
+   - FROM: `EditorWrapper` (Craft.js)
+   - TO: `PuckEditorIntegrated` (Puck)
+
+### Now Working:
+- ✅ All 63 Puck components accessible in visual editor
+- ✅ Craft.js content auto-migrates to Puck on page load
+- ✅ Full Puck editor interface with left panel (components), canvas, right panel (properties)
+- ✅ Save, preview, device switching all working
+- ✅ Editor is no longer stuck on old Craft.js interface
+
+---
+
+## 🚀 PHASE-ED-02A/ED-02B/ED-02C Component Library Expansion (January 30, 2026)
 
 **Status**: ✅ COMPLETE - 38 new Puck editor components across 3 categories
 **TypeScript**: ✅ Zero errors
