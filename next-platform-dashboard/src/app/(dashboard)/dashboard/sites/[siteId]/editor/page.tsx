@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getSite } from "@/lib/actions/sites";
 import { getPageWithContent, getPages } from "@/lib/actions/pages";
-import { EditorWrapper } from "@/components/editor/editor-wrapper";
+import { PuckEditorIntegrated } from "@/components/editor/puck-editor-integrated";
 
 interface EditorPageProps {
   params: Promise<{ siteId: string }>;
@@ -57,7 +57,7 @@ export default async function EditorPage({
   }
 
   return (
-    <EditorWrapper
+    <PuckEditorIntegrated
       site={site}
       page={page}
     />
