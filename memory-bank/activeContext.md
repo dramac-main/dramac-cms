@@ -1,8 +1,75 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 30, 2026  
-**Current Phase**: PHASE-ED-03 Puck Editor Route Connection (Master Build Prompt V2.1)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + ED-01A/ED-01B/ED-02A/ED-02B/ED-02C/ED-03 - ✅ Zero TypeScript Errors - ✅ Build Passing
+**Current Phase**: PHASE-ED-04 Critical Puck Editor Fixes (Master Build Prompt V2.1)  
+**Status**: ✅ 40 OF 40 PHASES (100%) + ED-01A/ED-01B/ED-02A/ED-02B/ED-02C/ED-03/ED-04 - ✅ Zero TypeScript Errors - ✅ Build Passing
+
+## 🚀 PHASE-ED-04: Critical Puck Editor Fixes (January 30, 2026)
+
+### Issues Found and Fixed
+
+**Error 1: "Field type for toggle did not exist"**
+- **Root Cause**: Puck doesn't have a native `toggle` field type
+- **Fix**: Replaced all `type: "toggle"` with `type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }]`
+- **Scope**: 50+ toggle fields across the entire puck-config.tsx
+
+**Error 2: Missing placeholder image (404)**
+- **Root Cause**: `/placeholder-product.jpg` didn't exist
+- **Fix**: Created `public/placeholder-product.svg` as an SVG placeholder
+
+**Error 3: Dark mode not working in editor**
+- **Root Cause**: Puck's default styles don't respect dark mode
+- **Fix**: Added 200+ lines of dark mode CSS overrides in `globals.css`
+
+**Error 4: Missing e-commerce components**
+- **Root Cause**: Only ProductGrid and ProductCard existed
+- **Fix**: Added 6 new e-commerce components
+
+### What Was Built - PHASE-ED-04
+
+1. **Toggle Field Fix** (`puck-config.tsx`)
+   - All 50+ toggle fields converted to radio fields with Yes/No options
+   - Now works correctly in Puck editor
+
+2. **Placeholder Image** (`public/placeholder-product.svg`)
+   - SVG placeholder for product images
+   - No more 404 errors
+
+3. **Dark Mode CSS** (`globals.css`)
+   - 200+ lines of Puck-specific dark mode overrides
+   - Sidebar, panels, inputs, buttons, dropdowns all themed
+   - Scrollbars, icons, and empty states styled
+
+4. **New E-commerce Components** (`components/ecommerce.tsx`)
+   - **ProductCategories**: Category grid with images and product counts
+   - **CartSummary**: Shopping cart summary widget
+   - **ProductFilters**: Filter sidebar for product listings
+   - **ProductQuickView**: Quick view modal for products
+   - **FeaturedProducts**: Featured/promotional product showcase
+   - **CartIcon**: Cart icon with count badge
+
+### Files Changed
+
+- `puck-config.tsx` - 50+ toggle → radio field conversions + 6 new components
+- `globals.css` - Added 200+ lines of Puck dark mode styles
+- `ecommerce.tsx` - Added 6 new components (500+ lines)
+- `puck.ts` - Added type definitions for new components
+- `index.ts` - Exported new e-commerce components
+- `custom-fields.tsx` - Created for future custom field support
+- `placeholder-product.svg` - New placeholder image
+
+### Total Components Now: 71
+- Layout: 16 components
+- Typography: 2 components  
+- Content: 15 components
+- Buttons: 1 component
+- Media: 3 components
+- Sections: 8 components
+- Navigation: 3 components
+- Forms: 17 components
+- **E-commerce: 8 components** (was 2, now 8)
+
+---
 
 ## 🚀 PHASE-ED-03: Puck Editor Route Connection (January 30, 2026)
 
