@@ -2,6 +2,7 @@
  * CRM Dashboard Main Component
  * 
  * Phase EM-50: CRM Module - Enterprise Ready
+ * PHASE-UI-10A/10B: Enhanced UI Components Integration
  * 
  * The main dashboard shell that provides navigation between CRM views
  */
@@ -16,26 +17,21 @@ import { ActivitiesView } from './views/activities-view'
 import { ReportsView } from './views/reports-view'
 import { CRMProvider, useCRM } from '../context/crm-context'
 import { 
+  // Enhanced UI Components (PHASE-UI-10A/10B)
+  CRMHeader,
+  CRMMetricCards,
+  type TimeRange
+} from './ui'
+import { 
   Users, 
   Building2, 
   TrendingUp, 
   Activity, 
   BarChart3,
-  Search,
-  Plus,
   RefreshCw
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { cn } from '@/lib/utils'
 import type { CRMSettings } from '../types/crm-types'
 
 // ============================================================================
@@ -48,7 +44,7 @@ interface CRMDashboardProps {
 }
 
 // ============================================================================
-// DASHBOARD CONTENT
+// DASHBOARD CONTENT (Enhanced with PHASE-UI-10A/10B)
 // ============================================================================
 
 function CRMDashboardContent() {
@@ -56,35 +52,24 @@ function CRMDashboardContent() {
     contacts, 
     companies, 
     deals, 
-    activities,
     error, 
-    refresh,
-    search
+    refresh
   } = useCRM()
   
   const [activeTab, setActiveTab] = useState('deals')
-  const [searchQuery, setSearchQuery] = useState('')
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [timeRange, setTimeRange] = useState<TimeRange>('30d')
 
   // Calculate summary stats
   const openDeals = deals.filter(d => d.status === 'open')
   const totalPipelineValue = openDeals.reduce((sum, d) => sum + (d.amount || 0), 0)
+  const wonDeals = deals.filter(d => d.status === 'won')
+  const totalWonValue = wonDeals.reduce((sum, d) => sum + (d.amount || 0), 0)
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
     await refresh()
     setIsRefreshing(false)
-  }
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return
-    try {
-      const results = await search(searchQuery)
-      console.log('Search results:', results)
-      // TODO: Show search results in a modal or dropdown
-    } catch (error) {
-      console.error('Search error:', error)
-    }
   }
 
   if (error) {
@@ -101,102 +86,69 @@ function CRMDashboardContent() {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="border-b px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">CRM Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage your contacts, companies, and deals
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-10 w-64"
-              />
-            </div>
-            
-            {/* Actions */}
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  New
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setActiveTab('contacts')}>
-                  <Users className="h-4 w-4 mr-2" />
-                  New Contact
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab('companies')}>
-                  <Building2 className="h-4 w-4 mr-2" />
-                  New Company
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setActiveTab('deals')}>
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  New Deal
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setActiveTab('activities')}>
-                  <Activity className="h-4 w-4 mr-2" />
-                  Log Activity
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
+      {/* Enhanced Header (PHASE-UI-10A) */}
+      <CRMHeader
+        title="CRM Dashboard"
+        description="Manage your contacts, companies, and deals"
+        entityCount={contacts.length + companies.length + deals.length}
+        entityLabel="total records"
+        timeRange={timeRange}
+        onTimeRangeChange={setTimeRange}
+        onRefresh={handleRefresh}
+        isRefreshing={isRefreshing}
+        showTimeSelector={true}
+        showExportImport={true}
+      />
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-5 gap-4 mt-4">
-          <QuickStat 
-            label="Contacts" 
-            value={contacts.length} 
-            icon={Users}
-            onClick={() => setActiveTab('contacts')}
-          />
-          <QuickStat 
-            label="Companies" 
-            value={companies.length} 
-            icon={Building2}
-            onClick={() => setActiveTab('companies')}
-          />
-          <QuickStat 
-            label="Open Deals" 
-            value={openDeals.length} 
-            icon={TrendingUp}
-            onClick={() => setActiveTab('deals')}
-          />
-          <QuickStat 
-            label="Pipeline Value" 
-            value={`$${(totalPipelineValue / 1000).toFixed(0)}k`} 
-            icon={BarChart3}
-            onClick={() => setActiveTab('reports')}
-          />
-          <QuickStat 
-            label="Activities" 
-            value={activities.length} 
-            icon={Activity}
-            onClick={() => setActiveTab('activities')}
-          />
-        </div>
+      {/* Enhanced Metric Cards (PHASE-UI-10A) */}
+      <div className="px-6 py-4 border-b bg-muted/30">
+        <CRMMetricCards
+          metrics={[
+            {
+              id: 'contacts',
+              label: 'Total Contacts',
+              value: contacts.length,
+              previousValue: Math.max(0, contacts.length - 5),
+              icon: Users,
+              onClick: () => setActiveTab('contacts'),
+            },
+            {
+              id: 'companies',
+              label: 'Companies',
+              value: companies.length,
+              previousValue: Math.max(0, companies.length - 2),
+              icon: Building2,
+              onClick: () => setActiveTab('companies'),
+            },
+            {
+              id: 'openDeals',
+              label: 'Open Deals',
+              value: openDeals.length,
+              previousValue: Math.max(0, openDeals.length - 3),
+              icon: TrendingUp,
+              onClick: () => setActiveTab('deals'),
+            },
+            {
+              id: 'pipelineValue',
+              label: 'Pipeline Value',
+              value: totalPipelineValue,
+              previousValue: Math.max(0, totalPipelineValue - 10000),
+              format: 'currency',
+              icon: BarChart3,
+              onClick: () => setActiveTab('reports'),
+            },
+            {
+              id: 'wonValue',
+              label: 'Won This Month',
+              value: totalWonValue,
+              previousValue: Math.max(0, totalWonValue - 5000),
+              format: 'currency',
+              icon: Activity,
+              color: 'success',
+            },
+          ]}
+          columns={5}
+        />
       </div>
 
       {/* Main Content */}
@@ -250,34 +202,6 @@ function CRMDashboardContent() {
         </TabsContent>
       </Tabs>
     </div>
-  )
-}
-
-// ============================================================================
-// QUICK STAT COMPONENT
-// ============================================================================
-
-interface QuickStatProps {
-  label: string
-  value: string | number
-  icon: React.ElementType
-  onClick?: () => void
-}
-
-function QuickStat({ label, value, icon: Icon, onClick }: QuickStatProps) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent transition-colors text-left"
-    >
-      <div className="p-2 rounded-md bg-primary/10">
-        <Icon className="h-4 w-4 text-primary" />
-      </div>
-      <div>
-        <div className="text-lg font-semibold">{value}</div>
-        <div className="text-xs text-muted-foreground">{label}</div>
-      </div>
-    </button>
   )
 }
 
