@@ -174,6 +174,39 @@ export { CreateWorkflowDialog } from './components/create-workflow-dialog'
 export { CreateWorkflowButton } from './components/create-workflow-button'
 export { WorkflowListCard } from './components/workflow-list-card'
 
+// ============================================================================
+// PHASE-UI-12A: ENHANCED WORKFLOW BUILDER UI
+// ============================================================================
+
+export { WorkflowBuilderEnhanced } from './components/WorkflowBuilderEnhanced'
+export {
+  WorkflowStepCard,
+  WorkflowMiniMap,
+  ActionSearchPalette,
+  TriggerCard,
+  StepConnectionLine,
+  HorizontalConnectionLine,
+  WorkflowHeader,
+} from './components/ui'
+
+// ============================================================================
+// PHASE-UI-12B: AUTOMATION LOGS & ANALYTICS UI
+// ============================================================================
+
+export { AnalyticsDashboardEnhanced } from './components/AnalyticsDashboardEnhanced'
+export {
+  ExecutionTimeline,
+  ExecutionLogCard,
+  AnalyticsMetricCard,
+  ExecutionsMetricCard,
+  SuccessRateMetricCard,
+  AvgDurationMetricCard,
+  ActiveWorkflowsMetricCard,
+  WorkflowPerformanceChart,
+  ExecutionFilterBar,
+  type ExecutionFilters,
+} from './components/ui'
+
 // Hooks
 export { useWorkflowBuilder } from './hooks/use-workflow-builder'
 
