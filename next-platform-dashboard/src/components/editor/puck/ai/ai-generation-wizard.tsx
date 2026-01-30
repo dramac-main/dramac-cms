@@ -50,7 +50,7 @@ import {
   type StylePresetType,
   type IndustryPresetType,
   type PageGenerationContext,
-} from "@/lib/ai/puck-generation";
+} from "@/lib/ai/puck-generation-types";
 import type { Data as PuckData } from "@puckeditor/core";
 
 // ============================================

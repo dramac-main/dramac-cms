@@ -10,42 +10,25 @@ import { checkRateLimit, recordRateLimitedAction } from "@/lib/rate-limit";
 import { checkContent, sanitizePrompt, getHighestSeverity } from "@/lib/safety";
 import type { Data as PuckData, ComponentData } from "@puckeditor/core";
 
-// ============================================
-// Types
-// ============================================
+// Re-export types and constants from types file
+export {
+  PAGE_TEMPLATES,
+  STYLE_PRESETS,
+  INDUSTRY_PRESETS,
+  type PageTemplateType,
+  type StylePresetType,
+  type IndustryPresetType,
+  type PageGenerationContext,
+  type GenerationResult,
+  type ComponentGenerationContext,
+} from "./puck-generation-types";
 
-export interface PageGenerationContext {
-  description: string;
-  industry?: string;
-  style?: "modern" | "classic" | "minimal" | "bold" | "playful";
-  colorScheme?: {
-    primary?: string;
-    secondary?: string;
-    accent?: string;
-  };
-  targetAudience?: string;
-  sections?: readonly string[] | string[];
-  tone?: "professional" | "friendly" | "casual" | "luxury" | "technical";
-  existingBranding?: {
-    companyName?: string;
-    tagline?: string;
-    logoUrl?: string;
-  };
-}
-
-export interface GenerationResult {
-  success: boolean;
-  data?: PuckData;
-  error?: string;
-  tokensUsed?: number;
-}
-
-export interface ComponentGenerationContext {
-  componentType: string;
-  pageContext: PageGenerationContext;
-  position?: "start" | "middle" | "end";
-  existingContent?: string[];
-}
+// Import types for use in this file
+import type {
+  PageGenerationContext,
+  GenerationResult,
+  ComponentGenerationContext,
+} from "./puck-generation-types";
 
 // ============================================
 // Page Generation Prompt
@@ -309,133 +292,3 @@ export async function generateSingleComponent(
     };
   }
 }
-
-// ============================================
-// Page Layout Templates
-// ============================================
-
-export const PAGE_TEMPLATES = {
-  landing: {
-    name: "Landing Page",
-    description: "High-converting landing page with hero, features, testimonials, and CTA",
-    sections: ["Hero", "Features", "Testimonials", "Pricing", "FAQ", "CTA", "Footer"],
-  },
-  business: {
-    name: "Business Website",
-    description: "Professional business website with services and about sections",
-    sections: ["Navbar", "Hero", "Features", "Team", "Testimonials", "ContactForm", "Footer"],
-  },
-  portfolio: {
-    name: "Portfolio",
-    description: "Creative portfolio showcasing work and skills",
-    sections: ["Navbar", "Hero", "Gallery", "Stats", "Testimonials", "ContactForm", "Footer"],
-  },
-  saas: {
-    name: "SaaS Product",
-    description: "Software product page with pricing and features",
-    sections: ["Navbar", "Hero", "LogoCloud", "Features", "Pricing", "FAQ", "CTA", "Footer"],
-  },
-  ecommerce: {
-    name: "E-Commerce",
-    description: "Product-focused page for online stores",
-    sections: ["Navbar", "Hero", "Features", "Gallery", "Testimonials", "CTA", "Newsletter", "Footer"],
-  },
-  blog: {
-    name: "Blog / Content",
-    description: "Content-focused layout for blogs and articles",
-    sections: ["Navbar", "Hero", "Features", "Newsletter", "Footer"],
-  },
-} as const;
-
-export type PageTemplateType = keyof typeof PAGE_TEMPLATES;
-
-// ============================================
-// Style Presets
-// ============================================
-
-export const STYLE_PRESETS = {
-  modern: {
-    name: "Modern",
-    description: "Clean, contemporary design with bold typography",
-    characteristics: "Sharp corners, sans-serif fonts, whitespace",
-  },
-  classic: {
-    name: "Classic",
-    description: "Timeless, elegant design with traditional elements",
-    characteristics: "Serif fonts, subtle colors, refined details",
-  },
-  minimal: {
-    name: "Minimal",
-    description: "Stripped-down design focusing on essentials",
-    characteristics: "Maximum whitespace, few colors, simple shapes",
-  },
-  bold: {
-    name: "Bold",
-    description: "High-impact design with strong visual elements",
-    characteristics: "Large typography, vibrant colors, dramatic contrasts",
-  },
-  playful: {
-    name: "Playful",
-    description: "Fun, energetic design with creative elements",
-    characteristics: "Rounded shapes, bright colors, animations",
-  },
-} as const;
-
-export type StylePresetType = keyof typeof STYLE_PRESETS;
-
-// ============================================
-// Industry Presets
-// ============================================
-
-export const INDUSTRY_PRESETS = {
-  technology: {
-    name: "Technology",
-    suggestedStyle: "modern",
-    suggestedTone: "professional",
-    suggestedSections: ["Hero", "Features", "Stats", "Pricing", "FAQ"],
-  },
-  healthcare: {
-    name: "Healthcare",
-    suggestedStyle: "classic",
-    suggestedTone: "professional",
-    suggestedSections: ["Hero", "Features", "Team", "Testimonials", "ContactForm"],
-  },
-  retail: {
-    name: "Retail / E-Commerce",
-    suggestedStyle: "modern",
-    suggestedTone: "friendly",
-    suggestedSections: ["Hero", "Features", "Gallery", "Testimonials", "Newsletter"],
-  },
-  education: {
-    name: "Education",
-    suggestedStyle: "classic",
-    suggestedTone: "friendly",
-    suggestedSections: ["Hero", "Features", "Team", "FAQ", "ContactForm"],
-  },
-  creative: {
-    name: "Creative / Design",
-    suggestedStyle: "bold",
-    suggestedTone: "casual",
-    suggestedSections: ["Hero", "Gallery", "Testimonials", "ContactForm"],
-  },
-  finance: {
-    name: "Finance",
-    suggestedStyle: "classic",
-    suggestedTone: "professional",
-    suggestedSections: ["Hero", "Features", "Stats", "Team", "ContactForm"],
-  },
-  hospitality: {
-    name: "Hospitality",
-    suggestedStyle: "modern",
-    suggestedTone: "friendly",
-    suggestedSections: ["Hero", "Gallery", "Features", "Testimonials", "ContactForm"],
-  },
-  nonprofit: {
-    name: "Nonprofit",
-    suggestedStyle: "minimal",
-    suggestedTone: "friendly",
-    suggestedSections: ["Hero", "Stats", "Team", "Testimonials", "CTA", "Newsletter"],
-  },
-} as const;
-
-export type IndustryPresetType = keyof typeof INDUSTRY_PRESETS;
