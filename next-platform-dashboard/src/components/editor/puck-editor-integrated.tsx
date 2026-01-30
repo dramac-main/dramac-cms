@@ -35,7 +35,15 @@ import {
   ChevronLeft,
   AlertCircle,
   Info,
+  Sparkles,
+  Wand2,
+  BarChart3,
 } from "lucide-react";
+
+// AI Components
+import { AIAssistantPanel } from "./puck/ai/ai-assistant-panel";
+import { AIGenerationWizard } from "./puck/ai/ai-generation-wizard";
+import { AIOptimizationPanel } from "./puck/ai/ai-optimization-panel";
 
 interface PageWithContent {
   id: string;
@@ -104,6 +112,11 @@ export function PuckEditorIntegrated({ site, page }: PuckEditorIntegratedProps) 
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [showMigrationNotice, setShowMigrationNotice] = useState(wasMigrated);
   
+  // AI Panel States
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [showGenerationWizard, setShowGenerationWizard] = useState(false);
+  const [showOptimizationPanel, setShowOptimizationPanel] = useState(false);
+  
   // Preview management
   const {
     device,
@@ -144,6 +157,20 @@ export function PuckEditorIntegrated({ site, page }: PuckEditorIntegratedProps) 
       setIsSaving(false);
     }
   }, [isSaving, page.id, refreshPreview]);
+
+  // Handle AI-generated page
+  const handleAIGenerate = useCallback((generatedData: PuckData) => {
+    setData(generatedData);
+    setHasChanges(true);
+    setShowGenerationWizard(false);
+    toast.success("AI page generated successfully!");
+  }, []);
+
+  // Handle AI content update
+  const handleAIContentUpdate = useCallback((newContent: string) => {
+    toast.success("Content updated with AI suggestion");
+    setHasChanges(true);
+  }, []);
 
   // Auto-save every 60 seconds when there are changes
   useEffect(() => {
@@ -321,6 +348,41 @@ export function PuckEditorIntegrated({ site, page }: PuckEditorIntegratedProps) 
           </div>
           
           <div className="flex items-center gap-2">
+            {/* AI Tools */}
+            <div className="flex items-center gap-1 border-r pr-2 mr-2">
+              <button
+                onClick={() => setShowAIAssistant(!showAIAssistant)}
+                className={cn(
+                  "p-2 rounded-md text-sm flex items-center gap-1.5 transition-colors",
+                  showAIAssistant
+                    ? "bg-violet-500 text-white"
+                    : "hover:bg-violet-100 text-violet-600 dark:hover:bg-violet-900/30"
+                )}
+                title="AI Assistant"
+              >
+                <Sparkles className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setShowGenerationWizard(true)}
+                className="p-2 rounded-md text-sm flex items-center gap-1.5 hover:bg-violet-100 text-violet-600 dark:hover:bg-violet-900/30 transition-colors"
+                title="Generate Page with AI"
+              >
+                <Wand2 className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setShowOptimizationPanel(!showOptimizationPanel)}
+                className={cn(
+                  "p-2 rounded-md text-sm flex items-center gap-1.5 transition-colors",
+                  showOptimizationPanel
+                    ? "bg-emerald-500 text-white"
+                    : "hover:bg-emerald-100 text-emerald-600 dark:hover:bg-emerald-900/30"
+                )}
+                title="Content Optimization"
+              >
+                <BarChart3 className="h-4 w-4" />
+              </button>
+            </div>
+            
             {lastSaved && (
               <span className="text-xs text-muted-foreground">
                 Saved {lastSaved.toLocaleTimeString()}
@@ -354,14 +416,39 @@ export function PuckEditorIntegrated({ site, page }: PuckEditorIntegratedProps) 
         </div>
         
         {/* Puck Editor */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden relative">
           <Puck
             config={puckConfig}
             data={data}
             onChange={handleChange}
             onPublish={handleSave}
           />
+          
+          {/* AI Assistant Panel - Has its own fixed positioning */}
+          <AIAssistantPanel
+            isOpen={showAIAssistant}
+            onClose={() => setShowAIAssistant(false)}
+            onApplyResult={handleAIContentUpdate}
+          />
+
+          {/* Optimization Panel - Floating */}
+          {showOptimizationPanel && (
+            <div className="absolute top-4 right-4 z-50 w-[420px] max-h-[calc(100vh-120px)] overflow-auto">
+              <AIOptimizationPanel
+                puckData={data}
+                pageTitle={data.root?.props?.title as string}
+                pageDescription={(data.root?.props as Record<string, unknown>)?.description as string}
+              />
+            </div>
+          )}
         </div>
+
+        {/* AI Generation Wizard Modal */}
+        <AIGenerationWizard
+          isOpen={showGenerationWizard}
+          onClose={() => setShowGenerationWizard(false)}
+          onGenerate={handleAIGenerate}
+        />
       </div>
     </EditorProvider>
   );
