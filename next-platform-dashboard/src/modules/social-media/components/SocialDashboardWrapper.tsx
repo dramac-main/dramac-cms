@@ -5,11 +5,13 @@
  * 
  * Client wrapper that handles navigation callbacks internally
  * This prevents passing functions from Server Component to Client Component
+ * 
+ * Updated in PHASE-UI-11A to use enhanced dashboard with modern UI
  */
 
 import { useRouter } from 'next/navigation'
 import { useCallback } from 'react'
-import { SocialDashboard } from './SocialDashboard'
+import { SocialDashboardEnhanced } from './SocialDashboardEnhanced'
 import type { SocialAccount, SocialPost, AnalyticsOverview } from '../types'
 
 interface SocialDashboardWrapperProps {
@@ -54,7 +56,8 @@ export function SocialDashboardWrapper({
   }, [router])
 
   return (
-    <SocialDashboard
+    <SocialDashboardEnhanced
+      siteId={siteId}
       accounts={accounts}
       scheduledPosts={scheduledPosts}
       recentPosts={recentPosts}
