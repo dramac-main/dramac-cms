@@ -1406,3 +1406,113 @@ export interface StockIndicatorProps {
   showQuantity?: boolean;
   variant?: "badge" | "text" | "dot";
 }
+
+// ============================================
+// 3D Component Props (PHASE-ED-04A)
+// ============================================
+
+export interface Scene3DProps {
+  modelUrl?: string;
+  autoRotate?: boolean;
+  enableZoom?: boolean;
+  backgroundColor?: string;
+  lighting?: "ambient" | "directional" | "studio" | "dramatic";
+  height?: number;
+  cameraPosition?: "front" | "angle" | "top";
+}
+
+export interface ParticleBackgroundProps {
+  particleCount?: number;
+  particleColor?: string;
+  particleSize?: number;
+  animationStyle?: "float" | "swarm" | "galaxy" | "snow" | "rain";
+  speed?: number;
+  backgroundColor?: string;
+  height?: number;
+}
+
+export interface FloatingCardsProps {
+  cards?: Array<{
+    title: string;
+    description: string;
+    image?: string;
+  }>;
+  depth?: number;
+  rotationIntensity?: number;
+  floatIntensity?: number;
+  backgroundColor?: string;
+  height?: number;
+}
+
+export interface GlobeVisualizationProps {
+  texture?: "earth" | "wireframe" | "dots" | "custom";
+  autoRotate?: boolean;
+  rotationSpeed?: number;
+  markers?: Array<{
+    lat: number;
+    lng: number;
+    label?: string;
+    color?: string;
+  }>;
+  backgroundColor?: string;
+  height?: number;
+}
+
+export interface Animated3DTextProps {
+  text?: string;
+  fontSize?: number;
+  color?: string;
+  metalness?: number;
+  roughness?: number;
+  depth?: number;
+  animationType?: "rotate" | "float" | "pulse" | "none";
+  backgroundColor?: string;
+  height?: number;
+}
+
+// ============================================
+// Spline Integration Props (PHASE-ED-04B)
+// ============================================
+
+export interface SplineSceneProps {
+  sceneUrl?: string;
+  height?: number;
+  backgroundColor?: string;
+  loading?: "lazy" | "eager";
+  fallbackText?: string;
+}
+
+export interface SplineViewerProps {
+  sceneUrl?: string;
+  height?: number;
+  interactive?: boolean;
+  autoRotate?: boolean;
+  backgroundColor?: string;
+  showControls?: boolean;
+}
+
+export interface Spline3DCardProps {
+  sceneUrl?: string;
+  title?: string;
+  description?: string;
+  height?: number;
+  cardBackground?: string;
+  textColor?: string;
+}
+
+export interface SplineBackgroundProps {
+  sceneUrl?: string;
+  opacity?: number;
+  overlayColor?: string;
+  children?: string;
+  minHeight?: number;
+}
+
+export interface SplineProductViewerProps {
+  sceneUrl?: string;
+  productName?: string;
+  productDescription?: string;
+  price?: string;
+  height?: number;
+  showInfo?: boolean;
+}

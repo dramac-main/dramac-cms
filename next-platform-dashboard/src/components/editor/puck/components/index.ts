@@ -162,3 +162,20 @@ export {
   ProductBundleRender,
   StockIndicatorRender,
 } from "./ecommerce-advanced";
+// 3D Components - React Three Fiber (PHASE-ED-04A)
+export {
+  Scene3DRender,
+  ParticleBackgroundRender,
+  FloatingCardsRender,
+  GlobeVisualizationRender,
+  Animated3DTextRender,
+} from "./three-d";
+
+// Spline 3D Components (PHASE-ED-04B)
+export {
+  SplineSceneRender,
+  SplineViewerRender,
+  Spline3DCardRender,
+  SplineBackgroundRender,
+  SplineProductViewerRender,
+} from "./spline";

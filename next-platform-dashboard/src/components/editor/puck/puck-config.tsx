@@ -119,6 +119,18 @@ import type {
   RelatedProductsProps,
   ProductBundleProps,
   StockIndicatorProps,
+  // 3D Component Types (PHASE-ED-04A)
+  Scene3DProps,
+  ParticleBackgroundProps,
+  FloatingCardsProps,
+  GlobeVisualizationProps,
+  Animated3DTextProps,
+  // Spline Component Types (PHASE-ED-04B)
+  SplineSceneProps,
+  SplineViewerProps,
+  Spline3DCardProps,
+  SplineBackgroundProps,
+  SplineProductViewerProps,
 } from "@/types/puck";
 import { cn } from "@/lib/utils";
 
@@ -274,6 +286,24 @@ import {
   StockIndicatorRender,
 } from "./components/ecommerce-advanced";
 
+// 3D Components - React Three Fiber (PHASE-ED-04A)
+import {
+  Scene3DRender,
+  ParticleBackgroundRender,
+  FloatingCardsRender,
+  GlobeVisualizationRender,
+  Animated3DTextRender,
+} from "./components/three-d";
+
+// Spline 3D Components (PHASE-ED-04B)
+import {
+  SplineSceneRender,
+  SplineViewerRender,
+  Spline3DCardRender,
+  SplineBackgroundRender,
+  SplineProductViewerRender,
+} from "./components/spline";
+
 // Standard field options
 const alignmentOptions = [
   { label: "Left", value: "left" },
@@ -395,6 +425,14 @@ export const puckConfig: Config = {
     ecommerceAdvanced: {
       title: "Advanced E-Commerce",
       components: ["ProductShowcase", "ProductTabs", "ProductReviews", "ShippingCalculator", "SizeGuide", "WishlistButton", "RecentlyViewed", "RelatedProducts", "ProductBundle", "StockIndicator"],
+    },
+    threeD: {
+      title: "3D (React Three Fiber)",
+      components: ["Scene3D", "ParticleBackground", "FloatingCards", "GlobeVisualization", "Animated3DText"],
+    },
+    spline: {
+      title: "3D (Spline)",
+      components: ["SplineScene", "SplineViewer", "Spline3DCard", "SplineBackground", "SplineProductViewer"],
     },
   },
 
@@ -3851,6 +3889,249 @@ export const puckConfig: Config = {
         variant: "badge",
       } as StockIndicatorProps,
       render: StockIndicatorRender as any,
+    },
+
+    // ============================================
+    // 3D COMPONENTS - REACT THREE FIBER (PHASE-ED-04A)
+    // ============================================
+
+    Scene3D: {
+      label: "3D Scene Viewer",
+      fields: {
+        modelUrl: { type: "text", label: "3D Model URL (.glb/.gltf)" },
+        autoRotate: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Auto Rotate" },
+        enableZoom: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Enable Zoom" },
+        backgroundColor: { type: "text", label: "Background Color" },
+        lighting: { type: "select", label: "Lighting", options: [{ label: "Ambient", value: "ambient" }, { label: "Directional", value: "directional" }, { label: "Studio", value: "studio" }, { label: "Dramatic", value: "dramatic" }] },
+        height: { type: "number", label: "Height (px)" },
+        cameraPosition: { type: "select", label: "Camera Position", options: [{ label: "Front", value: "front" }, { label: "Angle", value: "angle" }, { label: "Top", value: "top" }] },
+      },
+      defaultProps: {
+        modelUrl: "",
+        autoRotate: true,
+        enableZoom: true,
+        backgroundColor: "#1a1a2e",
+        lighting: "studio",
+        height: 400,
+        cameraPosition: "angle",
+      } as Scene3DProps,
+      render: Scene3DRender as any,
+    },
+
+    ParticleBackground: {
+      label: "Particle Background",
+      fields: {
+        particleCount: { type: "number", label: "Particle Count" },
+        particleColor: { type: "text", label: "Particle Color" },
+        particleSize: { type: "number", label: "Particle Size" },
+        animationStyle: { type: "select", label: "Animation Style", options: [{ label: "Float", value: "float" }, { label: "Swarm", value: "swarm" }, { label: "Galaxy", value: "galaxy" }, { label: "Snow", value: "snow" }, { label: "Rain", value: "rain" }] },
+        speed: { type: "number", label: "Animation Speed" },
+        backgroundColor: { type: "text", label: "Background Color" },
+        height: { type: "number", label: "Height (px)" },
+      },
+      defaultProps: {
+        particleCount: 500,
+        particleColor: "#ffffff",
+        particleSize: 0.05,
+        animationStyle: "float",
+        speed: 1,
+        backgroundColor: "#0a0a0f",
+        height: 400,
+      } as ParticleBackgroundProps,
+      render: ParticleBackgroundRender as any,
+    },
+
+    FloatingCards: {
+      label: "Floating 3D Cards",
+      fields: {
+        cards: {
+          type: "array",
+          label: "Cards",
+          arrayFields: {
+            title: { type: "text", label: "Title" },
+            description: { type: "text", label: "Description" },
+            image: { type: "text", label: "Image URL" },
+          },
+        },
+        depth: { type: "number", label: "Depth Effect" },
+        rotationIntensity: { type: "number", label: "Rotation Intensity" },
+        floatIntensity: { type: "number", label: "Float Intensity" },
+        backgroundColor: { type: "text", label: "Background Color" },
+        height: { type: "number", label: "Height (px)" },
+      },
+      defaultProps: {
+        cards: [
+          { title: "Card 1", description: "Description for card 1" },
+          { title: "Card 2", description: "Description for card 2" },
+          { title: "Card 3", description: "Description for card 3" },
+        ],
+        depth: 2,
+        rotationIntensity: 0.5,
+        floatIntensity: 0.5,
+        backgroundColor: "#f8fafc",
+        height: 500,
+      } as FloatingCardsProps,
+      render: FloatingCardsRender as any,
+    },
+
+    GlobeVisualization: {
+      label: "3D Globe",
+      fields: {
+        texture: { type: "select", label: "Texture", options: [{ label: "Earth", value: "earth" }, { label: "Wireframe", value: "wireframe" }, { label: "Dots", value: "dots" }] },
+        autoRotate: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Auto Rotate" },
+        rotationSpeed: { type: "number", label: "Rotation Speed" },
+        markers: {
+          type: "array",
+          label: "Markers",
+          arrayFields: {
+            lat: { type: "number", label: "Latitude" },
+            lng: { type: "number", label: "Longitude" },
+            label: { type: "text", label: "Label" },
+            color: { type: "text", label: "Color" },
+          },
+        },
+        backgroundColor: { type: "text", label: "Background Color" },
+        height: { type: "number", label: "Height (px)" },
+      },
+      defaultProps: {
+        texture: "earth",
+        autoRotate: true,
+        rotationSpeed: 1,
+        markers: [],
+        backgroundColor: "#0f172a",
+        height: 500,
+      } as GlobeVisualizationProps,
+      render: GlobeVisualizationRender as any,
+    },
+
+    Animated3DText: {
+      label: "Animated 3D Text",
+      fields: {
+        text: { type: "text", label: "Text" },
+        fontSize: { type: "number", label: "Font Size" },
+        color: { type: "text", label: "Color" },
+        metalness: { type: "number", label: "Metalness (0-1)" },
+        roughness: { type: "number", label: "Roughness (0-1)" },
+        depth: { type: "number", label: "Depth" },
+        animationType: { type: "select", label: "Animation", options: [{ label: "Rotate", value: "rotate" }, { label: "Float", value: "float" }, { label: "Pulse", value: "pulse" }, { label: "None", value: "none" }] },
+        backgroundColor: { type: "text", label: "Background Color" },
+        height: { type: "number", label: "Height (px)" },
+      },
+      defaultProps: {
+        text: "Hello 3D",
+        fontSize: 1,
+        color: "#6366f1",
+        metalness: 0.5,
+        roughness: 0.3,
+        depth: 0.5,
+        animationType: "rotate",
+        backgroundColor: "#1e1b4b",
+        height: 300,
+      } as Animated3DTextProps,
+      render: Animated3DTextRender as any,
+    },
+
+    // ============================================
+    // SPLINE 3D COMPONENTS (PHASE-ED-04B)
+    // ============================================
+
+    SplineScene: {
+      label: "Spline Scene",
+      fields: {
+        sceneUrl: { type: "text", label: "Spline Scene URL" },
+        height: { type: "number", label: "Height (px)" },
+        backgroundColor: { type: "text", label: "Background Color" },
+        loading: { type: "select", label: "Loading", options: [{ label: "Lazy", value: "lazy" }, { label: "Eager", value: "eager" }] },
+        fallbackText: { type: "text", label: "Fallback Text" },
+      },
+      defaultProps: {
+        sceneUrl: "",
+        height: 400,
+        backgroundColor: "#1a1a2e",
+        loading: "lazy",
+        fallbackText: "No Spline scene configured",
+      } as SplineSceneProps,
+      render: SplineSceneRender as any,
+    },
+
+    SplineViewer: {
+      label: "Spline Viewer",
+      fields: {
+        sceneUrl: { type: "text", label: "Spline Scene URL" },
+        height: { type: "number", label: "Height (px)" },
+        interactive: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Interactive" },
+        autoRotate: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Auto Rotate" },
+        backgroundColor: { type: "text", label: "Background Color" },
+        showControls: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Controls" },
+      },
+      defaultProps: {
+        sceneUrl: "",
+        height: 500,
+        interactive: true,
+        autoRotate: false,
+        backgroundColor: "#0a0a0f",
+        showControls: true,
+      } as SplineViewerProps,
+      render: SplineViewerRender as any,
+    },
+
+    Spline3DCard: {
+      label: "Spline 3D Card",
+      fields: {
+        sceneUrl: { type: "text", label: "Spline Scene URL" },
+        title: { type: "text", label: "Title" },
+        description: { type: "textarea", label: "Description" },
+        height: { type: "number", label: "Height (px)" },
+        cardBackground: { type: "text", label: "Card Overlay Color" },
+        textColor: { type: "text", label: "Text Color" },
+      },
+      defaultProps: {
+        sceneUrl: "",
+        title: "3D Card Title",
+        description: "Add a description for your 3D card content",
+        height: 400,
+        cardBackground: "rgba(0, 0, 0, 0.7)",
+        textColor: "#ffffff",
+      } as Spline3DCardProps,
+      render: Spline3DCardRender as any,
+    },
+
+    SplineBackground: {
+      label: "Spline Background",
+      fields: {
+        sceneUrl: { type: "text", label: "Spline Scene URL" },
+        opacity: { type: "number", label: "Opacity (0-1)" },
+        overlayColor: { type: "text", label: "Overlay Color" },
+        minHeight: { type: "number", label: "Min Height (px)" },
+      },
+      defaultProps: {
+        sceneUrl: "",
+        opacity: 0.5,
+        overlayColor: "rgba(0, 0, 0, 0.5)",
+        minHeight: 500,
+      } as SplineBackgroundProps,
+      render: SplineBackgroundRender as any,
+    },
+
+    SplineProductViewer: {
+      label: "Spline Product Viewer",
+      fields: {
+        sceneUrl: { type: "text", label: "Spline Scene URL" },
+        productName: { type: "text", label: "Product Name" },
+        productDescription: { type: "textarea", label: "Product Description" },
+        price: { type: "text", label: "Price" },
+        height: { type: "number", label: "Height (px)" },
+        showInfo: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Product Info" },
+      },
+      defaultProps: {
+        sceneUrl: "",
+        productName: "Product Name",
+        productDescription: "Explore this product in 3D",
+        price: "$99.99",
+        height: 500,
+        showInfo: true,
+      } as SplineProductViewerProps,
+      render: SplineProductViewerRender as any,
     },
   },
 };
