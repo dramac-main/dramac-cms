@@ -65,7 +65,15 @@ export {
   TableCaption,
 } from "./table";
 
-export { Skeleton } from "./skeleton";
+export { 
+  Skeleton, 
+  SkeletonText, 
+  SkeletonAvatar, 
+  SkeletonCard, 
+  SkeletonTable, 
+  SkeletonStats,
+  SkeletonList,
+} from "./skeleton";
 export { Separator } from "./separator";
 export { Switch } from "./switch";
 export { Checkbox } from "./checkbox";
@@ -115,8 +123,16 @@ export {
   AlertDialogCancel,
 } from "./alert-dialog";
 
-export { Alert, AlertTitle, AlertDescription } from "./alert";
+export { Alert, AlertTitle, AlertDescription, AlertWithIcon, alertVariants } from "./alert";
 
 export { RateLimitError, RateLimitErrorInline } from "./rate-limit-error";
 
 export { RadioGroup, RadioGroupItem } from "./radio-group";
+
+// Part 4 - PHASE-UI-04A: Core UI Polish Components
+export { LoadingButton } from "./loading-button";
+export { EmptyState, EmptyStatePresets } from "./empty-state";
+export { Stat, StatCard, StatGrid, Trend } from "./stat";
+export { Spinner, SpinnerOverlay, LoadingDots } from "./spinner";
+export { Divider, DividerPresets } from "./divider";
+export { Progress, StageProgress, progressVariants, indicatorVariants } from "./progress";
