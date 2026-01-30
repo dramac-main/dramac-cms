@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { MessageSquare, Plus, Clock, CheckCircle, XCircle, AlertCircle, Search, ThumbsUp } from "lucide-react";
+import { MessageSquare, Plus, Clock, CheckCircle, XCircle, AlertCircle, Search, ThumbsUp, LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   description: "View your module requests",
 };
 
-const statusConfig: Record<string, { icon: React.ElementType; label: string; color: string }> = {
+const statusConfig: Record<string, { icon: LucideIcon; label: string; color: string }> = {
   submitted: { icon: Clock, label: "Submitted", color: "bg-gray-500" },
   reviewing: { icon: Search, label: "Under Review", color: "bg-blue-500" },
   approved: { icon: CheckCircle, label: "Approved", color: "bg-green-500" },
