@@ -29,6 +29,15 @@ export { PageHeader } from "./page-header";
 // Mobile Components
 export { MobileBottomNav, MobileBottomNavSpacer } from "./mobile-bottom-nav";
 export { SwipeHandler } from "./swipe-handler";
+export { MobileCommandSheet } from "./mobile-command-sheet";
+export { MobileActionSheet } from "./mobile-action-sheet";
+export { MobileSearchTrigger } from "./mobile-search-trigger";
+export { MobileFAB } from "./mobile-fab";
+
+// Desktop Components
+export { CommandPalette } from "./command-palette";
+export { SidebarSearch } from "./sidebar-search";
+export { QuickActions, SidebarQuickActions } from "./quick-actions";
 
 // Legacy exports (for backwards compatibility during migration)
 export { Sidebar as LegacySidebar } from "./sidebar";

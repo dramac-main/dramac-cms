@@ -1,11 +1,14 @@
 "use client";
 
 import { ReactNode } from "react";
-import { SidebarProvider, useSidebar } from "./sidebar-context";
+import { SidebarProvider } from "./sidebar-context";
 import { Sidebar } from "./sidebar-modern";
 import { Header } from "./header-modern";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { SwipeHandler } from "./swipe-handler";
+import { CommandPalette } from "./command-palette";
+import { QuickActions } from "./quick-actions";
+import { MobileFAB } from "./mobile-fab";
 import { cn } from "@/lib/utils";
 import { useBreakpointDown } from "@/hooks/use-media-query";
 
@@ -18,6 +21,10 @@ interface DashboardLayoutClientProps {
   showBottomNav?: boolean;
   /** Enable swipe gestures for sidebar on mobile */
   enableSwipeGestures?: boolean;
+  /** Sites for command palette search */
+  sites?: Array<{ id: string; name: string; subdomain: string }>;
+  /** Clients for command palette search */
+  clients?: Array<{ id: string; name: string; email?: string }>;
 }
 
 /**
@@ -38,6 +45,8 @@ export function DashboardLayoutClient({
   impersonationBanner,
   showBottomNav = true,
   enableSwipeGestures = true,
+  sites = [],
+  clients = [],
 }: DashboardLayoutClientProps) {
   return (
     <SidebarProvider>
@@ -47,6 +56,8 @@ export function DashboardLayoutClient({
         impersonationBanner={impersonationBanner}
         showBottomNav={showBottomNav}
         enableSwipeGestures={enableSwipeGestures}
+        sites={sites}
+        clients={clients}
       >
         {children}
       </DashboardLayoutInner>
@@ -64,15 +75,26 @@ function DashboardLayoutInner({
   impersonationBanner,
   showBottomNav,
   enableSwipeGestures,
+  sites,
+  clients,
 }: DashboardLayoutClientProps & { 
   showBottomNav: boolean;
   enableSwipeGestures: boolean;
+  sites: Array<{ id: string; name: string; subdomain: string }>;
+  clients: Array<{ id: string; name: string; email?: string }>;
 }) {
   const isMobile = useBreakpointDown("md");
 
   // Content to render
   const content = (
     <div className="flex min-h-screen bg-background">
+      {/* Global Command Palette - ⌘K / Ctrl+K */}
+      <CommandPalette 
+        sites={sites} 
+        clients={clients} 
+        isSuperAdmin={isSuperAdmin} 
+      />
+      
       {/* Impersonation banner - fixed at top */}
       {isImpersonating && impersonationBanner}
       
@@ -96,9 +118,15 @@ function DashboardLayoutInner({
         </main>
       </div>
       
+      {/* Desktop Quick Actions FAB */}
+      {!isMobile && <QuickActions />}
+      
       {/* Mobile bottom navigation */}
       {showBottomNav && isMobile && (
-        <MobileBottomNav />
+        <>
+          <MobileFAB />
+          <MobileBottomNav />
+        </>
       )}
     </div>
   );
