@@ -1,103 +1,153 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: January 30, 2026  
-**Current Phase**: PHASE-UI-12A & PHASE-UI-12B Automation UI Enhancement (Master Build Prompt V2.1)  
+**Current Phase**: PHASE-UI-13A & PHASE-UI-13B AI Agents UI Enhancement (Master Build Prompt V2.1)  
 **Status**: ✅ 40 OF 40 PHASES (100%) - ✅ Zero TypeScript Errors - ✅ Build Passing - ✅ All Features Implemented
 
-## 🚀 PHASE-UI-12A & PHASE-UI-12B: Automation Workflow Builder & Analytics UI (January 30, 2026)
+## 🚀 PHASE-UI-13A & PHASE-UI-13B: AI Agents Dashboard & Builder UI (January 30, 2026)
 
-### What Was Built - Automation Workflow Builder UI (PHASE-UI-12A)
+### What Was Built - AI Agents Dashboard UI (PHASE-UI-13A)
 
-1. **WorkflowStepCard** (`src/modules/automation/components/ui/workflow-step-card.tsx`)
-   - Enhanced visual step card with status indicators
-   - Action type config with icon
-   - Status badges (pending, running, completed, failed)
-   - Connection points for flow visualization
-   - Drag handle for reordering
-   - Quick actions on hover (edit, delete, duplicate)
-   - Framer Motion animations throughout
+1. **AgentMetricCard** (`src/components/ai-agents/ui/agent-metric-card.tsx`)
+   - Animated metric cards with sparklines and trend indicators
+   - AnimatedNumber component for smooth value transitions
+   - Sparkline SVG for mini trend visualization
+   - TrendBadge for up/down/neutral indicators
+   - Preset variants: ExecutionsMetricCard, SuccessRateMetricCard, TokensUsedMetricCard, CostMetricCard, ActiveAgentsMetricCard, FailedExecutionsMetricCard
 
-2. **WorkflowMiniMap** (`src/modules/automation/components/ui/workflow-mini-map.tsx`)
-   - Miniature workflow overview navigation
-   - Clickable step nodes with status colors
-   - Trigger display at top
-   - Expandable/collapsible view
-   - Current view indicator
+2. **AgentPerformanceChart** (`src/components/ai-agents/ui/agent-performance-chart.tsx`)
+   - SVG-based performance visualization with bars
+   - Time range selector (7d, 30d, 90d, all)
+   - Chart type toggle (bar, line)
+   - Summary stats (total, avg, peak)
+   - ChartBar components with tooltips
 
-3. **ActionSearchPalette** (`src/modules/automation/components/ui/action-search-palette.tsx`)
-   - Command palette style action search (⌘K)
-   - Fuzzy search across all action types
-   - Category-based filtering
-   - Recent actions quick access
-   - Keyboard navigation support
-   - All action categories from existing ACTION_REGISTRY
-
-4. **TriggerCard** (`src/modules/automation/components/ui/trigger-card.tsx`)
-   - Visual trigger type display
-   - 5 trigger types (event, schedule, webhook, manual, condition)
-   - Configuration summary preview
-   - Expandable details view
-   - Quick edit action
-
-5. **StepConnectionLine** (`src/modules/automation/components/ui/step-connection-line.tsx`)
-   - Animated connection lines between steps
-   - SVG-based rendering
-   - Conditional branch indicators
-   - Error state styling
-   - HorizontalConnectionLine variant export
-
-6. **WorkflowHeader** (`src/modules/automation/components/ui/workflow-header.tsx`)
-   - Enhanced builder header with controls
-   - Editable workflow name (inline edit)
-   - Active/inactive toggle switch
-   - Save, Test, Run buttons with loading states
-   - Undo/redo controls with tooltips
-   - Custom breadcrumb navigation
-   - Last saved indicator
-   - More actions dropdown (duplicate, delete, history)
-
-7. **WorkflowBuilderEnhanced** (`src/modules/automation/components/WorkflowBuilderEnhanced.tsx`)
-   - Main enhanced workflow builder component
-   - Three-panel resizable layout (actions, canvas, config)
-   - DnD context with sensors and collision detection
-   - SortableContext for step reordering
-   - ActionSearchPalette integration
-   - Keyboard shortcuts (Cmd+K, Cmd+S, Cmd+Z, etc.)
-   - Toast notifications for user feedback
-
-### What Was Built - Automation Logs & Analytics UI (PHASE-UI-12B)
-
-1. **ExecutionTimeline** (`src/modules/automation/components/ui/execution-timeline.tsx`)
-   - Vertical timeline with step nodes
-   - Color-coded status indicators (completed, failed, running, pending, skipped, cancelled)
-   - Duration display between steps
-   - Expandable step details (input, output, error)
-   - Error highlighting with stack trace support
-   - Retry action for failed steps
-
-2. **ExecutionLogCard** (`src/modules/automation/components/ui/execution-log-card.tsx`)
+3. **ExecutionLogCard** (`src/components/ai-agents/ui/execution-log-card.tsx`)
+   - Display execution history with status, duration, actions
    - Compact and detailed variants
-   - Workflow name and execution ID
-   - Status badge with appropriate styling
-   - Start time and duration display
-   - Step progress indicator
-   - Error summary for failed executions
-   - Quick action dropdown (view, retry, cancel)
-   - Expandable trigger and context data
-
-3. **AnalyticsMetricCard** (`src/modules/automation/components/ui/analytics-metric-card.tsx`)
-   - Large metric display with animated numbers
-   - Trend indicator with percentage change
-   - Optional sparkline chart
+   - Status badges (completed, failed, running, pending, cancelled)
+   - Collapsible content with input/output/error
+   - Action menu (view, retry, cancel)
    - Loading skeleton state
-   - Tooltip descriptions
-   - Preset variants: ExecutionsMetricCard, SuccessRateMetricCard, AvgDurationMetricCard, ActiveWorkflowsMetricCard
 
-4. **WorkflowPerformanceChart** (`src/modules/automation/components/ui/workflow-performance-chart.tsx`)
-   - Bar chart for workflow comparison
-   - Success rate visualization
-   - Time range selector (7d, 30d, 90d)
-   - Chart type toggle (bar, line, area)
+4. **AgentStatusCard** (`src/components/ai-agents/ui/agent-status-card.tsx`)
+   - Agent status display with quick stats and actions
+   - Live status indicator with pulse animation
+   - Stat items grid (executions, success rate, tokens)
+   - Toggle active switch with loading state
+   - Action menu (edit, duplicate, view logs, delete)
+   - Loading skeleton state
+
+5. **AgentQuickActions** (`src/components/ai-agents/ui/agent-quick-actions.tsx`)
+   - Quick action buttons for common operations
+   - Action grid with icons and labels
+   - Recent agents list with navigation
+   - Compact variant for sidebar
+
+6. **AgentFilterBar** (`src/components/ai-agents/ui/agent-filter-bar.tsx`)
+   - Search, filter, and sort controls
+   - Debounced search input
+   - Status filter (active, inactive, paused, error)
+   - Type filter (assistant, specialist, orchestrator, analyst, guardian)
+   - Sort options (name, created, runs, success_rate, last_run)
+   - Active filter badges with clear all
+
+7. **AIAgentsDashboardEnhanced** (`src/components/ai-agents/AIAgentsDashboardEnhanced.tsx`)
+   - Enhanced dashboard integrating all new UI components
+   - Stats row with 6 animated metric cards
+   - Tabbed interface (Overview, Agents, Executions, Performance)
+   - Quick actions sidebar
+   - Filter support with sorting
+   - Mock data for demonstration
+
+### What Was Built - AI Agent Builder UI (PHASE-UI-13B)
+
+1. **BuilderStepCard** (`src/components/ai-agents/ui/builder-step-card.tsx`)
+   - Numbered step indicator with completion status
+   - Collapsible content with animation
+   - Step progress indicator for navigation
+   - Status types: pending, active, completed, error
+   - Auto-open when step becomes active
+
+2. **BuilderToolSelector** (`src/components/ai-agents/ui/builder-tool-selector.tsx`)
+   - Grid of tools with search and category filtering
+   - Tool card with icon, name, badges (Pro, New)
+   - Category filter (communication, data, integration, etc.)
+   - Max selection limit with counter
+   - Selected tools summary with remove
+
+3. **BuilderTriggerConfig** (`src/components/ai-agents/ui/builder-trigger-config.tsx`)
+   - Visual trigger type configuration
+   - 6 trigger types (manual, schedule, webhook, event, message, api)
+   - Schedule config with frequency, cron, days of week, time
+   - Webhook config with URL and secret
+   - Event config with event type selector
+   - Enable/disable toggle per trigger
+   - Multiple triggers support
+
+4. **BuilderPreviewPanel** (`src/components/ai-agents/ui/builder-preview-panel.tsx`)
+   - Live agent preview card showing configuration
+   - Collapsible sections (AI Model, Tools, Triggers, Settings)
+   - Validation status display with errors/warnings
+   - Sticky positioning for visibility
+   - CompactPreview variant for quick display
+
+5. **BuilderTestConsole** (`src/components/ai-agents/ui/builder-test-console.tsx`)
+   - Interactive test execution with live output
+   - Input modes (text, JSON, variables)
+   - Status indicators (idle, running, success, error, timeout)
+   - Output tabs (Output, Logs, Tools, History)
+   - Log entry display with levels (info, warn, error, debug)
+   - Tool call visualization with input/output
+   - Test history with selection
+
+6. **BuilderHeader** (`src/components/ai-agents/ui/builder-header.tsx`)
+   - Header with editable title and actions
+   - Save status indicator (saving, saved, error, unsaved)
+   - Test and Save buttons with loading states
+   - More actions menu (duplicate, export, import, history, delete)
+   - Step progress indicator slot
+
+7. **AgentBuilderEnhanced** (`src/components/ai-agents/AgentBuilderEnhanced.tsx`)
+   - Multi-step wizard with live preview
+   - 5 steps: Basic Info, AI Model, Tools, Triggers, Settings
+   - Step navigation with prev/next buttons
+   - Live validation with error display
+   - Preview panel with configuration summary
+   - Test console slide-over panel
+   - Template selection for quick start
+   - Icon picker for agent customization
+   - Settings sliders for temperature and max tokens
+
+### Files Created
+
+**PHASE-UI-13A (Dashboard UI):**
+- `src/components/ai-agents/ui/agent-metric-card.tsx`
+- `src/components/ai-agents/ui/agent-performance-chart.tsx`
+- `src/components/ai-agents/ui/execution-log-card.tsx`
+- `src/components/ai-agents/ui/agent-status-card.tsx`
+- `src/components/ai-agents/ui/agent-quick-actions.tsx`
+- `src/components/ai-agents/ui/agent-filter-bar.tsx`
+- `src/components/ai-agents/ui/index.ts`
+- `src/components/ai-agents/AIAgentsDashboardEnhanced.tsx`
+- `src/components/ai-agents/index.ts`
+
+**PHASE-UI-13B (Builder UI):**
+- `src/components/ai-agents/ui/builder-step-card.tsx`
+- `src/components/ai-agents/ui/builder-tool-selector.tsx`
+- `src/components/ai-agents/ui/builder-trigger-config.tsx`
+- `src/components/ai-agents/ui/builder-preview-panel.tsx`
+- `src/components/ai-agents/ui/builder-test-console.tsx`
+- `src/components/ai-agents/ui/builder-header.tsx`
+- `src/components/ai-agents/AgentBuilderEnhanced.tsx`
+
+**Phase Documentation:**
+- `phases/enterprise-modules/PHASE-UI-13A-AI-AGENTS-DASHBOARD-UI.md`
+- `phases/enterprise-modules/PHASE-UI-13B-AI-AGENT-BUILDER-UI.md`
+
+---
+
+## Previous Session: PHASE-UI-12A & PHASE-UI-12B Automation UI Enhancement (January 30, 2026)
    - Interactive legend with tooltips
    - Summary stats row
    - Export chart capability
