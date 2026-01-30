@@ -86,6 +86,39 @@ import type {
   OTPInputProps,
   SelectInputProps,
   TagInputProps,
+  // Interactive Types (PHASE-ED-03A)
+  CarouselProps,
+  SliderProps,
+  LightboxProps,
+  ParallaxProps,
+  RevealProps,
+  TypewriterProps,
+  VideoBackgroundProps,
+  CountdownProps,
+  ConfettiProps,
+  AnimatedGradientProps,
+  // Marketing Types (PHASE-ED-03B)
+  AnnouncementBarProps,
+  SocialProofProps,
+  TrustBadgesProps,
+  LogoCloudProps,
+  ComparisonTableProps,
+  FeatureComparisonProps,
+  BeforeAfterProps,
+  TestimonialWallProps,
+  ValuePropositionProps,
+  LeadCaptureProps,
+  // E-Commerce Advanced Types (PHASE-ED-03C)
+  ProductShowcaseProps,
+  ProductTabsProps,
+  ProductReviewsProps,
+  ShippingCalculatorProps,
+  SizeGuideProps,
+  WishlistButtonProps,
+  RecentlyViewedProps,
+  RelatedProductsProps,
+  ProductBundleProps,
+  StockIndicatorProps,
 } from "@/types/puck";
 import { cn } from "@/lib/utils";
 
@@ -199,6 +232,48 @@ import {
   TagInputRender,
 } from "./components/forms-advanced";
 
+// Interactive Components (PHASE-ED-03A)
+import {
+  CarouselRender,
+  SliderRender,
+  LightboxRender,
+  ParallaxRender,
+  RevealRender,
+  TypewriterRender,
+  VideoBackgroundRender,
+  CountdownRender,
+  ConfettiRender,
+  AnimatedGradientRender,
+} from "./components/interactive";
+
+// Marketing Components (PHASE-ED-03B)
+import {
+  AnnouncementBarRender,
+  SocialProofRender,
+  TrustBadgesRender,
+  LogoCloudRender,
+  ComparisonTableRender,
+  FeatureComparisonRender,
+  BeforeAfterRender,
+  TestimonialWallRender,
+  ValuePropositionRender,
+  LeadCaptureRender,
+} from "./components/marketing";
+
+// Advanced E-Commerce Components (PHASE-ED-03C)
+import {
+  ProductShowcaseRender,
+  ProductTabsRender,
+  ProductReviewsRender,
+  ShippingCalculatorRender,
+  SizeGuideRender,
+  WishlistButtonRender,
+  RecentlyViewedRender,
+  RelatedProductsRender,
+  ProductBundleRender,
+  StockIndicatorRender,
+} from "./components/ecommerce-advanced";
+
 // Standard field options
 const alignmentOptions = [
   { label: "Left", value: "left" },
@@ -308,6 +383,18 @@ export const puckConfig: Config = {
     ecommerce: {
       title: "E-Commerce",
       components: ["ProductGrid", "ProductCard", "ProductCategories", "CartSummary", "ProductFilters", "ProductQuickView", "FeaturedProducts", "CartIcon"],
+    },
+    interactive: {
+      title: "Interactive",
+      components: ["Carousel", "Slider", "Lightbox", "Parallax", "Reveal", "Typewriter", "VideoBackground", "Countdown", "Confetti", "AnimatedGradient"],
+    },
+    marketing: {
+      title: "Marketing",
+      components: ["AnnouncementBar", "SocialProof", "TrustBadges", "LogoCloud", "ComparisonTable", "FeatureComparison", "BeforeAfter", "TestimonialWall", "ValueProposition", "LeadCapture"],
+    },
+    ecommerceAdvanced: {
+      title: "Advanced E-Commerce",
+      components: ["ProductShowcase", "ProductTabs", "ProductReviews", "ShippingCalculator", "SizeGuide", "WishlistButton", "RecentlyViewed", "RelatedProducts", "ProductBundle", "StockIndicator"],
     },
   },
 
@@ -2900,6 +2987,870 @@ export const puckConfig: Config = {
         helpText: "",
       } as TagInputProps,
       render: TagInputRender as any,
+    },
+
+    // ============================================
+    // INTERACTIVE COMPONENTS (PHASE-ED-03A)
+    // ============================================
+
+    Carousel: {
+      label: "Carousel",
+      fields: {
+        slides: {
+          type: "array",
+          label: "Slides",
+          arrayFields: {
+            image: { type: "text", label: "Image URL" },
+            title: { type: "text", label: "Title" },
+            description: { type: "textarea", label: "Description" },
+            buttonText: { type: "text", label: "Button Text" },
+            buttonLink: { type: "text", label: "Button Link" },
+          },
+        },
+        autoplay: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Autoplay" },
+        autoplayInterval: { type: "number", label: "Autoplay Interval (ms)" },
+        showNavigation: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Navigation" },
+        showPagination: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Pagination" },
+        loop: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Loop" },
+        slideHeight: { type: "number", label: "Slide Height (px)" },
+        gap: { type: "select", label: "Gap", options: [{ label: "None", value: "none" }, { label: "Small", value: "sm" }, { label: "Medium", value: "md" }, { label: "Large", value: "lg" }] },
+      },
+      defaultProps: {
+        slides: [],
+        autoplay: true,
+        autoplayInterval: 5000,
+        showNavigation: true,
+        showPagination: true,
+        loop: true,
+        slideHeight: 400,
+        gap: "md",
+      } as CarouselProps,
+      render: CarouselRender as any,
+    },
+
+    Slider: {
+      label: "Image Slider",
+      fields: {
+        items: {
+          type: "array",
+          label: "Items",
+          arrayFields: {
+            image: { type: "text", label: "Image URL" },
+            title: { type: "text", label: "Title" },
+            subtitle: { type: "text", label: "Subtitle" },
+            content: { type: "textarea", label: "Content" },
+          },
+        },
+        variant: { type: "select", label: "Variant", options: [{ label: "Default", value: "default" }, { label: "Cards", value: "cards" }, { label: "Minimal", value: "minimal" }] },
+        autoplay: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Autoplay" },
+        autoplayInterval: { type: "number", label: "Autoplay Interval (ms)" },
+        showArrows: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Arrows" },
+        showDots: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Dots" },
+        slidesToShow: { type: "number", label: "Slides to Show" },
+      },
+      defaultProps: {
+        items: [],
+        variant: "default",
+        autoplay: false,
+        autoplayInterval: 3000,
+        showArrows: true,
+        showDots: true,
+        slidesToShow: 1,
+      } as SliderProps,
+      render: SliderRender as any,
+    },
+
+    Lightbox: {
+      label: "Lightbox Gallery",
+      fields: {
+        images: {
+          type: "array",
+          label: "Images",
+          arrayFields: {
+            src: { type: "text", label: "Image URL" },
+            alt: { type: "text", label: "Alt Text" },
+            caption: { type: "text", label: "Caption" },
+          },
+        },
+        columns: { type: "select", label: "Columns", options: [{ label: "2", value: 2 }, { label: "3", value: 3 }, { label: "4", value: 4 }] },
+        gap: { type: "select", label: "Gap", options: [{ label: "None", value: "none" }, { label: "Small", value: "sm" }, { label: "Medium", value: "md" }, { label: "Large", value: "lg" }] },
+        aspectRatio: { type: "select", label: "Aspect Ratio", options: [{ label: "Square", value: "square" }, { label: "Landscape", value: "landscape" }, { label: "Portrait", value: "portrait" }, { label: "Auto", value: "auto" }] },
+        showCaptions: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Captions" },
+      },
+      defaultProps: {
+        images: [],
+        columns: 3,
+        gap: "md",
+        aspectRatio: "square",
+        showCaptions: true,
+      } as LightboxProps,
+      render: LightboxRender as any,
+    },
+
+    Parallax: {
+      label: "Parallax Section",
+      fields: {
+        backgroundImage: { type: "text", label: "Background Image URL" },
+        backgroundColor: { type: "text", label: "Background Color" },
+        speed: { type: "number", label: "Parallax Speed (0-1)" },
+        minHeight: { type: "number", label: "Min Height (px)" },
+        overlay: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Overlay" },
+        overlayOpacity: { type: "number", label: "Overlay Opacity (0-100)" },
+        alignment: { type: "select", label: "Content Alignment", options: alignmentOptions },
+      },
+      defaultProps: {
+        backgroundImage: "",
+        backgroundColor: "",
+        speed: 0.5,
+        minHeight: 400,
+        overlay: true,
+        overlayOpacity: 50,
+        alignment: "center",
+      } as ParallaxProps,
+      render: ParallaxRender as any,
+    },
+
+    Reveal: {
+      label: "Reveal Animation",
+      fields: {
+        animation: { type: "select", label: "Animation", options: [
+          { label: "Fade Up", value: "fade-up" },
+          { label: "Fade Down", value: "fade-down" },
+          { label: "Fade Left", value: "fade-left" },
+          { label: "Fade Right", value: "fade-right" },
+          { label: "Zoom In", value: "zoom-in" },
+          { label: "Zoom Out", value: "zoom-out" },
+          { label: "Flip Up", value: "flip-up" },
+          { label: "Flip Left", value: "flip-left" },
+        ]},
+        duration: { type: "number", label: "Duration (ms)" },
+        delay: { type: "number", label: "Delay (ms)" },
+        threshold: { type: "number", label: "Threshold (0-1)" },
+        once: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Animate Once" },
+      },
+      defaultProps: {
+        animation: "fade-up",
+        duration: 600,
+        delay: 0,
+        threshold: 0.1,
+        once: true,
+      } as RevealProps,
+      render: RevealRender as any,
+    },
+
+    Confetti: {
+      label: "Confetti Effect",
+      fields: {
+        trigger: { type: "select", label: "Trigger", options: [{ label: "On Load", value: "load" }, { label: "On Click", value: "click" }] },
+        colors: {
+          type: "array",
+          label: "Colors",
+          arrayFields: {
+            value: { type: "text", label: "Color" },
+          },
+        },
+        particleCount: { type: "number", label: "Particle Count" },
+        spread: { type: "number", label: "Spread" },
+        duration: { type: "number", label: "Duration (ms)" },
+      },
+      defaultProps: {
+        trigger: "load",
+        colors: [],
+        particleCount: 100,
+        spread: 70,
+        duration: 3000,
+      } as ConfettiProps,
+      render: ConfettiRender as any,
+    },
+
+    Typewriter: {
+      label: "Typewriter Text",
+      fields: {
+        texts: {
+          type: "array",
+          label: "Texts",
+          arrayFields: {
+            value: { type: "text", label: "Text" },
+          },
+        },
+        speed: { type: "number", label: "Type Speed (ms)" },
+        deleteSpeed: { type: "number", label: "Delete Speed (ms)" },
+        delayBetween: { type: "number", label: "Delay Between (ms)" },
+        loop: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Loop" },
+        cursor: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Cursor" },
+        cursorChar: { type: "text", label: "Cursor Character" },
+        className: { type: "text", label: "CSS Class" },
+      },
+      defaultProps: {
+        texts: [],
+        speed: 100,
+        deleteSpeed: 50,
+        delayBetween: 2000,
+        loop: true,
+        cursor: true,
+        cursorChar: "|",
+        className: "",
+      } as TypewriterProps,
+      render: TypewriterRender as any,
+    },
+
+    AnimatedGradient: {
+      label: "Animated Gradient",
+      fields: {
+        colors: {
+          type: "array",
+          label: "Colors",
+          arrayFields: {
+            value: { type: "text", label: "Color" },
+          },
+        },
+        angle: { type: "number", label: "Angle (degrees)" },
+        speed: { type: "number", label: "Speed (seconds)" },
+        minHeight: { type: "number", label: "Min Height (px)" },
+        blur: { type: "number", label: "Blur Amount" },
+      },
+      defaultProps: {
+        colors: [],
+        angle: 45,
+        speed: 5,
+        minHeight: 400,
+        blur: 0,
+      } as AnimatedGradientProps,
+      render: AnimatedGradientRender as any,
+    },
+
+    Countdown: {
+      label: "Countdown Timer",
+      fields: {
+        targetDate: { type: "text", label: "Target Date (ISO)" },
+        showDays: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Days" },
+        showHours: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Hours" },
+        showMinutes: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Minutes" },
+        showSeconds: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Seconds" },
+        variant: { type: "select", label: "Variant", options: [{ label: "Default", value: "default" }, { label: "Minimal", value: "minimal" }, { label: "Boxed", value: "boxed" }] },
+        size: { type: "select", label: "Size", options: sizeOptions },
+        completedMessage: { type: "text", label: "Completed Message" },
+      },
+      defaultProps: {
+        targetDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        showDays: true,
+        showHours: true,
+        showMinutes: true,
+        showSeconds: true,
+        variant: "default",
+        size: "md",
+        completedMessage: "Time's up!",
+      } as CountdownProps,
+      render: CountdownRender as any,
+    },
+
+    VideoBackground: {
+      label: "Video Background",
+      fields: {
+        videoUrl: { type: "text", label: "Video URL" },
+        posterImage: { type: "text", label: "Poster Image URL" },
+        overlay: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Overlay" },
+        overlayOpacity: { type: "number", label: "Overlay Opacity (0-100)" },
+        overlayColor: { type: "text", label: "Overlay Color" },
+        minHeight: { type: "number", label: "Min Height (px)" },
+        muted: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Muted" },
+        autoplay: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Autoplay" },
+        loop: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Loop" },
+      },
+      defaultProps: {
+        videoUrl: "",
+        posterImage: "",
+        overlay: true,
+        overlayOpacity: 40,
+        overlayColor: "#000000",
+        minHeight: 400,
+        muted: true,
+        autoplay: true,
+        loop: true,
+      } as VideoBackgroundProps,
+      render: VideoBackgroundRender as any,
+    },
+
+    // ============================================
+    // MARKETING COMPONENTS (PHASE-ED-03B)
+    // ============================================
+
+    AnnouncementBar: {
+      label: "Announcement Bar",
+      fields: {
+        text: { type: "text", label: "Text" },
+        linkText: { type: "text", label: "Link Text" },
+        linkUrl: { type: "text", label: "Link URL" },
+        backgroundColor: { type: "text", label: "Background Color" },
+        textColor: { type: "text", label: "Text Color" },
+        dismissible: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Dismissible" },
+        sticky: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Sticky" },
+        size: { type: "select", label: "Size", options: sizeOptions },
+      },
+      defaultProps: {
+        text: "Welcome to our store!",
+        linkText: "Learn more",
+        linkUrl: "#",
+        backgroundColor: "#3b82f6",
+        textColor: "#ffffff",
+        dismissible: true,
+        sticky: false,
+        size: "md",
+      } as AnnouncementBarProps,
+      render: AnnouncementBarRender as any,
+    },
+
+    SocialProof: {
+      label: "Social Proof",
+      fields: {
+        variant: { type: "select", label: "Variant", options: [{ label: "Counter", value: "counter" }, { label: "Live", value: "live" }] },
+        count: { type: "number", label: "Count" },
+        countLabel: { type: "text", label: "Count Label" },
+        activities: {
+          type: "array",
+          label: "Activities",
+          arrayFields: {
+            name: { type: "text", label: "Name" },
+            action: { type: "text", label: "Action" },
+            time: { type: "text", label: "Time" },
+            avatar: { type: "text", label: "Avatar URL" },
+          },
+        },
+        showAvatar: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Avatar" },
+        updateInterval: { type: "number", label: "Update Interval (ms)" },
+        backgroundColor: { type: "text", label: "Background Color" },
+        position: { type: "select", label: "Position", options: [{ label: "Bottom Left", value: "bottom-left" }, { label: "Bottom Right", value: "bottom-right" }, { label: "Inline", value: "inline" }] },
+      },
+      defaultProps: {
+        variant: "counter",
+        count: 1000,
+        countLabel: "people trust us",
+        activities: [],
+        showAvatar: true,
+        updateInterval: 5000,
+        backgroundColor: "#ffffff",
+        position: "bottom-left",
+      } as SocialProofProps,
+      render: SocialProofRender as any,
+    },
+
+    TrustBadges: {
+      label: "Trust Badges",
+      fields: {
+        badges: {
+          type: "array",
+          label: "Badges",
+          arrayFields: {
+            icon: { type: "text", label: "Icon Name" },
+            label: { type: "text", label: "Label" },
+            image: { type: "text", label: "Image URL" },
+          },
+        },
+        layout: { type: "select", label: "Layout", options: [{ label: "Horizontal", value: "horizontal" }, { label: "Vertical", value: "vertical" }] },
+        size: { type: "select", label: "Size", options: sizeOptions },
+        showLabels: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Labels" },
+        grayscale: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Grayscale" },
+      },
+      defaultProps: {
+        badges: [],
+        layout: "horizontal",
+        size: "md",
+        showLabels: true,
+        grayscale: false,
+      } as TrustBadgesProps,
+      render: TrustBadgesRender as any,
+    },
+
+    LogoCloud: {
+      label: "Logo Cloud",
+      fields: {
+        title: { type: "text", label: "Title" },
+        logos: {
+          type: "array",
+          label: "Logos",
+          arrayFields: {
+            src: { type: "text", label: "Image URL" },
+            alt: { type: "text", label: "Alt Text" },
+            href: { type: "text", label: "Link URL" },
+          },
+        },
+        columns: { type: "number", label: "Columns" },
+        grayscale: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Grayscale" },
+        hoverEffect: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Hover Effect" },
+        size: { type: "select", label: "Size", options: sizeOptions },
+        alignment: { type: "select", label: "Alignment", options: alignmentOptions },
+      },
+      defaultProps: {
+        title: "Trusted by",
+        logos: [],
+        columns: 5,
+        grayscale: true,
+        hoverEffect: true,
+        size: "md",
+        alignment: "center",
+      } as LogoCloudProps,
+      render: LogoCloudRender as any,
+    },
+
+    ComparisonTable: {
+      label: "Comparison Table",
+      fields: {
+        title: { type: "text", label: "Title" },
+        headers: {
+          type: "array",
+          label: "Headers",
+          arrayFields: {
+            name: { type: "text", label: "Name" },
+            price: { type: "text", label: "Price" },
+          },
+        },
+        features: {
+          type: "array",
+          label: "Features",
+          arrayFields: {
+            name: { type: "text", label: "Feature Name" },
+          },
+        },
+        highlightColumn: { type: "number", label: "Highlight Column Index" },
+        showCheckmarks: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Checkmarks" },
+      },
+      defaultProps: {
+        title: "Compare Plans",
+        headers: [],
+        features: [],
+        highlightColumn: 1,
+        showCheckmarks: true,
+      } as ComparisonTableProps,
+      render: ComparisonTableRender as any,
+    },
+
+    FeatureComparison: {
+      label: "Feature Comparison",
+      fields: {
+        leftTitle: { type: "text", label: "Left Title" },
+        rightTitle: { type: "text", label: "Right Title" },
+        leftFeatures: {
+          type: "array",
+          label: "Left Features",
+          arrayFields: {
+            value: { type: "text", label: "Feature" },
+          },
+        },
+        rightFeatures: {
+          type: "array",
+          label: "Right Features",
+          arrayFields: {
+            value: { type: "text", label: "Feature" },
+          },
+        },
+        leftColor: { type: "text", label: "Left Color" },
+        rightColor: { type: "text", label: "Right Color" },
+      },
+      defaultProps: {
+        leftTitle: "Without Us",
+        rightTitle: "With Us",
+        leftFeatures: [],
+        rightFeatures: [],
+        leftColor: "#ef4444",
+        rightColor: "#22c55e",
+      } as FeatureComparisonProps,
+      render: FeatureComparisonRender as any,
+    },
+
+    BeforeAfter: {
+      label: "Before/After Slider",
+      fields: {
+        beforeImage: { type: "text", label: "Before Image URL" },
+        afterImage: { type: "text", label: "After Image URL" },
+        beforeLabel: { type: "text", label: "Before Label" },
+        afterLabel: { type: "text", label: "After Label" },
+        startPosition: { type: "number", label: "Start Position (0-100)" },
+        orientation: { type: "select", label: "Orientation", options: [{ label: "Horizontal", value: "horizontal" }, { label: "Vertical", value: "vertical" }] },
+      },
+      defaultProps: {
+        beforeImage: "",
+        afterImage: "",
+        beforeLabel: "Before",
+        afterLabel: "After",
+        startPosition: 50,
+        orientation: "horizontal",
+      } as BeforeAfterProps,
+      render: BeforeAfterRender as any,
+    },
+
+    TestimonialWall: {
+      label: "Testimonial Wall",
+      fields: {
+        testimonials: {
+          type: "array",
+          label: "Testimonials",
+          arrayFields: {
+            quote: { type: "textarea", label: "Quote" },
+            author: { type: "text", label: "Author" },
+            role: { type: "text", label: "Role" },
+            avatar: { type: "text", label: "Avatar URL" },
+            rating: { type: "number", label: "Rating" },
+          },
+        },
+        columns: { type: "select", label: "Columns", options: [{ label: "2", value: 2 }, { label: "3", value: 3 }, { label: "4", value: 4 }] },
+        variant: { type: "select", label: "Variant", options: [{ label: "Masonry", value: "masonry" }, { label: "Grid", value: "grid" }] },
+        showRating: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Rating" },
+        cardStyle: { type: "select", label: "Card Style", options: [{ label: "Default", value: "default" }, { label: "Minimal", value: "minimal" }, { label: "Elevated", value: "elevated" }] },
+      },
+      defaultProps: {
+        testimonials: [],
+        columns: 3,
+        variant: "masonry",
+        showRating: true,
+        cardStyle: "default",
+      } as TestimonialWallProps,
+      render: TestimonialWallRender as any,
+    },
+
+    ValueProposition: {
+      label: "Value Proposition",
+      fields: {
+        title: { type: "text", label: "Title" },
+        subtitle: { type: "text", label: "Subtitle" },
+        propositions: {
+          type: "array",
+          label: "Propositions",
+          arrayFields: {
+            icon: { type: "text", label: "Icon" },
+            title: { type: "text", label: "Title" },
+            description: { type: "textarea", label: "Description" },
+          },
+        },
+        layout: { type: "select", label: "Layout", options: [{ label: "Grid", value: "grid" }, { label: "List", value: "list" }] },
+        columns: { type: "select", label: "Columns", options: [{ label: "2", value: 2 }, { label: "3", value: 3 }, { label: "4", value: 4 }] },
+        iconStyle: { type: "select", label: "Icon Style", options: [{ label: "Default", value: "default" }, { label: "Circle", value: "circle" }, { label: "Minimal", value: "minimal" }] },
+      },
+      defaultProps: {
+        title: "Why Choose Us",
+        subtitle: "",
+        propositions: [],
+        layout: "grid",
+        columns: 3,
+        iconStyle: "default",
+      } as ValuePropositionProps,
+      render: ValuePropositionRender as any,
+    },
+
+    LeadCapture: {
+      label: "Lead Capture",
+      fields: {
+        title: { type: "text", label: "Title" },
+        subtitle: { type: "text", label: "Subtitle" },
+        incentive: { type: "text", label: "Incentive" },
+        incentiveIcon: { type: "text", label: "Incentive Icon" },
+        buttonText: { type: "text", label: "Button Text" },
+        placeholder: { type: "text", label: "Placeholder" },
+        successMessage: { type: "text", label: "Success Message" },
+        layout: { type: "select", label: "Layout", options: [{ label: "Horizontal", value: "horizontal" }, { label: "Stacked", value: "stacked" }] },
+        backgroundColor: { type: "text", label: "Background Color" },
+        showPrivacyNote: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Privacy Note" },
+        privacyText: { type: "text", label: "Privacy Text" },
+      },
+      defaultProps: {
+        title: "Get Your Free Guide",
+        subtitle: "",
+        incentive: "",
+        incentiveIcon: "",
+        buttonText: "Subscribe",
+        placeholder: "Enter your email",
+        successMessage: "Thanks for subscribing!",
+        layout: "horizontal",
+        backgroundColor: "",
+        showPrivacyNote: true,
+        privacyText: "We respect your privacy.",
+      } as LeadCaptureProps,
+      render: LeadCaptureRender as any,
+    },
+
+    // ============================================
+    // ADVANCED E-COMMERCE COMPONENTS (PHASE-ED-03C)
+    // ============================================
+
+    ProductShowcase: {
+      label: "Product Showcase",
+      fields: {
+        images: {
+          type: "array",
+          label: "Images",
+          arrayFields: {
+            src: { type: "text", label: "Image URL" },
+            alt: { type: "text", label: "Alt Text" },
+          },
+        },
+        name: { type: "text", label: "Product Name" },
+        price: { type: "number", label: "Price" },
+        salePrice: { type: "number", label: "Sale Price" },
+        rating: { type: "number", label: "Rating" },
+        reviewCount: { type: "number", label: "Review Count" },
+        description: { type: "textarea", label: "Description" },
+        badges: {
+          type: "array",
+          label: "Badges",
+          arrayFields: {
+            text: { type: "text", label: "Badge Text" },
+            color: { type: "text", label: "Badge Color" },
+          },
+        },
+        showThumbnails: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Thumbnails" },
+        thumbnailPosition: { type: "select", label: "Thumbnail Position", options: [{ label: "Bottom", value: "bottom" }, { label: "Left", value: "left" }] },
+        zoomOnHover: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Zoom on Hover" },
+      },
+      defaultProps: {
+        images: [],
+        name: "",
+        price: 0,
+        salePrice: 0,
+        rating: 0,
+        reviewCount: 0,
+        description: "",
+        badges: [],
+        showThumbnails: true,
+        thumbnailPosition: "bottom",
+        zoomOnHover: true,
+      } as ProductShowcaseProps,
+      render: ProductShowcaseRender as any,
+    },
+
+    ProductTabs: {
+      label: "Product Tabs",
+      fields: {
+        tabs: {
+          type: "array",
+          label: "Tabs",
+          arrayFields: {
+            id: { type: "text", label: "Tab ID" },
+            label: { type: "text", label: "Label" },
+            content: { type: "textarea", label: "Content" },
+          },
+        },
+        defaultTab: { type: "number", label: "Default Tab Index" },
+        variant: { type: "select", label: "Variant", options: [{ label: "Underline", value: "underline" }, { label: "Pills", value: "pills" }, { label: "Boxed", value: "boxed" }] },
+      },
+      defaultProps: {
+        tabs: [],
+        defaultTab: 0,
+        variant: "underline",
+      } as ProductTabsProps,
+      render: ProductTabsRender as any,
+    },
+
+    ProductReviews: {
+      label: "Product Reviews",
+      fields: {
+        reviews: {
+          type: "array",
+          label: "Reviews",
+          arrayFields: {
+            id: { type: "text", label: "Review ID" },
+            author: { type: "text", label: "Author" },
+            rating: { type: "number", label: "Rating" },
+            date: { type: "text", label: "Date" },
+            title: { type: "text", label: "Title" },
+            content: { type: "textarea", label: "Content" },
+            verified: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Verified" },
+          },
+        },
+        averageRating: { type: "number", label: "Average Rating" },
+        totalReviews: { type: "number", label: "Total Reviews" },
+        showWriteReview: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Write Review" },
+        showFilters: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Filters" },
+      },
+      defaultProps: {
+        reviews: [],
+        averageRating: 4.5,
+        totalReviews: 0,
+        showWriteReview: true,
+        showFilters: true,
+      } as ProductReviewsProps,
+      render: ProductReviewsRender as any,
+    },
+
+    ShippingCalculator: {
+      label: "Shipping Calculator",
+      fields: {
+        methods: {
+          type: "array",
+          label: "Methods",
+          arrayFields: {
+            name: { type: "text", label: "Name" },
+            price: { type: "number", label: "Price" },
+            estimate: { type: "text", label: "Estimate" },
+          },
+        },
+        defaultCountry: { type: "text", label: "Default Country" },
+        showEstimate: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Estimate" },
+        freeShippingThreshold: { type: "number", label: "Free Shipping Threshold" },
+        currentTotal: { type: "number", label: "Current Total" },
+      },
+      defaultProps: {
+        methods: [],
+        defaultCountry: "US",
+        showEstimate: true,
+        freeShippingThreshold: 50,
+        currentTotal: 0,
+      } as ShippingCalculatorProps,
+      render: ShippingCalculatorRender as any,
+    },
+
+    SizeGuide: {
+      label: "Size Guide",
+      fields: {
+        title: { type: "text", label: "Title" },
+        sizes: {
+          type: "array",
+          label: "Sizes",
+          arrayFields: {
+            value: { type: "text", label: "Size" },
+          },
+        },
+        measurements: {
+          type: "array",
+          label: "Measurements",
+          arrayFields: {
+            name: { type: "text", label: "Measurement Name" },
+          },
+        },
+        unit: { type: "select", label: "Unit", options: [{ label: "Inches", value: "inches" }, { label: "Centimeters", value: "cm" }] },
+        showToggle: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Unit Toggle" },
+      },
+      defaultProps: {
+        title: "Size Guide",
+        sizes: [],
+        measurements: [],
+        unit: "inches",
+        showToggle: true,
+      } as SizeGuideProps,
+      render: SizeGuideRender as any,
+    },
+
+    WishlistButton: {
+      label: "Wishlist Button",
+      fields: {
+        isInWishlist: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "In Wishlist" },
+        variant: { type: "select", label: "Variant", options: [{ label: "Icon", value: "icon" }, { label: "Button", value: "button" }] },
+        size: { type: "select", label: "Size", options: sizeOptions },
+        showCount: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Count" },
+        count: { type: "number", label: "Count" },
+      },
+      defaultProps: {
+        isInWishlist: false,
+        variant: "icon",
+        size: "md",
+        showCount: false,
+        count: 0,
+      } as WishlistButtonProps,
+      render: WishlistButtonRender as any,
+    },
+
+    RecentlyViewed: {
+      label: "Recently Viewed",
+      fields: {
+        title: { type: "text", label: "Title" },
+        products: {
+          type: "array",
+          label: "Products",
+          arrayFields: {
+            id: { type: "text", label: "Product ID" },
+            name: { type: "text", label: "Name" },
+            image: { type: "text", label: "Image URL" },
+            price: { type: "number", label: "Price" },
+            href: { type: "text", label: "Link URL" },
+          },
+        },
+        columns: { type: "select", label: "Columns", options: [{ label: "2", value: 2 }, { label: "3", value: 3 }, { label: "4", value: 4 }, { label: "5", value: 5 }] },
+        showPrice: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Price" },
+      },
+      defaultProps: {
+        title: "Recently Viewed",
+        products: [],
+        columns: 4,
+        showPrice: true,
+      } as RecentlyViewedProps,
+      render: RecentlyViewedRender as any,
+    },
+
+    RelatedProducts: {
+      label: "Related Products",
+      fields: {
+        title: { type: "text", label: "Title" },
+        products: {
+          type: "array",
+          label: "Products",
+          arrayFields: {
+            id: { type: "text", label: "Product ID" },
+            name: { type: "text", label: "Name" },
+            image: { type: "text", label: "Image URL" },
+            price: { type: "number", label: "Price" },
+            rating: { type: "number", label: "Rating" },
+            href: { type: "text", label: "Link URL" },
+          },
+        },
+        columns: { type: "select", label: "Columns", options: [{ label: "2", value: 2 }, { label: "3", value: 3 }, { label: "4", value: 4 }] },
+        showRating: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Rating" },
+        showAddToCart: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Add to Cart" },
+      },
+      defaultProps: {
+        title: "You May Also Like",
+        products: [],
+        columns: 4,
+        showRating: true,
+        showAddToCart: true,
+      } as RelatedProductsProps,
+      render: RelatedProductsRender as any,
+    },
+
+    ProductBundle: {
+      label: "Product Bundle",
+      fields: {
+        title: { type: "text", label: "Title" },
+        products: {
+          type: "array",
+          label: "Products",
+          arrayFields: {
+            id: { type: "text", label: "Product ID" },
+            name: { type: "text", label: "Name" },
+            image: { type: "text", label: "Image URL" },
+            price: { type: "number", label: "Price" },
+          },
+        },
+        bundlePrice: { type: "number", label: "Bundle Price" },
+        originalPrice: { type: "number", label: "Original Price" },
+        savings: { type: "number", label: "Savings" },
+        showAddBundle: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Add Bundle Button" },
+      },
+      defaultProps: {
+        title: "Frequently Bought Together",
+        products: [],
+        bundlePrice: 0,
+        originalPrice: 0,
+        savings: 0,
+        showAddBundle: true,
+      } as ProductBundleProps,
+      render: ProductBundleRender as any,
+    },
+
+    StockIndicator: {
+      label: "Stock Indicator",
+      fields: {
+        status: { type: "select", label: "Status", options: [{ label: "In Stock", value: "in_stock" }, { label: "Low Stock", value: "low_stock" }, { label: "Out of Stock", value: "out_of_stock" }, { label: "Pre-Order", value: "pre_order" }] },
+        quantity: { type: "number", label: "Quantity" },
+        lowStockThreshold: { type: "number", label: "Low Stock Threshold" },
+        showQuantity: { type: "radio", options: [{ label: "Yes", value: true }, { label: "No", value: false }], label: "Show Quantity" },
+        variant: { type: "select", label: "Variant", options: [{ label: "Badge", value: "badge" }, { label: "Text", value: "text" }, { label: "Dot", value: "dot" }] },
+      },
+      defaultProps: {
+        status: "in_stock",
+        quantity: 10,
+        lowStockThreshold: 5,
+        showQuantity: false,
+        variant: "badge",
+      } as StockIndicatorProps,
+      render: StockIndicatorRender as any,
     },
   },
 };

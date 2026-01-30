@@ -120,3 +120,45 @@ export {
   SelectInputRender,
   TagInputRender,
 } from "./forms-advanced";
+
+// Interactive Components (PHASE-ED-03A)
+export {
+  CarouselRender,
+  SliderRender,
+  LightboxRender,
+  ParallaxRender,
+  RevealRender,
+  TypewriterRender,
+  VideoBackgroundRender,
+  CountdownRender,
+  ConfettiRender,
+  AnimatedGradientRender,
+} from "./interactive";
+
+// Marketing Components (PHASE-ED-03B)
+export {
+  AnnouncementBarRender,
+  SocialProofRender,
+  TrustBadgesRender,
+  LogoCloudRender,
+  ComparisonTableRender,
+  FeatureComparisonRender,
+  BeforeAfterRender,
+  TestimonialWallRender,
+  ValuePropositionRender,
+  LeadCaptureRender,
+} from "./marketing";
+
+// Advanced E-Commerce Components (PHASE-ED-03C)
+export {
+  ProductShowcaseRender,
+  ProductTabsRender,
+  ProductReviewsRender,
+  ShippingCalculatorRender,
+  SizeGuideRender,
+  WishlistButtonRender,
+  RecentlyViewedRender,
+  RelatedProductsRender,
+  ProductBundleRender,
+  StockIndicatorRender,
+} from "./ecommerce-advanced";

@@ -1023,3 +1023,386 @@ export interface TagInputProps {
   required?: boolean;
   helpText?: string;
 }
+// ============================================
+// PHASE-ED-03A: Interactive Component Props
+// ============================================
+
+export interface CarouselProps {
+  slides?: Array<{
+    image?: string;
+    title?: string;
+    description?: string;
+    buttonText?: string;
+    buttonLink?: string;
+  }>;
+  autoplay?: boolean;
+  autoplayInterval?: number;
+  showNavigation?: boolean;
+  showPagination?: boolean;
+  loop?: boolean;
+  slideHeight?: number;
+  gap?: "none" | "sm" | "md" | "lg";
+}
+
+export interface SliderProps {
+  items?: Array<{
+    image?: string;
+    content?: string;
+    title?: string;
+    subtitle?: string;
+  }>;
+  variant?: "default" | "cards" | "minimal";
+  autoplay?: boolean;
+  autoplayInterval?: number;
+  showArrows?: boolean;
+  showDots?: boolean;
+  slidesToShow?: number;
+}
+
+export interface LightboxProps {
+  images?: Array<{
+    src: string;
+    alt?: string;
+    caption?: string;
+  }>;
+  columns?: 2 | 3 | 4;
+  gap?: "none" | "sm" | "md" | "lg";
+  aspectRatio?: "square" | "landscape" | "portrait" | "auto";
+  showCaptions?: boolean;
+}
+
+export interface ParallaxProps {
+  backgroundImage?: string;
+  backgroundColor?: string;
+  speed?: number;
+  minHeight?: number;
+  overlay?: boolean;
+  overlayOpacity?: number;
+  alignment?: "left" | "center" | "right";
+}
+
+export interface RevealProps {
+  animation?: "fade-up" | "fade-down" | "fade-left" | "fade-right" | "zoom-in" | "zoom-out" | "flip-up" | "flip-left";
+  duration?: number;
+  delay?: number;
+  threshold?: number;
+  once?: boolean;
+}
+
+export interface TypewriterProps {
+  texts?: string[];
+  speed?: number;
+  deleteSpeed?: number;
+  delayBetween?: number;
+  loop?: boolean;
+  cursor?: boolean;
+  cursorChar?: string;
+  className?: string;
+}
+
+export interface VideoBackgroundProps {
+  videoUrl?: string;
+  posterImage?: string;
+  overlay?: boolean;
+  overlayOpacity?: number;
+  overlayColor?: string;
+  minHeight?: number;
+  muted?: boolean;
+  autoplay?: boolean;
+  loop?: boolean;
+}
+
+export interface CountdownProps {
+  targetDate?: string;
+  showDays?: boolean;
+  showHours?: boolean;
+  showMinutes?: boolean;
+  showSeconds?: boolean;
+  variant?: "default" | "minimal" | "boxed";
+  size?: "sm" | "md" | "lg";
+  labels?: {
+    days?: string;
+    hours?: string;
+    minutes?: string;
+    seconds?: string;
+  };
+  completedMessage?: string;
+}
+
+export interface ConfettiProps {
+  trigger?: "load" | "click";
+  colors?: string[];
+  particleCount?: number;
+  spread?: number;
+  duration?: number;
+}
+
+export interface AnimatedGradientProps {
+  colors?: string[];
+  angle?: number;
+  speed?: number;
+  minHeight?: number;
+  blur?: number;
+}
+
+// ============================================
+// PHASE-ED-03B: Marketing Component Props
+// ============================================
+
+export interface AnnouncementBarProps {
+  text?: string;
+  linkText?: string;
+  linkUrl?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  dismissible?: boolean;
+  sticky?: boolean;
+  size?: "sm" | "md" | "lg";
+}
+
+export interface SocialProofProps {
+  variant?: "counter" | "live";
+  count?: number;
+  countLabel?: string;
+  activities?: Array<{
+    name?: string;
+    action?: string;
+    time?: string;
+    avatar?: string;
+  }>;
+  showAvatar?: boolean;
+  updateInterval?: number;
+  backgroundColor?: string;
+  position?: "bottom-left" | "bottom-right" | "inline";
+}
+
+export interface TrustBadgesProps {
+  badges?: Array<{
+    icon?: string;
+    label?: string;
+    image?: string;
+  }>;
+  layout?: "horizontal" | "vertical";
+  size?: "sm" | "md" | "lg";
+  showLabels?: boolean;
+  grayscale?: boolean;
+}
+
+export interface LogoCloudProps {
+  title?: string;
+  logos?: Array<{
+    src: string;
+    alt?: string;
+    href?: string;
+  }>;
+  columns?: number;
+  grayscale?: boolean;
+  hoverEffect?: boolean;
+  size?: "sm" | "md" | "lg";
+  alignment?: "left" | "center" | "right";
+}
+
+export interface ComparisonTableProps {
+  title?: string;
+  headers?: Array<{
+    name: string;
+    price?: string;
+  }>;
+  features?: Array<{
+    name: string;
+    values: (string | boolean)[];
+  }>;
+  highlightColumn?: number;
+  showCheckmarks?: boolean;
+}
+
+export interface FeatureComparisonProps {
+  leftTitle?: string;
+  rightTitle?: string;
+  leftFeatures?: string[];
+  rightFeatures?: string[];
+  leftColor?: string;
+  rightColor?: string;
+}
+
+export interface BeforeAfterProps {
+  beforeImage?: string;
+  afterImage?: string;
+  beforeLabel?: string;
+  afterLabel?: string;
+  startPosition?: number;
+  orientation?: "horizontal" | "vertical";
+}
+
+export interface TestimonialWallProps {
+  testimonials?: Array<{
+    quote: string;
+    author: string;
+    role?: string;
+    avatar?: string;
+    rating?: number;
+  }>;
+  columns?: 2 | 3 | 4;
+  variant?: "masonry" | "grid";
+  showRating?: boolean;
+  cardStyle?: "default" | "minimal" | "elevated";
+}
+
+export interface ValuePropositionProps {
+  title?: string;
+  subtitle?: string;
+  propositions?: Array<{
+    icon?: string;
+    title: string;
+    description: string;
+  }>;
+  layout?: "grid" | "list";
+  columns?: 2 | 3 | 4;
+  iconStyle?: "default" | "circle" | "minimal";
+}
+
+export interface LeadCaptureProps {
+  title?: string;
+  subtitle?: string;
+  incentive?: string;
+  incentiveIcon?: string;
+  buttonText?: string;
+  placeholder?: string;
+  successMessage?: string;
+  layout?: "horizontal" | "stacked";
+  backgroundColor?: string;
+  showPrivacyNote?: boolean;
+  privacyText?: string;
+}
+
+// ============================================
+// PHASE-ED-03C: Advanced E-Commerce Component Props
+// ============================================
+
+export interface ProductShowcaseProps {
+  images?: Array<{
+    src: string;
+    alt?: string;
+  }>;
+  name?: string;
+  price?: number;
+  salePrice?: number;
+  rating?: number;
+  reviewCount?: number;
+  description?: string;
+  badges?: Array<{
+    text: string;
+    color?: string;
+  }>;
+  showThumbnails?: boolean;
+  thumbnailPosition?: "bottom" | "left";
+  zoomOnHover?: boolean;
+}
+
+export interface ProductTabsProps {
+  tabs?: Array<{
+    id: string;
+    label: string;
+    content: string;
+  }>;
+  defaultTab?: number;
+  variant?: "underline" | "pills" | "boxed";
+}
+
+export interface ProductReviewsProps {
+  reviews?: Array<{
+    id: string;
+    author: string;
+    rating: number;
+    date: string;
+    title?: string;
+    content: string;
+    verified?: boolean;
+  }>;
+  averageRating?: number;
+  totalReviews?: number;
+  ratingDistribution?: Record<number, number>;
+  showWriteReview?: boolean;
+  showFilters?: boolean;
+}
+
+export interface ShippingCalculatorProps {
+  methods?: Array<{
+    name: string;
+    price: number;
+    estimate?: string;
+  }>;
+  defaultCountry?: string;
+  showEstimate?: boolean;
+  freeShippingThreshold?: number;
+  currentTotal?: number;
+}
+
+export interface SizeGuideProps {
+  title?: string;
+  sizes?: string[];
+  measurements?: Array<{
+    name: string;
+    values: number[];
+  }>;
+  unit?: "inches" | "cm";
+  showToggle?: boolean;
+}
+
+export interface WishlistButtonProps {
+  isInWishlist?: boolean;
+  variant?: "icon" | "button";
+  size?: "sm" | "md" | "lg";
+  showCount?: boolean;
+  count?: number;
+}
+
+export interface RecentlyViewedProps {
+  title?: string;
+  products?: Array<{
+    id: string;
+    name: string;
+    image?: string;
+    price?: number;
+    href?: string;
+  }>;
+  columns?: 2 | 3 | 4 | 5;
+  showPrice?: boolean;
+}
+
+export interface RelatedProductsProps {
+  title?: string;
+  products?: Array<{
+    id: string;
+    name: string;
+    image?: string;
+    price: number;
+    rating?: number;
+    href?: string;
+  }>;
+  columns?: 2 | 3 | 4;
+  showRating?: boolean;
+  showAddToCart?: boolean;
+}
+
+export interface ProductBundleProps {
+  title?: string;
+  products?: Array<{
+    id: string;
+    name: string;
+    image?: string;
+    price?: number;
+  }>;
+  bundlePrice?: number;
+  originalPrice?: number;
+  savings?: number;
+  showAddBundle?: boolean;
+}
+
+export interface StockIndicatorProps {
+  status?: "in_stock" | "low_stock" | "out_of_stock" | "pre_order";
+  quantity?: number;
+  lowStockThreshold?: number;
+  showQuantity?: boolean;
+  variant?: "badge" | "text" | "dot";
+}
