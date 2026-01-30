@@ -136,3 +136,12 @@ export { Stat, StatCard, StatGrid, Trend } from "./stat";
 export { Spinner, SpinnerOverlay, LoadingDots } from "./spinner";
 export { Divider, DividerPresets } from "./divider";
 export { Progress, StageProgress, progressVariants, indicatorVariants } from "./progress";
+
+// Part 5 - PHASE-UI-04C: Forms & Inputs Polish Components
+export { InputWithIcon } from "./input-with-icon";
+export { SearchInput } from "./search-input";
+export { TextareaWithCounter } from "./textarea-with-counter";
+export { FormSection, FormCardSection } from "./form-section";
+export { FormFieldGroup, FormFieldRow, OptionalFieldWrapper, FieldHint } from "./form-field-group";
+export { PasswordInput } from "./password-input";
+export { DateInput, DateRangeInput } from "./date-input";

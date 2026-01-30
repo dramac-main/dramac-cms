@@ -6,3 +6,5 @@ export * from "./enhanced-metrics";
 export * from "./recent-clients";
 export * from "./module-subscriptions";
 export * from "./welcome-card";
+export * from "./activity-timeline";
+export * from "./dashboard-section";
