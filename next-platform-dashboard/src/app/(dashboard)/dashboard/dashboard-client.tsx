@@ -9,60 +9,21 @@ import {
   RecentClients,
   ModuleSubscriptions,
   WelcomeCard,
-  DashboardHeader,
   DashboardGrid,
   GridItem,
   DashboardWidget,
   DashboardSection,
-  SiteStatusWidget,
-  ModuleUsageWidget,
-  StorageWidget,
 } from "@/components/dashboard";
-import { Plus, Globe, Users, Package, Activity, HardDrive } from "lucide-react";
+import { Globe, Users, Package, Activity, BarChart3 } from "lucide-react";
 import type { DashboardData } from "@/lib/actions/dashboard";
 
 interface DashboardClientProps {
   data: DashboardData;
-  siteStatusData: {
-    published: number;
-    draft: number;
-    total: number;
-    recentlyUpdated: number;
-    needsAttention: number;
-  };
-  moduleUsageData: Array<{
-    moduleId: string;
-    name: string;
-    enabled: number;
-    total: number;
-    category: string;
-  }>;
-  storageData: {
-    used: number;
-    total: number;
-    breakdown: {
-      images: number;
-      documents: number;
-      videos: number;
-      other: number;
-    };
-  };
 }
 
-export function DashboardClient({ data, siteStatusData, moduleUsageData, storageData }: DashboardClientProps) {
+export function DashboardClient({ data }: DashboardClientProps) {
   return (
     <div className="space-y-6">
-      {/* Page Header with Actions */}
-      <DashboardHeader
-        title="Dashboard"
-        subtitle={`Welcome back${data.user?.name ? `, ${data.user.name}` : ''}! Here's your agency overview.`}
-        primaryAction={{
-          label: "New Site",
-          icon: Plus,
-          href: "/dashboard/sites/new",
-        }}
-      />
-
       {/* Welcome Card with Agency Info */}
       <WelcomeCard 
         userName={data.user?.name || data.user?.email?.split("@")[0]}
@@ -73,55 +34,11 @@ export function DashboardClient({ data, siteStatusData, moduleUsageData, storage
       {/* Primary Stats Row */}
       <DashboardStats stats={data.stats} />
 
-      {/* Main Content Grid */}
-      <DashboardGrid cols={{ default: 1, lg: 3 }} gap="default">
-        {/* Site Status Widget - Takes 1 column */}
-        <DashboardWidget
-          title="Site Status"
-          description="Overview of your websites"
-          icon={Globe}
-          iconBg="bg-blue-100 dark:bg-blue-900/30"
-          iconColor="text-blue-600 dark:text-blue-400"
-          action={{ label: "View All", href: "/dashboard/sites" }}
-        >
-          <SiteStatusWidget data={siteStatusData} />
-        </DashboardWidget>
-
-        {/* Module Usage Widget - Takes 1 column */}
-        <DashboardWidget
-          title="Module Usage"
-          description="Active module installations"
-          icon={Package}
-          iconBg="bg-violet-100 dark:bg-violet-900/30"
-          iconColor="text-violet-600 dark:text-violet-400"
-          action={{ label: "Marketplace", href: "/marketplace/v2" }}
-        >
-          <ModuleUsageWidget modules={moduleUsageData} maxItems={4} />
-        </DashboardWidget>
-
-        {/* Storage Widget - Takes 1 column */}
-        <DashboardWidget
-          title="Media Storage"
-          description="Storage usage overview"
-          icon={HardDrive}
-          iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          action={{ label: "Media Library", href: "/dashboard/media" }}
-        >
-          <StorageWidget
-            used={storageData.used}
-            total={storageData.total}
-            breakdown={storageData.breakdown}
-            showBreakdown
-          />
-        </DashboardWidget>
-      </DashboardGrid>
-
       {/* Enhanced Metrics Row */}
       <DashboardSection
         title="Performance Metrics"
         description="Key metrics across your agency"
-        icon={Activity}
+        icon={BarChart3}
         collapsible
         defaultCollapsed={false}
       >
