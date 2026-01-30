@@ -9,33 +9,32 @@
 INSERT INTO public.modules_v2 (
   name,
   slug,
-  short_id,
   description,
   category,
-  module_type,
   icon,
-  price_monthly,
-  price_yearly,
-  is_active,
-  is_published,
+  pricing_type,
+  wholesale_price_monthly,
+  wholesale_price_yearly,
+  suggested_retail_monthly,
+  suggested_retail_yearly,
+  current_version,
   features,
-  requirements,
   documentation_url,
   support_url,
-  version
+  status
 ) VALUES (
   'CRM',
   'crm',
-  'crmmod01',
   'Complete Customer Relationship Management solution with contact management, company tracking, deal pipelines, activity logging, and comprehensive reporting.',
   'sales',
-  'enterprise',
   'users',
-  0,  -- Free during beta
+  'free',  -- Free during beta
   0,
-  true,
-  true,
-  jsonb_build_array(
+  0,
+  0,
+  0,
+  '1.0.0',
+  ARRAY[
     'Contact Management',
     'Company Directory',
     'Deal Pipeline',
@@ -46,20 +45,15 @@ INSERT INTO public.modules_v2 (
     'Email Integration',
     'Task Management',
     'Notes & History'
-  ),
-  jsonb_build_object(
-    'minPlatformVersion', '1.0.0',
-    'dependencies', jsonb_build_array()
-  ),
+  ],
   'https://docs.dramac.dev/modules/crm',
   'https://support.dramac.dev',
-  '1.0.0'
+  'published'
 ) ON CONFLICT (slug) DO UPDATE SET
   name = EXCLUDED.name,
   description = EXCLUDED.description,
-  is_active = true,
-  is_published = true,
-  version = EXCLUDED.version,
+  status = 'published',
+  current_version = EXCLUDED.current_version,
   updated_at = now();
 
 -- Log the registration
