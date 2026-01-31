@@ -16,3 +16,9 @@ export * from "./dashboard-header";
 export * from "./site-status-widget";
 export * from "./module-usage-widget";
 export * from "./storage-widget";
+
+// PHASE-DS-01A: Dashboard Widget System
+export * from "./widgets";
+
+// PHASE-DS-01B: Interactive Metrics & Charts
+export * from "./analytics-widgets";
