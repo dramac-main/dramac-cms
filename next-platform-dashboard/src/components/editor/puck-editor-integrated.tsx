@@ -38,12 +38,16 @@ import {
   Sparkles,
   Wand2,
   BarChart3,
+  LayoutTemplate,
 } from "lucide-react";
 
 // AI Components
 import { AIAssistantPanel } from "./puck/ai/ai-assistant-panel";
 import { AIGenerationWizard } from "./puck/ai/ai-generation-wizard";
 import { AIOptimizationPanel } from "./puck/ai/ai-optimization-panel";
+
+// Template Library
+import { PuckTemplateLibrary } from "./puck/templates";
 
 interface PageWithContent {
   id: string;
@@ -116,6 +120,7 @@ export function PuckEditorIntegrated({ site, page }: PuckEditorIntegratedProps) 
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [showGenerationWizard, setShowGenerationWizard] = useState(false);
   const [showOptimizationPanel, setShowOptimizationPanel] = useState(false);
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
   
   // Preview management
   const {
@@ -164,6 +169,14 @@ export function PuckEditorIntegrated({ site, page }: PuckEditorIntegratedProps) 
     setHasChanges(true);
     setShowGenerationWizard(false);
     toast.success("AI page generated successfully!");
+  }, []);
+
+  // Handle template selection
+  const handleTemplateSelect = useCallback((templateData: PuckData) => {
+    setData(templateData);
+    setHasChanges(true);
+    setShowTemplateLibrary(false);
+    toast.success("Template applied! You can now customize it.");
   }, []);
 
   // Handle AI content update
@@ -382,6 +395,16 @@ export function PuckEditorIntegrated({ site, page }: PuckEditorIntegratedProps) 
                 <BarChart3 className="h-4 w-4" />
               </button>
             </div>
+
+            {/* Templates Button */}
+            <button
+              onClick={() => setShowTemplateLibrary(true)}
+              className="flex items-center gap-2 px-3 py-1.5 text-sm border rounded-lg hover:bg-blue-50 hover:border-blue-300 text-blue-600 dark:hover:bg-blue-900/30 transition-colors"
+              title="Browse Templates"
+            >
+              <LayoutTemplate className="h-4 w-4" />
+              Templates
+            </button>
             
             {lastSaved && (
               <span className="text-xs text-muted-foreground">
@@ -448,6 +471,13 @@ export function PuckEditorIntegrated({ site, page }: PuckEditorIntegratedProps) 
           isOpen={showGenerationWizard}
           onClose={() => setShowGenerationWizard(false)}
           onGenerate={handleAIGenerate}
+        />
+
+        {/* Template Library - Uses Sheet component internally */}
+        <PuckTemplateLibrary
+          open={showTemplateLibrary}
+          onOpenChange={setShowTemplateLibrary}
+          onApply={handleTemplateSelect}
         />
       </div>
     </EditorProvider>
