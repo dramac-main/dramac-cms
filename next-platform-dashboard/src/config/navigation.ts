@@ -11,6 +11,7 @@ import {
   ImageIcon,
   Building2,
   Bot,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 

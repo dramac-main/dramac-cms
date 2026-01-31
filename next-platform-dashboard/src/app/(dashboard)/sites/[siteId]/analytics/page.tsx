@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RefreshCw, Download, BarChart3, Globe, Activity, Gauge } from "lucide-react";
+import { SiteTabs } from "@/components/sites/site-tabs";
 import {
   SiteAnalyticsMetrics,
   TopPagesTable,
@@ -117,16 +118,20 @@ export default function SiteAnalyticsPage() {
   }, [siteId, activeTab]);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Site Analytics</h1>
-          <p className="text-muted-foreground">
-            Monitor traffic, engagement, and performance metrics
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+    <div className="flex flex-col min-h-screen">
+      {/* Site Navigation Tabs */}
+      <SiteTabs siteId={siteId} />
+      
+      <div className="flex-1 space-y-6 p-6">
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Site Analytics</h1>
+            <p className="text-muted-foreground">
+              Monitor traffic, engagement, and performance metrics
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
           <Select value={timeRange} onValueChange={(v) => setTimeRange(v as AnalyticsTimeRange)}>
             <SelectTrigger className="w-[150px]">
               <SelectValue />
@@ -278,6 +283,7 @@ export default function SiteAnalyticsPage() {
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 }
