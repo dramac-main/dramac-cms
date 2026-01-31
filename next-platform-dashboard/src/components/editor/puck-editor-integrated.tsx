@@ -3,6 +3,8 @@
  * 
  * This is the main editor component that replaces the Craft.js editor.
  * It integrates the Puck editor with the existing DRAMAC CMS infrastructure.
+ * 
+ * PHASE-ED-08: Added UI polish components, keyboard shortcuts, and loading states.
  */
 
 "use client";
@@ -39,6 +41,7 @@ import {
   Wand2,
   BarChart3,
   LayoutTemplate,
+  Keyboard,
 } from "lucide-react";
 
 // AI Components
@@ -48,6 +51,18 @@ import { AIOptimizationPanel } from "./puck/ai/ai-optimization-panel";
 
 // Template Library
 import { PuckTemplateLibrary } from "./puck/templates";
+
+// UI Polish Components (PHASE-ED-08)
+import { 
+  EditorLoadingSkeleton, 
+  EditorSavingOverlay 
+} from "./puck/editor-loading-skeleton";
+import { 
+  KeyboardShortcutsPanel, 
+  useEditorShortcuts,
+  ShortcutHint,
+} from "./puck/keyboard-shortcuts";
+import { EditorEmptyState } from "./puck/editor-empty-state";
 
 interface PageWithContent {
   id: string;
@@ -121,6 +136,9 @@ export function PuckEditorIntegrated({ site, page }: PuckEditorIntegratedProps) 
   const [showGenerationWizard, setShowGenerationWizard] = useState(false);
   const [showOptimizationPanel, setShowOptimizationPanel] = useState(false);
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
+  
+  // UI Polish States (PHASE-ED-08)
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   
   // Preview management
   const {
@@ -211,30 +229,16 @@ export function PuckEditorIntegrated({ site, page }: PuckEditorIntegratedProps) 
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasChanges]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Save: Ctrl/Cmd + S
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-        e.preventDefault();
-        if (hasChanges) {
-          handleSave(data);
-        }
+  // Keyboard shortcuts (PHASE-ED-08)
+  useEditorShortcuts({
+    onSave: () => {
+      if (hasChanges) {
+        handleSave(data);
       }
-      // Preview: Ctrl/Cmd + P
-      if ((e.ctrlKey || e.metaKey) && e.key === "p") {
-        e.preventDefault();
-        setIsPreviewMode(!isPreviewMode);
-      }
-      // Escape to exit preview
-      if (e.key === "Escape" && isPreviewMode) {
-        setIsPreviewMode(false);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [hasChanges, data, handleSave, isPreviewMode]);
+    },
+    onTogglePreview: () => setIsPreviewMode(!isPreviewMode),
+    onShowShortcuts: () => setShowKeyboardShortcuts(true),
+  });
 
   // Preview mode - render without editor chrome
   if (isPreviewMode) {
@@ -405,6 +409,15 @@ export function PuckEditorIntegrated({ site, page }: PuckEditorIntegratedProps) 
               <LayoutTemplate className="h-4 w-4" />
               Templates
             </button>
+
+            {/* Keyboard Shortcuts (PHASE-ED-08) */}
+            <button
+              onClick={() => setShowKeyboardShortcuts(true)}
+              className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              title="Keyboard Shortcuts (Ctrl+/)"
+            >
+              <Keyboard className="h-4 w-4" />
+            </button>
             
             {lastSaved && (
               <span className="text-xs text-muted-foreground">
@@ -479,6 +492,15 @@ export function PuckEditorIntegrated({ site, page }: PuckEditorIntegratedProps) 
           onOpenChange={setShowTemplateLibrary}
           onApply={handleTemplateSelect}
         />
+
+        {/* Keyboard Shortcuts Panel (PHASE-ED-08) */}
+        <KeyboardShortcutsPanel
+          isOpen={showKeyboardShortcuts}
+          onClose={() => setShowKeyboardShortcuts(false)}
+        />
+
+        {/* Saving Overlay (PHASE-ED-08) */}
+        <EditorSavingOverlay isVisible={isSaving} />
       </div>
     </EditorProvider>
   );

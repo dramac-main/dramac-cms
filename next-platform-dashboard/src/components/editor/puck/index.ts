@@ -23,6 +23,33 @@ export * from "./components";
 // Template System (PHASE-ED-07A)
 export * from "./templates";
 
+// UI Polish Components (PHASE-ED-08)
+export {
+  EditorLoadingSkeleton,
+  EditorLoadingIndicator,
+  EditorSavingOverlay,
+} from "./editor-loading-skeleton";
+
+export {
+  KeyboardShortcutsPanel,
+  KeyCombination,
+  ShortcutHint,
+  useEditorShortcuts,
+  defaultEditorShortcuts,
+  type KeyboardShortcut,
+} from "./keyboard-shortcuts";
+
+export {
+  EditorToolbar,
+  type DeviceType,
+  type EditorMode,
+} from "./editor-toolbar";
+
+export {
+  EditorEmptyState,
+  EditorEmptyStateCompact,
+} from "./editor-empty-state";
+
 // Types (re-export from types folder)
 export type {
   PuckData,
