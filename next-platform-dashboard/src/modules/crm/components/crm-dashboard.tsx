@@ -9,6 +9,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ContactsView } from './views/contacts-view'
 import { CompaniesView } from './views/companies-view'
@@ -28,7 +29,8 @@ import {
   TrendingUp, 
   Activity, 
   BarChart3,
-  RefreshCw
+  RefreshCw,
+  LineChart
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -53,7 +55,8 @@ function CRMDashboardContent() {
     companies, 
     deals, 
     error, 
-    refresh
+    refresh,
+    siteId
   } = useCRM()
   
   const [activeTab, setActiveTab] = useState('deals')
@@ -182,6 +185,10 @@ function CRMDashboardContent() {
               <BarChart3 className="h-4 w-4" />
               Reports
             </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              <LineChart className="h-4 w-4" />
+              Analytics
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -199,6 +206,23 @@ function CRMDashboardContent() {
         </TabsContent>
         <TabsContent value="reports" className="flex-1 m-0">
           <ReportsView />
+        </TabsContent>
+        <TabsContent value="analytics" className="flex-1 m-0 p-6">
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold">CRM Analytics</h2>
+              <p className="text-muted-foreground">Comprehensive analytics and insights for your CRM data.</p>
+            </div>
+            <Link href={`/dashboard/sites/${siteId}/crm-module/analytics`}>
+              <Button size="lg" className="w-full max-w-md">
+                <LineChart className="h-5 w-5 mr-2" />
+                Open Analytics Dashboard
+              </Button>
+            </Link>
+            <p className="text-sm text-muted-foreground">
+              <strong>Note:</strong> Analytics currently use demo data for testing purposes.
+            </p>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

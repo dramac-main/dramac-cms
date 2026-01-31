@@ -1,9 +1,14 @@
+/**
+ * Social Analytics Dashboard Page
+ * 
+ * PHASE-DS-03B: Social Analytics Dashboard
+ * Comprehensive social media analytics with real-time insights
+ */
+
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { isModuleEnabledForSite } from '@/lib/actions/sites'
-import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
-import { getAnalyticsOverview, getTopPosts, getBestTimesToPost } from '@/modules/social-media/actions/analytics-actions'
-import { SocialAnalyticsPage } from '@/modules/social-media/components/SocialAnalyticsPage'
+import { SocialAnalyticsDashboardEnhanced } from '@/modules/social-media/components/SocialAnalyticsDashboardEnhanced'
 
 interface PageProps {
   params: Promise<{ siteId: string }>
@@ -26,23 +31,15 @@ export default async function AnalyticsPage({ params }: PageProps) {
     redirect(`/dashboard/sites/${siteId}?tab=modules`)
   }
   
-  // Get accounts and analytics data
-  const [accountsResult, analyticsResult, topPostsResult, bestTimesResult] = await Promise.all([
-    getSocialAccounts(siteId),
-    getAnalyticsOverview(siteId),
-    getTopPosts(siteId, { limit: 5 }),
-    getBestTimesToPost(siteId),
-  ])
-  
   return (
     <div className="container py-6">
-      <SocialAnalyticsPage 
-        siteId={siteId}
-        accounts={accountsResult.accounts}
-        overview={analyticsResult.overview}
-        topPosts={topPostsResult.posts}
-        bestTimes={bestTimesResult.bestTimes}
-      />
+      <div className="mb-4">
+        <p className="text-sm text-muted-foreground">
+          <strong>Note:</strong> Analytics currently display demo data for testing purposes.
+        </p>
+      </div>
+      <SocialAnalyticsDashboardEnhanced siteId={siteId} />
     </div>
   )
 }
+
