@@ -14,7 +14,7 @@ import { CloneSiteDialog } from "@/components/sites/clone-site-dialog";
 import { ExportSiteButton } from "@/components/sites/export-site-button";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, Settings, ExternalLink, Search, Copy, Bot, Zap, Share2, Users } from "lucide-react";
+import { Pencil, Settings, ExternalLink, Search, Copy, Bot, Zap, Share2, Users, BarChart3 } from "lucide-react";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 
 interface SiteDetailPageProps {
@@ -49,7 +49,7 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
   const hasAIAgents = enabledModules.has("ai-agents");
   
   // Build valid tabs list based on enabled modules
-  const validTabs = ["overview", "pages", "blog", "modules"];
+  const validTabs = ["overview", "pages", "blog", "modules", "analytics"];
   if (hasCRM) validTabs.push("crm");
   if (hasSocial) validTabs.push("social");
   
@@ -77,6 +77,12 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
           <Button variant="outline">
             <Search className="mr-2 h-4 w-4" />
             SEO
+          </Button>
+        </Link>
+        <Link href={`/sites/${site.id}/analytics`}>
+          <Button variant="outline">
+            <BarChart3 className="mr-2 h-4 w-4" />
+            Analytics
           </Button>
         </Link>
         {hasAutomation && (
@@ -144,6 +150,7 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
           <TabsTrigger value="pages">Pages ({site.pages?.length || 0})</TabsTrigger>
           <TabsTrigger value="blog">Blog</TabsTrigger>
           <TabsTrigger value="modules">Modules</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
           {hasCRM && <TabsTrigger value="crm">CRM</TabsTrigger>}
           {hasSocial && <TabsTrigger value="social">Social</TabsTrigger>}
         </TabsList>
@@ -162,6 +169,26 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
 
         <TabsContent value="modules">
           <SiteModulesTab siteId={site.id} />
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <div className="rounded-lg border bg-card p-8 text-center">
+            <div className="mx-auto max-w-md space-y-4">
+              <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <BarChart3 className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold">Site Analytics Dashboard</h3>
+              <p className="text-muted-foreground">
+                View detailed analytics including traffic sources, visitor metrics, device breakdown, geo data, and performance insights.
+              </p>
+              <Link href={`/sites/${site.id}/analytics`}>
+                <Button size="lg" className="mt-4">
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Open Full Analytics Dashboard
+                </Button>
+              </Link>
+            </div>
+          </div>
         </TabsContent>
 
         {hasCRM && (
