@@ -64,7 +64,7 @@ import {
   AIActionType,
   QUICK_ACTIONS,
   SUPPORTED_LANGUAGES,
-} from "./puck-ai-config";
+} from "./puck-ai-types";
 
 // ============================================
 // Types

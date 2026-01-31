@@ -14,7 +14,7 @@ import {
   AI_ACTIONS,
   DEFAULT_AI_CONFIG,
   SUPPORTED_LANGUAGES,
-} from "./puck-ai-config";
+} from "./puck-ai-types";
 import { toast } from "sonner";
 
 // ============================================
