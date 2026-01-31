@@ -1,8 +1,148 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: February 1, 2026  
-**Current Phase**: PHASE-DS-01B Dashboard Interactive Metrics (Master Build Prompt V2.1)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + ED-01A/ED-01B/ED-02A/ED-02B/ED-02C/ED-03/ED-04/ED-05/ED-03A/ED-03B/ED-03C/ED-04A/ED-04B/ED-05A/ED-05B/ED-05C/ED-07A/ED-07B/ED-08/DS-01A/DS-01B
+**Current Phase**: PHASE-DS-02B Site Analytics Charts & Trends (Master Build Prompt V2.1)  
+**Status**: ✅ 40 OF 40 PHASES (100%) + ED-01A/ED-01B/ED-02A/ED-02B/ED-02C/ED-03/ED-04/ED-05/ED-03A/ED-03B/ED-03C/ED-04A/ED-04B/ED-05A/ED-05B/ED-05C/ED-07A/ED-07B/ED-08/DS-01A/DS-01B/DS-02A/DS-02B
+
+## 🚀 PHASE-DS-02A & PHASE-DS-02B: Site Analytics Dashboard (February 1, 2026)
+
+### What Was Built
+
+Implemented comprehensive site analytics dashboard with traffic metrics, geographic distribution, device breakdown, real-time analytics, and performance monitoring using the widget system from DS-01A/DS-01B.
+
+### PHASE-DS-02A: Site Analytics Dashboard
+
+1. **Analytics Types** (`src/types/site-analytics.ts` ~180 lines):
+   - `AnalyticsTimeRange` - Time periods (24h, 7d, 30d, 90d, 12m, 1y, custom)
+   - `SiteOverviewMetrics` - Page views, visitors, bounce rate, session duration
+   - `PageAnalytics` - Individual page metrics
+   - `TrafficSource` - Source type with visitor counts
+   - `DeviceAnalytics` - Device breakdown with sessions
+   - `BrowserAnalytics` - Browser usage stats
+   - `GeoAnalytics` - Geographic distribution
+   - `TimeSeriesDataPoint` - Time-based data points
+   - `RealtimeAnalytics` - Active users, sessions, top pages
+   - `PerformanceMetrics` - Core Web Vitals (LCP, FID, CLS, TTFB)
+   - `SiteAnalyticsData` - Complete analytics response
+   - `AnalyticsFilters` - Query filters
+
+2. **Server Actions** (`src/lib/actions/site-analytics.ts` ~600 lines):
+   - `getSiteOverviewMetrics()` - Overview with trend comparison
+   - `getTopPages()` - Top pages from database with mock analytics
+   - `getTrafficSources()` - Traffic source breakdown
+   - `getDeviceAnalytics()` - Device distribution
+   - `getBrowserAnalytics()` - Browser usage
+   - `getGeoAnalytics()` - Geographic distribution
+   - `getTimeSeriesAnalytics()` - Time series with hourly/daily granularity
+   - `getRealtimeAnalytics()` - Live visitor data
+   - `getPerformanceMetrics()` - Core Web Vitals with scores
+   - `getSiteAnalytics()` - Complete analytics aggregation
+   - Uses seeded random for consistent mock data per site
+
+3. **Analytics Metrics** (`src/components/analytics/site-analytics-metrics.tsx` ~230 lines):
+   - `SiteAnalyticsMetrics` - Metrics overview grid
+   - `AnalyticsMetricCard` - Individual metric card with trend
+   - `NewVsReturningCard` - New vs returning visitors pie chart
+   - Helper functions: `formatDuration`, `formatNumber`, `formatPercentage`
+
+4. **Top Pages Table** (`src/components/analytics/top-pages-table.tsx` ~210 lines):
+   - `TopPagesTable` - Full table with views, unique, time, bounce
+   - `TopPagesCompact` - Compact list view
+   - Customizable title prop
+   - External link support
+
+5. **Traffic Sources** (`src/components/analytics/traffic-sources.tsx` ~240 lines):
+   - `TrafficSourcesChart` - Pie chart with aggregation
+   - `TrafficSourcesList` - Detailed list with progress bars
+   - `TrafficSourcesBadges` - Compact badge display
+   - Icons and colors for each source type
+
+6. **Device Analytics** (`src/components/analytics/device-analytics.tsx` ~350 lines):
+   - `DeviceBreakdown` - Progress bars with session data
+   - `DeviceChart` - Pie chart distribution
+   - `BrowserBreakdown` - Browser usage with progress
+   - `BrowserChart` - Horizontal bar chart
+   - `DeviceCompact` - Compact inline display
+
+### PHASE-DS-02B: Charts & Trends
+
+1. **Time Series Chart** (`src/components/analytics/time-series-chart.tsx` ~260 lines):
+   - `TimeSeriesChart` - Full area chart with metrics
+   - Metric selector (visitors, pageViews, bounceRate, avgSessionDuration)
+   - Time range selector
+   - Trend calculation with badge
+   - `MultiMetricChart` - Multi-line comparison
+
+2. **Geographic Analytics** (`src/components/analytics/geo-analytics.tsx` ~230 lines):
+   - `GeoBreakdown` - Country list with flags and progress
+   - `GeoMapPlaceholder` - Map visualization placeholder
+   - `GeoStatsCard` - Stats card with top country
+   - `GeoCompactList` - Compact country list
+   - Uses country code for flag emoji generation
+
+3. **Realtime Widget** (`src/components/analytics/realtime-widget.tsx` ~190 lines):
+   - `RealtimeWidget` - Live analytics with active users
+   - Active sessions list with page and duration
+   - Top pages now section
+   - Auto-refresh capability
+   - `RealtimeCompact` - Inline display
+   - `RealtimePulse` - Animated online indicator
+
+4. **Performance Metrics** (`src/components/analytics/performance-metrics.tsx` ~270 lines):
+   - `PerformanceMetrics` - Core Web Vitals display
+   - `PerformanceScoreGauge` - Circular score gauge
+   - `WebVitalCard` - Individual vital with thresholds
+   - `PerformanceCompact` - Progress bar display
+   - `WebVitalsCompact` - Inline vitals display
+   - Color coding: Good/Fair/Poor based on thresholds
+
+5. **Analytics Dashboard Page** (`src/app/(dashboard)/sites/[siteId]/analytics/page.tsx` ~285 lines):
+   - Full analytics dashboard with tabs
+   - Overview tab: Metrics, time series, top pages, traffic sources
+   - Audience tab: Geographic, device, browser, traffic chart
+   - Realtime tab: Live widget with popular pages
+   - Performance tab: Web Vitals and load times
+   - Time range selector and refresh controls
+   - Auto-refresh for realtime data
+
+6. **Index Exports** (`src/components/analytics/index.ts`):
+   - Barrel exports for all analytics components
+   - Both DS-02A and DS-02B components
+
+### Component Architecture
+
+```
+src/components/analytics/
+├── index.ts                     # Barrel exports
+├── site-analytics-metrics.tsx   # Overview metrics grid
+├── top-pages-table.tsx          # Top pages table/list
+├── traffic-sources.tsx          # Traffic source charts
+├── device-analytics.tsx         # Device/browser charts
+├── time-series-chart.tsx        # Time series area chart
+├── geo-analytics.tsx            # Geographic visualization
+├── realtime-widget.tsx          # Live analytics widget
+└── performance-metrics.tsx      # Core Web Vitals
+
+src/lib/actions/
+└── site-analytics.ts            # Server actions for data
+
+src/types/
+└── site-analytics.ts            # TypeScript interfaces
+
+src/app/(dashboard)/sites/[siteId]/analytics/
+└── page.tsx                     # Analytics dashboard page
+```
+
+### Integration with Widget System
+
+- Uses `AreaChartWidget` from DS-01B for time series
+- Uses `LineChartWidget` for multi-metric comparison
+- Uses `BarChartWidget` for browser statistics
+- Uses `PieChartWidget` for device/traffic distribution
+- Follows same styling patterns and color schemes
+- Consistent loading skeletons and error states
+
+---
 
 ## 🚀 PHASE-DS-01A & PHASE-DS-01B: Enterprise Dashboard Widget System (February 1, 2026)
 
