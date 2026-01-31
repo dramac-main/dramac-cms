@@ -20,6 +20,9 @@ export type { UsePuckEditorOptions, UsePuckEditorReturn } from "./use-puck-edito
 // Component Renders
 export * from "./components";
 
+// Template System (PHASE-ED-07A)
+export * from "./templates";
+
 // Types (re-export from types folder)
 export type {
   PuckData,

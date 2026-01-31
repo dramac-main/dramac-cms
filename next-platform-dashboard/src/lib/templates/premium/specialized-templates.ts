@@ -1,0 +1,1226 @@
+/**
+ * Premium Specialized Templates
+ * PHASE-ED-07B: Template System - Premium Templates
+ * 
+ * 8 premium specialized templates for specific industries.
+ */
+
+import type { PuckTemplate } from "@/types/puck-templates";
+
+function generateId(): string {
+  return `component-${Math.random().toString(36).substring(2, 11)}`;
+}
+
+// ============================================
+// 1. RESTAURANT / FOOD SERVICE
+// ============================================
+
+export const restaurantTemplate: PuckTemplate = {
+  id: "premium-restaurant",
+  name: "Restaurant",
+  slug: "restaurant",
+  description: "Elegant restaurant website with menu, reservations, and gallery",
+  category: "restaurant",
+  subcategory: "dining",
+  tags: ["restaurant", "food", "dining", "menu", "reservations"],
+  thumbnail: "/templates/premium/restaurant.jpg",
+  isPremium: true,
+  isNew: false,
+  isFeatured: true,
+  isPopular: true,
+  popularity: 93,
+  features: [
+    "Menu display",
+    "Reservation system",
+    "Photo gallery",
+    "Location map",
+    "Hours display",
+  ],
+  sections: ["navbar", "hero", "about", "menu", "gallery", "reservation", "location", "footer"],
+  componentsUsed: ["Navbar", "Hero", "About", "Menu", "Gallery", "ContactForm", "Map", "Footer"],
+  colorScheme: {
+    primary: "#92400e",
+    secondary: "#fef3c7",
+    accent: "#d97706",
+    background: "#fffbeb",
+  },
+  puckData: {
+    root: { props: { title: "Restaurant" } },
+    content: [
+      {
+        type: "Navbar",
+        props: {
+          id: generateId(),
+          logo: "La Maison",
+          links: [
+            { label: "About", href: "#about" },
+            { label: "Menu", href: "#menu" },
+            { label: "Gallery", href: "#gallery" },
+            { label: "Contact", href: "#contact" },
+          ],
+          ctaText: "Reserve a Table",
+          ctaLink: "#reservation",
+          sticky: true,
+          backgroundColor: "#fffbeb",
+          textColor: "#92400e",
+        },
+      },
+      {
+        type: "Hero",
+        props: {
+          id: generateId(),
+          title: "Fine Dining Experience",
+          subtitle: "Seasonal French cuisine crafted with locally-sourced ingredients and artisanal techniques",
+          alignment: "center",
+          buttonText: "View Menu",
+          buttonLink: "#menu",
+          secondaryButtonText: "Make Reservation",
+          secondaryButtonLink: "#reservation",
+          backgroundType: "video",
+          videoUrl: "/videos/restaurant-bg.mp4",
+          overlay: true,
+          overlayColor: "#000000",
+          overlayOpacity: 0.6,
+          textColor: "#ffffff",
+          padding: "xl",
+        },
+      },
+      {
+        type: "About",
+        props: {
+          id: generateId(),
+          title: "Our Story",
+          content: "Since 2005, La Maison has been serving authentic French cuisine in the heart of the city. Chef Pierre Dubois brings 25 years of culinary expertise, creating dishes that honor traditional techniques while embracing modern innovation. Every plate tells a story of passion, quality, and the finest seasonal ingredients.",
+          image: "/images/chef.jpg",
+          imagePosition: "right",
+          backgroundColor: "#fffbeb",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Menu",
+        props: {
+          id: generateId(),
+          title: "Our Menu",
+          subtitle: "A celebration of seasonal flavors",
+          categories: [
+            {
+              name: "Starters",
+              items: [
+                { name: "French Onion Soup", description: "Classic recipe with Gruyère crouton", price: 14 },
+                { name: "Escargots de Bourgogne", description: "Snails with garlic-herb butter", price: 18 },
+                { name: "Foie Gras Terrine", description: "With fig compote and brioche", price: 24 },
+              ],
+            },
+            {
+              name: "Main Courses",
+              items: [
+                { name: "Coq au Vin", description: "Braised chicken in red wine", price: 34 },
+                { name: "Beef Bourguignon", description: "Slow-cooked in burgundy wine", price: 38 },
+                { name: "Pan-Seared Duck Breast", description: "With cherry gastrique", price: 42 },
+              ],
+            },
+            {
+              name: "Desserts",
+              items: [
+                { name: "Crème Brûlée", description: "Classic vanilla custard", price: 12 },
+                { name: "Chocolate Soufflé", description: "Made to order (20 min)", price: 16 },
+              ],
+            },
+          ],
+          showPrices: true,
+          currency: "$",
+          backgroundColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Gallery",
+        props: {
+          id: generateId(),
+          title: "Gallery",
+          columns: 4,
+          images: [
+            { src: "/gallery/dish1.jpg", alt: "Signature Dish" },
+            { src: "/gallery/interior.jpg", alt: "Interior" },
+            { src: "/gallery/dish2.jpg", alt: "Appetizer" },
+            { src: "/gallery/ambiance.jpg", alt: "Ambiance" },
+          ],
+          enableLightbox: true,
+          backgroundColor: "#fef3c7",
+          padding: "lg",
+        },
+      },
+      {
+        type: "ContactForm",
+        props: {
+          id: generateId(),
+          title: "Make a Reservation",
+          subtitle: "Book your table for a memorable dining experience",
+          fields: [
+            { name: "name", label: "Name", type: "text", required: true },
+            { name: "email", label: "Email", type: "email", required: true },
+            { name: "phone", label: "Phone", type: "tel", required: true },
+            { name: "date", label: "Date", type: "date", required: true },
+            { name: "time", label: "Preferred Time", type: "select", options: ["6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM"], required: true },
+            { name: "guests", label: "Number of Guests", type: "select", options: ["1", "2", "3", "4", "5", "6", "7", "8+"], required: true },
+            { name: "notes", label: "Special Requests", type: "textarea", required: false },
+          ],
+          submitText: "Request Reservation",
+          backgroundColor: "#92400e",
+          textColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Map",
+        props: {
+          id: generateId(),
+          title: "Visit Us",
+          address: "123 Gourmet Avenue, Culinary District, NY 10001",
+          hours: "Tue-Sat: 5:30 PM - 10:30 PM | Sun: 5:00 PM - 9:00 PM | Mon: Closed",
+          phone: "(212) 555-0123",
+          email: "reservations@lamaison.com",
+          showMap: true,
+          backgroundColor: "#fffbeb",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Footer",
+        props: {
+          id: generateId(),
+          companyName: "La Maison",
+          description: "Fine French Dining • Est. 2005",
+          showSocial: true,
+          socialLinks: { instagram: "#", facebook: "#" },
+          copyrightText: "© 2026 La Maison. All rights reserved.",
+          backgroundColor: "#1c1917",
+          textColor: "#fef3c7",
+        },
+      },
+    ],
+    zones: {},
+  },
+  metadata: {
+    author: "DRAMAC",
+    version: "1.0.0",
+    createdAt: "2026-01-31",
+    lastUpdated: "2026-01-31",
+    estimatedBuildTime: "30 minutes",
+    difficulty: "intermediate",
+    componentCount: 8,
+    responsive: true,
+    darkModeReady: true,
+  },
+};
+
+// ============================================
+// 2. FITNESS / GYM
+// ============================================
+
+export const fitnessTemplate: PuckTemplate = {
+  id: "premium-fitness",
+  name: "Fitness / Gym",
+  slug: "fitness-gym",
+  description: "High-energy fitness studio or gym website",
+  category: "fitness",
+  subcategory: "gym",
+  tags: ["fitness", "gym", "workout", "health", "training"],
+  thumbnail: "/templates/premium/fitness.jpg",
+  isPremium: true,
+  isNew: true,
+  isFeatured: true,
+  isPopular: true,
+  popularity: 91,
+  features: [
+    "Class schedule",
+    "Membership plans",
+    "Trainer profiles",
+    "Facility tour",
+    "Contact/join form",
+  ],
+  sections: ["navbar", "hero", "classes", "trainers", "pricing", "facilities", "testimonials", "contact", "footer"],
+  componentsUsed: ["Navbar", "Hero", "Schedule", "Team", "PricingTable", "Gallery", "Testimonials", "ContactForm", "Footer"],
+  colorScheme: {
+    primary: "#dc2626",
+    secondary: "#fef2f2",
+    accent: "#ef4444",
+    background: "#0f0f0f",
+  },
+  puckData: {
+    root: { props: { title: "Fitness Gym" } },
+    content: [
+      {
+        type: "Navbar",
+        props: {
+          id: generateId(),
+          logo: "IRON FORGE",
+          links: [
+            { label: "Classes", href: "#classes" },
+            { label: "Trainers", href: "#trainers" },
+            { label: "Pricing", href: "#pricing" },
+            { label: "Facilities", href: "#facilities" },
+            { label: "Contact", href: "#contact" },
+          ],
+          ctaText: "Start Free Trial",
+          ctaLink: "#contact",
+          sticky: true,
+          backgroundColor: "#0f0f0f",
+          textColor: "#ffffff",
+        },
+      },
+      {
+        type: "Hero",
+        props: {
+          id: generateId(),
+          title: "TRANSFORM YOUR BODY",
+          subtitle: "State-of-the-art facilities, expert trainers, and a community that pushes you to be your best.",
+          alignment: "center",
+          buttonText: "Start Free Trial",
+          buttonLink: "#contact",
+          secondaryButtonText: "View Classes",
+          secondaryButtonLink: "#classes",
+          backgroundType: "video",
+          videoUrl: "/videos/gym-bg.mp4",
+          overlay: true,
+          overlayOpacity: 0.7,
+          textColor: "#ffffff",
+          padding: "xl",
+        },
+      },
+      {
+        type: "Stats",
+        props: {
+          id: generateId(),
+          stats: [
+            { value: "50+", label: "Weekly Classes" },
+            { value: "15", label: "Expert Trainers" },
+            { value: "20,000", label: "sq ft Facility" },
+            { value: "2,500+", label: "Active Members" },
+          ],
+          columns: 4,
+          backgroundColor: "#dc2626",
+          textColor: "#ffffff",
+          padding: "md",
+        },
+      },
+      {
+        type: "Schedule",
+        props: {
+          id: generateId(),
+          title: "Class Schedule",
+          subtitle: "Find the perfect class for your fitness goals",
+          classes: [
+            { name: "HIIT Blast", instructor: "Mike", time: "6:00 AM", duration: "45 min", days: ["Mon", "Wed", "Fri"], level: "All Levels" },
+            { name: "Spin Cycle", instructor: "Sarah", time: "7:00 AM", duration: "50 min", days: ["Mon", "Tue", "Thu"], level: "All Levels" },
+            { name: "Yoga Flow", instructor: "Emma", time: "9:00 AM", duration: "60 min", days: ["Tue", "Thu", "Sat"], level: "All Levels" },
+            { name: "Strength Training", instructor: "Alex", time: "12:00 PM", duration: "60 min", days: ["Mon", "Wed", "Fri"], level: "Intermediate" },
+            { name: "Boxing Fitness", instructor: "Jake", time: "6:00 PM", duration: "45 min", days: ["Tue", "Thu"], level: "All Levels" },
+          ],
+          view: "grid",
+          backgroundColor: "#1a1a1a",
+          textColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Team",
+        props: {
+          id: generateId(),
+          title: "Our Trainers",
+          subtitle: "Expert guidance every step of the way",
+          members: [
+            { name: "Mike Rodriguez", role: "HIIT & Strength", image: "/trainers/mike.jpg", bio: "NASM Certified, 10+ years experience" },
+            { name: "Sarah Chen", role: "Spin & Cardio", image: "/trainers/sarah.jpg", bio: "Spinning certified, marathon runner" },
+            { name: "Alex Thompson", role: "Personal Training", image: "/trainers/alex.jpg", bio: "ACE Certified, nutrition specialist" },
+            { name: "Emma Wilson", role: "Yoga & Mindfulness", image: "/trainers/emma.jpg", bio: "RYT-500, meditation instructor" },
+          ],
+          columns: 4,
+          showBio: true,
+          backgroundColor: "#0f0f0f",
+          textColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "PricingTable",
+        props: {
+          id: generateId(),
+          title: "Membership Plans",
+          subtitle: "Choose the plan that fits your lifestyle",
+          plans: [
+            {
+              name: "Basic",
+              price: 39,
+              period: "month",
+              description: "Gym access only",
+              features: ["Gym floor access", "Locker rooms", "Free parking"],
+              buttonText: "Get Started",
+              highlighted: false,
+            },
+            {
+              name: "Premium",
+              price: 79,
+              period: "month",
+              description: "Full access + classes",
+              features: ["Unlimited gym access", "All group classes", "Sauna & steam room", "Towel service", "Guest passes (2/month)"],
+              buttonText: "Get Started",
+              highlighted: true,
+              badge: "Most Popular",
+            },
+            {
+              name: "Elite",
+              price: 149,
+              period: "month",
+              description: "The complete experience",
+              features: ["Everything in Premium", "Personal training (4/month)", "Nutrition coaching", "Priority class booking", "Premium locker"],
+              buttonText: "Get Started",
+              highlighted: false,
+            },
+          ],
+          backgroundColor: "#1a1a1a",
+          textColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Gallery",
+        props: {
+          id: generateId(),
+          title: "Our Facilities",
+          columns: 4,
+          images: [
+            { src: "/facilities/weights.jpg", alt: "Weight Room" },
+            { src: "/facilities/cardio.jpg", alt: "Cardio Zone" },
+            { src: "/facilities/studio.jpg", alt: "Group Fitness Studio" },
+            { src: "/facilities/recovery.jpg", alt: "Recovery Zone" },
+          ],
+          enableLightbox: true,
+          backgroundColor: "#0f0f0f",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Testimonials",
+        props: {
+          id: generateId(),
+          title: "Success Stories",
+          testimonials: [
+            {
+              quote: "Lost 30 lbs in 6 months. The trainers here are incredible and the community keeps you motivated!",
+              author: "David M.",
+              role: "Member since 2024",
+              image: "/testimonials/david.jpg",
+            },
+            {
+              quote: "Best gym I've ever been to. The classes are challenging and fun. Worth every penny.",
+              author: "Jessica L.",
+              role: "Member since 2023",
+              image: "/testimonials/jessica.jpg",
+            },
+          ],
+          backgroundColor: "#dc2626",
+          textColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "ContactForm",
+        props: {
+          id: generateId(),
+          title: "Start Your Free Trial",
+          subtitle: "Experience Iron Forge free for 7 days. No commitment required.",
+          fields: [
+            { name: "name", label: "Full Name", type: "text", required: true },
+            { name: "email", label: "Email", type: "email", required: true },
+            { name: "phone", label: "Phone", type: "tel", required: true },
+            { name: "goals", label: "Fitness Goals", type: "select", options: ["Weight Loss", "Build Muscle", "General Fitness", "Sports Training", "Other"], required: true },
+          ],
+          submitText: "Claim Free Trial",
+          backgroundColor: "#0f0f0f",
+          textColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Footer",
+        props: {
+          id: generateId(),
+          companyName: "IRON FORGE",
+          description: "Where champions are made",
+          columns: [
+            {
+              title: "Hours",
+              links: [
+                { label: "Mon-Fri: 5AM - 11PM", href: "#" },
+                { label: "Sat-Sun: 6AM - 9PM", href: "#" },
+              ],
+            },
+            {
+              title: "Contact",
+              links: [
+                { label: "(555) 123-4567", href: "tel:5551234567" },
+                { label: "info@ironforge.com", href: "mailto:info@ironforge.com" },
+              ],
+            },
+          ],
+          showSocial: true,
+          socialLinks: { instagram: "#", youtube: "#", facebook: "#" },
+          copyrightText: "© 2026 Iron Forge Fitness. All rights reserved.",
+          backgroundColor: "#0f0f0f",
+          textColor: "#9ca3af",
+        },
+      },
+    ],
+    zones: {},
+  },
+  metadata: {
+    author: "DRAMAC",
+    version: "1.0.0",
+    createdAt: "2026-01-31",
+    lastUpdated: "2026-01-31",
+    estimatedBuildTime: "35 minutes",
+    difficulty: "intermediate",
+    componentCount: 10,
+    responsive: true,
+    darkModeReady: true,
+  },
+};
+
+// ============================================
+// 3. REAL ESTATE / PROPERTY
+// ============================================
+
+export const realEstateTemplate: PuckTemplate = {
+  id: "premium-real-estate",
+  name: "Real Estate",
+  slug: "real-estate",
+  description: "Professional real estate agency or agent website",
+  category: "realestate",
+  subcategory: "agency",
+  tags: ["real estate", "property", "agent", "listings", "homes"],
+  thumbnail: "/templates/premium/real-estate.jpg",
+  isPremium: true,
+  isNew: false,
+  isFeatured: true,
+  isPopular: true,
+  popularity: 90,
+  features: [
+    "Property search",
+    "Featured listings",
+    "Agent profiles",
+    "Neighborhood guides",
+    "Contact form",
+  ],
+  sections: ["navbar", "hero", "search", "featured", "services", "agents", "testimonials", "contact", "footer"],
+  componentsUsed: ["Navbar", "Hero", "PropertySearch", "PropertyGrid", "Services", "Team", "Testimonials", "ContactForm", "Footer"],
+  colorScheme: {
+    primary: "#1e3a5f",
+    secondary: "#f0f4f8",
+    accent: "#2563eb",
+    background: "#ffffff",
+  },
+  puckData: {
+    root: { props: { title: "Real Estate" } },
+    content: [
+      {
+        type: "Navbar",
+        props: {
+          id: generateId(),
+          logo: "PRESTIGE REALTY",
+          links: [
+            { label: "Buy", href: "#buy" },
+            { label: "Sell", href: "#sell" },
+            { label: "Rent", href: "#rent" },
+            { label: "Agents", href: "#agents" },
+            { label: "About", href: "#about" },
+          ],
+          ctaText: "List Your Property",
+          ctaLink: "#contact",
+          sticky: true,
+          backgroundColor: "#ffffff",
+          textColor: "#1e3a5f",
+        },
+      },
+      {
+        type: "Hero",
+        props: {
+          id: generateId(),
+          title: "Find Your Dream Home",
+          subtitle: "Discover exceptional properties in the most desirable neighborhoods",
+          alignment: "center",
+          backgroundType: "image",
+          backgroundImage: "/images/realestate-hero.jpg",
+          overlay: true,
+          overlayOpacity: 0.5,
+          textColor: "#ffffff",
+          padding: "xl",
+        },
+      },
+      {
+        type: "PropertySearch",
+        props: {
+          id: generateId(),
+          fields: [
+            { name: "type", label: "Property Type", type: "select", options: ["All Types", "House", "Condo", "Townhouse", "Land"] },
+            { name: "location", label: "Location", type: "text", placeholder: "City, ZIP, or Neighborhood" },
+            { name: "priceRange", label: "Price Range", type: "select", options: ["Any Price", "$0-250K", "$250K-500K", "$500K-750K", "$750K-1M", "$1M+"] },
+            { name: "beds", label: "Bedrooms", type: "select", options: ["Any", "1+", "2+", "3+", "4+", "5+"] },
+          ],
+          buttonText: "Search Properties",
+          style: "horizontal",
+          backgroundColor: "#ffffff",
+        },
+      },
+      {
+        type: "PropertyGrid",
+        props: {
+          id: generateId(),
+          title: "Featured Listings",
+          properties: [
+            {
+              title: "Modern Downtown Condo",
+              address: "456 Urban Ave, Downtown",
+              price: 575000,
+              beds: 2,
+              baths: 2,
+              sqft: 1200,
+              image: "/properties/condo1.jpg",
+              badge: "New",
+              link: "#",
+            },
+            {
+              title: "Spacious Family Home",
+              address: "789 Oak Street, Suburbs",
+              price: 825000,
+              beds: 4,
+              baths: 3,
+              sqft: 2800,
+              image: "/properties/house1.jpg",
+              badge: "Featured",
+              link: "#",
+            },
+            {
+              title: "Luxury Waterfront Estate",
+              address: "123 Marina Drive, Lakeside",
+              price: 2450000,
+              beds: 5,
+              baths: 4,
+              sqft: 4500,
+              image: "/properties/estate1.jpg",
+              badge: "Luxury",
+              link: "#",
+            },
+          ],
+          columns: 3,
+          showPrice: true,
+          showDetails: true,
+          backgroundColor: "#f0f4f8",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Services",
+        props: {
+          id: generateId(),
+          title: "Our Services",
+          services: [
+            { icon: "🏠", title: "Buy a Home", description: "Expert guidance through every step of the buying process" },
+            { icon: "💰", title: "Sell a Property", description: "Maximum exposure and top dollar for your property" },
+            { icon: "🔑", title: "Rent", description: "Find quality tenants or your perfect rental" },
+            { icon: "📊", title: "Market Analysis", description: "Data-driven insights for informed decisions" },
+          ],
+          columns: 4,
+          backgroundColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Team",
+        props: {
+          id: generateId(),
+          title: "Our Agents",
+          subtitle: "Experienced professionals dedicated to your success",
+          members: [
+            { name: "Jennifer Adams", role: "Luxury Properties", image: "/agents/jennifer.jpg", bio: "$50M+ in sales" },
+            { name: "Robert Chen", role: "Residential", image: "/agents/robert.jpg", bio: "15 years experience" },
+            { name: "Maria Santos", role: "Investment", image: "/agents/maria.jpg", bio: "Investment specialist" },
+          ],
+          columns: 3,
+          showBio: true,
+          backgroundColor: "#f0f4f8",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Testimonials",
+        props: {
+          id: generateId(),
+          title: "What Our Clients Say",
+          testimonials: [
+            {
+              quote: "Found our dream home in just 2 weeks! Professional service from start to finish.",
+              author: "The Williams Family",
+              role: "Home Buyers",
+            },
+            {
+              quote: "Sold our house above asking price. Best real estate experience ever.",
+              author: "Michael & Sarah T.",
+              role: "Home Sellers",
+            },
+          ],
+          backgroundColor: "#1e3a5f",
+          textColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "ContactForm",
+        props: {
+          id: generateId(),
+          title: "Get in Touch",
+          subtitle: "Ready to start your real estate journey?",
+          fields: [
+            { name: "name", label: "Name", type: "text", required: true },
+            { name: "email", label: "Email", type: "email", required: true },
+            { name: "phone", label: "Phone", type: "tel", required: true },
+            { name: "interest", label: "I'm interested in", type: "select", options: ["Buying", "Selling", "Renting", "Other"], required: true },
+            { name: "message", label: "Message", type: "textarea", required: true },
+          ],
+          submitText: "Send Message",
+          backgroundColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Footer",
+        props: {
+          id: generateId(),
+          companyName: "PRESTIGE REALTY",
+          description: "Your trusted real estate partner",
+          columns: [
+            {
+              title: "Quick Links",
+              links: [
+                { label: "Buy", href: "#" },
+                { label: "Sell", href: "#" },
+                { label: "Rent", href: "#" },
+                { label: "Agents", href: "#" },
+              ],
+            },
+            {
+              title: "Contact",
+              links: [
+                { label: "(555) 234-5678", href: "tel:5552345678" },
+                { label: "info@prestigerealty.com", href: "mailto:info@prestigerealty.com" },
+                { label: "123 Main Street, Suite 100", href: "#" },
+              ],
+            },
+          ],
+          showSocial: true,
+          socialLinks: { facebook: "#", instagram: "#", linkedin: "#" },
+          copyrightText: "© 2026 Prestige Realty. All rights reserved.",
+          backgroundColor: "#0f172a",
+          textColor: "#ffffff",
+        },
+      },
+    ],
+    zones: {},
+  },
+  metadata: {
+    author: "DRAMAC",
+    version: "1.0.0",
+    createdAt: "2026-01-31",
+    lastUpdated: "2026-01-31",
+    estimatedBuildTime: "35 minutes",
+    difficulty: "intermediate",
+    componentCount: 9,
+    responsive: true,
+    darkModeReady: true,
+  },
+};
+
+// ============================================
+// 4. HEALTHCARE / MEDICAL
+// ============================================
+
+export const healthcareTemplate: PuckTemplate = {
+  id: "premium-healthcare",
+  name: "Healthcare / Medical",
+  slug: "healthcare-medical",
+  description: "Professional healthcare or medical practice website",
+  category: "healthcare",
+  subcategory: "clinic",
+  tags: ["healthcare", "medical", "doctor", "clinic", "hospital"],
+  thumbnail: "/templates/premium/healthcare.jpg",
+  isPremium: true,
+  isNew: false,
+  isFeatured: false,
+  isPopular: true,
+  popularity: 88,
+  features: [
+    "Services overview",
+    "Doctor profiles",
+    "Appointment booking",
+    "Patient resources",
+    "Location/hours",
+  ],
+  sections: ["navbar", "hero", "services", "doctors", "about", "testimonials", "appointment", "contact", "footer"],
+  componentsUsed: ["Navbar", "Hero", "Services", "Team", "About", "Testimonials", "ContactForm", "Map", "Footer"],
+  colorScheme: {
+    primary: "#0891b2",
+    secondary: "#ecfeff",
+    accent: "#06b6d4",
+    background: "#ffffff",
+  },
+  puckData: {
+    root: { props: { title: "Healthcare" } },
+    content: [
+      {
+        type: "AnnouncementBar",
+        props: {
+          id: generateId(),
+          text: "Now accepting new patients! Call (555) 123-4567 for appointments",
+          backgroundColor: "#0891b2",
+          textColor: "#ffffff",
+        },
+      },
+      {
+        type: "Navbar",
+        props: {
+          id: generateId(),
+          logo: "WELLNESS CLINIC",
+          links: [
+            { label: "Services", href: "#services" },
+            { label: "Our Team", href: "#team" },
+            { label: "About", href: "#about" },
+            { label: "Resources", href: "#resources" },
+            { label: "Contact", href: "#contact" },
+          ],
+          ctaText: "Book Appointment",
+          ctaLink: "#appointment",
+          sticky: true,
+          backgroundColor: "#ffffff",
+        },
+      },
+      {
+        type: "Hero",
+        props: {
+          id: generateId(),
+          title: "Compassionate Care for Your Whole Family",
+          subtitle: "Comprehensive healthcare services with a patient-first approach. Accepting new patients and most insurance plans.",
+          alignment: "left",
+          buttonText: "Book Appointment",
+          buttonLink: "#appointment",
+          secondaryButtonText: "Our Services",
+          secondaryButtonLink: "#services",
+          backgroundType: "image",
+          backgroundImage: "/images/healthcare-hero.jpg",
+          overlay: true,
+          overlayOpacity: 0.5,
+          textColor: "#ffffff",
+          padding: "xl",
+        },
+      },
+      {
+        type: "Services",
+        props: {
+          id: generateId(),
+          title: "Our Services",
+          subtitle: "Comprehensive care for all stages of life",
+          services: [
+            { icon: "🩺", title: "Primary Care", description: "Routine checkups, preventive care, and chronic disease management" },
+            { icon: "👶", title: "Pediatrics", description: "Expert care for infants, children, and adolescents" },
+            { icon: "❤️", title: "Cardiology", description: "Heart health screenings and cardiovascular care" },
+            { icon: "🧠", title: "Mental Health", description: "Counseling and psychiatric services" },
+            { icon: "🦴", title: "Orthopedics", description: "Bone, joint, and muscle care" },
+            { icon: "💉", title: "Vaccinations", description: "Immunizations for all ages" },
+          ],
+          columns: 3,
+          backgroundColor: "#ecfeff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Team",
+        props: {
+          id: generateId(),
+          title: "Meet Our Providers",
+          subtitle: "Experienced, caring healthcare professionals",
+          members: [
+            { name: "Dr. Sarah Williams", role: "Family Medicine", image: "/doctors/sarah.jpg", bio: "MD, Board Certified, 15 years experience" },
+            { name: "Dr. Michael Chen", role: "Pediatrics", image: "/doctors/michael.jpg", bio: "MD, Board Certified Pediatrician" },
+            { name: "Dr. Lisa Thompson", role: "Internal Medicine", image: "/doctors/lisa.jpg", bio: "MD, Internal Medicine Specialist" },
+          ],
+          columns: 3,
+          showBio: true,
+          backgroundColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "About",
+        props: {
+          id: generateId(),
+          title: "Why Choose Wellness Clinic",
+          content: "For over 20 years, Wellness Clinic has been serving our community with compassionate, personalized healthcare. We combine the latest medical technology with a patient-centered approach to ensure you receive the best possible care. Our team is committed to your health and well-being.",
+          bulletPoints: [
+            "Same-day appointments available",
+            "Telehealth options",
+            "Most insurance plans accepted",
+            "On-site lab and imaging",
+            "Multilingual staff",
+          ],
+          image: "/images/clinic-interior.jpg",
+          imagePosition: "right",
+          backgroundColor: "#ecfeff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Testimonials",
+        props: {
+          id: generateId(),
+          title: "Patient Testimonials",
+          testimonials: [
+            {
+              quote: "The doctors here actually listen. I've never felt so cared for at a medical practice.",
+              author: "Maria G.",
+              role: "Patient",
+            },
+            {
+              quote: "Wonderful with kids! My children actually look forward to their checkups.",
+              author: "The Johnson Family",
+              role: "Patients",
+            },
+          ],
+          backgroundColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "ContactForm",
+        props: {
+          id: generateId(),
+          title: "Request an Appointment",
+          subtitle: "Fill out the form below and we'll contact you to confirm",
+          fields: [
+            { name: "name", label: "Full Name", type: "text", required: true },
+            { name: "email", label: "Email", type: "email", required: true },
+            { name: "phone", label: "Phone", type: "tel", required: true },
+            { name: "dob", label: "Date of Birth", type: "date", required: true },
+            { name: "visitType", label: "Visit Type", type: "select", options: ["New Patient", "Existing Patient", "Physical", "Follow-up", "Other"], required: true },
+            { name: "preferred", label: "Preferred Date/Time", type: "text", required: false },
+            { name: "notes", label: "Additional Notes", type: "textarea", required: false },
+          ],
+          submitText: "Request Appointment",
+          backgroundColor: "#0891b2",
+          textColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Map",
+        props: {
+          id: generateId(),
+          title: "Visit Us",
+          address: "100 Medical Center Drive, Suite 200",
+          hours: "Mon-Fri: 8AM-6PM | Sat: 9AM-1PM | Sun: Closed",
+          phone: "(555) 123-4567",
+          showMap: true,
+          backgroundColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Footer",
+        props: {
+          id: generateId(),
+          companyName: "WELLNESS CLINIC",
+          description: "Compassionate care for your whole family",
+          columns: [
+            {
+              title: "Services",
+              links: [
+                { label: "Primary Care", href: "#" },
+                { label: "Pediatrics", href: "#" },
+                { label: "Cardiology", href: "#" },
+                { label: "Mental Health", href: "#" },
+              ],
+            },
+            {
+              title: "Patients",
+              links: [
+                { label: "Patient Portal", href: "#" },
+                { label: "Forms", href: "#" },
+                { label: "Insurance", href: "#" },
+                { label: "FAQs", href: "#" },
+              ],
+            },
+          ],
+          copyrightText: "© 2026 Wellness Clinic. All rights reserved.",
+          backgroundColor: "#0f172a",
+          textColor: "#ffffff",
+        },
+      },
+    ],
+    zones: {},
+  },
+  metadata: {
+    author: "DRAMAC",
+    version: "1.0.0",
+    createdAt: "2026-01-31",
+    lastUpdated: "2026-01-31",
+    estimatedBuildTime: "35 minutes",
+    difficulty: "intermediate",
+    componentCount: 10,
+    responsive: true,
+    darkModeReady: true,
+  },
+};
+
+// ============================================
+// 5. EDUCATION / SCHOOL
+// ============================================
+
+export const educationTemplate: PuckTemplate = {
+  id: "premium-education",
+  name: "Education / School",
+  slug: "education-school",
+  description: "Professional website for schools, courses, or educational institutions",
+  category: "education",
+  subcategory: "school",
+  tags: ["education", "school", "courses", "university", "learning"],
+  thumbnail: "/templates/premium/education.jpg",
+  isPremium: true,
+  isNew: true,
+  isFeatured: false,
+  isPopular: true,
+  popularity: 86,
+  features: [
+    "Course catalog",
+    "Faculty profiles",
+    "Admissions info",
+    "Campus gallery",
+    "Contact form",
+  ],
+  sections: ["navbar", "hero", "programs", "faculty", "campus", "testimonials", "admissions", "footer"],
+  componentsUsed: ["Navbar", "Hero", "CourseGrid", "Team", "Gallery", "Testimonials", "ContactForm", "Footer"],
+  colorScheme: {
+    primary: "#1e40af",
+    secondary: "#dbeafe",
+    accent: "#3b82f6",
+    background: "#ffffff",
+  },
+  puckData: {
+    root: { props: { title: "Education" } },
+    content: [
+      {
+        type: "Navbar",
+        props: {
+          id: generateId(),
+          logo: "SUMMIT ACADEMY",
+          links: [
+            { label: "Programs", href: "#programs" },
+            { label: "Faculty", href: "#faculty" },
+            { label: "Campus", href: "#campus" },
+            { label: "Admissions", href: "#admissions" },
+            { label: "Contact", href: "#contact" },
+          ],
+          ctaText: "Apply Now",
+          ctaLink: "#admissions",
+          sticky: true,
+          backgroundColor: "#ffffff",
+        },
+      },
+      {
+        type: "Hero",
+        props: {
+          id: generateId(),
+          title: "Shaping Tomorrow's Leaders",
+          subtitle: "World-class education that prepares students for success in a rapidly changing world",
+          alignment: "center",
+          buttonText: "Explore Programs",
+          buttonLink: "#programs",
+          secondaryButtonText: "Schedule a Visit",
+          secondaryButtonLink: "#contact",
+          backgroundType: "image",
+          backgroundImage: "/images/education-hero.jpg",
+          overlay: true,
+          textColor: "#ffffff",
+          padding: "xl",
+        },
+      },
+      {
+        type: "Stats",
+        props: {
+          id: generateId(),
+          stats: [
+            { value: "50+", label: "Programs" },
+            { value: "200+", label: "Expert Faculty" },
+            { value: "15:1", label: "Student Ratio" },
+            { value: "95%", label: "Job Placement" },
+          ],
+          columns: 4,
+          backgroundColor: "#1e40af",
+          textColor: "#ffffff",
+          padding: "md",
+        },
+      },
+      {
+        type: "CourseGrid",
+        props: {
+          id: generateId(),
+          title: "Our Programs",
+          subtitle: "Comprehensive education for every path",
+          courses: [
+            { title: "Business Administration", duration: "4 years", level: "Undergraduate", link: "#" },
+            { title: "Computer Science", duration: "4 years", level: "Undergraduate", link: "#" },
+            { title: "MBA Program", duration: "2 years", level: "Graduate", link: "#" },
+            { title: "Data Science", duration: "2 years", level: "Graduate", link: "#" },
+            { title: "Engineering", duration: "4 years", level: "Undergraduate", link: "#" },
+            { title: "Liberal Arts", duration: "4 years", level: "Undergraduate", link: "#" },
+          ],
+          columns: 3,
+          backgroundColor: "#f8fafc",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Team",
+        props: {
+          id: generateId(),
+          title: "Our Faculty",
+          subtitle: "World-renowned educators and researchers",
+          members: [
+            { name: "Dr. Elizabeth Park", role: "Dean of Business", image: "/faculty/elizabeth.jpg" },
+            { name: "Prof. James Mitchell", role: "Computer Science", image: "/faculty/james.jpg" },
+            { name: "Dr. Maria Santos", role: "Psychology", image: "/faculty/maria.jpg" },
+            { name: "Prof. David Chen", role: "Engineering", image: "/faculty/david.jpg" },
+          ],
+          columns: 4,
+          backgroundColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Gallery",
+        props: {
+          id: generateId(),
+          title: "Campus Life",
+          columns: 4,
+          images: [
+            { src: "/campus/library.jpg", alt: "Library" },
+            { src: "/campus/quad.jpg", alt: "Campus Quad" },
+            { src: "/campus/labs.jpg", alt: "Research Labs" },
+            { src: "/campus/dorms.jpg", alt: "Student Housing" },
+          ],
+          enableLightbox: true,
+          backgroundColor: "#dbeafe",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Testimonials",
+        props: {
+          id: generateId(),
+          title: "Student Success Stories",
+          testimonials: [
+            {
+              quote: "Summit Academy gave me the foundation and network I needed to launch my career in tech.",
+              author: "Alex Johnson",
+              role: "Class of 2024, Software Engineer at Google",
+            },
+            {
+              quote: "The professors here are genuinely invested in your success. Life-changing experience.",
+              author: "Sarah Williams",
+              role: "Class of 2023, MBA Graduate",
+            },
+          ],
+          backgroundColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "ContactForm",
+        props: {
+          id: generateId(),
+          title: "Request Information",
+          subtitle: "Take the first step toward your future",
+          fields: [
+            { name: "name", label: "Full Name", type: "text", required: true },
+            { name: "email", label: "Email", type: "email", required: true },
+            { name: "phone", label: "Phone", type: "tel", required: false },
+            { name: "program", label: "Program of Interest", type: "select", options: ["Undergraduate", "Graduate", "Online", "Certificate"], required: true },
+            { name: "startTerm", label: "Intended Start Term", type: "select", options: ["Fall 2026", "Spring 2027", "Fall 2027", "Undecided"], required: true },
+            { name: "message", label: "Questions or Comments", type: "textarea", required: false },
+          ],
+          submitText: "Submit Request",
+          backgroundColor: "#1e40af",
+          textColor: "#ffffff",
+          padding: "lg",
+        },
+      },
+      {
+        type: "Footer",
+        props: {
+          id: generateId(),
+          companyName: "SUMMIT ACADEMY",
+          description: "Excellence in education since 1920",
+          columns: [
+            {
+              title: "Academics",
+              links: [
+                { label: "Undergraduate", href: "#" },
+                { label: "Graduate", href: "#" },
+                { label: "Online", href: "#" },
+                { label: "Catalog", href: "#" },
+              ],
+            },
+            {
+              title: "Admissions",
+              links: [
+                { label: "Apply", href: "#" },
+                { label: "Visit Campus", href: "#" },
+                { label: "Financial Aid", href: "#" },
+                { label: "Contact", href: "#" },
+              ],
+            },
+          ],
+          showSocial: true,
+          socialLinks: { facebook: "#", instagram: "#", linkedin: "#", youtube: "#" },
+          copyrightText: "© 2026 Summit Academy. All rights reserved.",
+          backgroundColor: "#0f172a",
+          textColor: "#ffffff",
+        },
+      },
+    ],
+    zones: {},
+  },
+  metadata: {
+    author: "DRAMAC",
+    version: "1.0.0",
+    createdAt: "2026-01-31",
+    lastUpdated: "2026-01-31",
+    estimatedBuildTime: "35 minutes",
+    difficulty: "intermediate",
+    componentCount: 9,
+    responsive: true,
+    darkModeReady: true,
+  },
+};
+
+// ============================================
+// ALL SPECIALIZED TEMPLATES
+// ============================================
+
+export const SPECIALIZED_TEMPLATES: PuckTemplate[] = [
+  restaurantTemplate,
+  fitnessTemplate,
+  realEstateTemplate,
+  healthcareTemplate,
+  educationTemplate,
+];
+
+export default SPECIALIZED_TEMPLATES;
