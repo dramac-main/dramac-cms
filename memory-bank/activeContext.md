@@ -1,8 +1,150 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: February 1, 2026  
-**Current Phase**: PHASE-DS-02B Site Analytics Charts & Trends (Master Build Prompt V2.1)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + ED-01A/ED-01B/ED-02A/ED-02B/ED-02C/ED-03/ED-04/ED-05/ED-03A/ED-03B/ED-03C/ED-04A/ED-04B/ED-05A/ED-05B/ED-05C/ED-07A/ED-07B/ED-08/DS-01A/DS-01B/DS-02A/DS-02B
+**Last Updated**: February 2, 2026  
+**Current Phase**: PHASE-DS-05 Billing & Revenue Dashboards (Master Build Prompt V2.1)  
+**Status**: ✅ 40 OF 40 PHASES (100%) + ED-01A/ED-01B/ED-02A/ED-02B/ED-02C/ED-03/ED-04/ED-05/ED-03A/ED-03B/ED-03C/ED-04A/ED-04B/ED-05A/ED-05B/ED-05C/ED-07A/ED-07B/ED-08/DS-01A/DS-01B/DS-02A/DS-02B/DS-04A/DS-04B/DS-05
+
+## 🚀 PHASE-DS-04A, DS-04B, DS-05: Admin Dashboards (February 2, 2026)
+
+### What Was Built
+
+Implemented comprehensive admin analytics dashboards for super admins including platform overview, agency metrics, and billing/revenue dashboards.
+
+### PHASE-DS-04A: Platform Overview Dashboard
+
+1. **Admin Analytics Types** (`src/types/admin-analytics.ts` ~430 lines):
+   - `AdminTimeRange` - Time periods (7d, 30d, 90d, 12m, custom)
+   - `PlatformOverviewMetrics` - Users, agencies, sites, modules, revenue, growth
+   - `SystemHealthMetrics` - Uptime, response times, services status
+   - `PlatformTrendData` - Time series for users, agencies, sites
+   - `PlatformActivityItem` - Activity feed items (signup, subscription, publish, etc.)
+
+2. **Server Actions** (`src/lib/actions/admin-analytics.ts` ~1130 lines):
+   - `getPlatformOverview()` - Platform metrics from database counts
+   - `getSystemHealth()` - Simulated system health with services
+   - `getPlatformTrends()` - Time series data grouped by period
+   - `getPlatformActivity()` - Recent activity feed from multiple tables
+
+3. **Platform Overview** (`src/components/admin/platform-overview.tsx` ~620 lines):
+   - `PlatformOverview` - Full metrics dashboard with charts
+   - `PlatformOverviewCompact` - Summary cards view
+   - `MetricCard` - Individual metric card with trend
+   - Area charts, pie charts, bar charts with Recharts
+
+4. **System Health** (`src/components/admin/system-health.tsx` ~540 lines):
+   - `SystemHealth` - Full system health dashboard
+   - `SystemHealthCompact` - Summary status view
+   - `StatusBadge` - Healthy/Warning/Down indicators
+   - `MetricGauge` - Progress gauge for metrics
+   - `ServiceStatusCard` - Individual service status
+
+5. **Platform Activity** (`src/components/admin/platform-activity.tsx` ~260 lines):
+   - `PlatformActivity` - Activity feed with filters
+   - `PlatformActivityCompact` - Compact activity list
+   - Activity type icons and colors
+   - Relative time formatting
+
+### PHASE-DS-04B: Agency Metrics Dashboard
+
+1. **Agency Types** (in `admin-analytics.ts`):
+   - `AgencyMetrics` - Full agency data with metrics, billing, engagement, health
+   - `AgencyLeaderboard` - Rankings by revenue, sites, engagement, risk, new
+   - `AgencyRankItem` - Individual rank item with trend
+   - `AgencyGrowthData` - Growth trends with churn and conversion
+   - `AgencySegmentation` - Distribution by plan, size, industry, region
+
+2. **Server Actions** (in `admin-analytics.ts`):
+   - `getAgencyMetrics()` - Paginated agency list with full metrics
+   - `getAgencyLeaderboard()` - Top agencies by various categories
+   - `getAgencyGrowth()` - Monthly growth data with churn rates
+   - `getAgencySegmentation()` - Distribution breakdowns
+
+3. **Agency Leaderboard** (`src/components/admin/agency-leaderboard.tsx` ~400 lines):
+   - `AgencyLeaderboard` - Tabbed leaderboards with rankings
+   - `SingleLeaderboard` - Individual category board
+   - Category tabs: Revenue, Sites, Engagement, Risk, New
+   - Trend indicators and ranking badges
+
+4. **Agency Growth** (`src/components/admin/agency-growth.tsx` ~465 lines):
+   - `AgencyGrowth` - Growth charts with multiple views
+   - `GrowthSummaryCard` - Summary metric cards
+   - Area chart for net growth
+   - Composed chart for growth vs churn
+   - Data table for period breakdown
+
+5. **Agency Segmentation** (`src/components/admin/agency-segmentation.tsx` ~545 lines):
+   - `AgencySegmentation` - Full segmentation dashboard
+   - `AgencySegmentationCompact` - Summary view
+   - Pie charts for plan and size distribution
+   - Bar charts for industry and region
+   - Progress bars with percentages
+
+### PHASE-DS-05: Billing & Revenue Dashboards
+
+1. **Billing Types** (in `admin-analytics.ts`):
+   - `RevenueMetrics` - MRR, ARR, growth, ARPA
+   - `SubscriptionMetrics` - Active, churn, trial, conversion
+   - `RevenueByPlan` - Revenue breakdown by plan
+   - `RevenueByModule` - Module revenue data
+   - `RevenueTrendData` - Revenue time series
+   - `PaymentMetrics` - Payment success, failure, refunds
+   - `CustomerMetrics` - Health distribution, age, NPS
+   - `BillingActivityItem` - Billing events feed
+   - `InvoiceMetrics` - Invoice status breakdown
+
+2. **Server Actions** (in `admin-analytics.ts`):
+   - `getRevenueMetrics()` - Core revenue metrics
+   - `getRevenueTrends()` - Revenue time series
+   - `getRevenueByPlan()` - Plan breakdown
+   - `getSubscriptionMetrics()` - Subscription data
+   - `getPaymentMetrics()` - Payment analytics
+   - `getCustomerMetrics()` - Customer health
+   - `getBillingActivity()` - Activity feed
+   - `getInvoiceMetrics()` - Invoice breakdown
+
+3. **Revenue Overview** (`src/components/admin/revenue-overview.tsx` ~395 lines):
+   - `RevenueOverview` - Full revenue dashboard
+   - `RevenueOverviewCompact` - Summary metrics
+   - `RevenueMetricCard` - Revenue metric with trend
+   - Area chart for revenue trends
+   - Bar chart for plan breakdown
+
+4. **Subscription Metrics** (`src/components/admin/subscription-metrics.tsx` ~510 lines):
+   - `SubscriptionMetrics` - Full subscription dashboard
+   - `SubscriptionMetricsCompact` - Summary cards
+   - `MetricCard` - Subscription metric card
+   - Pie chart for customer health
+   - Bar chart for payment metrics
+
+5. **Billing Activity** (`src/components/admin/billing-activity.tsx` ~485 lines):
+   - `BillingActivity` - Activity feed with filters
+   - `BillingActivityCompact` - Compact list view
+   - Activity type icons and status colors
+   - Invoice metrics summary
+   - Filter tabs by activity type
+
+### Admin Pages
+
+1. **Platform Analytics** (`src/app/(dashboard)/admin/analytics/page.tsx`):
+   - Uses PlatformOverview, SystemHealth, PlatformActivity
+   - Time range selector
+   - Tabbed interface
+
+2. **Agency Analytics** (`src/app/(dashboard)/admin/agencies/analytics/page.tsx`):
+   - Uses AgencyLeaderboard, AgencyGrowth, AgencySegmentation
+   - Time range selector
+   - Grid layout
+
+3. **Billing Revenue** (`src/app/(dashboard)/admin/billing/revenue/page.tsx`):
+   - Uses RevenueOverview, SubscriptionMetrics, BillingActivity
+   - Time range selector
+   - Tabbed interface
+
+### Index Exports
+
+Updated `src/components/admin/index.ts` with all new component exports
+
+---
 
 ## 🚀 PHASE-DS-02A & PHASE-DS-02B: Site Analytics Dashboard (February 1, 2026)
 
