@@ -4,36 +4,30 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { 
   ArrowLeft, 
-  Server, 
-  Info,
+  RefreshCw,
   Shield,
+  Server,
+  ExternalLink,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { getDomain } from "@/lib/actions/domains";
-import { DnsActions, DnsQuickTemplates, DnsRecordActions } from "./dns-actions-client";
+import { listDnsRecords, checkZoneActivation } from "@/lib/actions/dns";
+import { DnsRecordsTable } from "@/components/domains/dns/dns-records-table";
+import { DnsRecordForm } from "@/components/domains/dns/dns-record-form";
+import { DnsTemplatesDropdown } from "@/components/domains/dns/dns-templates-dropdown";
+import { DnsNameservers } from "@/components/domains/dns/dns-nameservers";
+import { DnsPropagationChecker } from "@/components/domains/dns/dns-propagation-checker";
+import { DnsSyncButton } from "./dns-sync-button";
 
-interface DnspageProps {
+interface DnsPageProps {
   params: Promise<{ domainId: string }>;
 }
 
-export async function generateMetadata({ params }: DnspageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: DnsPageProps): Promise<Metadata> {
   const { domainId } = await params;
   const response = await getDomain(domainId);
   
@@ -44,28 +38,51 @@ export async function generateMetadata({ params }: DnspageProps): Promise<Metada
   };
 }
 
-// Mock DNS records for UI testing
-const MOCK_DNS_RECORDS = [
-  { id: '1', type: 'A', name: '@', value: '192.0.2.1', ttl: 3600, proxied: true },
-  { id: '2', type: 'A', name: 'www', value: '192.0.2.1', ttl: 3600, proxied: true },
-  { id: '3', type: 'CNAME', name: 'blog', value: 'cname.dramac.app', ttl: 3600, proxied: false },
-  { id: '4', type: 'MX', name: '@', value: 'mx1.titan.email', ttl: 3600, priority: 10 },
-  { id: '5', type: 'MX', name: '@', value: 'mx2.titan.email', ttl: 3600, priority: 20 },
-  { id: '6', type: 'TXT', name: '@', value: 'v=spf1 include:spf.titan.email ~all', ttl: 3600 },
-  { id: '7', type: 'TXT', name: '_dmarc', value: 'v=DMARC1; p=none; rua=mailto:dmarc@example.com', ttl: 3600 },
-];
+async function DnsRecordsSection({ domainId, domainName }: { domainId: string; domainName: string }) {
+  const result = await listDnsRecords(domainId);
+  
+  if (!result.success || !result.data) {
+    return (
+      <div className="py-8 text-center text-muted-foreground">
+        {result.error || "Failed to load DNS records. DNS zone may not be configured."}
+      </div>
+    );
+  }
 
-const DNS_TYPE_COLORS: Record<string, string> = {
-  'A': 'bg-blue-500/10 text-blue-600 border-blue-200',
-  'AAAA': 'bg-purple-500/10 text-purple-600 border-purple-200',
-  'CNAME': 'bg-green-500/10 text-green-600 border-green-200',
-  'MX': 'bg-amber-500/10 text-amber-600 border-amber-200',
-  'TXT': 'bg-gray-500/10 text-gray-600 border-gray-200',
-  'NS': 'bg-red-500/10 text-red-600 border-red-200',
-  'SRV': 'bg-pink-500/10 text-pink-600 border-pink-200',
-};
+  return (
+    <DnsRecordsTable 
+      records={result.data} 
+      domainId={domainId}
+      domainName={domainName}
+    />
+  );
+}
 
-async function DnsContent({ domainId }: { domainId: string }) {
+async function NameserversSection({ domainId, nameservers }: { domainId: string; nameservers: string[] }) {
+  // Check zone activation status
+  const activationResult = await checkZoneActivation(domainId);
+  
+  if (!activationResult.success) {
+    // Zone not configured - don't show nameservers section
+    return null;
+  }
+
+  const expected = activationResult.data?.nameservers || [];
+  const configured = activationResult.data?.activated || false;
+
+  return (
+    <DnsNameservers 
+      current={nameservers}
+      expected={expected}
+      configured={configured}
+    />
+  );
+}
+
+export default async function DnsPage({ params }: DnsPageProps) {
+  const { domainId } = await params;
+  
+  // Get domain details
   const response = await getDomain(domainId);
   
   if (!response.success || !response.data) {
@@ -73,10 +90,18 @@ async function DnsContent({ domainId }: { domainId: string }) {
   }
   
   const domain = response.data;
-  const dnsRecords = MOCK_DNS_RECORDS;
-  
+  const hasCloudflareZone = !!domain.cloudflare_zone_id;
+
   return (
     <div className="space-y-6">
+      {/* Back Button */}
+      <Button variant="ghost" size="sm" asChild>
+        <Link href={`/dashboard/domains/${domainId}`}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Domain
+        </Link>
+      </Button>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -85,11 +110,18 @@ async function DnsContent({ domainId }: { domainId: string }) {
             Manage DNS records for {domain.domain_name}
           </p>
         </div>
-        <DnsActions domainName={domain.domain_name} />
+        <div className="flex items-center gap-2">
+          <DnsSyncButton domainId={domainId} />
+          <DnsTemplatesDropdown domainId={domainId} />
+          <DnsRecordForm 
+            domainId={domainId} 
+            domainName={domain.domain_name}
+          />
+        </div>
       </div>
-      
-      {/* Status */}
-      {domain.cloudflare_zone_id ? (
+
+      {/* Cloudflare Status */}
+      {hasCloudflareZone ? (
         <Card className="border-orange-200 bg-orange-500/5">
           <CardContent className="py-3">
             <div className="flex items-center justify-between">
@@ -118,160 +150,116 @@ async function DnsContent({ domainId }: { domainId: string }) {
                 <Server className="h-5 w-5 text-muted-foreground" />
               </div>
               <div>
-                <p className="font-medium">External DNS</p>
+                <p className="font-medium">DNS Zone Not Configured</p>
                 <p className="text-sm text-muted-foreground">
-                  DNS is managed externally. Some features may be limited.
+                  Set up a Cloudflare DNS zone to manage records. Use &quot;Quick Setup&quot; to get started.
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
-      
-      {/* Quick Templates */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Quick Setup Templates</CardTitle>
-          <CardDescription>
-            Apply pre-configured DNS templates
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DnsQuickTemplates domainName={domain.domain_name} />
-        </CardContent>
-      </Card>
-      
+
+      {/* Nameservers Section */}
+      {hasCloudflareZone && (
+        <Suspense fallback={<Skeleton className="h-32" />}>
+          <NameserversSection 
+            domainId={domainId} 
+            nameservers={domain.nameservers || []} 
+          />
+        </Suspense>
+      )}
+
       {/* DNS Records Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>DNS Records</CardTitle>
-          <CardDescription>
-            {dnsRecords.length} record{dnsRecords.length !== 1 ? 's' : ''} configured
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>DNS Records</CardTitle>
+            <CardDescription>
+              Manage A, AAAA, CNAME, MX, TXT, and other DNS records
+            </CardDescription>
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-24">Type</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead className="w-24">TTL</TableHead>
-                <TableHead className="w-24">Proxied</TableHead>
-                <TableHead className="w-20"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {dnsRecords.map((record) => (
-                <TableRow key={record.id}>
-                  <TableCell>
-                    <Badge 
-                      variant="outline" 
-                      className={DNS_TYPE_COLORS[record.type] || 'bg-muted'}
-                    >
-                      {record.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-mono text-sm">
-                    {record.name === '@' ? domain.domain_name : `${record.name}.${domain.domain_name}`}
-                  </TableCell>
-                  <TableCell className="font-mono text-sm max-w-xs truncate">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger className="truncate block">
-                          {record.value}
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-md">
-                          <p className="font-mono text-xs break-all">{record.value}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">
-                    {record.ttl === 1 ? 'Auto' : `${record.ttl}s`}
-                  </TableCell>
-                  <TableCell>
-                    {record.proxied !== undefined && (
-                      <Badge 
-                        variant="outline" 
-                        className={record.proxied 
-                          ? 'bg-orange-500/10 text-orange-600 border-orange-200' 
-                          : 'bg-muted text-muted-foreground'}
-                      >
-                        {record.proxied ? 'Yes' : 'No'}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <DnsRecordActions 
-                      recordId={record.id}
-                      recordType={record.type}
-                      recordName={record.name}
-                      domainName={domain.domain_name}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <Suspense fallback={<Skeleton className="h-64" />}>
+            <DnsRecordsSection domainId={domainId} domainName={domain.domain_name} />
+          </Suspense>
         </CardContent>
       </Card>
-      
-      {/* DNS Info */}
+
+      {/* Propagation Checker */}
+      {hasCloudflareZone && (
+        <Card>
+          <CardHeader>
+            <CardTitle>DNS Propagation</CardTitle>
+            <CardDescription>
+              Check if your DNS changes have propagated across global DNS servers
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DnsPropagationChecker domainId={domainId} domainName={domain.domain_name} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Help Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Info className="h-4 w-4" />
-            DNS Propagation
+            DNS Help
           </CardTitle>
+          <CardDescription>Common DNS configurations and troubleshooting</CardDescription>
         </CardHeader>
-        <CardContent className="text-sm text-muted-foreground space-y-2">
-          <p>
-            DNS changes can take up to 48 hours to propagate globally, though most 
-            changes take effect within a few minutes to a few hours.
-          </p>
-          <p>
-            If you&apos;re using Cloudflare proxy, changes to proxied records are 
-            typically instant.
-          </p>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-medium mb-2">Common Record Types</h4>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li><strong>A</strong> - Points domain to IPv4 address</li>
+                <li><strong>AAAA</strong> - Points domain to IPv6 address</li>
+                <li><strong>CNAME</strong> - Alias to another domain</li>
+                <li><strong>MX</strong> - Mail server routing</li>
+                <li><strong>TXT</strong> - Text records (SPF, DKIM, verification)</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-medium mb-2">Quick Links</h4>
+              <ul className="space-y-1 text-sm">
+                <li>
+                  <a 
+                    href="https://developers.cloudflare.com/dns/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    Cloudflare DNS Documentation
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </li>
+                <li>
+                  <a 
+                    href="https://dnschecker.org" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    DNS Checker Tool
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </li>
+              </ul>
+              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Note:</strong> DNS changes can take up to 48 hours to propagate globally, 
+                  though most changes take effect within a few minutes. Cloudflare-proxied records 
+                  update instantly.
+                </p>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-export default async function DnsPage({ params }: DnspageProps) {
-  const { domainId } = await params;
-  
-  return (
-    <div className="space-y-6">
-      <Button variant="ghost" size="sm" asChild>
-        <Link href={`/dashboard/domains/${domainId}`}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Domain
-        </Link>
-      </Button>
-      
-      <Suspense fallback={<DnsSkeleton />}>
-        <DnsContent domainId={domainId} />
-      </Suspense>
-    </div>
-  );
-}
-
-function DnsSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </div>
-        <Skeleton className="h-9 w-32" />
-      </div>
-      <Skeleton className="h-20 w-full" />
-      <Skeleton className="h-24 w-full" />
-      <Skeleton className="h-64 w-full" />
     </div>
   );
 }
