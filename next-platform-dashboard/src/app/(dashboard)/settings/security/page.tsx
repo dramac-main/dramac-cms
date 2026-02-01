@@ -3,6 +3,7 @@ import { PasswordChangeForm } from "@/components/settings/password-change-form";
 import { SessionsManager } from "@/components/settings/sessions-manager";
 import { TwoFactorSetup } from "@/components/settings/two-factor-setup";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Security Settings | DRAMAC",
@@ -11,12 +12,10 @@ export const metadata: Metadata = {
 export default function SecuritySettingsPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Security</h1>
-        <p className="text-muted-foreground">
-          Manage your password and security settings
-        </p>
-      </div>
+      <PageHeader
+        title="Security"
+        description="Manage your password and security settings"
+      />
 
       <Card>
         <CardHeader>

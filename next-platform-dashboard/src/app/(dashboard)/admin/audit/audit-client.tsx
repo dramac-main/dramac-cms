@@ -25,6 +25,7 @@ import { getAuditLogs, type AuditLogEntry } from "@/lib/admin/audit-service";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/use-debounce";
+import { PageHeader } from "@/components/layout/page-header";
 
 const RESOURCE_TYPES = [
   { value: "all", label: "All Types" },
@@ -101,18 +102,16 @@ export default function AuditLogsClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Audit Logs</h1>
-          <p className="text-muted-foreground">
-            System activity and change history
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={loadLogs} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="Audit Logs"
+        description="System activity and change history"
+        actions={
+          <Button variant="outline" size="sm" onClick={loadLogs} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        }
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

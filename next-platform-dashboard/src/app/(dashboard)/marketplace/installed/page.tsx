@@ -3,6 +3,7 @@ import { ArrowLeft, Package, Settings, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { PageHeader } from "@/components/layout/page-header";
 
 // This would fetch from the database for the selected site
 // For now, showing empty state
@@ -20,17 +21,15 @@ export default function InstalledModulesPage() {
         Back to Marketplace
       </Link>
 
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Installed Modules</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage modules installed on your sites
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/marketplace">Browse Marketplace</Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Installed Modules"
+        description="Manage modules installed on your sites"
+        actions={
+          <Button asChild>
+            <Link href="/marketplace">Browse Marketplace</Link>
+          </Button>
+        }
+      />
 
       {installedModules.length === 0 ? (
         <Card>

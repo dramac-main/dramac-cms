@@ -3,6 +3,7 @@ import { getSession } from "@/lib/actions/auth";
 import { getAgency, getAgencyBranding } from "@/lib/actions/agency";
 import { BrandingForm } from "@/components/settings/branding-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Branding Settings | DRAMAC",
@@ -19,12 +20,10 @@ export default async function BrandingSettingsPage() {
   if (!agency) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Branding</h1>
-          <p className="text-muted-foreground">
-            Create an agency first to customize branding.
-          </p>
-        </div>
+        <PageHeader
+          title="Branding"
+          description="Create an agency first to customize branding."
+        />
       </div>
     );
   }
@@ -33,12 +32,10 @@ export default async function BrandingSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Branding</h1>
-        <p className="text-muted-foreground">
-          Customize your agency&apos;s appearance and white-label settings
-        </p>
-      </div>
+      <PageHeader
+        title="Branding"
+        description="Customize your agency's appearance and white-label settings"
+      />
 
       <Card>
         <CardHeader>

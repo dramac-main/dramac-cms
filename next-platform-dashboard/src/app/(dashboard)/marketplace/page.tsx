@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Zap, BookOpen } from "lucide-react";
 import Link from "next/link";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Module Marketplace | DRAMAC",
@@ -49,28 +50,26 @@ export default async function MarketplacePage() {
   return (
     <div className="container mx-auto py-6 space-y-8">
       {/* Page Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Module Marketplace</h1>
-          <p className="text-muted-foreground mt-1">
-            Discover and install powerful modules to extend your platform
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button asChild>
-            <Link href="/dashboard/modules/requests/new">
-              <Zap className="h-4 w-4 mr-2" />
-              Request a Module
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/dashboard/modules/subscriptions">
-              <BookOpen className="h-4 w-4 mr-2" />
-              My Subscriptions
-            </Link>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Module Marketplace"
+        description="Discover and install powerful modules to extend your platform"
+        actions={
+          <div className="flex gap-2">
+            <Button asChild>
+              <Link href="/dashboard/modules/requests/new">
+                <Zap className="h-4 w-4 mr-2" />
+                Request a Module
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/dashboard/modules/subscriptions">
+                <BookOpen className="h-4 w-4 mr-2" />
+                My Subscriptions
+              </Link>
+            </Button>
+          </div>
+        }
+      />
 
       <Tabs defaultValue="browse">
         <TabsList>

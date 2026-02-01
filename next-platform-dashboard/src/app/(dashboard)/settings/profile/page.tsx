@@ -4,6 +4,7 @@ import { getProfile } from "@/lib/actions/profile";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { AvatarUpload } from "@/components/settings/avatar-upload";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Profile Settings | DRAMAC",
@@ -19,12 +20,10 @@ export default async function ProfileSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Profile</h1>
-        <p className="text-muted-foreground">
-          Manage your personal information and preferences
-        </p>
-      </div>
+      <PageHeader
+        title="Profile"
+        description="Manage your personal information and preferences"
+      />
 
       <Card>
         <CardHeader>

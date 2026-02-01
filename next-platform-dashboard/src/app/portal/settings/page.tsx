@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { updateClientSettings, changePortalPassword } from "@/lib/portal/portal-auth";
+import { PageHeader } from "@/components/layout/page-header";
 
 interface SettingsFormData {
   name: string;
@@ -124,12 +125,10 @@ export default function PortalSettingsPage() {
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage your account settings and preferences
-        </p>
-      </div>
+      <PageHeader
+        title="Settings"
+        description="Manage your account settings and preferences"
+      />
 
       {/* Profile Settings */}
       <Card>

@@ -18,6 +18,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { AdminBillingOverview } from '@/components/admin/billing-overview';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PageHeader } from '@/components/layout/page-header';
 
 export const metadata = {
   title: 'Billing Overview - Admin',
@@ -43,12 +44,10 @@ export default async function AdminBillingPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Billing Overview</h1>
-        <p className="text-muted-foreground">
-          Revenue metrics and subscription analytics
-        </p>
-      </div>
+      <PageHeader
+        title="Billing Overview"
+        description="Revenue metrics and subscription analytics"
+      />
       
       <Suspense fallback={<AdminBillingSkeleton />}>
         <AdminBillingOverview />

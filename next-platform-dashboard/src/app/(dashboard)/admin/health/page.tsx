@@ -16,6 +16,7 @@ import {
   Cpu,
   RefreshCw,
 } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "System Health | Admin | DRAMAC",
@@ -138,18 +139,16 @@ export default async function AdminHealthPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">System Health</h1>
-          <p className="text-muted-foreground">
-            Monitor platform health and performance
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => window.location.reload()}>
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="System Health"
+        description="Monitor platform health and performance"
+        actions={
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh
+          </Button>
+        }
+      />
 
       {/* Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

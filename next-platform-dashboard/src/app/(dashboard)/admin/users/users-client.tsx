@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { promoteToSuperAdmin } from "@/lib/admin/admin-service";
+import { PageHeader } from "@/components/layout/page-header";
 
 const ROLES = [
   { value: "all", label: "All Roles" },
@@ -121,24 +122,22 @@ export default function AdminUsersPageClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">
-            {total} total users
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={loadUsers} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-          <Button size="sm" onClick={() => setPromoteDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Promote Admin
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="User Management"
+        description={`${total} total users`}
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={loadUsers} disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <Button size="sm" onClick={() => setPromoteDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Promote Admin
+            </Button>
+          </div>
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">

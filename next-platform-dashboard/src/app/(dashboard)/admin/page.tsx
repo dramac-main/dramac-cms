@@ -6,6 +6,7 @@ import { StatsCard } from "@/components/admin/stats-card";
 import { ActivityFeed } from "@/components/admin/activity-feed";
 import { QuickActions } from "@/components/admin/quick-actions";
 import { getPlatformStats, getRecentActivity } from "@/lib/admin/stats-service";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard | DRAMAC",
@@ -46,12 +47,10 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Platform overview and management
-        </p>
-      </div>
+      <PageHeader
+        title="Admin Dashboard"
+        description="Platform overview and management"
+      />
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

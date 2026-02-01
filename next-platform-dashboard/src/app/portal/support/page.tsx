@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { requirePortalAuth } from "@/lib/portal/portal-auth";
 import { getClientTickets, getTicketStats } from "@/lib/portal/support-service";
 import { formatDistanceToNow } from "date-fns";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Support | Client Portal",
@@ -71,20 +72,18 @@ export default async function PortalSupportPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Support</h1>
-          <p className="text-muted-foreground mt-1">
-            Get help with your websites or request changes
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/portal/support/new">
-            <Plus className="h-4 w-4 mr-2" />
-            New Ticket
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Support"
+        description="Get help with your websites or request changes"
+        actions={
+          <Button asChild>
+            <Link href="/portal/support/new">
+              <Plus className="h-4 w-4 mr-2" />
+              New Ticket
+            </Link>
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">

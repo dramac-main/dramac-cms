@@ -9,6 +9,7 @@ import { getClientSites, getPortalAnalytics, getClientInfo } from "@/lib/portal/
 import { getClientTickets, getTicketStats } from "@/lib/portal/support-service";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 import { formatDistanceToNow } from "date-fns";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Dashboard | Client Portal",
@@ -36,17 +37,14 @@ export default async function PortalDashboard() {
   return (
     <div className="space-y-8">
       {/* Welcome */}
-      <div>
-        <h1 className="text-3xl font-bold">
-          Welcome back, {user.fullName.split(" ")[0]}!
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {clientInfo?.companyName 
+      <PageHeader
+        title={`Welcome back, ${user.fullName.split(" ")[0]}!`}
+        description={
+          clientInfo?.companyName 
             ? `Here's an overview of ${clientInfo.companyName}'s sites with ${clientInfo.agencyName}`
             : `Here's an overview of your sites with ${clientInfo?.agencyName || "your agency"}`
-          }
-        </p>
-      </div>
+        }
+      />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

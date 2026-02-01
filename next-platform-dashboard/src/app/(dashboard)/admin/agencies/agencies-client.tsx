@@ -15,6 +15,7 @@ import { AgencyManagementTable } from "@/components/admin/agency-management-tabl
 import { getAdminAgencies, updateAgencyStatus, type AdminAgency } from "@/lib/admin/admin-service";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/use-debounce";
+import { PageHeader } from "@/components/layout/page-header";
 
 const STATUSES = [
   { value: "all", label: "All Statuses" },
@@ -70,18 +71,16 @@ export default function AdminAgenciesPageClient() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Agency Management</h1>
-          <p className="text-muted-foreground">
-            {total} total agencies
-          </p>
-        </div>
-        <Button variant="outline" size="sm" onClick={loadAgencies} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
-      </div>
+      <PageHeader
+        title="Agency Management"
+        description={`${total} total agencies`}
+        actions={
+          <Button variant="outline" size="sm" onClick={loadAgencies} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">

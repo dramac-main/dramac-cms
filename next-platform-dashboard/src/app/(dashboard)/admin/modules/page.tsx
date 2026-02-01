@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { AdminModuleList } from "@/components/modules/admin/admin-module-list";
 import { ModuleStatsCards } from "@/components/modules/admin/module-stats-cards";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Module Management | Super Admin",
@@ -111,33 +112,31 @@ export default async function AdminModulesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Module Management</h1>
-          <p className="text-muted-foreground">
-            Create, manage, and monitor platform modules
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/admin/modules/requests">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Requests
-              {stats.pendingRequests > 0 && (
-                <span className="ml-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
-                  {stats.pendingRequests}
-                </span>
-              )}
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/admin/modules/studio">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Module
-            </Link>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Module Management"
+        description="Create, manage, and monitor platform modules"
+        actions={
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/admin/modules/requests">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Requests
+                {stats.pendingRequests > 0 && (
+                  <span className="ml-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+                    {stats.pendingRequests}
+                  </span>
+                )}
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link href="/admin/modules/studio">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Module
+              </Link>
+            </Button>
+          </div>
+        }
+      />
 
       {/* Stats Cards */}
       <ModuleStatsCards stats={stats} />

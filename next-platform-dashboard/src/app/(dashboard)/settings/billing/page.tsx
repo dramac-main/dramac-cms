@@ -15,6 +15,7 @@ import { UsageDashboard } from "@/components/billing/usage-dashboard";
 import { PaddleInvoiceHistory } from "@/components/billing/paddle-invoice-history";
 import { ModuleSubscriptions } from "@/components/billing/module-subscriptions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/layout/page-header";
 
 export default async function BillingPage() {
   const supabase = await createClient();
@@ -35,12 +36,10 @@ export default async function BillingPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Billing & Subscription</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage your subscription, payment methods, and view invoices.
-        </p>
-      </div>
+      <PageHeader
+        title="Billing & Subscription"
+        description="Manage your subscription, payment methods, and view invoices."
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Suspense fallback={<Skeleton className="h-[280px]" />}>

@@ -4,6 +4,7 @@ import { getAgencyTeam } from "@/lib/actions/team";
 import { TeamMembersList } from "@/components/settings/team-members-list";
 import { InviteMemberDialog } from "@/components/settings/invite-member-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Team Management | DRAMAC",
@@ -19,15 +20,11 @@ export default async function TeamSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Team</h1>
-          <p className="text-muted-foreground">
-            Manage your team members and their permissions
-          </p>
-        </div>
-        <InviteMemberDialog />
-      </div>
+      <PageHeader
+        title="Team"
+        description="Manage your team members and their permissions"
+        actions={<InviteMemberDialog />}
+      />
 
       <Card>
         <CardHeader>

@@ -3,6 +3,7 @@ import { getSession } from "@/lib/actions/auth";
 import { getNotificationPreferences } from "@/lib/actions/notifications";
 import { NotificationPreferencesForm } from "@/components/settings/notification-preferences-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Notification Settings | DRAMAC",
@@ -18,12 +19,10 @@ export default async function NotificationSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Notifications</h1>
-        <p className="text-muted-foreground">
-          Configure how and when you receive notifications
-        </p>
-      </div>
+      <PageHeader
+        title="Notifications"
+        description="Configure how and when you receive notifications"
+      />
 
       <Card>
         <CardHeader>

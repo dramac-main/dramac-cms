@@ -3,6 +3,7 @@ import { getSession } from "@/lib/actions/auth";
 import { getAgency } from "@/lib/actions/agency";
 import { AgencyForm } from "@/components/settings/agency-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Agency Settings | DRAMAC",
@@ -19,24 +20,20 @@ export default async function AgencySettingsPage() {
   if (!agency) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Agency Settings</h1>
-          <p className="text-muted-foreground">
-            You don&apos;t have an agency yet. Create one to get started.
-          </p>
-        </div>
+        <PageHeader
+          title="Agency Settings"
+          description="You don't have an agency yet. Create one to get started."
+        />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Agency Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your agency details and preferences
-        </p>
-      </div>
+      <PageHeader
+        title="Agency Settings"
+        description="Manage your agency details and preferences"
+      />
 
       <Card>
         <CardHeader>

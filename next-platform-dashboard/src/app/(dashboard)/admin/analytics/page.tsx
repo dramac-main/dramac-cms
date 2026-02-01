@@ -17,6 +17,7 @@ import {
   SystemHealthComponent,
   PlatformActivityComponent,
 } from "@/components/admin";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Analytics | Admin | DRAMAC",
@@ -41,14 +42,10 @@ export default async function AdminAnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Platform Analytics</h1>
-          <p className="text-muted-foreground">
-            Comprehensive insights and metrics for the platform
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Platform Analytics"
+        description="Comprehensive insights and metrics for the platform"
+      />
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>

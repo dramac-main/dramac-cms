@@ -21,6 +21,7 @@ import {
   Filter,
   LucideIcon,
 } from "lucide-react";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Activity Log | Admin | DRAMAC",
@@ -108,20 +109,16 @@ export default async function AdminActivityPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Activity Log</h1>
-          <p className="text-muted-foreground">
-            Track all actions performed on the platform
-          </p>
-        </div>
-        <div className="flex gap-2">
+      <PageHeader
+        title="Activity Log"
+        description="Track all actions performed on the platform"
+        actions={
           <Button variant="outline">
             <Download className="w-4 h-4 mr-2" />
             Export
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Filters */}
       <Card>

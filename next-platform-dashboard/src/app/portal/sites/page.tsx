@@ -9,6 +9,7 @@ import { requirePortalAuth } from "@/lib/portal/portal-auth";
 import { getClientSites } from "@/lib/portal/portal-service";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 import { formatDistanceToNow } from "date-fns";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "My Sites | Client Portal",
@@ -22,14 +23,10 @@ export default async function PortalSitesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">My Sites</h1>
-          <p className="text-muted-foreground mt-1">
-            {sites.length} {sites.length === 1 ? "website" : "websites"} managed for you
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="My Sites"
+        description={`${sites.length} ${sites.length === 1 ? "website" : "websites"} managed for you`}
+      />
 
       {/* Sites Grid */}
       {sites.length > 0 ? (
