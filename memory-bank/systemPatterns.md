@@ -52,7 +52,30 @@ dramac-cms/
     └── scripts/                  # Utility scripts
 ```
 
-## Core Design Patterns
+## Critical Implementation Protocols
+
+### Git Workflow (ALWAYS FOLLOW)
+
+**Commit and Push Protocol:**
+1. After implementing any phase or feature, ALWAYS run TypeScript check:
+   ```bash
+   cd next-platform-dashboard
+   npx tsc --noEmit --skipLibCheck
+   ```
+
+2. If **zero errors**, IMMEDIATELY commit and push:
+   ```bash
+   cd ..
+   git add .
+   git commit -m "feat: [descriptive message]"
+   git push
+   ```
+
+3. **Never leave uncommitted working changes** - this prevents loss of work and maintains project continuity between sessions.
+
+4. Update memory bank AFTER successful push to document what was built.
+
+### Code Patterns (MUST FOLLOW)
 
 ### 1. Multi-Tenant Hierarchy
 

@@ -3,9 +3,22 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "./theme-provider";
 import { AuthProvider } from "./auth-provider";
+import { LoadingProvider } from "./loading-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { GlobalErrorBoundary } from "@/components/error-boundary";
 import { useState } from "react";
+
+// Re-export loading provider hooks
+export {
+  LoadingProvider,
+  useLoading,
+  useLoadingState,
+  useAsyncOperation,
+  useDeferredLoading,
+  type LoadingProviderProps,
+  type LoadingContextValue,
+  type LoadingItem,
+} from "./loading-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -24,9 +37,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="dramac-theme">
         <AuthProvider>
-          <GlobalErrorBoundary>
-            {children}
-          </GlobalErrorBoundary>
+          <LoadingProvider>
+            <GlobalErrorBoundary>
+              {children}
+            </GlobalErrorBoundary>
+          </LoadingProvider>
           <Toaster position="bottom-right" richColors />
         </AuthProvider>
       </ThemeProvider>

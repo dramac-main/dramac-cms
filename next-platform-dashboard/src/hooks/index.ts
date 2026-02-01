@@ -43,3 +43,28 @@ export {
   useRecentItems,
   type RecentItem,
 } from "./use-recent-items";
+
+// Unsaved Changes & Navigation
+export {
+  useUnsavedChanges,
+  useFormDirtyState,
+  useNavigationBlocker,
+  UnsavedChangesDialog,
+  type UseUnsavedChangesOptions,
+  type UseFormDirtyStateOptions,
+  type UseNavigationBlockerOptions,
+} from "./use-unsaved-changes";
+
+// Optimistic Updates & Sync
+export {
+  useOptimisticMutation,
+  useOptimisticList,
+  useSyncState,
+  type OptimisticMutationConfig,
+  type OptimisticMutationResult,
+  type OptimisticListConfig,
+  type OptimisticListResult,
+  type SyncState,
+  type UseSyncStateOptions,
+  type UseSyncStateResult,
+} from "./use-optimistic";
