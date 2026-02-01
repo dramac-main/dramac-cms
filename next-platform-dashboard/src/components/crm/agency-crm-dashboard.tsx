@@ -101,7 +101,6 @@ export function AgencyCRMDashboard({ agencyId, sites }: AgencyCRMDashboardProps)
       <div className="flex items-center justify-end">
         <Select value={selectedSiteId} onValueChange={handleSiteChange}>
           <SelectTrigger className="w-[250px]">
-            <Globe className="h-4 w-4 mr-2" />
             <SelectValue placeholder="All Sites" />
           </SelectTrigger>
           <SelectContent>
