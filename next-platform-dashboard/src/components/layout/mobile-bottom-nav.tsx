@@ -9,6 +9,7 @@ import {
   Package, 
   Settings,
   Menu,
+  MessageCircle,
   type LucideIcon 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,7 @@ interface MobileNavItem {
   matchPrefix?: string;
 }
 
-const mobileNavItems: MobileNavItem[] = [
+const dashboardNavItems: MobileNavItem[] = [
   {
     title: "Home",
     href: "/dashboard",
@@ -52,8 +53,36 @@ const mobileNavItems: MobileNavItem[] = [
   },
 ];
 
+const portalNavItems: MobileNavItem[] = [
+  {
+    title: "Home",
+    href: "/portal",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Sites",
+    href: "/portal/sites",
+    icon: Globe,
+    matchPrefix: "/portal/sites",
+  },
+  {
+    title: "Support",
+    href: "/portal/support",
+    icon: MessageCircle,
+    matchPrefix: "/portal/support",
+  },
+  {
+    title: "Settings",
+    href: "/portal/settings",
+    icon: Settings,
+    matchPrefix: "/portal/settings",
+  },
+];
+
 interface MobileBottomNavProps {
   className?: string;
+  /** Navigation variant - dashboard or portal */
+  variant?: "dashboard" | "portal";
 }
 
 /**
@@ -65,15 +94,20 @@ interface MobileBottomNavProps {
  * - Touch-optimized (44px+ tap targets)
  * - Active state indicator
  * - "More" menu to open full sidebar
+ * - Supports dashboard and portal variants
  * 
  * @example
  * ```tsx
- * <MobileBottomNav className="md:hidden" />
+ * <MobileBottomNav variant="dashboard" className="md:hidden" />
+ * <MobileBottomNav variant="portal" className="md:hidden" />
  * ```
  */
-export function MobileBottomNav({ className }: MobileBottomNavProps) {
+export function MobileBottomNav({ className, variant = "dashboard" }: MobileBottomNavProps) {
   const pathname = usePathname();
   const { toggleMobile } = useSidebar();
+  
+  // Select nav items based on variant
+  const navItems = variant === "portal" ? portalNavItems : dashboardNavItems;
 
   const isActive = (item: MobileNavItem) => {
     if (item.matchPrefix) {
@@ -93,7 +127,7 @@ export function MobileBottomNav({ className }: MobileBottomNavProps) {
       aria-label="Mobile navigation"
     >
       <div className="flex items-center justify-around px-2">
-        {mobileNavItems.map((item) => {
+        {navItems.map((item) => {
           const active = isActive(item);
           const Icon = item.icon;
 
