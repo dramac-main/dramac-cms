@@ -557,6 +557,263 @@ export const ACTION_REGISTRY = {
       },
     },
   },
+  
+  // =========================================================
+  // DOMAIN ACTIONS (EM-57 - Domain & Email Reseller Integration)
+  // =========================================================
+  domain: {
+    check_availability: {
+      id: 'domain.check_availability',
+      name: 'Check Domain Availability',
+      description: 'Check if a domain name is available for registration',
+      category: 'domain',
+      icon: '🔍',
+      inputs: {
+        domain_name: { type: 'string' as const, required: true, description: 'Domain name to check (e.g., example.com)' },
+        tlds: { type: 'array' as const, required: false, description: 'TLDs to check (e.g., [".com", ".net", ".org"])' },
+      },
+      outputs: {
+        available: { type: 'boolean' as const, description: 'Whether the domain is available' },
+        price: { type: 'number' as const, description: 'Registration price if available' },
+        premium: { type: 'boolean' as const, description: 'Whether this is a premium domain' },
+        suggestions: { type: 'array' as const, description: 'Alternative domain suggestions' },
+      },
+    },
+    register: {
+      id: 'domain.register',
+      name: 'Register Domain',
+      description: 'Register a new domain name',
+      category: 'domain',
+      icon: '🌐',
+      inputs: {
+        domain_name: { type: 'string' as const, required: true, description: 'Domain name to register' },
+        years: { type: 'number' as const, required: false, default: 1, description: 'Registration period in years' },
+        contact_id: { type: 'string' as const, required: true, description: 'Contact ID for domain registration' },
+        nameservers: { type: 'array' as const, required: false, description: 'Custom nameservers' },
+        privacy_protection: { type: 'boolean' as const, required: false, default: true, description: 'Enable WHOIS privacy protection' },
+        auto_renew: { type: 'boolean' as const, required: false, default: true, description: 'Enable auto-renewal' },
+      },
+      outputs: {
+        domain_id: { type: 'string' as const, description: 'Registered domain ID' },
+        order_id: { type: 'string' as const, description: 'Order ID' },
+        expiry_date: { type: 'string' as const, description: 'Domain expiration date' },
+        success: { type: 'boolean' as const, description: 'Whether registration succeeded' },
+      },
+    },
+    renew: {
+      id: 'domain.renew',
+      name: 'Renew Domain',
+      description: 'Renew an existing domain registration',
+      category: 'domain',
+      icon: '🔄',
+      inputs: {
+        domain_id: { type: 'string' as const, required: true, description: 'Domain ID to renew' },
+        years: { type: 'number' as const, required: false, default: 1, description: 'Renewal period in years' },
+      },
+      outputs: {
+        new_expiry_date: { type: 'string' as const, description: 'New expiration date' },
+        order_id: { type: 'string' as const, description: 'Renewal order ID' },
+        success: { type: 'boolean' as const, description: 'Whether renewal succeeded' },
+      },
+    },
+    set_auto_renew: {
+      id: 'domain.set_auto_renew',
+      name: 'Set Auto-Renew',
+      description: 'Enable or disable auto-renewal for a domain',
+      category: 'domain',
+      icon: '🔁',
+      inputs: {
+        domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
+        enabled: { type: 'boolean' as const, required: true, description: 'Enable or disable auto-renewal' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether the update succeeded' },
+      },
+    },
+    add_dns_record: {
+      id: 'domain.add_dns_record',
+      name: 'Add DNS Record',
+      description: 'Add a DNS record to a domain',
+      category: 'domain',
+      icon: '➕',
+      inputs: {
+        domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
+        record_type: { type: 'enum' as const, values: ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'SRV', 'CAA'], required: true, description: 'DNS record type' },
+        name: { type: 'string' as const, required: true, description: 'Record name (e.g., www, @, mail)' },
+        value: { type: 'string' as const, required: true, description: 'Record value' },
+        ttl: { type: 'number' as const, required: false, default: 3600, description: 'Time to live in seconds' },
+        priority: { type: 'number' as const, required: false, description: 'Priority (for MX and SRV records)' },
+      },
+      outputs: {
+        record_id: { type: 'string' as const, description: 'Created DNS record ID' },
+        success: { type: 'boolean' as const, description: 'Whether the record was created' },
+      },
+    },
+    update_dns_record: {
+      id: 'domain.update_dns_record',
+      name: 'Update DNS Record',
+      description: 'Update an existing DNS record',
+      category: 'domain',
+      icon: '✏️',
+      inputs: {
+        record_id: { type: 'string' as const, required: true, description: 'DNS record ID' },
+        value: { type: 'string' as const, required: false, description: 'New record value' },
+        ttl: { type: 'number' as const, required: false, description: 'New TTL in seconds' },
+        priority: { type: 'number' as const, required: false, description: 'New priority (for MX/SRV)' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether the update succeeded' },
+      },
+    },
+    delete_dns_record: {
+      id: 'domain.delete_dns_record',
+      name: 'Delete DNS Record',
+      description: 'Delete a DNS record from a domain',
+      category: 'domain',
+      icon: '🗑️',
+      inputs: {
+        record_id: { type: 'string' as const, required: true, description: 'DNS record ID to delete' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether the record was deleted' },
+      },
+    },
+    create_email_account: {
+      id: 'domain.create_email_account',
+      name: 'Create Email Account',
+      description: 'Create a new email account for a domain',
+      category: 'domain',
+      icon: '📧',
+      inputs: {
+        domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
+        username: { type: 'string' as const, required: true, description: 'Email username (before @)' },
+        password: { type: 'string' as const, required: true, description: 'Email account password' },
+        quota_mb: { type: 'number' as const, required: false, default: 1024, description: 'Mailbox quota in MB' },
+        forwarding_address: { type: 'string' as const, required: false, description: 'Forward emails to this address' },
+      },
+      outputs: {
+        email_id: { type: 'string' as const, description: 'Created email account ID' },
+        email_address: { type: 'string' as const, description: 'Full email address' },
+        success: { type: 'boolean' as const, description: 'Whether the account was created' },
+      },
+    },
+    update_email_account: {
+      id: 'domain.update_email_account',
+      name: 'Update Email Account',
+      description: 'Update an existing email account',
+      category: 'domain',
+      icon: '✏️',
+      inputs: {
+        email_id: { type: 'string' as const, required: true, description: 'Email account ID' },
+        password: { type: 'string' as const, required: false, description: 'New password' },
+        quota_mb: { type: 'number' as const, required: false, description: 'New quota in MB' },
+        forwarding_address: { type: 'string' as const, required: false, description: 'New forwarding address' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether the update succeeded' },
+      },
+    },
+    delete_email_account: {
+      id: 'domain.delete_email_account',
+      name: 'Delete Email Account',
+      description: 'Delete an email account',
+      category: 'domain',
+      icon: '🗑️',
+      inputs: {
+        email_id: { type: 'string' as const, required: true, description: 'Email account ID to delete' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether the account was deleted' },
+      },
+    },
+    initiate_transfer: {
+      id: 'domain.initiate_transfer',
+      name: 'Initiate Domain Transfer',
+      description: 'Start a domain transfer from another registrar',
+      category: 'domain',
+      icon: '📥',
+      inputs: {
+        domain_name: { type: 'string' as const, required: true, description: 'Domain name to transfer' },
+        auth_code: { type: 'string' as const, required: true, description: 'EPP/Authorization code from current registrar' },
+        contact_id: { type: 'string' as const, required: true, description: 'Contact ID for the domain' },
+      },
+      outputs: {
+        transfer_id: { type: 'string' as const, description: 'Transfer request ID' },
+        status: { type: 'string' as const, description: 'Transfer status' },
+        success: { type: 'boolean' as const, description: 'Whether transfer was initiated' },
+      },
+    },
+    get_auth_code: {
+      id: 'domain.get_auth_code',
+      name: 'Get Authorization Code',
+      description: 'Get EPP authorization code for domain transfer out',
+      category: 'domain',
+      icon: '🔑',
+      inputs: {
+        domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
+      },
+      outputs: {
+        auth_code: { type: 'string' as const, description: 'EPP authorization code' },
+        success: { type: 'boolean' as const, description: 'Whether the code was retrieved' },
+      },
+    },
+    lookup: {
+      id: 'domain.lookup',
+      name: 'Domain Lookup',
+      description: 'Lookup domain details and WHOIS information',
+      category: 'domain',
+      icon: '🔍',
+      inputs: {
+        domain_name: { type: 'string' as const, required: true, description: 'Domain name to lookup' },
+        include_whois: { type: 'boolean' as const, required: false, default: false, description: 'Include WHOIS data' },
+      },
+      outputs: {
+        domain: { type: 'object' as const, description: 'Domain details' },
+        whois: { type: 'object' as const, description: 'WHOIS information (if requested)' },
+        found: { type: 'boolean' as const, description: 'Whether domain was found in system' },
+      },
+    },
+    set_nameservers: {
+      id: 'domain.set_nameservers',
+      name: 'Set Nameservers',
+      description: 'Update nameservers for a domain',
+      category: 'domain',
+      icon: '🖥️',
+      inputs: {
+        domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
+        nameservers: { type: 'array' as const, required: true, description: 'Array of nameserver hostnames' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether nameservers were updated' },
+      },
+    },
+    lock_domain: {
+      id: 'domain.lock_domain',
+      name: 'Lock Domain',
+      description: 'Enable transfer lock on domain',
+      category: 'domain',
+      icon: '🔒',
+      inputs: {
+        domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether domain was locked' },
+      },
+    },
+    unlock_domain: {
+      id: 'domain.unlock_domain',
+      name: 'Unlock Domain',
+      description: 'Disable transfer lock on domain',
+      category: 'domain',
+      icon: '🔓',
+      inputs: {
+        domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
+      },
+      outputs: {
+        success: { type: 'boolean' as const, description: 'Whether domain was unlocked' },
+      },
+    },
+  },
 } as const
 
 // ============================================================================
@@ -571,6 +828,7 @@ export const ACTION_CATEGORIES = [
   { id: 'data', name: 'Data', icon: '📊', description: 'Database operations (CRUD)' },
   { id: 'flow', name: 'Flow Control', icon: '🔀', description: 'Delays, conditions, loops, and stops' },
   { id: 'transform', name: 'Transform', icon: '🔄', description: 'Data mapping, filtering, and formatting' },
+  { id: 'domain', name: 'Domains', icon: '🌐', description: 'Domain registration, DNS, email, and transfer actions' },
 ] as const
 
 // ============================================================================

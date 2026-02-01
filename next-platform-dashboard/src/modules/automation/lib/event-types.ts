@@ -159,6 +159,56 @@ export const EVENT_REGISTRY = {
   },
   
   // =========================================================
+  // DOMAIN MODULE (DM-XX)
+  // Tables: domains, domain_dns_records, domain_email_accounts,
+  //         domain_orders, domain_transfers, cloudflare_zones,
+  //         email_subscriptions, domain_contacts
+  // =========================================================
+  domain: {
+    domain: {
+      registered: 'domain.domain.registered',
+      renewed: 'domain.domain.renewed',
+      transferred_in: 'domain.domain.transferred_in',
+      transferred_out: 'domain.domain.transferred_out',
+      expiring_soon: 'domain.domain.expiring_soon',
+      expired: 'domain.domain.expired',
+      suspended: 'domain.domain.suspended',
+      reactivated: 'domain.domain.reactivated',
+      auto_renewed: 'domain.domain.auto_renewed',
+      nameservers_changed: 'domain.domain.nameservers_changed',
+    },
+    dns: {
+      record_created: 'domain.dns.record_created',
+      record_updated: 'domain.dns.record_updated',
+      record_deleted: 'domain.dns.record_deleted',
+      zone_created: 'domain.dns.zone_created',
+      ssl_provisioned: 'domain.dns.ssl_provisioned',
+      propagation_complete: 'domain.dns.propagation_complete',
+    },
+    email: {
+      subscription_created: 'domain.email.subscription_created',
+      subscription_cancelled: 'domain.email.subscription_cancelled',
+      account_created: 'domain.email.account_created',
+      account_deleted: 'domain.email.account_deleted',
+      quota_warning: 'domain.email.quota_warning',
+    },
+    order: {
+      created: 'domain.order.created',
+      completed: 'domain.order.completed',
+      failed: 'domain.order.failed',
+      refunded: 'domain.order.refunded',
+    },
+    transfer: {
+      initiated: 'domain.transfer.initiated',
+      auth_required: 'domain.transfer.auth_required',
+      approved: 'domain.transfer.approved',
+      completed: 'domain.transfer.completed',
+      failed: 'domain.transfer.failed',
+      cancelled: 'domain.transfer.cancelled',
+    },
+  },
+  
+  // =========================================================
   // BILLING MODULE (EM-59A - Paddle Billing)
   // Tables: paddle_subscriptions, paddle_transactions, usage_*, etc.
   // =========================================================
@@ -286,6 +336,7 @@ export type EventType =
   | `form.${string}.${string}`
   | `accounting.${string}.${string}`
   | `ecommerce.${string}.${string}`
+  | `domain.${string}.${string}`
   | `billing.${string}.${string}`
   | `system.${string}.${string}`
   | `automation.${string}.${string}`
@@ -302,6 +353,7 @@ export const EVENT_CATEGORIES = [
   { id: 'form', name: 'Forms', icon: '📝', description: 'Form submission and creation events' },
   { id: 'accounting', name: 'Accounting', icon: '💰', description: 'Invoice, payment, and expense events' },
   { id: 'ecommerce', name: 'E-Commerce', icon: '🛒', description: 'Order, cart, and product events' },
+  { id: 'domain', name: 'Domains', icon: '🌐', description: 'Domain registration, DNS, email, and transfer events' },
   { id: 'billing', name: 'Billing', icon: '💳', description: 'Subscription, payment, and usage events' },
   { id: 'system', name: 'System', icon: '⚙️', description: 'Webhook, schedule, and module events' },
   { id: 'automation', name: 'Automation', icon: '⚡', description: 'Workflow execution events' },
@@ -429,6 +481,46 @@ export function getAllEventDefinitions(): EventDefinition[] {
     { id: EVENT_REGISTRY.ai_agent.tool.failed, category: 'ai_agent', entity: 'tool', action: 'failed', name: 'Tool Failed', description: 'Triggered when a tool execution fails' },
     { id: EVENT_REGISTRY.ai_agent.memory.stored, category: 'ai_agent', entity: 'memory', action: 'stored', name: 'Memory Stored', description: 'Triggered when agent stores a memory' },
     { id: EVENT_REGISTRY.ai_agent.memory.consolidated, category: 'ai_agent', entity: 'memory', action: 'consolidated', name: 'Memory Consolidated', description: 'Triggered when agent memories are consolidated' },
+  )
+  
+  // Domain Events (EM-57 - Domain & Email Reseller Integration)
+  events.push(
+    // Domain Events
+    { id: EVENT_REGISTRY.domain.domain.registered, category: 'domain', entity: 'domain', action: 'registered', name: 'Domain Registered', description: 'Triggered when a new domain is successfully registered' },
+    { id: EVENT_REGISTRY.domain.domain.renewed, category: 'domain', entity: 'domain', action: 'renewed', name: 'Domain Renewed', description: 'Triggered when a domain is renewed' },
+    { id: EVENT_REGISTRY.domain.domain.transferred_in, category: 'domain', entity: 'domain', action: 'transferred_in', name: 'Domain Transferred In', description: 'Triggered when a domain is transferred into the platform' },
+    { id: EVENT_REGISTRY.domain.domain.transferred_out, category: 'domain', entity: 'domain', action: 'transferred_out', name: 'Domain Transferred Out', description: 'Triggered when a domain is transferred out of the platform' },
+    { id: EVENT_REGISTRY.domain.domain.expiring_soon, category: 'domain', entity: 'domain', action: 'expiring_soon', name: 'Domain Expiring Soon', description: 'Triggered when a domain is approaching expiration (30/14/7 days)' },
+    { id: EVENT_REGISTRY.domain.domain.expired, category: 'domain', entity: 'domain', action: 'expired', name: 'Domain Expired', description: 'Triggered when a domain expires' },
+    { id: EVENT_REGISTRY.domain.domain.suspended, category: 'domain', entity: 'domain', action: 'suspended', name: 'Domain Suspended', description: 'Triggered when a domain is suspended' },
+    { id: EVENT_REGISTRY.domain.domain.reactivated, category: 'domain', entity: 'domain', action: 'reactivated', name: 'Domain Reactivated', description: 'Triggered when a suspended domain is reactivated' },
+    { id: EVENT_REGISTRY.domain.domain.auto_renewed, category: 'domain', entity: 'domain', action: 'auto_renewed', name: 'Domain Auto-Renewed', description: 'Triggered when a domain is automatically renewed' },
+    { id: EVENT_REGISTRY.domain.domain.nameservers_changed, category: 'domain', entity: 'domain', action: 'nameservers_changed', name: 'Nameservers Changed', description: 'Triggered when domain nameservers are updated' },
+    // DNS Events
+    { id: EVENT_REGISTRY.domain.dns.record_created, category: 'domain', entity: 'dns', action: 'record_created', name: 'DNS Record Created', description: 'Triggered when a new DNS record is created' },
+    { id: EVENT_REGISTRY.domain.dns.record_updated, category: 'domain', entity: 'dns', action: 'record_updated', name: 'DNS Record Updated', description: 'Triggered when a DNS record is updated' },
+    { id: EVENT_REGISTRY.domain.dns.record_deleted, category: 'domain', entity: 'dns', action: 'record_deleted', name: 'DNS Record Deleted', description: 'Triggered when a DNS record is deleted' },
+    { id: EVENT_REGISTRY.domain.dns.zone_created, category: 'domain', entity: 'dns', action: 'zone_created', name: 'DNS Zone Created', description: 'Triggered when a DNS zone is created' },
+    { id: EVENT_REGISTRY.domain.dns.ssl_provisioned, category: 'domain', entity: 'dns', action: 'ssl_provisioned', name: 'SSL Certificate Provisioned', description: 'Triggered when an SSL certificate is provisioned' },
+    { id: EVENT_REGISTRY.domain.dns.propagation_complete, category: 'domain', entity: 'dns', action: 'propagation_complete', name: 'DNS Propagation Complete', description: 'Triggered when DNS changes have fully propagated' },
+    // Email Events
+    { id: EVENT_REGISTRY.domain.email.subscription_created, category: 'domain', entity: 'email', action: 'subscription_created', name: 'Email Subscription Created', description: 'Triggered when a new email subscription is created' },
+    { id: EVENT_REGISTRY.domain.email.subscription_cancelled, category: 'domain', entity: 'email', action: 'subscription_cancelled', name: 'Email Subscription Cancelled', description: 'Triggered when an email subscription is cancelled' },
+    { id: EVENT_REGISTRY.domain.email.account_created, category: 'domain', entity: 'email', action: 'account_created', name: 'Email Account Created', description: 'Triggered when a new email account is created' },
+    { id: EVENT_REGISTRY.domain.email.account_deleted, category: 'domain', entity: 'email', action: 'account_deleted', name: 'Email Account Deleted', description: 'Triggered when an email account is deleted' },
+    { id: EVENT_REGISTRY.domain.email.quota_warning, category: 'domain', entity: 'email', action: 'quota_warning', name: 'Email Quota Warning', description: 'Triggered when an email account approaches its storage quota' },
+    // Order Events
+    { id: EVENT_REGISTRY.domain.order.created, category: 'domain', entity: 'order', action: 'created', name: 'Domain Order Created', description: 'Triggered when a new domain order is placed' },
+    { id: EVENT_REGISTRY.domain.order.completed, category: 'domain', entity: 'order', action: 'completed', name: 'Domain Order Completed', description: 'Triggered when a domain order is successfully completed' },
+    { id: EVENT_REGISTRY.domain.order.failed, category: 'domain', entity: 'order', action: 'failed', name: 'Domain Order Failed', description: 'Triggered when a domain order fails' },
+    { id: EVENT_REGISTRY.domain.order.refunded, category: 'domain', entity: 'order', action: 'refunded', name: 'Domain Order Refunded', description: 'Triggered when a domain order is refunded' },
+    // Transfer Events
+    { id: EVENT_REGISTRY.domain.transfer.initiated, category: 'domain', entity: 'transfer', action: 'initiated', name: 'Transfer Initiated', description: 'Triggered when a domain transfer is initiated' },
+    { id: EVENT_REGISTRY.domain.transfer.auth_required, category: 'domain', entity: 'transfer', action: 'auth_required', name: 'Transfer Auth Required', description: 'Triggered when a domain transfer requires authorization' },
+    { id: EVENT_REGISTRY.domain.transfer.approved, category: 'domain', entity: 'transfer', action: 'approved', name: 'Transfer Approved', description: 'Triggered when a domain transfer is approved' },
+    { id: EVENT_REGISTRY.domain.transfer.completed, category: 'domain', entity: 'transfer', action: 'completed', name: 'Transfer Completed', description: 'Triggered when a domain transfer is successfully completed' },
+    { id: EVENT_REGISTRY.domain.transfer.failed, category: 'domain', entity: 'transfer', action: 'failed', name: 'Transfer Failed', description: 'Triggered when a domain transfer fails' },
+    { id: EVENT_REGISTRY.domain.transfer.cancelled, category: 'domain', entity: 'transfer', action: 'cancelled', name: 'Transfer Cancelled', description: 'Triggered when a domain transfer is cancelled' },
   )
   
   return events
