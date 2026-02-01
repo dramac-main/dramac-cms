@@ -26,16 +26,19 @@ interface DashboardShellProps extends React.HTMLAttributes<HTMLDivElement> {
 /**
  * DashboardShell - Consistent wrapper for dashboard page content
  * 
+ * NOTE: Padding is now handled globally by dashboard-layout-client.tsx
+ * This component provides structural organization (header/content/footer)
+ * and optional max-width constraints.
+ * 
  * Provides:
- * - Consistent responsive padding
- * - Optional max-width constraint
  * - Header/content/footer structure
  * - Gap spacing between sections
+ * - Optional max-width constraint (for pages that need it within the global max-width)
  */
 export function DashboardShell({
   children,
-  noPadding = false,
-  noMaxWidth = false,
+  noPadding = true, // Default to no padding since layout handles it
+  noMaxWidth = true, // Default to no max-width since layout handles it
   header,
   footer,
   className,
@@ -45,17 +48,11 @@ export function DashboardShell({
     <div
       className={cn(
         // Base styles
-        'flex flex-col min-h-full',
-        // Responsive padding using CSS custom properties
-        !noPadding && [
-          'p-4 md:p-6 lg:p-8',
-          // Alternative: using explicit values from LAYOUT
-          // `p-[${LAYOUT.PAGE_PADDING.MOBILE}px]`,
-          // `md:p-[${LAYOUT.PAGE_PADDING.TABLET}px]`,
-          // `lg:p-[${LAYOUT.PAGE_PADDING.DESKTOP}px]`,
-        ],
-        // Max width constraint (keeps content readable on wide screens)
-        !noMaxWidth && 'max-w-7xl mx-auto w-full',
+        'flex flex-col min-h-full w-full',
+        // Optional padding (disabled by default - layout provides global padding)
+        !noPadding && 'p-4 md:p-6 lg:p-8',
+        // Optional max width constraint
+        !noMaxWidth && 'max-w-7xl mx-auto',
         className
       )}
       {...props}

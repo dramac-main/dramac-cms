@@ -111,10 +111,14 @@ function DashboardLayoutInner({
         <Header />
         <main className={cn(
           "flex-1 overflow-auto",
+          // Consistent responsive padding for all page content
+          "p-4 md:p-6 lg:p-8",
           // Add bottom padding on mobile when bottom nav is shown
-          showBottomNav && "pb-16 md:pb-0"
+          showBottomNav && "pb-20 md:pb-8"
         )}>
-          {children}
+          <div className="mx-auto w-full max-w-7xl">
+            {children}
+          </div>
         </main>
       </div>
       
