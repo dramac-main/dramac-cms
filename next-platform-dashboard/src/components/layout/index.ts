@@ -43,8 +43,5 @@ export { CommandPalette } from "./command-palette";
 export { SidebarSearch } from "./sidebar-search";
 export { QuickActions, SidebarQuickActions } from "./quick-actions";
 
-// Legacy Header (for backwards compatibility during migration)
-export { Header as LegacyHeader } from "./header";
-
-// NOTE: Legacy sidebar removed - use Sidebar with variant prop instead
+// NOTE: Legacy sidebar and header removed - use modern components instead
 

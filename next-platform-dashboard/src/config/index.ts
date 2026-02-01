@@ -18,6 +18,7 @@ export {
 } from './settings-navigation';
 export { 
   getPortalNavigation,
+  getPortalNavigationGroups,
   type PortalNavItem,
   type PortalUserPermissions 
 } from './portal-navigation';
