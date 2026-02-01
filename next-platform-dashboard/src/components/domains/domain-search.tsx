@@ -1,0 +1,261 @@
+"use client";
+
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { Search, Loader2, Globe, Check, X, Star, ShoppingCart, RefreshCw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { searchDomains } from "@/lib/actions/domains";
+import type { DomainSearchResult } from "@/types/domain";
+
+const POPULAR_TLDS = ['.com', '.net', '.org', '.io', '.co', '.app', '.dev'];
+
+interface DomainSearchProps {
+  onSelect?: (domain: DomainSearchResult) => void;
+  onAddToCart?: (domain: DomainSearchResult) => void;
+  className?: string;
+}
+
+export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchProps) {
+  const [keyword, setKeyword] = useState("");
+  const [results, setResults] = useState<DomainSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedTlds, setSelectedTlds] = useState<string[]>(POPULAR_TLDS);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const router = useRouter();
+  
+  const performSearch = useCallback(async (searchKeyword: string) => {
+    if (!searchKeyword || searchKeyword.length < 2) {
+      setResults([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    setError(null);
+    
+    try {
+      const response = await searchDomains(searchKeyword, selectedTlds);
+      if (response.success && response.data) {
+        setResults(response.data);
+      } else {
+        setError(response.error || 'Search failed');
+      }
+    } catch {
+      setError('An error occurred');
+    } finally {
+      setIsSearching(false);
+    }
+  }, [selectedTlds]);
+  
+  const handleKeywordChange = useCallback((value: string) => {
+    // Remove spaces and special characters except hyphens
+    const cleaned = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    setKeyword(cleaned);
+    
+    // Debounce search
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    const timeout = setTimeout(() => {
+      performSearch(cleaned);
+    }, 500);
+    
+    setSearchTimeout(timeout);
+  }, [performSearch, searchTimeout]);
+  
+  const handleManualSearch = () => {
+    if (keyword.length >= 2) {
+      performSearch(keyword);
+    }
+  };
+  
+  const toggleTld = (tld: string) => {
+    setSelectedTlds(prev => 
+      prev.includes(tld) 
+        ? prev.filter(t => t !== tld)
+        : [...prev, tld]
+    );
+  };
+  
+  const handleSelect = (result: DomainSearchResult) => {
+    if (onSelect) {
+      onSelect(result);
+    } else if (onAddToCart) {
+      onAddToCart(result);
+    } else {
+      // Navigate to cart with domain
+      router.push(`/dashboard/domains/cart?domain=${encodeURIComponent(result.domain)}`);
+    }
+  };
+  
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(price);
+  };
+  
+  return (
+    <div className={cn("space-y-6", className)}>
+      {/* Search Input */}
+      <div className="relative flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search for your perfect domain..."
+            value={keyword}
+            onChange={(e) => handleKeywordChange(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleManualSearch()}
+            className="pl-12 pr-12 h-14 text-lg"
+          />
+          {isSearching && (
+            <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-5 w-5 animate-spin text-muted-foreground" />
+          )}
+        </div>
+        <Button 
+          size="lg" 
+          className="h-14 px-6"
+          onClick={handleManualSearch}
+          disabled={isSearching || keyword.length < 2}
+        >
+          <Search className="h-5 w-5 mr-2" />
+          Search
+        </Button>
+      </div>
+      
+      {/* TLD Filter */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground mr-2">Extensions:</span>
+        {POPULAR_TLDS.map(tld => (
+          <Badge
+            key={tld}
+            variant={selectedTlds.includes(tld) ? "default" : "outline"}
+            className="cursor-pointer transition-colors"
+            onClick={() => toggleTld(tld)}
+          >
+            {tld}
+          </Badge>
+        ))}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setSelectedTlds(POPULAR_TLDS)}
+          className="ml-2"
+        >
+          <RefreshCw className="h-3 w-3 mr-1" />
+          Reset
+        </Button>
+      </div>
+      
+      {/* Error */}
+      {error && (
+        <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+          {error}
+        </div>
+      )}
+      
+      {/* Results */}
+      {results.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-muted-foreground">
+            {results.filter(r => r.available).length} available of {results.length} checked
+          </h3>
+          
+          <div className="grid gap-3">
+            {results.map(result => (
+              <Card 
+                key={result.domain}
+                className={cn(
+                  "transition-all cursor-pointer hover:shadow-md",
+                  result.available 
+                    ? "border-green-500/50 hover:border-green-500" 
+                    : "opacity-60"
+                )}
+                onClick={() => result.available && handleSelect(result)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {result.available ? (
+                        <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
+                          <Check className="h-5 w-5 text-green-500" />
+                        </div>
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                          <X className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-lg">{result.domain}</span>
+                          {result.premium && (
+                            <Badge variant="secondary" className="gap-1">
+                              <Star className="h-3 w-3" />
+                              Premium
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {result.available ? 'Available for registration' : 'Already registered'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {result.available && (
+                      <div className="text-right flex items-center gap-4">
+                        <div>
+                          <p className="font-bold text-xl">
+                            {formatPrice(result.retailPrices.register[1] || 0)}
+                            <span className="text-sm font-normal text-muted-foreground">/year</span>
+                          </p>
+                          {result.retailPrices.renew[1] && (
+                            <p className="text-xs text-muted-foreground">
+                              Renews at {formatPrice(result.retailPrices.renew[1])}/yr
+                            </p>
+                          )}
+                        </div>
+                        <Button size="sm" className="gap-2">
+                          <ShoppingCart className="h-4 w-4" />
+                          Add to Cart
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      {/* Empty State */}
+      {keyword && keyword.length >= 2 && !isSearching && results.length === 0 && !error && (
+        <div className="text-center py-12">
+          <Globe className="h-16 w-16 mx-auto text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-medium">No results found</h3>
+          <p className="text-muted-foreground mt-1">
+            Try a different keyword or select more extensions
+          </p>
+        </div>
+      )}
+      
+      {/* Initial State */}
+      {!keyword && results.length === 0 && !isSearching && (
+        <div className="text-center py-12 border-2 border-dashed rounded-lg">
+          <Globe className="h-16 w-16 mx-auto text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-medium">Find Your Perfect Domain</h3>
+          <p className="text-muted-foreground mt-1 max-w-md mx-auto">
+            Enter a keyword above to search for available domains. 
+            We&apos;ll check availability across multiple TLDs instantly.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
