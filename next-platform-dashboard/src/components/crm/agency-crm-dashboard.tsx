@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -98,36 +97,28 @@ export function AgencyCRMDashboard({ agencyId, sites }: AgencyCRMDashboardProps)
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="CRM"
-        description={
-          selectedSiteId === "all"
-            ? "Customer Relationship Management across all your sites"
-            : "Customer Relationship Management for selected site"
-        }
-      >
-        <div className="flex items-center gap-2">
-          <Select value={selectedSiteId} onValueChange={handleSiteChange}>
-            <SelectTrigger className="w-[250px]">
-              <Globe className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="All Sites" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
-                  <span>All Sites ({sites.length})</span>
-                </div>
+      {/* Site Filter */}
+      <div className="flex items-center justify-end">
+        <Select value={selectedSiteId} onValueChange={handleSiteChange}>
+          <SelectTrigger className="w-[250px]">
+            <Globe className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="All Sites" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4" />
+                <span>All Sites ({sites.length})</span>
+              </div>
+            </SelectItem>
+            {sites.map((site) => (
+              <SelectItem key={site.id} value={site.id}>
+                {site.name}
               </SelectItem>
-              {sites.map((site) => (
-                <SelectItem key={site.id} value={site.id}>
-                  {site.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </PageHeader>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* No Sites Warning */}
       {sites.length === 0 && (
