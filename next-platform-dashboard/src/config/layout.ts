@@ -34,10 +34,10 @@ export const LAYOUT = {
   // CONTENT MAX WIDTH
   // ============================================
   
-  /** Standard content width: 1536px */
+  /** Standard content width: 1536px (wider for better space usage) */
   CONTENT_MAX_WIDTH: 'max-w-screen-2xl',
   
-  /** Large content width: 1280px */
+  /** Previous standard width: 1280px */
   CONTENT_MAX_WIDTH_LG: 'max-w-screen-xl',
   
   /** Medium content width: 1024px */

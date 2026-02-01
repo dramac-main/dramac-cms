@@ -116,7 +116,7 @@ function DashboardLayoutInner({
           // Add bottom padding on mobile when bottom nav is shown
           showBottomNav && "pb-20 md:pb-8"
         )}>
-          <div className="mx-auto w-full max-w-7xl">
+          <div className="mx-auto w-full max-w-screen-2xl">
             {children}
           </div>
         </main>
