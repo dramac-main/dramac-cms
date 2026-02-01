@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { format, formatDistanceToNow } from "date-fns";
 import { 
   Globe, 
@@ -59,8 +60,13 @@ export function DomainList({
   isLoading,
   className,
 }: DomainListProps) {
+  const router = useRouter();
   const [sortColumn, setSortColumn] = useState<'domain_name' | 'expiry_date' | 'status'>('domain_name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleRowClick = (domain: DomainWithDetails) => {
+    router.push(`/dashboard/domains/${domain.id}`);
+  };
 
   const handleSort = (column: 'domain_name' | 'expiry_date' | 'status') => {
     if (sortColumn === column) {
@@ -163,7 +169,11 @@ export function DomainList({
             const expiringSoon = isExpiringSoon(domain.expiry_date);
             
             return (
-              <TableRow key={domain.id}>
+              <TableRow 
+                key={domain.id} 
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => handleRowClick(domain)}
+              >
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -230,7 +240,7 @@ export function DomainList({
                     <span className="text-muted-foreground text-sm">Not connected</span>
                   )}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
@@ -242,13 +252,17 @@ export function DomainList({
                         <Settings className="h-4 w-4 mr-2" />
                         Manage Domain
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => window.location.href = `/dashboard/domains/${domain.id}/dns`}>
+                      <DropdownMenuItem onClick={() => router.push(`/dashboard/domains/${domain.id}/dns`)}>
                         <Globe className="h-4 w-4 mr-2" />
                         DNS Settings
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => window.location.href = `/dashboard/domains/${domain.id}/email`}>
+                      <DropdownMenuItem onClick={() => router.push(`/dashboard/domains/${domain.id}/email`)}>
                         <Mail className="h-4 w-4 mr-2" />
                         Email Accounts
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(`/dashboard/domains/${domain.id}/settings`)}>
+                        <Settings className="h-4 w-4 mr-2" />
+                        Domain Settings
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => onRenew(domain)}>

@@ -87,7 +87,7 @@ async function DomainDetails({ domainId }: { domainId: string }) {
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link href={`/dashboard/domains/${domain.id}/dns`}>
-              <Settings className="h-4 w-4 mr-2" />
+              <Globe className="h-4 w-4 mr-2" />
               DNS
             </Link>
           </Button>
@@ -95,6 +95,12 @@ async function DomainDetails({ domainId }: { domainId: string }) {
             <Link href={`/dashboard/domains/${domain.id}/email`}>
               <Mail className="h-4 w-4 mr-2" />
               Email
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href={`/dashboard/domains/${domain.id}/settings`}>
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
             </Link>
           </Button>
         </div>

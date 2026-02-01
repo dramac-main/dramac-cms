@@ -5,19 +5,13 @@ import Link from "next/link";
 import { 
   ArrowLeft, 
   Server, 
-  Plus, 
   Info,
-  Globe,
-  Mail,
-  FileText,
   Shield,
-  RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -33,6 +27,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getDomain } from "@/lib/actions/domains";
+import { DnsActions, DnsQuickTemplates, DnsRecordActions } from "./dns-actions-client";
 
 interface DnspageProps {
   params: Promise<{ domainId: string }>;
@@ -90,16 +85,7 @@ async function DnsContent({ domainId }: { domainId: string }) {
             Manage DNS records for {domain.domain_name}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Sync
-          </Button>
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Record
-          </Button>
-        </div>
+        <DnsActions domainName={domain.domain_name} />
       </div>
       
       {/* Status */}
@@ -151,24 +137,7 @@ async function DnsContent({ domainId }: { domainId: string }) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Button variant="outline" className="h-auto flex-col py-3">
-              <Globe className="h-5 w-5 mb-1" />
-              <span className="text-xs">Website</span>
-            </Button>
-            <Button variant="outline" className="h-auto flex-col py-3">
-              <Mail className="h-5 w-5 mb-1" />
-              <span className="text-xs">Titan Email</span>
-            </Button>
-            <Button variant="outline" className="h-auto flex-col py-3">
-              <FileText className="h-5 w-5 mb-1" />
-              <span className="text-xs">Google Workspace</span>
-            </Button>
-            <Button variant="outline" className="h-auto flex-col py-3">
-              <Shield className="h-5 w-5 mb-1" />
-              <span className="text-xs">Security (SPF/DKIM)</span>
-            </Button>
-          </div>
+          <DnsQuickTemplates domainName={domain.domain_name} />
         </CardContent>
       </Card>
       
@@ -234,9 +203,12 @@ async function DnsContent({ domainId }: { domainId: string }) {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm">
-                      Edit
-                    </Button>
+                    <DnsRecordActions 
+                      recordId={record.id}
+                      recordType={record.type}
+                      recordName={record.name}
+                      domainName={domain.domain_name}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

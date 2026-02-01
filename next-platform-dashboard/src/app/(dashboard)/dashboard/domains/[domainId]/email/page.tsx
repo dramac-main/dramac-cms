@@ -122,7 +122,7 @@ async function EmailContent({ domainId }: { domainId: string }) {
                 Active
               </Badge>
               <Button variant="outline" size="sm" asChild>
-                <a href="https://mail.titan.email" target="_blank" rel="noopener noreferrer">
+                <a href="https://app.titan.email" target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Webmail
                 </a>
@@ -244,7 +244,7 @@ async function EmailContent({ domainId }: { domainId: string }) {
                       <Settings className="h-4 w-4" />
                     </Button>
                     <Button variant="outline" size="sm" asChild>
-                      <a href={`https://mail.titan.email?email=${encodeURIComponent(account.email)}`} target="_blank" rel="noopener noreferrer">
+                      <a href={`https://app.titan.email`} target="_blank" rel="noopener noreferrer">
                         <ExternalLink className="h-3 w-3 mr-1" />
                         Login
                       </a>
