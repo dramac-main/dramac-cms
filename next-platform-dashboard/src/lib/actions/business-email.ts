@@ -302,6 +302,54 @@ export async function renewBusinessEmailOrder(
 // ============================================================================
 
 /**
+ * Get email order stats for the current agency
+ */
+export async function getBusinessEmailStats(): Promise<{
+  success: boolean;
+  data?: {
+    total: number;
+    active: number;
+    accounts: number;
+    expiringSoon: number;
+  };
+  error?: string;
+}> {
+  const supabase = await createClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+  
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('agency_id')
+    .eq('id', user.id)
+    .single();
+  
+  if (!profile?.agency_id) return { success: false, error: 'No agency found' };
+
+  // Get counts
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: orders } = await (supabase as any)
+    .from('email_orders')
+    .select('id, status, number_of_accounts, used_accounts, expiry_date')
+    .eq('agency_id', profile.agency_id);
+
+  if (!orders) return { success: true, data: { total: 0, active: 0, accounts: 0, expiringSoon: 0 } };
+
+  const now = new Date();
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  const stats = {
+    total: orders.length,
+    active: orders.filter((o: { status: string }) => o.status === 'Active').length,
+    accounts: orders.reduce((sum: number, o: { used_accounts: number }) => sum + o.used_accounts, 0),
+    expiringSoon: orders.filter((o: { expiry_date: string }) => new Date(o.expiry_date) < thirtyDaysFromNow).length,
+  };
+
+  return { success: true, data: stats };
+}
+
+/**
  * Create a new email account
  */
 export async function createBusinessEmailAccount(formData: FormData): Promise<{
