@@ -145,3 +145,15 @@ export { FormSection, FormCardSection } from "./form-section";
 export { FormFieldGroup, FormFieldRow, OptionalFieldWrapper, FieldHint } from "./form-field-group";
 export { PasswordInput } from "./password-input";
 export { DateInput, DateRangeInput } from "./date-input";
+
+// Part 6 - PHASE-EH-03: Form Validation UI Components
+export { StandaloneFormField, SimpleFormField } from "./standalone-form-field";
+export { FormErrorSummary, CompactErrorSummary } from "./form-error-summary";
+export { 
+  InlineMessage, 
+  InlineError, 
+  InlineWarning, 
+  InlineSuccess, 
+  InlineInfo,
+  FieldError 
+} from "./inline-error";

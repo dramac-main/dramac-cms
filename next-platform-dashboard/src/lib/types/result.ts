@@ -169,3 +169,102 @@ export function unwrap<T>(result: ActionResult<T>): T {
   }
   throw new Error(result.error.message);
 }
+
+/**
+ * Helper to extract data from result or return default
+ */
+export function unwrapOr<T>(result: ActionResult<T>, defaultValue: T): T {
+  if (isSuccess(result)) {
+    return result.data;
+  }
+  return defaultValue;
+}
+
+/**
+ * Helper to map successful result data
+ */
+export function mapResult<T, U>(
+  result: ActionResult<T>,
+  mapper: (data: T) => U
+): ActionResult<U> {
+  if (isSuccess(result)) {
+    return { success: true, data: mapper(result.data) };
+  }
+  return result;
+}
+
+/**
+ * Helper to chain async operations that return ActionResult
+ */
+export async function chainResult<T, U>(
+  result: ActionResult<T>,
+  nextFn: (data: T) => Promise<ActionResult<U>>
+): Promise<ActionResult<U>> {
+  if (isSuccess(result)) {
+    return nextFn(result.data);
+  }
+  return result;
+}
+
+/**
+ * Helper to combine multiple ActionResults into one
+ * Returns first error encountered or all data combined
+ */
+export function combineResults<T extends Record<string, unknown>>(
+  results: { [K in keyof T]: ActionResult<T[K]> }
+): ActionResult<T> {
+  const keys = Object.keys(results) as (keyof T)[];
+  const data = {} as T;
+  
+  for (const key of keys) {
+    const result = results[key];
+    if (!result.success) {
+      return result;
+    }
+    data[key] = result.data;
+  }
+  
+  return { success: true, data };
+}
+
+/**
+ * Wrap an async function to always return ActionResult
+ * Catches any thrown errors and converts to ActionError
+ */
+export async function tryCatch<T>(
+  fn: () => Promise<T>
+): Promise<ActionResult<T>> {
+  try {
+    const data = await fn();
+    return { success: true, data };
+  } catch (error) {
+    return { success: false, error: Errors.fromError(error) };
+  }
+}
+
+/**
+ * Type for form field errors compatible with react-hook-form
+ */
+export type FieldErrors = Record<string, string[]>;
+
+/**
+ * Convert ActionError with details to react-hook-form compatible format
+ */
+export function toFieldErrors(error: ActionError): FieldErrors | null {
+  if (error.code === 'VALIDATION_ERROR' && error.details) {
+    return error.details;
+  }
+  return null;
+}
+
+/**
+ * Get the first error message from field errors
+ */
+export function getFirstError(errors: FieldErrors | null): string | null {
+  if (!errors) return null;
+  const firstKey = Object.keys(errors)[0];
+  if (firstKey && errors[firstKey]?.[0]) {
+    return errors[firstKey][0];
+  }
+  return null;
+}
