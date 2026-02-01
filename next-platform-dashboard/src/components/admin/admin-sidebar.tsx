@@ -1,90 +1,40 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  Building2,
-  Users,
-  CreditCard,
-  BarChart3,
-  Settings,
-  Shield,
-  Activity,
-  AlertTriangle,
-  ArrowLeft,
-  Package,
-} from "lucide-react";
+import { Sidebar } from "@/components/layout/sidebar-modern";
+import { adminNavigationItems } from "@/config/admin-navigation";
+import type { NavGroup } from "@/config/navigation";
 
-const adminNav = [
-  { name: "Overview", href: "/admin", icon: LayoutDashboard },
-  { name: "Agencies", href: "/admin/agencies", icon: Building2 },
-  { name: "Agency Analytics", href: "/admin/agencies/analytics", icon: BarChart3 },
-  { name: "Users", href: "/admin/users", icon: Users },
-  { name: "Modules", href: "/admin/modules", icon: Package },
-  { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
-  { name: "Billing & Revenue", href: "/admin/billing/revenue", icon: CreditCard },
-  { name: "Platform Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { name: "Activity Log", href: "/admin/activity", icon: Activity },
-  { name: "System Health", href: "/admin/health", icon: AlertTriangle },
-  { name: "Settings", href: "/admin/settings", icon: Settings },
-];
-
+/**
+ * AdminSidebar - Uses the unified Sidebar component with admin variant
+ * 
+ * The admin sidebar displays platform-level admin navigation.
+ * It uses the variant="admin" which provides:
+ * - Admin header with shield icon
+ * - "Back to Dashboard" footer link
+ * - Proper admin styling using CSS variables
+ */
 export function AdminSidebar() {
-  const pathname = usePathname();
+  // Transform admin navigation to NavGroup format for the unified sidebar
+  const adminNavGroups: NavGroup[] = [
+    {
+      title: "Administration",
+      items: adminNavigationItems.map((item) => ({
+        title: item.name,
+        href: item.href,
+        icon: item.icon,
+        badge: item.badge,
+      })),
+    },
+  ];
 
   return (
-    <aside className="relative w-64 bg-card border-r flex flex-col">
-      <div className="p-4 border-b">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-destructive flex items-center justify-center">
-            <Shield className="w-4 h-4 text-white" />
-          </div>
-          <div>
-            <h2 className="font-semibold">Admin Panel</h2>
-            <p className="text-xs text-muted-foreground">Super Admin Access</p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex-1 p-4">
-        <ul className="space-y-1">
-          {adminNav.map((item) => {
-            const Icon = item.icon;
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/admin" && pathname.startsWith(item.href));
-
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                    isActive
-                      ? "bg-destructive text-white"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                  )}
-                >
-                  <Icon className="w-4 h-4" />
-                  {item.name}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-
-      <div className="p-4 border-t">
-        <Link
-          href="/dashboard"
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
-        </Link>
-      </div>
-    </aside>
+    <Sidebar
+      variant="admin"
+      customNavigation={adminNavGroups}
+      showLogo={true}
+      collapsible={false}
+    />
   );
 }
+
+export default AdminSidebar;

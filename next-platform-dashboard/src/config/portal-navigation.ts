@@ -18,6 +18,7 @@ import {
   Search,
   type LucideIcon,
 } from "lucide-react";
+import type { NavGroup, NavItem } from "./navigation";
 
 export interface PortalNavItem {
   href: string;
@@ -35,7 +36,7 @@ export interface PortalUserPermissions {
  * Get portal navigation based on user permissions
  * @param permissions - User's portal permissions
  * @param openTicketCount - Number of open support tickets (for badge)
- * @returns Array of navigation items
+ * @returns Array of navigation items grouped by category
  */
 export function getPortalNavigation(
   permissions: PortalUserPermissions,
@@ -90,4 +91,45 @@ export function getPortalNavigation(
   });
 
   return { main: mainLinks, features: featureLinks, support: supportLinks };
+}
+
+/**
+ * Convert portal navigation to NavGroup format for unified sidebar
+ * @param permissions - User's portal permissions
+ * @param openTicketCount - Number of open support tickets (for badge)
+ * @returns Navigation groups compatible with the unified Sidebar component
+ */
+export function getPortalNavigationGroups(
+  permissions: PortalUserPermissions,
+  openTicketCount: number = 0
+): NavGroup[] {
+  const nav = getPortalNavigation(permissions, openTicketCount);
+  
+  const toNavItems = (items: PortalNavItem[]): NavItem[] =>
+    items.map((item) => ({
+      title: item.label,
+      href: item.href,
+      icon: item.icon,
+      badge: item.badge,
+    }));
+
+  const groups: NavGroup[] = [
+    {
+      items: toNavItems(nav.main),
+    },
+  ];
+
+  if (nav.features.length > 0) {
+    groups.push({
+      title: "Features",
+      items: toNavItems(nav.features),
+    });
+  }
+
+  groups.push({
+    title: "Support",
+    items: toNavItems(nav.support),
+  });
+
+  return groups;
 }
