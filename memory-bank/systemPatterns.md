@@ -1,6 +1,26 @@
 # System Patterns: DRAMAC Architecture
 
-**Last Updated**: January 26, 2026
+**Last Updated**: February 1, 2026
+
+## Development Workflow
+
+### Git Commit Pattern
+**CRITICAL**: Always verify TypeScript compilation before committing:
+```bash
+# 1. Check for TypeScript errors
+npx tsc --noEmit
+
+# 2. If zero errors, commit and push immediately
+git add -A
+git commit -m "feat: [descriptive message]"
+git push
+```
+
+**Guideline**: After completing any phase or significant feature:
+1. Run `npx tsc --noEmit` to verify zero errors
+2. If successful, immediately commit with descriptive message
+3. Push to remote repository
+4. Update memory bank with completion status
 
 ## Architecture Overview
 

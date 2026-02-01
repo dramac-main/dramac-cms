@@ -1,9 +1,81 @@
+# PHASE-UI-01B: Unify Sidebar Component with Variant Support
+
+**Phase ID**: PHASE-UI-01B  
+**Priority**: CRITICAL  
+**Estimated Time**: 2 hours  
+**Dependencies**: PHASE-UI-01A (config files must exist)  
+**Commit After**: Yes (if zero TypeScript errors)
+
+---
+
+## 🎯 OBJECTIVE
+
+Enhance the `sidebar-modern.tsx` component to support multiple variants (main, admin, portal, settings) while adding sticky positioning and proper theme colors. This creates ONE unified sidebar component for the entire platform.
+
+---
+
+## 📋 PRE-REQUISITES
+
+Before starting, verify these files exist:
+- `src/config/layout.ts`
+- `src/config/admin-navigation.ts`
+- `src/config/settings-navigation.ts`
+- `src/config/portal-navigation.ts`
+
+---
+
+## 📋 TASKS
+
+### Task 1: Update sidebar-modern.tsx with Variant Support
+
+**File**: `src/components/layout/sidebar-modern.tsx`
+
+**Action**: Completely update this file to support variants.
+
+**Instructions**:
+1. Read the current `sidebar-modern.tsx` file
+2. Add variant prop and variant-specific rendering
+3. Add sticky positioning
+4. Ensure all colors use `--sidebar-*` CSS variables
+5. Keep existing animation logic
+
+**Key Changes**:
+- Add `variant` prop: `'main' | 'admin' | 'portal' | 'settings'`
+- Add `customNavigation` prop for passing dynamic navigation
+- Add `headerComponent` and `footerComponent` props
+- Update desktop sidebar to use `sticky top-0`
+- Ensure mobile sidebar still works as overlay
+
+**Updated Component Interface**:
+
+```typescript
+interface SidebarProps {
+  className?: string;
+  isSuperAdmin?: boolean;
+  /** Sidebar variant determines styling and default navigation */
+  variant?: 'main' | 'admin' | 'portal' | 'settings';
+  /** Override default navigation with custom items */
+  customNavigation?: NavGroup[];
+  /** Custom header component (replaces logo for some variants) */
+  headerComponent?: React.ReactNode;
+  /** Custom footer component (e.g., "Back to Dashboard" link) */
+  footerComponent?: React.ReactNode;
+  /** Whether the sidebar can collapse (main variant only) */
+  collapsible?: boolean;
+  /** Whether to show the logo */
+  showLogo?: boolean;
+}
+```
+
+**Replace the entire file with this updated version**:
+
+```typescript
 "use client";
 
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronLeft, X, Shield, ArrowLeft } from "lucide-react";
+import { ChevronLeft, Menu, X, Shield, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -123,9 +195,6 @@ export function Sidebar({
   const header = headerComponent ?? (isAdminVariant ? <AdminHeader /> : null);
   const footer = footerComponent ?? (isAdminVariant ? <AdminFooter /> : null);
 
-  // Effective collapsed state (only for collapsible variants)
-  const isCollapsed = collapsible ? collapsed : false;
-
   // Close mobile sidebar on route change
   useEffect(() => {
     closeMobile();
@@ -142,6 +211,9 @@ export function Sidebar({
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
+
+  // Effective collapsed state (only for collapsible variants)
+  const isCollapsed = collapsible ? collapsed : false;
 
   const sidebarContent = (
     <TooltipProvider delayDuration={0}>
@@ -234,7 +306,7 @@ export function Sidebar({
       </nav>
 
       {/* Bottom Navigation */}
-      {(bottomNav.length > 0 || footer || (isSuperAdmin && isMainVariant)) && (
+      {(bottomNav.length > 0 || footer) && (
         <div className="border-t border-sidebar-border py-4">
           {/* Admin Panel link - only for super admins on main variant */}
           {isSuperAdmin && isMainVariant && (
@@ -321,6 +393,10 @@ export function Sidebar({
   );
 }
 
+// ============================================
+// NAV GROUP COMPONENT
+// ============================================
+
 function NavGroupComponent({
   group,
   collapsed,
@@ -365,6 +441,10 @@ function NavGroupComponent({
     </div>
   );
 }
+
+// ============================================
+// NAV ITEM COMPONENT
+// ============================================
 
 function NavItemComponent({
   item,
@@ -452,3 +532,146 @@ function NavItemComponent({
 // ============================================
 
 export type { SidebarProps };
+```
+
+---
+
+### Task 2: Remove Duplicate Hamburger Menu from Sidebar
+
+**Note**: The updated sidebar above does NOT include a hamburger menu trigger button outside the sidebar. The header will be the single location for the mobile menu trigger.
+
+The mobile menu button has been removed from the sidebar. It only exists in `header-modern.tsx`.
+
+---
+
+### Task 3: Delete Legacy Sidebar File
+
+**File**: `src/components/layout/sidebar.tsx`
+
+**Action**: Delete this file entirely. It's the legacy version that's been replaced.
+
+```bash
+# Command to run (or just delete the file manually)
+rm src/components/layout/sidebar.tsx
+```
+
+---
+
+### Task 4: Update Layout Index Exports
+
+**File**: `src/components/layout/index.ts`
+
+**Action**: Update exports to remove legacy sidebar and ensure correct exports.
+
+**Find and replace the sidebar exports section**:
+
+```typescript
+// REMOVE these lines:
+export { Sidebar as LegacySidebar } from "./sidebar";
+
+// ENSURE these exports exist:
+export { Sidebar, type SidebarProps, type SidebarVariant } from "./sidebar-modern";
+```
+
+**Full updated file**:
+
+```typescript
+/**
+ * Layout Components Barrel Export
+ * 
+ * Provides centralized exports for all layout-related components.
+ * Import from '@/components/layout' for cleaner imports.
+ * 
+ * @module components/layout
+ */
+
+// Context
+export { SidebarProvider, useSidebar } from "./sidebar-context";
+
+// Unified Sidebar Component (with variants)
+export { Sidebar, type SidebarProps, type SidebarVariant } from "./sidebar-modern";
+
+// Header
+export { Header } from "./header-modern";
+
+// Dashboard Layout
+export { DashboardLayoutClient } from "./dashboard-layout-client";
+
+// Shell Components
+export { 
+  DashboardShell, 
+  DashboardSection, 
+  DashboardGrid 
+} from "./dashboard-shell";
+
+// Navigation Components
+export { Breadcrumbs } from "./breadcrumbs";
+export { PageHeader } from "./page-header";
+
+// Mobile Components
+export { MobileBottomNav, MobileBottomNavSpacer } from "./mobile-bottom-nav";
+export { SwipeHandler } from "./swipe-handler";
+export { MobileCommandSheet } from "./mobile-command-sheet";
+export { MobileActionSheet } from "./mobile-action-sheet";
+export { MobileSearchTrigger } from "./mobile-search-trigger";
+export { MobileFAB } from "./mobile-fab";
+
+// Desktop Components
+export { CommandPalette } from "./command-palette";
+export { SidebarSearch } from "./sidebar-search";
+export { QuickActions, SidebarQuickActions } from "./quick-actions";
+
+// NOTE: Legacy sidebar removed - use Sidebar with variant prop instead
+```
+
+---
+
+## ✅ VERIFICATION STEPS
+
+After making all changes, run these commands:
+
+```bash
+cd next-platform-dashboard
+
+# 1. Check TypeScript compilation
+npx tsc --noEmit --skipLibCheck
+
+# 2. If zero errors, commit and push
+cd ..
+git add .
+git commit -m "feat(ui): unify sidebar component with variant support and sticky positioning (PHASE-UI-01B)"
+git push
+```
+
+---
+
+## 📁 FILES MODIFIED
+
+| File | Action | Description |
+|------|--------|-------------|
+| `src/components/layout/sidebar-modern.tsx` | Modified | Added variant support, sticky positioning |
+| `src/components/layout/sidebar.tsx` | Deleted | Legacy sidebar removed |
+| `src/components/layout/index.ts` | Modified | Updated exports |
+
+---
+
+## 🎯 SUCCESS CRITERIA
+
+- [ ] `sidebar-modern.tsx` supports `variant` prop
+- [ ] Sidebar uses `sticky top-0 h-screen` positioning
+- [ ] All colors use `--sidebar-*` CSS variables
+- [ ] Legacy `sidebar.tsx` deleted
+- [ ] Index exports updated
+- [ ] TypeScript compiles with zero errors
+- [ ] Git commit and push successful
+
+---
+
+## 🔗 NEXT PHASE
+
+After this phase completes successfully, proceed to:
+**PHASE-UI-01C: Fix Header Mobile Menu**
+
+---
+
+**End of Phase UI-01B**

@@ -10,9 +10,13 @@
 // Context
 export { SidebarProvider, useSidebar } from "./sidebar-context";
 
-// Modern Layout Components
-export { Sidebar } from "./sidebar-modern";
+// Unified Sidebar Component (with variants)
+export { Sidebar, type SidebarProps, type SidebarVariant } from "./sidebar-modern";
+
+// Header
 export { Header } from "./header-modern";
+
+// Dashboard Layout
 export { DashboardLayoutClient } from "./dashboard-layout-client";
 
 // Shell Components
@@ -39,6 +43,8 @@ export { CommandPalette } from "./command-palette";
 export { SidebarSearch } from "./sidebar-search";
 export { QuickActions, SidebarQuickActions } from "./quick-actions";
 
-// Legacy exports (for backwards compatibility during migration)
-export { Sidebar as LegacySidebar } from "./sidebar";
+// Legacy Header (for backwards compatibility during migration)
 export { Header as LegacyHeader } from "./header";
+
+// NOTE: Legacy sidebar removed - use Sidebar with variant prop instead
+
