@@ -12,6 +12,8 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/actions/auth";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { PaddleSubscriptionCard } from "@/components/billing/paddle-subscription-card";
 import { UsageDashboard } from "@/components/billing/usage-dashboard";
 import { PaddleInvoiceHistory } from "@/components/billing/paddle-invoice-history";
@@ -55,7 +57,7 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
   }
 
   return (
-    <div className="container py-8">
+    <DashboardShell>
       {/* Success Alert - shown after successful Paddle checkout */}
       {showSuccess && (
         <Alert className="mb-6 border-green-500 bg-green-50 dark:bg-green-950">
@@ -84,20 +86,18 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
         </Alert>
       )}
       
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Billing & Subscription</h1>
-          <p className="text-muted-foreground">
-            Manage your subscription and view billing history
-          </p>
-        </div>
-        <Button asChild variant="outline">
-          <Link href="/pricing">
-            <CreditCard className="w-4 h-4 mr-2" />
-            View Plans
-          </Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Billing & Subscription"
+        description="Manage your subscription and view billing history"
+        actions={
+          <Button asChild variant="outline">
+            <Link href="/pricing">
+              <CreditCard className="w-4 h-4 mr-2" />
+              View Plans
+            </Link>
+          </Button>
+        }
+      />
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
@@ -123,6 +123,6 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
           </Suspense>
         </TabsContent>
       </Tabs>
-    </div>
+    </DashboardShell>
   );
 }

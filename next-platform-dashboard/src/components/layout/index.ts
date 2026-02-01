@@ -23,12 +23,13 @@ export { DashboardLayoutClient } from "./dashboard-layout-client";
 export { 
   DashboardShell, 
   DashboardSection, 
+  DashboardContent,
   DashboardGrid 
 } from "./dashboard-shell";
 
 // Navigation Components
 export { Breadcrumbs } from "./breadcrumbs";
-export { PageHeader } from "./page-header";
+export { PageHeader, PageHeaderSkeleton } from "./page-header";
 
 // Mobile Components
 export { MobileBottomNav, MobileBottomNavSpacer } from "./mobile-bottom-nav";

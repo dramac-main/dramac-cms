@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { ClientsTable } from "@/components/clients/clients-table";
 import { ClientsTableSkeleton } from "@/components/clients/clients-table-skeleton";
@@ -55,18 +56,19 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
   const autoOpenCreate = params.create === "true";
 
   return (
-    <div>
+    <DashboardShell>
       <PageHeader
         title="Clients"
         description="Manage your client accounts and their websites."
-      >
-        <CreateClientDialog defaultOpen={autoOpenCreate}>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Client
-          </Button>
-        </CreateClientDialog>
-      </PageHeader>
+        actions={
+          <CreateClientDialog defaultOpen={autoOpenCreate}>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Client
+            </Button>
+          </CreateClientDialog>
+        }
+      />
 
       <div className="space-y-4">
         <ClientFiltersBar />
@@ -75,6 +77,6 @@ export default async function ClientsPage({ searchParams }: ClientsPageProps) {
           <ClientsTable filters={filters} />
         </Suspense>
       </div>
-    </div>
+    </DashboardShell>
   );
 }

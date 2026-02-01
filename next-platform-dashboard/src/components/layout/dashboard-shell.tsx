@@ -1,117 +1,129 @@
-"use client";
+import { cn } from '@/lib/utils';
+import { LAYOUT } from '@/config/layout';
 
-import { ReactNode } from "react";
-import { cn } from "@/lib/utils";
-
-interface DashboardShellProps {
-  /** Page content */
-  children: ReactNode;
-  /** Additional class name for the container */
-  className?: string;
-  /** Whether to apply default padding */
+interface DashboardShellProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+  /**
+   * Optional override for padding. 
+   * Set to false to disable padding (useful when content has its own padding)
+   */
   noPadding?: boolean;
-  /** Maximum width constraint */
-  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none";
+  /**
+   * Optional override for max width.
+   * Set to false to disable max-width constraint
+   */
+  noMaxWidth?: boolean;
+  /**
+   * Header content (typically PageHeader component)
+   */
+  header?: React.ReactNode;
+  /**
+   * Optional description shown below content
+   */
+  footer?: React.ReactNode;
 }
 
-const maxWidthClasses = {
-  sm: "max-w-screen-sm",
-  md: "max-w-screen-md", 
-  lg: "max-w-screen-lg",
-  xl: "max-w-screen-xl",
-  "2xl": "max-w-screen-2xl",
-  full: "max-w-full",
-  none: "",
-};
-
 /**
- * DashboardShell provides a consistent wrapper for dashboard pages.
- * It handles spacing, max-width constraints, and animations.
+ * DashboardShell - Consistent wrapper for dashboard page content
  * 
- * @example
- * ```tsx
- * <DashboardShell>
- *   <PageHeader title="Dashboard" />
- *   <Content />
- * </DashboardShell>
- * 
- * // Full width page
- * <DashboardShell maxWidth="full">
- *   <Editor />
- * </DashboardShell>
- * ```
+ * Provides:
+ * - Consistent responsive padding
+ * - Optional max-width constraint
+ * - Header/content/footer structure
+ * - Gap spacing between sections
  */
 export function DashboardShell({
   children,
-  className,
   noPadding = false,
-  maxWidth = "2xl",
+  noMaxWidth = false,
+  header,
+  footer,
+  className,
+  ...props
 }: DashboardShellProps) {
   return (
-    <div 
+    <div
       className={cn(
-        "flex-1 flex flex-col",
-        !noPadding && "p-4 lg:p-6",
+        // Base styles
+        'flex flex-col min-h-full',
+        // Responsive padding using CSS custom properties
+        !noPadding && [
+          'p-4 md:p-6 lg:p-8',
+          // Alternative: using explicit values from LAYOUT
+          // `p-[${LAYOUT.PAGE_PADDING.MOBILE}px]`,
+          // `md:p-[${LAYOUT.PAGE_PADDING.TABLET}px]`,
+          // `lg:p-[${LAYOUT.PAGE_PADDING.DESKTOP}px]`,
+        ],
+        // Max width constraint (keeps content readable on wide screens)
+        !noMaxWidth && 'max-w-7xl mx-auto w-full',
         className
       )}
+      {...props}
     >
-      <div className={cn(
-        "mx-auto w-full",
-        maxWidthClasses[maxWidth]
-      )}>
+      {/* Header Section */}
+      {header && (
+        <div className="pb-4 md:pb-6">
+          {header}
+        </div>
+      )}
+      
+      {/* Main Content */}
+      <div className="flex-1">
         {children}
       </div>
+      
+      {/* Footer Section */}
+      {footer && (
+        <div className="pt-4 md:pt-6 mt-auto">
+          {footer}
+        </div>
+      )}
     </div>
   );
 }
 
-interface DashboardSectionProps {
-  /** Section content */
-  children: ReactNode;
-  /** Section title */
-  title?: string;
-  /** Section description */
-  description?: string;
-  /** Additional class name */
-  className?: string;
-  /** Actions to display in the section header */
-  actions?: ReactNode;
+/**
+ * DashboardContent - Inner content wrapper for semantic structure
+ * Use inside DashboardShell when you need additional content grouping
+ */
+export function DashboardContent({
+  children,
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn('space-y-4 md:space-y-6', className)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
 }
 
 /**
- * DashboardSection provides a consistent section wrapper within dashboard pages.
- * 
- * @example
- * ```tsx
- * <DashboardSection 
- *   title="Recent Activity"
- *   description="Your latest actions"
- *   actions={<Button>View All</Button>}
- * >
- *   <ActivityList />
- * </DashboardSection>
- * ```
+ * DashboardSection - For grouping related content with spacing
  */
 export function DashboardSection({
   children,
   title,
   description,
   className,
-  actions,
-}: DashboardSectionProps) {
+  ...props
+}: React.HTMLAttributes<HTMLElement> & {
+  title?: string;
+  description?: string;
+}) {
   return (
-    <section className={cn("space-y-4", className)}>
-      {(title || actions) && (
-        <div className="flex items-start justify-between gap-4">
+    <section className={cn('space-y-4', className)} {...props}>
+      {(title || description) && (
+        <div className="space-y-1">
           {title && (
-            <div className="space-y-1">
-              <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
-              {description && (
-                <p className="text-sm text-muted-foreground">{description}</p>
-              )}
-            </div>
+            <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
           )}
-          {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+          {description && (
+            <p className="text-sm text-muted-foreground">{description}</p>
+          )}
         </div>
       )}
       {children}
@@ -121,7 +133,7 @@ export function DashboardSection({
 
 interface DashboardGridProps {
   /** Grid items */
-  children: ReactNode;
+  children: React.ReactNode;
   /** Number of columns on different breakpoints */
   columns?: {
     default?: 1 | 2 | 3 | 4;
@@ -179,3 +191,5 @@ export function DashboardGrid({
     </div>
   );
 }
+
+export default DashboardShell;

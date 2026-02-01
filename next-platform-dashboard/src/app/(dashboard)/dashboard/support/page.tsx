@@ -10,6 +10,7 @@ import {
   Lightbulb,
   Youtube,
 } from "lucide-react";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -80,7 +81,7 @@ const quickLinks = [
 
 export default function SupportPage() {
   return (
-    <div className="container py-8 max-w-5xl">
+    <DashboardShell className="max-w-5xl">
       {/* Header */}
       <div className="text-center mb-10">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
@@ -179,6 +180,6 @@ export default function SupportPage() {
       <p className="text-center text-sm text-muted-foreground mt-6">
         Email support typically responds within 24-48 hours during business days.
       </p>
-    </div>
+    </DashboardShell>
   );
 }

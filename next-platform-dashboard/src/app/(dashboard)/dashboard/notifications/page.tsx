@@ -1,6 +1,8 @@
 import { Metadata } from "next";
 import { Suspense } from "react";
 import { getNotifications } from "@/lib/actions/notifications";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { PageHeader } from "@/components/layout/page-header";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { NotificationsFilters } from "@/components/notifications/notifications-filters";
 import { Card, CardContent } from "@/components/ui/card";
@@ -47,15 +49,11 @@ async function NotificationsContent({ filter }: { filter?: string }) {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Notifications</h1>
-          <p className="text-muted-foreground">
-            {unreadCount} unread notification{unreadCount !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <NotificationsFilters currentFilter={filter} />
-      </div>
+      <PageHeader
+        title="Notifications"
+        description={`${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}`}
+        actions={<NotificationsFilters currentFilter={filter} />}
+      />
 
       <NotificationsList notifications={notifications} />
     </>
@@ -68,10 +66,10 @@ export default async function NotificationsPage({
   const params = await searchParams;
 
   return (
-    <div className="container py-8 max-w-3xl">
+    <DashboardShell className="max-w-3xl">
       <Suspense fallback={<NotificationsLoading />}>
         <NotificationsContent filter={params.filter} />
       </Suspense>
-    </div>
+    </DashboardShell>
   );
 }

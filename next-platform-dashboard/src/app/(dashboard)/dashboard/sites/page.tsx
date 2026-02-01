@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
+import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { SitesGrid } from "@/components/sites/sites-grid";
 import { SitesGridSkeleton } from "@/components/sites/sites-grid-skeleton";
@@ -36,18 +37,19 @@ export default async function SitesPage({ searchParams }: SitesPageProps) {
   };
 
   return (
-    <div>
+    <DashboardShell>
       <PageHeader
         title="Sites"
         description="Manage all your client websites."
-      >
-        <Link href="/dashboard/sites/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Site
-          </Button>
-        </Link>
-      </PageHeader>
+        actions={
+          <Link href="/dashboard/sites/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Site
+            </Button>
+          </Link>
+        }
+      />
 
       <div className="space-y-4">
         <SiteFiltersBar />
@@ -56,6 +58,6 @@ export default async function SitesPage({ searchParams }: SitesPageProps) {
           <SitesGrid filters={filters} />
         </Suspense>
       </div>
-    </div>
+    </DashboardShell>
   );
 }
