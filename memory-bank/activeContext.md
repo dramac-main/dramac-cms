@@ -1,12 +1,12 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: February 3, 2026  
+**Last Updated**: February 1, 2026  
 **Current Phase**: PHASE-DM-00 to DM-10 Domain & Email Reseller Module (New Feature)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + ED-01A/ED-01B/ED-02A/ED-02B/ED-02C/ED-03/ED-04/ED-05/ED-03A/ED-03B/ED-03C/ED-04A/ED-04B/ED-05A/ED-05B/ED-05C/ED-07A/ED-07B/ED-08/DS-01A/DS-01B/DS-02A/DS-02B/DS-04A/DS-04B/DS-05/EH-01/EH-02/EH-03/EH-04/EH-05/EH-06 + **DM-00 to DM-10 (Phase Docs Created)**
+**Status**: ✅ 40 OF 40 PHASES (100%) + ED-01A/ED-01B/ED-02A/ED-02B/ED-02C/ED-03/ED-04/ED-05/ED-03A/ED-03B/ED-03C/ED-04A/ED-04B/ED-05A/ED-05B/ED-05C/ED-07A/ED-07B/ED-08/DS-01A/DS-01B/DS-02A/DS-02B/DS-04A/DS-04B/DS-05/EH-01/EH-02/EH-03/EH-04/EH-05/EH-06 + **DM-00 to DM-10 (Phase Docs Created & EM-57 Integration)**
 
 ---
 
-## 🚀 NEW: Domain & Email Reseller Module (February 3, 2026)
+## 🚀 NEW: Domain & Email Reseller Module (February 1, 2026)
 
 ### Phase Documentation Created
 
@@ -16,22 +16,63 @@ Created comprehensive implementation specifications for Domain & Email Reselling
 |-------|------|------|----------|--------|
 | DM-00 | Master Plan | - | - | ✅ Created |
 | DM-01 | ResellerClub Integration | 8h | 🔴 HIGH | ✅ Docs Created |
-| DM-02 | Database Schema | 4h | 🔴 HIGH | ✅ Docs Created |
+| DM-02 | Database Schema | 4h | 🔴 HIGH | ✅ Docs Created (Fixed) |
 | DM-03 | Cloudflare DNS Integration | 8h | 🔴 HIGH | ✅ Docs Created |
 | DM-04 | Domain Search & Registration UI | 10h | 🔴 HIGH | ✅ Docs Created |
 | DM-05 | Domain Management Dashboard | 8h | 🔴 HIGH | ✅ Docs Created |
-| DM-06 | DNS Management UI | 8h | 🟡 MEDIUM | 📋 Pending |
-| DM-07 | Titan Mail Integration | 10h | 🟡 MEDIUM | ✅ Docs Created |
-| DM-08 | Email Management UI | 8h | 🟡 MEDIUM | 📋 Pending |
-| DM-09 | Domain Transfers & Automation | 10h | 🟢 LOW | 📋 Pending |
+| DM-06 | DNS Management UI | 8h | 🟡 MEDIUM | ✅ Docs Created |
+| DM-07 | Business Email Integration | 10h | 🟡 MEDIUM | ✅ Docs Created (Fixed) |
+| DM-08 | Email Management UI | 8h | 🟡 MEDIUM | ✅ Docs Created |
+| DM-09 | Domain Transfers & Automation | 10h | 🟡 MEDIUM | ✅ Docs Created (Updated) |
 | DM-10 | White-Label & Pricing | 8h | 🟡 MEDIUM | ✅ Docs Created |
 
 **Total Estimated Time**: 82 hours
+
+### Automation Engine Integration (EM-57)
+
+**Added February 1, 2026**: Domain module events are now integrated with the Automation Engine for powerful workflow automation.
+
+#### Domain Events as Automation Triggers
+
+| Event | Description | Example Workflow |
+|-------|-------------|------------------|
+| `domain.domain.registered` | New domain registered | Welcome email → CRM contact → DNS setup |
+| `domain.domain.renewed` | Domain renewed | Confirmation email → Log activity |
+| `domain.domain.expiring_soon` | Expiring in X days | Reminder email → Create task → Slack alert |
+| `domain.domain.expired` | Domain expired | Alert owner → Suspend site → Urgent task |
+| `domain.dns.record_created` | DNS record added | Verify propagation → SSL check |
+| `domain.email.account_created` | Mailbox created | Setup instructions → Log activity |
+| `domain.transfer.completed` | Transfer done | Welcome email → Configure DNS |
+| `domain.order.failed` | Order failed | Alert admin → Create support ticket |
+
+#### Domain Actions in Automation Workflows
+
+| Action | Description |
+|--------|-------------|
+| `domain.check_availability` | Check if domain is available |
+| `domain.register` | Register a new domain |
+| `domain.renew` | Renew existing domain |
+| `domain.set_auto_renew` | Enable/disable auto-renewal |
+| `domain.add_dns_record` | Add DNS record |
+| `domain.delete_dns_record` | Remove DNS record |
+| `domain.create_email_account` | Create email mailbox |
+| `domain.delete_email_account` | Delete email mailbox |
+| `domain.initiate_transfer` | Start domain transfer |
+| `domain.get_auth_code` | Get transfer auth code |
+| `domain.lookup` | Get domain details |
+
+### Key Corrections Made
+
+1. **DM-02 Schema**: Renamed `titan_*` columns to `resellerclub_email_*` for consistency
+2. **DM-07**: Corrected to "Business Email Integration" - uses ResellerClub `/api/eelite/` NOT separate Titan API
+3. **DM-09**: Added Automation Engine integration section with event emitting examples
+4. **Event Types**: Updated from legacy `domain.registered` to proper `domain.domain.registered` convention
 
 ### Key Features
 
 1. **ResellerClub API Integration**
    - Domain search, registration, renewal, transfer
+   - Business Email via `/api/eelite/` endpoint
    - Customer & contact management
    - Pricing & availability APIs
    - Rate limiting & error handling
@@ -42,11 +83,11 @@ Created comprehensive implementation specifications for Domain & Email Reselling
    - SSL certificate automation
    - One-click site setup
 
-3. **Titan Mail Integration**
-   - Email account provisioning
+3. **Business Email (Titan-powered via ResellerClub)**
+   - Email account provisioning through ResellerClub API
    - Mailbox, alias, forwarder management
    - Auto DNS configuration for email
-   - Webmail access links
+   - Webmail access links (https://mail.titan.email)
 
 4. **White-Label Reselling**
    - Agency pricing configuration
@@ -54,17 +95,20 @@ Created comprehensive implementation specifications for Domain & Email Reselling
    - Client pricing tiers
    - Revenue analytics
 
-### Files Created
+### Files Location
 
 ```
-phases/
+phases/domain-reseller/
 ├── PHASE-DM-00-DOMAIN-EMAIL-RESELLER-MASTER.md  (Master plan)
 ├── PHASE-DM-01-RESELLERCLUB-INTEGRATION.md      (API client)
 ├── PHASE-DM-02-DOMAIN-DATABASE-SCHEMA.md        (Full SQL + types)
 ├── PHASE-DM-03-CLOUDFLARE-DNS-INTEGRATION.md    (DNS automation)
 ├── PHASE-DM-04-DOMAIN-SEARCH-REGISTRATION-UI.md (Search & checkout)
 ├── PHASE-DM-05-DOMAIN-MANAGEMENT-DASHBOARD.md   (Domain list & details)
-├── PHASE-DM-07-TITAN-MAIL-INTEGRATION.md        (Email API)
+├── PHASE-DM-06-DNS-MANAGEMENT-UI.md             (DNS records UI)
+├── PHASE-DM-07-BUSINESS-EMAIL-INTEGRATION.md    (ResellerClub Email API)
+├── PHASE-DM-08-EMAIL-MANAGEMENT-UI.md           (Email dashboard)
+├── PHASE-DM-09-TRANSFERS-AUTOMATION.md          (Transfers + Events)
 └── PHASE-DM-10-WHITELABEL-PRICING.md            (Pricing config)
 ```
 

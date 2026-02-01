@@ -18,6 +18,54 @@ Create domain transfer capabilities and automation features:
 5. ✅ Domain health checks
 6. ✅ Expiry notifications
 7. ✅ Scheduled tasks for domain maintenance
+8. ✅ **Automation Engine Integration** (emit events for workflows)
+
+---
+
+## 🔗 Automation Engine Integration (EM-57)
+
+This module emits events that can trigger automations. Example workflows:
+
+| Event | Automation Example |
+|-------|-------------------|
+| `domain.domain.expiring_soon` | Send email reminder → Create CRM task → Slack notification |
+| `domain.domain.registered` | Welcome email → Create contact → Add DNS records |
+| `domain.transfer.completed` | Notify admin → Update CRM → Configure site |
+| `domain.email.account_created` | Send setup instructions → Log activity |
+| `domain.domain.expired` | Alert owner → Suspend site → Create urgent task |
+
+### Emitting Events
+
+```typescript
+import { emitEvent } from '@/lib/modules/module-events';
+
+// After domain registration
+await emitEvent(
+  DOMAIN_MODULE_ID,
+  siteId,
+  'domain.domain.registered',
+  {
+    domainId: domain.id,
+    domainName: domain.domain_name,
+    expiryDate: domain.expiry_date,
+    clientId: domain.client_id,
+  }
+);
+
+// Before expiration (cron job)
+await emitEvent(
+  DOMAIN_MODULE_ID,
+  siteId,
+  'domain.domain.expiring_soon',
+  {
+    domainId: domain.id,
+    domainName: domain.domain_name,
+    expiryDate: domain.expiry_date,
+    daysUntilExpiry: 30,
+    autoRenewEnabled: domain.auto_renew,
+  }
+);
+```
 
 ---
 

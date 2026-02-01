@@ -908,6 +908,53 @@ export const EVENT_REGISTRY = {
   },
   
   // =========================================================
+  // DOMAIN MODULE (DM-XX)
+  // =========================================================
+  domain: {
+    domain: {
+      registered: 'domain.domain.registered',        // New domain registered
+      renewed: 'domain.domain.renewed',              // Domain renewed
+      transferred_in: 'domain.domain.transferred_in', // Transfer completed
+      transferred_out: 'domain.domain.transferred_out', // Transfer out initiated
+      expiring_soon: 'domain.domain.expiring_soon',  // Expiring within X days
+      expired: 'domain.domain.expired',              // Domain expired
+      suspended: 'domain.domain.suspended',          // Domain suspended
+      reactivated: 'domain.domain.reactivated',      // Domain reactivated
+      auto_renewed: 'domain.domain.auto_renewed',    // Auto-renewal processed
+      nameservers_changed: 'domain.domain.nameservers_changed', // NS changed
+    },
+    dns: {
+      record_created: 'domain.dns.record_created',   // DNS record added
+      record_updated: 'domain.dns.record_updated',   // DNS record updated
+      record_deleted: 'domain.dns.record_deleted',   // DNS record deleted
+      zone_created: 'domain.dns.zone_created',       // Cloudflare zone created
+      ssl_provisioned: 'domain.dns.ssl_provisioned', // SSL certificate ready
+      propagation_complete: 'domain.dns.propagation_complete', // DNS propagated
+    },
+    email: {
+      subscription_created: 'domain.email.subscription_created', // Email plan purchased
+      subscription_cancelled: 'domain.email.subscription_cancelled', // Email cancelled
+      account_created: 'domain.email.account_created', // Email mailbox created
+      account_deleted: 'domain.email.account_deleted', // Email mailbox deleted
+      quota_warning: 'domain.email.quota_warning',     // Mailbox near capacity
+    },
+    order: {
+      created: 'domain.order.created',               // New order placed
+      completed: 'domain.order.completed',           // Order fulfilled
+      failed: 'domain.order.failed',                 // Order failed
+      refunded: 'domain.order.refunded',             // Order refunded
+    },
+    transfer: {
+      initiated: 'domain.transfer.initiated',        // Transfer started
+      auth_required: 'domain.transfer.auth_required', // Auth code needed
+      approved: 'domain.transfer.approved',          // Transfer approved
+      completed: 'domain.transfer.completed',        // Transfer done
+      failed: 'domain.transfer.failed',              // Transfer failed
+      cancelled: 'domain.transfer.cancelled',        // Transfer cancelled
+    },
+  },
+  
+  // =========================================================
   // SYSTEM EVENTS
   // =========================================================
   system: {
@@ -938,6 +985,7 @@ export type EventType =
   | `form.${string}.${string}`
   | `accounting.${string}.${string}`
   | `ecommerce.${string}.${string}`
+  | `domain.${string}.${string}`
   | `system.${string}.${string}`
   | string;  // Allow custom events
 
@@ -1315,6 +1363,186 @@ export const ACTION_REGISTRY = {
       },
       outputs: {
         success: { type: 'boolean' },
+      },
+    },
+  },
+  
+  // =========================================================
+  // DOMAIN ACTIONS (DM Module Integration)
+  // =========================================================
+  domain: {
+    check_availability: {
+      id: 'domain.check_availability',
+      name: 'Check Domain Availability',
+      description: 'Check if a domain is available for registration',
+      category: 'domain',
+      icon: '🔍',
+      inputs: {
+        domain_name: { type: 'string', required: true },
+        tlds: { type: 'array', required: false },  // ['.com', '.net']
+      },
+      outputs: {
+        available: { type: 'boolean' },
+        suggestions: { type: 'array' },
+        prices: { type: 'object' },
+      },
+    },
+    register: {
+      id: 'domain.register',
+      name: 'Register Domain',
+      description: 'Register a new domain',
+      category: 'domain',
+      icon: '🌐',
+      inputs: {
+        domain_name: { type: 'string', required: true },
+        years: { type: 'number', required: true, default: 1 },
+        client_id: { type: 'string', required: false },
+        privacy: { type: 'boolean', required: false, default: true },
+        auto_renew: { type: 'boolean', required: false, default: true },
+      },
+      outputs: {
+        domain_id: { type: 'string' },
+        order_id: { type: 'string' },
+        success: { type: 'boolean' },
+      },
+    },
+    renew: {
+      id: 'domain.renew',
+      name: 'Renew Domain',
+      description: 'Renew an existing domain',
+      category: 'domain',
+      icon: '🔄',
+      inputs: {
+        domain_id: { type: 'string', required: true },
+        years: { type: 'number', required: true, default: 1 },
+      },
+      outputs: {
+        order_id: { type: 'string' },
+        new_expiry: { type: 'string' },
+        success: { type: 'boolean' },
+      },
+    },
+    set_auto_renew: {
+      id: 'domain.set_auto_renew',
+      name: 'Set Auto-Renew',
+      description: 'Enable or disable domain auto-renewal',
+      category: 'domain',
+      icon: '⚙️',
+      inputs: {
+        domain_id: { type: 'string', required: true },
+        enabled: { type: 'boolean', required: true },
+      },
+      outputs: {
+        success: { type: 'boolean' },
+      },
+    },
+    add_dns_record: {
+      id: 'domain.add_dns_record',
+      name: 'Add DNS Record',
+      description: 'Add a DNS record to a domain',
+      category: 'domain',
+      icon: '📝',
+      inputs: {
+        domain_id: { type: 'string', required: true },
+        type: { type: 'enum', values: ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'SRV'], required: true },
+        name: { type: 'string', required: true },
+        content: { type: 'string', required: true },
+        ttl: { type: 'number', required: false, default: 3600 },
+        priority: { type: 'number', required: false },  // For MX records
+      },
+      outputs: {
+        record_id: { type: 'string' },
+        success: { type: 'boolean' },
+      },
+    },
+    delete_dns_record: {
+      id: 'domain.delete_dns_record',
+      name: 'Delete DNS Record',
+      description: 'Remove a DNS record from a domain',
+      category: 'domain',
+      icon: '🗑️',
+      inputs: {
+        domain_id: { type: 'string', required: true },
+        record_id: { type: 'string', required: true },
+      },
+      outputs: {
+        success: { type: 'boolean' },
+      },
+    },
+    create_email_account: {
+      id: 'domain.create_email_account',
+      name: 'Create Email Account',
+      description: 'Create a new email mailbox on a domain',
+      category: 'domain',
+      icon: '📧',
+      inputs: {
+        domain_id: { type: 'string', required: true },
+        username: { type: 'string', required: true },  // local part before @
+        display_name: { type: 'string', required: false },
+        mailbox_size_gb: { type: 'number', required: false, default: 10 },
+      },
+      outputs: {
+        email_address: { type: 'string' },
+        account_id: { type: 'string' },
+        success: { type: 'boolean' },
+      },
+    },
+    delete_email_account: {
+      id: 'domain.delete_email_account',
+      name: 'Delete Email Account',
+      description: 'Delete an email mailbox',
+      category: 'domain',
+      icon: '🗑️',
+      inputs: {
+        account_id: { type: 'string', required: true },
+      },
+      outputs: {
+        success: { type: 'boolean' },
+      },
+    },
+    initiate_transfer: {
+      id: 'domain.initiate_transfer',
+      name: 'Initiate Domain Transfer',
+      description: 'Start transferring a domain to the platform',
+      category: 'domain',
+      icon: '↔️',
+      inputs: {
+        domain_name: { type: 'string', required: true },
+        auth_code: { type: 'string', required: true },
+      },
+      outputs: {
+        transfer_id: { type: 'string' },
+        success: { type: 'boolean' },
+      },
+    },
+    get_auth_code: {
+      id: 'domain.get_auth_code',
+      name: 'Get Transfer Auth Code',
+      description: 'Get auth/EPP code for domain transfer out',
+      category: 'domain',
+      icon: '🔑',
+      inputs: {
+        domain_id: { type: 'string', required: true },
+      },
+      outputs: {
+        auth_code: { type: 'string' },
+        success: { type: 'boolean' },
+      },
+    },
+    lookup: {
+      id: 'domain.lookup',
+      name: 'Lookup Domain',
+      description: 'Get domain details by name',
+      category: 'domain',
+      icon: '🔎',
+      inputs: {
+        domain_name: { type: 'string', required: true },
+      },
+      outputs: {
+        domain: { type: 'object' },
+        found: { type: 'boolean' },
+        expiry_date: { type: 'string' },
+        status: { type: 'string' },
       },
     },
   },

@@ -201,10 +201,12 @@ CREATE TABLE domain_email_accounts (
   -- For aliases/forwarders
   forward_to TEXT[], -- Array of destination addresses
   
-  -- Titan Mail Integration
-  titan_account_id TEXT,
-  titan_order_id TEXT,
-  titan_subscription_id TEXT,
+  -- ResellerClub Business Email Integration
+  -- NOTE: Business Email (Titan) is managed through ResellerClub API (/api/eelite/)
+  -- There is NO separate Titan API - all operations go through ResellerClub
+  resellerclub_email_account_id TEXT,
+  resellerclub_email_order_id TEXT,
+  resellerclub_email_subscription_id TEXT,
   
   -- Mailbox Settings
   mailbox_size_gb INTEGER DEFAULT 10,
@@ -441,7 +443,7 @@ CREATE INDEX idx_cloudflare_zones_domain_id ON cloudflare_zones(domain_id);
 CREATE INDEX idx_cloudflare_zones_zone_id ON cloudflare_zones(zone_id);
 
 -- ============================================================================
--- EMAIL SUBSCRIPTIONS (Titan Mail)
+-- EMAIL SUBSCRIPTIONS (ResellerClub Business Email / Titan-powered)
 -- ============================================================================
 
 CREATE TABLE email_subscriptions (
@@ -449,9 +451,10 @@ CREATE TABLE email_subscriptions (
   agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
   domain_id UUID NOT NULL REFERENCES domains(id) ON DELETE CASCADE,
   
-  -- Titan Integration
-  titan_subscription_id TEXT,
-  titan_order_id TEXT,
+  -- ResellerClub Business Email Integration
+  -- NOTE: Business Email is powered by Titan but managed via ResellerClub API
+  resellerclub_email_subscription_id TEXT,
+  resellerclub_email_order_id TEXT,
   
   -- Plan Details
   plan_type TEXT DEFAULT 'business' CHECK (plan_type IN (
@@ -1005,21 +1008,64 @@ export interface PaginatedDomains {
 }
 
 // ============================================================================
-// Webhook Event Types
+// Webhook Event Types (Automation Engine Integration)
 // ============================================================================
 
-export interface DomainWebhookEvent {
-  type: 
-    | 'domain.registered'
-    | 'domain.renewed'
-    | 'domain.transferred'
-    | 'domain.expiring'
-    | 'domain.expired'
-    | 'email.provisioned'
-    | 'dns.updated';
+/**
+ * Domain Module Events
+ * 
+ * These events integrate with the Automation Engine (EM-57).
+ * When implementing, emit events using:
+ * 
+ * import { emitEvent } from '@/lib/modules/module-events';
+ * await emitEvent(domainModuleId, siteId, 'domain.domain.registered', payload);
+ * 
+ * Naming Convention: domain.{entity}.{action}
+ */
+export type DomainEventType =
+  // Domain lifecycle events
+  | 'domain.domain.registered'        // New domain registered
+  | 'domain.domain.renewed'           // Domain renewed
+  | 'domain.domain.transferred_in'    // Transfer completed
+  | 'domain.domain.transferred_out'   // Transfer out initiated
+  | 'domain.domain.expiring_soon'     // Expiring within X days
+  | 'domain.domain.expired'           // Domain expired
+  | 'domain.domain.suspended'         // Domain suspended
+  | 'domain.domain.reactivated'       // Domain reactivated
+  | 'domain.domain.auto_renewed'      // Auto-renewal processed
+  | 'domain.domain.nameservers_changed' // Nameservers changed
+  // DNS events
+  | 'domain.dns.record_created'       // DNS record added
+  | 'domain.dns.record_updated'       // DNS record updated
+  | 'domain.dns.record_deleted'       // DNS record deleted
+  | 'domain.dns.zone_created'         // Cloudflare zone created
+  | 'domain.dns.ssl_provisioned'      // SSL certificate ready
+  | 'domain.dns.propagation_complete' // DNS propagated
+  // Email events
+  | 'domain.email.subscription_created'   // Email plan purchased
+  | 'domain.email.subscription_cancelled' // Email cancelled
+  | 'domain.email.account_created'    // Email mailbox created
+  | 'domain.email.account_deleted'    // Email mailbox deleted
+  | 'domain.email.quota_warning'      // Mailbox near capacity
+  // Order events
+  | 'domain.order.created'            // New order placed
+  | 'domain.order.completed'          // Order fulfilled
+  | 'domain.order.failed'             // Order failed
+  | 'domain.order.refunded'           // Order refunded
+  // Transfer events
+  | 'domain.transfer.initiated'       // Transfer started
+  | 'domain.transfer.auth_required'   // Auth code needed
+  | 'domain.transfer.approved'        // Transfer approved
+  | 'domain.transfer.completed'       // Transfer done
+  | 'domain.transfer.failed'          // Transfer failed
+  | 'domain.transfer.cancelled';      // Transfer cancelled
+
+export interface DomainEvent {
+  type: DomainEventType;
   domainId: string;
   domainName: string;
   agencyId: string;
+  siteId?: string;
   timestamp: string;
   data: Record<string, unknown>;
 }
@@ -1031,7 +1077,7 @@ export interface DomainWebhookEvent {
 
 - [ ] Domain registry table with all fields
 - [ ] DNS records table with Cloudflare integration fields
-- [ ] Email accounts table with Titan integration
+- [ ] Email accounts table with ResellerClub Business Email integration
 - [ ] Domain orders/purchase history table
 - [ ] Domain transfers tracking table
 - [ ] Pricing configuration table
