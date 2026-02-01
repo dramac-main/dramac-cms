@@ -378,16 +378,22 @@ function NavItemComponent({
   onItemClick?: () => void;
 }) {
   // Improved active state logic:
-  // - Exact match for items like /dashboard, /settings, /admin
+  // - Exact match for items like /dashboard, /settings, /admin, /portal
   // - Child route match only for items that aren't top-level sections
   // This prevents /dashboard from being active when on /dashboard/crm
+  // and prevents /portal from being active when on /portal/sites
   const isExactMatch = pathname === item.href;
   const isChildRoute = pathname.startsWith(`${item.href}/`);
   
   // Only consider child routes as active if the item href has more than one segment
   // e.g., /dashboard/crm should match /dashboard/crm/contacts
   // but /dashboard should NOT match /dashboard/crm
-  const isTopLevelItem = item.href === '/dashboard' || item.href === '/settings' || item.href === '/admin' || item.href === '/marketplace';
+  // and /portal should NOT match /portal/sites
+  const isTopLevelItem = item.href === '/dashboard' || 
+                          item.href === '/settings' || 
+                          item.href === '/admin' || 
+                          item.href === '/marketplace' ||
+                          item.href === '/portal';
   const isActive = isExactMatch || (!isTopLevelItem && isChildRoute);
   const Icon = item.icon;
 
