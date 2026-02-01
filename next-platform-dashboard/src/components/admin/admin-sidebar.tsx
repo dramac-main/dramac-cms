@@ -20,10 +20,12 @@ import {
 const adminNav = [
   { name: "Overview", href: "/admin", icon: LayoutDashboard },
   { name: "Agencies", href: "/admin/agencies", icon: Building2 },
+  { name: "Agency Analytics", href: "/admin/agencies/analytics", icon: BarChart3 },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Modules", href: "/admin/modules", icon: Package },
   { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
-  { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+  { name: "Billing & Revenue", href: "/admin/billing/revenue", icon: CreditCard },
+  { name: "Platform Analytics", href: "/admin/analytics", icon: BarChart3 },
   { name: "Activity Log", href: "/admin/activity", icon: Activity },
   { name: "System Health", href: "/admin/health", icon: AlertTriangle },
   { name: "Settings", href: "/admin/settings", icon: Settings },
