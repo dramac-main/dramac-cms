@@ -4,6 +4,7 @@ import { getUnreadNotificationCount } from "@/lib/portal/notification-service";
 import { getTicketStats } from "@/lib/portal/support-service";
 import { PortalHeader } from "@/components/portal/portal-header";
 import { PortalSidebar } from "@/components/portal/portal-sidebar";
+import { SidebarProvider } from "@/components/layout/sidebar-context";
 import { redirect } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LAYOUT } from "@/config/layout";
@@ -32,33 +33,35 @@ export default async function PortalLayout({
   const openTicketCount = ticketStats.open + ticketStats.inProgress;
 
   return (
-    <div className="min-h-screen bg-background">
-      <PortalHeader 
-        user={session.user}
-        agencyName={clientInfo?.agencyName || "Agency"}
-        isImpersonating={session.isImpersonating}
-        impersonatorEmail={session.impersonatorEmail || undefined}
-        clientName={session.user.fullName}
-        unreadNotifications={unreadCount}
-      />
-      
-      <div className="flex">
-        {/* Portal Sidebar - uses unified component with portal variant */}
-        <PortalSidebar 
-          user={session.user} 
-          openTicketCount={openTicketCount}
+    <SidebarProvider>
+      <div className="min-h-screen bg-background">
+        <PortalHeader 
+          user={session.user}
+          agencyName={clientInfo?.agencyName || "Agency"}
+          isImpersonating={session.isImpersonating}
+          impersonatorEmail={session.impersonatorEmail || undefined}
+          clientName={session.user.fullName}
+          unreadNotifications={unreadCount}
         />
         
-        {/* Main Content Area with responsive padding */}
-        <main className={cn(
-          "flex-1 overflow-y-auto",
-          LAYOUT.PAGE_PADDING // Responsive: p-4 lg:p-6
-        )}>
-          <div className="max-w-6xl mx-auto">
-            {children}
-          </div>
-        </main>
+        <div className="flex">
+          {/* Portal Sidebar - uses unified component with portal variant */}
+          <PortalSidebar 
+            user={session.user} 
+            openTicketCount={openTicketCount}
+          />
+          
+          {/* Main Content Area with responsive padding */}
+          <main className={cn(
+            "flex-1 overflow-y-auto",
+            LAYOUT.PAGE_PADDING // Responsive: p-4 lg:p-6
+          )}>
+            <div className="max-w-6xl mx-auto">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
