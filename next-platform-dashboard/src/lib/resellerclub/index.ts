@@ -96,3 +96,8 @@ export {
   calculateMarkup,
   getStatusBadgeColor,
 } from './utils';
+
+// ============================================================================
+// Business Email (Titan) Integration
+// ============================================================================
+export * from './email';
