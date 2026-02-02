@@ -1,9 +1,8 @@
 /**
- * Studio Panel Components
- * 
- * Central exports for all panel components.
- * Phase STUDIO-04+ will add: left-panel, right-panel, bottom-panel, top-toolbar
+ * DRAMAC Studio Panel Components
  */
 
-// Placeholder - components added in later phases
-export {};
+export { ComponentLibrary } from "./component-library";
+export { ComponentCard } from "./component-card";
+export { CategoryAccordion } from "./category-accordion";
+export { RecentlyUsed, useRecentlyUsed } from "./recently-used";

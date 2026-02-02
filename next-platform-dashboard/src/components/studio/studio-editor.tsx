@@ -12,15 +12,11 @@ import { StudioToolbar } from "@/components/studio/layout/studio-toolbar";
 import { PanelHeader } from "@/components/studio/layout/panel-header";
 import { DndProvider } from "@/components/studio/dnd";
 import { EditorCanvas } from "@/components/studio/canvas";
+import { ComponentLibrary } from "@/components/studio/panels";
+import { PropertiesPanel } from "@/components/studio/properties";
 import { useUIStore, useEditorStore } from "@/lib/studio/store";
 import { initializeRegistry } from "@/lib/studio/registry";
-import {
-  Layers,
-  Settings2,
-  MessageSquare,
-  Search,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 // =============================================================================
@@ -42,61 +38,8 @@ interface StudioEditorProps {
 // PLACEHOLDER PANELS (to be replaced in later phases)
 // =============================================================================
 
-function ComponentListPlaceholder() {
-  const togglePanel = useUIStore((s) => s.togglePanel);
-  
-  return (
-    <div className="flex flex-1 flex-col">
-      <PanelHeader
-        title="Components"
-        icon={Layers}
-        position="left"
-        onCollapse={() => togglePanel("left")}
-      />
-      <div className="p-3">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search components..."
-            className="h-8 pl-8 text-sm"
-          />
-        </div>
-      </div>
-      <div className="flex-1 overflow-auto p-3">
-        <p className="text-sm text-muted-foreground">
-          Component library with drag-and-drop is active.
-          Detailed UI will be implemented in Phase STUDIO-07.
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function CanvasArea() {
   return <EditorCanvas />;
-}
-
-function PropertiesPanelPlaceholder() {
-  const togglePanel = useUIStore((s) => s.togglePanel);
-  
-  return (
-    <div className="flex flex-1 flex-col">
-      <PanelHeader
-        title="Properties"
-        icon={Settings2}
-        position="right"
-        onCollapse={() => togglePanel("right")}
-      />
-      <div className="flex-1 overflow-auto p-3">
-        <p className="text-sm text-muted-foreground">
-          Select a component to edit its properties.
-        </p>
-        <p className="text-xs text-muted-foreground mt-2">
-          Property editors will be implemented in Phase STUDIO-08
-        </p>
-      </div>
-    </div>
-  );
 }
 
 function BottomPanelPlaceholder() {
@@ -218,9 +161,9 @@ export function StudioEditor({
             saveStatus={saveStatus}
           />
         }
-        leftPanel={<ComponentListPlaceholder />}
+        leftPanel={<ComponentLibrary />}
         canvas={<CanvasArea />}
-        rightPanel={<PropertiesPanelPlaceholder />}
+        rightPanel={<PropertiesPanel />}
         bottomPanel={<BottomPanelPlaceholder />}
       />
     </DndProvider>

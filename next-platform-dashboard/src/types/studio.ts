@@ -127,6 +127,9 @@ export interface FieldDefinition {
   /** Field type */
   type: FieldType;
   
+  /** Field key (property name) - used when iterating as array */
+  key?: string;
+  
   /** Display label */
   label: string;
   
@@ -180,6 +183,21 @@ export interface FieldDefinition {
   
   /** Placeholder text for input fields */
   placeholder?: string;
+  
+  /** Whether to show a slider (for number fields) */
+  showSlider?: boolean;
+  
+  /** Preset colors for color field */
+  presets?: { name: string; value: string }[];
+  
+  /** Allow custom color input */
+  allowCustom?: boolean;
+  
+  /** Allow external URLs (for URL fields) */
+  allowExternal?: boolean;
+  
+  /** Validate URL format */
+  validateUrl?: boolean;
 }
 
 /**
@@ -323,6 +341,83 @@ export interface ComponentDefinition {
   
   /** Can this component be moved? */
   canMove?: boolean;
+  
+  /** Field groups for organizing in properties panel */
+  fieldGroups?: FieldGroup[];
+}
+
+// =============================================================================
+// FIELD VALUE TYPES (for Properties Panel)
+// =============================================================================
+
+/**
+ * Spacing value for padding/margin
+ */
+export type SpacingValue = {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+};
+
+/**
+ * Responsive value wrapper - stores different values per breakpoint
+ */
+export type ResponsiveValue<T> = {
+  mobile: T;      // REQUIRED - this is the base/default
+  tablet?: T;     // Optional override for tablet
+  desktop?: T;    // Optional override for desktop
+};
+
+/**
+ * All possible field value types
+ */
+export type FieldValue =
+  | string
+  | number
+  | boolean
+  | SpacingValue
+  | string[]
+  | ResponsiveValue<string>
+  | ResponsiveValue<number>
+  | ResponsiveValue<SpacingValue>
+  | Record<string, unknown>
+  | null
+  | undefined;
+
+/**
+ * Props for any field editor component
+ */
+export interface FieldEditorProps<T = FieldValue> {
+  /** The field definition */
+  field: FieldDefinition;
+  /** Current field value */
+  value: T;
+  /** Called when value changes */
+  onChange: (value: T) => void;
+  /** Whether to show responsive controls */
+  showResponsive?: boolean;
+  /** Current breakpoint for responsive editing */
+  activeBreakpoint?: Breakpoint;
+  /** Called when breakpoint changes */
+  onBreakpointChange?: (breakpoint: Breakpoint) => void;
+  /** Disabled state */
+  disabled?: boolean;
+}
+
+/**
+ * Field editor component type
+ */
+export type FieldEditorComponent<T = FieldValue> = React.ComponentType<FieldEditorProps<T>>;
+
+/**
+ * Field group for organizing related fields
+ */
+export interface FieldGroup {
+  id: string;
+  label: string;
+  fields: string[]; // Field keys
+  defaultExpanded?: boolean;
 }
 
 // =============================================================================

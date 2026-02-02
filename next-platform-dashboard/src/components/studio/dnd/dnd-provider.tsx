@@ -203,6 +203,13 @@ export function DndProvider({ children }: DndProviderProps) {
       // Select the new component
       selectComponent(newId);
       
+      // Emit custom event for recently used tracking
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("studio:component-dropped", {
+          detail: { type: componentType }
+        }));
+      }
+      
       console.debug(`[DnD] Added ${componentType} to ${parentId} at index ${index}`);
       return;
     }
