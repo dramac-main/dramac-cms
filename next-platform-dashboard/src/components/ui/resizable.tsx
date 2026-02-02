@@ -7,11 +7,15 @@ import { cn } from "@/lib/utils"
 
 interface ResizablePanelGroupProps extends React.ComponentPropsWithoutRef<typeof Group> {
   className?: string;
+  direction?: "horizontal" | "vertical";
+  autoSaveId?: string;
 }
 
-function ResizablePanelGroup({ className, ...props }: ResizablePanelGroupProps) {
+function ResizablePanelGroup({ className, direction, autoSaveId, ...props }: ResizablePanelGroupProps) {
   return (
     <Group
+      data-panel-group-direction={direction}
+      autoSave={autoSaveId}
       className={cn(
         "flex h-full w-full data-[panel-group-direction=vertical]:flex-col",
         className

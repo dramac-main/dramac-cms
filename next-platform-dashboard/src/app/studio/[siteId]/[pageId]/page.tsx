@@ -8,7 +8,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { StudioProvider } from "@/components/studio/core";
-import { StudioEditorPlaceholder } from "./studio-editor-placeholder";
+import { StudioEditor } from "@/components/studio/studio-editor";
 
 interface StudioPageProps {
   params: Promise<{
@@ -73,11 +73,12 @@ export default async function StudioPage({ params }: StudioPageProps) {
       pageName={page.name}
       initialData={content}
     >
-      <StudioEditorPlaceholder
+      <StudioEditor
         siteName={site.name}
         pageName={page.name}
         siteId={siteId}
         pageId={pageId}
+        pageSlug={page.slug}
       />
     </StudioProvider>
   );

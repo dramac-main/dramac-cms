@@ -536,3 +536,84 @@
   background: linear-gradient(to top, hsl(var(--card)), transparent);
   pointer-events: none;
 }
+
+/* =============================================================================
+   PANEL RESIZE HANDLES
+   ============================================================================= */
+
+.studio-resize-handle-horizontal {
+  width: 4px;
+  background: transparent;
+  transition: background-color 0.15s ease;
+  cursor: col-resize;
+  position: relative;
+}
+
+.studio-resize-handle-horizontal:hover,
+.studio-resize-handle-horizontal[data-resize-handle-active] {
+  background: hsl(var(--primary) / 0.3);
+}
+
+.studio-resize-handle-horizontal::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 32px;
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.studio-resize-handle-horizontal:hover::before {
+  opacity: 1;
+}
+
+.studio-resize-handle-vertical {
+  height: 4px;
+  background: transparent;
+  transition: background-color 0.15s ease;
+  cursor: row-resize;
+  position: relative;
+}
+
+.studio-resize-handle-vertical:hover,
+.studio-resize-handle-vertical[data-resize-handle-active] {
+  background: hsl(var(--primary) / 0.3);
+}
+
+.studio-resize-handle-vertical::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 2px;
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.studio-resize-handle-vertical:hover::before {
+  opacity: 1;
+}
+
+/* =============================================================================
+   PANEL STYLES
+   ============================================================================= */
+
+.studio-panel-left,
+.studio-panel-right,
+.studio-panel-bottom {
+  overflow: hidden;
+}
+
+.studio-panel-canvas {
+  background: hsl(var(--muted) / 0.1);
+  overflow: hidden;
+}

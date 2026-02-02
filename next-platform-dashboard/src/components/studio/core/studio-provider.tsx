@@ -13,6 +13,7 @@ import {
   useSelectionStore,
   clearHistory,
 } from "@/lib/studio/store";
+import { initializeRegistry, isRegistryInitialized } from "@/lib/studio/registry";
 import type { StudioPageData, PuckDataFormat } from "@/types/studio";
 import { createEmptyPageData, validatePageData, migrateFromPuckFormat } from "@/types/studio";
 
@@ -50,6 +51,11 @@ export function StudioProvider({
 
   // Initialize editor on mount
   useEffect(() => {
+    // Initialize registry if not already done
+    if (!isRegistryInitialized()) {
+      initializeRegistry();
+    }
+
     let data: StudioPageData;
 
     try {
