@@ -14,7 +14,6 @@ import { useEditorStore, useUIStore, useSelectionStore } from "@/lib/studio/stor
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
 import { DroppableCanvas, StudioSortableContext, SortableComponent } from "@/components/studio/dnd";
 import { ComponentWrapper } from "@/components/studio/core/component-wrapper";
-import { BREAKPOINTS } from "@/types/studio";
 import { BREAKPOINT_PIXELS, BREAKPOINT_LABELS } from "@/lib/studio/utils/responsive-utils";
 import type { Breakpoint } from "@/types/studio";
 import { Plus, MousePointer, Smartphone, Tablet, Monitor } from "lucide-react";
@@ -180,12 +179,12 @@ function BreakpointInfoBar({ breakpoint }: { breakpoint: Breakpoint }) {
   const width = BREAKPOINT_PIXELS[breakpoint];
   
   return (
-    <div className="absolute top-0 left-0 right-0 bg-primary/10 text-primary text-xs py-1 px-3 flex items-center justify-center gap-2 z-10">
+    <div className="flex items-center justify-center gap-2 bg-muted/50 text-muted-foreground text-xs py-1.5 px-3 mb-2 rounded-md border border-border">
       <Icon className="h-3.5 w-3.5" />
       <span className="font-medium">{BREAKPOINT_LABELS[breakpoint]}</span>
-      {breakpoint !== "desktop" && (
-        <span className="text-primary/70">({width}px)</span>
-      )}
+      <span className="text-muted-foreground/70">
+        {breakpoint === "desktop" ? "(Full width)" : `(${width}px)`}
+      </span>
     </div>
   );
 }
@@ -210,26 +209,42 @@ const DEVICE_FRAME_STYLES: Record<Breakpoint, React.CSSProperties> = {
     borderRadius: "20px",
   },
   desktop: {
-    boxShadow: "none",
+    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
     borderRadius: "8px",
   },
 };
 
 function DeviceFrame({ breakpoint, zoom, children }: DeviceFrameProps) {
   const frameStyle = DEVICE_FRAME_STYLES[breakpoint];
-  const width = breakpoint === "desktop" ? "100%" : `${BREAKPOINT_PIXELS[breakpoint]}px`;
+  
+  // Width based on breakpoint
+  const getWidth = () => {
+    switch (breakpoint) {
+      case "mobile":
+        return `${BREAKPOINT_PIXELS.mobile}px`;
+      case "tablet":
+        return `${BREAKPOINT_PIXELS.tablet}px`;
+      case "desktop":
+      default:
+        return "100%";
+    }
+  };
   
   return (
     <div
       className={cn(
         "bg-background transition-all duration-300 ease-out",
-        "min-h-[600px] relative overflow-hidden border border-border"
+        "relative overflow-hidden border border-border",
+        // Desktop takes full width
+        breakpoint === "desktop" && "w-full"
       )}
       style={{
-        width,
-        maxWidth: "100%",
+        width: getWidth(),
+        minWidth: breakpoint === "mobile" ? `${BREAKPOINT_PIXELS.mobile}px` : undefined,
+        maxWidth: breakpoint === "desktop" ? "100%" : `${BREAKPOINT_PIXELS[breakpoint]}px`,
+        minHeight: "600px",
         ...frameStyle,
-        transform: `scale(${zoom})`,
+        transform: zoom !== 1 ? `scale(${zoom})` : undefined,
         transformOrigin: "top center",
       }}
     >
@@ -255,13 +270,6 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
   const rootChildren = data.root.children;
   const hasComponents = rootChildren.length > 0;
   
-  // Get canvas width based on breakpoint (for comparison/legacy)
-  const canvasWidth = useMemo(() => {
-    if (breakpoint === "mobile") return BREAKPOINTS.mobile.width;
-    if (breakpoint === "tablet") return BREAKPOINTS.tablet.width;
-    return "100%";
-  }, [breakpoint]);
-  
   // Handle click on canvas (deselect)
   const handleCanvasClick = (e: React.MouseEvent) => {
     // Only deselect if clicking directly on canvas, not on a component
@@ -271,11 +279,14 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
   };
   
   const isPreviewMode = mode === "preview";
+  const isDesktop = breakpoint === "desktop";
   
   return (
     <div
       className={cn(
-        "flex h-full items-start justify-center overflow-auto p-8",
+        "flex h-full w-full overflow-auto",
+        // Desktop: fill entire canvas area with padding
+        isDesktop ? "p-4" : "items-start justify-center p-8",
         className
       )}
       onClick={handleCanvasClick}
@@ -288,9 +299,13 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
       }}
     >
       {/* Device frame container with breakpoint styling */}
-      <div className="relative">
+      <div className={cn(
+        "flex flex-col",
+        // Desktop takes full width, others are centered
+        isDesktop ? "w-full h-full" : "items-center"
+      )}>
         {/* Breakpoint indicator (not in preview mode) */}
-        {!isPreviewMode && breakpoint !== "desktop" && (
+        {!isPreviewMode && (
           <BreakpointInfoBar breakpoint={breakpoint} />
         )}
         

@@ -24,11 +24,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { PanelHeader } from "@/components/studio/layout/panel-header";
-import { FieldRenderer } from "./field-renderer";
+import { FieldRenderer } from "@/components/studio/fields/field-renderer";
 import { BreakpointIndicator, BreakpointSelectorCompact } from "@/components/studio/layout/breakpoint-selector";
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
 import { useEditorStore, useSelectionStore, useUIStore } from "@/lib/studio/store";
-import type { FieldValue, FieldGroup, ComponentDefinition, FieldDefinition } from "@/types/studio";
+import type { FieldGroup, ComponentDefinition, FieldDefinition } from "@/types/studio";
 
 // =============================================================================
 // EMPTY STATE
@@ -88,8 +88,8 @@ function ComponentInfo({ definition, componentId }: ComponentInfoProps) {
 interface FieldGroupAccordionProps {
   group: FieldGroup;
   fields: Array<FieldDefinition & { key: string }>;
-  props: Record<string, FieldValue>;
-  onFieldChange: (key: string, value: FieldValue) => void;
+  props: Record<string, unknown>;
+  onFieldChange: (key: string, value: unknown) => void;
   disabled?: boolean;
 }
 
@@ -179,7 +179,7 @@ export function PropertiesPanel() {
   
   // Handle field change
   const handleFieldChange = useCallback(
-    (key: string, value: FieldValue) => {
+    (key: string, value: unknown) => {
       if (!componentId) return;
       updateComponentProps(componentId, { [key]: value });
     },
@@ -291,7 +291,7 @@ export function PropertiesPanel() {
               key={group.id}
               group={group}
               fields={getFieldsForGroup(group)}
-              props={component.props as Record<string, FieldValue>}
+              props={component.props as Record<string, unknown>}
               onFieldChange={handleFieldChange}
             />
           ))
@@ -302,7 +302,7 @@ export function PropertiesPanel() {
               <FieldRenderer
                 key={field.key}
                 field={field}
-                value={(component.props as Record<string, FieldValue>)[field.key]}
+                value={(component.props as Record<string, unknown>)[field.key]}
                 onChange={(value) => handleFieldChange(field.key, value)}
               />
             ))}

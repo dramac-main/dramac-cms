@@ -81,6 +81,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Studio routes - full-screen editor (needs auth but handled by layout)
+  if (pathname.startsWith("/studio")) {
+    console.log("[proxy] → Studio route, passing through to auth");
+    return await updateSession(request);
+  }
+
   // Site renderer routes - public facing sites
   if (pathname.startsWith("/site")) {
     console.log("[proxy] → Site route, passing through");

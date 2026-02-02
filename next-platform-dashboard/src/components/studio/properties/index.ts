@@ -3,7 +3,8 @@
  */
 
 export { PropertiesPanel } from "./properties-panel";
-export { FieldRenderer } from "./field-renderer";
+// Use the Wave 3 FieldRenderer from fields folder instead
+export { FieldRenderer } from "@/components/studio/fields/field-renderer";
 export { FieldWrapper } from "./field-wrapper";
 
 // Field Editors
