@@ -213,6 +213,19 @@ export const useUIStore = create<UIStore>()(
         // NOTE: We intentionally DO NOT persist panels to avoid hydration mismatch
         // Users expect panels to be open when they open the editor
       }),
+      // Merge function to ensure panels from old localStorage are ignored
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<UIState> | undefined;
+        return {
+          ...currentState,
+          // Only restore these specific fields from storage
+          zoom: persisted?.zoom ?? currentState.zoom,
+          showGrid: persisted?.showGrid ?? currentState.showGrid,
+          showOutlines: persisted?.showOutlines ?? currentState.showOutlines,
+          // ALWAYS use initial panel state, never from storage
+          panels: initialState.panels,
+        };
+      },
     }
   )
 );
