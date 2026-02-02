@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PanelHeader } from "@/components/studio/layout/panel-header";
 import { FieldRenderer } from "./field-renderer";
+import { BreakpointIndicator, BreakpointSelectorCompact } from "@/components/studio/layout/breakpoint-selector";
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
 import { useEditorStore, useSelectionStore, useUIStore } from "@/lib/studio/store";
 import type { FieldValue, FieldGroup, ComponentDefinition, FieldDefinition } from "@/types/studio";
@@ -60,13 +61,21 @@ function ComponentInfo({ definition, componentId }: ComponentInfoProps) {
   const Icon = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[definition.icon] || LucideIcons.Box;
   
   return (
-    <div className="flex items-center gap-3 p-3 border-b border-border bg-muted/30">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10">
-        <Icon className="h-5 w-5 text-primary" />
+    <div className="border-b border-border">
+      <div className="flex items-center gap-3 p-3 bg-muted/30">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold">{definition.label}</h3>
+          <p className="text-xs text-muted-foreground truncate">{componentId}</p>
+        </div>
       </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-semibold">{definition.label}</h3>
-        <p className="text-xs text-muted-foreground truncate">{componentId}</p>
+      
+      {/* Breakpoint Indicator */}
+      <div className="flex items-center justify-between bg-muted/50 px-3 py-2">
+        <BreakpointIndicator />
+        <BreakpointSelectorCompact />
       </div>
     </div>
   );

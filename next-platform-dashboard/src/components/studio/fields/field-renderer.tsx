@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import type { FieldDefinition, FieldType } from '@/types/studio';
+import { ResponsiveFieldWrapper } from './responsive-field-wrapper';
 
 // Import existing field editors from properties folder
 import { TextField } from '@/components/studio/properties/fields/text-field';
@@ -61,7 +62,16 @@ const FIELD_EDITORS: Partial<Record<FieldType, React.ComponentType<any>>> = {
   object: ObjectFieldEditor,
 };
 
-// Inner field renderer (used by array/object for recursion)
+// Fields that support responsive mode
+const RESPONSIVE_FIELD_TYPES: FieldType[] = [
+  'text',
+  'number',
+  'spacing',
+  'typography',
+  'color',
+];
+
+// Inner field renderer (used by array/object for recursion and responsive wrapper)
 function InnerFieldRenderer({ field, value, onChange, disabled }: FieldRendererProps) {
   const Editor = FIELD_EDITORS[field.type];
   
@@ -135,13 +145,50 @@ function InnerFieldRenderer({ field, value, onChange, disabled }: FieldRendererP
   }
 }
 
+// Field renderer with responsive support
+function ResponsiveAwareRenderer({ field, value, onChange, disabled }: FieldRendererProps) {
+  // Check if this field supports and has responsive mode enabled
+  const supportsResponsive = field.responsive && RESPONSIVE_FIELD_TYPES.includes(field.type);
+  
+  // If field supports responsive and is marked responsive
+  if (supportsResponsive) {
+    return (
+      <ResponsiveFieldWrapper
+        field={field}
+        value={value}
+        onChange={onChange}
+        defaultValue={field.defaultValue}
+      >
+        {({ value: currentValue, onChange: handleChange }) => (
+          <InnerFieldRenderer
+            field={{ ...field, label: '', description: '' }} // Label handled by wrapper
+            value={currentValue}
+            onChange={handleChange}
+            disabled={disabled}
+          />
+        )}
+      </ResponsiveFieldWrapper>
+    );
+  }
+  
+  // Non-responsive field
+  return (
+    <InnerFieldRenderer
+      field={field}
+      value={value}
+      onChange={onChange}
+      disabled={disabled}
+    />
+  );
+}
+
 // Main field renderer with provider for nested fields
 export function FieldRenderer(props: FieldRendererProps) {
   // Wrap with providers for array/object fields
   return (
     <ArrayFieldEditorProvider fieldRenderer={InnerFieldRenderer}>
       <ObjectFieldEditorProvider fieldRenderer={InnerFieldRenderer}>
-        <InnerFieldRenderer {...props} />
+        <ResponsiveAwareRenderer {...props} />
       </ObjectFieldEditorProvider>
     </ArrayFieldEditorProvider>
   );

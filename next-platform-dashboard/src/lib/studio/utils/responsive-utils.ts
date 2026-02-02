@@ -241,3 +241,114 @@ export function getVisibilityClass(hideOn?: Breakpoint[]): string {
   
   return hideOn.map((bp) => `studio-hide-${bp}`).join(" ");
 }
+
+// =============================================================================
+// RESPONSIVE VALUE SETTERS (for field editing)
+// =============================================================================
+
+/**
+ * Set a value for a specific breakpoint, returning a new ResponsiveValue
+ */
+export function setBreakpointValue<T>(
+  currentValue: T | ResponsiveValue<T>,
+  breakpoint: Breakpoint,
+  newValue: T
+): ResponsiveValue<T> {
+  if (!isResponsiveValue(currentValue)) {
+    // Convert to responsive, using current value as mobile base
+    const base: ResponsiveValue<T> = { mobile: currentValue };
+    base[breakpoint] = newValue;
+    return base;
+  }
+  
+  return {
+    ...currentValue,
+    [breakpoint]: newValue,
+  };
+}
+
+/**
+ * Convert a plain value to a responsive value object
+ */
+export function toResponsiveValue<T>(value: T): ResponsiveValue<T> {
+  if (isResponsiveValue(value)) {
+    return value;
+  }
+  return { mobile: value };
+}
+
+/**
+ * Convert a responsive value back to plain (using mobile as default)
+ */
+export function fromResponsiveValue<T>(value: T | ResponsiveValue<T>): T {
+  if (isResponsiveValue(value)) {
+    return value.mobile;
+  }
+  return value;
+}
+
+/**
+ * Check if all breakpoints have the same value
+ */
+export function areAllBreakpointsSame<T>(value: ResponsiveValue<T>): boolean {
+  const mobile = value.mobile;
+  const tablet = value.tablet ?? mobile;
+  const desktop = value.desktop ?? tablet;
+  
+  // For objects, compare JSON
+  if (typeof mobile === "object" && mobile !== null) {
+    return JSON.stringify(mobile) === JSON.stringify(tablet) &&
+           JSON.stringify(tablet) === JSON.stringify(desktop);
+  }
+  
+  return mobile === tablet && tablet === desktop;
+}
+
+/**
+ * Get a summary string of all breakpoint values
+ */
+export function getResponsiveSummary<T>(
+  value: T | ResponsiveValue<T>,
+  formatter?: (val: T) => string
+): string {
+  const format = formatter || ((v: T) => String(v));
+  
+  if (!isResponsiveValue(value)) {
+    return format(value);
+  }
+  
+  const parts: string[] = [];
+  parts.push(`📱 ${format(value.mobile)}`);
+  
+  if (value.tablet !== undefined) {
+    parts.push(`💻 ${format(value.tablet)}`);
+  }
+  
+  if (value.desktop !== undefined) {
+    parts.push(`🖥️ ${format(value.desktop)}`);
+  }
+  
+  return parts.join(" | ");
+}
+
+// =============================================================================
+// BREAKPOINT CONSTANTS FOR UI
+// =============================================================================
+
+export const BREAKPOINT_LABELS: Record<Breakpoint, string> = {
+  mobile: "Mobile",
+  tablet: "Tablet",
+  desktop: "Desktop",
+} as const;
+
+export const BREAKPOINT_ICONS: Record<Breakpoint, string> = {
+  mobile: "📱",
+  tablet: "💻",
+  desktop: "🖥️",
+} as const;
+
+export const BREAKPOINT_PIXELS: Record<Breakpoint, number> = {
+  mobile: 375,
+  tablet: 768,
+  desktop: 1280,
+} as const;
