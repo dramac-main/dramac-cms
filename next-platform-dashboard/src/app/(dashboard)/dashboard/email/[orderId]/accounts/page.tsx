@@ -111,7 +111,7 @@ export default async function EmailAccountsPage({ params }: EmailAccountsPagePro
                 Access your email from any web browser
               </p>
               <Button variant="outline" size="sm" asChild>
-                <a href="https://mail.titan.email" target="_blank" rel="noopener noreferrer">
+                <a href="https://app.titan.email" target="_blank" rel="noopener noreferrer">
                   Open Webmail
                 </a>
               </Button>

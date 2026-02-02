@@ -9,7 +9,7 @@ export function EmailWebmailLink({ domain }: EmailWebmailLinkProps) {
   return (
     <Button variant="outline" asChild>
       <a 
-        href="https://mail.titan.email" 
+        href="https://app.titan.email" 
         target="_blank" 
         rel="noopener noreferrer"
       >

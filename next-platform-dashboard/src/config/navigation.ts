@@ -12,6 +12,9 @@ import {
   Building2,
   Bot,
   BarChart3,
+  Mail,
+  ArrowRightLeft,
+  Server,
   type LucideIcon,
 } from "lucide-react";
 
@@ -60,6 +63,29 @@ export const mainNavigation: NavGroup[] = [
         href: "/dashboard/media",
         icon: ImageIcon,
         dataTour: "media",
+      },
+    ],
+  },
+  {
+    title: "Domains & Email",
+    items: [
+      {
+        title: "Domains",
+        href: "/dashboard/domains",
+        icon: Server,
+        dataTour: "domains",
+      },
+      {
+        title: "Business Email",
+        href: "/dashboard/email",
+        icon: Mail,
+        dataTour: "email",
+      },
+      {
+        title: "Transfers",
+        href: "/dashboard/domains/transfer",
+        icon: ArrowRightLeft,
+        dataTour: "transfers",
       },
     ],
   },

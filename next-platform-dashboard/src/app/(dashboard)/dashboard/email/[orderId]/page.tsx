@@ -179,7 +179,7 @@ export default async function EmailOrderPage({ params }: EmailOrderPageProps) {
         <CardContent className="flex flex-wrap gap-2">
           <Button variant="outline" asChild>
             <a 
-              href="https://mail.titan.email" 
+              href="https://app.titan.email" 
               target="_blank" 
               rel="noopener noreferrer"
             >

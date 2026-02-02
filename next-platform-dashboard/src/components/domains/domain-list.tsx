@@ -230,7 +230,7 @@ export function DomainList({
                 <TableCell>
                   {domain.site ? (
                     <a 
-                      href={`/dashboard/${domain.site.id}`}
+                      href={`/dashboard/sites/${domain.site.id}`}
                       className="text-sm text-primary hover:underline flex items-center gap-1"
                     >
                       {domain.site.name}

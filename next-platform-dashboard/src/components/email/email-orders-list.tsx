@@ -133,7 +133,7 @@ function EmailOrderCard({ order }: { order: EmailOrdersListProps['orders'][0] })
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <a 
-                  href="https://mail.titan.email" 
+                  href="https://app.titan.email" 
                   target="_blank" 
                   rel="noopener noreferrer"
                 >

@@ -156,7 +156,7 @@ export function EmailAccountsTable({
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
                         <a 
-                          href={`https://mail.titan.email/?email=${encodeURIComponent(account.email)}`}
+                          href={`https://app.titan.email/?email=${encodeURIComponent(account.email)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                         >

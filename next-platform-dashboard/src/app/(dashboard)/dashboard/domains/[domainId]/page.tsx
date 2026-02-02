@@ -233,7 +233,7 @@ async function DomainDetails({ domainId }: { domainId: string }) {
                   <span className="text-sm text-muted-foreground">Connected Site</span>
                   <div className="mt-2">
                     <Link 
-                      href={`/dashboard/${domain.site.id}`}
+                      href={`/dashboard/sites/${domain.site.id}`}
                       className="text-sm text-primary hover:underline flex items-center gap-1"
                     >
                       {domain.site.name}
