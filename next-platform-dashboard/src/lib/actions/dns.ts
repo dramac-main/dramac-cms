@@ -324,6 +324,7 @@ export async function createDnsRecord(
 
 /**
  * Update a DNS record
+ * Note: recordId is the Cloudflare record ID (from listDnsRecords)
  */
 export async function updateDnsRecord(
   domainId: string,
@@ -338,7 +339,6 @@ export async function updateDnsRecord(
   }
 ): Promise<ActionResult> {
   const supabase = await createClient();
-  const admin = createAdminClient();
   
   try {
     const { data: domain } = await getTable(supabase, 'domains')
@@ -346,32 +346,16 @@ export async function updateDnsRecord(
       .eq('id', domainId)
       .single() as { data: Pick<DomainRow, 'cloudflare_zone_id'> | null };
     
-    const { data: dbRecord } = await getTable(supabase, 'domain_dns_records')
-      .select('cloudflare_record_id')
-      .eq('id', recordId)
-      .single() as { data: Pick<DnsRecordRow, 'cloudflare_record_id'> | null };
-    
-    if (!domain?.cloudflare_zone_id || !dbRecord?.cloudflare_record_id) {
-      return { success: false, error: 'Record not found' };
+    if (!domain?.cloudflare_zone_id) {
+      return { success: false, error: 'Domain not found or DNS zone not configured' };
     }
     
+    // recordId IS the Cloudflare record ID (from listDnsRecords which fetches from CF)
     await dnsService.updateRecord({
       zoneId: domain.cloudflare_zone_id,
-      recordId: dbRecord.cloudflare_record_id,
+      recordId: recordId,
       ...updates,
     });
-    
-    await getTable(admin, 'domain_dns_records')
-      .update({
-        record_type: updates.type,
-        name: updates.name,
-        content: updates.content,
-        ttl: updates.ttl,
-        priority: updates.priority,
-        proxied: updates.proxied,
-        last_synced_at: new Date().toISOString(),
-      })
-      .eq('id', recordId);
     
     revalidatePath(`/dashboard/domains/${domainId}`);
     revalidatePath(`/dashboard/domains/${domainId}/dns`);
@@ -388,13 +372,13 @@ export async function updateDnsRecord(
 
 /**
  * Delete a DNS record
+ * Note: recordId is the Cloudflare record ID (from listDnsRecords)
  */
 export async function deleteDnsRecord(
   domainId: string, 
   recordId: string
 ): Promise<ActionResult> {
   const supabase = await createClient();
-  const admin = createAdminClient();
   
   try {
     const { data: domain } = await getTable(supabase, 'domains')
@@ -402,20 +386,12 @@ export async function deleteDnsRecord(
       .eq('id', domainId)
       .single() as { data: Pick<DomainRow, 'cloudflare_zone_id'> | null };
     
-    const { data: dbRecord } = await getTable(supabase, 'domain_dns_records')
-      .select('cloudflare_record_id')
-      .eq('id', recordId)
-      .single() as { data: Pick<DnsRecordRow, 'cloudflare_record_id'> | null };
-    
-    if (!domain?.cloudflare_zone_id || !dbRecord?.cloudflare_record_id) {
-      return { success: false, error: 'Record not found' };
+    if (!domain?.cloudflare_zone_id) {
+      return { success: false, error: 'Domain not found or DNS zone not configured' };
     }
     
-    await dnsService.deleteRecord(domain.cloudflare_zone_id, dbRecord.cloudflare_record_id);
-    
-    await getTable(admin, 'domain_dns_records')
-      .delete()
-      .eq('id', recordId);
+    // recordId IS the Cloudflare record ID (from listDnsRecords which fetches from CF)
+    await dnsService.deleteRecord(domain.cloudflare_zone_id, recordId);
     
     revalidatePath(`/dashboard/domains/${domainId}`);
     revalidatePath(`/dashboard/domains/${domainId}/dns`);
@@ -502,7 +478,6 @@ export async function setupSiteDns(
   siteId?: string
 ): Promise<ActionResult<DnsSetupData>> {
   const supabase = await createClient();
-  const admin = createAdminClient();
   
   try {
     const { data: domain } = await getTable(supabase, 'domains')
@@ -525,38 +500,11 @@ export async function setupSiteDns(
       zoneId = zoneResult.data.zoneId;
     }
     
-    // Apply site template
+    // Apply site template - this creates records directly in Cloudflare
     const records = await dnsService.applySiteTemplate(zoneId);
     
-    // Store records in database
-    for (const record of records) {
-      const storageName = record.name
-        .replace(`.${domain.domain_name}`, '')
-        .replace(domain.domain_name, '@');
-      
-      await getTable(admin, 'domain_dns_records')
-        .insert({
-          domain_id: domainId,
-          record_type: record.type,
-          name: storageName,
-          content: record.content,
-          ttl: record.ttl,
-          proxied: record.proxied,
-          cloudflare_record_id: record.id,
-          status: 'active',
-          created_by: 'system',
-        });
-    }
-    
-    // Update domain status
-    await getTable(admin, 'domains')
-      .update({
-        dns_configured: true,
-        site_id: siteId,
-      })
-      .eq('id', domainId);
-    
     revalidatePath(`/dashboard/domains/${domainId}`);
+    revalidatePath(`/dashboard/domains/${domainId}/dns`);
     
     return { success: true, data: { recordsCreated: records.length } };
   } catch (error) {
@@ -577,7 +525,6 @@ export async function setupEmailDns(
   options?: { dkimValue?: string }
 ): Promise<ActionResult<DnsSetupData>> {
   const supabase = await createClient();
-  const admin = createAdminClient();
   
   try {
     const { data: domain } = await getTable(supabase, 'domains')
@@ -601,27 +548,8 @@ export async function setupEmailDns(
       return { success: false, error: 'Unsupported email provider' };
     }
     
-    // Store records in database
-    for (const record of records) {
-      const storageName = record.name
-        .replace(`.${domain.domain_name}`, '')
-        .replace(domain.domain_name, '@');
-      
-      await getTable(admin, 'domain_dns_records')
-        .insert({
-          domain_id: domainId,
-          record_type: record.type,
-          name: storageName,
-          content: record.content,
-          ttl: record.ttl,
-          priority: record.priority,
-          cloudflare_record_id: record.id,
-          status: 'active',
-          created_by: 'system',
-        });
-    }
-    
     revalidatePath(`/dashboard/domains/${domainId}`);
+    revalidatePath(`/dashboard/domains/${domainId}/dns`);
     
     return { success: true, data: { recordsCreated: records.length } };
   } catch (error) {
