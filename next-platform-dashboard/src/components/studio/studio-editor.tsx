@@ -14,7 +14,7 @@ import { DndProvider } from "@/components/studio/dnd";
 import { EditorCanvas } from "@/components/studio/canvas";
 import { ComponentLibrary } from "@/components/studio/panels";
 import { PropertiesPanel } from "@/components/studio/properties";
-import { useUIStore, useEditorStore } from "@/lib/studio/store";
+import { useUIStore, useEditorStore, useAIStore, useSelectionStore } from "@/lib/studio/store";
 import { initializeRegistry } from "@/lib/studio/registry";
 import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
@@ -79,6 +79,10 @@ export function StudioEditor({
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const addComponent = useEditorStore((s) => s.addComponent);
   const moveComponent = useEditorStore((s) => s.moveComponent);
+  
+  // AI Chat store
+  const { openChat, closeChat, isOpen: aiChatOpen } = useAIStore();
+  const selectedId = useSelectionStore((s) => s.componentId);
 
   // Initialize registry on mount
   useEffect(() => {
@@ -140,11 +144,21 @@ export function StudioEditor({
         e.preventDefault();
         handlePreview();
       }
+      
+      // Toggle AI Chat: Cmd/Ctrl + /
+      if (isMeta && e.key === "/") {
+        e.preventDefault();
+        if (aiChatOpen) {
+          closeChat();
+        } else if (selectedId) {
+          openChat(selectedId);
+        }
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleSave, handlePreview]);
+  }, [handleSave, handlePreview, aiChatOpen, closeChat, openChat, selectedId]);
 
   return (
     <DndProvider>

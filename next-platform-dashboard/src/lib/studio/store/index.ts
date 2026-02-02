@@ -42,6 +42,20 @@ export {
   type SelectionStore,
 } from "./selection-store";
 
+export {
+  useAIStore,
+  useIsAIChatOpen,
+  useChatHistory,
+  usePendingChanges,
+  useAILoading,
+  useAIChatOpen,
+  useAIActiveComponentId,
+  type ChatMessage,
+  type AIState,
+  type AIActions,
+  type AIStore,
+} from "./ai-store";
+
 // =============================================================================
 // COMBINED HOOKS
 // =============================================================================

@@ -2,8 +2,9 @@
  * Studio AI Components
  * 
  * AI-powered editing features.
- * Phase STUDIO-11+ will add: ai-component-chat, ai-page-generator, ai-suggestions
+ * Phase STUDIO-11: AI Component Chat
  */
 
-// Placeholder - components added in later phases
-export {};
+export { AIComponentChat } from "./ai-component-chat";
+export { ChangePreview } from "./change-preview";
+export { ChatMessage } from "./chat-message";

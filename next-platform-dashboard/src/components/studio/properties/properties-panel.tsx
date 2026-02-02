@@ -8,7 +8,7 @@
 
 import React, { useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { Settings, Trash2, Copy, ChevronDown, ChevronRight, MousePointer } from "lucide-react";
+import { Settings, Trash2, Copy, ChevronDown, ChevronRight, MousePointer, Sparkles } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,8 +26,9 @@ import {
 import { PanelHeader } from "@/components/studio/layout/panel-header";
 import { FieldRenderer } from "@/components/studio/fields/field-renderer";
 import { BreakpointIndicator, BreakpointSelectorCompact } from "@/components/studio/layout/breakpoint-selector";
+import { AIComponentChat } from "@/components/studio/ai";
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
-import { useEditorStore, useSelectionStore, useUIStore } from "@/lib/studio/store";
+import { useEditorStore, useSelectionStore, useUIStore, useAIStore } from "@/lib/studio/store";
 import type { FieldGroup, ComponentDefinition, FieldDefinition } from "@/types/studio";
 
 // =============================================================================
@@ -59,6 +60,7 @@ interface ComponentInfoProps {
 
 function ComponentInfo({ definition, componentId }: ComponentInfoProps) {
   const Icon = (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[definition.icon] || LucideIcons.Box;
+  const { openChat } = useAIStore();
   
   return (
     <div className="border-b border-border">
@@ -70,6 +72,16 @@ function ComponentInfo({ definition, componentId }: ComponentInfoProps) {
           <h3 className="text-sm font-semibold">{definition.label}</h3>
           <p className="text-xs text-muted-foreground truncate">{componentId}</p>
         </div>
+        {/* Ask AI Button */}
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 shrink-0"
+          onClick={() => openChat(componentId)}
+        >
+          <Sparkles className="h-4 w-4" />
+          Ask AI
+        </Button>
       </div>
       
       {/* Breakpoint Indicator */}
@@ -355,6 +367,9 @@ export function PropertiesPanel() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+      
+      {/* AI Component Chat Panel */}
+      <AIComponentChat />
     </div>
   );
 }
