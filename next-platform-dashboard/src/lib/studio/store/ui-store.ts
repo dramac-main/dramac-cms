@@ -3,10 +3,14 @@
  * 
  * State for UI elements: panels, zoom, breakpoint, editor mode.
  * Persists preferences to localStorage.
+ * 
+ * NOTE: Uses hydration-safe pattern to avoid SSR/client mismatch.
+ * Components should use `useHydratedUIStore` for panel state.
  */
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { useState, useEffect } from "react";
 import type { Breakpoint, EditorMode, PanelState, UIState } from "@/types/studio";
 
 // =============================================================================
@@ -197,9 +201,72 @@ export const useUIStore = create<UIStore>()(
         showGrid: state.showGrid,
         showOutlines: state.showOutlines,
       }),
+      // Skip hydration on server - we'll handle it manually
+      skipHydration: true,
     }
   )
 );
+
+// =============================================================================
+// HYDRATION HOOK
+// =============================================================================
+
+/**
+ * Hydration-safe hook for UI store.
+ * Prevents SSR/client mismatch by waiting for client-side hydration.
+ * 
+ * @returns The hydrated UI store state, or initial state during SSR
+ */
+export function useHydratedUIStore<T>(selector: (state: UIStore) => T): T {
+  const storeValue = useUIStore(selector);
+  const [hydrated, setHydrated] = useState(false);
+  
+  useEffect(() => {
+    // Rehydrate store from localStorage on client
+    useUIStore.persist.rehydrate();
+    setHydrated(true);
+  }, []);
+  
+  // During SSR or before hydration, use initial state values
+  if (!hydrated) {
+    // Return the selector applied to initial state
+    const initialStoreState = {
+      ...initialState,
+      togglePanel: () => {},
+      setPanelOpen: () => {},
+      setAllPanels: () => {},
+      setBreakpoint: () => {},
+      setZoom: () => {},
+      zoomIn: () => {},
+      zoomOut: () => {},
+      resetZoom: () => {},
+      setMode: () => {},
+      togglePreview: () => {},
+      setDragging: () => {},
+      toggleGrid: () => {},
+      toggleOutlines: () => {},
+      resetUI: () => {},
+    } as UIStore;
+    return selector(initialStoreState);
+  }
+  
+  return storeValue;
+}
+
+/**
+ * Hook to check if UI store is hydrated
+ */
+export function useUIStoreHydrated(): boolean {
+  const [hydrated, setHydrated] = useState(false);
+  
+  useEffect(() => {
+    // Perform hydration
+    useUIStore.persist.rehydrate();
+    setHydrated(true);
+  }, []);
+  
+  return hydrated;
+}
 
 // =============================================================================
 // SELECTORS

@@ -23,6 +23,8 @@ export {
 
 export {
   useUIStore,
+  useHydratedUIStore,
+  useUIStoreHydrated,
   selectBreakpoint,
   selectZoom,
   selectPanels,

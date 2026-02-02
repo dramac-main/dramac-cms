@@ -44,7 +44,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Toggle } from "@/components/ui/toggle";
 import { Separator } from "@/components/ui/separator";
-import { useEditorStore, useUIStore, undo, redo, canUndo, canRedo, useHistoryState } from "@/lib/studio/store";
+import { useEditorStore, useUIStore, useHydratedUIStore, undo, redo, canUndo, canRedo, useHistoryState } from "@/lib/studio/store";
 import type { Breakpoint } from "@/types/studio";
 
 // =============================================================================
@@ -90,7 +90,8 @@ export const StudioToolbar = memo(function StudioToolbar({
   const isDirty = useEditorStore((s) => s.isDirty);
   const { canUndo: historyCanUndo, canRedo: historyCanRedo } = useHistoryState();
   
-  const panels = useUIStore((s) => s.panels);
+  // Use hydration-safe hook for panel state to prevent SSR mismatch
+  const panels = useHydratedUIStore((s) => s.panels);
   const breakpoint = useUIStore((s) => s.breakpoint);
   const togglePanel = useUIStore((s) => s.togglePanel);
   const setBreakpoint = useUIStore((s) => s.setBreakpoint);
