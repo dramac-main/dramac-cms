@@ -291,16 +291,19 @@ export async function getDomains(filters?: DomainFilters): Promise<{
     const query = (supabase as unknown as { from: (table: string) => {
       select: (columns: string) => {
         eq: (column: string, value: string) => {
-          ilike?: (column: string, value: string) => unknown;
-          order: (column: string, options: { ascending: boolean }) => {
-            range: (from: number, to: number) => Promise<{ data: AnyRecord[] | null; error: { message: string } | null; count?: number }>
+          neq: (column: string, value: string) => {
+            ilike?: (column: string, value: string) => unknown;
+            order: (column: string, options: { ascending: boolean }) => {
+              range: (from: number, to: number) => Promise<{ data: AnyRecord[] | null; error: { message: string } | null; count?: number }>
+            }
           }
         }
       }
     }})
       .from('domains')
       .select('*')
-      .eq('agency_id', profile.agency_id);
+      .eq('agency_id', profile.agency_id)
+      .neq('status', 'cancelled'); // Filter out deleted domains
     
     // Apply sorting
     const sortBy = filters?.sortBy || 'created_at';

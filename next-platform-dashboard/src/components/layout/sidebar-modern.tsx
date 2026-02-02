@@ -389,12 +389,18 @@ function NavItemComponent({
   // e.g., /dashboard/crm should match /dashboard/crm/contacts
   // but /dashboard should NOT match /dashboard/crm
   // and /portal should NOT match /portal/sites
+  // SPECIAL CASE: /dashboard/domains should NOT match /dashboard/domains/transfer
+  // because Transfers has its own nav item
   const isTopLevelItem = item.href === '/dashboard' || 
                           item.href === '/settings' || 
                           item.href === '/admin' || 
                           item.href === '/marketplace' ||
                           item.href === '/portal';
-  const isActive = isExactMatch || (!isTopLevelItem && isChildRoute);
+  
+  // Items that have sub-items as separate nav entries shouldn't highlight for child routes
+  const hasChildNavItems = item.href === '/dashboard/domains';
+  
+  const isActive = isExactMatch || (!isTopLevelItem && !hasChildNavItems && isChildRoute);
   const Icon = item.icon;
 
   const content = (
