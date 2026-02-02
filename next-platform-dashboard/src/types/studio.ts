@@ -717,3 +717,119 @@ export function isLibraryDrag(data: DragData): data is LibraryDragData {
 export function isCanvasDrag(data: DragData): data is CanvasDragData {
   return data.source === "canvas";
 }
+
+// =============================================================================
+// ADVANCED FIELD VALUE TYPES (Phase STUDIO-09)
+// =============================================================================
+
+/**
+ * Spacing value with CSS units (for margin/padding fields with full CSS support)
+ */
+export interface SpacingValueCSS {
+  top: string;
+  right: string;
+  bottom: string;
+  left: string;
+}
+
+/**
+ * Typography value type
+ */
+export interface TypographyValue {
+  fontFamily?: string;
+  fontSize?: string;
+  fontWeight?: number;
+  lineHeight?: string;
+  letterSpacing?: string;
+  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+}
+
+/**
+ * Image value type
+ */
+export interface ImageValue {
+  url: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+}
+
+/**
+ * Link value type
+ */
+export interface LinkValue {
+  href: string;
+  target?: '_blank' | '_self';
+  pageId?: string;
+  type?: 'page' | 'url' | 'email' | 'phone';
+}
+
+/**
+ * Field editor props base
+ */
+export interface BaseFieldEditorProps<T> {
+  value: T;
+  onChange: (value: T) => void;
+  label: string;
+  description?: string;
+  disabled?: boolean;
+  required?: boolean;
+  error?: string;
+}
+
+/**
+ * Color field props
+ */
+export interface ColorFieldEditorProps extends BaseFieldEditorProps<string> {
+  showAlpha?: boolean;
+  presets?: string[];
+}
+
+/**
+ * Image field props
+ */
+export interface ImageFieldEditorProps extends BaseFieldEditorProps<ImageValue> {
+  accepts?: string[];
+  maxSize?: number;
+}
+
+/**
+ * Link field props
+ */
+export interface LinkFieldEditorProps extends BaseFieldEditorProps<LinkValue> {
+  allowedTypes?: Array<'page' | 'url' | 'email' | 'phone'>;
+  siteId?: string;
+}
+
+/**
+ * Spacing field props (with CSS units)
+ */
+export interface SpacingFieldEditorProps extends BaseFieldEditorProps<SpacingValueCSS> {
+  allowNegative?: boolean;
+  units?: string[];
+}
+
+/**
+ * Typography field props
+ */
+export interface TypographyFieldEditorProps extends BaseFieldEditorProps<TypographyValue> {
+  showPreview?: boolean;
+}
+
+/**
+ * Array field props
+ */
+export interface ArrayFieldEditorProps extends BaseFieldEditorProps<unknown[]> {
+  itemFields: Record<string, FieldDefinition>;
+  itemLabel?: string;
+  minItems?: number;
+  maxItems?: number;
+}
+
+/**
+ * Object field props
+ */
+export interface ObjectFieldEditorProps extends BaseFieldEditorProps<Record<string, unknown>> {
+  fields: Record<string, FieldDefinition>;
+  collapsible?: boolean;
+}

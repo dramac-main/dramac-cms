@@ -1,7 +1,7 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2, 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: WAVE 1 ✅ → WAVE 2 READY 🟡**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: WAVE 1 ✅ + WAVE 2 PARTIAL ✅ (05-08)**
 **Component Strategy**: Fresh premium components (NOT reusing basic Puck components)
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
@@ -13,7 +13,7 @@
 
 ## 🚀 DRAMAC Studio - Custom Website Editor (February 2, 2026)
 
-**Status**: ✅ WAVE 1 COMPLETE → 🟡 WAVE 2 READY
+**Status**: ✅ WAVE 1 COMPLETE + ✅ WAVE 2 PHASES 05-08 COMPLETE
 **Strategy**: Fresh premium mobile-first components (NOT reusing 116 basic Puck components)
 **Quality Goal**: Webflow/Wix Studio level
 
@@ -30,7 +30,7 @@
 | Wave | Phases | Description | Status |
 |------|--------|-------------|--------|
 | **1** | 01-04 | Foundation | ✅ **COMPLETE** |
-| **2** | 05-08 | Core Editor + 10 Premium Components | 🟡 **READY TO IMPLEMENT** |
+| **2** | 05-08 | Core Editor (DnD, Canvas, Component Library, Properties) | ✅ **COMPLETE** |
 | **3** | 09-10 | Field System | ⏳ Waiting |
 | **4** | 11-13 | AI Integration | ⏳ Waiting |
 | **5** | 14-15 | Module Integration | ⏳ Waiting |
@@ -38,6 +38,78 @@
 | **7** | 20-23 | Polish | ⏳ Waiting |
 | **8** | 24-26 | Extras | ⏳ Waiting |
 | **9** | 27 | Integration & Cleanup | ⏳ Waiting |
+
+### WAVE 2: Core Editor - ✅ PHASES 05-08 COMPLETE
+
+#### PHASE-STUDIO-05: Drag & Drop System ✅ COMPLETE
+
+**Completion Date**: February 2, 2026
+
+| File | Purpose | Status |
+|------|---------|--------|
+| src/components/studio/dnd/dnd-provider.tsx | DndContext wrapper with sensors | ✅ |
+| src/components/studio/dnd/draggable-component.tsx | Library component draggable | ✅ |
+| src/components/studio/dnd/droppable-canvas.tsx | Canvas drop zone | ✅ |
+| src/components/studio/dnd/sortable-component.tsx | Canvas component sortable | ✅ |
+| src/components/studio/dnd/index.ts | Barrel exports | ✅ |
+
+#### PHASE-STUDIO-06: Canvas & Rendering ✅ COMPLETE
+
+**Completion Date**: February 2, 2026
+
+| File | Purpose | Status |
+|------|---------|--------|
+| src/components/studio/canvas/canvas-area.tsx | Main canvas with viewport | ✅ |
+| src/components/studio/canvas/component-wrapper.tsx | Selection/hover overlays | ✅ |
+| src/components/studio/canvas/index.ts | Barrel exports | ✅ |
+
+#### PHASE-STUDIO-07: Component Library Panel ✅ COMPLETE
+
+**Completion Date**: February 2, 2026
+
+| File | Purpose | Status |
+|------|---------|--------|
+| src/components/studio/panels/component-card.tsx | Draggable card (default/compact) | ✅ |
+| src/components/studio/panels/category-accordion.tsx | Collapsible category sections | ✅ |
+| src/components/studio/panels/recently-used.tsx | 6 recently used + sessionStorage | ✅ |
+| src/components/studio/panels/component-library.tsx | Search, categories, quick-add | ✅ |
+| src/components/studio/panels/index.ts | Barrel exports | ✅ |
+
+**Features:**
+- Search filtering by component name
+- Category accordion with Lucide icons
+- Recently used section (persisted per session)
+- Double-click quick-add to canvas
+- Custom event `studio:component-dropped` for tracking
+
+#### PHASE-STUDIO-08: Properties Panel Foundation ✅ COMPLETE
+
+**Completion Date**: February 2, 2026
+
+| File | Purpose | Status |
+|------|---------|--------|
+| src/components/studio/properties/field-wrapper.tsx | Labels, tooltips, responsive toggle | ✅ |
+| src/components/studio/properties/fields/text-field.tsx | Text input editor | ✅ |
+| src/components/studio/properties/fields/textarea-field.tsx | Multi-line text editor | ✅ |
+| src/components/studio/properties/fields/number-field.tsx | Number with slider option | ✅ |
+| src/components/studio/properties/fields/select-field.tsx | Dropdown selector | ✅ |
+| src/components/studio/properties/fields/toggle-field.tsx | Boolean switch | ✅ |
+| src/components/studio/properties/fields/color-field.tsx | Color picker with presets | ✅ |
+| src/components/studio/properties/fields/spacing-field.tsx | Margin/padding editor | ✅ |
+| src/components/studio/properties/fields/url-field.tsx | URL input with validation | ✅ |
+| src/components/studio/properties/fields/index.ts | Field exports | ✅ |
+| src/components/studio/properties/field-renderer.tsx | Maps field types to editors | ✅ |
+| src/components/studio/properties/properties-panel.tsx | Main properties panel | ✅ |
+| src/components/studio/properties/index.ts | Barrel exports | ✅ |
+| src/types/studio.ts | Added SpacingValue, ResponsiveValue, FieldGroup | ✅ |
+
+**Features:**
+- 8 field type editors
+- Responsive breakpoint toggle per field
+- Component info header with icon
+- Grouped fields with collapsible sections
+- Delete/duplicate component actions
+- Empty state when no component selected
 
 ### WAVE 1: Foundation - ✅ 100% COMPLETE
 

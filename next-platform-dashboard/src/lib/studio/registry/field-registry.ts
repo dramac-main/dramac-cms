@@ -346,3 +346,216 @@ export const presetOptions = {
     { label: "Fill", value: "fill" },
   ],
 };
+
+// =============================================================================
+// FIELD TYPE METADATA (Phase STUDIO-09)
+// =============================================================================
+
+/**
+ * Field type metadata for UI
+ */
+export interface FieldTypeMeta {
+  type: FieldType;
+  label: string;
+  description: string;
+  icon: string;
+  supportsResponsive: boolean;
+}
+
+/**
+ * Registry of all field types with metadata
+ */
+export const FIELD_TYPE_REGISTRY: Record<FieldType, FieldTypeMeta> = {
+  text: {
+    type: 'text',
+    label: 'Text',
+    description: 'Single line text input',
+    icon: 'type',
+    supportsResponsive: false,
+  },
+  textarea: {
+    type: 'textarea',
+    label: 'Text Area',
+    description: 'Multi-line text input',
+    icon: 'align-left',
+    supportsResponsive: false,
+  },
+  number: {
+    type: 'number',
+    label: 'Number',
+    description: 'Numeric input with optional min/max',
+    icon: 'hash',
+    supportsResponsive: true,
+  },
+  select: {
+    type: 'select',
+    label: 'Select',
+    description: 'Dropdown selection',
+    icon: 'chevron-down',
+    supportsResponsive: false,
+  },
+  radio: {
+    type: 'radio',
+    label: 'Radio',
+    description: 'Radio button selection',
+    icon: 'circle-dot',
+    supportsResponsive: false,
+  },
+  checkbox: {
+    type: 'checkbox',
+    label: 'Checkbox',
+    description: 'Boolean checkbox',
+    icon: 'check-square',
+    supportsResponsive: false,
+  },
+  toggle: {
+    type: 'toggle',
+    label: 'Toggle',
+    description: 'Boolean switch',
+    icon: 'toggle-right',
+    supportsResponsive: false,
+  },
+  color: {
+    type: 'color',
+    label: 'Color',
+    description: 'Color picker with presets',
+    icon: 'palette',
+    supportsResponsive: false,
+  },
+  image: {
+    type: 'image',
+    label: 'Image',
+    description: 'Image upload or URL',
+    icon: 'image',
+    supportsResponsive: false,
+  },
+  link: {
+    type: 'link',
+    label: 'Link',
+    description: 'URL or page link',
+    icon: 'link',
+    supportsResponsive: false,
+  },
+  spacing: {
+    type: 'spacing',
+    label: 'Spacing',
+    description: 'Visual margin/padding editor',
+    icon: 'square',
+    supportsResponsive: true,
+  },
+  typography: {
+    type: 'typography',
+    label: 'Typography',
+    description: 'Font and text settings',
+    icon: 'type',
+    supportsResponsive: true,
+  },
+  array: {
+    type: 'array',
+    label: 'Array',
+    description: 'List of items',
+    icon: 'list',
+    supportsResponsive: false,
+  },
+  object: {
+    type: 'object',
+    label: 'Object',
+    description: 'Nested object fields',
+    icon: 'braces',
+    supportsResponsive: false,
+  },
+  richtext: {
+    type: 'richtext',
+    label: 'Rich Text',
+    description: 'Rich text editor (TipTap)',
+    icon: 'file-text',
+    supportsResponsive: false,
+  },
+  code: {
+    type: 'code',
+    label: 'Code',
+    description: 'Code editor input',
+    icon: 'code',
+    supportsResponsive: false,
+  },
+  slider: {
+    type: 'slider',
+    label: 'Slider',
+    description: 'Range slider input',
+    icon: 'sliders',
+    supportsResponsive: true,
+  },
+  custom: {
+    type: 'custom',
+    label: 'Custom',
+    description: 'Custom field renderer',
+    icon: 'puzzle',
+    supportsResponsive: false,
+  },
+};
+
+/**
+ * Helper to check if field supports responsive mode
+ */
+export function fieldSupportsResponsive(type: FieldType): boolean {
+  return FIELD_TYPE_REGISTRY[type]?.supportsResponsive ?? false;
+}
+
+/**
+ * Create field definition helper
+ */
+export function createField<T extends FieldType>(
+  type: T,
+  label: string,
+  options?: Partial<FieldDefinition>
+): FieldDefinition {
+  return {
+    type,
+    label,
+    ...options,
+  };
+}
+
+/**
+ * Commonly used field presets
+ */
+export const FieldPresets = {
+  // Text presets
+  title: () => createField('text', 'Title', { required: true }),
+  subtitle: () => createField('text', 'Subtitle'),
+  description: () => createField('textarea', 'Description', { rows: 3 }),
+  
+  // Visual presets
+  backgroundColor: () => createField('color', 'Background Color', { 
+    defaultValue: 'transparent' 
+  }),
+  textColor: () => createField('color', 'Text Color', { 
+    defaultValue: 'inherit' 
+  }),
+  
+  // Spacing presets
+  padding: () => createField('spacing', 'Padding', { 
+    responsive: true,
+    defaultValue: { top: 16, right: 16, bottom: 16, left: 16 },
+  }),
+  margin: () => createField('spacing', 'Margin', { 
+    responsive: true,
+    defaultValue: { top: 0, right: 0, bottom: 0, left: 0 },
+  }),
+  
+  // Typography preset
+  typography: () => createField('typography', 'Typography', { 
+    responsive: true 
+  }),
+  
+  // Link preset
+  link: () => createField('link', 'Link', {
+    defaultValue: { href: '', target: '_self', type: 'url' },
+  }),
+  
+  // Image preset
+  image: () => createField('image', 'Image', {
+    defaultValue: { url: '', alt: '' },
+  }),
+};
+
