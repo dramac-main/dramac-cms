@@ -1,8 +1,82 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: February 1, 2026  
-**Current Phase**: Domain & Email Reseller Module - DM-01 through DM-05 Complete  
-**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + **DM-01 ✅ DM-02 ✅ DM-03 ✅ DM-04 ✅ DM-05 ✅**
+**Last Updated**: February 2, 2026  
+**Current Phase**: Domain & Email Reseller Module - DM-01 through DM-08 + Email Page Unification  
+**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + **DM-01 ✅ DM-02 ✅ DM-03 ✅ DM-04 ✅ DM-05 ✅ DM-07 ✅ DM-08 ✅**
+
+---
+
+## 🔄 Email Page Unification (February 2, 2026)
+
+### Problem Identified
+Two separate email management pages with inconsistent data sources:
+1. `/dashboard/email` - Global email hub using **real data** from DM-08
+2. `/dashboard/domains/[domainId]/email` - Domain-specific using **mock data** from DM-05
+
+### Solution Implemented
+**Domain-Centric Approach**: Unified both pages to use real database data.
+
+#### Changes Made
+
+1. **New Server Action**: `getBusinessEmailOrderByDomainId(domainId)`
+   - Added to `src/lib/actions/business-email.ts`
+   - Fetches email order and accounts for a specific domain
+   - Returns domain info with null order if no email purchased
+   - Proper TypeScript types and error handling
+
+2. **Rewrote Domain Email Page**: `/dashboard/domains/[domainId]/email/page.tsx`
+   - Now uses `getBusinessEmailOrderByDomainId` for real data
+   - **No Email State**: Shows purchase prompt with feature list
+   - **Has Email State**: Full management UI with:
+     - Order status and expiry information
+     - Mailbox usage statistics (X/Y used)
+     - Days until renewal countdown
+     - Link to order details page
+     - Webmail access button
+     - IMAP/SMTP configuration reference
+   - Links to purchase flow with domain context pre-filled
+
+3. **New Client Component**: `domain-email-accounts-client.tsx`
+   - Interactive email account management
+   - Create account form with validation
+   - Delete account with confirmation dialog
+   - Copy email to clipboard functionality
+   - Max mailbox limit enforcement
+
+### User Flow Now
+1. User visits `/dashboard/domains/[id]/email`
+2. If no email: See purchase prompt → Click "Purchase Email" → Goes to `/dashboard/email/purchase?domain=example.com&domainId=xxx`
+3. If has email: Manage accounts, create/delete, see status
+4. Global overview at `/dashboard/email` shows ALL orders
+
+### Git Commit
+`1af7961` - "feat(email): unify domain email page with real data integration"
+- 3 files changed, 679 insertions(+), 138 deletions
+
+---
+
+## 🔧 External Service Setup (February 2, 2026)
+
+### Cloudflare Account ✅
+- Account ID: `286ec937c0301db8d6dcfd4234cd9c7e`
+- API Token: Created and verified working
+- Environment: Token in `.env.local`
+- Test script created: `scripts/test-cloudflare.ts`
+
+### ResellerClub Account ⏳
+- Signup in progress (user completing manually)
+- Currency: USD (accounting currency)
+- Note: "accountingcurrency" dropdown is hidden, must find in form
+
+### Currency Strategy Decided
+- **All pricing in USD** - Required by ResellerClub, practical for international
+- Paddle doesn't support ZMW (Zambian Kwacha)
+- Future: Can add DPO for local payments if needed
+
+### Payment Gateway Decision
+- **Primary**: Paddle (MoR - handles tax globally)
+- **Future option**: DPO for local Zambian payments
+- Documentation: `docs/PAYMENT-GATEWAY-COMPARISON.md`
 
 ---
 
