@@ -6,6 +6,44 @@
 
 ---
 
+## 🔧 Recent Bug Fix: Image Rendering (February 2, 2026)
+
+### Issue
+Images added via the Properties Panel (using ImageFieldEditor from Wave 3) were not displaying on the canvas.
+
+### Root Cause
+The Wave 3 `ImageFieldEditor` outputs `ImageValue` objects `{ url: string, alt?: string }`, but all render components were expecting plain string URLs for `src` or `backgroundImage` props.
+
+### Solution
+Added `extractImageUrl()` helper function to all components that render images. This helper handles both string and ImageValue formats:
+
+```typescript
+type ImageValue = { url: string; alt?: string; width?: number; height?: number };
+
+function extractImageUrl(src: string | ImageValue | undefined): string {
+  if (!src) return "";
+  if (typeof src === "string") return src;
+  if (typeof src === "object" && "url" in src) return src.url || "";
+  return "";
+}
+```
+
+### Files Fixed
+- `src/components/editor/puck/components/media.tsx` - ImageRender
+- `src/components/editor/puck/components/layout.tsx` - SectionRender
+- `src/components/editor/puck/components/sections.tsx` - HeroRender
+- `src/components/editor/puck/components/interactive.tsx` - ParallaxRender
+- `src/components/studio/blocks/layout/section-block.tsx` - SectionBlock
+- `src/components/editor/user-components/section.tsx` - Section
+- `src/components/editor/user-components/hero.tsx` - Hero
+- `src/components/editor/user-components/hero-section.tsx` - HeroSection
+- `src/components/editor/settings/hero-settings.tsx` - Value extraction
+
+### Pattern for Future Components
+Any component with image/backgroundImage props must use `extractImageUrl()` to ensure compatibility with both legacy string values and new ImageValue objects from Wave 3 field editors.
+
+---
+
 ## 🎉 WAVE 3 FIELD SYSTEM - COMPLETE (February 2, 2026)
 
 ### What Was Implemented
