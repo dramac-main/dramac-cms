@@ -205,32 +205,41 @@ export async function deleteCloudflareZone(
 
 /**
  * Check zone activation status
+ * Returns expected nameservers from Cloudflare and actual current nameservers from DNS
  */
 export async function checkZoneActivation(
   domainId: string
-): Promise<ActionResult<{ activated: boolean; nameservers: string[] }>> {
+): Promise<ActionResult<{ 
+  activated: boolean; 
+  nameservers: string[];  // Expected (Cloudflare assigned)
+  currentNameservers: string[]; // Actual (from DNS lookup)
+}>> {
   const supabase = await createClient();
-  const admin = createAdminClient();
   
   try {
     const { data: domain } = await getTable(supabase, 'domains')
-      .select('cloudflare_zone_id')
+      .select('cloudflare_zone_id, domain_name')
       .eq('id', domainId)
-      .single() as { data: Pick<DomainRow, 'cloudflare_zone_id'> | null };
+      .single() as { data: Pick<DomainRow, 'cloudflare_zone_id' | 'domain_name'> | null };
     
     if (!domain?.cloudflare_zone_id) {
       return { success: false, error: 'DNS zone not configured' };
     }
     
+    // Get expected nameservers from Cloudflare
     const status = await zoneService.checkActivation(domain.cloudflare_zone_id);
     
-    if (status.activated) {
-      await getTable(admin, 'cloudflare_zones')
-        .update({ 
-          status: 'active',
-          last_checked_at: new Date().toISOString(),
-        })
-        .eq('domain_id', domainId);
+    // Get actual current nameservers from DNS lookup
+    let currentNameservers: string[] = [];
+    try {
+      const nsStatus = await propagationService.checkNameserverPropagation(
+        domain.domain_name,
+        status.nameservers
+      );
+      currentNameservers = nsStatus.current;
+    } catch {
+      // If DNS lookup fails, return empty array
+      currentNameservers = [];
     }
     
     return { 
@@ -238,6 +247,7 @@ export async function checkZoneActivation(
       data: {
         activated: status.activated,
         nameservers: status.nameservers,
+        currentNameservers,
       }
     };
   } catch (error) {

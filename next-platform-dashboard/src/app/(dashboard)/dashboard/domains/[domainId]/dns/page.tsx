@@ -58,23 +58,22 @@ async function DnsRecordsSection({ domainId, domainName }: { domainId: string; d
   );
 }
 
-async function NameserversSection({ domainId, nameservers }: { domainId: string; nameservers: string[] }) {
-  // Check zone activation status
+async function NameserversSection({ domainId }: { domainId: string }) {
+  // Check zone activation status - includes both expected and current nameservers
   const activationResult = await checkZoneActivation(domainId);
   
-  if (!activationResult.success) {
+  if (!activationResult.success || !activationResult.data) {
     // Zone not configured - don't show nameservers section
     return null;
   }
 
-  const expected = activationResult.data?.nameservers || [];
-  const configured = activationResult.data?.activated || false;
+  const { nameservers: expected, currentNameservers: current, activated } = activationResult.data;
 
   return (
     <DnsNameservers 
-      current={nameservers}
+      current={current}
       expected={expected}
-      configured={configured}
+      configured={activated}
     />
   );
 }
@@ -163,10 +162,7 @@ export default async function DnsPage({ params }: DnsPageProps) {
       {/* Nameservers Section */}
       {hasCloudflareZone && (
         <Suspense fallback={<Skeleton className="h-32" />}>
-          <NameserversSection 
-            domainId={domainId} 
-            nameservers={domain.nameservers || []} 
-          />
+          <NameserversSection domainId={domainId} />
         </Suspense>
       )}
 
