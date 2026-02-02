@@ -10,7 +10,7 @@ import { useEffect, useCallback, useState } from "react";
 import { StudioLayout } from "@/components/studio/layout/studio-layout";
 import { StudioToolbar } from "@/components/studio/layout/studio-toolbar";
 import { PanelHeader } from "@/components/studio/layout/panel-header";
-import { useUIStore, useHydratedUIStore } from "@/lib/studio/store";
+import { useUIStore } from "@/lib/studio/store";
 import {
   Layers,
   Settings2,

@@ -24,7 +24,7 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
-import { useUIStore, useHydratedUIStore, useUIStoreHydrated } from "@/lib/studio/store";
+import { useUIStore } from "@/lib/studio/store";
 
 // =============================================================================
 // TYPES
@@ -59,10 +59,10 @@ export function StudioLayout({
   rightPanel,
   bottomPanel,
 }: StudioLayoutProps) {
-  // Use hydration-safe hook for panel state to prevent SSR mismatch
-  const panels = useHydratedUIStore((s) => s.panels);
+  // Get panel state directly from store
+  // Panels are NOT persisted to localStorage to avoid hydration issues
+  const panels = useUIStore((s) => s.panels);
   const togglePanel = useUIStore((s) => s.togglePanel);
-  const isHydrated = useUIStoreHydrated();
 
   // =============================================================================
   // KEYBOARD SHORTCUTS

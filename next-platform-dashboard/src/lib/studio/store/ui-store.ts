@@ -4,13 +4,12 @@
  * State for UI elements: panels, zoom, breakpoint, editor mode.
  * Persists preferences to localStorage.
  * 
- * NOTE: Uses hydration-safe pattern to avoid SSR/client mismatch.
- * Components should use `useHydratedUIStore` for panel state.
+ * IMPORTANT: This store uses persist middleware with onRehydrateStorage
+ * to properly handle SSR/client hydration.
  */
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { useState, useEffect } from "react";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type { Breakpoint, EditorMode, PanelState, UIState } from "@/types/studio";
 
 // =============================================================================
@@ -194,79 +193,29 @@ export const useUIStore = create<UIStore>()(
     }),
     {
       name: "dramac-studio-ui",
-      // Only persist these fields
+      storage: createJSONStorage(() => {
+        // Only use localStorage on client side
+        if (typeof window === "undefined") {
+          return {
+            getItem: () => null,
+            setItem: () => {},
+            removeItem: () => {},
+          };
+        }
+        return localStorage;
+      }),
+      // Only persist these fields - DO NOT persist panels to avoid hydration issues
+      // Panels will always start with default values (open)
       partialize: (state) => ({
-        panels: state.panels,
         zoom: state.zoom,
         showGrid: state.showGrid,
         showOutlines: state.showOutlines,
+        // NOTE: We intentionally DO NOT persist panels to avoid hydration mismatch
+        // Users expect panels to be open when they open the editor
       }),
-      // Skip hydration on server - we'll handle it manually
-      skipHydration: true,
     }
   )
 );
-
-// =============================================================================
-// HYDRATION HOOK
-// =============================================================================
-
-/**
- * Hydration-safe hook for UI store.
- * Prevents SSR/client mismatch by waiting for client-side hydration.
- * 
- * @returns The hydrated UI store state, or initial state during SSR
- */
-export function useHydratedUIStore<T>(selector: (state: UIStore) => T): T {
-  const storeValue = useUIStore(selector);
-  const [hydrated, setHydrated] = useState(false);
-  
-  useEffect(() => {
-    // Rehydrate store from localStorage on client
-    useUIStore.persist.rehydrate();
-    setHydrated(true);
-  }, []);
-  
-  // During SSR or before hydration, use initial state values
-  if (!hydrated) {
-    // Return the selector applied to initial state
-    const initialStoreState = {
-      ...initialState,
-      togglePanel: () => {},
-      setPanelOpen: () => {},
-      setAllPanels: () => {},
-      setBreakpoint: () => {},
-      setZoom: () => {},
-      zoomIn: () => {},
-      zoomOut: () => {},
-      resetZoom: () => {},
-      setMode: () => {},
-      togglePreview: () => {},
-      setDragging: () => {},
-      toggleGrid: () => {},
-      toggleOutlines: () => {},
-      resetUI: () => {},
-    } as UIStore;
-    return selector(initialStoreState);
-  }
-  
-  return storeValue;
-}
-
-/**
- * Hook to check if UI store is hydrated
- */
-export function useUIStoreHydrated(): boolean {
-  const [hydrated, setHydrated] = useState(false);
-  
-  useEffect(() => {
-    // Perform hydration
-    useUIStore.persist.rehydrate();
-    setHydrated(true);
-  }, []);
-  
-  return hydrated;
-}
 
 // =============================================================================
 // SELECTORS
