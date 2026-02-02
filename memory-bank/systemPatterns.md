@@ -1,6 +1,6 @@
 # System Patterns: DRAMAC Architecture
 
-**Last Updated**: February 1, 2026
+**Last Updated**: February 2, 2026
 
 ## Development Workflow
 
@@ -33,7 +33,87 @@ git push
 - **Hosting**: Vercel (platform), Supabase (data)
 - **UI**: Radix UI, Tailwind CSS, Framer Motion
 - **State**: Zustand, TanStack Query
-- **Editor**: Monaco Editor, Craft.js (page builder), TipTap (rich text)
+- **Editor**: DRAMAC Studio (custom dnd-kit based) - Replacing Puck (Feb 2026)
+- **Rich Text**: TipTap
+
+---
+
+## 🚀 DRAMAC Studio - Website Editor (NEW - February 2026)
+
+### Why Custom Editor (Replacing Puck)
+
+| Limitation in Puck | Solution in Studio |
+|-------------------|-------------------|
+| UI not customizable | 100% custom panels using DRAMAC design system |
+| DropZone limitations | Full control over nesting logic |
+| No native AI | AI chat built into every component |
+| No module support | Dynamic component loading from modules |
+| Limited field types | Custom field system (spacing, typography, etc.) |
+| External dependency | We own the code |
+
+### Studio Tech Stack
+
+```
+@dnd-kit/core + sortable  → Drag & Drop
+zustand + zundo           → State + Undo/Redo  
+react-resizable-panels    → Panel layout
+react-colorful            → Color picker
+react-hotkeys-hook        → Keyboard shortcuts
+@ai-sdk/anthropic         → AI (existing)
+@tiptap/react             → Rich text (existing)
+```
+
+### Studio Routes
+
+```
+NEW:  /studio/[siteId]/[pageId]              ← Full-screen editor
+OLD:  /dashboard/sites/[siteId]/editor       ← Removed after migration
+```
+
+### Studio File Structure
+
+```
+src/
+├── app/studio/[siteId]/[pageId]/     # Full-screen route
+├── components/studio/                 # Editor components
+│   ├── core/      → Canvas, providers
+│   ├── panels/    → Left, right, bottom, top
+│   ├── fields/    → Field editors
+│   ├── ai/        → AI chat, generator
+│   └── dnd/       → Drag & drop
+├── lib/studio/                        # Logic
+│   ├── store/     → Zustand stores
+│   ├── registry/  → Component definitions
+│   └── engine/    → Renderer
+└── types/studio.ts
+```
+
+### AI Per Component
+
+```typescript
+// Every component has AI context
+{
+  type: "Hero",
+  ai: {
+    description: "Hero section with title and CTA",
+    canModify: ["title", "subtitle", "buttonText"],
+    suggestions: ["Make exciting", "Add urgency"]
+  }
+}
+// User clicks AI → Types "make it shorter" → AI returns props → Apply
+```
+
+### Module Components
+
+```typescript
+// Modules export editor components
+export const studioComponents = {
+  ProductCard: { type, fields, render, ai },
+};
+// Auto-discovered when module installed
+```
+
+---
 
 ### Project Structure
 

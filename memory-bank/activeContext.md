@@ -1,12 +1,105 @@
 # Active Context: Current Work & Focus
 
-**Last Updated**: February 1, 2026  
-**Current Phase**: Domain & Email Reseller Module - DM-01 through DM-05 Complete  
-**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + **DM-01 ✅ DM-02 ✅ DM-03 ✅ DM-04 ✅ DM-05 ✅**
+**Last Updated**: February 2, 2026  
+**Current Phase**: DRAMAC Studio - Custom Website Editor (Replacing Puck)  
+**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module (DM-01 to DM-05) + **🚀 STUDIO EDITOR: STUDIO-01 ✅ STUDIO-02 ✅**
 
 ---
 
-## 🚀 NEW: Domain & Email Reseller Module (February 1, 2026)
+## 🚀 DRAMAC Studio - Custom Website Editor (February 2, 2026)
+
+### Strategic Decision
+
+After deep analysis of the current Puck-based editor, decided to build a **custom editor** called "DRAMAC Studio" for these reasons:
+
+| Issue with Puck | Impact |
+|-----------------|--------|
+| UI not deeply customizable | Editor looks different from dashboard |
+| DropZone limitations | Can't layer components on backgrounds |
+| No native AI integration | AI per component would be a hack |
+| No module component support | Can't dynamically load module components |
+| Limited field types | Can't build advanced controls |
+| External dependency | Locked to Puck's roadmap |
+
+### PHASE-STUDIO-01 & STUDIO-02: COMPLETE ✅
+
+**Implemented on February 2, 2026:**
+
+**Phase STUDIO-01 - Project Setup:**
+- ✅ Installed dependencies: immer, zundo, react-colorful, react-hotkeys-hook, @floating-ui/react, nanoid
+- ✅ Created TypeScript types in `src/types/studio.ts`
+- ✅ Created CSS file in `src/styles/studio.css`
+- ✅ Created utility functions in `src/lib/studio/utils/`
+- ✅ Created placeholder components in `src/components/studio/*/`
+- ✅ Created Studio route at `/studio/[siteId]/[pageId]`
+
+**Phase STUDIO-02 - State Management:**
+- ✅ Created Editor Store with Zustand + Immer + Zundo (undo/redo)
+- ✅ Created UI Store (panels, zoom, breakpoint, mode)
+- ✅ Created Selection Store (single/multi-select)
+- ✅ Created custom hooks for state access
+- ✅ Created StudioProvider component
+- ✅ Created debug placeholder UI for testing stores
+
+### Testing the Studio Editor
+
+**To test the implemented functionality:**
+
+1. Start the dev server: `pnpm dev` in `next-platform-dashboard/`
+2. Login to the dashboard
+3. Go to a site and find a page
+4. Navigate to: `/studio/[site-uuid]/[page-uuid]`
+   - Or use existing pages: Get a site ID and page ID from your database
+5. You should see the Studio debug UI with:
+   - Toolbar with back button and undo/redo
+   - Stats cards (Components, Breakpoint, Zoom, History)
+   - Test buttons to add/delete components
+   - Component list showing added components
+   - Raw data viewer
+
+### DRAMAC Studio Architecture
+
+**Core Libraries:**
+- `@dnd-kit/core` - Drag & Drop
+- `zustand` + `zundo` - State + Undo/Redo
+- `react-resizable-panels` - Panel layout
+- `react-colorful` - Color picker
+- `react-hotkeys-hook` - Keyboard shortcuts
+- `@tiptap/react` - Rich text (already using)
+- `@ai-sdk/anthropic` - AI (already using)
+
+**Key Features:**
+1. **Full-screen editor** at `/studio/[siteId]/[pageId]`
+2. **AI chat per component** - Click any component, ask AI to modify it
+3. **Module components** - Automatically load components from installed modules
+4. **100% design system match** - Uses DRAMAC CSS variables
+5. **Reuses existing renders** - 116 Puck component renders stay, just get new wrappers
+
+### Implementation Waves (27 Phases Total)
+
+| Wave | Phases | Focus | Status |
+|------|--------|-------|--------|
+| **1** | 01-04 | Foundation (setup, store, registry, layout) | ✅ 01-02 Complete |
+| **2** | 05-08 | Core Editor (DnD, canvas, panels) | ⏳ Waiting |
+| **3** | 09-10 | Field System | ⏳ Waiting |
+| **4** | 11-13 | AI Integration | ⏳ Waiting |
+| **5** | 14-15 | Module Integration | ⏳ Waiting |
+| **6** | 16-19 | Advanced Features | ⏳ Waiting |
+| **7** | 20-23 | Polish & Performance | ⏳ Waiting |
+| **8** | 24-26 | Templates & Extras | ⏳ Waiting |
+| **9** | 27 | Platform Integration & Puck Removal | ⏳ Waiting |
+
+### Next Steps
+
+1. ~~**Implement Phase STUDIO-01** (Project Setup)~~ ✅
+2. ~~**Implement Phase STUDIO-02** (State Management)~~ ✅
+3. **Implement Phase STUDIO-03** (Component Registry)
+4. **Implement Phase STUDIO-04** (Layout Shell)
+5. **Continue to Wave 2**
+
+---
+
+## 🌐 Domain & Email Reseller Module (February 1, 2026)
 
 ### Phase Documentation Created
 
