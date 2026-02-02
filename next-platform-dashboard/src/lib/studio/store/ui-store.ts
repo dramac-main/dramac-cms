@@ -2,14 +2,9 @@
  * DRAMAC Studio UI Store
  * 
  * State for UI elements: panels, zoom, breakpoint, editor mode.
- * Persists preferences to localStorage.
- * 
- * IMPORTANT: This store uses persist middleware with onRehydrateStorage
- * to properly handle SSR/client hydration.
  */
 
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import type { Breakpoint, EditorMode, PanelState, UIState } from "@/types/studio";
 
 // =============================================================================
@@ -77,158 +72,118 @@ const initialState: UIState = {
 };
 
 // =============================================================================
-// STORE IMPLEMENTATION
+// STORE IMPLEMENTATION (NO PERSIST - FOR DEBUGGING)
 // =============================================================================
 
-export const useUIStore = create<UIStore>()(
-  persist(
-    (set, get) => ({
-      // State
-      ...initialState,
+export const useUIStore = create<UIStore>()((set, get) => ({
+  // State
+  ...initialState,
 
-      // ---------------------------------------------------------------------------
-      // PANELS
-      // ---------------------------------------------------------------------------
-      
-      togglePanel: (panel) => {
-        set((state) => ({
-          panels: {
-            ...state.panels,
-            [panel]: !state.panels[panel],
-          },
-        }));
+  // ---------------------------------------------------------------------------
+  // PANELS
+  // ---------------------------------------------------------------------------
+  
+  togglePanel: (panel) => {
+    set((state) => ({
+      panels: {
+        ...state.panels,
+        [panel]: !state.panels[panel],
       },
+    }));
+  },
 
-      setPanelOpen: (panel, open) => {
-        set((state) => ({
-          panels: {
-            ...state.panels,
-            [panel]: open,
-          },
-        }));
+  setPanelOpen: (panel, open) => {
+    set((state) => ({
+      panels: {
+        ...state.panels,
+        [panel]: open,
       },
+    }));
+  },
 
-      setAllPanels: (panels) => {
-        set({ panels });
-      },
+  setAllPanels: (panels) => {
+    set({ panels });
+  },
 
-      // ---------------------------------------------------------------------------
-      // BREAKPOINT
-      // ---------------------------------------------------------------------------
-      
-      setBreakpoint: (breakpoint) => {
-        set({ breakpoint });
-      },
+  // ---------------------------------------------------------------------------
+  // BREAKPOINT
+  // ---------------------------------------------------------------------------
+  
+  setBreakpoint: (breakpoint) => {
+    set({ breakpoint });
+  },
 
-      // ---------------------------------------------------------------------------
-      // ZOOM
-      // ---------------------------------------------------------------------------
-      
-      setZoom: (zoom) => {
-        const clampedZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
-        set({ zoom: clampedZoom });
-      },
+  // ---------------------------------------------------------------------------
+  // ZOOM
+  // ---------------------------------------------------------------------------
+  
+  setZoom: (zoom) => {
+    const clampedZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
+    set({ zoom: clampedZoom });
+  },
 
-      zoomIn: () => {
-        const currentZoom = get().zoom;
-        const nextLevel = ZOOM_LEVELS.find((z) => z > currentZoom);
-        if (nextLevel) {
-          set({ zoom: nextLevel });
-        }
-      },
-
-      zoomOut: () => {
-        const currentZoom = get().zoom;
-        const prevLevel = [...ZOOM_LEVELS].reverse().find((z) => z < currentZoom);
-        if (prevLevel) {
-          set({ zoom: prevLevel });
-        }
-      },
-
-      resetZoom: () => {
-        set({ zoom: DEFAULT_ZOOM });
-      },
-
-      // ---------------------------------------------------------------------------
-      // MODE
-      // ---------------------------------------------------------------------------
-      
-      setMode: (mode) => {
-        set({ mode });
-      },
-
-      togglePreview: () => {
-        set((state) => ({
-          mode: state.mode === "preview" ? "edit" : "preview",
-        }));
-      },
-
-      // ---------------------------------------------------------------------------
-      // DRAG STATE
-      // ---------------------------------------------------------------------------
-      
-      setDragging: (isDragging, draggedType = null) => {
-        set({ isDragging, draggedType });
-      },
-
-      // ---------------------------------------------------------------------------
-      // DISPLAY OPTIONS
-      // ---------------------------------------------------------------------------
-      
-      toggleGrid: () => {
-        set((state) => ({ showGrid: !state.showGrid }));
-      },
-
-      toggleOutlines: () => {
-        set((state) => ({ showOutlines: !state.showOutlines }));
-      },
-
-      // ---------------------------------------------------------------------------
-      // RESET
-      // ---------------------------------------------------------------------------
-      
-      resetUI: () => {
-        set(initialState);
-      },
-    }),
-    {
-      name: "dramac-studio-ui",
-      storage: createJSONStorage(() => {
-        // Only use localStorage on client side
-        if (typeof window === "undefined") {
-          return {
-            getItem: () => null,
-            setItem: () => {},
-            removeItem: () => {},
-          };
-        }
-        return localStorage;
-      }),
-      // Only persist these fields - DO NOT persist panels to avoid hydration issues
-      // Panels will always start with default values (open)
-      partialize: (state) => ({
-        zoom: state.zoom,
-        showGrid: state.showGrid,
-        showOutlines: state.showOutlines,
-        // NOTE: We intentionally DO NOT persist panels to avoid hydration mismatch
-        // Users expect panels to be open when they open the editor
-      }),
-      // Merge function to ensure panels from old localStorage are ignored
-      merge: (persistedState, currentState) => {
-        const persisted = persistedState as Partial<UIState> | undefined;
-        return {
-          ...currentState,
-          // Only restore these specific fields from storage
-          zoom: persisted?.zoom ?? currentState.zoom,
-          showGrid: persisted?.showGrid ?? currentState.showGrid,
-          showOutlines: persisted?.showOutlines ?? currentState.showOutlines,
-          // ALWAYS use initial panel state, never from storage
-          panels: initialState.panels,
-        };
-      },
+  zoomIn: () => {
+    const currentZoom = get().zoom;
+    const nextLevel = ZOOM_LEVELS.find((z) => z > currentZoom);
+    if (nextLevel) {
+      set({ zoom: nextLevel });
     }
-  )
-);
+  },
+
+  zoomOut: () => {
+    const currentZoom = get().zoom;
+    const prevLevel = [...ZOOM_LEVELS].reverse().find((z) => z < currentZoom);
+    if (prevLevel) {
+      set({ zoom: prevLevel });
+    }
+  },
+
+  resetZoom: () => {
+    set({ zoom: DEFAULT_ZOOM });
+  },
+
+  // ---------------------------------------------------------------------------
+  // MODE
+  // ---------------------------------------------------------------------------
+  
+  setMode: (mode) => {
+    set({ mode });
+  },
+
+  togglePreview: () => {
+    set((state) => ({
+      mode: state.mode === "preview" ? "edit" : "preview",
+    }));
+  },
+
+  // ---------------------------------------------------------------------------
+  // DRAG STATE
+  // ---------------------------------------------------------------------------
+  
+  setDragging: (isDragging, draggedType = null) => {
+    set({ isDragging, draggedType });
+  },
+
+  // ---------------------------------------------------------------------------
+  // DISPLAY OPTIONS
+  // ---------------------------------------------------------------------------
+  
+  toggleGrid: () => {
+    set((state) => ({ showGrid: !state.showGrid }));
+  },
+
+  toggleOutlines: () => {
+    set((state) => ({ showOutlines: !state.showOutlines }));
+  },
+
+  // ---------------------------------------------------------------------------
+  // RESET
+  // ---------------------------------------------------------------------------
+  
+  resetUI: () => {
+    set(initialState);
+  },
+}));
 
 // =============================================================================
 // SELECTORS
