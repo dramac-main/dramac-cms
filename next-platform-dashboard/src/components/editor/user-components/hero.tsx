@@ -8,13 +8,29 @@ import { useIsEditorEnabled } from "../hooks/use-editor-mode";
 const DEFAULT_PRIMARY = "#8b5cf6";
 const DEFAULT_BACKGROUND = "#0f0d1a";
 
+// ImageValue type for Wave 3 advanced field system
+type ImageValue = {
+  url: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+};
+
+// Helper to extract URL from string or ImageValue object
+function extractImageUrl(src: string | ImageValue | undefined): string {
+  if (!src) return "";
+  if (typeof src === "string") return src;
+  if (typeof src === "object" && "url" in src) return src.url || "";
+  return "";
+}
+
 interface HeroProps {
   title?: string;
   subtitle?: string;
   buttonText?: string;
   buttonLink?: string;
   backgroundColor?: string;
-  backgroundImage?: string;
+  backgroundImage?: string | ImageValue;
   textColor?: string;
   alignment?: "left" | "center" | "right";
   minHeight?: number;
@@ -39,6 +55,9 @@ export function Hero({
 }: HeroProps) {
   const { connectors: { connect, drag } } = useNode();
   const isEditorEnabled = useIsEditorEnabled();
+  
+  // Extract URL from ImageValue or string
+  const bgImageUrl = extractImageUrl(backgroundImage);
 
   const alignmentStyles = {
     left: { textAlign: "left" as const, alignItems: "flex-start" },
@@ -98,15 +117,15 @@ export function Hero({
           alignItems: alignmentStyles[alignment].alignItems,
           textAlign: alignmentStyles[alignment].textAlign,
           minHeight: `${minHeight}px`,
-          backgroundColor: backgroundImage ? "transparent" : resolvedBgColor,
-          backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+          backgroundColor: bgImageUrl ? "transparent" : resolvedBgColor,
+          backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
           backgroundSize: "cover",
           backgroundPosition: "center",
           color: textColor,
           padding: "3rem 1.5rem",
         }}
       >
-        {overlay && backgroundImage && (
+        {overlay && bgImageUrl && (
           <div
             style={{
               position: "absolute",

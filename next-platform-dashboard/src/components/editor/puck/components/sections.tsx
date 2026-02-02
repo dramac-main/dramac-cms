@@ -25,6 +25,20 @@ import {
   ImageIcon,
 } from "lucide-react";
 
+// Type for ImageValue from studio
+interface ImageValue {
+  url: string;
+  alt?: string;
+}
+
+// Helper to extract URL from string or ImageValue object
+function extractImageUrl(src: string | ImageValue | undefined): string {
+  if (!src) return "";
+  if (typeof src === "string") return src;
+  if (typeof src === "object" && "url" in src) return src.url || "";
+  return "";
+}
+
 // Column grid utilities
 const columnGridMap: Record<number, string> = {
   1: "grid-cols-1",
@@ -65,6 +79,9 @@ export function HeroRender({
   overlay = true,
   overlayOpacity = 50,
 }: HeroProps) {
+  // Extract URL from string or ImageValue object
+  const bgImageUrl = extractImageUrl(backgroundImage as string | ImageValue | undefined);
+  
   return (
     <section
       className={cn(
@@ -73,15 +90,15 @@ export function HeroRender({
       )}
       style={{
         minHeight: `${minHeight}px`,
-        backgroundColor: backgroundImage ? undefined : (backgroundColor || "#0f0d1a"),
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        backgroundColor: bgImageUrl ? undefined : (backgroundColor || "#0f0d1a"),
+        backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
         color: textColor || "#ffffff",
       }}
     >
       {/* Overlay */}
-      {overlay && backgroundImage && (
+      {overlay && bgImageUrl && (
         <div
           className="absolute inset-0"
           style={{

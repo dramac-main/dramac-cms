@@ -26,6 +26,22 @@ import type { Breakpoint } from "@/types/studio";
 // TYPES
 // =============================================================================
 
+// ImageValue type for Wave 3 advanced field system
+type ImageValue = {
+  url: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+};
+
+// Helper to extract URL from string or ImageValue object
+function extractImageUrl(src: string | ImageValue | undefined): string {
+  if (!src) return "";
+  if (typeof src === "string") return src;
+  if (typeof src === "object" && "url" in src) return src.url || "";
+  return "";
+}
+
 export interface SectionBlockProps {
   children?: React.ReactNode;
   
@@ -121,6 +137,9 @@ export function SectionBlock({
   className,
   id,
 }: SectionBlockProps) {
+  // Extract URL from ImageValue or string
+  const bgImageUrl = extractImageUrl(backgroundImage as string | ImageValue | undefined);
+  
   // Build background style
   const backgroundStyles: React.CSSProperties = {
     backgroundColor,
@@ -131,8 +150,8 @@ export function SectionBlock({
   };
   
   // Add background image
-  if (backgroundImage) {
-    backgroundStyles.backgroundImage = `url(${backgroundImage})`;
+  if (bgImageUrl) {
+    backgroundStyles.backgroundImage = `url(${bgImageUrl})`;
     backgroundStyles.backgroundPosition = backgroundPosition;
     backgroundStyles.backgroundSize = backgroundSize;
     backgroundStyles.backgroundRepeat = "no-repeat";

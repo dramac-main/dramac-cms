@@ -8,6 +8,14 @@ import type { ImageProps, VideoProps, MapProps } from "@/types/puck";
 import { cn } from "@/lib/utils";
 import { ImageIcon, PlayCircle, MapPin } from "lucide-react";
 
+// Type for ImageValue from studio
+interface ImageValue {
+  url: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+}
+
 // Border radius utilities
 const radiusMap: Record<string, string> = {
   none: "rounded-none",
@@ -25,9 +33,26 @@ const aspectRatioMap: Record<string, string> = {
   "9:16": "aspect-[9/16]",
 };
 
+// Helper to extract URL from string or ImageValue object
+function extractImageUrl(src: string | ImageValue | undefined): string {
+  if (!src) return "";
+  if (typeof src === "string") return src;
+  if (typeof src === "object" && "url" in src) return src.url || "";
+  return "";
+}
+
+// Helper to extract alt from string or ImageValue object
+function extractImageAlt(src: string | ImageValue | undefined, fallbackAlt: string): string {
+  if (typeof src === "object" && src && "alt" in src && src.alt) {
+    return src.alt;
+  }
+  return fallbackAlt;
+}
+
 /**
  * Image Component
  * Display images with configurable sizing and styling.
+ * Supports both string src and ImageValue object from Studio fields.
  */
 export function ImageRender({
   src,
@@ -39,6 +64,10 @@ export function ImageRender({
   objectFit = "cover",
   borderRadius = "none",
 }: ImageProps) {
+  // Extract actual URL - handles both string and ImageValue object
+  const imageUrl = extractImageUrl(src as string | ImageValue | undefined);
+  const imageAlt = extractImageAlt(src as string | ImageValue | undefined, alt);
+  
   const widthStyle =
     width === "full"
       ? "100%"
@@ -50,7 +79,7 @@ export function ImageRender({
     height === "fixed" ? `${fixedHeight}px` : "auto";
 
   // Show placeholder if no source
-  if (!src) {
+  if (!imageUrl) {
     return (
       <div
         className={cn(
@@ -69,8 +98,8 @@ export function ImageRender({
 
   return (
     <img
-      src={src}
-      alt={alt}
+      src={imageUrl}
+      alt={imageAlt}
       className={cn(radiusMap[borderRadius || "none"])}
       style={{
         width: widthStyle,

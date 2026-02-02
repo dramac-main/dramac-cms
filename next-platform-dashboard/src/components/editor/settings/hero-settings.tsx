@@ -111,9 +111,11 @@ export function HeroSettings() {
 
         <SettingsInput
           label="Background Image URL"
-          value={props.backgroundImage || ""}
+          value={typeof props.backgroundImage === 'object' && props.backgroundImage 
+            ? props.backgroundImage.url || "" 
+            : props.backgroundImage || ""}
           onChange={(value) =>
-            setProp((props: HeroSectionProps) => (props.backgroundImage = value))
+            setProp((props: HeroSectionProps) => (props.backgroundImage = value as string))
           }
           placeholder="https://..."
           type="url"

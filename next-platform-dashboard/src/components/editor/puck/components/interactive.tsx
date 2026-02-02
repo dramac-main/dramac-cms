@@ -32,6 +32,22 @@ import type {
   AnimatedGradientProps,
 } from "@/types/puck";
 
+// ImageValue type for Wave 3 advanced field system
+type ImageValue = {
+  url: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+};
+
+// Helper to extract URL from string or ImageValue object
+function extractImageUrl(src: string | ImageValue | undefined): string {
+  if (!src) return "";
+  if (typeof src === "string") return src;
+  if (typeof src === "object" && "url" in src) return src.url || "";
+  return "";
+}
+
 // ============================================
 // CAROUSEL COMPONENT
 // ============================================
@@ -443,6 +459,9 @@ export function ParallaxRender({
 }: ParallaxProps) {
   const [offset, setOffset] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Extract URL from ImageValue or string
+  const bgImageUrl = extractImageUrl(backgroundImage);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -474,8 +493,8 @@ export function ParallaxRender({
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{
-          backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
-          backgroundColor: !backgroundImage ? backgroundColor : undefined,
+          backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
+          backgroundColor: !bgImageUrl ? backgroundColor : undefined,
           transform: `translateY(${offset}px)`,
           height: `calc(100% + ${Math.abs(offset) * 2}px)`,
           top: `-${Math.abs(offset)}px`,
@@ -483,7 +502,7 @@ export function ParallaxRender({
       />
 
       {/* Overlay */}
-      {overlay && backgroundImage && (
+      {overlay && bgImageUrl && (
         <div
           className="absolute inset-0 bg-black"
           style={{ opacity: overlayOpacity / 100 }}

@@ -15,6 +15,20 @@ import type {
 } from "@/types/puck";
 import { cn } from "@/lib/utils";
 
+// Type for ImageValue from studio
+interface ImageValue {
+  url: string;
+  alt?: string;
+}
+
+// Helper to extract URL from string or ImageValue object
+function extractImageUrl(src: string | ImageValue | undefined): string {
+  if (!src) return "";
+  if (typeof src === "string") return src;
+  if (typeof src === "object" && "url" in src) return src.url || "";
+  return "";
+}
+
 // Padding utilities
 const paddingMap: Record<string, string> = {
   none: "p-0",
@@ -77,12 +91,15 @@ export function SectionRender({
   minHeight = 0,
   puck,
 }: SectionProps & { puck?: { renderDropZone: typeof DropZone } }) {
+  // Extract URL from string or ImageValue object
+  const bgImageUrl = extractImageUrl(backgroundImage as string | ImageValue | undefined);
+  
   return (
     <section
       className={cn("relative w-full", paddingMap[padding || "md"])}
       style={{
         backgroundColor: backgroundColor || undefined,
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
         minHeight: minHeight ? `${minHeight}px` : undefined,

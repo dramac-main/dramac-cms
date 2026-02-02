@@ -6,10 +6,26 @@ import { Container } from "./container";
 import { Text } from "./text";
 import { SectionSettings } from "../settings/section-settings";
 
+// ImageValue type for Wave 3 advanced field system
+type ImageValue = {
+  url: string;
+  alt?: string;
+  width?: number;
+  height?: number;
+};
+
+// Helper to extract URL from string or ImageValue object
+function extractImageUrl(src: string | ImageValue | undefined): string {
+  if (!src) return "";
+  if (typeof src === "string") return src;
+  if (typeof src === "object" && "url" in src) return src.url || "";
+  return "";
+}
+
 interface SectionProps {
   children?: ReactNode;
   backgroundColor?: string;
-  backgroundImage?: string;
+  backgroundImage?: string | ImageValue;
   paddingTop?: number;
   paddingBottom?: number;
   paddingLeft?: number;
@@ -43,13 +59,16 @@ export function Section({
   className = "",
 }: SectionProps) {
   const { connectors: { connect, drag } } = useNode();
+  
+  // Extract URL from ImageValue or string
+  const bgImageUrl = extractImageUrl(backgroundImage);
 
   return (
     <section
       ref={(ref) => { if (ref) connect(drag(ref)); }}
       style={{
         backgroundColor,
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
         paddingTop: `${paddingTop}px`,
