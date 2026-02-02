@@ -6,7 +6,9 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getDomain } from "@/lib/actions/domains";
+import { getHealthCheck, getExpiryNotifications } from "@/lib/actions/automation";
 import { DomainSettingsForm } from "./settings-form-client";
+import { DomainHealthCheck, AutoRenewToggle, ExpiryNotifications } from "@/components/domains/automation";
 
 interface SettingsPageProps {
   params: Promise<{ domainId: string }>;
@@ -45,6 +47,34 @@ async function SettingsContent({ domainId }: { domainId: string }) {
   
   const domain = response.data;
   
+  // Fetch health check and notification data
+  const [healthResult, notificationsResult] = await Promise.all([
+    getHealthCheck(domainId),
+    getExpiryNotifications(domainId),
+  ]);
+
+  // Cast health data to expected type
+  const healthData = healthResult.data as {
+    dns_healthy: boolean;
+    ssl_healthy: boolean;
+    nameservers_correct: boolean;
+    whois_accessible: boolean;
+    dns_issues: string[];
+    ssl_issues: string[];
+    last_checked_at: string;
+  } | null | undefined;
+
+  // Cast notifications data to expected type  
+  const notificationSettings = notificationsResult.data as {
+    notify_30_days?: boolean;
+    notify_14_days?: boolean;
+    notify_7_days?: boolean;
+    notify_1_day?: boolean;
+  } | undefined;
+
+  // Get health status from domain (cast from unknown)
+  const domainRecord = domain as unknown as { health_status?: string };
+  
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -54,6 +84,28 @@ async function SettingsContent({ domainId }: { domainId: string }) {
           Advanced settings for {domain.domain_name}
         </p>
       </div>
+      
+      {/* Domain Health Check */}
+      <DomainHealthCheck 
+        domainId={domainId}
+        healthData={healthData}
+        healthStatus={domainRecord.health_status}
+      />
+      
+      {/* Auto-Renewal */}
+      {domain.expiry_date && (
+        <AutoRenewToggle
+          domainId={domainId}
+          enabled={domain.auto_renew ?? true}
+          expiryDate={domain.expiry_date}
+        />
+      )}
+      
+      {/* Expiry Notifications */}
+      <ExpiryNotifications 
+        domainId={domainId} 
+        settings={notificationSettings}
+      />
       
       <DomainSettingsForm
         domainId={domain.id}
