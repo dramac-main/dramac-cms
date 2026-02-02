@@ -8,15 +8,17 @@
 
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useEditorStore, useUIStore, useSelectionStore } from "@/lib/studio/store";
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
 import { DroppableCanvas, StudioSortableContext, SortableComponent } from "@/components/studio/dnd";
 import { ComponentWrapper } from "@/components/studio/core/component-wrapper";
+import { AIPageGenerator } from "@/components/studio/ai";
 import { BREAKPOINT_PIXELS, BREAKPOINT_LABELS } from "@/lib/studio/utils/responsive-utils";
+import { Button } from "@/components/ui/button";
 import type { Breakpoint } from "@/types/studio";
-import { Plus, MousePointer, Smartphone, Tablet, Monitor } from "lucide-react";
+import { Plus, MousePointer, Smartphone, Tablet, Monitor, Sparkles, LayoutGrid } from "lucide-react";
 
 // =============================================================================
 // TYPES
@@ -143,24 +145,57 @@ function NestedComponents({ componentIds, parentId }: NestedComponentsProps) {
 
 function EmptyCanvasState() {
   const isDragging = useUIStore((s) => s.isDragging);
+  const togglePanel = useUIStore((s) => s.togglePanel);
+  const [showGenerator, setShowGenerator] = useState(false);
   
   return (
-    <div className="studio-canvas-empty">
-      {isDragging ? (
-        <>
-          <MousePointer className="mb-4 h-12 w-12 animate-bounce text-primary" />
-          <h3 className="text-lg font-medium">Drop component here</h3>
-          <p className="mt-2 text-sm">Release to add your first component</p>
-        </>
-      ) : (
-        <>
-          <Plus className="mb-4 h-12 w-12" />
-          <h3 className="text-lg font-medium">Start building your page</h3>
-          <p className="mt-2 text-sm">Drag components from the left panel</p>
-          <p className="mt-1 text-xs">or press Ctrl+K to search components</p>
-        </>
-      )}
-    </div>
+    <>
+      <div className="studio-canvas-empty">
+        {isDragging ? (
+          <>
+            <MousePointer className="mb-4 h-12 w-12 animate-bounce text-primary" />
+            <h3 className="text-lg font-medium">Drop component here</h3>
+            <p className="mt-2 text-sm">Release to add your first component</p>
+          </>
+        ) : (
+          <>
+            <div className="w-16 h-16 rounded-full bg-primary/10 mx-auto flex items-center justify-center mb-4">
+              <Sparkles className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold">Start Building Your Page</h3>
+            <p className="mt-2 text-sm text-muted-foreground max-w-sm">
+              Drag components from the left panel, or let AI generate a complete page for you.
+            </p>
+            <div className="flex gap-3 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => togglePanel("left")}
+                className="gap-2"
+              >
+                <LayoutGrid className="w-4 h-4" />
+                Browse Components
+              </Button>
+              <Button 
+                onClick={() => setShowGenerator(true)} 
+                className="gap-2"
+              >
+                <Sparkles className="w-4 h-4" />
+                Generate with AI
+              </Button>
+            </div>
+            <p className="mt-4 text-xs text-muted-foreground">
+              or press Ctrl+K to search components
+            </p>
+          </>
+        )}
+      </div>
+      
+      {/* AI Page Generator Dialog */}
+      <AIPageGenerator
+        isOpen={showGenerator}
+        onClose={() => setShowGenerator(false)}
+      />
+    </>
   );
 }
 

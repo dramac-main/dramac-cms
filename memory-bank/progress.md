@@ -46,8 +46,37 @@
 | Phase | Document | Description | Est. Time | Status |
 |-------|----------|-------------|-----------|--------|
 | STUDIO-11 | `phases/PHASE-STUDIO-11-AI-COMPONENT-CHAT.md` | Per-component AI chat | 8-10 hrs | ✅ **COMPLETE** |
-| STUDIO-12 | `phases/PHASE-STUDIO-12-AI-PAGE-GENERATOR.md` | Full page generation | 10-12 hrs | 📄 Generated |
+| STUDIO-12 | `phases/PHASE-STUDIO-12-AI-PAGE-GENERATOR.md` | Full page generation | 10-12 hrs | ✅ **COMPLETE** |
 | STUDIO-13 | `phases/PHASE-STUDIO-13-AI-SUGGESTIONS-QUICK-ACTIONS.md` | Quick actions | 6-8 hrs | 📄 Generated |
+
+#### PHASE-STUDIO-12: AI Page Generator ✅ COMPLETE
+
+**Completion Date**: February 3, 2026
+
+| File | Purpose | Status |
+|------|---------|--------|
+| src/lib/studio/ai/types.ts | Added page generation types | ✅ |
+| src/lib/studio/ai/page-prompts.ts | Page generation prompt builders | ✅ |
+| src/lib/studio/ai/index.ts | Export page-prompts module | ✅ |
+| src/app/api/studio/ai/generate-page/route.ts | Page generation API endpoint | ✅ |
+| src/components/studio/ai/page-preview.tsx | Page preview component | ✅ |
+| src/components/studio/ai/ai-page-generator.tsx | Multi-step generator wizard | ✅ |
+| src/components/studio/ai/index.ts | Export new components | ✅ |
+| src/components/studio/layout/studio-toolbar.tsx | Added "Generate Page" button | ✅ |
+| src/components/studio/canvas/editor-canvas.tsx | Enhanced empty state with AI option | ✅ |
+
+**Key Features Implemented:**
+- "Generate Page" button in toolbar opens multi-step wizard
+- Quick templates: Landing, About, Services, Contact, Pricing, Portfolio
+- Business types: Technology, Healthcare, Finance, Education, E-Commerce, etc.
+- Color schemes: 8 preset palettes with visual color swatches
+- Content tones: Professional, Casual, Playful, Formal, Inspirational
+- Live preview shows section breakdown and component count
+- Regenerate with same settings if not satisfied
+- Empty canvas shows prominent AI generation option
+- Uses Claude claude-sonnet-4-20250514 for generation
+- Validates and sanitizes AI response
+- Rate limiting (10 requests/minute for page generation)
 
 #### PHASE-STUDIO-11: AI Component Chat ✅ COMPLETE
 
@@ -79,7 +108,6 @@
 - Conversation history support for follow-up requests
 
 **Key Features to Implement (Remaining Phases):**
-- Full page generator wizard with templates (STUDIO-12)
 - Quick action buttons (Shorten, Improve, Translate, etc.) (STUDIO-13)
 - Contextual suggestions per component type (STUDIO-13)
 

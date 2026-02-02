@@ -6,7 +6,7 @@
 
 "use client";
 
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -30,6 +30,7 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
+  Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,6 +49,7 @@ import {
 import { Toggle } from "@/components/ui/toggle";
 import { Separator } from "@/components/ui/separator";
 import { useEditorStore, useUIStore, undo, redo, canUndo, canRedo, useHistoryState } from "@/lib/studio/store";
+import { AIPageGenerator } from "@/components/studio/ai";
 import type { Breakpoint } from "@/types/studio";
 
 // =============================================================================
@@ -100,6 +102,9 @@ export const StudioToolbar = memo(function StudioToolbar({
   const togglePanel = useUIStore((s) => s.togglePanel);
   const setBreakpoint = useUIStore((s) => s.setBreakpoint);
   const setZoom = useUIStore((s) => s.setZoom);
+  
+  // AI Page Generator state
+  const [showPageGenerator, setShowPageGenerator] = useState(false);
 
   // Handlers
   const handleUndo = useCallback(() => undo(), []);
@@ -294,6 +299,22 @@ export const StudioToolbar = memo(function StudioToolbar({
 
           <Separator orientation="vertical" className="mx-2 h-6" />
 
+          {/* AI Generate Page Button */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1.5"
+                onClick={() => setShowPageGenerator(true)}
+              >
+                <Wand2 className="h-4 w-4 text-primary" />
+                <span>Generate Page</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Generate page with AI</TooltipContent>
+          </Tooltip>
+
           {/* AI Assist Button */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -420,6 +441,12 @@ export const StudioToolbar = memo(function StudioToolbar({
           </DropdownMenu>
         </div>
       </div>
+      
+      {/* AI Page Generator Dialog */}
+      <AIPageGenerator
+        isOpen={showPageGenerator}
+        onClose={() => setShowPageGenerator(false)}
+      />
     </TooltipProvider>
   );
 });
