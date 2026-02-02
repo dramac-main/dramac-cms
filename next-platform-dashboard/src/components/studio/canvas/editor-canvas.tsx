@@ -234,9 +234,9 @@ function DeviceFrame({ breakpoint, zoom, children }: DeviceFrameProps) {
     <div
       className={cn(
         "bg-background transition-all duration-300 ease-out",
-        "relative overflow-hidden border border-border",
-        // Desktop takes full width
-        breakpoint === "desktop" && "w-full"
+        "relative border border-border",
+        // Desktop takes full width, allow overflow for scrolling
+        breakpoint === "desktop" ? "w-full overflow-visible" : "overflow-hidden"
       )}
       style={{
         width: getWidth(),
@@ -284,9 +284,9 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
   return (
     <div
       className={cn(
-        "flex h-full w-full overflow-auto",
-        // Desktop: fill entire canvas area with padding
-        isDesktop ? "p-4" : "items-start justify-center p-8",
+        "flex w-full overflow-auto",
+        // Desktop: fill entire canvas area, allow natural scrolling
+        isDesktop ? "h-auto min-h-full p-4" : "h-full items-start justify-center p-8",
         className
       )}
       onClick={handleCanvasClick}
@@ -302,7 +302,7 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
       <div className={cn(
         "flex flex-col",
         // Desktop takes full width, others are centered
-        isDesktop ? "w-full h-full" : "items-center"
+        isDesktop ? "w-full" : "items-center"
       )}>
         {/* Breakpoint indicator (not in preview mode) */}
         {!isPreviewMode && (
