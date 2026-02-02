@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, MoreVertical, Pencil, Trash2, Home, FileText } from "lucide-react";
+import { Plus, MoreVertical, Pencil, Trash2, Home, FileText, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface Page {
@@ -69,7 +69,7 @@ export function SitePagesList({ siteId, pages }: SitePagesListProps) {
               <TableHead>Page</TableHead>
               <TableHead>Slug</TableHead>
               <TableHead>Created</TableHead>
-              <TableHead className="w-[70px]"></TableHead>
+              <TableHead className="w-[150px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -83,7 +83,7 @@ export function SitePagesList({ siteId, pages }: SitePagesListProps) {
                       <FileText className="h-4 w-4 text-muted-foreground" />
                     )}
                     <Link
-                      href={`/dashboard/sites/${siteId}/editor?page=${page.id}`}
+                      href={`/studio/${siteId}/${page.id}`}
                       className="font-medium hover:underline"
                     >
                       {page.name}
@@ -104,27 +104,41 @@ export function SitePagesList({ siteId, pages }: SitePagesListProps) {
                     : "—"}
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="h-4 w-4" />
+                  <div className="flex items-center gap-2">
+                    <Link href={`/studio/${siteId}/${page.id}`}>
+                      <Button variant="outline" size="sm">
+                        <Sparkles className="mr-2 h-3.5 w-3.5" />
+                        Edit in Studio
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem asChild>
-                        <Link href={`/dashboard/sites/${siteId}/editor?page=${page.id}`}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </Link>
-                      </DropdownMenuItem>
-                      {!page.is_homepage && (
-                        <DropdownMenuItem className="text-danger">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                    </Link>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem asChild>
+                          <Link href={`/studio/${siteId}/${page.id}`}>
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            Edit in Studio
+                          </Link>
                         </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/dashboard/sites/${siteId}/editor?page=${page.id}`}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Legacy Editor
+                          </Link>
+                        </DropdownMenuItem>
+                        {!page.is_homepage && (
+                          <DropdownMenuItem className="text-danger">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
