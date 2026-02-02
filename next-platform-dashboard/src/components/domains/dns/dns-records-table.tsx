@@ -43,6 +43,7 @@ interface DnsRecordData {
   ttl: number;
   priority?: number;
   proxied: boolean;
+  proxiable?: boolean;
   status: string;
 }
 
@@ -98,8 +99,6 @@ export function DnsRecordsTable({ records, domainId, domainName }: DnsRecordsTab
     }
     return name.replace(`.${domainName}`, "").replace(`.${domainName}.`, "");
   };
-
-  const canProxy = (type: string) => ['A', 'AAAA', 'CNAME'].includes(type);
 
   return (
     <div className="space-y-4">
@@ -172,7 +171,7 @@ export function DnsRecordsTable({ records, domainId, domainName }: DnsRecordsTab
                     {record.ttl === 1 ? "Auto" : `${record.ttl}s`}
                   </TableCell>
                   <TableCell>
-                    {canProxy(record.type) ? (
+                    {record.proxiable ? (
                       record.proxied ? (
                         <Badge variant="default" className="bg-orange-500">
                           <Shield className="h-3 w-3 mr-1" />

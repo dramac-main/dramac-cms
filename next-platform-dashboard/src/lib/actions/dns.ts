@@ -432,6 +432,7 @@ export async function deleteDnsRecord(
 
 /**
  * List DNS records for a domain
+ * Fetches directly from Cloudflare for accurate real-time data
  */
 export async function listDnsRecords(
   domainId: string
@@ -443,32 +444,41 @@ export async function listDnsRecords(
   ttl: number;
   priority?: number;
   proxied: boolean;
+  proxiable: boolean;
   status: string;
 }>>> {
   const supabase = await createClient();
   
   try {
-    const { data: records, error } = await getTable(supabase, 'domain_dns_records')
-      .select('*')
-      .eq('domain_id', domainId)
-      .order('record_type')
-      .order('name') as { data: DnsRecordRow[] | null; error: Error | null };
+    // Get domain with zone ID
+    const { data: domain, error } = await getTable(supabase, 'domains')
+      .select('domain_name, cloudflare_zone_id')
+      .eq('id', domainId)
+      .single() as { data: Pick<DomainRow, 'domain_name' | 'cloudflare_zone_id'> | null; error: Error | null };
     
-    if (error) {
-      return { success: false, error: 'Failed to fetch records' };
+    if (error || !domain) {
+      return { success: false, error: 'Domain not found' };
     }
+    
+    if (!domain.cloudflare_zone_id) {
+      return { success: false, error: 'DNS zone not configured. Click "Sync" to set up DNS.' };
+    }
+    
+    // Fetch directly from Cloudflare for real-time accuracy
+    const { records } = await dnsService.listRecords(domain.cloudflare_zone_id);
     
     return { 
       success: true, 
-      data: (records || []).map(r => ({
+      data: records.map(r => ({
         id: r.id,
-        type: r.record_type as DnsRecordType,
+        type: r.type as DnsRecordType,
         name: r.name,
         content: r.content,
         ttl: r.ttl,
-        priority: r.priority ?? undefined,
+        priority: r.priority,
         proxied: r.proxied,
-        status: r.status,
+        proxiable: r.proxiable,
+        status: 'active',
       }))
     };
   } catch (error) {
