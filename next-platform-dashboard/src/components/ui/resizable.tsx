@@ -14,8 +14,9 @@ interface ResizablePanelGroupProps extends React.ComponentPropsWithoutRef<typeof
 function ResizablePanelGroup({ className, direction, autoSaveId, ...props }: ResizablePanelGroupProps) {
   return (
     <Group
-      data-panel-group-direction={direction}
+      orientation={direction}
       autoSave={autoSaveId}
+      data-panel-group-direction={direction}
       className={cn(
         "flex h-full w-full data-[panel-group-direction=vertical]:flex-col",
         className
