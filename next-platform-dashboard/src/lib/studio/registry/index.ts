@@ -25,6 +25,12 @@ export {
 
 export { registerCoreComponents } from "./core-components";
 
+export {
+  registerPremiumComponents,
+  getPremiumComponents,
+  getPremiumComponentTypes,
+} from "./premium-components";
+
 export * from "./hooks";
 
 // =============================================================================
@@ -45,10 +51,13 @@ export function initializeRegistry(): void {
 
   // Import dynamically to avoid circular dependencies
   const { registerCoreComponents } = require("./core-components");
+  const { registerPremiumComponents } = require("./premium-components");
+  
   registerCoreComponents();
+  registerPremiumComponents();
   
   initialized = true;
-  console.log("[Studio] Registry initialized");
+  console.log("[Studio] Registry initialized with core and premium components");
 }
 
 /**

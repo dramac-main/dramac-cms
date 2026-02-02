@@ -1,8 +1,40 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: February 2, 2026  
-**Current Phase**: DRAMAC Studio - Custom Website Editor (Replacing Puck)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module (DM-01 to DM-05) + **🚀 STUDIO EDITOR: WAVE 1 COMPLETE ✅ (STUDIO-01 ✅ STUDIO-02 ✅ STUDIO-03 ✅ STUDIO-04 ✅)**
+**Current Phase**: DRAMAC Studio - Wave 2 (Core Editor)  
+**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVE 1 ✅ → WAVE 2 READY 🟡**
+
+---
+
+## 🎯 KEY DECISIONS (February 2, 2026)
+
+### Decision 1: Fresh Premium Components (NOT Reusing Puck)
+
+**Why:** Existing 116 Puck components are too basic:
+- No responsive support (single value, not per-breakpoint)
+- No animation options
+- No AI context
+- Minimal props (just text, color, size)
+- Don't rival Webflow/Wix quality
+
+**New Approach:** Build ALL components from scratch with:
+- ✅ Mobile-first responsive (`ResponsiveValue<T>` for all visual props)
+- ✅ Animation support (entrance, hover, scroll-triggered)
+- ✅ AI context built-in
+- ✅ Premium props (gradients, shadows, advanced typography)
+- ✅ Accessibility from the start
+
+### Decision 2: Mobile-First Responsive System
+
+```typescript
+type ResponsiveValue<T> = {
+  mobile: T;      // REQUIRED (0-767px)
+  tablet?: T;     // Optional (768-1023px)
+  desktop?: T;    // Optional (1024px+)
+};
+```
+
+Every component's visual props (padding, font-size, alignment, etc.) MUST use this.
 
 ---
 
@@ -34,14 +66,24 @@
 **Issue:** Panels were invisible due to `react-resizable-panels` saving corrupted sizes to localStorage.
 **Solution:** Replaced with simple flexbox layout (w-64 left, w-72 right, h-48 bottom).
 
-### What's Next: Wave 2 - Core Editor
+### What's Next: Wave 2 - Core Editor (READY TO IMPLEMENT 🟡)
 
-| Phase | Description |
-|-------|-------------|
-| STUDIO-05 | Drag & Drop System (dnd-kit setup) |
-| STUDIO-06 | Canvas & Rendering |
-| STUDIO-07 | Component Library Panel |
-| STUDIO-08 | Properties Panel |
+**Status**: Prompt created → `phases/STUDIO-WAVE2-PROMPT.md` ✅
+
+| Phase | Description | Dependencies |
+|-------|-------------|--------------|
+| STUDIO-05 | Drag & Drop System (@dnd-kit/core) | Wave 1 stores |
+| STUDIO-06 | Canvas & Rendering (component wrappers) | STUDIO-05 |
+| STUDIO-07 | Component Library Panel (search, categories) | STUDIO-05, STUDIO-06 |
+| STUDIO-08 | Properties Panel (basic field editors) | STUDIO-06 |
+
+**After Wave 2, we'll have:**
+- ✅ Drag components from library to canvas
+- ✅ Click to select components  
+- ✅ Edit properties in right panel
+- ✅ Basic field types working (text, number, select, toggle)
+- ✅ Delete components
+- ✅ Undo/redo works with all operations
 
 ---
 
@@ -112,14 +154,14 @@ After deep analysis of the current Puck-based editor, decided to build a **custo
 2. **AI chat per component** - Click any component, ask AI to modify it
 3. **Module components** - Automatically load components from installed modules
 4. **100% design system match** - Uses DRAMAC CSS variables
-5. **Reuses existing renders** - 116 Puck component renders stay, just get new wrappers
+5. **Fresh premium components** - Mobile-first, responsive, animation-ready (NOT reusing basic Puck components)
 
 ### Implementation Waves (27 Phases Total)
 
 | Wave | Phases | Focus | Status |
 |------|--------|-------|--------|
-| **1** | 01-04 | Foundation (setup, store, registry, layout) | ✅ 01-02 Complete |
-| **2** | 05-08 | Core Editor (DnD, canvas, panels) | ⏳ Waiting |
+| **1** | 01-04 | Foundation (setup, store, registry, layout) | ✅ COMPLETE |
+| **2** | 05-08 | Core Editor (DnD, canvas, 10 premium components) | 🟡 READY |
 | **3** | 09-10 | Field System | ⏳ Waiting |
 | **4** | 11-13 | AI Integration | ⏳ Waiting |
 | **5** | 14-15 | Module Integration | ⏳ Waiting |

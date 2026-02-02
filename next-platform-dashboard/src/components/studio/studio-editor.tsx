@@ -10,7 +10,10 @@ import { useEffect, useCallback, useState } from "react";
 import { StudioLayout } from "@/components/studio/layout/studio-layout";
 import { StudioToolbar } from "@/components/studio/layout/studio-toolbar";
 import { PanelHeader } from "@/components/studio/layout/panel-header";
-import { useUIStore } from "@/lib/studio/store";
+import { DndProvider } from "@/components/studio/dnd";
+import { EditorCanvas } from "@/components/studio/canvas";
+import { useUIStore, useEditorStore } from "@/lib/studio/store";
+import { initializeRegistry } from "@/lib/studio/registry";
 import {
   Layers,
   Settings2,
@@ -61,29 +64,16 @@ function ComponentListPlaceholder() {
       </div>
       <div className="flex-1 overflow-auto p-3">
         <p className="text-sm text-muted-foreground">
-          Component list will be implemented in Phase STUDIO-05
+          Component library with drag-and-drop is active.
+          Detailed UI will be implemented in Phase STUDIO-07.
         </p>
       </div>
     </div>
   );
 }
 
-function CanvasPlaceholder() {
-  const breakpoint = useUIStore((s) => s.breakpoint);
-  
-  return (
-    <div className="flex h-full items-center justify-center bg-muted/50">
-      <div className="text-center">
-        <p className="text-lg font-medium">Canvas Area</p>
-        <p className="text-sm text-muted-foreground">
-          Viewport: {breakpoint}
-        </p>
-        <p className="text-xs text-muted-foreground mt-2">
-          Canvas will be implemented in Phase STUDIO-06
-        </p>
-      </div>
-    </div>
-  );
+function CanvasArea() {
+  return <EditorCanvas />;
 }
 
 function PropertiesPanelPlaceholder() {
@@ -144,6 +134,13 @@ export function StudioEditor({
   pagePath,
 }: StudioEditorProps) {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const addComponent = useEditorStore((s) => s.addComponent);
+  const moveComponent = useEditorStore((s) => s.moveComponent);
+
+  // Initialize registry on mount
+  useEffect(() => {
+    initializeRegistry();
+  }, []);
 
   // Save handler
   const handleSave = useCallback(async () => {
@@ -207,23 +204,25 @@ export function StudioEditor({
   }, [handleSave, handlePreview]);
 
   return (
-    <StudioLayout
-      toolbar={
-        <StudioToolbar
-          siteId={siteId}
-          pageId={pageId}
-          pageTitle={pageName}
-          siteName={siteName}
-          onSave={handleSave}
-          onPreview={handlePreview}
-          onPublish={handlePublish}
-          saveStatus={saveStatus}
-        />
-      }
-      leftPanel={<ComponentListPlaceholder />}
-      canvas={<CanvasPlaceholder />}
-      rightPanel={<PropertiesPanelPlaceholder />}
-      bottomPanel={<BottomPanelPlaceholder />}
-    />
+    <DndProvider>
+      <StudioLayout
+        toolbar={
+          <StudioToolbar
+            siteId={siteId}
+            pageId={pageId}
+            pageTitle={pageName}
+            siteName={siteName}
+            onSave={handleSave}
+            onPreview={handlePreview}
+            onPublish={handlePublish}
+            saveStatus={saveStatus}
+          />
+        }
+        leftPanel={<ComponentListPlaceholder />}
+        canvas={<CanvasArea />}
+        rightPanel={<PropertiesPanelPlaceholder />}
+        bottomPanel={<BottomPanelPlaceholder />}
+      />
+    </DndProvider>
   );
 }

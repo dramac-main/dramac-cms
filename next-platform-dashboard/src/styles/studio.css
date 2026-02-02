@@ -617,3 +617,250 @@
   background: hsl(var(--muted) / 0.1);
   overflow: hidden;
 }
+
+/* =============================================================================
+   RESPONSIVE VISIBILITY (PHASE-STUDIO-06)
+   ============================================================================= */
+
+/* Hide on mobile (0-767px) */
+@media (max-width: 767px) {
+  .studio-hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Hide on tablet (768-1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .studio-hide-tablet {
+    display: none !important;
+  }
+}
+
+/* Hide on desktop (1024px+) */
+@media (min-width: 1024px) {
+  .studio-hide-desktop {
+    display: none !important;
+  }
+}
+
+/* =============================================================================
+   ANIMATIONS (PHASE-STUDIO-06)
+   ============================================================================= */
+
+@keyframes studio-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes studio-slide-up {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes studio-slide-down {
+  from { 
+    opacity: 0; 
+    transform: translateY(-20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes studio-slide-left {
+  from { 
+    opacity: 0; 
+    transform: translateX(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+}
+
+@keyframes studio-slide-right {
+  from { 
+    opacity: 0; 
+    transform: translateX(-20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateX(0); 
+  }
+}
+
+@keyframes studio-scale-in {
+  from { 
+    opacity: 0; 
+    transform: scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: scale(1); 
+  }
+}
+
+@keyframes studio-blur-in {
+  from { 
+    opacity: 0; 
+    filter: blur(10px); 
+  }
+  to { 
+    opacity: 1; 
+    filter: blur(0); 
+  }
+}
+
+.studio-animate-fade-in {
+  animation: studio-fade-in var(--studio-animation-duration, 500ms) ease-out;
+  animation-delay: var(--studio-animation-delay, 0ms);
+  animation-fill-mode: both;
+}
+
+.studio-animate-slide-up {
+  animation: studio-slide-up var(--studio-animation-duration, 500ms) ease-out;
+  animation-delay: var(--studio-animation-delay, 0ms);
+  animation-fill-mode: both;
+}
+
+.studio-animate-slide-down {
+  animation: studio-slide-down var(--studio-animation-duration, 500ms) ease-out;
+  animation-delay: var(--studio-animation-delay, 0ms);
+  animation-fill-mode: both;
+}
+
+.studio-animate-slide-left {
+  animation: studio-slide-left var(--studio-animation-duration, 500ms) ease-out;
+  animation-delay: var(--studio-animation-delay, 0ms);
+  animation-fill-mode: both;
+}
+
+.studio-animate-slide-right {
+  animation: studio-slide-right var(--studio-animation-duration, 500ms) ease-out;
+  animation-delay: var(--studio-animation-delay, 0ms);
+  animation-fill-mode: both;
+}
+
+.studio-animate-scale-in {
+  animation: studio-scale-in var(--studio-animation-duration, 500ms) ease-out;
+  animation-delay: var(--studio-animation-delay, 0ms);
+  animation-fill-mode: both;
+}
+
+.studio-animate-blur-in {
+  animation: studio-blur-in var(--studio-animation-duration, 500ms) ease-out;
+  animation-delay: var(--studio-animation-delay, 0ms);
+  animation-fill-mode: both;
+}
+
+/* =============================================================================
+   COMPONENT WRAPPER STYLES (PHASE-STUDIO-06)
+   ============================================================================= */
+
+.studio-component-wrapper {
+  position: relative;
+  transition: outline 0.15s ease;
+}
+
+.studio-component-wrapper:hover {
+  outline: 2px dashed hsl(var(--primary) / 0.5);
+  outline-offset: 2px;
+}
+
+.studio-component-wrapper.is-selected {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+.studio-component-wrapper.is-selected:hover {
+  outline: 2px solid hsl(var(--primary));
+}
+
+/* =============================================================================
+   CANVAS STYLES (PHASE-STUDIO-06)
+   ============================================================================= */
+
+.studio-canvas-grid {
+  background-color: hsl(var(--background));
+  background-image: 
+    linear-gradient(to right, hsl(var(--border) / 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+  min-height: 100%;
+  position: relative;
+}
+
+.studio-canvas-grid.show-grid {
+  background-image: 
+    linear-gradient(to right, hsl(var(--border) / 0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--border) / 0.3) 1px, transparent 1px);
+}
+
+.studio-canvas-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: hsl(var(--muted-foreground));
+}
+
+/* =============================================================================
+   RESPONSIVE VALUE CLASSES (PHASE-STUDIO-06)
+   ============================================================================= */
+
+/* These classes use CSS custom properties set via inline styles */
+.studio-responsive-padding {
+  padding: var(--studio-padding-mobile);
+}
+
+@media (min-width: 768px) {
+  .studio-responsive-padding {
+    padding: var(--studio-padding-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  .studio-responsive-padding {
+    padding: var(--studio-padding-desktop);
+  }
+}
+
+.studio-responsive-margin {
+  margin: var(--studio-margin-mobile);
+}
+
+@media (min-width: 768px) {
+  .studio-responsive-margin {
+    margin: var(--studio-margin-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  .studio-responsive-margin {
+    margin: var(--studio-margin-desktop);
+  }
+}
+
+.studio-responsive-font-size {
+  font-size: var(--studio-font-size-mobile);
+}
+
+@media (min-width: 768px) {
+  .studio-responsive-font-size {
+    font-size: var(--studio-font-size-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  .studio-responsive-font-size {
+    font-size: var(--studio-font-size-desktop);
+  }
+}

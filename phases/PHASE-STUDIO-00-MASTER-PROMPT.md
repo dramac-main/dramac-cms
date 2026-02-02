@@ -181,6 +181,103 @@ src/
     └── studio.css                       # NEW: Editor-specific styles
 ```
 
+---
+
+## 📱 MOBILE-FIRST RESPONSIVE SYSTEM (CRITICAL)
+
+**All components MUST be mobile-first responsive.** This is non-negotiable.
+
+### Breakpoints
+
+```typescript
+const BREAKPOINTS = {
+  mobile: 0,      // 0-767px (default/base styles)
+  tablet: 768,    // 768-1023px
+  desktop: 1024,  // 1024px+
+} as const;
+
+type Breakpoint = 'mobile' | 'tablet' | 'desktop';
+```
+
+### ResponsiveValue Type
+
+Every visual prop that can change per breakpoint uses this:
+
+```typescript
+// A responsive value stores different values per breakpoint
+type ResponsiveValue<T> = {
+  mobile: T;      // REQUIRED - this is the base/default
+  tablet?: T;     // Optional override for tablet
+  desktop?: T;    // Optional override for desktop
+};
+
+// Example usage in component props
+interface HeadingProps {
+  text: string;
+  fontSize: ResponsiveValue<string>;   // { mobile: '24px', tablet: '32px', desktop: '48px' }
+  textAlign: ResponsiveValue<'left' | 'center' | 'right'>;
+  margin: ResponsiveValue<Spacing>;
+  hideOn?: Breakpoint[];  // Hide component on specific breakpoints
+}
+```
+
+### Mobile-First CSS Generation
+
+Components generate CSS using mobile-first approach:
+
+```typescript
+// Helper to generate responsive styles
+function generateResponsiveCSS(
+  property: string,
+  value: ResponsiveValue<string>
+): string {
+  let css = `${property}: ${value.mobile};`; // Base (mobile)
+  
+  if (value.tablet) {
+    css += `@media (min-width: 768px) { ${property}: ${value.tablet}; }`;
+  }
+  if (value.desktop) {
+    css += `@media (min-width: 1024px) { ${property}: ${value.desktop}; }`;
+  }
+  
+  return css;
+}
+```
+
+### Component Responsive Props Checklist
+
+EVERY component must support responsive values for:
+- ✅ Font size
+- ✅ Padding (all sides)
+- ✅ Margin (all sides)
+- ✅ Width/Height (where applicable)
+- ✅ Gap (for flex/grid)
+- ✅ Text alignment
+- ✅ Display/visibility (hideOn)
+- ✅ Flex direction (for layout components)
+- ✅ Columns count (for grid/columns)
+
+### Editor Breakpoint Preview
+
+The toolbar includes a breakpoint selector (📱 💻 🖥️) that:
+1. Resizes the canvas to that breakpoint width
+2. Updates all component renders to show breakpoint-specific values
+3. Properties panel shows the value for current breakpoint
+4. Editing a field updates ONLY the current breakpoint's value
+
+### Responsive Field UI Pattern
+
+```
+┌─────────────────────────────────────┐
+│ Font Size                    [📱] ← Click to toggle responsive mode
+│ ┌─────────────────────────────────┐
+│ │ 📱 16px  │ 💻 18px │ 🖥️ 24px  │ ← Shows all breakpoints when responsive
+│ └─────────────────────────────────┘
+└─────────────────────────────────────┘
+```
+
+---
+
 ### Data Structure
 
 ```typescript
@@ -947,7 +1044,13 @@ src/lib/ai/  (keep AI utilities)
 
 ## ⚠️ IMPORTANT CONSTRAINTS
 
-1. **Reuse Existing Components**: The 116 Puck component renders should be adapted, not rewritten. Create wrappers that use the existing render functions.
+1. **Create Fresh Premium Components**: Do NOT reuse the basic Puck components. Build new, modern components with:
+   - Responsive props (mobile/tablet/desktop values)
+   - Animation settings (entrance, hover, scroll-triggered)
+   - Advanced typography controls
+   - AI context for intelligent suggestions
+   - Design tokens integration
+   - Accessibility built-in from the start
 
 2. **Design System Compliance**: All UI must use DRAMAC's existing design tokens (CSS variables, Tailwind classes).
 
@@ -959,21 +1062,23 @@ src/lib/ai/  (keep AI utilities)
 
 6. **Mobile Consideration**: Editing is desktop-only, but preview must work on all devices.
 
-7. **Data Migration**: Must support loading existing Puck-format pages (migration utility).
+7. **Data Migration**: Create a migration utility to convert old Puck pages to new component format.
 
-8. **Backward Compatibility**: Old pages must still render with the new renderer.
+8. **Premium Quality**: Components should rival Webflow/Wix Studio - not basic HTML wrappers.
 
 ---
 
 ## 🎯 SUCCESS METRICS
 
 - **Visual Consistency**: 100% match with DRAMAC design system
-- **Component Count**: All 116 existing components available plus module components
+- **Component Quality**: Premium, modern components with rich props (not basic HTML wrappers)
+- **Component Categories**: Layout, Typography, Media, Interactive, Marketing, E-Commerce, Forms
 - **AI Response Time**: < 3 seconds for component edits
 - **Editor Load Time**: < 2 seconds to interactive
 - **Save/Load**: < 500ms for average page
 - **Render Performance**: < 1.5s LCP for published sites
 - **User Satisfaction**: "Feels like Webflow or better"
+- **Animation Support**: All components support entrance, hover, and scroll animations
 
 ---
 
@@ -982,20 +1087,20 @@ src/lib/ai/  (keep AI utilities)
 Key existing files to reference:
 
 ```
-# Component renders (REUSE THESE)
-src/components/editor/puck/components/layout.tsx
-src/components/editor/puck/components/typography.tsx
-src/components/editor/puck/components/buttons.tsx
-src/components/editor/puck/components/media.tsx
-src/components/editor/puck/components/sections.tsx
-src/components/editor/puck/components/navigation.tsx
-src/components/editor/puck/components/forms.tsx
-src/components/editor/puck/components/ecommerce.tsx
-src/components/editor/puck/components/interactive.tsx
-src/components/editor/puck/components/marketing.tsx
-src/components/editor/puck/components/content.tsx
-src/components/editor/puck/components/three-d.tsx
-src/components/editor/puck/components/spline.tsx
+# OLD Puck components (for migration reference only, do NOT reuse)
+# These show what data structures exist in old pages that need migrating
+src/components/editor/puck/components/*.tsx
+
+# NEW premium components location
+src/components/studio/blocks/
+├── layout/       → Section, Container, Columns, Spacer, Grid
+├── typography/   → Heading, Text, RichText, Label, Quote
+├── media/        → Image, Video, Icon, Lottie, Gallery
+├── interactive/  → Button, Link, Accordion, Tabs, Modal
+├── marketing/    → Hero, CTA, Testimonial, Pricing, FAQ
+├── ecommerce/    → ProductCard, Cart, Checkout
+├── forms/        → Input, Select, Checkbox, Form
+└── navigation/   → Navbar, Footer, Breadcrumb, Menu
 
 # Types (REFERENCE)
 src/types/puck.ts

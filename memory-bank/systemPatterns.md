@@ -113,6 +113,58 @@ export const studioComponents = {
 // Auto-discovered when module installed
 ```
 
+### Mobile-First Responsive System (CRITICAL)
+
+**All components are mobile-first responsive:**
+
+```typescript
+// Every visual prop uses ResponsiveValue<T>
+type ResponsiveValue<T> = {
+  mobile: T;      // REQUIRED - base value
+  tablet?: T;     // 768px+ override
+  desktop?: T;    // 1024px+ override
+};
+
+// Example
+interface SectionProps {
+  padding: ResponsiveValue<Spacing>;  // { mobile: '16px', desktop: '64px' }
+  hideOn?: ('mobile' | 'tablet' | 'desktop')[];
+}
+```
+
+**Breakpoints:**
+- `mobile`: 0-767px (default)
+- `tablet`: 768-1023px
+- `desktop`: 1024px+
+
+**CSS is mobile-first:**
+```css
+.component { font-size: 16px; }  /* Mobile base */
+@media (min-width: 768px) { .component { font-size: 18px; } }
+@media (min-width: 1024px) { .component { font-size: 24px; } }
+```
+
+### Component Strategy: Fresh Premium Components
+
+**Decision (Feb 2, 2026):** Create ALL NEW components from scratch.
+
+**Why NOT reuse existing Puck components:**
+- Too basic (minimal props, no animations)
+- No responsive support built-in
+- No AI context
+- Don't match Webflow/Wix quality
+
+**New component location:**
+```
+src/components/studio/blocks/
+├── layout/       → Section, Container, Columns, Spacer
+├── typography/   → Heading, Text, RichText
+├── media/        → Image, Video, Icon
+├── interactive/  → Button, Link, Accordion
+├── marketing/    → Hero, CTA, Testimonial
+└── ...
+```
+
 ---
 
 ### Project Structure

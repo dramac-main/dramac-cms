@@ -1,9 +1,10 @@
 /**
- * Studio Drag & Drop Components
- * 
- * Drag and drop functionality using dnd-kit.
- * Phase STUDIO-05 will add: droppable-canvas, draggable-component, sortable-component, drag-overlay
+ * DRAMAC Studio DnD Components
  */
 
-// Placeholder - components added in later phases
-export {};
+export { DndProvider } from "./dnd-provider";
+export { DragOverlayContent } from "./drag-overlay";
+export { DraggableComponent } from "./draggable-component";
+export { SortableComponent } from "./sortable-component";
+export { DroppableCanvas } from "./droppable-canvas";
+export { StudioSortableContext } from "./sortable-context";

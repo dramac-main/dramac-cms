@@ -27,7 +27,7 @@ After implementing these 4 phases, we should have:
 2. **Include exact file paths** for all files to create
 3. **Include complete code** for key files (not just snippets or descriptions)
 4. **Follow DRAMAC's existing design system** - use CSS variables (`hsl(var(--primary))`) and Tailwind classes
-5. **Reuse existing component renders** - import from current Puck components, don't rewrite
+5. **Prepare for fresh components** - Wave 2 will create premium mobile-first components (NOT reusing basic Puck)
 
 ## Output Format
 

@@ -136,20 +136,25 @@ src/components/editor/puck/components/*.tsx → src/components/studio/renders/
 
 ## ⚠️ Key Constraints
 
-1. **REUSE** existing 116 component renders from Puck
-2. **USE** existing design system (CSS vars, Tailwind)
-3. **PASS** TypeScript strict mode
-4. **SUPPORT** loading existing Puck pages (migration)
-5. **ACHIEVE** < 2s editor load, < 1.5s page render
+1. **CREATE FRESH** premium mobile-first components (NOT reusing basic Puck)
+2. **MOBILE-FIRST** - All visual props use ResponsiveValue<T>
+3. **USE** existing design system (CSS vars, Tailwind)
+4. **PASS** TypeScript strict mode
+5. **MIGRATION UTILITY** - Convert existing Puck pages to new format
+6. **ACHIEVE** < 2s editor load, < 1.5s page render
 
 ## 📁 Reference Files
 
 ```
-# Reuse renders from:
-src/components/editor/puck/components/*.tsx
+# NEW premium components location:
+src/components/studio/blocks/
+├── layout/       → Section, Container, Columns
+├── typography/   → Heading, Text, RichText
+├── media/        → Image, Video, Icon
+└── interactive/  → Button, Link
 
-# Types reference:
-src/types/puck.ts
+# OLD Puck components (reference only for migration):
+src/components/editor/puck/components/*.tsx
 
 # Design system:
 src/app/globals.css

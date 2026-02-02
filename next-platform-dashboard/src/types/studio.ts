@@ -109,6 +109,7 @@ export type FieldType =
   | "object"
   | "richtext"
   | "code"
+  | "slider"
   | "custom";
 
 /**
@@ -171,11 +172,14 @@ export interface FieldDefinition {
   /** Group name for organizing in UI */
   group?: string;
   
-  /** Conditional visibility */
-  showWhen?: {
+  /** Conditional visibility - shorthand { field: value } or explicit format */
+  showWhen?: Record<string, unknown> | {
     field: string;
     value: unknown;
   };
+  
+  /** Placeholder text for input fields */
+  placeholder?: string;
 }
 
 /**
@@ -274,10 +278,12 @@ export interface ComponentDefinition {
   fields: Record<string, FieldDefinition>;
   
   /** Default prop values */
-  defaultProps: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  defaultProps: Record<string, any>;
   
   /** React component for rendering */
-  render: ComponentType<Record<string, unknown>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  render: ComponentType<any>;
   
   /** Does this component accept children? */
   acceptsChildren?: boolean;
@@ -285,11 +291,17 @@ export interface ComponentDefinition {
   /** What component types can be children? */
   allowedChildren?: string[];
   
+  /** What component types can be children (alias) */
+  allowedChildTypes?: string[];
+  
   /** Named drop zones */
   zones?: DropZoneConfig[];
   
   /** AI configuration */
   ai?: ComponentAIConfig;
+  
+  /** AI context string (shorthand for simple AI descriptions) */
+  aiContext?: string;
   
   /** Module source (if from a module) */
   module?: ComponentModuleSource;
@@ -551,4 +563,62 @@ export function createEmptyPageData(): StudioPageData {
     components: {},
     zones: {},
   };
+}
+
+// =============================================================================
+// DRAG & DROP TYPES
+// =============================================================================
+
+/**
+ * Identifies what type of drag operation is happening
+ */
+export type DragSource = "library" | "canvas";
+
+/**
+ * Data attached to draggable items from the library
+ */
+export interface LibraryDragData {
+  source: "library";
+  componentType: string;
+  label: string;
+  icon: string;
+}
+
+/**
+ * Data attached to sortable items on the canvas
+ */
+export interface CanvasDragData {
+  source: "canvas";
+  componentId: string;
+  componentType: string;
+  parentId: string | null;
+  index: number;
+}
+
+/**
+ * Union type for all drag data
+ */
+export type DragData = LibraryDragData | CanvasDragData;
+
+/**
+ * Drop target information
+ */
+export interface DropTarget {
+  parentId: string; // "root" or component ID
+  index: number;
+  zoneId?: string;
+}
+
+/**
+ * Type guard for library drag
+ */
+export function isLibraryDrag(data: DragData): data is LibraryDragData {
+  return data.source === "library";
+}
+
+/**
+ * Type guard for canvas drag
+ */
+export function isCanvasDrag(data: DragData): data is CanvasDragData {
+  return data.source === "canvas";
 }
