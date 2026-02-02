@@ -606,6 +606,110 @@ export async function verifyBusinessEmailDns(orderId: string): Promise<{
 }
 
 // ============================================================================
+// Domain-Specific Email Actions
+// ============================================================================
+
+/**
+ * Get email order for a specific domain by domain ID
+ * Returns the email order with accounts if exists, or null if no email purchased
+ */
+export async function getBusinessEmailOrderByDomainId(domainId: string): Promise<{
+  success: boolean;
+  data?: {
+    order: EmailOrder | null;
+    accounts: EmailAccount[];
+    domain: {
+      id: string;
+      domain_name: string;
+      status: string;
+      cloudflare_zone_id: string | null;
+    } | null;
+  };
+  error?: string;
+}> {
+  const supabase = await createClient();
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+
+  try {
+    // Get the domain first
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: domain, error: domainError } = await (supabase as any)
+      .from('domains')
+      .select('id, domain_name, status, cloudflare_zone_id')
+      .eq('id', domainId)
+      .single();
+
+    if (domainError || !domain) {
+      return { success: false, error: 'Domain not found' };
+    }
+
+    // Get email order for this domain
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: order, error: orderError } = await (supabase as any)
+      .from('email_orders')
+      .select('*')
+      .eq('domain_id', domainId)
+      .maybeSingle();
+
+    if (orderError) {
+      return { success: false, error: orderError.message };
+    }
+
+    // If no order, return domain info with null order
+    if (!order) {
+      return {
+        success: true,
+        data: {
+          order: null,
+          accounts: [],
+          domain: domain as {
+            id: string;
+            domain_name: string;
+            status: string;
+            cloudflare_zone_id: string | null;
+          },
+        },
+      };
+    }
+
+    // Get accounts for this order
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: accounts, error: accountsError } = await (supabase as any)
+      .from('email_accounts')
+      .select('*')
+      .eq('email_order_id', order.id)
+      .neq('status', 'deleted')
+      .order('created_at', { ascending: false });
+
+    if (accountsError) {
+      return { success: false, error: accountsError.message };
+    }
+
+    return {
+      success: true,
+      data: {
+        order: order as EmailOrder,
+        accounts: (accounts || []) as EmailAccount[],
+        domain: domain as {
+          id: string;
+          domain_name: string;
+          status: string;
+          cloudflare_zone_id: string | null;
+        },
+      },
+    };
+  } catch (error) {
+    console.error('Get business email order by domain ID error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get email order',
+    };
+  }
+}
+
+// ============================================================================
 // Helper Functions
 // ============================================================================
 

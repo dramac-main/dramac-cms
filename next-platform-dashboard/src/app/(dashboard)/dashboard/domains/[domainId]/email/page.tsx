@@ -5,25 +5,21 @@ import Link from "next/link";
 import { 
   ArrowLeft, 
   Mail, 
-  Plus, 
-  User,
   Settings,
   ExternalLink,
   Inbox,
   Send,
-  Archive,
   Clock,
   CheckCircle,
-  AlertCircle
+  ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
 import { getDomain } from "@/lib/actions/domains";
+import { getBusinessEmailOrderByDomainId } from "@/lib/actions/business-email";
+import { DomainEmailAccountsClient } from "./domain-email-accounts-client";
 
 interface EmailPageProps {
   params: Promise<{ domainId: string }>;
@@ -40,51 +36,140 @@ export async function generateMetadata({ params }: EmailPageProps): Promise<Meta
   };
 }
 
-// Mock email accounts for UI testing
-const MOCK_EMAIL_ACCOUNTS = [
-  { 
-    id: '1', 
-    email: 'info@example.com', 
-    name: 'Info', 
-    status: 'active',
-    storageUsed: 2.4,
-    storageLimit: 10,
-    lastLogin: '2026-01-31T10:30:00Z'
-  },
-  { 
-    id: '2', 
-    email: 'support@example.com', 
-    name: 'Support Team', 
-    status: 'active',
-    storageUsed: 5.8,
-    storageLimit: 10,
-    lastLogin: '2026-02-01T08:15:00Z'
-  },
-  { 
-    id: '3', 
-    email: 'sales@example.com', 
-    name: 'Sales', 
-    status: 'pending',
-    storageUsed: 0,
-    storageLimit: 10,
-    lastLogin: null
-  },
-];
-
 async function EmailContent({ domainId }: { domainId: string }) {
-  const response = await getDomain(domainId);
+  const response = await getBusinessEmailOrderByDomainId(domainId);
   
   if (!response.success || !response.data) {
     notFound();
   }
   
-  const domain = response.data;
-  const emailAccounts = MOCK_EMAIL_ACCOUNTS.map(a => ({
-    ...a,
-    email: a.email.replace('example.com', domain.domain_name)
-  }));
-  const hasEmailSetup = emailAccounts.length > 0;
+  const { order, accounts, domain } = response.data;
   
+  if (!domain) {
+    notFound();
+  }
+
+  // No email order exists - show purchase prompt
+  if (!order) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Email Accounts</h1>
+            <p className="text-muted-foreground">
+              Manage email accounts for {domain.domain_name}
+            </p>
+          </div>
+        </div>
+
+        {/* No Email Card */}
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+              <Mail className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No Business Email</h3>
+            <p className="text-muted-foreground text-center mb-6 max-w-md">
+              Purchase professional business email powered by Titan to create email accounts 
+              like info@{domain.domain_name} or support@{domain.domain_name}
+            </p>
+            <div className="flex gap-3">
+              <Button asChild>
+                <Link href={`/dashboard/email/purchase?domain=${encodeURIComponent(domain.domain_name)}&domainId=${domainId}`}>
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Purchase Email
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/email">
+                  View All Email Orders
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Features Preview */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Business Email Features</CardTitle>
+            <CardDescription>
+              What you&apos;ll get with Titan Email
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <div>
+                  <p className="font-medium">10GB Storage</p>
+                  <p className="text-sm text-muted-foreground">Per mailbox</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <div>
+                  <p className="font-medium">Custom Domain</p>
+                  <p className="text-sm text-muted-foreground">user@{domain.domain_name}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <div>
+                  <p className="font-medium">Webmail Access</p>
+                  <p className="text-sm text-muted-foreground">Access from anywhere</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <div>
+                  <p className="font-medium">Mobile Apps</p>
+                  <p className="text-sm text-muted-foreground">iOS & Android</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <div>
+                  <p className="font-medium">Calendar & Contacts</p>
+                  <p className="text-sm text-muted-foreground">Built-in productivity tools</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <div>
+                  <p className="font-medium">Spam Protection</p>
+                  <p className="text-sm text-muted-foreground">Advanced filtering</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Email order exists - show management UI
+  const isExpiringSoon = new Date(order.expiry_date).getTime() - Date.now() < 30 * 24 * 60 * 60 * 1000;
+  const isExpired = new Date(order.expiry_date) < new Date();
+  const daysUntilExpiry = Math.ceil((new Date(order.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  
+  const getStatusBadge = () => {
+    if (order.status === 'Active') {
+      if (isExpired) {
+        return <Badge variant="destructive">Expired</Badge>;
+      }
+      if (isExpiringSoon) {
+        return <Badge className="bg-yellow-500 hover:bg-yellow-600">Expiring Soon</Badge>;
+      }
+      return <Badge className="bg-green-500 hover:bg-green-600">Active</Badge>;
+    }
+    if (order.status === 'Suspended') {
+      return <Badge variant="destructive">Suspended</Badge>;
+    }
+    return <Badge variant="secondary">{order.status}</Badge>;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -95,10 +180,14 @@ async function EmailContent({ domainId }: { domainId: string }) {
             Manage email accounts for {domain.domain_name}
           </p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Mailbox
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/dashboard/email/${order.id}`}>
+              <Settings className="h-4 w-4 mr-2" />
+              Order Details
+            </Link>
+          </Button>
+        </div>
       </div>
       
       {/* Email Provider Status */}
@@ -110,17 +199,17 @@ async function EmailContent({ domainId }: { domainId: string }) {
                 <Mail className="h-5 w-5 text-blue-500" />
               </div>
               <div>
-                <p className="font-medium">Titan Email (via ResellerClub)</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">Titan Email (via ResellerClub)</p>
+                  {getStatusBadge()}
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  Professional email hosting with 10GB storage per mailbox
+                  {order.number_of_accounts} mailbox{order.number_of_accounts !== 1 ? 'es' : ''} • 
+                  Expires {new Date(order.expiry_date).toLocaleDateString()}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Active
-              </Badge>
               <Button variant="outline" size="sm" asChild>
                 <a href="https://app.titan.email" target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="h-3 w-3 mr-1" />
@@ -141,8 +230,8 @@ async function EmailContent({ domainId }: { domainId: string }) {
                 <Inbox className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{emailAccounts.length}</p>
-                <p className="text-sm text-muted-foreground">Mailboxes</p>
+                <p className="text-2xl font-bold">{order.used_accounts}/{order.number_of_accounts}</p>
+                <p className="text-sm text-muted-foreground">Mailboxes Used</p>
               </div>
             </div>
           </CardContent>
@@ -156,9 +245,9 @@ async function EmailContent({ domainId }: { domainId: string }) {
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {emailAccounts.filter(a => a.status === 'active').length}
+                  {accounts.filter(a => a.status === 'active').length}
                 </p>
-                <p className="text-sm text-muted-foreground">Active</p>
+                <p className="text-sm text-muted-foreground">Active Accounts</p>
               </div>
             </div>
           </CardContent>
@@ -168,96 +257,29 @@ async function EmailContent({ domainId }: { domainId: string }) {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                <Archive className="h-5 w-5 text-amber-500" />
+                <Clock className="h-5 w-5 text-amber-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">
-                  {emailAccounts.reduce((acc, a) => acc + a.storageUsed, 0).toFixed(1)} GB
+                  {daysUntilExpiry > 0 ? daysUntilExpiry : 0}
                 </p>
-                <p className="text-sm text-muted-foreground">Storage Used</p>
+                <p className="text-sm text-muted-foreground">Days Until Renewal</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
       
-      {/* Email Accounts List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Mailboxes</CardTitle>
-          <CardDescription>
-            All email accounts for this domain
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {emailAccounts.map((account, index) => (
-            <div key={account.id}>
-              {index > 0 && <Separator className="my-4" />}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-primary/10 text-primary">
-                      {account.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{account.email}</p>
-                      {account.status === 'active' ? (
-                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200 text-xs">
-                          Active
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-200 text-xs">
-                          Pending
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground">{account.name}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  {/* Storage */}
-                  <div className="hidden sm:block w-32">
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">Storage</span>
-                      <span>{account.storageUsed}/{account.storageLimit} GB</span>
-                    </div>
-                    <Progress 
-                      value={(account.storageUsed / account.storageLimit) * 100} 
-                      className="h-1.5"
-                    />
-                  </div>
-                  
-                  {/* Last Login */}
-                  <div className="hidden md:flex items-center gap-1 text-sm text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    {account.lastLogin 
-                      ? new Date(account.lastLogin).toLocaleDateString()
-                      : 'Never'}
-                  </div>
-                  
-                  {/* Actions */}
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm">
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={`https://app.titan.email`} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        Login
-                      </a>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      {/* Email Accounts Management */}
+      <DomainEmailAccountsClient 
+        orderId={order.id}
+        domainName={domain.domain_name}
+        accounts={accounts}
+        maxAccounts={order.number_of_accounts}
+        usedAccounts={order.used_accounts}
+      />
       
-      {/* Email Configuration Help */}
+      {/* Email Client Configuration Help */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Email Client Configuration</CardTitle>
