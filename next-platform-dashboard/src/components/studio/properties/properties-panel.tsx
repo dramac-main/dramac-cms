@@ -26,7 +26,7 @@ import {
 import { PanelHeader } from "@/components/studio/layout/panel-header";
 import { FieldRenderer } from "@/components/studio/fields/field-renderer";
 import { BreakpointIndicator, BreakpointSelectorCompact } from "@/components/studio/layout/breakpoint-selector";
-import { AIComponentChat } from "@/components/studio/ai";
+import { AIComponentChat, AIActionsPanel } from "@/components/studio/ai";
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
 import { useEditorStore, useSelectionStore, useUIStore, useAIStore } from "@/lib/studio/store";
 import type { FieldGroup, ComponentDefinition, FieldDefinition } from "@/types/studio";
@@ -318,6 +318,13 @@ export function PropertiesPanel() {
                 onChange={(value) => handleFieldChange(field.key, value)}
               />
             ))}
+          </div>
+        )}
+        
+        {/* AI Quick Actions & Suggestions Panel */}
+        {componentId && (
+          <div className="px-3 pb-4">
+            <AIActionsPanel componentId={componentId} />
           </div>
         )}
       </ScrollArea>

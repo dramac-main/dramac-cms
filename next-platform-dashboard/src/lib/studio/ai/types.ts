@@ -368,3 +368,180 @@ export const PAGE_TEMPLATES: Record<PageTemplate, {
     suggestedSections: ["Hero", "Leadership", "Team Grid", "Culture"],
   },
 };
+
+// =============================================================================
+// QUICK ACTIONS & SUGGESTIONS TYPES (Phase STUDIO-13)
+// =============================================================================
+
+/**
+ * Quick action definition
+ */
+export interface QuickAction {
+  /** Unique identifier */
+  id: string;
+  
+  /** Display label */
+  label: string;
+  
+  /** Icon emoji or lucide icon name */
+  icon: string;
+  
+  /** AI prompt to send */
+  prompt: string;
+  
+  /** Which field to target (default: text, content, or first string field) */
+  targetField?: string;
+  
+  /** Should auto-apply without preview? */
+  autoApply?: boolean;
+  
+  /** Component types this action applies to */
+  componentTypes?: string[];
+  
+  /** Requires additional input (e.g., language selection) */
+  requiresInput?: "language" | "tone" | "custom";
+}
+
+/**
+ * Suggestion for component improvement
+ */
+export interface AISuggestion {
+  /** Suggestion text */
+  text: string;
+  
+  /** AI prompt if clicked */
+  prompt: string;
+  
+  /** Icon */
+  icon?: string;
+}
+
+/**
+ * Supported languages for translation
+ */
+export const SUPPORTED_LANGUAGES = [
+  { code: "es", name: "Spanish" },
+  { code: "fr", name: "French" },
+  { code: "de", name: "German" },
+  { code: "it", name: "Italian" },
+  { code: "pt", name: "Portuguese" },
+  { code: "zh", name: "Chinese" },
+  { code: "ja", name: "Japanese" },
+  { code: "ko", name: "Korean" },
+  { code: "ar", name: "Arabic" },
+  { code: "hi", name: "Hindi" },
+  { code: "ru", name: "Russian" },
+  { code: "nl", name: "Dutch" },
+] as const;
+
+export type LanguageCode = typeof SUPPORTED_LANGUAGES[number]["code"];
+
+/**
+ * Default quick actions available for text-based components
+ */
+export const DEFAULT_QUICK_ACTIONS: QuickAction[] = [
+  {
+    id: "shorten",
+    label: "Shorten",
+    icon: "✂️",
+    prompt: "Make this text shorter and more concise while keeping the main message. Reduce by about 30-50%.",
+    autoApply: true,
+  },
+  {
+    id: "improve",
+    label: "Improve",
+    icon: "✨",
+    prompt: "Improve this text to be more engaging, clear, and impactful. Keep the same general length.",
+    autoApply: true,
+  },
+  {
+    id: "add-emoji",
+    label: "Add Emoji",
+    icon: "😀",
+    prompt: "Add 1-2 relevant emojis to make this text more engaging. Place them naturally.",
+    autoApply: true,
+  },
+  {
+    id: "professional",
+    label: "Professional",
+    icon: "👔",
+    prompt: "Rewrite in a professional, business-appropriate tone. Remove any casual language.",
+    autoApply: true,
+  },
+  {
+    id: "casual",
+    label: "Casual",
+    icon: "😊",
+    prompt: "Rewrite in a casual, friendly tone. Make it more conversational and approachable.",
+    autoApply: true,
+  },
+  {
+    id: "expand",
+    label: "Expand",
+    icon: "📝",
+    prompt: "Expand this text with more detail. Add about 50% more content while staying on topic.",
+    autoApply: true,
+  },
+  {
+    id: "exciting",
+    label: "More Exciting",
+    icon: "🔥",
+    prompt: "Make this text more exciting and energetic. Add urgency and enthusiasm.",
+    autoApply: true,
+  },
+  {
+    id: "translate",
+    label: "Translate",
+    icon: "🌐",
+    prompt: "Translate this text to {language}. Keep the same tone and meaning.",
+    requiresInput: "language",
+    autoApply: true,
+  },
+  {
+    id: "numbers",
+    label: "Add Numbers",
+    icon: "🔢",
+    prompt: "Add specific numbers or statistics to make this more impactful. Use realistic numbers.",
+    autoApply: true,
+  },
+  {
+    id: "cta",
+    label: "Make it a CTA",
+    icon: "🎯",
+    prompt: "Rewrite as a compelling call-to-action that encourages the user to take action.",
+    autoApply: true,
+    componentTypes: ["Button", "Text", "Heading"],
+  },
+];
+
+/**
+ * Component-specific suggestions based on type and AI context
+ */
+export const COMPONENT_SUGGESTIONS: Record<string, AISuggestion[]> = {
+  Heading: [
+    { text: "Make it more action-oriented", prompt: "Rewrite to be more action-oriented and compelling", icon: "🎯" },
+    { text: "Add power words", prompt: "Add powerful, persuasive words to increase impact", icon: "💪" },
+    { text: "Question format", prompt: "Rewrite as an engaging question to hook readers", icon: "❓" },
+  ],
+  Text: [
+    { text: "Add bullet points", prompt: "Convert to bullet points for easier scanning", icon: "📋" },
+    { text: "Add a statistic", prompt: "Add a relevant statistic to support the message", icon: "📊" },
+    { text: "Make it scannable", prompt: "Rewrite to be more scannable with short sentences", icon: "👁️" },
+  ],
+  Button: [
+    { text: "Add urgency", prompt: "Make the button text more urgent and action-oriented", icon: "⚡" },
+    { text: "Be more specific", prompt: "Make the button text more specific about what happens when clicked", icon: "🎯" },
+    { text: "Add value proposition", prompt: "Include a value proposition in the button text", icon: "💎" },
+  ],
+  Section: [
+    { text: "Suggest content", prompt: "Suggest what content should go in this section based on its position", icon: "💡" },
+  ],
+  Hero: [
+    { text: "Make it more compelling", prompt: "Make the hero copy more compelling with a stronger value proposition", icon: "🚀" },
+    { text: "Add social proof", prompt: "Add social proof elements like numbers, testimonials, or logos", icon: "⭐" },
+    { text: "Simplify the message", prompt: "Simplify the hero message to be clearer and more direct", icon: "✨" },
+  ],
+  Container: [
+    { text: "Optimize spacing", prompt: "Suggest optimal padding and gap values for this container", icon: "📐" },
+  ],
+};
