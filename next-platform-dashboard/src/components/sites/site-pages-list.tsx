@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, MoreVertical, Pencil, Trash2, Home, FileText, Sparkles } from "lucide-react";
+import { Plus, MoreVertical, Trash2, Home, FileText, Sparkles } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 interface Page {
@@ -122,12 +122,6 @@ export function SitePagesList({ siteId, pages }: SitePagesListProps) {
                           <Link href={`/studio/${siteId}/${page.id}`}>
                             <Sparkles className="mr-2 h-4 w-4" />
                             Edit in Studio
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href={`/dashboard/sites/${siteId}/editor?page=${page.id}`}>
-                            <Pencil className="mr-2 h-4 w-4" />
-                            Legacy Editor
                           </Link>
                         </DropdownMenuItem>
                         {!page.is_homepage && (

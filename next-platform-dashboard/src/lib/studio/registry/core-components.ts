@@ -1,44 +1,35 @@
 /**
  * DRAMAC Studio Core Components
  * 
- * Registers all built-in components from the existing Puck implementation.
- * Uses adapter pattern to wrap existing renders with Studio metadata.
+ * Registers all built-in components with Studio metadata.
+ * Uses standalone render components after Puck removal.
+ * 
+ * @phase STUDIO-27 - Platform Integration & Puck Removal
  */
 
 import { componentRegistry, defineComponent } from "./component-registry";
 import { presetOptions } from "./field-registry";
 import type { ComponentDefinition } from "@/types/studio";
 
-// Import existing render components - Layout
+// Import Studio render components
 import {
+  // Layout
   SectionRender,
   ContainerRender,
   ColumnsRender,
   CardRender,
   SpacerRender,
   DividerRender,
-} from "@/components/editor/puck/components/layout";
-
-// Import existing render components - Typography
-import {
+  // Typography
   HeadingRender,
   TextRender,
-} from "@/components/editor/puck/components/typography";
-
-// Import existing render components - Buttons
-import {
+  // Buttons
   ButtonRender,
-} from "@/components/editor/puck/components/buttons";
-
-// Import existing render components - Media
-import {
+  // Media
   ImageRender,
   VideoRender,
   MapRender,
-} from "@/components/editor/puck/components/media";
-
-// Import existing render components - Sections
-import {
+  // Sections
   HeroRender,
   FeaturesRender,
   CTARender,
@@ -47,56 +38,38 @@ import {
   StatsRender,
   TeamRender,
   GalleryRender,
-} from "@/components/editor/puck/components/sections";
-
-// Import existing render components - Navigation
-import {
+  // Navigation
   NavbarRender,
   FooterRender,
   SocialLinksRender,
-} from "@/components/editor/puck/components/navigation";
-
-// Import existing render components - Forms
-import {
+  // Forms
   FormRender,
   FormFieldRender,
   ContactFormRender,
   NewsletterRender,
-} from "@/components/editor/puck/components/forms";
-
-// Import existing render components - Content
-import {
+  // Content
   RichTextRender,
   QuoteRender,
   CodeBlockRender,
-} from "@/components/editor/puck/components/content";
-
-// Import existing render components - Interactive
-import {
+  // Interactive
   CarouselRender,
   CountdownRender,
   TypewriterRender,
   ParallaxRender,
-} from "@/components/editor/puck/components/interactive";
-
-// Import existing render components - Marketing
-import {
+  // Marketing
   AnnouncementBarRender,
   SocialProofRender,
   TrustBadgesRender,
   LogoCloudRender,
   ComparisonTableRender,
-} from "@/components/editor/puck/components/marketing";
-
-// Import existing render components - E-Commerce
-import {
+  // E-Commerce
   ProductGridRender,
   ProductCardRender,
   ProductCategoriesRender,
   CartSummaryRender,
   FeaturedProductsRender,
   CartIconRender,
-} from "@/components/editor/puck/components/ecommerce";
+} from "@/lib/studio/blocks/renders";
 
 // =============================================================================
 // LAYOUT COMPONENTS

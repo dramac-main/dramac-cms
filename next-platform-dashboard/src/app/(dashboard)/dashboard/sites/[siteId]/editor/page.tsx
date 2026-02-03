@@ -1,65 +1,55 @@
-import { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
-import { getSite } from "@/lib/actions/sites";
-import { getPageWithContent, getPages } from "@/lib/actions/pages";
-import { PuckEditorIntegrated } from "@/components/editor/puck-editor-integrated";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-interface EditorPageProps {
+interface PageProps {
   params: Promise<{ siteId: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; pageId?: string }>;
 }
 
-export async function generateMetadata({
-  params,
-}: EditorPageProps): Promise<Metadata> {
-  const resolvedParams = await params;
-  const site = await getSite(resolvedParams.siteId).catch(() => null);
-  return {
-    title: site ? `Editor - ${site.name} | DRAMAC` : "Editor",
-  };
-}
-
-export default async function EditorPage({
-  params,
+/**
+ * Legacy Editor Redirect
+ * 
+ * Redirects old Puck editor URLs to the new DRAMAC Studio.
+ * Handles both ?page=X and ?pageId=X query params.
+ * 
+ * Old format: /dashboard/sites/[siteId]/editor?page=[pageId]
+ * New format: /studio/[siteId]/[pageId]
+ * 
+ * @phase STUDIO-27 - Platform Integration & Puck Removal
+ */
+export default async function LegacyEditorRedirect({ 
+  params, 
   searchParams,
-}: EditorPageProps) {
-  const resolvedParams = await params;
-  const resolvedSearchParams = await searchParams;
+}: PageProps) {
+  const { siteId } = await params;
+  const { page, pageId } = await searchParams;
   
-  const site = await getSite(resolvedParams.siteId).catch(() => null);
-
-  if (!site) {
-    notFound();
+  // Get the page ID from either query param
+  const targetPageId = page || pageId;
+  
+  if (targetPageId) {
+    // Redirect to Studio with the page
+    redirect(`/studio/${siteId}/${targetPageId}`);
   }
-
-  // Get page ID from query or find homepage
-  const pageId = resolvedSearchParams.page;
-
-  if (!pageId) {
-    const pages = await getPages(resolvedParams.siteId);
-    const homepage = pages.find((p) => p.is_homepage);
-
-    if (homepage) {
-      redirect(`/dashboard/sites/${resolvedParams.siteId}/editor?page=${homepage.id}`);
-    } else if (pages.length > 0) {
-      redirect(`/dashboard/sites/${resolvedParams.siteId}/editor?page=${pages[0].id}`);
-    } else {
-      // No pages exist, redirect to create page
-      redirect(`/dashboard/sites/${resolvedParams.siteId}/pages/new`);
+  
+  // No page specified - try to find the homepage
+  try {
+    const supabase = await createClient();
+    
+    const { data: homepage } = await supabase
+      .from("pages")
+      .select("id")
+      .eq("site_id", siteId)
+      .eq("is_homepage", true)
+      .single();
+    
+    if (homepage?.id) {
+      redirect(`/studio/${siteId}/${homepage.id}`);
     }
+  } catch {
+    // Ignore errors and fallback to pages list
   }
-
-  const page = await getPageWithContent(pageId!).catch(() => null);
-
-  if (!page) {
-    // Page not found, redirect to site
-    redirect(`/dashboard/sites/${resolvedParams.siteId}`);
-  }
-
-  return (
-    <PuckEditorIntegrated
-      site={site}
-      page={page}
-    />
-  );
+  
+  // Fallback: redirect to site pages list
+  redirect(`/dashboard/sites/${siteId}/pages`);
 }

@@ -3,12 +3,62 @@
  * 
  * Type definitions for Puck editor data structures used in DRAMAC CMS.
  * These types define the page content format stored in the database.
+ * 
+ * @note Since STUDIO-27, these are standalone types (no Puck package dependency)
+ * @phase STUDIO-27 - Platform Integration & Puck Removal
  */
 
-import type { Data, ComponentData, Config, ComponentConfig } from "@puckeditor/core";
+// ============================================================================
+// Core Puck Data Types (standalone - no package dependency)
+// ============================================================================
 
-// Re-export Puck types for convenience
-export type { Data as PuckData, ComponentData, Config as PuckConfig, ComponentConfig };
+/**
+ * Component data in Puck format
+ */
+export interface ComponentData {
+  type: string;
+  props: Record<string, unknown>;
+}
+
+/**
+ * Puck page data format
+ */
+export interface PuckData {
+  root: {
+    props: Record<string, unknown>;
+  };
+  content: ComponentData[];
+  zones?: Record<string, ComponentData[]>;
+}
+
+/**
+ * Alias for backwards compatibility with code expecting `Data` type
+ */
+export type Data = PuckData;
+
+/**
+ * Component configuration
+ */
+export interface ComponentConfig {
+  label?: string;
+  fields?: Record<string, unknown>;
+  defaultProps?: Record<string, unknown>;
+  render?: unknown;
+}
+
+/**
+ * Puck editor configuration
+ */
+export interface PuckConfig {
+  components: Record<string, ComponentConfig>;
+  categories?: Record<string, { components: string[] }>;
+  root?: ComponentConfig;
+}
+
+/**
+ * Alias for backwards compatibility
+ */
+export type Config = PuckConfig;
 
 /**
  * Root props for Puck pages
@@ -18,6 +68,8 @@ export interface PuckRootProps {
   description?: string;
   backgroundColor?: string;
   padding?: number;
+  // Index signature for compatibility with Record<string, unknown>
+  [key: string]: unknown;
 }
 
 // Alias for backwards compatibility
@@ -26,7 +78,7 @@ export type RootProps = PuckRootProps;
 /**
  * Extended Puck data with DRAMAC-specific fields
  */
-export interface DramacPuckData extends Data {
+export interface DramacPuckData extends PuckData {
   root: {
     props: PuckRootProps;
   };

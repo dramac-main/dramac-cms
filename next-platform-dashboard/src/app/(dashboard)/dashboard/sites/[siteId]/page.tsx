@@ -123,10 +123,10 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
             Settings
           </Button>
         </Link>
-        <Link href={`/dashboard/sites/${site.id}/editor`}>
+        <Link href={`/dashboard/sites/${site.id}/pages`}>
           <Button variant="outline">
             <Pencil className="mr-2 h-4 w-4" />
-            Open Editor
+            Edit Pages
           </Button>
         </Link>
         <CloneSiteDialog

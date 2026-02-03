@@ -3,9 +3,11 @@
  * 
  * WCAG-based accessibility analysis for page content.
  * Part of PHASE-ED-05C: AI Editor - Content Optimization
+ * 
+ * @phase STUDIO-27 - Updated to use standalone types
  */
 
-import type { Data as PuckData, ComponentData } from "@puckeditor/core";
+import type { PuckData, ComponentData } from "@/types/puck";
 
 // ============================================
 // Types

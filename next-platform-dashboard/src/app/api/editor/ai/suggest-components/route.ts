@@ -3,6 +3,8 @@
  * 
  * API endpoint for AI-powered component suggestions.
  * Part of PHASE-ED-05B: AI Editor - Custom Generation
+ * 
+ * @phase STUDIO-27 - Updated to use standalone types
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -11,7 +13,7 @@ import {
   getSuggestions,
   type PageContext,
 } from "@/lib/ai/component-suggestions";
-import type { Data as PuckData } from "@puckeditor/core";
+import type { PuckData } from "@/types/puck";
 
 // ============================================
 // Types

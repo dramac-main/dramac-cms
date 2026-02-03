@@ -84,7 +84,7 @@ export function CreateSiteDialog({
         const siteId = result.data?.site?.id;
         const pageId = result.data?.homepage?.id;
         if (siteId && pageId) {
-          router.push(`/dashboard/sites/${siteId}/editor?pageId=${pageId}`);
+          router.push(`/studio/${siteId}/${pageId}`);
         } else {
           router.push(`/dashboard/sites/${siteId}`);
         }

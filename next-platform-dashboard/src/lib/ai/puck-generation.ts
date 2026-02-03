@@ -3,12 +3,14 @@
  * 
  * AI service for generating full Puck pages from descriptions.
  * Part of PHASE-ED-05B: AI Editor - Custom Generation
+ * 
+ * @phase STUDIO-27 - Updated to use standalone types
  */
 
 import { anthropic, AI_MODELS, GENERATION_CONFIG } from "./config";
 import { checkRateLimit, recordRateLimitedAction } from "@/lib/rate-limit";
 import { checkContent, sanitizePrompt, getHighestSeverity } from "@/lib/safety";
-import type { Data as PuckData, ComponentData } from "@puckeditor/core";
+import type { PuckData, ComponentData } from "@/types/puck";
 
 // Re-export types and constants from types file
 export {

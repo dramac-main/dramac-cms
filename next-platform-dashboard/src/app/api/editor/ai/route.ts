@@ -1,8 +1,8 @@
 /**
  * AI Editor API Route
  * 
- * API endpoint for AI-powered editing operations in the Puck editor.
- * Part of PHASE-ED-05A: AI Editor - Puck AI Plugin Integration
+ * API endpoint for AI-powered editing operations in the Studio editor.
+ * Updated for PHASE-STUDIO-27: Platform Integration & Puck Removal
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -11,7 +11,7 @@ import {
   executeAIAction,
   AIActionType,
   AI_ACTIONS,
-} from "@/components/editor/puck/ai/puck-ai-config";
+} from "@/lib/studio/ai/studio-ai-config";
 import { checkRateLimit, recordRateLimitedAction } from "@/lib/rate-limit";
 import {
   checkContent,

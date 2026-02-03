@@ -159,7 +159,7 @@ export function AIBuilderWizard({ site }: AIBuilderWizardProps) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       toast.success("Your website has been generated!");
-      router.push(`/dashboard/sites/${site.id}/editor`);
+      router.push(`/studio/${site.id}/${pageId}`);
     } catch (error) {
       clearInterval(progressInterval);
       clearInterval(statusInterval);

@@ -4,10 +4,12 @@
  * 
  * Contains starter templates that generate actual Puck component data structures.
  * These are the free templates included with every installation.
+ * 
+ * @phase STUDIO-27 - Updated to use standalone types
  */
 
 import type { PuckTemplate, TemplateCategory } from "@/types/puck-templates";
-import type { Data as PuckData } from "@puckeditor/core";
+import type { PuckData } from "@/types/puck";
 
 // ============================================
 // HELPER: Generate Unique IDs

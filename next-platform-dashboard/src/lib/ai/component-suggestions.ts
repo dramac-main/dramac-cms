@@ -3,10 +3,12 @@
  * 
  * AI service for suggesting components based on page context.
  * Part of PHASE-ED-05B: AI Editor - Custom Generation
+ * 
+ * @phase STUDIO-27 - Updated to use standalone types
  */
 
 import { anthropic, AI_MODELS } from "./config";
-import type { Data as PuckData } from "@puckeditor/core";
+import type { PuckData } from "@/types/puck";
 
 // ============================================
 // Types

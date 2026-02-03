@@ -1,12 +1,14 @@
 "use client";
 
+/**
+ * Preview Page - Renders page content using StudioRenderer
+ * 
+ * @phase STUDIO-27 - Migrated from Puck to StudioRenderer
+ */
+
 import { useEffect, useState } from "react";
 import { use } from "react";
-import { Render } from "@puckeditor/core";
-import "@puckeditor/core/puck.css";
-import { puckConfig } from "@/components/editor/puck/puck-config";
-import { detectContentFormat, migrateCraftToPuck, isPuckFormat } from "@/lib/migration/craft-to-puck";
-import type { PuckData } from "@/types/puck";
+import { StudioRenderer } from "@/lib/studio/engine/renderer";
 import { Loader2, AlertTriangle, FileText } from "lucide-react";
 
 interface PreviewPageProps {
@@ -100,78 +102,46 @@ export default function PreviewPage({ params }: PreviewPageProps) {
   // No content state
   if (!data?.content) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center max-w-md px-4">
-          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-            <FileText className="h-8 w-8 text-gray-400" />
-          </div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
           <h1 className="text-xl font-semibold mb-2 text-gray-900">
             No Content Yet
           </h1>
           <p className="text-gray-500">
-            This page doesn't have any content. Open the editor to add
-            components.
+            This page hasn&apos;t been built yet. Open the Studio to add content.
           </p>
         </div>
       </div>
     );
   }
 
-  // Apply theme settings as CSS custom properties
-  const themeVars: Record<string, string> = {};
-  if (data.themeSettings) {
-    const settings = data.themeSettings as Record<string, string>;
-    if (settings.primaryColor) {
-      themeVars["--theme-primary"] = settings.primaryColor;
-    }
-    if (settings.fontFamily) {
-      themeVars["--theme-font-family"] = settings.fontFamily;
-    }
-  }
-
-  // Parse and convert content to Puck format
-  let puckData: PuckData;
+  // Parse content
+  let pageContent: unknown;
   try {
-    const parsedContent = typeof data.content === "string" 
+    pageContent = typeof data.content === "string" 
       ? JSON.parse(data.content) 
       : data.content;
-    
-    // Check if already Puck format
-    if (isPuckFormat(parsedContent)) {
-      puckData = parsedContent as PuckData;
-    } else {
-      // Migrate from Craft.js format
-      const detection = detectContentFormat(parsedContent);
-      if (detection.format === "craft") {
-        const migrationResult = migrateCraftToPuck(parsedContent);
-        if (migrationResult.success && migrationResult.data) {
-          puckData = migrationResult.data;
-        } else {
-          console.error("[Preview] Migration failed:", migrationResult.errors);
-          puckData = { content: [], root: { props: { title: "" } } };
-        }
-      } else {
-        puckData = { content: [], root: { props: { title: "" } } };
-      }
-    }
-  } catch (e) {
-    console.error("[Preview] Failed to parse content:", e);
-    puckData = { content: [], root: { props: { title: "" } } };
+  } catch {
+    pageContent = {};
   }
 
+  // Render with StudioRenderer
   return (
     <>
-      {/* Document title update */}
-      {typeof document !== "undefined" && data.page.metaTitle && (
+      {/* Meta tags */}
+      {data.page.metaTitle && (
         <title>{data.page.metaTitle}</title>
       )}
-
-      <div
-        className="min-h-screen bg-white puck-preview"
-        style={themeVars as React.CSSProperties}
-      >
-        <Render config={puckConfig} data={puckData} />
-      </div>
+      
+      {/* Main content */}
+      <StudioRenderer
+        data={pageContent}
+        themeSettings={data.themeSettings || data.site?.theme_settings}
+        siteId={resolvedParams.siteId}
+        pageId={resolvedParams.pageId}
+        className="min-h-screen"
+      />
     </>
   );
 }

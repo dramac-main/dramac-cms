@@ -76,7 +76,7 @@ export function CreatePageForm({ siteId, isFirstPage }: CreatePageFormProps) {
         toast.error(result.error);
       } else {
         toast.success("Page created successfully");
-        router.push(`/dashboard/sites/${siteId}/editor?page=${result.data?.id}`);
+        router.push(`/studio/${siteId}/${result.data?.id}`);
       }
     } catch (_error) {
       toast.error("An unexpected error occurred");

@@ -4,9 +4,11 @@
  * 
  * Comprehensive TypeScript types for Puck-compatible templates
  * with categories, metadata, and component data structures.
+ * 
+ * @phase STUDIO-27 - Updated to use standalone types
  */
 
-import type { Data as PuckData } from "@puckeditor/core";
+import type { PuckData } from "@/types/puck";
 
 // ============================================
 // TEMPLATE CATEGORIES

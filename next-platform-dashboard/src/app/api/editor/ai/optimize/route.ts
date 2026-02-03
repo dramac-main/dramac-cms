@@ -3,6 +3,8 @@
  * 
  * Endpoint for running content optimization analysis.
  * Part of PHASE-ED-05C: AI Editor - Content Optimization
+ * 
+ * @phase STUDIO-27 - Updated to use standalone types
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -10,7 +12,7 @@ import { createClient } from "@/lib/supabase/server";
 import { analyzePageContent, getAIOptimizations } from "@/lib/ai/content-optimization";
 import { analyzeSEO } from "@/lib/ai/seo-analyzer";
 import { checkAccessibility } from "@/lib/ai/accessibility-checker";
-import type { Data as PuckData } from "@puckeditor/core";
+import type { PuckData } from "@/types/puck";
 
 // ============================================
 // Types

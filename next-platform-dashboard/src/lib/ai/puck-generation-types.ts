@@ -4,9 +4,11 @@
  * Client-safe types and constants for page generation.
  * This file contains NO server-side code or Anthropic SDK imports.
  * Part of PHASE-ED-05B: AI Editor - Custom Generation
+ * 
+ * @phase STUDIO-27 - Updated to use standalone types
  */
 
-import type { Data as PuckData } from "@puckeditor/core";
+import type { PuckData } from "@/types/puck";
 
 // ============================================
 // Types

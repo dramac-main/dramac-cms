@@ -3,10 +3,12 @@
  * 
  * AI service for analyzing and optimizing page content.
  * Part of PHASE-ED-05C: AI Editor - Content Optimization
+ * 
+ * @phase STUDIO-27 - Updated to use standalone types
  */
 
 import { anthropic, AI_MODELS } from "./config";
-import type { Data as PuckData, ComponentData } from "@puckeditor/core";
+import type { PuckData, ComponentData } from "@/types/puck";
 
 // ============================================
 // Types

@@ -2,32 +2,77 @@
 
 **Last Updated**: February 3, 2026  
 **Current Phase**: DRAMAC Studio - Wave 9 (Final: Integration & Cleanup)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-8 ✅ → WAVE 9 FINAL 🟡**
+**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-8 ✅ → WAVE 9 📄 PHASE DOC GENERATED**
 
 ---
 
-## 🟡 WAVE 9: Integration & Cleanup - READY (FINAL WAVE)
+## � WAVE 8 BUG FIXES (February 3, 2026)
+
+### Issues Fixed This Session:
+1. **Tutorial Breaking on Step 2 (Phase 26)**: Added panel visibility enforcement in `tutorial-provider.tsx` - ensures left/right/bottom panels open when tutorial activates and for specific step targets
+
+2. **Template Insertion (Phase 24)**: Added async scheduling with `useTransition`, `useDeferredValue`, and `requestAnimationFrame` for non-blocking UI + toast notifications for user feedback
+
+3. **Symbol Drop Handling (Phase 25)**: Created `SymbolDragData` type in `studio.ts` with `isSymbolDrag()` type guard, updated `dnd-provider.tsx` to handle symbol drops
+
+4. **Symbols Panel Visibility (Phase 25)**: Integrated Symbols panel into Component Library with Tabs UI - now shows Components/Symbols tabs with counts
+
+5. **INP Performance**: Used React 19 features (`useTransition`, `useDeferredValue`) to reduce UI blocking during template search and insertion
+
+### Files Modified:
+- `src/types/studio.ts` - Added SymbolDragData type and isSymbolDrag guard
+- `src/components/studio/onboarding/tutorial-provider.tsx` - Panel visibility on tutorial
+- `src/components/studio/panels/symbols-panel.tsx` - Use proper SymbolDragData type  
+- `src/components/studio/dnd/dnd-provider.tsx` - Handle symbol source in drop handler
+- `src/components/studio/panels/component-library.tsx` - Add tabs for Components/Symbols
+- `src/components/studio/features/template-browser.tsx` - Performance optimizations
+
+---
+
+## �🟡 WAVE 9: Integration & Cleanup - READY (FINAL WAVE)
 
 ### What Needs Implementation
 
+## 📄 WAVE 9: Integration & Cleanup - PHASE DOCUMENT GENERATED
+
+### Phase Document Created: `PHASE-STUDIO-27-PLATFORM-INTEGRATION-PUCK-REMOVAL.md`
+
 **Goal**: Complete the Puck → Studio transition. This is CRITICAL.
 
-**Phase 27 - Platform Integration & Puck Removal**:
-- Update all "Edit Page" links to `/studio/[siteId]/[pageId]`
-- Replace Puck renderer with StudioRenderer in preview/public routes
-- Create data migration utility (Puck format → Studio format)
-- Create legacy URL redirect (for bookmarks)
-- Remove Puck dependencies from package.json
-- Delete old editor files and routes
-- Final platform-wide testing
+**Estimated Time**: 12-16 hours
+**Risk Level**: HIGH (affects entire platform)
+
+### Implementation Tasks (from Phase Doc):
+
+| Task | Description | Files |
+|------|-------------|-------|
+| 1 | Create Data Migration Utility | `migrate-puck-data.ts` |
+| 2 | Create StudioRenderer Component | `renderer.tsx` |
+| 3 | Update All Navigation Links | 4+ component files |
+| 4 | Replace Page Renderers | preview/public routes |
+| 5 | Create Legacy URL Redirect | editor page redirect |
+| 6 | Delete Old Editor Files | `/puck/` folder |
+| 7 | Remove Puck Dependencies | package.json |
+| 8 | Final Platform Testing | Comprehensive tests |
+
+### Files to Create:
+- `src/lib/studio/utils/migrate-puck-data.ts` - Puck→Studio data converter
+- `src/lib/studio/engine/renderer.tsx` - StudioRenderer component  
+- `src/app/(dashboard)/dashboard/sites/[siteId]/editor/page.tsx` - Legacy redirect
 
 ### Files to Change:
-- `src/components/sites/site-pages-list.tsx` - Update editor links
-- `src/components/sites/create-site-dialog.tsx` - Update redirect
-- `src/components/pages/create-page-form.tsx` - Update redirect  
+- `src/components/sites/site-pages-list.tsx` - Remove legacy editor link
+- `src/components/sites/create-site-dialog.tsx` - Update redirect to Studio
+- `src/components/sites/create-site-form.tsx` - Update redirect to Studio
+- `src/components/pages/create-page-form.tsx` - Update redirect to Studio
+- `src/components/sites/sites-grid.tsx` - Update "Open Editor" link
 - `src/app/preview/[siteId]/[pageId]/page.tsx` - Use StudioRenderer
-- `src/app/(public)/[domain]/[[...slug]]/page.tsx` - Use StudioRenderer
-- `package.json` - Remove @measured/puck
+- `src/components/renderer/puck-site-renderer.tsx` - Wrap StudioRenderer
+- `package.json` - Remove @puckeditor/core
+
+### Files to Delete:
+- `src/components/editor/puck/` - Entire folder
+- `src/components/editor/puck-editor-integrated.tsx`
 
 ### After This Wave:
 - ✅ DRAMAC Studio is the ONLY editor

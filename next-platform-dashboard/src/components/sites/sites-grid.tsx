@@ -142,9 +142,9 @@ export async function SitesGrid({ filters }: SitesGridProps) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href={`/dashboard/sites/${site.id}/editor`}>
+                    <Link href={`/dashboard/sites/${site.id}/pages`}>
                       <Eye className="mr-2 h-4 w-4" />
-                      Open Editor
+                      Edit Pages
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

@@ -6,7 +6,16 @@
  * 
  * @phase STUDIO-22 - Added CSS generator for component states
  * @phase STUDIO-23 - Added HTML generator and export utilities
+ * @phase STUDIO-27 - Added StudioRenderer for page rendering
  */
+
+// StudioRenderer (PHASE-STUDIO-27)
+export { 
+  StudioRenderer,
+  ComponentRenderer,
+  ZoneRenderer,
+  type StudioRendererProps,
+} from "./renderer";
 
 // CSS Generator (PHASE-STUDIO-22)
 export {
