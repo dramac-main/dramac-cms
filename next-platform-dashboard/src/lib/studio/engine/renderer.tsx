@@ -11,13 +11,16 @@
  * - Renders all registered Studio components
  * - Supports theme settings/CSS variables
  * - SSR-compatible with "use client" directive
+ * - Auto-initializes component registry
  * 
  * @phase STUDIO-27 - Platform Integration & Puck Removal
+ * @phase STUDIO-28 - Fixed registry initialization for preview
  */
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { ensureStudioFormat } from "../utils/migrate-puck-data";
-import { getComponent } from "../registry/component-registry";
+import { getComponent, componentRegistry } from "../registry/component-registry";
+import { initializeRegistry, isRegistryInitialized } from "../registry";
 import type { StudioComponent } from "@/types/studio";
 
 // ============================================================================
@@ -203,6 +206,19 @@ export function StudioRenderer({
   pageId,
   className = "",
 }: StudioRendererProps): React.ReactElement {
+  // Track registry initialization state
+  const [registryReady, setRegistryReady] = useState(isRegistryInitialized());
+  
+  // Initialize registry on mount if needed
+  useEffect(() => {
+    if (!isRegistryInitialized()) {
+      console.log("[StudioRenderer] Initializing component registry...");
+      initializeRegistry();
+      setRegistryReady(true);
+      console.log("[StudioRenderer] Registry initialized with", componentRegistry.count, "components");
+    }
+  }, []);
+  
   // Migrate data to Studio format (memoized)
   const studioData = useMemo(() => {
     return ensureStudioFormat(data);
@@ -212,6 +228,17 @@ export function StudioRenderer({
   const themeStyles = useMemo(() => {
     return themeSettings ? generateThemeCSS(themeSettings) : {};
   }, [themeSettings]);
+  
+  // Wait for registry to be ready
+  if (!registryReady) {
+    return (
+      <div className={`studio-renderer studio-loading ${className}`}>
+        <div className="flex items-center justify-center min-h-[200px]">
+          <div className="animate-pulse text-muted-foreground">Loading components...</div>
+        </div>
+      </div>
+    );
+  }
   
   // Empty state
   if (!studioData.root.children || studioData.root.children.length === 0) {
