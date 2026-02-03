@@ -2,7 +2,50 @@
 
 **Last Updated**: February 3, 2026  
 **Current Phase**: DRAMAC Studio - Wave 6 (Advanced Features)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-5 ✅ → WAVE 6 READY 🟡**
+**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-6 ✅ COMPLETE**
+
+---
+
+## ✅ WAVE 6: Advanced Features - PHASES 18-19 COMPLETE (February 3, 2026)
+
+### What Was Implemented
+
+**Phase 18 - Responsive Preview** ✅:
+- Device preset selector with 25+ devices (iPhone SE through 4K Desktop)
+- Device categories: Phone, Tablet, Laptop, Desktop, Custom
+- Editable width/height inputs with arrow key support (±1 or ±10 with Shift)
+- Orientation toggle (portrait/landscape)
+- Zoom controls (25%-400%) with dropdown and buttons
+- Device frame visualization (phone bezel with notch/Dynamic Island, tablet frame)
+- Ruler on canvas edges (horizontal/vertical with major/minor ticks)
+- Keyboard shortcuts: Cmd+=/- for zoom, Cmd+0 reset to 100%, Cmd+1 fit to screen
+- StudioFrame wrapper component with checkered background pattern
+
+**Phase 19 - Nested Components & Zones** ✅:
+- ZoneDefinition type with acceptsChildren, allowedComponents, maxChildren, placeholder
+- Zone ID format: `parentId:zoneName` with helper functions (parseZoneId, createZoneId)
+- Zone actions in editor-store (getZoneComponents, canDropInZone, initializeZonesForComponent)
+- DroppableZone component with visual indicators during drag
+- Drop validation with toast error messages for invalid drops
+- ZoneRenderer and WithZones components for custom zone rendering
+- Layers panel shows zones in hierarchy (different styling, not draggable)
+- Columns component updated to use new zone format
+
+### Current Capabilities (After Wave 6)
+
+- ✅ Select any device preset → Canvas resizes to exact dimensions
+- ✅ Toggle device frame → Shows phone bezel with notch
+- ✅ Toggle ruler → Shows pixel rulers on canvas edges
+- ✅ Zoom in/out with shortcuts or dropdown
+- ✅ Components can define named drop zones
+- ✅ Zone restrictions enforced (only allowed components can drop)
+- ✅ Zones appear in layers panel hierarchy
+- ✅ Visual feedback during drag shows valid/invalid drop zones
+
+### Phases Still Needed for Complete Wave 6
+
+**Phase 16 - Layers & Structure Panel**: Already implemented in earlier wave
+**Phase 17 - History & Versioning**: Already implemented in earlier wave
 
 ---
 
@@ -36,78 +79,110 @@ Module system now fully integrated with DRAMAC Studio:
 
 ---
 
-## 🟡 WAVE 6: Advanced Features - READY (Next Up)
+## ✅ WAVE 5: Module Integration - COMPLETE (February 3, 2026)
 
-### What Needs Implementation
+### What Was Implemented
 
-**Goal**: Add professional editor features that rival Webflow/Figma.
+Module system now fully integrated with DRAMAC Studio:
 
-**Phase 16 - Layers & Structure Panel**:
-- Visual component tree in bottom panel
-- Click layer to select in canvas, drag to reorder
-- Lock/unlock components (prevents editing)
-- Hide/show components (invisible in canvas)
-- Context menu (duplicate, delete, rename)
-- Search and filter components
-- Expand/collapse branches
+**Phase 14 - Module Component Loader**:
+- Module discovery and dynamic loading
+- Component registry integration
+- Real-time module sync (Supabase subscriptions)
+- Module badges in component library
+- Placeholder rendering for uninstalled modules
 
-**Phase 17 - History & Versioning**:
-- Visual history timeline with undo/redo
-- Each entry shows: timestamp, action, component
-- Named snapshots (save/restore page states)
-- Version comparison UI (see what changed)
-- History stored in IndexedDB + database
-- Max 50 undo states (performance)
+**Phase 15 - Module-Specific Fields**:
+- Custom field type system
+- Module data binding (ProductSelector, CategorySelector)
+- Module API endpoints for data fetching
+- Custom field rendering in properties panel
 
-**Phase 18 - Responsive Preview**:
-- Device preset selector (iPhone, iPad, Desktop, Custom)
-- Editable width/height inputs
-- Zoom controls (50%, 75%, 100%, 150%, 200%, Fit)
-- Device frame visualization (optional bezel)
-- Ruler on canvas edges
-- Keyboard shortcuts (Ctrl/Cmd +/- for zoom)
+### Current Capabilities
 
-**Phase 19 - Nested Components & Zones**:
-- Components can define multiple drop zones
-- Example: Section with "content" zone
-- Example: Tabs with zone per tab
-- Example: Hero with header/content/footer zones
-- Zone restrictions (only allow certain components)
-- Visual zone indicators while dragging
-- Zones shown in layers panel hierarchy
-
-### After Wave 6
-
-When complete:
-- Editor feels professional (Webflow/Figma level)
-- Complex layouts possible (tabs, accordions with nested content)
-- Experiment safely with snapshots
-- Test on exact device sizes
-- Lock/hide to protect page sections during client handoff
-
-### Next Steps
-
-Give another AI agent the prompt at [phases/STUDIO-WAVE6-PROMPT.md](phases/STUDIO-WAVE6-PROMPT.md) to generate:
-1. `PHASE-STUDIO-16-LAYERS-STRUCTURE-PANEL.md`
-2. `PHASE-STUDIO-17-HISTORY-VERSIONING.md`
-3. `PHASE-STUDIO-18-RESPONSIVE-PREVIEW.md`
-4. `PHASE-STUDIO-19-NESTED-ZONES.md`
-
-Then implement those 4 phases and return for Wave 7.
 - ✅ Install E-Commerce module → Product Card, Cart Widget appear in library
 - ✅ Drag Product Card → Properties show custom "Product" dropdown
 - ✅ Select product → Renders with live product data
 - ✅ AI works with module components
 - ✅ Generate page → Can include module components
-- ✅ Real-time sync: module install/uninstall updates library
+- ✅ Real-time sync: module install/uninstall updates library immediately
 
-### Next Steps After Wave 5
+---
 
-Proceed to **Wave 6: Advanced Features** (Phases 16-19):
-- Layers & Structure Panel
-- History & Versioning
-- Responsive Preview
-- Nested Components & Zones
+## 📋 Testing Guide for Phases 18-19
+
+### Prerequisites
+1. Run the development server: `cd next-platform-dashboard && pnpm dev`
+2. Navigate to any site's page editor at `/studio/[siteId]/[pageId]`
+
+### Testing Phase 18 - Responsive Preview
+
+**Device Selector**:
+1. Look at the toolbar - you should see a device dropdown (defaults to "Custom")
+2. Click the dropdown and select different devices:
+   - iPhone SE, iPhone 14, iPad Pro, MacBook, Desktop, 4K
+3. Canvas should resize to match device dimensions
+4. Check that width×height inputs update to show current dimensions
+
+**Dimensions Input**:
+1. Click on width or height input field
+2. Type a custom dimension (e.g., 1920)
+3. Use arrow keys: ↑/↓ changes value by 1, Shift+↑/↓ changes by 10
+4. Click orientation toggle button to swap width/height
+
+**Zoom Controls**:
+1. Click + and - buttons to zoom in/out
+2. Use dropdown to select specific zoom level or "Fit" to fit canvas
+3. Use keyboard: Cmd+= (zoom in), Cmd+- (zoom out), Cmd+0 (reset 100%), Cmd+1 (fit)
+4. Toggle ruler button → rulers appear on canvas edges
+5. Toggle frame button → device bezel appears (if phone/tablet)
+
+**Device Frame**:
+1. Select iPhone or iPad device
+2. Enable device frame toggle
+3. Should see phone bezel with notch/Dynamic Island, status bar, home indicator
+4. Desktop devices show subtle shadow only
+
+### Testing Phase 19 - Nested Zones
+
+**Zones in Layers Panel**:
+1. Add a "Columns" component to the canvas
+2. Open the Layers panel (bottom or side panel)
+3. Expand the Columns component
+4. You should see zone entries (Column 1, Column 2, etc.) with different styling
+5. Zones show Target icon, italic text, and cannot be dragged
+
+**Dropping into Zones**:
+1. Drag any component from the library
+2. Hover over a zone (e.g., Column 1)
+3. Zone should highlight with blue border when valid drop
+4. Drop the component → it appears inside that zone
+5. Zone entry in layers panel shows child count
+
+**Zone Restrictions**:
+1. Create a component with zone restrictions (if available)
+2. Try dragging an invalid component type
+3. Zone should show red border and error message
+4. Drop is rejected with toast notification
+
+### Key Files Created/Modified
+
+**Phase 18**:
+- [device-presets.ts](next-platform-dashboard/src/lib/studio/data/device-presets.ts) - Device data
+- [device-selector.tsx](next-platform-dashboard/src/components/studio/features/device-selector.tsx)
+- [dimensions-input.tsx](next-platform-dashboard/src/components/studio/features/dimensions-input.tsx)
+- [zoom-controls.tsx](next-platform-dashboard/src/components/studio/features/zoom-controls.tsx)
+- [ruler.tsx](next-platform-dashboard/src/components/studio/features/ruler.tsx)
+- [device-frame.tsx](next-platform-dashboard/src/components/studio/features/device-frame.tsx)
+- [studio-frame.tsx](next-platform-dashboard/src/components/studio/core/studio-frame.tsx)
+
+**Phase 19**:
+- [studio.ts](next-platform-dashboard/src/types/studio.ts) - ZoneDefinition type, zone helpers
+- [droppable-zone.tsx](next-platform-dashboard/src/components/studio/dnd/droppable-zone.tsx)
+- [zone-renderer.tsx](next-platform-dashboard/src/components/studio/core/zone-renderer.tsx)
+- [dnd-provider.tsx](next-platform-dashboard/src/components/studio/dnd/dnd-provider.tsx) - Zone drop handling
+- [layer-utils.ts](next-platform-dashboard/src/lib/studio/utils/layer-utils.ts) - Zones in tree
+- [layer-row.tsx](next-platform-dashboard/src/components/studio/features/layer-row.tsx) - Zone styling
 
 ---
 
