@@ -198,6 +198,40 @@ export interface FieldDefinition {
   
   /** Validate URL format */
   validateUrl?: boolean;
+  
+  /**
+   * Custom field type identifier for module-specific fields.
+   * Format: "moduleSlug:fieldType" (e.g., "ecommerce:product-selector")
+   * Only used when type is "custom"
+   */
+  customType?: string;
+  
+  /**
+   * Additional options for custom fields.
+   * Passed to the custom field component.
+   */
+  customOptions?: Record<string, unknown>;
+  
+  /**
+   * API endpoint for fetching field data.
+   * If provided, the custom field can use this to fetch options.
+   */
+  dataEndpoint?: string;
+  
+  /**
+   * Whether the field supports multiple selection.
+   */
+  multiple?: boolean;
+  
+  /**
+   * Whether to allow clearing the selection.
+   */
+  clearable?: boolean;
+  
+  /**
+   * Whether the field supports search/filtering.
+   */
+  searchable?: boolean;
 }
 
 /**

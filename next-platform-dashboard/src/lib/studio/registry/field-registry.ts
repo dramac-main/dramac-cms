@@ -31,6 +31,30 @@ export interface FieldTypeDefinition {
   deserialize?: (value: unknown) => unknown;
 }
 
+/**
+ * Custom field definition for module-specific fields
+ */
+export interface CustomFieldDefinition {
+  /** Custom field type identifier (e.g., "ecommerce:product-selector") */
+  type: string;
+  
+  /** Display name */
+  label: string;
+  
+  /** Module this field belongs to */
+  moduleId: string;
+  moduleName: string;
+  
+  /** The editor component */
+  render: ComponentType<FieldRenderProps>;
+  
+  /** Default options */
+  defaultOptions?: Record<string, unknown>;
+  
+  /** Validate value */
+  validate?: (value: unknown, options?: Record<string, unknown>) => string | null;
+}
+
 // =============================================================================
 // REGISTRY
 // =============================================================================
@@ -38,6 +62,7 @@ export interface FieldTypeDefinition {
 class FieldRegistry {
   private fields: Map<FieldType, FieldTypeDefinition> = new Map();
   private customRenderers: Map<string, ComponentType<FieldRenderProps>> = new Map();
+  private customDefinitions: Map<string, CustomFieldDefinition> = new Map();
 
   /**
    * Register a field type
@@ -101,6 +126,61 @@ class FieldRegistry {
     }
 
     return null;
+  }
+
+  // ===========================================================================
+  // CUSTOM FIELD METHODS
+  // ===========================================================================
+
+  /**
+   * Register a custom field from a module
+   */
+  registerCustomField(definition: CustomFieldDefinition): void {
+    this.customDefinitions.set(definition.type, definition);
+    this.customRenderers.set(definition.type, definition.render);
+    
+    console.debug(`[FieldRegistry] Registered custom field: ${definition.type}`);
+  }
+
+  /**
+   * Unregister custom fields from a module
+   */
+  unregisterModuleFields(moduleId: string): void {
+    for (const [type, def] of this.customDefinitions.entries()) {
+      if (def.moduleId === moduleId) {
+        this.customDefinitions.delete(type);
+        this.customRenderers.delete(type);
+      }
+    }
+  }
+
+  /**
+   * Get custom field definition
+   */
+  getCustomFieldDefinition(type: string): CustomFieldDefinition | undefined {
+    return this.customDefinitions.get(type);
+  }
+
+  /**
+   * Get all custom fields for a module
+   */
+  getModuleCustomFields(moduleId: string): CustomFieldDefinition[] {
+    return Array.from(this.customDefinitions.values())
+      .filter(def => def.moduleId === moduleId);
+  }
+
+  /**
+   * Check if custom field exists
+   */
+  hasCustomField(type: string): boolean {
+    return this.customDefinitions.has(type);
+  }
+
+  /**
+   * Get all custom field types
+   */
+  getCustomFieldTypes(): string[] {
+    return Array.from(this.customDefinitions.keys());
   }
 }
 

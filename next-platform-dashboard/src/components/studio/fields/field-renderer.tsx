@@ -4,6 +4,7 @@
 import * as React from 'react';
 import type { FieldDefinition, FieldType } from '@/types/studio';
 import { ResponsiveFieldWrapper } from './responsive-field-wrapper';
+import { CustomFieldWrapper } from './custom-field-wrapper';
 
 // Import existing field editors from properties folder
 import { TextField } from '@/components/studio/properties/fields/text-field';
@@ -35,6 +36,7 @@ export interface FieldRendererProps {
   value: unknown;
   onChange: (value: unknown) => void;
   disabled?: boolean;
+  componentType?: string;
 }
 
 // Map field types to their editors
@@ -72,7 +74,20 @@ const RESPONSIVE_FIELD_TYPES: FieldType[] = [
 ];
 
 // Inner field renderer (used by array/object for recursion and responsive wrapper)
-function InnerFieldRenderer({ field, value, onChange, disabled }: FieldRendererProps) {
+function InnerFieldRenderer({ field, value, onChange, disabled, componentType }: FieldRendererProps) {
+  // Handle custom field type - route to CustomFieldWrapper
+  if (field.type === 'custom') {
+    return (
+      <CustomFieldWrapper
+        field={field}
+        value={value}
+        onChange={onChange}
+        componentType={componentType}
+        disabled={disabled}
+      />
+    );
+  }
+
   const Editor = FIELD_EDITORS[field.type];
   
   if (!Editor) {

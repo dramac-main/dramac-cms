@@ -188,6 +188,25 @@ export async function loadModuleComponents(
         }
       }
 
+      // Also register field definitions if provided (Phase 15)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const exportsWithDefs = exports as any;
+      if (exportsWithDefs.studioFieldDefinitions) {
+        for (const fieldDef of exportsWithDefs.studioFieldDefinitions) {
+          // Ensure proper prefixing for the type
+          const typeWithPrefix = fieldDef.type.includes(':') 
+            ? fieldDef.type 
+            : `${moduleInfo.slug}:${fieldDef.type}`;
+          
+          fieldRegistry.registerCustomField({
+            ...fieldDef,
+            type: typeWithPrefix,
+            moduleId: moduleInfo.id,
+            moduleName: moduleInfo.name,
+          });
+        }
+      }
+
       loaded.push(moduleInfo.id);
       console.log(
         `[ModuleLoader] Loaded module: ${moduleInfo.name} (${
