@@ -6,6 +6,7 @@
  */
 
 import type { StudioComponent, StudioPageData } from '@/types/studio';
+import { createZoneId } from '@/types/studio';
 import type { LayerItem } from '@/types/studio-history';
 import { componentRegistry } from '@/lib/studio/registry/component-registry';
 
@@ -137,22 +138,58 @@ export function getComponentIcon(type: string): string {
 
 /**
  * Build tree structure from flat components
+ * Includes zone entries for components with defined zones (Phase STUDIO-19)
  */
 export function buildLayerTree(
   pageData: StudioPageData,
   selectedComponentId: string | null,
   expandedLayers: Set<string>
 ): LayerItem[] {
-  const { root, components } = pageData;
+  const { root, components, zones } = pageData;
   
   function buildNode(componentId: string, depth: number): LayerItem | null {
     const component = components[componentId];
     if (!component) return null;
     
-    const childIds = component.children || [];
-    const children = childIds
-      .map(childId => buildNode(childId, depth + 1))
-      .filter((child): child is LayerItem => child !== null);
+    const definition = componentRegistry.get(component.type);
+    const children: LayerItem[] = [];
+    
+    // Add zones as children first (Phase STUDIO-19)
+    if (definition?.zones) {
+      Object.entries(definition.zones).forEach(([zoneName, zoneDef]) => {
+        const zoneId = createZoneId(componentId, zoneName);
+        const zoneComponentIds = zones?.[zoneId] || [];
+        
+        const zoneChildren = zoneComponentIds
+          .map(childId => buildNode(childId, depth + 2))
+          .filter((child): child is LayerItem => child !== null);
+        
+        children.push({
+          id: zoneId,
+          type: 'Zone',
+          label: zoneDef.label,
+          icon: 'Target',
+          children: zoneChildren,
+          isLocked: false,
+          isHidden: false,
+          isSelected: false, // Zones can't be selected
+          isExpanded: expandedLayers.has(zoneId),
+          depth: depth + 1,
+          parentId: componentId,
+          hasChildren: zoneChildren.length > 0,
+          isZone: true,
+          zoneName,
+          zoneParentId: componentId,
+        });
+      });
+    }
+    
+    // Add regular children (non-zone)
+    const regularChildIds = component.children || [];
+    regularChildIds.forEach(childId => {
+      const childNode = buildNode(childId, depth + 1);
+      if (childNode) children.push(childNode);
+    });
     
     return {
       id: component.id,
@@ -166,7 +203,7 @@ export function buildLayerTree(
       isExpanded: expandedLayers.has(component.id),
       depth,
       parentId: component.parentId,
-      hasChildren: childIds.length > 0,
+      hasChildren: children.length > 0,
     };
   }
   

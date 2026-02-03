@@ -207,6 +207,34 @@ export function StudioEditor({
         }
       }
       
+      // Zoom In: Cmd/Ctrl + = or Cmd/Ctrl + +
+      if (isMeta && (e.key === "=" || e.key === "+")) {
+        e.preventDefault();
+        useUIStore.getState().zoomIn();
+      }
+      
+      // Zoom Out: Cmd/Ctrl + -
+      if (isMeta && e.key === "-") {
+        e.preventDefault();
+        useUIStore.getState().zoomOut();
+      }
+      
+      // Reset Zoom: Cmd/Ctrl + 0
+      if (isMeta && e.key === "0") {
+        e.preventDefault();
+        useUIStore.getState().resetZoom();
+      }
+      
+      // Fit to Screen: Cmd/Ctrl + 1
+      if (isMeta && e.key === "1") {
+        e.preventDefault();
+        const container = document.querySelector('[data-canvas-container]');
+        if (container) {
+          const { clientWidth, clientHeight } = container;
+          useUIStore.getState().fitToScreen(clientWidth, clientHeight);
+        }
+      }
+      
       // Toggle Lock: Cmd/Ctrl + L
       if (isMeta && e.key === "l" && selectedId) {
         e.preventDefault();

@@ -190,12 +190,12 @@ const layoutComponents: ComponentDefinition[] = [
     render: ColumnsRender,
     acceptsChildren: true,
     isContainer: true,
-    zones: [
-      { id: "column-1", label: "Column 1" },
-      { id: "column-2", label: "Column 2" },
-      { id: "column-3", label: "Column 3" },
-      { id: "column-4", label: "Column 4" },
-    ],
+    zones: {
+      "column-1": { label: "Column 1", acceptsChildren: true },
+      "column-2": { label: "Column 2", acceptsChildren: true },
+      "column-3": { label: "Column 3", acceptsChildren: true },
+      "column-4": { label: "Column 4", acceptsChildren: true },
+    },
     fields: {
       columns: {
         type: "select",

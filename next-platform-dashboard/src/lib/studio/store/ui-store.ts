@@ -2,14 +2,35 @@
  * DRAMAC Studio UI Store
  * 
  * State for UI elements: panels, zoom, breakpoint, editor mode.
+ * Extended in PHASE-STUDIO-18 with responsive preview state.
  */
 
 import { create } from "zustand";
 import type { Breakpoint, EditorMode, PanelState, UIState } from "@/types/studio";
+import { 
+  getBreakpointFromWidth,
+  getNextZoomLevel,
+  getPreviousZoomLevel,
+} from "@/lib/studio/data/device-presets";
 
 // =============================================================================
 // TYPES
 // =============================================================================
+
+export interface ResponsivePreviewState {
+  /** Selected device preset ID */
+  selectedDeviceId: string;
+  /** Viewport width in pixels */
+  viewportWidth: number;
+  /** Viewport height in pixels */
+  viewportHeight: number;
+  /** Whether device is in landscape mode */
+  isLandscape: boolean;
+  /** Show device frame (bezel) */
+  showDeviceFrame: boolean;
+  /** Show ruler on canvas edges */
+  showRuler: boolean;
+}
 
 export interface UIActions {
   // Panels
@@ -37,26 +58,34 @@ export interface UIActions {
   toggleGrid: () => void;
   toggleOutlines: () => void;
   
+  // Responsive preview (PHASE-STUDIO-18)
+  setDevice: (deviceId: string, width: number, height: number) => void;
+  setViewportDimensions: (width: number, height: number) => void;
+  fitToScreen: (containerWidth: number, containerHeight: number) => void;
+  toggleOrientation: () => void;
+  toggleDeviceFrame: () => void;
+  toggleRuler: () => void;
+  
   // Reset
   resetUI: () => void;
 }
 
-export type UIStore = UIState & UIActions;
+export type UIStore = UIState & UIActions & ResponsivePreviewState;
 
 // =============================================================================
 // CONSTANTS
 // =============================================================================
 
-const ZOOM_LEVELS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
+const ZOOM_LEVELS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4];
 const DEFAULT_ZOOM = 1;
 const MIN_ZOOM = 0.25;
-const MAX_ZOOM = 2;
+const MAX_ZOOM = 4;
 
 // =============================================================================
 // INITIAL STATE
 // =============================================================================
 
-const initialState: UIState = {
+const initialState: UIState & ResponsivePreviewState = {
   breakpoint: "desktop",
   zoom: DEFAULT_ZOOM,
   panels: {
@@ -69,6 +98,13 @@ const initialState: UIState = {
   draggedType: null,
   showGrid: false,
   showOutlines: true,
+  // Responsive preview defaults (PHASE-STUDIO-18)
+  selectedDeviceId: 'desktop-hd',
+  viewportWidth: 1920,
+  viewportHeight: 1080,
+  isLandscape: false,
+  showDeviceFrame: false,
+  showRuler: false,
 };
 
 // =============================================================================
@@ -177,6 +213,60 @@ export const useUIStore = create<UIStore>()((set, get) => ({
   },
 
   // ---------------------------------------------------------------------------
+  // RESPONSIVE PREVIEW (PHASE-STUDIO-18)
+  // ---------------------------------------------------------------------------
+  
+  setDevice: (deviceId, width, height) => {
+    set({
+      selectedDeviceId: deviceId,
+      viewportWidth: width,
+      viewportHeight: height,
+      breakpoint: getBreakpointFromWidth(width),
+    });
+  },
+  
+  setViewportDimensions: (width, height) => {
+    set({
+      viewportWidth: width,
+      viewportHeight: height,
+      breakpoint: getBreakpointFromWidth(width),
+      selectedDeviceId: 'custom',
+    });
+  },
+  
+  fitToScreen: (containerWidth, containerHeight) => {
+    const { viewportWidth, viewportHeight } = get();
+    const padding = 80; // Padding around canvas
+    
+    const availableWidth = containerWidth - padding * 2;
+    const availableHeight = containerHeight - padding * 2;
+    
+    const scaleX = availableWidth / viewportWidth;
+    const scaleY = availableHeight / viewportHeight;
+    const scale = Math.min(scaleX, scaleY, 1); // Don't exceed 100%
+    
+    set({ zoom: Math.max(MIN_ZOOM, Math.round(scale * 100) / 100) });
+  },
+  
+  toggleOrientation: () => {
+    const { viewportWidth, viewportHeight, isLandscape } = get();
+    set({
+      viewportWidth: viewportHeight,
+      viewportHeight: viewportWidth,
+      isLandscape: !isLandscape,
+      breakpoint: getBreakpointFromWidth(viewportHeight), // Swapped
+    });
+  },
+  
+  toggleDeviceFrame: () => {
+    set((state) => ({ showDeviceFrame: !state.showDeviceFrame }));
+  },
+  
+  toggleRuler: () => {
+    set((state) => ({ showRuler: !state.showRuler }));
+  },
+
+  // ---------------------------------------------------------------------------
   // RESET
   // ---------------------------------------------------------------------------
   
@@ -194,3 +284,13 @@ export const selectZoom = (state: UIStore) => state.zoom;
 export const selectPanels = (state: UIStore) => state.panels;
 export const selectMode = (state: UIStore) => state.mode;
 export const selectIsDragging = (state: UIStore) => state.isDragging;
+export const selectViewport = (state: UIStore) => ({
+  width: state.viewportWidth,
+  height: state.viewportHeight,
+  deviceId: state.selectedDeviceId,
+  isLandscape: state.isLandscape,
+});
+export const selectPreviewOptions = (state: UIStore) => ({
+  showDeviceFrame: state.showDeviceFrame,
+  showRuler: state.showRuler,
+});

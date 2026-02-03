@@ -291,7 +291,7 @@ export interface ComponentModuleSource {
 }
 
 /**
- * Drop zone configuration for containers
+ * Drop zone configuration for containers (legacy - use ZoneDefinition for new components)
  */
 export interface DropZoneConfig {
   /** Zone identifier */
@@ -305,6 +305,59 @@ export interface DropZoneConfig {
   
   /** Maximum children */
   maxChildren?: number;
+}
+
+/**
+ * Zone ID format - parentId:zoneName
+ */
+export type ZoneId = `${string}:${string}`;
+
+/**
+ * Definition of a drop zone within a component (Phase STUDIO-19)
+ */
+export interface ZoneDefinition {
+  /** Display name for the zone (e.g., "Header", "Content", "Footer") */
+  label: string;
+  
+  /** List of allowed component types. If undefined, all components allowed */
+  allowedComponents?: string[];
+  
+  /** Whether the zone accepts child components */
+  acceptsChildren: boolean;
+  
+  /** Minimum number of children required */
+  minChildren?: number;
+  
+  /** Maximum number of children allowed */
+  maxChildren?: number;
+  
+  /** Component type to auto-add when zone is created */
+  defaultComponent?: string;
+  
+  /** Custom styling for the zone container */
+  className?: string;
+  
+  /** Placeholder text when zone is empty */
+  placeholder?: string;
+}
+
+/**
+ * Parse zone ID into parent and zone name
+ */
+export function parseZoneId(zoneId: string): { parentId: string; zoneName: string } | null {
+  const colonIndex = zoneId.indexOf(':');
+  if (colonIndex === -1) return null;
+  return { 
+    parentId: zoneId.slice(0, colonIndex), 
+    zoneName: zoneId.slice(colonIndex + 1) 
+  };
+}
+
+/**
+ * Create zone ID from parent ID and zone name
+ */
+export function createZoneId(parentId: string, zoneName: string): ZoneId {
+  return `${parentId}:${zoneName}` as ZoneId;
 }
 
 /**
@@ -346,8 +399,11 @@ export interface ComponentDefinition {
   /** What component types can be children (alias) */
   allowedChildTypes?: string[];
   
-  /** Named drop zones */
-  zones?: DropZoneConfig[];
+  /** Named drop zones (legacy array format) */
+  dropZones?: DropZoneConfig[];
+  
+  /** Named drop zones keyed by zone name (Phase STUDIO-19) */
+  zones?: Record<string, ZoneDefinition>;
   
   /** AI configuration */
   ai?: ComponentAIConfig;

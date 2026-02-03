@@ -149,10 +149,10 @@ export interface HistoryMetadata {
  * Layer item for tree rendering
  */
 export interface LayerItem {
-  /** Component ID */
+  /** Component ID or Zone ID */
   id: string;
   
-  /** Component type */
+  /** Component type or 'Zone' for zones */
   type: string;
   
   /** Display label (from props or type) */
@@ -184,6 +184,17 @@ export interface LayerItem {
   
   /** Has children? */
   hasChildren: boolean;
+  
+  // Zone-specific properties (Phase STUDIO-19)
+  
+  /** Is this a zone entry? */
+  isZone?: boolean;
+  
+  /** Zone name (only for zones) */
+  zoneName?: string;
+  
+  /** Parent component ID that owns the zone */
+  zoneParentId?: string;
 }
 
 /**

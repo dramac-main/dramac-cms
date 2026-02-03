@@ -31,7 +31,9 @@ import {
 import { useEditorStore, useUIStore, useSelectionStore } from "@/lib/studio/store";
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
 import { DragOverlayContent } from "./drag-overlay";
-import type { DragData, LibraryDragData, CanvasDragData } from "@/types/studio";
+import type { DragData, LibraryDragData, CanvasDragData, ZoneDefinition } from "@/types/studio";
+import { parseZoneId } from "@/types/studio";
+import { toast } from "sonner";
 
 // =============================================================================
 // COLLISION DETECTION
@@ -79,6 +81,7 @@ export function DndProvider({ children }: DndProviderProps) {
   // Stores
   const addComponent = useEditorStore((s) => s.addComponent);
   const moveComponent = useEditorStore((s) => s.moveComponent);
+  const canDropInZone = useEditorStore((s) => s.canDropInZone);
   const data = useEditorStore((s) => s.data);
   const setDragging = useUIStore((s) => s.setDragging);
   const selectComponent = useSelectionStore((s) => s.select);
@@ -152,6 +155,73 @@ export function DndProvider({ children }: DndProviderProps) {
     if (!over) return;
     
     const dragData = active.data.current as DragData;
+    const overData = over.data.current;
+    
+    // ==========================================================================
+    // HANDLE ZONE DROP (Phase STUDIO-19)
+    // ==========================================================================
+    
+    if (overData?.type === "zone") {
+      const zoneId = overData.zone as string;
+      const zoneDef = overData.zoneDef as ZoneDefinition | undefined;
+      const parsedZone = parseZoneId(zoneId);
+      
+      if (!parsedZone) {
+        console.error(`[DnD] Invalid zone ID: ${zoneId}`);
+        return;
+      }
+      
+      // Determine component type
+      const componentType = dragData.source === "library" 
+        ? (dragData as LibraryDragData).componentType
+        : data.components[(dragData as CanvasDragData).componentId]?.type;
+      
+      if (!componentType) {
+        console.error("[DnD] Could not determine component type");
+        return;
+      }
+      
+      // Check if drop is allowed
+      if (!canDropInZone(componentType, zoneId, zoneDef)) {
+        toast.error(`${componentType} cannot be dropped in ${zoneDef?.label || "this zone"}`, {
+          description: zoneDef?.allowedComponents 
+            ? `Allowed: ${zoneDef.allowedComponents.join(", ")}`
+            : undefined,
+        });
+        return;
+      }
+      
+      if (dragData.source === "library") {
+        // Add new component to zone
+        const definition = componentRegistry.get(componentType);
+        if (!definition) {
+          console.error(`[DnD] Unknown component type: ${componentType}`);
+          return;
+        }
+        
+        const defaultProps = componentRegistry.getDefaultProps(componentType);
+        const newId = addComponent(componentType, defaultProps, parsedZone.parentId, undefined, zoneId);
+        selectComponent(newId);
+        
+        // Emit custom event for recently used tracking
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("studio:component-dropped", {
+            detail: { type: componentType }
+          }));
+        }
+        
+        console.debug(`[DnD] Added ${componentType} to zone ${zoneId}`);
+      } else {
+        // Move existing component to zone
+        const { componentId } = dragData as CanvasDragData;
+        moveComponent(componentId, parsedZone.parentId, 0, zoneId);
+        selectComponent(componentId);
+        
+        console.debug(`[DnD] Moved ${componentId} to zone ${zoneId}`);
+      }
+      
+      return;
+    }
     
     // ==========================================================================
     // HANDLE LIBRARY DROP (Add new component)

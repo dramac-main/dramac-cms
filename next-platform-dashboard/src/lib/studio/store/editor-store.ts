@@ -11,8 +11,9 @@ import { temporal } from "zundo";
 import type { 
   StudioPageData, 
   StudioComponent,
+  ZoneDefinition,
 } from "@/types/studio";
-import { createEmptyPageData } from "@/types/studio";
+import { createEmptyPageData, parseZoneId, createZoneId } from "@/types/studio";
 import { generateComponentId } from "../utils";
 
 // =============================================================================
@@ -96,6 +97,11 @@ export interface EditorActions {
   // Data operations
   setData: (data: StudioPageData) => void;
   getData: () => StudioPageData;
+  
+  // Zone operations (Phase STUDIO-19)
+  getZoneComponents: (zoneId: string) => StudioComponent[];
+  canDropInZone: (componentType: string, zoneId: string, zoneDef?: ZoneDefinition) => boolean;
+  initializeZonesForComponent: (componentId: string, zones: Record<string, ZoneDefinition>) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -473,6 +479,57 @@ export const useEditorStore = create<EditorStore>()(
 
       getData: () => {
         return get().data;
+      },
+
+      // ---------------------------------------------------------------------------
+      // ZONE OPERATIONS (Phase STUDIO-19)
+      // ---------------------------------------------------------------------------
+      
+      getZoneComponents: (zoneId) => {
+        const { data } = get();
+        const componentIds = data.zones?.[zoneId] || [];
+        return componentIds
+          .map(id => data.components[id])
+          .filter((c): c is StudioComponent => c !== undefined);
+      },
+
+      canDropInZone: (componentType, zoneId, zoneDef) => {
+        const { data } = get();
+        const parsed = parseZoneId(zoneId);
+        if (!parsed) return false;
+
+        // If no zoneDef provided, we can't validate - allow it
+        if (!zoneDef) return true;
+        
+        if (!zoneDef.acceptsChildren) return false;
+
+        // Check allowed components
+        if (zoneDef.allowedComponents && !zoneDef.allowedComponents.includes(componentType)) {
+          return false;
+        }
+
+        // Check max children
+        const currentComponents = data.zones?.[zoneId] || [];
+        if (zoneDef.maxChildren && currentComponents.length >= zoneDef.maxChildren) {
+          return false;
+        }
+
+        return true;
+      },
+
+      initializeZonesForComponent: (componentId, zones) => {
+        set((state) => {
+          if (!state.data.zones) {
+            state.data.zones = {};
+          }
+          
+          Object.keys(zones).forEach((zoneName) => {
+            const zoneId = createZoneId(componentId, zoneName);
+            if (!state.data.zones![zoneId]) {
+              state.data.zones![zoneId] = [];
+            }
+          });
+        });
       },
     })),
     {

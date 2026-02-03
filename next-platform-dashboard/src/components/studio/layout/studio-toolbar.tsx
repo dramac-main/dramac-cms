@@ -2,6 +2,7 @@
  * DRAMAC Studio Toolbar
  * 
  * Top toolbar with common editor actions.
+ * Updated in PHASE-STUDIO-18 with responsive preview controls.
  */
 
 "use client";
@@ -27,9 +28,6 @@ import {
   Cloud,
   CloudOff,
   Sparkles,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
   Wand2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -50,6 +48,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { Separator } from "@/components/ui/separator";
 import { useEditorStore, useUIStore, undo, redo, canUndo, canRedo, useHistoryState } from "@/lib/studio/store";
 import { AIPageGenerator } from "@/components/studio/ai";
+import { DeviceSelector, DimensionsInput, ZoomControls } from "@/components/studio/features";
 import type { Breakpoint } from "@/types/studio";
 
 // =============================================================================
@@ -98,10 +97,8 @@ export const StudioToolbar = memo(function StudioToolbar({
   // Get panel state directly from store (panels are NOT persisted)
   const panels = useUIStore((s) => s.panels);
   const breakpoint = useUIStore((s) => s.breakpoint);
-  const zoom = useUIStore((s) => s.zoom);
   const togglePanel = useUIStore((s) => s.togglePanel);
   const setBreakpoint = useUIStore((s) => s.setBreakpoint);
-  const setZoom = useUIStore((s) => s.setZoom);
   
   // AI Page Generator state
   const [showPageGenerator, setShowPageGenerator] = useState(false);
@@ -109,18 +106,6 @@ export const StudioToolbar = memo(function StudioToolbar({
   // Handlers
   const handleUndo = useCallback(() => undo(), []);
   const handleRedo = useCallback(() => redo(), []);
-  
-  const handleZoomIn = useCallback(() => {
-    setZoom(Math.min(zoom + 0.1, 2));
-  }, [zoom, setZoom]);
-  
-  const handleZoomOut = useCallback(() => {
-    setZoom(Math.max(zoom - 0.1, 0.25));
-  }, [zoom, setZoom]);
-  
-  const handleZoomReset = useCallback(() => {
-    setZoom(1);
-  }, [setZoom]);
 
   // Save status indicator
   const renderSaveStatus = () => {
@@ -225,7 +210,7 @@ export const StudioToolbar = memo(function StudioToolbar({
           </div>
         </div>
 
-        {/* Center Section: Viewport, Zoom & AI */}
+        {/* Center Section: Device, Dimensions, Zoom & AI */}
         <div className="flex items-center gap-1">
           {/* Viewport Toggle */}
           <div className="flex items-center rounded-md border border-border p-0.5">
@@ -246,56 +231,18 @@ export const StudioToolbar = memo(function StudioToolbar({
             })}
           </div>
 
-          <Separator orientation="vertical" className="mx-2 h-6" />
+          <Separator orientation="vertical" className="mx-1 h-6" />
 
-          {/* Zoom Controls */}
-          <div className="flex items-center gap-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={handleZoomOut}
-                  disabled={zoom <= 0.25}
-                >
-                  <ZoomOut className="h-4 w-4" />
-                  <span className="sr-only">Zoom out</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Zoom out</TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 min-w-[52px] px-2 font-mono text-xs"
-                  onClick={handleZoomReset}
-                >
-                  {Math.round(zoom * 100)}%
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Reset to 100%</TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={handleZoomIn}
-                  disabled={zoom >= 2}
-                >
-                  <ZoomIn className="h-4 w-4" />
-                  <span className="sr-only">Zoom in</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Zoom in</TooltipContent>
-            </Tooltip>
-          </div>
+          {/* Device Selector (PHASE-STUDIO-18) */}
+          <DeviceSelector />
+          
+          {/* Dimensions Input (PHASE-STUDIO-18) */}
+          <DimensionsInput />
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          {/* Zoom Controls (PHASE-STUDIO-18) */}
+          <ZoomControls />
 
           <Separator orientation="vertical" className="mx-2 h-6" />
 
