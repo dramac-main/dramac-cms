@@ -601,9 +601,32 @@ export const useEditorStore = create<EditorStore>()(
       // ---------------------------------------------------------------------------
       
       setData: (data) => {
+        console.log("[EditorStore] setData called:", {
+          rootChildren: data.root?.children?.length,
+          componentsCount: Object.keys(data.components || {}).length,
+        });
+        
         set((state) => {
-          state.data = data;
+          // Completely replace data with validated structure
+          state.data = {
+            version: "1.0",
+            root: {
+              id: "root",
+              type: "Root",
+              children: data.root?.children || [],
+              props: data.root?.props || {},
+            },
+            components: data.components || {},
+            zones: data.zones || {},
+          };
           state.isDirty = true;
+          state.isLoading = false;
+          state.error = null;
+        });
+        
+        console.log("[EditorStore] setData complete, new state:", {
+          rootChildren: get().data.root.children.length,
+          componentsCount: Object.keys(get().data.components).length,
         });
       },
 

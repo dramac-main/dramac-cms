@@ -135,7 +135,7 @@ export function StudioEditor({
     initializeRegistry();
   }, []);
 
-  // Save handler - actually saves to database
+  // Save handler - actually saves to database with enhanced error handling
   const handleSave = useCallback(async () => {
     try {
       setSaveStatus("saving");
@@ -143,24 +143,46 @@ export function StudioEditor({
       // Get current editor data in Studio format
       const currentData = useEditorStore.getState().data;
       
+      // DEBUG: Log the data being saved
+      console.log("[Studio] Saving data:", {
+        pageId,
+        componentsCount: Object.keys(currentData.components).length,
+        rootChildren: currentData.root.children.length,
+      });
+      
+      // Validate data before save
+      if (!currentData.root || !currentData.components) {
+        throw new Error("Invalid page data structure");
+      }
+      
+      // Check for empty page
+      if (Object.keys(currentData.components).length === 0) {
+        console.log("[Studio] Saving empty page");
+      }
+      
       // Save to database - cast to Json type for Supabase
       const result = await savePageContentAction(pageId, currentData as unknown as Json);
       
       if (result.error) {
+        console.error("[Studio] Save error:", result.error);
         throw new Error(result.error);
       }
       
       // Mark as not dirty after successful save
       markSaved();
       setSaveStatus("saved");
-      toast.success("Page saved successfully");
+      toast.success("Page saved successfully", {
+        description: `${Object.keys(currentData.components).length} components saved`,
+      });
       
       // Reset status after a delay
       setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (error) {
       console.error("[Studio] Save failed:", error);
       setSaveStatus("error");
-      toast.error(error instanceof Error ? error.message : "Failed to save page");
+      toast.error(error instanceof Error ? error.message : "Failed to save page", {
+        description: "Check console for details",
+      });
     }
   }, [pageId, markSaved]);
 
@@ -171,18 +193,26 @@ export function StudioEditor({
     window.open(previewUrl, "_blank");
   }, [siteId, pageId]);
 
-  // Publish handler - saves and publishes the site
+  // Publish handler - saves and publishes the site with enhanced error handling
   const handlePublish = useCallback(async () => {
     try {
+      setSaveStatus("saving");
+      
       // Save first
       await handleSave();
       
+      // Wait a moment for save to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Then publish the site
+      console.log("[Studio] Publishing site:", siteId);
       const result = await publishSite(siteId);
       
       if (!result.success) {
         throw new Error(result.error || "Failed to publish site");
       }
+      
+      console.log("[Studio] Publish success:", result);
       
       toast.success("Site published successfully!", {
         description: result.siteUrl ? `Available at ${result.siteUrl}` : undefined,

@@ -145,11 +145,111 @@ const config: Config = {
           "0%,70%,100%": { opacity: "1" },
           "20%,50%": { opacity: "0" },
         },
+        // PHASE-STUDIO-29: Animation presets keyframes
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        fadeInUp: {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        fadeInDown: {
+          "0%": { opacity: "0", transform: "translateY(-20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        fadeInLeft: {
+          "0%": { opacity: "0", transform: "translateX(-20px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        fadeInRight: {
+          "0%": { opacity: "0", transform: "translateX(20px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        scaleIn: {
+          "0%": { opacity: "0", transform: "scale(0.95)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        scaleInUp: {
+          "0%": { opacity: "0", transform: "scale(0.95) translateY(20px)" },
+          "100%": { opacity: "1", transform: "scale(1) translateY(0)" },
+        },
+        slideInUp: {
+          "0%": { transform: "translateY(100%)" },
+          "100%": { transform: "translateY(0)" },
+        },
+        slideInDown: {
+          "0%": { transform: "translateY(-100%)" },
+          "100%": { transform: "translateY(0)" },
+        },
+        slideInLeft: {
+          "0%": { transform: "translateX(-100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
+        slideInRight: {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
+        bounceIn: {
+          "0%": { opacity: "0", transform: "scale(0.5)" },
+          "50%": { opacity: "1", transform: "scale(1.05)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        bounceInUp: {
+          "0%": { opacity: "0", transform: "translateY(50px)" },
+          "60%": { opacity: "1", transform: "translateY(-10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        flipIn: {
+          "0%": { opacity: "0", transform: "perspective(400px) rotateX(90deg)" },
+          "100%": { opacity: "1", transform: "perspective(400px) rotateX(0deg)" },
+        },
+        rotateIn: {
+          "0%": { opacity: "0", transform: "rotate(-45deg)" },
+          "100%": { opacity: "1", transform: "rotate(0)" },
+        },
+        zoomIn: {
+          "0%": { opacity: "0", transform: "scale(0)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        blurIn: {
+          "0%": { opacity: "0", filter: "blur(10px)" },
+          "100%": { opacity: "1", filter: "blur(0)" },
+        },
+        expandIn: {
+          "0%": { opacity: "0", transform: "scaleX(0)" },
+          "100%": { opacity: "1", transform: "scaleX(1)" },
+        },
+        popIn: {
+          "0%": { opacity: "0", transform: "scale(0)" },
+          "80%": { opacity: "1", transform: "scale(1.1)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "caret-blink": "caret-blink 1.25s ease-out infinite",
+        // PHASE-STUDIO-29: Animation presets
+        fadeIn: "fadeIn 0.5s ease-out forwards",
+        fadeInUp: "fadeInUp 0.5s ease-out forwards",
+        fadeInDown: "fadeInDown 0.5s ease-out forwards",
+        fadeInLeft: "fadeInLeft 0.5s ease-out forwards",
+        fadeInRight: "fadeInRight 0.5s ease-out forwards",
+        scaleIn: "scaleIn 0.3s ease-out forwards",
+        scaleInUp: "scaleInUp 0.4s ease-out forwards",
+        slideInUp: "slideInUp 0.4s ease-out forwards",
+        slideInDown: "slideInDown 0.4s ease-out forwards",
+        slideInLeft: "slideInLeft 0.4s ease-out forwards",
+        slideInRight: "slideInRight 0.4s ease-out forwards",
+        bounceIn: "bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
+        bounceInUp: "bounceInUp 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
+        flipIn: "flipIn 0.5s ease-out forwards",
+        rotateIn: "rotateIn 0.5s ease-out forwards",
+        zoomIn: "zoomIn 0.4s ease-out forwards",
+        blurIn: "blurIn 0.5s ease-out forwards",
+        expandIn: "expandIn 0.4s ease-out forwards",
+        popIn: "popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards",
       },
     },
   },

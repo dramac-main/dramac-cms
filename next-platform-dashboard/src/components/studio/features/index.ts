@@ -37,3 +37,6 @@ export { ExportButton, ExportMini } from './export-button';
 // PHASE-STUDIO-26: Onboarding & Help
 export { HelpPanel } from './help-panel';
 export { WhatsNewPanel } from './whats-new-panel';
+
+// PHASE-STUDIO-29: SEO Settings
+export { SEOSettingsPanel } from './seo-settings-panel';

@@ -3,11 +3,12 @@
  * 
  * Multi-step wizard for generating complete pages from prompts.
  * Phase STUDIO-12: AI Page Generator
+ * Phase STUDIO-28: Enhanced error handling and debugging
  */
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,7 +37,10 @@ import {
   Palette,
   Building2,
   FileText,
+  CheckCircle2,
+  Circle,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useEditorStore } from "@/lib/studio/store/editor-store";
 import { PagePreview } from "./page-preview";
 import type { 
@@ -186,12 +190,59 @@ export function AIPageGenerator({ isOpen, onClose }: AIPageGeneratorProps) {
     }
   };
   
-  // Apply generated page
+  // Apply generated page with validation and debugging
   const applyPage = () => {
-    if (!result?.data) return;
+    if (!result?.data) {
+      console.error("[AI Generator] No data to apply");
+      toast.error("No generated page data available");
+      return;
+    }
     
-    setData(result.data);
-    handleClose();
+    console.log("[AI Generator] Applying data:", {
+      hasRoot: !!result.data.root,
+      rootChildren: result.data.root?.children?.length || 0,
+      componentsCount: Object.keys(result.data.components || {}).length,
+      componentTypes: Object.values(result.data.components || {}).map((c: unknown) => (c as { type: string }).type),
+    });
+    
+    // Validate the generated data structure
+    if (!result.data.root) {
+      console.error("[AI Generator] Missing root in generated data");
+      toast.error("Invalid generated page structure: missing root");
+      return;
+    }
+    
+    if (!result.data.components) {
+      console.error("[AI Generator] Missing components in generated data");
+      toast.error("Invalid generated page structure: missing components");
+      return;
+    }
+    
+    // Ensure root.children array exists
+    if (!result.data.root.children) {
+      result.data.root.children = [];
+    }
+    
+    // Ensure zones object exists
+    if (!result.data.zones) {
+      result.data.zones = {};
+    }
+    
+    // Apply the data
+    try {
+      console.log("[AI Generator] Calling setData...");
+      setData(result.data);
+      console.log("[AI Generator] setData complete");
+      
+      toast.success("Page generated successfully!", {
+        description: `Added ${Object.keys(result.data.components).length} components`,
+      });
+      
+      handleClose();
+    } catch (error) {
+      console.error("[AI Generator] Apply error:", error);
+      toast.error("Failed to apply generated page");
+    }
   };
   
   // Regenerate with same settings

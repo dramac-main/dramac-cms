@@ -5,6 +5,7 @@
  * Updated in PHASE-STUDIO-18 with responsive preview controls.
  * Updated in PHASE-STUDIO-20 with keyboard shortcuts button.
  * Updated in PHASE-STUDIO-26 with Help and What's New panels.
+ * Updated in PHASE-STUDIO-29 with AI button functionality and toolbar cleanup.
  */
 
 "use client";
@@ -34,6 +35,9 @@ import {
   Keyboard,
   Command,
   LayoutGrid,
+  ChevronDown,
+  MessageSquare,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,7 +55,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Toggle } from "@/components/ui/toggle";
 import { Separator } from "@/components/ui/separator";
-import { useEditorStore, useUIStore, undo, redo, canUndo, canRedo, useHistoryState } from "@/lib/studio/store";
+import { toast } from "sonner";
+import { useEditorStore, useUIStore, useSelectionStore, useAIStore, undo, redo, useHistoryState } from "@/lib/studio/store";
 import { AIPageGenerator } from "@/components/studio/ai";
 import { DeviceSelector, DimensionsInput, ZoomControls, HelpPanel, WhatsNewPanel } from "@/components/studio/features";
 import { TemplateBrowser } from "@/components/studio/features/template-browser";
@@ -291,16 +296,47 @@ export const StudioToolbar = memo(function StudioToolbar({
             <TooltipContent>Generate page with AI</TooltipContent>
           </Tooltip>
 
-          {/* AI Assist Button */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5" data-ai-button>
+          {/* AI Dropdown Menu (PHASE-STUDIO-29) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1.5" 
+                data-ai-button
+              >
                 <Sparkles className="h-4 w-4 text-primary" />
                 <span>AI</span>
+                <ChevronDown className="h-3 w-3 opacity-50" />
               </Button>
-            </TooltipTrigger>
-            <TooltipContent>Open AI Assistant (⌘K)</TooltipContent>
-          </Tooltip>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-48">
+              <DropdownMenuItem onClick={() => setShowPageGenerator(true)}>
+                <Wand2 className="mr-2 h-4 w-4" />
+                Generate Page
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                togglePanel("bottom");
+                toast.success("AI Assistant panel opened");
+              }}>
+                <MessageSquare className="mr-2 h-4 w-4" />
+                AI Assistant
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => {
+                toast.info("AI suggestions coming soon!");
+              }}>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Smart Suggestions
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                toast.info("Quick actions coming soon!");
+              }}>
+                <HelpCircle className="mr-2 h-4 w-4" />
+                Quick Actions
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Right Section: Actions & Panels */}

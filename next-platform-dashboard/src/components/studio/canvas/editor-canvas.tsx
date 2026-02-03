@@ -352,14 +352,20 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
     }
   };
   
-  // Handle Ctrl+wheel zoom
+  // Handle Ctrl+wheel zoom - IMPROVED: More robust wheel handling
   const handleWheel = useCallback((e: WheelEvent) => {
+    // Only intercept zoom gestures (Ctrl/Cmd + wheel)
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      const newZoom = Math.min(4, Math.max(0.25, zoom + delta));
+      e.stopPropagation();
+      
+      const delta = e.deltaY > 0 ? -0.05 : 0.05;
+      const newZoom = Math.min(4, Math.max(0.1, zoom + delta));
       setZoom(newZoom);
+      return;
     }
+    // Allow normal scrolling to pass through - DO NOT prevent default
+    // This ensures scrolling works naturally
   }, [zoom, setZoom]);
   
   // Add wheel event listener with passive: false to allow preventDefault
@@ -367,9 +373,19 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    canvas.addEventListener("wheel", handleWheel, { passive: false });
+    // Use capture phase to handle zoom before other listeners
+    // BUT only prevent default for zoom, not scroll
+    const wheelHandler = (e: WheelEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        handleWheel(e);
+      }
+      // Normal scroll events pass through naturally
+    };
+    
+    canvas.addEventListener("wheel", wheelHandler, { passive: false });
     return () => {
-      canvas.removeEventListener("wheel", handleWheel);
+      canvas.removeEventListener("wheel", wheelHandler);
     };
   }, [handleWheel]);
   
@@ -387,7 +403,10 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
           radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px)
         ` : undefined,
         backgroundSize: showGrid ? "20px 20px" : undefined,
+        // Use overscrollBehavior to prevent scroll chaining issues
+        overscrollBehavior: "contain",
       }}
+      data-canvas-container
     >
       {/* Canvas frame container with responsive features */}
       <div className="flex flex-col items-center">

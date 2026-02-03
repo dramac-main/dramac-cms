@@ -1190,6 +1190,87 @@ export function HeroRender({
     );
   }
 
+  // Video Hero (PHASE-STUDIO-29 Enhancement)
+  if (variant === "video" && videoSrc) {
+    return (
+      <section
+        id={id}
+        className={`relative w-full min-h-screen flex items-center justify-center px-4 overflow-hidden ${className}`}
+      >
+        {/* Video Background */}
+        <video
+          className="absolute inset-0 w-full h-full object-cover"
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster={backgroundImage}
+        >
+          <source src={videoSrc} type="video/mp4" />
+          {/* Fallback to background image if video doesn't load */}
+        </video>
+        
+        {/* Overlay */}
+        {backgroundOverlay && (
+          <div 
+            className="absolute inset-0 bg-black" 
+            style={{ opacity: backgroundOverlayOpacity / 100 }} 
+            aria-hidden="true" 
+          />
+        )}
+        
+        {/* Content */}
+        <div className={`relative z-10 max-w-4xl mx-auto flex flex-col ${alignClasses}`}>
+          {badge && (
+            <span 
+              className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium text-white mb-4 md:mb-6" 
+              style={{ backgroundColor: badgeColor }}
+            >
+              {badge}
+            </span>
+          )}
+          <h1 
+            className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight" 
+            style={{ color: textColor || "#ffffff" }}
+          >
+            {title}
+          </h1>
+          {subtitle && (
+            <p 
+              className="text-lg md:text-xl lg:text-2xl font-medium mb-4 opacity-90" 
+              style={{ color: textColor || "#ffffff" }}
+            >
+              {subtitle}
+            </p>
+          )}
+          <p 
+            className="text-lg md:text-xl lg:text-2xl mb-8 opacity-90 max-w-2xl" 
+            style={{ color: textColor || "#ffffff" }}
+          >
+            {description}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <a 
+              href={primaryButtonLink} 
+              className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white rounded-lg hover:opacity-90 transition-all shadow-lg" 
+              style={{ backgroundColor: primaryButtonColor }}
+            >
+              {primaryButtonText}
+            </a>
+            {secondaryButtonText && (
+              <a 
+                href={secondaryButtonLink} 
+                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium border-2 border-white text-white rounded-lg hover:bg-white/10 transition-all"
+              >
+                {secondaryButtonText}
+              </a>
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   // Fullscreen Hero
   return (
     <section
@@ -1767,7 +1848,7 @@ export function GalleryRender({
   );
 }
 // ============================================================================
-// NAVBAR - Responsive Navigation
+// NAVBAR - Responsive Navigation with Mobile Hamburger Menu (PHASE-STUDIO-29)
 // ============================================================================
 
 export interface NavbarProps {
@@ -1791,7 +1872,8 @@ export interface NavbarProps {
   className?: string;
 }
 
-export function NavbarRender({
+// Client-side Navbar with state for mobile menu
+function NavbarWithMenu({
   logo,
   logoText = "Logo",
   logoLink = "/",
@@ -1807,13 +1889,15 @@ export function NavbarRender({
   id,
   className = "",
 }: NavbarProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  
   return (
     <nav
       id={id}
-      className={`w-full px-4 py-3 md:py-4 z-50 ${sticky ? "sticky top-0" : ""} ${transparent ? "bg-transparent" : "shadow-sm"} ${className}`}
+      className={`w-full z-50 ${sticky ? "sticky top-0" : ""} ${transparent ? "bg-transparent" : "shadow-sm"} ${className}`}
       style={{ backgroundColor: transparent ? "transparent" : backgroundColor }}
     >
-      <div className="max-w-screen-xl mx-auto flex items-center justify-between">
+      <div className="max-w-screen-xl mx-auto px-4 py-3 md:py-4 flex items-center justify-between">
         <a href={logoLink} className="flex items-center gap-2">
           {logo && <img src={logo} alt={logoText} className="h-8 md:h-10 w-auto" />}
           {!logo && <span className="text-xl md:text-2xl font-bold" style={{ color: textColor }}>{logoText}</span>}
@@ -1831,15 +1915,71 @@ export function NavbarRender({
               {ctaText}
             </a>
           )}
-          <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Toggle menu">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: textColor }}>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+          {/* Hamburger Menu Button */}
+          <button 
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors" 
+            aria-label="Toggle menu"
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: textColor }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: textColor }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
           </button>
+        </div>
+      </div>
+      
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="md:hidden fixed inset-0 top-[56px] bg-black/50 z-40 animate-in fade-in duration-200"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+      
+      {/* Mobile Menu Panel */}
+      <div 
+        className={`md:hidden absolute left-0 right-0 top-full overflow-hidden transition-all duration-300 ease-in-out ${
+          mobileMenuOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
+        }`}
+        style={{ backgroundColor }}
+      >
+        <div className="px-4 py-4 space-y-2 border-t" style={{ borderColor: `${textColor}20` }}>
+          {links.map((link, i) => (
+            <a 
+              key={i} 
+              href={link.href || "#"} 
+              className="block py-3 px-4 text-base font-medium rounded-lg hover:bg-gray-100 transition-colors"
+              style={{ color: textColor }}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {link.label}
+            </a>
+          ))}
+          {ctaText && (
+            <a 
+              href={ctaLink} 
+              className="block w-full py-3 px-4 mt-4 text-base font-medium text-white text-center rounded-lg transition-opacity hover:opacity-90"
+              style={{ backgroundColor: ctaColor }}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {ctaText}
+            </a>
+          )}
         </div>
       </div>
     </nav>
   );
+}
+
+export function NavbarRender(props: NavbarProps) {
+  return <NavbarWithMenu {...props} />;
 }
 
 // ============================================================================
