@@ -1,12 +1,43 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: February 3, 2026  
-**Current Phase**: DRAMAC Studio - Wave 8 (Templates & Extras)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-7 ✅ + WAVE 8 PHASES 24-25 ✅**
+**Current Phase**: DRAMAC Studio - Wave 9 (Final: Integration & Cleanup)  
+**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-8 ✅ → WAVE 9 FINAL 🟡**
 
 ---
 
-## ✅ WAVE 8: Templates & Extras - IN PROGRESS (February 3, 2026)
+## 🟡 WAVE 9: Integration & Cleanup - READY (FINAL WAVE)
+
+### What Needs Implementation
+
+**Goal**: Complete the Puck → Studio transition. This is CRITICAL.
+
+**Phase 27 - Platform Integration & Puck Removal**:
+- Update all "Edit Page" links to `/studio/[siteId]/[pageId]`
+- Replace Puck renderer with StudioRenderer in preview/public routes
+- Create data migration utility (Puck format → Studio format)
+- Create legacy URL redirect (for bookmarks)
+- Remove Puck dependencies from package.json
+- Delete old editor files and routes
+- Final platform-wide testing
+
+### Files to Change:
+- `src/components/sites/site-pages-list.tsx` - Update editor links
+- `src/components/sites/create-site-dialog.tsx` - Update redirect
+- `src/components/pages/create-page-form.tsx` - Update redirect  
+- `src/app/preview/[siteId]/[pageId]/page.tsx` - Use StudioRenderer
+- `src/app/(public)/[domain]/[[...slug]]/page.tsx` - Use StudioRenderer
+- `package.json` - Remove @measured/puck
+
+### After This Wave:
+- ✅ DRAMAC Studio is the ONLY editor
+- ✅ Zero Puck code remains
+- ✅ Bundle size reduced ~200KB
+- ✅ Platform fully transitioned
+
+---
+
+## ✅ WAVE 8: Templates & Extras - COMPLETE (February 3, 2026)
 
 ### What Was Implemented
 
@@ -27,12 +58,24 @@
 - Symbol instance renderer for canvas display (`symbol-instance-renderer.tsx`)
 - Context menu on component wrapper with "Save as Symbol"
 
-### What's Left in Wave 8
+**Phase 26 - Onboarding & Help ✅** (NEW):
+- Tutorial system with 10-step walkthrough for first-time users
+- TutorialProvider context for managing tutorial state
+- TutorialOverlay with spotlight highlighting and animated tooltips
+- Contextual help tooltips for all key UI elements
+- HelpPanel slide-out with documentation links and resources
+- WhatsNewPanel with changelog and unread indicators
+- EmptyCanvasGuide for empty page state
+- Tutorial auto-starts for new users, can be skipped or restarted
 
-**Phase 26 - Onboarding & Help** (TODO):
-- Guided tours with step highlighting
-- Contextual help tooltips
-- Tutorial system with progress
+### Next Steps - Wave 9
+
+**Phase 27 - Platform Integration & Puck Removal** (FINAL):
+- Update all navigation links to use Studio
+- Replace page renderer in preview/public routes
+- Remove Puck dependencies and imports
+- Clean up old editor files
+- Final testing across platform
 
 ---
 

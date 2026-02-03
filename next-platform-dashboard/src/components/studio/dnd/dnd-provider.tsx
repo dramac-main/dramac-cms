@@ -3,6 +3,7 @@
  * 
  * Wraps the editor with drag-and-drop context.
  * Handles drag start, drag end, and provides collision detection.
+ * Updated for PHASE-STUDIO-25 with symbol drag support.
  */
 
 "use client";
@@ -29,10 +30,11 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { useEditorStore, useUIStore, useSelectionStore } from "@/lib/studio/store";
+import { useSymbolStore } from "@/lib/studio/store/symbol-store";
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
 import { DragOverlayContent } from "./drag-overlay";
-import type { DragData, LibraryDragData, CanvasDragData, ZoneDefinition } from "@/types/studio";
-import { parseZoneId } from "@/types/studio";
+import type { DragData, LibraryDragData, CanvasDragData, SymbolDragData, ZoneDefinition } from "@/types/studio";
+import { parseZoneId, isSymbolDrag } from "@/types/studio";
 import { toast } from "sonner";
 
 // =============================================================================
@@ -80,12 +82,16 @@ interface ActiveDragState {
 export function DndProvider({ children }: DndProviderProps) {
   // Stores
   const addComponent = useEditorStore((s) => s.addComponent);
+  const insertComponents = useEditorStore((s) => s.insertComponents);
   const moveComponent = useEditorStore((s) => s.moveComponent);
   const canDropInZone = useEditorStore((s) => s.canDropInZone);
   const data = useEditorStore((s) => s.data);
   const setDragging = useUIStore((s) => s.setDragging);
   const selectComponent = useSelectionStore((s) => s.select);
   const clearSelection = useSelectionStore((s) => s.clearSelection);
+  
+  // Symbol store for symbol drops (PHASE-STUDIO-25)
+  const getSymbol = useSymbolStore((s) => s.getSymbol);
   
   // Local state
   const [activeDrag, setActiveDrag] = useState<ActiveDragState | null>(null);
@@ -127,11 +133,13 @@ export function DndProvider({ children }: DndProviderProps) {
       data: dragData,
     });
     
-    // Update UI store
+    // Update UI store based on drag source
     if (dragData.source === "library") {
-      setDragging(true, dragData.componentType);
-    } else {
-      setDragging(true, dragData.componentType);
+      setDragging(true, (dragData as LibraryDragData).componentType);
+    } else if (dragData.source === "symbol") {
+      setDragging(true, `Symbol: ${(dragData as SymbolDragData).symbolName}`);
+    } else if (dragData.source === "canvas") {
+      setDragging(true, (dragData as CanvasDragData).componentType);
     }
     
     // Clear selection when starting to drag
@@ -281,6 +289,57 @@ export function DndProvider({ children }: DndProviderProps) {
       }
       
       console.debug(`[DnD] Added ${componentType} to ${parentId} at index ${index}`);
+      return;
+    }
+    
+    // ==========================================================================
+    // HANDLE SYMBOL DROP (Insert symbol components) - PHASE-STUDIO-25
+    // ==========================================================================
+    
+    if (isSymbolDrag(dragData)) {
+      const { symbolId, symbolName } = dragData as SymbolDragData;
+      
+      // Get the symbol
+      const symbol = getSymbol(symbolId);
+      if (!symbol) {
+        console.error(`[DnD] Symbol not found: ${symbolId}`);
+        toast.error(`Symbol "${symbolName}" not found`);
+        return;
+      }
+      
+      // Clone symbol components (insertComponents will handle ID regeneration)
+      const componentsToInsert = symbol.components.map(c => ({ ...c }));
+      
+      // Determine drop location
+      let insertIndex = data.root.children.length; // Default to end
+      
+      // If dropped on a specific component, calculate insert position
+      const overId = over.id.toString();
+      if (overId !== "canvas-drop-zone" && overId !== "root") {
+        const overComponent = data.components[overId];
+        if (overComponent) {
+          // Insert after this component's position in root
+          if (!overComponent.parentId) {
+            insertIndex = data.root.children.indexOf(overId) + 1;
+          } else {
+            // If over a nested component, just add to end
+            insertIndex = data.root.children.length;
+          }
+        }
+      }
+      
+      // Insert the symbol's components
+      const insertedIds = insertComponents(componentsToInsert, insertIndex);
+      
+      // Select the first inserted component
+      if (insertedIds.length > 0) {
+        selectComponent(insertedIds[0]);
+      }
+      
+      // Show success toast
+      toast.success(`Added "${symbolName}" to canvas`);
+      
+      console.debug(`[DnD] Added symbol ${symbolId} (${insertedIds.length} components) at index ${insertIndex}`);
       return;
     }
     

@@ -59,6 +59,7 @@ import { cn } from '@/lib/utils';
 import { useSymbolStore, useFilteredSymbols } from '@/lib/studio/store/symbol-store';
 import { useEditorStore } from '@/lib/studio/store/editor-store';
 import { DEFAULT_SYMBOL_CATEGORIES, type StudioSymbol } from '@/types/studio-symbols';
+import type { SymbolDragData } from '@/types/studio';
 
 // =============================================================================
 // TYPES
@@ -85,13 +86,15 @@ function DraggableSymbolItem({
   onDuplicate,
   onDelete,
 }: DraggableSymbolItemProps) {
+  const dragData: SymbolDragData = {
+    source: 'symbol',
+    symbolId: symbol.id,
+    symbolName: symbol.name,
+  };
+  
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `symbol-${symbol.id}`,
-    data: {
-      type: 'symbol',
-      symbolId: symbol.id,
-      symbol,
-    },
+    data: dragData,
   });
 
   return (

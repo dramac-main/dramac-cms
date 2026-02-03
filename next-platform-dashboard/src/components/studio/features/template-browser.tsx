@@ -10,7 +10,7 @@
 'use client';
 
 import * as React from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useTransition, useDeferredValue } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -41,6 +41,7 @@ import {
   type TemplateCategory,
 } from '@/types/studio-templates';
 import { prepareTemplateForInsertion, DEFAULT_SITE_COLORS } from '@/lib/studio/utils/template-utils';
+import { toast } from 'sonner';
 
 // Category icons mapping
 const CATEGORY_ICONS: Partial<Record<TemplateCategory, React.ReactNode>> = {
@@ -74,6 +75,10 @@ export function TemplateBrowser({
   const [hoveredTemplate, setHoveredTemplate] = useState<string | null>(null);
   const [isInserting, setIsInserting] = useState(false);
   
+  // Use deferred value for search to improve responsiveness
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+  const [isPending, startTransition] = useTransition();
+  
   const { insertComponents, data: pageData } = useEditorStore();
   
   // Get templates from store
@@ -88,7 +93,7 @@ export function TemplateBrowser({
     }
   }, [templates.length, fetchTemplates]);
 
-  // Filter templates based on search and category
+  // Filter templates based on search and category (use deferred query for responsiveness)
   const filteredTemplates = useMemo(() => {
     let result = templates;
     
@@ -97,9 +102,9 @@ export function TemplateBrowser({
       result = result.filter(t => t.category === selectedCategory);
     }
     
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    // Filter by search query (using deferred value)
+    if (deferredSearchQuery.trim()) {
+      const query = deferredSearchQuery.toLowerCase();
       result = result.filter(t => 
         t.name.toLowerCase().includes(query) ||
         t.description.toLowerCase().includes(query) ||
@@ -108,7 +113,7 @@ export function TemplateBrowser({
     }
     
     return result;
-  }, [templates, selectedCategory, searchQuery]);
+  }, [templates, selectedCategory, deferredSearchQuery]);
 
   // Group templates by category for display
   const templatesByCategory = useMemo(() => {
@@ -122,11 +127,17 @@ export function TemplateBrowser({
     return grouped;
   }, [filteredTemplates]);
 
-  // Handle template insertion
+  // Handle template insertion with async scheduling
   const handleInsertTemplate = useCallback(async (template: SectionTemplate) => {
     setIsInserting(true);
     
     try {
+      // Close dialog first for perceived performance
+      onOpenChange(false);
+      
+      // Use requestAnimationFrame to allow UI update before heavy work
+      await new Promise(resolve => requestAnimationFrame(resolve));
+      
       // Get site colors (use defaults for now, could be fetched from site settings)
       const siteColors = DEFAULT_SITE_COLORS;
       
@@ -144,17 +155,22 @@ export function TemplateBrowser({
         insertIndex = insertPosition;
       }
       
-      // Insert components into page
-      insertComponents(preparedComponents, insertIndex);
-      
-      // Close dialog
-      onOpenChange(false);
+      // Insert components into page (wrap in transition for non-blocking update)
+      startTransition(() => {
+        const insertedIds = insertComponents(preparedComponents, insertIndex);
+        if (insertedIds.length > 0) {
+          toast.success(`Added "${template.name}" section`, {
+            description: `${insertedIds.length} component${insertedIds.length > 1 ? 's' : ''} added`,
+          });
+        }
+      });
     } catch (error) {
       console.error('Failed to insert template:', error);
+      toast.error('Failed to insert template');
     } finally {
       setIsInserting(false);
     }
-  }, [insertPosition, pageData, insertComponents, onOpenChange]);
+  }, [insertPosition, pageData, insertComponents, onOpenChange, startTransition]);
 
   // Reset state when dialog closes
   useEffect(() => {

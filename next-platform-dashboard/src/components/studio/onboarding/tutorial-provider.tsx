@@ -3,6 +3,7 @@
  * 
  * Context provider for managing tutorial state.
  * Auto-starts for first-time users.
+ * Ensures panels are visible during tutorial.
  * 
  * @phase STUDIO-26
  */
@@ -25,6 +26,7 @@ import {
   markTutorialCompleted,
   clearTutorialCompletion,
 } from "@/lib/studio/onboarding/tutorial-steps";
+import { useUIStore } from "@/lib/studio/store";
 
 // =============================================================================
 // CONTEXT
@@ -48,6 +50,26 @@ export function TutorialProvider({ children, disabled = false }: TutorialProvide
     currentStep: 0,
     completedAt: null,
   });
+  
+  // Get panel controls to ensure panels are visible during tutorial
+  const setPanelOpen = useUIStore((s) => s.setPanelOpen);
+
+  // Ensure panels are visible when tutorial starts and for specific steps
+  useEffect(() => {
+    if (!state.isActive) return;
+    
+    const currentStep = TUTORIAL_STEPS[state.currentStep];
+    if (!currentStep) return;
+    
+    // Ensure relevant panels are open based on current step
+    if (currentStep.target.includes('data-panel="left"')) {
+      setPanelOpen('left', true);
+    } else if (currentStep.target.includes('data-panel="right"')) {
+      setPanelOpen('right', true);
+    } else if (currentStep.target.includes('data-panel="bottom"')) {
+      setPanelOpen('bottom', true);
+    }
+  }, [state.isActive, state.currentStep, setPanelOpen]);
 
   // Check if should show tutorial on mount
   useEffect(() => {
@@ -56,12 +78,16 @@ export function TutorialProvider({ children, disabled = false }: TutorialProvide
     // Small delay to let the UI render first
     const timer = setTimeout(() => {
       if (!isTutorialCompleted()) {
+        // Ensure all panels are visible when tutorial starts
+        setPanelOpen('left', true);
+        setPanelOpen('right', true);
+        setPanelOpen('bottom', true);
         setState(prev => ({ ...prev, isActive: true }));
       }
     }, 1500); // 1.5 seconds to let page fully load
 
     return () => clearTimeout(timer);
-  }, [disabled]);
+  }, [disabled, setPanelOpen]);
 
   const currentStepData = useMemo(() => {
     if (!state.isActive) return null;

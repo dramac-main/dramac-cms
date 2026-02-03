@@ -869,7 +869,7 @@ export function createEmptyPageData(): StudioPageData {
 /**
  * Identifies what type of drag operation is happening
  */
-export type DragSource = "library" | "canvas";
+export type DragSource = "library" | "canvas" | "symbol";
 
 /**
  * Data attached to draggable items from the library
@@ -893,9 +893,19 @@ export interface CanvasDragData {
 }
 
 /**
+ * Data attached to draggable symbols from the symbols panel
+ * Phase: STUDIO-25
+ */
+export interface SymbolDragData {
+  source: "symbol";
+  symbolId: string;
+  symbolName: string;
+}
+
+/**
  * Union type for all drag data
  */
-export type DragData = LibraryDragData | CanvasDragData;
+export type DragData = LibraryDragData | CanvasDragData | SymbolDragData;
 
 /**
  * Drop target information
@@ -918,6 +928,14 @@ export function isLibraryDrag(data: DragData): data is LibraryDragData {
  */
 export function isCanvasDrag(data: DragData): data is CanvasDragData {
   return data.source === "canvas";
+}
+
+/**
+ * Type guard for symbol drag
+ * Phase: STUDIO-25
+ */
+export function isSymbolDrag(data: DragData): data is SymbolDragData {
+  return data.source === "symbol";
 }
 
 // =============================================================================
