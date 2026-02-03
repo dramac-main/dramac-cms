@@ -1,9 +1,17 @@
 /**
- * Studio Feature Components
+ * DRAMAC Studio Feature Components
  * 
  * Additional editor features.
- * Phase STUDIO-16+ will add: history-panel, responsive-controls, layers-panel, etc.
  */
 
-// Placeholder - components added in later phases
-export {};
+// PHASE-STUDIO-16: Layers & Structure Panel
+export { LayersPanel } from './layers-panel';
+export { LayerRow } from './layer-row';
+export { LayerContextMenu } from './layer-context-menu';
+
+// PHASE-STUDIO-17: History & Versioning
+export { HistoryPanel } from './history-panel';
+export { HistoryEntryRow } from './history-entry';
+export { SnapshotRow } from './snapshot-row';
+export { SaveSnapshotDialog } from './save-snapshot-dialog';
+export { ComparisonDialog } from './comparison-dialog';

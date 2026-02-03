@@ -14,7 +14,8 @@ import { DndProvider } from "@/components/studio/dnd";
 import { EditorCanvas } from "@/components/studio/canvas";
 import { ComponentLibrary } from "@/components/studio/panels";
 import { PropertiesPanel } from "@/components/studio/properties";
-import { useUIStore, useEditorStore, useAIStore, useSelectionStore, undo, redo, useHistoryState } from "@/lib/studio/store";
+import { LayersPanel, HistoryPanel } from "@/components/studio/features";
+import { useUIStore, useEditorStore, useAIStore, useSelectionStore, useHistoryStore, undo, redo, useHistoryState } from "@/lib/studio/store";
 import { initializeRegistry } from "@/lib/studio/registry";
 import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
@@ -42,21 +43,54 @@ function CanvasArea() {
   return <EditorCanvas />;
 }
 
-function BottomPanelPlaceholder() {
+function BottomPanelContent() {
   const togglePanel = useUIStore((s) => s.togglePanel);
+  const [activeTab, setActiveTab] = useState<"layers" | "ai">("layers");
   
   return (
     <div className="flex flex-1 flex-col">
-      <PanelHeader
-        title="AI Assistant"
-        icon={MessageSquare}
-        position="bottom"
-        onCollapse={() => togglePanel("bottom")}
-      />
-      <div className="flex-1 overflow-auto p-3">
-        <p className="text-sm text-muted-foreground">
-          AI chat and tools will be implemented in Phase STUDIO-11
-        </p>
+      {/* Tab header */}
+      <div className="flex items-center border-b bg-muted/30 px-2">
+        <button
+          className={`px-3 py-2 text-sm font-medium transition-colors ${
+            activeTab === "layers" 
+              ? "border-b-2 border-primary text-foreground" 
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => setActiveTab("layers")}
+        >
+          Layers
+        </button>
+        <button
+          className={`px-3 py-2 text-sm font-medium transition-colors ${
+            activeTab === "ai" 
+              ? "border-b-2 border-primary text-foreground" 
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+          onClick={() => setActiveTab("ai")}
+        >
+          AI Assistant
+        </button>
+        <div className="flex-1" />
+        <button
+          className="p-1 text-muted-foreground hover:text-foreground"
+          onClick={() => togglePanel("bottom")}
+        >
+          ×
+        </button>
+      </div>
+      
+      {/* Tab content */}
+      <div className="flex-1 overflow-hidden">
+        {activeTab === "layers" ? (
+          <LayersPanel />
+        ) : (
+          <div className="flex-1 overflow-auto p-3">
+            <p className="text-sm text-muted-foreground">
+              AI chat and tools will be implemented in Phase STUDIO-11
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -80,6 +114,10 @@ export function StudioEditor({
   const addComponent = useEditorStore((s) => s.addComponent);
   const moveComponent = useEditorStore((s) => s.moveComponent);
   const deleteComponent = useEditorStore((s) => s.deleteComponent);
+  const updateComponent = useEditorStore((s) => s.updateComponent);
+  const editorData = useEditorStore((s) => s.data);
+  const components = editorData.components;
+  const recordAction = useHistoryStore((s) => s.recordAction);
   
   // AI Chat store
   const { openChat, closeChat, isOpen: aiChatOpen } = useAIStore();
@@ -169,6 +207,30 @@ export function StudioEditor({
         }
       }
       
+      // Toggle Lock: Cmd/Ctrl + L
+      if (isMeta && e.key === "l" && selectedId) {
+        e.preventDefault();
+        const component = components[selectedId];
+        if (component) {
+          const newLocked = !component.locked;
+          updateComponent(selectedId, { locked: newLocked });
+          recordAction(newLocked ? "component.lock" : "component.unlock", editorData, selectedId, component.type);
+          toast.success(newLocked ? "Component locked" : "Component unlocked");
+        }
+      }
+      
+      // Toggle Hide: Cmd/Ctrl + H (when component selected)
+      if (isMeta && e.key === "h" && selectedId) {
+        e.preventDefault();
+        const component = components[selectedId];
+        if (component) {
+          const newHidden = !component.hidden;
+          updateComponent(selectedId, { hidden: newHidden });
+          recordAction(newHidden ? "component.hide" : "component.show", editorData, selectedId, component.type);
+          toast.success(newHidden ? "Component hidden" : "Component visible");
+        }
+      }
+      
       // Delete component: Delete or Backspace (when not in input)
       if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
         const target = e.target as HTMLElement;
@@ -187,7 +249,7 @@ export function StudioEditor({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleSave, handlePreview, aiChatOpen, closeChat, openChat, selectedId, deleteComponent, clearSelection]);
+  }, [handleSave, handlePreview, aiChatOpen, closeChat, openChat, selectedId, deleteComponent, clearSelection, components, updateComponent, recordAction, editorData]);
 
   return (
     <DndProvider>
@@ -207,7 +269,7 @@ export function StudioEditor({
         leftPanel={<ComponentLibrary />}
         canvas={<CanvasArea />}
         rightPanel={<PropertiesPanel />}
-        bottomPanel={<BottomPanelPlaceholder />}
+        bottomPanel={<BottomPanelContent />}
       />
     </DndProvider>
   );

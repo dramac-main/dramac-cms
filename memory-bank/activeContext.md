@@ -1,95 +1,113 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: February 3, 2026  
-**Current Phase**: DRAMAC Studio - Wave 5 (Module Integration)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-4 ✅ → WAVE 5 COMPLETE ✅**
+**Current Phase**: DRAMAC Studio - Wave 6 (Advanced Features)  
+**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-5 ✅ → WAVE 6 READY 🟡**
 
 ---
 
-## 🟢 WAVE 5: Module Integration - COMPLETE
+## ✅ WAVE 5: Module Integration - COMPLETE (February 3, 2026)
 
-### ✅ PHASE-STUDIO-14: Module Component Loader - COMPLETE
+### What Was Implemented
 
-**Completion Date**: February 3, 2026
+Module system now fully integrated with DRAMAC Studio:
 
-This phase added dynamic module component loading to DRAMAC Studio, allowing installed modules like E-Commerce, Booking, and CRM to contribute their own components to the visual editor.
+**Phase 14 - Module Component Loader**:
+- Module discovery and dynamic loading
+- Component registry integration
+- Real-time module sync (Supabase subscriptions)
+- Module badges in component library
+- Placeholder rendering for uninstalled modules
 
-#### Files Created:
+**Phase 15 - Module-Specific Fields**:
+- Custom field type system
+- Module data binding (ProductSelector, CategorySelector)
+- Module API endpoints for data fetching
+- Custom field rendering in properties panel
 
-| File | Purpose |
-|------|---------|
-| `src/types/studio-module.ts` | Module Studio types (InstalledModuleInfo, ModuleStudioExports, etc.) |
-| `src/lib/studio/registry/module-discovery.ts` | Server action for discovering installed modules |
-| `src/lib/studio/registry/module-loader.ts` | Dynamic imports with webpack code splitting |
-| `src/lib/studio/store/module-store.ts` | Zustand store for module loading state |
-| `src/lib/studio/hooks/use-module-sync.ts` | Real-time Supabase subscription hooks |
-| `src/lib/studio/hooks/index.ts` | Central hook exports |
-| `src/components/studio/core/module-placeholder.tsx` | Placeholder for missing/uninstalled modules |
-| `src/modules/ecommerce/studio/index.ts` | E-Commerce module Studio exports |
-| `src/modules/ecommerce/studio/components/product-card-block.tsx` | ProductCard block (3 variants) |
-| `src/modules/ecommerce/studio/components/product-grid-block.tsx` | ProductGrid block |
-| `src/modules/booking/studio/index.ts` | Booking Studio exports (stub) |
-| `src/modules/crm/studio/index.ts` | CRM Studio exports (stub) |
-| `src/modules/automation/studio/index.ts` | Automation Studio exports (stub) |
-| `src/modules/social-media/studio/index.ts` | Social Media Studio exports (stub) |
+### Current Capabilities
 
-#### Files Modified:
+- ✅ Install E-Commerce module → Product Card, Cart Widget appear in library
+- ✅ Drag Product Card → Properties show custom "Product" dropdown
+- ✅ Select product → Renders with live product data
+- ✅ AI works with module components
+- ✅ Generate page → Can include module components
+- ✅ Real-time sync: module install/uninstall updates library immediately
 
-| File | Changes |
-|------|---------|
-| `src/components/studio/panels/component-card.tsx` | Added module badge display |
-| `src/components/studio/panels/component-library.tsx` | Module store integration, loading indicator |
-| `src/components/studio/core/studio-provider.tsx` | Module initialization hooks |
-| `src/components/studio/core/component-wrapper.tsx` | Missing component placeholder handling |
-| `src/lib/studio/registry/index.ts` | Export module-discovery, module-loader |
-| `src/lib/studio/store/index.ts` | Export module-store |
+---
 
-#### Key Features:
+## 🟡 WAVE 6: Advanced Features - READY (Next Up)
 
-1. **Module Discovery**: Server action queries `site_module_installations` table
-2. **Dynamic Loading**: Webpack code-splitting via `MODULE_IMPORTS` registry
-3. **Real-time Sync**: Supabase subscriptions for INSERT/DELETE/UPDATE on module installations
-4. **Left Panel Integration**: Module components show with module badge, loading indicators
-5. **Missing Components**: ModulePlaceholder renders when module is uninstalled
-6. **E-Commerce Components**: ProductCard (card/horizontal/minimal), ProductGrid with responsive columns
+### What Needs Implementation
 
-### ✅ PHASE-STUDIO-15: Module-Specific Fields - COMPLETE
+**Goal**: Add professional editor features that rival Webflow/Figma.
 
-**Completion Date**: February 3, 2026
+**Phase 16 - Layers & Structure Panel**:
+- Visual component tree in bottom panel
+- Click layer to select in canvas, drag to reorder
+- Lock/unlock components (prevents editing)
+- Hide/show components (invisible in canvas)
+- Context menu (duplicate, delete, rename)
+- Search and filter components
+- Expand/collapse branches
 
-This phase added custom field types for modules, enabling product selectors, category pickers, and other module-specific field editors.
+**Phase 17 - History & Versioning**:
+- Visual history timeline with undo/redo
+- Each entry shows: timestamp, action, component
+- Named snapshots (save/restore page states)
+- Version comparison UI (see what changed)
+- History stored in IndexedDB + database
+- Max 50 undo states (performance)
 
-#### Files Created:
+**Phase 18 - Responsive Preview**:
+- Device preset selector (iPhone, iPad, Desktop, Custom)
+- Editable width/height inputs
+- Zoom controls (50%, 75%, 100%, 150%, 200%, Fit)
+- Device frame visualization (optional bezel)
+- Ruler on canvas edges
+- Keyboard shortcuts (Ctrl/Cmd +/- for zoom)
 
-| File | Purpose |
-|------|---------|
-| `src/components/studio/fields/custom-field-wrapper.tsx` | Wrapper for custom module field components |
-| `src/app/api/studio/modules/ecommerce/products/route.ts` | Products API endpoint for product selector |
-| `src/app/api/studio/modules/ecommerce/categories/route.ts` | Categories API endpoint for category selector |
-| `src/modules/ecommerce/studio/fields/product-selector-field.tsx` | Searchable product dropdown with images/prices |
-| `src/modules/ecommerce/studio/fields/category-selector-field.tsx` | Hierarchical category picker with product counts |
+**Phase 19 - Nested Components & Zones**:
+- Components can define multiple drop zones
+- Example: Section with "content" zone
+- Example: Tabs with zone per tab
+- Example: Hero with header/content/footer zones
+- Zone restrictions (only allow certain components)
+- Visual zone indicators while dragging
+- Zones shown in layers panel hierarchy
 
-#### Files Modified:
+### After Wave 6
 
-| File | Changes |
-|------|---------|
-| `src/types/studio.ts` | Added customType, customOptions, dataEndpoint, multiple, clearable, searchable to FieldDefinition |
-| `src/lib/studio/registry/field-registry.ts` | Added CustomFieldDefinition, registerCustomField, unregisterModuleFields, getCustomFieldDefinition |
-| `src/components/studio/fields/field-renderer.tsx` | Route custom field types to CustomFieldWrapper |
-| `src/components/studio/fields/index.ts` | Export CustomFieldWrapper |
-| `src/modules/ecommerce/studio/index.ts` | Added custom fields and field definitions exports |
-| `src/lib/studio/registry/module-loader.ts` | Register custom field definitions from modules |
-| `package.json` | Added use-debounce dependency |
+When complete:
+- Editor feels professional (Webflow/Figma level)
+- Complex layouts possible (tabs, accordions with nested content)
+- Experiment safely with snapshots
+- Test on exact device sizes
+- Lock/hide to protect page sections during client handoff
 
-#### Key Features:
+### Next Steps
 
-1. **Custom Field Type System**: Fields can specify `type: "custom"` with `customType: "module:field-type"`
-2. **Product Selector Field**: Searchable dropdown with product images, prices, SKUs, and categories
-3. **Category Selector Field**: Hierarchical dropdown with product counts and nested categories
-4. **Demo Data Fallback**: API endpoints return demo data when database tables don't exist
-5. **Debounced Search**: Product search uses use-debounce for efficient API calls
-6. **Field Validation**: Custom fields support validation functions
-7. **Module Registration**: Module loader automatically registers field definitions
+Give another AI agent the prompt at [phases/STUDIO-WAVE6-PROMPT.md](phases/STUDIO-WAVE6-PROMPT.md) to generate:
+1. `PHASE-STUDIO-16-LAYERS-STRUCTURE-PANEL.md`
+2. `PHASE-STUDIO-17-HISTORY-VERSIONING.md`
+3. `PHASE-STUDIO-18-RESPONSIVE-PREVIEW.md`
+4. `PHASE-STUDIO-19-NESTED-ZONES.md`
+
+Then implement those 4 phases and return for Wave 7.
+- ✅ Install E-Commerce module → Product Card, Cart Widget appear in library
+- ✅ Drag Product Card → Properties show custom "Product" dropdown
+- ✅ Select product → Renders with live product data
+- ✅ AI works with module components
+- ✅ Generate page → Can include module components
+- ✅ Real-time sync: module install/uninstall updates library
+
+### Next Steps After Wave 5
+
+Proceed to **Wave 6: Advanced Features** (Phases 16-19):
+- Layers & Structure Panel
+- History & Versioning
+- Responsive Preview
+- Nested Components & Zones
 
 ---
 

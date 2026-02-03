@@ -1,6 +1,7 @@
 export * from "./database";
 export * from "./roles";
 export * from "./notifications";
+export * from "./studio-history";
 
 // UI Types
 export interface NavItem {

@@ -66,6 +66,10 @@ export {
   type ModuleStore,
 } from "./module-store";
 
+export { useHistoryStore } from "./history-store";
+
+export { useSnapshotStore } from "./snapshot-store";
+
 // =============================================================================
 // COMBINED HOOKS
 // =============================================================================
