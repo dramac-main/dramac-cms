@@ -3,6 +3,7 @@
  * 
  * Displays a component in the library panel.
  * Wraps with DraggableComponent for drag functionality.
+ * Shows module badge for components from installed modules.
  */
 
 "use client";
@@ -11,6 +12,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
 import { DraggableComponent } from "@/components/studio/dnd";
+import { Badge } from "@/components/ui/badge";
 import type { ComponentDefinition } from "@/types/studio";
 
 // =============================================================================
@@ -103,9 +105,20 @@ export function ComponentCard({
         
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium leading-none">
-            {definition.label}
-          </h4>
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-medium leading-none">
+              {definition.label}
+            </h4>
+            {/* Module Badge */}
+            {definition.module && (
+              <Badge 
+                variant="secondary" 
+                className="text-[10px] px-1.5 py-0 h-4 flex-shrink-0"
+              >
+                {definition.module.name}
+              </Badge>
+            )}
+          </div>
           {definition.description && (
             <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
               {definition.description}

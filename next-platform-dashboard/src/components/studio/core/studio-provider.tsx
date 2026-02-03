@@ -2,6 +2,7 @@
  * DRAMAC Studio Provider
  * 
  * Wraps the editor with necessary providers and initializes state.
+ * Handles module component loading for the site.
  */
 
 "use client";
@@ -14,6 +15,7 @@ import {
   clearHistory,
 } from "@/lib/studio/store";
 import { initializeRegistry, isRegistryInitialized } from "@/lib/studio/registry";
+import { useModuleInitialization, useModuleSync } from "@/lib/studio/hooks/use-module-sync";
 import type { StudioPageData, PuckDataFormat } from "@/types/studio";
 import { createEmptyPageData, validatePageData, migrateFromPuckFormat } from "@/types/studio";
 
@@ -38,7 +40,7 @@ export function StudioProvider({
   children,
   siteId,
   pageId,
-  siteName,
+  siteName: _siteName,
   pageName,
   initialData,
 }: StudioProviderProps) {
@@ -48,6 +50,13 @@ export function StudioProvider({
   const setError = useEditorStore((s) => s.setError);
   const isDirty = useEditorStore((s) => s.isDirty);
   const clearSelection = useSelectionStore((s) => s.clearSelection);
+
+  // Initialize modules for this site (Phase STUDIO-14)
+  // isLoadingModules can be used to show loading state while modules are being fetched
+  const { isLoading: _isLoadingModules } = useModuleInitialization(siteId);
+  
+  // Subscribe to real-time module changes
+  useModuleSync(siteId);
 
   // Initialize editor on mount
   useEffect(() => {

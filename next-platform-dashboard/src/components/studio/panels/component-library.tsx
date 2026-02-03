@@ -3,12 +3,13 @@
  * 
  * The left panel showing all available components.
  * Supports search, categories, and drag-to-canvas.
+ * Includes module components when modules are installed.
  */
 
 "use client";
 
 import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { Search, X, Layers } from "lucide-react";
+import { Search, X, Layers, Loader2, Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -18,6 +19,11 @@ import { RecentlyUsed, useRecentlyUsed } from "./recently-used";
 import { ComponentCard } from "./component-card";
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
 import { useUIStore, useEditorStore, useSelectionStore } from "@/lib/studio/store";
+import { 
+  useModuleStore, 
+  selectIsLoadingModules,
+  selectIsModuleInitialized 
+} from "@/lib/studio/store/module-store";
 
 // =============================================================================
 // COMPONENT
@@ -38,15 +44,24 @@ export function ComponentLibrary() {
   const addComponent = useEditorStore((s) => s.addComponent);
   const selectComponent = useSelectionStore((s) => s.select);
   
+  // Module store - for real-time updates
+  const isLoadingModules = useModuleStore(selectIsLoadingModules);
+  const isModuleInitialized = useModuleStore(selectIsModuleInitialized);
+  const moduleComponentCount = useModuleStore((s) => s.getModuleComponentCount());
+  
   // Get all components grouped by category
+  // Re-compute when modules change
   const groupedComponents = useMemo(() => {
+    // This will include module components when they're loaded
     return componentRegistry.getGroupedByCategory();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModuleInitialized, moduleComponentCount]);
   
   // Get active categories (only those with components)
   const activeCategories = useMemo(() => {
     return componentRegistry.getActiveCategories();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isModuleInitialized, moduleComponentCount]);
   
   // Filter components by search query
   const filteredComponents = useMemo(() => {
@@ -164,6 +179,24 @@ export function ComponentLibrary() {
         ) : (
           // Category view
           <div>
+            {/* Module Loading Indicator */}
+            {isLoadingModules && (
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/50">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                <span className="text-xs text-muted-foreground">Loading module components...</span>
+              </div>
+            )}
+            
+            {/* Module Components Badge */}
+            {moduleComponentCount > 0 && !isLoadingModules && (
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-primary/5">
+                <Package className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs text-primary">
+                  {moduleComponentCount} module component{moduleComponentCount !== 1 ? "s" : ""} loaded
+                </span>
+              </div>
+            )}
+            
             {/* Recently Used */}
             <RecentlyUsed
               componentTypes={recentTypes}
@@ -191,6 +224,9 @@ export function ComponentLibrary() {
       <div className="border-t border-border p-2 text-center">
         <p className="text-xs text-muted-foreground">
           {componentRegistry.count} components available
+          {moduleComponentCount > 0 && (
+            <span className="text-primary"> ({moduleComponentCount} from modules)</span>
+          )}
         </p>
       </div>
     </div>

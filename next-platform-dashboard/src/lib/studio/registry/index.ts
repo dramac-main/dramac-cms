@@ -31,6 +31,21 @@ export {
   getPremiumComponentTypes,
 } from "./premium-components";
 
+export {
+  getInstalledModulesForSite,
+  isModuleInstalled,
+  getModuleInfo,
+} from "./module-discovery";
+
+export {
+  loadModuleComponents,
+  unloadModuleComponents,
+  reloadModuleComponents,
+  getModuleLoaderState,
+  resetModuleLoaderState,
+  hasModuleImport,
+} from "./module-loader";
+
 export * from "./hooks";
 
 // =============================================================================

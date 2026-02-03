@@ -58,6 +58,14 @@ export {
   type AIStore,
 } from "./ai-store";
 
+export {
+  useModuleStore,
+  selectIsLoadingModules,
+  selectInstalledModules,
+  selectIsModuleInitialized,
+  type ModuleStore,
+} from "./module-store";
+
 // =============================================================================
 // COMBINED HOOKS
 // =============================================================================
