@@ -38,6 +38,11 @@ export {
 } from "./module-discovery";
 
 export {
+  KNOWN_MODULE_SLUGS,
+  getModuleImportPath,
+} from "./module-constants";
+
+export {
   loadModuleComponents,
   unloadModuleComponents,
   reloadModuleComponents,

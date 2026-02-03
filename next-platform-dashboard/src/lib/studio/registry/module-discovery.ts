@@ -9,6 +9,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { InstalledModuleInfo } from "@/types/studio-module";
+import { KNOWN_MODULE_SLUGS } from "./module-constants";
 
 // =============================================================================
 // MAIN DISCOVERY FUNCTION
@@ -208,29 +209,4 @@ export async function getModuleInfoBySlug(
     icon: data.icon || undefined,
     hasStudioComponents: KNOWN_MODULE_SLUGS.includes(data.slug),
   };
-}
-
-// =============================================================================
-// KNOWN MODULES
-// =============================================================================
-
-/**
- * Known module slugs that have Studio component exports
- * These modules have components defined in src/modules/[slug]/studio/
- */
-export const KNOWN_MODULE_SLUGS: string[] = [
-  "ecommerce",
-  "booking",
-  "crm",
-  "automation",
-  "social-media",
-];
-
-/**
- * Get module import path from slug
- * Used for dynamic imports of module Studio exports
- */
-export function getModuleImportPath(slug: string): string {
-  // Local modules are in src/modules/
-  return `@/modules/${slug}/studio`;
 }
