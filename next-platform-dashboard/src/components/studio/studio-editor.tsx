@@ -79,10 +79,12 @@ export function StudioEditor({
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const addComponent = useEditorStore((s) => s.addComponent);
   const moveComponent = useEditorStore((s) => s.moveComponent);
+  const deleteComponent = useEditorStore((s) => s.deleteComponent);
   
   // AI Chat store
   const { openChat, closeChat, isOpen: aiChatOpen } = useAIStore();
   const selectedId = useSelectionStore((s) => s.componentId);
+  const clearSelection = useSelectionStore((s) => s.clearSelection);
 
   // Initialize registry on mount
   useEffect(() => {
@@ -166,11 +168,26 @@ export function StudioEditor({
           openChat(selectedId);
         }
       }
+      
+      // Delete component: Delete or Backspace (when not in input)
+      if ((e.key === "Delete" || e.key === "Backspace") && selectedId) {
+        const target = e.target as HTMLElement;
+        const isInput = target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
+        if (!isInput) {
+          e.preventDefault();
+          deleteComponent(selectedId);
+        }
+      }
+      
+      // Escape: Clear selection
+      if (e.key === "Escape" && selectedId) {
+        clearSelection();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleSave, handlePreview, aiChatOpen, closeChat, openChat, selectedId]);
+  }, [handleSave, handlePreview, aiChatOpen, closeChat, openChat, selectedId, deleteComponent, clearSelection]);
 
   return (
     <DndProvider>

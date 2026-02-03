@@ -228,11 +228,18 @@ export async function POST(request: NextRequest) {
       // Clean response
       let responseText = content.text.trim();
       
-      // Remove markdown if present
-      if (responseText.startsWith("```")) {
-        responseText = responseText
-          .replace(/^```(?:json)?\n?/, "")
-          .replace(/\n?```$/, "");
+      // Remove markdown code fences if present (various formats)
+      // Handle: ```json, ```, with or without newlines
+      responseText = responseText
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/, "")
+        .replace(/\s*```$/g, "")
+        .trim();
+      
+      // Try to extract JSON if there's extra text around it
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        responseText = jsonMatch[0];
       }
       
       const parsed = JSON.parse(responseText);

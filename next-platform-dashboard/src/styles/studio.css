@@ -789,21 +789,40 @@
 
 .studio-component-wrapper {
   position: relative;
-  transition: outline 0.15s ease;
+  transition: outline 0.15s ease, box-shadow 0.15s ease;
 }
 
-.studio-component-wrapper:hover {
-  outline: 2px dashed hsl(var(--primary) / 0.5);
-  outline-offset: 2px;
+.studio-component-wrapper:hover:not(.is-selected) {
+  outline: 1px dashed hsl(var(--primary) / 0.5);
+  outline-offset: 3px;
 }
 
 .studio-component-wrapper.is-selected {
   outline: 2px solid hsl(var(--primary));
-  outline-offset: 2px;
+  outline-offset: 3px;
+  box-shadow: 
+    0 0 0 1px hsl(var(--background)),
+    0 0 0 3px hsl(var(--primary) / 0.8),
+    0 0 16px hsl(var(--primary) / 0.3);
+  border-radius: 2px;
+}
+
+.studio-component-wrapper.is-selected::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border: 1px solid hsl(var(--primary) / 0.3);
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .studio-component-wrapper.is-selected:hover {
   outline: 2px solid hsl(var(--primary));
+  box-shadow: 
+    0 0 0 1px hsl(var(--background)),
+    0 0 0 3px hsl(var(--primary)),
+    0 0 20px hsl(var(--primary) / 0.4);
 }
 
 /* =============================================================================
