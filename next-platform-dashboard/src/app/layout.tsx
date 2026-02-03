@@ -7,6 +7,7 @@ import { Providers } from "@/components/providers";
 
 /**
  * Site metadata generated from brand configuration.
+ * DRAMAC Studio v0.2.0 - Complete Platform Integration
  * @see src/config/brand/identity.ts for brand settings
  */
 export const metadata: Metadata = {
