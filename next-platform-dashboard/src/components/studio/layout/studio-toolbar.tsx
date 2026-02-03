@@ -32,6 +32,7 @@ import {
   Wand2,
   Keyboard,
   Command,
+  LayoutGrid,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,6 +53,7 @@ import { Separator } from "@/components/ui/separator";
 import { useEditorStore, useUIStore, undo, redo, canUndo, canRedo, useHistoryState } from "@/lib/studio/store";
 import { AIPageGenerator } from "@/components/studio/ai";
 import { DeviceSelector, DimensionsInput, ZoomControls } from "@/components/studio/features";
+import { TemplateBrowser } from "@/components/studio/features/template-browser";
 import type { Breakpoint } from "@/types/studio";
 
 // =============================================================================
@@ -105,6 +107,9 @@ export const StudioToolbar = memo(function StudioToolbar({
   
   // AI Page Generator state
   const [showPageGenerator, setShowPageGenerator] = useState(false);
+  
+  // Template Browser state (PHASE-STUDIO-24)
+  const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
 
   // Handlers
   const handleUndo = useCallback(() => undo(), []);
@@ -203,6 +208,24 @@ export const StudioToolbar = memo(function StudioToolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Redo (⌘⇧Z)</TooltipContent>
+          </Tooltip>
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+
+          {/* Add Section Button (PHASE-STUDIO-24) */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => setShowTemplateBrowser(true)}
+              >
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">Add Section</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Browse section templates</TooltipContent>
           </Tooltip>
 
           <Separator orientation="vertical" className="mx-1 h-6" />
@@ -428,6 +451,13 @@ export const StudioToolbar = memo(function StudioToolbar({
       <AIPageGenerator
         isOpen={showPageGenerator}
         onClose={() => setShowPageGenerator(false)}
+      />
+      
+      {/* Template Browser Dialog (PHASE-STUDIO-24) */}
+      <TemplateBrowser
+        open={showTemplateBrowser}
+        onOpenChange={setShowTemplateBrowser}
+        insertPosition="end"
       />
     </TooltipProvider>
   );

@@ -70,6 +70,19 @@ export { useHistoryStore } from "./history-store";
 
 export { useSnapshotStore } from "./snapshot-store";
 
+// Phase STUDIO-24: Section Templates
+export {
+  useTemplateStore,
+} from "./template-store";
+
+// Phase STUDIO-25: Symbols & Reusable Components
+export {
+  useSymbolStore,
+  useSymbol,
+  useFilteredSymbols,
+  useSymbolsByCategory,
+} from "./symbol-store";
+
 // Optimized selectors for Phase 21 performance
 export * from "./selectors";
 

@@ -2,7 +2,7 @@
 
 **Last Updated**: February 3, 2026  
 **Current Phase**: DRAMAC Studio - Wave 8 (Templates & Extras)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-7 ✅ → WAVE 8 (PHASES 24-26) READY 🟡**
+**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-7 ✅ → WAVE 8 READY 🟡**
 
 ---
 
@@ -10,124 +10,136 @@
 
 ### What Was Implemented
 
-**Phase 20 - Keyboard Shortcuts & Command Palette** ✅:
-- Created clipboard module (`src/lib/studio/clipboard.ts`) with copy/paste and ID regeneration
-- Created shortcuts hook (`src/lib/studio/hooks/use-studio-shortcuts.ts`) with comprehensive keybindings
-- Command palette component using cmdk/shadcn (`src/components/studio/features/command-palette.tsx`)
-- Shortcuts help panel modal (`src/components/studio/features/shortcuts-panel.tsx`)
-- Updated UI store with command palette and shortcuts panel state
-- Updated selection store with `selectNext()` and `selectPrevious()` for arrow key navigation
-- Updated toolbar with keyboard (?) and command palette (⌘K) buttons
-- Integrated shortcuts hook into studio provider
+**Phase 20 - Keyboard Shortcuts**:
+- All shortcuts working (save, undo, copy, paste, delete, duplicate)
+- Command palette (Cmd/Ctrl+K) with search
+- Shortcuts help panel
+- Clipboard system for copy/paste
 
-**Keyboard Shortcuts Implemented**:
-- Save: `Ctrl/Cmd + S`
-- Undo: `Ctrl/Cmd + Z`
-- Redo: `Ctrl/Cmd + Shift + Z`
-- Delete: `Delete` or `Backspace`
-- Duplicate: `Ctrl/Cmd + D`
-- Copy: `Ctrl/Cmd + C`
-- Paste: `Ctrl/Cmd + V`
-- Escape: `Esc` (clear selection)
-- Command Palette: `Ctrl/Cmd + K`
-- Preview: `Ctrl/Cmd + P`
-- AI Chat: `Ctrl/Cmd + /`
-- Shortcuts Help: `Shift + ?`
-- Zoom: `Ctrl/Cmd + +/-/0`
-- Arrow Navigation: `↑/↓` (select previous/next component)
+**Phase 21 - Performance Optimization**:
+- Virtualized component list (handles 500+ components)
+- Memoized component renders
+- Debounced state updates
+- Code-split panels (lazy loaded)
 
-**Phase 21 - Performance Optimization** ✅:
-- Created debounce/throttle utilities (`src/lib/studio/utils/debounce.ts`)
-- Created performance monitoring utilities (`src/lib/studio/utils/performance.ts`)
-- Created virtualized component list using @tanstack/react-virtual (`src/components/studio/panels/virtualized-component-list.tsx`)
-- Created optimized Zustand selectors with shallow comparison (`src/lib/studio/store/selectors.ts`)
-- Created code-split dynamic imports for heavy panels (`src/components/studio/dynamic-panels.tsx`)
-- Added @tanstack/react-virtual dependency
+**Phase 22 - Component States**:
+- Hover, active, focus state editing
+- State selector in wrapper
+- Preview states in canvas
+- CSS transitions for state changes
 
-**Phase 22 - Component States (Hover/Active)** ✅:
-- Created StateEditor component for properties panel (`src/components/studio/properties/state-editor.tsx`)
-- Created StateSelector for preview mode state switching (`src/components/studio/features/state-selector.tsx`)
-- Created StateTestButton for interactive state cycling (`src/components/studio/features/state-test-button.tsx`)
-- Created CSS generator with pseudo-class state support (`src/lib/studio/engine/css-generator.ts`)
-- Added ComponentState type and StateOverrides/TransitionSettings interfaces to `src/types/studio.ts`
-- Updated editor store with state manipulation actions
-- Updated UI store with previewState management
-- Updated component wrapper for state preview integration
-- 7 component states: default, hover, focus, active, disabled, loading, error
-- Transition settings (property, duration, easing, delay)
-
-**Phase 23 - Export & Render Optimization** ✅:
-- Created HTML generator for static output (`src/lib/studio/engine/html-generator.ts`)
-- Created CSS generator with minification and critical CSS extraction
-- Created asset optimizer with extraction and manifests (`src/lib/studio/engine/asset-optimizer.ts`)
-- Created build engine for page/site exports (`src/lib/studio/engine/build.ts`)
-- Created export API route (`src/app/api/studio/export/route.ts`)
-- Created ExportButton toolbar component with options dialog (`src/components/studio/features/export-button.tsx`)
-- Export formats: JSON (build result), ZIP (download), preview (preview URLs)
-- Export options: minify, optimizeAssets, inlineCriticalCSS, baseUrl, mode
-
----
-
-## 🟡 WAVE 8: Templates & Extras (Next Up)
-
-**Phase 24 - Starter Templates**:
-- Blank page template
-- Landing page template
-- Blog post template
-- Portfolio template
-- Contact page template
-- Template selection on new page
-
-**Phase 25 - Premium Templates**:
-- Industry-specific templates (Restaurant, Real Estate, etc.)
-- E-commerce product page template
-- Service business template
-- Multi-section templates
-- Premium component arrangements
-
-**Phase 26 - Extra Features**:
-- SEO settings panel
-- Social media preview
-- Custom fonts integration
-- Color palette generator
-- Global styles management
-
-### After Wave 8
-
-When complete:
-- Users can start from beautiful templates
-- Industry-specific starting points
-- Complete SEO and social preview capabilities
-- Professional design system tools
+**Phase 23 - Export Optimization**:
+- Critical CSS extraction
+- Image srcset generation
+- Lazy loading for published sites
+- Build optimization script
 
 ---
 
 ## ✅ WAVE 6: Advanced Features - COMPLETE (February 3, 2026)
 
-### Latest Fixes Applied (Session 3 - Breakpoint-Device Sync)
+### What Was Implemented
 
-**Breakpoint Icons Now Sync with Device Selector**:
+**Phase 16 - Layers & Structure Panel**:
+- Component tree in bottom panel
+- Click to select, drag to reorder
+- Lock/unlock and hide/show components
+- Context menu on right-click
+- Search and filter
 
-1. **DEFAULT_DEVICE_FOR_BREAKPOINT Constant**:
-   - ✅ New: Added in `device-presets.ts`
-   - Maps each breakpoint to a default device: `mobile→iphone-15-pro`, `tablet→ipad-air`, `desktop→desktop-hd`
-   - Clicking the 📱💻🖥️ breakpoint icons now also sets the device selector
+**Phase 17 - History & Versioning**:
+- History timeline with undo/redo
+- Named snapshots (save/restore states)
+- Version comparison UI
+- Stored in IndexedDB + database
 
-2. **setBreakpoint Syncs Device**:
-   - ❌ Old: setBreakpoint only changed breakpoint, not device
-   - ✅ New: setBreakpoint looks up default device and sets `selectedDeviceId`, `viewportWidth`, `viewportHeight`
-   - This means clicking Desktop icon → Device selector shows "Desktop HD (1920×1080)"
+**Phase 18 - Responsive Preview**:
+- Device presets (iPhone, iPad, Desktop, Custom)
+- Custom width/height input
+- Zoom controls (50-200%, Fit)
+- Device frame visualization
+- Ruler on canvas edges
 
-3. **Device Frames for ALL Device Types**:
-   - ❌ Old: Device frames only worked for phones/tablets
-   - ✅ New: Complete rewrite of `device-frame.tsx` with 4 frame components:
-     - `PhoneFrame`: Rounded bezel + notch/Dynamic Island + side buttons
-     - `TabletFrame`: Rounded bezel + speaker grille + camera dot
-     - `LaptopFrame`: Screen housing + camera notch + keyboard base + trackpad
-     - `DesktopFrame`: Monitor bezel + chin logo + stand neck + base
-   - ✅ New: CanvasFrame shows frames for ALL categories except 'custom'
+**Phase 19 - Nested Components & Zones**:
+- Components define drop zones
+- Zone restrictions enforced
+- Visual zone indicators
+- Zones in layers panel
 
-### Previous Fixes (Session 2)
+---
+
+## 🟡 WAVE 8: Templates & Extras - READY (Next Up)
+
+### What Needs Implementation
+
+**Goal**: Template system, reusable symbols, and user guidance.
+
+**Phase 24 - Section Templates**:
+- Template data structure with categories
+- Template browser UI with search/filter
+- Insert template at position
+- Color token replacement (adapt to site colors)
+- 12+ starter templates (hero, features, pricing, etc.)
+
+**Phase 25 - Symbols (Reusable Components)**:
+- Save component as symbol
+- Symbols panel in left sidebar
+- Insert symbol instances
+- Edit symbol updates all instances
+- Override instance props
+- Unlink instance from source
+
+**Phase 26 - Onboarding & Help**:
+- First-time tutorial walkthrough
+- Contextual tooltips on hover
+- Help panel with documentation links
+- "What's new" changelog panel
+- Empty canvas guidance
+- Clipboard system for copy/paste between components
+
+**Phase 21 - Performance Optimization**:
+- Virtualized component list (@tanstack/react-virtual)
+- Memoized renders (prevent unnecessary re-renders)
+- Debounced store updates
+- Code-split panels (lazy load)
+- Performance metrics logging
+
+**Phase 22 - Component States (Hover, Active)**:
+- State selector (default/hover/active/focus)
+- Edit hover styles separately
+- Edit active/focus styles
+- State preview in canvas
+- CSS generation with :hover/:active/:focus
+- Transition settings
+
+**Phase 23 - Export & Render Optimization**:
+- Optimized HTML generation
+- Critical CSS extraction (inline above-fold)
+- Image optimization with srcset
+- Lazy loading for heavy components
+- Code splitting for published sites
+- Build script for optimized output
+
+### After Wave 7
+
+When complete:
+- Full keyboard workflow possible
+- Editor stays fast with 500+ components
+- Buttons can have hover effects (darker on hover, etc.)
+- Published sites load fast (Lighthouse 90+)
+- Professional export for deployment
+
+### Next Steps
+
+Give another AI agent the prompt at [phases/STUDIO-WAVE7-PROMPT.md](phases/STUDIO-WAVE7-PROMPT.md) to generate:
+1. `PHASE-STUDIO-20-KEYBOARD-SHORTCUTS.md`
+2. `PHASE-STUDIO-21-PERFORMANCE-OPTIMIZATION.md`
+3. `PHASE-STUDIO-22-COMPONENT-STATES.md`
+4. `PHASE-STUDIO-23-EXPORT-OPTIMIZATION.md`
+
+Then implement those 4 phases and return for Wave 8.
+
+### Latest Fixes Applied (Session 2 - Continued)
 
 **Critical Canvas Fixes**:
 
@@ -139,6 +151,7 @@ When complete:
 2. **Device Frame Toggle Now Works**:
    - ❌ Old: ResponsiveDeviceFrame was missing `preset` prop - always returned no frame
    - ✅ New: Gets device preset via `getDevicePreset(selectedDeviceId)` and passes to component
+   - ✅ New: Only shows device frame for phone/tablet categories, not desktop/laptop
 
 3. **Rulers Fixed and Improved**:
    - ❌ Old: Rulers used fixed sizing, poor visibility
@@ -190,13 +203,12 @@ When complete:
 - Layers panel shows zones in hierarchy (different styling, not draggable)
 - Columns component updated to use new zone format
 
-### Current Capabilities (After Wave 6 + Session 3 Fixes)
+### Current Capabilities (After Wave 6)
 
 - ✅ Select any device preset → Canvas resizes to exact dimensions
-- ✅ Toggle device frame → Shows frame for ALL device types (phone/tablet/laptop/desktop)
+- ✅ Toggle device frame → Shows phone bezel with notch
 - ✅ Toggle ruler → Shows pixel rulers on canvas edges
 - ✅ Zoom in/out with shortcuts or dropdown
-- ✅ **Breakpoint icons sync with device selector** (click Desktop → device shows Desktop HD)
 - ✅ Components can define named drop zones
 - ✅ Zone restrictions enforced (only allowed components can drop)
 - ✅ Zones appear in layers panel hierarchy

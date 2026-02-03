@@ -92,6 +92,17 @@ export interface EditorActions {
   // Bulk operations
   deleteComponents: (componentIds: string[]) => void;
   
+  /**
+   * Insert multiple components at once (for template insertion)
+   * Phase: STUDIO-24 Section Templates
+   */
+  insertComponents: (
+    components: StudioComponent[],
+    insertIndex?: number,
+    parentId?: string,
+    zoneId?: string
+  ) => string[];
+  
   // Root updates
   updateRootProps: (props: Partial<StudioPageData["root"]["props"]>) => void;
   
@@ -473,6 +484,105 @@ export const useEditorStore = create<EditorStore>()(
         for (const id of componentIds) {
           get().deleteComponent(id);
         }
+      },
+
+      /**
+       * Insert multiple components at once (for template insertion)
+       * Phase: STUDIO-24 Section Templates
+       */
+      insertComponents: (components, insertIndex, parentId = 'root', zoneId) => {
+        const insertedIds: string[] = [];
+        
+        set((state) => {
+          // Create a map of old ID to new ID for relationship fixing
+          const idMap = new Map<string, string>();
+          
+          // First pass: create all components with new IDs
+          for (const component of components) {
+            const newId = generateComponentId();
+            idMap.set(component.id, newId);
+          }
+          
+          // Second pass: add components with fixed relationships
+          for (const component of components) {
+            const newId = idMap.get(component.id)!;
+            
+            // Determine the new parent ID
+            let newParentId: string | undefined = undefined;
+            if (component.parentId) {
+              // Use mapped parent ID if the parent is also being inserted
+              newParentId = idMap.get(component.parentId) ?? component.parentId;
+            }
+            
+            // Fix children IDs
+            const newChildren = component.children?.map(childId => 
+              idMap.get(childId) ?? childId
+            ) || [];
+            
+            // Create the component with new relationships
+            const newComponent: StudioComponent = {
+              ...component,
+              id: newId,
+              parentId: newParentId,
+              children: newChildren,
+              zoneId: newParentId ? undefined : zoneId,
+            };
+            
+            // Add to components map
+            state.data.components[newId] = newComponent;
+            
+            // Track root-level inserted components
+            if (!component.parentId) {
+              insertedIds.push(newId);
+            }
+          }
+          
+          // Add root-level components to the correct parent
+          for (const newId of insertedIds) {
+            if (zoneId) {
+              // Add to zone
+              if (!state.data.zones) {
+                state.data.zones = {};
+              }
+              if (!state.data.zones[zoneId]) {
+                state.data.zones[zoneId] = [];
+              }
+              const zoneChildren = state.data.zones[zoneId];
+              if (insertIndex !== undefined && insertIndex >= 0) {
+                zoneChildren.splice(insertIndex, 0, newId);
+                insertIndex++; // Increment for next component
+              } else {
+                zoneChildren.push(newId);
+              }
+            } else if (parentId === 'root') {
+              // Add to root children
+              if (insertIndex !== undefined && insertIndex >= 0) {
+                state.data.root.children.splice(insertIndex, 0, newId);
+                insertIndex++; // Increment for next component
+              } else {
+                state.data.root.children.push(newId);
+              }
+            } else {
+              // Add to parent component
+              const parent = state.data.components[parentId];
+              if (parent) {
+                if (!parent.children) {
+                  parent.children = [];
+                }
+                if (insertIndex !== undefined && insertIndex >= 0) {
+                  parent.children.splice(insertIndex, 0, newId);
+                  insertIndex++; // Increment for next component
+                } else {
+                  parent.children.push(newId);
+                }
+              }
+            }
+          }
+          
+          state.isDirty = true;
+        });
+        
+        return insertedIds;
       },
 
       // ---------------------------------------------------------------------------
