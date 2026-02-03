@@ -24,7 +24,7 @@ export function PageSelector({ siteId, currentPageId, pages }: PageSelectorProps
     if (pageId === "new") {
       router.push(`/dashboard/sites/${siteId}/pages/new`);
     } else {
-      router.push(`/dashboard/sites/${siteId}/editor?page=${pageId}`);
+      router.push(`/studio/${siteId}/${pageId}`);
     }
   };
 

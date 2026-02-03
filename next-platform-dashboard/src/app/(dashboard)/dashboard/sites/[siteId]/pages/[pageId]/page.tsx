@@ -4,8 +4,8 @@ interface PageDetailPageProps {
   params: Promise<{ siteId: string; pageId: string }>;
 }
 
-// Redirect to the page editor where page settings can be accessed
+// Redirect to Studio where page settings can be accessed
 export default async function PageDetailPage({ params }: PageDetailPageProps) {
   const { siteId, pageId } = await params;
-  redirect(`/dashboard/sites/${siteId}/editor/${pageId}`);
+  redirect(`/studio/${siteId}/${pageId}`);
 }
