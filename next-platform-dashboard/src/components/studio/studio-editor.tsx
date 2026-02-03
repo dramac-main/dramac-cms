@@ -19,6 +19,9 @@ import { useUIStore, useEditorStore, useAIStore, useSelectionStore, useHistorySt
 import { initializeRegistry } from "@/lib/studio/registry";
 import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
+import { savePageContentAction } from "@/lib/actions/pages";
+import { publishSite } from "@/lib/publishing/publish-service";
+import type { Json } from "@/types/database";
 
 // =============================================================================
 // TYPES
@@ -123,18 +126,32 @@ export function StudioEditor({
   const { openChat, closeChat, isOpen: aiChatOpen } = useAIStore();
   const selectedId = useSelectionStore((s) => s.componentId);
   const clearSelection = useSelectionStore((s) => s.clearSelection);
+  
+  // Get markSaved to reset dirty state after save
+  const markSaved = useEditorStore((s) => s.markSaved);
 
   // Initialize registry on mount
   useEffect(() => {
     initializeRegistry();
   }, []);
 
-  // Save handler
+  // Save handler - actually saves to database
   const handleSave = useCallback(async () => {
     try {
       setSaveStatus("saving");
-      // TODO: Implement save logic in Phase STUDIO-06
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate save
+      
+      // Get current editor data in Studio format
+      const currentData = useEditorStore.getState().data;
+      
+      // Save to database - cast to Json type for Supabase
+      const result = await savePageContentAction(pageId, currentData as unknown as Json);
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      // Mark as not dirty after successful save
+      markSaved();
       setSaveStatus("saved");
       toast.success("Page saved successfully");
       
@@ -143,30 +160,42 @@ export function StudioEditor({
     } catch (error) {
       console.error("[Studio] Save failed:", error);
       setSaveStatus("error");
-      toast.error("Failed to save page");
+      toast.error(error instanceof Error ? error.message : "Failed to save page");
     }
-  }, []);
+  }, [pageId, markSaved]);
 
-  // Preview handler
+  // Preview handler - opens preview in new tab
   const handlePreview = useCallback(() => {
-    // Open preview in new tab
-    const path = pagePath || `/${pageSlug || ""}`;
-    const previewUrl = siteCustomDomain
-      ? `https://${siteCustomDomain}${path}`
-      : siteSubdomain
-        ? `https://${siteSubdomain}.dramac.com${path}`
-        : `/preview/${siteId}${path}`;
-    
+    // Use the preview route with siteId and pageId
+    const previewUrl = `/preview/${siteId}/${pageId}`;
     window.open(previewUrl, "_blank");
-  }, [siteCustomDomain, siteSubdomain, siteId, pageSlug, pagePath]);
+  }, [siteId, pageId]);
 
-  // Publish handler
+  // Publish handler - saves and publishes the site
   const handlePublish = useCallback(async () => {
-    // Save first, then publish
-    await handleSave();
-    // TODO: Implement publish logic
-    toast.info("Publish functionality coming in a future phase");
-  }, [handleSave]);
+    try {
+      // Save first
+      await handleSave();
+      
+      // Then publish the site
+      const result = await publishSite(siteId);
+      
+      if (!result.success) {
+        throw new Error(result.error || "Failed to publish site");
+      }
+      
+      toast.success("Site published successfully!", {
+        description: result.siteUrl ? `Available at ${result.siteUrl}` : undefined,
+        action: result.siteUrl ? {
+          label: "View Site",
+          onClick: () => window.open(result.siteUrl, "_blank"),
+        } : undefined,
+      });
+    } catch (error) {
+      console.error("[Studio] Publish failed:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to publish site");
+    }
+  }, [handleSave, siteId]);
 
   // Keyboard shortcuts
   useEffect(() => {
