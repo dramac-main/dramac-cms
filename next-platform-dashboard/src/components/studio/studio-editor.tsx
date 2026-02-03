@@ -14,7 +14,7 @@ import { DndProvider } from "@/components/studio/dnd";
 import { EditorCanvas } from "@/components/studio/canvas";
 import { ComponentLibrary } from "@/components/studio/panels";
 import { PropertiesPanel } from "@/components/studio/properties";
-import { useUIStore, useEditorStore, useAIStore, useSelectionStore } from "@/lib/studio/store";
+import { useUIStore, useEditorStore, useAIStore, useSelectionStore, undo, redo, useHistoryState } from "@/lib/studio/store";
 import { initializeRegistry } from "@/lib/studio/registry";
 import { MessageSquare } from "lucide-react";
 import { toast } from "sonner";
@@ -143,6 +143,18 @@ export function StudioEditor({
       if (isMeta && e.key === "p" && !e.shiftKey) {
         e.preventDefault();
         handlePreview();
+      }
+      
+      // Undo: Cmd/Ctrl + Z
+      if (isMeta && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+      
+      // Redo: Cmd/Ctrl + Shift + Z
+      if (isMeta && e.key === "z" && e.shiftKey) {
+        e.preventDefault();
+        redo();
       }
       
       // Toggle AI Chat: Cmd/Ctrl + /

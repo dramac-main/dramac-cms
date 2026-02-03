@@ -149,19 +149,63 @@
    COMPONENT WRAPPER
    ============================================================================= */
 
+.studio-component-wrapper {
+  position: relative;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition: outline-color 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
+}
+
+.studio-component-wrapper:hover {
+  outline-color: hsl(var(--primary) / 0.4);
+}
+
+.studio-component-wrapper.is-selected {
+  outline-color: hsl(var(--primary));
+  outline-width: 2px;
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15);
+}
+
+/* Component label */
+.studio-component-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateY(-100%);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-radius: 4px 4px 0 0;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+
+.studio-component-wrapper:hover .studio-component-label,
+.studio-component-wrapper.is-selected .studio-component-label {
+  opacity: 1;
+}
+
+/* Old class for backward compatibility */
 .studio-component {
   position: relative;
   outline: 2px solid transparent;
-  outline-offset: -2px;
-  transition: outline-color 0.15s ease;
+  outline-offset: 2px;
+  transition: outline-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .studio-component:hover {
-  outline-color: hsl(var(--primary) / 0.3);
+  outline-color: hsl(var(--primary) / 0.4);
 }
 
 .studio-component.is-selected {
   outline-color: hsl(var(--primary));
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15);
 }
 
 .studio-component.is-locked {
@@ -171,29 +215,6 @@
 
 .studio-component.is-hidden {
   opacity: 0.3;
-}
-
-/* Component label */
-.studio-component-label {
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: translateY(-100%);
-  padding: 0.125rem 0.5rem;
-  font-size: 0.625rem;
-  font-weight: 500;
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  opacity: 0;
-  pointer-events: none;
-  white-space: nowrap;
-  transition: opacity 0.15s ease;
-}
-
-.studio-component:hover .studio-component-label,
-.studio-component.is-selected .studio-component-label {
-  opacity: 1;
 }
 
 /* Component actions */
@@ -206,12 +227,14 @@
   gap: 0.125rem;
   padding: 0.125rem;
   background: hsl(var(--primary));
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  border-radius: 4px 4px 0 0;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.15s ease;
+  z-index: 10;
 }
 
+.studio-component-wrapper.is-selected .studio-component-actions,
 .studio-component.is-selected .studio-component-actions {
   opacity: 1;
   pointer-events: auto;

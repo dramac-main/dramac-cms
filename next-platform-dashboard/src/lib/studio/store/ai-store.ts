@@ -59,11 +59,14 @@ export interface AIState {
   
   /** Error message */
   error: string | null;
+  
+  /** Initial message to be sent when chat opens (from suggestions) */
+  initialMessage: string | null;
 }
 
 export interface AIActions {
-  /** Open chat for a specific component */
-  openChat: (componentId: string) => void;
+  /** Open chat for a specific component, optionally with an initial message */
+  openChat: (componentId: string, initialMessage?: string) => void;
   
   /** Close chat panel */
   closeChat: () => void;
@@ -97,6 +100,9 @@ export interface AIActions {
   
   /** Set error */
   setError: (error: string | null) => void;
+  
+  /** Clear initial message after it's been used */
+  clearInitialMessage: () => void;
 }
 
 export type AIStore = AIState & AIActions;
@@ -113,6 +119,7 @@ const initialState: AIState = {
   pendingExplanation: null,
   isLoading: false,
   error: null,
+  initialMessage: null,
 };
 
 // =============================================================================
@@ -122,7 +129,7 @@ const initialState: AIState = {
 export const useAIStore = create<AIStore>()((set, get) => ({
   ...initialState,
 
-  openChat: (componentId: string) => {
+  openChat: (componentId: string, initialMessage?: string) => {
     const { activeComponentId } = get();
     
     // If switching components, clear history
@@ -134,9 +141,13 @@ export const useAIStore = create<AIStore>()((set, get) => ({
         pendingChanges: null,
         pendingExplanation: null,
         error: null,
+        initialMessage: initialMessage || null,
       });
     } else {
-      set({ isOpen: true });
+      set({ 
+        isOpen: true,
+        initialMessage: initialMessage || null,
+      });
     }
   },
 
@@ -235,6 +246,10 @@ export const useAIStore = create<AIStore>()((set, get) => ({
 
   setError: (error) => {
     set({ error, isLoading: false });
+  },
+  
+  clearInitialMessage: () => {
+    set({ initialMessage: null });
   },
 }));
 

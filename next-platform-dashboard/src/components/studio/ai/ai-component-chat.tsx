@@ -42,6 +42,7 @@ export function AIComponentChat() {
     pendingExplanation,
     isLoading,
     error,
+    initialMessage,
     closeChat,
     addMessage,
     updateLastMessage,
@@ -49,6 +50,7 @@ export function AIComponentChat() {
     setLoading,
     setError,
     clearHistory,
+    clearInitialMessage,
   } = useAIStore();
   
   const data = useEditorStore((s) => s.data);
@@ -74,6 +76,16 @@ export function AIComponentChat() {
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
+  
+  // Handle initial message from suggestions
+  useEffect(() => {
+    if (isOpen && initialMessage && !isLoading && component) {
+      setInputValue(initialMessage);
+      clearInitialMessage();
+      // Optionally auto-send - for now just populate the input
+      // User can review and send
+    }
+  }, [isOpen, initialMessage, isLoading, component, clearInitialMessage]);
   
   // Build AI context
   const buildContext = useCallback((): AIComponentContext | null => {

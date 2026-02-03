@@ -4,6 +4,8 @@
  * Central exports for all Zustand stores and hooks.
  */
 
+import { useStore } from "zustand";
+
 // =============================================================================
 // STORE EXPORTS
 // =============================================================================
@@ -184,15 +186,18 @@ export function useZoneChildren(zoneId: string): string[] {
 }
 
 /**
- * Hook for undo/redo state
+ * Hook for undo/redo state - reactive version using useStore
  */
 export function useHistoryState() {
-  const temporal = useEditorStore.temporal.getState();
+  const temporalStore = useEditorStore.temporal;
+  
+  const pastStates = useStore(temporalStore, (state) => state.pastStates);
+  const futureStates = useStore(temporalStore, (state) => state.futureStates);
   
   return {
-    canUndo: temporal.pastStates.length > 0,
-    canRedo: temporal.futureStates.length > 0,
-    undoCount: temporal.pastStates.length,
-    redoCount: temporal.futureStates.length,
+    canUndo: pastStates.length > 0,
+    canRedo: futureStates.length > 0,
+    undoCount: pastStates.length,
+    redoCount: futureStates.length,
   };
 }

@@ -8,7 +8,7 @@
 
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useEditorStore, useUIStore, useSelectionStore } from "@/lib/studio/store";
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
@@ -299,7 +299,11 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
   const zoom = useUIStore((s) => s.zoom);
   const showGrid = useUIStore((s) => s.showGrid);
   const mode = useUIStore((s) => s.mode);
+  const setZoom = useUIStore((s) => s.setZoom);
   const clearSelection = useSelectionStore((s) => s.clearSelection);
+  
+  // Canvas ref for wheel events
+  const canvasRef = useRef<HTMLDivElement>(null);
   
   // Get root children
   const rootChildren = data.root.children;
@@ -313,11 +317,33 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
     }
   };
   
+  // Handle Ctrl+wheel zoom
+  const handleWheel = useCallback((e: WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const newZoom = Math.min(2, Math.max(0.25, zoom + delta));
+      setZoom(newZoom);
+    }
+  }, [zoom, setZoom]);
+  
+  // Add wheel event listener with passive: false to allow preventDefault
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    canvas.addEventListener("wheel", handleWheel, { passive: false });
+    return () => {
+      canvas.removeEventListener("wheel", handleWheel);
+    };
+  }, [handleWheel]);
+  
   const isPreviewMode = mode === "preview";
   const isDesktop = breakpoint === "desktop";
   
   return (
     <div
+      ref={canvasRef}
       className={cn(
         "flex w-full overflow-auto",
         // Desktop: fill entire canvas area, allow natural scrolling

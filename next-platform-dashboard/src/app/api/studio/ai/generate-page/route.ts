@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { buildPageGenerationPrompt, buildUserPrompt } from "@/lib/studio/ai/page-prompts";
-import { componentRegistry } from "@/lib/studio/registry/component-registry";
+import { getComponentsForAI } from "@/lib/studio/registry/component-metadata";
 import type { AIPageGenerationRequest, AIPageGenerationResponse } from "@/lib/studio/ai/types";
 import type { StudioPageData, StudioComponent } from "@/types/studio";
 
@@ -191,9 +191,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Get available components
-    // In future: also load module components based on siteId
-    const availableComponents = componentRegistry.getAll();
+    // Get available components from server-safe metadata
+    // This uses static component definitions instead of the client-side registry
+    const availableComponents = getComponentsForAI();
     
     if (availableComponents.length === 0) {
       return NextResponse.json(

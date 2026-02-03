@@ -51,11 +51,8 @@ export function AISuggestions({ componentId, className }: AISuggestionsProps) {
   
   // Handle suggestion click - opens chat with pre-filled prompt
   const handleSuggestionClick = (suggestion: AISuggestion) => {
-    // Open the AI chat for this component
-    openChat(componentId);
-    // Note: The chat panel will need to handle the suggestion prompt
-    // For now, this opens the chat where user can manually type
-    // Future enhancement: pass the prompt to the chat
+    // Open the AI chat for this component with the suggestion prompt
+    openChat(componentId, suggestion.prompt);
   };
   
   return (

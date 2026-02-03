@@ -5,7 +5,6 @@
  * Phase STUDIO-12: AI Page Generator
  */
 
-import type { ComponentDefinition } from "@/types/studio";
 import type { 
   AIPageGenerationRequest, 
   BusinessType,
@@ -15,13 +14,30 @@ import type {
 import { COLOR_SCHEMES } from "./types";
 
 /**
+ * Minimal component interface for prompt generation
+ * Compatible with both ComponentDefinition and ComponentMetadata
+ */
+interface PromptComponent {
+  type: string;
+  label: string;
+  category?: string;
+  description?: string;
+  acceptsChildren?: boolean;
+  ai?: {
+    description?: string;
+    usageGuidelines?: string;
+    suggestedWith?: string[];
+  };
+}
+
+/**
  * Format available components for the prompt
  */
 function formatComponentsForPrompt(
-  components: ComponentDefinition[]
+  components: PromptComponent[]
 ): string {
   // Group by category
-  const byCategory: Record<string, ComponentDefinition[]> = {};
+  const byCategory: Record<string, PromptComponent[]> = {};
   
   for (const comp of components) {
     const category = comp.category || "other";
@@ -122,7 +138,7 @@ function getBusinessContext(businessType: BusinessType | undefined): string {
  * Build the main system prompt for page generation
  */
 export function buildPageGenerationPrompt(
-  availableComponents: ComponentDefinition[],
+  availableComponents: PromptComponent[],
   request: AIPageGenerationRequest
 ): string {
   const { businessType, colorScheme, customColors, tone } = request;
