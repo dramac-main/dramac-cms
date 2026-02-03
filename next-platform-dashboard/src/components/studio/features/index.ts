@@ -33,3 +33,7 @@ export { StateTestButton, StateTestMini } from './state-test-button';
 
 // PHASE-STUDIO-23: Export & Render Optimization
 export { ExportButton, ExportMini } from './export-button';
+
+// PHASE-STUDIO-26: Onboarding & Help
+export { HelpPanel } from './help-panel';
+export { WhatsNewPanel } from './whats-new-panel';

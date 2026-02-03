@@ -1,7 +1,7 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 3, 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: WAVES 1-7 ✅ → WAVE 8 READY 🟡**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: WAVES 1-7 ✅ + WAVE 8 PHASES 24-25 ✅**
 **Component Strategy**: Fresh premium components (NOT reusing basic Puck components)
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
@@ -13,7 +13,7 @@
 
 ## 🚀 DRAMAC Studio - Custom Website Editor (February 3, 2026)
 
-**Status**: ✅ WAVES 1-7 COMPLETE → 🟡 WAVE 8 READY TO IMPLEMENT
+**Status**: ✅ WAVES 1-7 COMPLETE + WAVE 8 PHASES 24-25 ✅ → 🟡 PHASE 26 REMAINING
 **Strategy**: Fresh premium mobile-first components (NOT reusing 116 basic Puck components)
 **Quality Goal**: Webflow/Wix Studio level
 
@@ -36,8 +36,61 @@
 | **5** | 14-15 | Module Integration (Dynamic Loading, Custom Fields) | ✅ **COMPLETE** |
 | **6** | 16-19 | Advanced Features (Layers, History, Preview, Zones) | ✅ **COMPLETE** |
 | **7** | 20-23 | Polish & Optimization (Shortcuts, Performance, States, Export) | ✅ **COMPLETE** |
-| **8** | 24-26 | Templates & Extras (Templates, Symbols, Onboarding) | 🟡 **READY TO IMPLEMENT** |
+| **8** | 24-26 | Templates & Extras (Templates, Symbols, Onboarding) | 🟢 **24-25 COMPLETE, 26 PENDING** |
 | **9** | 27 | Integration & Cleanup | ⏳ Waiting |
+
+### WAVE 8: Templates & Extras - 🟢 PHASES 24-25 COMPLETE
+
+**Completion Date**: February 3, 2026 (Phases 24-25)
+
+| Phase | Description | Est. Time | Status |
+|-------|-------------|-----------|--------|
+| STUDIO-24 | Section Templates | 8-10 hrs | ✅ **COMPLETE** |
+| STUDIO-25 | Symbols/Reusable Components | 10-12 hrs | ✅ **COMPLETE** |
+| STUDIO-26 | Onboarding & Help | 6-8 hrs | 🟡 **PENDING** |
+
+#### PHASE-STUDIO-24: Section Templates ✅ COMPLETE
+
+**Commit**: `333dfa8` - feat(studio): implement PHASE-STUDIO-24 Section Templates and PHASE-STUDIO-25 Symbols
+
+Key Files Created:
+- `src/types/studio-templates.ts` - TemplateCategory (12 categories), SectionTemplate, SiteColorScheme, TemplateStoreState/Actions
+- `src/lib/studio/store/template-store.ts` - Zustand store with fetchTemplates, setCategory, setSearchQuery, getFilteredTemplates
+- `src/lib/studio/utils/template-utils.ts` - cloneTemplateComponents, replaceColorTokens, replaceTextTokens, prepareTemplateForInsertion, DEFAULT_SITE_COLORS
+- `src/lib/studio/data/starter-templates.ts` - 12+ pre-designed section templates (hero, features, pricing, testimonials, CTA, team, FAQ, contact, footer, stats, newsletter)
+- `src/components/studio/features/template-browser.tsx` - Full-screen dialog with category sidebar, search, grid layout, hover preview, insert button
+
+Key Features:
+- 12 categories: hero, features, pricing, testimonials, cta, team, faq, contact, footer, stats, newsletter, custom
+- Token system: Color tokens ($primary, $secondary, etc.) and text tokens ($headline, $description, etc.) replaced at insert time
+- Template browser: Search, category filter, preview on hover, one-click insert
+- Editor integration: `insertComponents` action added to editor-store.ts for bulk component insertion with ID remapping
+- Toolbar integration: "Add Section" button in studio-toolbar.tsx
+
+#### PHASE-STUDIO-25: Symbols/Reusable Components ✅ COMPLETE
+
+Key Files Created:
+- `src/types/studio-symbols.ts` - StudioSymbol, SymbolInstance, SymbolOverrides, SymbolInstanceComponent, utility functions
+- `src/lib/studio/store/symbol-store.ts` - CRUD, instance management, page tracking, import/export, localStorage persistence
+- `src/components/studio/features/create-symbol-dialog.tsx` - Dialog for saving components as symbols (name, description, category, tags, global toggle)
+- `src/components/studio/panels/symbols-panel.tsx` - Panel for browsing/managing symbols with search, accordion categories, drag support
+- `src/components/studio/core/symbol-instance-renderer.tsx` - Renders symbol instances with sync status, detach button, override application
+
+Key Features:
+- Symbol CRUD: Create, update, delete, duplicate symbols
+- Instance management: Create instances from symbols, detach instances, sync instances to master
+- Override system: Instance-level property overrides that persist through sync
+- Page tracking: Track which instances are on which pages
+- Import/Export: JSON-based symbol library sharing
+- Persistence: localStorage via Zustand persist middleware
+- Context menu: Right-click component → "Save as Symbol"
+- Drag-and-drop: Symbols draggable from panel to canvas
+
+Modified Files:
+- `src/lib/studio/store/editor-store.ts` - Added `insertComponents` action
+- `src/components/studio/layout/studio-toolbar.tsx` - Added "Add Section" button with TemplateBrowser dialog
+- `src/components/studio/core/component-wrapper.tsx` - Added ContextMenu with Save as Symbol, Duplicate, Lock, Hide, Delete
+- `src/lib/studio/store/index.ts` - Added exports for template and symbol stores
 
 ### WAVE 6: Advanced Features - ✅ COMPLETE
 

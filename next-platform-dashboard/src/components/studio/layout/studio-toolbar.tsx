@@ -4,6 +4,7 @@
  * Top toolbar with common editor actions.
  * Updated in PHASE-STUDIO-18 with responsive preview controls.
  * Updated in PHASE-STUDIO-20 with keyboard shortcuts button.
+ * Updated in PHASE-STUDIO-26 with Help and What's New panels.
  */
 
 "use client";
@@ -52,7 +53,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { Separator } from "@/components/ui/separator";
 import { useEditorStore, useUIStore, undo, redo, canUndo, canRedo, useHistoryState } from "@/lib/studio/store";
 import { AIPageGenerator } from "@/components/studio/ai";
-import { DeviceSelector, DimensionsInput, ZoomControls } from "@/components/studio/features";
+import { DeviceSelector, DimensionsInput, ZoomControls, HelpPanel, WhatsNewPanel } from "@/components/studio/features";
 import { TemplateBrowser } from "@/components/studio/features/template-browser";
 import type { Breakpoint } from "@/types/studio";
 
@@ -220,6 +221,7 @@ export const StudioToolbar = memo(function StudioToolbar({
                 size="sm"
                 className="gap-1.5"
                 onClick={() => setShowTemplateBrowser(true)}
+                data-template-button
               >
                 <LayoutGrid className="h-4 w-4" />
                 <span className="hidden sm:inline">Add Section</span>
@@ -237,7 +239,7 @@ export const StudioToolbar = memo(function StudioToolbar({
         </div>
 
         {/* Center Section: Device, Dimensions, Zoom & AI */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1" data-responsive-controls>
           {/* Viewport Toggle */}
           <div className="flex items-center rounded-md border border-border p-0.5">
             {(["desktop", "tablet", "mobile"] as Breakpoint[]).map((size) => {
@@ -280,6 +282,7 @@ export const StudioToolbar = memo(function StudioToolbar({
                 size="sm" 
                 className="gap-1.5"
                 onClick={() => setShowPageGenerator(true)}
+                data-ai-generate
               >
                 <Wand2 className="h-4 w-4 text-primary" />
                 <span>Generate Page</span>
@@ -291,7 +294,7 @@ export const StudioToolbar = memo(function StudioToolbar({
           {/* AI Assist Button */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5">
+              <Button variant="outline" size="sm" className="gap-1.5" data-ai-button>
                 <Sparkles className="h-4 w-4 text-primary" />
                 <span>AI</span>
               </Button>
@@ -360,6 +363,7 @@ export const StudioToolbar = memo(function StudioToolbar({
                 className="gap-1.5"
                 onClick={onSave}
                 disabled={saveStatus === "saving" || !isDirty}
+                data-save-button
               >
                 {saveStatus === "saving" ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -414,6 +418,12 @@ export const StudioToolbar = memo(function StudioToolbar({
             </TooltipTrigger>
             <TooltipContent>Keyboard Shortcuts (⌘?)</TooltipContent>
           </Tooltip>
+
+          {/* What's New (PHASE-STUDIO-26) */}
+          <WhatsNewPanel />
+
+          {/* Help Panel (PHASE-STUDIO-26) */}
+          <HelpPanel />
 
           {/* More Actions */}
           <DropdownMenu>

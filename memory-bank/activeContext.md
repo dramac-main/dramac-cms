@@ -2,7 +2,37 @@
 
 **Last Updated**: February 3, 2026  
 **Current Phase**: DRAMAC Studio - Wave 8 (Templates & Extras)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-7 ✅ → WAVE 8 READY 🟡**
+**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-7 ✅ + WAVE 8 PHASES 24-25 ✅**
+
+---
+
+## ✅ WAVE 8: Templates & Extras - IN PROGRESS (February 3, 2026)
+
+### What Was Implemented
+
+**Phase 24 - Section Templates ✅**:
+- Template data structure with categories (`studio-templates.ts`)
+- Template store for management (`template-store.ts`)
+- Template utilities for color/text token replacement (`template-utils.ts`)
+- 12+ starter templates (hero, features, pricing, testimonials, CTA, team, FAQ, contact, footer, stats, newsletter)
+- Template browser UI with search/filter (`template-browser.tsx`)
+- Insert template at position via `insertComponents` action
+- "Add Section" button in toolbar
+
+**Phase 25 - Symbols/Reusable Components ✅**:
+- Symbol type definitions (`studio-symbols.ts`)
+- Symbol store for CRUD operations (`symbol-store.ts`)
+- Create symbol dialog for saving components (`create-symbol-dialog.tsx`)
+- Symbols panel for browsing/managing (`symbols-panel.tsx`)
+- Symbol instance renderer for canvas display (`symbol-instance-renderer.tsx`)
+- Context menu on component wrapper with "Save as Symbol"
+
+### What's Left in Wave 8
+
+**Phase 26 - Onboarding & Help** (TODO):
+- Guided tours with step highlighting
+- Contextual help tooltips
+- Tutorial system with progress
 
 ---
 
@@ -68,36 +98,7 @@
 
 ---
 
-## 🟡 WAVE 8: Templates & Extras - READY (Next Up)
-
-### What Needs Implementation
-
-**Goal**: Template system, reusable symbols, and user guidance.
-
-**Phase 24 - Section Templates**:
-- Template data structure with categories
-- Template browser UI with search/filter
-- Insert template at position
-- Color token replacement (adapt to site colors)
-- 12+ starter templates (hero, features, pricing, etc.)
-
-**Phase 25 - Symbols (Reusable Components)**:
-- Save component as symbol
-- Symbols panel in left sidebar
-- Insert symbol instances
-- Edit symbol updates all instances
-- Override instance props
-- Unlink instance from source
-
-**Phase 26 - Onboarding & Help**:
-- First-time tutorial walkthrough
-- Contextual tooltips on hover
-- Help panel with documentation links
-- "What's new" changelog panel
-- Empty canvas guidance
-- Clipboard system for copy/paste between components
-
-**Phase 21 - Performance Optimization**:
+## ✅ WAVE 6: Advanced Features - COMPLETE (February 3, 2026)
 - Virtualized component list (@tanstack/react-virtual)
 - Memoized renders (prevent unnecessary re-renders)
 - Debounced store updates

@@ -92,7 +92,10 @@ export function StudioLayout({
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Components */}
         {panels.left && (
-          <div className="w-64 shrink-0 border-r border-border bg-muted/30">
+          <div 
+            className="w-64 shrink-0 border-r border-border bg-muted/30"
+            data-panel="left"
+          >
             {leftPanel}
           </div>
         )}
@@ -100,13 +103,16 @@ export function StudioLayout({
         {/* Center Area - Canvas + Bottom */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Canvas */}
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto" data-panel="canvas">
             {canvas}
           </div>
 
           {/* Bottom Panel - AI Chat, etc. */}
           {panels.bottom && (
-            <div className="h-48 shrink-0 border-t border-border bg-muted/30">
+            <div 
+              className="h-48 shrink-0 border-t border-border bg-muted/30"
+              data-panel="bottom"
+            >
               {bottomPanel}
             </div>
           )}
@@ -114,7 +120,10 @@ export function StudioLayout({
 
         {/* Right Panel - Properties */}
         {panels.right && (
-          <div className="w-72 shrink-0 border-l border-border bg-muted/30">
+          <div 
+            className="w-72 shrink-0 border-l border-border bg-muted/30"
+            data-panel="right"
+          >
             {rightPanel}
           </div>
         )}

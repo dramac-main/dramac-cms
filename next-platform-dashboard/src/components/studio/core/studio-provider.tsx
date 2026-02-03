@@ -4,6 +4,7 @@
  * Wraps the editor with necessary providers and initializes state.
  * Handles module component loading for the site.
  * Initializes keyboard shortcuts (PHASE-STUDIO-20).
+ * Provides onboarding tutorial for first-time users (PHASE-STUDIO-26).
  */
 
 "use client";
@@ -18,6 +19,7 @@ import {
 import { initializeRegistry, isRegistryInitialized } from "@/lib/studio/registry";
 import { useModuleInitialization, useModuleSync, useStudioShortcuts } from "@/lib/studio/hooks";
 import { CommandPalette, ShortcutsPanel } from "@/components/studio/features";
+import { TutorialProvider, TutorialOverlay } from "@/components/studio/onboarding";
 import type { StudioPageData, PuckDataFormat } from "@/types/studio";
 import { createEmptyPageData, validatePageData, migrateFromPuckFormat } from "@/types/studio";
 
@@ -129,12 +131,14 @@ export function StudioProvider({
   // Note: Keyboard shortcuts are now handled by useStudioShortcuts hook (Phase STUDIO-20)
 
   return (
-    <>
+    <TutorialProvider>
       {children}
       {/* Global dialogs - Phase STUDIO-20 */}
       <CommandPalette onSave={onSave} />
       <ShortcutsPanel />
-    </>
+      {/* Tutorial overlay - Phase STUDIO-26 (renders on top of everything) */}
+      <TutorialOverlay />
+    </TutorialProvider>
   );
 }
 
