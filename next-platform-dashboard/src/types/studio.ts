@@ -56,6 +56,108 @@ export interface StudioPageData {
   zones?: Record<string, string[]>;
 }
 
+// =============================================================================
+// COMPONENT STATE TYPES (PHASE-STUDIO-22)
+// =============================================================================
+
+/**
+ * Interactive states for components
+ */
+export type ComponentState = 'default' | 'hover' | 'active' | 'focus';
+
+/**
+ * Transition settings for state changes
+ */
+export interface TransitionSettings {
+  property: 'all' | 'transform' | 'opacity' | 'colors' | 'shadow' | 'none';
+  duration: number; // milliseconds
+  easing: 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'linear';
+  delay?: number; // milliseconds
+}
+
+/**
+ * Default transition settings
+ */
+export const DEFAULT_TRANSITION: TransitionSettings = {
+  property: 'all',
+  duration: 200,
+  easing: 'ease-out',
+  delay: 0,
+};
+
+/**
+ * Properties that can be different per state
+ * Only visual properties that make sense for interactive states
+ */
+export const STATE_EDITABLE_PROPERTIES = [
+  // Colors
+  'backgroundColor',
+  'color',
+  'borderColor',
+  'outlineColor',
+  
+  // Transform
+  'scale',
+  'scaleX',
+  'scaleY',
+  'rotate',
+  'translateX',
+  'translateY',
+  'skewX',
+  'skewY',
+  
+  // Opacity
+  'opacity',
+  
+  // Shadows
+  'boxShadow',
+  'textShadow',
+  
+  // Borders
+  'borderWidth',
+  'borderStyle',
+  
+  // Outline (for focus)
+  'outlineWidth',
+  'outlineStyle',
+  'outlineOffset',
+] as const;
+
+export type StateEditableProperty = typeof STATE_EDITABLE_PROPERTIES[number];
+
+/**
+ * State overrides (partial props that override default)
+ */
+export type StateOverrides = Partial<Record<StateEditableProperty, unknown>>;
+
+/**
+ * Helper to check if a property can be edited per state
+ */
+export function isStateEditableProperty(property: string): property is StateEditableProperty {
+  return STATE_EDITABLE_PROPERTIES.includes(property as StateEditableProperty);
+}
+
+/**
+ * Helper to get effective props for a state
+ */
+export function getEffectiveProps(
+  component: StudioComponent,
+  state: ComponentState
+): Record<string, unknown> {
+  if (state === 'default' || !component.states?.[state]) {
+    return component.props;
+  }
+  
+  return {
+    ...component.props,
+    ...component.states[state],
+  };
+}
+
+// =============================================================================
+// COMPONENT INSTANCE TYPES
+// =============================================================================
+
 /**
  * Individual component instance
  */
@@ -83,6 +185,16 @@ export interface StudioComponent {
   
   /** Hide in canvas (but keep in data) */
   hidden?: boolean;
+  
+  /** State-specific property overrides (PHASE-STUDIO-22) */
+  states?: {
+    hover?: StateOverrides;
+    active?: StateOverrides;
+    focus?: StateOverrides;
+  };
+  
+  /** Transition settings for state changes (PHASE-STUDIO-22) */
+  transition?: TransitionSettings;
 }
 
 // =============================================================================

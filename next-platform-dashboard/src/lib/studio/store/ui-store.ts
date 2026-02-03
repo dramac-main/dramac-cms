@@ -3,10 +3,11 @@
  * 
  * State for UI elements: panels, zoom, breakpoint, editor mode.
  * Extended in PHASE-STUDIO-18 with responsive preview state.
+ * Extended in PHASE-STUDIO-22 with component state editing.
  */
 
 import { create } from "zustand";
-import type { Breakpoint, EditorMode, PanelState, UIState } from "@/types/studio";
+import type { Breakpoint, EditorMode, PanelState, UIState, ComponentState } from "@/types/studio";
 import { 
   getBreakpointFromWidth,
   getDevicePreset,
@@ -44,6 +45,14 @@ export interface ShortcutsState {
   aiGeneratorOpen: boolean;
   /** Settings panel open state */
   settingsPanelOpen: boolean;
+}
+
+/** PHASE-STUDIO-22: Component state editing state */
+export interface ComponentStateEditingState {
+  /** Currently editing component state (default/hover/active/focus) */
+  editingState: ComponentState;
+  /** State being previewed in canvas (null = show editingState) */
+  previewingState: ComponentState | null;
 }
 
 export interface UIActions {
@@ -88,11 +97,15 @@ export interface UIActions {
   setSettingsPanelOpen: (open: boolean) => void;
   setDevicePreset: (presetId: string) => void;
   
+  // Component state editing (PHASE-STUDIO-22)
+  setEditingState: (state: ComponentState) => void;
+  setPreviewingState: (state: ComponentState | null) => void;
+  
   // Reset
   resetUI: () => void;
 }
 
-export type UIStore = UIState & UIActions & ResponsivePreviewState & ShortcutsState;
+export type UIStore = UIState & UIActions & ResponsivePreviewState & ShortcutsState & ComponentStateEditingState;
 
 // =============================================================================
 // CONSTANTS
@@ -107,7 +120,7 @@ const MAX_ZOOM = 4;
 // INITIAL STATE
 // =============================================================================
 
-const initialState: UIState & ResponsivePreviewState & ShortcutsState = {
+const initialState: UIState & ResponsivePreviewState & ShortcutsState & ComponentStateEditingState = {
   breakpoint: "desktop",
   zoom: DEFAULT_ZOOM,
   panels: {
@@ -133,6 +146,9 @@ const initialState: UIState & ResponsivePreviewState & ShortcutsState = {
   aiChatOpen: false,
   aiGeneratorOpen: false,
   settingsPanelOpen: false,
+  // Component state editing defaults (PHASE-STUDIO-22)
+  editingState: 'default',
+  previewingState: null,
 };
 
 // =============================================================================
@@ -346,6 +362,18 @@ export const useUIStore = create<UIStore>()((set, get) => ({
   },
 
   // ---------------------------------------------------------------------------
+  // COMPONENT STATE EDITING (PHASE-STUDIO-22)
+  // ---------------------------------------------------------------------------
+  
+  setEditingState: (state) => {
+    set({ editingState: state });
+  },
+  
+  setPreviewingState: (state) => {
+    set({ previewingState: state });
+  },
+
+  // ---------------------------------------------------------------------------
   // RESET
   // ---------------------------------------------------------------------------
   
@@ -373,3 +401,5 @@ export const selectPreviewOptions = (state: UIStore) => ({
   showDeviceFrame: state.showDeviceFrame,
   showRuler: state.showRuler,
 });
+export const selectEditingState = (state: UIStore) => state.editingState;
+export const selectPreviewingState = (state: UIStore) => state.previewingState;

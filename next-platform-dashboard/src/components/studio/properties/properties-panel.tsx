@@ -8,10 +8,15 @@
 
 import React, { useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { Settings, Trash2, Copy, ChevronDown, ChevronRight, MousePointer, Sparkles } from "lucide-react";
+import { Settings, Trash2, Copy, ChevronDown, ChevronRight, MousePointer, MousePointer2, Sparkles } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +32,7 @@ import { PanelHeader } from "@/components/studio/layout/panel-header";
 import { FieldRenderer } from "@/components/studio/fields/field-renderer";
 import { BreakpointIndicator, BreakpointSelectorCompact } from "@/components/studio/layout/breakpoint-selector";
 import { AIComponentChat, AIActionsPanel } from "@/components/studio/ai";
+import { StateEditor } from "@/components/studio/properties/state-editor";
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
 import { useEditorStore, useSelectionStore, useUIStore, useAIStore } from "@/lib/studio/store";
 import type { FieldGroup, ComponentDefinition, FieldDefinition } from "@/types/studio";
@@ -325,6 +331,24 @@ export function PropertiesPanel() {
         {componentId && (
           <div className="px-3 pb-4">
             <AIActionsPanel componentId={componentId} />
+          </div>
+        )}
+        
+        {/* States Editor (PHASE-STUDIO-22) */}
+        {componentId && component && (
+          <div className="border-t border-border">
+            <Collapsible defaultOpen={false}>
+              <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 text-left hover:bg-muted/50">
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  <MousePointer2 className="h-4 w-4" />
+                  States (Hover/Active/Focus)
+                </span>
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <StateEditor component={component} />
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         )}
       </ScrollArea>

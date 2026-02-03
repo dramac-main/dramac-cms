@@ -26,3 +26,10 @@ export { DeviceFrame } from './device-frame';
 // PHASE-STUDIO-20: Keyboard Shortcuts & Command Palette
 export { CommandPalette } from './command-palette';
 export { ShortcutsPanel } from './shortcuts-panel';
+
+// PHASE-STUDIO-22: Component States (Hover, Active, Focus)
+export { StateSelector, StateSelectorInline, StateBadge } from './state-selector';
+export { StateTestButton, StateTestMini } from './state-test-button';
+
+// PHASE-STUDIO-23: Export & Render Optimization
+export { ExportButton, ExportMini } from './export-button';

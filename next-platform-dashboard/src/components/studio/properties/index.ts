@@ -7,6 +7,9 @@ export { PropertiesPanel } from "./properties-panel";
 export { FieldRenderer } from "@/components/studio/fields/field-renderer";
 export { FieldWrapper } from "./field-wrapper";
 
+// State Editor (PHASE-STUDIO-22)
+export { StateEditor } from "./state-editor";
+
 // Field Editors
 export { TextField } from "./fields/text-field";
 export { TextareaField } from "./fields/textarea-field";

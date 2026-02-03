@@ -12,8 +12,9 @@ import type {
   StudioPageData, 
   StudioComponent,
   ZoneDefinition,
+  TransitionSettings,
 } from "@/types/studio";
-import { createEmptyPageData, parseZoneId, createZoneId } from "@/types/studio";
+import { createEmptyPageData, parseZoneId, createZoneId, STATE_EDITABLE_PROPERTIES } from "@/types/studio";
 import { generateComponentId } from "../utils";
 
 // =============================================================================
@@ -102,6 +103,25 @@ export interface EditorActions {
   getZoneComponents: (zoneId: string) => StudioComponent[];
   canDropInZone: (componentType: string, zoneId: string, zoneDef?: ZoneDefinition) => boolean;
   initializeZonesForComponent: (componentId: string, zones: Record<string, ZoneDefinition>) => void;
+  
+  // Component state operations (Phase STUDIO-22)
+  setComponentStateProps: (
+    componentId: string,
+    state: 'hover' | 'active' | 'focus',
+    props: Record<string, unknown>
+  ) => void;
+  clearComponentState: (
+    componentId: string,
+    state: 'hover' | 'active' | 'focus'
+  ) => void;
+  copyStateFromDefault: (
+    componentId: string,
+    state: 'hover' | 'active' | 'focus'
+  ) => void;
+  setComponentTransition: (
+    componentId: string,
+    transition: import('@/types/studio').TransitionSettings
+  ) => void;
 }
 
 export type EditorStore = EditorState & EditorActions;
@@ -529,6 +549,86 @@ export const useEditorStore = create<EditorStore>()(
               state.data.zones![zoneId] = [];
             }
           });
+        });
+      },
+      
+      // ---------------------------------------------------------------------------
+      // COMPONENT STATE OPERATIONS (Phase STUDIO-22)
+      // ---------------------------------------------------------------------------
+      
+      setComponentStateProps: (componentId, state, props) => {
+        set((draft) => {
+          const component = draft.data.components[componentId];
+          if (!component) return;
+          
+          // Initialize states object if needed
+          if (!component.states) {
+            component.states = {};
+          }
+          
+          // Initialize specific state if needed
+          if (!component.states[state]) {
+            component.states[state] = {};
+          }
+          
+          // Merge new props (filter to only state-editable properties)
+          for (const [key, value] of Object.entries(props)) {
+            if (STATE_EDITABLE_PROPERTIES.includes(key as typeof STATE_EDITABLE_PROPERTIES[number])) {
+              component.states[state]![key as typeof STATE_EDITABLE_PROPERTIES[number]] = value;
+            }
+          }
+          
+          draft.isDirty = true;
+        });
+      },
+      
+      clearComponentState: (componentId, state) => {
+        set((draft) => {
+          const component = draft.data.components[componentId];
+          if (!component?.states) return;
+          
+          delete component.states[state];
+          
+          // Clean up empty states object
+          if (Object.keys(component.states).length === 0) {
+            delete component.states;
+          }
+          
+          draft.isDirty = true;
+        });
+      },
+      
+      copyStateFromDefault: (componentId, state) => {
+        set((draft) => {
+          const component = draft.data.components[componentId];
+          if (!component) return;
+          
+          // Initialize states object if needed
+          if (!component.states) {
+            component.states = {};
+          }
+          
+          // Copy only state-editable props from default
+          const stateProps: Record<string, unknown> = {};
+          
+          for (const key of STATE_EDITABLE_PROPERTIES) {
+            if (component.props[key] !== undefined) {
+              stateProps[key] = component.props[key];
+            }
+          }
+          
+          component.states[state] = stateProps as typeof component.states[typeof state];
+          draft.isDirty = true;
+        });
+      },
+      
+      setComponentTransition: (componentId, transition) => {
+        set((draft) => {
+          const component = draft.data.components[componentId];
+          if (!component) return;
+          
+          component.transition = transition;
+          draft.isDirty = true;
         });
       },
     })),
