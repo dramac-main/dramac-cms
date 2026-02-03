@@ -9,8 +9,8 @@ import { create } from "zustand";
 import type { Breakpoint, EditorMode, PanelState, UIState } from "@/types/studio";
 import { 
   getBreakpointFromWidth,
-  getNextZoomLevel,
-  getPreviousZoomLevel,
+  getDevicePreset,
+  DEFAULT_DEVICE_FOR_BREAKPOINT,
 } from "@/lib/studio/data/device-presets";
 
 // =============================================================================
@@ -30,6 +30,20 @@ export interface ResponsivePreviewState {
   showDeviceFrame: boolean;
   /** Show ruler on canvas edges */
   showRuler: boolean;
+}
+
+/** PHASE-STUDIO-20: Keyboard shortcuts & Command palette state */
+export interface ShortcutsState {
+  /** Command palette open state */
+  commandPaletteOpen: boolean;
+  /** Shortcuts help panel open state */
+  shortcutsPanelOpen: boolean;
+  /** AI Chat panel open state */
+  aiChatOpen: boolean;
+  /** AI Page Generator open state */
+  aiGeneratorOpen: boolean;
+  /** Settings panel open state */
+  settingsPanelOpen: boolean;
 }
 
 export interface UIActions {
@@ -66,11 +80,19 @@ export interface UIActions {
   toggleDeviceFrame: () => void;
   toggleRuler: () => void;
   
+  // Keyboard shortcuts & Command palette (PHASE-STUDIO-20)
+  setCommandPaletteOpen: (open: boolean) => void;
+  setShortcutsPanelOpen: (open: boolean) => void;
+  setAIChatOpen: (open: boolean) => void;
+  setAIGeneratorOpen: (open: boolean) => void;
+  setSettingsPanelOpen: (open: boolean) => void;
+  setDevicePreset: (presetId: string) => void;
+  
   // Reset
   resetUI: () => void;
 }
 
-export type UIStore = UIState & UIActions & ResponsivePreviewState;
+export type UIStore = UIState & UIActions & ResponsivePreviewState & ShortcutsState;
 
 // =============================================================================
 // CONSTANTS
@@ -85,7 +107,7 @@ const MAX_ZOOM = 4;
 // INITIAL STATE
 // =============================================================================
 
-const initialState: UIState & ResponsivePreviewState = {
+const initialState: UIState & ResponsivePreviewState & ShortcutsState = {
   breakpoint: "desktop",
   zoom: DEFAULT_ZOOM,
   panels: {
@@ -105,6 +127,12 @@ const initialState: UIState & ResponsivePreviewState = {
   isLandscape: false,
   showDeviceFrame: false,
   showRuler: false,
+  // Shortcuts & Command palette defaults (PHASE-STUDIO-20)
+  commandPaletteOpen: false,
+  shortcutsPanelOpen: false,
+  aiChatOpen: false,
+  aiGeneratorOpen: false,
+  settingsPanelOpen: false,
 };
 
 // =============================================================================
@@ -146,7 +174,22 @@ export const useUIStore = create<UIStore>()((set, get) => ({
   // ---------------------------------------------------------------------------
   
   setBreakpoint: (breakpoint) => {
-    set({ breakpoint });
+    // Get the default device for this breakpoint
+    const defaultDeviceId = DEFAULT_DEVICE_FOR_BREAKPOINT[breakpoint];
+    const preset = getDevicePreset(defaultDeviceId);
+    
+    if (preset) {
+      // Sync device with breakpoint
+      set({
+        breakpoint,
+        selectedDeviceId: defaultDeviceId,
+        viewportWidth: preset.width,
+        viewportHeight: preset.height,
+      });
+    } else {
+      // Fallback: just set breakpoint
+      set({ breakpoint });
+    }
   },
 
   // ---------------------------------------------------------------------------
@@ -264,6 +307,42 @@ export const useUIStore = create<UIStore>()((set, get) => ({
   
   toggleRuler: () => {
     set((state) => ({ showRuler: !state.showRuler }));
+  },
+
+  // ---------------------------------------------------------------------------
+  // KEYBOARD SHORTCUTS & COMMAND PALETTE (PHASE-STUDIO-20)
+  // ---------------------------------------------------------------------------
+  
+  setCommandPaletteOpen: (open) => {
+    set({ commandPaletteOpen: open });
+  },
+  
+  setShortcutsPanelOpen: (open) => {
+    set({ shortcutsPanelOpen: open });
+  },
+  
+  setAIChatOpen: (open) => {
+    set({ aiChatOpen: open });
+  },
+  
+  setAIGeneratorOpen: (open) => {
+    set({ aiGeneratorOpen: open });
+  },
+  
+  setSettingsPanelOpen: (open) => {
+    set({ settingsPanelOpen: open });
+  },
+  
+  setDevicePreset: (presetId) => {
+    const preset = getDevicePreset(presetId);
+    if (preset) {
+      set({
+        selectedDeviceId: presetId,
+        viewportWidth: preset.width,
+        viewportHeight: preset.height,
+        breakpoint: getBreakpointFromWidth(preset.width),
+      });
+    }
   },
 
   // ---------------------------------------------------------------------------

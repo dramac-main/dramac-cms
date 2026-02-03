@@ -3,6 +3,7 @@
  * 
  * Wraps the editor with necessary providers and initializes state.
  * Handles module component loading for the site.
+ * Initializes keyboard shortcuts (PHASE-STUDIO-20).
  */
 
 "use client";
@@ -15,7 +16,8 @@ import {
   clearHistory,
 } from "@/lib/studio/store";
 import { initializeRegistry, isRegistryInitialized } from "@/lib/studio/registry";
-import { useModuleInitialization, useModuleSync } from "@/lib/studio/hooks/use-module-sync";
+import { useModuleInitialization, useModuleSync, useStudioShortcuts } from "@/lib/studio/hooks";
+import { CommandPalette, ShortcutsPanel } from "@/components/studio/features";
 import type { StudioPageData, PuckDataFormat } from "@/types/studio";
 import { createEmptyPageData, validatePageData, migrateFromPuckFormat } from "@/types/studio";
 
@@ -30,6 +32,8 @@ export interface StudioProviderProps {
   siteName: string;
   pageName: string;
   initialData?: unknown;
+  /** Callback when save is triggered via shortcut or command palette */
+  onSave?: () => Promise<void>;
 }
 
 // =============================================================================
@@ -43,6 +47,7 @@ export function StudioProvider({
   siteName: _siteName,
   pageName,
   initialData,
+  onSave,
 }: StudioProviderProps) {
   // Store actions
   const initialize = useEditorStore((s) => s.initialize);
@@ -57,6 +62,9 @@ export function StudioProvider({
   
   // Subscribe to real-time module changes
   useModuleSync(siteId);
+  
+  // Initialize keyboard shortcuts (Phase STUDIO-20)
+  useStudioShortcuts({ enabled: true, onSave });
 
   // Initialize editor on mount
   useEffect(() => {
@@ -118,22 +126,16 @@ export function StudioProvider({
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
-  // Handle keyboard shortcuts for save
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Cmd/Ctrl + S to save
-      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
-        e.preventDefault();
-        // TODO: Implement save action in later phase
-        toast.info("Save functionality coming in Phase STUDIO-06");
-      }
-    };
+  // Note: Keyboard shortcuts are now handled by useStudioShortcuts hook (Phase STUDIO-20)
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {/* Global dialogs - Phase STUDIO-20 */}
+      <CommandPalette onSave={onSave} />
+      <ShortcutsPanel />
+    </>
+  );
 }
 
 // =============================================================================

@@ -3,6 +3,7 @@
  * 
  * Top toolbar with common editor actions.
  * Updated in PHASE-STUDIO-18 with responsive preview controls.
+ * Updated in PHASE-STUDIO-20 with keyboard shortcuts button.
  */
 
 "use client";
@@ -29,6 +30,8 @@ import {
   CloudOff,
   Sparkles,
   Wand2,
+  Keyboard,
+  Command,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -356,6 +359,38 @@ export const StudioToolbar = memo(function StudioToolbar({
             <Play className="h-4 w-4" />
             <span>Publish</span>
           </Button>
+
+          {/* Command Palette Trigger (PHASE-STUDIO-20) */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => useUIStore.getState().setCommandPaletteOpen(true)}
+              >
+                <Command className="h-4 w-4" />
+                <span className="sr-only">Command palette</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Command Palette (⌘K)</TooltipContent>
+          </Tooltip>
+
+          {/* Keyboard Shortcuts (PHASE-STUDIO-20) */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => useUIStore.getState().setShortcutsPanelOpen(true)}
+              >
+                <Keyboard className="h-4 w-4" />
+                <span className="sr-only">Keyboard shortcuts</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Keyboard Shortcuts (⌘?)</TooltipContent>
+          </Tooltip>
 
           {/* More Actions */}
           <DropdownMenu>

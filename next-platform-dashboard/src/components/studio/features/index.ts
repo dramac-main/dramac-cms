@@ -22,3 +22,7 @@ export { DimensionsInput } from './dimensions-input';
 export { ZoomControls } from './zoom-controls';
 export { Ruler, RulerContainer } from './ruler';
 export { DeviceFrame } from './device-frame';
+
+// PHASE-STUDIO-20: Keyboard Shortcuts & Command Palette
+export { CommandPalette } from './command-palette';
+export { ShortcutsPanel } from './shortcuts-panel';

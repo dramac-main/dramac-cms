@@ -1,12 +1,158 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: February 3, 2026  
-**Current Phase**: DRAMAC Studio - Wave 6 (Advanced Features)  
-**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-6 ✅ COMPLETE**
+**Current Phase**: DRAMAC Studio - Wave 7 (Polish & Optimization)  
+**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: WAVES 1-6 ✅ → WAVE 7 READY 🟡**
 
 ---
 
-## ✅ WAVE 6: Advanced Features - PHASES 18-19 COMPLETE (February 3, 2026)
+## ✅ WAVE 6: Advanced Features - COMPLETE (February 3, 2026)
+
+### What Was Implemented
+
+**Phase 16 - Layers & Structure Panel**:
+- Component tree in bottom panel
+- Click to select, drag to reorder
+- Lock/unlock and hide/show components
+- Context menu on right-click
+- Search and filter
+
+**Phase 17 - History & Versioning**:
+- History timeline with undo/redo
+- Named snapshots (save/restore states)
+- Version comparison UI
+- Stored in IndexedDB + database
+
+**Phase 18 - Responsive Preview**:
+- Device presets (iPhone, iPad, Desktop, Custom)
+- Custom width/height input
+- Zoom controls (50-200%, Fit)
+- Device frame visualization
+- Ruler on canvas edges
+
+**Phase 19 - Nested Components & Zones**:
+- Components define drop zones
+- Zone restrictions enforced
+- Visual zone indicators
+- Zones in layers panel
+
+---
+
+## 🟡 WAVE 7: Polish & Optimization - READY (Next Up)
+
+### What Needs Implementation
+
+**Goal**: Professional polish and performance for production readiness.
+
+**Phase 20 - Keyboard Shortcuts**:
+- All shortcuts working (save, undo, copy, paste, delete, duplicate)
+- Command palette (Cmd/Ctrl+K) for quick actions
+- Shortcuts help panel (show all shortcuts)
+- Clipboard system for copy/paste between components
+
+**Phase 21 - Performance Optimization**:
+- Virtualized component list (@tanstack/react-virtual)
+- Memoized renders (prevent unnecessary re-renders)
+- Debounced store updates
+- Code-split panels (lazy load)
+- Performance metrics logging
+
+**Phase 22 - Component States (Hover, Active)**:
+- State selector (default/hover/active/focus)
+- Edit hover styles separately
+- Edit active/focus styles
+- State preview in canvas
+- CSS generation with :hover/:active/:focus
+- Transition settings
+
+**Phase 23 - Export & Render Optimization**:
+- Optimized HTML generation
+- Critical CSS extraction (inline above-fold)
+- Image optimization with srcset
+- Lazy loading for heavy components
+- Code splitting for published sites
+- Build script for optimized output
+
+### After Wave 7
+
+When complete:
+- Full keyboard workflow possible
+- Editor stays fast with 500+ components
+- Buttons can have hover effects (darker on hover, etc.)
+- Published sites load fast (Lighthouse 90+)
+- Professional export for deployment
+
+### Next Steps
+
+Give another AI agent the prompt at [phases/STUDIO-WAVE7-PROMPT.md](phases/STUDIO-WAVE7-PROMPT.md) to generate:
+1. `PHASE-STUDIO-20-KEYBOARD-SHORTCUTS.md`
+2. `PHASE-STUDIO-21-PERFORMANCE-OPTIMIZATION.md`
+3. `PHASE-STUDIO-22-COMPONENT-STATES.md`
+4. `PHASE-STUDIO-23-EXPORT-OPTIMIZATION.md`
+
+Then implement those 4 phases and return for Wave 8.
+
+### Latest Fixes Applied (Session 3 - Breakpoint-Device Sync)
+
+**Breakpoint Icons Now Sync with Device Selector**:
+
+1. **DEFAULT_DEVICE_FOR_BREAKPOINT Constant**:
+   - ✅ New: Added in `device-presets.ts`
+   - Maps each breakpoint to a default device: `mobile→iphone-15-pro`, `tablet→ipad-air`, `desktop→desktop-hd`
+   - Clicking the 📱💻🖥️ breakpoint icons now also sets the device selector
+
+2. **setBreakpoint Syncs Device**:
+   - ❌ Old: setBreakpoint only changed breakpoint, not device
+   - ✅ New: setBreakpoint looks up default device and sets `selectedDeviceId`, `viewportWidth`, `viewportHeight`
+   - This means clicking Desktop icon → Device selector shows "Desktop HD (1920×1080)"
+
+3. **Device Frames for ALL Device Types**:
+   - ❌ Old: Device frames only worked for phones/tablets
+   - ✅ New: Complete rewrite of `device-frame.tsx` with 4 frame components:
+     - `PhoneFrame`: Rounded bezel + notch/Dynamic Island + side buttons
+     - `TabletFrame`: Rounded bezel + speaker grille + camera dot
+     - `LaptopFrame`: Screen housing + camera notch + keyboard base + trackpad
+     - `DesktopFrame`: Monitor bezel + chin logo + stand neck + base
+   - ✅ New: CanvasFrame shows frames for ALL categories except 'custom'
+
+### Previous Fixes (Session 2)
+
+**Critical Canvas Fixes**:
+
+1. **Canvas Light Theme (Professional Editor Standard)**:
+   - ❌ Old: Canvas followed dark mode (`bg-background`)
+   - ✅ New: Canvas ALWAYS renders with light theme (`light` class + `bg-white text-gray-900`)
+   - This matches professional editors (Webflow, Figma, Framer) where canvas content appears as it would on the published site
+
+2. **Device Frame Toggle Now Works**:
+   - ❌ Old: ResponsiveDeviceFrame was missing `preset` prop - always returned no frame
+   - ✅ New: Gets device preset via `getDevicePreset(selectedDeviceId)` and passes to component
+
+3. **Rulers Fixed and Improved**:
+   - ❌ Old: Rulers used fixed sizing, poor visibility
+   - ✅ New: Rulers calculate proper dimensions based on `viewportWidth * zoom`
+   - ✅ New: Better contrast colors (`gray-100`/`gray-800` backgrounds)
+   - ✅ New: Improved tick visibility and label positioning
+   - ✅ New: Corner square properly styled with visible borders
+
+**EditorCanvas Integration Fixed**:
+- ❌ Old: Canvas used legacy `DeviceFrame` with hardcoded `BREAKPOINT_PIXELS`
+- ✅ New: Canvas uses `CanvasFrame` component that reads `viewportWidth`/`viewportHeight` from ui-store
+- ❌ Old: No ruler integration in canvas
+- ✅ New: Canvas wraps content with `RulerContainer` when `showRuler` is enabled
+- ❌ Old: Device frame toggle had no effect
+- ✅ New: Canvas uses `ResponsiveDeviceFrame` with preset when `showDeviceFrame` is enabled
+
+**DimensionsInput Arrow Keys Fixed**:
+- Added bounds (100-3000px) to prevent invalid values
+- Immediate local state update after arrow key press
+- Store and local state now stay in sync
+
+**ModuleSync Supabase Error Fixed**:
+- Changed from console.error to console.log for missing realtime
+- Added table existence check before subscribing
+- Graceful fallback when realtime is not configured
+- Returns `syncStatus` to components for UI feedback
 
 ### What Was Implemented
 
@@ -20,6 +166,7 @@
 - Ruler on canvas edges (horizontal/vertical with major/minor ticks)
 - Keyboard shortcuts: Cmd+=/- for zoom, Cmd+0 reset to 100%, Cmd+1 fit to screen
 - StudioFrame wrapper component with checkered background pattern
+- **CanvasFrame component** integrates rulers and device frames into canvas
 
 **Phase 19 - Nested Components & Zones** ✅:
 - ZoneDefinition type with acceptsChildren, allowedComponents, maxChildren, placeholder
@@ -31,16 +178,33 @@
 - Layers panel shows zones in hierarchy (different styling, not draggable)
 - Columns component updated to use new zone format
 
-### Current Capabilities (After Wave 6)
+### Current Capabilities (After Wave 6 + Session 3 Fixes)
 
 - ✅ Select any device preset → Canvas resizes to exact dimensions
-- ✅ Toggle device frame → Shows phone bezel with notch
+- ✅ Toggle device frame → Shows frame for ALL device types (phone/tablet/laptop/desktop)
 - ✅ Toggle ruler → Shows pixel rulers on canvas edges
 - ✅ Zoom in/out with shortcuts or dropdown
+- ✅ **Breakpoint icons sync with device selector** (click Desktop → device shows Desktop HD)
 - ✅ Components can define named drop zones
 - ✅ Zone restrictions enforced (only allowed components can drop)
 - ✅ Zones appear in layers panel hierarchy
 - ✅ Visual feedback during drag shows valid/invalid drop zones
+
+### Key File Changes
+
+**[editor-canvas.tsx](../next-platform-dashboard/src/components/studio/canvas/editor-canvas.tsx)**:
+- Added imports for `RulerContainer` and `DeviceFrame` (as `ResponsiveDeviceFrame`)
+- New `CanvasFrame` component uses `viewportWidth`, `viewportHeight`, `zoom`, `showRuler`, `showDeviceFrame` from ui-store
+- Replaced old `DeviceFrame` usage with `CanvasFrame` in render
+
+**[dimensions-input.tsx](../next-platform-dashboard/src/components/studio/features/dimensions-input.tsx)**:
+- Added bounds (100-3000px) in arrow key handler
+- Immediate local state sync after store update
+
+**[use-module-sync.ts](../next-platform-dashboard/src/lib/studio/hooks/use-module-sync.ts)**:
+- Added `syncStatus` state
+- Table existence check before subscription
+- Graceful error handling for CHANNEL_ERROR and TIMED_OUT
 
 ### Phases Still Needed for Complete Wave 6
 

@@ -256,6 +256,19 @@ export const MAX_ZOOM = 400;
 export const ZOOM_STEP = 25;
 
 // =============================================================================
+// DEFAULT DEVICE IDS PER BREAKPOINT
+// =============================================================================
+
+/**
+ * Default device to use when switching to a breakpoint via the breakpoint icons
+ */
+export const DEFAULT_DEVICE_FOR_BREAKPOINT: Record<'mobile' | 'tablet' | 'desktop', string> = {
+  mobile: 'iphone-15-pro',
+  tablet: 'ipad-air',
+  desktop: 'desktop-hd',
+};
+
+// =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================
 

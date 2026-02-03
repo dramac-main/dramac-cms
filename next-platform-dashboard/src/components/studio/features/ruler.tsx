@@ -3,6 +3,13 @@
  * 
  * Horizontal and vertical rulers for canvas measurement.
  * Created in PHASE-STUDIO-18.
+ * 
+ * ARCHITECTURE:
+ * - `length` = the UNZOOMED viewport dimension (e.g., 375 for iPhone)
+ * - `zoom` = current zoom level (e.g., 0.5 for 50%)
+ * - Ruler visual size = length × zoom (so it matches the zoomed canvas)
+ * - Tick positions are scaled by zoom
+ * - Labels show the UNZOOMED pixel values (0, 100, 200, etc.)
  */
 
 'use client';
@@ -16,14 +23,14 @@ import { cn } from '@/lib/utils';
 
 interface RulerProps {
   orientation: 'horizontal' | 'vertical';
-  length: number; // Viewport width or height
+  length: number; // UNZOOMED viewport width or height
   zoom: number; // Zoom as decimal (1 = 100%)
   className?: string;
 }
 
 interface RulerContainerProps {
-  width: number;
-  height: number;
+  width: number; // UNZOOMED viewport width
+  height: number; // UNZOOMED viewport height
   zoom: number;
   children: React.ReactNode;
 }
@@ -34,7 +41,7 @@ interface RulerContainerProps {
 
 const MAJOR_TICK_INTERVAL = 100; // Major tick every 100px
 const MINOR_TICK_INTERVAL = 10; // Minor tick every 10px
-const RULER_SIZE = 20; // Width/height of ruler in pixels
+const RULER_SIZE = 24; // Width/height of ruler in pixels
 
 // =============================================================================
 // RULER COMPONENT
@@ -43,61 +50,71 @@ const RULER_SIZE = 20; // Width/height of ruler in pixels
 export function Ruler({ orientation, length, zoom, className }: RulerProps) {
   const isHorizontal = orientation === 'horizontal';
   
-  // Calculate visible ticks based on zoom
+  // Visual size of the ruler (matches the zoomed canvas)
+  const displaySize = length * zoom;
+  
+  // Calculate visible ticks based on viewport length
+  // Tick labels show UNZOOMED values, positions are scaled by zoom
   const ticks = useMemo(() => {
     const result: Array<{ position: number; isMajor: boolean; label?: string }> = [];
-    const scaledLength = length;
     
-    for (let i = 0; i <= scaledLength; i += MINOR_TICK_INTERVAL) {
+    // Generate ticks for the full UNZOOMED length
+    for (let i = 0; i <= length; i += MINOR_TICK_INTERVAL) {
       const isMajor = i % MAJOR_TICK_INTERVAL === 0;
       result.push({
-        position: i * zoom,
+        position: i * zoom, // Scale position by zoom for visual placement
         isMajor,
-        label: isMajor ? String(i) : undefined,
+        label: isMajor ? String(i) : undefined, // Label shows UNZOOMED value
       });
     }
     
     return result;
   }, [length, zoom]);
   
-  const scaledSize = length * zoom;
-  
   return (
     <div
       className={cn(
-        'bg-muted/50 border-border select-none overflow-hidden',
-        isHorizontal ? 'h-5 border-b' : 'w-5 border-r',
+        'relative select-none overflow-hidden',
+        'bg-zinc-100 dark:bg-zinc-900',
+        isHorizontal ? 'border-b border-zinc-300 dark:border-zinc-700' : 'border-r border-zinc-300 dark:border-zinc-700',
         className
       )}
       style={{
-        [isHorizontal ? 'width' : 'height']: scaledSize,
+        [isHorizontal ? 'width' : 'height']: displaySize,
+        [isHorizontal ? 'height' : 'width']: RULER_SIZE,
       }}
     >
       {isHorizontal ? (
         // Horizontal ruler
         <svg 
-          width={scaledSize} 
+          width={displaySize} 
           height={RULER_SIZE} 
-          className="text-muted-foreground"
+          className="text-zinc-600 dark:text-zinc-400"
+          style={{ display: 'block' }}
         >
+          {/* Baseline */}
+          <line x1={0} y1={RULER_SIZE - 1} x2={displaySize} y2={RULER_SIZE - 1} stroke="currentColor" strokeWidth={1} opacity={0.3} />
+          
           {ticks.map((tick, i) => (
             <g key={i}>
               <line
                 x1={tick.position}
-                y1={tick.isMajor ? 0 : 12}
+                y1={tick.isMajor ? 8 : 16}
                 x2={tick.position}
                 y2={RULER_SIZE}
                 stroke="currentColor"
                 strokeWidth={tick.isMajor ? 1 : 0.5}
-                opacity={tick.isMajor ? 0.6 : 0.3}
+                opacity={tick.isMajor ? 0.7 : 0.35}
               />
-              {tick.label && (
+              {tick.label && tick.position > 0 && (
                 <text
                   x={tick.position + 3}
-                  y={10}
+                  y={7}
                   fontSize={9}
                   fill="currentColor"
-                  opacity={0.7}
+                  opacity={0.85}
+                  fontFamily="system-ui, -apple-system, sans-serif"
+                  fontWeight={500}
                 >
                   {tick.label}
                 </text>
@@ -109,31 +126,34 @@ export function Ruler({ orientation, length, zoom, className }: RulerProps) {
         // Vertical ruler
         <svg 
           width={RULER_SIZE} 
-          height={scaledSize} 
-          className="text-muted-foreground"
+          height={displaySize} 
+          className="text-zinc-600 dark:text-zinc-400"
+          style={{ display: 'block' }}
         >
+          {/* Baseline */}
+          <line x1={RULER_SIZE - 1} y1={0} x2={RULER_SIZE - 1} y2={displaySize} stroke="currentColor" strokeWidth={1} opacity={0.3} />
+          
           {ticks.map((tick, i) => (
             <g key={i}>
               <line
-                x1={tick.isMajor ? 0 : 12}
+                x1={tick.isMajor ? 8 : 16}
                 y1={tick.position}
                 x2={RULER_SIZE}
                 y2={tick.position}
                 stroke="currentColor"
                 strokeWidth={tick.isMajor ? 1 : 0.5}
-                opacity={tick.isMajor ? 0.6 : 0.3}
+                opacity={tick.isMajor ? 0.7 : 0.35}
               />
-              {tick.label && (
+              {tick.label && tick.position > 0 && (
                 <text
-                  x={2}
+                  x={4}
                   y={tick.position + 10}
                   fontSize={9}
                   fill="currentColor"
-                  opacity={0.7}
-                  style={{ 
-                    writingMode: 'vertical-rl',
-                    textOrientation: 'mixed',
-                  }}
+                  opacity={0.85}
+                  fontFamily="system-ui, -apple-system, sans-serif"
+                  fontWeight={500}
+                  transform={`rotate(-90, 4, ${tick.position + 10})`}
                 >
                   {tick.label}
                 </text>
@@ -152,23 +172,43 @@ export function Ruler({ orientation, length, zoom, className }: RulerProps) {
 
 export function RulerContainer({ width, height, zoom, children }: RulerContainerProps) {
   return (
-    <div className="relative">
-      {/* Corner square */}
-      <div className="absolute top-0 left-0 w-5 h-5 bg-muted/50 border-r border-b z-10" />
-      
-      {/* Horizontal ruler */}
-      <div className="absolute top-0 left-5">
-        <Ruler orientation="horizontal" length={width} zoom={zoom} />
+    <div className="relative inline-flex flex-col">
+      {/* Top row: Corner + Horizontal ruler */}
+      <div className="flex">
+        {/* Corner square */}
+        <div 
+          className="shrink-0 bg-zinc-100 dark:bg-zinc-900 border-r border-b border-zinc-300 dark:border-zinc-700"
+          style={{ width: RULER_SIZE, height: RULER_SIZE }}
+        >
+          {/* Diagonal line in corner */}
+          <svg width={RULER_SIZE} height={RULER_SIZE} className="text-zinc-400 dark:text-zinc-600">
+            <line x1={RULER_SIZE - 4} y1={4} x2={4} y2={RULER_SIZE - 4} stroke="currentColor" strokeWidth={1} />
+          </svg>
+        </div>
+        
+        {/* Horizontal ruler */}
+        <Ruler 
+          orientation="horizontal" 
+          length={width} 
+          zoom={zoom} 
+        />
       </div>
       
-      {/* Vertical ruler */}
-      <div className="absolute top-5 left-0">
-        <Ruler orientation="vertical" length={height} zoom={zoom} />
-      </div>
-      
-      {/* Content with offset for rulers */}
-      <div className="pl-5 pt-5">
-        {children}
+      {/* Bottom row: Vertical ruler + Content */}
+      <div className="flex">
+        {/* Vertical ruler */}
+        <div className="shrink-0">
+          <Ruler 
+            orientation="vertical" 
+            length={height} 
+            zoom={zoom} 
+          />
+        </div>
+        
+        {/* Content */}
+        <div className="relative">
+          {children}
+        </div>
       </div>
     </div>
   );

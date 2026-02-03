@@ -1,7 +1,7 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 3, 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: WAVES 1-6 ✅ COMPLETE**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: WAVES 1-6 ✅ → WAVE 7 READY 🟡**
 **Component Strategy**: Fresh premium components (NOT reusing basic Puck components)
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
@@ -35,7 +35,7 @@
 | **4** | 11-13 | AI Integration (Chat, Generator, Quick Actions) | ✅ **COMPLETE** |
 | **5** | 14-15 | Module Integration (Dynamic Loading, Custom Fields) | ✅ **COMPLETE** |
 | **6** | 16-19 | Advanced Features (Layers, History, Preview, Zones) | ✅ **COMPLETE** |
-| **7** | 20-23 | Polish & Optimization | ⏳ Ready |
+| **7** | 20-23 | Polish & Optimization (Shortcuts, Performance, States, Export) | 🟡 **READY TO IMPLEMENT** |
 | **8** | 24-26 | Templates & Extras | ⏳ Waiting |
 | **9** | 27 | Integration & Cleanup | ⏳ Waiting |
 
@@ -47,20 +47,21 @@
 |-------|-------------|-----------|--------|
 | STUDIO-16 | Layers & Structure Panel | 8-10 hrs | ✅ **COMPLETE** (earlier) |
 | STUDIO-17 | History & Versioning | 10-12 hrs | ✅ **COMPLETE** (earlier) |
-| STUDIO-18 | Responsive Preview | 6-8 hrs | ✅ **COMPLETE** |
+| STUDIO-18 | Responsive Preview | 6-8 hrs | ✅ **COMPLETE + FIXED** |
 | STUDIO-19 | Nested Components & Zones | 12-14 hrs | ✅ **COMPLETE** |
 
-#### PHASE-STUDIO-18: Responsive Preview ✅ COMPLETE
+#### PHASE-STUDIO-18: Responsive Preview ✅ COMPLETE + CANVAS INTEGRATION FIXED
 
-Key Files Created:
+Key Files Created/Modified:
 - `src/lib/studio/data/device-presets.ts` - 25+ device presets (iPhone, iPad, Desktop, 4K)
 - `src/components/studio/features/device-selector.tsx` - Device dropdown with categories
-- `src/components/studio/features/dimensions-input.tsx` - Editable width/height with arrow keys
+- `src/components/studio/features/dimensions-input.tsx` - Editable width/height with arrow keys (FIXED: bounds + immediate sync)
 - `src/components/studio/features/zoom-controls.tsx` - Zoom buttons, dropdown, toggles
 - `src/components/studio/features/ruler.tsx` - Canvas rulers (H/V) with major/minor ticks
 - `src/components/studio/features/device-frame.tsx` - Phone/tablet bezel visualization
 - `src/components/studio/core/studio-frame.tsx` - Canvas wrapper with rulers and frame
 - `src/lib/studio/store/ui-store.ts` - Extended with ResponsivePreviewState
+- **`src/components/studio/canvas/editor-canvas.tsx` - NEW: CanvasFrame component integrates all Phase 18 features**
 
 Features:
 - Device presets: iPhone SE, 14, 14 Pro Max, iPad, iPad Pro, MacBook, iMac, 4K
@@ -68,6 +69,14 @@ Features:
 - Device frame: Phone bezel with notch/Dynamic Island, status bar, home indicator
 - Rulers: Horizontal/vertical with 100px major ticks, 10px minor ticks
 - Orientation toggle: Portrait/landscape swap
+- **Canvas integration**: CanvasFrame reads viewportWidth/height from store, conditionally renders rulers/device frames
+
+Bug Fixes Applied:
+- ✅ Canvas now uses viewportWidth/viewportHeight from ui-store (was using hardcoded BREAKPOINT_PIXELS)
+- ✅ RulerContainer wraps canvas when showRuler is enabled
+- ✅ ResponsiveDeviceFrame wraps content when showDeviceFrame is enabled for phone/tablet
+- ✅ Dimensions input arrow keys update both store AND local state immediately
+- ✅ Dimensions input has bounds (100-3000px) to prevent invalid values
 
 #### PHASE-STUDIO-19: Nested Components & Zones ✅ COMPLETE
 
@@ -102,10 +111,16 @@ Features:
 - `src/lib/studio/registry/module-discovery.ts` - Server-side module discovery
 - `src/lib/studio/registry/module-loader.ts` - Dynamic module component loader
 - `src/lib/studio/store/module-store.ts` - Zustand store for module state
-- `src/lib/studio/hooks/use-module-sync.ts` - Real-time Supabase sync hook
+- `src/lib/studio/hooks/use-module-sync.ts` - Real-time Supabase sync hook **(FIXED: graceful fallback when realtime not configured)**
 - `src/modules/ecommerce/studio/index.ts` - E-Commerce module Studio exports
 - `src/modules/ecommerce/studio/components/*.tsx` - ProductCard, ProductGrid blocks
 - `src/components/studio/core/module-placeholder.tsx` - Placeholder for missing modules
+
+Bug Fixes Applied (Session 2):
+- ✅ ModuleSync no longer shows console.error when realtime isn't configured
+- ✅ Added table existence check before subscribing to Supabase channel
+- ✅ Graceful handling of CHANNEL_ERROR and TIMED_OUT statuses
+- ✅ Returns syncStatus for UI feedback
 
 #### Phase 15 Key Deliverables:
 - `src/components/studio/fields/custom-field-wrapper.tsx` - Custom field wrapper

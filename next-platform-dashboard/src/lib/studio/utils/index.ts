@@ -7,3 +7,5 @@
 export * from "./id-utils";
 export * from "./tree-utils";
 export * from "./component-utils";
+export * from "./debounce";
+export * from "./performance";

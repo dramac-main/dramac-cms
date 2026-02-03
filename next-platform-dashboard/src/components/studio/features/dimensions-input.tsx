@@ -75,11 +75,13 @@ export function DimensionsInput() {
       const direction = e.key === 'ArrowUp' ? 1 : -1;
       
       if (type === 'width') {
-        const newWidth = Math.max(1, viewportWidth + delta * direction);
+        const newWidth = Math.max(100, Math.min(3000, viewportWidth + delta * direction));
         setViewportDimensions(newWidth, viewportHeight);
+        setWidth(String(newWidth)); // Immediately update local state
       } else {
-        const newHeight = Math.max(1, viewportHeight + delta * direction);
+        const newHeight = Math.max(100, Math.min(3000, viewportHeight + delta * direction));
         setViewportDimensions(viewportWidth, newHeight);
+        setHeight(String(newHeight)); // Immediately update local state
       }
     }
   }, [viewportWidth, viewportHeight, setViewportDimensions]);

@@ -10,3 +10,10 @@ export {
   useModuleRefresh,
   useModules,
 } from "./use-module-sync";
+
+export {
+  useStudioShortcuts,
+  SHORTCUT_DEFINITIONS,
+  type ShortcutDefinition,
+  type ShortcutGroup,
+} from "./use-studio-shortcuts";

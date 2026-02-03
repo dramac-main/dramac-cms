@@ -8,14 +8,13 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import { ZoomIn, ZoomOut, Maximize, Ruler, Frame } from 'lucide-react';
+import { ZoomIn, ZoomOut, Ruler, Frame } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
 import {
   Tooltip,
@@ -25,7 +24,13 @@ import {
 } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { useUIStore } from '@/lib/studio/store/ui-store';
-import { ZOOM_LEVELS } from '@/lib/studio/data/device-presets';
+
+// =============================================================================
+// CONSTANTS
+// =============================================================================
+
+// Zoom levels as percentages for display
+const ZOOM_LEVEL_PERCENTS = [25, 50, 75, 100, 125, 150, 200, 300, 400];
 
 // =============================================================================
 // TYPES
@@ -64,11 +69,12 @@ export function ZoomControls({ canvasContainerRef }: ZoomControlsProps) {
     if (value === 'fit') {
       handleFitToScreen();
     } else {
+      // Convert percentage string to decimal (e.g., "100" -> 1.0)
       setZoom(parseInt(value, 10) / 100);
     }
   }, [handleFitToScreen, setZoom]);
   
-  // Convert zoom (0-4) to percentage for display
+  // Convert zoom (0.25-4.0) to percentage for display and matching select value
   const zoomPercent = Math.round(zoom * 100);
   
   return (
@@ -90,13 +96,13 @@ export function ZoomControls({ canvasContainerRef }: ZoomControlsProps) {
         </Tooltip>
         
         <Select value={String(zoomPercent)} onValueChange={handleZoomSelect}>
-          <SelectTrigger className="w-[70px] h-7 text-xs">
-            <SelectValue />
+          <SelectTrigger className="w-18 h-7 text-xs">
+            <span>{zoomPercent}%</span>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="fit" className="text-xs">Fit</SelectItem>
+            <SelectItem value="fit" className="text-xs">Fit to Screen</SelectItem>
             <Separator className="my-1" />
-            {ZOOM_LEVELS.map((level) => (
+            {ZOOM_LEVEL_PERCENTS.map((level) => (
               <SelectItem key={level} value={String(level)} className="text-xs">
                 {level}%
               </SelectItem>

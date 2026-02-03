@@ -3,10 +3,12 @@
  * 
  * Manages component selection state.
  * Supports single and multi-select modes.
+ * Updated in PHASE-STUDIO-20 with keyboard navigation.
  */
 
 import { create } from "zustand";
 import type { SelectionState } from "@/types/studio";
+import { useEditorStore } from "./editor-store";
 
 // =============================================================================
 // TYPES
@@ -36,6 +38,12 @@ export interface SelectionActions {
   
   /** Enable/disable multi-select mode */
   setMultiSelect: (enabled: boolean) => void;
+  
+  /** Select next component in tree (PHASE-STUDIO-20) */
+  selectNext: () => void;
+  
+  /** Select previous component in tree (PHASE-STUDIO-20) */
+  selectPrevious: () => void;
 }
 
 export type SelectionStore = SelectionState & SelectionActions;
@@ -145,6 +153,141 @@ export const useSelectionStore = create<SelectionStore>((set, get) => ({
       });
     } else {
       set({ isMultiSelect: enabled });
+    }
+  },
+
+  // ---------------------------------------------------------------------------
+  // KEYBOARD NAVIGATION (PHASE-STUDIO-20)
+  // ---------------------------------------------------------------------------
+
+  selectNext: () => {
+    const { componentId: selectedId } = get();
+    const editorState = useEditorStore.getState();
+    const { data } = editorState;
+    const components = data.components;
+    const rootChildren = data.root.children;
+
+    if (!selectedId) {
+      // No selection, select first root child
+      if (rootChildren.length > 0) {
+        set({
+          componentId: rootChildren[0],
+          componentIds: [rootChildren[0]],
+          isMultiSelect: false,
+        });
+      }
+      return;
+    }
+
+    const current = components[selectedId];
+    if (!current) return;
+
+    // If current has children, select first child
+    if (current.children && current.children.length > 0) {
+      const firstChild = current.children[0];
+      set({
+        componentId: firstChild,
+        componentIds: [firstChild],
+        isMultiSelect: false,
+      });
+      return;
+    }
+
+    // Otherwise, try next sibling
+    const parentId = current.parentId;
+    const siblings = parentId
+      ? components[parentId]?.children || []
+      : rootChildren;
+
+    const currentIndex = siblings.indexOf(selectedId);
+    if (currentIndex < siblings.length - 1) {
+      const nextSibling = siblings[currentIndex + 1];
+      set({
+        componentId: nextSibling,
+        componentIds: [nextSibling],
+        isMultiSelect: false,
+      });
+      return;
+    }
+
+    // No next sibling, go to parent's next sibling (recurse up)
+    let parent = parentId ? components[parentId] : null;
+    while (parent) {
+      const parentParentId = parent.parentId;
+      const parentSiblings = parentParentId
+        ? components[parentParentId]?.children || []
+        : rootChildren;
+      
+      const parentIndex = parentSiblings.indexOf(parent.id);
+      if (parentIndex < parentSiblings.length - 1) {
+        const nextParentSibling = parentSiblings[parentIndex + 1];
+        set({
+          componentId: nextParentSibling,
+          componentIds: [nextParentSibling],
+          isMultiSelect: false,
+        });
+        return;
+      }
+      parent = parentParentId ? components[parentParentId] : null;
+    }
+  },
+
+  selectPrevious: () => {
+    const { componentId: selectedId } = get();
+    const editorState = useEditorStore.getState();
+    const { data } = editorState;
+    const components = data.components;
+    const rootChildren = data.root.children;
+
+    if (!selectedId) {
+      // No selection, select last root child
+      if (rootChildren.length > 0) {
+        const lastChild = rootChildren[rootChildren.length - 1];
+        set({
+          componentId: lastChild,
+          componentIds: [lastChild],
+          isMultiSelect: false,
+        });
+      }
+      return;
+    }
+
+    const current = components[selectedId];
+    if (!current) return;
+
+    const parentId = current.parentId;
+    const siblings = parentId
+      ? components[parentId]?.children || []
+      : rootChildren;
+
+    const currentIndex = siblings.indexOf(selectedId);
+
+    if (currentIndex > 0) {
+      // Go to previous sibling, then to its last descendant
+      let target = siblings[currentIndex - 1];
+      let targetComp = components[target];
+
+      // Traverse to deepest last child
+      while (targetComp?.children && targetComp.children.length > 0) {
+        target = targetComp.children[targetComp.children.length - 1];
+        targetComp = components[target];
+      }
+
+      set({
+        componentId: target,
+        componentIds: [target],
+        isMultiSelect: false,
+      });
+      return;
+    }
+
+    // No previous sibling, go to parent
+    if (parentId) {
+      set({
+        componentId: parentId,
+        componentIds: [parentId],
+        isMultiSelect: false,
+      });
     }
   },
 }));

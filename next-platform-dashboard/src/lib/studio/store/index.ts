@@ -70,6 +70,9 @@ export { useHistoryStore } from "./history-store";
 
 export { useSnapshotStore } from "./snapshot-store";
 
+// Optimized selectors for Phase 21 performance
+export * from "./selectors";
+
 // =============================================================================
 // COMBINED HOOKS
 // =============================================================================

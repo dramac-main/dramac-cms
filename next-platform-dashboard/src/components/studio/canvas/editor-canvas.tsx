@@ -4,6 +4,11 @@
  * Renders the page content with all components.
  * Handles drop zones and component rendering.
  * Supports responsive breakpoint preview.
+ * 
+ * PHASE-STUDIO-18: Integrated responsive preview with rulers and device frames.
+ * 
+ * Canvas Design: Always renders content with light background (like published site).
+ * Professional editors (Webflow, Figma) use fixed light canvas regardless of editor theme.
  */
 
 "use client";
@@ -15,10 +20,11 @@ import { componentRegistry } from "@/lib/studio/registry/component-registry";
 import { DroppableCanvas, StudioSortableContext, SortableComponent } from "@/components/studio/dnd";
 import { ComponentWrapper } from "@/components/studio/core/component-wrapper";
 import { AIPageGenerator } from "@/components/studio/ai";
-import { BREAKPOINT_PIXELS, BREAKPOINT_LABELS } from "@/lib/studio/utils/responsive-utils";
+import { RulerContainer } from "@/components/studio/features/ruler";
+import { DeviceFrame as ResponsiveDeviceFrame } from "@/components/studio/features/device-frame";
+import { getDevicePreset } from "@/lib/studio/data/device-presets";
 import { Button } from "@/components/ui/button";
-import type { Breakpoint } from "@/types/studio";
-import { Plus, MousePointer, Smartphone, Tablet, Monitor, Sparkles, LayoutGrid } from "lucide-react";
+import { MousePointer, Sparkles, LayoutGrid } from "lucide-react";
 
 // =============================================================================
 // TYPES
@@ -42,13 +48,29 @@ function CanvasComponent({ componentId, index, parentId }: CanvasComponentProps)
   const component = useEditorStore((s) => s.data.components[componentId]);
   const breakpoint = useUIStore((s) => s.breakpoint);
   
+  // Get the render function from registry (memoized to avoid repeated lookups)
+  const definition = component ? componentRegistry.get(component.type) : null;
+  
+  // Resolve responsive props for the current breakpoint
+  // Components can access _breakpoint and _isEditor for context
+  // Note: This hook must be called unconditionally (before any early returns)
+  const resolvedProps = useMemo(() => {
+    if (!component) return {};
+    
+    const props: Record<string, unknown> = { ...component.props };
+    
+    // Add editor context
+    props._breakpoint = breakpoint;
+    props._isEditor = true;
+    
+    return props;
+  }, [component, breakpoint]);
+  
+  // Early returns after all hooks
   if (!component) {
     console.warn(`[Canvas] Component not found: ${componentId}`);
     return null;
   }
-  
-  // Get the render function from registry
-  const definition = componentRegistry.get(component.type);
   
   if (!definition) {
     console.warn(`[Canvas] Unknown component type: ${component.type}`);
@@ -74,18 +96,6 @@ function CanvasComponent({ componentId, index, parentId }: CanvasComponentProps)
   }
   
   const RenderComponent = definition.render;
-  
-  // Resolve responsive props for the current breakpoint
-  // Components can access _breakpoint and _isEditor for context
-  const resolvedProps = useMemo(() => {
-    const props: Record<string, unknown> = { ...component.props };
-    
-    // Add editor context
-    props._breakpoint = breakpoint;
-    props._isEditor = true;
-    
-    return props;
-  }, [component.props, breakpoint]);
   
   return (
     <SortableComponent
@@ -200,92 +210,119 @@ function EmptyCanvasState() {
 }
 
 // =============================================================================
-// BREAKPOINT INFO BAR
+// RESPONSIVE CANVAS FRAME
 // =============================================================================
 
-const BREAKPOINT_ICON_MAP: Record<Breakpoint, React.ComponentType<{ className?: string }>> = {
-  mobile: Smartphone,
-  tablet: Tablet,
-  desktop: Monitor,
-};
-
-function BreakpointInfoBar({ breakpoint }: { breakpoint: Breakpoint }) {
-  const Icon = BREAKPOINT_ICON_MAP[breakpoint];
-  const width = BREAKPOINT_PIXELS[breakpoint];
-  
-  return (
-    <div className="flex items-center justify-center gap-2 bg-muted/50 text-muted-foreground text-xs py-1.5 px-3 mb-2 rounded-md border border-border">
-      <Icon className="h-3.5 w-3.5" />
-      <span className="font-medium">{BREAKPOINT_LABELS[breakpoint]}</span>
-      <span className="text-muted-foreground/70">
-        {breakpoint === "desktop" ? "(Full width)" : `(${width}px)`}
-      </span>
-    </div>
-  );
-}
-
-// =============================================================================
-// DEVICE FRAME CONTAINER
-// =============================================================================
-
-interface DeviceFrameProps {
-  breakpoint: Breakpoint;
-  zoom: number;
+interface CanvasFrameProps {
   children: React.ReactNode;
 }
 
-const DEVICE_FRAME_STYLES: Record<Breakpoint, React.CSSProperties> = {
-  mobile: {
-    boxShadow: "0 0 0 12px hsl(var(--muted)), 0 0 0 14px hsl(var(--border))",
-    borderRadius: "36px",
-  },
-  tablet: {
-    boxShadow: "0 0 0 10px hsl(var(--muted)), 0 0 0 12px hsl(var(--border))",
-    borderRadius: "20px",
-  },
-  desktop: {
-    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-    borderRadius: "8px",
-  },
-};
-
-function DeviceFrame({ breakpoint, zoom, children }: DeviceFrameProps) {
-  const frameStyle = DEVICE_FRAME_STYLES[breakpoint];
+/**
+ * Responsive canvas frame that uses ui-store for dimensions and features.
+ * Supports rulers, device frames, and custom dimensions from Phase 18.
+ * 
+ * ARCHITECTURE:
+ * 1. Content always renders at FULL SIZE (viewportWidth × viewportHeight)
+ * 2. Zoom is applied via CSS transform on the outer container
+ * 3. Rulers measure the UNZOOMED viewport dimensions
+ * 4. Device frame wraps the zoomed content
+ * 
+ * IMPORTANT: Canvas content always renders with LIGHT theme (like a real website).
+ * This matches professional editors like Webflow, Figma, Framer.
+ */
+function CanvasFrame({ children }: CanvasFrameProps) {
+  const viewportWidth = useUIStore((s) => s.viewportWidth);
+  const viewportHeight = useUIStore((s) => s.viewportHeight);
+  const selectedDeviceId = useUIStore((s) => s.selectedDeviceId);
+  const zoom = useUIStore((s) => s.zoom);
+  const showDeviceFrame = useUIStore((s) => s.showDeviceFrame);
+  const showRuler = useUIStore((s) => s.showRuler);
   
-  // Width based on breakpoint
-  const getWidth = () => {
-    switch (breakpoint) {
-      case "mobile":
-        return `${BREAKPOINT_PIXELS.mobile}px`;
-      case "tablet":
-        return `${BREAKPOINT_PIXELS.tablet}px`;
-      case "desktop":
-      default:
-        return "100%";
-    }
-  };
+  // Get the selected device preset for frame styling
+  const devicePreset = useMemo(() => {
+    return getDevicePreset(selectedDeviceId);
+  }, [selectedDeviceId]);
   
-  return (
+  // Check if device frame should hide the default container styling
+  const hasDeviceFrame = showDeviceFrame && devicePreset && devicePreset.category !== 'custom';
+  
+  // The actual content with FORCED LIGHT THEME at FULL SIZE
+  // This is what gets zoomed via CSS transform
+  const contentFrame = (
     <div
       className={cn(
-        "bg-background transition-all duration-300 ease-out",
-        "relative border border-border",
-        // Desktop takes full width, allow overflow for scrolling
-        breakpoint === "desktop" ? "w-full overflow-visible" : "overflow-hidden"
+        // Force light theme on canvas content - websites are typically light
+        "light",
+        "bg-white text-gray-900",
+        "relative overflow-hidden"
       )}
       style={{
-        width: getWidth(),
-        minWidth: breakpoint === "mobile" ? `${BREAKPOINT_PIXELS.mobile}px` : undefined,
-        maxWidth: breakpoint === "desktop" ? "100%" : `${BREAKPOINT_PIXELS[breakpoint]}px`,
-        minHeight: "600px",
-        ...frameStyle,
-        transform: zoom !== 1 ? `scale(${zoom})` : undefined,
-        transformOrigin: "top center",
+        width: viewportWidth,
+        height: viewportHeight,
       }}
     >
       {children}
     </div>
   );
+  
+  // The zoomed container - applies zoom transform to the full-size content
+  // This wrapper handles the sizing so the content looks smaller/larger
+  // Only used when device frame is OFF
+  const zoomedContent = (
+    <div
+      className="relative shadow-lg rounded-lg overflow-hidden border border-gray-200"
+      style={{
+        width: viewportWidth * zoom,
+        height: viewportHeight * zoom,
+        borderRadius: 8,
+      }}
+    >
+      <div
+        style={{
+          width: viewportWidth,
+          height: viewportHeight,
+          transform: `scale(${zoom})`,
+          transformOrigin: 'top left',
+        }}
+      >
+        {contentFrame}
+      </div>
+    </div>
+  );
+  
+  // Wrap with device frame if enabled for ANY device type
+  let framedContent = zoomedContent;
+  
+  if (hasDeviceFrame) {
+    // Device frame renders at zoomed size - pass zoom for bezel scaling
+    // DeviceFrame handles ALL device types: phone, tablet, laptop, desktop
+    framedContent = (
+      <ResponsiveDeviceFrame 
+        preset={devicePreset}
+        width={viewportWidth} 
+        height={viewportHeight} 
+        zoom={zoom}
+      >
+        {/* Pass the unzoomed content - DeviceFrame handles the zoom internally */}
+        {contentFrame}
+      </ResponsiveDeviceFrame>
+    );
+  }
+  
+  // Wrap with rulers if enabled - rulers measure UNZOOMED viewport
+  if (showRuler) {
+    return (
+      <RulerContainer 
+        width={viewportWidth} 
+        height={viewportHeight} 
+        zoom={zoom}
+      >
+        {framedContent}
+      </RulerContainer>
+    );
+  }
+  
+  return framedContent;
 }
 
 // =============================================================================
@@ -295,10 +332,8 @@ function DeviceFrame({ breakpoint, zoom, children }: DeviceFrameProps) {
 export function EditorCanvas({ className }: EditorCanvasProps) {
   // State
   const data = useEditorStore((s) => s.data);
-  const breakpoint = useUIStore((s) => s.breakpoint);
   const zoom = useUIStore((s) => s.zoom);
   const showGrid = useUIStore((s) => s.showGrid);
-  const mode = useUIStore((s) => s.mode);
   const setZoom = useUIStore((s) => s.setZoom);
   const clearSelection = useSelectionStore((s) => s.clearSelection);
   
@@ -322,7 +357,7 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       const delta = e.deltaY > 0 ? -0.1 : 0.1;
-      const newZoom = Math.min(2, Math.max(0.25, zoom + delta));
+      const newZoom = Math.min(4, Math.max(0.25, zoom + delta));
       setZoom(newZoom);
     }
   }, [zoom, setZoom]);
@@ -338,16 +373,11 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
     };
   }, [handleWheel]);
   
-  const isPreviewMode = mode === "preview";
-  const isDesktop = breakpoint === "desktop";
-  
   return (
     <div
       ref={canvasRef}
       className={cn(
-        "flex w-full overflow-auto",
-        // Desktop: fill entire canvas area, allow natural scrolling
-        isDesktop ? "h-auto min-h-full p-4" : "h-full items-start justify-center p-8",
+        "flex w-full h-full overflow-auto items-start justify-center p-8",
         className
       )}
       onClick={handleCanvasClick}
@@ -359,18 +389,10 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
         backgroundSize: showGrid ? "20px 20px" : undefined,
       }}
     >
-      {/* Device frame container with breakpoint styling */}
-      <div className={cn(
-        "flex flex-col",
-        // Desktop takes full width, others are centered
-        isDesktop ? "w-full" : "items-center"
-      )}>
-        {/* Breakpoint indicator (not in preview mode) */}
-        {!isPreviewMode && (
-          <BreakpointInfoBar breakpoint={breakpoint} />
-        )}
-        
-        <DeviceFrame breakpoint={breakpoint} zoom={zoom}>
+      {/* Canvas frame container with responsive features */}
+      <div className="flex flex-col items-center">
+        {/* CanvasFrame uses viewportWidth/Height and supports rulers/device frames */}
+        <CanvasFrame>
           <DroppableCanvas>
             {hasComponents ? (
               <StudioSortableContext items={rootChildren}>
@@ -387,7 +409,7 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
               <EmptyCanvasState />
             )}
           </DroppableCanvas>
-        </DeviceFrame>
+        </CanvasFrame>
       </div>
     </div>
   );
