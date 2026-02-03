@@ -10,6 +10,24 @@
 import React from "react";
 
 // ============================================================================
+// Utility: Filter unsafe props for HTML elements
+// ============================================================================
+
+/**
+ * Filters out children and other unsafe props from spreading onto HTML elements.
+ * This prevents React Error #137 (void elements with children) and ensures
+ * only valid HTML attributes are passed to DOM elements.
+ */
+function _filterDOMProps(props: Record<string, unknown>): Record<string, unknown> {
+  const { 
+    children, // Never spread children onto elements
+    ...safeProps 
+  } = props;
+  void children; // Suppress unused variable warning
+  return safeProps;
+}
+
+// ============================================================================
 // Layout Components
 // ============================================================================
 
@@ -150,8 +168,9 @@ export function HeadingRender({
   level = 2, 
   align = "left",
   color,
+  children: _children, // Exclude children since we render text
   ...props 
-}: Record<string, unknown>) {
+}: Record<string, unknown> & { children?: React.ReactNode }) {
   const Tag = `h${level}` as keyof React.JSX.IntrinsicElements;
   const sizeClass = {
     1: "text-4xl md:text-5xl font-bold",
@@ -161,12 +180,14 @@ export function HeadingRender({
     5: "text-lg md:text-xl font-medium",
     6: "text-base md:text-lg font-medium",
   }[level as number] || "text-2xl font-bold";
+  
+  const { id, className } = props;
 
   return (
     <Tag 
-      className={`${sizeClass} text-${align}`}
+      className={`${sizeClass} text-${align} ${className || ""}`}
       style={{ color: color as string }}
-      {...props}
+      id={id as string | undefined}
     >
       {text as string}
     </Tag>
@@ -177,13 +198,16 @@ export function TextRender({
   text = "Text content", 
   align = "left",
   color,
+  children: _children, // Exclude children since we render text
   ...props 
-}: Record<string, unknown>) {
+}: Record<string, unknown> & { children?: React.ReactNode }) {
+  const { id, className } = props;
+  
   return (
     <p 
-      className={`text-base text-${align}`}
+      className={`text-base text-${align} ${className || ""}`}
       style={{ color: color as string }}
-      {...props}
+      id={id as string | undefined}
     >
       {text as string}
     </p>
@@ -199,8 +223,9 @@ export function ButtonRender({
   href = "#", 
   variant = "primary",
   size = "md",
+  children: _children, // Exclude children since we render label
   ...props 
-}: Record<string, unknown>) {
+}: Record<string, unknown> & { children?: React.ReactNode }) {
   const baseClass = "inline-flex items-center justify-center rounded-md font-medium transition-colors";
   const variantClass = {
     primary: "bg-blue-600 text-white hover:bg-blue-700",
@@ -212,12 +237,14 @@ export function ButtonRender({
     md: "px-4 py-2 text-base",
     lg: "px-6 py-3 text-lg",
   }[size as string] || "px-4 py-2 text-base";
+  
+  const { id, className } = props;
 
   return (
     <a 
       href={href as string}
-      className={`${baseClass} ${variantClass} ${sizeClass}`}
-      {...props}
+      className={`${baseClass} ${variantClass} ${sizeClass} ${className || ""}`}
+      id={id as string | undefined}
     >
       {label as string}
     </a>
@@ -234,19 +261,25 @@ export function ImageRender({
   width,
   height,
   objectFit = "cover",
+  children: _children, // Explicitly exclude children (void element)
   ...props 
-}: Record<string, unknown>) {
+}: Record<string, unknown> & { children?: React.ReactNode }) {
+  // Extract only safe HTML attributes for img
+  const { id, className, style, ...rest } = props;
+  void rest; // Discard any remaining props not suitable for img
+  
   return (
     <img 
       src={src as string}
       alt={alt as string}
-      className="w-full h-auto"
+      className={`w-full h-auto ${className || ""}`}
+      id={id as string | undefined}
       style={{ 
+        ...(style as React.CSSProperties || {}),
         width: width ? `${width}px` : "100%",
         height: height ? `${height}px` : "auto",
         objectFit: objectFit as "cover" | "contain" | "fill",
       }}
-      {...props}
     />
   );
 }
@@ -255,13 +288,17 @@ export function VideoRender({
   url = "", 
   autoplay = false,
   controls = true,
+  children: _children, // Explicitly exclude children (void-like element)
   ...props 
-}: Record<string, unknown>) {
+}: Record<string, unknown> & { children?: React.ReactNode }) {
+  // Extract only safe props
+  const { id, className } = props;
+  
   // Handle YouTube URLs
   if ((url as string).includes("youtube.com") || (url as string).includes("youtu.be")) {
     const videoId = (url as string).match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)?.[1];
     return (
-      <div className="aspect-video w-full" {...props}>
+      <div className={`aspect-video w-full ${className || ""}`} id={id as string | undefined}>
         <iframe 
           src={`https://www.youtube.com/embed/${videoId}${autoplay ? "?autoplay=1" : ""}`}
           className="w-full h-full"
@@ -277,8 +314,8 @@ export function VideoRender({
       src={url as string}
       autoPlay={autoplay as boolean}
       controls={controls as boolean}
-      className="w-full h-auto"
-      {...props}
+      className={`w-full h-auto ${className || ""}`}
+      id={id as string | undefined}
     />
   );
 }
@@ -286,11 +323,17 @@ export function VideoRender({
 export function MapRender({ 
   address = "New York, NY",
   height = 300,
+  children: _children, // Explicitly exclude children
   ...props 
-}: Record<string, unknown>) {
+}: Record<string, unknown> & { children?: React.ReactNode }) {
+  const { id, className } = props;
   const encodedAddress = encodeURIComponent(address as string);
   return (
-    <div style={{ height: `${height}px` }} {...props}>
+    <div 
+      style={{ height: `${height}px` }} 
+      id={id as string | undefined}
+      className={className as string | undefined}
+    >
       <iframe 
         src={`https://maps.google.com/maps?q=${encodedAddress}&output=embed`}
         className="w-full h-full border-0"
@@ -736,11 +779,16 @@ export function CarouselRender({
 }
 
 export function CountdownRender({ 
-  targetDate = new Date(Date.now() + 86400000).toISOString(),
+  targetDate: _targetDate = new Date(Date.now() + 86400000).toISOString(),
+  children: _children, // Exclude children
   ...props 
-}: Record<string, unknown>) {
+}: Record<string, unknown> & { children?: React.ReactNode }) {
+  const { id, className } = props;
   return (
-    <div className="flex justify-center gap-4" {...props}>
+    <div 
+      className={`flex justify-center gap-4 ${className || ""}`}
+      id={id as string | undefined}
+    >
       <div className="text-center">
         <div className="text-4xl font-bold">00</div>
         <div className="text-sm text-gray-600">Days</div>

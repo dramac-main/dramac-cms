@@ -18,7 +18,7 @@
 import React, { useMemo } from "react";
 import { ensureStudioFormat } from "../utils/migrate-puck-data";
 import { getComponent } from "../registry/component-registry";
-import type { StudioPageData, StudioComponent } from "@/types/studio";
+import type { StudioComponent } from "@/types/studio";
 
 // ============================================================================
 // Types
@@ -78,29 +78,46 @@ function ComponentRenderer({
   // Render component
   const RenderComponent = definition.render;
   
-  // Get children if this component has any
-  const children = component.children?.map((childId) => {
-    const childComponent = components[childId];
-    if (!childComponent) return null;
-    
-    return (
-      <ComponentRenderer
-        key={childId}
-        component={childComponent}
-        components={components}
-        depth={depth + 1}
-      />
-    );
-  }).filter(Boolean);
+  // Only get children if this component accepts them
+  // This prevents passing children to void elements like img, input, etc.
+  const acceptsChildren = definition.acceptsChildren === true;
   
+  const children = acceptsChildren && component.children?.length 
+    ? component.children.map((childId) => {
+        const childComponent = components[childId];
+        if (!childComponent) return null;
+        
+        return (
+          <ComponentRenderer
+            key={childId}
+            component={childComponent}
+            components={components}
+            depth={depth + 1}
+          />
+        );
+      }).filter(Boolean)
+    : null;
+  
+  // Only pass children prop if the component accepts children AND has children
+  if (acceptsChildren && children && children.length > 0) {
+    return (
+      <RenderComponent
+        key={component.id}
+        {...component.props}
+        id={component.id}
+      >
+        {children}
+      </RenderComponent>
+    );
+  }
+  
+  // For components that don't accept children, render without children prop
   return (
     <RenderComponent
       key={component.id}
       {...component.props}
       id={component.id}
-    >
-      {children && children.length > 0 ? children : undefined}
-    </RenderComponent>
+    />
   );
 }
 
