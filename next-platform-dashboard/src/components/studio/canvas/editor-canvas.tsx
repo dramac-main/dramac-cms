@@ -6,6 +6,7 @@
  * Supports responsive breakpoint preview.
  * 
  * PHASE-STUDIO-18: Integrated responsive preview with rulers and device frames.
+ * PHASE-STUDIO-28: Fixed component registry initialization check.
  * 
  * Canvas Design: Always renders content with light background (like published site).
  * Professional editors (Webflow, Figma) use fixed light canvas regardless of editor theme.
@@ -17,6 +18,7 @@ import React, { useMemo, useState, useRef, useCallback, useEffect } from "react"
 import { cn } from "@/lib/utils";
 import { useEditorStore, useUIStore, useSelectionStore } from "@/lib/studio/store";
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
+import { initializeRegistry, isRegistryInitialized } from "@/lib/studio/registry";
 import { DroppableCanvas, StudioSortableContext, SortableComponent } from "@/components/studio/dnd";
 import { ComponentWrapper } from "@/components/studio/core/component-wrapper";
 import { AIPageGenerator } from "@/components/studio/ai";
@@ -337,12 +339,24 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
   const setZoom = useUIStore((s) => s.setZoom);
   const clearSelection = useSelectionStore((s) => s.clearSelection);
   
+  // Track registry initialization
+  const [registryReady, setRegistryReady] = useState(isRegistryInitialized());
+  
   // Canvas ref for wheel events
   const canvasRef = useRef<HTMLDivElement>(null);
   
   // Get root children
   const rootChildren = data.root.children;
   const hasComponents = rootChildren.length > 0;
+  
+  // Ensure registry is initialized
+  useEffect(() => {
+    if (!isRegistryInitialized()) {
+      console.log("[EditorCanvas] Initializing component registry...");
+      initializeRegistry();
+      setRegistryReady(true);
+    }
+  }, []);
   
   // Handle click on canvas (deselect)
   const handleCanvasClick = (e: React.MouseEvent) => {
@@ -388,6 +402,17 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
       canvas.removeEventListener("wheel", wheelHandler);
     };
   }, [handleWheel]);
+  
+  // Wait for registry to be ready before rendering components
+  if (!registryReady) {
+    return (
+      <div className={cn("flex w-full h-full items-center justify-center", className)}>
+        <div className="animate-pulse text-muted-foreground">
+          Loading components...
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div
