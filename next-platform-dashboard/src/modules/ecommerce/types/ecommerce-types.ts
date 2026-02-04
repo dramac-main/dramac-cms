@@ -649,3 +649,70 @@ export interface ActivityItem {
 }
 
 export type StatsPeriod = 'today' | 'week' | 'month' | 'year'
+
+// ============================================================================
+// ENHANCED PRODUCT MANAGEMENT TYPES (Phase ECOM-02)
+// ============================================================================
+
+export interface ProductTableFilters {
+  search: string
+  status: ProductStatus | 'all'
+  category: string | 'all'
+  stockLevel: 'all' | 'in_stock' | 'low_stock' | 'out_of_stock'
+  priceMin: number | null
+  priceMax: number | null
+  dateFrom: string | null
+  dateTo: string | null
+  featured: boolean | null
+}
+
+export interface ProductTableColumn {
+  id: string
+  label: string
+  visible: boolean
+  sortable: boolean
+}
+
+export type BulkAction = 
+  | 'delete'
+  | 'set_active'
+  | 'set_draft'
+  | 'set_archived'
+  | 'assign_category'
+  | 'adjust_price'
+  | 'adjust_stock'
+
+export interface BulkActionResult {
+  success: boolean
+  affected: number
+  errors: string[]
+}
+
+export interface ProductImportRow {
+  name: string
+  sku?: string
+  description?: string
+  base_price: number
+  compare_at_price?: number
+  quantity?: number
+  category?: string
+  status?: ProductStatus
+  images?: string
+  track_inventory?: boolean
+  low_stock_threshold?: number
+}
+
+export interface ProductImportResult {
+  success: boolean
+  imported: number
+  skipped: number
+  errors: Array<{ row: number; message: string }>
+}
+
+export interface ProductExportOptions {
+  format: 'csv' | 'xlsx'
+  includeFields: string[]
+  filters?: ProductTableFilters
+  includeVariants: boolean
+  includeImages: boolean
+}
