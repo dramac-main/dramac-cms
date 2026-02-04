@@ -17,7 +17,8 @@ export const metadata: Metadata = {
 async function getClientDomains(clientId: string) {
   const supabase = await createClient();
   
-  const { data: domains, error } = await supabase
+  // Cast to any to bypass strict typing for tables not in generated types
+  const { data: domains, error } = await (supabase as any)
     .from('domains')
     .select('*')
     .eq('client_id', clientId)

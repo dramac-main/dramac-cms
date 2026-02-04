@@ -17,7 +17,8 @@ async function getClientEmailAccounts(clientId: string) {
   const supabase = await createClient();
   
   // Get domains for this client
-  const { data: domains } = await supabase
+  // Cast to any to bypass strict typing for tables not in generated types
+  const { data: domains } = await (supabase as any)
     .from('domains')
     .select('id')
     .eq('client_id', clientId);
@@ -26,10 +27,11 @@ async function getClientEmailAccounts(clientId: string) {
     return [];
   }
   
-  const domainIds = domains.map(d => d.id);
+  const domainIds = domains.map((d: any) => d.id);
   
   // Get email accounts for those domains
-  const { data: accounts, error } = await supabase
+  // Cast to any to bypass strict typing for tables not in generated types
+  const { data: accounts, error } = await (supabase as any)
     .from('domain_email_accounts')
     .select(`
       *,
