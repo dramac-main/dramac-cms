@@ -7,7 +7,7 @@
  */
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { EcommerceSidebar, EcommerceHeader } from './layout'
 import { HomeView } from './views/home-view'
 import { ProductsView } from './views/products-view'
@@ -15,12 +15,12 @@ import { OrdersView } from './views/orders-view'
 import { CategoriesView } from './views/categories-view'
 import { DiscountsView } from './views/discounts-view'
 import { AnalyticsView } from './views/analytics-view'
+import { SettingsView } from './views/settings-view'
 import { CommandPalette } from './command-palette'
 import { EcommerceProvider, useEcommerce } from '../context/ecommerce-context'
 import { CreateProductDialog } from './dialogs/create-product-dialog'
 import { CreateCategoryDialog } from './dialogs/create-category-dialog'
 import { CreateDiscountDialog } from './dialogs/create-discount-dialog'
-import { EcommerceSettingsDialog } from './dialogs/ecommerce-settings-dialog'
 import { ViewProductDialog } from './dialogs/view-product-dialog'
 import { Button } from '@/components/ui/button'
 import { RefreshCw } from 'lucide-react'
@@ -42,10 +42,12 @@ interface EcommerceDashboardProps {
 // ============================================================================
 
 function EcommerceDashboardContent({ 
-  siteId, 
+  siteId,
+  agencyId,
   initialView 
 }: { 
   siteId: string
+  agencyId: string
   initialView?: string 
 }) {
   const { 
@@ -78,7 +80,6 @@ function EcommerceDashboardContent({
   const [showCreateProduct, setShowCreateProduct] = useState(false)
   const [showCreateCategory, setShowCreateCategory] = useState(false)
   const [showCreateDiscount, setShowCreateDiscount] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null)
   const [showViewProduct, setShowViewProduct] = useState(false)
 
@@ -108,14 +109,6 @@ function EcommerceDashboardContent({
     setActiveView('orders')
     // TODO: Pass orderId to OrdersView to open detail dialog
   }, [])
-
-  // Handle settings view navigation
-  useEffect(() => {
-    if (activeView === 'settings') {
-      setShowSettings(true)
-      setActiveView('home') // Return to home after opening settings
-    }
-  }, [activeView])
 
   // Error state
   if (error) {
@@ -151,7 +144,7 @@ function EcommerceDashboardContent({
           onCreateProduct={() => setShowCreateProduct(true)}
           onCreateCategory={() => setShowCreateCategory(true)}
           onCreateDiscount={() => setShowCreateDiscount(true)}
-          onOpenSettings={() => setShowSettings(true)}
+          onOpenSettings={() => setActiveView('settings')}
           onRefresh={handleRefresh}
           isRefreshing={isRefreshing || isLoading}
         />
@@ -205,6 +198,10 @@ function EcommerceDashboardContent({
           {activeView === 'analytics' && (
             <AnalyticsView />
           )}
+
+          {activeView === 'settings' && (
+            <SettingsView siteId={siteId} agencyId={agencyId} />
+          )}
         </main>
       </div>
 
@@ -237,11 +234,6 @@ function EcommerceDashboardContent({
         onOpenChange={setShowCreateDiscount}
       />
 
-      <EcommerceSettingsDialog
-        open={showSettings}
-        onOpenChange={setShowSettings}
-      />
-
       {viewingProduct && (
         <ViewProductDialog
           open={showViewProduct}
@@ -266,7 +258,8 @@ export function EcommerceDashboard({
   return (
     <EcommerceProvider siteId={siteId} agencyId={agencyId}>
       <EcommerceDashboardContent 
-        siteId={siteId} 
+        siteId={siteId}
+        agencyId={agencyId}
         initialView={initialView} 
       />
     </EcommerceProvider>
