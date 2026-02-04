@@ -678,18 +678,34 @@ export function TextRender({
     maxWidth: !maxWidthMap[maxWidth] && maxWidth !== "none" ? maxWidth : undefined,
   };
   
-  // Create the element with the appropriate tag
-  const Tag = htmlTag as keyof JSX.IntrinsicElements;
+  // Valid HTML tags for text content
+  const validTags = ["p", "span", "div", "h1", "h2", "h3", "h4", "h5", "h6"] as const;
+  type ValidTag = typeof validTags[number];
+  const tag: ValidTag = validTags.includes(htmlTag as ValidTag) ? (htmlTag as ValidTag) : "p";
   
-  return (
-    <Tag
-      id={id}
-      className={`${sizeClass} ${alignClasses} ${mbClasses} ${weightClass} ${leadingClass} ${maxWClass} ${italic ? "italic" : ""} ${textDecorationClass} ${textTransformClass} ${className}`.trim().replace(/\s+/g, ' ')}
-      style={style}
-    >
-      {children || text}
-    </Tag>
-  );
+  const baseClassName = `${sizeClass} ${alignClasses} ${mbClasses} ${weightClass} ${leadingClass} ${maxWClass} ${italic ? "italic" : ""} ${textDecorationClass} ${textTransformClass} ${className}`.trim().replace(/\s+/g, ' ');
+  
+  // Render based on tag type
+  switch (tag) {
+    case "h1":
+      return <h1 id={id} className={baseClassName} style={style}>{children || text}</h1>;
+    case "h2":
+      return <h2 id={id} className={baseClassName} style={style}>{children || text}</h2>;
+    case "h3":
+      return <h3 id={id} className={baseClassName} style={style}>{children || text}</h3>;
+    case "h4":
+      return <h4 id={id} className={baseClassName} style={style}>{children || text}</h4>;
+    case "h5":
+      return <h5 id={id} className={baseClassName} style={style}>{children || text}</h5>;
+    case "h6":
+      return <h6 id={id} className={baseClassName} style={style}>{children || text}</h6>;
+    case "span":
+      return <span id={id} className={baseClassName} style={style}>{children || text}</span>;
+    case "div":
+      return <div id={id} className={baseClassName} style={style}>{children || text}</div>;
+    default:
+      return <p id={id} className={baseClassName} style={style}>{children || text}</p>;
+  }
 }
 
 // ============================================================================
@@ -811,316 +827,1801 @@ export function QuoteRender({
 }
 
 // ============================================================================
-// BUTTON - Fully customizable button
+// BUTTON PROPS - Premium Button with 60+ properties
 // ============================================================================
 
 export interface ButtonProps {
+  // Content
   label?: string;
   children?: React.ReactNode;
-  href?: string;
-  target?: "_self" | "_blank";
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "link" | "destructive";
-  size?: "xs" | "sm" | "md" | "lg" | "xl";
-  backgroundColor?: string;
-  textColor?: string;
-  borderColor?: string;
-  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "full";
-  fullWidth?: boolean;
-  fullWidthMobile?: boolean;
   iconLeft?: React.ReactNode;
   iconRight?: React.ReactNode;
+  iconEmoji?: string;
+  iconPosition?: "left" | "right" | "only";
+  
+  // Link & Action
+  href?: string;
+  target?: "_self" | "_blank";
+  type?: "button" | "submit" | "reset";
+  onClick?: () => void;
+  
+  // Variant & Style
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "link" | "destructive" | "success" | "warning" | "gradient";
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  
+  // Colors
+  backgroundColor?: string;
+  hoverBackgroundColor?: string;
+  activeBackgroundColor?: string;
+  textColor?: string;
+  hoverTextColor?: string;
+  borderColor?: string;
+  hoverBorderColor?: string;
+  
+  // Gradient (for gradient variant)
+  gradientFrom?: string;
+  gradientTo?: string;
+  gradientDirection?: "to-r" | "to-l" | "to-t" | "to-b" | "to-br" | "to-bl" | "to-tr" | "to-tl";
+  
+  // Border & Radius
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "full";
+  borderWidth?: "0" | "1" | "2" | "3";
+  borderStyle?: "solid" | "dashed" | "dotted";
+  
+  // Shadow
+  shadow?: "none" | "sm" | "md" | "lg" | "xl";
+  hoverShadow?: "none" | "sm" | "md" | "lg" | "xl";
+  glowOnHover?: boolean;
+  glowColor?: string;
+  
+  // Width & Sizing
+  fullWidth?: boolean;
+  fullWidthMobile?: boolean;
+  minWidth?: string;
+  paddingX?: "xs" | "sm" | "md" | "lg" | "xl";
+  paddingY?: "xs" | "sm" | "md" | "lg" | "xl";
+  
+  // Typography
+  fontWeight?: "normal" | "medium" | "semibold" | "bold";
+  fontFamily?: string;
+  textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
+  letterSpacing?: "normal" | "wide" | "wider" | "widest";
+  
+  // Animation & Effects
+  hoverEffect?: "none" | "lift" | "scale" | "pulse" | "shine";
+  transitionDuration?: "fast" | "normal" | "slow";
+  animateOnLoad?: boolean;
+  loadingAnimation?: "spinner" | "dots" | "pulse";
+  
+  // States
   disabled?: boolean;
   loading?: boolean;
-  shadow?: "none" | "sm" | "md" | "lg";
+  loadingText?: string;
+  
+  // Focus
+  focusRingColor?: string;
+  focusRingWidth?: "1" | "2" | "3" | "4";
+  focusRingOffset?: "0" | "1" | "2";
+  
+  // Icon Styling
+  iconSize?: "xs" | "sm" | "md" | "lg";
+  iconGap?: "xs" | "sm" | "md" | "lg";
+  iconColor?: string;
+  
+  // Badge/Notification
+  showBadge?: boolean;
+  badgeText?: string;
+  badgeColor?: string;
+  badgeTextColor?: string;
+  badgePosition?: "top-right" | "top-left" | "bottom-right" | "bottom-left";
+  
+  // Tooltip
+  tooltip?: string;
+  tooltipPosition?: "top" | "bottom" | "left" | "right";
+  
+  // Accessibility
+  ariaLabel?: string;
+  ariaDescribedBy?: string;
+  tabIndex?: number;
+  
+  // Misc
   id?: string;
   className?: string;
-  onClick?: () => void;
-  type?: "button" | "submit" | "reset";
 }
 
 export function ButtonRender({
+  // Content
   label = "Button",
   children,
-  href,
-  target = "_self",
-  variant = "primary",
-  size = "md",
-  backgroundColor,
-  textColor,
-  borderColor,
-  borderRadius = "md",
-  fullWidth = false,
-  fullWidthMobile = false,
   iconLeft,
   iconRight,
+  iconEmoji,
+  iconPosition = "left",
+  
+  // Link & Action
+  href,
+  target = "_self",
+  type = "button",
+  onClick,
+  
+  // Variant & Style
+  variant = "primary",
+  size = "md",
+  
+  // Colors
+  backgroundColor,
+  hoverBackgroundColor,
+  textColor,
+  hoverTextColor,
+  borderColor,
+  hoverBorderColor,
+  
+  // Gradient
+  gradientFrom = "#3b82f6",
+  gradientTo = "#8b5cf6",
+  gradientDirection = "to-r",
+  
+  // Border & Radius
+  borderRadius = "md",
+  borderWidth = "1",
+  borderStyle = "solid",
+  
+  // Shadow
+  shadow = "none",
+  hoverShadow,
+  glowOnHover = false,
+  glowColor = "#3b82f6",
+  
+  // Width & Sizing
+  fullWidth = false,
+  fullWidthMobile = false,
+  minWidth,
+  paddingX,
+  paddingY,
+  
+  // Typography
+  fontWeight = "medium",
+  fontFamily,
+  textTransform = "none",
+  letterSpacing = "normal",
+  
+  // Animation & Effects
+  hoverEffect = "none",
+  transitionDuration = "normal",
+  loadingAnimation = "spinner",
+  
+  // States
   disabled = false,
   loading = false,
-  shadow = "none",
+  loadingText,
+  
+  // Focus
+  focusRingColor = "#3b82f6",
+  focusRingWidth = "2",
+  focusRingOffset = "2",
+  
+  // Icon Styling
+  iconSize = "md",
+  iconGap = "sm",
+  iconColor,
+  
+  // Badge
+  showBadge = false,
+  badgeText,
+  badgeColor = "#ef4444",
+  badgeTextColor = "#ffffff",
+  badgePosition = "top-right",
+  
+  // Tooltip
+  tooltip,
+  tooltipPosition = "top",
+  
+  // Accessibility
+  ariaLabel,
+  ariaDescribedBy,
+  tabIndex,
+  
+  // Misc
   id,
   className = "",
-  onClick,
-  type = "button",
 }: ButtonProps) {
+  // Size classes
   const sizeClasses = {
-    xs: "px-2.5 py-1 text-xs gap-1",
-    sm: "px-3 py-1.5 text-sm gap-1.5",
-    md: "px-4 py-2 text-sm md:text-base gap-2",
-    lg: "px-6 py-3 text-base md:text-lg gap-2",
-    xl: "px-8 py-4 text-lg md:text-xl gap-2.5",
+    xs: "px-2.5 py-1 text-xs",
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2 text-sm md:text-base",
+    lg: "px-6 py-3 text-base md:text-lg",
+    xl: "px-8 py-4 text-lg md:text-xl",
   }[size];
 
+  // Variant classes
   const variantClasses = {
     primary: "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 border-transparent",
     secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 active:bg-gray-300 border-transparent",
-    outline: "bg-transparent text-gray-900 hover:bg-gray-50 active:bg-gray-100 border-gray-300 border",
+    outline: "bg-transparent text-gray-900 hover:bg-gray-50 active:bg-gray-100 border-gray-300",
     ghost: "bg-transparent text-gray-700 hover:bg-gray-100 active:bg-gray-200 border-transparent",
     link: "bg-transparent text-blue-600 hover:text-blue-700 hover:underline border-transparent p-0",
     destructive: "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 border-transparent",
+    success: "bg-green-600 text-white hover:bg-green-700 active:bg-green-800 border-transparent",
+    warning: "bg-yellow-500 text-white hover:bg-yellow-600 active:bg-yellow-700 border-transparent",
+    gradient: "",
   }[variant];
 
-  const radiusClass = { none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl", full: "rounded-full" }[borderRadius];
-  const shadowClass = { none: "", sm: "shadow-sm hover:shadow", md: "shadow hover:shadow-md", lg: "shadow-md hover:shadow-lg" }[shadow];
+  // Radius
+  const radiusClass = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    full: "rounded-full",
+  }[borderRadius];
+
+  // Shadow
+  const shadowClass = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow",
+    lg: "shadow-md",
+    xl: "shadow-lg",
+  }[shadow];
+
+  // Hover shadow
+  const hoverShadowClass = hoverShadow ? {
+    none: "hover:shadow-none",
+    sm: "hover:shadow-sm",
+    md: "hover:shadow",
+    lg: "hover:shadow-md",
+    xl: "hover:shadow-lg",
+  }[hoverShadow] : "";
+
+  // Width
   const widthClasses = fullWidth ? "w-full justify-center" : fullWidthMobile ? "w-full md:w-auto justify-center md:justify-start" : "";
 
-  const baseClasses = `inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed ${sizeClasses} ${variantClasses} ${radiusClass} ${shadowClass} ${widthClasses} ${className}`;
+  // Font weight
+  const weightClass = {
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+  }[fontWeight];
 
-  const customStyles: React.CSSProperties = {};
-  if (backgroundColor) customStyles.backgroundColor = backgroundColor;
-  if (textColor) customStyles.color = textColor;
+  // Text transform
+  const transformClass = {
+    none: "",
+    uppercase: "uppercase",
+    lowercase: "lowercase",
+    capitalize: "capitalize",
+  }[textTransform];
+
+  // Letter spacing
+  const spacingClass = {
+    normal: "",
+    wide: "tracking-wide",
+    wider: "tracking-wider",
+    widest: "tracking-widest",
+  }[letterSpacing];
+
+  // Transition
+  const transitionClass = {
+    fast: "transition-all duration-150",
+    normal: "transition-all duration-200",
+    slow: "transition-all duration-300",
+  }[transitionDuration];
+
+  // Hover effect
+  const hoverEffectClass = {
+    none: "",
+    lift: "hover:-translate-y-0.5",
+    scale: "hover:scale-105",
+    pulse: "hover:animate-pulse",
+    shine: "overflow-hidden",
+  }[hoverEffect];
+
+  // Icon gap
+  const gapClass = {
+    xs: "gap-1",
+    sm: "gap-1.5",
+    md: "gap-2",
+    lg: "gap-3",
+  }[iconGap];
+
+  // Icon size
+  const iconSizeClass = {
+    xs: "text-xs",
+    sm: "text-sm",
+    md: "text-base",
+    lg: "text-lg",
+  }[iconSize];
+
+  // Badge position
+  const badgePositionClass = {
+    "top-right": "-top-1 -right-1",
+    "top-left": "-top-1 -left-1",
+    "bottom-right": "-bottom-1 -right-1",
+    "bottom-left": "-bottom-1 -left-1",
+  }[badgePosition];
+
+  // Build class string
+  const baseClasses = `
+    inline-flex items-center justify-center ${weightClass}
+    ${transitionClass} focus:outline-none
+    disabled:opacity-50 disabled:cursor-not-allowed
+    ${sizeClasses} ${variant !== "gradient" ? variantClasses : ""} ${radiusClass}
+    ${shadowClass} ${hoverShadowClass} ${widthClasses}
+    ${transformClass} ${spacingClass} ${gapClass}
+    ${hoverEffectClass}
+    ${borderWidth !== "0" && variant !== "gradient" ? `border-${borderWidth}` : ""}
+    ${className}
+  `.replace(/\s+/g, " ").trim();
+
+  // Custom styles
+  const customStyles: React.CSSProperties = {
+    fontFamily: fontFamily || undefined,
+    minWidth: minWidth || undefined,
+    borderStyle: borderStyle !== "solid" ? borderStyle : undefined,
+    ["--tw-ring-color" as keyof React.CSSProperties]: focusRingColor,
+  };
+
+  if (variant === "gradient") {
+    const gradientDir = {
+      "to-r": "to right",
+      "to-l": "to left",
+      "to-t": "to top",
+      "to-b": "to bottom",
+      "to-br": "to bottom right",
+      "to-bl": "to bottom left",
+      "to-tr": "to top right",
+      "to-tl": "to top left",
+    }[gradientDirection];
+    customStyles.background = `linear-gradient(${gradientDir}, ${gradientFrom}, ${gradientTo})`;
+    customStyles.color = textColor || "#ffffff";
+  } else {
+    if (backgroundColor) customStyles.backgroundColor = backgroundColor;
+    if (textColor) customStyles.color = textColor;
+  }
+
   if (borderColor) customStyles.borderColor = borderColor;
 
-  const content = (
-    <>
-      {loading && (
-        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+  // Glow effect
+  if (glowOnHover) {
+    customStyles.boxShadow = `0 0 20px ${glowColor}40`;
+  }
+
+  // Loading spinner
+  const renderLoadingIndicator = () => {
+    if (loadingAnimation === "spinner") {
+      return (
+        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
         </svg>
+      );
+    }
+    if (loadingAnimation === "dots") {
+      return <span className="flex gap-1"><span className="animate-bounce">.</span><span className="animate-bounce delay-100">.</span><span className="animate-bounce delay-200">.</span></span>;
+    }
+    return <span className="animate-pulse">●</span>;
+  };
+
+  // Render icon
+  const renderIcon = (position: "left" | "right") => {
+    if (loading) return null;
+    
+    const icon = iconEmoji ? (
+      <span className={iconSizeClass} style={{ color: iconColor }}>{iconEmoji}</span>
+    ) : position === "left" ? iconLeft : iconRight;
+    
+    if (iconPosition === "only" && position === "left") {
+      return icon;
+    }
+    
+    if (position === "left" && (iconLeft || (iconEmoji && iconPosition === "left"))) {
+      return icon;
+    }
+    
+    if (position === "right" && (iconRight || (iconEmoji && iconPosition === "right"))) {
+      return icon;
+    }
+    
+    return null;
+  };
+
+  // Content
+  const buttonContent = (
+    <>
+      {loading && renderLoadingIndicator()}
+      {renderIcon("left")}
+      {iconPosition !== "only" && (loading && loadingText ? loadingText : (children || label))}
+      {renderIcon("right")}
+      
+      {/* Shine effect overlay */}
+      {hoverEffect === "shine" && (
+        <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       )}
-      {!loading && iconLeft}
-      {children || label}
-      {!loading && iconRight}
+      
+      {/* Badge */}
+      {showBadge && badgeText && (
+        <span
+          className={`absolute ${badgePositionClass} px-1.5 py-0.5 text-xs font-medium rounded-full`}
+          style={{ backgroundColor: badgeColor, color: badgeTextColor }}
+        >
+          {badgeText}
+        </span>
+      )}
     </>
   );
 
-  if (href) {
+  // Wrapper for tooltip and badge positioning
+  const buttonElement = href ? (
+    <a
+      id={id}
+      href={href}
+      target={target}
+      rel={target === "_blank" ? "noopener noreferrer" : undefined}
+      className={`${baseClasses} relative group`}
+      style={customStyles}
+      aria-label={ariaLabel}
+      aria-describedby={ariaDescribedBy}
+      tabIndex={tabIndex}
+    >
+      {buttonContent}
+    </a>
+  ) : (
+    <button
+      id={id}
+      type={type}
+      className={`${baseClasses} relative group`}
+      style={customStyles}
+      onClick={onClick}
+      disabled={disabled || loading}
+      aria-label={ariaLabel}
+      aria-describedby={ariaDescribedBy}
+      tabIndex={tabIndex}
+    >
+      {buttonContent}
+    </button>
+  );
+
+  // Wrap with tooltip if present
+  if (tooltip) {
+    const tooltipPositionClasses = {
+      top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
+      bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
+      left: "right-full top-1/2 -translate-y-1/2 mr-2",
+      right: "left-full top-1/2 -translate-y-1/2 ml-2",
+    }[tooltipPosition];
+
     return (
-      <a id={id} href={href} target={target} rel={target === "_blank" ? "noopener noreferrer" : undefined} className={baseClasses} style={customStyles}>
-        {content}
-      </a>
+      <div className="relative inline-flex group/tooltip">
+        {buttonElement}
+        <span className={`absolute ${tooltipPositionClasses} px-2 py-1 text-xs text-white bg-gray-900 rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50`}>
+          {tooltip}
+        </span>
+      </div>
     );
   }
 
-  return (
-    <button id={id} type={type} className={baseClasses} style={customStyles} onClick={onClick} disabled={disabled || loading}>
-      {content}
-    </button>
-  );
+  return buttonElement;
 }
 
 // ============================================================================
-// IMAGE - Responsive image with all options
+// IMAGE PROPS - Premium Image with 50+ properties
 // ============================================================================
 
 export interface ImageProps {
-  src?: string | ImageValue;  // Support both string and ImageValue object
+  // Source
+  src?: string | ImageValue;
   alt?: string;
-  width?: "full" | "3/4" | "1/2" | "1/3" | "1/4" | "auto" | number;
-  aspectRatio?: "auto" | "square" | "video" | "4/3" | "3/2" | "16/9" | "21/9";
-  objectFit?: "contain" | "cover" | "fill" | "none";
-  objectPosition?: "center" | "top" | "bottom" | "left" | "right";
-  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "full";
+  title?: string;
+  
+  // Sizing
+  width?: "full" | "3/4" | "2/3" | "1/2" | "1/3" | "1/4" | "auto" | number;
+  height?: "auto" | number;
+  maxWidth?: string;
+  maxHeight?: string;
+  minWidth?: string;
+  minHeight?: string;
+  aspectRatio?: "auto" | "square" | "video" | "4/3" | "3/2" | "16/9" | "21/9" | "9/16" | "3/4" | "2/3";
+  
+  // Object Fit & Position
+  objectFit?: "contain" | "cover" | "fill" | "none" | "scale-down";
+  objectPosition?: "center" | "top" | "bottom" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  
+  // Border & Radius
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";
   border?: boolean;
   borderColor?: string;
-  shadow?: "none" | "sm" | "md" | "lg" | "xl";
+  borderWidth?: "1" | "2" | "3" | "4";
+  borderStyle?: "solid" | "dashed" | "dotted" | "double";
+  
+  // Shadow & Effects
+  shadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "inner";
+  hoverShadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  
+  // Hover Effects
   hoverZoom?: boolean;
+  hoverZoomScale?: number;
+  hoverRotate?: boolean;
+  hoverRotateDegrees?: number;
+  hoverBrightness?: boolean;
+  hoverBlur?: boolean;
+  
+  // Filters
   grayscale?: boolean;
+  grayscaleHoverOff?: boolean;
+  blur?: number;
+  brightness?: number;
+  contrast?: number;
+  saturate?: number;
+  sepia?: boolean;
+  opacity?: number;
+  
+  // Overlay
+  showOverlay?: boolean;
+  overlayColor?: string;
+  overlayOpacity?: number;
+  overlayHoverOpacity?: number;
+  overlayContent?: string;
+  overlayContentColor?: string;
+  overlayContentSize?: "sm" | "md" | "lg" | "xl";
+  overlayPosition?: "center" | "top" | "bottom" | "left" | "right";
+  
+  // Caption
   caption?: string;
   captionAlign?: "left" | "center" | "right";
-  loading?: "eager" | "lazy";
+  captionColor?: string;
+  captionBackgroundColor?: string;
+  captionPosition?: "below" | "overlay-bottom" | "overlay-top";
+  captionPadding?: "sm" | "md" | "lg";
+  
+  // Link
   href?: string;
   target?: "_self" | "_blank";
+  
+  // Loading
+  loading?: "eager" | "lazy";
+  priority?: boolean;
+  placeholder?: "blur" | "empty" | "skeleton";
+  blurDataURL?: string;
+  
+  // Animation
+  animateOnLoad?: boolean;
+  animationType?: "fade" | "scale" | "slide-up" | "slide-down";
+  animationDuration?: "fast" | "normal" | "slow";
+  animationDelay?: number;
+  
+  // Responsive
+  hideOnMobile?: boolean;
+  hideOnDesktop?: boolean;
+  mobileWidth?: "full" | "3/4" | "1/2" | "auto";
+  
+  // Frame/Container
+  showFrame?: boolean;
+  frameColor?: string;
+  framePadding?: "sm" | "md" | "lg" | "xl";
+  frameStyle?: "simple" | "polaroid" | "shadow-box" | "rounded";
+  
+  // Decorators
+  showBadge?: boolean;
+  badgeText?: string;
+  badgeColor?: string;
+  badgePosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  
+  // Misc
   id?: string;
   className?: string;
 }
 
 export function ImageRender({
+  // Source
   src = "/placeholder.svg",
   alt = "Image",
+  title,
+  
+  // Sizing
   width = "full",
+  height = "auto",
+  maxWidth,
+  maxHeight,
   aspectRatio = "auto",
+  
+  // Object Fit & Position
   objectFit = "cover",
   objectPosition = "center",
+  
+  // Border & Radius
   borderRadius = "none",
   border = false,
   borderColor = "#e5e7eb",
+  borderWidth = "1",
+  borderStyle = "solid",
+  
+  // Shadow
   shadow = "none",
+  hoverShadow,
+  
+  // Hover Effects
   hoverZoom = false,
+  hoverZoomScale = 1.05,
+  hoverRotate = false,
+  hoverRotateDegrees = 2,
+  hoverBrightness = false,
+  
+  // Filters
   grayscale = false,
+  grayscaleHoverOff = false,
+  blur = 0,
+  brightness = 100,
+  contrast = 100,
+  saturate = 100,
+  sepia = false,
+  opacity = 100,
+  
+  // Overlay
+  showOverlay = false,
+  overlayColor = "#000000",
+  overlayOpacity = 0.5,
+  overlayHoverOpacity,
+  overlayContent,
+  overlayContentColor = "#ffffff",
+  overlayContentSize = "md",
+  overlayPosition = "center",
+  
+  // Caption
   caption,
   captionAlign = "center",
-  loading = "lazy",
+  captionColor = "#6b7280",
+  captionBackgroundColor,
+  captionPosition = "below",
+  captionPadding = "sm",
+  
+  // Link
   href,
   target = "_self",
+  
+  // Loading
+  loading = "lazy",
+  placeholder = "empty",
+  
+  // Animation
+  animateOnLoad = false,
+  animationType = "fade",
+  animationDuration = "normal",
+  animationDelay = 0,
+  
+  // Frame
+  showFrame = false,
+  frameColor = "#ffffff",
+  framePadding = "md",
+  frameStyle = "simple",
+  
+  // Badge
+  showBadge = false,
+  badgeText,
+  badgeColor = "#3b82f6",
+  badgePosition = "top-right",
+  
+  // Misc
   id,
   className = "",
 }: ImageProps) {
-  // Normalize image value to URL string
   const imageUrl = getImageUrl(src) || "/placeholder.svg";
   const imageAlt = alt || getImageAlt(src, "Image");
-  
-  const widthClass = typeof width === "string" ? { full: "w-full", "3/4": "w-3/4", "1/2": "w-1/2", "1/3": "w-1/3", "1/4": "w-1/4", auto: "w-auto" }[width] : "";
-  const aspectClass = { auto: "", square: "aspect-square", video: "aspect-video", "4/3": "aspect-[4/3]", "3/2": "aspect-[3/2]", "16/9": "aspect-[16/9]", "21/9": "aspect-[21/9]" }[aspectRatio];
-  const fitClass = { contain: "object-contain", cover: "object-cover", fill: "object-fill", none: "object-none" }[objectFit];
-  const posClass = { center: "object-center", top: "object-top", bottom: "object-bottom", left: "object-left", right: "object-right" }[objectPosition];
-  const radiusClass = { none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl", "2xl": "rounded-2xl", full: "rounded-full" }[borderRadius];
-  const shadowClass = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" }[shadow];
 
+  // Width class
+  const widthClass = typeof width === "string" ? {
+    full: "w-full",
+    "3/4": "w-3/4",
+    "2/3": "w-2/3",
+    "1/2": "w-1/2",
+    "1/3": "w-1/3",
+    "1/4": "w-1/4",
+    auto: "w-auto",
+  }[width] : "";
+
+  // Aspect ratio
+  const aspectClass = {
+    auto: "",
+    square: "aspect-square",
+    video: "aspect-video",
+    "4/3": "aspect-[4/3]",
+    "3/2": "aspect-[3/2]",
+    "16/9": "aspect-[16/9]",
+    "21/9": "aspect-[21/9]",
+    "9/16": "aspect-[9/16]",
+    "3/4": "aspect-[3/4]",
+    "2/3": "aspect-[2/3]",
+  }[aspectRatio];
+
+  // Object fit
+  const fitClass = {
+    contain: "object-contain",
+    cover: "object-cover",
+    fill: "object-fill",
+    none: "object-none",
+    "scale-down": "object-scale-down",
+  }[objectFit];
+
+  // Object position
+  const posClass = {
+    center: "object-center",
+    top: "object-top",
+    bottom: "object-bottom",
+    left: "object-left",
+    right: "object-right",
+    "top-left": "object-left-top",
+    "top-right": "object-right-top",
+    "bottom-left": "object-left-bottom",
+    "bottom-right": "object-right-bottom",
+  }[objectPosition];
+
+  // Border radius
+  const radiusClass = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+    "3xl": "rounded-3xl",
+    full: "rounded-full",
+  }[borderRadius];
+
+  // Shadow
+  const shadowClass = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    "2xl": "shadow-2xl",
+    inner: "shadow-inner",
+  }[shadow];
+
+  // Hover shadow
+  const hoverShadowClass = hoverShadow ? {
+    none: "hover:shadow-none",
+    sm: "hover:shadow-sm",
+    md: "hover:shadow-md",
+    lg: "hover:shadow-lg",
+    xl: "hover:shadow-xl",
+    "2xl": "hover:shadow-2xl",
+  }[hoverShadow] : "";
+
+  // Animation duration
+  const durationClass = {
+    fast: "duration-150",
+    normal: "duration-300",
+    slow: "duration-500",
+  }[animationDuration];
+
+  // Frame padding
+  const framePaddingClass = {
+    sm: "p-2",
+    md: "p-4",
+    lg: "p-6",
+    xl: "p-8",
+  }[framePadding];
+
+  // Caption padding
+  const captionPaddingClass = {
+    sm: "p-2",
+    md: "p-3",
+    lg: "p-4",
+  }[captionPadding];
+
+  // Overlay content size
+  const overlayContentSizeClass = {
+    sm: "text-sm",
+    md: "text-base",
+    lg: "text-lg",
+    xl: "text-xl",
+  }[overlayContentSize];
+
+  // Overlay position
+  const overlayPositionClass = {
+    center: "items-center justify-center",
+    top: "items-start justify-center pt-4",
+    bottom: "items-end justify-center pb-4",
+    left: "items-center justify-start pl-4",
+    right: "items-center justify-end pr-4",
+  }[overlayPosition];
+
+  // Badge position
+  const badgePositionClass = {
+    "top-left": "top-2 left-2",
+    "top-right": "top-2 right-2",
+    "bottom-left": "bottom-2 left-2",
+    "bottom-right": "bottom-2 right-2",
+  }[badgePosition];
+
+  // Build filter string
+  const filterStyles: string[] = [];
+  if (grayscale) filterStyles.push("grayscale(100%)");
+  if (blur > 0) filterStyles.push(`blur(${blur}px)`);
+  if (brightness !== 100) filterStyles.push(`brightness(${brightness}%)`);
+  if (contrast !== 100) filterStyles.push(`contrast(${contrast}%)`);
+  if (saturate !== 100) filterStyles.push(`saturate(${saturate}%)`);
+  if (sepia) filterStyles.push("sepia(100%)");
+
+  // Hover effects
+  const hoverClasses: string[] = ["transition-all", durationClass];
+  if (hoverZoom) hoverClasses.push("group-hover:scale-105");
+  if (hoverRotate) hoverClasses.push(`group-hover:rotate-[${hoverRotateDegrees}deg]`);
+  if (hoverBrightness) hoverClasses.push("group-hover:brightness-110");
+  if (grayscaleHoverOff) hoverClasses.push("group-hover:grayscale-0");
+
+  // Custom styles
+  const imageStyles: React.CSSProperties = {
+    width: typeof width === "number" ? `${width}px` : undefined,
+    height: typeof height === "number" ? `${height}px` : undefined,
+    maxWidth: maxWidth || undefined,
+    maxHeight: maxHeight || undefined,
+    borderColor: border ? borderColor : undefined,
+    borderWidth: border ? `${borderWidth}px` : undefined,
+    borderStyle: border ? borderStyle : undefined,
+    filter: filterStyles.length > 0 ? filterStyles.join(" ") : undefined,
+    opacity: opacity !== 100 ? opacity / 100 : undefined,
+    transform: hoverZoom ? `scale(${hoverZoomScale})` : undefined,
+  };
+
+  // Animation classes for load
+  const animationLoadClass = animateOnLoad ? {
+    fade: "animate-fadeIn",
+    scale: "animate-scaleIn",
+    "slide-up": "animate-slideUp",
+    "slide-down": "animate-slideDown",
+  }[animationType] : "";
+
+  // Frame styles
+  const frameStyles: React.CSSProperties = showFrame ? {
+    backgroundColor: frameColor,
+    boxShadow: frameStyle === "shadow-box" ? "0 4px 20px rgba(0,0,0,0.15)" : undefined,
+  } : {};
+
+  // Build image element
   const imageElement = (
     <img
       id={id}
       src={imageUrl}
       alt={imageAlt}
+      title={title}
       loading={loading}
-      className={`${widthClass} ${aspectClass} ${fitClass} ${posClass} ${radiusClass} ${shadowClass} ${border ? "border" : ""} ${grayscale ? "grayscale hover:grayscale-0 transition-all duration-300" : ""} ${hoverZoom ? "hover:scale-105 transition-transform duration-300" : ""} ${className}`}
-      style={{ borderColor: border ? borderColor : undefined, width: typeof width === "number" ? `${width}px` : undefined }}
+      className={`
+        ${widthClass} ${aspectClass} ${fitClass} ${posClass} ${radiusClass}
+        ${shadowClass} ${hoverShadowClass}
+        ${border ? "border" : ""}
+        ${hoverClasses.join(" ")}
+        ${animationLoadClass}
+        ${className}
+      `.replace(/\s+/g, " ").trim()}
+      style={imageStyles}
     />
   );
 
-  const wrappedImage = href ? (
-    <a href={href} target={target} rel={target === "_blank" ? "noopener noreferrer" : undefined} className={hoverZoom ? "block overflow-hidden" : ""}>
+  // Wrapper with overlay
+  const imageWithOverlay = showOverlay || showBadge ? (
+    <div className={`relative group overflow-hidden ${radiusClass}`}>
       {imageElement}
-    </a>
-  ) : hoverZoom ? (
-    <div className="overflow-hidden">{imageElement}</div>
-  ) : (
-    imageElement
-  );
+      
+      {/* Overlay */}
+      {showOverlay && (
+        <div
+          className={`absolute inset-0 flex ${overlayPositionClass} transition-opacity ${durationClass}`}
+          style={{
+            backgroundColor: overlayColor,
+            opacity: overlayHoverOpacity !== undefined ? undefined : overlayOpacity,
+          }}
+        >
+          {overlayContent && (
+            <span className={`${overlayContentSizeClass} font-medium`} style={{ color: overlayContentColor }}>
+              {overlayContent}
+            </span>
+          )}
+        </div>
+      )}
+      
+      {/* Badge */}
+      {showBadge && badgeText && (
+        <span
+          className={`absolute ${badgePositionClass} px-2 py-1 text-xs font-medium text-white rounded`}
+          style={{ backgroundColor: badgeColor }}
+        >
+          {badgeText}
+        </span>
+      )}
+    </div>
+  ) : hoverZoom || hoverRotate ? (
+    <div className={`overflow-hidden group ${radiusClass}`}>
+      {imageElement}
+    </div>
+  ) : imageElement;
 
+  // Frame wrapper
+  const framedImage = showFrame ? (
+    <div
+      className={`inline-block ${framePaddingClass} ${frameStyle === "polaroid" ? "pb-8" : ""} ${frameStyle === "rounded" ? "rounded-lg" : ""}`}
+      style={frameStyles}
+    >
+      {imageWithOverlay}
+    </div>
+  ) : imageWithOverlay;
+
+  // Link wrapper
+  const linkedImage = href ? (
+    <a href={href} target={target} rel={target === "_blank" ? "noopener noreferrer" : undefined} className="block">
+      {framedImage}
+    </a>
+  ) : framedImage;
+
+  // Caption
   if (caption) {
+    if (captionPosition === "below") {
+      return (
+        <figure>
+          {linkedImage}
+          <figcaption
+            className={`mt-2 text-sm text-${captionAlign} ${captionPaddingClass}`}
+            style={{ color: captionColor, backgroundColor: captionBackgroundColor }}
+          >
+            {caption}
+          </figcaption>
+        </figure>
+      );
+    }
+
+    // Overlay caption
     return (
-      <figure>
-        {wrappedImage}
-        <figcaption className={`mt-2 text-sm text-gray-500 text-${captionAlign}`}>{caption}</figcaption>
+      <figure className="relative">
+        {linkedImage}
+        <figcaption
+          className={`absolute ${captionPosition === "overlay-bottom" ? "bottom-0" : "top-0"} left-0 right-0 text-sm text-${captionAlign} ${captionPaddingClass}`}
+          style={{ color: captionColor, backgroundColor: captionBackgroundColor || "rgba(0,0,0,0.5)" }}
+        >
+          {caption}
+        </figcaption>
       </figure>
     );
   }
 
-  return wrappedImage;
+  return linkedImage;
 }
 
 // ============================================================================
-// VIDEO - Responsive video player
+// VIDEO PROPS - Premium Video with 50+ properties
 // ============================================================================
 
 export interface VideoProps {
+  // Source
   src?: string;
-  poster?: string;
-  width?: "full" | "3/4" | "1/2" | "auto";
-  aspectRatio?: "video" | "square" | "4/3" | "21/9";
+  poster?: string | ImageValue;
+  type?: "file" | "youtube" | "vimeo" | "embed";
+  
+  // Sizing
+  width?: "full" | "3/4" | "2/3" | "1/2" | "auto";
+  maxWidth?: string;
+  height?: number;
+  aspectRatio?: "video" | "square" | "4/3" | "21/9" | "9/16" | "1/1" | "custom";
+  customAspect?: string;
+  
+  // Playback
   autoplay?: boolean;
   muted?: boolean;
   loop?: boolean;
   controls?: boolean;
-  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
-  shadow?: "none" | "sm" | "md" | "lg";
+  playsinline?: boolean;
+  preload?: "auto" | "metadata" | "none";
+  startTime?: number;
+  endTime?: number;
+  playbackSpeed?: number;
+  
+  // YouTube/Vimeo Options
+  showRelated?: boolean;
+  showInfo?: boolean;
+  modestBranding?: boolean;
+  privacyEnhanced?: boolean;
+  enableJsApi?: boolean;
+  origin?: string;
+  
+  // Appearance
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  shadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  border?: boolean;
+  borderColor?: string;
+  borderWidth?: "1" | "2" | "3" | "4";
+  
+  // Overlay & Thumbnail
+  showThumbnailOverlay?: boolean;
+  thumbnailOverlayColor?: string;
+  thumbnailOverlayOpacity?: number;
+  customPlayButton?: boolean;
+  playButtonColor?: string;
+  playButtonSize?: "sm" | "md" | "lg" | "xl";
+  playButtonStyle?: "circle" | "rounded" | "minimal";
+  
+  // Loading
+  loading?: "eager" | "lazy";
+  showLoadingSpinner?: boolean;
+  loadingSpinnerColor?: string;
+  
+  // Caption
   caption?: string;
   captionAlign?: "left" | "center" | "right";
+  captionColor?: string;
+  captionSize?: "sm" | "md" | "lg";
+  
+  // Container
+  backgroundColor?: string;
+  padding?: "none" | "sm" | "md" | "lg";
+  
+  // Title Bar
+  showTitleBar?: boolean;
+  title?: string;
+  titleBarColor?: string;
+  titleBarTextColor?: string;
+  
+  // Responsive
+  hideOnMobile?: boolean;
+  mobileAspectRatio?: "video" | "square" | "4/3";
+  
+  // Accessibility
+  ariaLabel?: string;
+  
+  // Misc
   id?: string;
   className?: string;
 }
 
 export function VideoRender({
+  // Source
   src = "",
   poster,
+  type = "file",
+  
+  // Sizing
   width = "full",
+  maxWidth,
   aspectRatio = "video",
+  customAspect,
+  
+  // Playback
   autoplay = false,
   muted = false,
   loop = false,
   controls = true,
+  playsinline = true,
+  preload = "metadata",
+  startTime = 0,
+  endTime,
+  playbackSpeed = 1,
+  
+  // YouTube/Vimeo Options
+  showRelated = false,
+  showInfo = true,
+  modestBranding = true,
+  privacyEnhanced = true,
+  
+  // Appearance
   borderRadius = "lg",
   shadow = "md",
+  border = false,
+  borderColor = "#e5e7eb",
+  borderWidth = "1",
+  
+  // Overlay
+  showThumbnailOverlay = false,
+  thumbnailOverlayColor = "#000000",
+  thumbnailOverlayOpacity = 0.3,
+  customPlayButton = false,
+  playButtonColor = "#ffffff",
+  playButtonSize = "lg",
+  playButtonStyle = "circle",
+  
+  // Loading
+  loading = "lazy",
+  showLoadingSpinner = false,
+  loadingSpinnerColor = "#3b82f6",
+  
+  // Caption
   caption,
   captionAlign = "center",
+  captionColor = "#6b7280",
+  captionSize = "sm",
+  
+  // Container
+  backgroundColor,
+  padding = "none",
+  
+  // Title Bar
+  showTitleBar = false,
+  title,
+  titleBarColor = "#1f2937",
+  titleBarTextColor = "#ffffff",
+  
+  // Accessibility
+  ariaLabel,
+  
+  // Misc
   id,
   className = "",
 }: VideoProps) {
-  const widthClass = { full: "w-full", "3/4": "w-3/4", "1/2": "w-1/2", auto: "w-auto" }[width];
-  const aspectClass = { video: "aspect-video", square: "aspect-square", "4/3": "aspect-[4/3]", "21/9": "aspect-[21/9]" }[aspectRatio];
-  const radiusClass = { none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl" }[borderRadius];
-  const shadowClass = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg" }[shadow];
+  const posterUrl = typeof poster === "object" && poster?.url ? poster.url : poster as string;
 
-  // Handle YouTube
-  if (src.includes("youtube.com") || src.includes("youtu.be")) {
-    const videoId = src.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/)?.[1];
-    if (videoId) {
-      const embedUrl = `https://www.youtube.com/embed/${videoId}?${autoplay ? "autoplay=1&" : ""}${muted ? "mute=1&" : ""}${loop ? `loop=1&playlist=${videoId}&` : ""}${!controls ? "controls=0&" : ""}playsinline=1`;
-      const videoElement = <iframe id={id} src={embedUrl} className={`${widthClass} ${aspectClass} ${radiusClass} ${shadowClass} ${className}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />;
-      if (caption) {
-        return <figure>{videoElement}<figcaption className={`mt-2 text-sm text-gray-500 text-${captionAlign}`}>{caption}</figcaption></figure>;
-      }
-      return videoElement;
+  // Width class
+  const widthClass = {
+    full: "w-full",
+    "3/4": "w-3/4",
+    "2/3": "w-2/3",
+    "1/2": "w-1/2",
+    auto: "w-auto",
+  }[width];
+
+  // Aspect ratio
+  const aspectClass = aspectRatio === "custom" && customAspect ? "" : {
+    video: "aspect-video",
+    square: "aspect-square",
+    "4/3": "aspect-[4/3]",
+    "21/9": "aspect-[21/9]",
+    "9/16": "aspect-[9/16]",
+    "1/1": "aspect-square",
+    custom: "",
+  }[aspectRatio] || "aspect-video";
+
+  // Border radius
+  const radiusClass = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+  }[borderRadius];
+
+  // Shadow
+  const shadowClass = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    "2xl": "shadow-2xl",
+  }[shadow];
+
+  // Padding
+  const paddingClass = {
+    none: "",
+    sm: "p-2",
+    md: "p-4",
+    lg: "p-6",
+  }[padding];
+
+  // Caption size
+  const captionSizeClass = {
+    sm: "text-sm",
+    md: "text-base",
+    lg: "text-lg",
+  }[captionSize];
+
+  // Play button size
+  const playButtonSizeClass = {
+    sm: "w-12 h-12",
+    md: "w-16 h-16",
+    lg: "w-20 h-20",
+    xl: "w-24 h-24",
+  }[playButtonSize];
+
+  // Custom styles
+  const containerStyles: React.CSSProperties = {
+    maxWidth: maxWidth || undefined,
+    backgroundColor: backgroundColor || undefined,
+    aspectRatio: aspectRatio === "custom" && customAspect ? customAspect : undefined,
+  };
+
+  const videoStyles: React.CSSProperties = {
+    borderColor: border ? borderColor : undefined,
+    borderWidth: border ? `${borderWidth}px` : undefined,
+    borderStyle: border ? "solid" : undefined,
+  };
+
+  // Build YouTube embed URL
+  const getYouTubeEmbed = (url: string) => {
+    const videoId = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/)?.[1];
+    if (!videoId) return null;
+    
+    const baseUrl = privacyEnhanced ? "https://www.youtube-nocookie.com" : "https://www.youtube.com";
+    const params = new URLSearchParams({
+      ...(autoplay && { autoplay: "1" }),
+      ...(muted && { mute: "1" }),
+      ...(loop && { loop: "1", playlist: videoId }),
+      ...(!controls && { controls: "0" }),
+      ...(!showRelated && { rel: "0" }),
+      ...(!showInfo && { showinfo: "0" }),
+      ...(modestBranding && { modestbranding: "1" }),
+      ...(startTime > 0 && { start: String(startTime) }),
+      ...(endTime && { end: String(endTime) }),
+      playsinline: "1",
+    });
+    
+    return `${baseUrl}/embed/${videoId}?${params.toString()}`;
+  };
+
+  // Build Vimeo embed URL
+  const getVimeoEmbed = (url: string) => {
+    const videoId = url.match(/vimeo\.com\/(\d+)/)?.[1];
+    if (!videoId) return null;
+    
+    const params = new URLSearchParams({
+      ...(autoplay && { autoplay: "1" }),
+      ...(muted && { muted: "1" }),
+      ...(loop && { loop: "1" }),
+      ...(!showInfo && { title: "0", byline: "0", portrait: "0" }),
+    });
+    
+    return `https://player.vimeo.com/video/${videoId}?${params.toString()}`;
+  };
+
+  // Render play button
+  const renderPlayButton = () => {
+    if (!customPlayButton) return null;
+    
+    const shapeClass = {
+      circle: "rounded-full",
+      rounded: "rounded-xl",
+      minimal: "bg-transparent",
+    }[playButtonStyle];
+    
+    return (
+      <div
+        className={`absolute inset-0 flex items-center justify-center cursor-pointer group-hover:scale-105 transition-transform`}
+      >
+        <div
+          className={`${playButtonSizeClass} ${shapeClass} flex items-center justify-center`}
+          style={{
+            backgroundColor: playButtonStyle !== "minimal" ? `${playButtonColor}20` : undefined,
+            backdropFilter: "blur(8px)",
+          }}
+        >
+          <svg
+            className="w-1/2 h-1/2 ml-1"
+            fill={playButtonColor}
+            viewBox="0 0 24 24"
+          >
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </div>
+      </div>
+    );
+  };
+
+  // Render loading spinner
+  const renderLoadingSpinner = () => {
+    if (!showLoadingSpinner) return null;
+    
+    return (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <svg
+          className="animate-spin w-8 h-8"
+          style={{ color: loadingSpinnerColor }}
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+      </div>
+    );
+  };
+
+  // Video element based on type
+  let videoElement: React.ReactNode;
+
+  // YouTube
+  if (src.includes("youtube.com") || src.includes("youtu.be") || type === "youtube") {
+    const embedUrl = getYouTubeEmbed(src);
+    if (embedUrl) {
+      videoElement = (
+        <iframe
+          id={id}
+          src={embedUrl}
+          className={`${widthClass} ${aspectClass} ${radiusClass} ${shadowClass} ${className}`}
+          style={videoStyles}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          loading={loading}
+          aria-label={ariaLabel}
+        />
+      );
     }
   }
-
-  // Handle Vimeo
-  if (src.includes("vimeo.com")) {
-    const videoId = src.match(/vimeo\.com\/(\d+)/)?.[1];
-    if (videoId) {
-      const embedUrl = `https://player.vimeo.com/video/${videoId}?${autoplay ? "autoplay=1&" : ""}${muted ? "muted=1&" : ""}${loop ? "loop=1&" : ""}`;
-      const videoElement = <iframe id={id} src={embedUrl} className={`${widthClass} ${aspectClass} ${radiusClass} ${shadowClass} ${className}`} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />;
-      if (caption) {
-        return <figure>{videoElement}<figcaption className={`mt-2 text-sm text-gray-500 text-${captionAlign}`}>{caption}</figcaption></figure>;
-      }
-      return videoElement;
+  // Vimeo
+  else if (src.includes("vimeo.com") || type === "vimeo") {
+    const embedUrl = getVimeoEmbed(src);
+    if (embedUrl) {
+      videoElement = (
+        <iframe
+          id={id}
+          src={embedUrl}
+          className={`${widthClass} ${aspectClass} ${radiusClass} ${shadowClass} ${className}`}
+          style={videoStyles}
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+          loading={loading}
+          aria-label={ariaLabel}
+        />
+      );
     }
   }
-
+  // Generic embed
+  else if (type === "embed") {
+    videoElement = (
+      <iframe
+        id={id}
+        src={src}
+        className={`${widthClass} ${aspectClass} ${radiusClass} ${shadowClass} ${className}`}
+        style={videoStyles}
+        allowFullScreen
+        loading={loading}
+        aria-label={ariaLabel}
+      />
+    );
+  }
   // Native video
-  const videoElement = (
-    <video id={id} src={src} poster={poster} autoPlay={autoplay} muted={muted} loop={loop} controls={controls} playsInline className={`${widthClass} ${aspectClass} ${radiusClass} ${shadowClass} ${className}`} />
+  else {
+    videoElement = (
+      <video
+        id={id}
+        src={src}
+        poster={posterUrl}
+        autoPlay={autoplay}
+        muted={muted}
+        loop={loop}
+        controls={controls}
+        playsInline={playsinline}
+        preload={preload}
+        className={`${widthClass} ${aspectClass} ${radiusClass} ${shadowClass} ${className}`}
+        style={{
+          ...videoStyles,
+          playbackRate: playbackSpeed !== 1 ? playbackSpeed : undefined,
+        } as React.CSSProperties}
+        aria-label={ariaLabel}
+      />
+    );
+  }
+
+  // Container with optional overlays
+  const wrappedVideo = (
+    <div
+      className={`relative group ${radiusClass} overflow-hidden ${paddingClass}`}
+      style={containerStyles}
+    >
+      {/* Title bar */}
+      {showTitleBar && title && (
+        <div
+          className="px-4 py-2 text-sm font-medium"
+          style={{ backgroundColor: titleBarColor, color: titleBarTextColor }}
+        >
+          {title}
+        </div>
+      )}
+
+      {/* Video */}
+      {videoElement}
+
+      {/* Thumbnail overlay */}
+      {showThumbnailOverlay && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundColor: thumbnailOverlayColor,
+            opacity: thumbnailOverlayOpacity,
+          }}
+        />
+      )}
+
+      {/* Custom play button */}
+      {renderPlayButton()}
+
+      {/* Loading spinner */}
+      {renderLoadingSpinner()}
+    </div>
   );
 
+  // Caption
   if (caption) {
-    return <figure>{videoElement}<figcaption className={`mt-2 text-sm text-gray-500 text-${captionAlign}`}>{caption}</figcaption></figure>;
+    return (
+      <figure>
+        {wrappedVideo}
+        <figcaption
+          className={`mt-2 ${captionSizeClass} text-${captionAlign}`}
+          style={{ color: captionColor }}
+        >
+          {caption}
+        </figcaption>
+      </figure>
+    );
   }
 
-  return videoElement;
+  return wrappedVideo;
 }
 
 // ============================================================================
-// MAP - Embedded map
+// MAP PROPS - Premium Map with 40+ properties
 // ============================================================================
 
 export interface MapProps {
+  // Location
   address?: string;
-  height?: number;
+  latitude?: number;
+  longitude?: number;
+  placeId?: string;
+  
+  // Provider
+  provider?: "google" | "openstreetmap" | "mapbox";
+  apiKey?: string;
+  
+  // Map Settings
   zoom?: number;
-  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
-  shadow?: "none" | "sm" | "md" | "lg";
+  mapType?: "roadmap" | "satellite" | "hybrid" | "terrain";
+  
+  // Sizing
+  height?: number;
+  width?: "full" | "3/4" | "2/3" | "1/2" | "auto";
+  maxWidth?: string;
+  aspectRatio?: "auto" | "video" | "square" | "4/3" | "21/9";
+  
+  // Appearance
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  shadow?: "none" | "sm" | "md" | "lg" | "xl";
+  border?: boolean;
+  borderColor?: string;
+  borderWidth?: "1" | "2" | "3" | "4";
+  
+  // Marker
+  showMarker?: boolean;
+  markerColor?: string;
+  markerLabel?: string;
+  customMarkerIcon?: string;
+  
+  // Controls
+  showZoomControls?: boolean;
+  showFullscreenButton?: boolean;
+  showMapTypeControl?: boolean;
+  showStreetViewControl?: boolean;
+  showScaleControl?: boolean;
+  
+  // Interaction
+  allowScrollZoom?: boolean;
+  allowDragging?: boolean;
+  allowClickableIcons?: boolean;
+  
+  // Style/Theme
+  mapStyle?: "default" | "silver" | "retro" | "dark" | "night" | "aubergine" | "custom";
+  customStyleJson?: string;
+  grayscale?: boolean;
+  saturation?: number;
+  
+  // Info Window
+  showInfoWindow?: boolean;
+  infoWindowTitle?: string;
+  infoWindowDescription?: string;
+  infoWindowImage?: string;
+  
+  // Directions
+  showDirectionsLink?: boolean;
+  directionsLinkText?: string;
+  directionsLinkPosition?: "above" | "below" | "overlay";
+  
+  // Loading
+  loading?: "eager" | "lazy";
+  showLoadingPlaceholder?: boolean;
+  placeholderColor?: string;
+  
+  // Caption
+  caption?: string;
+  captionAlign?: "left" | "center" | "right";
+  captionColor?: string;
+  
+  // Container
+  backgroundColor?: string;
+  padding?: "none" | "sm" | "md" | "lg";
+  
+  // Responsive
+  mobileHeight?: number;
+  hideOnMobile?: boolean;
+  
+  // Accessibility
+  ariaLabel?: string;
+  title?: string;
+  
+  // Misc
   id?: string;
   className?: string;
 }
 
 export function MapRender({
+  // Location
   address = "New York, NY",
-  height = 300,
+  latitude,
+  longitude,
+  
+  // Provider
+  provider = "google",
+  
+  // Map Settings
   zoom = 14,
+  mapType = "roadmap",
+  
+  // Sizing
+  height = 300,
+  width = "full",
+  maxWidth,
+  aspectRatio = "auto",
+  
+  // Appearance
   borderRadius = "lg",
   shadow = "md",
+  border = false,
+  borderColor = "#e5e7eb",
+  borderWidth = "1",
+  
+  // Marker
+  showMarker = true,
+  markerColor = "#ef4444",
+  markerLabel,
+  
+  // Controls
+  showZoomControls = true,
+  showFullscreenButton = true,
+  showMapTypeControl = false,
+  showStreetViewControl = false,
+  showScaleControl = false,
+  
+  // Interaction
+  allowScrollZoom = false,
+  allowDragging = true,
+  
+  // Style
+  mapStyle = "default",
+  grayscale = false,
+  saturation = 100,
+  
+  // Info Window
+  showInfoWindow = false,
+  infoWindowTitle,
+  
+  // Directions
+  showDirectionsLink = false,
+  directionsLinkText = "Get Directions",
+  directionsLinkPosition = "below",
+  
+  // Loading
+  loading = "lazy",
+  showLoadingPlaceholder = true,
+  placeholderColor = "#f3f4f6",
+  
+  // Caption
+  caption,
+  captionAlign = "center",
+  captionColor = "#6b7280",
+  
+  // Container
+  backgroundColor,
+  padding = "none",
+  
+  // Responsive
+  mobileHeight,
+  
+  // Accessibility
+  ariaLabel,
+  title,
+  
+  // Misc
   id,
   className = "",
 }: MapProps) {
-  const radiusClass = { none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl" }[borderRadius];
-  const shadowClass = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg" }[shadow];
-  const encodedAddress = encodeURIComponent(address);
+  // Width class
+  const widthClass = {
+    full: "w-full",
+    "3/4": "w-3/4",
+    "2/3": "w-2/3",
+    "1/2": "w-1/2",
+    auto: "w-auto",
+  }[width];
 
-  return (
-    <div id={id} className={`${radiusClass} ${shadowClass} overflow-hidden ${className}`} style={{ height: `${height}px` }}>
-      <iframe src={`https://maps.google.com/maps?q=${encodedAddress}&z=${zoom}&output=embed`} className="w-full h-full border-0" loading="lazy" allowFullScreen />
+  // Aspect ratio
+  const aspectClass = aspectRatio !== "auto" ? {
+    video: "aspect-video",
+    square: "aspect-square",
+    "4/3": "aspect-[4/3]",
+    "21/9": "aspect-[21/9]",
+  }[aspectRatio] : "";
+
+  // Border radius
+  const radiusClass = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+  }[borderRadius];
+
+  // Shadow
+  const shadowClass = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+  }[shadow];
+
+  // Padding
+  const paddingClass = {
+    none: "",
+    sm: "p-2",
+    md: "p-4",
+    lg: "p-6",
+  }[padding];
+
+  // Build Google Maps URL with options
+  const buildGoogleMapUrl = () => {
+    const baseUrl = "https://maps.google.com/maps";
+    const params = new URLSearchParams();
+    
+    // Location
+    if (latitude && longitude) {
+      params.set("q", `${latitude},${longitude}`);
+    } else {
+      params.set("q", address);
+    }
+    
+    params.set("z", String(zoom));
+    params.set("output", "embed");
+    params.set("t", { roadmap: "m", satellite: "k", hybrid: "h", terrain: "p" }[mapType]);
+    
+    // Disable controls via URL params where possible
+    if (!allowScrollZoom) {
+      params.set("scrollwheel", "0");
+    }
+    
+    return `${baseUrl}?${params.toString()}`;
+  };
+
+  // Build OpenStreetMap URL
+  const buildOsmUrl = () => {
+    if (latitude && longitude) {
+      return `https://www.openstreetmap.org/export/embed.html?bbox=${longitude - 0.01},${latitude - 0.01},${longitude + 0.01},${latitude + 0.01}&layer=mapnik&marker=${latitude},${longitude}`;
+    }
+    const encodedAddress = encodeURIComponent(address);
+    return `https://www.openstreetmap.org/export/embed.html?bbox=-74.1,40.6,-73.9,40.8&layer=mapnik&marker=40.7128,-74.006`;
+  };
+
+  // Get directions URL
+  const getDirectionsUrl = () => {
+    if (latitude && longitude) {
+      return `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+    }
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+  };
+
+  // Container styles
+  const containerStyles: React.CSSProperties = {
+    maxWidth: maxWidth || undefined,
+    backgroundColor: backgroundColor || undefined,
+  };
+
+  // Map styles
+  const mapStyles: React.CSSProperties = {
+    height: aspectRatio === "auto" ? `${height}px` : undefined,
+    borderColor: border ? borderColor : undefined,
+    borderWidth: border ? `${borderWidth}px` : undefined,
+    borderStyle: border ? "solid" : undefined,
+    filter: grayscale ? "grayscale(100%)" : saturation !== 100 ? `saturate(${saturation}%)` : undefined,
+  };
+
+  // Render directions link
+  const renderDirectionsLink = () => {
+    if (!showDirectionsLink) return null;
+
+    const link = (
+      <a
+        href={getDirectionsUrl()}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        {directionsLinkText}
+      </a>
+    );
+
+    if (directionsLinkPosition === "overlay") {
+      return (
+        <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-md">
+          {link}
+        </div>
+      );
+    }
+
+    return link;
+  };
+
+  // Map iframe
+  const mapUrl = provider === "openstreetmap" ? buildOsmUrl() : buildGoogleMapUrl();
+  
+  const mapElement = (
+    <div
+      className={`relative ${radiusClass} ${shadowClass} overflow-hidden ${paddingClass}`}
+      style={containerStyles}
+    >
+      {/* Loading placeholder */}
+      {showLoadingPlaceholder && (
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ backgroundColor: placeholderColor }}
+        >
+          <svg className="w-8 h-8 text-gray-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+      )}
+
+      {/* Map iframe */}
+      <iframe
+        id={id}
+        src={mapUrl}
+        className={`${widthClass} ${aspectClass} border-0 ${className}`}
+        style={mapStyles}
+        loading={loading}
+        allowFullScreen={showFullscreenButton}
+        aria-label={ariaLabel || `Map showing ${address}`}
+        title={title || `Map of ${address}`}
+      />
+
+      {/* Info window overlay */}
+      {showInfoWindow && infoWindowTitle && (
+        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs">
+          <h4 className="font-semibold text-gray-900">{infoWindowTitle}</h4>
+          <p className="text-sm text-gray-600 mt-1">{address}</p>
+        </div>
+      )}
+
+      {/* Overlay directions link */}
+      {directionsLinkPosition === "overlay" && renderDirectionsLink()}
     </div>
   );
+
+  // With directions and caption
+  const fullElement = (
+    <div className={widthClass}>
+      {directionsLinkPosition === "above" && renderDirectionsLink()}
+      {mapElement}
+      {directionsLinkPosition === "below" && renderDirectionsLink()}
+    </div>
+  );
+
+  // Caption
+  if (caption) {
+    return (
+      <figure className={widthClass}>
+        {fullElement}
+        <figcaption
+          className={`mt-2 text-sm text-${captionAlign}`}
+          style={{ color: captionColor }}
+        >
+          {caption}
+        </figcaption>
+      </figure>
+    );
+  }
+
+  return fullElement;
 }
 
 // ============================================================================
@@ -1413,182 +2914,1658 @@ export function HeroRender({
 // FEATURES - Feature Grid with Icons
 // ============================================================================
 
+export interface FeatureItem {
+  title?: string;
+  description?: string;
+  icon?: string;
+  iconColor?: string;
+  iconBackgroundColor?: string;
+  image?: string | ImageValue;
+  link?: string;
+  linkText?: string;
+  badge?: string;
+  isFeatured?: boolean;
+}
+
 export interface FeaturesProps {
+  // Header Content
   title?: string;
   subtitle?: string;
   description?: string;
-  features?: Array<{
-    title?: string;
-    description?: string;
-    icon?: string;
-    iconColor?: string;
-    link?: string;
-  }>;
-  columns?: 2 | 3 | 4;
-  variant?: "cards" | "minimal" | "centered" | "icons-left";
+  badge?: string;
+  badgeIcon?: string;
+  
+  // Header Styling
+  headerAlign?: "left" | "center" | "right";
+  titleSize?: "sm" | "md" | "lg" | "xl" | "2xl";
+  titleColor?: string;
+  titleFont?: string;
+  subtitleColor?: string;
+  descriptionColor?: string;
+  badgeStyle?: "pill" | "outlined" | "solid" | "gradient";
+  badgeColor?: string;
+  badgeTextColor?: string;
+  
+  // Features Array
+  features?: FeatureItem[];
+  
+  // Layout & Variant
+  variant?: "cards" | "minimal" | "centered" | "icons-left" | "icons-top" | "alternating" | "bento" | "list" | "timeline" | "masonry";
+  columns?: 2 | 3 | 4 | 5;
+  maxWidth?: "md" | "lg" | "xl" | "2xl" | "full";
+  contentAlign?: "left" | "center" | "right";
+  
+  // Card Styling
   backgroundColor?: string;
   cardBackgroundColor?: string;
-  textColor?: string;
-  paddingY?: "sm" | "md" | "lg" | "xl";
+  cardHoverBackgroundColor?: string;
+  featuredCardBackground?: string;
   showBorder?: boolean;
+  cardBorderColor?: string;
+  cardBorderWidth?: "1" | "2" | "3";
+  cardBorderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
   showShadow?: boolean;
+  cardShadow?: "none" | "sm" | "md" | "lg" | "xl";
+  cardHoverShadow?: "none" | "sm" | "md" | "lg" | "xl";
+  cardPadding?: "sm" | "md" | "lg" | "xl";
+  hoverEffect?: "none" | "lift" | "scale" | "glow" | "border";
+  
+  // Icon Styling
+  iconStyle?: "emoji" | "icon" | "image" | "number";
+  iconSize?: "sm" | "md" | "lg" | "xl";
+  iconShape?: "circle" | "square" | "rounded" | "none";
+  iconPosition?: "top" | "left" | "inline";
+  showIconBackground?: boolean;
+  defaultIconColor?: string;
+  defaultIconBackgroundColor?: string;
+  iconBorder?: boolean;
+  iconBorderColor?: string;
+  
+  // Title & Description
+  featureTitleSize?: "sm" | "md" | "lg" | "xl";
+  featureTitleColor?: string;
+  featureTitleFont?: string;
+  featureTitleWeight?: "normal" | "medium" | "semibold" | "bold";
+  featureDescriptionSize?: "xs" | "sm" | "md";
+  featureDescriptionColor?: string;
+  descriptionMaxLines?: number;
+  
+  // Links
+  showLinks?: boolean;
+  linkStyle?: "text" | "button" | "arrow";
+  linkColor?: string;
+  linkHoverColor?: string;
+  defaultLinkText?: string;
+  
+  // Numbering
+  showNumbers?: boolean;
+  numberStyle?: "circle" | "plain" | "badge";
+  numberColor?: string;
+  numberBackgroundColor?: string;
+  
+  // Highlight/Featured
+  highlightFeatured?: boolean;
+  featuredBorderColor?: string;
+  featuredBadgeText?: string;
+  
+  // Section Sizing
+  paddingY?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  paddingX?: "none" | "sm" | "md" | "lg" | "xl";
+  gap?: "sm" | "md" | "lg" | "xl";
+  sectionGap?: "sm" | "md" | "lg" | "xl";
+  
+  // Background
+  backgroundStyle?: "solid" | "gradient" | "pattern" | "image";
+  backgroundGradientFrom?: string;
+  backgroundGradientTo?: string;
+  backgroundGradientDirection?: "to-r" | "to-l" | "to-t" | "to-b" | "to-br" | "to-bl";
+  backgroundPattern?: "dots" | "grid" | "lines";
+  backgroundPatternOpacity?: number;
+  backgroundImage?: string | ImageValue;
+  backgroundOverlay?: boolean;
+  backgroundOverlayColor?: string;
+  backgroundOverlayOpacity?: number;
+  
+  // Decorative
+  showDecorators?: boolean;
+  decoratorStyle?: "dots" | "circles" | "blur";
+  decoratorColor?: string;
+  decoratorPosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "both-sides";
+  
+  // Animation
+  animateOnScroll?: boolean;
+  animationType?: "fade" | "slide-up" | "slide-left" | "slide-right" | "scale" | "stagger";
+  animationDelay?: number;
+  staggerDelay?: number;
+  
+  // CTA
+  showCta?: boolean;
+  ctaTitle?: string;
+  ctaDescription?: string;
+  ctaButtonText?: string;
+  ctaButtonLink?: string;
+  ctaButtonStyle?: "primary" | "secondary" | "outline";
+  
+  // Responsive
+  mobileColumns?: 1 | 2;
+  stackOnMobile?: boolean;
+  compactOnMobile?: boolean;
+  
+  // Colors
+  textColor?: string;
+  accentColor?: string;
+  
   id?: string;
   className?: string;
 }
 
 export function FeaturesRender({
+  // Header Content
   title = "Amazing Features",
   subtitle,
   description,
+  badge,
+  badgeIcon,
+  
+  // Header Styling
+  headerAlign = "center",
+  titleSize = "lg",
+  titleColor,
+  titleFont,
+  subtitleColor,
+  descriptionColor,
+  badgeStyle = "pill",
+  badgeColor = "#3b82f6",
+  badgeTextColor = "#ffffff",
+  
+  // Features
   features = [],
-  columns = 3,
+  
+  // Layout & Variant
   variant = "cards",
+  columns = 3,
+  maxWidth = "xl",
+  contentAlign = "left",
+  
+  // Card Styling
   backgroundColor = "#ffffff",
   cardBackgroundColor = "#ffffff",
-  textColor,
-  paddingY = "lg",
+  cardHoverBackgroundColor,
+  featuredCardBackground = "#3b82f610",
   showBorder = true,
+  cardBorderColor = "#e5e7eb",
+  cardBorderWidth = "1",
+  cardBorderRadius = "xl",
   showShadow = true,
+  cardShadow = "sm",
+  cardHoverShadow = "lg",
+  cardPadding = "lg",
+  hoverEffect = "lift",
+  
+  // Icon Styling
+  iconStyle = "emoji",
+  iconSize = "lg",
+  iconShape = "rounded",
+  iconPosition = "top",
+  showIconBackground = true,
+  defaultIconColor = "#3b82f6",
+  defaultIconBackgroundColor,
+  iconBorder = false,
+  iconBorderColor = "#3b82f6",
+  
+  // Title & Description
+  featureTitleSize = "lg",
+  featureTitleColor,
+  featureTitleFont,
+  featureTitleWeight = "semibold",
+  featureDescriptionSize = "sm",
+  featureDescriptionColor,
+  descriptionMaxLines = 0,
+  
+  // Links
+  showLinks = true,
+  linkStyle = "arrow",
+  linkColor = "#3b82f6",
+  linkHoverColor = "#2563eb",
+  defaultLinkText = "Learn more",
+  
+  // Numbering
+  showNumbers = false,
+  numberStyle = "circle",
+  numberColor = "#ffffff",
+  numberBackgroundColor,
+  
+  // Highlight/Featured
+  highlightFeatured = false,
+  featuredBorderColor = "#3b82f6",
+  featuredBadgeText = "Popular",
+  
+  // Section Sizing
+  paddingY = "lg",
+  paddingX = "md",
+  gap = "lg",
+  sectionGap = "lg",
+  
+  // Background
+  backgroundStyle = "solid",
+  backgroundGradientFrom = "#ffffff",
+  backgroundGradientTo = "#f3f4f6",
+  backgroundGradientDirection = "to-b",
+  backgroundPattern,
+  backgroundPatternOpacity = 0.1,
+  backgroundImage,
+  backgroundOverlay = false,
+  backgroundOverlayColor = "#000000",
+  backgroundOverlayOpacity = 0.5,
+  
+  // Decorative
+  showDecorators = false,
+  decoratorStyle = "blur",
+  decoratorColor = "#3b82f6",
+  decoratorPosition = "both-sides",
+  
+  // Animation
+  animateOnScroll = false,
+  animationType = "fade",
+  animationDelay = 0,
+  staggerDelay = 100,
+  
+  // CTA
+  showCta = false,
+  ctaTitle = "Ready to Get Started?",
+  ctaDescription = "Join thousands of satisfied customers today.",
+  ctaButtonText = "Get Started",
+  ctaButtonLink = "#",
+  ctaButtonStyle = "primary",
+  
+  // Responsive
+  mobileColumns = 1,
+  stackOnMobile = true,
+  compactOnMobile = false,
+  
+  // Colors
+  textColor,
+  accentColor = "#3b82f6",
+  
   id,
   className = "",
 }: FeaturesProps) {
-  const paddingClasses = { sm: "py-12 md:py-16", md: "py-16 md:py-20", lg: "py-20 md:py-28", xl: "py-24 md:py-32" }[paddingY];
-  const colClasses = { 2: "md:grid-cols-2", 3: "md:grid-cols-2 lg:grid-cols-3", 4: "md:grid-cols-2 lg:grid-cols-4" }[columns];
+  // Padding classes
+  const paddingYClasses = {
+    none: "",
+    sm: "py-8 md:py-12",
+    md: "py-12 md:py-16",
+    lg: "py-16 md:py-24",
+    xl: "py-20 md:py-32",
+    "2xl": "py-24 md:py-40",
+  }[paddingY];
+  
+  const paddingXClasses = {
+    none: "",
+    sm: "px-4",
+    md: "px-4 md:px-6",
+    lg: "px-4 md:px-8",
+    xl: "px-4 md:px-12",
+  }[paddingX];
+
+  // Max width classes
+  const maxWidthClasses = {
+    md: "max-w-3xl",
+    lg: "max-w-5xl",
+    xl: "max-w-7xl",
+    "2xl": "max-w-screen-2xl",
+    full: "max-w-full",
+  }[maxWidth];
+
+  // Column classes
+  const columnClasses = {
+    2: `grid-cols-${mobileColumns} md:grid-cols-2`,
+    3: `grid-cols-${mobileColumns} md:grid-cols-2 lg:grid-cols-3`,
+    4: `grid-cols-${mobileColumns} md:grid-cols-2 lg:grid-cols-4`,
+    5: `grid-cols-${mobileColumns} md:grid-cols-3 lg:grid-cols-5`,
+  }[columns];
+
+  // Title size classes
+  const titleSizeClasses = {
+    sm: "text-xl md:text-2xl",
+    md: "text-2xl md:text-3xl",
+    lg: "text-3xl md:text-4xl lg:text-5xl",
+    xl: "text-4xl md:text-5xl lg:text-6xl",
+    "2xl": "text-5xl md:text-6xl lg:text-7xl",
+  }[titleSize];
+
+  // Feature title size classes
+  const featureTitleSizeClasses = {
+    sm: "text-sm md:text-base",
+    md: "text-base md:text-lg",
+    lg: "text-lg md:text-xl",
+    xl: "text-xl md:text-2xl",
+  }[featureTitleSize];
+
+  // Feature title weight classes
+  const featureTitleWeightClasses = {
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+  }[featureTitleWeight];
+
+  // Feature description size classes
+  const featureDescriptionSizeClasses = {
+    xs: "text-xs md:text-sm",
+    sm: "text-sm md:text-base",
+    md: "text-base md:text-lg",
+  }[featureDescriptionSize];
+
+  // Icon size classes
+  const iconSizeClasses = {
+    sm: "w-8 h-8 md:w-10 md:h-10 text-lg",
+    md: "w-10 h-10 md:w-12 md:h-12 text-xl",
+    lg: "w-12 h-12 md:w-14 md:h-14 text-2xl",
+    xl: "w-14 h-14 md:w-16 md:h-16 text-3xl",
+  }[iconSize];
+
+  // Icon shape classes
+  const iconShapeClasses = {
+    circle: "rounded-full",
+    square: "rounded-none",
+    rounded: "rounded-lg",
+    none: "",
+  }[iconShape];
+
+  // Card padding classes
+  const cardPaddingClasses = {
+    sm: "p-4",
+    md: "p-5 md:p-6",
+    lg: "p-6 md:p-8",
+    xl: "p-8 md:p-10",
+  }[cardPadding];
+
+  // Border radius classes
+  const borderRadiusClasses = {
+    none: "rounded-none",
+    sm: "rounded",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+  }[cardBorderRadius];
+
+  // Shadow classes
+  const shadowClasses = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+  }[cardShadow];
+
+  // Hover effect classes
+  const hoverEffectClasses = {
+    none: "",
+    lift: "hover:-translate-y-2 transition-all duration-300",
+    scale: "hover:scale-105 transition-transform duration-300",
+    glow: "hover:ring-2 hover:ring-offset-2 transition-all duration-300",
+    border: "hover:border-blue-500 transition-all duration-300",
+  }[hoverEffect];
+
+  // Gap classes
+  const gapClasses = {
+    sm: "gap-4 md:gap-5",
+    md: "gap-5 md:gap-6",
+    lg: "gap-6 md:gap-8",
+    xl: "gap-8 md:gap-10",
+  }[gap];
+
+  // Section gap classes
+  const sectionGapClasses = {
+    sm: "mb-8 md:mb-10",
+    md: "mb-10 md:mb-12",
+    lg: "mb-12 md:mb-16",
+    xl: "mb-16 md:mb-20",
+  }[sectionGap];
+
+  // Content alignment
+  const contentAlignClasses = {
+    left: "text-left items-start",
+    center: "text-center items-center",
+    right: "text-right items-end",
+  }[contentAlign];
+
+  // Badge styles
+  const badgeClasses = {
+    pill: "px-4 py-1.5 rounded-full text-sm font-medium",
+    outlined: "px-4 py-1.5 rounded-full text-sm font-medium border-2 bg-transparent",
+    solid: "px-4 py-2 rounded-md text-sm font-medium",
+    gradient: "px-4 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r",
+  }[badgeStyle];
+
+  // Get background style
+  const getBackgroundStyle = (): React.CSSProperties => {
+    const style: React.CSSProperties = {};
+    
+    if (backgroundStyle === "solid") {
+      style.backgroundColor = backgroundColor;
+    } else if (backgroundStyle === "gradient") {
+      const direction = {
+        "to-r": "to right",
+        "to-l": "to left",
+        "to-t": "to top",
+        "to-b": "to bottom",
+        "to-br": "to bottom right",
+        "to-bl": "to bottom left",
+      }[backgroundGradientDirection];
+      style.background = `linear-gradient(${direction}, ${backgroundGradientFrom}, ${backgroundGradientTo})`;
+    } else if (backgroundStyle === "image" && backgroundImage) {
+      style.backgroundImage = `url(${getImageUrl(backgroundImage)})`;
+      style.backgroundSize = "cover";
+      style.backgroundPosition = "center";
+    }
+    
+    return style;
+  };
+
+  // Animation classes
+  const getAnimationClasses = (index: number) => {
+    if (!animateOnScroll) return "";
+    const baseClasses = "animate-in duration-500";
+    const typeClasses = {
+      fade: "fade-in",
+      "slide-up": "slide-in-from-bottom-4",
+      "slide-left": "slide-in-from-left-4",
+      "slide-right": "slide-in-from-right-4",
+      scale: "zoom-in-95",
+      stagger: "fade-in slide-in-from-bottom-2",
+    }[animationType];
+    return `${baseClasses} ${typeClasses}`;
+  };
+
+  // Render decorators
+  const renderDecorators = () => {
+    if (!showDecorators) return null;
+    
+    const decoratorElement = () => {
+      switch (decoratorStyle) {
+        case "dots":
+          return (
+            <div className="grid grid-cols-4 gap-2 w-24 h-24 opacity-20">
+              {Array.from({ length: 16 }).map((_, i) => (
+                <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: decoratorColor }} />
+              ))}
+            </div>
+          );
+        case "circles":
+          return (
+            <div className="relative w-40 h-40 opacity-20">
+              <div className="absolute w-full h-full rounded-full border-4" style={{ borderColor: decoratorColor }} />
+              <div className="absolute w-2/3 h-2/3 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4" style={{ borderColor: decoratorColor }} />
+            </div>
+          );
+        case "blur":
+          return <div className="w-64 h-64 rounded-full blur-3xl opacity-30" style={{ backgroundColor: decoratorColor }} />;
+        default:
+          return null;
+      }
+    };
+    
+    if (decoratorPosition === "both-sides") {
+      return (
+        <>
+          <div className="absolute top-0 left-0 pointer-events-none">{decoratorElement()}</div>
+          <div className="absolute bottom-0 right-0 pointer-events-none">{decoratorElement()}</div>
+        </>
+      );
+    }
+    
+    const positionClasses = {
+      "top-left": "top-0 left-0",
+      "top-right": "top-0 right-0",
+      "bottom-left": "bottom-0 left-0",
+      "bottom-right": "bottom-0 right-0",
+      "both-sides": "",
+    }[decoratorPosition];
+    
+    return <div className={`absolute ${positionClasses} pointer-events-none`}>{decoratorElement()}</div>;
+  };
+
+  // CTA button classes
+  const ctaButtonClasses = {
+    primary: "px-6 py-3 rounded-lg font-semibold text-white transition-all hover:opacity-90",
+    secondary: "px-6 py-3 rounded-lg font-semibold transition-all hover:opacity-90",
+    outline: "px-6 py-3 rounded-lg font-semibold border-2 bg-transparent transition-all hover:bg-opacity-10",
+  }[ctaButtonStyle];
+
+  // Render feature icon
+  const renderIcon = (feature: FeatureItem, index: number) => {
+    const iconBgColor = feature.iconBackgroundColor || defaultIconBackgroundColor || `${feature.iconColor || defaultIconColor}20`;
+    
+    if (showNumbers) {
+      return (
+        <div
+          className={`${iconSizeClasses} ${numberStyle === "circle" ? "rounded-full" : numberStyle === "badge" ? "rounded-lg" : ""} flex items-center justify-center font-bold`}
+          style={{
+            backgroundColor: numberBackgroundColor || accentColor,
+            color: numberColor,
+          }}
+        >
+          {index + 1}
+        </div>
+      );
+    }
+    
+    if (iconStyle === "image" && feature.image) {
+      return (
+        <img
+          src={getImageUrl(feature.image) || "/placeholder.svg"}
+          alt={feature.title || "Feature"}
+          className={`${iconSizeClasses} ${iconShapeClasses} object-cover`}
+        />
+      );
+    }
+    
+    return (
+      <div
+        className={`${iconSizeClasses} ${iconShapeClasses} flex items-center justify-center ${iconBorder ? "ring-2 ring-offset-2" : ""}`}
+        style={{
+          backgroundColor: showIconBackground ? iconBgColor : "transparent",
+          color: feature.iconColor || defaultIconColor,
+          // @ts-expect-error - Custom CSS property for ring-color
+          "--tw-ring-color": iconBorder ? iconBorderColor : undefined,
+        }}
+      >
+        <span>{feature.icon || "✨"}</span>
+      </div>
+    );
+  };
+
+  // Render link
+  const renderLink = (feature: FeatureItem) => {
+    if (!showLinks || !feature.link) return null;
+    
+    const text = feature.linkText || defaultLinkText;
+    
+    if (linkStyle === "button") {
+      return (
+        <a
+          href={feature.link}
+          className="mt-4 inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          style={{ backgroundColor: `${linkColor}20`, color: linkColor }}
+        >
+          {text}
+        </a>
+      );
+    }
+    
+    return (
+      <a
+        href={feature.link}
+        className="mt-4 inline-flex items-center text-sm font-medium transition-colors group/link"
+        style={{ color: linkColor }}
+        onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
+        onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}
+      >
+        {text}
+        {linkStyle === "arrow" && (
+          <svg className="w-4 h-4 ml-1 transition-transform group-hover/link:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        )}
+      </a>
+    );
+  };
 
   return (
-    <section id={id} className={`w-full ${paddingClasses} px-4 ${className}`} style={{ backgroundColor }}>
-      <div className="max-w-screen-xl mx-auto">
-        <div className="text-center mb-12 md:mb-16">
-          {subtitle && <p className="text-sm md:text-base font-semibold text-blue-600 uppercase tracking-wider mb-2">{subtitle}</p>}
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4" style={{ color: textColor }}>{title}</h2>
-          {description && <p className="text-base md:text-lg max-w-2xl mx-auto opacity-80" style={{ color: textColor }}>{description}</p>}
+    <section
+      id={id}
+      className={`w-full ${paddingYClasses} ${paddingXClasses} relative overflow-hidden ${className}`}
+      style={getBackgroundStyle()}
+    >
+      {/* Background overlay for images */}
+      {backgroundStyle === "image" && backgroundOverlay && (
+        <div
+          className="absolute inset-0 z-0"
+          style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity }}
+        />
+      )}
+      
+      {/* Background pattern */}
+      {backgroundPattern && (
+        <div className="absolute inset-0 z-0" style={{ opacity: backgroundPatternOpacity }}>
+          {backgroundPattern === "dots" && (
+            <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(circle, ${accentColor} 1px, transparent 1px)`, backgroundSize: "20px 20px" }} />
+          )}
+          {backgroundPattern === "grid" && (
+            <div className="absolute inset-0" style={{ backgroundImage: `linear-gradient(${accentColor}20 1px, transparent 1px), linear-gradient(90deg, ${accentColor}20 1px, transparent 1px)`, backgroundSize: "40px 40px" }} />
+          )}
         </div>
-        <div className={`grid grid-cols-1 ${colClasses} gap-6 md:gap-8`}>
+      )}
+      
+      {/* Decorators */}
+      {renderDecorators()}
+      
+      <div className={`${maxWidthClasses} mx-auto relative z-10`}>
+        {/* Header */}
+        <div className={`${sectionGapClasses} ${headerAlign === "center" ? "text-center" : headerAlign === "right" ? "text-right" : "text-left"}`}>
+          {/* Badge */}
+          {badge && (
+            <div className={`inline-flex items-center gap-2 mb-4 ${badgeClasses}`} style={{
+              backgroundColor: badgeStyle !== "outlined" ? badgeColor : "transparent",
+              color: badgeStyle === "outlined" ? badgeColor : badgeTextColor,
+              borderColor: badgeStyle === "outlined" ? badgeColor : undefined,
+            }}>
+              {badgeIcon && <span>{badgeIcon}</span>}
+              {badge}
+            </div>
+          )}
+          
+          {/* Subtitle */}
+          {subtitle && (
+            <p className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2" style={{ color: subtitleColor || accentColor }}>
+              {subtitle}
+            </p>
+          )}
+          
+          {/* Title */}
+          <h2
+            className={`${titleSizeClasses} font-bold mb-4`}
+            style={{ color: titleColor || textColor, fontFamily: titleFont }}
+          >
+            {title}
+          </h2>
+          
+          {/* Description */}
+          {description && (
+            <p
+              className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80`}
+              style={{ color: descriptionColor || textColor }}
+            >
+              {description}
+            </p>
+          )}
+        </div>
+        
+        {/* Features Grid */}
+        <div className={`grid ${columnClasses} ${gapClasses} ${compactOnMobile ? "gap-3 md:gap-6" : ""}`}>
           {features.map((feature, i) => (
             <div
               key={i}
-              className={`p-6 md:p-8 rounded-xl transition-all duration-300 hover:-translate-y-1 ${showBorder ? "border" : ""} ${showShadow ? "shadow-sm hover:shadow-lg" : ""} ${variant === "centered" ? "text-center" : ""}`}
-              style={{ backgroundColor: cardBackgroundColor }}
+              className={`flex ${iconPosition === "left" ? "flex-row" : "flex-col"} ${contentAlignClasses} ${variant === "cards" ? `${cardPaddingClasses} ${borderRadiusClasses}` : ""} ${showShadow && variant === "cards" ? shadowClasses : ""} ${hoverEffectClasses} ${getAnimationClasses(i)} ${showBorder && variant === "cards" ? "border" : ""} ${feature.isFeatured && highlightFeatured ? "ring-2 relative" : ""} group`}
+              style={{
+                backgroundColor: variant === "cards" ? (feature.isFeatured ? featuredCardBackground : cardBackgroundColor) : undefined,
+                borderColor: showBorder ? cardBorderColor : undefined,
+                borderWidth: showBorder ? `${cardBorderWidth}px` : undefined,
+                animationDelay: animateOnScroll ? `${animationDelay + (i * staggerDelay)}ms` : undefined,
+                // @ts-expect-error - Custom CSS property for ring-color
+                "--tw-ring-color": feature.isFeatured && highlightFeatured ? featuredBorderColor : undefined,
+              }}
             >
-              {feature.icon && (
-                <div className={`w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center mb-4 ${variant === "centered" ? "mx-auto" : ""}`} style={{ backgroundColor: `${feature.iconColor || "#3b82f6"}20` }}>
-                  <span className="text-2xl">{feature.icon}</span>
-                </div>
+              {/* Featured badge */}
+              {feature.isFeatured && highlightFeatured && (
+                <span
+                  className="absolute -top-3 left-4 px-3 py-1 text-xs font-medium rounded-full"
+                  style={{ backgroundColor: featuredBorderColor, color: "#ffffff" }}
+                >
+                  {feature.badge || featuredBadgeText}
+                </span>
               )}
-              <h3 className="text-lg md:text-xl font-semibold mb-2" style={{ color: textColor }}>{feature.title}</h3>
-              <p className="text-sm md:text-base opacity-75 leading-relaxed" style={{ color: textColor }}>{feature.description}</p>
-              {feature.link && <a href={feature.link} className="inline-flex items-center mt-4 text-sm font-medium text-blue-600 hover:text-blue-700">Learn more →</a>}
+              
+              {/* Icon */}
+              <div className={`${iconPosition === "left" ? "mr-4 flex-shrink-0" : "mb-4"} ${contentAlign === "center" && iconPosition !== "left" ? "mx-auto" : ""}`}>
+                {renderIcon(feature, i)}
+              </div>
+              
+              {/* Content */}
+              <div className={iconPosition === "left" ? "flex-1" : ""}>
+                <h3
+                  className={`${featureTitleSizeClasses} ${featureTitleWeightClasses} mb-2`}
+                  style={{ color: featureTitleColor || textColor, fontFamily: featureTitleFont }}
+                >
+                  {feature.title}
+                </h3>
+                <p
+                  className={`${featureDescriptionSizeClasses} opacity-75 leading-relaxed`}
+                  style={{
+                    color: featureDescriptionColor || textColor,
+                    ...(descriptionMaxLines > 0 ? {
+                      display: "-webkit-box",
+                      WebkitLineClamp: descriptionMaxLines,
+                      WebkitBoxOrient: "vertical" as const,
+                      overflow: "hidden",
+                    } : {}),
+                  }}
+                >
+                  {feature.description}
+                </p>
+                {renderLink(feature)}
+              </div>
             </div>
           ))}
         </div>
+        
+        {/* CTA */}
+        {showCta && (
+          <div className="mt-12 md:mt-16 text-center p-8 md:p-12 rounded-2xl" style={{ backgroundColor: `${accentColor}10` }}>
+            <h3 className="text-xl md:text-2xl font-bold mb-2" style={{ color: textColor }}>{ctaTitle}</h3>
+            <p className="text-base opacity-80 mb-6 max-w-lg mx-auto" style={{ color: textColor }}>{ctaDescription}</p>
+            <a
+              href={ctaButtonLink}
+              className={ctaButtonClasses}
+              style={{
+                backgroundColor: ctaButtonStyle === "primary" ? accentColor : ctaButtonStyle === "secondary" ? `${accentColor}20` : "transparent",
+                borderColor: ctaButtonStyle === "outline" ? accentColor : undefined,
+                color: ctaButtonStyle === "outline" ? accentColor : ctaButtonStyle === "secondary" ? textColor : "#ffffff",
+              }}
+            >
+              {ctaButtonText}
+            </a>
+          </div>
+        )}
       </div>
     </section>
   );
 }
 
 // ============================================================================
-// CTA - Call To Action Section
+// CTA - Call To Action Section (PREMIUM - 80+ Properties)
 // ============================================================================
 
 export interface CTAProps {
+  // === Content ===
   title?: string;
+  titleSize?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  titleColor?: string;
+  titleWeight?: "normal" | "medium" | "semibold" | "bold" | "extrabold";
+  titleAlign?: "left" | "center" | "right";
+  titleAnimation?: "none" | "fadeIn" | "slideUp" | "slideDown" | "typewriter";
+  subtitle?: string;
+  subtitleSize?: "xs" | "sm" | "md" | "lg";
+  subtitleColor?: string;
+  subtitleWeight?: "normal" | "medium" | "semibold";
   description?: string;
+  descriptionSize?: "sm" | "md" | "lg";
+  descriptionColor?: string;
+  descriptionMaxWidth?: "sm" | "md" | "lg" | "xl" | "full";
+  
+  // === Badge ===
+  badge?: string;
+  badgeColor?: string;
+  badgeTextColor?: string;
+  badgeStyle?: "solid" | "outline" | "pill" | "glow";
+  badgeIcon?: string;
+  badgePosition?: "top" | "inline";
+  
+  // === Primary CTA Button ===
   buttonText?: string;
   buttonLink?: string;
   buttonColor?: string;
+  buttonTextColor?: string;
+  buttonSize?: "sm" | "md" | "lg" | "xl";
+  buttonRadius?: "none" | "sm" | "md" | "lg" | "full";
+  buttonStyle?: "solid" | "outline" | "gradient" | "glow" | "3d";
+  buttonGradientFrom?: string;
+  buttonGradientTo?: string;
+  buttonIcon?: "none" | "arrow" | "chevron" | "rocket" | "sparkle" | "play";
+  buttonIconPosition?: "left" | "right";
+  buttonShadow?: "none" | "sm" | "md" | "lg" | "xl" | "glow";
+  buttonHoverEffect?: "none" | "scale" | "lift" | "glow" | "shine" | "pulse";
+  buttonAnimation?: "none" | "bounce" | "pulse" | "shake";
+  
+  // === Secondary CTA Button ===
   secondaryButtonText?: string;
   secondaryButtonLink?: string;
-  variant?: "simple" | "centered" | "split" | "gradient";
+  secondaryButtonColor?: string;
+  secondaryButtonTextColor?: string;
+  secondaryButtonStyle?: "solid" | "outline" | "ghost" | "text" | "link";
+  secondaryButtonSize?: "sm" | "md" | "lg";
+  secondaryButtonRadius?: "none" | "sm" | "md" | "lg" | "full";
+  secondaryButtonIcon?: "none" | "arrow" | "chevron" | "external";
+  
+  // === Layout ===
+  variant?: "centered" | "left" | "right" | "split" | "splitReverse" | "banner" | "floating" | "minimal" | "gradient" | "glass";
+  contentAlign?: "left" | "center" | "right";
+  contentWidth?: "sm" | "md" | "lg" | "xl" | "full";
+  buttonLayout?: "horizontal" | "vertical" | "stacked";
+  buttonGap?: "sm" | "md" | "lg";
+  
+  // === Background ===
   backgroundColor?: string;
+  backgroundGradient?: boolean;
   backgroundGradientFrom?: string;
   backgroundGradientTo?: string;
+  backgroundGradientDirection?: "to-r" | "to-l" | "to-b" | "to-t" | "to-br" | "to-bl" | "to-tr" | "to-tl";
   backgroundImage?: string | ImageValue;
-  textColor?: string;
-  paddingY?: "sm" | "md" | "lg" | "xl";
-  borderRadius?: "none" | "lg" | "xl" | "2xl";
+  backgroundImagePosition?: "center" | "top" | "bottom" | "left" | "right";
+  backgroundImageSize?: "cover" | "contain" | "auto";
+  backgroundImageFixed?: boolean;
+  backgroundOverlay?: boolean;
+  backgroundOverlayColor?: string;
+  backgroundOverlayOpacity?: number;
+  backgroundPattern?: "none" | "dots" | "grid" | "diagonal" | "waves" | "circuit";
+  backgroundPatternColor?: string;
+  backgroundPatternOpacity?: number;
+  
+  // === Image (Split Layouts) ===
   image?: string | ImageValue;
   imageAlt?: string;
+  imagePosition?: "left" | "right";
+  imageFit?: "cover" | "contain" | "fill";
+  imageRounded?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  imageShadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  imageAnimation?: "none" | "fadeIn" | "slideIn" | "zoom" | "float";
+  imageBorder?: boolean;
+  imageBorderColor?: string;
+  
+  // === Sizing & Spacing ===
+  minHeight?: "auto" | "sm" | "md" | "lg" | "xl" | "screen";
+  paddingY?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  paddingX?: "sm" | "md" | "lg" | "xl";
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  margin?: "none" | "sm" | "md" | "lg" | "xl";
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
+  
+  // === Effects ===
+  textColor?: string;
+  shadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "inner";
+  border?: boolean;
+  borderColor?: string;
+  borderWidth?: "1" | "2" | "4";
+  glassEffect?: boolean;
+  glassBlur?: "sm" | "md" | "lg";
+  
+  // === Animation ===
+  animateOnScroll?: boolean;
+  animationType?: "fadeIn" | "slideUp" | "slideDown" | "slideLeft" | "slideRight" | "zoom" | "flip";
+  animationDuration?: "fast" | "normal" | "slow";
+  animationDelay?: "none" | "sm" | "md" | "lg";
+  
+  // === Decorative Elements ===
+  showDecorator?: boolean;
+  decoratorType?: "circles" | "lines" | "dots" | "waves" | "shapes";
+  decoratorColor?: string;
+  decoratorOpacity?: number;
+  decoratorPosition?: "background" | "corners" | "sides";
+  
+  // === Trust Signals ===
+  trustBadges?: Array<{
+    icon?: string;
+    text?: string;
+    image?: string | ImageValue;
+  }>;
+  trustBadgesPosition?: "top" | "bottom";
+  trustBadgesStyle?: "icons" | "logos" | "text";
+  
+  // === Countdown Timer ===
+  showCountdown?: boolean;
+  countdownDate?: string;
+  countdownLabels?: { days?: string; hours?: string; minutes?: string; seconds?: string };
+  countdownStyle?: "simple" | "cards" | "minimal";
+  countdownColor?: string;
+  
+  // === Responsive ===
+  hideOnMobile?: boolean;
+  mobileLayout?: "stacked" | "default";
+  mobileButtonFullWidth?: boolean;
+  
   id?: string;
   className?: string;
+  _breakpoint?: "mobile" | "tablet" | "desktop";
+  _isEditor?: boolean;
 }
 
 export function CTARender({
+  // Content
   title = "Ready to get started?",
+  titleSize = "xl",
+  titleColor,
+  titleWeight = "bold",
+  titleAlign = "center",
+  titleAnimation = "none",
+  subtitle,
+  subtitleSize = "sm",
+  subtitleColor,
+  subtitleWeight = "semibold",
   description = "Join thousands of satisfied customers using our platform today.",
+  descriptionSize = "md",
+  descriptionColor,
+  descriptionMaxWidth = "lg",
+  // Badge
+  badge,
+  badgeColor = "#3b82f6",
+  badgeTextColor = "#ffffff",
+  badgeStyle = "pill",
+  badgeIcon,
+  badgePosition = "top",
+  // Primary Button
   buttonText = "Get Started Free",
   buttonLink = "#",
   buttonColor = "#ffffff",
+  buttonTextColor,
+  buttonSize = "lg",
+  buttonRadius = "lg",
+  buttonStyle = "solid",
+  buttonGradientFrom = "#3b82f6",
+  buttonGradientTo = "#8b5cf6",
+  buttonIcon = "arrow",
+  buttonIconPosition = "right",
+  buttonShadow = "lg",
+  buttonHoverEffect = "lift",
+  buttonAnimation = "none",
+  // Secondary Button
   secondaryButtonText,
   secondaryButtonLink = "#",
+  secondaryButtonColor,
+  secondaryButtonTextColor,
+  secondaryButtonStyle = "outline",
+  secondaryButtonSize = "lg",
+  secondaryButtonRadius = "lg",
+  secondaryButtonIcon = "none",
+  // Layout
   variant = "centered",
+  contentAlign = "center",
+  contentWidth = "lg",
+  buttonLayout = "horizontal",
+  buttonGap = "md",
+  // Background
   backgroundColor = "#3b82f6",
+  backgroundGradient = false,
   backgroundGradientFrom = "#3b82f6",
   backgroundGradientTo = "#8b5cf6",
+  backgroundGradientDirection = "to-br",
   backgroundImage,
-  textColor = "#ffffff",
-  paddingY = "lg",
-  borderRadius = "none",
+  backgroundImagePosition = "center",
+  backgroundImageSize = "cover",
+  backgroundImageFixed = false,
+  backgroundOverlay = true,
+  backgroundOverlayColor = "#000000",
+  backgroundOverlayOpacity = 50,
+  backgroundPattern = "none",
+  backgroundPatternColor = "#ffffff",
+  backgroundPatternOpacity = 10,
+  // Image (Split)
   image,
   imageAlt = "CTA image",
+  imagePosition = "right",
+  imageFit = "cover",
+  imageRounded = "lg",
+  imageShadow = "xl",
+  imageAnimation = "fadeIn",
+  imageBorder = false,
+  imageBorderColor = "#e5e7eb",
+  // Sizing
+  minHeight = "auto",
+  paddingY = "lg",
+  paddingX = "md",
+  borderRadius = "none",
+  margin = "none",
+  maxWidth = "full",
+  // Effects
+  textColor = "#ffffff",
+  shadow = "none",
+  border = false,
+  borderColor = "#e5e7eb",
+  borderWidth = "1",
+  glassEffect = false,
+  glassBlur = "md",
+  // Animation
+  animateOnScroll = false,
+  animationType = "fadeIn",
+  animationDuration = "normal",
+  animationDelay = "none",
+  // Decorators
+  showDecorator = false,
+  decoratorType = "circles",
+  decoratorColor = "#ffffff",
+  decoratorOpacity = 20,
+  decoratorPosition = "background",
+  // Trust Badges
+  trustBadges = [],
+  trustBadgesPosition = "bottom",
+  trustBadgesStyle = "logos",
+  // Countdown
+  showCountdown = false,
+  countdownDate,
+  countdownLabels = { days: "Days", hours: "Hours", minutes: "Minutes", seconds: "Seconds" },
+  countdownStyle = "cards",
+  countdownColor,
+  // Responsive
+  hideOnMobile = false,
+  mobileLayout = "stacked",
+  mobileButtonFullWidth = true,
   id,
   className = "",
+  _breakpoint = "desktop",
+  _isEditor = false,
 }: CTAProps) {
   // Normalize image values
   const bgImageUrl = getImageUrl(backgroundImage);
   const ctaImageUrl = getImageUrl(image);
   
-  const paddingClasses = { sm: "py-12 md:py-16", md: "py-16 md:py-20", lg: "py-20 md:py-28", xl: "py-24 md:py-32" }[paddingY];
-  const radiusClasses = { none: "", lg: "rounded-lg", xl: "rounded-xl", "2xl": "rounded-2xl" }[borderRadius];
-
-  const bgStyle: React.CSSProperties = variant === "gradient"
-    ? { background: `linear-gradient(135deg, ${backgroundGradientFrom}, ${backgroundGradientTo})` }
-    : bgImageUrl
-      ? { backgroundImage: `url(${bgImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
-      : { backgroundColor };
-
-  // Split variant
-  if (variant === "split" && ctaImageUrl) {
+  // Size classes
+  const titleSizeClasses = {
+    sm: "text-xl md:text-2xl",
+    md: "text-2xl md:text-3xl",
+    lg: "text-3xl md:text-4xl",
+    xl: "text-3xl md:text-4xl lg:text-5xl",
+    "2xl": "text-4xl md:text-5xl lg:text-6xl",
+    "3xl": "text-5xl md:text-6xl lg:text-7xl",
+  }[titleSize];
+  
+  const titleWeightClasses = {
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+    extrabold: "font-extrabold",
+  }[titleWeight];
+  
+  const descriptionSizeClasses = {
+    sm: "text-sm md:text-base",
+    md: "text-base md:text-lg",
+    lg: "text-lg md:text-xl",
+  }[descriptionSize];
+  
+  const descriptionMaxWidthClasses = {
+    sm: "max-w-sm",
+    md: "max-w-md",
+    lg: "max-w-xl",
+    xl: "max-w-2xl",
+    full: "max-w-none",
+  }[descriptionMaxWidth];
+  
+  const paddingYClasses = {
+    none: "py-0",
+    sm: "py-8 md:py-12",
+    md: "py-12 md:py-16",
+    lg: "py-16 md:py-24",
+    xl: "py-20 md:py-32",
+    "2xl": "py-24 md:py-40",
+  }[paddingY];
+  
+  const paddingXClasses = { sm: "px-4", md: "px-6", lg: "px-8", xl: "px-12" }[paddingX];
+  
+  const borderRadiusClasses = {
+    none: "",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+  }[borderRadius];
+  
+  const marginClasses = {
+    none: "",
+    sm: "mx-4",
+    md: "mx-8",
+    lg: "mx-12",
+    xl: "mx-16",
+  }[margin];
+  
+  const maxWidthClasses = {
+    sm: "max-w-3xl",
+    md: "max-w-4xl",
+    lg: "max-w-5xl",
+    xl: "max-w-6xl",
+    "2xl": "max-w-7xl",
+    full: "max-w-none",
+  }[maxWidth];
+  
+  const minHeightClasses = {
+    auto: "",
+    sm: "min-h-[300px]",
+    md: "min-h-[400px]",
+    lg: "min-h-[500px]",
+    xl: "min-h-[600px]",
+    screen: "min-h-screen",
+  }[minHeight];
+  
+  const shadowClasses = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    "2xl": "shadow-2xl",
+    inner: "shadow-inner",
+  }[shadow];
+  
+  const contentAlignClasses = {
+    left: "text-left items-start",
+    center: "text-center items-center",
+    right: "text-right items-end",
+  }[contentAlign];
+  
+  const buttonLayoutClasses = {
+    horizontal: "flex-row",
+    vertical: "flex-col",
+    stacked: "flex-col sm:flex-row",
+  }[buttonLayout];
+  
+  const buttonGapClasses = { sm: "gap-2", md: "gap-3", lg: "gap-4" }[buttonGap];
+  
+  // Button size classes
+  const buttonSizeClasses = {
+    sm: "px-4 py-2 text-sm",
+    md: "px-5 py-2.5 text-base",
+    lg: "px-6 py-3 text-base md:text-lg",
+    xl: "px-8 py-4 text-lg md:text-xl",
+  }[buttonSize];
+  
+  const buttonRadiusClasses = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    full: "rounded-full",
+  }[buttonRadius];
+  
+  const buttonShadowClasses = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    glow: "shadow-lg shadow-blue-500/50",
+  }[buttonShadow];
+  
+  const buttonHoverClasses = {
+    none: "",
+    scale: "hover:scale-105",
+    lift: "hover:-translate-y-1",
+    glow: "hover:shadow-xl hover:shadow-blue-500/40",
+    shine: "overflow-hidden relative",
+    pulse: "hover:animate-pulse",
+  }[buttonHoverEffect];
+  
+  const imageRoundedClasses = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+  }[imageRounded];
+  
+  const imageShadowClasses = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    "2xl": "shadow-2xl",
+  }[imageShadow];
+  
+  const contentWidthClasses = {
+    sm: "max-w-lg",
+    md: "max-w-2xl",
+    lg: "max-w-3xl",
+    xl: "max-w-4xl",
+    full: "max-w-none",
+  }[contentWidth];
+  
+  // Build background style
+  const bgStyle: React.CSSProperties = {};
+  
+  if (backgroundGradient) {
+    const gradientDirMap: Record<string, string> = {
+      "to-r": "to right",
+      "to-l": "to left",
+      "to-b": "to bottom",
+      "to-t": "to top",
+      "to-br": "to bottom right",
+      "to-bl": "to bottom left",
+      "to-tr": "to top right",
+      "to-tl": "to top left",
+    };
+    bgStyle.background = `linear-gradient(${gradientDirMap[backgroundGradientDirection]}, ${backgroundGradientFrom}, ${backgroundGradientTo})`;
+  } else if (bgImageUrl) {
+    bgStyle.backgroundImage = `url(${bgImageUrl})`;
+    bgStyle.backgroundSize = backgroundImageSize;
+    bgStyle.backgroundPosition = backgroundImagePosition;
+    if (backgroundImageFixed) bgStyle.backgroundAttachment = "fixed";
+  } else {
+    bgStyle.backgroundColor = backgroundColor;
+  }
+  
+  // Glass effect
+  const glassClasses = glassEffect ? `backdrop-blur-${glassBlur} bg-opacity-80` : "";
+  
+  // Button icons
+  const ButtonIcon = ({ type, position }: { type: string; position: "left" | "right" }) => {
+    const iconClass = `w-5 h-5 ${position === "left" ? "mr-2" : "ml-2"} transition-transform group-hover:translate-x-1`;
+    switch (type) {
+      case "arrow":
+        return <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>;
+      case "chevron":
+        return <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>;
+      case "rocket":
+        return <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" /></svg>;
+      case "sparkle":
+        return <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" /></svg>;
+      case "play":
+        return <svg className={iconClass} fill="currentColor" viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z" /></svg>;
+      default:
+        return null;
+    }
+  };
+  
+  // Badge component
+  const BadgeElement = () => {
+    if (!badge) return null;
+    const badgeStyleClasses = {
+      solid: "px-3 py-1 rounded-md",
+      outline: "px-3 py-1 rounded-md border-2",
+      pill: "px-4 py-1.5 rounded-full",
+      glow: "px-4 py-1.5 rounded-full shadow-lg",
+    }[badgeStyle];
+    
     return (
-      <section id={id} className={`w-full ${paddingClasses} px-4 ${className}`}>
-        <div className={`max-w-screen-xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 items-center p-8 md:p-12 ${radiusClasses}`} style={bgStyle}>
-          <div>
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4" style={{ color: textColor }}>{title}</h2>
-            <p className="text-base md:text-lg mb-6 opacity-90" style={{ color: textColor }}>{description}</p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <a href={buttonLink} className="inline-flex items-center justify-center px-6 py-3 text-base font-medium rounded-lg transition-all" style={{ backgroundColor: buttonColor, color: backgroundColor }}>{buttonText}</a>
-              {secondaryButtonText && <a href={secondaryButtonLink} className="inline-flex items-center justify-center px-6 py-3 text-base font-medium border-2 rounded-lg transition-all" style={{ borderColor: textColor, color: textColor }}>{secondaryButtonText}</a>}
+      <span
+        className={`inline-flex items-center gap-2 text-sm font-semibold ${badgeStyleClasses} mb-4`}
+        style={{
+          backgroundColor: badgeStyle === "outline" ? "transparent" : badgeColor,
+          color: badgeStyle === "outline" ? badgeColor : badgeTextColor,
+          borderColor: badgeStyle === "outline" ? badgeColor : undefined,
+          boxShadow: badgeStyle === "glow" ? `0 0 20px ${badgeColor}50` : undefined,
+        }}
+      >
+        {badgeIcon && <span>{badgeIcon}</span>}
+        {badge}
+      </span>
+    );
+  };
+  
+  // Trust badges component
+  const TrustBadgesElement = () => {
+    if (!trustBadges || trustBadges.length === 0) return null;
+    return (
+      <div className={`flex flex-wrap justify-center items-center gap-6 ${trustBadgesPosition === "top" ? "mb-8" : "mt-8"}`}>
+        {trustBadges.map((item, i) => (
+          <div key={i} className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity">
+            {item.image && <img src={getImageUrl(item.image) || ""} alt={item.text || ""} className="h-8 w-auto" />}
+            {item.icon && <span className="text-xl">{item.icon}</span>}
+            {item.text && <span className="text-sm font-medium" style={{ color: textColor }}>{item.text}</span>}
+          </div>
+        ))}
+      </div>
+    );
+  };
+  
+  // Pattern overlay
+  const PatternOverlay = () => {
+    if (backgroundPattern === "none") return null;
+    const patternStyles: Record<string, React.CSSProperties> = {
+      dots: { backgroundImage: `radial-gradient(${backgroundPatternColor} 1px, transparent 1px)`, backgroundSize: "20px 20px" },
+      grid: { backgroundImage: `linear-gradient(${backgroundPatternColor} 1px, transparent 1px), linear-gradient(90deg, ${backgroundPatternColor} 1px, transparent 1px)`, backgroundSize: "40px 40px" },
+      diagonal: { backgroundImage: `repeating-linear-gradient(45deg, ${backgroundPatternColor} 0, ${backgroundPatternColor} 1px, transparent 0, transparent 50%)`, backgroundSize: "20px 20px" },
+      waves: { backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='${encodeURIComponent(backgroundPatternColor)}' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E")`, backgroundSize: "cover" },
+      circuit: { backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath fill='none' stroke='${encodeURIComponent(backgroundPatternColor)}' stroke-width='0.5' d='M10,10 L90,10 M10,50 L90,50 M10,90 L90,90 M50,10 L50,90 M10,10 L10,90 M90,10 L90,90'/%3E%3C/svg%3E")` },
+    };
+    return (
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ ...patternStyles[backgroundPattern], opacity: backgroundPatternOpacity / 100 }}
+        aria-hidden="true"
+      />
+    );
+  };
+  
+  // Decorator element
+  const DecoratorElement = () => {
+    if (!showDecorator) return null;
+    return (
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: decoratorOpacity / 100 }}>
+        {decoratorType === "circles" && (
+          <>
+            <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full" style={{ backgroundColor: decoratorColor }} />
+            <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full" style={{ backgroundColor: decoratorColor }} />
+          </>
+        )}
+        {decoratorType === "dots" && (
+          <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(${decoratorColor} 2px, transparent 2px)`, backgroundSize: "32px 32px" }} />
+        )}
+      </div>
+    );
+  };
+  
+  // Primary button styling
+  const getPrimaryButtonStyle = (): React.CSSProperties => {
+    if (buttonStyle === "gradient") {
+      return {
+        background: `linear-gradient(135deg, ${buttonGradientFrom}, ${buttonGradientTo})`,
+        color: buttonTextColor || "#ffffff",
+      };
+    }
+    if (buttonStyle === "outline") {
+      return {
+        backgroundColor: "transparent",
+        border: `2px solid ${buttonColor}`,
+        color: buttonColor,
+      };
+    }
+    if (buttonStyle === "3d") {
+      return {
+        backgroundColor: buttonColor,
+        color: buttonTextColor || backgroundColor,
+        boxShadow: `0 4px 0 ${buttonColor}cc, 0 6px 20px rgba(0,0,0,0.2)`,
+        transform: "translateY(-2px)",
+      };
+    }
+    return {
+      backgroundColor: buttonColor,
+      color: buttonTextColor || backgroundColor,
+    };
+  };
+  
+  // Secondary button styling
+  const getSecondaryButtonStyle = (): React.CSSProperties => {
+    const color = secondaryButtonColor || textColor;
+    const txtColor = secondaryButtonTextColor || color;
+    switch (secondaryButtonStyle) {
+      case "solid":
+        return { backgroundColor: color, color: backgroundColor };
+      case "outline":
+        return { backgroundColor: "transparent", border: `2px solid ${color}`, color: txtColor };
+      case "ghost":
+        return { backgroundColor: "transparent", color: txtColor };
+      case "text":
+      case "link":
+        return { backgroundColor: "transparent", color: txtColor, textDecoration: secondaryButtonStyle === "link" ? "underline" : "none" };
+      default:
+        return { backgroundColor: "transparent", border: `2px solid ${color}`, color: txtColor };
+    }
+  };
+  
+  const secButtonRadiusClasses = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    full: "rounded-full",
+  }[secondaryButtonRadius];
+  
+  const secButtonSizeClasses = {
+    sm: "px-4 py-2 text-sm",
+    md: "px-5 py-2.5 text-base",
+    lg: "px-6 py-3 text-base md:text-lg",
+  }[secondaryButtonSize];
+
+  // Hide on mobile check
+  if (hideOnMobile && _breakpoint === "mobile" && _isEditor) {
+    return <div className="p-8 text-center text-gray-500 bg-gray-100 rounded-lg">Hidden on mobile</div>;
+  }
+
+  // Split variant with image
+  if ((variant === "split" || variant === "splitReverse") && ctaImageUrl) {
+    const isReverse = variant === "splitReverse" || imagePosition === "left";
+    return (
+      <section id={id} className={`w-full ${paddingYClasses} ${paddingXClasses} ${marginClasses} ${className}`}>
+        <div className={`${maxWidthClasses} mx-auto grid md:grid-cols-2 gap-8 md:gap-12 items-center ${borderRadiusClasses} ${shadowClasses} overflow-hidden`} style={bgStyle}>
+          {/* Content */}
+          <div className={`p-8 md:p-12 ${isReverse ? "md:order-2" : ""} ${contentAlignClasses}`}>
+            {backgroundOverlay && bgImageUrl && (
+              <div className="absolute inset-0" style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity / 100 }} />
+            )}
+            <div className="relative z-10 flex flex-col">
+              {badgePosition === "top" && <BadgeElement />}
+              {subtitle && (
+                <p className={`text-${subtitleSize} font-${subtitleWeight} uppercase tracking-wider mb-2`} style={{ color: subtitleColor || textColor }}>
+                  {subtitle}
+                </p>
+              )}
+              <h2 className={`${titleSizeClasses} ${titleWeightClasses} mb-4`} style={{ color: titleColor || textColor }}>
+                {title}
+              </h2>
+              {description && (
+                <p className={`${descriptionSizeClasses} ${descriptionMaxWidthClasses} mb-6 opacity-90`} style={{ color: descriptionColor || textColor }}>
+                  {description}
+                </p>
+              )}
+              {badgePosition === "inline" && <BadgeElement />}
+              <div className={`flex ${buttonLayoutClasses} ${buttonGapClasses} ${mobileButtonFullWidth ? "w-full" : ""}`}>
+                {buttonText && (
+                  <a
+                    href={buttonLink}
+                    className={`group inline-flex items-center justify-center font-medium transition-all duration-300 ${buttonSizeClasses} ${buttonRadiusClasses} ${buttonShadowClasses} ${buttonHoverClasses} ${mobileButtonFullWidth ? "w-full md:w-auto" : ""}`}
+                    style={getPrimaryButtonStyle()}
+                  >
+                    {buttonIcon !== "none" && buttonIconPosition === "left" && <ButtonIcon type={buttonIcon} position="left" />}
+                    {buttonText}
+                    {buttonIcon !== "none" && buttonIconPosition === "right" && <ButtonIcon type={buttonIcon} position="right" />}
+                  </a>
+                )}
+                {secondaryButtonText && (
+                  <a
+                    href={secondaryButtonLink}
+                    className={`inline-flex items-center justify-center font-medium transition-all duration-300 ${secButtonSizeClasses} ${secButtonRadiusClasses} hover:opacity-80 ${mobileButtonFullWidth ? "w-full md:w-auto" : ""}`}
+                    style={getSecondaryButtonStyle()}
+                  >
+                    {secondaryButtonText}
+                    {secondaryButtonIcon !== "none" && <ButtonIcon type={secondaryButtonIcon} position="right" />}
+                  </a>
+                )}
+              </div>
             </div>
           </div>
-          <div className="hidden md:block">
-            <img src={ctaImageUrl} alt={imageAlt} className="w-full h-auto rounded-lg shadow-xl" loading="lazy" />
+          {/* Image */}
+          <div className={`${isReverse ? "md:order-1" : ""} hidden md:block`}>
+            <img
+              src={ctaImageUrl}
+              alt={imageAlt}
+              className={`w-full h-full object-${imageFit} ${imageRoundedClasses} ${imageShadowClasses} ${imageBorder ? "border-2" : ""}`}
+              style={imageBorder ? { borderColor: imageBorderColor } : undefined}
+              loading="lazy"
+            />
           </div>
         </div>
       </section>
     );
   }
 
-  // Centered (default)
-  return (
-    <section id={id} className={`relative w-full ${paddingClasses} px-4 ${radiusClasses} ${className}`} style={bgStyle}>
-      {bgImageUrl && <div className="absolute inset-0 bg-black/50" aria-hidden="true" />}
-      <div className="relative z-10 max-w-3xl mx-auto text-center">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 md:mb-6" style={{ color: textColor }}>{title}</h2>
-        <p className="text-base md:text-lg lg:text-xl mb-6 md:mb-8 opacity-90" style={{ color: textColor }}>{description}</p>
-        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center">
-          <a href={buttonLink} className="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-medium rounded-lg transition-all hover:opacity-90 shadow-lg" style={{ backgroundColor: buttonColor, color: backgroundColor }}>{buttonText}</a>
-          {secondaryButtonText && <a href={secondaryButtonLink} className="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-medium border-2 rounded-lg transition-all hover:bg-white/10" style={{ borderColor: textColor, color: textColor }}>{secondaryButtonText}</a>}
+  // Glass variant
+  if (variant === "glass") {
+    return (
+      <section id={id} className={`relative w-full ${paddingYClasses} ${paddingXClasses} ${marginClasses} ${className}`} style={bgStyle}>
+        {backgroundOverlay && bgImageUrl && (
+          <div className="absolute inset-0" style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity / 100 }} aria-hidden="true" />
+        )}
+        <PatternOverlay />
+        <DecoratorElement />
+        <div className="relative z-10 max-w-3xl mx-auto">
+          <div className={`backdrop-blur-lg bg-white/10 border border-white/20 ${borderRadiusClasses || "rounded-2xl"} p-8 md:p-12 ${contentAlignClasses} flex flex-col`}>
+            {trustBadgesPosition === "top" && <TrustBadgesElement />}
+            {badgePosition === "top" && <BadgeElement />}
+            {subtitle && <p className={`text-${subtitleSize} font-${subtitleWeight} uppercase tracking-wider mb-2`} style={{ color: subtitleColor || textColor }}>{subtitle}</p>}
+            <h2 className={`${titleSizeClasses} ${titleWeightClasses} mb-4`} style={{ color: titleColor || textColor }}>{title}</h2>
+            {description && <p className={`${descriptionSizeClasses} ${descriptionMaxWidthClasses} mb-8 opacity-90 mx-auto`} style={{ color: descriptionColor || textColor }}>{description}</p>}
+            <div className={`flex ${buttonLayoutClasses} ${buttonGapClasses} justify-center`}>
+              {buttonText && (
+                <a href={buttonLink} className={`group inline-flex items-center justify-center font-medium transition-all duration-300 ${buttonSizeClasses} ${buttonRadiusClasses} ${buttonShadowClasses} ${buttonHoverClasses}`} style={getPrimaryButtonStyle()}>
+                  {buttonIcon !== "none" && buttonIconPosition === "left" && <ButtonIcon type={buttonIcon} position="left" />}
+                  {buttonText}
+                  {buttonIcon !== "none" && buttonIconPosition === "right" && <ButtonIcon type={buttonIcon} position="right" />}
+                </a>
+              )}
+              {secondaryButtonText && (
+                <a href={secondaryButtonLink} className={`inline-flex items-center justify-center font-medium transition-all duration-300 ${secButtonSizeClasses} ${secButtonRadiusClasses} hover:opacity-80`} style={getSecondaryButtonStyle()}>
+                  {secondaryButtonText}
+                </a>
+              )}
+            </div>
+            {trustBadgesPosition === "bottom" && <TrustBadgesElement />}
+          </div>
         </div>
+      </section>
+    );
+  }
+
+  // Banner variant (full-width compact)
+  if (variant === "banner") {
+    return (
+      <section id={id} className={`w-full py-4 md:py-6 ${paddingXClasses} ${borderRadiusClasses} ${shadowClasses} ${className}`} style={bgStyle}>
+        <div className="max-w-screen-xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {badge && <BadgeElement />}
+            <p className="font-medium" style={{ color: textColor }}>{title}</p>
+          </div>
+          <div className="flex gap-3">
+            {buttonText && (
+              <a href={buttonLink} className={`inline-flex items-center justify-center font-medium transition-all ${buttonSizeClasses} ${buttonRadiusClasses}`} style={getPrimaryButtonStyle()}>
+                {buttonText}
+              </a>
+            )}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Floating variant (card style)
+  if (variant === "floating") {
+    return (
+      <section id={id} className={`w-full ${paddingYClasses} ${paddingXClasses} ${className}`}>
+        <div className={`${maxWidthClasses} mx-auto`}>
+          <div className={`${borderRadiusClasses || "rounded-2xl"} ${shadowClasses || "shadow-2xl"} p-8 md:p-12 lg:p-16 ${contentAlignClasses} flex flex-col`} style={bgStyle}>
+            {backgroundOverlay && bgImageUrl && (
+              <div className={`absolute inset-0 ${borderRadiusClasses}`} style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity / 100 }} />
+            )}
+            <PatternOverlay />
+            <DecoratorElement />
+            <div className="relative z-10">
+              {trustBadgesPosition === "top" && <TrustBadgesElement />}
+              {badgePosition === "top" && <BadgeElement />}
+              {subtitle && <p className={`text-${subtitleSize} font-${subtitleWeight} uppercase tracking-wider mb-2`} style={{ color: subtitleColor || textColor }}>{subtitle}</p>}
+              <h2 className={`${titleSizeClasses} ${titleWeightClasses} mb-4`} style={{ color: titleColor || textColor }}>{title}</h2>
+              {description && <p className={`${descriptionSizeClasses} ${descriptionMaxWidthClasses} mb-8 opacity-90 mx-auto`} style={{ color: descriptionColor || textColor }}>{description}</p>}
+              <div className={`flex ${buttonLayoutClasses} ${buttonGapClasses} justify-center`}>
+                {buttonText && (
+                  <a href={buttonLink} className={`group inline-flex items-center justify-center font-medium transition-all duration-300 ${buttonSizeClasses} ${buttonRadiusClasses} ${buttonShadowClasses} ${buttonHoverClasses}`} style={getPrimaryButtonStyle()}>
+                    {buttonIcon !== "none" && buttonIconPosition === "left" && <ButtonIcon type={buttonIcon} position="left" />}
+                    {buttonText}
+                    {buttonIcon !== "none" && buttonIconPosition === "right" && <ButtonIcon type={buttonIcon} position="right" />}
+                  </a>
+                )}
+                {secondaryButtonText && (
+                  <a href={secondaryButtonLink} className={`inline-flex items-center justify-center font-medium transition-all duration-300 ${secButtonSizeClasses} ${secButtonRadiusClasses} hover:opacity-80`} style={getSecondaryButtonStyle()}>
+                    {secondaryButtonText}
+                  </a>
+                )}
+              </div>
+              {trustBadgesPosition === "bottom" && <TrustBadgesElement />}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Left/Right aligned variants
+  if (variant === "left" || variant === "right") {
+    return (
+      <section id={id} className={`relative w-full ${minHeightClasses} ${paddingYClasses} ${paddingXClasses} ${borderRadiusClasses} ${marginClasses} ${shadowClasses} ${border ? `border-${borderWidth}` : ""} ${className}`} style={{ ...bgStyle, borderColor: border ? borderColor : undefined }}>
+        {backgroundOverlay && bgImageUrl && (
+          <div className="absolute inset-0" style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity / 100 }} aria-hidden="true" />
+        )}
+        <PatternOverlay />
+        <DecoratorElement />
+        <div className={`relative z-10 ${maxWidthClasses} mx-auto flex flex-col ${variant === "left" ? "items-start text-left" : "items-end text-right"}`}>
+          {trustBadgesPosition === "top" && <TrustBadgesElement />}
+          {badgePosition === "top" && <BadgeElement />}
+          {subtitle && <p className={`text-${subtitleSize} font-${subtitleWeight} uppercase tracking-wider mb-2`} style={{ color: subtitleColor || textColor }}>{subtitle}</p>}
+          <h2 className={`${titleSizeClasses} ${titleWeightClasses} mb-4 ${contentWidthClasses}`} style={{ color: titleColor || textColor }}>{title}</h2>
+          {description && <p className={`${descriptionSizeClasses} ${descriptionMaxWidthClasses} mb-8 opacity-90`} style={{ color: descriptionColor || textColor }}>{description}</p>}
+          <div className={`flex ${buttonLayoutClasses} ${buttonGapClasses}`}>
+            {buttonText && (
+              <a href={buttonLink} className={`group inline-flex items-center justify-center font-medium transition-all duration-300 ${buttonSizeClasses} ${buttonRadiusClasses} ${buttonShadowClasses} ${buttonHoverClasses}`} style={getPrimaryButtonStyle()}>
+                {buttonIcon !== "none" && buttonIconPosition === "left" && <ButtonIcon type={buttonIcon} position="left" />}
+                {buttonText}
+                {buttonIcon !== "none" && buttonIconPosition === "right" && <ButtonIcon type={buttonIcon} position="right" />}
+              </a>
+            )}
+            {secondaryButtonText && (
+              <a href={secondaryButtonLink} className={`inline-flex items-center justify-center font-medium transition-all duration-300 ${secButtonSizeClasses} ${secButtonRadiusClasses} hover:opacity-80`} style={getSecondaryButtonStyle()}>
+                {secondaryButtonText}
+              </a>
+            )}
+          </div>
+          {trustBadgesPosition === "bottom" && <TrustBadgesElement />}
+        </div>
+      </section>
+    );
+  }
+
+  // Centered (default) and minimal variants
+  return (
+    <section
+      id={id}
+      className={`relative w-full ${minHeightClasses} ${paddingYClasses} ${paddingXClasses} ${borderRadiusClasses} ${marginClasses} ${shadowClasses} ${glassClasses} ${border ? `border-${borderWidth}` : ""} flex items-center ${className}`}
+      style={{ ...bgStyle, borderColor: border ? borderColor : undefined }}
+    >
+      {backgroundOverlay && bgImageUrl && (
+        <div className="absolute inset-0" style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity / 100 }} aria-hidden="true" />
+      )}
+      <PatternOverlay />
+      <DecoratorElement />
+      <div className={`relative z-10 w-full ${contentWidthClasses} mx-auto ${contentAlignClasses} flex flex-col`}>
+        {trustBadgesPosition === "top" && <TrustBadgesElement />}
+        {badgePosition === "top" && <BadgeElement />}
+        {subtitle && (
+          <p className={`text-${subtitleSize} font-${subtitleWeight} uppercase tracking-wider mb-2`} style={{ color: subtitleColor || textColor }}>
+            {subtitle}
+          </p>
+        )}
+        <h2 className={`${titleSizeClasses} ${titleWeightClasses} mb-4 md:mb-6`} style={{ color: titleColor || textColor }}>
+          {title}
+        </h2>
+        {description && (
+          <p className={`${descriptionSizeClasses} ${descriptionMaxWidthClasses} mb-6 md:mb-8 opacity-90 mx-auto`} style={{ color: descriptionColor || textColor }}>
+            {description}
+          </p>
+        )}
+        <div className={`flex ${buttonLayoutClasses} ${buttonGapClasses} justify-center ${mobileButtonFullWidth ? "w-full md:w-auto" : ""}`}>
+          {buttonText && (
+            <a
+              href={buttonLink}
+              className={`group inline-flex items-center justify-center font-medium transition-all duration-300 ${buttonSizeClasses} ${buttonRadiusClasses} ${buttonShadowClasses} ${buttonHoverClasses} ${mobileButtonFullWidth ? "w-full md:w-auto" : ""}`}
+              style={getPrimaryButtonStyle()}
+            >
+              {buttonIcon !== "none" && buttonIconPosition === "left" && <ButtonIcon type={buttonIcon} position="left" />}
+              {buttonText}
+              {buttonIcon !== "none" && buttonIconPosition === "right" && <ButtonIcon type={buttonIcon} position="right" />}
+            </a>
+          )}
+          {secondaryButtonText && (
+            <a
+              href={secondaryButtonLink}
+              className={`inline-flex items-center justify-center font-medium transition-all duration-300 ${secButtonSizeClasses} ${secButtonRadiusClasses} hover:opacity-80 ${mobileButtonFullWidth ? "w-full md:w-auto" : ""}`}
+              style={getSecondaryButtonStyle()}
+            >
+              {secondaryButtonText}
+              {secondaryButtonIcon !== "none" && <ButtonIcon type={secondaryButtonIcon} position="right" />}
+            </a>
+          )}
+        </div>
+        {trustBadgesPosition === "bottom" && <TrustBadgesElement />}
       </div>
     </section>
   );
 }
 // ============================================================================
-// TESTIMONIALS - Customer Testimonials
+// TESTIMONIALS - Customer Testimonials (PREMIUM - 60+ Properties)
 // ============================================================================
 
 export interface TestimonialsProps {
+  // === Header ===
   title?: string;
+  titleSize?: "sm" | "md" | "lg" | "xl" | "2xl";
+  titleColor?: string;
+  titleWeight?: "normal" | "medium" | "semibold" | "bold" | "extrabold";
+  titleAlign?: "left" | "center" | "right";
   subtitle?: string;
+  subtitleColor?: string;
+  description?: string;
+  descriptionColor?: string;
+  
+  // === Testimonial Items ===
   testimonials?: Array<{
     quote?: string;
     author?: string;
@@ -1596,71 +4573,557 @@ export interface TestimonialsProps {
     company?: string;
     image?: string | ImageValue;
     rating?: number;
+    companyLogo?: string | ImageValue;
+    featured?: boolean;
+    videoUrl?: string;
   }>;
-  columns?: 1 | 2 | 3;
-  variant?: "cards" | "minimal" | "quote" | "carousel";
-  backgroundColor?: string;
+  
+  // === Layout ===
+  columns?: 1 | 2 | 3 | 4;
+  variant?: "cards" | "minimal" | "quote" | "carousel" | "masonry" | "slider" | "grid" | "featured" | "bubble" | "timeline";
+  layout?: "grid" | "list" | "masonry" | "carousel";
+  contentAlign?: "left" | "center" | "right";
+  gap?: "sm" | "md" | "lg" | "xl";
+  
+  // === Card Styling ===
   cardBackgroundColor?: string;
+  cardBorderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  cardShadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  cardBorder?: boolean;
+  cardBorderColor?: string;
+  cardPadding?: "sm" | "md" | "lg" | "xl";
+  cardHoverEffect?: "none" | "lift" | "scale" | "glow" | "border";
+  cardHoverScale?: number;
+  
+  // === Avatar ===
+  showAvatar?: boolean;
+  avatarSize?: "sm" | "md" | "lg" | "xl";
+  avatarShape?: "circle" | "square" | "rounded";
+  avatarBorder?: boolean;
+  avatarBorderColor?: string;
+  avatarPosition?: "top" | "bottom" | "inline" | "left";
+  
+  // === Rating ===
+  showRating?: boolean;
+  ratingStyle?: "stars" | "hearts" | "numeric" | "thumbs";
+  ratingColor?: string;
+  ratingPosition?: "top" | "bottom" | "inline";
+  maxRating?: number;
+  
+  // === Quote ===
+  quoteStyle?: "normal" | "italic" | "large";
+  quoteFontSize?: "sm" | "md" | "lg" | "xl";
+  quoteColor?: string;
+  showQuoteIcon?: boolean;
+  quoteIconColor?: string;
+  quoteIconSize?: "sm" | "md" | "lg";
+  quoteIconPosition?: "top-left" | "top-right" | "background";
+  
+  // === Company/Logo ===
+  showCompanyLogo?: boolean;
+  logoSize?: "sm" | "md" | "lg";
+  logoPosition?: "top" | "bottom" | "inline";
+  showCompanyName?: boolean;
+  
+  // === Background ===
+  backgroundColor?: string;
+  backgroundGradient?: boolean;
+  backgroundGradientFrom?: string;
+  backgroundGradientTo?: string;
+  backgroundGradientDirection?: "to-r" | "to-l" | "to-b" | "to-t" | "to-br" | "to-bl";
+  backgroundImage?: string | ImageValue;
+  backgroundOverlay?: boolean;
+  backgroundOverlayColor?: string;
+  backgroundOverlayOpacity?: number;
+  backgroundPattern?: "none" | "dots" | "grid" | "diagonal";
+  
+  // === Sizing ===
+  paddingY?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  paddingX?: "sm" | "md" | "lg" | "xl";
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
+  
+  // === Carousel Settings ===
+  autoplay?: boolean;
+  autoplaySpeed?: number;
+  showArrows?: boolean;
+  showDots?: boolean;
+  arrowStyle?: "circle" | "square" | "minimal";
+  arrowColor?: string;
+  dotsColor?: string;
+  dotsPosition?: "bottom" | "side";
+  infiniteLoop?: boolean;
+  slidesToShow?: 1 | 2 | 3 | 4;
+  
+  // === Animation ===
+  animateOnScroll?: boolean;
+  animationType?: "fadeIn" | "slideUp" | "slideIn" | "zoom" | "stagger";
+  animationDuration?: "fast" | "normal" | "slow";
+  staggerDelay?: number;
+  
+  // === Featured Style ===
+  featuredCardScale?: number;
+  featuredCardShadow?: "lg" | "xl" | "2xl";
+  featuredBorderColor?: string;
+  
+  // === Decorative ===
+  showDecorator?: boolean;
+  decoratorType?: "quotes" | "lines" | "dots" | "gradient-blur";
+  decoratorColor?: string;
+  decoratorOpacity?: number;
+  
   textColor?: string;
   accentColor?: string;
-  paddingY?: "sm" | "md" | "lg" | "xl";
-  showRating?: boolean;
   id?: string;
   className?: string;
+  _breakpoint?: "mobile" | "tablet" | "desktop";
+  _isEditor?: boolean;
 }
 
 export function TestimonialsRender({
+  // Header
   title = "What Our Customers Say",
+  titleSize = "lg",
+  titleColor,
+  titleWeight = "bold",
+  titleAlign = "center",
   subtitle,
+  subtitleColor,
+  description,
+  descriptionColor,
+  // Items
   testimonials = [],
+  // Layout
   columns = 3,
   variant = "cards",
-  backgroundColor = "#f9fafb",
+  layout = "grid",
+  contentAlign = "left",
+  gap = "lg",
+  // Card
   cardBackgroundColor = "#ffffff",
+  cardBorderRadius = "xl",
+  cardShadow = "sm",
+  cardBorder = false,
+  cardBorderColor = "#e5e7eb",
+  cardPadding = "lg",
+  cardHoverEffect = "lift",
+  cardHoverScale = 1.02,
+  // Avatar
+  showAvatar = true,
+  avatarSize = "md",
+  avatarShape = "circle",
+  avatarBorder = false,
+  avatarBorderColor = "#ffffff",
+  avatarPosition = "bottom",
+  // Rating
+  showRating = true,
+  ratingStyle = "stars",
+  ratingColor = "#fbbf24",
+  ratingPosition = "top",
+  maxRating = 5,
+  // Quote
+  quoteStyle = "normal",
+  quoteFontSize = "md",
+  quoteColor,
+  showQuoteIcon = true,
+  quoteIconColor,
+  quoteIconSize = "md",
+  quoteIconPosition = "top-left",
+  // Company
+  showCompanyLogo = false,
+  logoSize = "md",
+  logoPosition = "bottom",
+  showCompanyName = true,
+  // Background
+  backgroundColor = "#f9fafb",
+  backgroundGradient = false,
+  backgroundGradientFrom = "#f9fafb",
+  backgroundGradientTo = "#ffffff",
+  backgroundGradientDirection = "to-b",
+  backgroundImage,
+  backgroundOverlay = false,
+  backgroundOverlayColor = "#000000",
+  backgroundOverlayOpacity = 50,
+  backgroundPattern = "none",
+  // Sizing
+  paddingY = "lg",
+  paddingX = "md",
+  maxWidth = "xl",
+  // Carousel
+  autoplay = false,
+  autoplaySpeed = 5000,
+  showArrows = true,
+  showDots = true,
+  arrowStyle = "circle",
+  arrowColor = "#374151",
+  dotsColor = "#3b82f6",
+  dotsPosition = "bottom",
+  infiniteLoop = true,
+  slidesToShow = 3,
+  // Animation
+  animateOnScroll = false,
+  animationType = "fadeIn",
+  animationDuration = "normal",
+  staggerDelay = 100,
+  // Featured
+  featuredCardScale = 1.05,
+  featuredCardShadow = "xl",
+  featuredBorderColor = "#3b82f6",
+  // Decorative
+  showDecorator = false,
+  decoratorType = "quotes",
+  decoratorColor = "#3b82f6",
+  decoratorOpacity = 10,
   textColor,
   accentColor = "#3b82f6",
-  paddingY = "lg",
-  showRating = true,
   id,
   className = "",
+  _breakpoint = "desktop",
+  _isEditor = false,
 }: TestimonialsProps) {
-  const paddingClasses = { sm: "py-12 md:py-16", md: "py-16 md:py-20", lg: "py-20 md:py-28", xl: "py-24 md:py-32" }[paddingY];
-  const colClasses = { 1: "max-w-2xl mx-auto", 2: "md:grid-cols-2", 3: "md:grid-cols-2 lg:grid-cols-3" }[columns];
+  
+  // Sizing classes
+  const paddingYClasses = {
+    none: "py-0",
+    sm: "py-8 md:py-12",
+    md: "py-12 md:py-16",
+    lg: "py-16 md:py-24",
+    xl: "py-20 md:py-32",
+    "2xl": "py-24 md:py-40",
+  }[paddingY];
+  
+  const paddingXClasses = { sm: "px-4", md: "px-6", lg: "px-8", xl: "px-12" }[paddingX];
+  
+  const maxWidthClasses = {
+    sm: "max-w-3xl",
+    md: "max-w-4xl",
+    lg: "max-w-5xl",
+    xl: "max-w-6xl",
+    "2xl": "max-w-7xl",
+    full: "max-w-none",
+  }[maxWidth];
+  
+  const gapClasses = { sm: "gap-4", md: "gap-6", lg: "gap-8", xl: "gap-10" }[gap];
+  
+  const colClasses = {
+    1: "grid-cols-1 max-w-2xl mx-auto",
+    2: "grid-cols-1 md:grid-cols-2",
+    3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+    4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
+  }[columns];
+  
+  const titleSizeClasses = {
+    sm: "text-xl md:text-2xl",
+    md: "text-2xl md:text-3xl",
+    lg: "text-3xl md:text-4xl",
+    xl: "text-3xl md:text-4xl lg:text-5xl",
+    "2xl": "text-4xl md:text-5xl lg:text-6xl",
+  }[titleSize];
+  
+  const titleWeightClasses = {
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+    extrabold: "font-extrabold",
+  }[titleWeight];
+  
+  const cardBorderRadiusClasses = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+  }[cardBorderRadius];
+  
+  const cardShadowClasses = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    "2xl": "shadow-2xl",
+  }[cardShadow];
+  
+  const cardPaddingClasses = {
+    sm: "p-4",
+    md: "p-6",
+    lg: "p-6 md:p-8",
+    xl: "p-8 md:p-10",
+  }[cardPadding];
+  
+  const cardHoverClasses = {
+    none: "",
+    lift: "hover:-translate-y-1 transition-transform duration-300",
+    scale: "hover:scale-[1.02] transition-transform duration-300",
+    glow: "hover:shadow-xl transition-shadow duration-300",
+    border: "hover:border-blue-500 transition-colors duration-300",
+  }[cardHoverEffect];
+  
+  const avatarSizeClasses = {
+    sm: "w-10 h-10",
+    md: "w-12 h-12",
+    lg: "w-14 h-14",
+    xl: "w-16 h-16",
+  }[avatarSize];
+  
+  const avatarShapeClasses = {
+    circle: "rounded-full",
+    square: "rounded-none",
+    rounded: "rounded-lg",
+  }[avatarShape];
+  
+  const quoteFontSizeClasses = {
+    sm: "text-sm",
+    md: "text-base md:text-lg",
+    lg: "text-lg md:text-xl",
+    xl: "text-xl md:text-2xl",
+  }[quoteFontSize];
+  
+  const quoteStyleClasses = {
+    normal: "",
+    italic: "italic",
+    large: "font-medium",
+  }[quoteStyle];
+  
+  const quoteIconSizeClasses = {
+    sm: "w-6 h-6",
+    md: "w-8 h-8",
+    lg: "w-12 h-12",
+  }[quoteIconSize];
+  
+  // Background style
+  const bgStyle: React.CSSProperties = {};
+  if (backgroundGradient) {
+    const gradientDirMap: Record<string, string> = {
+      "to-r": "to right",
+      "to-l": "to left",
+      "to-b": "to bottom",
+      "to-t": "to top",
+      "to-br": "to bottom right",
+      "to-bl": "to bottom left",
+    };
+    bgStyle.background = `linear-gradient(${gradientDirMap[backgroundGradientDirection]}, ${backgroundGradientFrom}, ${backgroundGradientTo})`;
+  } else {
+    bgStyle.backgroundColor = backgroundColor;
+  }
+  
+  const bgImageUrl = getImageUrl(backgroundImage);
+  if (bgImageUrl) {
+    bgStyle.backgroundImage = `url(${bgImageUrl})`;
+    bgStyle.backgroundSize = "cover";
+    bgStyle.backgroundPosition = "center";
+  }
+  
+  // Quote icon component
+  const QuoteIcon = () => (
+    <svg className={`${quoteIconSizeClasses} opacity-30`} fill="currentColor" viewBox="0 0 24 24" style={{ color: quoteIconColor || accentColor }}>
+      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+    </svg>
+  );
+  
+  // Rating component
+  const RatingStars = ({ rating }: { rating: number }) => {
+    if (ratingStyle === "numeric") {
+      return <span className="font-bold text-lg" style={{ color: ratingColor }}>{rating}/{maxRating}</span>;
+    }
+    
+    return (
+      <div className="flex gap-0.5">
+        {Array.from({ length: maxRating }).map((_, j) => {
+          if (ratingStyle === "hearts") {
+            return (
+              <svg key={j} className={`w-5 h-5 ${j < (rating || 0) ? "" : "opacity-30"}`} fill="currentColor" viewBox="0 0 24 24" style={{ color: j < (rating || 0) ? ratingColor : "#d1d5db" }}>
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+            );
+          }
+          if (ratingStyle === "thumbs") {
+            return (
+              <svg key={j} className={`w-5 h-5 ${j < (rating || 0) ? "" : "opacity-30"}`} fill="currentColor" viewBox="0 0 24 24" style={{ color: j < (rating || 0) ? ratingColor : "#d1d5db" }}>
+                <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z" />
+              </svg>
+            );
+          }
+          return (
+            <svg key={j} className={`w-5 h-5`} fill="currentColor" viewBox="0 0 20 20" style={{ color: j < (rating || 0) ? ratingColor : "#d1d5db" }}>
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          );
+        })}
+      </div>
+    );
+  };
+  
+  // Testimonial card
+  const TestimonialCard = ({ testimonial, index }: { testimonial: NonNullable<TestimonialsProps["testimonials"]>[0]; index: number }) => {
+    const isFeatured = testimonial.featured && variant === "featured";
+    const authorImgUrl = getImageUrl(testimonial.image);
+    const logoUrl = getImageUrl(testimonial.companyLogo);
+    
+    return (
+      <div
+        className={`relative flex flex-col ${cardBorderRadiusClasses} ${cardShadowClasses} ${cardPaddingClasses} ${cardHoverClasses} ${cardBorder ? "border" : ""} ${isFeatured ? "ring-2" : ""} ${contentAlign === "center" ? "items-center text-center" : contentAlign === "right" ? "items-end text-right" : "items-start text-left"}`}
+        style={{
+          backgroundColor: cardBackgroundColor,
+          borderColor: cardBorder ? cardBorderColor : undefined,
+          transform: isFeatured ? `scale(${featuredCardScale})` : undefined,
+          boxShadow: isFeatured ? `0 25px 50px -12px rgba(0,0,0,0.25)` : undefined,
+          // Ring color is applied via CSS variable for Tailwind ring utility
+          // @ts-expect-error - Custom CSS property for ring-color
+          "--tw-ring-color": isFeatured ? featuredBorderColor : undefined,
+        }}
+      >
+        {/* Quote Icon */}
+        {showQuoteIcon && quoteIconPosition === "top-left" && (
+          <div className="mb-4">
+            <QuoteIcon />
+          </div>
+        )}
+        {showQuoteIcon && quoteIconPosition === "background" && (
+          <div className="absolute top-4 right-4 opacity-10">
+            <svg className="w-16 h-16" fill="currentColor" viewBox="0 0 24 24" style={{ color: quoteIconColor || accentColor }}>
+              <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+            </svg>
+          </div>
+        )}
+        
+        {/* Company Logo - Top */}
+        {showCompanyLogo && logoUrl && logoPosition === "top" && (
+          <img
+            src={logoUrl}
+            alt={testimonial.company || "Company"}
+            className={`mb-4 object-contain grayscale hover:grayscale-0 transition-all ${logoSize === "sm" ? "h-6" : logoSize === "md" ? "h-8" : "h-10"}`}
+          />
+        )}
+        
+        {/* Rating - Top */}
+        {showRating && testimonial.rating && ratingPosition === "top" && (
+          <div className="mb-4">
+            <RatingStars rating={testimonial.rating} />
+          </div>
+        )}
+        
+        {/* Avatar - Top */}
+        {showAvatar && authorImgUrl && avatarPosition === "top" && (
+          <img
+            src={authorImgUrl}
+            alt={testimonial.author}
+            className={`${avatarSizeClasses} ${avatarShapeClasses} object-cover mb-4 ${avatarBorder ? "ring-2 ring-offset-2" : ""}`}
+            style={avatarBorder ? { "--tw-ring-color": avatarBorderColor } as React.CSSProperties : undefined}
+            loading="lazy"
+          />
+        )}
+        
+        {/* Quote */}
+        <blockquote className={`${quoteFontSizeClasses} ${quoteStyleClasses} leading-relaxed flex-1 mb-6`} style={{ color: quoteColor || textColor }}>
+          &ldquo;{testimonial.quote}&rdquo;
+        </blockquote>
+        
+        {/* Rating - Bottom */}
+        {showRating && testimonial.rating && ratingPosition === "bottom" && (
+          <div className="mb-4">
+            <RatingStars rating={testimonial.rating} />
+          </div>
+        )}
+        
+        {/* Author section */}
+        <div className={`flex items-center gap-4 ${avatarPosition === "left" ? "flex-row" : avatarPosition === "inline" ? "flex-row" : ""} ${contentAlign === "center" ? "justify-center" : ""}`}>
+          {/* Avatar - Inline/Left */}
+          {showAvatar && authorImgUrl && (avatarPosition === "bottom" || avatarPosition === "inline" || avatarPosition === "left") && (
+            <img
+              src={authorImgUrl}
+              alt={testimonial.author}
+              className={`${avatarSizeClasses} ${avatarShapeClasses} object-cover ${avatarBorder ? "ring-2 ring-offset-2" : ""}`}
+              style={avatarBorder ? { "--tw-ring-color": avatarBorderColor } as React.CSSProperties : undefined}
+              loading="lazy"
+            />
+          )}
+          <div>
+            <p className="font-semibold" style={{ color: textColor }}>{testimonial.author}</p>
+            {(testimonial.role || (showCompanyName && testimonial.company)) && (
+              <p className="text-sm opacity-75" style={{ color: textColor }}>
+                {testimonial.role}
+                {testimonial.role && showCompanyName && testimonial.company && ", "}
+                {showCompanyName && testimonial.company}
+              </p>
+            )}
+            {/* Rating - Inline */}
+            {showRating && testimonial.rating && ratingPosition === "inline" && (
+              <div className="mt-1">
+                <RatingStars rating={testimonial.rating} />
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Company Logo - Bottom */}
+        {showCompanyLogo && logoUrl && logoPosition === "bottom" && (
+          <img
+            src={logoUrl}
+            alt={testimonial.company || "Company"}
+            className={`mt-4 object-contain grayscale hover:grayscale-0 transition-all ${logoSize === "sm" ? "h-6" : logoSize === "md" ? "h-8" : "h-10"}`}
+          />
+        )}
+      </div>
+    );
+  };
 
   return (
-    <section id={id} className={`w-full ${paddingClasses} px-4 ${className}`} style={{ backgroundColor }}>
-      <div className="max-w-screen-xl mx-auto">
-        <div className="text-center mb-12 md:mb-16">
-          {subtitle && <p className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2" style={{ color: accentColor }}>{subtitle}</p>}
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold" style={{ color: textColor }}>{title}</h2>
+    <section id={id} className={`relative w-full ${paddingYClasses} ${paddingXClasses} ${className}`} style={bgStyle}>
+      {/* Background overlay */}
+      {backgroundOverlay && bgImageUrl && (
+        <div className="absolute inset-0" style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity / 100 }} aria-hidden="true" />
+      )}
+      
+      {/* Pattern */}
+      {backgroundPattern !== "none" && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: backgroundPattern === "dots" ? `radial-gradient(${decoratorColor || "#000"} 1px, transparent 1px)` : backgroundPattern === "grid" ? `linear-gradient(${decoratorColor || "#000"} 1px, transparent 1px), linear-gradient(90deg, ${decoratorColor || "#000"} 1px, transparent 1px)` : undefined,
+            backgroundSize: "20px 20px",
+            opacity: decoratorOpacity / 100,
+          }}
+          aria-hidden="true"
+        />
+      )}
+      
+      {/* Decorative quote marks */}
+      {showDecorator && decoratorType === "quotes" && (
+        <div className="absolute top-10 left-10 pointer-events-none" style={{ opacity: decoratorOpacity / 100 }}>
+          <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24" style={{ color: decoratorColor }}>
+            <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+          </svg>
         </div>
-        <div className={`grid grid-cols-1 ${colClasses} gap-6 md:gap-8`}>
+      )}
+      
+      <div className={`relative z-10 ${maxWidthClasses} mx-auto`}>
+        {/* Header */}
+        {(title || subtitle || description) && (
+          <div className={`${titleAlign === "center" ? "text-center" : titleAlign === "right" ? "text-right" : "text-left"} mb-12 md:mb-16`}>
+            {subtitle && (
+              <p className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2" style={{ color: subtitleColor || accentColor }}>
+                {subtitle}
+              </p>
+            )}
+            {title && (
+              <h2 className={`${titleSizeClasses} ${titleWeightClasses} mb-4`} style={{ color: titleColor || textColor }}>
+                {title}
+              </h2>
+            )}
+            {description && (
+              <p className="text-base md:text-lg opacity-80 max-w-2xl mx-auto" style={{ color: descriptionColor || textColor }}>
+                {description}
+              </p>
+            )}
+          </div>
+        )}
+        
+        {/* Grid Layout */}
+        <div className={`grid ${colClasses} ${gapClasses}`}>
           {testimonials.map((testimonial, i) => (
-            <div key={i} className="p-6 md:p-8 rounded-xl shadow-sm hover:shadow-lg transition-shadow" style={{ backgroundColor: cardBackgroundColor }}>
-              {showRating && testimonial.rating && (
-                <div className="flex gap-1 mb-4">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <svg key={j} className={`w-5 h-5 ${j < (testimonial.rating || 0) ? "text-yellow-400" : "text-gray-300"}`} fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-              )}
-              <blockquote className="text-base md:text-lg leading-relaxed mb-6 italic" style={{ color: textColor }}>
-                &ldquo;{testimonial.quote}&rdquo;
-              </blockquote>
-              <div className="flex items-center gap-4">
-                {getImageUrl(testimonial.image) && <img src={getImageUrl(testimonial.image)!} alt={testimonial.author} className="w-12 h-12 rounded-full object-cover" loading="lazy" />}
-                <div>
-                  <p className="font-semibold" style={{ color: textColor }}>{testimonial.author}</p>
-                  {(testimonial.role || testimonial.company) && (
-                    <p className="text-sm opacity-75" style={{ color: textColor }}>
-                      {testimonial.role}{testimonial.role && testimonial.company && ", "}{testimonial.company}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
+            <TestimonialCard key={i} testimonial={testimonial} index={i} />
           ))}
         </div>
       </div>
@@ -1673,70 +5136,891 @@ export function TestimonialsRender({
 // ============================================================================
 
 export interface FAQProps {
+  // Header Content
   title?: string;
   subtitle?: string;
   description?: string;
+  badge?: string;
+  badgeIcon?: string;
+  
+  // Header Styling
+  headerAlign?: "left" | "center" | "right";
+  titleSize?: "sm" | "md" | "lg" | "xl" | "2xl";
+  titleColor?: string;
+  titleFont?: string;
+  subtitleColor?: string;
+  descriptionColor?: string;
+  badgeStyle?: "pill" | "outlined" | "solid" | "gradient";
+  badgeColor?: string;
+  badgeTextColor?: string;
+  
+  // FAQ Items
   items?: Array<{
     question?: string;
     answer?: string;
     category?: string;
+    icon?: string;
+    isPopular?: boolean;
+    helpfulVotes?: number;
   }>;
-  variant?: "accordion" | "cards" | "two-column";
+  
+  // Layout & Variant
+  variant?: "accordion" | "cards" | "two-column" | "minimal" | "tabs" | "timeline" | "bubble" | "modern" | "grid" | "floating";
+  columns?: 1 | 2;
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
+  contentWidth?: "narrow" | "medium" | "wide" | "full";
+  
+  // Accordion Behavior
+  defaultOpen?: number | "all" | "none";
+  allowMultiple?: boolean;
+  collapseOthers?: boolean;
+  animationSpeed?: "slow" | "normal" | "fast";
+  
+  // Accordion Styling
+  accordionStyle?: "default" | "bordered" | "separated" | "connected" | "minimal";
+  accordionGap?: "none" | "sm" | "md" | "lg";
+  questionPadding?: "sm" | "md" | "lg";
+  answerPadding?: "sm" | "md" | "lg";
+  
+  // Icon Settings
+  showIcon?: boolean;
+  iconPosition?: "left" | "right";
+  iconStyle?: "chevron" | "plus" | "arrow" | "caret" | "custom";
+  iconSize?: "sm" | "md" | "lg";
+  iconColor?: string;
+  iconRotation?: boolean;
+  expandedIcon?: string;
+  collapsedIcon?: string;
+  
+  // Question Styling
+  questionFontSize?: "sm" | "md" | "lg" | "xl";
+  questionFontWeight?: "normal" | "medium" | "semibold" | "bold";
+  questionColor?: string;
+  questionHoverColor?: string;
+  
+  // Answer Styling
+  answerFontSize?: "sm" | "md" | "lg";
+  answerColor?: string;
+  answerLineHeight?: "tight" | "normal" | "relaxed" | "loose";
+  answerMaxLines?: number;
+  
+  // Card/Item Background
   backgroundColor?: string;
   cardBackgroundColor?: string;
-  textColor?: string;
+  cardHoverBackgroundColor?: string;
+  expandedBackgroundColor?: string;
+  
+  // Border Settings
+  cardBorder?: boolean;
+  cardBorderColor?: string;
+  cardBorderWidth?: "1" | "2" | "3";
+  cardBorderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "full";
+  dividerStyle?: "solid" | "dashed" | "dotted" | "none";
+  dividerColor?: string;
+  
+  // Shadow & Effects
+  cardShadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  cardHoverShadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  hoverEffect?: "none" | "lift" | "glow" | "border" | "background";
+  
+  // Section Sizing
+  paddingY?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  paddingX?: "none" | "sm" | "md" | "lg" | "xl";
+  sectionGap?: "sm" | "md" | "lg" | "xl";
+  
+  // Accent & Theme
   accentColor?: string;
-  paddingY?: "sm" | "md" | "lg" | "xl";
-  defaultOpen?: number;
+  textColor?: string;
+  
+  // Categories & Search
+  showCategories?: boolean;
+  categoryPosition?: "top" | "sidebar" | "tabs";
+  categoryStyle?: "pills" | "buttons" | "underline" | "minimal";
+  categoryColor?: string;
+  activeCategoryColor?: string;
+  showSearch?: boolean;
+  searchPlaceholder?: string;
+  searchPosition?: "top" | "sidebar";
+  
+  // Popular/Featured
+  showPopularBadge?: boolean;
+  popularBadgeText?: string;
+  popularBadgeColor?: string;
+  highlightPopular?: boolean;
+  
+  // Numbering
+  showNumbers?: boolean;
+  numberStyle?: "circle" | "square" | "plain" | "outlined";
+  numberColor?: string;
+  numberBackgroundColor?: string;
+  
+  // Helpful Section
+  showHelpful?: boolean;
+  helpfulText?: string;
+  helpfulYesText?: string;
+  helpfulNoText?: string;
+  
+  // Contact CTA
+  showContactCta?: boolean;
+  contactTitle?: string;
+  contactDescription?: string;
+  contactButtonText?: string;
+  contactButtonLink?: string;
+  contactButtonStyle?: "primary" | "secondary" | "outline";
+  
+  // Decorative Elements
+  showDecorators?: boolean;
+  decoratorStyle?: "dots" | "lines" | "circles" | "gradient" | "blur";
+  decoratorColor?: string;
+  decoratorPosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "both-sides";
+  
+  // Background
+  backgroundStyle?: "solid" | "gradient" | "pattern" | "image";
+  backgroundGradientFrom?: string;
+  backgroundGradientTo?: string;
+  backgroundGradientDirection?: "to-r" | "to-l" | "to-t" | "to-b" | "to-br" | "to-bl" | "to-tr" | "to-tl";
+  backgroundPattern?: "dots" | "grid" | "lines" | "waves";
+  backgroundPatternOpacity?: number;
+  backgroundImage?: string | ImageValue;
+  backgroundOverlay?: boolean;
+  backgroundOverlayColor?: string;
+  backgroundOverlayOpacity?: number;
+  
+  // Animation
+  animateOnScroll?: boolean;
+  animationType?: "fade" | "slide-up" | "slide-left" | "slide-right" | "scale" | "stagger";
+  animationDelay?: number;
+  staggerDelay?: number;
+  
+  // Schema.org / SEO
+  enableSchema?: boolean;
+  schemaType?: "FAQPage" | "HowTo" | "QAPage";
+  
+  // Responsive
+  mobileColumns?: 1;
+  mobileVariant?: "accordion" | "cards";
+  hideDescriptionOnMobile?: boolean;
+  
+  // Accessibility
+  ariaLabel?: string;
+  
   id?: string;
   className?: string;
 }
 
 export function FAQRender({
+  // Header Content
   title = "Frequently Asked Questions",
   subtitle,
   description,
+  badge,
+  badgeIcon,
+  
+  // Header Styling
+  headerAlign = "center",
+  titleSize = "lg",
+  titleColor,
+  titleFont,
+  subtitleColor,
+  descriptionColor,
+  badgeStyle = "pill",
+  badgeColor = "#3b82f6",
+  badgeTextColor = "#ffffff",
+  
+  // FAQ Items
   items = [],
+  
+  // Layout & Variant
   variant = "accordion",
+  columns = 1,
+  maxWidth = "lg",
+  contentWidth = "medium",
+  
+  // Accordion Behavior
+  defaultOpen = 0,
+  allowMultiple = false,
+  collapseOthers: _collapseOthers = true,
+  animationSpeed = "normal",
+  
+  // Accordion Styling
+  accordionStyle = "default",
+  accordionGap = "md",
+  questionPadding = "md",
+  answerPadding = "md",
+  
+  // Icon Settings
+  showIcon = true,
+  iconPosition = "right",
+  iconStyle = "chevron",
+  iconSize = "md",
+  iconColor,
+  iconRotation = true,
+  expandedIcon,
+  collapsedIcon,
+  
+  // Question Styling
+  questionFontSize = "md",
+  questionFontWeight = "medium",
+  questionColor,
+  questionHoverColor,
+  
+  // Answer Styling
+  answerFontSize = "md",
+  answerColor,
+  answerLineHeight = "relaxed",
+  answerMaxLines,
+  
+  // Card/Item Background
   backgroundColor = "#ffffff",
   cardBackgroundColor = "#f9fafb",
-  textColor,
-  accentColor = "#3b82f6",
+  cardHoverBackgroundColor,
+  expandedBackgroundColor,
+  
+  // Border Settings
+  cardBorder = false,
+  cardBorderColor = "#e5e7eb",
+  cardBorderWidth = "1",
+  cardBorderRadius = "lg",
+  dividerStyle = "solid",
+  dividerColor = "#e5e7eb",
+  
+  // Shadow & Effects
+  cardShadow = "none",
+  cardHoverShadow = "md",
+  hoverEffect = "lift",
+  
+  // Section Sizing
   paddingY = "lg",
-  defaultOpen = 0,
+  paddingX = "md",
+  sectionGap = "lg",
+  
+  // Accent & Theme
+  accentColor = "#3b82f6",
+  textColor,
+  
+  // Categories & Search
+  showCategories = false,
+  categoryPosition = "top",
+  categoryStyle = "pills",
+  categoryColor = "#6b7280",
+  activeCategoryColor = "#3b82f6",
+  showSearch = false,
+  searchPlaceholder = "Search questions...",
+  searchPosition: _searchPosition = "top",
+  
+  // Popular/Featured
+  showPopularBadge = false,
+  popularBadgeText = "Popular",
+  popularBadgeColor = "#f59e0b",
+  highlightPopular = false,
+  
+  // Numbering
+  showNumbers = false,
+  numberStyle = "circle",
+  numberColor = "#ffffff",
+  numberBackgroundColor = "#3b82f6",
+  
+  // Helpful Section
+  showHelpful = false,
+  helpfulText = "Was this helpful?",
+  helpfulYesText = "Yes",
+  helpfulNoText = "No",
+  
+  // Contact CTA
+  showContactCta = false,
+  contactTitle = "Still have questions?",
+  contactDescription = "Can't find the answer you're looking for? Please chat to our friendly team.",
+  contactButtonText = "Get in touch",
+  contactButtonLink = "/contact",
+  contactButtonStyle = "primary",
+  
+  // Decorative Elements
+  showDecorators = false,
+  decoratorStyle = "dots",
+  decoratorColor = "#3b82f6",
+  decoratorPosition = "top-right",
+  
+  // Background
+  backgroundStyle = "solid",
+  backgroundGradientFrom = "#ffffff",
+  backgroundGradientTo = "#f3f4f6",
+  backgroundGradientDirection = "to-b",
+  backgroundPattern,
+  backgroundPatternOpacity = 0.1,
+  backgroundImage,
+  backgroundOverlay = false,
+  backgroundOverlayColor = "#000000",
+  backgroundOverlayOpacity = 0.5,
+  
+  // Animation
+  animateOnScroll = false,
+  animationType = "fade",
+  animationDelay = 0,
+  staggerDelay = 100,
+  
+  // Schema.org / SEO
+  enableSchema = false,
+  schemaType: _schemaType = "FAQPage",
+  
+  // Responsive
+  mobileColumns: _mobileColumns = 1,
+  mobileVariant: _mobileVariant = "accordion",
+  hideDescriptionOnMobile = false,
+  
+  // Accessibility
+  ariaLabel,
+  
   id,
   className = "",
 }: FAQProps) {
-  const paddingClasses = { sm: "py-12 md:py-16", md: "py-16 md:py-20", lg: "py-20 md:py-28", xl: "py-24 md:py-32" }[paddingY];
+  // Padding classes
+  const paddingYClasses = {
+    none: "",
+    sm: "py-8 md:py-12",
+    md: "py-12 md:py-16",
+    lg: "py-16 md:py-24",
+    xl: "py-20 md:py-32",
+    "2xl": "py-24 md:py-40",
+  }[paddingY];
+  
+  const paddingXClasses = {
+    none: "",
+    sm: "px-4",
+    md: "px-4 md:px-6",
+    lg: "px-4 md:px-8",
+    xl: "px-4 md:px-12",
+  }[paddingX];
+
+  // Max width classes
+  const maxWidthClasses = {
+    sm: "max-w-2xl",
+    md: "max-w-3xl",
+    lg: "max-w-4xl",
+    xl: "max-w-5xl",
+    "2xl": "max-w-6xl",
+    full: "max-w-full",
+  }[maxWidth];
+
+  // Title size classes
+  const titleSizeClasses = {
+    sm: "text-xl md:text-2xl",
+    md: "text-2xl md:text-3xl",
+    lg: "text-3xl md:text-4xl lg:text-5xl",
+    xl: "text-4xl md:text-5xl lg:text-6xl",
+    "2xl": "text-5xl md:text-6xl lg:text-7xl",
+  }[titleSize];
+
+  // Accordion gap classes
+  const gapClasses = {
+    none: "space-y-0",
+    sm: "space-y-2",
+    md: "space-y-3 md:space-y-4",
+    lg: "space-y-4 md:space-y-6",
+  }[accordionGap];
+
+  // Question padding classes
+  const questionPaddingClasses = {
+    sm: "p-3 md:p-4",
+    md: "p-4 md:p-6",
+    lg: "p-5 md:p-8",
+  }[questionPadding];
+
+  // Answer padding classes
+  const answerPaddingClasses = {
+    sm: "px-3 pb-3 md:px-4 md:pb-4",
+    md: "px-4 pb-4 md:px-6 md:pb-6",
+    lg: "px-5 pb-5 md:px-8 md:pb-8",
+  }[answerPadding];
+
+  // Icon size classes
+  const iconSizeClasses = {
+    sm: "w-4 h-4",
+    md: "w-5 h-5",
+    lg: "w-6 h-6",
+  }[iconSize];
+
+  // Question font size classes
+  const questionFontSizeClasses = {
+    sm: "text-sm md:text-base",
+    md: "text-base md:text-lg",
+    lg: "text-lg md:text-xl",
+    xl: "text-xl md:text-2xl",
+  }[questionFontSize];
+
+  // Question font weight classes
+  const questionFontWeightClasses = {
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+  }[questionFontWeight];
+
+  // Answer font size classes
+  const answerFontSizeClasses = {
+    sm: "text-xs md:text-sm",
+    md: "text-sm md:text-base",
+    lg: "text-base md:text-lg",
+  }[answerFontSize];
+
+  // Answer line height classes
+  const lineHeightClasses = {
+    tight: "leading-tight",
+    normal: "leading-normal",
+    relaxed: "leading-relaxed",
+    loose: "leading-loose",
+  }[answerLineHeight];
+
+  // Card border radius classes
+  const borderRadiusClasses = {
+    none: "rounded-none",
+    sm: "rounded",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+    full: "rounded-3xl",
+  }[cardBorderRadius];
+
+  // Card shadow classes
+  const shadowClasses = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    "2xl": "shadow-2xl",
+  }[cardShadow];
+
+  // Hover effect classes
+  const hoverEffectClasses = {
+    none: "",
+    lift: "hover:-translate-y-1 hover:shadow-lg",
+    glow: "hover:ring-2 hover:ring-offset-2",
+    border: "hover:border-2",
+    background: "hover:bg-opacity-90",
+  }[hoverEffect];
+
+  // Animation speed classes
+  const animationSpeedClasses = {
+    slow: "duration-500",
+    normal: "duration-300",
+    fast: "duration-150",
+  }[animationSpeed];
+
+  // Section gap classes
+  const sectionGapClasses = {
+    sm: "mb-8 md:mb-10",
+    md: "mb-10 md:mb-12",
+    lg: "mb-12 md:mb-16",
+    xl: "mb-16 md:mb-20",
+  }[sectionGap];
+
+  // Animation classes
+  const getAnimationClasses = (index: number) => {
+    if (!animateOnScroll) return "";
+    const delay = animationDelay + (index * staggerDelay);
+    const baseClasses = `animate-in ${animationSpeedClasses}`;
+    const typeClasses = {
+      fade: "fade-in",
+      "slide-up": "slide-in-from-bottom-4",
+      "slide-left": "slide-in-from-left-4",
+      "slide-right": "slide-in-from-right-4",
+      scale: "zoom-in-95",
+      stagger: "fade-in slide-in-from-bottom-2",
+    }[animationType];
+    return `${baseClasses} ${typeClasses}`;
+  };
+
+  // Get background style
+  const getBackgroundStyle = (): React.CSSProperties => {
+    const style: React.CSSProperties = {};
+    
+    if (backgroundStyle === "solid") {
+      style.backgroundColor = backgroundColor;
+    } else if (backgroundStyle === "gradient") {
+      const direction = {
+        "to-r": "to right",
+        "to-l": "to left",
+        "to-t": "to top",
+        "to-b": "to bottom",
+        "to-br": "to bottom right",
+        "to-bl": "to bottom left",
+        "to-tr": "to top right",
+        "to-tl": "to top left",
+      }[backgroundGradientDirection];
+      style.background = `linear-gradient(${direction}, ${backgroundGradientFrom}, ${backgroundGradientTo})`;
+    } else if (backgroundStyle === "image" && backgroundImage) {
+      style.backgroundImage = `url(${getImageUrl(backgroundImage)})`;
+      style.backgroundSize = "cover";
+      style.backgroundPosition = "center";
+    }
+    
+    return style;
+  };
+
+  // Render icon based on style
+  const renderIcon = (isOpen: boolean) => {
+    if (!showIcon) return null;
+    
+    const iconClass = `${iconSizeClasses} flex-shrink-0 transition-transform ${iconRotation && isOpen ? "rotate-180" : ""} ${animationSpeedClasses}`;
+    const color = iconColor || textColor || "#6b7280";
+    
+    if (expandedIcon && collapsedIcon) {
+      return <span style={{ color }}>{isOpen ? expandedIcon : collapsedIcon}</span>;
+    }
+    
+    switch (iconStyle) {
+      case "plus":
+        return (
+          <svg className={iconClass} fill="none" stroke={color} viewBox="0 0 24 24">
+            {isOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            )}
+          </svg>
+        );
+      case "arrow":
+        return (
+          <svg className={iconClass} fill="none" stroke={color} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isOpen ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"} />
+          </svg>
+        );
+      case "caret":
+        return (
+          <svg className={iconClass} fill={color} viewBox="0 0 24 24">
+            <path d={isOpen ? "M7 14l5-5 5 5H7z" : "M7 10l5 5 5-5H7z"} />
+          </svg>
+        );
+      default: // chevron
+        return (
+          <svg className={iconClass} fill="none" stroke={color} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        );
+    }
+  };
+
+  // Badge styles
+  const badgeClasses = {
+    pill: "px-4 py-1.5 rounded-full text-sm font-medium",
+    outlined: "px-4 py-1.5 rounded-full text-sm font-medium border-2 bg-transparent",
+    solid: "px-4 py-2 rounded-md text-sm font-medium",
+    gradient: "px-4 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r",
+  }[badgeStyle];
+
+  // Number style classes
+  const getNumberClasses = () => {
+    const base = "flex items-center justify-center text-sm font-bold mr-3 flex-shrink-0";
+    switch (numberStyle) {
+      case "circle":
+        return `${base} w-8 h-8 rounded-full`;
+      case "square":
+        return `${base} w-8 h-8 rounded-md`;
+      case "outlined":
+        return `${base} w-8 h-8 rounded-full border-2 bg-transparent`;
+      default:
+        return `${base}`;
+    }
+  };
+
+  // Category filter component
+  const categories = [...new Set(items.map(item => item.category).filter(Boolean))];
+
+  // Render decorators
+  const renderDecorators = () => {
+    if (!showDecorators) return null;
+    
+    const decoratorClass = "absolute pointer-events-none";
+    const positionClasses = {
+      "top-left": "top-0 left-0",
+      "top-right": "top-0 right-0",
+      "bottom-left": "bottom-0 left-0",
+      "bottom-right": "bottom-0 right-0",
+      "both-sides": "",
+    }[decoratorPosition];
+    
+    const decoratorElement = () => {
+      switch (decoratorStyle) {
+        case "dots":
+          return (
+            <div className="grid grid-cols-5 gap-2 w-32 h-32 opacity-20">
+              {Array.from({ length: 25 }).map((_, i) => (
+                <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: decoratorColor }} />
+              ))}
+            </div>
+          );
+        case "circles":
+          return (
+            <div className="relative w-40 h-40 opacity-20">
+              <div className="absolute w-full h-full rounded-full border-4" style={{ borderColor: decoratorColor }} />
+              <div className="absolute w-3/4 h-3/4 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4" style={{ borderColor: decoratorColor }} />
+            </div>
+          );
+        case "blur":
+          return (
+            <div className="w-64 h-64 rounded-full blur-3xl opacity-30" style={{ backgroundColor: decoratorColor }} />
+          );
+        default:
+          return null;
+      }
+    };
+    
+    if (decoratorPosition === "both-sides") {
+      return (
+        <>
+          <div className={`${decoratorClass} top-0 left-0`}>{decoratorElement()}</div>
+          <div className={`${decoratorClass} bottom-0 right-0`}>{decoratorElement()}</div>
+        </>
+      );
+    }
+    
+    return <div className={`${decoratorClass} ${positionClasses}`}>{decoratorElement()}</div>;
+  };
+
+  // Contact CTA button classes
+  const contactButtonClasses = {
+    primary: "px-6 py-3 rounded-lg font-semibold text-white transition-all hover:opacity-90",
+    secondary: "px-6 py-3 rounded-lg font-semibold transition-all hover:opacity-90",
+    outline: "px-6 py-3 rounded-lg font-semibold border-2 bg-transparent transition-all hover:bg-opacity-10",
+  }[contactButtonStyle];
+
+  // Render helpful buttons
+  const renderHelpful = () => {
+    if (!showHelpful) return null;
+    return (
+      <div className="flex items-center gap-3 mt-4 pt-4 border-t" style={{ borderColor: dividerColor }}>
+        <span className="text-sm opacity-70" style={{ color: textColor }}>{helpfulText}</span>
+        <button className="px-3 py-1 text-sm rounded border hover:bg-gray-50 transition-colors" style={{ borderColor: dividerColor, color: textColor }}>
+          {helpfulYesText}
+        </button>
+        <button className="px-3 py-1 text-sm rounded border hover:bg-gray-50 transition-colors" style={{ borderColor: dividerColor, color: textColor }}>
+          {helpfulNoText}
+        </button>
+      </div>
+    );
+  };
+
+  // Generate Schema.org JSON-LD
+  const schemaData = enableSchema ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": items.map(item => ({
+      "@type": "Question",
+      "name": item.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": item.answer
+      }
+    }))
+  } : null;
 
   return (
-    <section id={id} className={`w-full ${paddingClasses} px-4 ${className}`} style={{ backgroundColor }}>
-      <div className="max-w-3xl mx-auto">
-        <div className="text-center mb-12 md:mb-16">
-          {subtitle && <p className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2" style={{ color: accentColor }}>{subtitle}</p>}
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4" style={{ color: textColor }}>{title}</h2>
-          {description && <p className="text-base md:text-lg opacity-80" style={{ color: textColor }}>{description}</p>}
+    <section
+      id={id}
+      className={`w-full ${paddingYClasses} ${paddingXClasses} relative overflow-hidden ${className}`}
+      style={getBackgroundStyle()}
+      aria-label={ariaLabel || "Frequently Asked Questions"}
+    >
+      {/* Background overlay for images */}
+      {backgroundStyle === "image" && backgroundOverlay && (
+        <div
+          className="absolute inset-0 z-0"
+          style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity }}
+        />
+      )}
+      
+      {/* Background pattern */}
+      {backgroundPattern && (
+        <div
+          className="absolute inset-0 z-0"
+          style={{ opacity: backgroundPatternOpacity }}
+        >
+          {backgroundPattern === "dots" && (
+            <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(circle, ${accentColor} 1px, transparent 1px)`, backgroundSize: "20px 20px" }} />
+          )}
+          {backgroundPattern === "grid" && (
+            <div className="absolute inset-0" style={{ backgroundImage: `linear-gradient(${accentColor}20 1px, transparent 1px), linear-gradient(90deg, ${accentColor}20 1px, transparent 1px)`, backgroundSize: "40px 40px" }} />
+          )}
         </div>
-        <div className="space-y-3 md:space-y-4">
+      )}
+      
+      {/* Decorators */}
+      {renderDecorators()}
+      
+      {/* Schema.org JSON-LD */}
+      {schemaData && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }} />
+      )}
+      
+      <div className={`${maxWidthClasses} mx-auto relative z-10`}>
+        {/* Header */}
+        <div className={`${sectionGapClasses} ${headerAlign === "center" ? "text-center" : headerAlign === "right" ? "text-right" : "text-left"}`}>
+          {/* Badge */}
+          {badge && (
+            <div className={`inline-flex items-center gap-2 mb-4 ${badgeClasses}`} style={{
+              backgroundColor: badgeStyle !== "outlined" ? badgeColor : "transparent",
+              color: badgeStyle === "outlined" ? badgeColor : badgeTextColor,
+              borderColor: badgeStyle === "outlined" ? badgeColor : undefined,
+            }}>
+              {badgeIcon && <span>{badgeIcon}</span>}
+              {badge}
+            </div>
+          )}
+          
+          {/* Subtitle */}
+          {subtitle && (
+            <p className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2" style={{ color: subtitleColor || accentColor }}>
+              {subtitle}
+            </p>
+          )}
+          
+          {/* Title */}
+          <h2
+            className={`${titleSizeClasses} font-bold mb-4`}
+            style={{ color: titleColor || textColor, fontFamily: titleFont }}
+          >
+            {title}
+          </h2>
+          
+          {/* Description */}
+          {description && (
+            <p
+              className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80 ${hideDescriptionOnMobile ? "hidden md:block" : ""}`}
+              style={{ color: descriptionColor || textColor }}
+            >
+              {description}
+            </p>
+          )}
+        </div>
+        
+        {/* Search */}
+        {showSearch && (
+          <div className="mb-8">
+            <div className="relative max-w-md mx-auto">
+              <input
+                type="text"
+                placeholder={searchPlaceholder}
+                className="w-full px-4 py-3 pl-12 rounded-lg border focus:ring-2 focus:outline-none transition-all"
+                style={{ borderColor: cardBorderColor, backgroundColor: cardBackgroundColor }}
+              />
+              <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+        )}
+        
+        {/* Categories */}
+        {showCategories && categories.length > 0 && categoryPosition === "top" && (
+          <div className={`flex flex-wrap gap-2 mb-8 ${headerAlign === "center" ? "justify-center" : ""}`}>
+            <button
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-all`}
+              style={{ backgroundColor: activeCategoryColor, color: "#ffffff" }}
+            >
+              All
+            </button>
+            {categories.map((category, i) => (
+              <button
+                key={i}
+                className={`px-4 py-2 text-sm font-medium rounded-full transition-all hover:opacity-80`}
+                style={{ backgroundColor: cardBackgroundColor, color: categoryColor }}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {/* FAQ Items - Accordion Variant */}
+        <div className={`${gapClasses} ${columns === 2 ? "grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" : ""}`}>
           {items.map((item, i) => (
             <details
               key={i}
-              open={i === defaultOpen}
-              className="group rounded-lg overflow-hidden transition-all"
-              style={{ backgroundColor: cardBackgroundColor }}
+              open={defaultOpen === "all" || (typeof defaultOpen === "number" && i === defaultOpen)}
+              className={`group ${borderRadiusClasses} overflow-hidden transition-all ${animationSpeedClasses} ${shadowClasses} ${hoverEffectClasses} ${cardBorder ? `border` : ""} ${accordionStyle === "separated" ? "" : accordionStyle === "connected" && i > 0 ? "border-t-0 rounded-t-none" : ""} ${getAnimationClasses(i)}`}
+              style={{
+                backgroundColor: cardBackgroundColor,
+                borderColor: cardBorder ? cardBorderColor : undefined,
+                borderWidth: cardBorder ? `${cardBorderWidth}px` : undefined,
+              }}
             >
-              <summary className="p-4 md:p-6 cursor-pointer list-none flex items-center justify-between gap-4 font-medium text-base md:text-lg hover:bg-opacity-80" style={{ color: textColor }}>
-                <span>{item.question}</span>
-                <svg className="w-5 h-5 flex-shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+              <summary
+                className={`${questionPaddingClasses} cursor-pointer list-none flex items-center ${iconPosition === "left" ? "flex-row-reverse" : ""} justify-between gap-4 ${questionFontSizeClasses} ${questionFontWeightClasses} transition-all`}
+                style={{ color: questionColor || textColor }}
+              >
+                <div className="flex items-center gap-3 flex-1">
+                  {/* Number */}
+                  {showNumbers && (
+                    <span
+                      className={getNumberClasses()}
+                      style={{
+                        backgroundColor: numberStyle !== "outlined" ? numberBackgroundColor : "transparent",
+                        color: numberStyle === "outlined" ? numberBackgroundColor : numberColor,
+                        borderColor: numberStyle === "outlined" ? numberBackgroundColor : undefined,
+                      }}
+                    >
+                      {i + 1}
+                    </span>
+                  )}
+                  
+                  {/* Item icon */}
+                  {item.icon && <span className="text-xl">{item.icon}</span>}
+                  
+                  <span className="flex-1">{item.question}</span>
+                  
+                  {/* Popular badge */}
+                  {showPopularBadge && item.isPopular && (
+                    <span
+                      className="px-2 py-0.5 text-xs font-medium rounded-full"
+                      style={{ backgroundColor: popularBadgeColor, color: "#ffffff" }}
+                    >
+                      {popularBadgeText}
+                    </span>
+                  )}
+                </div>
+                
+                {/* Icon */}
+                {renderIcon(false)}
               </summary>
-              <div className="px-4 md:px-6 pb-4 md:pb-6 text-sm md:text-base leading-relaxed opacity-80" style={{ color: textColor }}>
+              
+              <div
+                className={`${answerPaddingClasses} ${answerFontSizeClasses} ${lineHeightClasses} opacity-80`}
+                style={{
+                  color: answerColor || textColor,
+                  WebkitLineClamp: answerMaxLines,
+                  display: answerMaxLines ? "-webkit-box" : undefined,
+                  WebkitBoxOrient: answerMaxLines ? "vertical" : undefined,
+                  overflow: answerMaxLines ? "hidden" : undefined,
+                }}
+              >
                 {item.answer}
+                
+                {/* Helpful */}
+                {renderHelpful()}
               </div>
             </details>
           ))}
         </div>
+        
+        {/* Contact CTA */}
+        {showContactCta && (
+          <div className="mt-12 md:mt-16 text-center p-8 md:p-12 rounded-2xl" style={{ backgroundColor: cardBackgroundColor }}>
+            <h3 className="text-xl md:text-2xl font-bold mb-2" style={{ color: textColor }}>{contactTitle}</h3>
+            <p className="text-base opacity-80 mb-6 max-w-lg mx-auto" style={{ color: textColor }}>{contactDescription}</p>
+            <a
+              href={contactButtonLink}
+              className={contactButtonClasses}
+              style={{
+                backgroundColor: contactButtonStyle === "primary" ? accentColor : contactButtonStyle === "secondary" ? cardBackgroundColor : "transparent",
+                borderColor: contactButtonStyle === "outline" ? accentColor : undefined,
+                color: contactButtonStyle === "outline" ? accentColor : contactButtonStyle === "secondary" ? textColor : "#ffffff",
+              }}
+            >
+              {contactButtonText}
+            </a>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -1746,61 +6030,781 @@ export function FAQRender({
 // STATS - Statistics/Metrics Display
 // ============================================================================
 
+export interface StatItem {
+  value?: string;
+  label?: string;
+  description?: string;
+  prefix?: string;
+  suffix?: string;
+  icon?: string;
+  iconColor?: string;
+  trend?: "up" | "down" | "neutral";
+  trendValue?: string;
+  link?: string;
+  isHighlighted?: boolean;
+}
+
 export interface StatsProps {
+  // Header Content
   title?: string;
   subtitle?: string;
-  stats?: Array<{
-    value?: string;
-    label?: string;
-    prefix?: string;
-    suffix?: string;
-    icon?: string;
-  }>;
-  columns?: 2 | 3 | 4;
-  variant?: "simple" | "cards" | "bordered" | "icons";
+  description?: string;
+  badge?: string;
+  badgeIcon?: string;
+  
+  // Header Styling
+  headerAlign?: "left" | "center" | "right";
+  titleSize?: "sm" | "md" | "lg" | "xl" | "2xl";
+  titleColor?: string;
+  titleFont?: string;
+  subtitleColor?: string;
+  descriptionColor?: string;
+  badgeStyle?: "pill" | "outlined" | "solid" | "gradient";
+  badgeColor?: string;
+  badgeTextColor?: string;
+  
+  // Stats Items
+  stats?: StatItem[];
+  
+  // Layout & Variant
+  variant?: "simple" | "cards" | "bordered" | "icons" | "minimal" | "gradient" | "glass" | "outline" | "split" | "circular";
+  columns?: 2 | 3 | 4 | 5 | 6;
+  maxWidth?: "md" | "lg" | "xl" | "2xl" | "full";
+  contentAlign?: "left" | "center" | "right";
+  
+  // Value Styling
+  valueSize?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
+  valueColor?: string;
+  valueFont?: string;
+  valueFontWeight?: "normal" | "medium" | "semibold" | "bold" | "extrabold";
+  
+  // Label Styling
+  labelSize?: "xs" | "sm" | "md" | "lg";
+  labelColor?: string;
+  labelPosition?: "above" | "below";
+  labelOpacity?: number;
+  showDescription?: boolean;
+  descriptionSize?: "xs" | "sm" | "md";
+  
+  // Icon Settings
+  showIcons?: boolean;
+  iconPosition?: "top" | "left" | "inline";
+  iconSize?: "sm" | "md" | "lg" | "xl";
+  iconStyle?: "default" | "circle" | "square" | "rounded" | "gradient";
+  iconBackgroundColor?: string;
+  defaultIconColor?: string;
+  
+  // Counter Animation
+  animateNumbers?: boolean;
+  animationDuration?: number;
+  animationDelay?: number;
+  staggerAnimation?: boolean;
+  staggerDelay?: number;
+  startFromZero?: boolean;
+  countingType?: "linear" | "easeOut" | "easeInOut";
+  
+  // Card Styling
   backgroundColor?: string;
-  textColor?: string;
+  cardBackgroundColor?: string;
+  cardHoverBackgroundColor?: string;
+  highlightedCardBackground?: string;
+  cardBorder?: boolean;
+  cardBorderColor?: string;
+  cardBorderWidth?: "1" | "2" | "3";
+  cardBorderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "full";
+  cardShadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  cardHoverShadow?: "none" | "sm" | "md" | "lg" | "xl";
+  cardPadding?: "sm" | "md" | "lg" | "xl";
+  hoverEffect?: "none" | "lift" | "scale" | "glow" | "border";
+  
+  // Accent & Dividers
   accentColor?: string;
-  paddingY?: "sm" | "md" | "lg" | "xl";
+  textColor?: string;
+  showDividers?: boolean;
+  dividerStyle?: "solid" | "dashed" | "dotted" | "gradient";
+  dividerColor?: string;
+  
+  // Trend Indicators
+  showTrends?: boolean;
+  trendUpColor?: string;
+  trendDownColor?: string;
+  trendNeutralColor?: string;
+  trendPosition?: "inline" | "below";
+  
+  // Section Sizing
+  paddingY?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  paddingX?: "none" | "sm" | "md" | "lg" | "xl";
+  gap?: "sm" | "md" | "lg" | "xl";
+  sectionGap?: "sm" | "md" | "lg" | "xl";
+  
+  // Background
+  backgroundStyle?: "solid" | "gradient" | "pattern" | "image";
+  backgroundGradientFrom?: string;
+  backgroundGradientTo?: string;
+  backgroundGradientDirection?: "to-r" | "to-l" | "to-t" | "to-b" | "to-br" | "to-bl" | "to-tr" | "to-tl";
+  backgroundPattern?: "dots" | "grid" | "lines" | "waves";
+  backgroundPatternOpacity?: number;
+  backgroundImage?: string | ImageValue;
+  backgroundOverlay?: boolean;
+  backgroundOverlayColor?: string;
+  backgroundOverlayOpacity?: number;
+  
+  // Decorative Elements
+  showDecorators?: boolean;
+  decoratorStyle?: "dots" | "circles" | "blur" | "lines";
+  decoratorColor?: string;
+  decoratorPosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "both-sides";
+  
+  // Animation
+  animateOnScroll?: boolean;
+  animationType?: "fade" | "slide-up" | "slide-left" | "slide-right" | "scale" | "stagger";
+  entranceDelay?: number;
+  
+  // Responsive
+  mobileColumns?: 1 | 2;
+  hideDescriptionOnMobile?: boolean;
+  compactOnMobile?: boolean;
+  
+  // Accessibility
+  ariaLabel?: string;
+  
   id?: string;
   className?: string;
 }
 
 export function StatsRender({
+  // Header Content
   title,
   subtitle,
+  description,
+  badge,
+  badgeIcon,
+  
+  // Header Styling
+  headerAlign = "center",
+  titleSize = "lg",
+  titleColor,
+  titleFont,
+  subtitleColor,
+  descriptionColor,
+  badgeStyle = "pill",
+  badgeColor = "#3b82f6",
+  badgeTextColor = "#ffffff",
+  
+  // Stats Items
   stats = [],
-  columns = 4,
+  
+  // Layout & Variant
   variant = "simple",
+  columns = 4,
+  maxWidth = "xl",
+  contentAlign = "center",
+  
+  // Value Styling
+  valueSize = "xl",
+  valueColor,
+  valueFont,
+  valueFontWeight = "bold",
+  
+  // Label Styling
+  labelSize = "md",
+  labelColor,
+  labelPosition = "below",
+  labelOpacity = 0.7,
+  showDescription = false,
+  descriptionSize = "sm",
+  
+  // Icon Settings
+  showIcons = false,
+  iconPosition = "top",
+  iconSize = "lg",
+  iconStyle = "default",
+  iconBackgroundColor = "#3b82f620",
+  defaultIconColor = "#3b82f6",
+  
+  // Counter Animation
+  animateNumbers = false,
+  animationDuration: _animationDuration = 2000,
+  animationDelay: _animationDelay = 0,
+  staggerAnimation: _staggerAnimation = true,
+  staggerDelay: _staggerDelay = 200,
+  startFromZero: _startFromZero = true,
+  countingType: _countingType = "easeOut",
+  
+  // Card Styling
   backgroundColor = "#111827",
-  textColor = "#ffffff",
+  cardBackgroundColor = "rgba(255,255,255,0.05)",
+  cardHoverBackgroundColor,
+  highlightedCardBackground = "#3b82f620",
+  cardBorder = false,
+  cardBorderColor = "#ffffff20",
+  cardBorderWidth = "1",
+  cardBorderRadius = "xl",
+  cardShadow = "none",
+  cardHoverShadow = "lg",
+  cardPadding = "lg",
+  hoverEffect = "lift",
+  
+  // Accent & Dividers
   accentColor = "#3b82f6",
+  textColor = "#ffffff",
+  showDividers = false,
+  dividerStyle = "solid",
+  dividerColor = "#ffffff20",
+  
+  // Trend Indicators
+  showTrends = false,
+  trendUpColor = "#22c55e",
+  trendDownColor = "#ef4444",
+  trendNeutralColor = "#9ca3af",
+  trendPosition = "below",
+  
+  // Section Sizing
   paddingY = "lg",
+  paddingX = "md",
+  gap = "lg",
+  sectionGap = "lg",
+  
+  // Background
+  backgroundStyle = "solid",
+  backgroundGradientFrom = "#111827",
+  backgroundGradientTo = "#1f2937",
+  backgroundGradientDirection = "to-br",
+  backgroundPattern,
+  backgroundPatternOpacity = 0.1,
+  backgroundImage,
+  backgroundOverlay = false,
+  backgroundOverlayColor = "#000000",
+  backgroundOverlayOpacity = 0.6,
+  
+  // Decorative Elements
+  showDecorators = false,
+  decoratorStyle = "blur",
+  decoratorColor = "#3b82f6",
+  decoratorPosition = "both-sides",
+  
+  // Animation
+  animateOnScroll = false,
+  animationType = "fade",
+  entranceDelay = 0,
+  
+  // Responsive
+  mobileColumns = 2,
+  hideDescriptionOnMobile = false,
+  compactOnMobile = false,
+  
+  // Accessibility
+  ariaLabel,
+  
   id,
   className = "",
 }: StatsProps) {
-  const paddingClasses = { sm: "py-12 md:py-16", md: "py-16 md:py-20", lg: "py-20 md:py-28", xl: "py-24 md:py-32" }[paddingY];
-  const colClasses = { 2: "grid-cols-2", 3: "grid-cols-2 md:grid-cols-3", 4: "grid-cols-2 md:grid-cols-4" }[columns];
+  // Padding classes
+  const paddingYClasses = {
+    none: "",
+    sm: "py-8 md:py-12",
+    md: "py-12 md:py-16",
+    lg: "py-16 md:py-24",
+    xl: "py-20 md:py-32",
+    "2xl": "py-24 md:py-40",
+  }[paddingY];
+  
+  const paddingXClasses = {
+    none: "",
+    sm: "px-4",
+    md: "px-4 md:px-6",
+    lg: "px-4 md:px-8",
+    xl: "px-4 md:px-12",
+  }[paddingX];
+
+  // Max width classes
+  const maxWidthClasses = {
+    md: "max-w-3xl",
+    lg: "max-w-5xl",
+    xl: "max-w-7xl",
+    "2xl": "max-w-screen-2xl",
+    full: "max-w-full",
+  }[maxWidth];
+
+  // Column classes
+  const columnClasses = {
+    2: `grid-cols-${mobileColumns} md:grid-cols-2`,
+    3: `grid-cols-${mobileColumns} md:grid-cols-3`,
+    4: `grid-cols-${mobileColumns} md:grid-cols-4`,
+    5: `grid-cols-${mobileColumns} md:grid-cols-5`,
+    6: `grid-cols-${mobileColumns} md:grid-cols-3 lg:grid-cols-6`,
+  }[columns];
+
+  // Title size classes
+  const titleSizeClasses = {
+    sm: "text-xl md:text-2xl",
+    md: "text-2xl md:text-3xl",
+    lg: "text-3xl md:text-4xl lg:text-5xl",
+    xl: "text-4xl md:text-5xl lg:text-6xl",
+    "2xl": "text-5xl md:text-6xl lg:text-7xl",
+  }[titleSize];
+
+  // Value size classes
+  const valueSizeClasses = {
+    sm: "text-2xl md:text-3xl",
+    md: "text-3xl md:text-4xl",
+    lg: "text-4xl md:text-5xl",
+    xl: "text-5xl md:text-6xl",
+    "2xl": "text-6xl md:text-7xl",
+    "3xl": "text-7xl md:text-8xl",
+  }[valueSize];
+
+  // Value font weight classes
+  const valueFontWeightClasses = {
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+    extrabold: "font-extrabold",
+  }[valueFontWeight];
+
+  // Label size classes
+  const labelSizeClasses = {
+    xs: "text-xs md:text-sm",
+    sm: "text-sm md:text-base",
+    md: "text-base md:text-lg",
+    lg: "text-lg md:text-xl",
+  }[labelSize];
+
+  // Description size classes
+  const descriptionSizeClasses = {
+    xs: "text-xs",
+    sm: "text-sm",
+    md: "text-base",
+  }[descriptionSize];
+
+  // Icon size classes
+  const iconSizeClasses = {
+    sm: "text-xl md:text-2xl",
+    md: "text-2xl md:text-3xl",
+    lg: "text-3xl md:text-4xl",
+    xl: "text-4xl md:text-5xl",
+  }[iconSize];
+
+  // Card padding classes
+  const cardPaddingClasses = {
+    sm: "p-4 md:p-5",
+    md: "p-5 md:p-6",
+    lg: "p-6 md:p-8",
+    xl: "p-8 md:p-10",
+  }[cardPadding];
+
+  // Card border radius classes
+  const borderRadiusClasses = {
+    none: "rounded-none",
+    sm: "rounded",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+    full: "rounded-3xl",
+  }[cardBorderRadius];
+
+  // Card shadow classes
+  const shadowClasses = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    "2xl": "shadow-2xl",
+  }[cardShadow];
+
+  // Hover effect classes
+  const hoverEffectClasses = {
+    none: "",
+    lift: "hover:-translate-y-1 transition-transform duration-300",
+    scale: "hover:scale-105 transition-transform duration-300",
+    glow: "hover:ring-2 hover:ring-offset-2 transition-all duration-300",
+    border: "hover:border-2 transition-all duration-300",
+  }[hoverEffect];
+
+  // Gap classes
+  const gapClasses = {
+    sm: "gap-4 md:gap-5",
+    md: "gap-5 md:gap-6",
+    lg: "gap-6 md:gap-8",
+    xl: "gap-8 md:gap-10",
+  }[gap];
+
+  // Section gap classes
+  const sectionGapClasses = {
+    sm: "mb-8 md:mb-10",
+    md: "mb-10 md:mb-12",
+    lg: "mb-12 md:mb-16",
+    xl: "mb-16 md:mb-20",
+  }[sectionGap];
+
+  // Content alignment
+  const contentAlignClasses = {
+    left: "text-left items-start",
+    center: "text-center items-center",
+    right: "text-right items-end",
+  }[contentAlign];
+
+  // Badge styles
+  const badgeClasses = {
+    pill: "px-4 py-1.5 rounded-full text-sm font-medium",
+    outlined: "px-4 py-1.5 rounded-full text-sm font-medium border-2 bg-transparent",
+    solid: "px-4 py-2 rounded-md text-sm font-medium",
+    gradient: "px-4 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r",
+  }[badgeStyle];
+
+  // Get background style
+  const getBackgroundStyle = (): React.CSSProperties => {
+    const style: React.CSSProperties = {};
+    
+    if (backgroundStyle === "solid") {
+      style.backgroundColor = backgroundColor;
+    } else if (backgroundStyle === "gradient") {
+      const direction = {
+        "to-r": "to right",
+        "to-l": "to left",
+        "to-t": "to top",
+        "to-b": "to bottom",
+        "to-br": "to bottom right",
+        "to-bl": "to bottom left",
+        "to-tr": "to top right",
+        "to-tl": "to top left",
+      }[backgroundGradientDirection];
+      style.background = `linear-gradient(${direction}, ${backgroundGradientFrom}, ${backgroundGradientTo})`;
+    } else if (backgroundStyle === "image" && backgroundImage) {
+      style.backgroundImage = `url(${getImageUrl(backgroundImage)})`;
+      style.backgroundSize = "cover";
+      style.backgroundPosition = "center";
+    }
+    
+    return style;
+  };
+
+  // Get card styles based on variant
+  const getCardStyles = (stat: StatItem, index: number): { className: string; style: React.CSSProperties } => {
+    const baseStyle: React.CSSProperties = {};
+    let baseClasses = `flex flex-col ${contentAlignClasses}`;
+    
+    switch (variant) {
+      case "cards":
+        baseClasses += ` ${cardPaddingClasses} ${borderRadiusClasses} ${shadowClasses} ${hoverEffectClasses}`;
+        baseStyle.backgroundColor = stat?.isHighlighted ? highlightedCardBackground : cardBackgroundColor;
+        if (cardBorder) {
+          baseStyle.borderWidth = `${cardBorderWidth}px`;
+          baseStyle.borderColor = cardBorderColor;
+          baseStyle.borderStyle = "solid";
+        }
+        break;
+      case "bordered":
+        baseClasses += " border-l-4 pl-6";
+        baseStyle.borderColor = accentColor;
+        break;
+      case "gradient":
+        baseClasses += ` ${cardPaddingClasses} ${borderRadiusClasses}`;
+        baseStyle.background = `linear-gradient(135deg, ${accentColor}20, transparent)`;
+        break;
+      case "glass":
+        baseClasses += ` ${cardPaddingClasses} ${borderRadiusClasses} backdrop-blur-sm`;
+        baseStyle.backgroundColor = "rgba(255,255,255,0.1)";
+        baseStyle.borderWidth = "1px";
+        baseStyle.borderColor = "rgba(255,255,255,0.2)";
+        break;
+      case "outline":
+        baseClasses += ` ${cardPaddingClasses} ${borderRadiusClasses} border-2`;
+        baseStyle.borderColor = cardBorderColor || accentColor;
+        break;
+      case "circular":
+        baseClasses += " w-32 h-32 md:w-40 md:h-40 rounded-full justify-center mx-auto";
+        baseStyle.backgroundColor = cardBackgroundColor;
+        break;
+      case "minimal":
+        // No special styling for minimal
+        break;
+      default:
+        // Simple variant - no special styling
+        break;
+    }
+    
+    // Animation classes
+    if (animateOnScroll) {
+      baseClasses += ` animate-in fade-in duration-500`;
+      if (animationType === "slide-up") baseClasses += " slide-in-from-bottom-4";
+      if (animationType === "scale") baseClasses += " zoom-in-95";
+    }
+    
+    return { className: baseClasses, style: baseStyle };
+  };
+
+  // Render icon
+  const renderIcon = (stat: StatItem) => {
+    if (!showIcons || !stat?.icon) return null;
+    
+    const iconBgClasses = {
+      default: "",
+      circle: "rounded-full p-3 md:p-4",
+      square: "rounded-md p-3 md:p-4",
+      rounded: "rounded-lg p-3 md:p-4",
+      gradient: "rounded-full p-3 md:p-4",
+    }[iconStyle];
+    
+    const iconBgStyle: React.CSSProperties = iconStyle !== "default" ? {
+      backgroundColor: iconStyle === "gradient" 
+        ? `linear-gradient(135deg, ${stat.iconColor || defaultIconColor}, ${stat.iconColor || defaultIconColor}80)` 
+        : iconBackgroundColor,
+    } : {};
+    
+    return (
+      <div 
+        className={`${iconSizeClasses} ${iconBgClasses} ${iconPosition === "top" ? "mb-4" : iconPosition === "left" ? "mr-4" : "mr-2"}`}
+        style={{ ...iconBgStyle, color: stat.iconColor || defaultIconColor }}
+      >
+        {stat.icon}
+      </div>
+    );
+  };
+
+  // Render trend indicator
+  const renderTrend = (stat: StatItem) => {
+    if (!showTrends || !stat?.trend) return null;
+    
+    const trendColor = {
+      up: trendUpColor,
+      down: trendDownColor,
+      neutral: trendNeutralColor,
+    }[stat.trend];
+    
+    const trendIcon = {
+      up: "↑",
+      down: "↓",
+      neutral: "→",
+    }[stat.trend];
+    
+    return (
+      <span 
+        className={`inline-flex items-center gap-1 text-sm font-medium ${trendPosition === "inline" ? "ml-2" : "mt-1"}`}
+        style={{ color: trendColor }}
+      >
+        {trendIcon} {stat.trendValue}
+      </span>
+    );
+  };
+
+  // Render decorators
+  const renderDecorators = () => {
+    if (!showDecorators) return null;
+    
+    const decoratorElement = () => {
+      switch (decoratorStyle) {
+        case "dots":
+          return (
+            <div className="grid grid-cols-4 gap-2 w-24 h-24 opacity-20">
+              {Array.from({ length: 16 }).map((_, i) => (
+                <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: decoratorColor }} />
+              ))}
+            </div>
+          );
+        case "circles":
+          return (
+            <div className="relative w-40 h-40 opacity-20">
+              <div className="absolute w-full h-full rounded-full border-4" style={{ borderColor: decoratorColor }} />
+              <div className="absolute w-2/3 h-2/3 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4" style={{ borderColor: decoratorColor }} />
+            </div>
+          );
+        case "blur":
+          return (
+            <div className="w-64 h-64 rounded-full blur-3xl opacity-30" style={{ backgroundColor: decoratorColor }} />
+          );
+        default:
+          return null;
+      }
+    };
+    
+    if (decoratorPosition === "both-sides") {
+      return (
+        <>
+          <div className="absolute top-0 left-0 pointer-events-none">{decoratorElement()}</div>
+          <div className="absolute bottom-0 right-0 pointer-events-none">{decoratorElement()}</div>
+        </>
+      );
+    }
+    
+    const positionClasses = {
+      "top-left": "top-0 left-0",
+      "top-right": "top-0 right-0",
+      "bottom-left": "bottom-0 left-0",
+      "bottom-right": "bottom-0 right-0",
+      "both-sides": "",
+    }[decoratorPosition];
+    
+    return <div className={`absolute ${positionClasses} pointer-events-none`}>{decoratorElement()}</div>;
+  };
 
   return (
-    <section id={id} className={`w-full ${paddingClasses} px-4 ${className}`} style={{ backgroundColor }}>
-      <div className="max-w-screen-xl mx-auto">
-        {(title || subtitle) && (
-          <div className="text-center mb-12 md:mb-16">
-            {subtitle && <p className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2" style={{ color: accentColor }}>{subtitle}</p>}
-            {title && <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold" style={{ color: textColor }}>{title}</h2>}
+    <section
+      id={id}
+      className={`w-full ${paddingYClasses} ${paddingXClasses} relative overflow-hidden ${className}`}
+      style={getBackgroundStyle()}
+      aria-label={ariaLabel || "Statistics"}
+    >
+      {/* Background overlay for images */}
+      {backgroundStyle === "image" && backgroundOverlay && (
+        <div
+          className="absolute inset-0 z-0"
+          style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity }}
+        />
+      )}
+      
+      {/* Background pattern */}
+      {backgroundPattern && (
+        <div
+          className="absolute inset-0 z-0"
+          style={{ opacity: backgroundPatternOpacity }}
+        >
+          {backgroundPattern === "dots" && (
+            <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(circle, ${accentColor} 1px, transparent 1px)`, backgroundSize: "20px 20px" }} />
+          )}
+          {backgroundPattern === "grid" && (
+            <div className="absolute inset-0" style={{ backgroundImage: `linear-gradient(${accentColor}20 1px, transparent 1px), linear-gradient(90deg, ${accentColor}20 1px, transparent 1px)`, backgroundSize: "40px 40px" }} />
+          )}
+        </div>
+      )}
+      
+      {/* Decorators */}
+      {renderDecorators()}
+      
+      <div className={`${maxWidthClasses} mx-auto relative z-10`}>
+        {/* Header */}
+        {(title || subtitle || description || badge) && (
+          <div className={`${sectionGapClasses} ${headerAlign === "center" ? "text-center" : headerAlign === "right" ? "text-right" : "text-left"}`}>
+            {/* Badge */}
+            {badge && (
+              <div className={`inline-flex items-center gap-2 mb-4 ${badgeClasses}`} style={{
+                backgroundColor: badgeStyle !== "outlined" ? badgeColor : "transparent",
+                color: badgeStyle === "outlined" ? badgeColor : badgeTextColor,
+                borderColor: badgeStyle === "outlined" ? badgeColor : undefined,
+              }}>
+                {badgeIcon && <span>{badgeIcon}</span>}
+                {badge}
+              </div>
+            )}
+            
+            {/* Subtitle */}
+            {subtitle && (
+              <p className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2" style={{ color: subtitleColor || accentColor }}>
+                {subtitle}
+              </p>
+            )}
+            
+            {/* Title */}
+            {title && (
+              <h2
+                className={`${titleSizeClasses} font-bold mb-4`}
+                style={{ color: titleColor || textColor, fontFamily: titleFont }}
+              >
+                {title}
+              </h2>
+            )}
+            
+            {/* Description */}
+            {description && (
+              <p
+                className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80`}
+                style={{ color: descriptionColor || textColor }}
+              >
+                {description}
+              </p>
+            )}
           </div>
         )}
-        <div className={`grid ${colClasses} gap-6 md:gap-8 lg:gap-12`}>
-          {stats.map((stat, i) => (
-            <div key={i} className={`text-center ${variant === "cards" ? "p-6 md:p-8 rounded-xl bg-white/5" : ""} ${variant === "bordered" ? "border-l-4 pl-6" : ""}`} style={variant === "bordered" ? { borderColor: accentColor } : undefined}>
-              {stat.icon && variant === "icons" && <div className="text-3xl md:text-4xl mb-4">{stat.icon}</div>}
-              <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2" style={{ color: textColor }}>
-                {stat.prefix}{stat.value}{stat.suffix}
-              </div>
-              <div className="text-sm md:text-base opacity-70" style={{ color: textColor }}>{stat.label}</div>
-            </div>
-          ))}
+        
+        {/* Stats Grid */}
+        <div className={`grid ${columnClasses} ${gapClasses} ${compactOnMobile ? "gap-3 md:gap-6" : ""}`}>
+          {stats.map((stat, i) => {
+            const { className: cardClasses, style: cardStyle } = getCardStyles(stat, i);
+            const StatWrapper = stat.link ? "a" : "div";
+            const wrapperProps = stat.link ? { href: stat.link } : {};
+            
+            return (
+              <StatWrapper
+                key={i}
+                {...wrapperProps}
+                className={`${cardClasses} ${stat.link ? "cursor-pointer" : ""} ${showDividers && i > 0 ? "relative" : ""}`}
+                style={{
+                  ...cardStyle,
+                  animationDelay: animateOnScroll ? `${entranceDelay + (i * 100)}ms` : undefined,
+                }}
+              >
+                {/* Divider */}
+                {showDividers && i > 0 && variant === "simple" && (
+                  <div
+                    className="absolute left-0 top-1/4 h-1/2 w-px hidden md:block"
+                    style={{ 
+                      backgroundColor: dividerColor,
+                      borderStyle: dividerStyle === "solid" ? undefined : dividerStyle,
+                    }}
+                  />
+                )}
+                
+                {/* Icon - Top */}
+                {iconPosition === "top" && renderIcon(stat)}
+                
+                {/* Content with Icon Left */}
+                <div className={`flex ${iconPosition === "left" ? "flex-row items-center" : "flex-col"} ${contentAlignClasses}`}>
+                  {/* Icon - Left */}
+                  {iconPosition === "left" && renderIcon(stat)}
+                  
+                  <div className={`flex flex-col ${contentAlignClasses}`}>
+                    {/* Label - Above */}
+                    {labelPosition === "above" && (
+                      <div 
+                        className={`${labelSizeClasses} mb-2`}
+                        style={{ color: labelColor || textColor, opacity: labelOpacity }}
+                      >
+                        {stat.label}
+                      </div>
+                    )}
+                    
+                    {/* Value */}
+                    <div 
+                      className={`${valueSizeClasses} ${valueFontWeightClasses} flex items-center`}
+                      style={{ color: valueColor || textColor, fontFamily: valueFont }}
+                    >
+                      {/* Icon - Inline */}
+                      {iconPosition === "inline" && renderIcon(stat)}
+                      <span>{stat.prefix}{stat.value}{stat.suffix}</span>
+                      {/* Trend - Inline */}
+                      {trendPosition === "inline" && renderTrend(stat)}
+                    </div>
+                    
+                    {/* Label - Below */}
+                    {labelPosition === "below" && (
+                      <div 
+                        className={`${labelSizeClasses} mt-2`}
+                        style={{ color: labelColor || textColor, opacity: labelOpacity }}
+                      >
+                        {stat.label}
+                      </div>
+                    )}
+                    
+                    {/* Description */}
+                    {showDescription && stat.description && (
+                      <p 
+                        className={`${descriptionSizeClasses} mt-2 opacity-60 ${hideDescriptionOnMobile ? "hidden md:block" : ""}`}
+                        style={{ color: textColor }}
+                      >
+                        {stat.description}
+                      </p>
+                    )}
+                    
+                    {/* Trend - Below */}
+                    {trendPosition === "below" && renderTrend(stat)}
+                  </div>
+                </div>
+              </StatWrapper>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -1811,73 +6815,930 @@ export function StatsRender({
 // TEAM - Team Members Grid
 // ============================================================================
 
+export interface TeamMember {
+  name?: string;
+  role?: string;
+  department?: string;
+  bio?: string;
+  image?: string | ImageValue;
+  linkedin?: string;
+  twitter?: string;
+  instagram?: string;
+  github?: string;
+  website?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  skills?: string[];
+  isLeadership?: boolean;
+  isFeatured?: boolean;
+}
+
 export interface TeamProps {
+  // Header Content
   title?: string;
   subtitle?: string;
   description?: string;
-  members?: Array<{
-    name?: string;
-    role?: string;
-    bio?: string;
-    image?: string | ImageValue;
-    linkedin?: string;
-    twitter?: string;
-    email?: string;
-  }>;
-  columns?: 2 | 3 | 4;
-  variant?: "cards" | "minimal" | "detailed";
+  badge?: string;
+  badgeIcon?: string;
+  
+  // Header Styling
+  headerAlign?: "left" | "center" | "right";
+  titleSize?: "sm" | "md" | "lg" | "xl" | "2xl";
+  titleColor?: string;
+  titleFont?: string;
+  subtitleColor?: string;
+  descriptionColor?: string;
+  badgeStyle?: "pill" | "outlined" | "solid" | "gradient";
+  badgeColor?: string;
+  badgeTextColor?: string;
+  
+  // Team Members
+  members?: TeamMember[];
+  
+  // Layout & Variant
+  variant?: "cards" | "minimal" | "detailed" | "grid" | "list" | "magazine" | "overlap" | "circular" | "modern" | "hover-reveal";
+  columns?: 2 | 3 | 4 | 5 | 6;
+  maxWidth?: "md" | "lg" | "xl" | "2xl" | "full";
+  contentAlign?: "left" | "center" | "right";
+  
+  // Card Styling
   backgroundColor?: string;
   cardBackgroundColor?: string;
-  textColor?: string;
-  paddingY?: "sm" | "md" | "lg" | "xl";
+  cardHoverBackgroundColor?: string;
+  featuredCardBackground?: string;
+  cardBorder?: boolean;
+  cardBorderColor?: string;
+  cardBorderWidth?: "1" | "2" | "3";
+  cardBorderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl" | "full";
+  cardShadow?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  cardHoverShadow?: "none" | "sm" | "md" | "lg" | "xl";
+  cardPadding?: "sm" | "md" | "lg" | "xl";
+  hoverEffect?: "none" | "lift" | "scale" | "glow" | "flip" | "slide-up";
+  
+  // Image Styling
+  imageSize?: "sm" | "md" | "lg" | "xl" | "2xl";
+  imageShape?: "circle" | "square" | "rounded" | "rounded-lg";
+  imageBorder?: boolean;
+  imageBorderColor?: string;
+  imageBorderWidth?: "2" | "3" | "4";
+  imagePosition?: "top" | "left" | "background" | "side";
+  showImageOverlay?: boolean;
+  imageOverlayColor?: string;
+  imageGrayscale?: boolean;
+  imageGrayscaleHover?: boolean;
+  
+  // Name & Role Styling
+  nameSize?: "sm" | "md" | "lg" | "xl";
+  nameColor?: string;
+  nameFont?: string;
+  nameFontWeight?: "normal" | "medium" | "semibold" | "bold";
+  roleSize?: "xs" | "sm" | "md";
+  roleColor?: string;
+  roleStyle?: "normal" | "badge" | "uppercase";
+  showDepartment?: boolean;
+  departmentColor?: string;
+  
+  // Bio Settings
+  showBio?: boolean;
+  bioMaxLines?: number;
+  bioSize?: "xs" | "sm" | "md";
+  bioColor?: string;
+  
+  // Social Links
   showSocial?: boolean;
+  socialPosition?: "bottom" | "overlay" | "inline" | "hover";
+  socialSize?: "sm" | "md" | "lg";
+  socialStyle?: "icons" | "buttons" | "pills";
+  socialColor?: string;
+  socialHoverColor?: string;
+  showLinkedIn?: boolean;
+  showTwitter?: boolean;
+  showInstagram?: boolean;
+  showGithub?: boolean;
+  showWebsite?: boolean;
+  showEmail?: boolean;
+  showPhone?: boolean;
+  
+  // Skills
+  showSkills?: boolean;
+  skillStyle?: "tags" | "pills" | "list";
+  skillColor?: string;
+  skillBackgroundColor?: string;
+  maxSkillsShown?: number;
+  
+  // Location
+  showLocation?: boolean;
+  locationIcon?: boolean;
+  locationColor?: string;
+  
+  // Filtering & Categories
+  showFilter?: boolean;
+  filterBy?: "department" | "role" | "none";
+  filterPosition?: "top" | "sidebar";
+  filterStyle?: "pills" | "dropdown" | "tabs";
+  
+  // Featured/Leadership
+  highlightLeadership?: boolean;
+  leadershipLabel?: string;
+  featuredScale?: number;
+  
+  // Section Sizing
+  paddingY?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  paddingX?: "none" | "sm" | "md" | "lg" | "xl";
+  gap?: "sm" | "md" | "lg" | "xl";
+  sectionGap?: "sm" | "md" | "lg" | "xl";
+  
+  // Background
+  backgroundStyle?: "solid" | "gradient" | "pattern" | "image";
+  backgroundGradientFrom?: string;
+  backgroundGradientTo?: string;
+  backgroundGradientDirection?: "to-r" | "to-l" | "to-t" | "to-b" | "to-br" | "to-bl" | "to-tr" | "to-tl";
+  backgroundPattern?: "dots" | "grid" | "lines";
+  backgroundPatternOpacity?: number;
+  backgroundImage?: string | ImageValue;
+  backgroundOverlay?: boolean;
+  backgroundOverlayColor?: string;
+  backgroundOverlayOpacity?: number;
+  
+  // Decorative Elements
+  showDecorators?: boolean;
+  decoratorStyle?: "dots" | "circles" | "blur";
+  decoratorColor?: string;
+  decoratorPosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "both-sides";
+  
+  // Animation
+  animateOnScroll?: boolean;
+  animationType?: "fade" | "slide-up" | "slide-left" | "slide-right" | "scale" | "stagger";
+  animationDelay?: number;
+  staggerDelay?: number;
+  
+  // CTA
+  showCta?: boolean;
+  ctaTitle?: string;
+  ctaDescription?: string;
+  ctaButtonText?: string;
+  ctaButtonLink?: string;
+  ctaButtonStyle?: "primary" | "secondary" | "outline";
+  
+  // Responsive
+  mobileColumns?: 1 | 2;
+  hideBioOnMobile?: boolean;
+  hideSkillsOnMobile?: boolean;
+  compactOnMobile?: boolean;
+  
+  // Text colors (legacy support)
+  textColor?: string;
+  accentColor?: string;
+  
   id?: string;
   className?: string;
 }
 
 export function TeamRender({
+  // Header Content
   title = "Meet Our Team",
   subtitle,
   description,
+  badge,
+  badgeIcon,
+  
+  // Header Styling
+  headerAlign = "center",
+  titleSize = "lg",
+  titleColor,
+  titleFont,
+  subtitleColor,
+  descriptionColor,
+  badgeStyle = "pill",
+  badgeColor = "#3b82f6",
+  badgeTextColor = "#ffffff",
+  
+  // Team Members
   members = [],
-  columns = 4,
+  
+  // Layout & Variant
   variant = "cards",
+  columns = 4,
+  maxWidth = "xl",
+  contentAlign = "center",
+  
+  // Card Styling
   backgroundColor = "#ffffff",
   cardBackgroundColor = "#f9fafb",
-  textColor,
-  paddingY = "lg",
+  cardHoverBackgroundColor,
+  featuredCardBackground = "#3b82f610",
+  cardBorder = false,
+  cardBorderColor = "#e5e7eb",
+  cardBorderWidth = "1",
+  cardBorderRadius = "xl",
+  cardShadow = "sm",
+  cardHoverShadow = "lg",
+  cardPadding = "lg",
+  hoverEffect = "lift",
+  
+  // Image Styling
+  imageSize = "lg",
+  imageShape = "circle",
+  imageBorder = false,
+  imageBorderColor = "#3b82f6",
+  imageBorderWidth = "3",
+  imagePosition = "top",
+  showImageOverlay = false,
+  imageOverlayColor = "#000000",
+  imageGrayscale = false,
+  imageGrayscaleHover = false,
+  
+  // Name & Role Styling
+  nameSize = "lg",
+  nameColor,
+  nameFont,
+  nameFontWeight = "semibold",
+  roleSize = "sm",
+  roleColor,
+  roleStyle = "normal",
+  showDepartment = false,
+  departmentColor,
+  
+  // Bio Settings
+  showBio = false,
+  bioMaxLines = 3,
+  bioSize = "sm",
+  bioColor,
+  
+  // Social Links
   showSocial = true,
+  socialPosition = "bottom",
+  socialSize = "md",
+  socialStyle = "icons",
+  socialColor = "#9ca3af",
+  socialHoverColor = "#3b82f6",
+  showLinkedIn = true,
+  showTwitter = true,
+  showInstagram = false,
+  showGithub = false,
+  showWebsite = false,
+  showEmail = true,
+  showPhone = false,
+  
+  // Skills
+  showSkills = false,
+  skillStyle = "tags",
+  skillColor = "#3b82f6",
+  skillBackgroundColor = "#3b82f620",
+  maxSkillsShown = 3,
+  
+  // Location
+  showLocation = false,
+  locationIcon = true,
+  locationColor,
+  
+  // Filtering & Categories
+  showFilter = false,
+  filterBy = "department",
+  filterPosition: _filterPosition = "top",
+  filterStyle: _filterStyle = "pills",
+  
+  // Featured/Leadership
+  highlightLeadership = false,
+  leadershipLabel = "Leadership",
+  featuredScale: _featuredScale = 1.05,
+  
+  // Section Sizing
+  paddingY = "lg",
+  paddingX = "md",
+  gap = "lg",
+  sectionGap = "lg",
+  
+  // Background
+  backgroundStyle = "solid",
+  backgroundGradientFrom = "#ffffff",
+  backgroundGradientTo = "#f3f4f6",
+  backgroundGradientDirection = "to-b",
+  backgroundPattern,
+  backgroundPatternOpacity = 0.1,
+  backgroundImage,
+  backgroundOverlay = false,
+  backgroundOverlayColor = "#000000",
+  backgroundOverlayOpacity = 0.5,
+  
+  // Decorative Elements
+  showDecorators = false,
+  decoratorStyle = "blur",
+  decoratorColor = "#3b82f6",
+  decoratorPosition = "both-sides",
+  
+  // Animation
+  animateOnScroll = false,
+  animationType = "fade",
+  animationDelay = 0,
+  staggerDelay = 100,
+  
+  // CTA
+  showCta = false,
+  ctaTitle = "Join Our Team",
+  ctaDescription = "We're always looking for talented individuals to join us.",
+  ctaButtonText = "View Openings",
+  ctaButtonLink = "/careers",
+  ctaButtonStyle = "primary",
+  
+  // Responsive
+  mobileColumns = 2,
+  hideBioOnMobile = true,
+  hideSkillsOnMobile = true,
+  compactOnMobile = false,
+  
+  // Text colors
+  textColor,
+  accentColor = "#3b82f6",
+  
   id,
   className = "",
 }: TeamProps) {
-  const paddingClasses = { sm: "py-12 md:py-16", md: "py-16 md:py-20", lg: "py-20 md:py-28", xl: "py-24 md:py-32" }[paddingY];
-  const colClasses = { 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-2 lg:grid-cols-4" }[columns];
+  // Padding classes
+  const paddingYClasses = {
+    none: "",
+    sm: "py-8 md:py-12",
+    md: "py-12 md:py-16",
+    lg: "py-16 md:py-24",
+    xl: "py-20 md:py-32",
+    "2xl": "py-24 md:py-40",
+  }[paddingY];
+  
+  const paddingXClasses = {
+    none: "",
+    sm: "px-4",
+    md: "px-4 md:px-6",
+    lg: "px-4 md:px-8",
+    xl: "px-4 md:px-12",
+  }[paddingX];
+
+  // Max width classes
+  const maxWidthClasses = {
+    md: "max-w-3xl",
+    lg: "max-w-5xl",
+    xl: "max-w-7xl",
+    "2xl": "max-w-screen-2xl",
+    full: "max-w-full",
+  }[maxWidth];
+
+  // Column classes
+  const columnClasses = {
+    2: `grid-cols-${mobileColumns} md:grid-cols-2`,
+    3: `grid-cols-${mobileColumns} md:grid-cols-3`,
+    4: `grid-cols-${mobileColumns} md:grid-cols-2 lg:grid-cols-4`,
+    5: `grid-cols-${mobileColumns} md:grid-cols-3 lg:grid-cols-5`,
+    6: `grid-cols-${mobileColumns} md:grid-cols-3 lg:grid-cols-6`,
+  }[columns];
+
+  // Title size classes
+  const titleSizeClasses = {
+    sm: "text-xl md:text-2xl",
+    md: "text-2xl md:text-3xl",
+    lg: "text-3xl md:text-4xl lg:text-5xl",
+    xl: "text-4xl md:text-5xl lg:text-6xl",
+    "2xl": "text-5xl md:text-6xl lg:text-7xl",
+  }[titleSize];
+
+  // Image size classes
+  const imageSizeClasses = {
+    sm: "w-16 h-16 md:w-20 md:h-20",
+    md: "w-20 h-20 md:w-24 md:h-24",
+    lg: "w-24 h-24 md:w-28 md:h-28 lg:w-32 lg:h-32",
+    xl: "w-28 h-28 md:w-32 md:h-32 lg:w-40 lg:h-40",
+    "2xl": "w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48",
+  }[imageSize];
+
+  // Image shape classes
+  const imageShapeClasses = {
+    circle: "rounded-full",
+    square: "rounded-none",
+    rounded: "rounded-lg",
+    "rounded-lg": "rounded-xl",
+  }[imageShape];
+
+  // Name size classes
+  const nameSizeClasses = {
+    sm: "text-sm md:text-base",
+    md: "text-base md:text-lg",
+    lg: "text-lg md:text-xl",
+    xl: "text-xl md:text-2xl",
+  }[nameSize];
+
+  // Name font weight classes
+  const nameFontWeightClasses = {
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+  }[nameFontWeight];
+
+  // Role size classes
+  const roleSizeClasses = {
+    xs: "text-xs md:text-sm",
+    sm: "text-sm md:text-base",
+    md: "text-base md:text-lg",
+  }[roleSize];
+
+  // Bio size classes
+  const bioSizeClasses = {
+    xs: "text-xs",
+    sm: "text-sm",
+    md: "text-base",
+  }[bioSize];
+
+  // Card padding classes
+  const cardPaddingClasses = {
+    sm: "p-4",
+    md: "p-5 md:p-6",
+    lg: "p-6 md:p-8",
+    xl: "p-8 md:p-10",
+  }[cardPadding];
+
+  // Border radius classes
+  const borderRadiusClasses = {
+    none: "rounded-none",
+    sm: "rounded",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+    full: "rounded-3xl",
+  }[cardBorderRadius];
+
+  // Shadow classes
+  const shadowClasses = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+    "2xl": "shadow-2xl",
+  }[cardShadow];
+
+  // Hover effect classes
+  const hoverEffectClasses = {
+    none: "",
+    lift: "hover:-translate-y-2 transition-all duration-300",
+    scale: "hover:scale-105 transition-transform duration-300",
+    glow: "hover:ring-2 hover:ring-offset-2 transition-all duration-300",
+    flip: "group [perspective:1000px]",
+    "slide-up": "group overflow-hidden",
+  }[hoverEffect];
+
+  // Gap classes
+  const gapClasses = {
+    sm: "gap-4 md:gap-5",
+    md: "gap-5 md:gap-6",
+    lg: "gap-6 md:gap-8",
+    xl: "gap-8 md:gap-10",
+  }[gap];
+
+  // Section gap classes
+  const sectionGapClasses = {
+    sm: "mb-8 md:mb-10",
+    md: "mb-10 md:mb-12",
+    lg: "mb-12 md:mb-16",
+    xl: "mb-16 md:mb-20",
+  }[sectionGap];
+
+  // Social size classes
+  const socialSizeClasses = {
+    sm: "w-4 h-4",
+    md: "w-5 h-5",
+    lg: "w-6 h-6",
+  }[socialSize];
+
+  // Content alignment
+  const contentAlignClasses = {
+    left: "text-left items-start",
+    center: "text-center items-center",
+    right: "text-right items-end",
+  }[contentAlign];
+
+  // Badge styles
+  const badgeClasses = {
+    pill: "px-4 py-1.5 rounded-full text-sm font-medium",
+    outlined: "px-4 py-1.5 rounded-full text-sm font-medium border-2 bg-transparent",
+    solid: "px-4 py-2 rounded-md text-sm font-medium",
+    gradient: "px-4 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r",
+  }[badgeStyle];
+
+  // Get background style
+  const getBackgroundStyle = (): React.CSSProperties => {
+    const style: React.CSSProperties = {};
+    
+    if (backgroundStyle === "solid") {
+      style.backgroundColor = backgroundColor;
+    } else if (backgroundStyle === "gradient") {
+      const direction = {
+        "to-r": "to right",
+        "to-l": "to left",
+        "to-t": "to top",
+        "to-b": "to bottom",
+        "to-br": "to bottom right",
+        "to-bl": "to bottom left",
+        "to-tr": "to top right",
+        "to-tl": "to top left",
+      }[backgroundGradientDirection];
+      style.background = `linear-gradient(${direction}, ${backgroundGradientFrom}, ${backgroundGradientTo})`;
+    } else if (backgroundStyle === "image" && backgroundImage) {
+      style.backgroundImage = `url(${getImageUrl(backgroundImage)})`;
+      style.backgroundSize = "cover";
+      style.backgroundPosition = "center";
+    }
+    
+    return style;
+  };
+
+  // Animation classes
+  const getAnimationClasses = (index: number) => {
+    if (!animateOnScroll) return "";
+    const delay = animationDelay + (index * staggerDelay);
+    const baseClasses = "animate-in duration-500";
+    const typeClasses = {
+      fade: "fade-in",
+      "slide-up": "slide-in-from-bottom-4",
+      "slide-left": "slide-in-from-left-4",
+      "slide-right": "slide-in-from-right-4",
+      scale: "zoom-in-95",
+      stagger: "fade-in slide-in-from-bottom-2",
+    }[animationType];
+    return `${baseClasses} ${typeClasses}`;
+  };
+
+  // Render decorators
+  const renderDecorators = () => {
+    if (!showDecorators) return null;
+    
+    const decoratorElement = () => {
+      switch (decoratorStyle) {
+        case "dots":
+          return (
+            <div className="grid grid-cols-4 gap-2 w-24 h-24 opacity-20">
+              {Array.from({ length: 16 }).map((_, i) => (
+                <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: decoratorColor }} />
+              ))}
+            </div>
+          );
+        case "circles":
+          return (
+            <div className="relative w-40 h-40 opacity-20">
+              <div className="absolute w-full h-full rounded-full border-4" style={{ borderColor: decoratorColor }} />
+              <div className="absolute w-2/3 h-2/3 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4" style={{ borderColor: decoratorColor }} />
+            </div>
+          );
+        case "blur":
+          return (
+            <div className="w-64 h-64 rounded-full blur-3xl opacity-30" style={{ backgroundColor: decoratorColor }} />
+          );
+        default:
+          return null;
+      }
+    };
+    
+    if (decoratorPosition === "both-sides") {
+      return (
+        <>
+          <div className="absolute top-0 left-0 pointer-events-none">{decoratorElement()}</div>
+          <div className="absolute bottom-0 right-0 pointer-events-none">{decoratorElement()}</div>
+        </>
+      );
+    }
+    
+    const positionClasses = {
+      "top-left": "top-0 left-0",
+      "top-right": "top-0 right-0",
+      "bottom-left": "bottom-0 left-0",
+      "bottom-right": "bottom-0 right-0",
+      "both-sides": "",
+    }[decoratorPosition];
+    
+    return <div className={`absolute ${positionClasses} pointer-events-none`}>{decoratorElement()}</div>;
+  };
+
+  // Render social links
+  const renderSocialLinks = (member: TeamMember) => {
+    if (!showSocial) return null;
+    
+    const links = [];
+    
+    if (showLinkedIn && member.linkedin) {
+      links.push({ href: member.linkedin, icon: "linkedin", label: "LinkedIn" });
+    }
+    if (showTwitter && member.twitter) {
+      links.push({ href: member.twitter, icon: "twitter", label: "Twitter" });
+    }
+    if (showInstagram && member.instagram) {
+      links.push({ href: member.instagram, icon: "instagram", label: "Instagram" });
+    }
+    if (showGithub && member.github) {
+      links.push({ href: member.github, icon: "github", label: "GitHub" });
+    }
+    if (showWebsite && member.website) {
+      links.push({ href: member.website, icon: "website", label: "Website" });
+    }
+    if (showEmail && member.email) {
+      links.push({ href: `mailto:${member.email}`, icon: "email", label: "Email" });
+    }
+    if (showPhone && member.phone) {
+      links.push({ href: `tel:${member.phone}`, icon: "phone", label: "Phone" });
+    }
+    
+    if (links.length === 0) return null;
+    
+    const containerClasses = socialPosition === "overlay" 
+      ? "absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"
+      : socialPosition === "inline"
+      ? "inline-flex gap-2 ml-2"
+      : "flex gap-3 mt-4";
+    
+    const renderIcon = (iconType: string) => {
+      switch (iconType) {
+        case "linkedin":
+          return <svg className={socialSizeClasses} fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>;
+        case "twitter":
+          return <svg className={socialSizeClasses} fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" /></svg>;
+        case "email":
+          return <svg className={socialSizeClasses} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>;
+        case "github":
+          return <svg className={socialSizeClasses} fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>;
+        case "instagram":
+          return <svg className={socialSizeClasses} fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>;
+        default:
+          return <svg className={socialSizeClasses} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>;
+      }
+    };
+    
+    return (
+      <div className={`${containerClasses} ${contentAlign === "center" ? "justify-center" : ""}`}>
+        {links.map((link, i) => (
+          <a
+            key={i}
+            href={link.href}
+            target={link.icon !== "email" && link.icon !== "phone" ? "_blank" : undefined}
+            rel="noopener noreferrer"
+            className={`transition-colors duration-200 ${socialStyle === "buttons" ? "p-2 rounded-lg bg-gray-100 hover:bg-gray-200" : socialStyle === "pills" ? "px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center gap-1 text-xs" : ""}`}
+            style={{ color: socialColor }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = socialHoverColor; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = socialColor; }}
+            aria-label={link.label}
+          >
+            {renderIcon(link.icon)}
+            {socialStyle === "pills" && <span>{link.label}</span>}
+          </a>
+        ))}
+      </div>
+    );
+  };
+
+  // Get filter categories
+  const departments = [...new Set(members.map(m => m.department).filter(Boolean))];
+
+  // CTA button classes
+  const ctaButtonClasses = {
+    primary: "px-6 py-3 rounded-lg font-semibold text-white transition-all hover:opacity-90",
+    secondary: "px-6 py-3 rounded-lg font-semibold transition-all hover:opacity-90",
+    outline: "px-6 py-3 rounded-lg font-semibold border-2 bg-transparent transition-all hover:bg-opacity-10",
+  }[ctaButtonStyle];
 
   return (
-    <section id={id} className={`w-full ${paddingClasses} px-4 ${className}`} style={{ backgroundColor }}>
-      <div className="max-w-screen-xl mx-auto">
-        <div className="text-center mb-12 md:mb-16">
-          {subtitle && <p className="text-sm md:text-base font-semibold text-blue-600 uppercase tracking-wider mb-2">{subtitle}</p>}
-          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4" style={{ color: textColor }}>{title}</h2>
-          {description && <p className="text-base md:text-lg max-w-2xl mx-auto opacity-80" style={{ color: textColor }}>{description}</p>}
+    <section
+      id={id}
+      className={`w-full ${paddingYClasses} ${paddingXClasses} relative overflow-hidden ${className}`}
+      style={getBackgroundStyle()}
+    >
+      {/* Background overlay for images */}
+      {backgroundStyle === "image" && backgroundOverlay && (
+        <div
+          className="absolute inset-0 z-0"
+          style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity }}
+        />
+      )}
+      
+      {/* Background pattern */}
+      {backgroundPattern && (
+        <div
+          className="absolute inset-0 z-0"
+          style={{ opacity: backgroundPatternOpacity }}
+        >
+          {backgroundPattern === "dots" && (
+            <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(circle, ${accentColor} 1px, transparent 1px)`, backgroundSize: "20px 20px" }} />
+          )}
+          {backgroundPattern === "grid" && (
+            <div className="absolute inset-0" style={{ backgroundImage: `linear-gradient(${accentColor}20 1px, transparent 1px), linear-gradient(90deg, ${accentColor}20 1px, transparent 1px)`, backgroundSize: "40px 40px" }} />
+          )}
         </div>
-        <div className={`grid grid-cols-2 ${colClasses} gap-6 md:gap-8`}>
+      )}
+      
+      {/* Decorators */}
+      {renderDecorators()}
+      
+      <div className={`${maxWidthClasses} mx-auto relative z-10`}>
+        {/* Header */}
+        <div className={`${sectionGapClasses} ${headerAlign === "center" ? "text-center" : headerAlign === "right" ? "text-right" : "text-left"}`}>
+          {/* Badge */}
+          {badge && (
+            <div className={`inline-flex items-center gap-2 mb-4 ${badgeClasses}`} style={{
+              backgroundColor: badgeStyle !== "outlined" ? badgeColor : "transparent",
+              color: badgeStyle === "outlined" ? badgeColor : badgeTextColor,
+              borderColor: badgeStyle === "outlined" ? badgeColor : undefined,
+            }}>
+              {badgeIcon && <span>{badgeIcon}</span>}
+              {badge}
+            </div>
+          )}
+          
+          {/* Subtitle */}
+          {subtitle && (
+            <p className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2" style={{ color: subtitleColor || accentColor }}>
+              {subtitle}
+            </p>
+          )}
+          
+          {/* Title */}
+          <h2
+            className={`${titleSizeClasses} font-bold mb-4`}
+            style={{ color: titleColor || textColor, fontFamily: titleFont }}
+          >
+            {title}
+          </h2>
+          
+          {/* Description */}
+          {description && (
+            <p
+              className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80`}
+              style={{ color: descriptionColor || textColor }}
+            >
+              {description}
+            </p>
+          )}
+        </div>
+        
+        {/* Filter */}
+        {showFilter && departments.length > 0 && (
+          <div className={`flex flex-wrap gap-2 mb-8 ${headerAlign === "center" ? "justify-center" : ""}`}>
+            <button
+              className="px-4 py-2 text-sm font-medium rounded-full transition-all"
+              style={{ backgroundColor: accentColor, color: "#ffffff" }}
+            >
+              All
+            </button>
+            {departments.map((dept, i) => (
+              <button
+                key={i}
+                className="px-4 py-2 text-sm font-medium rounded-full transition-all hover:opacity-80"
+                style={{ backgroundColor: cardBackgroundColor, color: textColor }}
+              >
+                {dept}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {/* Team Grid */}
+        <div className={`grid ${columnClasses} ${gapClasses} ${compactOnMobile ? "gap-3 md:gap-6" : ""}`}>
           {members.map((member, i) => (
-            <div key={i} className={`text-center ${variant === "cards" ? "p-6 rounded-xl shadow-sm hover:shadow-lg transition-shadow" : ""}`} style={variant === "cards" ? { backgroundColor: cardBackgroundColor } : undefined}>
-              <img src={getImageUrl(member.image) || "/placeholder-avatar.svg"} alt={member.name} className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-full mx-auto mb-4 object-cover" loading="lazy" />
-              <h3 className="text-base md:text-lg font-semibold mb-1" style={{ color: textColor }}>{member.name}</h3>
-              <p className="text-sm opacity-75 mb-2" style={{ color: textColor }}>{member.role}</p>
-              {variant === "detailed" && member.bio && <p className="text-sm opacity-60 mb-3" style={{ color: textColor }}>{member.bio}</p>}
-              {showSocial && (
-                <div className="flex justify-center gap-3">
-                  {member.linkedin && <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-600 transition-colors" aria-label="LinkedIn"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg></a>}
-                  {member.twitter && <a href={member.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-400 transition-colors" aria-label="Twitter"><svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" /></svg></a>}
-                  {member.email && <a href={`mailto:${member.email}`} className="text-gray-400 hover:text-gray-600 transition-colors" aria-label="Email"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></a>}
+            <div
+              key={i}
+              className={`flex flex-col ${contentAlignClasses} ${variant === "cards" ? `${cardPaddingClasses} ${borderRadiusClasses} ${shadowClasses}` : ""} ${hoverEffectClasses} ${getAnimationClasses(i)} ${cardBorder ? "border" : ""} ${member.isFeatured || (highlightLeadership && member.isLeadership) ? "ring-2" : ""} relative group`}
+              style={{
+                backgroundColor: variant === "cards" ? (member.isFeatured ? featuredCardBackground : cardBackgroundColor) : undefined,
+                borderColor: cardBorder ? cardBorderColor : undefined,
+                borderWidth: cardBorder ? `${cardBorderWidth}px` : undefined,
+                animationDelay: animateOnScroll ? `${animationDelay + (i * staggerDelay)}ms` : undefined,
+                // @ts-expect-error - Custom CSS property for ring-color
+                "--tw-ring-color": member.isFeatured || (highlightLeadership && member.isLeadership) ? accentColor : undefined,
+              }}
+            >
+              {/* Leadership badge */}
+              {highlightLeadership && member.isLeadership && (
+                <span
+                  className="absolute top-2 right-2 px-2 py-1 text-xs font-medium rounded-full"
+                  style={{ backgroundColor: accentColor, color: "#ffffff" }}
+                >
+                  {leadershipLabel}
+                </span>
+              )}
+              
+              {/* Image */}
+              <div className={`relative ${imagePosition === "top" ? "mb-4" : ""}`}>
+                <img
+                  src={getImageUrl(member.image) || "/placeholder-avatar.svg"}
+                  alt={member.name}
+                  className={`${imageSizeClasses} ${imageShapeClasses} object-cover mx-auto ${imageBorder ? "ring-2 ring-offset-2" : ""} ${imageGrayscale ? "grayscale" : ""} ${imageGrayscaleHover ? "grayscale-0 group-hover:grayscale" : imageGrayscale ? "group-hover:grayscale-0" : ""} transition-all duration-300`}
+                  style={imageBorder ? { "--tw-ring-color": imageBorderColor } as React.CSSProperties : undefined}
+                  loading="lazy"
+                />
+                {showImageOverlay && (
+                  <div
+                    className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-40 transition-opacity duration-300"
+                    style={{ backgroundColor: imageOverlayColor }}
+                  />
+                )}
+                {/* Social links on overlay */}
+                {socialPosition === "overlay" && renderSocialLinks(member)}
+              </div>
+              
+              {/* Name */}
+              <h3
+                className={`${nameSizeClasses} ${nameFontWeightClasses} mb-1`}
+                style={{ color: nameColor || textColor, fontFamily: nameFont }}
+              >
+                {member.name}
+              </h3>
+              
+              {/* Role */}
+              <p
+                className={`${roleSizeClasses} ${roleStyle === "uppercase" ? "uppercase tracking-wider" : ""} ${roleStyle === "badge" ? "px-2 py-0.5 rounded-full" : ""} opacity-75 mb-1`}
+                style={{ 
+                  color: roleColor || textColor,
+                  backgroundColor: roleStyle === "badge" ? `${accentColor}20` : undefined,
+                }}
+              >
+                {member.role}
+              </p>
+              
+              {/* Department */}
+              {showDepartment && member.department && (
+                <p className="text-xs opacity-60 mb-2" style={{ color: departmentColor || textColor }}>
+                  {member.department}
+                </p>
+              )}
+              
+              {/* Location */}
+              {showLocation && member.location && (
+                <p className="text-xs opacity-60 mb-2 flex items-center gap-1" style={{ color: locationColor || textColor }}>
+                  {locationIcon && (
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  )}
+                  {member.location}
+                </p>
+              )}
+              
+              {/* Bio */}
+              {showBio && member.bio && (
+                <p
+                  className={`${bioSizeClasses} opacity-60 mb-3 ${hideBioOnMobile ? "hidden md:block" : ""}`}
+                  style={{
+                    color: bioColor || textColor,
+                    WebkitLineClamp: bioMaxLines,
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  {member.bio}
+                </p>
+              )}
+              
+              {/* Skills */}
+              {showSkills && member.skills && member.skills.length > 0 && (
+                <div className={`flex flex-wrap gap-1 mb-3 ${contentAlign === "center" ? "justify-center" : ""} ${hideSkillsOnMobile ? "hidden md:flex" : ""}`}>
+                  {member.skills.slice(0, maxSkillsShown).map((skill, si) => (
+                    <span
+                      key={si}
+                      className={`text-xs px-2 py-0.5 ${skillStyle === "pills" ? "rounded-full" : skillStyle === "tags" ? "rounded" : ""}`}
+                      style={{ color: skillColor, backgroundColor: skillBackgroundColor }}
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                  {member.skills.length > maxSkillsShown && (
+                    <span className="text-xs opacity-60" style={{ color: textColor }}>
+                      +{member.skills.length - maxSkillsShown}
+                    </span>
+                  )}
                 </div>
               )}
+              
+              {/* Social links - bottom/inline */}
+              {socialPosition !== "overlay" && renderSocialLinks(member)}
             </div>
           ))}
         </div>
+        
+        {/* CTA */}
+        {showCta && (
+          <div className="mt-12 md:mt-16 text-center p-8 md:p-12 rounded-2xl" style={{ backgroundColor: cardBackgroundColor }}>
+            <h3 className="text-xl md:text-2xl font-bold mb-2" style={{ color: textColor }}>{ctaTitle}</h3>
+            <p className="text-base opacity-80 mb-6 max-w-lg mx-auto" style={{ color: textColor }}>{ctaDescription}</p>
+            <a
+              href={ctaButtonLink}
+              className={ctaButtonClasses}
+              style={{
+                backgroundColor: ctaButtonStyle === "primary" ? accentColor : ctaButtonStyle === "secondary" ? cardBackgroundColor : "transparent",
+                borderColor: ctaButtonStyle === "outline" ? accentColor : undefined,
+                color: ctaButtonStyle === "outline" ? accentColor : ctaButtonStyle === "secondary" ? textColor : "#ffffff",
+              }}
+            >
+              {ctaButtonText}
+            </a>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -1887,80 +7748,751 @@ export function TeamRender({
 // GALLERY - Image Gallery
 // ============================================================================
 
+export interface GalleryImage {
+  src?: string | ImageValue;
+  alt?: string;
+  caption?: string;
+  title?: string;
+  category?: string;
+  link?: string;
+  linkTarget?: "_self" | "_blank";
+}
+
 export interface GalleryProps {
+  // Header Content
   title?: string;
   subtitle?: string;
-  images?: Array<{
-    src?: string | ImageValue;
-    alt?: string;
-    caption?: string;
-    link?: string;
-  }>;
-  columns?: 2 | 3 | 4 | 5;
-  variant?: "grid" | "masonry" | "carousel";
-  gap?: "none" | "sm" | "md" | "lg";
-  aspectRatio?: "square" | "video" | "auto";
-  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
-  backgroundColor?: string;
-  paddingY?: "sm" | "md" | "lg" | "xl";
-  hoverEffect?: "zoom" | "overlay" | "none";
+  description?: string;
+  badge?: string;
+  badgeIcon?: string;
+  
+  // Header Styling
+  headerAlign?: "left" | "center" | "right";
+  titleSize?: "sm" | "md" | "lg" | "xl" | "2xl";
+  titleColor?: string;
+  titleFont?: string;
+  subtitleColor?: string;
+  descriptionColor?: string;
+  badgeStyle?: "pill" | "outlined" | "solid" | "gradient";
+  badgeColor?: string;
+  badgeTextColor?: string;
+  
+  // Images
+  images?: GalleryImage[];
+  
+  // Layout & Variant
+  variant?: "grid" | "masonry" | "carousel" | "justified" | "spotlight" | "collage" | "pinterest" | "slider";
+  columns?: 2 | 3 | 4 | 5 | 6;
+  maxWidth?: "md" | "lg" | "xl" | "2xl" | "full";
+  
+  // Image Styling
+  gap?: "none" | "xs" | "sm" | "md" | "lg" | "xl";
+  aspectRatio?: "square" | "video" | "portrait" | "wide" | "auto";
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  imageBorder?: boolean;
+  imageBorderColor?: string;
+  imageBorderWidth?: "1" | "2" | "3";
+  imageShadow?: "none" | "sm" | "md" | "lg" | "xl";
+  
+  // Hover Effects
+  hoverEffect?: "none" | "zoom" | "zoom-out" | "overlay" | "slide-up" | "blur" | "grayscale" | "brightness" | "tilt";
+  hoverOverlayColor?: string;
+  hoverOverlayOpacity?: number;
+  hoverScale?: number;
+  showCaptionOnHover?: boolean;
+  showTitleOnHover?: boolean;
+  
+  // Caption/Title Display
+  showCaption?: boolean;
+  captionPosition?: "overlay" | "below" | "above";
+  captionAlign?: "left" | "center" | "right";
+  captionSize?: "xs" | "sm" | "md";
+  captionColor?: string;
+  captionBackgroundColor?: string;
+  showTitle?: boolean;
+  titlePosition?: "overlay" | "below";
+  imagesTitleSize?: "sm" | "md" | "lg";
+  imagesTitleColor?: string;
+  
+  // Lightbox
   lightbox?: boolean;
+  lightboxStyle?: "default" | "fullscreen" | "minimal";
+  lightboxBackground?: string;
+  showLightboxCaption?: boolean;
+  showLightboxCounter?: boolean;
+  enableLightboxZoom?: boolean;
+  
+  // Filtering
+  showFilter?: boolean;
+  filterPosition?: "top" | "sidebar";
+  filterStyle?: "pills" | "dropdown" | "tabs" | "buttons";
+  filterAlign?: "left" | "center" | "right";
+  filterActiveColor?: string;
+  filterInactiveColor?: string;
+  
+  // Load More / Pagination
+  enableLoadMore?: boolean;
+  loadMoreStyle?: "button" | "infinite" | "pagination";
+  initialCount?: number;
+  loadMoreCount?: number;
+  loadMoreText?: string;
+  loadingAnimation?: boolean;
+  
+  // Section Sizing
+  paddingY?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  paddingX?: "none" | "sm" | "md" | "lg" | "xl";
+  sectionGap?: "sm" | "md" | "lg" | "xl";
+  
+  // Background
+  backgroundColor?: string;
+  backgroundStyle?: "solid" | "gradient" | "pattern" | "image";
+  backgroundGradientFrom?: string;
+  backgroundGradientTo?: string;
+  backgroundGradientDirection?: "to-r" | "to-l" | "to-t" | "to-b" | "to-br" | "to-bl";
+  backgroundPattern?: "dots" | "grid" | "lines";
+  backgroundPatternOpacity?: number;
+  backgroundImage?: string | ImageValue;
+  backgroundOverlay?: boolean;
+  backgroundOverlayColor?: string;
+  backgroundOverlayOpacity?: number;
+  
+  // Decorative
+  showDecorators?: boolean;
+  decoratorStyle?: "dots" | "circles" | "blur";
+  decoratorColor?: string;
+  decoratorPosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "both-sides";
+  
+  // Animation
+  animateOnScroll?: boolean;
+  animationType?: "fade" | "slide-up" | "scale" | "stagger" | "flip";
+  animationDelay?: number;
+  staggerDelay?: number;
+  
+  // CTA
+  showCta?: boolean;
+  ctaTitle?: string;
+  ctaDescription?: string;
+  ctaButtonText?: string;
+  ctaButtonLink?: string;
+  ctaButtonStyle?: "primary" | "secondary" | "outline";
+  
+  // Responsive
+  mobileColumns?: 1 | 2;
+  tabletColumns?: 2 | 3;
+  hideFilterOnMobile?: boolean;
+  compactOnMobile?: boolean;
+  
+  // Colors
+  textColor?: string;
+  accentColor?: string;
+  
   id?: string;
   className?: string;
 }
 
 export function GalleryRender({
+  // Header Content
   title,
   subtitle,
+  description,
+  badge,
+  badgeIcon,
+  
+  // Header Styling
+  headerAlign = "center",
+  titleSize = "lg",
+  titleColor,
+  titleFont,
+  subtitleColor,
+  descriptionColor,
+  badgeStyle = "pill",
+  badgeColor = "#3b82f6",
+  badgeTextColor = "#ffffff",
+  
+  // Images
   images = [],
-  columns = 3,
+  
+  // Layout & Variant
   variant = "grid",
+  columns = 3,
+  maxWidth = "xl",
+  
+  // Image Styling
   gap = "md",
   aspectRatio = "square",
   borderRadius = "lg",
-  backgroundColor = "#ffffff",
-  paddingY = "lg",
+  imageBorder = false,
+  imageBorderColor = "#e5e7eb",
+  imageBorderWidth = "1",
+  imageShadow = "none",
+  
+  // Hover Effects
   hoverEffect = "zoom",
+  hoverOverlayColor = "#000000",
+  hoverOverlayOpacity = 0.5,
+  hoverScale = 1.05,
+  showCaptionOnHover = true,
+  showTitleOnHover = false,
+  
+  // Caption/Title Display
+  showCaption = true,
+  captionPosition = "overlay",
+  captionAlign = "center",
+  captionSize = "sm",
+  captionColor = "#ffffff",
+  captionBackgroundColor = "transparent",
+  showTitle = false,
+  titlePosition = "overlay",
+  imagesTitleSize = "md",
+  imagesTitleColor = "#ffffff",
+  
+  // Lightbox
   lightbox = false,
+  lightboxStyle: _lightboxStyle = "default",
+  lightboxBackground: _lightboxBackground = "#000000",
+  showLightboxCaption: _showLightboxCaption = true,
+  showLightboxCounter: _showLightboxCounter = true,
+  enableLightboxZoom: _enableLightboxZoom = true,
+  
+  // Filtering
+  showFilter = false,
+  filterPosition: _filterPosition = "top",
+  filterStyle = "pills",
+  filterAlign = "center",
+  filterActiveColor,
+  filterInactiveColor,
+  
+  // Load More
+  enableLoadMore = false,
+  loadMoreStyle = "button",
+  initialCount = 6,
+  loadMoreCount = 6,
+  loadMoreText = "Load More",
+  loadingAnimation: _loadingAnimation = true,
+  
+  // Section Sizing
+  paddingY = "lg",
+  paddingX = "md",
+  sectionGap = "lg",
+  
+  // Background
+  backgroundColor = "#ffffff",
+  backgroundStyle = "solid",
+  backgroundGradientFrom = "#ffffff",
+  backgroundGradientTo = "#f3f4f6",
+  backgroundGradientDirection = "to-b",
+  backgroundPattern,
+  backgroundPatternOpacity = 0.1,
+  backgroundImage,
+  backgroundOverlay = false,
+  backgroundOverlayColor = "#000000",
+  backgroundOverlayOpacity = 0.5,
+  
+  // Decorative
+  showDecorators = false,
+  decoratorStyle = "blur",
+  decoratorColor = "#3b82f6",
+  decoratorPosition = "both-sides",
+  
+  // Animation
+  animateOnScroll = false,
+  animationType = "fade",
+  animationDelay = 0,
+  staggerDelay = 100,
+  
+  // CTA
+  showCta = false,
+  ctaTitle = "Want to See More?",
+  ctaDescription = "Explore our full collection.",
+  ctaButtonText = "View All",
+  ctaButtonLink = "/gallery",
+  ctaButtonStyle = "primary",
+  
+  // Responsive
+  mobileColumns = 2,
+  tabletColumns: _tabletColumns = 2,
+  hideFilterOnMobile = false,
+  compactOnMobile = false,
+  
+  // Colors
+  textColor,
+  accentColor = "#3b82f6",
+  
   id,
   className = "",
 }: GalleryProps) {
-  const paddingClasses = { sm: "py-12 md:py-16", md: "py-16 md:py-20", lg: "py-20 md:py-28", xl: "py-24 md:py-32" }[paddingY];
-  const colClasses = { 2: "md:grid-cols-2", 3: "md:grid-cols-3", 4: "md:grid-cols-2 lg:grid-cols-4", 5: "md:grid-cols-3 lg:grid-cols-5" }[columns];
-  const gapClasses = { none: "gap-0", sm: "gap-2", md: "gap-4", lg: "gap-6" }[gap];
-  const aspectClasses = { square: "aspect-square", video: "aspect-video", auto: "" }[aspectRatio];
-  const radiusClasses = { none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl" }[borderRadius];
-  const hoverClasses = { zoom: "hover:scale-105", overlay: "", none: "" }[hoverEffect];
+  // State for filtering and load more
+  const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = React.useState(enableLoadMore ? initialCount : images.length);
+
+  // Get unique categories
+  const categories = [...new Set(images.map(img => img.category).filter(Boolean))] as string[];
+  
+  // Filter images
+  const filteredImages = selectedCategory 
+    ? images.filter(img => img.category === selectedCategory)
+    : images;
+  
+  // Visible images based on load more
+  const displayImages = enableLoadMore 
+    ? filteredImages.slice(0, visibleCount)
+    : filteredImages;
+
+  // Padding classes
+  const paddingYClasses = {
+    none: "",
+    sm: "py-8 md:py-12",
+    md: "py-12 md:py-16",
+    lg: "py-16 md:py-24",
+    xl: "py-20 md:py-32",
+    "2xl": "py-24 md:py-40",
+  }[paddingY];
+  
+  const paddingXClasses = {
+    none: "",
+    sm: "px-4",
+    md: "px-4 md:px-6",
+    lg: "px-4 md:px-8",
+    xl: "px-4 md:px-12",
+  }[paddingX];
+
+  // Max width classes
+  const maxWidthClasses = {
+    md: "max-w-3xl",
+    lg: "max-w-5xl",
+    xl: "max-w-7xl",
+    "2xl": "max-w-screen-2xl",
+    full: "max-w-full",
+  }[maxWidth];
+
+  // Column classes
+  const columnClasses = {
+    2: `grid-cols-${mobileColumns} md:grid-cols-2`,
+    3: `grid-cols-${mobileColumns} md:grid-cols-3`,
+    4: `grid-cols-${mobileColumns} md:grid-cols-2 lg:grid-cols-4`,
+    5: `grid-cols-${mobileColumns} md:grid-cols-3 lg:grid-cols-5`,
+    6: `grid-cols-${mobileColumns} md:grid-cols-3 lg:grid-cols-6`,
+  }[columns];
+
+  // Title size classes
+  const titleSizeClasses = {
+    sm: "text-xl md:text-2xl",
+    md: "text-2xl md:text-3xl",
+    lg: "text-3xl md:text-4xl lg:text-5xl",
+    xl: "text-4xl md:text-5xl lg:text-6xl",
+    "2xl": "text-5xl md:text-6xl lg:text-7xl",
+  }[titleSize];
+
+  // Gap classes
+  const gapClasses = {
+    none: "gap-0",
+    xs: "gap-1",
+    sm: "gap-2 md:gap-3",
+    md: "gap-3 md:gap-4",
+    lg: "gap-4 md:gap-6",
+    xl: "gap-6 md:gap-8",
+  }[gap];
+
+  // Aspect ratio classes
+  const aspectClasses = {
+    square: "aspect-square",
+    video: "aspect-video",
+    portrait: "aspect-[3/4]",
+    wide: "aspect-[16/9]",
+    auto: "",
+  }[aspectRatio];
+
+  // Border radius classes
+  const radiusClasses = {
+    none: "rounded-none",
+    sm: "rounded",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+  }[borderRadius];
+
+  // Shadow classes
+  const shadowClasses = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+  }[imageShadow];
+
+  // Section gap
+  const sectionGapClasses = {
+    sm: "mb-8 md:mb-10",
+    md: "mb-10 md:mb-12",
+    lg: "mb-12 md:mb-16",
+    xl: "mb-16 md:mb-20",
+  }[sectionGap];
+
+  // Caption size classes
+  const captionSizeClasses = {
+    xs: "text-xs",
+    sm: "text-sm",
+    md: "text-base",
+  }[captionSize];
+
+  // Image title size classes
+  const imagesTitleSizeClasses = {
+    sm: "text-sm md:text-base",
+    md: "text-base md:text-lg",
+    lg: "text-lg md:text-xl",
+  }[imagesTitleSize];
+
+  // Badge styles
+  const badgeClasses = {
+    pill: "px-4 py-1.5 rounded-full text-sm font-medium",
+    outlined: "px-4 py-1.5 rounded-full text-sm font-medium border-2 bg-transparent",
+    solid: "px-4 py-2 rounded-md text-sm font-medium",
+    gradient: "px-4 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r",
+  }[badgeStyle];
+
+  // Hover effect classes
+  const getHoverEffectClasses = () => {
+    switch (hoverEffect) {
+      case "zoom": return "group-hover:scale-105 transition-transform duration-300";
+      case "zoom-out": return "scale-110 group-hover:scale-100 transition-transform duration-300";
+      case "grayscale": return "grayscale group-hover:grayscale-0 transition-all duration-300";
+      case "brightness": return "brightness-90 group-hover:brightness-110 transition-all duration-300";
+      case "blur": return "group-hover:blur-sm transition-all duration-300";
+      default: return "";
+    }
+  };
+
+  // Get background style
+  const getBackgroundStyle = (): React.CSSProperties => {
+    const style: React.CSSProperties = {};
+    
+    if (backgroundStyle === "solid") {
+      style.backgroundColor = backgroundColor;
+    } else if (backgroundStyle === "gradient") {
+      const direction = {
+        "to-r": "to right",
+        "to-l": "to left",
+        "to-t": "to top",
+        "to-b": "to bottom",
+        "to-br": "to bottom right",
+        "to-bl": "to bottom left",
+      }[backgroundGradientDirection];
+      style.background = `linear-gradient(${direction}, ${backgroundGradientFrom}, ${backgroundGradientTo})`;
+    } else if (backgroundStyle === "image" && backgroundImage) {
+      style.backgroundImage = `url(${getImageUrl(backgroundImage)})`;
+      style.backgroundSize = "cover";
+      style.backgroundPosition = "center";
+    }
+    
+    return style;
+  };
+
+  // Animation classes
+  const getAnimationClasses = (index: number) => {
+    if (!animateOnScroll) return "";
+    const baseClasses = "animate-in duration-500";
+    const typeClasses = {
+      fade: "fade-in",
+      "slide-up": "slide-in-from-bottom-4",
+      scale: "zoom-in-95",
+      stagger: "fade-in slide-in-from-bottom-2",
+      flip: "fade-in",
+    }[animationType];
+    return `${baseClasses} ${typeClasses}`;
+  };
+
+  // Render decorators
+  const renderDecorators = () => {
+    if (!showDecorators) return null;
+    
+    const decoratorElement = () => {
+      switch (decoratorStyle) {
+        case "dots":
+          return (
+            <div className="grid grid-cols-4 gap-2 w-24 h-24 opacity-20">
+              {Array.from({ length: 16 }).map((_, i) => (
+                <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: decoratorColor }} />
+              ))}
+            </div>
+          );
+        case "circles":
+          return (
+            <div className="relative w-40 h-40 opacity-20">
+              <div className="absolute w-full h-full rounded-full border-4" style={{ borderColor: decoratorColor }} />
+              <div className="absolute w-2/3 h-2/3 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4" style={{ borderColor: decoratorColor }} />
+            </div>
+          );
+        case "blur":
+          return <div className="w-64 h-64 rounded-full blur-3xl opacity-30" style={{ backgroundColor: decoratorColor }} />;
+        default:
+          return null;
+      }
+    };
+    
+    if (decoratorPosition === "both-sides") {
+      return (
+        <>
+          <div className="absolute top-0 left-0 pointer-events-none">{decoratorElement()}</div>
+          <div className="absolute bottom-0 right-0 pointer-events-none">{decoratorElement()}</div>
+        </>
+      );
+    }
+    
+    const positionClasses = {
+      "top-left": "top-0 left-0",
+      "top-right": "top-0 right-0",
+      "bottom-left": "bottom-0 left-0",
+      "bottom-right": "bottom-0 right-0",
+      "both-sides": "",
+    }[decoratorPosition];
+    
+    return <div className={`absolute ${positionClasses} pointer-events-none`}>{decoratorElement()}</div>;
+  };
+
+  // CTA button classes
+  const ctaButtonClasses = {
+    primary: "px-6 py-3 rounded-lg font-semibold text-white transition-all hover:opacity-90",
+    secondary: "px-6 py-3 rounded-lg font-semibold transition-all hover:opacity-90",
+    outline: "px-6 py-3 rounded-lg font-semibold border-2 bg-transparent transition-all hover:bg-opacity-10",
+  }[ctaButtonStyle];
+
+  // Filter alignment
+  const filterAlignClasses = {
+    left: "justify-start",
+    center: "justify-center",
+    right: "justify-end",
+  }[filterAlign];
 
   return (
-    <section id={id} className={`w-full ${paddingClasses} px-4 ${className}`} style={{ backgroundColor }}>
-      <div className="max-w-screen-xl mx-auto">
-        {(title || subtitle) && (
-          <div className="text-center mb-12 md:mb-16">
-            {subtitle && <p className="text-sm md:text-base font-semibold text-blue-600 uppercase tracking-wider mb-2">{subtitle}</p>}
-            {title && <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold">{title}</h2>}
+    <section
+      id={id}
+      className={`w-full ${paddingYClasses} ${paddingXClasses} relative overflow-hidden ${className}`}
+      style={getBackgroundStyle()}
+    >
+      {/* Background overlay for images */}
+      {backgroundStyle === "image" && backgroundOverlay && (
+        <div
+          className="absolute inset-0 z-0"
+          style={{ backgroundColor: backgroundOverlayColor, opacity: backgroundOverlayOpacity }}
+        />
+      )}
+      
+      {/* Background pattern */}
+      {backgroundPattern && (
+        <div className="absolute inset-0 z-0" style={{ opacity: backgroundPatternOpacity }}>
+          {backgroundPattern === "dots" && (
+            <div className="absolute inset-0" style={{ backgroundImage: `radial-gradient(circle, ${accentColor} 1px, transparent 1px)`, backgroundSize: "20px 20px" }} />
+          )}
+          {backgroundPattern === "grid" && (
+            <div className="absolute inset-0" style={{ backgroundImage: `linear-gradient(${accentColor}20 1px, transparent 1px), linear-gradient(90deg, ${accentColor}20 1px, transparent 1px)`, backgroundSize: "40px 40px" }} />
+          )}
+        </div>
+      )}
+      
+      {/* Decorators */}
+      {renderDecorators()}
+      
+      <div className={`${maxWidthClasses} mx-auto relative z-10`}>
+        {/* Header */}
+        {(title || subtitle || description || badge) && (
+          <div className={`${sectionGapClasses} ${headerAlign === "center" ? "text-center" : headerAlign === "right" ? "text-right" : "text-left"}`}>
+            {/* Badge */}
+            {badge && (
+              <div className={`inline-flex items-center gap-2 mb-4 ${badgeClasses}`} style={{
+                backgroundColor: badgeStyle !== "outlined" ? badgeColor : "transparent",
+                color: badgeStyle === "outlined" ? badgeColor : badgeTextColor,
+                borderColor: badgeStyle === "outlined" ? badgeColor : undefined,
+              }}>
+                {badgeIcon && <span>{badgeIcon}</span>}
+                {badge}
+              </div>
+            )}
+            
+            {/* Subtitle */}
+            {subtitle && (
+              <p className="text-sm md:text-base font-semibold uppercase tracking-wider mb-2" style={{ color: subtitleColor || accentColor }}>
+                {subtitle}
+              </p>
+            )}
+            
+            {/* Title */}
+            {title && (
+              <h2
+                className={`${titleSizeClasses} font-bold mb-4`}
+                style={{ color: titleColor || textColor, fontFamily: titleFont }}
+              >
+                {title}
+              </h2>
+            )}
+            
+            {/* Description */}
+            {description && (
+              <p
+                className={`text-base md:text-lg max-w-2xl ${headerAlign === "center" ? "mx-auto" : ""} opacity-80`}
+                style={{ color: descriptionColor || textColor }}
+              >
+                {description}
+              </p>
+            )}
           </div>
         )}
-        <div className={`grid grid-cols-2 ${colClasses} ${gapClasses}`}>
-          {images.map((image, i) => {
+        
+        {/* Filter */}
+        {showFilter && categories.length > 0 && (
+          <div className={`flex flex-wrap gap-2 mb-8 ${filterAlignClasses} ${hideFilterOnMobile ? "hidden md:flex" : ""}`}>
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${filterStyle === "pills" ? "" : filterStyle === "buttons" ? "rounded-md" : "rounded-lg"}`}
+              style={{
+                backgroundColor: selectedCategory === null ? (filterActiveColor || accentColor) : "transparent",
+                color: selectedCategory === null ? "#ffffff" : (filterInactiveColor || textColor),
+                border: selectedCategory === null ? "none" : `1px solid ${filterInactiveColor || "#e5e7eb"}`,
+              }}
+            >
+              All
+            </button>
+            {categories.map((cat, i) => (
+              <button
+                key={i}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 text-sm font-medium rounded-full transition-all ${filterStyle === "pills" ? "" : filterStyle === "buttons" ? "rounded-md" : "rounded-lg"}`}
+                style={{
+                  backgroundColor: selectedCategory === cat ? (filterActiveColor || accentColor) : "transparent",
+                  color: selectedCategory === cat ? "#ffffff" : (filterInactiveColor || textColor),
+                  border: selectedCategory === cat ? "none" : `1px solid ${filterInactiveColor || "#e5e7eb"}`,
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {/* Gallery Grid */}
+        <div className={`grid ${columnClasses} ${gapClasses} ${compactOnMobile ? "gap-2 md:gap-4" : ""}`}>
+          {displayImages.map((image, i) => {
             const imageSrc = getImageUrl(image.src);
             return (
-            <div key={i} className={`relative overflow-hidden ${radiusClasses} group`}>
-              <img
-                src={imageSrc || "/placeholder.svg"}
-                alt={image.alt || `Gallery image ${i + 1}`}
-                className={`w-full h-full object-cover ${aspectClasses} transition-transform duration-300 ${hoverClasses}`}
-                loading="lazy"
-              />
-              {hoverEffect === "overlay" && (
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-300 flex items-center justify-center">
-                  {image.caption && <p className="text-white text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 px-4">{image.caption}</p>}
-                </div>
-              )}
-              {image.link && <a href={image.link} className="absolute inset-0" aria-label={image.alt || "View image"} />}
-            </div>
-          )})}
+              <div
+                key={i}
+                className={`relative overflow-hidden ${radiusClasses} ${shadowClasses} group cursor-pointer ${getAnimationClasses(i)} ${imageBorder ? "border" : ""}`}
+                style={{
+                  borderColor: imageBorder ? imageBorderColor : undefined,
+                  borderWidth: imageBorder ? `${imageBorderWidth}px` : undefined,
+                  animationDelay: animateOnScroll ? `${animationDelay + (i * staggerDelay)}ms` : undefined,
+                }}
+              >
+                <img
+                  src={imageSrc || "/placeholder.svg"}
+                  alt={image.alt || `Gallery image ${i + 1}`}
+                  className={`w-full h-full object-cover ${aspectClasses} ${getHoverEffectClasses()}`}
+                  loading="lazy"
+                />
+                
+                {/* Overlay on hover */}
+                {(hoverEffect === "overlay" || showCaptionOnHover || showTitleOnHover) && (
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center"
+                    style={{
+                      backgroundColor: `${hoverOverlayColor}${Math.round(hoverOverlayOpacity * 255).toString(16).padStart(2, '0')}`,
+                    }}
+                  >
+                    {showTitleOnHover && image.title && (
+                      <h3 className={`${imagesTitleSizeClasses} font-bold mb-2`} style={{ color: imagesTitleColor }}>
+                        {image.title}
+                      </h3>
+                    )}
+                    {showCaptionOnHover && image.caption && (
+                      <p className={`${captionSizeClasses} px-4 ${captionAlign === "center" ? "text-center" : ""}`} style={{ color: captionColor }}>
+                        {image.caption}
+                      </p>
+                    )}
+                  </div>
+                )}
+                
+                {/* Caption below */}
+                {showCaption && captionPosition === "below" && image.caption && (
+                  <div
+                    className={`py-3 px-2 ${captionAlign === "center" ? "text-center" : captionAlign === "right" ? "text-right" : "text-left"}`}
+                    style={{ backgroundColor: captionBackgroundColor }}
+                  >
+                    <p className={captionSizeClasses} style={{ color: captionColor }}>
+                      {image.caption}
+                    </p>
+                  </div>
+                )}
+                
+                {/* Title below */}
+                {showTitle && titlePosition === "below" && image.title && (
+                  <div className="py-3 px-2">
+                    <h3 className={`${imagesTitleSizeClasses} font-semibold`} style={{ color: imagesTitleColor }}>
+                      {image.title}
+                    </h3>
+                  </div>
+                )}
+                
+                {/* Link */}
+                {image.link && (
+                  <a
+                    href={image.link}
+                    target={image.linkTarget || "_self"}
+                    className="absolute inset-0"
+                    aria-label={image.alt || "View image"}
+                  />
+                )}
+              </div>
+            );
+          })}
         </div>
+        
+        {/* Load More */}
+        {enableLoadMore && loadMoreStyle === "button" && visibleCount < filteredImages.length && (
+          <div className="mt-8 md:mt-12 text-center">
+            <button
+              onClick={() => setVisibleCount(prev => prev + loadMoreCount)}
+              className="px-8 py-3 rounded-lg font-semibold transition-all hover:opacity-90"
+              style={{ backgroundColor: accentColor, color: "#ffffff" }}
+            >
+              {loadMoreText}
+            </button>
+          </div>
+        )}
+        
+        {/* Pagination */}
+        {enableLoadMore && loadMoreStyle === "pagination" && (
+          <div className="mt-8 md:mt-12 flex justify-center gap-2">
+            {Array.from({ length: Math.ceil(filteredImages.length / loadMoreCount) }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setVisibleCount((i + 1) * loadMoreCount)}
+                className={`w-10 h-10 rounded-full font-medium transition-all ${visibleCount >= (i + 1) * loadMoreCount ? "opacity-100" : "opacity-50"}`}
+                style={{ backgroundColor: accentColor, color: "#ffffff" }}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
+        
+        {/* CTA */}
+        {showCta && (
+          <div className="mt-12 md:mt-16 text-center p-8 md:p-12 rounded-2xl" style={{ backgroundColor: `${accentColor}10` }}>
+            <h3 className="text-xl md:text-2xl font-bold mb-2" style={{ color: textColor }}>{ctaTitle}</h3>
+            <p className="text-base opacity-80 mb-6 max-w-lg mx-auto" style={{ color: textColor }}>{ctaDescription}</p>
+            <a
+              href={ctaButtonLink}
+              className={ctaButtonClasses}
+              style={{
+                backgroundColor: ctaButtonStyle === "primary" ? accentColor : ctaButtonStyle === "secondary" ? `${accentColor}20` : "transparent",
+                borderColor: ctaButtonStyle === "outline" ? accentColor : undefined,
+                color: ctaButtonStyle === "outline" ? accentColor : ctaButtonStyle === "secondary" ? textColor : "#ffffff",
+              }}
+            >
+              {ctaButtonText}
+            </a>
+          </div>
+        )}
       </div>
     </section>
   );
@@ -2445,153 +8977,714 @@ export function SocialLinksRender({
   );
 }
 // ============================================================================
-// FORM - Flexible Form Container
+// FORM - Premium Form Container with 40+ properties
 // ============================================================================
 
 export interface FormProps {
+  // Content
   children?: React.ReactNode;
+  title?: string;
+  description?: string;
+  
+  // Form Settings
   action?: string;
   method?: "GET" | "POST";
-  layout?: "vertical" | "horizontal" | "inline";
-  gap?: "sm" | "md" | "lg";
-  maxWidth?: "sm" | "md" | "lg" | "xl" | "full";
+  enctype?: "application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain";
+  novalidate?: boolean;
+  autocomplete?: "on" | "off";
+  
+  // Layout
+  layout?: "vertical" | "horizontal" | "inline" | "grid-2" | "grid-3";
+  gap?: "xs" | "sm" | "md" | "lg" | "xl";
+  labelPosition?: "top" | "left" | "floating";
+  alignItems?: "start" | "center" | "end";
+  
+  // Sizing
+  maxWidth?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full";
+  fullWidth?: boolean;
+  
+  // Appearance
   backgroundColor?: string;
-  padding?: "none" | "sm" | "md" | "lg";
-  borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
-  shadow?: "none" | "sm" | "md" | "lg";
+  padding?: "none" | "xs" | "sm" | "md" | "lg" | "xl";
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
+  shadow?: "none" | "sm" | "md" | "lg" | "xl";
   border?: boolean;
+  borderColor?: string;
+  borderWidth?: "1" | "2" | "3";
+  
+  // Header Styling
+  showHeader?: boolean;
+  headerAlign?: "left" | "center" | "right";
+  titleSize?: "sm" | "md" | "lg" | "xl";
+  titleColor?: string;
+  descriptionColor?: string;
+  headerSpacing?: "sm" | "md" | "lg";
+  
+  // Dividers
+  showDividers?: boolean;
+  dividerColor?: string;
+  
+  // Submit Button (built-in)
+  showSubmitButton?: boolean;
+  submitText?: string;
+  submitVariant?: "primary" | "secondary" | "outline";
+  submitSize?: "sm" | "md" | "lg";
+  submitFullWidth?: boolean;
+  submitColor?: string;
+  submitPosition?: "left" | "center" | "right" | "full";
+  
+  // Reset Button
+  showResetButton?: boolean;
+  resetText?: string;
+  
+  // Loading & States
+  isLoading?: boolean;
+  loadingText?: string;
+  disabled?: boolean;
+  
+  // Success/Error States
+  successMessage?: string;
+  errorMessage?: string;
+  showSuccessIcon?: boolean;
+  showErrorIcon?: boolean;
+  
+  // Animation
+  animateOnLoad?: boolean;
+  animationType?: "fade" | "slide" | "scale";
+  
+  // Misc
   id?: string;
   className?: string;
   onSubmit?: (e: React.FormEvent) => void;
 }
 
 export function FormRender({
+  // Content
   children,
+  title,
+  description,
+  
+  // Form Settings
   action = "#",
   method = "POST",
+  enctype,
+  novalidate = false,
+  autocomplete = "on",
+  
+  // Layout
   layout = "vertical",
   gap = "md",
+  labelPosition = "top",
+  alignItems = "start",
+  
+  // Sizing
   maxWidth = "full",
+  fullWidth = false,
+  
+  // Appearance
   backgroundColor,
   padding = "none",
   borderRadius = "none",
   shadow = "none",
   border = false,
+  borderColor = "#e5e7eb",
+  borderWidth = "1",
+  
+  // Header Styling
+  showHeader = true,
+  headerAlign = "left",
+  titleSize = "lg",
+  titleColor,
+  descriptionColor,
+  headerSpacing = "md",
+  
+  // Dividers
+  showDividers = false,
+  dividerColor = "#e5e7eb",
+  
+  // Submit Button
+  showSubmitButton = true,
+  submitText = "Submit",
+  submitVariant = "primary",
+  submitSize = "md",
+  submitFullWidth = false,
+  submitColor = "#3b82f6",
+  submitPosition = "left",
+  
+  // Reset Button
+  showResetButton = false,
+  resetText = "Reset",
+  
+  // Loading & States
+  isLoading = false,
+  loadingText = "Submitting...",
+  disabled = false,
+  
+  // Success/Error States
+  successMessage,
+  errorMessage,
+  showSuccessIcon = true,
+  showErrorIcon = true,
+  
+  // Animation
+  animateOnLoad = false,
+  animationType = "fade",
+  
+  // Misc
   id,
   className = "",
   onSubmit,
 }: FormProps) {
-  const gapClasses = { sm: "gap-3", md: "gap-4 md:gap-6", lg: "gap-6 md:gap-8" }[gap];
-  const maxWClasses = { sm: "max-w-sm", md: "max-w-md", lg: "max-w-lg", xl: "max-w-xl", full: "max-w-full" }[maxWidth];
-  const paddingClasses = { none: "", sm: "p-4", md: "p-6 md:p-8", lg: "p-8 md:p-10" }[padding];
-  const radiusClasses = { none: "", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl" }[borderRadius];
-  const shadowClasses = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg" }[shadow];
-  const layoutClasses = { vertical: "flex flex-col", horizontal: "grid md:grid-cols-2", inline: "flex flex-wrap items-end" }[layout];
+  // Gap classes
+  const gapClasses = {
+    xs: "gap-2",
+    sm: "gap-3",
+    md: "gap-4 md:gap-6",
+    lg: "gap-6 md:gap-8",
+    xl: "gap-8 md:gap-10",
+  }[gap];
+
+  // Max width classes
+  const maxWClasses = {
+    xs: "max-w-xs",
+    sm: "max-w-sm",
+    md: "max-w-md",
+    lg: "max-w-lg",
+    xl: "max-w-xl",
+    "2xl": "max-w-2xl",
+    full: "max-w-full",
+  }[maxWidth];
+
+  // Padding classes
+  const paddingClasses = {
+    none: "",
+    xs: "p-2",
+    sm: "p-4",
+    md: "p-6 md:p-8",
+    lg: "p-8 md:p-10",
+    xl: "p-10 md:p-12",
+  }[padding];
+
+  // Border radius classes
+  const radiusClasses = {
+    none: "",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    "2xl": "rounded-2xl",
+  }[borderRadius];
+
+  // Shadow classes
+  const shadowClasses = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+  }[shadow];
+
+  // Layout classes
+  const layoutClasses = {
+    vertical: "flex flex-col",
+    horizontal: "grid md:grid-cols-2",
+    inline: "flex flex-wrap items-end",
+    "grid-2": "grid grid-cols-1 md:grid-cols-2",
+    "grid-3": "grid grid-cols-1 md:grid-cols-3",
+  }[layout];
+
+  // Title size classes
+  const titleSizeClasses = {
+    sm: "text-lg",
+    md: "text-xl",
+    lg: "text-2xl",
+    xl: "text-3xl",
+  }[titleSize];
+
+  // Header spacing classes
+  const headerSpacingClasses = {
+    sm: "mb-4",
+    md: "mb-6",
+    lg: "mb-8",
+  }[headerSpacing];
+
+  // Submit position classes
+  const submitPositionClasses = {
+    left: "justify-start",
+    center: "justify-center",
+    right: "justify-end",
+    full: "",
+  }[submitPosition];
+
+  // Submit button variant classes
+  const submitButtonClasses = {
+    primary: `bg-blue-600 text-white hover:bg-blue-700`,
+    secondary: `bg-gray-200 text-gray-900 hover:bg-gray-300`,
+    outline: `bg-transparent border-2 border-current text-blue-600 hover:bg-blue-50`,
+  }[submitVariant];
+
+  // Submit size classes
+  const submitSizeClasses = {
+    sm: "px-4 py-2 text-sm",
+    md: "px-6 py-2.5 text-base",
+    lg: "px-8 py-3 text-lg",
+  }[submitSize];
+
+  // Animation classes
+  const animationClass = animateOnLoad ? {
+    fade: "animate-fadeIn",
+    slide: "animate-slideUp",
+    scale: "animate-scaleIn",
+  }[animationType] : "";
+
+  // Border styles
+  const borderStyles: React.CSSProperties = border ? {
+    borderColor,
+    borderWidth: `${borderWidth}px`,
+    borderStyle: "solid",
+  } : {};
 
   return (
     <form
       id={id}
       action={action}
       method={method}
-      className={`${layoutClasses} ${gapClasses} ${maxWClasses} ${paddingClasses} ${radiusClasses} ${shadowClasses} ${border ? "border" : ""} ${className}`}
-      style={{ backgroundColor }}
+      encType={enctype}
+      noValidate={novalidate}
+      autoComplete={autocomplete}
+      className={`
+        ${layoutClasses} ${gapClasses} ${maxWClasses} ${paddingClasses}
+        ${radiusClasses} ${shadowClasses} ${animationClass}
+        ${fullWidth ? "w-full" : ""} ${className}
+      `.replace(/\s+/g, " ").trim()}
+      style={{ backgroundColor, ...borderStyles }}
       onSubmit={onSubmit}
     >
+      {/* Header */}
+      {showHeader && (title || description) && (
+        <div className={`${layout === "horizontal" || layout.startsWith("grid") ? "col-span-full" : ""} ${headerSpacingClasses} text-${headerAlign}`}>
+          {title && (
+            <h3 className={`${titleSizeClasses} font-bold`} style={{ color: titleColor }}>
+              {title}
+            </h3>
+          )}
+          {description && (
+            <p className="mt-2 text-sm" style={{ color: descriptionColor || "#6b7280" }}>
+              {description}
+            </p>
+          )}
+          {showDividers && <hr className="mt-4" style={{ borderColor: dividerColor }} />}
+        </div>
+      )}
+
+      {/* Form Fields */}
       {children}
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className={`${layout === "horizontal" || layout.startsWith("grid") ? "col-span-full" : ""} p-4 bg-green-50 text-green-700 rounded-lg flex items-center gap-2`}>
+          {showSuccessIcon && <span>✓</span>}
+          {successMessage}
+        </div>
+      )}
+
+      {/* Error Message */}
+      {errorMessage && (
+        <div className={`${layout === "horizontal" || layout.startsWith("grid") ? "col-span-full" : ""} p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-2`}>
+          {showErrorIcon && <span>✕</span>}
+          {errorMessage}
+        </div>
+      )}
+
+      {/* Buttons */}
+      {(showSubmitButton || showResetButton) && (
+        <div className={`${layout === "horizontal" || layout.startsWith("grid") ? "col-span-full" : ""} flex ${submitPositionClasses} gap-3 mt-2`}>
+          {showResetButton && (
+            <button
+              type="reset"
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              disabled={disabled || isLoading}
+            >
+              {resetText}
+            </button>
+          )}
+          {showSubmitButton && (
+            <button
+              type="submit"
+              className={`${submitButtonClasses} ${submitSizeClasses} ${submitFullWidth || submitPosition === "full" ? "w-full" : ""} rounded-lg font-medium transition-all disabled:opacity-50`}
+              style={submitVariant === "primary" ? { backgroundColor: submitColor } : undefined}
+              disabled={disabled || isLoading}
+            >
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  {loadingText}
+                </span>
+              ) : submitText}
+            </button>
+          )}
+        </div>
+      )}
     </form>
   );
 }
 
 // ============================================================================
-// FORM FIELD - Universal Input Field
+// FORM FIELD - Premium Input Field with 50+ properties
 // ============================================================================
 
 export interface FormFieldProps {
+  // Label & Name
   label?: string;
   name?: string;
-  type?: "text" | "email" | "password" | "tel" | "url" | "number" | "date" | "time" | "datetime-local" | "textarea" | "select";
+  
+  // Input Type
+  type?: "text" | "email" | "password" | "tel" | "url" | "number" | "date" | "time" | "datetime-local" | "textarea" | "select" | "checkbox" | "radio" | "range" | "file" | "color" | "hidden";
+  
+  // Values
   placeholder?: string;
   value?: string;
   defaultValue?: string;
+  
+  // Validation
   required?: boolean;
   disabled?: boolean;
   readonly?: boolean;
-  options?: Array<{ value?: string; label?: string }>;
-  rows?: number;
   min?: number;
   max?: number;
   step?: number;
+  minLength?: number;
+  maxLength?: number;
   pattern?: string;
+  
+  // Select/Radio Options
+  options?: Array<{ value?: string; label?: string; disabled?: boolean }>;
+  
+  // Textarea
+  rows?: number;
+  cols?: number;
+  resize?: "none" | "vertical" | "horizontal" | "both";
+  
+  // File
+  accept?: string;
+  multiple?: boolean;
+  
+  // Autocomplete
   autocomplete?: string;
+  autofocus?: boolean;
+  spellcheck?: boolean;
+  
+  // Help & Error
   helpText?: string;
   error?: string;
-  size?: "sm" | "md" | "lg";
-  variant?: "default" | "filled" | "underline";
+  success?: string;
+  showCharCount?: boolean;
+  
+  // Styling
+  size?: "xs" | "sm" | "md" | "lg" | "xl";
+  variant?: "default" | "filled" | "underline" | "ghost";
   fullWidth?: boolean;
+  
+  // Label
   hideLabel?: boolean;
-  icon?: React.ReactNode;
+  labelPosition?: "top" | "left" | "floating";
+  labelSize?: "sm" | "md" | "lg";
+  labelColor?: string;
+  labelWeight?: "normal" | "medium" | "semibold" | "bold";
+  requiredIndicator?: "*" | "required" | "none";
+  
+  // Icon
+  iconEmoji?: string;
   iconPosition?: "left" | "right";
+  iconColor?: string;
+  
+  // Prefix/Suffix
+  prefix?: string;
+  suffix?: string;
+  prefixColor?: string;
+  suffixColor?: string;
+  
+  // Border & Colors
+  borderColor?: string;
+  focusBorderColor?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  borderRadius?: "none" | "sm" | "md" | "lg" | "xl" | "full";
+  
+  // States
+  showSuccessState?: boolean;
+  showErrorState?: boolean;
+  
+  // Clear Button
+  showClearButton?: boolean;
+  
+  // Password Toggle
+  showPasswordToggle?: boolean;
+  
+  // Counter
+  showCounter?: boolean;
+  
+  // Misc
   id?: string;
   className?: string;
+  containerClassName?: string;
+  inputClassName?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
 }
 
 export function FormFieldRender({
+  // Label & Name
   label,
   name,
+  
+  // Input Type
   type = "text",
+  
+  // Values
   placeholder,
   value,
   defaultValue,
+  
+  // Validation
   required = false,
   disabled = false,
   readonly = false,
-  options = [],
-  rows = 4,
   min,
   max,
   step,
+  minLength,
+  maxLength,
   pattern,
+  
+  // Select Options
+  options = [],
+  
+  // Textarea
+  rows = 4,
+  cols,
+  resize = "vertical",
+  
+  // File
+  accept,
+  multiple = false,
+  
+  // Autocomplete
   autocomplete,
+  autofocus = false,
+  spellcheck,
+  
+  // Help & Error
   helpText,
   error,
+  success,
+  showCharCount = false,
+  
+  // Styling
   size = "md",
   variant = "default",
   fullWidth = true,
+  
+  // Label
   hideLabel = false,
-  icon,
+  labelPosition = "top",
+  labelSize = "sm",
+  labelColor,
+  labelWeight = "medium",
+  requiredIndicator = "*",
+  
+  // Icon
+  iconEmoji,
   iconPosition = "left",
+  iconColor = "#9ca3af",
+  
+  // Prefix/Suffix
+  prefix,
+  suffix,
+  prefixColor = "#6b7280",
+  suffixColor = "#6b7280",
+  
+  // Border & Colors
+  borderColor = "#d1d5db",
+  focusBorderColor = "#3b82f6",
+  backgroundColor = "#ffffff",
+  textColor,
+  borderRadius = "lg",
+  
+  // Clear Button
+  showClearButton = false,
+  
+  // Password Toggle
+  showPasswordToggle = false,
+  
+  // Misc
   id,
   className = "",
+  containerClassName = "",
+  inputClassName = "",
   onChange,
+  onBlur,
+  onFocus,
 }: FormFieldProps) {
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [charCount, setCharCount] = React.useState(0);
+
+  // Size classes
   const sizeClasses = {
+    xs: "px-2 py-1 text-xs",
     sm: "px-3 py-1.5 text-sm",
     md: "px-4 py-2.5 text-base",
-    lg: "px-5 py-3.5 text-lg",
+    lg: "px-5 py-3 text-lg",
+    xl: "px-6 py-4 text-xl",
   }[size];
 
+  // Variant classes
   const variantClasses = {
-    default: "border border-gray-300 rounded-lg bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20",
-    filled: "border-0 bg-gray-100 rounded-lg focus:bg-gray-50 focus:ring-2 focus:ring-blue-500/20",
-    underline: "border-0 border-b-2 border-gray-300 rounded-none bg-transparent focus:border-blue-500",
+    default: "border bg-white",
+    filled: "border-0 bg-gray-100",
+    underline: "border-0 border-b-2 bg-transparent rounded-none",
+    ghost: "border-0 bg-transparent",
   }[variant];
 
-  const baseClasses = `${sizeClasses} ${variantClasses} ${fullWidth ? "w-full" : ""} ${error ? "border-red-500 focus:border-red-500 focus:ring-red-500/20" : ""} ${disabled ? "opacity-50 cursor-not-allowed" : ""} transition-all duration-200 outline-none`;
+  // Border radius classes
+  const radiusClasses = {
+    none: "rounded-none",
+    sm: "rounded-sm",
+    md: "rounded-md",
+    lg: "rounded-lg",
+    xl: "rounded-xl",
+    full: "rounded-full",
+  }[borderRadius];
+
+  // Label size classes
+  const labelSizeClasses = {
+    sm: "text-sm",
+    md: "text-base",
+    lg: "text-lg",
+  }[labelSize];
+
+  // Label weight classes
+  const labelWeightClasses = {
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+  }[labelWeight];
+
+  // State classes
+  const stateClasses = error
+    ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+    : success
+    ? "border-green-500 focus:border-green-500 focus:ring-green-500/20"
+    : `focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`;
+
+  // Base input classes
+  const baseClasses = `
+    ${sizeClasses} ${variantClasses} ${radiusClasses} ${stateClasses}
+    ${fullWidth ? "w-full" : ""} 
+    ${disabled ? "opacity-50 cursor-not-allowed" : ""} 
+    transition-all duration-200 outline-none
+    ${iconEmoji && iconPosition === "left" ? "pl-10" : ""}
+    ${iconEmoji && iconPosition === "right" ? "pr-10" : ""}
+    ${prefix ? "pl-8" : ""}
+    ${suffix || showClearButton || (type === "password" && showPasswordToggle) ? "pr-10" : ""}
+    ${inputClassName}
+  `.replace(/\s+/g, " ").trim();
 
   const fieldId = id || name;
+  const inputType = type === "password" && showPassword ? "text" : type;
 
+  // Handle change with char count
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    if (showCharCount || maxLength) {
+      setCharCount(e.target.value.length);
+    }
+    onChange?.(e);
+  };
+
+  // Render the input element
   const renderInput = () => {
+    const commonStyles: React.CSSProperties = {
+      borderColor: error ? undefined : borderColor,
+      backgroundColor: variant === "default" ? backgroundColor : undefined,
+      color: textColor,
+    };
+
     if (type === "textarea") {
-      return <textarea id={fieldId} name={name} placeholder={placeholder} value={value} defaultValue={defaultValue} required={required} disabled={disabled} readOnly={readonly} rows={rows} className={baseClasses} onChange={onChange} />;
+      return (
+        <textarea
+          id={fieldId}
+          name={name}
+          placeholder={placeholder}
+          value={value}
+          defaultValue={defaultValue}
+          required={required}
+          disabled={disabled}
+          readOnly={readonly}
+          rows={rows}
+          cols={cols}
+          minLength={minLength}
+          maxLength={maxLength}
+          autoFocus={autofocus}
+          spellCheck={spellcheck}
+          className={baseClasses}
+          style={{ ...commonStyles, resize }}
+          onChange={handleChange}
+          onBlur={onBlur}
+          onFocus={onFocus}
+        />
+      );
     }
 
     if (type === "select") {
       return (
-        <select id={fieldId} name={name} value={value} defaultValue={defaultValue} required={required} disabled={disabled} className={baseClasses} onChange={onChange}>
+        <select
+          id={fieldId}
+          name={name}
+          value={value}
+          defaultValue={defaultValue}
+          required={required}
+          disabled={disabled}
+          className={baseClasses}
+          style={commonStyles}
+          onChange={handleChange}
+          onBlur={onBlur}
+          onFocus={onFocus}
+        >
           {placeholder && <option value="" disabled>{placeholder}</option>}
-          {options.map((opt, i) => <option key={i} value={opt.value}>{opt.label}</option>)}
+          {options.map((opt, i) => (
+            <option key={i} value={opt.value} disabled={opt.disabled}>
+              {opt.label}
+            </option>
+          ))}
         </select>
+      );
+    }
+
+    if (type === "checkbox" || type === "radio") {
+      return (
+        <div className="flex items-center gap-2">
+          <input
+            id={fieldId}
+            name={name}
+            type={type}
+            value={value}
+            defaultValue={defaultValue}
+            required={required}
+            disabled={disabled}
+            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            onChange={handleChange}
+          />
+          {label && !hideLabel && (
+            <label htmlFor={fieldId} className="text-sm text-gray-700">
+              {label}
+            </label>
+          )}
+        </div>
       );
     }
 
@@ -2599,7 +9692,7 @@ export function FormFieldRender({
       <input
         id={fieldId}
         name={name}
-        type={type}
+        type={inputType}
         placeholder={placeholder}
         value={value}
         defaultValue={defaultValue}
@@ -2609,29 +9702,122 @@ export function FormFieldRender({
         min={min}
         max={max}
         step={step}
+        minLength={minLength}
+        maxLength={maxLength}
         pattern={pattern}
         autoComplete={autocomplete}
-        className={`${baseClasses} ${icon ? (iconPosition === "left" ? "pl-10" : "pr-10") : ""}`}
-        onChange={onChange}
+        autoFocus={autofocus}
+        spellCheck={spellcheck}
+        accept={accept}
+        multiple={multiple}
+        className={baseClasses}
+        style={commonStyles}
+        onChange={handleChange}
+        onBlur={onBlur}
+        onFocus={onFocus}
       />
     );
   };
 
+  // For checkbox/radio, return simple layout
+  if (type === "checkbox" || type === "radio") {
+    return (
+      <div className={`${className} ${containerClassName}`}>
+        {renderInput()}
+        {helpText && !error && <p className="mt-1 text-xs text-gray-500">{helpText}</p>}
+        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      </div>
+    );
+  }
+
   return (
-    <div className={`${className}`}>
-      {label && !hideLabel && (
-        <label htmlFor={fieldId} className="block text-sm font-medium text-gray-700 mb-1.5">
+    <div className={`${className} ${containerClassName}`}>
+      {/* Label */}
+      {label && !hideLabel && labelPosition !== "floating" && (
+        <label
+          htmlFor={fieldId}
+          className={`block ${labelSizeClasses} ${labelWeightClasses} mb-1.5`}
+          style={{ color: labelColor || "#374151" }}
+        >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && requiredIndicator !== "none" && (
+            <span className="text-red-500 ml-1">
+              {requiredIndicator === "*" ? "*" : "(required)"}
+            </span>
+          )}
         </label>
       )}
+
+      {/* Input Container */}
       <div className="relative">
-        {icon && iconPosition === "left" && <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</div>}
+        {/* Prefix */}
+        {prefix && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: prefixColor }}>
+            {prefix}
+          </div>
+        )}
+
+        {/* Icon Left */}
+        {iconEmoji && iconPosition === "left" && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: iconColor }}>
+            {iconEmoji}
+          </div>
+        )}
+
+        {/* Input */}
         {renderInput()}
-        {icon && iconPosition === "right" && <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</div>}
+
+        {/* Icon Right */}
+        {iconEmoji && iconPosition === "right" && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: iconColor }}>
+            {iconEmoji}
+          </div>
+        )}
+
+        {/* Suffix */}
+        {suffix && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: suffixColor }}>
+            {suffix}
+          </div>
+        )}
+
+        {/* Password Toggle */}
+        {type === "password" && showPasswordToggle && (
+          <button
+            type="button"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? "👁️" : "👁️‍🗨️"}
+          </button>
+        )}
+
+        {/* Clear Button */}
+        {showClearButton && value && (
+          <button
+            type="button"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        )}
       </div>
-      {helpText && !error && <p className="mt-1.5 text-sm text-gray-500">{helpText}</p>}
-      {error && <p className="mt-1.5 text-sm text-red-600">{error}</p>}
+
+      {/* Help Text / Error / Success */}
+      <div className="flex justify-between mt-1.5">
+        <div>
+          {helpText && !error && !success && <p className="text-sm text-gray-500">{helpText}</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          {success && !error && <p className="text-sm text-green-600">{success}</p>}
+        </div>
+        
+        {/* Character Count */}
+        {(showCharCount || maxLength) && type !== "select" && (
+          <span className="text-xs text-gray-400">
+            {charCount}{maxLength ? `/${maxLength}` : ""}
+          </span>
+        )}
+      </div>
     </div>
   );
 }

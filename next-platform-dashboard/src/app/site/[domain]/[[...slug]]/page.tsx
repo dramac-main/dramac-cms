@@ -3,6 +3,10 @@ import { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { CraftRenderer } from "./craft-renderer";
 import { ModuleInjector } from "@/components/renderer/module-injector";
+import type { InstalledModuleInfo } from "@/types/studio-module";
+
+// Known module slugs that have Studio components
+const KNOWN_MODULE_SLUGS = ["ecommerce", "booking", "crm", "automation", "social-media"];
 
 interface SitePageProps {
   params: Promise<{
@@ -62,6 +66,7 @@ async function getSiteData(domain: string, pageSlug: string) {
       custom_domain,
       settings,
       published,
+      agency_id,
       pages (
         id,
         slug,
@@ -114,13 +119,13 @@ async function getSiteData(domain: string, pageSlug: string) {
       return null;
     }
 
-    return processData(siteByCustomDomain, pageSlug);
+    return processData(siteByCustomDomain, pageSlug, supabase);
   }
 
-  return processData(site, pageSlug);
+  return processData(site, pageSlug, supabase);
 }
 
-function processData(site: any, pageSlug: string) {
+async function processData(site: any, pageSlug: string, supabase: ReturnType<typeof createAdminClient>) {
   // Find the requested page
   const pages = site.pages || [];
   const page = pageSlug
@@ -146,6 +151,61 @@ function processData(site: any, pageSlug: string) {
   const siteSettings = site.settings || {};
   const themeSettings = siteSettings.theme || null;
 
+  // Fetch installed modules for this site
+  let modules: InstalledModuleInfo[] = [];
+  try {
+    const { data: installations } = await supabase
+      .from("site_module_installations")
+      .select(`
+        id,
+        module_id,
+        is_enabled,
+        installed_at,
+        settings
+      `)
+      .eq("site_id", site.id)
+      .eq("is_enabled", true);
+
+    if (installations && installations.length > 0) {
+      const moduleIds = installations.map(d => d.module_id);
+      
+      const { data: modulesData } = await supabase
+        .from("modules_v2")
+        .select(`
+          id,
+          name,
+          slug,
+          current_version,
+          category,
+          icon,
+          status
+        `)
+        .in("id", moduleIds);
+
+      if (modulesData) {
+        const moduleMap = new Map(modulesData.map(m => [m.id, m]));
+        
+        for (const row of installations) {
+          const mod = moduleMap.get(row.module_id);
+          if (mod && (mod.status === "published" || mod.status === "active")) {
+            modules.push({
+              id: mod.id,
+              name: mod.name,
+              slug: mod.slug,
+              status: row.is_enabled ? "active" : "inactive",
+              version: mod.current_version || "1.0.0",
+              category: mod.category,
+              icon: mod.icon || undefined,
+              hasStudioComponents: KNOWN_MODULE_SLUGS.includes(mod.slug),
+            });
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[SitePage] Error fetching modules:", err);
+  }
+
   return {
     site: {
       id: site.id,
@@ -165,6 +225,7 @@ function processData(site: any, pageSlug: string) {
     },
     content: content ? JSON.stringify(content) : null,
     themeSettings,
+    modules,
   };
 }
 
@@ -203,12 +264,14 @@ export default async function SitePage({ params }: SitePageProps) {
     );
   }
 
-  // Pass data to client component for Craft.js rendering
+  // Pass data to client component for rendering with modules
   return (
     <>
       <CraftRenderer 
         content={data.content} 
         themeSettings={data.themeSettings}
+        siteId={data.site.id}
+        modules={data.modules}
       />
       {/* Inject studio modules for this site */}
       <ModuleInjector siteId={data.site.id} />
