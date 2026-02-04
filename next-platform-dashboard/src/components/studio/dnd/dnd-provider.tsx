@@ -8,13 +8,14 @@
 
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useRef } from "react";
 import {
   DndContext,
   DragOverlay,
   DragStartEvent,
   DragEndEvent,
   DragOverEvent,
+  DragMoveEvent,
   closestCenter,
   pointerWithin,
   rectIntersection,
@@ -97,6 +98,9 @@ export function DndProvider({ children }: DndProviderProps) {
   const [activeDrag, setActiveDrag] = useState<ActiveDragState | null>(null);
   const [, setOverId] = useState<UniqueIdentifier | null>(null);
   
+  // Track last pointer position for determining drop position (above/below center)
+  const lastPointerPositionRef = useRef<{ x: number; y: number } | null>(null);
+  
   // =============================================================================
   // SENSORS
   // =============================================================================
@@ -151,6 +155,36 @@ export function DndProvider({ children }: DndProviderProps) {
     setOverId(over?.id ?? null);
   }, []);
   
+  // Track pointer position during drag
+  const handleDragMove = useCallback((event: DragMoveEvent) => {
+    // Store the pointer coordinates for determining drop position
+    if (event.activatorEvent && 'clientX' in event.activatorEvent) {
+      const activator = event.activatorEvent as MouseEvent;
+      // Calculate actual pointer position using delta from start
+      lastPointerPositionRef.current = {
+        x: activator.clientX + (event.delta?.x ?? 0),
+        y: activator.clientY + (event.delta?.y ?? 0),
+      };
+    }
+  }, []);
+  
+  /**
+   * Helper: Determine if pointer is in upper half of a DOM element
+   */
+  const isDroppedAboveCenter = useCallback((overId: string): boolean => {
+    // Get the DOM element for the target component
+    const targetElement = document.querySelector(`[data-component-id="${overId}"]`);
+    if (!targetElement || !lastPointerPositionRef.current) {
+      // Default to "after" if we can't determine
+      return false;
+    }
+    
+    const rect = targetElement.getBoundingClientRect();
+    const centerY = rect.top + rect.height / 2;
+    
+    return lastPointerPositionRef.current.y < centerY;
+  }, []);
+
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     
@@ -252,7 +286,7 @@ export function DndProvider({ children }: DndProviderProps) {
       let parentId = "root";
       let index = data.root.children.length; // Default to end
       
-      // If dropped on a specific component, insert after it
+      // If dropped on a specific component, insert relative to it
       const overId = over.id.toString();
       if (overId !== "canvas-drop-zone" && overId !== "root") {
         // Check if dropped on a container drop zone (container-{id})
@@ -275,12 +309,21 @@ export function DndProvider({ children }: DndProviderProps) {
               parentId = overId;
               index = overComponent.children?.length ?? 0;
             } else {
-              // Drop after this component
+              // Determine if we should insert before or after based on pointer position
               parentId = overComponent.parentId ?? "root";
               const siblings = overComponent.parentId
                 ? data.components[overComponent.parentId]?.children ?? []
                 : data.root.children;
-              index = siblings.indexOf(overId) + 1;
+              const currentIndex = siblings.indexOf(overId);
+              
+              // Check if pointer is in upper half (insert before) or lower half (insert after)
+              if (isDroppedAboveCenter(overId)) {
+                index = currentIndex; // Insert before
+                console.debug(`[DnD] Dropping BEFORE ${overId} at index ${index}`);
+              } else {
+                index = currentIndex + 1; // Insert after
+                console.debug(`[DnD] Dropping AFTER ${overId} at index ${index}`);
+              }
             }
           }
         }
@@ -291,6 +334,9 @@ export function DndProvider({ children }: DndProviderProps) {
       
       // Select the new component
       selectComponent(newId);
+      
+      // Reset pointer tracking
+      lastPointerPositionRef.current = null;
       
       // Emit custom event for recently used tracking
       if (typeof window !== "undefined") {
@@ -385,12 +431,19 @@ export function DndProvider({ children }: DndProviderProps) {
             newParentId = overId;
             newIndex = overComponent.children?.length ?? 0;
           } else {
-            // Drop as sibling (after)
+            // Determine position based on where the pointer is (above/below center)
             newParentId = overComponent.parentId ?? "root";
             const siblings = overComponent.parentId
               ? data.components[overComponent.parentId]?.children ?? []
               : data.root.children;
-            newIndex = siblings.indexOf(overId) + 1;
+            const currentIndex = siblings.indexOf(overId);
+            
+            // Check if pointer is in upper half (insert before) or lower half (insert after)
+            if (isDroppedAboveCenter(overId)) {
+              newIndex = currentIndex; // Insert before
+            } else {
+              newIndex = currentIndex + 1; // Insert after
+            }
             
             // Adjust index if moving within same parent
             if (oldParentId === newParentId) {
@@ -409,14 +462,18 @@ export function DndProvider({ children }: DndProviderProps) {
       // Select the moved component
       selectComponent(componentId);
       
+      // Reset pointer tracking
+      lastPointerPositionRef.current = null;
+      
       console.debug(`[DnD] Moved ${componentId} to ${newParentId} at index ${newIndex}`);
     }
-  }, [data, addComponent, moveComponent, selectComponent, setDragging]);
+  }, [data, addComponent, moveComponent, selectComponent, setDragging, isDroppedAboveCenter]);
   
   const handleDragCancel = useCallback(() => {
     setActiveDrag(null);
     setOverId(null);
     setDragging(false, null);
+    lastPointerPositionRef.current = null;
   }, [setDragging]);
   
   // =============================================================================
@@ -429,6 +486,7 @@ export function DndProvider({ children }: DndProviderProps) {
       collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
+      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >

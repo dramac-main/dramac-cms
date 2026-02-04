@@ -11,7 +11,15 @@
 
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles, Lightbulb, Zap } from "lucide-react";
+import { 
+  Loader2, Sparkles, Lightbulb, Zap,
+  Wand2, Type, Palette, LayoutGrid, Image, Video,
+  AlignCenter, Columns, Rows, PanelTop, PanelBottom,
+  FileText, Edit3, RefreshCw, ArrowRight, Plus,
+  Maximize, Minimize, Grid, List, Star, Quote,
+  Shapes, Layers, Link2, MousePointer, Move,
+  Copy, Trash2, Settings2, ChevronRight
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { 
@@ -21,6 +29,60 @@ import {
   type AIActionConfig 
 } from "@/lib/studio/registry/ai-configs";
 import { useEditorStore } from "@/lib/studio/store/editor-store";
+
+// =============================================================================
+// ICON MAP - Map iconName strings to Lucide components
+// =============================================================================
+
+const ICON_MAP: Record<string, React.ElementType> = {
+  // Text & Content
+  "wand": Wand2,
+  "type": Type,
+  "text": Type,
+  "edit": Edit3,
+  "quote": Quote,
+  "file-text": FileText,
+  
+  // Media
+  "image": Image,
+  "video": Video,
+  
+  // Layout
+  "layout": LayoutGrid,
+  "grid": Grid,
+  "list": List,
+  "columns": Columns,
+  "rows": Rows,
+  "panel-top": PanelTop,
+  "panel-bottom": PanelBottom,
+  "align-center": AlignCenter,
+  "maximize": Maximize,
+  "minimize": Minimize,
+  
+  // Style
+  "palette": Palette,
+  "sparkles": Sparkles,
+  "star": Star,
+  "shapes": Shapes,
+  "layers": Layers,
+  
+  // Actions
+  "refresh": RefreshCw,
+  "arrow-right": ArrowRight,
+  "plus": Plus,
+  "link": Link2,
+  "pointer": MousePointer,
+  "move": Move,
+  "copy": Copy,
+  "trash": Trash2,
+  "settings": Settings2,
+  "chevron-right": ChevronRight,
+};
+
+function getIconComponent(iconName?: string): React.ElementType {
+  if (!iconName) return Wand2;
+  return ICON_MAP[iconName] || Wand2;
+}
 
 // =============================================================================
 // TYPES
@@ -150,33 +212,39 @@ export function QuickActionsPanel({
         {/* Actions */}
         {actions.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {actions.map((action) => (
-              <Button
-                key={action.id}
-                size="sm"
-                variant="outline"
-                className={cn(
-                  "h-7 text-xs gap-1.5 bg-background hover:bg-primary/5",
-                  loading === action.id && "pointer-events-none opacity-70"
-                )}
-                onClick={() => handleAction(action)}
-                disabled={loading !== null}
-                title={action.description}
-              >
-                {loading === action.id ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <span className="text-sm">{action.icon}</span>
-                )}
-                <span>{action.label}</span>
-              </Button>
-            ))}
+            {actions.map((action) => {
+              const IconComponent = getIconComponent(action.iconName);
+              
+              return (
+                <Button
+                  key={action.id}
+                  size="sm"
+                  variant="outline"
+                  className={cn(
+                    "h-8 text-xs gap-2 bg-background",
+                    "hover:bg-primary/5 hover:border-primary/30 hover:text-primary",
+                    "transition-all duration-200",
+                    loading === action.id && "pointer-events-none opacity-70"
+                  )}
+                  onClick={() => handleAction(action)}
+                  disabled={loading !== null}
+                  title={action.description}
+                >
+                  {loading === action.id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <IconComponent className="h-3.5 w-3.5" />
+                  )}
+                  <span>{action.label}</span>
+                </Button>
+              );
+            })}
           </div>
         )}
         
         {/* Loading overlay */}
         {loading && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground animate-pulse">
             <Loader2 className="h-3 w-3 animate-spin" />
             <span>AI is working on your request...</span>
           </div>

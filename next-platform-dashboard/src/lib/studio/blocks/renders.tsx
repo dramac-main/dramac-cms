@@ -537,13 +537,21 @@ export interface TextProps {
   children?: React.ReactNode;
   color?: string;
   align?: ResponsiveValue<"left" | "center" | "right" | "justify">;
-  fontSize?: "xs" | "sm" | "base" | "lg" | "xl" | "2xl";
-  fontWeight?: "light" | "normal" | "medium" | "semibold" | "bold";
-  lineHeight?: "tight" | "normal" | "relaxed" | "loose";
+  alignment?: ResponsiveValue<"left" | "center" | "right" | "justify">; // Alternative name from registry
+  fontSize?: "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl" | "7xl" | "8xl";
+  fontWeight?: "light" | "normal" | "medium" | "semibold" | "bold" | "100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900" | number;
+  lineHeight?: "tight" | "normal" | "relaxed" | "loose" | string;
   italic?: boolean;
   underline?: boolean;
-  maxWidth?: "none" | "prose" | "md" | "lg" | "xl";
+  maxWidth?: "none" | "prose" | "md" | "lg" | "xl" | string;
   marginBottom?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg">;
+  // New typography fields
+  htmlTag?: "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "span" | "div";
+  fontFamily?: string;
+  letterSpacing?: string;
+  textTransform?: "none" | "uppercase" | "lowercase" | "capitalize";
+  textDecoration?: "none" | "underline" | "line-through";
+  textShadow?: string;
   id?: string;
   className?: string;
 }
@@ -553,6 +561,7 @@ export function TextRender({
   children,
   color,
   align = "left",
+  alignment, // Alternative prop name from registry
   fontSize = "base",
   fontWeight = "normal",
   lineHeight = "relaxed",
@@ -560,9 +569,19 @@ export function TextRender({
   underline = false,
   maxWidth = "none",
   marginBottom = "md",
+  // New typography props
+  htmlTag = "p",
+  fontFamily,
+  letterSpacing = "0",
+  textTransform = "none",
+  textDecoration = "none",
+  textShadow,
   id,
   className = "",
 }: TextProps) {
+  // Use alignment if align is not provided (for backward compatibility)
+  const effectiveAlign = alignment || align;
+  
   const alignMap: Record<string, { mobile: string; tablet: string; desktop: string }> = {
     left: { mobile: "text-left", tablet: "md:text-left", desktop: "lg:text-left" },
     center: { mobile: "text-center", tablet: "md:text-center", desktop: "lg:text-center" },
@@ -578,21 +597,98 @@ export function TextRender({
     lg: { mobile: "mb-4", tablet: "md:mb-5", desktop: "lg:mb-6" },
   };
 
-  const alignClasses = getResponsiveClasses(align, alignMap);
+  const alignClasses = getResponsiveClasses(effectiveAlign, alignMap);
   const mbClasses = getResponsiveClasses(marginBottom, marginBottomMap);
-  const sizeClass = { xs: "text-xs", sm: "text-sm md:text-sm", base: "text-base md:text-base", lg: "text-base md:text-lg", xl: "text-lg md:text-xl", "2xl": "text-xl md:text-2xl" }[fontSize];
-  const weightClass = { light: "font-light", normal: "font-normal", medium: "font-medium", semibold: "font-semibold", bold: "font-bold" }[fontWeight];
-  const leadingClass = { tight: "leading-tight", normal: "leading-normal", relaxed: "leading-relaxed", loose: "leading-loose" }[lineHeight];
-  const maxWClass = { none: "", prose: "max-w-prose", md: "max-w-md", lg: "max-w-lg", xl: "max-w-xl" }[maxWidth];
-
+  
+  // Font size mapping - supports both old preset values and new values
+  const fontSizeMap: Record<string, string> = {
+    xs: "text-xs",
+    sm: "text-sm",
+    base: "text-base",
+    lg: "text-lg",
+    xl: "text-xl",
+    "2xl": "text-2xl",
+    "3xl": "text-3xl",
+    "4xl": "text-4xl",
+    "5xl": "text-5xl",
+    "6xl": "text-6xl",
+    "7xl": "text-7xl",
+    "8xl": "text-8xl",
+    "9xl": "text-9xl",
+  };
+  const sizeClass = fontSizeMap[fontSize] || "text-base";
+  
+  // Font weight mapping - supports both string names and numeric values
+  const fontWeightMap: Record<string, string> = {
+    light: "font-light",
+    normal: "font-normal",
+    medium: "font-medium",
+    semibold: "font-semibold",
+    bold: "font-bold",
+    "100": "font-thin",
+    "200": "font-extralight",
+    "300": "font-light",
+    "400": "font-normal",
+    "500": "font-medium",
+    "600": "font-semibold",
+    "700": "font-bold",
+    "800": "font-extrabold",
+    "900": "font-black",
+  };
+  const weightClass = fontWeightMap[String(fontWeight)] || "font-normal";
+  
+  // Line height mapping
+  const lineHeightMap: Record<string, string> = {
+    tight: "leading-tight",
+    normal: "leading-normal",
+    relaxed: "leading-relaxed",
+    loose: "leading-loose",
+    "1": "leading-none",
+    "1.25": "leading-tight",
+    "1.375": "leading-snug",
+    "1.5": "leading-normal",
+    "1.625": "leading-relaxed",
+    "2": "leading-loose",
+  };
+  const leadingClass = lineHeightMap[String(lineHeight)] || "leading-normal";
+  
+  // Max width - support both preset values and custom values
+  const maxWidthMap: Record<string, string> = {
+    none: "",
+    prose: "max-w-prose",
+    md: "max-w-md",
+    lg: "max-w-lg",
+    xl: "max-w-xl",
+  };
+  const maxWClass = maxWidthMap[maxWidth] || "";
+  
+  // Text transform classes
+  const textTransformClass = textTransform !== "none" ? `${textTransform}` : "";
+  
+  // Text decoration (replaces underline prop)
+  const textDecorationClass = textDecoration !== "none" ? textDecoration : (underline ? "underline" : "");
+  
+  // Dynamic styles
+  const style: React.CSSProperties = {
+    color,
+    fontFamily: fontFamily || undefined,
+    letterSpacing: letterSpacing !== "0" ? letterSpacing : undefined,
+    textTransform: textTransform !== "none" ? textTransform : undefined,
+    textShadow: textShadow || undefined,
+    maxWidth: !maxWidthMap[maxWidth] && maxWidth !== "none" ? maxWidth : undefined,
+  };
+  
+  // Create the element with the appropriate tag
+  const Tag = htmlTag as keyof JSX.IntrinsicElements;
+  
   return (
-    <p
+    <Tag
       id={id}
-      className={`${sizeClass} ${alignClasses} ${mbClasses} ${weightClass} ${leadingClass} ${maxWClass} ${italic ? "italic" : ""} ${underline ? "underline" : ""} ${className}`}
-      style={{ color }}
+      className={`${sizeClass} ${alignClasses} ${mbClasses} ${weightClass} ${leadingClass} ${maxWClass} ${italic ? "italic" : ""} ${textDecorationClass} ${textTransformClass} ${className}`.trim().replace(/\s+/g, ' ')}
+      style={style}
     >
       {children || text}
-    </p>
+    </Tag>
   );
 }
 

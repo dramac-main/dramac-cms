@@ -416,11 +416,18 @@ export function PremiumNavbarRender({
   };
 
   // Position class mapping
-  const positionClasses: Record<string, string> = {
-    relative: "relative",
-    absolute: "absolute top-0 left-0 right-0",
-    fixed: "fixed top-0 left-0 right-0",
-    sticky: "sticky",
+  // When position is absolute + transparentUntilScroll, switch to fixed after scroll
+  const getPositionClass = () => {
+    if (position === "absolute" && transparentUntilScroll && isScrolled) {
+      return "fixed top-0 left-0 right-0";
+    }
+    const positionClasses: Record<string, string> = {
+      relative: "relative",
+      absolute: "absolute top-0 left-0 right-0",
+      fixed: "fixed top-0 left-0 right-0",
+      sticky: "sticky",
+    };
+    return positionClasses[position] || positionClasses.relative;
   };
 
   // Compute background style
@@ -481,7 +488,7 @@ export function PremiumNavbarRender({
       <nav
         ref={navRef}
         id={id}
-        className={`w-full z-50 ${positionClasses[position]} ${shadowClasses[shadow]} ${className}`}
+        className={`w-full z-50 ${getPositionClass()} ${shadowClasses[shadow]} ${className}`}
         style={bgStyle}
         aria-label={ariaLabel}
         role="navigation"
@@ -864,6 +871,14 @@ export interface PremiumHeroProps {
   mouseParallaxIntensity?: number; // 1-100
   mouseParallaxLayers?: number; // Number of parallax layers
   mouseParallaxSmooth?: number; // Smoothing factor (ms)
+  // Advanced 3D Parallax
+  enable3DParallax?: boolean;
+  parallax3DRotateX?: number; // Max X rotation in degrees
+  parallax3DRotateY?: number; // Max Y rotation in degrees
+  parallax3DScale?: number; // Scale factor on hover (1.0 = no scale)
+  parallax3DPerspective?: number; // Perspective distance in px
+  parallaxAffectBackground?: boolean; // Move background image
+  parallaxAffectContent?: boolean; // Move content elements
   
   // Decorations
   showPattern?: boolean;
@@ -978,6 +993,14 @@ export function PremiumHeroRender({
   mouseParallaxIntensity = 20,
   mouseParallaxLayers = 1,
   mouseParallaxSmooth = 150,
+  // Advanced 3D Parallax
+  enable3DParallax = false,
+  parallax3DRotateX = 10,
+  parallax3DRotateY = 10,
+  parallax3DScale = 1.02,
+  parallax3DPerspective = 1000,
+  parallaxAffectBackground = true,
+  parallaxAffectContent = true,
   
   // Pattern
   showPattern = false,
@@ -1144,7 +1167,7 @@ export function PremiumHeroRender({
   
   // Mouse parallax effect handler
   useEffect(() => {
-    if (!enableEffects || !enableMouseParallax) return;
+    if (!enableEffects || (!enableMouseParallax && !enable3DParallax)) return;
     
     const handleMouseMove = (e: MouseEvent) => {
       if (!heroRef.current) return;
@@ -1154,14 +1177,23 @@ export function PremiumHeroRender({
       setMousePosition({ x, y });
     };
     
+    // Reset on mouse leave for smooth return
+    const handleMouseLeave = () => {
+      setMousePosition({ x: 0.5, y: 0.5 });
+    };
+    
     const heroElement = heroRef.current;
     if (heroElement) {
       heroElement.addEventListener("mousemove", handleMouseMove);
-      return () => heroElement.removeEventListener("mousemove", handleMouseMove);
+      heroElement.addEventListener("mouseleave", handleMouseLeave);
+      return () => {
+        heroElement.removeEventListener("mousemove", handleMouseMove);
+        heroElement.removeEventListener("mouseleave", handleMouseLeave);
+      };
     }
-  }, [enableEffects, enableMouseParallax]);
+  }, [enableEffects, enableMouseParallax, enable3DParallax]);
   
-  // Calculate parallax transform for layers
+  // Calculate parallax transform for layers (2D translate)
   const getParallaxTransform = (layer: number) => {
     if (!enableMouseParallax) return {};
     const intensity = (mouseParallaxIntensity / 100) * (layer + 1) * 10;
@@ -1172,6 +1204,37 @@ export function PremiumHeroRender({
       transition: `transform ${mouseParallaxSmooth}ms ease-out`,
     };
   };
+  
+  // Calculate 3D parallax transform (perspective + rotation)
+  const get3DParallaxTransform = (target: "background" | "content") => {
+    if (!enable3DParallax) return {};
+    if (target === "background" && !parallaxAffectBackground) return {};
+    if (target === "content" && !parallaxAffectContent) return {};
+    
+    const rotateY = (mousePosition.x - 0.5) * parallax3DRotateY;
+    const rotateX = -(mousePosition.y - 0.5) * parallax3DRotateX;
+    const scale = 1 + (parallax3DScale - 1) * 0.5; // Subtle scale on hover
+    
+    // Content moves opposite to mouse for depth effect
+    const depthMultiplier = target === "background" ? 0.5 : 1;
+    
+    return {
+      transform: `
+        perspective(${parallax3DPerspective}px)
+        rotateX(${rotateX * depthMultiplier}deg)
+        rotateY(${rotateY * depthMultiplier}deg)
+        scale(${scale})
+      `.replace(/\s+/g, ' ').trim(),
+      transition: `transform ${mouseParallaxSmooth}ms ease-out`,
+      transformStyle: "preserve-3d" as const,
+    };
+  };
+  
+  // Combined parallax style for hero wrapper
+  const heroParallaxStyle: React.CSSProperties = enable3DParallax ? {
+    transformStyle: "preserve-3d",
+    perspective: parallax3DPerspective,
+  } : {};
   
   const paddingTopClasses: Record<string, string> = {
     none: "pt-0",
@@ -1525,8 +1588,22 @@ export function PremiumHeroRender({
       ref={heroRef}
       id={id}
       className={`relative w-full ${heightClasses[minHeight]} ${paddingTopClasses[paddingTop]} ${paddingBottomClasses[paddingBottom]} ${paddingXClasses[paddingX]} flex flex-col ${verticalAlignClasses[verticalAlign]} ${className}`}
-      style={bgStyle}
+      style={{ ...bgStyle, ...heroParallaxStyle }}
     >
+      {/* Background with 3D parallax */}
+      {enable3DParallax && parallaxAffectBackground && bgImageUrl && (
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center"
+          style={{ 
+            backgroundImage: `url(${bgImageUrl})`,
+            backgroundPosition,
+            backgroundSize,
+            ...get3DParallaxTransform("background"),
+          }} 
+          aria-hidden="true" 
+        />
+      )}
+      
       {/* Overlay */}
       {backgroundOverlay && bgImageUrl && (
         <div 
@@ -1556,7 +1633,10 @@ export function PremiumHeroRender({
       {/* Content */}
       <div 
         className={`relative z-10 ${maxWidthClasses[maxWidth]} mx-auto w-full`}
-        style={enableMouseParallax ? getParallaxTransform(0) : undefined}
+        style={{
+          ...(enableMouseParallax ? getParallaxTransform(0) : {}),
+          ...(enable3DParallax ? get3DParallaxTransform("content") : {}),
+        }}
       >
         <div className={`flex flex-col ${contentAlignClasses[contentAlign]}`}>
           {badge && (

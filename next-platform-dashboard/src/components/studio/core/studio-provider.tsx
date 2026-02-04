@@ -59,8 +59,8 @@ export function StudioProvider({
   const clearSelection = useSelectionStore((s) => s.clearSelection);
 
   // Initialize modules for this site (Phase STUDIO-14)
-  // isLoadingModules can be used to show loading state while modules are being fetched
-  const { isLoading: _isLoadingModules } = useModuleInitialization(siteId);
+  // Wait for modules to be loaded before rendering the editor
+  const { isLoading: isLoadingModules } = useModuleInitialization(siteId);
   
   // Subscribe to real-time module changes
   useModuleSync(siteId);
@@ -129,6 +129,18 @@ export function StudioProvider({
   }, [isDirty]);
 
   // Note: Keyboard shortcuts are now handled by useStudioShortcuts hook (Phase STUDIO-20)
+
+  // Show loading state while modules are loading
+  if (isLoadingModules) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+          <p className="text-sm text-muted-foreground">Loading modules...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <TutorialProvider>

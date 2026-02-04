@@ -33,7 +33,8 @@ export type AIActionType =
 export interface AIActionConfig {
   id: string;
   label: string;
-  icon: string;
+  icon: string; // Emoji fallback
+  iconName?: string; // Lucide icon name for professional look
   description: string;
   type: AIActionType;
   prompt: string;
@@ -107,6 +108,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "improve-hero-text",
         label: "Improve Headlines",
         icon: "✨",
+        iconName: "wand",
         description: "Make the title and subtitle more compelling",
         type: "text-improvement",
         prompt: "Improve this hero section's title and subtitle to be more compelling and conversion-focused while keeping the same meaning. Make it punchy and memorable.",
@@ -116,6 +118,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "hero-add-video",
         label: "Add Video Background",
         icon: "🎬",
+        iconName: "video",
         description: "Set up for video background",
         type: "style-change",
         prompt: "Configure this hero for a video background with an appropriate dark overlay for text readability",
@@ -125,6 +128,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "hero-split-layout",
         label: "Use Split Layout",
         icon: "📐",
+        iconName: "columns",
         description: "Change to split layout with image",
         type: "layout-adjust",
         prompt: "Convert this hero to use a split layout with content on one side and image on the other",
@@ -134,6 +138,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "hero-make-bold",
         label: "Make Bold & Dramatic",
         icon: "💪",
+        iconName: "maximize",
         description: "Increase impact with bold styling",
         type: "style-change",
         prompt: "Make this hero section more bold and dramatic with larger text, stronger contrast, and full viewport height",
@@ -216,6 +221,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "improve-features",
         label: "Improve Feature Text",
         icon: "✨",
+        iconName: "wand",
         description: "Enhance feature titles and descriptions",
         type: "text-improvement",
         prompt: "Improve all feature titles and descriptions to be more benefit-focused and compelling",
@@ -225,6 +231,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "add-more-features",
         label: "Add More Features",
         icon: "➕",
+        iconName: "plus",
         description: "Generate additional features",
         type: "content-generate",
         prompt: "Generate 2-3 additional features that would complement the existing ones",
@@ -234,6 +241,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "change-layout",
         label: "Change Layout",
         icon: "📐",
+        iconName: "grid",
         description: "Switch between grid layouts",
         type: "layout-adjust",
         prompt: "Suggest a better layout based on the number of features",
@@ -284,6 +292,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "improve-cta",
         label: "Boost Conversion",
         icon: "🚀",
+        iconName: "arrow-right",
         description: "Make CTA more compelling",
         type: "text-improvement",
         prompt: "Improve this CTA section to drive more conversions. Make the headline urgent, the subtitle supportive, and the button action-oriented.",
@@ -320,6 +329,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "add-testimonial",
         label: "Add Testimonial",
         icon: "➕",
+        iconName: "quote",
         description: "Generate a new testimonial",
         type: "content-generate",
         prompt: "Generate a realistic testimonial that matches the existing style",
@@ -702,6 +712,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "improve-text",
         label: "Improve Writing",
         icon: "✨",
+        iconName: "wand",
         description: "Enhance text quality",
         type: "text-improvement",
         prompt: "Improve this text to be clearer and more engaging",
@@ -711,6 +722,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "make-concise",
         label: "Make Concise",
         icon: "✂️",
+        iconName: "minimize",
         description: "Shorten the text",
         type: "text-improvement",
         prompt: "Shorten this text while keeping the key message",
@@ -742,6 +754,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "improve-heading",
         label: "Improve Heading",
         icon: "✨",
+        iconName: "type",
         description: "Make heading more impactful",
         type: "text-improvement",
         prompt: "Make this heading more impactful and memorable",
@@ -773,6 +786,7 @@ export const AI_COMPONENT_CONFIGS: Record<string, AIComponentConfig> = {
         id: "improve-richtext",
         label: "Improve Writing",
         icon: "✨",
+        iconName: "edit",
         description: "Enhance content quality",
         type: "text-improvement",
         prompt: "Improve this content to be clearer, more engaging, and better structured",

@@ -3,17 +3,26 @@
  * 
  * Displays a grid of products from the store catalog.
  * Supports responsive columns and different product sources.
+ * Fetches real data in preview/production mode, shows demo data in editor.
  */
 
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Loader2 } from "lucide-react";
 
 // =============================================================================
 // TYPES
 // =============================================================================
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image?: string;
+  rating?: number;
+}
 
 interface ProductGridProps {
   // Grid settings
@@ -30,6 +39,10 @@ interface ProductGridProps {
   showPrice: boolean;
   showRating: boolean;
   cardVariant: "card" | "minimal";
+  
+  // Editor context props (passed by canvas)
+  _isEditor?: boolean;
+  _siteId?: string;
 }
 
 // =============================================================================
@@ -39,22 +52,73 @@ interface ProductGridProps {
 export function ProductGridBlock({
   columns = { mobile: 2, tablet: 3, desktop: 4 },
   gap = { mobile: "16px" },
-  source: _source = "featured",
+  source = "featured",
   categoryId: _categoryId,
   productIds: _productIds = [],
   limit = 8,
   showRating: _showRating = true,
   showPrice = true,
   cardVariant = "card",
+  _isEditor = false,
+  _siteId,
 }: ProductGridProps) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(!_isEditor);
+  const [error, setError] = useState<string | null>(null);
+  
   // Demo products for editor preview - use deterministic values
-  const demoProducts = Array.from({ length: limit }, (_, i) => ({
+  const demoProducts: Product[] = Array.from({ length: limit }, (_, i) => ({
     id: `demo-${i + 1}`,
     name: `Product ${i + 1}`,
     price: 49.99 + i * 10,
     image: undefined,
-    rating: 4 + (i % 10) * 0.1, // Deterministic rating based on index
+    rating: 4 + (i % 10) * 0.1,
   }));
+  
+  // Fetch real products when not in editor
+  useEffect(() => {
+    if (_isEditor) {
+      setProducts(demoProducts);
+      setIsLoading(false);
+      return;
+    }
+    
+    // Fetch real data
+    async function fetchProducts() {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        const params = new URLSearchParams({
+          source,
+          limit: String(limit),
+        });
+        if (_siteId) params.append("siteId", _siteId);
+        if (_categoryId) params.append("categoryId", _categoryId);
+        
+        const response = await fetch(`/api/modules/ecommerce/products?${params}`);
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+        
+        const data = await response.json();
+        setProducts(data.products || []);
+      } catch (err) {
+        console.error("[ProductGrid] Error fetching products:", err);
+        setError("Failed to load products");
+        // Fallback to demo data on error
+        setProducts(demoProducts);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchProducts();
+  }, [_isEditor, _siteId, source, _categoryId, limit]);
+  
+  // Use products (real or demo)
+  const displayProducts = products.length > 0 ? products : demoProducts;
 
   // Get responsive values
   const columnsValue = typeof columns === "object" ? columns : { mobile: columns };
@@ -68,39 +132,56 @@ export function ProductGridBlock({
 
   return (
     <div className="product-grid-wrapper">
-      <div 
-        className="product-grid"
-        style={gridStyle}
-      >
-        {demoProducts.map((product) => (
-          <div 
-            key={product.id}
-            className={`${cardVariant === "minimal" ? "" : "bg-card border rounded-lg overflow-hidden"} group`}
-          >
-            <div className="aspect-square relative overflow-hidden bg-muted rounded-lg">
-              {product.image ? (
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                />
-              ) : (
-                <div className="w-full h-full bg-muted flex items-center justify-center">
-                  <ShoppingBag className="h-12 w-12 text-muted-foreground" />
-                </div>
-              )}
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )}
+      
+      {/* Error State */}
+      {error && !isLoading && (
+        <div className="text-center py-8 text-muted-foreground">
+          <p>{error}</p>
+        </div>
+      )}
+      
+      {/* Product Grid */}
+      {!isLoading && (
+        <div 
+          className="product-grid"
+          style={gridStyle}
+        >
+          {displayProducts.map((product) => (
+            <div 
+              key={product.id}
+              className={`${cardVariant === "minimal" ? "" : "bg-card border rounded-lg overflow-hidden"} group`}
+            >
+              <div className="aspect-square relative overflow-hidden bg-muted rounded-lg">
+                {product.image ? (
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <ShoppingBag className="h-12 w-12 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+              <div className={cardVariant === "minimal" ? "mt-3" : "p-4"}>
+                <h3 className="font-medium truncate">{product.name}</h3>
+                {showPrice && (
+                  <p className="text-primary font-semibold mt-1">
+                    ${product.price.toFixed(2)}
+                  </p>
+                )}
+              </div>
             </div>
-            <div className={cardVariant === "minimal" ? "mt-3" : "p-4"}>
-              <h3 className="font-medium truncate">{product.name}</h3>
-              {showPrice && (
-                <p className="text-primary font-semibold mt-1">
-                  ${product.price.toFixed(2)}
-                </p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
       
       {/* Responsive CSS */}
       <style jsx>{`

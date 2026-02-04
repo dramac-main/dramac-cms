@@ -23,15 +23,28 @@ const DEFAULT_IMAGE: ImageValue = {
   alt: '',
 };
 
+// Normalize value to always be an ImageValue object
+// Handles both string URLs and ImageValue objects
+function normalizeImageValue(value: string | ImageValue | undefined | null): ImageValue {
+  if (!value) return DEFAULT_IMAGE;
+  if (typeof value === 'string') {
+    return { url: value, alt: '' };
+  }
+  return { url: value.url || '', alt: value.alt || '' };
+}
+
 export function ImageFieldEditor({
-  value = DEFAULT_IMAGE,
+  value: rawValue,
   onChange,
   label,
   description,
   disabled = false,
   accepts = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
 }: ImageFieldEditorProps) {
-  const [urlInput, setUrlInput] = React.useState(value?.url || '');
+  // Normalize the value to always be an ImageValue object
+  const value = React.useMemo(() => normalizeImageValue(rawValue as string | ImageValue | undefined | null), [rawValue]);
+  
+  const [urlInput, setUrlInput] = React.useState(value.url);
   const [isLoading, setIsLoading] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<string>('url');
@@ -39,9 +52,9 @@ export function ImageFieldEditor({
   
   // Sync URL input with value
   React.useEffect(() => {
-    setUrlInput(value?.url || '');
+    setUrlInput(value.url);
     setImageError(false);
-  }, [value?.url]);
+  }, [value.url]);
   
   // Handle URL input change
   const handleUrlChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,7 +65,7 @@ export function ImageFieldEditor({
   
   // Handle URL input blur - commit the change
   const handleUrlBlur = React.useCallback(() => {
-    if (urlInput !== value?.url) {
+    if (urlInput !== value.url) {
       onChange({
         ...value,
         url: urlInput,
@@ -106,7 +119,7 @@ export function ImageFieldEditor({
           const uploadedFile = data.uploaded[0];
           onChange({
             url: uploadedFile.publicUrl,
-            alt: value?.alt || file.name.replace(/\.[^/.]+$/, ''),
+            alt: value.alt || file.name.replace(/\.[^/.]+$/, ''),
           });
         } else {
           throw new Error(data.errors?.[0]?.error || 'Upload failed');
@@ -116,7 +129,7 @@ export function ImageFieldEditor({
         const objectUrl = URL.createObjectURL(file);
         onChange({
           url: objectUrl,
-          alt: value?.alt || file.name.replace(/\.[^/.]+$/, ''),
+          alt: value.alt || file.name.replace(/\.[^/.]+$/, ''),
         });
       }
     } catch {
@@ -124,7 +137,7 @@ export function ImageFieldEditor({
       const objectUrl = URL.createObjectURL(file);
       onChange({
         url: objectUrl,
-        alt: value?.alt || file.name.replace(/\.[^/.]+$/, ''),
+        alt: value.alt || file.name.replace(/\.[^/.]+$/, ''),
       });
     } finally {
       setIsLoading(false);
@@ -178,11 +191,11 @@ export function ImageFieldEditor({
           "relative w-full aspect-video rounded-lg border-2 border-dashed",
           "flex items-center justify-center overflow-hidden",
           "bg-muted/50 transition-colors",
-          !value?.url && "hover:bg-muted hover:border-muted-foreground/50",
+          !value.url && "hover:bg-muted hover:border-muted-foreground/50",
           disabled && "opacity-50 pointer-events-none"
         )}
       >
-        {value?.url && !imageError ? (
+        {value.url && !imageError ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -291,7 +304,7 @@ export function ImageFieldEditor({
       <div className="space-y-1.5">
         <Label className="text-xs text-muted-foreground">Alt Text</Label>
         <Input
-          value={value?.alt || ''}
+          value={value.alt || ''}
           onChange={handleAltChange}
           placeholder="Describe this image"
           disabled={disabled}
