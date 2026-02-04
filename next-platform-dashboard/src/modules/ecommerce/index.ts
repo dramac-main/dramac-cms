@@ -110,6 +110,46 @@ export {
   initializeEcommerceForSite
 } from './actions/ecommerce-actions'
 
+// Order Actions (Phase ECOM-04)
+export {
+  getOrderDetail,
+  getOrders as getOrdersWithFilters,
+  updateOrderStatus as updateOrderStatusDetailed,
+  addOrderNote as addOrderNoteWithTimestamp,
+  deleteOrderNote,
+  addOrderShipment,
+  updateShipmentStatus,
+  createRefund,
+  processRefund,
+  executeOrderBulkAction,
+  generateInvoiceNumber,
+  sendOrderEmail
+} from './actions/order-actions'
+
+// Customer Actions (Phase ECOM-05)
+export {
+  getCustomers,
+  getCustomerDetail,
+  createCustomer,
+  updateCustomer,
+  deleteCustomer,
+  addCustomerAddress,
+  updateCustomerAddress,
+  deleteCustomerAddress,
+  getCustomerGroups,
+  createCustomerGroup,
+  updateCustomerGroup,
+  deleteCustomerGroup,
+  addCustomerToGroup,
+  removeCustomerFromGroup,
+  addCustomerNote,
+  deleteCustomerNote,
+  executeCustomerBulkAction,
+  importCustomers,
+  exportCustomers,
+  getCustomerStats
+} from './actions/customer-actions'
+
 // ============================================================================
 // CONTEXT & HOOKS
 // ============================================================================

@@ -1063,3 +1063,154 @@ export interface PackingSlipData {
   packing_date: string
   notes?: string
 }
+
+// ============================================================================
+// CUSTOMER MANAGEMENT TYPES (Phase ECOM-05)
+// ============================================================================
+
+export type CustomerStatus = 'active' | 'inactive' | 'guest'
+
+export interface Customer {
+  id: string
+  site_id: string
+  agency_id: string
+  user_id?: string // Linked auth user if registered
+  
+  // Contact Info
+  first_name: string
+  last_name: string
+  email: string
+  phone?: string
+  avatar_url?: string
+  
+  // Status
+  status: CustomerStatus
+  is_guest: boolean
+  email_verified: boolean
+  accepts_marketing: boolean
+  
+  // Stats (computed)
+  orders_count: number
+  total_spent: number
+  average_order_value: number
+  last_order_date?: string
+  
+  // Metadata
+  tags: string[]
+  metadata: Record<string, unknown>
+  notes_count: number
+  
+  // Timestamps
+  created_at: string
+  updated_at: string
+  last_seen_at?: string
+}
+
+export interface CustomerAddress {
+  id: string
+  customer_id: string
+  label: string // 'Home', 'Work', 'Billing', 'Shipping'
+  is_default_billing: boolean
+  is_default_shipping: boolean
+  first_name: string
+  last_name: string
+  company?: string
+  address_line_1: string
+  address_line_2?: string
+  city: string
+  state: string
+  postal_code: string
+  country: string
+  phone?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CustomerGroup {
+  id: string
+  site_id: string
+  name: string
+  description?: string
+  discount_percentage?: number
+  color: string
+  member_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface CustomerNote {
+  id: string
+  customer_id: string
+  content: string
+  user_id: string
+  user_name: string
+  created_at: string
+}
+
+export interface CustomerDetailData extends Customer {
+  addresses: CustomerAddress[]
+  groups: CustomerGroup[]
+  notes: CustomerNote[]
+  recent_orders: Order[]
+}
+
+export interface CustomerTableFilters {
+  search: string
+  status: CustomerStatus | 'all'
+  group: string | 'all'
+  hasOrders: boolean | null
+  minSpent: number | null
+  maxSpent: number | null
+  dateFrom: string | null
+  dateTo: string | null
+  acceptsMarketing: boolean | null
+}
+
+export interface CustomerImportRow {
+  first_name: string
+  last_name: string
+  email: string
+  phone?: string
+  company?: string
+  address_line_1?: string
+  city?: string
+  state?: string
+  postal_code?: string
+  country?: string
+  tags?: string
+  accepts_marketing?: boolean
+}
+
+export interface CustomerImportResult {
+  success: boolean
+  imported: number
+  updated: number
+  skipped: number
+  errors: Array<{ row: number; message: string }>
+}
+
+export interface CustomerExportOptions {
+  format: 'csv' | 'xlsx'
+  includeFields: string[]
+  filters?: CustomerTableFilters
+  includeAddresses: boolean
+  includeOrderStats: boolean
+}
+
+export type CustomerBulkAction = 
+  | 'delete'
+  | 'assign_group'
+  | 'remove_group'
+  | 'set_active'
+  | 'set_inactive'
+  | 'export'
+  | 'send_email'
+
+export interface CustomerStats {
+  total: number
+  active: number
+  guests: number
+  withOrders: number
+  newThisMonth: number
+  totalRevenue: number
+}

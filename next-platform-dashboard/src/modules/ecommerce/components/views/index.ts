@@ -1,7 +1,7 @@
 /**
  * E-Commerce Views
  * 
- * Phase EM-52 + ECOM-01: E-Commerce Views
+ * Phase EM-52 + ECOM-01 + ECOM-05: E-Commerce Views
  */
 
 export { ProductsView } from './products-view'
@@ -11,3 +11,4 @@ export { DiscountsView } from './discounts-view'
 export { AnalyticsView } from './analytics-view'
 export { HomeView } from './home-view'
 export { SettingsView } from './settings-view'
+export { CustomersView } from './customers-view'
