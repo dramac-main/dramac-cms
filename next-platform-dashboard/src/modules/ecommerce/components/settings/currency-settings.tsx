@@ -30,7 +30,8 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, Save, X } from 'lucide-react'
 import { toast } from 'sonner'
 import type { CurrencySettings } from '../../types/ecommerce-types'
-import { getSettingsTab, updateCurrencySettings, getCurrencyList } from '../../actions/settings-actions'
+import { getSettingsTab, updateCurrencySettings } from '../../actions/settings-actions'
+import { getCurrencyList } from '../../lib/settings-utils'
 
 // ============================================================================
 // TYPES

@@ -28,7 +28,8 @@ import {
 import { Loader2, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import type { GeneralSettings } from '../../types/ecommerce-types'
-import { getSettingsTab, updateGeneralSettings, getTimezoneList, getCountryList } from '../../actions/settings-actions'
+import { getSettingsTab, updateGeneralSettings } from '../../actions/settings-actions'
+import { getTimezoneList, getCountryList } from '../../lib/settings-utils'
 
 // ============================================================================
 // TYPES
