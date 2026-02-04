@@ -16,6 +16,8 @@ import {
   Inbox,
   BookOpen,
   Search,
+  Server,
+  Mail,
   type LucideIcon,
 } from "lucide-react";
 import type { NavGroup, NavItem } from "./navigation";
@@ -45,6 +47,8 @@ export function getPortalNavigation(
   const mainLinks: PortalNavItem[] = [
     { href: "/portal", label: "Dashboard", icon: LayoutDashboard },
     { href: "/portal/sites", label: "My Sites", icon: Globe },
+    { href: "/portal/domains", label: "Domains", icon: Server },
+    { href: "/portal/email", label: "Email", icon: Mail },
   ];
 
   const featureLinks: PortalNavItem[] = [];

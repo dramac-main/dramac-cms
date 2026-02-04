@@ -215,19 +215,23 @@ export interface Order {
   
   // Customer
   customer_id: string | null
+  customer_name: string
   customer_email: string
   customer_phone: string | null
   
   // Addresses
-  shipping_address: Address
-  billing_address: Address
+  shipping_address: Address | Record<string, string> | null
+  billing_address: Address | Record<string, string> | null
   
   // Amounts
   subtotal: number
   discount_amount: number
   discount_code: string | null
+  discount_total: number
   shipping_amount: number
+  shipping_total: number
   tax_amount: number
+  tax_total: number
   total: number
   currency: string
   
@@ -247,6 +251,7 @@ export interface Order {
   delivered_at: string | null
   
   // Notes
+  notes: string | null
   customer_notes: string | null
   internal_notes: string | null
   
@@ -268,8 +273,11 @@ export interface OrderItem {
   
   product_name: string
   product_sku: string | null
+  variant_name?: string | null
   variant_options: Record<string, string>
+  product_image?: string | null
   image_url: string | null
+  sku?: string | null
   
   quantity: number
   unit_price: number
@@ -934,4 +942,124 @@ export interface EcommerceSettingsComplete {
   notifications: NotificationSettings
   inventory: InventorySettings
   legal: LegalSettings
+}
+
+// ============================================================================
+// ORDER MANAGEMENT TYPES (Phase ECOM-04)
+// ============================================================================
+
+export type OrderEventType = 
+  | 'created'
+  | 'confirmed'
+  | 'payment_received'
+  | 'payment_failed'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cancelled'
+  | 'refund_requested'
+  | 'refund_processed'
+  | 'note_added'
+  | 'status_changed'
+  | 'email_sent'
+
+export interface OrderTimelineEvent {
+  id: string
+  order_id: string
+  event_type: OrderEventType
+  title: string
+  description?: string
+  metadata?: Record<string, unknown>
+  user_id?: string
+  user_name?: string
+  created_at: string
+}
+
+export interface OrderNote {
+  id: string
+  order_id: string
+  content: string
+  is_internal: boolean
+  user_id: string
+  user_name: string
+  created_at: string
+}
+
+export interface OrderShipment {
+  id: string
+  order_id: string
+  carrier: string
+  tracking_number: string
+  tracking_url?: string
+  shipped_at: string
+  delivered_at?: string
+  status: 'pending' | 'in_transit' | 'delivered' | 'failed'
+  items: Array<{
+    order_item_id: string
+    quantity: number
+  }>
+}
+
+export interface OrderRefund {
+  id: string
+  order_id: string
+  amount: number
+  reason: string
+  status: 'pending' | 'approved' | 'processed' | 'rejected'
+  refund_method: 'original_payment' | 'store_credit' | 'other'
+  items?: Array<{
+    order_item_id: string
+    quantity: number
+    amount: number
+  }>
+  processed_at?: string
+  processed_by?: string
+  created_at: string
+}
+
+export interface OrderTableFilters {
+  search: string
+  status: OrderStatus | 'all'
+  paymentStatus: PaymentStatus | 'all'
+  dateFrom: string | null
+  dateTo: string | null
+  minTotal: number | null
+  maxTotal: number | null
+}
+
+export interface OrderBulkAction {
+  action: 'update_status' | 'export' | 'print_invoices' | 'print_labels' | 'archive'
+  orderIds: string[]
+  params?: Record<string, unknown>
+}
+
+export interface OrderDetailData extends Order {
+  timeline: OrderTimelineEvent[]
+  notes: OrderNote[]
+  shipments: OrderShipment[]
+  refunds: OrderRefund[]
+}
+
+export interface InvoiceData {
+  order: Order
+  store: {
+    name: string
+    address: string
+    email: string
+    phone?: string
+    logo?: string
+  }
+  invoice_number: string
+  invoice_date: string
+  due_date?: string
+}
+
+export interface PackingSlipData {
+  order: Order
+  store: {
+    name: string
+    address: string
+  }
+  packing_date: string
+  notes?: string
 }
