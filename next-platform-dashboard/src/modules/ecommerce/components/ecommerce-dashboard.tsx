@@ -1,56 +1,30 @@
 /**
  * E-Commerce Dashboard Main Component
  * 
- * Phase EM-52: E-Commerce Module
+ * Phase ECOM-01: Dashboard Redesign
  * 
- * The main dashboard shell that provides navigation between E-Commerce views
+ * The main dashboard shell with sidebar navigation
  */
 'use client'
 
-import { useState } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useState, useEffect, useCallback } from 'react'
+import { EcommerceSidebar, EcommerceHeader } from './layout'
+import { HomeView } from './views/home-view'
 import { ProductsView } from './views/products-view'
 import { OrdersView } from './views/orders-view'
 import { CategoriesView } from './views/categories-view'
 import { DiscountsView } from './views/discounts-view'
 import { AnalyticsView } from './views/analytics-view'
+import { CommandPalette } from './command-palette'
 import { EcommerceProvider, useEcommerce } from '../context/ecommerce-context'
-import { 
-  Package, 
-  ShoppingCart, 
-  FolderTree,
-  Percent,
-  BarChart3,
-  Search,
-  Plus,
-  RefreshCw,
-  Settings,
-  DollarSign,
-  TrendingUp
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { cn } from '@/lib/utils'
 import { CreateProductDialog } from './dialogs/create-product-dialog'
 import { CreateCategoryDialog } from './dialogs/create-category-dialog'
 import { CreateDiscountDialog } from './dialogs/create-discount-dialog'
 import { EcommerceSettingsDialog } from './dialogs/ecommerce-settings-dialog'
-import type { EcommerceSettings } from '../types/ecommerce-types'
-
-// ============================================================================
-// VIEW TYPE
-// ============================================================================
-
-export type EcommerceView = 'products' | 'orders' | 'categories' | 'discounts' | 'analytics'
+import { ViewProductDialog } from './dialogs/view-product-dialog'
+import { Button } from '@/components/ui/button'
+import { RefreshCw } from 'lucide-react'
+import type { EcommerceView, EcommerceSettings, Product } from '../types/ecommerce-types'
 
 // ============================================================================
 // DASHBOARD PROPS
@@ -67,57 +41,86 @@ interface EcommerceDashboardProps {
 // DASHBOARD CONTENT
 // ============================================================================
 
-function EcommerceDashboardContent({ initialView }: { initialView?: string }) {
+function EcommerceDashboardContent({ 
+  siteId, 
+  initialView 
+}: { 
+  siteId: string
+  initialView?: string 
+}) {
   const { 
     products,
     orders,
-    categories,
-    discounts,
     error, 
     isLoading,
     refresh
   } = useEcommerce()
-  
+
+  // State
   const [activeView, setActiveView] = useState<EcommerceView>(() => {
     if (initialView) {
-      const view = initialView as EcommerceView
-      if (['products', 'orders', 'categories', 'discounts', 'analytics'].includes(view)) {
-        return view
+      const validViews: EcommerceView[] = [
+        'home', 'products', 'orders', 'customers', 'categories', 
+        'discounts', 'quotes', 'analytics', 'settings'
+      ]
+      if (validViews.includes(initialView as EcommerceView)) {
+        return initialView as EcommerceView
       }
     }
-    return 'products'
+    return 'home'
   })
-  const [searchQuery, setSearchQuery] = useState('')
+  
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  
+  // Dialog states
   const [showCreateProduct, setShowCreateProduct] = useState(false)
   const [showCreateCategory, setShowCreateCategory] = useState(false)
   const [showCreateDiscount, setShowCreateDiscount] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null)
+  const [showViewProduct, setShowViewProduct] = useState(false)
 
-  // Calculate summary stats
-  const activeProducts = products.filter(p => p.status === 'active')
-  const draftProducts = products.filter(p => p.status === 'draft')
-  const lowStockProducts = products.filter(p => p.track_inventory && p.quantity <= p.low_stock_threshold)
-  
-  const pendingOrders = orders.filter(o => o.status === 'pending')
-  const _processingOrders = orders.filter(o => o.status === 'processing')
-  
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const todayOrders = orders.filter(o => new Date(o.created_at) >= today)
-  const todayRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0)
-  
-  const activeDiscounts = discounts.filter(d => d.is_active)
+  // Calculate stats for sidebar badges
+  const pendingOrders = orders.filter(o => o.status === 'pending').length
+  const lowStockProducts = products.filter(p => 
+    p.track_inventory && p.quantity <= p.low_stock_threshold
+  ).length
 
-  const handleRefresh = async () => {
+  // Handlers
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true)
     await refresh()
     setIsRefreshing(false)
-  }
+  }, [refresh])
 
+  const handleViewProduct = useCallback((productId: string) => {
+    const product = products.find(p => p.id === productId)
+    if (product) {
+      setViewingProduct(product)
+      setShowViewProduct(true)
+    }
+  }, [products])
+
+  const handleViewOrder = useCallback((_orderId: string) => {
+    // Navigate to orders view and potentially open order detail
+    setActiveView('orders')
+    // TODO: Pass orderId to OrdersView to open detail dialog
+  }, [])
+
+  // Handle settings view navigation
+  useEffect(() => {
+    if (activeView === 'settings') {
+      setShowSettings(true)
+      setActiveView('home') // Return to home after opening settings
+    }
+  }, [activeView])
+
+  // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[50vh] gap-4">
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
         <p className="text-destructive">{error}</p>
         <Button onClick={handleRefresh}>
           <RefreshCw className="h-4 w-4 mr-2" />
@@ -128,251 +131,124 @@ function EcommerceDashboardContent({ initialView }: { initialView?: string }) {
   }
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="border-b px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">E-Commerce Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage products, orders, and your online store
-            </p>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {/* Search */}
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            
-            {/* Quick Actions */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => setShowCreateProduct(true)}>
-                  <Package className="h-4 w-4 mr-2" />
-                  New Product
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowCreateCategory(true)}>
-                  <FolderTree className="h-4 w-4 mr-2" />
-                  New Category
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowCreateDiscount(true)}>
-                  <Percent className="h-4 w-4 mr-2" />
-                  New Discount
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setShowSettings(true)}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Store Settings
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            {/* Refresh */}
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={handleRefresh}
-              disabled={isRefreshing || isLoading}
-            >
-              <RefreshCw className={cn("h-4 w-4", (isRefreshing || isLoading) && "animate-spin")} />
-            </Button>
-          </div>
-        </div>
-        
-        {/* Stats Cards */}
-        <div className="grid grid-cols-5 gap-4 mt-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Package className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Products</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold">{activeProducts.length}</span>
-                    {draftProducts.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{draftProducts.length} draft
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-orange-500/10">
-                  <ShoppingCart className="h-5 w-5 text-orange-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Orders Today</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold">{todayOrders.length}</span>
-                    {pendingOrders.length > 0 && (
-                      <Badge variant="destructive" className="text-xs">
-                        {pendingOrders.length} pending
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-500/10">
-                  <DollarSign className="h-5 w-5 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Today&apos;s Revenue</p>
-                  <span className="text-2xl font-bold">
-                    ${(todayRevenue / 100).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-red-500/10">
-                  <TrendingUp className="h-5 w-5 text-red-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Low Stock</p>
-                  <span className="text-2xl font-bold">{lowStockProducts.length}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-purple-500/10">
-                  <Percent className="h-5 w-5 text-purple-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Active Discounts</p>
-                  <span className="text-2xl font-bold">{activeDiscounts.length}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+    <div className="flex h-screen bg-background">
+      {/* Sidebar */}
+      <EcommerceSidebar
+        activeView={activeView}
+        onViewChange={setActiveView}
+        pendingOrders={pendingOrders}
+        lowStockCount={lowStockProducts}
+        isCollapsed={sidebarCollapsed}
+        onCollapsedChange={setSidebarCollapsed}
+      />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden">
-        <Tabs 
-          value={activeView} 
-          onValueChange={(v) => setActiveView(v as EcommerceView)}
-          className="h-full flex flex-col"
-        >
-          <div className="border-b px-6">
-            <TabsList className="h-12 bg-transparent border-none gap-4">
-              <TabsTrigger value="products" className="data-[state=active]:bg-muted gap-2">
-                <Package className="h-4 w-4" />
-                Products
-                <Badge variant="secondary" className="ml-1">{products.length}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="orders" className="data-[state=active]:bg-muted gap-2">
-                <ShoppingCart className="h-4 w-4" />
-                Orders
-                {pendingOrders.length > 0 && (
-                  <Badge variant="destructive" className="ml-1">{pendingOrders.length}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="categories" className="data-[state=active]:bg-muted gap-2">
-                <FolderTree className="h-4 w-4" />
-                Categories
-                <Badge variant="secondary" className="ml-1">{categories.length}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="discounts" className="data-[state=active]:bg-muted gap-2">
-                <Percent className="h-4 w-4" />
-                Discounts
-                <Badge variant="secondary" className="ml-1">{discounts.length}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="data-[state=active]:bg-muted gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Analytics
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          
-          <div className="flex-1 overflow-auto p-6">
-            <TabsContent value="products" className="mt-0 h-full">
-              <ProductsView 
-                searchQuery={searchQuery} 
-                onCreateProduct={() => setShowCreateProduct(true)}
-              />
-            </TabsContent>
-            
-            <TabsContent value="orders" className="mt-0 h-full">
-              <OrdersView searchQuery={searchQuery} />
-            </TabsContent>
-            
-            <TabsContent value="categories" className="mt-0 h-full">
-              <CategoriesView 
-                searchQuery={searchQuery}
-                onCreateCategory={() => setShowCreateCategory(true)}
-              />
-            </TabsContent>
-            
-            <TabsContent value="discounts" className="mt-0 h-full">
-              <DiscountsView 
-                searchQuery={searchQuery}
-                onCreateDiscount={() => setShowCreateDiscount(true)}
-              />
-            </TabsContent>
-            
-            <TabsContent value="analytics" className="mt-0 h-full">
-              <AnalyticsView />
-            </TabsContent>
-          </div>
-        </Tabs>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <EcommerceHeader
+          currentView={activeView}
+          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+          onCreateProduct={() => setShowCreateProduct(true)}
+          onCreateCategory={() => setShowCreateCategory(true)}
+          onCreateDiscount={() => setShowCreateDiscount(true)}
+          onOpenSettings={() => setShowSettings(true)}
+          onRefresh={handleRefresh}
+          isRefreshing={isRefreshing || isLoading}
+        />
+
+        {/* Content Area */}
+        <main className="flex-1 overflow-auto p-6">
+          {activeView === 'home' && (
+            <HomeView
+              siteId={siteId}
+              onViewOrder={handleViewOrder}
+              onViewProduct={handleViewProduct}
+              onNavigateToOrders={() => setActiveView('orders')}
+              onNavigateToProducts={() => setActiveView('products')}
+            />
+          )}
+
+          {activeView === 'products' && (
+            <ProductsView 
+              onCreateProduct={() => setShowCreateProduct(true)}
+            />
+          )}
+
+          {activeView === 'orders' && (
+            <OrdersView />
+          )}
+
+          {activeView === 'customers' && (
+            <div className="flex items-center justify-center h-64 text-muted-foreground">
+              <p>Customer Management - Coming in Phase ECOM-05</p>
+            </div>
+          )}
+
+          {activeView === 'categories' && (
+            <CategoriesView 
+              onCreateCategory={() => setShowCreateCategory(true)}
+            />
+          )}
+
+          {activeView === 'discounts' && (
+            <DiscountsView 
+              onCreateDiscount={() => setShowCreateDiscount(true)}
+            />
+          )}
+
+          {activeView === 'quotes' && (
+            <div className="flex items-center justify-center h-64 text-muted-foreground">
+              <p>Quotation System - Coming in Wave 2 (Phase ECOM-10+)</p>
+            </div>
+          )}
+
+          {activeView === 'analytics' && (
+            <AnalyticsView />
+          )}
+        </main>
       </div>
-      
+
+      {/* Command Palette */}
+      <CommandPalette
+        open={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+        siteId={siteId}
+        onNavigate={setActiveView}
+        onCreateProduct={() => setShowCreateProduct(true)}
+        onCreateCategory={() => setShowCreateCategory(true)}
+        onCreateDiscount={() => setShowCreateDiscount(true)}
+        onViewProduct={handleViewProduct}
+        onViewOrder={handleViewOrder}
+      />
+
       {/* Dialogs */}
       <CreateProductDialog
         open={showCreateProduct}
         onOpenChange={setShowCreateProduct}
       />
-      
+
       <CreateCategoryDialog
         open={showCreateCategory}
         onOpenChange={setShowCreateCategory}
       />
-      
+
       <CreateDiscountDialog
         open={showCreateDiscount}
         onOpenChange={setShowCreateDiscount}
       />
-      
+
       <EcommerceSettingsDialog
         open={showSettings}
         onOpenChange={setShowSettings}
       />
+
+      {viewingProduct && (
+        <ViewProductDialog
+          open={showViewProduct}
+          onOpenChange={setShowViewProduct}
+          product={viewingProduct}
+        />
+      )}
     </div>
   )
 }
@@ -381,10 +257,19 @@ function EcommerceDashboardContent({ initialView }: { initialView?: string }) {
 // MAIN DASHBOARD WRAPPER
 // ============================================================================
 
-export function EcommerceDashboard({ siteId, agencyId, settings: _settings, initialView }: EcommerceDashboardProps) {
+export function EcommerceDashboard({ 
+  siteId, 
+  agencyId, 
+  settings: _settings, 
+  initialView 
+}: EcommerceDashboardProps) {
   return (
     <EcommerceProvider siteId={siteId} agencyId={agencyId}>
-      <EcommerceDashboardContent initialView={initialView} />
+      <EcommerceDashboardContent 
+        siteId={siteId} 
+        initialView={initialView} 
+      />
     </EcommerceProvider>
   )
 }
+

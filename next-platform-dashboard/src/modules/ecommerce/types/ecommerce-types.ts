@@ -579,3 +579,73 @@ export interface CategoriesResponse {
   data: Category[]
   total: number
 }
+
+// ============================================================================
+// NAVIGATION & DASHBOARD TYPES (PHASE ECOM-01)
+// ============================================================================
+
+export type EcommerceView = 
+  | 'home'
+  | 'products' 
+  | 'orders' 
+  | 'customers'
+  | 'categories' 
+  | 'discounts' 
+  | 'quotes'
+  | 'analytics'
+  | 'settings'
+
+export interface EcommerceNavItem {
+  id: EcommerceView
+  label: string
+  icon: string
+  badge?: number | string
+  badgeVariant?: 'default' | 'destructive' | 'warning' | 'success'
+  children?: EcommerceNavItem[]
+}
+
+export interface DashboardStats {
+  totalRevenue: number
+  revenueChange: number // percentage change from previous period
+  totalOrders: number
+  pendingOrders: number
+  totalProducts: number
+  activeProducts: number
+  draftProducts: number
+  lowStockProducts: number
+  totalCustomers: number
+  newCustomersThisWeek: number
+}
+
+export interface RecentOrderSummary {
+  id: string
+  orderNumber: string
+  customerName: string
+  customerEmail: string
+  total: number
+  currency: string
+  status: OrderStatus
+  paymentStatus: PaymentStatus
+  createdAt: string
+}
+
+export interface LowStockProduct {
+  id: string
+  name: string
+  sku: string | null
+  quantity: number
+  lowStockThreshold: number
+  imageUrl: string | null
+}
+
+export interface ActivityItem {
+  id: string
+  type: 'order' | 'product' | 'customer' | 'review' | 'discount'
+  action: 'created' | 'updated' | 'deleted' | 'status_changed'
+  title: string
+  description: string
+  timestamp: string
+  metadata?: Record<string, unknown>
+}
+
+export type StatsPeriod = 'today' | 'week' | 'month' | 'year'
