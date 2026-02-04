@@ -83,6 +83,16 @@ export {
   useSymbolsByCategory,
 } from "./symbol-store";
 
+// Phase STUDIO-30: Component Variations
+export {
+  useVariationsStore,
+  getVariationCategories,
+  getVariationTags,
+  getVariationCountsByType,
+  type ComponentVariation,
+  type VariationsStore,
+} from "./variations-store";
+
 // Optimized selectors for Phase 21 performance
 export * from "./selectors";
 

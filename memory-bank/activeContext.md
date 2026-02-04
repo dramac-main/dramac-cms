@@ -1,12 +1,40 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: February 3, 2026  
-**Current Phase**: DRAMAC Studio - Wave 10 Emergency Recovery COMPLETE  
+**Current Phase**: DRAMAC Studio - Phase 28/29 Complete + Registry Fix  
 **Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: ALL WAVES COMPLETE ✅**
 
 ---
 
-## � WAVE 8 BUG FIXES (February 3, 2026)
+## 🔧 PHASE 28/29 BUG FIX (February 3, 2026)
+
+### Critical Fix: Component Registry Initialization
+
+**Problem**: After Phase 28/29 implementation, preview and editor showed "Unknown component: X" for ALL components (Container, Navbar, Hero, etc.)
+
+**Root Cause**: `StudioRenderer` and `EditorCanvas` components were calling `getComponent()` before the registry was initialized. The component registry (singleton pattern) needs `initializeRegistry()` to be called before any component lookups work.
+
+**Solution Applied**:
+1. **StudioRenderer** (`src/lib/studio/engine/renderer.tsx`):
+   - Added `useState(isRegistryInitialized())` for tracking
+   - Added `useEffect` to call `initializeRegistry()` on mount if needed
+   - Added loading state while registry initializes
+
+2. **EditorCanvas** (`src/components/studio/canvas/editor-canvas.tsx`):
+   - Same pattern: useState + useEffect for registry initialization
+   - Added loading state before main canvas render
+
+**Commits**:
+- `1f05f1d` - fix: Add registry initialization to StudioRenderer for preview pages
+- `f1059f1` - fix: Add registry initialization to EditorCanvas for consistent component loading
+
+### Files Modified:
+- `src/lib/studio/engine/renderer.tsx` - Auto-initializes registry with loading state
+- `src/components/studio/canvas/editor-canvas.tsx` - Auto-initializes registry with loading state
+
+---
+
+## 🛠️ WAVE 8 BUG FIXES (February 3, 2026)
 
 ### Issues Fixed This Session:
 1. **Tutorial Breaking on Step 2 (Phase 26)**: Added panel visibility enforcement in `tutorial-provider.tsx` - ensures left/right/bottom panels open when tutorial activates and for specific step targets

@@ -51,6 +51,40 @@ export {
   hasModuleImport,
 } from "./module-loader";
 
+// Phase STUDIO-30: Enhanced AI Configurations
+export {
+  AI_COMPONENT_CONFIGS,
+  getAIConfig,
+  getAvailableActions,
+  getSuggestions,
+  getActionableSuggestions,
+  buildAIPrompt,
+  hasAICapabilities,
+  getAIEnabledComponentTypes,
+  type AICapabilityLevel,
+  type AIActionType,
+  type AIActionConfig,
+  type AISuggestion,
+  type AIGenerationTemplate,
+  type AIComponentConfig,
+} from "./ai-configs";
+
+// Phase STUDIO-30: Universal Props System
+export {
+  UNIVERSAL_FIELDS,
+  UNIVERSAL_GROUPS,
+  HOVER_EFFECTS,
+  animationFieldOptions,
+  hoverFieldOptions,
+  delayFieldOptions,
+  getUniversalClasses,
+  getUniversalStyles,
+  extractUniversalProps,
+  hasUniversalProps,
+  type UniversalProps,
+  type HoverEffect,
+} from "./universal-props";
+
 export * from "./hooks";
 
 // =============================================================================
