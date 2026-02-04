@@ -1,6 +1,120 @@
 # Active Context
 
-## Latest Session Update (Phase ECOM-04 Complete - February 4, 2026)
+## Latest Session Update (ECOM Critical Fixes - February 5, 2026)
+
+### Fixed: E-Commerce Wave 1 Phase Completion Issues
+**Date:** February 5, 2026
+
+#### Problems Found:
+1. **Settings Database Schema Mismatch** - The settings actions tried to save to JSON columns (`general_settings`, `currency_settings`, etc.) that didn't exist in the database. Original schema had individual columns (`store_name`, `currency`, etc.).
+
+2. **Customer Management (ECOM-05) Not Integrated** - CustomersView component existed but dashboard showed placeholder text instead of the actual component.
+
+3. **Missing Customer & Order Tables** - Database lacked tables for:
+   - `mod_ecommod01_customers`
+   - `mod_ecommod01_customer_addresses`
+   - `mod_ecommod01_customer_groups`
+   - `mod_ecommod01_customer_group_members`
+   - `mod_ecommod01_customer_notes`
+   - `mod_ecommod01_order_timeline`
+   - `mod_ecommod01_order_notes`
+   - `mod_ecommod01_order_shipments`
+   - `mod_ecommod01_order_refunds`
+
+#### Fixes Applied:
+
+**1. Database Migration Created** (`migrations/ecom-phase-fixes-settings-customers.sql`):
+   - Added 9 JSON settings columns to `mod_ecommod01_settings` table
+   - Created all customer management tables with proper RLS policies
+   - Created all order management tables (timeline, notes, shipments, refunds)
+   - Added indexes for performance
+   - Added triggers for auto-updating stats (customer order count, notes count, group member count)
+
+**2. Dashboard Integration Fixed** (`ecommerce-dashboard.tsx`):
+   - Imported `CustomersView` from views
+   - Replaced placeholder with actual `CustomersView` component
+   - Component receives `siteId`, `agencyId`, `userId`, `userName` props
+
+#### Files Created:
+- `migrations/ecom-phase-fixes-settings-customers.sql` (~400 lines)
+
+#### Files Modified:
+- `src/modules/ecommerce/components/ecommerce-dashboard.tsx` - Integrated CustomersView
+
+#### Action Required:
+**The database migration MUST be run in Supabase SQL Editor:**
+```sql
+-- Run contents of: migrations/ecom-phase-fixes-settings-customers.sql
+```
+
+#### Verification:
+- ✅ TypeScript compiles with zero errors
+- ⏳ Database migration needs to be applied
+
+---
+
+## Previous Session Update (Wave 2 Prompt Created - February 4, 2026)
+
+### Created: ECOMMERCE-WAVE2-PROMPT.md
+**Date:** February 4, 2026  
+**File:** `phases/enterprise-modules/ECOMMERCE-WAVE2-PROMPT.md`
+
+#### Wave 1 Completed (ECOM-01 through ECOM-05):
+All 5 Wave 1 phases have been successfully implemented:
+- ✅ ECOM-01: Dashboard Redesign & Navigation (sidebar, widgets, command palette)
+- ✅ ECOM-02: Product Management Enhancement (TanStack Table, filters, bulk actions, import/export)
+- ✅ ECOM-03: Settings & Configuration Center (9 settings tabs, server actions)
+- ✅ ECOM-04: Order Management Enhancement (order detail dialog, timeline, refunds, invoices)
+- ✅ ECOM-05: Customer Management (customer table, detail dialog, groups, notes)
+
+#### Wave 2 Prompt Created - Quotation System (4 Phases):
+| Phase | Title | Priority | Est. Hours |
+|-------|-------|----------|------------|
+| **ECOM-10** | Quotation Database Schema & Types | 🔴 CRITICAL | 4-5 |
+| **ECOM-11** | Quote Builder & Management | 🔴 CRITICAL | 10-12 |
+| **ECOM-12** | Quote Workflow & Customer Portal | 🟠 HIGH | 8-10 |
+| **ECOM-13** | Quote Templates & Automation | 🟠 HIGH | 6-8 |
+
+#### Wave 2 Features:
+- **ECOM-10**: Database tables (`quotes`, `quote_items`, `quote_activities`, `quote_templates`), TypeScript types
+- **ECOM-11**: Quote builder dialog, quote list view, items editor, product selector, server actions
+- **ECOM-12**: Status workflow, send quote via email, customer portal (public `/quote/[token]`), quote-to-order conversion
+- **ECOM-13**: Quote templates CRUD, create from template, quote settings, automated expiration/reminders
+
+#### Current E-Commerce Module Structure:
+```
+src/modules/ecommerce/
+├── actions/ (6 files: customer, dashboard, ecommerce, order, import-export, settings)
+├── components/
+│   ├── bulk/           # Bulk actions toolbar
+│   ├── customers/      # Customer table, detail dialog
+│   ├── dialogs/        # Product, order, import dialogs
+│   ├── filters/        # Product filters
+│   ├── layout/         # Sidebar, header
+│   ├── orders/         # Order detail, timeline, refund
+│   ├── settings/       # 9 settings components
+│   ├── tables/         # Product data table
+│   ├── views/          # 9 views (home, products, orders, customers, categories, discounts, quotes, analytics, settings)
+│   ├── widgets/        # Stats cards, recent orders, low stock, activity
+│   ├── command-palette.tsx
+│   └── ecommerce-dashboard.tsx
+├── lib/
+│   └── settings-utils.ts
+├── types/
+│   └── ecommerce-types.ts (~1216 lines)
+└── context/
+    └── ecommerce-context.tsx
+```
+
+#### Next Steps:
+1. User gives Wave 2 prompt to AI agent
+2. AI agent generates 4 PHASE documents (ECOM-10, 11, 12, 13)
+3. User implements each phase sequentially
+4. After Wave 2 complete → Wave 3 (Inventory & Analytics)
+
+---
+
+## Previous Session Update (Phase ECOM-04 Complete - February 4, 2026)
 
 ### Completed: Order Management Enhancement
 **Date:** February 4, 2026  

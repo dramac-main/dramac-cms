@@ -12,6 +12,7 @@ import { EcommerceSidebar, EcommerceHeader } from './layout'
 import { HomeView } from './views/home-view'
 import { ProductsView } from './views/products-view'
 import { OrdersView } from './views/orders-view'
+import { CustomersView } from './views/customers-view'
 import { CategoriesView } from './views/categories-view'
 import { DiscountsView } from './views/discounts-view'
 import { AnalyticsView } from './views/analytics-view'
@@ -172,9 +173,12 @@ function EcommerceDashboardContent({
           )}
 
           {activeView === 'customers' && (
-            <div className="flex items-center justify-center h-64 text-muted-foreground">
-              <p>Customer Management - Coming in Phase ECOM-05</p>
-            </div>
+            <CustomersView
+              siteId={siteId}
+              agencyId={agencyId}
+              userId="user-id"
+              userName="Store Manager"
+            />
           )}
 
           {activeView === 'categories' && (
