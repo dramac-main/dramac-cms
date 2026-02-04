@@ -716,3 +716,222 @@ export interface ProductExportOptions {
   includeVariants: boolean
   includeImages: boolean
 }
+
+// ============================================================================
+// SETTINGS CONFIGURATION TYPES (Phase ECOM-03)
+// ============================================================================
+
+export type SettingsTab = 
+  | 'general'
+  | 'currency'
+  | 'tax'
+  | 'shipping'
+  | 'payments'
+  | 'checkout'
+  | 'notifications'
+  | 'inventory'
+  | 'legal'
+
+export interface GeneralSettings {
+  store_name: string
+  store_email: string
+  store_phone: string
+  store_address: {
+    address_line_1: string
+    address_line_2?: string
+    city: string
+    state: string
+    postal_code: string
+    country: string
+  }
+  timezone: string
+  date_format: string
+  time_format: string
+  weight_unit: 'kg' | 'lb' | 'g' | 'oz'
+  dimension_unit: 'cm' | 'in' | 'm' | 'ft'
+}
+
+export interface CurrencySettings {
+  default_currency: string
+  currency_position: 'before' | 'after'
+  currency_symbol: string
+  decimal_separator: string
+  thousand_separator: string
+  decimal_places: number
+  supported_currencies: string[]
+  auto_currency_conversion: boolean
+}
+
+export interface TaxZone {
+  id: string
+  name: string
+  countries: string[]
+  states?: string[]
+  tax_rates: TaxRate[]
+}
+
+export interface TaxRate {
+  id: string
+  name: string
+  rate: number
+  tax_class: string
+  compound: boolean
+  shipping_taxable: boolean
+}
+
+export interface TaxSettings {
+  tax_enabled: boolean
+  prices_include_tax: boolean
+  tax_based_on: 'billing' | 'shipping' | 'store'
+  shipping_tax_class: string
+  display_prices: 'including' | 'excluding'
+  display_in_cart: 'including' | 'excluding' | 'both'
+  tax_rounding_mode: 'round' | 'ceil' | 'floor'
+  tax_zones: TaxZone[]
+}
+
+export interface ShippingZone {
+  id: string
+  name: string
+  regions: string[]
+  methods: ShippingMethod[]
+}
+
+export interface ShippingMethod {
+  id: string
+  name: string
+  type: 'flat_rate' | 'free_shipping' | 'local_pickup' | 'table_rate' | 'carrier_calculated'
+  enabled: boolean
+  cost: number
+  free_shipping_threshold?: number
+  min_order_amount?: number
+  max_order_amount?: number
+  handling_fee?: number
+  tax_status: 'taxable' | 'none'
+  delivery_time?: string
+}
+
+export interface ShippingSettings {
+  enable_shipping: boolean
+  shipping_origin: {
+    address_line_1: string
+    address_line_2?: string
+    city: string
+    state: string
+    postal_code: string
+    country: string
+  }
+  shipping_zones: ShippingZone[]
+  default_package_dimensions: {
+    length: number
+    width: number
+    height: number
+    weight: number
+  }
+  shipping_calculations: 'per_order' | 'per_item' | 'per_class'
+}
+
+export interface PaymentGateway {
+  id: string
+  name: string
+  type: 'stripe' | 'paypal' | 'square' | 'manual' | 'cod' | 'bank_transfer'
+  enabled: boolean
+  test_mode: boolean
+  api_key?: string
+  secret_key?: string
+  webhook_secret?: string
+  additional_settings?: Record<string, unknown>
+}
+
+export interface PaymentSettings {
+  accepted_methods: ('credit_card' | 'paypal' | 'bank_transfer' | 'cod')[]
+  gateways: PaymentGateway[]
+  capture_mode: 'automatic' | 'manual'
+  statement_descriptor: string
+  allow_partial_payments: boolean
+  min_order_amount: number
+  max_order_amount?: number
+}
+
+export interface CheckoutSettings {
+  guest_checkout: boolean
+  require_phone: boolean
+  require_company: boolean
+  address_autocomplete: boolean
+  show_order_notes: boolean
+  terms_page_id?: string
+  privacy_page_id?: string
+  thank_you_page_id?: string
+  checkout_fields: CheckoutField[]
+  express_checkout: {
+    enabled: boolean
+    providers: ('apple_pay' | 'google_pay' | 'paypal_express')[]
+  }
+}
+
+export interface CheckoutField {
+  id: string
+  name: string
+  label: string
+  type: 'text' | 'email' | 'phone' | 'select' | 'checkbox' | 'textarea'
+  required: boolean
+  enabled: boolean
+  position: 'billing' | 'shipping' | 'order'
+  options?: string[]
+}
+
+export interface NotificationTemplate {
+  id: string
+  type: 'order_confirmation' | 'order_shipped' | 'order_delivered' | 'order_cancelled' | 'payment_received' | 'refund_issued' | 'low_stock' | 'back_in_stock' | 'abandoned_cart'
+  enabled: boolean
+  subject: string
+  body: string
+  send_to: 'customer' | 'admin' | 'both'
+}
+
+export interface NotificationSettings {
+  email_from_name: string
+  email_from_address: string
+  email_header_logo?: string
+  email_footer_text: string
+  templates: NotificationTemplate[]
+  admin_notifications: {
+    new_order: boolean
+    low_stock: boolean
+    new_review: boolean
+    refund_request: boolean
+  }
+}
+
+export interface InventorySettings {
+  track_inventory: boolean
+  allow_backorders: 'no' | 'notify' | 'yes'
+  hold_stock_minutes: number
+  low_stock_threshold: number
+  out_of_stock_visibility: 'hide' | 'show' | 'show_marked'
+  stock_display: 'always' | 'low_only' | 'never'
+  manage_stock_status: boolean
+  reserved_stock_expiry_hours: number
+}
+
+export interface LegalSettings {
+  terms_and_conditions: string
+  privacy_policy: string
+  refund_policy: string
+  shipping_policy: string
+  cookie_policy?: string
+  terms_accepted_timestamp_required: boolean
+  minimum_age_verification?: number
+}
+
+export interface EcommerceSettingsComplete {
+  general: GeneralSettings
+  currency: CurrencySettings
+  tax: TaxSettings
+  shipping: ShippingSettings
+  payments: PaymentSettings
+  checkout: CheckoutSettings
+  notifications: NotificationSettings
+  inventory: InventorySettings
+  legal: LegalSettings
+}
