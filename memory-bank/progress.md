@@ -1,13 +1,89 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 4, 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + UI FULLY INTEGRATED ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅**
 **Component Strategy**: Fresh premium components (NOT reusing basic Puck components)
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
 **Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
 
-## 🎉 PROJECT STATUS - ALL COMPONENTS FULLY REGISTERED (59 Total)
+## 🎉 PROJECT STATUS - CRITICAL FIXES APPLIED (59 Components Registered)
+
+---
+
+## �️ IMAGE FIELD SYSTEM FIX (February 4, 2026 - Session 4)
+
+### Root Cause Analysis
+**Problem**: Images weren't displaying on canvas when uploaded via Image field editor
+
+**Root Causes Found**:
+1. **ImageFieldEditor API mismatch**: 
+   - Was using `formData.append('file', file)` but API expected `files`
+   - Was expecting `data.url` response but API returns `data.uploaded[0].publicUrl`
+2. **Render components not using `getImageUrl()` helper**:
+   - Many components used raw image props (e.g., `backgroundImage`, `image`)
+   - These props now receive `ImageValue` objects: `{ url, alt, width?, height? }`
+   - Components needed to call `getImageUrl()` to extract the URL string
+
+### Files Modified
+
+**`src/lib/studio/fields/image-field-editor.tsx`**:
+- Fixed `formData.append('files', file)` (was `'file'`)
+- Fixed response handling: `data.uploaded[0].publicUrl` (was `data.url`)
+
+**`src/lib/studio/blocks/renders.tsx`** - Updated 15+ component interfaces and render functions:
+
+| Component | Props Fixed | Change |
+|-----------|-------------|--------|
+| SectionRender | `backgroundImage` | Added `| ImageValue`, use `getImageUrl()` |
+| HeroRender | fullscreen variant | Use `bgImageUrl` |
+| CTARender | `backgroundImage`, `image` | Both normalized with `getImageUrl()` |
+| ParallaxRender | `backgroundImage` | Use `getImageUrl()` |
+| CardFlip3DRender | `frontImage`, `backImage` | Both normalized |
+| TiltCardRender | `backgroundImage` | Use `bgImageUrl` |
+| QuoteRender | `authorImage` | Use `authorImageUrl` |
+| FooterRender | `logo` | Use `logoUrl` |
+| AvatarRender | `src` | Use `srcUrl` with `getImageAlt()` |
+| SocialProofRender | `platformLogo` | Use `platformLogoUrl` |
+| TestimonialsRender | `testimonials[].image` | Use `getImageUrl()` inline |
+| TeamRender | `members[].image` | Use `getImageUrl()` inline |
+| GalleryRender | `images[].src` | Use `getImageUrl()` inline |
+| CarouselRender | `items[].image` | Use `getImageUrl()` inline |
+| ProductCardRender | `image`, `images[]` | Use `imageUrl` |
+| CartSummaryRender | `items[].image` | Use `getImageUrl()` inline |
+
+### The Pattern Applied
+```tsx
+// 1. Update interface to accept both types
+interface Props {
+  backgroundImage?: string | ImageValue;
+}
+
+// 2. Normalize at start of render function
+const bgImageUrl = getImageUrl(backgroundImage);
+
+// 3. Use normalized URL in JSX
+style={{ backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined }}
+```
+
+---
+
+## �🔧 CRITICAL BUG FIXES (February 4, 2026 - Session 3)
+
+### Fixes Applied
+| Issue | Root Cause | Solution |
+|-------|------------|----------|
+| PricingRender TypeError | Features array format mismatch (objects vs strings) | Handle both formats in render |
+| Can't drop inside containers | No visible droppable zone for containers | Created ContainerDropZone component |
+| Canvas scrolling breaks | `overflow-hidden` with fixed height | Changed to `overflow-y-auto` with `minHeight` |
+| Bottom panel placeholder | "Coming soon" text instead of AI features | Added BottomPanelAIContent with real functionality |
+
+### Files Modified
+- `src/lib/studio/blocks/renders.tsx` - PricingRender fix
+- `src/components/studio/dnd/container-drop-zone.tsx` - NEW component
+- `src/components/studio/dnd/dnd-provider.tsx` - Container drop handling
+- `src/components/studio/canvas/editor-canvas.tsx` - ContainerDropZone integration + scroll fix
+- `src/components/studio/studio-editor.tsx` - Bottom panel AI content
 
 ---
 

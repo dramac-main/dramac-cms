@@ -544,6 +544,9 @@ export interface ComponentDefinition {
   /** Can this component be moved? */
   canMove?: boolean;
   
+  /** Layout direction for container children (vertical or horizontal) */
+  layoutDirection?: "vertical" | "horizontal";
+  
   /** Field groups for organizing in properties panel */
   fieldGroups?: FieldGroup[];
 }

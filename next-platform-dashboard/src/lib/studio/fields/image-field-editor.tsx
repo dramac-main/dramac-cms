@@ -89,13 +89,9 @@ export function ImageFieldEditor({
     setIsLoading(true);
     
     try {
-      // TODO: Integrate with actual media library upload
-      // For now, create a local object URL for preview
-      // In production, this should upload to Supabase storage
-      
-      // Create FormData for upload
+      // Create FormData for upload to media API
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('files', file);  // API expects 'files' (plural)
       
       // Attempt upload to media library API
       const response = await fetch('/api/media/upload', {
@@ -105,14 +101,18 @@ export function ImageFieldEditor({
       
       if (response.ok) {
         const data = await response.json();
-        onChange({
-          url: data.url,
-          alt: value?.alt || file.name.replace(/\.[^/.]+$/, ''),
-          width: data.width,
-          height: data.height,
-        });
+        // API returns: { success, uploaded: [{ name, fileId, publicUrl }], errors }
+        if (data.success && data.uploaded && data.uploaded.length > 0) {
+          const uploadedFile = data.uploaded[0];
+          onChange({
+            url: uploadedFile.publicUrl,
+            alt: value?.alt || file.name.replace(/\.[^/.]+$/, ''),
+          });
+        } else {
+          throw new Error(data.errors?.[0]?.error || 'Upload failed');
+        }
       } else {
-        // Fallback: Use object URL for development
+        // Fallback: Use object URL for development/preview
         const objectUrl = URL.createObjectURL(file);
         onChange({
           url: objectUrl,
@@ -120,7 +120,7 @@ export function ImageFieldEditor({
         });
       }
     } catch {
-      // Fallback: Use object URL for development
+      // Fallback: Use object URL for development/preview
       const objectUrl = URL.createObjectURL(file);
       onChange({
         url: objectUrl,

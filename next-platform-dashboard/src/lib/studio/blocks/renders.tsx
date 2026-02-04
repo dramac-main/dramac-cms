@@ -14,6 +14,7 @@
  */
 
 import React from "react";
+import { getImageUrl, getImageAlt, type ImageValue } from "@/lib/studio/utils/image-helpers";
 
 // ============================================================================
 // RESPONSIVE UTILITIES
@@ -108,7 +109,7 @@ const borderRadiusMap: Record<string, { mobile: string; tablet: string; desktop:
 export interface SectionProps {
   children?: React.ReactNode;
   backgroundColor?: string;
-  backgroundImage?: string;
+  backgroundImage?: string | ImageValue;
   backgroundPosition?: "center" | "top" | "bottom" | "left" | "right";
   backgroundSize?: "cover" | "contain" | "auto";
   backgroundOverlay?: string;
@@ -154,6 +155,9 @@ export function SectionRender({
   id,
   className = "",
 }: SectionProps) {
+  // Normalize backgroundImage to URL string
+  const bgImageUrl = getImageUrl(backgroundImage);
+  
   const pyClasses = getResponsiveClasses(paddingY, paddingYMap);
   const pxClasses = getResponsiveClasses(paddingX, paddingXMap);
 
@@ -182,7 +186,7 @@ export function SectionRender({
       className={`relative w-full ${pyClasses} ${fullHeight ? "min-h-screen flex flex-col " + vAlignClass : ""} ${visibility} ${borderTop ? "border-t" : ""} ${borderBottom ? "border-b" : ""} ${className}`}
       style={{
         backgroundColor: backgroundOverlay ? undefined : backgroundColor,
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
         backgroundPosition,
         backgroundSize,
         minHeight: fullHeight ? "100vh" : minHeight,
@@ -627,7 +631,7 @@ export interface QuoteProps {
   text?: string;
   author?: string;
   authorTitle?: string;
-  authorImage?: string;
+  authorImage?: string | ImageValue;
   borderColor?: string;
   backgroundColor?: string;
   textColor?: string;
@@ -650,6 +654,9 @@ export function QuoteRender({
   id,
   className = "",
 }: QuoteProps) {
+  // Normalize image value
+  const authorImageUrl = getImageUrl(authorImage);
+  
   const sizeStyles = {
     sm: { text: "text-base md:text-lg", author: "text-sm", padding: "p-4 md:p-6", avatar: "w-8 h-8" },
     md: { text: "text-lg md:text-xl lg:text-2xl", author: "text-sm md:text-base", padding: "p-6 md:p-8", avatar: "w-10 h-10" },
@@ -662,7 +669,7 @@ export function QuoteRender({
         <p className={`${sizeStyles.text} italic leading-relaxed`} style={{ color: textColor }}>&ldquo;{text}&rdquo;</p>
         {author && (
           <footer className={`mt-4 ${sizeStyles.author} flex items-center gap-3`}>
-            {authorImage && <img src={authorImage} alt={author} className={`${sizeStyles.avatar} rounded-full object-cover`} />}
+            {authorImageUrl && <img src={authorImageUrl} alt={author} className={`${sizeStyles.avatar} rounded-full object-cover`} />}
             <div>
               <cite className="not-italic font-medium block">— {author}</cite>
               {authorTitle && <span className="opacity-75">{authorTitle}</span>}
@@ -682,7 +689,7 @@ export function QuoteRender({
         <p className={`${sizeStyles.text} leading-relaxed`} style={{ color: textColor }}>{text}</p>
         {author && (
           <footer className={`mt-6 ${sizeStyles.author} flex items-center justify-center gap-3`}>
-            {authorImage && <img src={authorImage} alt={author} className={`${sizeStyles.avatar} rounded-full object-cover`} />}
+            {authorImageUrl && <img src={authorImageUrl} alt={author} className={`${sizeStyles.avatar} rounded-full object-cover`} />}
             <div className="text-center">
               <cite className="not-italic font-semibold block" style={{ color: textColor }}>{author}</cite>
               {authorTitle && <span className="opacity-75">{authorTitle}</span>}
@@ -820,7 +827,7 @@ export function ButtonRender({
 // ============================================================================
 
 export interface ImageProps {
-  src?: string;
+  src?: string | ImageValue;  // Support both string and ImageValue object
   alt?: string;
   width?: "full" | "3/4" | "1/2" | "1/3" | "1/4" | "auto" | number;
   aspectRatio?: "auto" | "square" | "video" | "4/3" | "3/2" | "16/9" | "21/9";
@@ -862,6 +869,10 @@ export function ImageRender({
   id,
   className = "",
 }: ImageProps) {
+  // Normalize image value to URL string
+  const imageUrl = getImageUrl(src) || "/placeholder.svg";
+  const imageAlt = alt || getImageAlt(src, "Image");
+  
   const widthClass = typeof width === "string" ? { full: "w-full", "3/4": "w-3/4", "1/2": "w-1/2", "1/3": "w-1/3", "1/4": "w-1/4", auto: "w-auto" }[width] : "";
   const aspectClass = { auto: "", square: "aspect-square", video: "aspect-video", "4/3": "aspect-[4/3]", "3/2": "aspect-[3/2]", "16/9": "aspect-[16/9]", "21/9": "aspect-[21/9]" }[aspectRatio];
   const fitClass = { contain: "object-contain", cover: "object-cover", fill: "object-fill", none: "object-none" }[objectFit];
@@ -872,8 +883,8 @@ export function ImageRender({
   const imageElement = (
     <img
       id={id}
-      src={src}
-      alt={alt}
+      src={imageUrl}
+      alt={imageAlt}
       loading={loading}
       className={`${widthClass} ${aspectClass} ${fitClass} ${posClass} ${radiusClass} ${shadowClass} ${border ? "border" : ""} ${grayscale ? "grayscale hover:grayscale-0 transition-all duration-300" : ""} ${hoverZoom ? "hover:scale-105 transition-transform duration-300" : ""} ${className}`}
       style={{ borderColor: border ? borderColor : undefined, width: typeof width === "number" ? `${width}px` : undefined }}
@@ -1026,7 +1037,7 @@ export interface HeroProps {
   description?: string;
   variant?: "centered" | "split" | "fullscreen" | "minimal" | "video";
   backgroundColor?: string;
-  backgroundImage?: string;
+  backgroundImage?: string | ImageValue;
   backgroundOverlay?: boolean;
   backgroundOverlayOpacity?: number;
   textColor?: string;
@@ -1035,7 +1046,7 @@ export interface HeroProps {
   primaryButtonColor?: string;
   secondaryButtonText?: string;
   secondaryButtonLink?: string;
-  image?: string;
+  image?: string | ImageValue;
   imageAlt?: string;
   imagePosition?: "left" | "right";
   videoSrc?: string;
@@ -1075,6 +1086,11 @@ export function HeroRender({
   id,
   className = "",
 }: HeroProps) {
+  // Normalize image values
+  const bgImageUrl = getImageUrl(backgroundImage);
+  const heroImageUrl = getImageUrl(image);
+  const heroImageAlt = imageAlt || getImageAlt(image, "Hero image");
+  
   const paddingClasses = {
     sm: "py-12 md:py-16",
     md: "py-16 md:py-24",
@@ -1101,13 +1117,13 @@ export function HeroRender({
         id={id}
         className={`relative w-full ${paddingClasses} ${heightClasses} px-4 flex flex-col justify-center ${className}`}
         style={{
-          backgroundColor: backgroundImage ? undefined : backgroundColor,
-          backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+          backgroundColor: bgImageUrl ? undefined : backgroundColor,
+          backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
       >
-        {backgroundImage && backgroundOverlay && (
+        {bgImageUrl && backgroundOverlay && (
           <div className="absolute inset-0 bg-black" style={{ opacity: backgroundOverlayOpacity / 100 }} aria-hidden="true" />
         )}
         <div className={`relative z-10 max-w-4xl mx-auto flex flex-col ${alignClasses}`}>
@@ -1183,7 +1199,7 @@ export function HeroRender({
             </div>
           </div>
           <div className={`${imageOrder}`}>
-            {image && <img src={image} alt={imageAlt} className="w-full h-auto rounded-xl shadow-2xl" loading="lazy" />}
+            {heroImageUrl && <img src={heroImageUrl} alt={heroImageAlt} className="w-full h-auto rounded-xl shadow-2xl" loading="lazy" />}
           </div>
         </div>
       </section>
@@ -1204,7 +1220,7 @@ export function HeroRender({
           muted
           loop
           playsInline
-          poster={backgroundImage}
+          poster={bgImageUrl}
         >
           <source src={videoSrc} type="video/mp4" />
           {/* Fallback to background image if video doesn't load */}
@@ -1277,13 +1293,13 @@ export function HeroRender({
       id={id}
       className={`relative w-full min-h-screen flex items-center justify-center px-4 ${className}`}
       style={{
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundColor,
       }}
     >
-      {backgroundOverlay && <div className="absolute inset-0 bg-black" style={{ opacity: backgroundOverlayOpacity / 100 }} aria-hidden="true" />}
+      {bgImageUrl && backgroundOverlay && <div className="absolute inset-0 bg-black" style={{ opacity: backgroundOverlayOpacity / 100 }} aria-hidden="true" />}
       <div className={`relative z-10 max-w-4xl mx-auto flex flex-col ${alignClasses}`}>
         {badge && <span className="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm font-medium text-white mb-4 md:mb-6" style={{ backgroundColor: badgeColor }}>{badge}</span>}
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight" style={{ color: textColor || "#ffffff" }}>{title}</h1>
@@ -1390,11 +1406,11 @@ export interface CTAProps {
   backgroundColor?: string;
   backgroundGradientFrom?: string;
   backgroundGradientTo?: string;
-  backgroundImage?: string;
+  backgroundImage?: string | ImageValue;
   textColor?: string;
   paddingY?: "sm" | "md" | "lg" | "xl";
   borderRadius?: "none" | "lg" | "xl" | "2xl";
-  image?: string;
+  image?: string | ImageValue;
   imageAlt?: string;
   id?: string;
   className?: string;
@@ -1421,17 +1437,21 @@ export function CTARender({
   id,
   className = "",
 }: CTAProps) {
+  // Normalize image values
+  const bgImageUrl = getImageUrl(backgroundImage);
+  const ctaImageUrl = getImageUrl(image);
+  
   const paddingClasses = { sm: "py-12 md:py-16", md: "py-16 md:py-20", lg: "py-20 md:py-28", xl: "py-24 md:py-32" }[paddingY];
   const radiusClasses = { none: "", lg: "rounded-lg", xl: "rounded-xl", "2xl": "rounded-2xl" }[borderRadius];
 
   const bgStyle: React.CSSProperties = variant === "gradient"
     ? { background: `linear-gradient(135deg, ${backgroundGradientFrom}, ${backgroundGradientTo})` }
-    : backgroundImage
-      ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover", backgroundPosition: "center" }
+    : bgImageUrl
+      ? { backgroundImage: `url(${bgImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
       : { backgroundColor };
 
   // Split variant
-  if (variant === "split" && image) {
+  if (variant === "split" && ctaImageUrl) {
     return (
       <section id={id} className={`w-full ${paddingClasses} px-4 ${className}`}>
         <div className={`max-w-screen-xl mx-auto grid md:grid-cols-2 gap-8 md:gap-12 items-center p-8 md:p-12 ${radiusClasses}`} style={bgStyle}>
@@ -1444,7 +1464,7 @@ export function CTARender({
             </div>
           </div>
           <div className="hidden md:block">
-            <img src={image} alt={imageAlt} className="w-full h-auto rounded-lg shadow-xl" loading="lazy" />
+            <img src={ctaImageUrl} alt={imageAlt} className="w-full h-auto rounded-lg shadow-xl" loading="lazy" />
           </div>
         </div>
       </section>
@@ -1454,7 +1474,7 @@ export function CTARender({
   // Centered (default)
   return (
     <section id={id} className={`relative w-full ${paddingClasses} px-4 ${radiusClasses} ${className}`} style={bgStyle}>
-      {backgroundImage && <div className="absolute inset-0 bg-black/50" aria-hidden="true" />}
+      {bgImageUrl && <div className="absolute inset-0 bg-black/50" aria-hidden="true" />}
       <div className="relative z-10 max-w-3xl mx-auto text-center">
         <h2 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 md:mb-6" style={{ color: textColor }}>{title}</h2>
         <p className="text-base md:text-lg lg:text-xl mb-6 md:mb-8 opacity-90" style={{ color: textColor }}>{description}</p>
@@ -1478,7 +1498,7 @@ export interface TestimonialsProps {
     author?: string;
     role?: string;
     company?: string;
-    image?: string;
+    image?: string | ImageValue;
     rating?: number;
   }>;
   columns?: 1 | 2 | 3;
@@ -1534,7 +1554,7 @@ export function TestimonialsRender({
                 &ldquo;{testimonial.quote}&rdquo;
               </blockquote>
               <div className="flex items-center gap-4">
-                {testimonial.image && <img src={testimonial.image} alt={testimonial.author} className="w-12 h-12 rounded-full object-cover" loading="lazy" />}
+                {getImageUrl(testimonial.image) && <img src={getImageUrl(testimonial.image)!} alt={testimonial.author} className="w-12 h-12 rounded-full object-cover" loading="lazy" />}
                 <div>
                   <p className="font-semibold" style={{ color: textColor }}>{testimonial.author}</p>
                   {(testimonial.role || testimonial.company) && (
@@ -1703,7 +1723,7 @@ export interface TeamProps {
     name?: string;
     role?: string;
     bio?: string;
-    image?: string;
+    image?: string | ImageValue;
     linkedin?: string;
     twitter?: string;
     email?: string;
@@ -1748,7 +1768,7 @@ export function TeamRender({
         <div className={`grid grid-cols-2 ${colClasses} gap-6 md:gap-8`}>
           {members.map((member, i) => (
             <div key={i} className={`text-center ${variant === "cards" ? "p-6 rounded-xl shadow-sm hover:shadow-lg transition-shadow" : ""}`} style={variant === "cards" ? { backgroundColor: cardBackgroundColor } : undefined}>
-              <img src={member.image || "/placeholder-avatar.svg"} alt={member.name} className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-full mx-auto mb-4 object-cover" loading="lazy" />
+              <img src={getImageUrl(member.image) || "/placeholder-avatar.svg"} alt={member.name} className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-full mx-auto mb-4 object-cover" loading="lazy" />
               <h3 className="text-base md:text-lg font-semibold mb-1" style={{ color: textColor }}>{member.name}</h3>
               <p className="text-sm opacity-75 mb-2" style={{ color: textColor }}>{member.role}</p>
               {variant === "detailed" && member.bio && <p className="text-sm opacity-60 mb-3" style={{ color: textColor }}>{member.bio}</p>}
@@ -1775,7 +1795,7 @@ export interface GalleryProps {
   title?: string;
   subtitle?: string;
   images?: Array<{
-    src?: string;
+    src?: string | ImageValue;
     alt?: string;
     caption?: string;
     link?: string;
@@ -1826,10 +1846,12 @@ export function GalleryRender({
           </div>
         )}
         <div className={`grid grid-cols-2 ${colClasses} ${gapClasses}`}>
-          {images.map((image, i) => (
+          {images.map((image, i) => {
+            const imageSrc = getImageUrl(image.src);
+            return (
             <div key={i} className={`relative overflow-hidden ${radiusClasses} group`}>
               <img
-                src={image.src || "/placeholder.svg"}
+                src={imageSrc || "/placeholder.svg"}
                 alt={image.alt || `Gallery image ${i + 1}`}
                 className={`w-full h-full object-cover ${aspectClasses} transition-transform duration-300 ${hoverClasses}`}
                 loading="lazy"
@@ -1841,140 +1863,309 @@ export function GalleryRender({
               )}
               {image.link && <a href={image.link} className="absolute inset-0" aria-label={image.alt || "View image"} />}
             </div>
-          ))}
+          )})}
         </div>
       </div>
     </section>
   );
 }
 // ============================================================================
-// NAVBAR - Responsive Navigation with Mobile Hamburger Menu (PHASE-STUDIO-29)
+// NAVBAR - Professional Navigation (Wix Studio Style)
 // ============================================================================
 
 export interface NavbarProps {
-  logo?: string;
+  // Logo
+  logo?: string | ImageValue;
   logoText?: string;
   logoLink?: string;
+  logoHeight?: number;
+  logoPosition?: "left" | "center";
+  
+  // Navigation Links
   links?: Array<{
     label?: string;
+    text?: string;
     href?: string;
-    children?: Array<{ label?: string; href?: string }>;
+    icon?: string;
   }>;
+  linkAlignment?: "left" | "center" | "right";
+  linkSpacing?: "sm" | "md" | "lg";
+  linkSize?: "sm" | "md" | "lg";
+  linkWeight?: "normal" | "medium" | "semibold" | "bold";
+  linkHoverStyle?: "opacity" | "underline" | "color";
+  
+  // CTA Button
   ctaText?: string;
   ctaLink?: string;
+  ctaVariant?: "solid" | "outline" | "ghost";
   ctaColor?: string;
+  ctaSize?: "sm" | "md" | "lg";
+  ctaRadius?: "none" | "sm" | "md" | "lg" | "full";
+  showCtaOnMobile?: boolean;
+  
+  // Secondary CTA
+  secondaryCtaText?: string;
+  secondaryCtaLink?: string;
+  secondaryCtaVariant?: "solid" | "outline" | "ghost";
+  
+  // Layout
+  layout?: "standard" | "centered" | "split";
+  maxWidth?: "full" | "container" | "narrow";
+  height?: "sm" | "md" | "lg";
+  paddingX?: "sm" | "md" | "lg";
+  
+  // Style
   backgroundColor?: string;
   textColor?: string;
+  borderBottom?: boolean;
+  borderColor?: string;
+  shadow?: "none" | "sm" | "md" | "lg";
+  
+  // Behavior
   sticky?: boolean;
   transparent?: boolean;
-  variant?: "simple" | "centered" | "split";
+  blurBackground?: boolean;
+  hideOnScroll?: boolean;
+  
+  // Mobile Menu
+  mobileBreakpoint?: "sm" | "md" | "lg";
+  mobileMenuPosition?: "left" | "right" | "full";
+  mobileMenuAnimation?: "slide" | "fade" | "scale";
+  showOverlay?: boolean;
+  
   id?: string;
   className?: string;
+  _breakpoint?: "mobile" | "tablet" | "desktop";
+  _isEditor?: boolean;
 }
 
-// Client-side Navbar with state for mobile menu
 function NavbarWithMenu({
   logo,
   logoText = "Logo",
   logoLink = "/",
+  logoHeight = 40,
+  logoPosition = "left",
   links = [],
+  linkAlignment = "right",
+  linkSpacing = "md",
+  linkSize = "md",
+  linkWeight = "medium",
+  linkHoverStyle = "opacity",
   ctaText,
   ctaLink = "#",
+  ctaVariant = "solid",
   ctaColor = "#3b82f6",
+  ctaSize = "md",
+  ctaRadius = "md",
+  showCtaOnMobile = true,
+  secondaryCtaText,
+  secondaryCtaLink = "#",
+  secondaryCtaVariant = "outline",
+  layout = "standard",
+  maxWidth = "container",
+  height = "md",
+  paddingX = "md",
   backgroundColor = "#ffffff",
-  textColor = "#374151",
+  textColor = "#1f2937",
+  borderBottom = false,
+  borderColor = "#e5e7eb",
+  shadow = "sm",
   sticky = true,
   transparent = false,
-  variant = "simple",
+  blurBackground = false,
+  hideOnScroll = false,
+  mobileBreakpoint = "md",
+  mobileMenuPosition = "full",
+  mobileMenuAnimation = "slide",
+  showOverlay = true,
   id,
   className = "",
+  _breakpoint = "desktop",
+  _isEditor = false,
 }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   
+  const logoUrl = getImageUrl(logo);
+  const logoAlt = logoText || getImageAlt(logo, "Logo");
+  
+  // Responsive behavior
+  const isMobile = _isEditor ? _breakpoint === "mobile" : false;
+  const showMobileMenu = _isEditor ? isMobile : true;
+  const showDesktopNav = _isEditor ? !isMobile : true;
+  
+  // Style calculations
+  const heightClasses = { sm: "h-14", md: "h-16", lg: "h-20" }[height];
+  const paddingClasses = { sm: "px-4", md: "px-6", lg: "px-8" }[paddingX];
+  const maxWidthClasses = { full: "max-w-none", container: "max-w-7xl mx-auto", narrow: "max-w-5xl mx-auto" }[maxWidth];
+  const shadowClasses = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg" }[shadow];
+  const linkSpacingClass = { sm: "gap-4", md: "gap-6", lg: "gap-8" }[linkSpacing];
+  const linkSizeClass = { sm: "text-sm", md: "text-base", lg: "text-lg" }[linkSize];
+  const linkWeightClass = { normal: "font-normal", medium: "font-medium", semibold: "font-semibold", bold: "font-bold" }[linkWeight];
+  const ctaSizeClasses = { sm: "px-3 py-1.5 text-sm", md: "px-4 py-2 text-base", lg: "px-6 py-3 text-lg" }[ctaSize];
+  const ctaRadiusClass = { none: "rounded-none", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", full: "rounded-full" }[ctaRadius];
+  
+  const linkHoverClass = {
+    opacity: "hover:opacity-70 transition-opacity",
+    underline: "hover:underline underline-offset-4",
+    color: "hover:opacity-80 transition-colors"
+  }[linkHoverStyle];
+  
+  const navBgStyle: React.CSSProperties = {
+    backgroundColor: transparent ? "transparent" : backgroundColor,
+    backdropFilter: blurBackground ? "blur(10px)" : undefined,
+  };
+  
   return (
-    <nav
-      id={id}
-      className={`w-full z-50 ${sticky ? "sticky top-0" : ""} ${transparent ? "bg-transparent" : "shadow-sm"} ${className}`}
-      style={{ backgroundColor: transparent ? "transparent" : backgroundColor }}
-    >
-      <div className="max-w-screen-xl mx-auto px-4 py-3 md:py-4 flex items-center justify-between">
-        <a href={logoLink} className="flex items-center gap-2">
-          {logo && <img src={logo} alt={logoText} className="h-8 md:h-10 w-auto" />}
-          {!logo && <span className="text-xl md:text-2xl font-bold" style={{ color: textColor }}>{logoText}</span>}
-        </a>
-        <div className="hidden md:flex items-center gap-6 lg:gap-8">
-          {links.map((link, i) => (
-            <a key={i} href={link.href || "#"} className="text-sm lg:text-base font-medium hover:opacity-75 transition-opacity" style={{ color: textColor }}>
-              {link.label}
-            </a>
-          ))}
-        </div>
-        <div className="flex items-center gap-4">
-          {ctaText && (
-            <a href={ctaLink} className="hidden md:inline-flex items-center px-4 py-2 text-sm font-medium text-white rounded-lg transition-opacity hover:opacity-90" style={{ backgroundColor: ctaColor }}>
-              {ctaText}
+    <>
+      <nav
+        id={id}
+        className={`w-full z-50 ${sticky ? "sticky top-0" : ""} ${shadowClasses} ${borderBottom ? "border-b" : ""} ${className}`}
+        style={{ ...navBgStyle, borderColor }}
+      >
+        <div className={`${heightClasses} ${paddingClasses} ${maxWidthClasses} flex items-center ${layout === "centered" ? "justify-center" : "justify-between"}`}>
+          {/* Logo */}
+          {(layout === "standard" || layout === "split") && (
+            <a href={logoLink} className="flex items-center gap-2 shrink-0">
+              {logoUrl && <img src={logoUrl} alt={logoAlt} style={{ height: logoHeight }} className="w-auto" />}
+              {!logoUrl && <span className="text-xl font-bold" style={{ color: textColor }}>{logoText}</span>}
             </a>
           )}
-          {/* Hamburger Menu Button */}
-          <button 
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors" 
-            aria-label="Toggle menu"
-            aria-expanded={mobileMenuOpen}
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: textColor }}>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: textColor }}>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+          
+          {/* Desktop Navigation */}
+          {showDesktopNav && (
+            <div className={`hidden md:flex items-center ${linkSpacingClass} ${linkAlignment === "center" ? "flex-1 justify-center" : linkAlignment === "right" ? "flex-1 justify-end" : ""}`}>
+              {links.map((link, i) => (
+                <a 
+                  key={i} 
+                  href={link.href || "#"} 
+                  className={`${linkSizeClass} ${linkWeightClass} ${linkHoverClass}`}
+                  style={{ color: textColor }}
+                >
+                  {link.label || link.text || `Link ${i + 1}`}
+                </a>
+              ))}
+            </div>
+          )}
+          
+          {/* CTA Buttons */}
+          <div className="flex items-center gap-3">
+            {secondaryCtaText && showDesktopNav && (
+              <a
+                href={secondaryCtaLink}
+                className={`hidden md:inline-flex items-center ${ctaSizeClasses} ${ctaRadiusClass} font-medium transition-all
+                  ${secondaryCtaVariant === "solid" ? "text-white" : ""}
+                  ${secondaryCtaVariant === "outline" ? "border-2" : ""}
+                  ${secondaryCtaVariant === "ghost" ? "hover:bg-gray-100" : ""}
+                `}
+                style={{
+                  backgroundColor: secondaryCtaVariant === "solid" ? ctaColor : "transparent",
+                  borderColor: secondaryCtaVariant === "outline" ? ctaColor : undefined,
+                  color: secondaryCtaVariant !== "solid" ? ctaColor : "#ffffff",
+                }}
+              >
+                {secondaryCtaText}
+              </a>
             )}
-          </button>
+            
+            {ctaText && (
+              <a
+                href={ctaLink}
+                className={`${showCtaOnMobile ? "" : "hidden md:inline-flex"} ${showCtaOnMobile ? "inline-flex" : ""} items-center ${ctaSizeClasses} ${ctaRadiusClass} font-medium transition-all
+                  ${ctaVariant === "solid" ? "text-white hover:opacity-90" : ""}
+                  ${ctaVariant === "outline" ? "border-2 hover:bg-opacity-10" : ""}
+                  ${ctaVariant === "ghost" ? "hover:bg-gray-100" : ""}
+                `}
+                style={{
+                  backgroundColor: ctaVariant === "solid" ? ctaColor : "transparent",
+                  borderColor: ctaVariant === "outline" ? ctaColor : undefined,
+                  color: ctaVariant !== "solid" ? ctaColor : "#ffffff",
+                }}
+              >
+                {ctaText}
+              </a>
+            )}
+            
+            {/* Hamburger Button */}
+            {showMobileMenu && (
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                aria-label="Toggle menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                {mobileMenuOpen ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: textColor }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: textColor }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      </nav>
       
       {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div 
-          className="md:hidden fixed inset-0 top-[56px] bg-black/50 z-40 animate-in fade-in duration-200"
+      {mobileMenuOpen && showOverlay && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
       
       {/* Mobile Menu Panel */}
-      <div 
-        className={`md:hidden absolute left-0 right-0 top-full overflow-hidden transition-all duration-300 ease-in-out ${
-          mobileMenuOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
+      <div
+        className={`fixed top-[${parseInt(heightClasses.match(/\d+/)?.[0] || "16") * 4}px] ${mobileMenuPosition === "left" ? "left-0" : mobileMenuPosition === "right" ? "right-0" : "left-0 right-0"} bottom-0 z-50 md:hidden transform transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? "translate-x-0" : mobileMenuPosition === "right" ? "translate-x-full" : "-translate-x-full"
         }`}
-        style={{ backgroundColor }}
+        style={{ backgroundColor, maxWidth: mobileMenuPosition === "full" ? "100%" : "320px" }}
       >
-        <div className="px-4 py-4 space-y-2 border-t" style={{ borderColor: `${textColor}20` }}>
+        <div className="h-full overflow-y-auto p-6 space-y-1">
           {links.map((link, i) => (
-            <a 
-              key={i} 
-              href={link.href || "#"} 
-              className="block py-3 px-4 text-base font-medium rounded-lg hover:bg-gray-100 transition-colors"
-              style={{ color: textColor }}
+            <a
+              key={i}
+              href={link.href || "#"}
               onClick={() => setMobileMenuOpen(false)}
+              className="block px-4 py-3 rounded-lg text-base font-medium hover:bg-gray-100 transition-colors"
+              style={{ color: textColor }}
             >
-              {link.label}
+              {link.label || link.text || `Link ${i + 1}`}
             </a>
           ))}
-          {ctaText && (
-            <a 
-              href={ctaLink} 
-              className="block w-full py-3 px-4 mt-4 text-base font-medium text-white text-center rounded-lg transition-opacity hover:opacity-90"
-              style={{ backgroundColor: ctaColor }}
+          
+          {secondaryCtaText && (
+            <a
+              href={secondaryCtaLink}
               onClick={() => setMobileMenuOpen(false)}
+              className={`block w-full px-4 py-3 mt-4 text-center rounded-lg font-medium transition-all ${
+                secondaryCtaVariant === "outline" ? "border-2" : ""
+              }`}
+              style={{
+                backgroundColor: secondaryCtaVariant === "solid" ? ctaColor : "transparent",
+                borderColor: secondaryCtaVariant === "outline" ? ctaColor : undefined,
+                color: secondaryCtaVariant === "solid" ? "#ffffff" : ctaColor,
+              }}
+            >
+              {secondaryCtaText}
+            </a>
+          )}
+          
+          {!showCtaOnMobile && ctaText && (
+            <a
+              href={ctaLink}
+              onClick={() => setMobileMenuOpen(false)}
+              className="block w-full px-4 py-3 mt-4 text-center rounded-lg font-medium text-white transition-opacity hover:opacity-90"
+              style={{ backgroundColor: ctaColor }}
             >
               {ctaText}
             </a>
           )}
         </div>
       </div>
-    </nav>
+    </>
   );
 }
 
@@ -1987,7 +2178,7 @@ export function NavbarRender(props: NavbarProps) {
 // ============================================================================
 
 export interface FooterProps {
-  logo?: string;
+  logo?: string | ImageValue;
   logoText?: string;
   description?: string;
   columns?: Array<{
@@ -2033,6 +2224,9 @@ export function FooterRender({
   id,
   className = "",
 }: FooterProps) {
+  // Normalize logo image
+  const logoUrl = getImageUrl(logo);
+  
   const paddingClasses = { sm: "py-8 md:py-12", md: "py-12 md:py-16", lg: "py-16 md:py-20" }[paddingY];
 
   const SocialIcon = ({ platform }: { platform?: string }) => {
@@ -2053,8 +2247,8 @@ export function FooterRender({
         {variant === "columns" && columns.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
             <div className="col-span-2 md:col-span-1 lg:col-span-2">
-              {logo && <img src={logo} alt={logoText} className="h-8 mb-4" />}
-              {!logo && <p className="text-xl font-bold mb-4" style={{ color: textColor }}>{logoText}</p>}
+              {logoUrl && <img src={logoUrl} alt={logoText} className="h-8 mb-4" />}
+              {!logoUrl && <p className="text-xl font-bold mb-4" style={{ color: textColor }}>{logoText}</p>}
               {description && <p className="text-sm opacity-75 mb-4 max-w-xs" style={{ color: textColor }}>{description}</p>}
               {socialLinks.length > 0 && (
                 <div className="flex gap-4">
@@ -2487,7 +2681,7 @@ export function NewsletterRender({
 
 export interface CarouselProps {
   items?: Array<{
-    image?: string;
+    image?: string | ImageValue;
     title?: string;
     description?: string;
     link?: string;
@@ -2526,9 +2720,11 @@ export function CarouselRender({
   return (
     <div id={id} className={`relative overflow-hidden ${radiusClasses} ${className}`}>
       <div className={`flex transition-transform duration-500 ${aspectClasses}`}>
-        {items.map((item, i) => (
+        {items.map((item, i) => {
+          const itemImageUrl = getImageUrl(item.image);
+          return (
           <div key={i} className="flex-none w-full h-full relative">
-            <img src={item.image || "/placeholder.svg"} alt={item.title || `Slide ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
+            <img src={itemImageUrl || "/placeholder.svg"} alt={item.title || `Slide ${i + 1}`} className="w-full h-full object-cover" loading="lazy" />
             {overlay && <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${overlayOpacity / 100})` }} />}
             {(item.title || item.description) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
@@ -2538,7 +2734,7 @@ export function CarouselRender({
               </div>
             )}
           </div>
-        ))}
+        )})}
       </div>
       {showArrows && items.length > 1 && (
         <>
@@ -2701,14 +2897,19 @@ export function PricingRender({
                 {plan.period && <span className="text-sm opacity-75 ml-1" style={{ color: textColor }}>/{plan.period}</span>}
               </div>
               <ul className="space-y-3 mb-8">
-                {(plan.features || []).map((feature, j) => (
-                  <li key={j} className="flex items-start gap-3 text-sm" style={{ color: textColor }}>
-                    <svg className="w-5 h-5 flex-shrink-0 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {feature}
-                  </li>
-                ))}
+                {(Array.isArray(plan.features) ? plan.features : []).map((feature: string | { text?: string; label?: string }, j: number) => {
+                  // Handle both string array and object array formats
+                  const featureText = typeof feature === 'string' ? feature : (feature?.text || feature?.label || '');
+                  if (!featureText) return null;
+                  return (
+                    <li key={j} className="flex items-start gap-3 text-sm" style={{ color: textColor }}>
+                      <svg className="w-5 h-5 flex-shrink-0 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      {featureText}
+                    </li>
+                  );
+                })}
               </ul>
               <a
                 href={plan.buttonLink || "#"}
@@ -2988,7 +3189,7 @@ export function BadgeRender({
 // ============================================================================
 
 export interface AvatarProps {
-  src?: string;
+  src?: string | ImageValue;
   alt?: string;
   name?: string;
   size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
@@ -3016,6 +3217,10 @@ export function AvatarRender({
   id,
   className = "",
 }: AvatarProps) {
+  // Normalize src image
+  const srcUrl = getImageUrl(src);
+  const srcAlt = getImageAlt(src) || alt;
+  
   const sizeClasses = { xs: "w-6 h-6 text-xs", sm: "w-8 h-8 text-xs", md: "w-10 h-10 text-sm", lg: "w-12 h-12 text-base", xl: "w-16 h-16 text-lg", "2xl": "w-20 h-20 text-xl" }[size];
   const shapeClasses = { circle: "rounded-full", rounded: "rounded-lg", square: "rounded-none" }[shape];
   const statusSizeClasses = { xs: "w-1.5 h-1.5", sm: "w-2 h-2", md: "w-2.5 h-2.5", lg: "w-3 h-3", xl: "w-3.5 h-3.5", "2xl": "w-4 h-4" }[size];
@@ -3026,8 +3231,8 @@ export function AvatarRender({
 
   return (
     <div id={id} className={`relative inline-flex ${className}`}>
-      {src ? (
-        <img src={src} alt={alt} className={`${sizeClasses} ${shapeClasses} object-cover ${border ? "ring-2 ring-white" : ""}`} loading="lazy" />
+      {srcUrl ? (
+        <img src={srcUrl} alt={srcAlt} className={`${sizeClasses} ${shapeClasses} object-cover ${border ? "ring-2 ring-white" : ""}`} loading="lazy" />
       ) : (
         <div className={`${sizeClasses} ${shapeClasses} flex items-center justify-center font-medium ${border ? "ring-2 ring-white" : ""}`} style={{ backgroundColor: fallbackColor }}>
           {initials}
@@ -3296,7 +3501,7 @@ export function TypewriterRender({
 
 export interface ParallaxProps {
   children?: React.ReactNode;
-  backgroundImage?: string;
+  backgroundImage?: string | ImageValue;
   backgroundPosition?: "center" | "top" | "bottom";
   speed?: number;
   overlay?: boolean;
@@ -3321,6 +3526,9 @@ export function ParallaxRender({
   id,
   className = "",
 }: ParallaxProps) {
+  // Normalize image value
+  const bgImageUrl = getImageUrl(backgroundImage) || "/placeholder.jpg";
+  
   const heightClasses = getResponsiveClasses(minHeight, {
     sm: ["min-h-[200px]", "md:min-h-[250px]", "lg:min-h-[300px]"],
     md: ["min-h-[300px]", "md:min-h-[400px]", "lg:min-h-[500px]"],
@@ -3347,7 +3555,7 @@ export function ParallaxRender({
       id={id}
       className={`relative overflow-hidden ${heightClasses} ${className}`}
       style={{
-        backgroundImage: `url(${backgroundImage})`,
+        backgroundImage: `url(${bgImageUrl})`,
         backgroundAttachment: "fixed",
         backgroundSize: "cover",
       }}
@@ -3460,7 +3668,7 @@ export interface SocialProofProps {
   maxRating?: number;
   reviewCount?: number;
   platform?: string;
-  platformLogo?: string;
+  platformLogo?: string | ImageValue;
   variant?: "stars" | "score" | "compact" | "detailed";
   size?: ResponsiveValue<"sm" | "md" | "lg">;
   showCount?: boolean;
@@ -3484,6 +3692,9 @@ export function SocialProofRender({
   id,
   className = "",
 }: SocialProofProps) {
+  // Normalize platformLogo image
+  const platformLogoUrl = getImageUrl(platformLogo);
+  
   const sizeClasses = getResponsiveClasses(size, {
     sm: ["text-xs gap-1", "md:text-xs md:gap-1", "lg:text-xs lg:gap-1"],
     md: ["text-sm gap-2", "md:text-sm md:gap-2", "lg:text-sm lg:gap-2"],
@@ -3565,7 +3776,7 @@ export function SocialProofRender({
       </div>
       {showPlatform && (
         <div className="flex items-center gap-1 text-gray-400 text-xs mt-1">
-          {platformLogo && <img src={platformLogo} alt={platform} className="w-4 h-4" />}
+          {platformLogoUrl && <img src={platformLogoUrl} alt={platform} className="w-4 h-4" />}
           <span>{platform}</span>
         </div>
       )}
@@ -4077,8 +4288,8 @@ export function CodeBlockRender({
 // ============================================================================
 
 export interface ProductCardProps {
-  image?: string;
-  images?: string[];
+  image?: string | ImageValue;
+  images?: (string | ImageValue)[];
   title?: string;
   description?: string;
   price?: number;
@@ -4126,6 +4337,9 @@ export function ProductCardRender({
   className = "",
 }: ProductCardProps) {
   const discount = originalPrice ? Math.round((1 - price / originalPrice) * 100) : 0;
+  
+  // Normalize image
+  const imageUrl = getImageUrl(image) || "/products/placeholder.jpg";
 
   const sizeClasses = getResponsiveClasses(size, {
     sm: ["text-sm", "md:text-sm", "lg:text-sm"],
@@ -4138,7 +4352,7 @@ export function ProductCardRender({
       {/* Image Container */}
       <div className="relative aspect-square overflow-hidden bg-gray-100 group">
         <img
-          src={image}
+          src={imageUrl}
           alt={title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
@@ -4474,7 +4688,7 @@ export function ProductCategoriesRender({
 export interface CartItem {
   id: string;
   name: string;
-  image?: string;
+  image?: string | ImageValue;
   price: number;
   quantity: number;
   variant?: string;
@@ -4547,11 +4761,13 @@ export function CartSummaryRender({
 
       {/* Items */}
       <div className="divide-y max-h-80 md:max-h-96 overflow-y-auto">
-        {items.map((item) => (
+        {items.map((item) => {
+          const itemImageUrl = getImageUrl(item.image);
+          return (
           <div key={item.id} className="p-4 md:p-6 flex gap-4">
-            {item.image && (
+            {itemImageUrl && (
               <div className="w-16 h-16 md:w-20 md:h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
-                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                <img src={itemImageUrl} alt={item.name} className="w-full h-full object-cover" />
               </div>
             )}
             <div className="flex-1 min-w-0">
@@ -4575,7 +4791,7 @@ export function CartSummaryRender({
               </button>
             )}
           </div>
-        ))}
+        )})}
       </div>
 
       {/* Summary */}
@@ -4788,8 +5004,8 @@ export interface CardFlip3DProps {
   backContent?: React.ReactNode;
   frontBackgroundColor?: string;
   backBackgroundColor?: string;
-  frontImage?: string;
-  backImage?: string;
+  frontImage?: string | ImageValue;
+  backImage?: string | ImageValue;
   frontTitle?: string;
   frontDescription?: string;
   backTitle?: string;
@@ -4822,6 +5038,10 @@ export function CardFlip3DRender({
   className = "",
 }: CardFlip3DProps) {
   const [isFlipped, setIsFlipped] = React.useState(false);
+  
+  // Normalize image values
+  const frontImageUrl = getImageUrl(frontImage);
+  const backImageUrl = getImageUrl(backImage);
   
   const widthMap: Record<string, string> = {
     sm: "w-48",
@@ -4871,13 +5091,13 @@ export function CardFlip3DRender({
           className={`absolute inset-0 w-full h-full ${radiusClasses} overflow-hidden flex flex-col items-center justify-center text-white p-6`}
           style={{
             backfaceVisibility: "hidden",
-            backgroundColor: frontImage ? undefined : frontBackgroundColor,
-            backgroundImage: frontImage ? `url(${frontImage})` : undefined,
+            backgroundColor: frontImageUrl ? undefined : frontBackgroundColor,
+            backgroundImage: frontImageUrl ? `url(${frontImageUrl})` : undefined,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
         >
-          {frontImage && <div className="absolute inset-0 bg-black/30" />}
+          {frontImageUrl && <div className="absolute inset-0 bg-black/30" />}
           <div className="relative z-10 text-center">
             <h3 className="text-xl font-bold mb-2">{frontTitle}</h3>
             <p className="text-sm opacity-80">{frontDescription}</p>
@@ -4890,13 +5110,13 @@ export function CardFlip3DRender({
           style={{
             backfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
-            backgroundColor: backImage ? undefined : backBackgroundColor,
-            backgroundImage: backImage ? `url(${backImage})` : undefined,
+            backgroundColor: backImageUrl ? undefined : backBackgroundColor,
+            backgroundImage: backImageUrl ? `url(${backImageUrl})` : undefined,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
         >
-          {backImage && <div className="absolute inset-0 bg-black/30" />}
+          {backImageUrl && <div className="absolute inset-0 bg-black/30" />}
           <div className="relative z-10 text-center">
             <h3 className="text-xl font-bold mb-2">{backTitle}</h3>
             <p className="text-sm opacity-80">{backDescription}</p>
@@ -4916,7 +5136,7 @@ export interface TiltCardProps {
   title?: string;
   description?: string;
   backgroundColor?: string;
-  backgroundImage?: string;
+  backgroundImage?: string | ImageValue;
   textColor?: string;
   maxRotation?: number;
   scale?: number;
@@ -4946,6 +5166,9 @@ export function TiltCardRender({
   const cardRef = React.useRef<HTMLDivElement>(null);
   const [transform, setTransform] = React.useState("rotateX(0deg) rotateY(0deg)");
   const [glarePosition, setGlarePosition] = React.useState({ x: 50, y: 50 });
+  
+  // Normalize image value
+  const bgImageUrl = getImageUrl(backgroundImage);
   
   const paddingClasses = getResponsiveClasses(padding, paddingYMap);
   const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
@@ -4981,8 +5204,8 @@ export function TiltCardRender({
       ref={cardRef}
       className={`relative overflow-hidden ${radiusClasses} ${shadowMap[shadow]} ${paddingClasses} ${className}`}
       style={{
-        backgroundColor: backgroundImage ? undefined : backgroundColor,
-        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        backgroundColor: bgImageUrl ? undefined : backgroundColor,
+        backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
         color: textColor,
@@ -4993,7 +5216,7 @@ export function TiltCardRender({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      {backgroundImage && <div className="absolute inset-0 bg-black/30" />}
+      {bgImageUrl && <div className="absolute inset-0 bg-black/30" />}
       {glare && (
         <div
           className="absolute inset-0 pointer-events-none"

@@ -15,9 +15,11 @@ import { EditorCanvas } from "@/components/studio/canvas";
 import { ComponentLibrary } from "@/components/studio/panels";
 import { PropertiesPanel } from "@/components/studio/properties";
 import { LayersPanel, HistoryPanel } from "@/components/studio/features";
+import { AIPageGenerator, AIActionsPanel } from "@/components/studio/ai";
 import { useUIStore, useEditorStore, useAIStore, useSelectionStore, useHistoryStore, undo, redo, useHistoryState } from "@/lib/studio/store";
 import { initializeRegistry } from "@/lib/studio/registry";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Sparkles, Wand2, LayoutGrid } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { savePageContentAction } from "@/lib/actions/pages";
 import { publishSite } from "@/lib/publishing/publish-service";
@@ -46,14 +48,86 @@ function CanvasArea() {
   return <EditorCanvas />;
 }
 
+function BottomPanelAIContent() {
+  const selectedId = useSelectionStore((s) => s.componentId);
+  const { openChat } = useAIStore();
+  const togglePanel = useUIStore((s) => s.togglePanel);
+  const [pageGeneratorOpen, setPageGeneratorOpen] = useState(false);
+  
+  // If a component is selected, show component-specific AI actions
+  if (selectedId) {
+    return (
+      <div className="flex h-full flex-col p-3">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            AI for Selected Component
+          </h3>
+        </div>
+        <div className="space-y-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="w-full justify-start gap-2"
+            onClick={() => openChat(selectedId)}
+          >
+            <MessageSquare className="h-4 w-4" />
+            Open AI Chat for Component
+          </Button>
+          <div className="text-xs text-muted-foreground mt-2">
+            Use AI to modify text, colors, styles, and more for the selected component.
+          </div>
+        </div>
+        <AIActionsPanel componentId={selectedId} className="mt-4" />
+      </div>
+    );
+  }
+  
+  // No component selected - show general AI actions
+  return (
+    <div className="flex h-full flex-col p-3">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          AI Page Builder
+        </h3>
+      </div>
+      <div className="space-y-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full justify-start gap-2"
+          onClick={() => setPageGeneratorOpen(true)}
+        >
+          <Wand2 className="h-4 w-4" />
+          Generate Page with AI
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="w-full justify-start gap-2"
+          onClick={() => togglePanel("left")}
+        >
+          <LayoutGrid className="h-4 w-4" />
+          Browse Components
+        </Button>
+        <div className="text-xs text-muted-foreground mt-4">
+          Select a component on the canvas to access AI editing features for that specific component.
+        </div>
+      </div>
+      <AIPageGenerator isOpen={pageGeneratorOpen} onClose={() => setPageGeneratorOpen(false)} />
+    </div>
+  );
+}
+
 function BottomPanelContent() {
   const togglePanel = useUIStore((s) => s.togglePanel);
-  const [activeTab, setActiveTab] = useState<"layers" | "ai">("layers");
+  const [activeTab, setActiveTab] = useState<"layers" | "ai">("ai");
   
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col h-full">
       {/* Tab header */}
-      <div className="flex items-center border-b bg-muted/30 px-2">
+      <div className="flex items-center border-b bg-muted/30 px-2 shrink-0">
         <button
           className={`px-3 py-2 text-sm font-medium transition-colors ${
             activeTab === "layers" 
@@ -84,15 +158,11 @@ function BottomPanelContent() {
       </div>
       
       {/* Tab content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-auto">
         {activeTab === "layers" ? (
           <LayersPanel />
         ) : (
-          <div className="flex-1 overflow-auto p-3">
-            <p className="text-sm text-muted-foreground">
-              AI chat and tools will be implemented in Phase STUDIO-11
-            </p>
-          </div>
+          <BottomPanelAIContent />
         )}
       </div>
     </div>

@@ -19,11 +19,13 @@ import { cn } from "@/lib/utils";
 import { useEditorStore, useUIStore, useSelectionStore } from "@/lib/studio/store";
 import { componentRegistry } from "@/lib/studio/registry/component-registry";
 import { initializeRegistry, isRegistryInitialized } from "@/lib/studio/registry";
-import { DroppableCanvas, StudioSortableContext, SortableComponent } from "@/components/studio/dnd";
+import { DroppableCanvas, StudioSortableContext, SortableComponent, ContainerDropZone } from "@/components/studio/dnd";
 import { ComponentWrapper } from "@/components/studio/core/component-wrapper";
 import { AIPageGenerator } from "@/components/studio/ai";
 import { RulerContainer } from "@/components/studio/features/ruler";
 import { DeviceFrame as ResponsiveDeviceFrame } from "@/components/studio/features/device-frame";
+import { ComponentStateStyles } from "@/components/studio/canvas/component-state-styles";
+import { ResponsiveCanvasStyles } from "@/components/studio/canvas/responsive-canvas-styles";
 import { getDevicePreset } from "@/lib/studio/data/device-presets";
 import { Button } from "@/components/ui/button";
 import { MousePointer, Sparkles, LayoutGrid } from "lucide-react";
@@ -99,6 +101,9 @@ function CanvasComponent({ componentId, index, parentId }: CanvasComponentProps)
   
   const RenderComponent = definition.render;
   
+  // Determine if this is a container that can accept children
+  const isContainer = definition.acceptsChildren || definition.isContainer;
+  
   return (
     <SortableComponent
       id={componentId}
@@ -114,12 +119,20 @@ function CanvasComponent({ componentId, index, parentId }: CanvasComponentProps)
         hidden={component.hidden}
       >
         <RenderComponent {...resolvedProps}>
-          {/* Render children if this is a container */}
-          {definition.acceptsChildren && component.children && component.children.length > 0 && (
-            <NestedComponents
-              componentIds={component.children}
-              parentId={componentId}
-            />
+          {/* Render children inside ContainerDropZone if this is a container */}
+          {isContainer && (
+            <ContainerDropZone
+              containerId={componentId}
+              containerType={component.type}
+              direction={definition.layoutDirection || "vertical"}
+            >
+              {component.children && component.children.length > 0 && (
+                <NestedComponents
+                  componentIds={component.children}
+                  parentId={componentId}
+                />
+              )}
+            </ContainerDropZone>
           )}
         </RenderComponent>
       </ComponentWrapper>
@@ -250,17 +263,21 @@ function CanvasFrame({ children }: CanvasFrameProps) {
   
   // The actual content with FORCED LIGHT THEME at FULL SIZE
   // This is what gets zoomed via CSS transform
+  // Content scrolls vertically when it exceeds viewport height
   const contentFrame = (
     <div
       className={cn(
         // Force light theme on canvas content - websites are typically light
         "light",
         "bg-white text-gray-900",
-        "relative overflow-hidden"
+        "relative overflow-x-hidden overflow-y-auto",
+        // Class for responsive CSS overrides to target
+        "studio-canvas-content"
       )}
       style={{
         width: viewportWidth,
-        height: viewportHeight,
+        minHeight: viewportHeight,
+        // Allow content to grow beyond viewport height
       }}
     >
       {children}
@@ -270,19 +287,21 @@ function CanvasFrame({ children }: CanvasFrameProps) {
   // The zoomed container - applies zoom transform to the full-size content
   // This wrapper handles the sizing so the content looks smaller/larger
   // Only used when device frame is OFF
+  // Allow vertical scrolling when content exceeds viewport height
   const zoomedContent = (
     <div
-      className="relative shadow-lg rounded-lg overflow-hidden border border-gray-200"
+      className="relative shadow-lg rounded-lg overflow-y-auto overflow-x-hidden border border-gray-200"
       style={{
         width: viewportWidth * zoom,
-        height: viewportHeight * zoom,
+        minHeight: viewportHeight * zoom,
+        maxHeight: "calc(100vh - 200px)", // Limit max height for outer scroll
         borderRadius: 8,
       }}
     >
       <div
         style={{
           width: viewportWidth,
-          height: viewportHeight,
+          minHeight: viewportHeight,
           transform: `scale(${zoom})`,
           transformOrigin: 'top left',
         }}
@@ -435,6 +454,12 @@ export function EditorCanvas({ className }: EditorCanvasProps) {
     >
       {/* Canvas frame container with responsive features */}
       <div className="flex flex-col items-center">
+        {/* Inject component state CSS for hover/active/focus effects */}
+        <ComponentStateStyles />
+        
+        {/* Inject responsive CSS overrides based on canvas width */}
+        <ResponsiveCanvasStyles />
+        
         {/* CanvasFrame uses viewportWidth/Height and supports rulers/device frames */}
         <CanvasFrame>
           <DroppableCanvas>

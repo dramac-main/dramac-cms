@@ -348,6 +348,27 @@ function TemplateCard({
   onInsert,
   isInserting,
 }: TemplateCardProps) {
+  // Get proper icon for category
+  const categoryIcon = CATEGORY_ICONS[template.category] || <LayoutGrid className="h-8 w-8" />;
+  
+  // Generate gradient colors based on category for visual preview
+  const categoryGradients: Record<string, string> = {
+    hero: 'from-blue-500 to-purple-600',
+    features: 'from-green-500 to-teal-600',
+    pricing: 'from-amber-500 to-orange-600',
+    testimonials: 'from-pink-500 to-rose-600',
+    cta: 'from-indigo-500 to-blue-600',
+    team: 'from-cyan-500 to-blue-600',
+    faq: 'from-violet-500 to-purple-600',
+    contact: 'from-emerald-500 to-green-600',
+    footer: 'from-slate-600 to-gray-700',
+    gallery: 'from-rose-500 to-pink-600',
+    stats: 'from-yellow-500 to-orange-600',
+    newsletter: 'from-blue-500 to-indigo-600',
+  };
+  
+  const gradient = categoryGradients[template.category] || 'from-gray-500 to-gray-600';
+  
   return (
     <div
       className={cn(
@@ -357,11 +378,15 @@ function TemplateCard({
       onMouseEnter={onHover}
       onMouseLeave={onLeave}
     >
-      {/* Thumbnail / Preview */}
-      <div className="aspect-[4/3] bg-muted relative overflow-hidden">
-        {/* Placeholder preview - could be enhanced with actual thumbnails */}
-        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">
-          <LayoutGrid className="h-8 w-8 text-muted-foreground/40" />
+      {/* Visual Preview - gradient with icon representing the section type */}
+      <div className="aspect-[4/3] relative overflow-hidden">
+        <div className={`absolute inset-0 bg-gradient-to-br ${gradient} flex flex-col items-center justify-center text-white`}>
+          <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center mb-2">
+            {categoryIcon}
+          </div>
+          <span className="text-xs font-medium uppercase tracking-wider opacity-80">
+            {template.category}
+          </span>
         </div>
         
         {/* Premium badge */}
@@ -378,7 +403,7 @@ function TemplateCard({
         {/* Hover overlay with insert button */}
         <div
           className={cn(
-            'absolute inset-0 flex items-center justify-center bg-black/50 transition-opacity',
+            'absolute inset-0 flex items-center justify-center bg-black/60 transition-opacity',
             isHovered ? 'opacity-100' : 'opacity-0'
           )}
         >

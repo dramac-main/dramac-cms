@@ -255,22 +255,33 @@ export function DndProvider({ children }: DndProviderProps) {
       // If dropped on a specific component, insert after it
       const overId = over.id.toString();
       if (overId !== "canvas-drop-zone" && overId !== "root") {
-        // Check if over a container component
-        const overComponent = data.components[overId];
-        if (overComponent) {
-          const overDefinition = componentRegistry.get(overComponent.type);
-          
-          if (overDefinition?.acceptsChildren || overDefinition?.isContainer) {
-            // Drop inside the container
-            parentId = overId;
-            index = overComponent.children?.length ?? 0;
-          } else {
-            // Drop after this component
-            parentId = overComponent.parentId ?? "root";
-            const siblings = overComponent.parentId
-              ? data.components[overComponent.parentId]?.children ?? []
-              : data.root.children;
-            index = siblings.indexOf(overId) + 1;
+        // Check if dropped on a container drop zone (container-{id})
+        if (overId.startsWith("container-")) {
+          const containerId = overId.replace("container-", "");
+          const containerComponent = data.components[containerId];
+          if (containerComponent) {
+            parentId = containerId;
+            index = containerComponent.children?.length ?? 0;
+            console.debug(`[DnD] Dropping inside container ${containerId} at index ${index}`);
+          }
+        } else {
+          // Check if over a container component directly
+          const overComponent = data.components[overId];
+          if (overComponent) {
+            const overDefinition = componentRegistry.get(overComponent.type);
+            
+            if (overDefinition?.acceptsChildren || overDefinition?.isContainer) {
+              // Drop inside the container
+              parentId = overId;
+              index = overComponent.children?.length ?? 0;
+            } else {
+              // Drop after this component
+              parentId = overComponent.parentId ?? "root";
+              const siblings = overComponent.parentId
+                ? data.components[overComponent.parentId]?.children ?? []
+                : data.root.children;
+              index = siblings.indexOf(overId) + 1;
+            }
           }
         }
       }

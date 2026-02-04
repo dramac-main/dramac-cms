@@ -146,49 +146,91 @@
 }
 
 /* =============================================================================
-   COMPONENT WRAPPER
+   COMPONENT WRAPPER - Wix Studio Style Selection (Premium)
+   
+   Industry-leading selection UX like Wix Studio, Figma, Webflow:
+   - Solid 2px border on hover (light blue)
+   - Solid 2px border on selection (strong blue) with glow
+   - 8 resize handles on corners and edges
+   - Component type badge at top
+   - Breadcrumb hierarchy support
    ============================================================================= */
 
 .studio-component-wrapper {
   position: relative;
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  transition: outline-color 0.15s ease, box-shadow 0.15s ease;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.studio-component-wrapper:hover {
-  outline-color: hsl(var(--primary) / 0.4);
+/* Hover state - prominent blue dashed border */
+.studio-component-wrapper:hover:not(.is-selected) {
+  outline: 2px dashed hsl(217 91% 60% / 0.7) !important;
+  outline-offset: 0;
 }
 
+/* Selected state - solid blue border with prominent glow */
 .studio-component-wrapper.is-selected {
-  outline-color: hsl(var(--primary));
-  outline-width: 2px;
-  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15);
+  outline: 2px solid hsl(217 91% 60%) !important;
+  outline-offset: 0;
+  box-shadow: 
+    0 0 0 1px hsl(217 91% 60%),
+    0 0 0 4px hsl(217 91% 60% / 0.25),
+    0 0 12px hsl(217 91% 60% / 0.3);
+  z-index: 50 !important;
 }
 
-/* Component label */
+/* Selection resize handles - 8 points like Wix/Figma */
+.studio-component-wrapper.is-selected::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  pointer-events: none;
+  z-index: 100;
+  /* Use CSS gradient to create corner handles */
+  background:
+    /* Top-left */
+    radial-gradient(circle at 0% 0%, white 3px, hsl(217 91% 60%) 3px, hsl(217 91% 60%) 5px, transparent 5px),
+    /* Top-center */
+    radial-gradient(circle at 50% 0%, white 3px, hsl(217 91% 60%) 3px, hsl(217 91% 60%) 5px, transparent 5px),
+    /* Top-right */
+    radial-gradient(circle at 100% 0%, white 3px, hsl(217 91% 60%) 3px, hsl(217 91% 60%) 5px, transparent 5px),
+    /* Middle-left */
+    radial-gradient(circle at 0% 50%, white 3px, hsl(217 91% 60%) 3px, hsl(217 91% 60%) 5px, transparent 5px),
+    /* Middle-right */
+    radial-gradient(circle at 100% 50%, white 3px, hsl(217 91% 60%) 3px, hsl(217 91% 60%) 5px, transparent 5px),
+    /* Bottom-left */
+    radial-gradient(circle at 0% 100%, white 3px, hsl(217 91% 60%) 3px, hsl(217 91% 60%) 5px, transparent 5px),
+    /* Bottom-center */
+    radial-gradient(circle at 50% 100%, white 3px, hsl(217 91% 60%) 3px, hsl(217 91% 60%) 5px, transparent 5px),
+    /* Bottom-right */
+    radial-gradient(circle at 100% 100%, white 3px, hsl(217 91% 60%) 3px, hsl(217 91% 60%) 5px, transparent 5px);
+  background-repeat: no-repeat;
+}
+
+/* Component type label - visible on hover and selection */
 .studio-component-label {
   position: absolute;
   top: 0;
   left: 0;
   transform: translateY(-100%);
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
   padding: 0.25rem 0.5rem;
-  font-size: 0.625rem;
-  font-weight: 600;
-  background: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  border-radius: 4px 4px 0 0;
-  opacity: 0;
-  pointer-events: none;
+  background: hsl(217 91% 60%);
+  color: white;
+  font-size: 11px;
+  font-weight: 500;
   white-space: nowrap;
-  transition: opacity 0.15s ease;
-  z-index: 10;
+  border-radius: 4px 4px 0 0;
+  z-index: 100;
+  pointer-events: none;
 }
 
+/* Show label on hover and selection */
 .studio-component-wrapper:hover .studio-component-label,
 .studio-component-wrapper.is-selected .studio-component-label {
-  opacity: 1;
+  display: flex;
 }
 
 /* Old class for backward compatibility */

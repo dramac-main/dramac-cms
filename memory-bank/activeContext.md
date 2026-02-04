@@ -1,8 +1,219 @@
 # Active Context: Current Work & Focus
 
 **Last Updated**: February 4, 2026  
-**Current Phase**: DRAMAC Studio - **ALL 31 PHASES COMPLETE + FULL COMPONENT REGISTRATION** 🎉  
-**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: 59 COMPONENTS FULLY REGISTERED ✅**
+**Current Phase**: DRAMAC Studio - **ALL 31 PHASES COMPLETE + CRITICAL FIXES + PREMIUM COMPONENTS** 🎉  
+**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: PREMIUM COMPONENTS + WIX STUDIO CANVAS SELECTION ✅**
+
+---
+
+## 🎨 PREMIUM COMPONENTS & WIX STUDIO CANVAS (February 4, 2026 - Session 5)
+
+### User Request
+1. "Canvas needs to highlight active component/section with a border for better UI"
+2. "Look at how Wix Studio layout components work and copy that accurately"
+3. "Navigation hamburger menu broken - links and background not showing"
+4. "REDO ALL THESE" - Complete rewrites of Navigation, Footer, Hero components
+
+### Research Conducted
+- Fetched Wix Studio documentation for Flexbox containers
+- Analyzed canvas selection patterns from Figma, Webflow, Wix Studio
+- 8-point resize handles on corners and edges
+- Blue outline selection with glow effect
+- Component type labels visible on hover/selection
+
+### Solutions Implemented
+
+#### 1. Premium Canvas Selection (Wix Studio Quality) ✅
+**File**: `src/styles/studio.css`
+- **Hover**: 2px dashed blue border (70% opacity)
+- **Selected**: 2px solid blue border + glow effect (box-shadow)
+- **8 Resize Handles**: Radial gradient CSS creates corner + edge handles
+- **Component Label**: Blue badge at top showing component type
+- All interaction states properly handled
+
+#### 2. Premium Components Created ✅
+**File**: `src/lib/studio/blocks/premium-components.tsx` (~2,600 lines)
+
+**PremiumNavbarRender** (Now NavbarRender):
+- Full mobile menu support (fullscreen/slideRight/slideLeft/dropdown)
+- Dropdown navigation with descriptions
+- Scroll behavior (sticky, hide on scroll, transparent until scroll)
+- Glass effect option
+- Primary + Secondary CTA buttons
+- Logo positioning, link styling, hover effects
+- Complete accessibility (aria labels, skip to content)
+
+**PremiumHeroRender** (Now HeroRender):
+- 6 variants: centered, split, splitReverse, fullscreen, video, minimal
+- Video background with play controls
+- Badge/tag above title
+- Dual CTA buttons with icons
+- Background image with overlay and parallax
+- Scroll indicator
+- Pattern overlays (dots, grid, waves, circles)
+- Animation on load
+
+**PremiumFooterRender** (Now FooterRender):
+- Multi-column link layout
+- Newsletter signup form
+- Social links with icons
+- Contact information section
+- App store badges
+- Legal links + copyright
+- Made with badge option
+- Multiple variants (standard, centered, simple, extended)
+
+#### 3. Component Registry Updated ✅
+**File**: `src/lib/studio/registry/core-components.ts`
+- Imports now from `premium-components.tsx` instead of `renders.tsx`
+- Hero: 60+ field definitions (was 11)
+- Navbar: 50+ field definitions (was 12)
+- Footer: 40+ field definitions (was 7)
+- All new props accessible in properties panel
+
+### Technical Details
+
+**Import Change**:
+```tsx
+// Premium components (Wix Studio quality)
+import {
+  NavbarRender,
+  HeroRender,
+  FooterRender,
+} from "@/lib/studio/blocks/premium-components";
+```
+
+**New Hero Fields Include**:
+- Video background (videoSrc, videoPoster, autoplay, loop, muted)
+- Split layout image (image, imagePosition, imageFit, imageRounded)
+- Badge (badge, badgeColor, badgeTextColor, badgeStyle)
+- Animations (animateOnLoad, animationType, animationDelay)
+- Scroll indicator
+- Pattern overlays
+- All typography controls (size, weight, color for each text element)
+
+**New Navbar Fields Include**:
+- Mobile menu configuration (style, colors, animation, overlay)
+- Glass effect
+- Scroll behaviors (sticky, hide on scroll, transparent until scroll)
+- Dropdown support with descriptions
+- Link styling (hover effect, active indicator, font controls)
+- Dual CTA buttons
+
+**New Footer Fields Include**:
+- Newsletter signup
+- Social links array with platform icons
+- Contact information
+- App store badges
+- Legal links
+- Multiple variants
+
+---
+
+## 🖼️ IMAGE FIELD SYSTEM FIX (February 4, 2026 - Session 4)
+
+### Issue Reported
+User reported: "Images not displaying on canvas when added through image field editor"
+
+### Root Cause Analysis
+1. **ImageFieldEditor** was sending wrong API field name (`file` instead of `files`)
+2. **ImageFieldEditor** expected wrong response format (`data.url` instead of `data.uploaded[0].publicUrl`)
+3. **15+ render components** were using raw image props directly instead of `getImageUrl()` helper
+4. Image field returns `ImageValue` objects: `{ url, alt, width?, height? }` - not strings
+
+### Solution Applied
+**Fixed ImageFieldEditor** (`src/lib/studio/fields/image-field-editor.tsx`):
+- `formData.append('files', file)` instead of `'file'`
+- Response: `data.uploaded[0].publicUrl` instead of `data.url`
+
+**Fixed 15+ render components** in `renders.tsx`:
+Each component updated with pattern:
+```tsx
+// Interface: Accept both types
+backgroundImage?: string | ImageValue;
+
+// Render: Normalize with helper
+const bgImageUrl = getImageUrl(backgroundImage);
+
+// Usage: Use normalized URL
+style={{ backgroundImage: bgImageUrl ? `url(${bgImageUrl})` : undefined }}
+```
+
+**Components Fixed**:
+- SectionRender, HeroRender, CTARender, ParallaxRender
+- CardFlip3DRender, TiltCardRender, QuoteRender, FooterRender
+- AvatarRender, SocialProofRender, TestimonialsRender, TeamRender
+- GalleryRender, CarouselRender, ProductCardRender, CartSummaryRender
+
+### Helper Location
+`src/lib/studio/utils/image-helpers.ts`:
+- `getImageUrl(value)` - Extract URL from string or ImageValue
+- `getImageAlt(value, fallback)` - Extract alt text
+- `hasImage(value)` - Check if valid image exists
+
+---
+
+## 🔧 CRITICAL BUG FIXES (February 4, 2026 - Session 3)
+
+### Issues Reported by User
+User reported 17+ platform issues including:
+1. "I still see the old NAV bar!" (misunderstanding - Navbar is premium responsive)
+2. Site preview doesn't work
+3. Website doesn't save nor publish
+4. Bottom panel untouched (placeholder text)
+5. Can't drag anything inside layout components
+6. Components super basic
+7. Header/footer need hamburger menu (already has it)
+8. Hero needs video background support
+9. AI page generator Apply does nothing
+10. Canvas scrolling breaks
+11. Add Section popup doesn't work
+12. AI toolbar button doesn't work
+
+### Fixes Applied This Session
+
+#### 1. PricingRender TypeError Fix ✅
+**Problem**: Console error `TypeError: (plan.features || []).map is not a function`
+**Root Cause**: Component registry defines features as `{ type: "array", itemFields: { text } }` creating `[{ text: "Feature" }]` but PricingRender expected `["Feature"]`
+**Solution**: Updated PricingRender to handle both formats:
+```tsx
+const featureText = typeof feature === 'string' ? feature : (feature?.text || feature?.label || '');
+```
+
+#### 2. Container Drop Zones Fix ✅
+**Problem**: Can't drag components inside layout containers (Section, Container, etc.)
+**Root Cause**: Containers had `acceptsChildren: true` and `isContainer: true` but no visible droppable zone
+**Solution**: 
+- Created `ContainerDropZone` component in `src/components/studio/dnd/container-drop-zone.tsx`
+- Updated `editor-canvas.tsx` to wrap container children with `ContainerDropZone`
+- Updated `dnd-provider.tsx` to handle `container-{id}` drop targets
+- Added `layoutDirection` property to ComponentDefinition type
+
+#### 3. Canvas Scrolling Fix ✅
+**Problem**: Canvas scrolling breaks and stops working
+**Root Cause**: Content frame had `overflow-hidden` with fixed height, clipping content
+**Solution**: Changed to `overflow-x-hidden overflow-y-auto` with `minHeight` instead of fixed height
+
+#### 4. Bottom Panel AI Content ✅
+**Problem**: Bottom panel "AI Assistant" tab showed placeholder text "Phase STUDIO-11 coming soon"
+**Solution**: 
+- Created `BottomPanelAIContent` component
+- When component selected: Shows "Open AI Chat" button + AIActionsPanel
+- When nothing selected: Shows "Generate Page with AI" + "Browse Components" buttons
+- Integrated AIPageGenerator and AIActionsPanel
+
+#### 5. TypeScript Errors Fixed ✅
+- Fixed `feature` parameter type in PricingRender map callback
+- All `npx tsc --noEmit` passes with 0 errors
+
+### Files Modified This Session
+1. `src/lib/studio/blocks/renders.tsx` - PricingRender features array handling
+2. `src/components/studio/dnd/container-drop-zone.tsx` - NEW: Container drop zone component
+3. `src/components/studio/dnd/index.ts` - Export ContainerDropZone
+4. `src/components/studio/dnd/dnd-provider.tsx` - Handle container-{id} drop targets
+5. `src/components/studio/canvas/editor-canvas.tsx` - Wrap containers with ContainerDropZone, fix scrolling
+6. `src/types/studio.ts` - Add layoutDirection to ComponentDefinition
+7. `src/components/studio/studio-editor.tsx` - Replace bottom panel placeholder with AI content
 
 ---
 
