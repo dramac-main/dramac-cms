@@ -4779,3 +4779,529 @@ export function CartIconRender({
     </button>
   );
 }
+// ============================================================================
+// 3D EFFECTS: CARD FLIP 3D
+// ============================================================================
+
+export interface CardFlip3DProps {
+  frontContent?: React.ReactNode;
+  backContent?: React.ReactNode;
+  frontBackgroundColor?: string;
+  backBackgroundColor?: string;
+  frontImage?: string;
+  backImage?: string;
+  frontTitle?: string;
+  frontDescription?: string;
+  backTitle?: string;
+  backDescription?: string;
+  flipOn?: "hover" | "click";
+  width?: ResponsiveValue<"sm" | "md" | "lg" | "xl" | "full">;
+  height?: ResponsiveValue<"sm" | "md" | "lg" | "xl">;
+  borderRadius?: ResponsiveValue<"none" | "sm" | "md" | "lg" | "xl" | "2xl">;
+  shadow?: "none" | "sm" | "md" | "lg" | "xl";
+  id?: string;
+  className?: string;
+  children?: React.ReactNode;
+}
+
+export function CardFlip3DRender({
+  frontBackgroundColor = "#6366f1",
+  backBackgroundColor = "#ec4899",
+  frontImage,
+  backImage,
+  frontTitle = "Front Side",
+  frontDescription = "Hover to flip",
+  backTitle = "Back Side",
+  backDescription = "Amazing content here",
+  flipOn = "hover",
+  width = "md",
+  height = "md",
+  borderRadius = "lg",
+  shadow = "lg",
+  id,
+  className = "",
+}: CardFlip3DProps) {
+  const [isFlipped, setIsFlipped] = React.useState(false);
+  
+  const widthMap: Record<string, string> = {
+    sm: "w-48",
+    md: "w-64",
+    lg: "w-80",
+    xl: "w-96",
+    full: "w-full",
+  };
+  
+  const heightMap: Record<string, string> = {
+    sm: "h-48",
+    md: "h-64",
+    lg: "h-80",
+    xl: "h-96",
+  };
+  
+  const shadowMap: Record<string, string> = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+  };
+  
+  const widthClass = widthMap[typeof width === "string" ? width : width?.desktop || "md"];
+  const heightClass = heightMap[typeof height === "string" ? height : height?.desktop || "md"];
+  const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
+  
+  return (
+    <div
+      id={id}
+      className={`relative cursor-pointer ${widthClass} ${heightClass} ${className}`}
+      style={{ perspective: "1000px" }}
+      onMouseEnter={() => flipOn === "hover" && setIsFlipped(true)}
+      onMouseLeave={() => flipOn === "hover" && setIsFlipped(false)}
+      onClick={() => flipOn === "click" && setIsFlipped(!isFlipped)}
+    >
+      <div
+        className={`relative w-full h-full transition-transform duration-500 ${shadowMap[shadow]}`}
+        style={{
+          transformStyle: "preserve-3d",
+          transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+        }}
+      >
+        {/* Front Face */}
+        <div
+          className={`absolute inset-0 w-full h-full ${radiusClasses} overflow-hidden flex flex-col items-center justify-center text-white p-6`}
+          style={{
+            backfaceVisibility: "hidden",
+            backgroundColor: frontImage ? undefined : frontBackgroundColor,
+            backgroundImage: frontImage ? `url(${frontImage})` : undefined,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          {frontImage && <div className="absolute inset-0 bg-black/30" />}
+          <div className="relative z-10 text-center">
+            <h3 className="text-xl font-bold mb-2">{frontTitle}</h3>
+            <p className="text-sm opacity-80">{frontDescription}</p>
+          </div>
+        </div>
+        
+        {/* Back Face */}
+        <div
+          className={`absolute inset-0 w-full h-full ${radiusClasses} overflow-hidden flex flex-col items-center justify-center text-white p-6`}
+          style={{
+            backfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+            backgroundColor: backImage ? undefined : backBackgroundColor,
+            backgroundImage: backImage ? `url(${backImage})` : undefined,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          {backImage && <div className="absolute inset-0 bg-black/30" />}
+          <div className="relative z-10 text-center">
+            <h3 className="text-xl font-bold mb-2">{backTitle}</h3>
+            <p className="text-sm opacity-80">{backDescription}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// 3D EFFECTS: TILT CARD
+// ============================================================================
+
+export interface TiltCardProps {
+  children?: React.ReactNode;
+  title?: string;
+  description?: string;
+  backgroundColor?: string;
+  backgroundImage?: string;
+  textColor?: string;
+  maxRotation?: number;
+  scale?: number;
+  glare?: boolean;
+  padding?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg">;
+  borderRadius?: ResponsiveValue<"none" | "sm" | "md" | "lg" | "xl" | "2xl">;
+  shadow?: "none" | "sm" | "md" | "lg" | "xl";
+  id?: string;
+  className?: string;
+}
+
+export function TiltCardRender({
+  title = "Tilt Card",
+  description = "Hover to see 3D tilt effect",
+  backgroundColor = "#1f2937",
+  backgroundImage,
+  textColor = "#ffffff",
+  maxRotation = 15,
+  scale = 1.05,
+  glare = true,
+  padding = "lg",
+  borderRadius = "xl",
+  shadow = "xl",
+  id,
+  className = "",
+}: TiltCardProps) {
+  const cardRef = React.useRef<HTMLDivElement>(null);
+  const [transform, setTransform] = React.useState("rotateX(0deg) rotateY(0deg)");
+  const [glarePosition, setGlarePosition] = React.useState({ x: 50, y: 50 });
+  
+  const paddingClasses = getResponsiveClasses(padding, paddingYMap);
+  const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
+  
+  const shadowMap: Record<string, string> = {
+    none: "",
+    sm: "shadow-sm",
+    md: "shadow-md",
+    lg: "shadow-lg",
+    xl: "shadow-xl",
+  };
+  
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -maxRotation;
+    const rotateY = ((x - centerX) / centerX) * maxRotation;
+    setTransform(`perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale})`);
+    setGlarePosition({ x: (x / rect.width) * 100, y: (y / rect.height) * 100 });
+  };
+  
+  const handleMouseLeave = () => {
+    setTransform("perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)");
+  };
+  
+  return (
+    <div
+      id={id}
+      ref={cardRef}
+      className={`relative overflow-hidden ${radiusClasses} ${shadowMap[shadow]} ${paddingClasses} ${className}`}
+      style={{
+        backgroundColor: backgroundImage ? undefined : backgroundColor,
+        backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        color: textColor,
+        transform,
+        transition: "transform 0.1s ease-out",
+        transformStyle: "preserve-3d",
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {backgroundImage && <div className="absolute inset-0 bg-black/30" />}
+      {glare && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `radial-gradient(circle at ${glarePosition.x}% ${glarePosition.y}%, rgba(255,255,255,0.3), transparent 50%)`,
+          }}
+        />
+      )}
+      <div className="relative z-10">
+        <h3 className="text-xl font-bold mb-2">{title}</h3>
+        <p className="text-sm opacity-80">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// 3D EFFECTS: GLASS CARD
+// ============================================================================
+
+export interface GlassCardProps {
+  children?: React.ReactNode;
+  title?: string;
+  description?: string;
+  preset?: "light" | "dark" | "colored" | "subtle" | "heavy";
+  blur?: number;
+  tint?: string;
+  borderOpacity?: number;
+  padding?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg">;
+  borderRadius?: ResponsiveValue<"none" | "sm" | "md" | "lg" | "xl" | "2xl">;
+  textColor?: string;
+  id?: string;
+  className?: string;
+}
+
+export function GlassCardRender({
+  title = "Glass Card",
+  description = "Beautiful frosted glass effect",
+  preset = "light",
+  blur = 10,
+  tint,
+  borderOpacity = 0.2,
+  padding = "lg",
+  borderRadius = "xl",
+  textColor = "#ffffff",
+  id,
+  className = "",
+}: GlassCardProps) {
+  const presets = {
+    light: { blur: 10, bg: "rgba(255,255,255,0.25)", border: 0.2 },
+    dark: { blur: 12, bg: "rgba(0,0,0,0.3)", border: 0.1 },
+    colored: { blur: 15, bg: "rgba(99,102,241,0.2)", border: 0.3 },
+    subtle: { blur: 5, bg: "rgba(255,255,255,0.1)", border: 0 },
+    heavy: { blur: 25, bg: "rgba(255,255,255,0.4)", border: 0.4 },
+  };
+  
+  const config = presets[preset];
+  const actualBlur = blur || config.blur;
+  const actualTint = tint || config.bg;
+  const actualBorderOpacity = borderOpacity ?? config.border;
+  
+  const paddingClasses = getResponsiveClasses(padding, paddingYMap);
+  const radiusClasses = getResponsiveClasses(borderRadius, borderRadiusMap);
+  
+  return (
+    <div
+      id={id}
+      className={`${paddingClasses} ${radiusClasses} ${className}`}
+      style={{
+        backgroundColor: actualTint,
+        backdropFilter: `blur(${actualBlur}px) saturate(120%)`,
+        WebkitBackdropFilter: `blur(${actualBlur}px) saturate(120%)`,
+        border: actualBorderOpacity > 0 ? `1px solid rgba(255,255,255,${actualBorderOpacity})` : undefined,
+        boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+        color: textColor,
+      }}
+    >
+      <h3 className="text-xl font-bold mb-2">{title}</h3>
+      <p className="text-sm opacity-80">{description}</p>
+    </div>
+  );
+}
+
+// ============================================================================
+// 3D EFFECTS: PARTICLE BACKGROUND
+// ============================================================================
+
+export interface ParticleBackgroundProps {
+  particleCount?: number;
+  particleColor?: string;
+  particleSize?: number;
+  speed?: number;
+  connected?: boolean;
+  connectionDistance?: number;
+  backgroundColor?: string;
+  height?: ResponsiveValue<"sm" | "md" | "lg" | "xl" | "screen">;
+  children?: React.ReactNode;
+  id?: string;
+  className?: string;
+}
+
+export function ParticleBackgroundRender({
+  particleCount = 50,
+  particleColor = "#6366f1",
+  particleSize = 4,
+  speed = 1,
+  connected = true,
+  connectionDistance = 150,
+  backgroundColor = "#0f172a",
+  height = "md",
+  children,
+  id,
+  className = "",
+}: ParticleBackgroundProps) {
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  const animationRef = React.useRef<number | undefined>(undefined);
+  const particlesRef = React.useRef<Array<{ x: number; y: number; size: number; speedX: number; speedY: number; opacity: number }>>([]);
+  
+  const heightMap: Record<string, string> = {
+    sm: "h-48",
+    md: "h-64",
+    lg: "h-96",
+    xl: "h-[32rem]",
+    screen: "h-screen",
+  };
+  
+  const heightClass = heightMap[typeof height === "string" ? height : height?.desktop || "md"];
+  
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    
+    const resize = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    
+    particlesRef.current = Array.from({ length: particleCount }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: Math.random() * particleSize + 1,
+      speedX: (Math.random() - 0.5) * speed,
+      speedY: (Math.random() - 0.5) * speed,
+      opacity: Math.random() * 0.6 + 0.2,
+    }));
+    
+    const animate = () => {
+      if (!canvas || !ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      particlesRef.current.forEach((particle, i) => {
+        particle.x += particle.speedX;
+        particle.y += particle.speedY;
+        if (particle.x < 0) particle.x = canvas.width;
+        if (particle.x > canvas.width) particle.x = 0;
+        if (particle.y < 0) particle.y = canvas.height;
+        if (particle.y > canvas.height) particle.y = 0;
+        
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fillStyle = particleColor;
+        ctx.globalAlpha = particle.opacity;
+        ctx.fill();
+        
+        if (connected) {
+          for (let j = i + 1; j < particlesRef.current.length; j++) {
+            const other = particlesRef.current[j];
+            const dx = particle.x - other.x;
+            const dy = particle.y - other.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < connectionDistance) {
+              ctx.beginPath();
+              ctx.moveTo(particle.x, particle.y);
+              ctx.lineTo(other.x, other.y);
+              ctx.strokeStyle = particleColor;
+              ctx.globalAlpha = (1 - distance / connectionDistance) * 0.3;
+              ctx.stroke();
+            }
+          }
+        }
+      });
+      
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+    
+    return () => {
+      window.removeEventListener("resize", resize);
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, [particleCount, particleColor, particleSize, speed, connected, connectionDistance]);
+  
+  return (
+    <div
+      id={id}
+      className={`relative overflow-hidden ${heightClass} ${className}`}
+      style={{ backgroundColor }}
+    >
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full pointer-events-none"
+      />
+      {children && (
+        <div className="relative z-10 flex items-center justify-center h-full">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// 3D EFFECTS: SCROLL ANIMATE
+// ============================================================================
+
+export interface ScrollAnimateProps {
+  children?: React.ReactNode;
+  animation?: "fade-up" | "fade-down" | "fade-left" | "fade-right" | "zoom-in" | "zoom-out" | "flip-up" | "flip-left" | "bounce-in" | "rotate-in";
+  delay?: number;
+  duration?: number;
+  threshold?: number;
+  once?: boolean;
+  title?: string;
+  description?: string;
+  backgroundColor?: string;
+  padding?: ResponsiveValue<"none" | "xs" | "sm" | "md" | "lg">;
+  id?: string;
+  className?: string;
+}
+
+export function ScrollAnimateRender({
+  animation = "fade-up",
+  delay = 0,
+  duration = 600,
+  threshold = 0.1,
+  once = true,
+  title = "Scroll Animation",
+  description = "This content animates when you scroll",
+  backgroundColor = "#f8fafc",
+  padding = "lg",
+  id,
+  className = "",
+}: ScrollAnimateProps) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = React.useState(false);
+  const [hasAnimated, setHasAnimated] = React.useState(false);
+  
+  const paddingClasses = getResponsiveClasses(padding, paddingYMap);
+  
+  const animations: Record<string, { initial: React.CSSProperties; animate: React.CSSProperties }> = {
+    "fade-up": { initial: { opacity: 0, transform: "translateY(40px)" }, animate: { opacity: 1, transform: "translateY(0)" } },
+    "fade-down": { initial: { opacity: 0, transform: "translateY(-40px)" }, animate: { opacity: 1, transform: "translateY(0)" } },
+    "fade-left": { initial: { opacity: 0, transform: "translateX(40px)" }, animate: { opacity: 1, transform: "translateX(0)" } },
+    "fade-right": { initial: { opacity: 0, transform: "translateX(-40px)" }, animate: { opacity: 1, transform: "translateX(0)" } },
+    "zoom-in": { initial: { opacity: 0, transform: "scale(0.8)" }, animate: { opacity: 1, transform: "scale(1)" } },
+    "zoom-out": { initial: { opacity: 0, transform: "scale(1.2)" }, animate: { opacity: 1, transform: "scale(1)" } },
+    "flip-up": { initial: { opacity: 0, transform: "perspective(1000px) rotateX(-90deg)" }, animate: { opacity: 1, transform: "perspective(1000px) rotateX(0)" } },
+    "flip-left": { initial: { opacity: 0, transform: "perspective(1000px) rotateY(90deg)" }, animate: { opacity: 1, transform: "perspective(1000px) rotateY(0)" } },
+    "bounce-in": { initial: { opacity: 0, transform: "scale(0.3)" }, animate: { opacity: 1, transform: "scale(1)" } },
+    "rotate-in": { initial: { opacity: 0, transform: "rotate(-180deg) scale(0)" }, animate: { opacity: 1, transform: "rotate(0) scale(1)" } },
+  };
+  
+  const config = animations[animation];
+  
+  React.useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          if (once) {
+            setHasAnimated(true);
+            observer.disconnect();
+          }
+        } else if (!once) {
+          setIsVisible(false);
+        }
+      },
+      { threshold }
+    );
+    
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [threshold, once]);
+  
+  const shouldAnimate = isVisible && (!once || !hasAnimated);
+  
+  return (
+    <div
+      id={id}
+      ref={ref}
+      className={`${paddingClasses} rounded-lg ${className}`}
+      style={{
+        backgroundColor,
+        ...config.initial,
+        ...(shouldAnimate ? config.animate : {}),
+        transition: `all ${duration}ms ease-out ${delay}ms`,
+      }}
+    >
+      <h3 className="text-xl font-bold mb-2">{title}</h3>
+      <p className="text-sm text-gray-600">{description}</p>
+    </div>
+  );
+}

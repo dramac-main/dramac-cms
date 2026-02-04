@@ -5,6 +5,7 @@
  * Uses standalone render components after Puck removal.
  * 
  * @phase STUDIO-27 - Platform Integration & Puck Removal
+ * @phase STUDIO-31 - 3D Effects & Advanced Animations
  */
 
 import { componentRegistry, defineComponent } from "./component-registry";
@@ -69,6 +70,12 @@ import {
   CartSummaryRender,
   FeaturedProductsRender,
   CartIconRender,
+  // 3D Effects (Phase 31)
+  CardFlip3DRender,
+  TiltCardRender,
+  GlassCardRender,
+  ParticleBackgroundRender,
+  ScrollAnimateRender,
 } from "@/lib/studio/blocks/renders";
 
 // =============================================================================
@@ -1713,6 +1720,379 @@ const ecommerceComponents: ComponentDefinition[] = [
 ];
 
 // =============================================================================
+// 3D EFFECTS COMPONENTS (Phase 31)
+// =============================================================================
+
+const effectsComponents: ComponentDefinition[] = [
+  defineComponent({
+    type: "CardFlip3D",
+    label: "3D Flip Card",
+    description: "A card that flips to reveal back content on hover or click",
+    category: "3d",
+    icon: "RotateCcw",
+    render: CardFlip3DRender,
+    fields: {
+      frontTitle: { type: "text", label: "Front Title", defaultValue: "Front Side" },
+      frontDescription: { type: "text", label: "Front Description", defaultValue: "Hover to flip" },
+      backTitle: { type: "text", label: "Back Title", defaultValue: "Back Side" },
+      backDescription: { type: "text", label: "Back Description", defaultValue: "Amazing content here" },
+      frontBackgroundColor: { type: "color", label: "Front Color", defaultValue: "#6366f1" },
+      backBackgroundColor: { type: "color", label: "Back Color", defaultValue: "#ec4899" },
+      frontImage: { type: "image", label: "Front Image" },
+      backImage: { type: "image", label: "Back Image" },
+      flipOn: {
+        type: "select",
+        label: "Flip Trigger",
+        options: [
+          { label: "Hover", value: "hover" },
+          { label: "Click", value: "click" },
+        ],
+        defaultValue: "hover",
+      },
+      width: {
+        type: "select",
+        label: "Width",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+          { label: "XL", value: "xl" },
+          { label: "Full", value: "full" },
+        ],
+        defaultValue: "md",
+      },
+      height: {
+        type: "select",
+        label: "Height",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+          { label: "XL", value: "xl" },
+        ],
+        defaultValue: "md",
+      },
+      borderRadius: {
+        type: "select",
+        label: "Border Radius",
+        options: presetOptions.borderRadius,
+        defaultValue: "lg",
+      },
+      shadow: {
+        type: "select",
+        label: "Shadow",
+        options: presetOptions.shadow,
+        defaultValue: "lg",
+      },
+    },
+    defaultProps: {
+      frontTitle: "Front Side",
+      frontDescription: "Hover to flip",
+      backTitle: "Back Side",
+      backDescription: "Amazing content here",
+      frontBackgroundColor: "#6366f1",
+      backBackgroundColor: "#ec4899",
+      flipOn: "hover",
+      width: "md",
+      height: "md",
+      borderRadius: "lg",
+      shadow: "lg",
+    },
+    ai: {
+      description: "A 3D flip card that reveals back content on hover or click, perfect for team members, product features, or interactive content",
+      canModify: ["frontTitle", "frontDescription", "backTitle", "backDescription", "frontBackgroundColor", "backBackgroundColor", "flipOn"],
+      suggestions: ["Add images to both sides", "Change flip trigger to click", "Update card colors"],
+    },
+  }),
+
+  defineComponent({
+    type: "TiltCard",
+    label: "3D Tilt Card",
+    description: "A card with 3D tilt effect on mouse hover",
+    category: "3d",
+    icon: "Move3d",
+    render: TiltCardRender,
+    fields: {
+      title: { type: "text", label: "Title", defaultValue: "Tilt Card" },
+      description: { type: "text", label: "Description", defaultValue: "Hover to see 3D tilt effect" },
+      backgroundColor: { type: "color", label: "Background Color", defaultValue: "#1f2937" },
+      backgroundImage: { type: "image", label: "Background Image" },
+      textColor: { type: "color", label: "Text Color", defaultValue: "#ffffff" },
+      maxRotation: {
+        type: "number",
+        label: "Max Rotation (deg)",
+        min: 5,
+        max: 45,
+        defaultValue: 15,
+      },
+      scale: {
+        type: "number",
+        label: "Hover Scale",
+        min: 1,
+        max: 1.2,
+        step: 0.01,
+        defaultValue: 1.05,
+      },
+      glare: { type: "toggle", label: "Enable Glare Effect", defaultValue: true },
+      padding: {
+        type: "select",
+        label: "Padding",
+        options: presetOptions.padding,
+        defaultValue: "lg",
+      },
+      borderRadius: {
+        type: "select",
+        label: "Border Radius",
+        options: presetOptions.borderRadius,
+        defaultValue: "xl",
+      },
+      shadow: {
+        type: "select",
+        label: "Shadow",
+        options: presetOptions.shadow,
+        defaultValue: "xl",
+      },
+    },
+    defaultProps: {
+      title: "Tilt Card",
+      description: "Hover to see 3D tilt effect",
+      backgroundColor: "#1f2937",
+      textColor: "#ffffff",
+      maxRotation: 15,
+      scale: 1.05,
+      glare: true,
+      padding: "lg",
+      borderRadius: "xl",
+      shadow: "xl",
+    },
+    ai: {
+      description: "An interactive card with 3D tilt effect on mouse hover, adds depth and interactivity",
+      canModify: ["title", "description", "backgroundColor", "textColor", "maxRotation", "glare"],
+      suggestions: ["Add background image", "Adjust tilt intensity", "Toggle glare effect"],
+    },
+  }),
+
+  defineComponent({
+    type: "GlassCard",
+    label: "Glass Card",
+    description: "A card with glassmorphism (frosted glass) effect",
+    category: "3d",
+    icon: "Sparkles",
+    render: GlassCardRender,
+    fields: {
+      title: { type: "text", label: "Title", defaultValue: "Glass Card" },
+      description: { type: "text", label: "Description", defaultValue: "Beautiful frosted glass effect" },
+      preset: {
+        type: "select",
+        label: "Glass Preset",
+        options: [
+          { label: "Light", value: "light" },
+          { label: "Dark", value: "dark" },
+          { label: "Colored", value: "colored" },
+          { label: "Subtle", value: "subtle" },
+          { label: "Heavy", value: "heavy" },
+        ],
+        defaultValue: "light",
+      },
+      blur: {
+        type: "number",
+        label: "Blur Amount (px)",
+        min: 0,
+        max: 50,
+        defaultValue: 10,
+      },
+      tint: { type: "color", label: "Tint Color" },
+      borderOpacity: {
+        type: "number",
+        label: "Border Opacity",
+        min: 0,
+        max: 1,
+        step: 0.1,
+        defaultValue: 0.2,
+      },
+      textColor: { type: "color", label: "Text Color", defaultValue: "#ffffff" },
+      padding: {
+        type: "select",
+        label: "Padding",
+        options: presetOptions.padding,
+        defaultValue: "lg",
+      },
+      borderRadius: {
+        type: "select",
+        label: "Border Radius",
+        options: presetOptions.borderRadius,
+        defaultValue: "xl",
+      },
+    },
+    defaultProps: {
+      title: "Glass Card",
+      description: "Beautiful frosted glass effect",
+      preset: "light",
+      blur: 10,
+      borderOpacity: 0.2,
+      textColor: "#ffffff",
+      padding: "lg",
+      borderRadius: "xl",
+    },
+    ai: {
+      description: "A card with modern glassmorphism effect - frosted glass with blur and transparency",
+      canModify: ["title", "description", "preset", "blur", "tint", "textColor"],
+      suggestions: ["Try dark preset", "Increase blur effect", "Add custom tint color"],
+    },
+  }),
+
+  defineComponent({
+    type: "ParticleBackground",
+    label: "Particle Background",
+    description: "Animated particle effects for backgrounds",
+    category: "3d",
+    icon: "Atom",
+    render: ParticleBackgroundRender,
+    acceptsChildren: true,
+    isContainer: true,
+    fields: {
+      particleCount: {
+        type: "number",
+        label: "Particle Count",
+        min: 10,
+        max: 200,
+        defaultValue: 50,
+      },
+      particleColor: { type: "color", label: "Particle Color", defaultValue: "#6366f1" },
+      particleSize: {
+        type: "number",
+        label: "Max Particle Size",
+        min: 1,
+        max: 10,
+        defaultValue: 4,
+      },
+      speed: {
+        type: "number",
+        label: "Speed",
+        min: 0.1,
+        max: 3,
+        step: 0.1,
+        defaultValue: 1,
+      },
+      connected: { type: "toggle", label: "Connect Particles", defaultValue: true },
+      connectionDistance: {
+        type: "number",
+        label: "Connection Distance",
+        min: 50,
+        max: 300,
+        defaultValue: 150,
+      },
+      backgroundColor: { type: "color", label: "Background Color", defaultValue: "#0f172a" },
+      height: {
+        type: "select",
+        label: "Height",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+          { label: "XL", value: "xl" },
+          { label: "Full Screen", value: "screen" },
+        ],
+        defaultValue: "md",
+      },
+    },
+    defaultProps: {
+      particleCount: 50,
+      particleColor: "#6366f1",
+      particleSize: 4,
+      speed: 1,
+      connected: true,
+      connectionDistance: 150,
+      backgroundColor: "#0f172a",
+      height: "md",
+    },
+    ai: {
+      description: "An animated particle background that creates a modern, dynamic effect - great for hero sections",
+      canModify: ["particleCount", "particleColor", "speed", "connected", "backgroundColor", "height"],
+      suggestions: ["Increase particle count", "Change particle color", "Make full screen"],
+    },
+  }),
+
+  defineComponent({
+    type: "ScrollAnimate",
+    label: "Scroll Animation",
+    description: "Content that animates when scrolling into view",
+    category: "3d",
+    icon: "MoveVertical",
+    render: ScrollAnimateRender,
+    fields: {
+      title: { type: "text", label: "Title", defaultValue: "Scroll Animation" },
+      description: { type: "text", label: "Description", defaultValue: "This content animates when you scroll" },
+      animation: {
+        type: "select",
+        label: "Animation Type",
+        options: [
+          { label: "Fade Up", value: "fade-up" },
+          { label: "Fade Down", value: "fade-down" },
+          { label: "Fade Left", value: "fade-left" },
+          { label: "Fade Right", value: "fade-right" },
+          { label: "Zoom In", value: "zoom-in" },
+          { label: "Zoom Out", value: "zoom-out" },
+          { label: "Flip Up", value: "flip-up" },
+          { label: "Flip Left", value: "flip-left" },
+          { label: "Bounce In", value: "bounce-in" },
+          { label: "Rotate In", value: "rotate-in" },
+        ],
+        defaultValue: "fade-up",
+      },
+      delay: {
+        type: "number",
+        label: "Delay (ms)",
+        min: 0,
+        max: 2000,
+        step: 100,
+        defaultValue: 0,
+      },
+      duration: {
+        type: "number",
+        label: "Duration (ms)",
+        min: 100,
+        max: 2000,
+        step: 100,
+        defaultValue: 600,
+      },
+      threshold: {
+        type: "number",
+        label: "Trigger Threshold (0-1)",
+        min: 0,
+        max: 1,
+        step: 0.1,
+        defaultValue: 0.1,
+      },
+      once: { type: "toggle", label: "Animate Once", defaultValue: true },
+      backgroundColor: { type: "color", label: "Background Color", defaultValue: "#f8fafc" },
+      padding: {
+        type: "select",
+        label: "Padding",
+        options: presetOptions.padding,
+        defaultValue: "lg",
+      },
+    },
+    defaultProps: {
+      title: "Scroll Animation",
+      description: "This content animates when you scroll",
+      animation: "fade-up",
+      delay: 0,
+      duration: 600,
+      threshold: 0.1,
+      once: true,
+      backgroundColor: "#f8fafc",
+      padding: "lg",
+    },
+    ai: {
+      description: "A content block with scroll-triggered animation - reveals content as user scrolls",
+      canModify: ["title", "description", "animation", "delay", "duration", "backgroundColor"],
+      suggestions: ["Try bounce-in animation", "Add delay for stagger effect", "Change to zoom-in"],
+    },
+  }),
+];
+
+// =============================================================================
 // REGISTER ALL COMPONENTS
 // =============================================================================
 
@@ -1732,6 +2112,7 @@ export function registerCoreComponents(): void {
     ...interactiveComponents,
     ...marketingComponents,
     ...ecommerceComponents,
+    ...effectsComponents,
   ];
 
   componentRegistry.registerAll(allComponents, "core");
@@ -1755,4 +2136,5 @@ export {
   interactiveComponents,
   marketingComponents,
   ecommerceComponents,
+  effectsComponents,
 };
