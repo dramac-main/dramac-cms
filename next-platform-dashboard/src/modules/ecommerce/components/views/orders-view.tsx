@@ -2,12 +2,14 @@
  * Orders View Component
  * 
  * Phase EM-52: E-Commerce Module
+ * Phase ECOM-04: Order Management Enhancement
  * 
  * Displays orders with filtering and status management
  */
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { useEcommerce } from '../../context/ecommerce-context'
 import { 
   ShoppingCart, 
@@ -22,6 +24,7 @@ import {
   Package,
   DollarSign
 } from 'lucide-react'
+import { OrderDetailDialog } from '../orders'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -72,9 +75,23 @@ const paymentStatusConfig: Record<PaymentStatus, { label: string; className: str
 }
 
 export function OrdersView({ searchQuery = '' }: OrdersViewProps) {
-  const { orders, isLoading, changeOrderStatus } = useEcommerce()
+  const router = useRouter()
+  const { orders, isLoading, changeOrderStatus, siteId, settings } = useEcommerce()
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all')
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | 'all'>('all')
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false)
+  
+  // Get user info from session (would be from useSession in real app)
+  const userId = 'user-id' // TODO: Get from useSession()
+  const userName = 'Store Manager' // TODO: Get from useSession()
+  
+  // Get store info from settings
+  const storeName = settings?.store_name || 'My Store'
+  const storeAddress = settings?.store_address 
+    ? `${settings.store_address.address_line_1}, ${settings.store_address.city}, ${settings.store_address.state} ${settings.store_address.postal_code}`
+    : ''
+  const storeEmail = settings?.store_email || ''
 
   // Filter orders
   const filteredOrders = useMemo(() => {
@@ -102,6 +119,19 @@ export function OrdersView({ searchQuery = '' }: OrdersViewProps) {
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     await changeOrderStatus(orderId, newStatus)
+  }
+
+  const handleViewDetails = (orderId: string) => {
+    setSelectedOrderId(orderId)
+    setDetailDialogOpen(true)
+  }
+
+  const handleDialogClose = (open: boolean) => {
+    setDetailDialogOpen(open)
+    if (!open) {
+      setSelectedOrderId(null)
+      router.refresh()
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -220,7 +250,7 @@ export function OrdersView({ searchQuery = '' }: OrdersViewProps) {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleViewDetails(order.id)}>
                             <Eye className="h-4 w-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
@@ -258,6 +288,21 @@ export function OrdersView({ searchQuery = '' }: OrdersViewProps) {
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {/* Order Detail Dialog */}
+      {selectedOrderId && (
+        <OrderDetailDialog
+          orderId={selectedOrderId}
+          siteId={siteId}
+          userId={userId}
+          userName={userName}
+          storeName={storeName}
+          storeAddress={storeAddress}
+          storeEmail={storeEmail}
+          open={detailDialogOpen}
+          onOpenChange={handleDialogClose}
+        />
       )}
     </div>
   )
