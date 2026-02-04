@@ -621,6 +621,7 @@ export type FieldEditorComponent<T = FieldValue> = React.ComponentType<FieldEdit
 export interface FieldGroup {
   id: string;
   label: string;
+  icon?: string; // Lucide icon name
   fields: string[]; // Field keys
   defaultExpanded?: boolean;
 }

@@ -122,6 +122,11 @@ function FieldGroupAccordion({
   
   if (fields.length === 0) return null;
   
+  // Get icon component safely
+  const IconComponent = group.icon 
+    ? (LucideIcons as any)[group.icon] as React.ComponentType<{ className?: string }> | undefined
+    : null;
+  
   return (
     <div className="border-b border-border last:border-b-0">
       <button
@@ -139,6 +144,7 @@ function FieldGroupAccordion({
         ) : (
           <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
         )}
+        {IconComponent && <IconComponent className="h-4 w-4 shrink-0 text-muted-foreground" />}
         <span className="flex-1 text-sm font-medium">{group.label}</span>
       </button>
       
