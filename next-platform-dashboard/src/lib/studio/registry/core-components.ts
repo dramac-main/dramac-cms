@@ -57,6 +57,16 @@ import {
   CountdownRender,
   TypewriterRender,
   ParallaxRender,
+  PricingRender,
+  AccordionRender,
+  TabsRender,
+  ModalRender,
+  // UI Elements
+  BadgeRender,
+  AvatarRender,
+  ProgressRender,
+  AlertRender,
+  TooltipRender,
   // Marketing
   AnnouncementBarRender,
   SocialProofRender,
@@ -1391,6 +1401,493 @@ const interactiveComponents: ComponentDefinition[] = [
       canModify: ["speed", "height"],
     },
   }),
+
+  // =========================================================================
+  // PRICING - Pricing Tables
+  // =========================================================================
+  defineComponent({
+    type: "Pricing",
+    label: "Pricing",
+    description: "Pricing plans comparison table",
+    category: "interactive",
+    icon: "CreditCard",
+    render: PricingRender,
+    fields: {
+      title: { type: "text", label: "Title", defaultValue: "Pricing Plans" },
+      subtitle: { type: "text", label: "Subtitle" },
+      description: { type: "textarea", label: "Description" },
+      plans: {
+        type: "array",
+        label: "Plans",
+        itemFields: {
+          name: { type: "text", label: "Plan Name" },
+          description: { type: "textarea", label: "Plan Description" },
+          price: { type: "text", label: "Price" },
+          period: { type: "text", label: "Period (e.g., /month)" },
+          features: { type: "array", label: "Features", itemFields: { text: { type: "text", label: "Feature" } } },
+          buttonText: { type: "text", label: "Button Text" },
+          buttonLink: { type: "link", label: "Button Link" },
+          popular: { type: "toggle", label: "Popular (highlighted)" },
+          badge: { type: "text", label: "Badge Text" },
+        },
+      },
+      variant: {
+        type: "select",
+        label: "Variant",
+        options: [
+          { label: "Cards", value: "cards" },
+          { label: "Simple", value: "simple" },
+        ],
+        defaultValue: "cards",
+      },
+      columns: {
+        type: "select",
+        label: "Columns",
+        options: [
+          { label: "2 Columns", value: 2 },
+          { label: "3 Columns", value: 3 },
+          { label: "4 Columns", value: 4 },
+        ],
+        defaultValue: 3,
+      },
+      backgroundColor: { type: "color", label: "Background Color" },
+      popularBorderColor: { type: "color", label: "Popular Border Color", defaultValue: "#3b82f6" },
+    },
+    defaultProps: {
+      title: "Pricing Plans",
+      plans: [],
+      variant: "cards",
+      columns: 3,
+    },
+    ai: {
+      description: "A pricing comparison table with multiple plans",
+      canModify: ["title", "subtitle", "plans", "columns"],
+    },
+  }),
+
+  // =========================================================================
+  // ACCORDION - Expandable Content
+  // =========================================================================
+  defineComponent({
+    type: "Accordion",
+    label: "Accordion",
+    description: "Expandable accordion content",
+    category: "interactive",
+    icon: "ChevronsUpDown",
+    render: AccordionRender,
+    fields: {
+      items: {
+        type: "array",
+        label: "Items",
+        itemFields: {
+          title: { type: "text", label: "Title" },
+          content: { type: "textarea", label: "Content" },
+          defaultOpen: { type: "toggle", label: "Open by Default" },
+        },
+      },
+      variant: {
+        type: "select",
+        label: "Variant",
+        options: [
+          { label: "Simple", value: "simple" },
+          { label: "Bordered", value: "bordered" },
+          { label: "Separated", value: "separated" },
+          { label: "Filled", value: "filled" },
+        ],
+        defaultValue: "bordered",
+      },
+      allowMultiple: { type: "toggle", label: "Allow Multiple Open", defaultValue: true },
+      backgroundColor: { type: "color", label: "Background Color" },
+      borderColor: { type: "color", label: "Border Color" },
+    },
+    defaultProps: {
+      items: [],
+      variant: "bordered",
+      allowMultiple: true,
+    },
+    ai: {
+      description: "An expandable accordion component with multiple items",
+      canModify: ["items", "variant"],
+    },
+  }),
+
+  // =========================================================================
+  // TABS - Tabbed Content
+  // =========================================================================
+  defineComponent({
+    type: "Tabs",
+    label: "Tabs",
+    description: "Tabbed content switcher",
+    category: "interactive",
+    icon: "LayoutList",
+    render: TabsRender,
+    fields: {
+      tabs: {
+        type: "array",
+        label: "Tabs",
+        itemFields: {
+          label: { type: "text", label: "Tab Label" },
+          content: { type: "textarea", label: "Tab Content" },
+          icon: { type: "text", label: "Icon (optional)" },
+        },
+      },
+      defaultTab: { type: "number", label: "Default Tab (0-based)", defaultValue: 0 },
+      variant: {
+        type: "select",
+        label: "Variant",
+        options: [
+          { label: "Underline", value: "underline" },
+          { label: "Pills", value: "pills" },
+          { label: "Boxed", value: "boxed" },
+        ],
+        defaultValue: "underline",
+      },
+      size: {
+        type: "select",
+        label: "Size",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+        ],
+        defaultValue: "md",
+      },
+      fullWidth: { type: "toggle", label: "Full Width", defaultValue: false },
+      centered: { type: "toggle", label: "Centered", defaultValue: false },
+      activeColor: { type: "color", label: "Active Color", defaultValue: "#3b82f6" },
+    },
+    defaultProps: {
+      tabs: [],
+      defaultTab: 0,
+      variant: "underline",
+      size: "md",
+    },
+    ai: {
+      description: "A tabbed content component for organizing information",
+      canModify: ["tabs", "variant", "size"],
+    },
+  }),
+
+  // =========================================================================
+  // MODAL - Dialog Component
+  // =========================================================================
+  defineComponent({
+    type: "Modal",
+    label: "Modal",
+    description: "Modal/dialog popup",
+    category: "interactive",
+    icon: "Square",
+    render: ModalRender,
+    acceptsChildren: true,
+    isContainer: true,
+    fields: {
+      title: { type: "text", label: "Title" },
+      description: { type: "textarea", label: "Description" },
+      isOpen: { type: "toggle", label: "Show in Editor", defaultValue: true },
+      size: {
+        type: "select",
+        label: "Size",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+          { label: "Extra Large", value: "xl" },
+          { label: "Full", value: "full" },
+        ],
+        defaultValue: "md",
+      },
+      showCloseButton: { type: "toggle", label: "Show Close Button", defaultValue: true },
+      centered: { type: "toggle", label: "Centered", defaultValue: true },
+      backgroundColor: { type: "color", label: "Background Color", defaultValue: "#ffffff" },
+      overlayOpacity: { type: "number", label: "Overlay Opacity (%)", min: 0, max: 100, defaultValue: 50 },
+    },
+    defaultProps: {
+      isOpen: true,
+      size: "md",
+      showCloseButton: true,
+      centered: true,
+      overlayOpacity: 50,
+    },
+    ai: {
+      description: "A modal dialog popup component",
+      canModify: ["title", "description", "size"],
+    },
+  }),
+];
+
+// =============================================================================
+// UI ELEMENT COMPONENTS
+// =============================================================================
+
+const uiComponents: ComponentDefinition[] = [
+  // =========================================================================
+  // BADGE - Status/Label Badge
+  // =========================================================================
+  defineComponent({
+    type: "Badge",
+    label: "Badge",
+    description: "Status or label badge",
+    category: "content",
+    icon: "Tag",
+    render: BadgeRender,
+    fields: {
+      text: { type: "text", label: "Text", defaultValue: "Badge" },
+      variant: {
+        type: "select",
+        label: "Variant",
+        options: [
+          { label: "Default", value: "default" },
+          { label: "Primary", value: "primary" },
+          { label: "Success", value: "success" },
+          { label: "Warning", value: "warning" },
+          { label: "Error", value: "error" },
+          { label: "Info", value: "info" },
+        ],
+        defaultValue: "default",
+      },
+      size: {
+        type: "select",
+        label: "Size",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+        ],
+        defaultValue: "md",
+      },
+      rounded: {
+        type: "select",
+        label: "Rounded",
+        options: [
+          { label: "Default", value: "default" },
+          { label: "Full (Pill)", value: "full" },
+        ],
+        defaultValue: "full",
+      },
+      outline: { type: "toggle", label: "Outline Style", defaultValue: false },
+      dot: { type: "toggle", label: "Show Dot", defaultValue: false },
+    },
+    defaultProps: {
+      text: "Badge",
+      variant: "default",
+      size: "md",
+      rounded: "full",
+    },
+    ai: {
+      description: "A status or label badge component",
+      canModify: ["text", "variant", "size"],
+    },
+  }),
+
+  // =========================================================================
+  // AVATAR - User Avatar
+  // =========================================================================
+  defineComponent({
+    type: "Avatar",
+    label: "Avatar",
+    description: "User avatar with status",
+    category: "content",
+    icon: "UserCircle",
+    render: AvatarRender,
+    fields: {
+      src: { type: "image", label: "Image" },
+      alt: { type: "text", label: "Alt Text", defaultValue: "Avatar" },
+      name: { type: "text", label: "Name (for fallback initials)" },
+      size: {
+        type: "select",
+        label: "Size",
+        options: [
+          { label: "Extra Small", value: "xs" },
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+          { label: "Extra Large", value: "xl" },
+          { label: "2X Large", value: "2xl" },
+        ],
+        defaultValue: "md",
+      },
+      shape: {
+        type: "select",
+        label: "Shape",
+        options: [
+          { label: "Circle", value: "circle" },
+          { label: "Rounded", value: "rounded" },
+          { label: "Square", value: "square" },
+        ],
+        defaultValue: "circle",
+      },
+      status: {
+        type: "select",
+        label: "Status",
+        options: [
+          { label: "None", value: "" },
+          { label: "Online", value: "online" },
+          { label: "Offline", value: "offline" },
+          { label: "Busy", value: "busy" },
+          { label: "Away", value: "away" },
+        ],
+        defaultValue: "",
+      },
+      border: { type: "toggle", label: "Show Border", defaultValue: false },
+    },
+    defaultProps: {
+      size: "md",
+      shape: "circle",
+    },
+    ai: {
+      description: "A user avatar component with optional status indicator",
+      canModify: ["src", "name", "size", "status"],
+    },
+  }),
+
+  // =========================================================================
+  // PROGRESS - Progress Bar
+  // =========================================================================
+  defineComponent({
+    type: "Progress",
+    label: "Progress",
+    description: "Progress bar indicator",
+    category: "content",
+    icon: "BarChart",
+    render: ProgressRender,
+    fields: {
+      value: { type: "number", label: "Value", min: 0, max: 100, defaultValue: 50 },
+      max: { type: "number", label: "Max Value", defaultValue: 100 },
+      label: { type: "text", label: "Label" },
+      showValue: { type: "toggle", label: "Show Percentage", defaultValue: true },
+      size: {
+        type: "select",
+        label: "Size",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+        ],
+        defaultValue: "md",
+      },
+      variant: {
+        type: "select",
+        label: "Variant",
+        options: [
+          { label: "Default", value: "default" },
+          { label: "Gradient", value: "gradient" },
+          { label: "Striped", value: "striped" },
+        ],
+        defaultValue: "default",
+      },
+      color: { type: "color", label: "Bar Color", defaultValue: "#3b82f6" },
+      backgroundColor: { type: "color", label: "Track Color", defaultValue: "#e5e7eb" },
+      rounded: { type: "toggle", label: "Rounded", defaultValue: true },
+      animate: { type: "toggle", label: "Animate (Pulse)", defaultValue: false },
+    },
+    defaultProps: {
+      value: 50,
+      max: 100,
+      showValue: true,
+      size: "md",
+      variant: "default",
+      rounded: true,
+    },
+    ai: {
+      description: "A progress bar indicator component",
+      canModify: ["value", "label", "color", "variant"],
+    },
+  }),
+
+  // =========================================================================
+  // ALERT - Alert/Notification
+  // =========================================================================
+  defineComponent({
+    type: "Alert",
+    label: "Alert",
+    description: "Alert or notification message",
+    category: "content",
+    icon: "AlertCircle",
+    render: AlertRender,
+    fields: {
+      title: { type: "text", label: "Title" },
+      message: { type: "textarea", label: "Message" },
+      variant: {
+        type: "select",
+        label: "Variant",
+        options: [
+          { label: "Info", value: "info" },
+          { label: "Success", value: "success" },
+          { label: "Warning", value: "warning" },
+          { label: "Error", value: "error" },
+        ],
+        defaultValue: "info",
+      },
+      size: {
+        type: "select",
+        label: "Size",
+        options: [
+          { label: "Small", value: "sm" },
+          { label: "Medium", value: "md" },
+          { label: "Large", value: "lg" },
+        ],
+        defaultValue: "md",
+      },
+      icon: { type: "toggle", label: "Show Icon", defaultValue: true },
+      closable: { type: "toggle", label: "Closable", defaultValue: false },
+    },
+    defaultProps: {
+      variant: "info",
+      size: "md",
+      icon: true,
+      closable: false,
+    },
+    ai: {
+      description: "An alert or notification message component",
+      canModify: ["title", "message", "variant"],
+    },
+  }),
+
+  // =========================================================================
+  // TOOLTIP - Hover Tooltip
+  // =========================================================================
+  defineComponent({
+    type: "Tooltip",
+    label: "Tooltip",
+    description: "Hover tooltip wrapper",
+    category: "content",
+    icon: "MessageSquare",
+    render: TooltipRender,
+    acceptsChildren: true,
+    isContainer: true,
+    fields: {
+      text: { type: "text", label: "Tooltip Text", defaultValue: "Tooltip" },
+      position: {
+        type: "select",
+        label: "Position",
+        options: [
+          { label: "Top", value: "top" },
+          { label: "Bottom", value: "bottom" },
+          { label: "Left", value: "left" },
+          { label: "Right", value: "right" },
+        ],
+        defaultValue: "top",
+      },
+      variant: {
+        type: "select",
+        label: "Style",
+        options: [
+          { label: "Dark", value: "dark" },
+          { label: "Light", value: "light" },
+        ],
+        defaultValue: "dark",
+      },
+    },
+    defaultProps: {
+      text: "Tooltip",
+      position: "top",
+      variant: "dark",
+    },
+    ai: {
+      description: "A tooltip that shows on hover",
+      canModify: ["text", "position"],
+    },
+  }),
 ];
 
 // =============================================================================
@@ -2110,6 +2607,7 @@ export function registerCoreComponents(): void {
     ...formComponents,
     ...contentComponents,
     ...interactiveComponents,
+    ...uiComponents,
     ...marketingComponents,
     ...ecommerceComponents,
     ...effectsComponents,
@@ -2134,6 +2632,7 @@ export {
   formComponents,
   contentComponents,
   interactiveComponents,
+  uiComponents,
   marketingComponents,
   ecommerceComponents,
   effectsComponents,
