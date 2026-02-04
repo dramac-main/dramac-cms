@@ -1,6 +1,40 @@
 # Active Context
 
-## Latest Session Update (Phase ECOM-02 Complete)
+## Latest Session Update (Navigation Fix - February 4, 2026)
+
+### Fixed: Domains & Email Navigation Accidentally Removed
+
+**Issue Discovered**: User reported that domain/email sidebar links were missing, despite all phases being implemented.
+
+**Root Cause Analysis**:
+1. Git investigation revealed commit `068ef0c` (Feb 2) correctly added Domains & Email navigation
+2. Subsequent commit `7ec8fbc` (Studio Wave 1, Feb 2) accidentally **deleted 26 lines** from `navigation.ts`
+3. This was an accidental revert during the Studio implementation
+
+**Fix Applied**:
+- **Commit**: `c49bf9f` - fix(nav): restore Domains & Email navigation section
+- **File Modified**: `src/config/navigation.ts`
+
+**Navigation Restored**:
+```
+Domains & Email (new section in sidebar)
+├── Domains: /dashboard/domains
+├── Business Email: /dashboard/email
+└── Transfers: /dashboard/domains/transfer
+```
+
+**Impact**:
+- All domain/email pages were always there (just not linked in sidebar)
+- ResellerClub integration: ✅ Still working
+- Cloudflare DNS integration: ✅ Still working
+- Email management: ✅ Still working
+- Domain components: ✅ All 30+ files present
+
+**Not Related to Vercel Limit**: The Vercel 100,000 invocations limit affects deployment/serverless functions, not local code or git. The issue was purely a git conflict where Studio Wave 1 overwrote navigation changes.
+
+---
+
+## Previous Session Update (Phase ECOM-02 Complete)
 
 ### Completed: Product Management Enhancement
 **Date:** Current Session  
