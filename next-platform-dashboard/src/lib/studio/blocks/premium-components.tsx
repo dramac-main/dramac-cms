@@ -129,8 +129,8 @@ export interface PremiumNavbarProps {
   glassEffect?: boolean;
   glassBlur?: number;
   
-  // Behavior
-  sticky?: boolean;
+  // Positioning & Behavior
+  position?: "relative" | "absolute" | "fixed" | "sticky";
   stickyOffset?: number;
   hideOnScroll?: boolean;
   showOnScrollUp?: boolean;
@@ -229,8 +229,8 @@ export function PremiumNavbarRender({
   glassEffect = false,
   glassBlur = 10,
   
-  // Behavior
-  sticky = true,
+  // Positioning & Behavior
+  position = "sticky",
   stickyOffset = 0,
   hideOnScroll = false,
   showOnScrollUp = false,
@@ -415,6 +415,14 @@ export function PremiumNavbarRender({
     spacious: "py-4",
   };
 
+  // Position class mapping
+  const positionClasses: Record<string, string> = {
+    relative: "relative",
+    absolute: "absolute top-0 left-0 right-0",
+    fixed: "fixed top-0 left-0 right-0",
+    sticky: "sticky",
+  };
+
   // Compute background style
   const bgStyle: React.CSSProperties = {
     backgroundColor: transparentUntilScroll && !isScrolled 
@@ -423,7 +431,7 @@ export function PremiumNavbarRender({
     backdropFilter: glassEffect ? `blur(${glassBlur}px)` : undefined,
     WebkitBackdropFilter: glassEffect ? `blur(${glassBlur}px)` : undefined,
     borderBottom: borderBottom ? `${borderWidth}px solid ${borderColor}` : undefined,
-    top: sticky ? stickyOffset : undefined,
+    top: (position === "sticky" || position === "fixed") ? stickyOffset : undefined,
     transform: !isVisible && (hideOnScroll || showOnScrollUp) ? "translateY(-100%)" : "translateY(0)",
     transition: "transform 0.3s ease, background-color 0.3s ease",
   };
@@ -473,7 +481,7 @@ export function PremiumNavbarRender({
       <nav
         ref={navRef}
         id={id}
-        className={`w-full z-50 ${sticky ? "sticky" : "relative"} ${shadowClasses[shadow]} ${className}`}
+        className={`w-full z-50 ${positionClasses[position]} ${shadowClasses[shadow]} ${className}`}
         style={bgStyle}
         aria-label={ariaLabel}
         role="navigation"
@@ -836,7 +844,7 @@ export interface PremiumHeroProps {
   imageAnimation?: "none" | "fadeIn" | "slideUp" | "slideIn" | "zoom";
   
   // Sizing
-  minHeight?: "auto" | "50vh" | "75vh" | "100vh" | "screen";
+  minHeight?: "auto" | "50vh" | "75vh" | "100vh" | "100dvh" | "fullscreen" | "screen";
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "7xl" | "full";
   paddingTop?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
   paddingBottom?: "none" | "sm" | "md" | "lg" | "xl" | "2xl";
@@ -844,8 +852,18 @@ export interface PremiumHeroProps {
   
   // Scroll Indicator
   showScrollIndicator?: boolean;
+  scrollIndicatorIcon?: "arrow" | "chevron" | "chevronDouble" | "mouse" | "hand" | "dots" | "line";
   scrollIndicatorColor?: string;
+  scrollIndicatorSize?: "sm" | "md" | "lg" | "xl";
+  scrollIndicatorAnimation?: "bounce" | "pulse" | "fade" | "slide" | "none";
+  scrollIndicatorLabel?: string;
   scrollTarget?: string;
+  
+  // Mouse/Touch Parallax Effect
+  enableMouseParallax?: boolean;
+  mouseParallaxIntensity?: number; // 1-100
+  mouseParallaxLayers?: number; // Number of parallax layers
+  mouseParallaxSmooth?: number; // Smoothing factor (ms)
   
   // Decorations
   showPattern?: boolean;
@@ -946,10 +964,20 @@ export function PremiumHeroRender({
   paddingBottom = "xl",
   paddingX = "md",
   
-  // Scroll
+  // Scroll Indicator
   showScrollIndicator = false,
+  scrollIndicatorIcon = "arrow",
   scrollIndicatorColor = "#6b7280",
+  scrollIndicatorSize = "md",
+  scrollIndicatorAnimation = "bounce",
+  scrollIndicatorLabel = "Scroll down",
   scrollTarget = "#main",
+  
+  // Mouse/Touch Parallax
+  enableMouseParallax = false,
+  mouseParallaxIntensity = 20,
+  mouseParallaxLayers = 1,
+  mouseParallaxSmooth = 150,
   
   // Pattern
   showPattern = false,
@@ -968,7 +996,9 @@ export function PremiumHeroRender({
   _liveEffects = false,
 }: PremiumHeroProps) {
   const [isVideoPlaying, setIsVideoPlaying] = useState(videoAutoplay);
+  const [mousePosition, setMousePosition] = useState({ x: 0.5, y: 0.5 });
   const videoRef = useRef<HTMLVideoElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
   
   // Check if effects should run
   const enableEffects = !_isEditor || _liveEffects;
@@ -1035,7 +1065,112 @@ export function PremiumHeroRender({
     "50vh": "min-h-[50vh]",
     "75vh": "min-h-[75vh]",
     "100vh": "min-h-screen",
+    "100dvh": "min-h-[100dvh]", // Dynamic viewport height - accounts for mobile address bar
+    fullscreen: "min-h-[100svh]", // Small viewport height - safe for nav overlay
     screen: "min-h-screen",
+  };
+  
+  // Scroll indicator size classes
+  const scrollIndicatorSizeClasses: Record<string, string> = {
+    sm: "w-5 h-5",
+    md: "w-8 h-8",
+    lg: "w-10 h-10",
+    xl: "w-12 h-12",
+  };
+  
+  // Scroll indicator animation classes
+  const scrollIndicatorAnimationClasses: Record<string, string> = {
+    bounce: "animate-bounce",
+    pulse: "animate-pulse",
+    fade: "animate-[fade_2s_ease-in-out_infinite]",
+    slide: "animate-[slideDown_1.5s_ease-in-out_infinite]",
+    none: "",
+  };
+  
+  // Scroll indicator icons
+  const renderScrollIndicatorIcon = () => {
+    const sizeClass = scrollIndicatorSizeClasses[scrollIndicatorSize];
+    const baseProps = { className: sizeClass, fill: "none", stroke: "currentColor", viewBox: "0 0 24 24" };
+    
+    switch (scrollIndicatorIcon) {
+      case "chevron":
+        return (
+          <svg {...baseProps}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        );
+      case "chevronDouble":
+        return (
+          <svg {...baseProps}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 5l-7 7-7-7M19 13l-7 7-7-7" />
+          </svg>
+        );
+      case "mouse":
+        return (
+          <svg {...baseProps}>
+            <rect x="6" y="3" width="12" height="18" rx="6" strokeWidth={2} />
+            <line x1="12" y1="7" x2="12" y2="11" strokeWidth={2} strokeLinecap="round" />
+          </svg>
+        );
+      case "hand":
+        return (
+          <svg {...baseProps}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" />
+          </svg>
+        );
+      case "dots":
+        return (
+          <svg {...baseProps}>
+            <circle cx="12" cy="6" r="2" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="18" r="2" fill="currentColor" stroke="none" />
+          </svg>
+        );
+      case "line":
+        return (
+          <svg {...baseProps}>
+            <line x1="12" y1="2" x2="12" y2="22" strokeWidth={2} strokeLinecap="round" />
+          </svg>
+        );
+      case "arrow":
+      default:
+        return (
+          <svg {...baseProps}>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        );
+    }
+  };
+  
+  // Mouse parallax effect handler
+  useEffect(() => {
+    if (!enableEffects || !enableMouseParallax) return;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!heroRef.current) return;
+      const rect = heroRef.current.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      setMousePosition({ x, y });
+    };
+    
+    const heroElement = heroRef.current;
+    if (heroElement) {
+      heroElement.addEventListener("mousemove", handleMouseMove);
+      return () => heroElement.removeEventListener("mousemove", handleMouseMove);
+    }
+  }, [enableEffects, enableMouseParallax]);
+  
+  // Calculate parallax transform for layers
+  const getParallaxTransform = (layer: number) => {
+    if (!enableMouseParallax) return {};
+    const intensity = (mouseParallaxIntensity / 100) * (layer + 1) * 10;
+    const x = (mousePosition.x - 0.5) * intensity;
+    const y = (mousePosition.y - 0.5) * intensity;
+    return {
+      transform: `translate(${x}px, ${y}px)`,
+      transition: `transform ${mouseParallaxSmooth}ms ease-out`,
+    };
   };
   
   const paddingTopClasses: Record<string, string> = {
@@ -1152,6 +1287,7 @@ export function PremiumHeroRender({
     
     return (
       <section
+        ref={heroRef}
         id={id}
         className={`relative w-full ${heightClasses[minHeight]} ${paddingTopClasses[paddingTop]} ${paddingBottomClasses[paddingBottom]} ${paddingXClasses[paddingX]} flex items-center ${className}`}
         style={bgStyle}
@@ -1165,7 +1301,10 @@ export function PremiumHeroRender({
           />
         )}
         
-        <div className={`relative z-10 ${maxWidthClasses[maxWidth]} mx-auto w-full`}>
+        <div 
+          className={`relative z-10 ${maxWidthClasses[maxWidth]} mx-auto w-full`}
+          style={enableMouseParallax ? getParallaxTransform(0) : undefined}
+        >
           <div className={`grid md:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center ${isReversed ? "" : ""}`}>
             {/* Content */}
             <div className={`flex flex-col ${contentAlignClasses[contentAlign]} ${isReversed ? "md:order-2" : "md:order-1"}`}>
@@ -1262,6 +1401,7 @@ export function PremiumHeroRender({
   if (variant === "video" && videoSrc) {
     return (
       <section
+        ref={heroRef}
         id={id}
         className={`relative w-full ${heightClasses[minHeight]} flex flex-col ${verticalAlignClasses[verticalAlign]} overflow-hidden ${className}`}
       >
@@ -1286,7 +1426,10 @@ export function PremiumHeroRender({
         />
         
         {/* Content */}
-        <div className={`relative z-20 ${maxWidthClasses[maxWidth]} mx-auto w-full ${paddingXClasses[paddingX]} ${paddingTopClasses[paddingTop]} ${paddingBottomClasses[paddingBottom]}`}>
+        <div 
+          className={`relative z-20 ${maxWidthClasses[maxWidth]} mx-auto w-full ${paddingXClasses[paddingX]} ${paddingTopClasses[paddingTop]} ${paddingBottomClasses[paddingBottom]}`}
+          style={enableMouseParallax ? getParallaxTransform(0) : undefined}
+        >
           <div className={`flex flex-col ${contentAlignClasses[contentAlign]}`}>
             {badge && (
               <span 
@@ -1362,13 +1505,14 @@ export function PremiumHeroRender({
         {showScrollIndicator && (
           <a 
             href={scrollTarget}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 animate-bounce"
+            className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 ${scrollIndicatorAnimationClasses[scrollIndicatorAnimation]}`}
             style={{ color: scrollIndicatorColor }}
-            aria-label="Scroll down"
+            aria-label={scrollIndicatorLabel}
           >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
+            {scrollIndicatorLabel && (
+              <span className="text-xs uppercase tracking-widest opacity-70">{scrollIndicatorLabel}</span>
+            )}
+            {renderScrollIndicatorIcon()}
           </a>
         )}
       </section>
@@ -1378,6 +1522,7 @@ export function PremiumHeroRender({
   // Default Centered/Fullscreen/Minimal Variant
   return (
     <section
+      ref={heroRef}
       id={id}
       className={`relative w-full ${heightClasses[minHeight]} ${paddingTopClasses[paddingTop]} ${paddingBottomClasses[paddingBottom]} ${paddingXClasses[paddingX]} flex flex-col ${verticalAlignClasses[verticalAlign]} ${className}`}
       style={bgStyle}
@@ -1409,7 +1554,10 @@ export function PremiumHeroRender({
       )}
       
       {/* Content */}
-      <div className={`relative z-10 ${maxWidthClasses[maxWidth]} mx-auto w-full`}>
+      <div 
+        className={`relative z-10 ${maxWidthClasses[maxWidth]} mx-auto w-full`}
+        style={enableMouseParallax ? getParallaxTransform(0) : undefined}
+      >
         <div className={`flex flex-col ${contentAlignClasses[contentAlign]}`}>
           {badge && (
             <span 
@@ -1487,13 +1635,14 @@ export function PremiumHeroRender({
       {showScrollIndicator && (
         <a 
           href={scrollTarget}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 animate-bounce"
+          className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 ${scrollIndicatorAnimationClasses[scrollIndicatorAnimation]}`}
           style={{ color: scrollIndicatorColor }}
-          aria-label="Scroll down"
+          aria-label={scrollIndicatorLabel}
         >
-          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
+          {scrollIndicatorLabel && (
+            <span className="text-xs uppercase tracking-widest opacity-70">{scrollIndicatorLabel}</span>
+          )}
+          {renderScrollIndicatorIcon()}
         </a>
       )}
     </section>

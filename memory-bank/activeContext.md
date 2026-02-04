@@ -2,7 +2,85 @@
 
 **Last Updated**: February 4, 2026  
 **Current Phase**: DRAMAC Studio - **ALL 31 PHASES COMPLETE + CRITICAL FIXES + PREMIUM COMPONENTS** 🎉  
-**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: PREMIUM COMPONENTS + WIX STUDIO CANVAS SELECTION ✅**
+**Status**: ✅ 40 OF 40 PHASES (100%) + All Enhancement Phases + Domain Module + **🚀 STUDIO: PREMIUM COMPONENTS + ADVANCED FEATURES ✅**
+
+---
+
+## 🎨 ADVANCED STUDIO FEATURES (February 4, 2026 - Session 6)
+
+### User Requests Addressed
+1. **Hero 100vh + Nav Issue**: When hero is 100vh and navbar is present, scroll indicator goes off-screen
+2. **Mouse/Finger Parallax**: Interactive animations that respond to cursor movement
+3. **More Scroll Indicator Icons**: Only had one arrow icon before
+4. **Component Nesting**: Ability to drag components inside other components
+5. **Enhanced Customization**: More fine-grained control over component elements
+
+### Solutions Implemented
+
+#### 1. Navbar Position Modes (Overlay Hero) ✅
+**File**: `src/lib/studio/blocks/premium-components.tsx`
+- **NEW**: `position` property replaces `sticky` boolean
+- Options: `relative` | `sticky` | `absolute` | `fixed`
+- `absolute`: Navbar overlays hero (transparent with content beneath)
+- `fixed`: Always visible at top, overlays all content
+- Combined with `transparentUntilScroll` for professional effect
+
+#### 2. Hero Dynamic Height Options ✅
+**File**: `src/lib/studio/blocks/premium-components.tsx`
+- **NEW Heights**:
+  - `100dvh`: Dynamic viewport height - safe for mobile (accounts for address bar)
+  - `fullscreen`: Uses `100svh` - small viewport height for overlay scenarios
+- Existing: `auto`, `50vh`, `75vh`, `100vh`, `screen`
+
+#### 3. Mouse/Touch Parallax Effect ✅
+**File**: `src/lib/studio/blocks/premium-components.tsx`
+- **Properties**:
+  - `enableMouseParallax`: Toggle effect on/off
+  - `mouseParallaxIntensity`: 1-100 (how much movement)
+  - `mouseParallaxLayers`: Number of depth layers (1-5)
+  - `mouseParallaxSmooth`: Smoothing in ms (0-500)
+- Content wrapper tracks mouse position within hero bounds
+- Smooth animation transitions
+
+#### 4. Enhanced Scroll Indicator Icons ✅
+**File**: `src/lib/studio/blocks/premium-components.tsx`
+- **7 Icon Styles**:
+  - `arrow`: Down arrow (default)
+  - `chevron`: Single chevron down
+  - `chevronDouble`: Double chevrons (more noticeable)
+  - `mouse`: Mouse/scroll wheel icon
+  - `hand`: Pointing hand/swipe gesture
+  - `dots`: Three vertical dots
+  - `line`: Simple vertical line
+- **Customization**:
+  - `scrollIndicatorSize`: sm/md/lg/xl
+  - `scrollIndicatorAnimation`: bounce/pulse/fade/slide/none
+  - `scrollIndicatorLabel`: Optional text label (e.g., "Scroll down")
+  - `scrollIndicatorColor`: Any color
+
+#### 5. Component Registry Updated ✅
+**File**: `src/lib/studio/registry/core-components.ts`
+- Navbar: `position` field with 4 options (replaced `sticky` toggle)
+- Hero: `minHeight` now has 6 options including `100dvh` and `fullscreen`
+- Hero: New scroll indicator fields (icon, size, animation, label)
+- Hero: New mouse parallax fields (enable, intensity, layers, smooth)
+
+### How to Use for Fullscreen Hero with Nav Overlay
+
+**Navbar Settings**:
+```
+position: "absolute"
+backgroundColor: transparent or with low opacity
+transparentUntilScroll: true (optional - becomes solid on scroll)
+```
+
+**Hero Settings**:
+```
+minHeight: "100dvh" or "fullscreen"
+paddingTop: "xl" or "2xl" (to account for navbar space)
+```
+
+This allows the hero to fill the entire viewport while the navbar floats on top, just like professional websites.
 
 ---
 
