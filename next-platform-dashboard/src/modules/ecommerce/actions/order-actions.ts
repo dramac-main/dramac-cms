@@ -89,7 +89,7 @@ export async function getOrderDetail(
     ...order,
     items: items || [],
     timeline: timeline || [],
-    notes: notes || [],
+    order_notes: notes || [],
     shipments: shipments || [],
     refunds: refunds || []
   }

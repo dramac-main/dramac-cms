@@ -1035,7 +1035,7 @@ export interface OrderBulkAction {
 
 export interface OrderDetailData extends Order {
   timeline: OrderTimelineEvent[]
-  notes: OrderNote[]
+  order_notes: OrderNote[]
   shipments: OrderShipment[]
   refunds: OrderRefund[]
 }
