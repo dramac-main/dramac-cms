@@ -77,13 +77,6 @@ import {
   TrustBadgesRender,
   LogoCloudRender,
   ComparisonTableRender,
-  // E-Commerce
-  ProductGridRender,
-  ProductCardRender,
-  ProductCategoriesRender,
-  CartSummaryRender,
-  FeaturedProductsRender,
-  CartIconRender,
   // 3D Effects (Phase 31)
   CardFlip3DRender,
   TiltCardRender,
@@ -8078,185 +8071,6 @@ const marketingComponents: ComponentDefinition[] = [
 ];
 
 // =============================================================================
-// E-COMMERCE COMPONENTS
-// =============================================================================
-
-const ecommerceComponents: ComponentDefinition[] = [
-  defineComponent({
-    type: "ProductGrid",
-    label: "Product Grid",
-    description: "Grid of product cards",
-    category: "ecommerce",
-    icon: "ShoppingBag",
-    render: ProductGridRender,
-    fields: {
-      title: { type: "text", label: "Title" },
-      products: {
-        type: "array",
-        label: "Products",
-        itemFields: {
-          name: { type: "text", label: "Name" },
-          price: { type: "number", label: "Price" },
-          image: { type: "image", label: "Image" },
-          link: { type: "link", label: "Link" },
-        },
-      },
-      columns: {
-        type: "select",
-        label: "Columns",
-        options: [
-          { label: "2 Columns", value: "2" },
-          { label: "3 Columns", value: "3" },
-          { label: "4 Columns", value: "4" },
-        ],
-        defaultValue: "4",
-      },
-    },
-    defaultProps: {
-      products: [],
-      columns: 4,
-    },
-    ai: {
-      description: "A grid displaying product cards",
-      canModify: ["title", "columns"],
-    },
-  }),
-
-  defineComponent({
-    type: "ProductCard",
-    label: "Product Card",
-    description: "Single product card",
-    category: "ecommerce",
-    icon: "ShoppingBag",
-    render: ProductCardRender,
-    fields: {
-      name: { type: "text", label: "Product Name" },
-      price: { type: "number", label: "Price" },
-      originalPrice: { type: "number", label: "Original Price" },
-      image: { type: "image", label: "Image" },
-      link: { type: "link", label: "Product Link" },
-      badge: { type: "text", label: "Badge Text" },
-      rating: { type: "number", label: "Rating", min: 0, max: 5 },
-    },
-    defaultProps: {},
-    ai: {
-      description: "A single product card",
-      canModify: ["name", "price", "badge"],
-    },
-  }),
-
-  defineComponent({
-    type: "ProductCategories",
-    label: "Product Categories",
-    description: "Category navigation",
-    category: "ecommerce",
-    icon: "Tags",
-    render: ProductCategoriesRender,
-    fields: {
-      title: { type: "text", label: "Title" },
-      categories: {
-        type: "array",
-        label: "Categories",
-        itemFields: {
-          name: { type: "text", label: "Name" },
-          image: { type: "image", label: "Image" },
-          link: { type: "link", label: "Link" },
-        },
-      },
-    },
-    defaultProps: {
-      categories: [],
-    },
-    ai: {
-      description: "Product category navigation",
-      canModify: ["title", "categories"],
-    },
-  }),
-
-  defineComponent({
-    type: "CartSummary",
-    label: "Cart Summary",
-    description: "Shopping cart summary",
-    category: "ecommerce",
-    icon: "ShoppingCart",
-    render: CartSummaryRender,
-    fields: {
-      title: { type: "text", label: "Title", defaultValue: "Your Cart" },
-      showCoupon: { type: "toggle", label: "Show Coupon Field", defaultValue: true },
-      checkoutLink: { type: "link", label: "Checkout Link" },
-    },
-    defaultProps: {
-      title: "Your Cart",
-      showCoupon: true,
-    },
-    ai: {
-      description: "A shopping cart summary widget",
-      canModify: ["title", "showCoupon"],
-    },
-  }),
-
-  defineComponent({
-    type: "FeaturedProducts",
-    label: "Featured Products",
-    description: "Featured products section",
-    category: "ecommerce",
-    icon: "Star",
-    render: FeaturedProductsRender,
-    fields: {
-      title: { type: "text", label: "Title", defaultValue: "Featured Products" },
-      products: {
-        type: "array",
-        label: "Products",
-        itemFields: {
-          name: { type: "text", label: "Name" },
-          price: { type: "number", label: "Price" },
-          image: { type: "image", label: "Image" },
-          link: { type: "link", label: "Link" },
-        },
-      },
-    },
-    defaultProps: {
-      title: "Featured Products",
-      products: [],
-    },
-    ai: {
-      description: "A featured products showcase",
-      canModify: ["title", "products"],
-    },
-  }),
-
-  defineComponent({
-    type: "CartIcon",
-    label: "Cart Icon",
-    description: "Shopping cart icon with count",
-    category: "ecommerce",
-    icon: "ShoppingCart",
-    render: CartIconRender,
-    fields: {
-      style: {
-        type: "select",
-        label: "Style",
-        options: [
-          { label: "Default", value: "default" },
-          { label: "Minimal", value: "minimal" },
-          { label: "Outlined", value: "outlined" },
-        ],
-        defaultValue: "default",
-      },
-      showCount: { type: "toggle", label: "Show Count", defaultValue: true },
-    },
-    defaultProps: {
-      style: "default",
-      showCount: true,
-    },
-    ai: {
-      description: "A shopping cart icon with item count",
-      canModify: ["style", "showCount"],
-    },
-  }),
-];
-
-// =============================================================================
 // 3D EFFECTS COMPONENTS (Phase 31)
 // =============================================================================
 
@@ -8649,7 +8463,6 @@ export function registerCoreComponents(): void {
     ...interactiveComponents,
     ...uiComponents,
     ...marketingComponents,
-    ...ecommerceComponents,
     ...effectsComponents,
   ];
 
@@ -8674,6 +8487,5 @@ export {
   interactiveComponents,
   uiComponents,
   marketingComponents,
-  ecommerceComponents,
   effectsComponents,
 };
