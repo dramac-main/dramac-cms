@@ -1,6 +1,57 @@
 # Active Context
 
-## Latest Session Update (Build Error Fix - February 4, 2026)
+## Latest Session Update (Phase ECOM-04 Complete - February 4, 2026)
+
+### Completed: Order Management Enhancement
+**Date:** February 4, 2026  
+**Commit:** 8c53251 - fix(ecommerce): resolve OrderDetailData type conflict with Order.notes
+
+#### Features Implemented:
+- **Order Detail Dialog** - Comprehensive view with tabs (Details, Timeline, Invoice)
+- **Order Timeline** - Visual timeline with 13 event types (status_changed, payment_received, note_added, etc.)
+- **Order Items Table** - Product images, variants, SKU, subtotals with all adjustments
+- **Customer Panel** - Customer info, billing/shipping addresses, guest badges, order notes
+- **Invoice Template** - Printable invoice with forwardRef support, store branding
+- **Refund Dialog** - Full/partial refund, item selection, quantity adjustment, custom amount
+
+#### Files Created (8 new files):
+- `src/modules/ecommerce/actions/order-actions.ts` - 12 server actions for order management (~500 lines)
+- `src/modules/ecommerce/components/orders/order-timeline.tsx` - Visual timeline component (~165 lines)
+- `src/modules/ecommerce/components/orders/order-items-table.tsx` - Order line items table (~175 lines)
+- `src/modules/ecommerce/components/orders/order-customer-panel.tsx` - Customer info panel (~165 lines)
+- `src/modules/ecommerce/components/orders/invoice-template.tsx` - Printable invoice (~220 lines)
+- `src/modules/ecommerce/components/orders/refund-dialog.tsx` - Refund creation dialog (~295 lines)
+- `src/modules/ecommerce/components/orders/order-detail-dialog.tsx` - Main order view (~345 lines)
+- `src/modules/ecommerce/components/orders/index.ts` - Component exports
+
+#### Types Added (15 new types in ecommerce-types.ts):
+- `OrderEventType`, `OrderTimelineEvent`, `OrderNote`, `OrderShipment`, `OrderRefund`
+- `OrderTableFilters`, `OrderBulkAction`, `OrderDetailData`, `InvoiceData`, `PackingSlipData`
+
+#### Server Actions Added (order-actions.ts):
+- `getOrderDetail()`, `getOrders()`, `updateOrderStatus()`, `addOrderNote()`, `deleteOrderNote()`
+- `addOrderShipment()`, `updateShipmentStatus()`, `createRefund()`, `processRefund()`
+- `executeOrderBulkAction()`, `generateInvoiceNumber()`, `sendOrderEmail()`
+
+#### Type Fix Applied:
+- Renamed `notes` property to `order_notes` in `OrderDetailData` interface
+- This avoids conflict with `Order.notes` (string) vs `OrderDetailData.order_notes` (OrderNote[])
+
+#### Database Tables Required (NOT YET APPLIED):
+The following tables need to be created for full functionality:
+- `mod_ecommod01_order_timeline` - Order event history
+- `mod_ecommod01_order_notes` - Internal/customer notes
+- `mod_ecommod01_order_shipments` - Shipment tracking
+- `mod_ecommod01_order_refunds` - Refund records
+
+#### Verification:
+- ✅ No TypeScript errors in e-commerce module
+- ✅ Dev server starts successfully
+- ✅ Committed and pushed to origin/main
+
+---
+
+## Previous Session Update (Build Error Fix - February 4, 2026)
 
 ### Fixed: Next.js 16 'use server' Directive Build Error
 **Date:** Current Session  

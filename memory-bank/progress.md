@@ -6,7 +6,69 @@
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
 **Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
-**E-Commerce Module**: ECOM-01 ✅ | ECOM-02 ✅ | ECOM-03 ✅
+**E-Commerce Module**: ECOM-01 ✅ | ECOM-02 ✅ | ECOM-03 ✅ | ECOM-04 ✅
+
+## 🛒 E-COMMERCE PHASE ECOM-04 COMPLETE (February 4, 2026)
+
+### Phase ECOM-04: Order Management Enhancement
+
+**Commit**: `8c53251` (type fix) | **Files Added**: 8 new files, 2 modified
+
+### Features Implemented
+
+| Feature | Description |
+|---------|-------------|
+| **Order Detail Dialog** | Comprehensive dialog with tabs (Details, Timeline, Invoice) |
+| **Order Timeline** | Visual timeline with 13 event types (status, payment, notes, etc.) |
+| **Order Items Table** | Product images, variants, SKU, subtotals with discounts/tax/shipping |
+| **Customer Panel** | Customer info, billing/shipping addresses, guest badge, order notes |
+| **Invoice Template** | Printable invoice with forwardRef support, store branding |
+| **Refund Dialog** | Full/partial refund, item selection, quantity adjustment, custom amount |
+| **Bulk Actions** | Update status, export, print invoices, print labels, archive |
+| **Status Management** | Update order status with timeline tracking |
+| **Shipment Tracking** | Add shipments, update tracking numbers, mark delivered |
+| **Email Actions** | Send invoice, send shipping notification |
+
+### New Files Created
+
+| File | Purpose |
+|------|---------|
+| `actions/order-actions.ts` | 12 server actions for order management |
+| `components/orders/order-timeline.tsx` | Visual timeline with 13 event type configs |
+| `components/orders/order-items-table.tsx` | Order line items table with totals |
+| `components/orders/order-customer-panel.tsx` | Customer info and addresses panel |
+| `components/orders/invoice-template.tsx` | Printable invoice document |
+| `components/orders/refund-dialog.tsx` | Refund creation dialog |
+| `components/orders/order-detail-dialog.tsx` | Main comprehensive order view |
+| `components/orders/index.ts` | Component exports |
+
+### Types Added to ecommerce-types.ts (15 types)
+- `OrderEventType` - Union of 13 event types
+- `OrderTimelineEvent` - Timeline event structure
+- `OrderNote` - Order note with internal flag
+- `OrderShipment` - Shipment tracking data
+- `OrderRefund` - Refund request structure
+- `OrderTableFilters` - Filter state interface
+- `OrderBulkAction` - Bulk action definition
+- `OrderDetailData` - Extended Order with relations
+- `InvoiceData` - Invoice generation data
+- `PackingSlipData` - Packing slip data
+
+### Server Actions Added (order-actions.ts)
+- `getOrderDetail()` - Fetch order with all relations
+- `getOrders()` - List orders with filters
+- `updateOrderStatus()` - Change order status
+- `addOrderNote()` - Add internal/customer notes
+- `deleteOrderNote()` - Remove note
+- `addOrderShipment()` - Create shipment record
+- `updateShipmentStatus()` - Update shipment tracking
+- `createRefund()` - Initiate refund request
+- `processRefund()` - Complete refund processing
+- `executeOrderBulkAction()` - Handle bulk operations
+- `generateInvoiceNumber()` - Generate unique invoice number
+- `sendOrderEmail()` - Send order-related emails
+
+---
 
 ## 🛒 E-COMMERCE PHASE ECOM-03 COMPLETE (February 4, 2026)
 
