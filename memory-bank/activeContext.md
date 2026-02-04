@@ -1,9 +1,52 @@
 # Active Context
 
-## Latest Session Update (Phase ECOM-03 Complete - February 4, 2026)
+## Latest Session Update (Build Error Fix - February 4, 2026)
+
+### Fixed: Next.js 16 'use server' Directive Build Error
+**Date:** Current Session  
+**Commit:** eee5d11 - fix: Move settings helper functions to utils to comply with 'use server' directive
+
+#### Problem:
+After deploying Phase ECOM-03, the dev server failed to start with error:
+```
+Server Actions must be async functions.
+```
+
+The issue was in `settings-actions.ts` where helper functions `getCountryList()`, `getCurrencyList()`, `getTimezoneList()`, and `validateTaxRate()` were **synchronous functions** in a file with `'use server'` directive.
+
+#### Root Cause:
+In Next.js 16 with `'use server'` directive, **ALL exported functions must be async**, even pure utility functions that return static data.
+
+#### Solution:
+1. Created new file: `src/modules/ecommerce/lib/settings-utils.ts` for pure utility functions
+2. Moved all 4 helper functions to this new file (made them synchronous again)
+3. Removed these functions from `settings-actions.ts`
+4. Updated imports in:
+   - `general-settings.tsx` - Now imports from `../../lib/settings-utils`
+   - `currency-settings.tsx` - Now imports from `../../lib/settings-utils`
+
+#### Files Changed:
+- **Created**: `src/modules/ecommerce/lib/settings-utils.ts` (126 lines)
+- **Modified**: `src/modules/ecommerce/actions/settings-actions.ts` (removed 120 lines)
+- **Modified**: `src/modules/ecommerce/components/settings/general-settings.tsx` (import statement)
+- **Modified**: `src/modules/ecommerce/components/settings/currency-settings.tsx` (import statement)
+
+#### Pattern Learned:
+- **Server Actions file** (`'use server'`) → ALL exports must be `async function`
+- **Utility functions** (pure logic) → Move to separate file WITHOUT `'use server'` directive
+- This separation is cleaner and follows Next.js best practices
+
+#### Verification:
+- ✅ `npx tsc --noEmit` passes with zero errors
+- ✅ Dev server starts successfully on port 3001
+- ✅ No build errors
+
+---
+
+## Previous Session Update (Phase ECOM-03 Complete - February 4, 2026)
 
 ### Completed: Settings & Configuration Center
-**Date:** Current Session  
+**Date:** February 4, 2026  
 **Commit:** 7fc4f98 - feat(ecommerce): Phase ECOM-03 - Settings & Configuration Center
 
 #### Files Created (6 new files):
