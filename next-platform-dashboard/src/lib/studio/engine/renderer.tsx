@@ -12,6 +12,7 @@
  * - Supports theme settings/CSS variables
  * - SSR-compatible with "use client" directive
  * - Auto-initializes component registry
+ * - Loads module components when modules prop provided
  * 
  * @phase STUDIO-27 - Platform Integration & Puck Removal
  * @phase STUDIO-28 - Fixed registry initialization for preview
@@ -21,7 +22,9 @@ import React, { useMemo, useEffect, useState } from "react";
 import { ensureStudioFormat } from "../utils/migrate-puck-data";
 import { getComponent, componentRegistry } from "../registry/component-registry";
 import { initializeRegistry, isRegistryInitialized } from "../registry";
+import { loadModuleComponents } from "../registry/module-loader";
 import type { StudioComponent } from "@/types/studio";
+import type { InstalledModuleInfo } from "@/types/studio-module";
 
 // ============================================================================
 // Types
@@ -38,6 +41,8 @@ export interface StudioRendererProps {
   pageId?: string;
   /** Additional CSS class */
   className?: string;
+  /** Installed modules for this site - enables module component rendering */
+  modules?: InstalledModuleInfo[];
 }
 
 interface ComponentRendererProps {
@@ -204,20 +209,46 @@ export function StudioRenderer({
   themeSettings,
   siteId,
   pageId,
+  modules,
   className = "",
 }: StudioRendererProps): React.ReactElement {
-  // Track registry initialization state
-  const [registryReady, setRegistryReady] = useState(isRegistryInitialized());
-  
-  // Initialize registry on mount if needed
-  useEffect(() => {
+  // Ensure registry is initialized synchronously on first render
+  const registryReady = useMemo(() => {
     if (!isRegistryInitialized()) {
       console.log("[StudioRenderer] Initializing component registry...");
       initializeRegistry();
-      setRegistryReady(true);
       console.log("[StudioRenderer] Registry initialized with", componentRegistry.count, "components");
     }
+    return true;
   }, []);
+  
+  const [modulesLoaded, setModulesLoaded] = useState(!modules || modules.length === 0);
+  
+  // Load module components if modules are provided
+  useEffect(() => {
+    if (modules && modules.length > 0) {
+      console.log("[StudioRenderer] Loading module components for", modules.length, "modules...");
+      let isCancelled = false;
+      
+      loadModuleComponents(modules)
+        .then(() => {
+          if (!isCancelled) {
+            console.log("[StudioRenderer] Module components loaded");
+            setModulesLoaded(true);
+          }
+        })
+        .catch((err) => {
+          if (!isCancelled) {
+            console.error("[StudioRenderer] Error loading module components:", err);
+            setModulesLoaded(true); // Continue even if modules fail to load
+          }
+        });
+      
+      return () => {
+        isCancelled = true;
+      };
+    }
+  }, [modules]);
   
   // Migrate data to Studio format (memoized)
   const studioData = useMemo(() => {
@@ -229,11 +260,11 @@ export function StudioRenderer({
     return themeSettings ? generateThemeCSS(themeSettings) : {};
   }, [themeSettings]);
   
-  // Wait for registry to be ready
-  if (!registryReady) {
+  // Wait for registry and modules to be ready
+  if (!registryReady || !modulesLoaded) {
     return (
       <div className={`studio-renderer studio-loading ${className}`}>
-        <div className="flex items-center justify-center min-h-[200px]">
+        <div className="flex items-center justify-center min-h-50">
           <div className="animate-pulse text-muted-foreground">Loading components...</div>
         </div>
       </div>

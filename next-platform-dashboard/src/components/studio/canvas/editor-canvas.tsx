@@ -51,12 +51,14 @@ interface CanvasComponentProps {
 function CanvasComponent({ componentId, index, parentId }: CanvasComponentProps) {
   const component = useEditorStore((s) => s.data.components[componentId]);
   const breakpoint = useUIStore((s) => s.breakpoint);
+  const liveEffects = useUIStore((s) => s.liveEffects);
+  const zoom = useUIStore((s) => s.zoom);
   
   // Get the render function from registry (memoized to avoid repeated lookups)
   const definition = component ? componentRegistry.get(component.type) : null;
   
   // Resolve responsive props for the current breakpoint
-  // Components can access _breakpoint and _isEditor for context
+  // Components can access _breakpoint, _isEditor, and _liveEffects for context
   // Note: This hook must be called unconditionally (before any early returns)
   const resolvedProps = useMemo(() => {
     if (!component) return {};
@@ -66,9 +68,11 @@ function CanvasComponent({ componentId, index, parentId }: CanvasComponentProps)
     // Add editor context
     props._breakpoint = breakpoint;
     props._isEditor = true;
+    // Enable live effects when toggle is on AND zoom is 100% (transforms break fixed positioning)
+    props._liveEffects = liveEffects && zoom === 1;
     
     return props;
-  }, [component, breakpoint]);
+  }, [component, breakpoint, liveEffects, zoom]);
   
   // Early returns after all hooks
   if (!component) {

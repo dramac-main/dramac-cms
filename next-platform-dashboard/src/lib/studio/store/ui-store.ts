@@ -55,6 +55,12 @@ export interface ComponentStateEditingState {
   previewingState: ComponentState | null;
 }
 
+/** Live effects state for realistic preview in editor */
+export interface LiveEffectsState {
+  /** Enable live effects (parallax, scroll behaviors, animations) in editor canvas */
+  liveEffects: boolean;
+}
+
 export interface UIActions {
   // Panels
   togglePanel: (panel: keyof PanelState) => void;
@@ -101,11 +107,15 @@ export interface UIActions {
   setEditingState: (state: ComponentState) => void;
   setPreviewingState: (state: ComponentState | null) => void;
   
+  // Live effects
+  toggleLiveEffects: () => void;
+  setLiveEffects: (enabled: boolean) => void;
+  
   // Reset
   resetUI: () => void;
 }
 
-export type UIStore = UIState & UIActions & ResponsivePreviewState & ShortcutsState & ComponentStateEditingState;
+export type UIStore = UIState & UIActions & ResponsivePreviewState & ShortcutsState & ComponentStateEditingState & LiveEffectsState;
 
 // =============================================================================
 // CONSTANTS
@@ -120,7 +130,7 @@ const MAX_ZOOM = 4;
 // INITIAL STATE
 // =============================================================================
 
-const initialState: UIState & ResponsivePreviewState & ShortcutsState & ComponentStateEditingState = {
+const initialState: UIState & ResponsivePreviewState & ShortcutsState & ComponentStateEditingState & LiveEffectsState = {
   breakpoint: "desktop",
   zoom: DEFAULT_ZOOM,
   panels: {
@@ -149,6 +159,8 @@ const initialState: UIState & ResponsivePreviewState & ShortcutsState & Componen
   // Component state editing defaults (PHASE-STUDIO-22)
   editingState: 'default',
   previewingState: null,
+  // Live effects defaults
+  liveEffects: false,
 };
 
 // =============================================================================
@@ -374,6 +386,18 @@ export const useUIStore = create<UIStore>()((set, get) => ({
   },
 
   // ---------------------------------------------------------------------------
+  // LIVE EFFECTS
+  // ---------------------------------------------------------------------------
+  
+  toggleLiveEffects: () => {
+    set((state) => ({ liveEffects: !state.liveEffects }));
+  },
+  
+  setLiveEffects: (enabled) => {
+    set({ liveEffects: enabled });
+  },
+
+  // ---------------------------------------------------------------------------
   // RESET
   // ---------------------------------------------------------------------------
   
@@ -403,3 +427,4 @@ export const selectPreviewOptions = (state: UIStore) => ({
 });
 export const selectEditingState = (state: UIStore) => state.editingState;
 export const selectPreviewingState = (state: UIStore) => state.previewingState;
+export const selectLiveEffects = (state: UIStore) => state.liveEffects;

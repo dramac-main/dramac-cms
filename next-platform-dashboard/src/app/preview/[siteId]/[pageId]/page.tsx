@@ -32,6 +32,16 @@ interface PreviewData {
   } | null;
   content: string | null;
   themeSettings: Record<string, unknown> | null;
+  modules?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    status: "active" | "inactive" | "suspended";
+    version: string;
+    category?: string;
+    hasStudioComponents?: boolean;
+    installationId?: string;
+  }>;
 }
 
 export default function PreviewPage({ params }: PreviewPageProps) {
@@ -195,6 +205,7 @@ export default function PreviewPage({ params }: PreviewPageProps) {
         themeSettings={data.themeSettings || data.site?.theme_settings}
         siteId={resolvedParams.siteId}
         pageId={resolvedParams.pageId}
+        modules={data.modules}
         className="min-h-screen"
       />
     </>

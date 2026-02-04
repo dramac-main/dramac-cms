@@ -83,10 +83,11 @@ export interface PremiumNavbarProps {
   // Navigation Links
   links?: Array<{
     label?: string;
+    text?: string; // Legacy support
     href?: string;
     target?: "_self" | "_blank";
     hasDropdown?: boolean;
-    dropdownLinks?: Array<{ label?: string; href?: string; description?: string }>;
+    dropdownLinks?: Array<{ label?: string; text?: string; href?: string; description?: string }>;
   }>;
   linkAlignment?: "left" | "center" | "right";
   linkSpacing?: "compact" | "normal" | "wide";
@@ -152,6 +153,14 @@ export interface PremiumNavbarProps {
   showCtaInMobileMenu?: boolean;
   mobileMenuLinkSpacing?: "compact" | "normal" | "spacious";
   
+  // Scroll Progress Indicator
+  showScrollProgress?: boolean;
+  scrollProgressPosition?: "top" | "bottom";
+  scrollProgressHeight?: number;
+  scrollProgressColor?: string;
+  scrollProgressBackground?: string;
+  scrollProgressStyle?: "bar" | "line" | "gradient";
+  
   // Accessibility
   ariaLabel?: string;
   skipToContent?: string;
@@ -161,6 +170,7 @@ export interface PremiumNavbarProps {
   className?: string;
   _breakpoint?: "mobile" | "tablet" | "desktop";
   _isEditor?: boolean;
+  _liveEffects?: boolean;
 }
 
 export function PremiumNavbarRender({
@@ -243,6 +253,14 @@ export function PremiumNavbarRender({
   showCtaInMobileMenu = true,
   mobileMenuLinkSpacing = "spacious",
   
+  // Scroll Progress
+  showScrollProgress = false,
+  scrollProgressPosition = "top",
+  scrollProgressHeight = 3,
+  scrollProgressColor = "#3b82f6",
+  scrollProgressBackground = "transparent",
+  scrollProgressStyle = "bar",
+  
   // Accessibility
   ariaLabel = "Main navigation",
   skipToContent,
@@ -252,17 +270,22 @@ export function PremiumNavbarRender({
   className = "",
   _breakpoint = "desktop",
   _isEditor = false,
+  _liveEffects = false,
 }: PremiumNavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const navRef = useRef<HTMLElement>(null);
+  
+  // Check if effects should run: either not in editor, or live effects enabled
+  const enableEffects = !_isEditor || _liveEffects;
 
   // Handle scroll behavior
   useEffect(() => {
-    if (_isEditor) return; // Disable scroll effects in editor
+    if (!enableEffects) return; // Disable scroll effects in editor unless live effects enabled
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -279,12 +302,19 @@ export function PremiumNavbarRender({
         }
       }
       
+      // Calculate scroll progress
+      if (showScrollProgress) {
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = docHeight > 0 ? (currentScrollY / docHeight) * 100 : 0;
+        setScrollProgress(Math.min(100, Math.max(0, progress)));
+      }
+      
       setLastScrollY(currentScrollY);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY, hideOnScroll, showOnScrollUp, scrollThreshold, _isEditor]);
+  }, [lastScrollY, hideOnScroll, showOnScrollUp, scrollThreshold, enableEffects, showScrollProgress]);
 
   // Close mobile menu on escape
   useEffect(() => {
@@ -481,46 +511,52 @@ export function PremiumNavbarRender({
               layout === "split" ? "flex-1 justify-center" : ""
             } ${linkAlignment === "right" ? "justify-end" : linkAlignment === "center" ? "justify-center" : ""}`}
           >
-            {links.map((link, i) => (
-              <div key={i} className="relative group">
-                <a
-                  href={link.href || "#"}
-                  target={link.target || "_self"}
-                  className={`inline-flex items-center gap-1 ${linkFontSizeClasses[linkFontSize]} ${linkWeightClasses[linkFontWeight]} ${getLinkHoverClass()}`}
-                  style={{ 
-                    color: textColor,
-                    textTransform: linkTextTransform,
-                  }}
-                  onMouseEnter={() => link.hasDropdown && setOpenDropdown(i)}
-                  onMouseLeave={() => setOpenDropdown(null)}
-                >
-                  {link.label}
-                  {link.hasDropdown && <ChevronDownIcon className="w-4 h-4 transition-transform group-hover:rotate-180" />}
-                </a>
-                
-                {/* Dropdown Menu */}
-                {link.hasDropdown && link.dropdownLinks && openDropdown === i && (
-                  <div 
-                    className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-100 py-2 opacity-100 translate-y-0 transition-all z-50"
-                    onMouseEnter={() => setOpenDropdown(i)}
+            {(links || []).map((link, i) => {
+              // Support both 'label' and 'text' properties for backwards compatibility
+              const linkText = link.label || link.text || '';
+              if (!linkText) return null;
+              
+              return (
+                <div key={i} className="relative group">
+                  <a
+                    href={link.href || "#"}
+                    target={link.target || "_self"}
+                    className={`inline-flex items-center gap-1 ${linkFontSizeClasses[linkFontSize]} ${linkWeightClasses[linkFontWeight]} ${getLinkHoverClass()}`}
+                    style={{ 
+                      color: textColor,
+                      textTransform: linkTextTransform,
+                    }}
+                    onMouseEnter={() => link.hasDropdown && setOpenDropdown(i)}
                     onMouseLeave={() => setOpenDropdown(null)}
                   >
-                    {link.dropdownLinks.map((dropLink, j) => (
-                      <a
-                        key={j}
-                        href={dropLink.href || "#"}
-                        className="block px-4 py-2 hover:bg-gray-50 transition-colors"
-                      >
-                        <span className="font-medium text-gray-900">{dropLink.label}</span>
-                        {dropLink.description && (
-                          <span className="block text-sm text-gray-500 mt-0.5">{dropLink.description}</span>
-                        )}
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+                    {linkText}
+                    {link.hasDropdown && <ChevronDownIcon className="w-4 h-4 transition-transform group-hover:rotate-180" />}
+                  </a>
+                
+                  {/* Dropdown Menu */}
+                  {link.hasDropdown && link.dropdownLinks && openDropdown === i && (
+                    <div 
+                      className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-100 py-2 opacity-100 translate-y-0 transition-all z-50"
+                      onMouseEnter={() => setOpenDropdown(i)}
+                      onMouseLeave={() => setOpenDropdown(null)}
+                    >
+                      {link.dropdownLinks.map((dropLink, j) => (
+                        <a
+                          key={j}
+                          href={dropLink.href || "#"}
+                          className="block px-4 py-2 hover:bg-gray-50 transition-colors"
+                        >
+                          <span className="font-medium text-gray-900">{dropLink.label || dropLink.text}</span>
+                          {dropLink.description && (
+                            <span className="block text-sm text-gray-500 mt-0.5">{dropLink.description}</span>
+                          )}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* CTA Buttons */}
@@ -567,6 +603,32 @@ export function PremiumNavbarRender({
             )}
           </button>
         </div>
+        
+        {/* Scroll Progress Indicator */}
+        {showScrollProgress && (
+          <div 
+            className={`absolute left-0 right-0 ${scrollProgressPosition === "top" ? "top-0" : "bottom-0"}`}
+            style={{ 
+              height: scrollProgressHeight,
+              backgroundColor: scrollProgressBackground,
+            }}
+            role="progressbar"
+            aria-valuenow={scrollProgress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Page scroll progress"
+          >
+            <div 
+              className="h-full transition-all duration-150 ease-out"
+              style={{ 
+                width: `${scrollProgress}%`,
+                background: scrollProgressStyle === "gradient" 
+                  ? `linear-gradient(90deg, ${scrollProgressColor}, ${scrollProgressColor}80)` 
+                  : scrollProgressColor,
+              }}
+            />
+          </div>
+        )}
       </nav>
 
       {/* Mobile Menu Overlay */}
@@ -626,35 +688,41 @@ export function PremiumNavbarRender({
 
         {/* Mobile Links */}
         <div className={`p-6 space-y-1 ${mobileMenuStyle === "fullscreen" ? "flex flex-col items-center justify-center min-h-[60vh]" : ""}`}>
-          {links.map((link, i) => (
-            <div key={i}>
-              <a
-                href={link.href || "#"}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block ${mobileLinkSpacingClasses[mobileMenuLinkSpacing]} ${mobileMenuStyle === "fullscreen" ? "text-2xl text-center" : "text-lg"} font-medium transition-colors hover:opacity-70`}
-                style={{ color: mobileMenuTextColor }}
-              >
-                {link.label}
-              </a>
-              
-              {/* Mobile Dropdown */}
-              {link.hasDropdown && link.dropdownLinks && (
-                <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-200 pl-4">
-                  {link.dropdownLinks.map((dropLink, j) => (
-                    <a
-                      key={j}
-                      href={dropLink.href || "#"}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block py-2 text-base transition-colors hover:opacity-70"
-                      style={{ color: mobileMenuTextColor, opacity: 0.8 }}
-                    >
-                      {dropLink.label}
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+          {(links || []).map((link, i) => {
+            // Support both 'label' and 'text' properties for backwards compatibility
+            const linkText = link.label || link.text || '';
+            if (!linkText) return null;
+            
+            return (
+              <div key={i}>
+                <a
+                  href={link.href || "#"}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block ${mobileLinkSpacingClasses[mobileMenuLinkSpacing]} ${mobileMenuStyle === "fullscreen" ? "text-2xl text-center" : "text-lg"} font-medium transition-colors hover:opacity-70`}
+                  style={{ color: mobileMenuTextColor }}
+                >
+                  {linkText}
+                </a>
+                
+                {/* Mobile Dropdown */}
+                {link.hasDropdown && link.dropdownLinks && (
+                  <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-200 pl-4">
+                    {link.dropdownLinks.map((dropLink, j) => (
+                      <a
+                        key={j}
+                        href={dropLink.href || "#"}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block py-2 text-base transition-colors hover:opacity-70"
+                        style={{ color: mobileMenuTextColor, opacity: 0.8 }}
+                      >
+                        {dropLink.label || dropLink.text}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {/* Mobile CTAs */}
           {showCtaInMobileMenu && (ctaText || secondaryCtaText) && (
@@ -793,6 +861,7 @@ export interface PremiumHeroProps {
   className?: string;
   _breakpoint?: "mobile" | "tablet" | "desktop";
   _isEditor?: boolean;
+  _liveEffects?: boolean;
 }
 
 export function PremiumHeroRender({
@@ -896,9 +965,13 @@ export function PremiumHeroRender({
   className = "",
   _breakpoint = "desktop",
   _isEditor = false,
+  _liveEffects = false,
 }: PremiumHeroProps) {
   const [isVideoPlaying, setIsVideoPlaying] = useState(videoAutoplay);
   const videoRef = useRef<HTMLVideoElement>(null);
+  
+  // Check if effects should run
+  const enableEffects = !_isEditor || _liveEffects;
 
   // Normalize images
   const bgImageUrl = getImageUrl(backgroundImage);
@@ -1170,7 +1243,7 @@ export function PremiumHeroRender({
             {/* Image */}
             <div className={`${isReversed ? "md:order-1" : "md:order-2"}`}>
               {heroImageUrl && (
-                <div className={`relative ${imageAnimation !== "none" && !_isEditor ? "animate-fadeIn" : ""}`}>
+                <div className={`relative ${imageAnimation !== "none" && enableEffects ? "animate-fadeIn" : ""}`}>
                   <img
                     src={heroImageUrl}
                     alt={imageAlt}
@@ -1512,6 +1585,7 @@ export interface PremiumFooterProps {
   className?: string;
   _breakpoint?: "mobile" | "tablet" | "desktop";
   _isEditor?: boolean;
+  _liveEffects?: boolean;
 }
 
 export function PremiumFooterRender({
@@ -1996,6 +2070,7 @@ export interface FlexboxProps {
   className?: string;
   _breakpoint?: "mobile" | "tablet" | "desktop";
   _isEditor?: boolean;
+  _liveEffects?: boolean;
 }
 
 export function FlexboxRender({
@@ -2323,6 +2398,7 @@ export interface GridProps {
   className?: string;
   _breakpoint?: "mobile" | "tablet" | "desktop";
   _isEditor?: boolean;
+  _liveEffects?: boolean;
 }
 
 export function GridRender({
@@ -2486,6 +2562,7 @@ export interface ContainerProps {
   className?: string;
   _breakpoint?: "mobile" | "tablet" | "desktop";
   _isEditor?: boolean;
+  _liveEffects?: boolean;
 }
 
 export function ContainerRender({

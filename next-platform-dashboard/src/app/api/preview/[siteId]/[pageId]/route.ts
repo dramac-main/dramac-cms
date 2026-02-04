@@ -58,6 +58,43 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const siteSettings = (page.site as { settings?: Record<string, unknown> } | null)?.settings || {};
     const themeSettings = (siteSettings as Record<string, unknown>)?.theme || null;
     
+    // Fetch installed modules for this site
+    const { data: installedModules } = await supabase
+      .from("site_module_installations")
+      .select(`
+        id,
+        is_enabled,
+        enabled_at,
+        settings,
+        module:modules_v2 (
+          id,
+          slug,
+          name,
+          description,
+          type,
+          category,
+          current_version,
+          schema
+        )
+      `)
+      .eq("site_id", siteId)
+      .eq("is_enabled", true);
+    
+    // Format installed modules for the renderer
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const modules = (installedModules || []).map((im: any) => ({
+      // InstalledModuleInfo structure
+      id: im.module?.id || im.id,
+      name: im.module?.name || 'Unknown Module',
+      slug: im.module?.slug || '', // Module slug for imports
+      status: 'active' as const, // Only enabled modules are queried
+      version: im.module?.current_version || '1.0.0',
+      category: im.module?.category,
+      hasStudioComponents: true, // Assume true, let the loader handle it
+      installationId: im.id,
+    })).filter((m: { slug?: string }) => m.slug);
+    
     return NextResponse.json({
       page: {
         id: page.id,
@@ -69,6 +106,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       site: page.site,
       content: content ? JSON.stringify(content) : null,
       themeSettings: themeSettings,
+      modules: modules,
     });
   } catch (error) {
     console.error("[Preview API] Error:", error);

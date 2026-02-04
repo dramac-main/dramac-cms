@@ -1676,6 +1676,34 @@ const navigationComponents: ComponentDefinition[] = [
         ],
         defaultValue: "normal",
       },
+      // === Scroll Progress Indicator ===
+      showScrollProgress: { type: "toggle", label: "Show Scroll Progress", defaultValue: false },
+      scrollProgressPosition: {
+        type: "select",
+        label: "Progress Position",
+        options: [
+          { label: "Top", value: "top" },
+          { label: "Bottom", value: "bottom" },
+        ],
+        defaultValue: "top",
+      },
+      scrollProgressHeight: {
+        type: "number",
+        label: "Progress Height (px)",
+        defaultValue: 3,
+      },
+      scrollProgressColor: { type: "color", label: "Progress Color", defaultValue: "#3b82f6" },
+      scrollProgressBackground: { type: "color", label: "Progress Background", defaultValue: "transparent" },
+      scrollProgressStyle: {
+        type: "select",
+        label: "Progress Style",
+        options: [
+          { label: "Bar", value: "bar" },
+          { label: "Line", value: "line" },
+          { label: "Gradient", value: "gradient" },
+        ],
+        defaultValue: "bar",
+      },
       // === Accessibility ===
       ariaLabel: { type: "text", label: "Aria Label", defaultValue: "Main navigation" },
       skipToContent: { type: "text", label: "Skip to Content Link" },

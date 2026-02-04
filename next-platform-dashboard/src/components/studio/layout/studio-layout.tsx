@@ -121,7 +121,7 @@ export function StudioLayout({
         {/* Right Panel - Properties */}
         {panels.right && (
           <div 
-            className="w-72 shrink-0 border-l border-border bg-muted/30"
+            className="w-80 shrink-0 border-l border-border bg-muted/30 overflow-y-auto"
             data-panel="right"
           >
             {rightPanel}

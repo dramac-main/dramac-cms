@@ -38,6 +38,7 @@ import {
   ChevronDown,
   MessageSquare,
   HelpCircle,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -110,6 +111,9 @@ export const StudioToolbar = memo(function StudioToolbar({
   const breakpoint = useUIStore((s) => s.breakpoint);
   const togglePanel = useUIStore((s) => s.togglePanel);
   const setBreakpoint = useUIStore((s) => s.setBreakpoint);
+  const liveEffects = useUIStore((s) => s.liveEffects);
+  const toggleLiveEffects = useUIStore((s) => s.toggleLiveEffects);
+  const zoom = useUIStore((s) => s.zoom);
   
   // AI Page Generator state
   const [showPageGenerator, setShowPageGenerator] = useState(false);
@@ -371,6 +375,32 @@ export const StudioToolbar = memo(function StudioToolbar({
               <PanelRight className="h-4 w-4" />
             </Toggle>
           </div>
+
+          <Separator orientation="vertical" className="mx-1 h-6" />
+          
+          {/* Live Effects Toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Toggle
+                pressed={liveEffects}
+                onPressedChange={toggleLiveEffects}
+                size="sm"
+                className={`h-8 gap-1.5 px-2 ${liveEffects ? 'bg-primary text-primary-foreground' : ''}`}
+                title={zoom !== 1 ? "Live effects require 100% zoom" : "Toggle live effects (parallax, animations)"}
+                disabled={zoom !== 1}
+              >
+                <Zap className="h-4 w-4" />
+                <span className="hidden sm:inline text-xs">Live</span>
+              </Toggle>
+            </TooltipTrigger>
+            <TooltipContent>
+              {zoom !== 1 
+                ? "Set zoom to 100% to enable live effects" 
+                : liveEffects 
+                  ? "Disable live effects (parallax, animations)" 
+                  : "Enable live effects (parallax, animations)"}
+            </TooltipContent>
+          </Tooltip>
 
           <Separator orientation="vertical" className="mx-1 h-6" />
 
