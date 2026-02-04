@@ -135,121 +135,86 @@ Follow this order for the most logical testing experience:
 
 ## Phase ECOM-02: Settings Management
 
-### General Settings Tab
-1. Navigate to **Settings** tab
-2. Click **General** sub-tab
-3. Test the following:
+⚠️ **Note:** Currently, only 3 settings tabs are fully implemented. Other tabs show placeholders for future implementation.
 
-**Store Information:**
-- [ ] Update Store Name
-- [ ] Update Store Description
-- [ ] Change Store URL
-- [ ] Upload Store Logo
-- [ ] Add Contact Email
-- [ ] Add Phone Number
-- [ ] Select Country (dropdown with 240+ countries)
-- [ ] Select Timezone
+### General Settings Tab
+1. Navigate to **Settings** tab (in left sidebar)
+2. **General** sub-tab should be active by default
+3. Test the following sections:
+
+#### Store Information Card
+- [ ] Update **Store Name** (e.g., "Jetz Store")
+- [ ] Update **Store Email** (e.g., "store@example.com")
+- [ ] Update **Store Phone** (e.g., "+1 (555) 000-0000")
 - [ ] Click "Save Changes" - should see success toast
 
-**Expected Result:** Settings persist after page reload.
+#### Store Address Card
+- [ ] Enter **Address Line 1** (e.g., "123 Main Street")
+- [ ] Enter **Address Line 2** (Optional) (e.g., "Suite 100")
+- [ ] Enter **City** (e.g., "New York")
+- [ ] Enter **State / Province** (e.g., "NY")
+- [ ] Enter **Postal Code** (e.g., "10001")
+- [ ] Select **Country** from dropdown (240+ countries available)
+- [ ] Click "Save Changes"
+
+#### Regional Settings Card
+- [ ] Select **Timezone** (e.g., "America/New_York")
+- [ ] Select **Date Format** (MM/DD/YYYY, DD/MM/YYYY, or YYYY-MM-DD)
+- [ ] Select **Time Format** (12 Hour AM/PM or 24 Hour)
+- [ ] Select **Weight Unit** (Kilograms, Pounds, Grams, or Ounces)
+- [ ] Select **Dimension Unit** (Centimeters, Inches, Meters, or Feet)
+- [ ] Click "Save Changes"
+
+**Expected Result:** Settings persist after page reload and "Save Changes" button disables until you make new changes.
+
+---
 
 ### Currency Settings Tab
-1. Click **Currency** sub-tab
+1. Click **Currency** tab
 2. Test the following:
 
-**Currency Configuration:**
-- [ ] Select Currency Code (USD, EUR, GBP, etc.)
-- [ ] Set Currency Symbol ($, €, £)
-- [ ] Choose Symbol Position (before/after)
-- [ ] Set Decimal Places (0-4)
-- [ ] Toggle "Use Thousand Separator"
+#### Currency Format Card
+- [ ] Select **Currency Code** (USD, EUR, GBP, CAD, AUD, JPY, etc.)
+- [ ] Enter **Currency Symbol** (auto-fills based on code, e.g., "$", "€", "£")
+- [ ] Select **Symbol Position** (Before Amount or After Amount)
+- [ ] Set **Decimal Places** (0-4, typically 2 for most currencies)
+- [ ] Toggle **Use Thousand Separator** (adds commas: $1,000.00)
 - [ ] Click "Save Changes"
 
-**Expected Result:** Currency formatting updates across the dashboard.
+**Preview:** The currency format preview should update in real-time as you change settings.
 
-### Tax Settings Tab
-1. Click **Tax** sub-tab
+**Expected Result:** Currency formatting updates across the dashboard (products, orders, totals).
+
+---
+
+### Inventory Settings Tab
+1. Click **Inventory** tab
 2. Test the following:
 
-**Tax Configuration:**
-- [ ] Toggle "Enable Tax"
-- [ ] Enter Default Tax Rate (0-100%)
-- [ ] Enter Tax Label (e.g., "VAT", "GST")
-- [ ] Toggle "Tax Inclusive Pricing"
-- [ ] Toggle "Display Tax Breakdown"
+#### Stock Management Card
+- [ ] Toggle **Track Inventory** (enable/disable global inventory tracking)
+- [ ] Toggle **Continue Selling When Out of Stock** (allow backorders)
+- [ ] Set **Low Stock Threshold** (number, e.g., 10)
+- [ ] Toggle **Hold Stock** (reserve items in cart for X minutes)
+- [ ] Set **Hold Stock Duration** (in minutes, e.g., 60)
 - [ ] Click "Save Changes"
 
-**Add Custom Tax Rate:**
-- [ ] Click "+ Add Tax Rate"
-- [ ] Enter Name (e.g., "California Sales Tax")
-- [ ] Enter Rate (e.g., 8.5)
-- [ ] Enter Country Code (e.g., "US")
-- [ ] Enter Region (e.g., "CA")
-- [ ] Click "Add"
-- [ ] See new tax rate in list
-- [ ] Delete tax rate using trash icon
+**Expected Result:** Inventory policies apply to all products.
 
-**Expected Result:** Tax settings apply to orders.
+---
 
-### Checkout Settings Tab
-1. Click **Checkout** sub-tab
-2. Test the following:
+### Placeholder Tabs (Not Yet Implemented)
 
-**Customer Accounts:**
-- [ ] Toggle "Require Account" (force login)
-- [ ] Toggle "Allow Guest Checkout"
-- [ ] Toggle "Require Phone Number"
+The following tabs show placeholder screens indicating future implementation:
 
-**Checkout Fields:**
-- [ ] Toggle "Company Name" (optional/required)
-- [ ] Toggle "Address Line 2" (show/hide)
-- [ ] Toggle "Order Notes" field
+- **Tax** - Tax zones, rates, and calculations
+- **Shipping** - Shipping zones and delivery methods  
+- **Payments** - Payment gateways and options
+- **Checkout** - Checkout flow and fields
+- **Notifications** - Email templates and alerts
+- **Legal** - Terms, privacy, and policies
 
-**Terms & Conditions:**
-- [ ] Toggle "Require Terms Acceptance"
-- [ ] Enter Terms & Conditions text
-- [ ] Add Terms URL
-
-**Expected Result:** Checkout form updates based on settings.
-
-### Shipping Settings Tab
-1. Click **Shipping** sub-tab
-2. Test the following:
-
-**Shipping Configuration:**
-- [ ] Toggle "Enable Shipping"
-- [ ] Set Default Shipping Cost
-- [ ] Toggle "Free Shipping Threshold"
-- [ ] Set Minimum Order for Free Shipping
-- [ ] Select Weight Unit (kg, lb, oz, g)
-- [ ] Select Dimension Unit (cm, in, m)
-
-**Add Shipping Zone:**
-- [ ] Click "+ Add Shipping Zone"
-- [ ] Enter Zone Name (e.g., "United States")
-- [ ] Add Countries to zone
-- [ ] Set Shipping Rate
-- [ ] Set Estimated Delivery Days
-- [ ] Save Zone
-
-**Expected Result:** Shipping options appear at checkout.
-
-### Email Settings Tab
-1. Click **Email** sub-tab
-2. Test the following:
-
-**Email Templates:**
-- [ ] Toggle "Order Confirmation Email"
-- [ ] Customize subject line
-- [ ] Edit email body template
-- [ ] Preview email
-- [ ] Toggle "Shipping Notification"
-- [ ] Toggle "Refund Confirmation"
-- [ ] Set "From Name"
-- [ ] Set "From Email"
-- [ ] Set "Reply-To Email"
-
-**Expected Result:** Emails send with custom templates.
+These tabs display a centered placeholder with an icon and description. They do not have functional forms yet.
 
 ---
 
