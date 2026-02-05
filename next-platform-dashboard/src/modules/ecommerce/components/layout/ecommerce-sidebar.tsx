@@ -25,7 +25,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Store
+  Store,
+  Warehouse
 } from 'lucide-react'
 import type { EcommerceView } from '../../types/ecommerce-types'
 
@@ -73,6 +74,13 @@ function getNavItems(pendingOrders: number, lowStockCount: number): NavItemConfi
     },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'categories', label: 'Categories', icon: FolderTree },
+    { 
+      id: 'inventory', 
+      label: 'Inventory', 
+      icon: Warehouse,
+      badge: lowStockCount > 0 ? lowStockCount : undefined,
+      badgeVariant: 'destructive' as const
+    },
     { id: 'discounts', label: 'Discounts', icon: Percent },
     { id: 'quotes', label: 'Quotes', icon: FileText },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },

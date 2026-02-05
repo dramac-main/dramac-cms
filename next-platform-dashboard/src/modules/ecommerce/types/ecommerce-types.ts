@@ -600,6 +600,7 @@ export type EcommerceView =
   | 'categories' 
   | 'discounts' 
   | 'quotes'
+  | 'inventory'
   | 'analytics'
   | 'settings'
 
@@ -2118,3 +2119,9 @@ export interface StorefrontWishlistResult {
   clear: () => void
   itemCount: number
 }
+
+// ============================================================================
+// INVENTORY TYPES EXPORT
+// ============================================================================
+
+export * from './inventory-types'
