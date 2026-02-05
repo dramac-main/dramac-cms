@@ -73,11 +73,28 @@ function EcommerceDashboardContent({
     refresh
   } = useEcommerce()
 
-  // Onboarding state - show wizard if onboarding not completed
-  const [showOnboarding, setShowOnboarding] = useState(() => {
-    // Check if onboarding has been completed from settings
-    return settings?.onboardingCompleted !== true
-  })
+  // Onboarding state - initially null while loading
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null)
+  
+  // Check onboarding status from site_module_installations on mount
+  useEffect(() => {
+    async function checkOnboarding() {
+      try {
+        const { getOnboardingStatus } = await import('../actions/onboarding-actions')
+        const result = await getOnboardingStatus(siteId)
+        if (result.success && result.status) {
+          setShowOnboarding(!result.status.completed)
+        } else {
+          // If we can't determine, default to showing onboarding
+          setShowOnboarding(true)
+        }
+      } catch (err) {
+        console.error('Failed to check onboarding status:', err)
+        setShowOnboarding(true)
+      }
+    }
+    checkOnboarding()
+  }, [siteId])
 
   // State
   const [activeView, setActiveView] = useState<EcommerceView>(() => {
@@ -141,6 +158,15 @@ function EcommerceDashboardContent({
           <RefreshCw className="h-4 w-4 mr-2" />
           Retry
         </Button>
+      </div>
+    )
+  }
+
+  // Loading onboarding check
+  if (showOnboarding === null) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     )
   }

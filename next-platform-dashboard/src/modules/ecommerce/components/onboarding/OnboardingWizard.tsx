@@ -59,7 +59,13 @@ export function OnboardingWizard({
         const result = await getOnboardingStatus(siteId);
         if (result.success && result.status) {
           setCurrentStep(result.status.currentStep);
-          // Merge any existing data
+          // Restore previously saved data if available
+          if (result.status.data) {
+            setData(prev => ({
+              ...prev,
+              ...result.status!.data,
+            }));
+          }
         }
       } catch (err) {
         console.error('Failed to load onboarding status:', err);

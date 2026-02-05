@@ -724,7 +724,8 @@ export async function getEcommerceSetupStatus(siteId: string): Promise<{
       .single();
     
     settingsApplied = installation?.settings?._autoSetupApplied || false;
-    onboardingCompleted = installation?.settings?.onboardingCompleted || false;
+    // Use snake_case to match database storage
+    onboardingCompleted = installation?.settings?.onboarding_completed || false;
   }
   
   return {

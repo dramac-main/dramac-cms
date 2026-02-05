@@ -93,6 +93,8 @@ export interface OnboardingStatus {
   stepStatuses: StepStatus[];
   startedAt?: string;
   completedAt?: string;
+  /** Previously saved onboarding data for restoration */
+  data?: Partial<OnboardingData> | null;
 }
 
 /**

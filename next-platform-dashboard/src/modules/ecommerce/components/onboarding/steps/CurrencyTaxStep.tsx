@@ -11,6 +11,7 @@ import { DollarSign, Percent } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StepComponentProps } from '../../../types/onboarding-types';
 import { AVAILABLE_CURRENCIES } from '../../../types/onboarding-types';
+import { Switch } from '../ui/Switch';
 
 export function CurrencyTaxStep({
   data,
@@ -131,21 +132,11 @@ export function CurrencyTaxStep({
               <p className="text-sm text-gray-500 dark:text-gray-400">Add tax to your products</p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => handleChange('taxEnabled', !currencyTax.taxEnabled)}
-            className={cn(
-              'relative w-12 h-6 rounded-full transition-colors',
-              currencyTax.taxEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
-            )}
-          >
-            <span
-              className={cn(
-                'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform shadow',
-                currencyTax.taxEnabled ? 'translate-x-7' : 'translate-x-1'
-              )}
-            />
-          </button>
+          <Switch
+            checked={currencyTax.taxEnabled}
+            onCheckedChange={(checked) => handleChange('taxEnabled', checked)}
+            aria-label="Enable tax"
+          />
         </div>
 
         {/* Tax Options (shown when enabled) */}

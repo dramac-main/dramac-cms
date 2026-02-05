@@ -94,6 +94,8 @@ export async function getOnboardingStatus(
       stepStatuses: settings.onboarding_step_statuses || [],
       startedAt: settings.onboarding_started_at,
       completedAt: settings.onboarding_completed_at,
+      // Include saved onboarding data for restoration
+      data: settings.onboarding_data || null,
     };
 
     return { success: true, status, error: undefined };

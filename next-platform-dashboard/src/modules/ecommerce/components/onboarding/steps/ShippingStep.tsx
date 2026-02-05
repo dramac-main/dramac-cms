@@ -10,6 +10,7 @@ import React from 'react';
 import { Truck, Gift, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StepComponentProps } from '../../../types/onboarding-types';
+import { Switch } from '../ui/Switch';
 
 export function ShippingStep({
   data,
@@ -64,21 +65,12 @@ export function ShippingStep({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => handleChange('shippingEnabled', !shipping.shippingEnabled)}
-            className={cn(
-              'relative w-12 h-6 rounded-full transition-colors',
-              shipping.shippingEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
-            )}
-          >
-            <span
-              className={cn(
-                'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform shadow',
-                shipping.shippingEnabled ? 'translate-x-7' : 'translate-x-1'
-              )}
-            />
-          </button>
+          <Switch
+            checked={shipping.shippingEnabled}
+            onCheckedChange={(checked) => handleChange('shippingEnabled', checked)}
+            color="purple"
+            aria-label="Enable shipping"
+          />
         </div>
       </div>
 
@@ -98,10 +90,10 @@ export function ShippingStep({
                 type="number"
                 min="0"
                 step="0.01"
-                value={shipping.defaultShippingRate}
+                value={shipping.defaultShippingRate || ''}
                 onChange={(e) => handleChange('defaultShippingRate', parseFloat(e.target.value) || 0)}
                 className={cn(
-                  'w-full pl-8 pr-4 py-3 border rounded-lg transition-colors',
+                  'w-full pl-10 pr-4 py-3 border rounded-lg transition-colors',
                   'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                   'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                   'text-gray-900 dark:text-white'
@@ -126,21 +118,12 @@ export function ShippingStep({
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => handleChange('freeShippingEnabled', !shipping.freeShippingEnabled)}
-                className={cn(
-                  'relative w-12 h-6 rounded-full transition-colors',
-                  shipping.freeShippingEnabled ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-700'
-                )}
-              >
-                <span
-                  className={cn(
-                    'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform shadow',
-                    shipping.freeShippingEnabled ? 'translate-x-7' : 'translate-x-1'
-                  )}
-                />
-              </button>
+              <Switch
+                checked={shipping.freeShippingEnabled}
+                onCheckedChange={(checked) => handleChange('freeShippingEnabled', checked)}
+                color="green"
+                aria-label="Enable free shipping"
+              />
             </div>
 
             {/* Free Shipping Threshold */}
@@ -157,10 +140,10 @@ export function ShippingStep({
                     type="number"
                     min="0"
                     step="0.01"
-                    value={shipping.freeShippingThreshold}
+                    value={shipping.freeShippingThreshold || ''}
                     onChange={(e) => handleChange('freeShippingThreshold', parseFloat(e.target.value) || 0)}
                     className={cn(
-                      'w-full pl-8 pr-4 py-3 border rounded-lg transition-colors',
+                      'w-full pl-10 pr-4 py-3 border rounded-lg transition-colors',
                       'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                       'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                       'text-gray-900 dark:text-white'

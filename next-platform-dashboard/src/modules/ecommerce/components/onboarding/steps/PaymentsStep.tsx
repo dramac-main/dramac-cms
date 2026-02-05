@@ -10,6 +10,7 @@ import React from 'react';
 import { CreditCard, Check, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StepComponentProps, PaymentProviderConfig } from '../../../types/onboarding-types';
+import { Switch } from '../ui/Switch';
 
 type ProviderType = PaymentProviderConfig['provider'];
 
@@ -111,7 +112,7 @@ export function PaymentsStep({
       </div>
 
       {/* Configure Later Toggle */}
-      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-900/30">
         <div className="flex items-center justify-between">
           <div>
             <p className="font-medium text-yellow-800 dark:text-yellow-200">Configure Later</p>
@@ -119,26 +120,17 @@ export function PaymentsStep({
               Skip payment setup and configure later
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => onDataChange({
+          <Switch
+            checked={payments.paymentsConfiguredLater}
+            onCheckedChange={(checked) => onDataChange({
               payments: {
                 ...payments,
-                paymentsConfiguredLater: !payments.paymentsConfiguredLater,
+                paymentsConfiguredLater: checked,
               },
             })}
-            className={cn(
-              'relative w-12 h-6 rounded-full transition-colors',
-              payments.paymentsConfiguredLater ? 'bg-yellow-500' : 'bg-gray-200 dark:bg-gray-700'
-            )}
-          >
-            <span
-              className={cn(
-                'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform shadow',
-                payments.paymentsConfiguredLater ? 'translate-x-7' : 'translate-x-1'
-              )}
-            />
-          </button>
+            color="yellow"
+            aria-label="Configure payments later"
+          />
         </div>
       </div>
 
