@@ -1214,3 +1214,608 @@ export interface CustomerStats {
   newThisMonth: number
   totalRevenue: number
 }
+
+// ============================================================================
+// QUOTATION SYSTEM TYPES (Phase ECOM-10)
+// ============================================================================
+
+/**
+ * Quote status union type
+ * Represents all possible states in the quote workflow
+ */
+export type QuoteStatus = 
+  | 'draft'           // Being created or edited
+  | 'pending_approval' // Awaiting internal approval
+  | 'sent'            // Sent to customer
+  | 'viewed'          // Customer has viewed
+  | 'accepted'        // Customer accepted
+  | 'rejected'        // Customer rejected
+  | 'expired'         // Past validity date
+  | 'converted'       // Converted to order
+  | 'cancelled'       // Cancelled by staff
+
+/**
+ * Quote activity types for audit logging
+ */
+export type QuoteActivityType =
+  | 'created'
+  | 'updated'
+  | 'sent'
+  | 'viewed'
+  | 'accepted'
+  | 'rejected'
+  | 'expired'
+  | 'converted'
+  | 'cancelled'
+  | 'note_added'
+  | 'reminder_sent'
+  | 'item_added'
+  | 'item_removed'
+  | 'item_updated'
+  | 'status_changed'
+  | 'resent'
+  | 'duplicated'
+
+/**
+ * Quote discount type
+ */
+export type QuoteDiscountType = 'percentage' | 'fixed'
+
+/**
+ * Main Quote interface
+ */
+export interface Quote {
+  id: string
+  site_id: string
+  agency_id: string
+  
+  // Identification
+  quote_number: string
+  reference_number?: string | null
+  
+  // Customer
+  customer_id?: string | null
+  customer_email: string
+  customer_name: string
+  customer_company?: string | null
+  customer_phone?: string | null
+  
+  // Addresses
+  billing_address?: Address | null
+  shipping_address?: Address | null
+  
+  // Status
+  status: QuoteStatus
+  
+  // Amounts
+  subtotal: number
+  discount_type?: QuoteDiscountType | null
+  discount_value: number
+  discount_amount: number
+  tax_rate: number
+  tax_amount: number
+  shipping_amount: number
+  total: number
+  currency: string
+  
+  // Validity
+  valid_from: string
+  valid_until?: string | null
+  
+  // Content
+  title?: string | null
+  introduction?: string | null
+  terms_and_conditions?: string | null
+  notes_to_customer?: string | null
+  internal_notes?: string | null
+  
+  // Tracking
+  sent_at?: string | null
+  viewed_at?: string | null
+  first_viewed_at?: string | null
+  view_count: number
+  responded_at?: string | null
+  response_notes?: string | null
+  
+  // Conversion
+  converted_to_order_id?: string | null
+  converted_at?: string | null
+  
+  // Access
+  access_token: string
+  
+  // Metadata
+  template_id?: string | null
+  created_by?: string | null
+  last_modified_by?: string | null
+  metadata: Record<string, unknown>
+  
+  // Timestamps
+  created_at: string
+  updated_at: string
+  
+  // Relations (when joined)
+  items?: QuoteItem[]
+  activities?: QuoteActivity[]
+  customer?: Customer | null
+}
+
+/**
+ * Quote line item interface
+ */
+export interface QuoteItem {
+  id: string
+  quote_id: string
+  
+  // Product reference
+  product_id?: string | null
+  variant_id?: string | null
+  
+  // Item details (snapshot)
+  name: string
+  sku?: string | null
+  description?: string | null
+  image_url?: string | null
+  
+  // Pricing
+  quantity: number
+  unit_price: number
+  discount_percent: number
+  tax_rate: number
+  line_total: number
+  
+  // Options
+  options: Record<string, string>
+  
+  // Sorting
+  sort_order: number
+  
+  // Timestamps
+  created_at: string
+  updated_at: string
+  
+  // Relations (when joined)
+  product?: Product | null
+  variant?: ProductVariant | null
+}
+
+/**
+ * Quote activity/audit log interface
+ */
+export interface QuoteActivity {
+  id: string
+  quote_id: string
+  
+  activity_type: QuoteActivityType
+  description: string
+  
+  // Tracking
+  performed_by?: string | null
+  performed_by_name?: string | null
+  ip_address?: string | null
+  user_agent?: string | null
+  
+  // Change tracking
+  old_value?: Record<string, unknown> | null
+  new_value?: Record<string, unknown> | null
+  metadata: Record<string, unknown>
+  
+  created_at: string
+}
+
+/**
+ * Quote template interface
+ */
+export interface QuoteTemplate {
+  id: string
+  site_id: string
+  agency_id: string
+  
+  // Identification
+  name: string
+  description?: string | null
+  
+  // Default content
+  default_title?: string | null
+  default_introduction?: string | null
+  default_terms?: string | null
+  default_notes?: string | null
+  default_validity_days: number
+  
+  // Pre-filled items
+  items: QuoteTemplateItem[]
+  
+  // Default discount
+  default_discount_type?: QuoteDiscountType | null
+  default_discount_value: number
+  
+  // Settings
+  is_default: boolean
+  is_active: boolean
+  
+  // Usage
+  use_count: number
+  
+  // Timestamps
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Template item structure (stored in JSONB)
+ */
+export interface QuoteTemplateItem {
+  product_id?: string | null
+  variant_id?: string | null
+  name: string
+  sku?: string | null
+  description?: string | null
+  quantity: number
+  unit_price: number
+  discount_percent?: number
+}
+
+/**
+ * Quote settings interface (site-specific)
+ */
+export interface QuoteSettings {
+  id: string
+  site_id: string
+  agency_id: string
+  
+  // Numbering
+  quote_number_prefix: string
+  quote_number_counter: number
+  quote_number_format: string
+  
+  // Defaults
+  default_validity_days: number
+  default_terms?: string | null
+  default_currency: string
+  
+  // Automation
+  auto_expire_enabled: boolean
+  reminder_enabled: boolean
+  reminder_days_before_expiry: number
+  
+  // Email
+  send_copy_to_admin: boolean
+  admin_notification_email?: string | null
+  
+  // PDF branding
+  pdf_logo_url?: string | null
+  pdf_header_color: string
+  pdf_show_bank_details: boolean
+  pdf_bank_details?: string | null
+  
+  // Timestamps
+  created_at: string
+  updated_at: string
+}
+
+// ============================================================================
+// QUOTE INPUT/UPDATE TYPES
+// ============================================================================
+
+/**
+ * Input type for creating a quote
+ */
+export interface QuoteInput {
+  site_id: string
+  agency_id: string
+  
+  // Optional reference
+  reference_number?: string
+  
+  // Customer
+  customer_id?: string
+  customer_email: string
+  customer_name: string
+  customer_company?: string
+  customer_phone?: string
+  
+  // Addresses
+  billing_address?: Address
+  shipping_address?: Address
+  
+  // Amounts (auto-calculated but can be overridden)
+  discount_type?: QuoteDiscountType
+  discount_value?: number
+  tax_rate?: number
+  shipping_amount?: number
+  currency?: string
+  
+  // Validity
+  valid_from?: string
+  valid_until?: string
+  
+  // Content
+  title?: string
+  introduction?: string
+  terms_and_conditions?: string
+  notes_to_customer?: string
+  internal_notes?: string
+  
+  // Template reference
+  template_id?: string
+  
+  // Metadata
+  metadata?: Record<string, unknown>
+}
+
+/**
+ * Input type for updating a quote
+ */
+export type QuoteUpdate = Partial<Omit<QuoteInput, 'site_id' | 'agency_id'>>
+
+/**
+ * Input type for creating a quote item
+ */
+export interface QuoteItemInput {
+  quote_id: string
+  
+  // Product reference (optional)
+  product_id?: string
+  variant_id?: string
+  
+  // Item details
+  name: string
+  sku?: string
+  description?: string
+  image_url?: string
+  
+  // Pricing
+  quantity: number
+  unit_price: number
+  discount_percent?: number
+  tax_rate?: number
+  
+  // Options
+  options?: Record<string, string>
+  
+  // Sorting
+  sort_order?: number
+}
+
+/**
+ * Input type for updating a quote item
+ */
+export type QuoteItemUpdate = Partial<Omit<QuoteItemInput, 'quote_id'>>
+
+/**
+ * Input type for creating a template
+ */
+export interface QuoteTemplateInput {
+  site_id: string
+  agency_id: string
+  
+  name: string
+  description?: string
+  
+  default_title?: string
+  default_introduction?: string
+  default_terms?: string
+  default_notes?: string
+  default_validity_days?: number
+  
+  items?: QuoteTemplateItem[]
+  
+  default_discount_type?: QuoteDiscountType
+  default_discount_value?: number
+  
+  is_default?: boolean
+  is_active?: boolean
+}
+
+/**
+ * Input type for updating a template
+ */
+export type QuoteTemplateUpdate = Partial<Omit<QuoteTemplateInput, 'site_id' | 'agency_id'>>
+
+/**
+ * Input type for quote settings
+ */
+export type QuoteSettingsInput = Omit<QuoteSettings, 'id' | 'created_at' | 'updated_at'>
+export type QuoteSettingsUpdate = Partial<Omit<QuoteSettingsInput, 'site_id' | 'agency_id'>>
+
+// ============================================================================
+// QUOTE FILTER & LIST TYPES
+// ============================================================================
+
+/**
+ * Quote table filter interface
+ */
+export interface QuoteTableFilters {
+  search: string
+  status: QuoteStatus | 'all'
+  dateFrom: string | null
+  dateTo: string | null
+  expiresFrom: string | null
+  expiresTo: string | null
+  minTotal: number | null
+  maxTotal: number | null
+  customerId: string | null
+  hasExpired: boolean | null
+}
+
+/**
+ * Quote with extended data (for detail view)
+ */
+export interface QuoteDetailData extends Quote {
+  items: QuoteItem[]
+  activities: QuoteActivity[]
+  customer: Customer | null
+}
+
+/**
+ * Quote summary for list view
+ */
+export interface QuoteSummary {
+  id: string
+  quote_number: string
+  customer_name: string
+  customer_company?: string | null
+  customer_email: string
+  status: QuoteStatus
+  total: number
+  currency: string
+  valid_until?: string | null
+  items_count: number
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Quote stats for dashboard
+ */
+export interface QuoteStats {
+  total: number
+  draft: number
+  pending: number
+  sent: number
+  viewed: number
+  accepted: number
+  rejected: number
+  expired: number
+  converted: number
+  totalValue: number
+  acceptedValue: number
+  conversionRate: number
+}
+
+// ============================================================================
+// QUOTE BULK ACTION TYPES
+// ============================================================================
+
+/**
+ * Available bulk actions for quotes
+ */
+export type QuoteBulkActionType = 
+  | 'send'
+  | 'mark_expired'
+  | 'delete'
+  | 'export'
+  | 'duplicate'
+
+/**
+ * Bulk action input
+ */
+export interface QuoteBulkAction {
+  action: QuoteBulkActionType
+  quoteIds: string[]
+  params?: Record<string, unknown>
+}
+
+// ============================================================================
+// QUOTE WORKFLOW TYPES
+// ============================================================================
+
+/**
+ * Valid status transitions
+ */
+export const QUOTE_STATUS_TRANSITIONS: Record<QuoteStatus, QuoteStatus[]> = {
+  draft: ['pending_approval', 'sent', 'cancelled'],
+  pending_approval: ['sent', 'draft', 'cancelled'],
+  sent: ['viewed', 'accepted', 'rejected', 'expired', 'cancelled'],
+  viewed: ['accepted', 'rejected', 'expired'],
+  accepted: ['converted', 'cancelled'],
+  rejected: [], // Final state (can duplicate)
+  expired: [], // Final state (can duplicate)
+  converted: [], // Final state
+  cancelled: ['draft'] // Can reopen as draft
+}
+
+/**
+ * Quote status config for UI display
+ */
+export interface QuoteStatusConfig {
+  label: string
+  color: string
+  bgColor: string
+  description: string
+  allowedTransitions: QuoteStatus[]
+}
+
+/**
+ * Send quote input
+ */
+export interface SendQuoteInput {
+  quoteId: string
+  recipientEmail: string
+  subject: string
+  message: string
+  includePdf: boolean
+  ccEmails?: string[]
+}
+
+/**
+ * Quote response from customer
+ */
+export interface QuoteResponse {
+  quoteId: string
+  action: 'accept' | 'reject'
+  notes?: string
+  ipAddress?: string
+  userAgent?: string
+}
+
+/**
+ * Quote to order conversion input
+ */
+export interface QuoteToOrderInput {
+  quoteId: string
+  paymentStatus?: PaymentStatus
+  additionalNotes?: string
+  sendOrderConfirmation?: boolean
+}
+
+/**
+ * Quote email template variables
+ */
+export interface QuoteEmailVariables {
+  quote_number: string
+  customer_name: string
+  customer_email: string
+  company_name?: string
+  quote_total: string
+  currency: string
+  valid_until: string
+  items_count: number
+  quote_url: string
+  store_name: string
+  store_email: string
+  store_phone?: string
+}
+
+// ============================================================================
+// QUOTE PDF TYPES
+// ============================================================================
+
+/**
+ * PDF generation options
+ */
+export interface QuotePdfOptions {
+  includeImages: boolean
+  includeTerms: boolean
+  showDiscounts: boolean
+  showTaxBreakdown: boolean
+  paperSize: 'a4' | 'letter'
+  orientation: 'portrait' | 'landscape'
+}
+
+/**
+ * PDF data structure
+ */
+export interface QuotePdfData {
+  quote: Quote
+  items: QuoteItem[]
+  store: {
+    name: string
+    email: string
+    phone?: string
+    address?: string
+    logo?: string
+    website?: string
+  }
+  settings: QuoteSettings
+}
