@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 interface FeaturedProductsProps {
   // Data source
   siteId?: string;
+  _siteId?: string | null; // Studio canvas passes this
   productSource: "featured" | "new" | "bestselling" | "sale" | "category" | "manual";
   categoryId?: string;
   productIds?: string[];
@@ -90,6 +91,7 @@ const SOURCE_TITLES = {
 
 export function FeaturedProductsBlock({
   siteId,
+  _siteId,
   productSource = "featured",
   categoryId,
   productIds,
@@ -117,7 +119,8 @@ export function FeaturedProductsBlock({
 }: FeaturedProductsProps) {
   // Context
   const storefront = useStorefront();
-  const effectiveSiteId = siteId || storefront?.siteId || "";
+  // Use _siteId from Studio canvas, then siteId prop, then context
+  const effectiveSiteId = _siteId || siteId || storefront?.siteId || "";
   
   // Carousel state
   const [currentSlide, setCurrentSlide] = useState(0);

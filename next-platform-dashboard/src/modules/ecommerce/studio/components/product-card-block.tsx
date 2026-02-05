@@ -29,6 +29,7 @@ interface ProductCardProps {
   // Product selection
   productId: string | null;
   siteId?: string;
+  _siteId?: string | null; // Studio canvas passes this
   
   // Display options
   showPrice: boolean;
@@ -90,6 +91,7 @@ const DEMO_PRODUCT: DemoProduct = {
 export function ProductCardBlock({
   productId,
   siteId,
+  _siteId,
   showPrice = true,
   showRating = true,
   showButton = true,
@@ -108,7 +110,8 @@ export function ProductCardBlock({
 }: ProductCardProps) {
   // Context
   const storefront = useStorefront();
-  const effectiveSiteId = siteId || storefront?.siteId;
+  // Use _siteId from Studio canvas, then siteId prop, then context
+  const effectiveSiteId = _siteId || siteId || storefront?.siteId;
   
   // Hooks for real data
   const { product: fetchedProduct, isLoading, error } = useStorefrontProduct(

@@ -75,15 +75,17 @@ export function ProductGridBlock({
     rating: 4 + (i % 10) * 0.1,
   }));
   
-  // Fetch real products when not in editor
+  // Fetch real products - if siteId is available, always try to fetch real data
+  // Even in editor mode, we want to show real products when a site context exists
   useEffect(() => {
-    if (_isEditor) {
+    // Only show demo data if we're in editor mode AND have no siteId
+    if (_isEditor && !_siteId) {
       setProducts(demoProducts);
       setIsLoading(false);
       return;
     }
     
-    // Fetch real data
+    // Fetch real data (in editor with siteId, or on live site)
     async function fetchProducts() {
       setIsLoading(true);
       setError(null);

@@ -5,6 +5,8 @@
  * Phase ECOM-23: Checkout Hook
  * Phase ECOM-24: Navigation & Filtering Hooks
  * Phase ECOM-25: Quotation Hooks
+ * Phase ECOM-30: Mobile Cart Experience
+ * Phase ECOM-31: Mobile Checkout Flow
  * 
  * Exports all hooks for use in Studio components and pages.
  */
@@ -46,3 +48,16 @@ export type {
   UseQuotationsResult,
   QuoteRequestData
 } from './useQuotations'
+
+// Mobile hooks (ECOM-30, ECOM-31)
+export { useMobile, useBreakpoint, useDeviceInfo, useMediaQuery, usePrefersDarkMode, usePrefersReducedMotion } from './useMobile'
+export type { Breakpoint, BreakpointConfig, DeviceInfo } from './useMobile'
+
+export { useSwipeGesture, useSwipeToDelete } from './useSwipeGesture'
+export type { SwipeDirection, SwipeState, SwipeConfig, SwipeHandlers, UseSwipeGestureReturn } from './useSwipeGesture'
+
+export { useHapticFeedback, triggerHaptic } from './useHapticFeedback'
+export type { HapticPattern, HapticConfig, UseHapticFeedbackReturn } from './useHapticFeedback'
+
+export { useKeyboardVisible, useAutoScrollOnFocus } from './useKeyboardVisible'
+export type { KeyboardState, UseKeyboardVisibleReturn } from './useKeyboardVisible'
