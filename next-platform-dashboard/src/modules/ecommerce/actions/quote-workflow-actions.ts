@@ -784,11 +784,3 @@ export async function markExpiredQuotes(siteId: string): Promise<{ count: number
     return { count: 0 }
   }
 }
-
-/**
- * Get quote portal URL
- */
-export function getQuotePortalUrl(accessToken: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-  return `${baseUrl}/quote/${accessToken}`
-}

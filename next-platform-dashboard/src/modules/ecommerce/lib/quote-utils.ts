@@ -394,3 +394,15 @@ export function canConvertToOrder(quote: {
     errors
   }
 }
+
+// ============================================================================
+// URL UTILITIES
+// ============================================================================
+
+/**
+ * Get quote portal URL for customer access
+ */
+export function getQuotePortalUrl(accessToken: string): string {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  return `${baseUrl}/quote/${accessToken}`
+}
