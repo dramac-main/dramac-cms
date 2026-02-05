@@ -1,6 +1,44 @@
 # Active Context
 
-## Latest Session Update (ECOM-13 Complete - February 5, 2026)
+## Latest Session Update (Wave 4 Mobile ECOM-30/31/32 Complete - February 5, 2026)
+
+### Completed: E-Commerce Wave 4 Mobile Experience (First 3 Phases)
+**Date:** February 5, 2026
+
+#### Wave 4 Mobile Phases Complete:
+| Phase | Title | Status |
+|-------|-------|--------|
+| ECOM-30 | Mobile Cart Experience | ✅ Complete |
+| ECOM-31 | Mobile Checkout Flow | ✅ Complete |
+| ECOM-32 | Mobile Product Experience | ✅ Complete |
+
+#### Implementation Summary:
+
+**Hooks Created** (4 total in `src/modules/ecommerce/hooks/`):
+- `useMobile.ts` (176 lines) - Device detection, breakpoints, media queries
+- `useSwipeGesture.ts` (235 lines) - Touch gesture handling
+- `useHapticFeedback.ts` (88 lines) - Vibration feedback
+- `useKeyboardVisible.ts` (100 lines) - Keyboard detection
+
+**Mobile Components Created** (22 total in `src/modules/ecommerce/studio/components/mobile/`):
+- ECOM-30: MobileQuantitySelector, SwipeableCartItem, CartNotification, MobileCartBottomSheet, MobileCartButton
+- ECOM-31: MobileInput, MobileSelect, CollapsibleSection, MobileCheckoutProgress, MobileAddressInput, MobilePaymentSelector, MobileShippingSelector, MobileOrderReview, StickyCheckoutFooter, MobileCheckoutPage
+- ECOM-32: MobileProductGallery, MobileVariantSelector, StickyAddToCartBar, CollapsibleProductDetails, MobileProductCard, MobileQuickView, ProductSwipeView
+
+**All components verified with TypeScript** (`npx tsc --noEmit` - zero errors)
+
+**Key Features:**
+- 44px minimum touch targets for accessibility
+- Haptic feedback integration for tactile response
+- Safe area inset handling for notched devices
+- Reduced motion support via `usePrefersReducedMotion()`
+- framer-motion animations throughout
+- Bottom sheet patterns for mobile-native UX
+- Swipe gestures for intuitive interactions
+
+---
+
+## Previous Session Update (ECOM-13 Complete - February 5, 2026)
 
 ### Completed: PHASE-ECOM-13 Quote Templates & Automation
 **Date:** February 5, 2026
