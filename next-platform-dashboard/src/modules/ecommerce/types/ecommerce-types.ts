@@ -1949,3 +1949,150 @@ export interface QuotePerformance {
   total_value: number
   accepted_value: number
 }
+
+// ============================================================================
+// STOREFRONT HOOK TYPES (Phase ECOM-20)
+// ============================================================================
+
+export interface StorefrontProductsOptions {
+  categoryId?: string
+  categorySlug?: string
+  featured?: boolean
+  search?: string
+  minPrice?: number
+  maxPrice?: number
+  inStock?: boolean
+  sortBy?: 'name' | 'price-asc' | 'price-desc' | 'newest' | 'popularity'
+  limit?: number
+  page?: number
+}
+
+export interface StorefrontProductsResult {
+  products: Product[]
+  pagination: {
+    total: number
+    page: number
+    totalPages: number
+    limit: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export interface StorefrontProductResult {
+  product: Product | null
+  variants: ProductVariant[]
+  options: ProductOption[]
+  relatedProducts: Product[]
+  isLoading: boolean
+  error: string | null
+  refetch: () => Promise<void>
+}
+
+export interface StorefrontCategoriesResult {
+  categories: Category[]
+  categoryTree: CategoryTreeNode[]
+  isLoading: boolean
+  error: string | null
+  getCategoryById: (id: string) => Category | undefined
+  getCategoryBySlug: (slug: string) => Category | undefined
+  getCategoryPath: (categoryId: string) => Category[]
+}
+
+export interface CategoryTreeNode extends Category {
+  children: CategoryTreeNode[]
+  level: number
+}
+
+export interface StorefrontCartResult {
+  cart: Cart | null
+  items: CartItem[]
+  totals: CartTotals | null
+  itemCount: number
+  isLoading: boolean
+  isUpdating: boolean
+  error: string | null
+  addItem: (productId: string, variantId: string | null, quantity: number) => Promise<boolean>
+  updateItemQuantity: (itemId: string, quantity: number) => Promise<boolean>
+  removeItem: (itemId: string) => Promise<boolean>
+  clearCart: () => Promise<boolean>
+  applyDiscount: (code: string) => Promise<{ success: boolean; message: string }>
+  removeDiscount: () => Promise<boolean>
+  refresh: () => Promise<void>
+}
+
+export interface WishlistItem {
+  productId: string
+  variantId?: string
+  addedAt: string
+}
+
+export interface StorefrontWishlistResult {
+  items: WishlistItem[]
+  products: Product[]
+  isLoading: boolean
+  addItem: (productId: string, variantId?: string) => void
+  removeItem: (productId: string, variantId?: string) => void
+  toggleItem: (productId: string, variantId?: string) => void
+  isInWishlist: (productId: string, variantId?: string) => boolean
+  clear: () => void
+  itemCount: number
+}
+
+export interface StorefrontSearchResult {
+  query: string
+  setQuery: (query: string) => void
+  results: Product[]
+  isSearching: boolean
+  error: string | null
+  recentSearches: string[]
+  clearRecentSearches: () => void
+}
+
+export interface RecentlyViewedResult {
+  products: Product[]
+  isLoading: boolean
+  addProduct: (productId: string) => void
+  removeProduct: (productId: string) => void
+  clear: () => void
+}
+
+export interface StorefrontContextValue {
+  siteId: string
+  settings: EcommerceSettings | null
+  currency: string
+  currencySymbol: string
+  taxRate: number
+  formatPrice: (amount: number) => string
+  isInitialized: boolean
+}
+
+// ============================================================================
+// PRODUCT DISPLAY TYPES (Phase ECOM-21)
+// ============================================================================
+
+/**
+ * Product image type for display components
+ */
+export interface ProductImage {
+  id: string
+  url: string
+  alt_text: string | null
+  sort_order: number
+  is_primary?: boolean
+}
+
+/**
+ * Extended product with display properties
+ * Uses Omit to override the images field type
+ */
+export interface ProductWithImages extends Omit<Product, 'images'> {
+  images: ProductImage[]
+  rating?: number
+  review_count?: number
+  inventory_quantity?: number
+  featured?: boolean
+}

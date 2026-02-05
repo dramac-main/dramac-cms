@@ -167,6 +167,29 @@ export {
 } from './context/ecommerce-context'
 
 // ============================================================================
+// STOREFRONT HOOKS (Phase ECOM-20)
+// ============================================================================
+
+export {
+  useStorefrontProducts,
+  useStorefrontProduct,
+  useStorefrontCategories,
+  useStorefrontCart,
+  useStorefrontWishlist,
+  useStorefrontSearch,
+  useRecentlyViewed
+} from './hooks'
+
+// ============================================================================
+// STOREFRONT CONTEXT (Phase ECOM-20)
+// ============================================================================
+
+export {
+  StorefrontProvider,
+  useStorefront
+} from './context/storefront-context'
+
+// ============================================================================
 // MODULE MANIFEST
 // ============================================================================
 
@@ -178,6 +201,23 @@ export { EcommerceModuleManifest } from './manifest'
 
 // These will be exported as they are implemented:
 // export * from './components'
+
+// ============================================================================
+// STUDIO COMPONENTS (Phase ECOM-21)
+// ============================================================================
+
+export {
+  ProductPriceDisplay,
+  ProductStockBadge,
+  ProductRatingDisplay,
+  ProductImageGallery,
+  ProductQuickView,
+  useProductQuickView,
+  studioComponents,
+  studioFields,
+  studioFieldDefinitions,
+  studioMetadata
+} from './studio'
 
 // ============================================================================
 // WIDGETS

@@ -10,6 +10,15 @@ import type { ModuleStudioExports } from "@/types/studio-module";
 import { ProductCardBlock, productCardDefinition } from "./components/product-card-block";
 import { ProductGridBlock, productGridDefinition } from "./components/product-grid-block";
 import { 
+  ProductGridBlock as EnhancedProductGridBlock, 
+  productGridDefinition as enhancedProductGridDefinition 
+} from "./components/ProductGridBlock";
+import { 
+  FeaturedProductsBlock, 
+  featuredProductsDefinition 
+} from "./components/FeaturedProductsBlock";
+import { ProductQuickView, useProductQuickView } from "./components/ProductQuickView";
+import { 
   ProductSelectorField, 
   productSelectorFieldDefinition 
 } from "./fields/product-selector-field";
@@ -17,6 +26,13 @@ import {
   CategorySelectorField, 
   categorySelectorFieldDefinition 
 } from "./fields/category-selector-field";
+
+// Re-export utility components for external use
+export { ProductPriceDisplay } from "./components/ProductPriceDisplay";
+export { ProductStockBadge } from "./components/ProductStockBadge";
+export { ProductRatingDisplay } from "./components/ProductRatingDisplay";
+export { ProductImageGallery } from "./components/ProductImageGallery";
+export { ProductQuickView, useProductQuickView };
 
 // =============================================================================
 // STUDIO COMPONENTS
@@ -48,6 +64,37 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
         customType: "ecommerce:category-selector",
         label: "Category",
         description: "Filter products by category",
+      },
+    },
+  },
+  // Enhanced Product Grid with real-time data and advanced filtering
+  EcommerceProductCatalog: {
+    ...enhancedProductGridDefinition,
+    type: "EcommerceProductCatalog",
+    label: "Product Catalog",
+    description: "Full-featured product catalog with filters, sorting, and pagination",
+    render: EnhancedProductGridBlock,
+    fields: {
+      ...enhancedProductGridDefinition.fields,
+      categoryId: {
+        type: "custom" as const,
+        customType: "ecommerce:category-selector",
+        label: "Category",
+        description: "Filter products by category",
+      },
+    },
+  },
+  // Featured Products carousel/grid
+  EcommerceFeaturedProducts: {
+    ...featuredProductsDefinition,
+    render: FeaturedProductsBlock,
+    fields: {
+      ...featuredProductsDefinition.fields,
+      categoryId: {
+        type: "custom" as const,
+        customType: "ecommerce:category-selector",
+        label: "Category",
+        description: "Filter products by category (when source is 'category')",
       },
     },
   },
