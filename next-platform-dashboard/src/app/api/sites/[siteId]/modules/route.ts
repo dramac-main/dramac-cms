@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { 
+  executeInstallHook, 
+  executeUninstallHook,
+  executeEnableHook,
+  executeDisableHook 
+} from "@/lib/modules/hooks/module-hooks-registry";
+
+// Ensure hooks are initialized
+import "@/lib/modules/hooks/init-hooks";
 
 interface RouteContext {
   params: Promise<{ siteId: string }>;
@@ -118,6 +127,29 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
+    // First, get the module slug for hook execution
+    // Hooks are registered by slug (e.g., 'ecommerce'), not UUID
+    let moduleSlug: string | null = null;
+    const { data: moduleData } = await (supabase as any)
+      .from("modules_v2")
+      .select("slug")
+      .eq("id", moduleId)
+      .single();
+    
+    if (moduleData?.slug) {
+      moduleSlug = moduleData.slug;
+    } else {
+      // Fallback to module_source
+      const { data: sourceModule } = await (supabase as any)
+        .from("module_source")
+        .select("slug")
+        .eq("id", moduleId)
+        .single();
+      moduleSlug = sourceModule?.slug || null;
+    }
+    
+    console.log(`[SiteModules] Module ${moduleId} has slug: ${moduleSlug}`);
+
     // Verify agency has this module subscribed
     const { data: site } = await supabase
       .from("sites")
@@ -144,31 +176,48 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Check if already enabled
+    // Check if already installed (but maybe disabled)
     const { data: existing } = await supabase
       .from("site_module_installations")
-      .select("id")
+      .select("id, is_enabled")
       .eq("site_id", siteId)
       .eq("module_id", moduleId)
       .single();
 
     if (existing) {
-      // Update existing
+      // Re-enable existing installation
       const { data, error } = await supabase
         .from("site_module_installations")
         .update({
           is_enabled: true,
           settings,
+          enabled_at: new Date().toISOString(),
         })
         .eq("id", existing.id)
         .select()
         .single();
 
       if (error) throw error;
+      
+      // Execute enable hook if module was previously disabled
+      // Use the slug for hook execution, not UUID
+      if (!existing.is_enabled && moduleSlug) {
+        try {
+          console.log(`[SiteModules] Executing enable hook for ${moduleSlug} (${moduleId}) on site ${siteId}`);
+          const hookResult = await executeEnableHook(moduleSlug, siteId);
+          if (!hookResult.success) {
+            console.warn(`[SiteModules] Enable hook warning for ${moduleSlug}:`, hookResult.error);
+          }
+        } catch (hookError) {
+          console.error(`[SiteModules] Enable hook error for ${moduleSlug}:`, hookError);
+          // Continue - enable succeeded, hook is optional
+        }
+      }
+      
       return NextResponse.json(data);
     }
 
-    // Create new
+    // Create new installation
     const { data, error } = await supabase
       .from("site_module_installations")
       .insert({
@@ -176,11 +225,38 @@ export async function POST(request: NextRequest, context: RouteContext) {
         module_id: moduleId,
         settings,
         is_enabled: true,
+        installed_at: new Date().toISOString(),
+        installed_by: user.id,
+        enabled_at: new Date().toISOString(),
       })
       .select()
       .single();
 
     if (error) throw error;
+
+    // Execute the install hook for this module (if registered)
+    // Use the slug for hook execution, not UUID
+    if (moduleSlug) {
+      try {
+        console.log(`[SiteModules] Executing install hook for ${moduleSlug} (${moduleId}) on site ${siteId}`);
+        const hookResult = await executeInstallHook(moduleSlug, siteId, settings);
+        
+        if (!hookResult.success) {
+          console.warn(`[SiteModules] Install hook warning for ${moduleSlug}:`, hookResult.errors);
+          // Don't fail - installation succeeded, hook is optional
+        } else {
+          console.log(`[SiteModules] Install hook executed for ${moduleSlug}:`, {
+            pagesCreated: hookResult.pagesCreated?.length ?? 0,
+            navItemsAdded: hookResult.navItemsAdded?.length ?? 0,
+          });
+        }
+      } catch (hookError) {
+        console.error(`[SiteModules] Install hook error for ${moduleSlug}:`, hookError);
+        // Continue - installation succeeded, hook is optional
+      }
+    } else {
+      console.warn(`[SiteModules] No slug found for module ${moduleId}, skipping hooks`);
+    }
 
     return NextResponse.json(data, { status: 201 });
   } catch (error) {

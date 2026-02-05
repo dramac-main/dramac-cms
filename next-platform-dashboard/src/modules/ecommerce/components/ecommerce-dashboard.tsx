@@ -2,12 +2,13 @@
  * E-Commerce Dashboard Main Component
  * 
  * Phase ECOM-01: Dashboard Redesign
+ * Phase ECOM-53: Onboarding Wizard Integration
  * 
  * The main dashboard shell with sidebar navigation
  */
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { EcommerceSidebar, EcommerceHeader } from './layout'
 import { HomeView } from './views/home-view'
 import { ProductsView } from './views/products-view'
@@ -27,6 +28,7 @@ import { CreateProductDialog } from './dialogs/create-product-dialog'
 import { CreateCategoryDialog } from './dialogs/create-category-dialog'
 import { CreateDiscountDialog } from './dialogs/create-discount-dialog'
 import { ViewProductDialog } from './dialogs/view-product-dialog'
+import { OnboardingWizard } from './onboarding/OnboardingWizard'
 import { Button } from '@/components/ui/button'
 import { RefreshCw } from 'lucide-react'
 import type { EcommerceView, EcommerceSettings, Product } from '../types/ecommerce-types'
@@ -53,13 +55,15 @@ function EcommerceDashboardContent({
   agencyId,
   userId,
   userName = 'Store Manager',
-  initialView 
+  initialView,
+  settings
 }: { 
   siteId: string
   agencyId: string
   userId?: string
   userName?: string
   initialView?: string 
+  settings?: EcommerceSettings | null
 }) {
   const { 
     products,
@@ -68,6 +72,12 @@ function EcommerceDashboardContent({
     isLoading,
     refresh
   } = useEcommerce()
+
+  // Onboarding state - show wizard if onboarding not completed
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    // Check if onboarding has been completed from settings
+    return settings?.onboardingCompleted !== true
+  })
 
   // State
   const [activeView, setActiveView] = useState<EcommerceView>(() => {
@@ -131,6 +141,24 @@ function EcommerceDashboardContent({
           <RefreshCw className="h-4 w-4 mr-2" />
           Retry
         </Button>
+      </div>
+    )
+  }
+
+  // Show onboarding wizard if not completed
+  if (showOnboarding) {
+    return (
+      <div className="min-h-screen bg-background">
+        <OnboardingWizard
+          siteId={siteId}
+          onComplete={() => {
+            setShowOnboarding(false)
+            refresh() // Refresh data after onboarding
+          }}
+          onSkip={() => {
+            setShowOnboarding(false)
+          }}
+        />
       </div>
     )
   }
@@ -292,7 +320,7 @@ export function EcommerceDashboard({
   agencyId,
   userId,
   userName,
-  settings: _settings, 
+  settings, 
   initialView 
 }: EcommerceDashboardProps) {
   return (
@@ -302,6 +330,7 @@ export function EcommerceDashboard({
         agencyId={agencyId}
         userId={userId}
         userName={userName}
+        settings={settings}
         initialView={initialView} 
       />
     </EcommerceProvider>

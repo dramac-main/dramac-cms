@@ -403,6 +403,10 @@ export interface EcommerceSettings {
   
   continue_selling_when_out_of_stock: boolean
   
+  // Onboarding state (from Wave 6 ECOM-53)
+  onboardingCompleted?: boolean
+  onboardingStep?: number
+  
   created_at: string
   updated_at: string
 }

@@ -27,6 +27,40 @@ import {
 } from '../lib/page-templates';
 
 // ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Get the e-commerce module's UUID from its slug
+ * The modules_v2 table has slug='ecommerce', but site_module_installations uses the UUID
+ */
+async function getEcommerceModuleUuid(): Promise<string | null> {
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
+  
+  // Try modules_v2 first
+  const { data: moduleData } = await db
+    .from('modules_v2')
+    .select('id')
+    .eq('slug', 'ecommerce')
+    .single();
+  
+  if (moduleData?.id) {
+    return moduleData.id;
+  }
+  
+  // Fallback to module_source
+  const { data: sourceModule } = await db
+    .from('module_source')
+    .select('id')
+    .eq('slug', 'ecommerce')
+    .single();
+  
+  return sourceModule?.id || null;
+}
+
+// ============================================================================
 // PAGE CREATION
 // ============================================================================
 
@@ -503,17 +537,26 @@ export async function applyDefaultEcommerceSettings(
   };
   
   try {
-    // Get the module installation to update its settings
+    // Get the e-commerce module's UUID from its slug
+    const moduleUuid = await getEcommerceModuleUuid();
+    
+    if (!moduleUuid) {
+      result.success = false;
+      result.errors?.push('E-commerce module not found in database');
+      return result;
+    }
+    
+    // Get the module installation to update its settings using the UUID
     const { data: installation } = await db
       .from('site_module_installations')
       .select('id, settings')
       .eq('site_id', siteId)
-      .eq('module_id', 'ecommerce')
+      .eq('module_id', moduleUuid)
       .single();
     
     if (!installation) {
       result.success = false;
-      result.errors?.push('E-commerce module not installed');
+      result.errors?.push('E-commerce module not installed on this site');
       return result;
     }
     
@@ -565,12 +608,19 @@ export async function clearEcommerceSetupData(
   };
   
   try {
+    // Get the e-commerce module's UUID
+    const moduleUuid = await getEcommerceModuleUuid();
+    
+    if (!moduleUuid) {
+      return result; // Module not found, nothing to clean
+    }
+    
     // Get the module installation
     const { data: installation } = await db
       .from('site_module_installations')
       .select('id, settings')
       .eq('site_id', siteId)
-      .eq('module_id', 'ecommerce')
+      .eq('module_id', moduleUuid)
       .single();
     
     if (installation?.settings) {
@@ -658,18 +708,29 @@ export async function getEcommerceSetupStatus(siteId: string): Promise<{
   const hasShopNav = nav?.main?.some((n: NavigationItem) => n.id === 'ecom-shop');
   const hasCartNav = nav?.utility?.some((n: NavigationItem) => n.id === 'ecom-cart');
   
-  // Check module settings
-  const { data: installation } = await db
-    .from('site_module_installations')
-    .select('settings')
-    .eq('site_id', siteId)
-    .eq('module_id', 'ecommerce')
-    .single();
+  // Get the e-commerce module's UUID
+  const moduleUuid = await getEcommerceModuleUuid();
+  
+  // Check module settings using the UUID
+  let settingsApplied = false;
+  let onboardingCompleted = false;
+  
+  if (moduleUuid) {
+    const { data: installation } = await db
+      .from('site_module_installations')
+      .select('settings')
+      .eq('site_id', siteId)
+      .eq('module_id', moduleUuid)
+      .single();
+    
+    settingsApplied = installation?.settings?._autoSetupApplied || false;
+    onboardingCompleted = installation?.settings?.onboardingCompleted || false;
+  }
   
   return {
     pagesCreated: pagesCheck.exists,
     navigationAdded: hasShopNav && hasCartNav,
-    settingsApplied: installation?.settings?._autoSetupApplied || false,
-    onboardingCompleted: installation?.settings?.onboardingCompleted || false,
+    settingsApplied,
+    onboardingCompleted,
   };
 }
