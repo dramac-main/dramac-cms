@@ -589,7 +589,7 @@ export interface CategoriesResponse {
 }
 
 // ============================================================================
-// NAVIGATION & DASHBOARD TYPES (PHASE ECOM-01)
+// NAVIGATION & DASHBOARD TYPES (PHASE ECOM-01 + Wave 5)
 // ============================================================================
 
 export type EcommerceView = 
@@ -602,6 +602,8 @@ export type EcommerceView =
   | 'quotes'
   | 'inventory'
   | 'analytics'
+  | 'marketing'
+  | 'developer'
   | 'settings'
 
 export interface EcommerceNavItem {

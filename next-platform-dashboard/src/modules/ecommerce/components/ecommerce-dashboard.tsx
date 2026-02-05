@@ -18,6 +18,8 @@ import { DiscountsView } from './views/discounts-view'
 import { QuotesView } from './views/quotes-view'
 import { InventoryView } from './views/inventory-view'
 import { AnalyticsView } from './views/analytics-view'
+import { MarketingView } from './views/marketing-view'
+import { DeveloperSettingsView } from './views/developer-settings-view'
 import { SettingsView } from './views/settings-view'
 import { CommandPalette } from './command-palette'
 import { EcommerceProvider, useEcommerce } from '../context/ecommerce-context'
@@ -72,7 +74,8 @@ function EcommerceDashboardContent({
     if (initialView) {
       const validViews: EcommerceView[] = [
         'home', 'products', 'orders', 'customers', 'categories', 
-        'discounts', 'quotes', 'inventory', 'analytics', 'settings'
+        'discounts', 'quotes', 'inventory', 'analytics', 'marketing',
+        'developer', 'settings'
       ]
       if (validViews.includes(initialView as EcommerceView)) {
         return initialView as EcommerceView
@@ -219,6 +222,19 @@ function EcommerceDashboardContent({
 
           {activeView === 'analytics' && (
             <AnalyticsView />
+          )}
+
+          {activeView === 'marketing' && (
+            <MarketingView 
+              siteId={siteId}
+            />
+          )}
+
+          {activeView === 'developer' && (
+            <DeveloperSettingsView 
+              siteId={siteId}
+              agencyId={agencyId}
+            />
           )}
 
           {activeView === 'settings' && (
