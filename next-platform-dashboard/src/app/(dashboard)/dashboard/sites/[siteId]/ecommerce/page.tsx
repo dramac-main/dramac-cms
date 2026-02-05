@@ -14,6 +14,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { getSite } from '@/lib/actions/sites'
+import { getCurrentUserId } from '@/lib/auth/permissions'
+import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
   title: 'E-Commerce | DRAMAC',
@@ -50,6 +52,24 @@ export default async function EcommercePage({ params, searchParams }: EcommerceP
   // Fetch site with agency_id
   const site = await getSite(siteId)
   
+  // Get current user
+  const userId = await getCurrentUserId()
+  
+  // Get user profile for name
+  let userName = 'Store Manager'
+  if (userId) {
+    const supabase = await createClient()
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, email')
+      .eq('id', userId)
+      .single()
+    
+    if (profile) {
+      userName = profile.full_name || profile.email || 'Store Manager'
+    }
+  }
+  
   if (!site) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -72,7 +92,13 @@ export default async function EcommercePage({ params, searchParams }: EcommerceP
       
       {/* E-Commerce Dashboard */}
       <Suspense fallback={<EcommerceLoadingSkeleton />}>
-        <EcommerceDashboard siteId={siteId} agencyId={site.agency_id} initialView={view} />
+        <EcommerceDashboard 
+          siteId={siteId} 
+          agencyId={site.agency_id} 
+          userId={userId || undefined}
+          userName={userName}
+          initialView={view} 
+        />
       </Suspense>
     </div>
   )

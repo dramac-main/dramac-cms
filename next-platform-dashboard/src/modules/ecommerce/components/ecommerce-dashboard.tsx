@@ -35,6 +35,8 @@ import type { EcommerceView, EcommerceSettings, Product } from '../types/ecommer
 interface EcommerceDashboardProps {
   siteId: string
   agencyId: string
+  userId?: string
+  userName?: string
   settings?: EcommerceSettings | null
   initialView?: string
 }
@@ -46,10 +48,14 @@ interface EcommerceDashboardProps {
 function EcommerceDashboardContent({ 
   siteId,
   agencyId,
+  userId,
+  userName = 'Store Manager',
   initialView 
 }: { 
   siteId: string
   agencyId: string
+  userId?: string
+  userName?: string
   initialView?: string 
 }) {
   const { 
@@ -177,8 +183,8 @@ function EcommerceDashboardContent({
             <CustomersView
               siteId={siteId}
               agencyId={agencyId}
-              userId="user-id"
-              userName="Store Manager"
+              userId={userId || ''}
+              userName={userName}
             />
           )}
 
@@ -198,8 +204,8 @@ function EcommerceDashboardContent({
             <QuotesView 
               siteId={siteId}
               agencyId={agencyId}
-              userId="user-id"
-              userName="Store Manager"
+              userId={userId || ''}
+              userName={userName}
             />
           )}
 
@@ -259,7 +265,9 @@ function EcommerceDashboardContent({
 
 export function EcommerceDashboard({ 
   siteId, 
-  agencyId, 
+  agencyId,
+  userId,
+  userName,
   settings: _settings, 
   initialView 
 }: EcommerceDashboardProps) {
@@ -268,6 +276,8 @@ export function EcommerceDashboard({
       <EcommerceDashboardContent 
         siteId={siteId}
         agencyId={agencyId}
+        userId={userId}
+        userName={userName}
         initialView={initialView} 
       />
     </EcommerceProvider>

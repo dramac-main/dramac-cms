@@ -207,8 +207,9 @@ export async function createQuote(
         notes_to_customer: input.notes_to_customer,
         internal_notes: input.internal_notes,
         template_id: input.template_id,
-        created_by: userId,
-        last_modified_by: userId,
+        // Only set created_by if it's a valid UUID (not empty string or placeholder)
+        created_by: userId && userId.length > 10 ? userId : null,
+        last_modified_by: userId && userId.length > 10 ? userId : null,
         metadata: input.metadata || {}
       })
       .select()
@@ -682,8 +683,9 @@ export async function duplicateQuote(
         notes_to_customer: original.notes_to_customer,
         internal_notes: `Duplicated from ${original.quote_number}`,
         template_id: original.template_id,
-        created_by: userId,
-        last_modified_by: userId,
+        // Only set created_by if it's a valid UUID (not empty string or placeholder)
+        created_by: userId && userId.length > 10 ? userId : null,
+        last_modified_by: userId && userId.length > 10 ? userId : null,
         metadata: { ...original.metadata, duplicated_from: original.id }
       })
       .select()

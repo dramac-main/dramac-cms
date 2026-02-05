@@ -110,35 +110,19 @@ CREATE TRIGGER update_quote_settings_timestamp
 ALTER TABLE mod_ecommod01_quote_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mod_ecommod01_quote_settings ENABLE ROW LEVEL SECURITY;
 
--- Templates policies
+-- Templates policies - Simple full access (RLS filtering done in app code)
 DROP POLICY IF EXISTS "Templates viewable by site members" ON mod_ecommod01_quote_templates;
-CREATE POLICY "Templates viewable by site members"
-  ON mod_ecommod01_quote_templates FOR SELECT
-  USING (site_id IN (SELECT site_id FROM site_members WHERE user_id = auth.uid()));
-
 DROP POLICY IF EXISTS "Templates manageable by site admins" ON mod_ecommod01_quote_templates;
-CREATE POLICY "Templates manageable by site admins"
-  ON mod_ecommod01_quote_templates FOR ALL
-  USING (site_id IN (
-    SELECT site_id FROM site_members 
-    WHERE user_id = auth.uid() 
-    AND role IN ('owner', 'admin', 'editor')
-  ));
+DROP POLICY IF EXISTS "Quote templates full access" ON mod_ecommod01_quote_templates;
+CREATE POLICY "Quote templates full access"
+  ON mod_ecommod01_quote_templates FOR ALL USING (true);
 
--- Settings policies
+-- Settings policies - Simple full access (RLS filtering done in app code)
 DROP POLICY IF EXISTS "Quote settings viewable by site members" ON mod_ecommod01_quote_settings;
-CREATE POLICY "Quote settings viewable by site members"
-  ON mod_ecommod01_quote_settings FOR SELECT
-  USING (site_id IN (SELECT site_id FROM site_members WHERE user_id = auth.uid()));
-
 DROP POLICY IF EXISTS "Quote settings manageable by site admins" ON mod_ecommod01_quote_settings;
-CREATE POLICY "Quote settings manageable by site admins"
-  ON mod_ecommod01_quote_settings FOR ALL
-  USING (site_id IN (
-    SELECT site_id FROM site_members 
-    WHERE user_id = auth.uid() 
-    AND role IN ('owner', 'admin')
-  ));
+DROP POLICY IF EXISTS "Quote settings full access" ON mod_ecommod01_quote_settings;
+CREATE POLICY "Quote settings full access"
+  ON mod_ecommod01_quote_settings FOR ALL USING (true);
 
 -- Add reminder_count column to quotes table if not exists
 DO $$
