@@ -1,44 +1,79 @@
 # Active Context
 
-## Latest Session Update (Wave 4 Mobile ECOM-30/31/32 Complete - February 5, 2026)
+## Latest Session Update (Wave 5 ECOM-41A & ECOM-41B Complete - February 5, 2026)
 
-### Completed: E-Commerce Wave 4 Mobile Experience (First 3 Phases)
+### Completed: E-Commerce Wave 5 Analytics Implementation
 **Date:** February 5, 2026
 
-#### Wave 4 Mobile Phases Complete:
+#### Wave 5 Analytics Phases Complete:
 | Phase | Title | Status |
 |-------|-------|--------|
-| ECOM-30 | Mobile Cart Experience | ✅ Complete |
-| ECOM-31 | Mobile Checkout Flow | ✅ Complete |
-| ECOM-32 | Mobile Product Experience | ✅ Complete |
+| ECOM-40 | Inventory Management | ✅ Complete (previous session) |
+| ECOM-41A | Analytics Schema & Server Actions | ✅ Complete |
+| ECOM-41B | Analytics UI Components | ✅ Complete |
 
 #### Implementation Summary:
 
-**Hooks Created** (4 total in `src/modules/ecommerce/hooks/`):
-- `useMobile.ts` (176 lines) - Device detection, breakpoints, media queries
-- `useSwipeGesture.ts` (235 lines) - Touch gesture handling
-- `useHapticFeedback.ts` (88 lines) - Vibration feedback
-- `useKeyboardVisible.ts` (100 lines) - Keyboard detection
+**Types Created** (`src/modules/ecommerce/types/analytics-types.ts` - 437 lines):
+- Date range types: DateRange, DateRangePreset, GroupByPeriod
+- Sales types: SalesOverview, SalesByPeriod, SalesByChannel, RevenueBreakdown
+- Product types: ProductPerformance, CategoryPerformance
+- Customer types: CustomerInsights, CustomerLifetimeValue, CustomerSegment, CustomerSegmentation
+- Conversion types: FunnelStage, ConversionFunnel, CartAbandonment
+- Report types: SavedReport, SavedReportInput
 
-**Mobile Components Created** (22 total in `src/modules/ecommerce/studio/components/mobile/`):
-- ECOM-30: MobileQuantitySelector, SwipeableCartItem, CartNotification, MobileCartBottomSheet, MobileCartButton
-- ECOM-31: MobileInput, MobileSelect, CollapsibleSection, MobileCheckoutProgress, MobileAddressInput, MobilePaymentSelector, MobileShippingSelector, MobileOrderReview, StickyCheckoutFooter, MobileCheckoutPage
-- ECOM-32: MobileProductGallery, MobileVariantSelector, StickyAddToCartBar, CollapsibleProductDetails, MobileProductCard, MobileQuickView, ProductSwipeView
+**Utils Created** (`src/modules/ecommerce/lib/analytics-utils.ts`):
+- Date range helpers: getDateRangeFromPreset, getComparisonDateRange, suggestGroupingPeriod
+- Formatters: formatCurrency, formatNumber, formatPercentage, formatPeriodLabel
+- Chart helpers: getChartColors (generates distinct colors)
+- Export helpers: toCSV, downloadCSV
+
+**Server Actions Created** (`src/modules/ecommerce/actions/analytics-actions.ts` - 1203 lines):
+- Sales: getSalesOverview, getSalesByPeriod, getSalesByChannel, getRevenueBreakdown
+- Products: getProductPerformance, getTopProducts, getCategoryPerformance
+- Customers: getCustomerInsights, getCustomerLifetimeValue, getCustomerSegmentation
+- Conversions: getConversionFunnel, getCartAbandonmentRate
+- Reports: getSavedReports, createSavedReport, updateSavedReport, deleteSavedReport, toggleReportFavorite
+
+**Migration Created** (`migrations/ecom-41-analytics.sql`):
+- mod_ecommod01_analytics_snapshots - Daily metrics snapshots
+- mod_ecommod01_saved_reports - User report configurations
+- mod_ecommod01_report_history - Generation history
+- RLS policies, indexes, generate_daily_analytics_snapshot function
+
+**Hooks Created** (`src/modules/ecommerce/hooks/use-analytics.ts` - 500+ lines):
+- useDateRange - Date range state management with presets
+- useSalesAnalytics, useProductAnalytics, useCustomerAnalytics, useConversionAnalytics
+- useSavedReports - CRUD for saved reports
+- useAnalytics - Combined dashboard hook
+
+**Chart Components** (`src/modules/ecommerce/components/analytics/analytics-charts.tsx`):
+- ChartWrapper, RevenueChart, OrdersChart, SalesByChannelChart
+- TopProductsChart, CategoryPerformanceChart
+- CustomerSegmentationChart, ConversionFunnelChart
+
+**Card Components** (`src/modules/ecommerce/components/analytics/analytics-cards.tsx`):
+- KPICard, SalesOverviewCards, RevenueBreakdownCard
+- CustomerInsightsCard, CartAbandonmentCard
+
+**Table Components** (`src/modules/ecommerce/components/analytics/analytics-tables.tsx`):
+- ProductPerformanceTable (sortable, filterable, exportable)
+- CategoryPerformanceTable (with progress bars)
+- CustomerLTVTable (top customers by lifetime value)
+
+**Picker Components** (`src/modules/ecommerce/components/analytics/date-range-picker.tsx`):
+- DateRangePicker, GroupBySelector, AnalyticsToolbar
+
+**Dashboard View** (`src/modules/ecommerce/components/analytics/analytics-dashboard-view.tsx`):
+- Tabbed interface: Sales, Products, Customers, Conversions
+- Integrated toolbar with date range and grouping
 
 **All components verified with TypeScript** (`npx tsc --noEmit` - zero errors)
-
-**Key Features:**
-- 44px minimum touch targets for accessibility
-- Haptic feedback integration for tactile response
-- Safe area inset handling for notched devices
-- Reduced motion support via `usePrefersReducedMotion()`
-- framer-motion animations throughout
-- Bottom sheet patterns for mobile-native UX
-- Swipe gestures for intuitive interactions
+**Git committed and pushed** (commit 1af5db4)
 
 ---
 
-## Previous Session Update (ECOM-13 Complete - February 5, 2026)
+## Previous Session Update (Wave 4 Mobile ECOM-30/31/32 Complete - February 5, 2026)
 
 ### Completed: PHASE-ECOM-13 Quote Templates & Automation
 **Date:** February 5, 2026

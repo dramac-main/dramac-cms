@@ -6,7 +6,132 @@
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
 **Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
-**E-Commerce Module**: ECOM-01 ✅ | ECOM-02 ✅ | ECOM-03 ✅ | ECOM-04 ✅ | ECOM-05 ✅ | **Wave 1 COMPLETE** ✅ | **Wave 2 COMPLETE** ✅ | **Wave 3 COMPLETE** ✅ | **Wave 4 (ECOM-30/31/32) COMPLETE** ✅
+**E-Commerce Module**: ECOM-01 ✅ | ECOM-02 ✅ | ECOM-03 ✅ | ECOM-04 ✅ | ECOM-05 ✅ | **Wave 1 COMPLETE** ✅ | **Wave 2 COMPLETE** ✅ | **Wave 3 COMPLETE** ✅ | **Wave 4 (ECOM-30/31/32) COMPLETE** ✅ | **Wave 5 (ECOM-40/41) IN PROGRESS** 🟡
+
+## 📋 E-COMMERCE WAVE 5 - Operations & Analytics (February 2026)
+
+### Wave 5 Progress - Business Operations Features
+**Location**: `src/modules/ecommerce/` (actions, components, hooks, types)
+
+| Phase | Title | Priority | Status |
+|-------|-------|----------|--------|
+| ECOM-40 | Inventory Management | 🔴 CRITICAL | ✅ Complete |
+| ECOM-41A | Analytics Schema & Server Actions | 🔴 CRITICAL | ✅ Complete |
+| ECOM-41B | Analytics UI Components | 🔴 CRITICAL | ✅ Complete |
+| ECOM-42 | Email Notifications | 🟠 HIGH | 🔲 Not Started |
+| ECOM-43 | Promotions & Discounts | 🟠 HIGH | 🔲 Not Started |
+
+### ECOM-40: Inventory Management (COMPLETE)
+**Files**: `inventory-actions.ts`, inventory types
+
+**Features**:
+- Stock level tracking and updates
+- Low stock alerts
+- Inventory history
+- SKU management
+- Restock scheduling
+
+### ECOM-41A: Analytics Schema & Server Actions (COMPLETE)
+
+**Types Created** (`types/analytics-types.ts` - 437 lines):
+- DateRange, DateRangePreset, GroupByPeriod
+- SalesOverview, SalesByPeriod, SalesByChannel, RevenueBreakdown
+- ProductPerformance, CategoryPerformance
+- CustomerInsights, CustomerLifetimeValue, CustomerSegment, CustomerSegmentation
+- FunnelStage, ConversionFunnel, CartAbandonment
+- SavedReport, SavedReportInput
+
+**Utils Created** (`lib/analytics-utils.ts`):
+- `getDateRangeFromPreset()` - Date range calculation
+- `getComparisonDateRange()` - Period comparison
+- `suggestGroupingPeriod()` - Smart period selection
+- `formatPeriodLabel()` - Period formatting
+- `formatCurrency()`, `formatNumber()`, `formatPercentage()`
+- `getChartColors()` - Chart color palette
+- `toCSV()`, `downloadCSV()` - Export utilities
+
+**Server Actions Created** (`actions/analytics-actions.ts` - 1200+ lines):
+
+*Sales Analytics*:
+- `getSalesOverview()` - Revenue, orders, AOV, products sold with changes
+- `getSalesByPeriod()` - Time series data with grouping
+- `getSalesByChannel()` - Revenue by channel (website, quote, manual, api)
+- `getRevenueBreakdown()` - Gross, discounts, tax, shipping, refunds, net
+
+*Product Analytics*:
+- `getProductPerformance()` - All products with sales metrics, stock, ranking
+- `getTopProducts()` - Top N by revenue or quantity
+- `getCategoryPerformance()` - Revenue by category with percentages
+
+*Customer Analytics*:
+- `getCustomerInsights()` - Total, new, returning, repeat rate, growth
+- `getCustomerLifetimeValue()` - Top customers by CLV
+- `getCustomerSegmentation()` - Segment distribution (high_value, active, at_risk, churned)
+
+*Conversion Analytics*:
+- `getConversionFunnel()` - Stage progression with drop-off rates
+- `getCartAbandonmentRate()` - Cart abandonment metrics
+
+*Saved Reports*:
+- `getSavedReports()` - List user's saved reports
+- `createSavedReport()` - Create new report configuration
+- `updateSavedReport()` - Update existing report
+- `deleteSavedReport()` - Remove report
+- `toggleReportFavorite()` - Star/unstar reports
+
+**Migration Created** (`migrations/ecom-41-analytics.sql`):
+- `mod_ecommod01_analytics_snapshots` - Daily metrics snapshots
+- `mod_ecommod01_saved_reports` - User report configurations
+- `mod_ecommod01_report_history` - Report generation history
+- RLS policies for all tables
+- `generate_daily_analytics_snapshot()` function
+
+### ECOM-41B: Analytics UI Components (COMPLETE)
+
+**Hooks Created** (`hooks/use-analytics.ts` - 500+ lines):
+- `useDateRange()` - Date range state with presets and custom range
+- `useSalesAnalytics()` - Fetch sales overview, period, channel, breakdown
+- `useProductAnalytics()` - Fetch product, top products, category data
+- `useCustomerAnalytics()` - Fetch insights, CLV, segmentation
+- `useConversionAnalytics()` - Fetch funnel and abandonment data
+- `useSavedReports()` - CRUD operations for saved reports
+- `useAnalytics()` - Combined hook for full dashboard
+
+**Chart Components** (`components/analytics/analytics-charts.tsx`):
+- `ChartWrapper` - Loading/empty/error state wrapper
+- `RevenueChart` - Area chart for revenue over time
+- `OrdersChart` - Line chart for orders over time
+- `SalesByChannelChart` - Pie chart for channel distribution
+- `TopProductsChart` - Horizontal bar chart for top products
+- `CategoryPerformanceChart` - Bar chart for categories
+- `CustomerSegmentationChart` - Pie chart for segments
+- `ConversionFunnelChart` - Funnel visualization
+
+**Card Components** (`components/analytics/analytics-cards.tsx`):
+- `KPICard` - Single metric with change indicator
+- `SalesOverviewCards` - 4 KPI cards grid
+- `RevenueBreakdownCard` - Line items breakdown
+- `CustomerInsightsCard` - Customer metrics grid
+- `CartAbandonmentCard` - Abandonment metrics
+- `MetricTrend` - Trend calculation helper
+
+**Table Components** (`components/analytics/analytics-tables.tsx`):
+- `ProductPerformanceTable` - Sortable, filterable, exportable product table
+- `CategoryPerformanceTable` - Category metrics with progress bars
+- `CustomerLTVTable` - Top customers by lifetime value
+
+**Picker Components** (`components/analytics/date-range-picker.tsx`):
+- `DateRangePicker` - Preset selector with custom date pickers
+- `GroupBySelector` - Period grouping dropdown
+- `AnalyticsToolbar` - Combined toolbar with date range and refresh
+
+**Dashboard View** (`components/analytics/analytics-dashboard-view.tsx`):
+- Tabbed interface (Sales, Products, Customers, Conversions)
+- Each tab loads relevant charts, cards, tables
+- Toolbar with date range, group by, refresh
+- Loading states throughout
+
+**All components use snake_case properties matching database schema**
 
 ## 📋 E-COMMERCE WAVE 4 - Mobile Optimization (February 2026)
 
