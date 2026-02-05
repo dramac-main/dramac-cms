@@ -6,7 +6,7 @@
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
 **Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
-**E-Commerce Module**: ECOM-01 ✅ | ECOM-02 ✅ | ECOM-03 ✅ | ECOM-04 ✅ | ECOM-05 ✅ | **Wave 1 COMPLETE** ✅ | **Wave 2 COMPLETE** ✅ | **Wave 3 COMPLETE** ✅ | **Wave 4 (ECOM-30/31/32) COMPLETE** ✅ | **Wave 5 (ECOM-40/41) IN PROGRESS** 🟡
+**E-Commerce Module**: ECOM-01 ✅ | ECOM-02 ✅ | ECOM-03 ✅ | ECOM-04 ✅ | ECOM-05 ✅ | **Wave 1 COMPLETE** ✅ | **Wave 2 COMPLETE** ✅ | **Wave 3 COMPLETE** ✅ | **Wave 4 (ECOM-30/31/32) COMPLETE** ✅ | **Wave 5 (ECOM-40/41/42) IN PROGRESS** 🟡
 
 ## 📋 E-COMMERCE WAVE 5 - Operations & Analytics (February 2026)
 
@@ -18,8 +18,10 @@
 | ECOM-40 | Inventory Management | 🔴 CRITICAL | ✅ Complete |
 | ECOM-41A | Analytics Schema & Server Actions | 🔴 CRITICAL | ✅ Complete |
 | ECOM-41B | Analytics UI Components | 🔴 CRITICAL | ✅ Complete |
-| ECOM-42 | Email Notifications | 🟠 HIGH | 🔲 Not Started |
-| ECOM-43 | Promotions & Discounts | 🟠 HIGH | 🔲 Not Started |
+| ECOM-42A | Marketing Schema & Server Actions | 🔴 CRITICAL | ✅ Complete |
+| ECOM-42B | Marketing UI Components | 🔴 CRITICAL | ✅ Complete |
+| ECOM-43 | Email Notifications | 🟠 HIGH | 🔲 Not Started |
+| ECOM-44 | Promotions & Discounts | 🟠 HIGH | 🔲 Not Started |
 
 ### ECOM-40: Inventory Management (COMPLETE)
 **Files**: `inventory-actions.ts`, inventory types
@@ -132,6 +134,64 @@
 - Loading states throughout
 
 **All components use snake_case properties matching database schema**
+
+### ECOM-42A: Marketing Schema & Server Actions (COMPLETE)
+
+**Migration Created** (`migrations/ecom-42-marketing.sql`):
+- `mod_ecommod01_flash_sales` - Time-limited sales with discount configuration
+- `mod_ecommod01_flash_sale_products` - Products in flash sales with max quantity
+- `mod_ecommod01_gift_cards` - Gift card management with balance tracking
+- `mod_ecommod01_gift_card_transactions` - Transaction history for gift cards
+- `mod_ecommod01_product_bundles` - Bundle products with pricing
+- `mod_ecommod01_bundle_items` - Items within bundles
+- `mod_ecommod01_loyalty_programs` - Loyalty program configuration
+- `mod_ecommod01_loyalty_members` - Customer loyalty membership
+- `mod_ecommod01_loyalty_transactions` - Points earning/redemption history
+- RLS policies, indexes, triggers for all tables
+
+**Types Created** (`types/marketing-types.ts`):
+- FlashSale, FlashSaleProduct, FlashSaleInput, FlashSaleProductInput
+- GiftCard, GiftCardTransaction, GiftCardInput, GiftCardTransactionInput
+- ProductBundle, BundleItem, ProductBundleInput, BundleItemInput
+- LoyaltyProgram, LoyaltyConfig, LoyaltyMember, LoyaltyTransaction
+- LoyaltyConfigInput, AdjustPointsInput
+- MarketingStats (aggregate statistics)
+
+**Server Actions** (`actions/marketing-actions.ts` - 800+ lines):
+- Flash Sales: getFlashSales, getActiveFlashSales, createFlashSale, updateFlashSale, deleteFlashSale, addFlashSaleProducts, removeFlashSaleProduct
+- Gift Cards: getGiftCards, lookupGiftCard, createGiftCard, deactivateGiftCard, processGiftCardTransaction
+- Bundles: getBundles, createBundle, updateBundle, deleteBundle
+- Loyalty: getLoyaltyConfig, updateLoyaltyConfig, getLoyaltyMembers, getLoyaltyMember, adjustLoyaltyPoints
+- Statistics: getMarketingStats (aggregate data for dashboards)
+
+### ECOM-42B: Marketing UI Components (COMPLETE)
+
+**Hooks Created** (`hooks/use-marketing.ts` - 400+ lines):
+- `useFlashSales` - Flash sale CRUD with active filtering
+- `useGiftCards` - Gift card management with lookup
+- `useBundles` - Product bundle management
+- `useLoyalty` - Loyalty program config and members
+- `useMarketingStats` - Dashboard statistics
+
+**Widget Components** (`components/widgets/countdown-timer.tsx`):
+- `CountdownTimer` - Animated countdown with days/hours/minutes/seconds
+
+**View Components** (`components/views/`):
+- `FlashSalesView` - Status tabs, stats cards, countdown timers, CRUD
+- `GiftCardsView` - Card lookup, issuance, transaction history
+- `MarketingView` - Main tabbed dashboard for all marketing features
+- `BundlesView` - Product bundle management with item configuration
+- `LoyaltyView` - Loyalty program configuration and member management
+
+**Dialog Components** (`components/dialogs/`):
+- `FlashSaleDialog` - Create/edit flash sales with product selection
+- `BundleDialog` - Create/edit bundles with item configuration
+- `CreateGiftCardDialog` - Issue new gift cards
+- `LoyaltyConfigDialog` - Configure loyalty program settings
+- `AdjustPointsDialog` - Manual point adjustments for members
+
+**All components verified with TypeScript** (`pnpm tsc --noEmit` - zero errors)
+**Git committed and pushed** (commit 04b4ff0)
 
 ## 📋 E-COMMERCE WAVE 4 - Mobile Optimization (February 2026)
 

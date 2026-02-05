@@ -64,3 +64,7 @@ export type { KeyboardState, UseKeyboardVisibleReturn } from './useKeyboardVisib
 
 // Marketing hooks (ECOM-42B)
 export { useFlashSales, useBundles, useGiftCards, useLoyalty, useMarketingStats } from './use-marketing'
+
+// Integration hooks (ECOM-43A/B)
+export { useApiKeys, useWebhooks, useIntegrations, useSyncJobs } from './use-integrations'
+export type { UseApiKeysReturn, UseWebhooksReturn, UseIntegrationsReturn, UseSyncJobsReturn } from './use-integrations'

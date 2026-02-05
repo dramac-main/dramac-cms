@@ -1,79 +1,78 @@
 # Active Context
 
-## Latest Session Update (Wave 5 ECOM-41A & ECOM-41B Complete - February 5, 2026)
+## Latest Session Update (Wave 5 ECOM-42A & ECOM-42B Complete - February 2026)
 
-### Completed: E-Commerce Wave 5 Analytics Implementation
-**Date:** February 5, 2026
+### Completed: E-Commerce Wave 5 Marketing Implementation
+**Date:** February 2026
 
-#### Wave 5 Analytics Phases Complete:
+#### Wave 5 Marketing Phases Complete:
 | Phase | Title | Status |
 |-------|-------|--------|
 | ECOM-40 | Inventory Management | ✅ Complete (previous session) |
-| ECOM-41A | Analytics Schema & Server Actions | ✅ Complete |
-| ECOM-41B | Analytics UI Components | ✅ Complete |
+| ECOM-41A | Analytics Schema & Server Actions | ✅ Complete (previous session) |
+| ECOM-41B | Analytics UI Components | ✅ Complete (previous session) |
+| ECOM-42A | Marketing Schema & Server Actions | ✅ Complete |
+| ECOM-42B | Marketing UI Components | ✅ Complete |
 
 #### Implementation Summary:
 
-**Types Created** (`src/modules/ecommerce/types/analytics-types.ts` - 437 lines):
-- Date range types: DateRange, DateRangePreset, GroupByPeriod
-- Sales types: SalesOverview, SalesByPeriod, SalesByChannel, RevenueBreakdown
-- Product types: ProductPerformance, CategoryPerformance
-- Customer types: CustomerInsights, CustomerLifetimeValue, CustomerSegment, CustomerSegmentation
-- Conversion types: FunnelStage, ConversionFunnel, CartAbandonment
-- Report types: SavedReport, SavedReportInput
+**Migration Created** (`migrations/ecom-42-marketing.sql`):
+- `mod_ecommod01_flash_sales` - Time-limited sales with discount configuration
+- `mod_ecommod01_flash_sale_products` - Products in flash sales with max quantity
+- `mod_ecommod01_gift_cards` - Gift card management with balance tracking
+- `mod_ecommod01_gift_card_transactions` - Transaction history for gift cards
+- `mod_ecommod01_product_bundles` - Bundle products with pricing
+- `mod_ecommod01_bundle_items` - Items within bundles
+- `mod_ecommod01_loyalty_programs` - Loyalty program configuration
+- `mod_ecommod01_loyalty_members` - Customer loyalty membership
+- `mod_ecommod01_loyalty_transactions` - Points earning/redemption history
+- RLS policies, indexes, triggers for all tables
 
-**Utils Created** (`src/modules/ecommerce/lib/analytics-utils.ts`):
-- Date range helpers: getDateRangeFromPreset, getComparisonDateRange, suggestGroupingPeriod
-- Formatters: formatCurrency, formatNumber, formatPercentage, formatPeriodLabel
-- Chart helpers: getChartColors (generates distinct colors)
-- Export helpers: toCSV, downloadCSV
+**Types Created** (`types/marketing-types.ts`):
+- FlashSale, FlashSaleProduct, FlashSaleInput, FlashSaleProductInput
+- GiftCard, GiftCardTransaction, GiftCardInput, GiftCardTransactionInput
+- ProductBundle, BundleItem, ProductBundleInput, BundleItemInput
+- LoyaltyProgram, LoyaltyConfig, LoyaltyMember, LoyaltyTransaction
+- LoyaltyConfigInput, AdjustPointsInput
+- MarketingStats (aggregate statistics)
 
-**Server Actions Created** (`src/modules/ecommerce/actions/analytics-actions.ts` - 1203 lines):
-- Sales: getSalesOverview, getSalesByPeriod, getSalesByChannel, getRevenueBreakdown
-- Products: getProductPerformance, getTopProducts, getCategoryPerformance
-- Customers: getCustomerInsights, getCustomerLifetimeValue, getCustomerSegmentation
-- Conversions: getConversionFunnel, getCartAbandonmentRate
-- Reports: getSavedReports, createSavedReport, updateSavedReport, deleteSavedReport, toggleReportFavorite
+**Server Actions** (`actions/marketing-actions.ts` - 800+ lines):
+- Flash Sales: getFlashSales, getActiveFlashSales, createFlashSale, updateFlashSale, deleteFlashSale, addFlashSaleProducts, removeFlashSaleProduct
+- Gift Cards: getGiftCards, lookupGiftCard, createGiftCard, deactivateGiftCard, processGiftCardTransaction
+- Bundles: getBundles, createBundle, updateBundle, deleteBundle
+- Loyalty: getLoyaltyConfig, updateLoyaltyConfig, getLoyaltyMembers, getLoyaltyMember, adjustLoyaltyPoints
+- Statistics: getMarketingStats (aggregate data for dashboards)
 
-**Migration Created** (`migrations/ecom-41-analytics.sql`):
-- mod_ecommod01_analytics_snapshots - Daily metrics snapshots
-- mod_ecommod01_saved_reports - User report configurations
-- mod_ecommod01_report_history - Generation history
-- RLS policies, indexes, generate_daily_analytics_snapshot function
+**Hooks Created** (`hooks/use-marketing.ts` - 400+ lines):
+- `useFlashSales` - Flash sale CRUD with active filtering
+- `useGiftCards` - Gift card management with lookup
+- `useBundles` - Product bundle management
+- `useLoyalty` - Loyalty program config and members
+- `useMarketingStats` - Dashboard statistics
 
-**Hooks Created** (`src/modules/ecommerce/hooks/use-analytics.ts` - 500+ lines):
-- useDateRange - Date range state management with presets
-- useSalesAnalytics, useProductAnalytics, useCustomerAnalytics, useConversionAnalytics
-- useSavedReports - CRUD for saved reports
-- useAnalytics - Combined dashboard hook
+**Widget Components** (`components/widgets/countdown-timer.tsx`):
+- `CountdownTimer` - Animated countdown with days/hours/minutes/seconds
 
-**Chart Components** (`src/modules/ecommerce/components/analytics/analytics-charts.tsx`):
-- ChartWrapper, RevenueChart, OrdersChart, SalesByChannelChart
-- TopProductsChart, CategoryPerformanceChart
-- CustomerSegmentationChart, ConversionFunnelChart
+**View Components** (`components/views/`):
+- `FlashSalesView` - Status tabs, stats cards, countdown timers, CRUD
+- `GiftCardsView` - Card lookup, issuance, transaction history
+- `MarketingView` - Main tabbed dashboard for all marketing features
+- `BundlesView` - Product bundle management with item configuration
+- `LoyaltyView` - Loyalty program configuration and member management
 
-**Card Components** (`src/modules/ecommerce/components/analytics/analytics-cards.tsx`):
-- KPICard, SalesOverviewCards, RevenueBreakdownCard
-- CustomerInsightsCard, CartAbandonmentCard
+**Dialog Components** (`components/dialogs/`):
+- `FlashSaleDialog` - Create/edit flash sales with product selection
+- `BundleDialog` - Create/edit bundles with item configuration
+- `CreateGiftCardDialog` - Issue new gift cards
+- `LoyaltyConfigDialog` - Configure loyalty program settings
+- `AdjustPointsDialog` - Manual point adjustments for members
 
-**Table Components** (`src/modules/ecommerce/components/analytics/analytics-tables.tsx`):
-- ProductPerformanceTable (sortable, filterable, exportable)
-- CategoryPerformanceTable (with progress bars)
-- CustomerLTVTable (top customers by lifetime value)
-
-**Picker Components** (`src/modules/ecommerce/components/analytics/date-range-picker.tsx`):
-- DateRangePicker, GroupBySelector, AnalyticsToolbar
-
-**Dashboard View** (`src/modules/ecommerce/components/analytics/analytics-dashboard-view.tsx`):
-- Tabbed interface: Sales, Products, Customers, Conversions
-- Integrated toolbar with date range and grouping
-
-**All components verified with TypeScript** (`npx tsc --noEmit` - zero errors)
-**Git committed and pushed** (commit 1af5db4)
+**All components verified with TypeScript** (`pnpm tsc --noEmit` - zero errors)
+**Git committed and pushed** (commit 04b4ff0)
 
 ---
 
-## Previous Session Update (Wave 4 Mobile ECOM-30/31/32 Complete - February 5, 2026)
+## Previous Session Update (Wave 5 ECOM-41A & ECOM-41B Complete - February 5, 2026)
 
 ### Completed: PHASE-ECOM-13 Quote Templates & Automation
 **Date:** February 5, 2026

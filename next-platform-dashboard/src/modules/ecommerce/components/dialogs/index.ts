@@ -18,4 +18,6 @@ export * from './create-gift-card-dialog'
 export * from './loyalty-config-dialog'
 export * from './adjust-points-dialog'
 
-
+// Phase ECOM-43B: Integration Dialogs
+export * from './create-api-key-dialog'
+export * from './webhook-endpoint-dialog'

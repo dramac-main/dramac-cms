@@ -149,9 +149,7 @@ CREATE TABLE IF NOT EXISTS mod_ecommod01_bundle_items (
   -- Sort order
   sort_order INTEGER DEFAULT 0,
   
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  
-  UNIQUE(bundle_id, product_id, COALESCE(variant_id, '00000000-0000-0000-0000-000000000000'::uuid))
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Indexes for bundles
@@ -159,6 +157,10 @@ CREATE INDEX IF NOT EXISTS idx_bundles_site ON mod_ecommod01_bundles(site_id);
 CREATE INDEX IF NOT EXISTS idx_bundles_active ON mod_ecommod01_bundles(site_id, is_active) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_bundle_items_bundle ON mod_ecommod01_bundle_items(bundle_id);
 CREATE INDEX IF NOT EXISTS idx_bundle_items_product ON mod_ecommod01_bundle_items(product_id);
+
+-- Unique constraint for bundle items (handles optional variant_id)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_bundle_items_unique 
+  ON mod_ecommod01_bundle_items(bundle_id, product_id, COALESCE(variant_id, '00000000-0000-0000-0000-000000000000'::uuid));
 
 -- ============================================================================
 -- GIFT CARDS TABLE
