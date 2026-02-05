@@ -170,9 +170,10 @@ ALTER TABLE mod_ecommod01_report_history ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view analytics snapshots for their sites"
     ON mod_ecommod01_analytics_snapshots FOR SELECT
     USING (
-        site_id IN (
-            SELECT site_id FROM user_site_roles 
-            WHERE user_id = auth.uid()
+        EXISTS (
+            SELECT 1 FROM sites s
+            JOIN agency_members am ON am.agency_id = s.agency_id
+            WHERE s.id = site_id AND am.user_id = auth.uid()
         )
     );
 
@@ -184,18 +185,20 @@ CREATE POLICY "Service role can manage analytics snapshots"
 CREATE POLICY "Users can view saved reports for their sites"
     ON mod_ecommod01_saved_reports FOR SELECT
     USING (
-        site_id IN (
-            SELECT site_id FROM user_site_roles 
-            WHERE user_id = auth.uid()
+        EXISTS (
+            SELECT 1 FROM sites s
+            JOIN agency_members am ON am.agency_id = s.agency_id
+            WHERE s.id = site_id AND am.user_id = auth.uid()
         )
     );
 
 CREATE POLICY "Users can create saved reports for their sites"
     ON mod_ecommod01_saved_reports FOR INSERT
     WITH CHECK (
-        site_id IN (
-            SELECT site_id FROM user_site_roles 
-            WHERE user_id = auth.uid()
+        EXISTS (
+            SELECT 1 FROM sites s
+            JOIN agency_members am ON am.agency_id = s.agency_id
+            WHERE s.id = site_id AND am.user_id = auth.uid()
         )
     );
 
@@ -203,9 +206,10 @@ CREATE POLICY "Users can update their own saved reports"
     ON mod_ecommod01_saved_reports FOR UPDATE
     USING (
         created_by = auth.uid() OR
-        site_id IN (
-            SELECT site_id FROM user_site_roles 
-            WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
+        EXISTS (
+            SELECT 1 FROM sites s
+            JOIN agency_members am ON am.agency_id = s.agency_id
+            WHERE s.id = site_id AND am.user_id = auth.uid() AND am.role IN ('owner', 'admin')
         )
     );
 
@@ -213,9 +217,10 @@ CREATE POLICY "Users can delete their own saved reports"
     ON mod_ecommod01_saved_reports FOR DELETE
     USING (
         created_by = auth.uid() OR
-        site_id IN (
-            SELECT site_id FROM user_site_roles 
-            WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
+        EXISTS (
+            SELECT 1 FROM sites s
+            JOIN agency_members am ON am.agency_id = s.agency_id
+            WHERE s.id = site_id AND am.user_id = auth.uid() AND am.role IN ('owner', 'admin')
         )
     );
 
@@ -223,18 +228,20 @@ CREATE POLICY "Users can delete their own saved reports"
 CREATE POLICY "Users can view report history for their sites"
     ON mod_ecommod01_report_history FOR SELECT
     USING (
-        site_id IN (
-            SELECT site_id FROM user_site_roles 
-            WHERE user_id = auth.uid()
+        EXISTS (
+            SELECT 1 FROM sites s
+            JOIN agency_members am ON am.agency_id = s.agency_id
+            WHERE s.id = site_id AND am.user_id = auth.uid()
         )
     );
 
 CREATE POLICY "Users can create report history for their sites"
     ON mod_ecommod01_report_history FOR INSERT
     WITH CHECK (
-        site_id IN (
-            SELECT site_id FROM user_site_roles 
-            WHERE user_id = auth.uid()
+        EXISTS (
+            SELECT 1 FROM sites s
+            JOIN agency_members am ON am.agency_id = s.agency_id
+            WHERE s.id = site_id AND am.user_id = auth.uid()
         )
     );
 
