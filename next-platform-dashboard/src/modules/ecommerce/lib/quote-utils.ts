@@ -312,7 +312,8 @@ export function calculateQuoteTotals(
 export function formatQuoteCurrency(
   amount: number,
   currency: string = 'USD',
-  locale: string = 'en-US'
+  locale: string = 'en-US',
+  isAlreadyInDollars: boolean = true // Quote amounts are stored in dollars, not cents
 ): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',

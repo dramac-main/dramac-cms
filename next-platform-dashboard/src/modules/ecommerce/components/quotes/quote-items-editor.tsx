@@ -352,7 +352,8 @@ export function QuoteItemsEditor({
       description: sel.product.short_description || undefined,
       image_url: sel.variant?.image_url || sel.product.images?.[0] || undefined,
       quantity: sel.quantity,
-      unit_price: sel.variant?.price || sel.product.base_price,
+      // Convert cents to dollars (database stores prices as cents)
+      unit_price: (sel.variant?.price || sel.product.base_price) / 100,
       options: sel.variant?.options || {}
     }))
     

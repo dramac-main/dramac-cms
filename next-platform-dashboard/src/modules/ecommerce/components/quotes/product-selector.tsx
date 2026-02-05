@@ -67,10 +67,11 @@ function ProductItem({
   const imageUrl = product.images?.[0]
   
   const formatPrice = (price: number) => {
+    // Convert cents to dollars (database stores prices as cents)
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
-    }).format(price)
+    }).format(price / 100)
   }
 
   return (
