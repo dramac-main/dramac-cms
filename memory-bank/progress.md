@@ -1,69 +1,12 @@
 # Progress: What Works & What's Left
 
-**Last Updated**: February 5, 2026  
+**Last Updated**: February 4, 2026  
 **Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅**
 **Component Strategy**: Fresh premium components (NOT reusing basic Puck components)
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
 **Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
 **E-Commerce Module**: ECOM-01 ✅ | ECOM-02 ✅ | ECOM-03 ✅ | ECOM-04 ✅ | ECOM-05 ✅ | **Wave 1 COMPLETE** ✅
-**E-Commerce Wave 3**: ECOM-20 ✅ | ECOM-21 ✅ | **ECOM-22 ✅ | ECOM-23 ✅** | **Storefront Components COMPLETE** ✅
-
-## 📋 E-COMMERCE WAVE 3: STOREFRONT COMPONENTS (February 5, 2026)
-
-### Wave 3 Complete - Storefront & Cart/Checkout Components
-| Phase | Title | Status |
-|-------|-------|--------|
-| ECOM-20 | Core Storefront Hooks | ✅ Complete |
-| ECOM-21 | Product Display Components | ✅ Complete |
-| ECOM-22 | Cart Components | ✅ Complete |
-| ECOM-23 | Checkout Components | ✅ Complete |
-
-### PHASE-ECOM-22: Cart Components (NEW)
-**Commit**: `a43f96d` | **18 files changed, 3785 insertions**
-
-| Component | Description |
-|-----------|-------------|
-| `CartQuantitySelector` | +/- quantity controls with sm/md/lg sizes |
-| `CartEmptyState` | Friendly empty cart display with shop link |
-| `CartItemCard` | Item card with 3 variants: default, compact, drawer |
-| `CartDiscountInput` | Discount code input with validation |
-| `CartSummaryCard` | Order totals with discount support |
-| `CartDrawerBlock` | Slide-out cart drawer using Sheet |
-| `MiniCartBlock` | Compact cart popover for headers |
-| `CartPageBlock` | Full responsive 2-column cart page |
-
-### PHASE-ECOM-23: Checkout Components (NEW)
-**Commit**: `a43f96d` | Included with ECOM-22
-
-| Component | Description |
-|-----------|-------------|
-| `useCheckout` | Multi-step checkout state management hook |
-| `CheckoutStepIndicator` | Visual progress (mobile + desktop) |
-| `AddressForm` | Reusable address form with validation |
-| `ShippingAddressForm` | Shipping with contact info |
-| `BillingAddressForm` | Billing with same-as-shipping toggle |
-| `ShippingMethodSelector` | Shipping method radio selection |
-| `PaymentMethodSelector` | Payment method radio selection |
-| `OrderSummaryCard` | Checkout order summary, collapsible |
-| `CheckoutPageBlock` | Full 4-step checkout page |
-| `OrderConfirmationBlock` | Post-checkout confirmation display |
-
-### Hook Exports Updated
-```typescript
-// hooks/index.ts
-export { useCheckout } from './useCheckout'
-export type { CheckoutStep, ShippingMethod, PaymentMethod, CheckoutState, CheckoutValidation, UseCheckoutResult }
-```
-
-### Studio Exports Updated  
-```typescript
-// studio/index.ts - New exports
-export { CartQuantitySelector, CartEmptyState, CartItemCard, ... } // 8 cart components
-export { CheckoutStepIndicator, AddressForm, ShippingAddressForm, ... } // 8 checkout components
-```
-
----
 
 ## 📋 E-COMMERCE WAVE 2 COMPLETE (February 4, 2026)
 

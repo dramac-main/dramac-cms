@@ -1951,47 +1951,33 @@ export interface QuotePerformance {
 }
 
 // ============================================================================
-// STOREFRONT HOOK TYPES (Phase ECOM-20)
+// HOOK RETURN TYPES (ECOM-20)
 // ============================================================================
 
-export interface StorefrontProductsOptions {
-  categoryId?: string
-  categorySlug?: string
-  featured?: boolean
-  search?: string
-  minPrice?: number
-  maxPrice?: number
-  inStock?: boolean
-  sortBy?: 'name' | 'price-asc' | 'price-desc' | 'newest' | 'popularity'
-  limit?: number
-  page?: number
+/**
+ * Result type for useStorefrontContext
+ */
+export interface StorefrontContextValue {
+  siteId: string
+  settings: EcommerceSettings | null
+  currency: string
+  currencySymbol: string
+  taxRate: number
+  formatPrice: (amount: number) => string
+  isInitialized: boolean
 }
 
-export interface StorefrontProductsResult {
-  products: Product[]
-  pagination: {
-    total: number
-    page: number
-    totalPages: number
-    limit: number
-    hasNext: boolean
-    hasPrev: boolean
-  }
-  isLoading: boolean
-  error: string | null
-  refetch: () => Promise<void>
+/**
+ * Tree node for category hierarchy
+ */
+export interface CategoryTreeNode extends Category {
+  children: CategoryTreeNode[]
+  level: number
 }
 
-export interface StorefrontProductResult {
-  product: Product | null
-  variants: ProductVariant[]
-  options: ProductOption[]
-  relatedProducts: Product[]
-  isLoading: boolean
-  error: string | null
-  refetch: () => Promise<void>
-}
-
+/**
+ * Result type for useStorefrontCategories
+ */
 export interface StorefrontCategoriesResult {
   categories: Category[]
   categoryTree: CategoryTreeNode[]
@@ -2002,11 +1988,96 @@ export interface StorefrontCategoriesResult {
   getCategoryPath: (categoryId: string) => Category[]
 }
 
-export interface CategoryTreeNode extends Category {
-  children: CategoryTreeNode[]
-  level: number
+/**
+ * Result type for useStorefrontProducts
+ */
+export interface StorefrontProductsOptions {
+  categoryId?: string
+  categorySlug?: string
+  brand?: string
+  searchQuery?: string
+  search?: string
+  minPrice?: number
+  maxPrice?: number
+  inStock?: boolean
+  onSale?: boolean
+  featured?: boolean
+  tags?: string[]
+  sortBy?: 'newest' | 'price_asc' | 'price_desc' | 'price-asc' | 'price-desc' | 'name' | 'popularity'
+  limit?: number
+  offset?: number
+  page?: number
 }
 
+export interface StorefrontProductsPagination {
+  total: number
+  page: number
+  totalPages: number
+  limit: number
+  hasNext: boolean
+  hasPrev: boolean
+}
+
+export interface StorefrontProductsResult {
+  products: Product[]
+  pagination: StorefrontProductsPagination
+  isLoading: boolean
+  error: string | null
+  refetch: () => void
+}
+
+/**
+ * Result type for useStorefrontProduct
+ */
+export interface StorefrontProductResult {
+  product: Product | null
+  variants: ProductVariant[]
+  options: ProductOption[]
+  relatedProducts: Product[]
+  isLoading: boolean
+  error: string | null
+  refetch: () => void
+}
+
+/**
+ * Result type for useStorefrontSearch
+ */
+export interface StorefrontSearchResult {
+  query: string
+  setQuery: (query: string) => void
+  results: Product[]
+  isSearching: boolean
+  error: string | null
+  recentSearches: string[]
+  clearRecentSearches: () => void
+}
+
+/**
+ * Result type for useRecentlyViewed
+ */
+export interface RecentlyViewedResult {
+  products: Product[]
+  isLoading: boolean
+  addProduct: (productId: string) => void
+  removeProduct: (productId: string) => void
+  clear: () => void
+}
+
+/**
+ * Cart totals
+ */
+export interface CartTotals {
+  subtotal: number
+  discount: number
+  tax: number
+  shipping: number
+  total: number
+  itemCount: number
+}
+
+/**
+ * Result type for useStorefrontCart
+ */
 export interface StorefrontCartResult {
   cart: Cart | null
   items: CartItem[]
@@ -2024,12 +2095,18 @@ export interface StorefrontCartResult {
   refresh: () => Promise<void>
 }
 
+/**
+ * Wishlist item type (internal)
+ */
 export interface WishlistItem {
   productId: string
   variantId?: string
   addedAt: string
 }
 
+/**
+ * Result type for useStorefrontWishlist
+ */
 export interface StorefrontWishlistResult {
   items: WishlistItem[]
   products: Product[]
@@ -2040,59 +2117,4 @@ export interface StorefrontWishlistResult {
   isInWishlist: (productId: string, variantId?: string) => boolean
   clear: () => void
   itemCount: number
-}
-
-export interface StorefrontSearchResult {
-  query: string
-  setQuery: (query: string) => void
-  results: Product[]
-  isSearching: boolean
-  error: string | null
-  recentSearches: string[]
-  clearRecentSearches: () => void
-}
-
-export interface RecentlyViewedResult {
-  products: Product[]
-  isLoading: boolean
-  addProduct: (productId: string) => void
-  removeProduct: (productId: string) => void
-  clear: () => void
-}
-
-export interface StorefrontContextValue {
-  siteId: string
-  settings: EcommerceSettings | null
-  currency: string
-  currencySymbol: string
-  taxRate: number
-  formatPrice: (amount: number) => string
-  isInitialized: boolean
-}
-
-// ============================================================================
-// PRODUCT DISPLAY TYPES (Phase ECOM-21)
-// ============================================================================
-
-/**
- * Product image type for display components
- */
-export interface ProductImage {
-  id: string
-  url: string
-  alt_text: string | null
-  sort_order: number
-  is_primary?: boolean
-}
-
-/**
- * Extended product with display properties
- * Uses Omit to override the images field type
- */
-export interface ProductWithImages extends Omit<Product, 'images'> {
-  images: ProductImage[]
-  rating?: number
-  review_count?: number
-  inventory_quantity?: number
-  featured?: boolean
 }

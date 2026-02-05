@@ -8,6 +8,8 @@
  * Phase ECOM-21: Product Display Components
  * Phase ECOM-22: Cart Components  
  * Phase ECOM-23: Checkout Components
+ * Phase ECOM-24: Navigation & Discovery Components
+ * Phase ECOM-25: Quotation Frontend Components
  */
 
 import type { ModuleStudioExports } from "@/types/studio-module";
@@ -56,6 +58,24 @@ export { PaymentMethodSelector } from "./components/PaymentMethodSelector";
 export { OrderSummaryCard } from "./components/OrderSummaryCard";
 export { CheckoutPageBlock } from "./components/CheckoutPageBlock";
 export { OrderConfirmationBlock } from "./components/OrderConfirmationBlock";
+
+// Re-export Navigation & Discovery components (ECOM-24)
+export { CategoryCard } from "./components/CategoryCard";
+export { CategoryNavBlock } from "./components/CategoryNavBlock";
+export { SearchBarBlock } from "./components/SearchBarBlock";
+export { ActiveFilters } from "./components/ActiveFilters";
+export { FilterSidebarBlock } from "./components/FilterSidebarBlock";
+export { BreadcrumbBlock } from "./components/BreadcrumbBlock";
+export { ProductSortBlock } from "./components/ProductSortBlock";
+
+// Re-export Quotation components (ECOM-25)
+export { QuoteStatusBadge, getQuoteStatusLabel, getQuoteStatusColor, isQuoteActionable, isQuoteFinal } from "./components/QuoteStatusBadge";
+export { QuoteItemCard } from "./components/QuoteItemCard";
+export { QuotePriceBreakdown, QuoteSavingsDisplay } from "./components/QuotePriceBreakdown";
+export { QuoteActionButtons } from "./components/QuoteActionButtons";
+export { QuoteRequestBlock } from "./components/QuoteRequestBlock";
+export { QuoteListBlock } from "./components/QuoteListBlock";
+export { QuoteDetailBlock } from "./components/QuoteDetailBlock";
 
 // =============================================================================
 // STUDIO COMPONENTS

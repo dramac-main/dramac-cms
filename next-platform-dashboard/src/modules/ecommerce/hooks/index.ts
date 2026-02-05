@@ -3,6 +3,8 @@
  * 
  * Phase ECOM-20: Core Data Hooks
  * Phase ECOM-23: Checkout Hook
+ * Phase ECOM-24: Navigation & Filtering Hooks
+ * Phase ECOM-25: Quotation Hooks
  * 
  * Exports all hooks for use in Studio components and pages.
  */
@@ -26,3 +28,21 @@ export type {
   CheckoutValidation,
   UseCheckoutResult 
 } from './useCheckout'
+
+// Product filtering hook (ECOM-24)
+export { useProductFilters } from './useProductFilters'
+export type {
+  FilterState,
+  PriceRange,
+  SortOption,
+  FilterResult
+} from './useProductFilters'
+export { SORT_OPTIONS } from './useProductFilters'
+
+// Quotations hook (ECOM-25)
+export { useQuotations } from './useQuotations'
+export type {
+  QuoteBuilderItem,
+  UseQuotationsResult,
+  QuoteRequestData
+} from './useQuotations'
