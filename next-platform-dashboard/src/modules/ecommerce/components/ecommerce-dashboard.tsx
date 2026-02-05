@@ -15,6 +15,7 @@ import { OrdersView } from './views/orders-view'
 import { CustomersView } from './views/customers-view'
 import { CategoriesView } from './views/categories-view'
 import { DiscountsView } from './views/discounts-view'
+import { QuotesView } from './views/quotes-view'
 import { AnalyticsView } from './views/analytics-view'
 import { SettingsView } from './views/settings-view'
 import { CommandPalette } from './command-palette'
@@ -194,9 +195,12 @@ function EcommerceDashboardContent({
           )}
 
           {activeView === 'quotes' && (
-            <div className="flex items-center justify-center h-64 text-muted-foreground">
-              <p>Quotation System - Coming in Wave 2 (Phase ECOM-10+)</p>
-            </div>
+            <QuotesView 
+              siteId={siteId}
+              agencyId={agencyId}
+              userId="user-id"
+              userName="Store Manager"
+            />
           )}
 
           {activeView === 'analytics' && (
