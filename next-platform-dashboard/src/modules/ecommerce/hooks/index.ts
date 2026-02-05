@@ -61,3 +61,6 @@ export type { HapticPattern, HapticConfig, UseHapticFeedbackReturn } from './use
 
 export { useKeyboardVisible, useAutoScrollOnFocus } from './useKeyboardVisible'
 export type { KeyboardState, UseKeyboardVisibleReturn } from './useKeyboardVisible'
+
+// Marketing hooks (ECOM-42B)
+export { useFlashSales, useBundles, useGiftCards, useLoyalty, useMarketingStats } from './use-marketing'
