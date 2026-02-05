@@ -1,6 +1,67 @@
 # Active Context
 
-## Latest Session Update (Wave 5 COMPLETE + Navigation Integration - February 5, 2026)
+## Latest Session Update (Module Hook Fix + Wave 6 Integration - February 6, 2026)
+
+### CRITICAL BUG FIX: Module Installation Hooks Now Working ✅
+
+**Root Cause Identified & Fixed:**
+The module installation hooks were not firing because:
+1. Hooks are registered by **slug** (e.g., `'ecommerce'`)
+2. API endpoints were passing **UUID** from `site_module_installations.module_id`
+3. Hooks never matched because UUID ≠ slug
+
+**Fix Applied:**
+1. API endpoints now look up module slug before executing hooks
+2. Added `getEcommerceModuleUuid()` helper in auto-setup-actions.ts
+3. All DB queries that used `module_id = 'ecommerce'` now properly resolve UUID
+
+### Wave 6 Onboarding Wizard Integration ✅
+
+**Integrated into Dashboard:**
+- OnboardingWizard now shows when `onboardingCompleted` is false
+- Dashboard checks settings.onboardingCompleted on load
+- Wizard dismisses on complete or skip, then refreshes data
+
+**Files Modified:**
+| File | Change |
+|------|--------|
+| `api/sites/[siteId]/modules/route.ts` | Look up slug before hooks |
+| `api/sites/[siteId]/modules/[moduleId]/route.ts` | Same + helper function |
+| `actions/auto-setup-actions.ts` | Added `getEcommerceModuleUuid()` |
+| `components/ecommerce-dashboard.tsx` | Integrated OnboardingWizard |
+| `types/ecommerce-types.ts` | Added `onboardingCompleted` field |
+
+### Verification: Wave 5 & 6 COMPLETE ✅
+
+**Deep Scan Results:**
+| Wave | Phases | Files | Lines | Status |
+|------|--------|-------|-------|--------|
+| Wave 5 | ECOM-40 to 43 | 20+ | ~12,500 | ✅ Production Ready |
+| Wave 6 | ECOM-50 to 53 | 15+ | ~4,000 | ✅ Production Ready |
+
+**All Wave 5 Components Verified:**
+- ECOM-40: Inventory Management (actions, types, views)
+- ECOM-41: Analytics (actions, types, utils, hooks, views)
+- ECOM-42: Marketing (actions, types, hooks, views, dialogs)
+- ECOM-43: Integrations (actions, types, hooks, views)
+
+**All Wave 6 Components Verified:**
+- ECOM-50: Installation hook system (installation-hook.ts)
+- ECOM-51: Auto-page generation (auto-setup-actions.ts, page-templates.ts)
+- ECOM-52: Navigation auto-setup (nav items, widgets)
+- ECOM-53: Onboarding wizard (6 steps, complete flow)
+
+### Git Commit
+```
+d6e6a11 fix(ecommerce): Fix module installation hooks not firing and integrate onboarding wizard
+```
+
+### TypeScript Verification: ✅ PASSED
+`pnpm tsc --noEmit` - Zero errors
+
+---
+
+## Previous Session Update (Wave 5 COMPLETE + Navigation Integration - February 5, 2026)
 
 ### Wave 5 FULLY IMPLEMENTED & INDUSTRY READY ✅
 

@@ -19,6 +19,40 @@ import type {
 import { updateSettings } from './settings-actions';
 
 // ============================================================================
+// HELPER FUNCTION: Get E-commerce Module UUID
+// ============================================================================
+
+/**
+ * Get the e-commerce module's UUID from its slug
+ * The modules_v2 table has slug='ecommerce', but site_module_installations uses the UUID
+ */
+async function getEcommerceModuleUuid(): Promise<string | null> {
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
+  
+  // Try modules_v2 first
+  const { data: moduleData } = await db
+    .from('modules_v2')
+    .select('id')
+    .eq('slug', 'ecommerce')
+    .single();
+  
+  if (moduleData?.id) {
+    return moduleData.id;
+  }
+  
+  // Fallback to module_source
+  const { data: sourceModule } = await db
+    .from('module_source')
+    .select('id')
+    .eq('slug', 'ecommerce')
+    .single();
+  
+  return sourceModule?.id || null;
+}
+
+// ============================================================================
 // GET ONBOARDING STATUS
 // ============================================================================
 
@@ -33,12 +67,19 @@ export async function getOnboardingStatus(
   const db = supabase as any;
 
   try {
-    // Get module installation settings
+    // Get the e-commerce module UUID
+    const moduleUuid = await getEcommerceModuleUuid();
+    
+    if (!moduleUuid) {
+      return { success: false, status: null, error: 'E-commerce module not found in database' };
+    }
+    
+    // Get module installation settings using UUID
     const { data: installation, error } = await db
       .from('site_module_installations')
       .select('settings')
       .eq('site_id', siteId)
-      .eq('module_id', 'ecommerce')
+      .eq('module_id', moduleUuid)
       .single();
 
     if (error) {
@@ -83,12 +124,19 @@ export async function saveOnboardingStep(
   const db = supabase as any;
 
   try {
-    // Get current installation settings
+    // Get the e-commerce module UUID
+    const moduleUuid = await getEcommerceModuleUuid();
+    
+    if (!moduleUuid) {
+      return { success: false, error: 'E-commerce module not found in database' };
+    }
+    
+    // Get current installation settings using UUID
     const { data: installation, error: fetchError } = await db
       .from('site_module_installations')
       .select('id, settings')
       .eq('site_id', siteId)
-      .eq('module_id', 'ecommerce')
+      .eq('module_id', moduleUuid)
       .single();
 
     if (fetchError || !installation) {
@@ -167,11 +215,18 @@ export async function skipOnboardingStep(
   const db = supabase as any;
 
   try {
+    // Get the e-commerce module UUID
+    const moduleUuid = await getEcommerceModuleUuid();
+    
+    if (!moduleUuid) {
+      return { success: false, error: 'E-commerce module not found in database' };
+    }
+    
     const { data: installation, error: fetchError } = await db
       .from('site_module_installations')
       .select('id, settings')
       .eq('site_id', siteId)
-      .eq('module_id', 'ecommerce')
+      .eq('module_id', moduleUuid)
       .single();
 
     if (fetchError || !installation) {
@@ -240,11 +295,18 @@ export async function completeOnboarding(
   const db = supabase as any;
 
   try {
+    // Get the e-commerce module UUID
+    const moduleUuid = await getEcommerceModuleUuid();
+    
+    if (!moduleUuid) {
+      return { success: false, error: 'E-commerce module not found in database' };
+    }
+    
     const { data: installation, error: fetchError } = await db
       .from('site_module_installations')
       .select('id, settings')
       .eq('site_id', siteId)
-      .eq('module_id', 'ecommerce')
+      .eq('module_id', moduleUuid)
       .single();
 
     if (fetchError || !installation) {
@@ -302,11 +364,18 @@ export async function skipOnboarding(
   const db = supabase as any;
 
   try {
+    // Get the e-commerce module UUID
+    const moduleUuid = await getEcommerceModuleUuid();
+    
+    if (!moduleUuid) {
+      return { success: false, error: 'E-commerce module not found in database' };
+    }
+    
     const { data: installation, error: fetchError } = await db
       .from('site_module_installations')
       .select('id, settings')
       .eq('site_id', siteId)
-      .eq('module_id', 'ecommerce')
+      .eq('module_id', moduleUuid)
       .single();
 
     if (fetchError || !installation) {
