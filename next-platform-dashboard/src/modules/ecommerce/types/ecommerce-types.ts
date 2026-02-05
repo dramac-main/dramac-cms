@@ -1317,6 +1317,10 @@ export interface Quote {
   responded_at?: string | null
   response_notes?: string | null
   
+  // Reminder tracking (ECOM-13)
+  reminder_count?: number
+  last_reminder_at?: string | null
+  
   // Conversion
   converted_to_order_id?: string | null
   converted_at?: string | null
@@ -1433,8 +1437,11 @@ export interface QuoteTemplate {
   is_default: boolean
   is_active: boolean
   
-  // Usage
+  // Usage tracking
   use_count: number
+  usage_count: number // Alias for use_count
+  last_used_at?: string | null
+  created_by?: string | null
   
   // Timestamps
   created_at: string
@@ -1818,4 +1825,125 @@ export interface QuotePdfData {
     website?: string
   }
   settings: QuoteSettings
+}
+
+// ============================================================================
+// QUOTE ANALYTICS TYPES
+// Phase ECOM-13: Quote Templates & Automation
+// ============================================================================
+
+/**
+ * Quote Site Settings - Extended settings for automation
+ */
+export interface QuoteSiteSettings {
+  id: string
+  site_id: string
+  
+  // Numbering
+  quote_number_prefix: string
+  quote_number_padding: number
+  next_quote_number: number
+  
+  // Defaults
+  default_validity_days: number
+  default_tax_rate: number
+  default_currency: string
+  
+  // Auto-actions
+  auto_expire_enabled: boolean
+  auto_reminder_enabled: boolean
+  reminder_days_before: number
+  max_reminders: number
+  
+  // Email settings
+  send_acceptance_notification: boolean
+  send_rejection_notification: boolean
+  cc_email_on_send: string | null
+  
+  // Branding
+  company_name: string | null
+  company_address: string | null
+  company_phone: string | null
+  company_email: string | null
+  logo_url: string | null
+  primary_color: string
+  
+  // Default content
+  default_introduction: string | null
+  default_terms: string | null
+  default_footer: string | null
+  
+  // Metadata
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Quote Settings Update - For updating settings
+ */
+export interface QuoteSiteSettingsUpdate {
+  quote_number_prefix?: string
+  quote_number_padding?: number
+  default_validity_days?: number
+  default_tax_rate?: number
+  default_currency?: string
+  auto_expire_enabled?: boolean
+  auto_reminder_enabled?: boolean
+  reminder_days_before?: number
+  max_reminders?: number
+  send_acceptance_notification?: boolean
+  send_rejection_notification?: boolean
+  cc_email_on_send?: string
+  company_name?: string
+  company_address?: string
+  company_phone?: string
+  company_email?: string
+  logo_url?: string
+  primary_color?: string
+  default_introduction?: string
+  default_terms?: string
+  default_footer?: string
+}
+
+/**
+ * Quote Analytics Data
+ */
+export interface QuoteAnalytics {
+  // Overview
+  total_quotes: number
+  total_value: number
+  average_value: number
+  
+  // Status breakdown
+  by_status: Record<QuoteStatus, number>
+  
+  // Conversion metrics
+  conversion_rate: number
+  rejection_rate: number
+  expiry_rate: number
+  average_time_to_accept: number
+  
+  // Value metrics
+  total_accepted_value: number
+  total_pending_value: number
+  total_lost_value: number
+  
+  // Time-based
+  quotes_this_month: number
+  quotes_last_month: number
+  growth_rate: number
+}
+
+/**
+ * Quote Performance Summary (for dashboard)
+ */
+export interface QuotePerformance {
+  period: string
+  quotes_created: number
+  quotes_sent: number
+  quotes_accepted: number
+  quotes_rejected: number
+  quotes_expired: number
+  total_value: number
+  accepted_value: number
 }
