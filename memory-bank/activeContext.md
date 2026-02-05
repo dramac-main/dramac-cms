@@ -1,6 +1,68 @@
 # Active Context
 
-## Latest Session Update (ECOM Critical Fixes - February 5, 2026)
+## Latest Session Update (ECOM-13 Complete - February 5, 2026)
+
+### Completed: PHASE-ECOM-13 Quote Templates & Automation
+**Date:** February 5, 2026
+
+#### All Wave 2 Quotation System Phases Complete:
+| Phase | Title | Status |
+|-------|-------|--------|
+| ECOM-10 | Quotation Database Schema & Types | ✅ Complete |
+| ECOM-11A | Quote Server Actions | ✅ Complete |
+| ECOM-11B | Quote UI Components | ✅ Complete |
+| ECOM-12 | Quote Workflow & Customer Portal | ✅ Complete |
+| ECOM-13 | Quote Templates & Automation | ✅ Complete |
+
+#### PHASE-ECOM-13 Implementation Details:
+
+**Database Migration** (`migrations/ecom-13-quote-templates.sql`):
+- `mod_ecommod01_quote_templates` table with JSONB items column
+- `mod_ecommod01_quote_settings` table for site-level configuration
+- RLS policies for agency/site isolation
+- Triggers for updated_at timestamps
+- Added `reminder_count`, `last_reminder_at` columns to quotes table
+
+**Server Actions** (`actions/quote-template-actions.ts`):
+- CRUD operations for templates (create, read, update, delete)
+- `getQuoteTemplates()`, `getQuoteTemplate()`, `getDefaultTemplate()`
+- `createQuoteTemplate()`, `updateQuoteTemplate()`, `deleteQuoteTemplate()`
+- `duplicateQuoteTemplate()` for template cloning
+- `incrementTemplateUsage()` for usage tracking
+- `getQuoteSiteSettings()`, `upsertQuoteSiteSettings()` for settings management
+- `getNextQuoteNumber()` for auto-numbering
+
+**Automation Utilities** (`lib/quote-automation.ts`):
+- `processExpiredQuotes()` - Auto-expire quotes past valid_until date
+- `getQuotesDueForReminder()` - Find quotes needing reminder
+- `processQuoteReminders()` - Send automated reminders
+- `runQuoteAutomation()` - Combined automation runner for cron jobs
+- `getQuotesNeedingFollowUp()` - Detect non-responsive quotes
+
+**Analytics Utilities** (`lib/quote-analytics.ts`):
+- `getQuoteAnalytics()` - Comprehensive quote metrics (totals, rates, values)
+- `getQuotePerformance()` - Monthly performance reports
+- `getTopTemplates()` - Most used templates
+- `getQuoteValueDistribution()` - Value range analysis
+
+**UI Components**:
+- `QuoteTemplateList` - Grid view of all templates with actions
+- `QuoteTemplateDialog` - Create/edit template dialog with tabs
+- `QuoteTemplateSelector` - Dropdown for quote creation
+
+**Types Added**:
+- `QuoteSiteSettings` interface
+- `QuoteSiteSettingsUpdate` interface
+- `QuoteAnalytics` interface
+- `QuotePerformance` interface
+- Added `reminder_count`, `last_reminder_at` to Quote interface
+- Added `usage_count`, `last_used_at`, `created_by` to QuoteTemplate interface
+
+**Commit**: `8c8e369` - feat(ecommerce): implement PHASE-ECOM-13 Quote Templates & Automation
+
+---
+
+## Previous Session Update (ECOM Critical Fixes - February 5, 2026)
 
 ### Fixed: E-Commerce Wave 1 Phase Completion Issues
 **Date:** February 5, 2026
