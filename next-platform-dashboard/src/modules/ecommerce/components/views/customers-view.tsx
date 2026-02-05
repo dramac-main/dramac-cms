@@ -28,6 +28,7 @@ import { Loader2, Users, UserPlus, Download, Upload, Search, Filter, X, Trending
 import { toast } from 'sonner'
 import { CustomerTable } from '../customers/customer-table'
 import { CustomerDetailDialog } from '../customers/customer-detail-dialog'
+import { CreateCustomerDialog } from '../customers/create-customer-dialog'
 import { 
   getCustomers, 
   getCustomerStats,
@@ -98,6 +99,7 @@ export function CustomersView({
   // UI state
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
 
@@ -309,7 +311,7 @@ export function CustomersView({
           </DropdownMenu>
 
           {/* Add Customer - placeholder */}
-          <Button>
+          <Button onClick={() => setIsCreateOpen(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Add Customer
           </Button>
@@ -503,6 +505,18 @@ export function CustomersView({
         userId={userId}
         userName={userName}
         onViewOrder={onViewOrder}
+      />
+
+      {/* Create Customer Dialog */}
+      <CreateCustomerDialog
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        siteId={siteId}
+        agencyId={agencyId}
+        onSuccess={() => {
+          loadCustomers()
+          loadStats()
+        }}
       />
     </div>
   )
