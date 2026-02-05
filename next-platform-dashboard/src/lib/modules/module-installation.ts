@@ -2,6 +2,15 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUserId } from "@/lib/auth/permissions";
+import { 
+  executeInstallHook, 
+  executeUninstallHook, 
+  executeEnableHook, 
+  executeDisableHook 
+} from "./hooks/module-hooks-registry";
+
+// Initialize hooks on module load
+import "./hooks/init-hooks";
 
 // ============================================================
 // TYPES
@@ -137,6 +146,24 @@ export async function installModuleOnSite(
 
   console.log(`[ModuleInstallation] Installed ${moduleName} on site ${siteId}`);
 
+  // Execute the install hook for this module (if registered)
+  try {
+    const hookResult = await executeInstallHook(moduleId, siteId, mergedSettings);
+    
+    if (!hookResult.success) {
+      console.warn(`[ModuleInstallation] Install hook warning for ${moduleId}:`, hookResult.errors);
+      // Don't fail the installation if the hook fails, just log it
+    } else {
+      console.log(`[ModuleInstallation] Install hook executed for ${moduleId}`, {
+        pagesCreated: hookResult.pagesCreated?.length ?? 0,
+        navItemsAdded: hookResult.navItemsAdded?.length ?? 0,
+      });
+    }
+  } catch (hookError) {
+    console.error(`[ModuleInstallation] Install hook error for ${moduleId}:`, hookError);
+    // Continue - installation succeeded, hook is optional
+  }
+
   return { success: true, installationId: installation.id };
 }
 
@@ -170,6 +197,23 @@ export async function uninstallModuleFromSite(
 
   if (findError || !installation) {
     return { success: false, error: "Installation not found" };
+  }
+
+  // Execute the uninstall hook first (before removing from database)
+  try {
+    const hookResult = await executeUninstallHook(moduleId, siteId);
+    
+    if (!hookResult.success) {
+      console.warn(`[ModuleInstallation] Uninstall hook warning for ${moduleId}:`, hookResult.errors);
+    } else {
+      console.log(`[ModuleInstallation] Uninstall hook executed for ${moduleId}`, {
+        pagesRemoved: hookResult.pagesRemoved?.length ?? 0,
+        navItemsRemoved: hookResult.navItemsRemoved?.length ?? 0,
+      });
+    }
+  } catch (hookError) {
+    console.error(`[ModuleInstallation] Uninstall hook error for ${moduleId}:`, hookError);
+    // Continue - we still want to remove the installation record
   }
 
   // Delete the installation
@@ -268,6 +312,28 @@ export async function toggleModuleEnabled(
   if (updateError) {
     console.error("[ModuleInstallation] Toggle error:", updateError);
     return { success: false, error: updateError.message };
+  }
+
+  // Execute enable/disable hook
+  try {
+    if (enabled) {
+      const hookResult = await executeEnableHook(moduleId, siteId);
+      if (!hookResult.success) {
+        console.warn(`[ModuleInstallation] Enable hook warning for ${moduleId}:`, hookResult.error);
+      } else {
+        console.log(`[ModuleInstallation] Enable hook executed for ${moduleId}`);
+      }
+    } else {
+      const hookResult = await executeDisableHook(moduleId, siteId);
+      if (!hookResult.success) {
+        console.warn(`[ModuleInstallation] Disable hook warning for ${moduleId}:`, hookResult.error);
+      } else {
+        console.log(`[ModuleInstallation] Disable hook executed for ${moduleId}`);
+      }
+    }
+  } catch (hookError) {
+    console.error(`[ModuleInstallation] Toggle hook error for ${moduleId}:`, hookError);
+    // Continue - the toggle succeeded, hook is optional
   }
 
   return { success: true };

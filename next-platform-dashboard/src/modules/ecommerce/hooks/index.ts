@@ -7,6 +7,8 @@
  * Phase ECOM-25: Quotation Hooks
  * Phase ECOM-30: Mobile Cart Experience
  * Phase ECOM-31: Mobile Checkout Flow
+ * Phase ECOM-50: Module Installation Hooks
+ * Phase ECOM-52: Module Status & Widget Hooks
  * 
  * Exports all hooks for use in Studio components and pages.
  */
@@ -68,3 +70,20 @@ export { useFlashSales, useBundles, useGiftCards, useLoyalty, useMarketingStats 
 // Integration hooks (ECOM-43A/B)
 export { useApiKeys, useWebhooks, useIntegrations, useSyncJobs } from './use-integrations'
 export type { UseApiKeysReturn, UseWebhooksReturn, UseIntegrationsReturn, UseSyncJobsReturn } from './use-integrations'
+
+// ============================================================================
+// MODULE STATUS HOOKS (Wave 6 - PHASE-ECOM-52)
+// ============================================================================
+
+export {
+  useModuleStatus,
+  useEcommerceStatus,
+  useModulesStatus,
+} from './useModuleStatus'
+export type { ModuleStatus } from './useModuleStatus'
+
+// ============================================================================
+// INSTALLATION HOOK (Wave 6 - PHASE-ECOM-50)
+// ============================================================================
+
+export { ecommerceInstallationHook } from './installation-hook'
