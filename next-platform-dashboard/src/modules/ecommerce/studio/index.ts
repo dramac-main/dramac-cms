@@ -4,6 +4,10 @@
  * Exports Studio components and custom fields for the visual editor.
  * These components appear in the Studio component library when
  * the E-Commerce module is installed on a site.
+ * 
+ * Phase ECOM-21: Product Display Components
+ * Phase ECOM-22: Cart Components  
+ * Phase ECOM-23: Checkout Components
  */
 
 import type { ModuleStudioExports } from "@/types/studio-module";
@@ -27,12 +31,31 @@ import {
   categorySelectorFieldDefinition 
 } from "./fields/category-selector-field";
 
-// Re-export utility components for external use
+// Re-export utility components for external use (ECOM-21)
 export { ProductPriceDisplay } from "./components/ProductPriceDisplay";
 export { ProductStockBadge } from "./components/ProductStockBadge";
 export { ProductRatingDisplay } from "./components/ProductRatingDisplay";
 export { ProductImageGallery } from "./components/ProductImageGallery";
 export { ProductQuickView, useProductQuickView };
+
+// Re-export Cart components (ECOM-22)
+export { CartQuantitySelector } from "./components/CartQuantitySelector";
+export { CartEmptyState } from "./components/CartEmptyState";
+export { CartItemCard } from "./components/CartItemCard";
+export { CartDiscountInput } from "./components/CartDiscountInput";
+export { CartSummaryCard } from "./components/CartSummaryCard";
+export { CartDrawerBlock } from "./components/CartDrawerBlock";
+export { MiniCartBlock } from "./components/MiniCartBlock";
+export { CartPageBlock } from "./components/CartPageBlock";
+
+// Re-export Checkout components (ECOM-23)
+export { CheckoutStepIndicator } from "./components/CheckoutStepIndicator";
+export { AddressForm, ShippingAddressForm, BillingAddressForm } from "./components/AddressForm";
+export { ShippingMethodSelector } from "./components/ShippingMethodSelector";
+export { PaymentMethodSelector } from "./components/PaymentMethodSelector";
+export { OrderSummaryCard } from "./components/OrderSummaryCard";
+export { CheckoutPageBlock } from "./components/CheckoutPageBlock";
+export { OrderConfirmationBlock } from "./components/OrderConfirmationBlock";
 
 // =============================================================================
 // STUDIO COMPONENTS
