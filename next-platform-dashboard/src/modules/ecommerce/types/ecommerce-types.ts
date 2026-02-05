@@ -739,6 +739,7 @@ export type SettingsTab =
   | 'notifications'
   | 'inventory'
   | 'legal'
+  | 'quotes'
 
 export interface GeneralSettings {
   store_name: string
@@ -942,6 +943,7 @@ export interface EcommerceSettingsComplete {
   notifications: NotificationSettings
   inventory: InventorySettings
   legal: LegalSettings
+  quotes: QuoteSiteSettings | null
 }
 
 // ============================================================================

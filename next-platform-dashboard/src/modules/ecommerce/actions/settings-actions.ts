@@ -176,7 +176,8 @@ export async function getAllSettings(
       checkout: defaultCheckoutSettings,
       notifications: defaultNotificationSettings,
       inventory: defaultInventorySettings,
-      legal: defaultLegalSettings
+      legal: defaultLegalSettings,
+      quotes: null // Quote settings use separate table
     }
   }
 
@@ -190,7 +191,8 @@ export async function getAllSettings(
     checkout: { ...defaultCheckoutSettings, ...data.checkout_settings },
     notifications: { ...defaultNotificationSettings, ...data.notification_settings },
     inventory: { ...defaultInventorySettings, ...data.inventory_settings },
-    legal: { ...defaultLegalSettings, ...data.legal_settings }
+    legal: { ...defaultLegalSettings, ...data.legal_settings },
+    quotes: null // Quote settings use separate table (mod_ecommod01_quote_settings)
   }
 }
 
@@ -230,7 +232,8 @@ export async function updateSettings(
     checkout: 'checkout_settings',
     notifications: 'notification_settings',
     inventory: 'inventory_settings',
-    legal: 'legal_settings'
+    legal: 'legal_settings',
+    quotes: 'quote_settings' // Uses separate table via quote-template-actions
   }
 
   const column = columnMap[tab]

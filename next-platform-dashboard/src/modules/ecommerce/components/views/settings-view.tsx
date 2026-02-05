@@ -19,12 +19,14 @@ import {
   ShoppingCart, 
   Bell, 
   Package, 
-  FileText 
+  FileText,
+  FileCheck
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { GeneralSettingsForm } from '../settings/general-settings'
 import { CurrencySettingsForm } from '../settings/currency-settings'
 import { InventorySettingsForm } from '../settings/inventory-settings'
+import { QuoteSettingsForm } from '../settings/quote-settings'
 import type { SettingsTab } from '../../types/ecommerce-types'
 
 // ============================================================================
@@ -97,6 +99,12 @@ const tabs: TabConfig[] = [
     description: 'Stock management policies'
   },
   {
+    id: 'quotes',
+    label: 'Quotes',
+    icon: FileCheck,
+    description: 'Quote numbering, defaults, and branding'
+  },
+  {
     id: 'legal',
     label: 'Legal',
     icon: FileText,
@@ -138,6 +146,8 @@ export function SettingsView({ siteId, agencyId }: SettingsViewProps) {
         return <CurrencySettingsForm siteId={siteId} agencyId={agencyId} />
       case 'inventory':
         return <InventorySettingsForm siteId={siteId} agencyId={agencyId} />
+      case 'quotes':
+        return <QuoteSettingsForm siteId={siteId} agencyId={agencyId} />
       default:
         const tab = tabs.find(t => t.id === tabId)!
         return <SettingsPlaceholder tab={tab} />

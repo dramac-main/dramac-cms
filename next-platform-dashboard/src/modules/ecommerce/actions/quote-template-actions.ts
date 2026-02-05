@@ -360,6 +360,7 @@ export async function getQuoteSiteSettings(siteId: string): Promise<QuoteSiteSet
  */
 export async function upsertQuoteSiteSettings(
   siteId: string,
+  agencyId: string,
   settings: QuoteSiteSettingsUpdate
 ): Promise<ActionResult<QuoteSiteSettings>> {
   try {
@@ -369,6 +370,7 @@ export async function upsertQuoteSiteSettings(
       .from(`${TABLE_PREFIX}_quote_settings`)
       .upsert({
         site_id: siteId,
+        agency_id: agencyId,
         ...settings,
         updated_at: new Date().toISOString()
       }, {
@@ -402,7 +404,15 @@ export async function getNextQuoteNumber(siteId: string): Promise<string> {
     
     // Create defaults if not exists
     if (!settings) {
-      const result = await upsertQuoteSiteSettings(siteId, {})
+      // Get agency_id from site
+      const { data: site } = await supabase
+        .from('sites')
+        .select('agency_id')
+        .eq('id', siteId)
+        .single()
+      
+      const agencyId = site?.agency_id || siteId
+      const result = await upsertQuoteSiteSettings(siteId, agencyId, {})
       settings = result.data || null
     }
     
