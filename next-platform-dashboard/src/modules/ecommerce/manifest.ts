@@ -262,17 +262,17 @@ export const EcommerceModuleManifest: ModuleManifest = {
   settings: {
     currency: {
       type: 'string',
-      default: 'USD',
-      description: 'Store currency code'
+      default: 'ZMW',  // ZAMBIAN KWACHA DEFAULT
+      description: 'Store currency code (default: Zambian Kwacha)'
     },
     taxRate: {
       type: 'number',
-      default: 0,
-      description: 'Default tax rate percentage'
+      default: 16,  // ZAMBIA VAT RATE
+      description: 'Default tax rate percentage (Zambia VAT: 16%)'
     },
     taxIncludedInPrice: {
       type: 'boolean',
-      default: false,
+      default: true,  // ZAMBIAN STANDARD
       description: 'Whether tax is included in product prices'
     },
     enableGuestCheckout: {
@@ -282,7 +282,7 @@ export const EcommerceModuleManifest: ModuleManifest = {
     },
     requirePhone: {
       type: 'boolean',
-      default: false,
+      default: true,  // Phone is important for delivery in Zambia
       description: 'Require phone number at checkout'
     },
     sendOrderConfirmation: {

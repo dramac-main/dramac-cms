@@ -185,17 +185,28 @@ export interface GetOnboardingStatusResult {
 // ============================================================================
 
 /**
- * Available currencies
+ * Available currencies - ZMW (Zambian Kwacha) is default for Zambia
  */
 export const AVAILABLE_CURRENCIES = [
+  // ZAMBIA IS DEFAULT
+  { code: 'ZMW', symbol: 'ZK', name: 'Zambian Kwacha' },
+  
+  // Regional African Currencies
+  { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
+  { code: 'BWP', symbol: 'P', name: 'Botswana Pula' },
+  { code: 'MWK', symbol: 'MK', name: 'Malawian Kwacha' },
+  { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
+  { code: 'TZS', symbol: 'TSh', name: 'Tanzanian Shilling' },
+  { code: 'UGX', symbol: 'USh', name: 'Ugandan Shilling' },
+  { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
+  
+  // International Currencies
   { code: 'USD', symbol: '$', name: 'US Dollar' },
   { code: 'EUR', symbol: '€', name: 'Euro' },
   { code: 'GBP', symbol: '£', name: 'British Pound' },
-  { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
-  { code: 'ZMW', symbol: 'ZK', name: 'Zambian Kwacha' },
-  { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
-  { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
+  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+  { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
   { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
   { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
 ] as const;
@@ -261,22 +272,27 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 ];
 
 /**
- * Default onboarding data
+ * Default onboarding data - Zambian defaults
  */
 export const DEFAULT_ONBOARDING_DATA: OnboardingData = {
   storeBasics: {
     storeName: '',
     contactEmail: '',
+    businessAddress: {
+      country: 'ZM', // Zambia default
+    },
   },
   currencyTax: {
-    currency: 'USD',
-    currencySymbol: '$',
+    // ZAMBIA DEFAULTS
+    currency: 'ZMW',
+    currencySymbol: 'ZK',
     currencyPosition: 'before',
     thousandsSeparator: ',',
     decimalSeparator: '.',
-    taxEnabled: false,
-    taxRate: 0,
-    taxIncludedInPrice: false,
+    taxEnabled: true,       // VAT is common in Zambia
+    taxRate: 16,            // Zambia standard VAT rate is 16%
+    taxIncludedInPrice: true, // Prices typically shown inclusive
+    taxDisplayText: 'VAT',
   },
   shipping: {
     shippingEnabled: true,

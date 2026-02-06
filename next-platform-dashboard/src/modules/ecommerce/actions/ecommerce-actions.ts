@@ -1730,17 +1730,17 @@ export async function initializeEcommerceForSite(siteId: string, agencyId: strin
     .single()
   
   if (!existing) {
-    // Create default settings
+    // Create default settings - ZAMBIAN DEFAULTS
     await supabase
       .from(`${TABLE_PREFIX}_settings`)
       .insert({
         site_id: siteId,
         agency_id: agencyId,
-        currency: 'USD',
-        tax_rate: 0,
-        tax_included_in_price: false,
+        currency: 'ZMW',              // ZAMBIAN KWACHA DEFAULT
+        tax_rate: 16,                  // Zambia standard VAT rate
+        tax_included_in_price: true,   // Prices shown inclusive
         enable_guest_checkout: true,
-        require_phone: false,
+        require_phone: true,           // Phone important for delivery in Zambia
         send_order_confirmation: true,
         continue_selling_when_out_of_stock: false,
         shipping_zones: []

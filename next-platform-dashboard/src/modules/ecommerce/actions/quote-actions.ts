@@ -198,7 +198,7 @@ export async function createQuote(
         tax_amount: 0,
         shipping_amount: input.shipping_amount || 0,
         total: 0,
-        currency: input.currency || 'USD',
+        currency: input.currency || 'ZMW',  // ZAMBIAN KWACHA DEFAULT
         valid_from: validFrom,
         valid_until: validUntil,
         title: input.title,

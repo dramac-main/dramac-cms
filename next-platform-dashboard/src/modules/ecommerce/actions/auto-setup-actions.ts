@@ -500,16 +500,16 @@ export async function removeEcommerceNavigation(
 // ============================================================================
 
 /**
- * Default e-commerce store settings
+ * Default e-commerce store settings - ZAMBIAN DEFAULTS
  */
 const DEFAULT_STORE_SETTINGS: DefaultStoreSettings = {
   storeName: 'My Store',
-  currency: 'USD',
-  currencySymbol: '$',
+  currency: 'ZMW',           // ZAMBIAN KWACHA DEFAULT
+  currencySymbol: 'ZK',      // Zambian Kwacha symbol
   currencyPosition: 'before',
-  taxEnabled: false,
-  taxRate: 0,
-  taxIncluded: false,
+  taxEnabled: true,          // VAT is common in Zambia
+  taxRate: 16,               // Zambia standard VAT rate is 16%
+  taxIncluded: true,         // Prices typically shown inclusive
   shippingEnabled: true,
   freeShippingThreshold: null,
   checkoutGuestEnabled: true,

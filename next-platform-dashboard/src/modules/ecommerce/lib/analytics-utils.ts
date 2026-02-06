@@ -274,10 +274,10 @@ export function calculateConversionRate(conversions: number, total: number): num
 // ============================================================================
 
 /**
- * Format currency value
+ * Format currency value - ZAMBIAN DEFAULT
  */
-export function formatCurrency(cents: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+export function formatCurrency(cents: number, currency: string = 'ZMW'): string {
+  return new Intl.NumberFormat('en-ZM', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,

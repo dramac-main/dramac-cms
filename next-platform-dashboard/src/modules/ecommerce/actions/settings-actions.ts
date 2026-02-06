@@ -40,55 +40,72 @@ const defaultGeneralSettings: GeneralSettings = {
   store_phone: '',
   store_address: {
     address_line_1: '',
-    city: '',
-    state: '',
+    city: 'Lusaka',
+    state: 'Lusaka Province',
     postal_code: '',
-    country: 'US'
+    country: 'ZM'  // ZAMBIA DEFAULT
   },
-  timezone: 'America/New_York',
-  date_format: 'MM/DD/YYYY',
-  time_format: '12h',
-  weight_unit: 'lb',
-  dimension_unit: 'in'
+  timezone: 'Africa/Lusaka',  // ZAMBIA TIMEZONE (CAT, UTC+2)
+  date_format: 'DD/MM/YYYY',  // Day-first format common in Zambia
+  time_format: '24h',          // 24-hour format common in Zambia
+  weight_unit: 'kg',           // Metric system
+  dimension_unit: 'cm'         // Metric system
 }
 
 const defaultCurrencySettings: CurrencySettings = {
-  default_currency: 'USD',
-  currency_position: 'before',
-  currency_symbol: '$',
+  default_currency: 'ZMW',     // ZAMBIAN KWACHA DEFAULT
+  currency_position: 'before', 
+  currency_symbol: 'ZK',       // Zambian Kwacha symbol
   decimal_separator: '.',
   thousand_separator: ',',
   decimal_places: 2,
-  supported_currencies: ['USD'],
+  supported_currencies: ['ZMW', 'USD', 'ZAR', 'GBP', 'EUR'],  // ZMW first
   auto_currency_conversion: false
 }
 
 const defaultTaxSettings: TaxSettings = {
-  tax_enabled: false,
-  prices_include_tax: false,
+  tax_enabled: true,           // VAT is common in Zambia
+  prices_include_tax: true,    // Prices typically shown inclusive
   tax_based_on: 'shipping',
   shipping_tax_class: 'standard',
-  display_prices: 'excluding',
-  display_in_cart: 'excluding',
+  display_prices: 'including', // Display prices including VAT
+  display_in_cart: 'including',
   tax_rounding_mode: 'round',
-  tax_zones: []
+  tax_zones: [
+    {
+      id: 'zm-vat',
+      name: 'Zambia VAT',
+      countries: ['ZM'],
+      states: [],
+      tax_rates: [
+        {
+          id: 'zm-vat-standard',
+          name: 'Standard VAT',
+          rate: 16,  // Zambia standard VAT rate is 16%
+          tax_class: 'standard',
+          compound: false,
+          shipping_taxable: true
+        }
+      ]
+    }
+  ]
 }
 
 const defaultShippingSettings: ShippingSettings = {
   enable_shipping: true,
   shipping_origin: {
     address_line_1: '',
-    city: '',
-    state: '',
+    city: 'Lusaka',
+    state: 'Lusaka Province',
     postal_code: '',
-    country: 'US'
+    country: 'ZM'  // ZAMBIA DEFAULT
   },
-  shipping_zones: [],
+  shipping_zones: [],  // Will be configured in settings UI
   default_package_dimensions: {
-    length: 10,
-    width: 10,
-    height: 10,
-    weight: 1
+    length: 25,   // cm
+    width: 20,    // cm
+    height: 15,   // cm
+    weight: 1     // kg
   },
   shipping_calculations: 'per_order'
 }
