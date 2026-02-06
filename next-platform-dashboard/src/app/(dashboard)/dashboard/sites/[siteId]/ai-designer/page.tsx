@@ -14,20 +14,21 @@
 
 "use client";
 
-import { use, useState, useCallback, useEffect } from "react";
-import { Sparkles, ArrowLeft, Save, Loader2, RefreshCw, Check, X, Monitor, Tablet, Smartphone, ChevronRight } from "lucide-react";
+import { use, useState, useCallback, useEffect, useRef } from "react";
+import { Sparkles, ArrowLeft, Loader2, RefreshCw, Check, X, Monitor, Tablet, Smartphone, Clock, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
+// Animation imports available for future use
+// import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+// import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -37,7 +38,7 @@ import { Progress } from "@/components/ui/progress";
 import { StudioRenderer } from "@/lib/studio/engine/renderer";
 import { convertPageToStudioFormat } from "@/lib/ai/website-designer/converter";
 
-import type { WebsiteDesignerOutput, GeneratedPage } from "@/lib/ai/website-designer/types";
+import type { WebsiteDesignerOutput } from "@/lib/ai/website-designer/types";
 import type { StudioPageData } from "@/types/studio";
 
 // =============================================================================
@@ -84,6 +85,17 @@ const COLOR_OPTIONS = [
 // MAIN COMPONENT
 // =============================================================================
 
+// Time estimates for each stage (in seconds) - used for reference
+const _STAGE_TIME_ESTIMATES: Record<string, number> = {
+  "initializing": 2,
+  "building-context": 5,
+  "analyzing-prompt": 15,
+  "creating-architecture": 20,
+  "generating-pages": 45, // per page, but we'll multiply
+  "generating-shared-elements": 15,
+  "finalizing": 5,
+};
+
 export default function AIDesignerPage({ params }: AIDesignerPageProps) {
   const { siteId } = use(params);
   const router = useRouter();
@@ -97,6 +109,12 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
+  const [_currentStage, setCurrentStage] = useState<string>("");
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [estimatedTotalTime, setEstimatedTotalTime] = useState(90); // Default 90 seconds
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const startTimeRef = useRef<number>(0);
   
   // Results state
   const [output, setOutput] = useState<WebsiteDesignerOutput | null>(null);
@@ -106,6 +124,26 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
   
   // Saving state
   const [isSaving, setIsSaving] = useState(false);
+
+  // Timer for elapsed time
+  useEffect(() => {
+    if (isGenerating) {
+      startTimeRef.current = Date.now();
+      timerRef.current = setInterval(() => {
+        setElapsedTime(Math.floor((Date.now() - startTimeRef.current) / 1000));
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isGenerating]);
 
   // Convert generated pages to Studio format when output changes
   useEffect(() => {
@@ -124,6 +162,13 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
   const currentStudioData = currentPage ? studioDataMap.get(currentPage.slug) : null;
   const deviceConfig = DEVICES[device];
 
+  // Format time helper
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  };
+
   // =============================================================================
   // HANDLERS
   // =============================================================================
@@ -141,18 +186,16 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
 
     setIsGenerating(true);
     setProgress(0);
-    setProgressMessage("Starting AI generation...");
+    setElapsedTime(0);
+    setProgressMessage("Connecting to AI service...");
+    setCurrentStage("initializing");
+    setGenerationError(null);
     setOutput(null);
+    setEstimatedTotalTime(90); // Reset estimate
 
     try {
-      // Simulate progress updates (real progress would come from streaming)
-      const progressInterval = setInterval(() => {
-        setProgress((p) => Math.min(p + 10, 90));
-      }, 2000);
-
-      setProgressMessage("Analyzing your requirements...");
-      
-      const response = await fetch("/api/ai/website-designer", {
+      // Use the streaming endpoint for real-time progress
+      const response = await fetch("/api/ai/website-designer/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -167,28 +210,112 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
         }),
       });
 
-      clearInterval(progressInterval);
-
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to generate website");
+        // Try to parse error response
+        const contentType = response.headers.get("content-type");
+        if (contentType?.includes("application/json")) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || errorData.error || `Server error: ${response.status}`);
+        } else {
+          // Handle timeout or HTML error responses
+          if (response.status === 524) {
+            throw new Error("Request timed out. The AI is working hard - please try again with a simpler prompt.");
+          }
+          throw new Error(`Server error: ${response.status}. Please try again.`);
+        }
       }
 
-      const result = await response.json() as WebsiteDesignerOutput;
-
-      if (!result.success) {
-        throw new Error(result.error || "Generation failed");
+      // Check if response is SSE
+      const contentType = response.headers.get("content-type");
+      if (!contentType?.includes("text/event-stream")) {
+        // Fallback to regular JSON response
+        const result = await response.json() as WebsiteDesignerOutput;
+        if (!result.success) {
+          throw new Error(result.error || "Generation failed");
+        }
+        setProgress(100);
+        setProgressMessage("Website generated successfully!");
+        setOutput(result);
+        setSelectedPageIndex(0);
+        toast.success(`Generated ${result.pages.length} pages!`);
+        return;
       }
 
-      setProgress(100);
-      setProgressMessage("Website generated successfully!");
-      setOutput(result);
-      setSelectedPageIndex(0);
-      
-      toast.success(`Generated ${result.pages.length} pages!`);
+      // Process SSE stream
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Failed to read response stream");
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith("event: ")) {
+            // Event type is tracked on separate line, used for SSE protocol
+            continue;
+          }
+          if (line.startsWith("data: ")) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              // Handle different event types based on data structure
+              if (data.stage) {
+                // Progress event
+                setCurrentStage(data.stage);
+                setProgressMessage(data.message || `${data.stage}...`);
+                
+                // Calculate progress based on stage
+                const stages = ["initializing", "building-context", "analyzing-prompt", "creating-architecture", "generating-pages", "generating-shared-elements", "finalizing"];
+                const stageIndex = stages.indexOf(data.stage);
+                if (stageIndex >= 0) {
+                  const baseProgress = (stageIndex / stages.length) * 100;
+                  const stageProgress = (data.pagesComplete || 0) / Math.max(data.pagesTotal || 1, 1) * (100 / stages.length);
+                  setProgress(Math.min(baseProgress + stageProgress, 95));
+                }
+
+                // Update time estimate based on pages
+                if (data.pagesTotal && data.pagesTotal > 0) {
+                  const newEstimate = 30 + (data.pagesTotal * 20); // 30s base + 20s per page
+                  setEstimatedTotalTime(newEstimate);
+                }
+              } else if (data.success !== undefined) {
+                // Complete event
+                if (data.success) {
+                  setProgress(100);
+                  setProgressMessage("Website generated successfully!");
+                  setOutput(data as WebsiteDesignerOutput);
+                  setSelectedPageIndex(0);
+                  toast.success(`Generated ${data.pages?.length || 0} pages!`);
+                } else {
+                  throw new Error(data.error || "Generation failed");
+                }
+              } else if (data.message && !data.stage) {
+                // Error or info event
+                if (data.error) {
+                  throw new Error(data.message);
+                }
+                setProgressMessage(data.message);
+              }
+            } catch (_parseError) {
+              console.warn("[AI Designer] Failed to parse SSE data:", line);
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error("[AI Designer] Error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to generate website");
+      const errorMessage = error instanceof Error ? error.message : "Failed to generate website";
+      setGenerationError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsGenerating(false);
     }
@@ -366,12 +493,53 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
 
                 {/* Progress */}
                 {isGenerating && (
-                  <div className="space-y-3 py-4">
-                    <Progress value={progress} className="h-2" />
-                    <p className="text-sm text-center text-muted-foreground flex items-center justify-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      {progressMessage}
+                  <div className="space-y-4 py-6 px-4 bg-muted/30 rounded-lg border">
+                    {/* Progress Bar */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Progress</span>
+                        <span className="font-medium">{Math.round(progress)}%</span>
+                      </div>
+                      <Progress value={progress} className="h-3" />
+                    </div>
+                    
+                    {/* Status Message */}
+                    <div className="flex items-center justify-center gap-2 py-2">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      <span className="font-medium">{progressMessage}</span>
+                    </div>
+                    
+                    {/* Time Info */}
+                    <div className="flex justify-between items-center text-sm border-t pt-4">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span>Elapsed: <span className="font-mono text-foreground">{formatTime(elapsedTime)}</span></span>
+                      </div>
+                      <div className="text-muted-foreground">
+                        Est. total: <span className="font-mono text-foreground">~{formatTime(estimatedTotalTime)}</span>
+                      </div>
+                    </div>
+                    
+                    {/* AI Working Message */}
+                    <p className="text-xs text-center text-muted-foreground">
+                      AI is designing your website. This typically takes 1-2 minutes depending on complexity.
                     </p>
+                  </div>
+                )}
+
+                {/* Error Display */}
+                {generationError && !isGenerating && (
+                  <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="font-medium text-destructive">Generation Failed</p>
+                        <p className="text-sm text-muted-foreground">{generationError}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Try again with a simpler prompt, or contact support if the issue persists.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
 
