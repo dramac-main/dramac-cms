@@ -1,5 +1,16 @@
 {
   "buildCommand": "pnpm build",
   "installCommand": "pnpm install",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "functions": {
+    "src/app/api/ai/website-designer/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/ai/website-designer/stream/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/ai/**/*.ts": {
+      "maxDuration": 120
+    }
+  }
 }
