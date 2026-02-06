@@ -932,6 +932,15 @@ export interface InventorySettings {
   reserved_stock_expiry_hours: number
 }
 
+export interface LegalPage {
+  id: string
+  type: 'terms' | 'privacy' | 'refund' | 'shipping'
+  title: string
+  content: string
+  is_published: boolean
+  slug: string
+}
+
 export interface LegalSettings {
   terms_and_conditions: string
   privacy_policy: string
@@ -940,6 +949,11 @@ export interface LegalSettings {
   cookie_policy?: string
   terms_accepted_timestamp_required: boolean
   minimum_age_verification?: number
+  pages: LegalPage[]
+  require_terms_acceptance: boolean
+  require_privacy_acceptance: boolean
+  gdpr_enabled: boolean
+  show_cookie_banner: boolean
 }
 
 export interface EcommerceSettingsComplete {
