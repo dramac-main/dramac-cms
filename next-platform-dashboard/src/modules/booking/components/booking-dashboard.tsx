@@ -14,6 +14,8 @@ import { AppointmentsView } from './views/appointments-view'
 import { ServicesView } from './views/services-view'
 import { StaffView } from './views/staff-view'
 import { AnalyticsView } from './views/analytics-view'
+import { SettingsView } from './views/settings-view'
+import { EmbedCodeView } from './views/embed-code-view'
 import { AppointmentDetailSheet } from './sheets/appointment-detail-sheet'
 import { ServiceDetailSheet } from './sheets/service-detail-sheet'
 import { StaffDetailSheet } from './sheets/staff-detail-sheet'
@@ -27,7 +29,8 @@ import {
   Search,
   Plus,
   RefreshCw,
-  Settings
+  Settings,
+  Code
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,7 +49,6 @@ import { EditServiceDialog } from './dialogs/edit-service-dialog'
 import { CreateStaffDialog } from './dialogs/create-staff-dialog'
 import { EditStaffDialog } from './dialogs/edit-staff-dialog'
 import { CreateAppointmentDialog } from './dialogs/create-appointment-dialog'
-import { BookingSettingsDialog } from './dialogs/booking-settings-dialog'
 import type { BookingView, BookingSettings, Appointment, Service, Staff } from '../types/booking-types'
 
 // ============================================================================
@@ -80,7 +82,6 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
   const [showCreateService, setShowCreateService] = useState(false)
   const [showCreateStaff, setShowCreateStaff] = useState(false)
   const [showCreateAppointment, setShowCreateAppointment] = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
   
   // Detail sheets state
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
@@ -95,7 +96,7 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
   useEffect(() => {
     if (initialView) {
       const view = initialView as BookingView
-      if (['calendar', 'appointments', 'services', 'staff', 'analytics'].includes(view)) {
+      if (['calendar', 'appointments', 'services', 'staff', 'analytics', 'settings', 'embed'].includes(view)) {
         setActiveView(view)
       }
     }
@@ -167,14 +168,6 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
               disabled={isRefreshing}
             >
               <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setShowSettings(true)}
-            >
-              <Settings className="h-4 w-4" />
             </Button>
             
             <DropdownMenu>
@@ -286,6 +279,14 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
                 <BarChart3 className="h-4 w-4" />
                 Analytics
               </TabsTrigger>
+              <TabsTrigger value="settings" className="gap-2">
+                <Settings className="h-4 w-4" />
+                Settings
+              </TabsTrigger>
+              <TabsTrigger value="embed" className="gap-2">
+                <Code className="h-4 w-4" />
+                Embed
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -323,6 +324,12 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
             <TabsContent value="analytics" className="h-full m-0">
               <AnalyticsView />
             </TabsContent>
+            <TabsContent value="settings" className="h-full m-0 overflow-auto">
+              <SettingsView />
+            </TabsContent>
+            <TabsContent value="embed" className="h-full m-0 overflow-auto">
+              <EmbedCodeView />
+            </TabsContent>
           </div>
         </Tabs>
       </div>
@@ -349,10 +356,6 @@ function BookingDashboardContent({ initialView }: { initialView?: string }) {
       <CreateAppointmentDialog
         open={showCreateAppointment}
         onOpenChange={setShowCreateAppointment}
-      />
-      <BookingSettingsDialog
-        open={showSettings}
-        onOpenChange={setShowSettings}
       />
       
       {/* Detail Sheets */}

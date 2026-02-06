@@ -400,7 +400,7 @@ export interface BookingProviderProps {
   settings?: BookingSettings | null
 }
 
-export type BookingView = 'calendar' | 'appointments' | 'services' | 'staff' | 'analytics'
+export type BookingView = 'calendar' | 'appointments' | 'services' | 'staff' | 'analytics' | 'settings' | 'embed'
 
 export interface BookingContextValue {
   // State

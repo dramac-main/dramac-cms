@@ -3418,7 +3418,7 @@ The Puck infrastructure (63 components, config, wrapper) was built in ED-01A/01B
 
 ### Wave 6: Business Modules (MONEY MAKERS) - 1 of 7 Complete (14%)
 - ⬜ EM-50: CRM Module (~10 hours)
-- ⬜ EM-51: Booking Module (~8 hours)
+- 🟡 EM-51: Booking Module (Studio components + settings/embed views implemented)
 - ⬜ EM-52: E-Commerce Module (~12 hours)
 - ⬜ EM-53: Live Chat Module (~6 hours)
 - ✅ EM-54: Social Media Module ✅ **COMPLETE** (Jan 28, 2026)
