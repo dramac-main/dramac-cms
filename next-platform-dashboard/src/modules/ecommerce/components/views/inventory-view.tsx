@@ -100,9 +100,9 @@ export function InventoryView({ siteId, agencyId }: InventoryViewProps) {
             toast.error('No inventory data to export')
             return
           }
-          csvContent = 'Product Name,SKU,Current Stock,Low Stock Threshold,Status,Cost Price,Base Price\n'
+          csvContent = 'Product Name,SKU,Current Stock,Low Stock Threshold,Alert Level,Unit Cost,Total Value\n'
           report.items.forEach((p) => {
-            csvContent += `"${p.product_name || ''}","${p.sku || ''}",${p.current_quantity || 0},${p.low_stock_threshold || 0},"${p.status || ''}",${((p.cost_price || 0) / 100).toFixed(2)},${((p.base_price || 0) / 100).toFixed(2)}\n`
+            csvContent += `"${p.name || ''}","${p.sku || ''}",${p.quantity || 0},${p.low_stock_threshold || 0},"${p.alert_level || ''}",${((p.unit_cost || 0) / 100).toFixed(2)},${((p.total_value || 0) / 100).toFixed(2)}\n`
           })
           filename = `inventory-${new Date().toISOString().split('T')[0]}.csv`
           break
