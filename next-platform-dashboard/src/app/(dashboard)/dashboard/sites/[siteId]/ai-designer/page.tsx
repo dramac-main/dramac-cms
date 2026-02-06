@@ -685,7 +685,8 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
               maxHeight: "100%",
             }}
           >
-            <div className="h-full overflow-auto">
+            {/* IMPORTANT: Force light mode for preview canvas - prevents dark mode inheritance */}
+            <div className="h-full overflow-auto light" style={{ colorScheme: "light" }} data-theme="light">
               {currentStudioData ? (
                 <StudioRenderer
                   data={currentStudioData}
@@ -693,7 +694,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                   pageId={currentPage?.slug}
                 />
               ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground">
+                <div className="h-full flex items-center justify-center text-gray-500 bg-white">
                   <Loader2 className="h-8 w-8 animate-spin" />
                 </div>
               )}

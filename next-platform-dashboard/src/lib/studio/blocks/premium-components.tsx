@@ -703,6 +703,17 @@ export function PremiumNavbarRender({
 
         {/* Mobile Links */}
         <div className={`p-6 space-y-1 ${mobileMenuStyle === "fullscreen" ? "flex flex-col items-center justify-center min-h-[60vh]" : ""}`}>
+          {/* Close button for fullscreen menu */}
+          {mobileMenuStyle === "fullscreen" && (
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute top-4 right-4 p-3 rounded-full hover:bg-gray-100/10 transition-colors z-50"
+              aria-label="Close menu"
+            >
+              <CloseIcon className="w-8 h-8" color={mobileMenuTextColor} />
+            </button>
+          )}
+          
           {(links || []).map((link, i) => {
             // Support both 'label' and 'text' properties for backwards compatibility
             const linkText = link.label || link.text || '';
