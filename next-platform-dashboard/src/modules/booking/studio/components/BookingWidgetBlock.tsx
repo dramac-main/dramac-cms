@@ -103,19 +103,56 @@ export function BookingWidgetBlock({
   // Calendar state
   const [currentMonth, setCurrentMonth] = useState(new Date())
   
-  // Load demo data for preview
+  // Load services and staff data
   useEffect(() => {
-    setServices([
-      { id: '1', name: 'Consultation', duration_minutes: 30, price: 5000, currency: 'ZMW', color: '#3B82F6' },
-      { id: '2', name: 'Full Session', duration_minutes: 60, price: 15000, currency: 'ZMW', color: '#10B981' },
-      { id: '3', name: 'Premium Package', duration_minutes: 90, price: 25000, currency: 'ZMW', color: '#F59E0B' },
-    ])
-    setStaff([
-      { id: '1', name: 'Dr. Sarah Johnson' },
-      { id: '2', name: 'Michael Chen' },
-      { id: '3', name: 'Emily Rodriguez' },
-    ])
-    setIsLoading(false)
+    if (siteId) {
+      // Fetch real data from the booking module API
+      const fetchData = async () => {
+        setIsLoading(true)
+        try {
+          const [servicesRes, staffRes] = await Promise.all([
+            fetch(`/api/modules/booking/services?siteId=${siteId}`),
+            fetch(`/api/modules/booking/staff?siteId=${siteId}`),
+          ])
+          
+          if (servicesRes.ok) {
+            const data = await servicesRes.json()
+            setServices(data.services || data || [])
+          }
+          if (staffRes.ok) {
+            const data = await staffRes.json()
+            setStaff(data.staff || data || [])
+          }
+        } catch {
+          // Fall back to demo data on error
+          setServices([
+            { id: '1', name: 'Consultation', duration_minutes: 30, price: 5000, currency: 'ZMW', color: '#3B82F6' },
+            { id: '2', name: 'Full Session', duration_minutes: 60, price: 15000, currency: 'ZMW', color: '#10B981' },
+            { id: '3', name: 'Premium Package', duration_minutes: 90, price: 25000, currency: 'ZMW', color: '#F59E0B' },
+          ])
+          setStaff([
+            { id: '1', name: 'Dr. Sarah Johnson' },
+            { id: '2', name: 'Michael Chen' },
+            { id: '3', name: 'Emily Rodriguez' },
+          ])
+        }
+        setIsLoading(false)
+      }
+      fetchData()
+    } else {
+      // No siteId — use demo data for Studio preview
+      setServices([
+        { id: '1', name: 'Consultation', duration_minutes: 30, price: 5000, currency: 'ZMW', color: '#3B82F6' },
+        { id: '2', name: 'Full Session', duration_minutes: 60, price: 15000, currency: 'ZMW', color: '#10B981' },
+        { id: '3', name: 'Premium Package', duration_minutes: 90, price: 25000, currency: 'ZMW', color: '#F59E0B' },
+      ])
+      setStaff([
+        { id: '1', name: 'Dr. Sarah Johnson' },
+        { id: '2', name: 'Michael Chen' },
+        { id: '3', name: 'Emily Rodriguez' },
+      ])
+      setIsLoading(false)
+    }
   }, [siteId])
   
   // Generate time slots when date is selected

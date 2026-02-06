@@ -275,9 +275,9 @@ function processModuleComponents(
       // Add search keywords including module name
       keywords: [
         ...(def.keywords || []),
-        moduleInfo.name.toLowerCase(),
-        moduleInfo.slug,
-      ],
+        (moduleInfo.name || '').toLowerCase(),
+        moduleInfo.slug || '',
+      ].filter(Boolean),
     };
 
     processed.push(fullDef);

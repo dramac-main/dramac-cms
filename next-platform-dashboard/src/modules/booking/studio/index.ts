@@ -30,6 +30,10 @@ import {
   BookingWidgetBlock, 
   bookingWidgetDefinition 
 } from "./components/BookingWidgetBlock";
+import {
+  BookingEmbedBlock,
+  bookingEmbedDefinition,
+} from "./components/BookingEmbedBlock";
 
 // Re-export components for external use
 export { BookingCalendarBlock } from "./components/BookingCalendarBlock";
@@ -37,6 +41,7 @@ export { ServiceSelectorBlock } from "./components/ServiceSelectorBlock";
 export { BookingFormBlock } from "./components/BookingFormBlock";
 export { StaffGridBlock } from "./components/StaffGridBlock";
 export { BookingWidgetBlock } from "./components/BookingWidgetBlock";
+export { BookingEmbedBlock } from "./components/BookingEmbedBlock";
 
 // =============================================================================
 // CUSTOM FIELD EDITORS
@@ -64,13 +69,13 @@ function ServiceSelectorField(props: CustomFieldEditorProps) {
       React.createElement(
         "option",
         { value: "placeholder" },
-        `Load services from site: ${siteId}`
+        siteId ? `Site: ${siteId.slice(0, 8)}…` : "No site selected"
       )
     ),
     React.createElement(
       "p",
       { className: "text-xs text-muted-foreground" },
-      "Services will be loaded from the booking module"
+      "Choose a service to pre-select for this block"
     )
   );
 }
@@ -97,13 +102,13 @@ function StaffSelectorField(props: CustomFieldEditorProps) {
       React.createElement(
         "option",
         { value: "placeholder" },
-        `Load staff from site: ${siteId}`
+        siteId ? `Site: ${siteId.slice(0, 8)}…` : "No site selected"
       )
     ),
     React.createElement(
       "p",
       { className: "text-xs text-muted-foreground" },
-      "Staff will be loaded from the booking module"
+      "Choose a staff member to pre-select for this block"
     )
   );
 }
@@ -117,6 +122,12 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
   BookingWidget: {
     ...bookingWidgetDefinition,
     render: BookingWidgetBlock,
+  },
+  
+  // Booking Embed - Embeddable iframe widget for pages
+  BookingEmbed: {
+    ...bookingEmbedDefinition,
+    render: BookingEmbedBlock,
   },
   
   // Booking Calendar - Date and time selection

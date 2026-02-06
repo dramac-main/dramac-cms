@@ -96,7 +96,6 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
   // Generate embed URL
   const embedUrl = useMemo(() => {
     const params = new URLSearchParams({
-      site: siteId,
       type: config.widgetType,
       color: config.primaryColor.replace('#', ''),
       radius: config.borderRadius.toString(),
@@ -109,7 +108,7 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
       params.append('buttonText', config.buttonText)
     }
     
-    return `${baseUrl}/embed/booking?${params.toString()}`
+    return `${baseUrl}/embed/booking/${siteId}?${params.toString()}`
   }, [siteId, config, baseUrl])
   
   // Generate iframe code

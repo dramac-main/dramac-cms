@@ -231,7 +231,7 @@ class ComponentRegistry {
           def.type.toLowerCase().includes(lowerQuery) ||
           def.label.toLowerCase().includes(lowerQuery) ||
           def.description?.toLowerCase().includes(lowerQuery) ||
-          def.keywords?.some((k) => k.toLowerCase().includes(lowerQuery))
+          def.keywords?.some((k) => k?.toLowerCase().includes(lowerQuery))
         );
       })
       .map((e) => e.definition);
