@@ -174,3 +174,68 @@ export type {
   BorderRadiusScale,
   ShadowScale,
 } from "./design";
+
+// =============================================================================
+// PREVIEW & ITERATION (from AWD-08)
+// =============================================================================
+
+export {
+  usePreviewStore,
+  usePreviewHistory,
+  useCurrentPage,
+  usePreviewStatus,
+  usePreviewState,
+  IterationEngine,
+  QUICK_REFINEMENTS,
+  DEVICE_PRESETS,
+  createPreviewState,
+  toPreviewPage,
+} from "./preview";
+
+export type {
+  PreviewStatus,
+  PreviewState,
+  PreviewPage,
+  PreviewComponent,
+  ChangeType,
+  Change,
+  Iteration,
+  DeviceType,
+  DevicePreview,
+  RefinementType,
+  RefinementRequest,
+  RefinementResult,
+  RefinementScope,
+} from "./preview";
+
+// =============================================================================
+// MODULE INTEGRATION (from AWD-09)
+// =============================================================================
+
+export {
+  analyzeModuleRequirements,
+  getRequiredModules,
+  getOptionalModules,
+  ModuleConfigurator,
+  ComponentInjector,
+  ModuleIntegrationOrchestrator,
+  getDefaultModuleConfig,
+  INDUSTRY_MODULE_MAPPING,
+  extractFeatureFlags,
+} from "./modules";
+
+export type {
+  ModuleType,
+  ModulePriority,
+  ModuleRequirement,
+  ModuleConfig,
+  ModuleComponent,
+  ModulePage,
+  ModuleIntegration,
+  EcommerceConfig,
+  BookingConfig,
+  CRMConfig,
+  AutomationConfig,
+  SocialMediaConfig,
+  ModuleFeatureFlags,
+} from "./modules";
