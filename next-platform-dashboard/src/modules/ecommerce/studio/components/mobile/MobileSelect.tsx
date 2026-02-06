@@ -55,7 +55,7 @@ export const MobileSelect = forwardRef<HTMLSelectElement, MobileSelectProps>(
     },
     ref
   ) => {
-    const selectId = id || `select-${label.toLowerCase().replace(/\s+/g, '-')}`
+    const selectId = id || `select-${(label || 'field').toLowerCase().replace(/\s+/g, '-')}`
 
     // Size classes
     const sizeClasses = {

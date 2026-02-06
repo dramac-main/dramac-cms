@@ -554,19 +554,20 @@ function ProductCard({ product, primaryColor, isDark, currency }: ProductCardPro
           <div className="sf-variants">
             {product.options.slice(0, 1).map(option => (
               <div key={option.id} className="sf-variant-group">
-                <label>{option.name}</label>
+                <label>{option.name || 'Option'}</label>
                 <select
                   onChange={(e) => {
                     // Find variant matching this option
+                    const optionNameLower = (option.name || '').toLowerCase()
                     const variant = product.variants?.find(v => 
-                      v.options[option.name.toLowerCase()] === e.target.value
+                      v.options && v.options[optionNameLower] === e.target.value
                     )
                     setSelectedVariant(variant?.id || null)
                   }}
                   className="sf-variant-select"
                 >
-                  <option value="">Select {option.name}</option>
-                  {option.values.map(val => (
+                  <option value="">Select {option.name || 'Option'}</option>
+                  {option.values?.map(val => (
                     <option key={val} value={val}>{val}</option>
                   ))}
                 </select>

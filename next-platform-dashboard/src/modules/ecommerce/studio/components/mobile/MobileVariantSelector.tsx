@@ -83,6 +83,7 @@ const COLOR_MAP: Record<string, string> = {
 // ============================================================================
 
 function getColorHex(colorName: string): string | null {
+  if (!colorName) return null
   const normalized = colorName.toLowerCase().trim()
   return COLOR_MAP[normalized] || null
 }

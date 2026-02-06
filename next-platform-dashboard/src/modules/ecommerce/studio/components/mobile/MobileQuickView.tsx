@@ -76,6 +76,7 @@ function formatPrice(price: number): string {
 }
 
 function getColorHex(colorName: string): string | null {
+  if (!colorName) return null
   return COLOR_MAP[colorName.toLowerCase()] || null
 }
 

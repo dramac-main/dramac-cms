@@ -53,7 +53,7 @@ export const MobileInput = forwardRef<HTMLInputElement, MobileInputProps>(
     ref
   ) => {
     const { scrollInputIntoView } = useKeyboardVisible()
-    const inputId = id || `input-${label.toLowerCase().replace(/\s+/g, '-')}`
+    const inputId = id || `input-${(label || 'field').toLowerCase().replace(/\s+/g, '-')}`
 
     // Handle focus with scroll
     const handleFocus = useCallback(

@@ -282,17 +282,17 @@ export function ProductQuickView({
               {variantOptions.length > 0 && (
                 <div className="space-y-4">
                   {variantOptions.map((option) => (
-                    <div key={option.name}>
-                      <Label className="text-sm font-medium">{option.name}</Label>
+                    <div key={option.name || 'unknown'}>
+                      <Label className="text-sm font-medium">{option.name || 'Option'}</Label>
                       <Select
-                        value={selectedOptions[option.name] || ""}
-                        onValueChange={(value) => handleOptionChange(option.name, value)}
+                        value={selectedOptions[option.name || ''] || ""}
+                        onValueChange={(value) => handleOptionChange(option.name || '', value)}
                       >
                         <SelectTrigger className="mt-1.5">
-                          <SelectValue placeholder={`Select ${option.name}`} />
+                          <SelectValue placeholder={`Select ${option.name || 'Option'}`} />
                         </SelectTrigger>
                         <SelectContent>
-                          {option.values.map((value) => (
+                          {option.values?.map((value) => (
                             <SelectItem key={value} value={value}>
                               {value}
                             </SelectItem>

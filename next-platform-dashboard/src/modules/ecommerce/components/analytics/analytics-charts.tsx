@@ -292,7 +292,7 @@ export function SalesByChannelChart({
             outerRadius={100}
             paddingAngle={2}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            label={(props: any) => `${props.channel}: ${props.percentage.toFixed(1)}%`}
+            label={(props: any) => `${props.channel || 'Unknown'}: ${(props.percentage ?? 0).toFixed(1)}%`}
             labelLine={false}
           >
             {chartData.map((entry, index) => (
@@ -305,15 +305,15 @@ export function SalesByChannelChart({
               const item = payload[0].payload as SalesByChannel & { fill: string }
               return (
                 <div className="bg-popover border rounded-lg shadow-lg p-3">
-                  <p className="font-medium capitalize">{item.channel}</p>
+                  <p className="font-medium capitalize">{item.channel || 'Unknown'}</p>
                   <p className="text-sm text-muted-foreground">
-                    Revenue: {formatCurrency(item.revenue)}
+                    Revenue: {formatCurrency(item.revenue ?? 0)}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Orders: {item.orders}
+                    Orders: {item.orders ?? 0}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Share: {item.percentage.toFixed(1)}%
+                    Share: {(item.percentage ?? 0).toFixed(1)}%
                   </p>
                 </div>
               )
@@ -520,7 +520,7 @@ export function CustomerSegmentationChart({
             cy="50%"
             outerRadius={100}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            label={(props: any) => `${props.segment}: ${props.percentage.toFixed(0)}%`}
+            label={(props: any) => `${props.segment || 'Unknown'}: ${(props.percentage ?? 0).toFixed(0)}%`}
           >
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -592,9 +592,9 @@ export function ConversionFunnelChart({
   return (
     <ChartWrapper
       title="Conversion Funnel"
-      description={`Overall conversion: ${data.overall_conversion_rate.toFixed(1)}%`}
+      description={`Overall conversion: ${(data.overall_conversion_rate ?? 0).toFixed(1)}%`}
       isLoading={isLoading}
-      isEmpty={data.stages.length === 0}
+      isEmpty={!data.stages || data.stages.length === 0}
       className={className}
     >
       <ResponsiveContainer width="100%" height={300}>
@@ -605,12 +605,12 @@ export function ConversionFunnelChart({
               const item = payload[0].payload as typeof chartData[0]
               return (
                 <div className="bg-popover border rounded-lg shadow-lg p-3">
-                  <p className="font-medium">{item.label}</p>
+                  <p className="font-medium">{item.label || 'Unknown'}</p>
                   <p className="text-sm text-muted-foreground">
-                    Count: {formatNumber(item.count)}
+                    Count: {formatNumber(item.count ?? 0)}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Rate: {item.conversion_rate.toFixed(1)}%
+                    Rate: {(item.conversion_rate ?? 0).toFixed(1)}%
                   </p>
                 </div>
               )
