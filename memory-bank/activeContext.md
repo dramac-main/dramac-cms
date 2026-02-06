@@ -1,6 +1,48 @@
 # Active Context
 
-## Latest Session Update (Booking Module Enhancements - February 8, 2026)
+## Latest Session Update (Booking Module Bug Fixes - February 8, 2026)
+
+### BOOKING MODULE PRODUCTION FIXES COMPLETED ✅
+
+**Goal:** Fix multiple production errors reported after booking module deployment.
+
+**Issues Fixed:**
+
+1. **Studio toLowerCase Crash** — `moduleInfo.name.toLowerCase()` crashed when name was null/undefined in `module-loader.ts:278`. Also `k.toLowerCase()` in `component-registry.ts:234` for undefined keywords. Both guarded with null checks.
+
+2. **Confusing Field Editor Text** — Studio field editors showed "Services will be loaded from the booking module" / "Staff will be loaded from the booking module" which confused users into thinking the module wasn't installed. Changed to "Choose a service to pre-select for this block" / "Choose a staff member to pre-select for this block".
+
+3. **Embed 404 Error** — Embed code view generated URLs as `/embed/booking?site=SITE_ID` which didn't match any route. Fixed to `/embed/booking/{siteId}` matching the new dedicated route.
+
+4. **New BookingEmbedBlock Component** — Created a Studio drag-and-drop component for embedding booking widgets on pages. Supports full widget, calendar-only, and button-popup modes. Shows live iframe preview when siteId is available.
+
+5. **New /embed/booking/[siteId] Route** — Created a dedicated public-facing booking embed route that doesn't require token auth (booking pages are public). Renders services, staff, with Zambia defaults (ZMW, Africa/Lusaka, DD/MM/YYYY).
+
+6. **BookingWidgetBlock Data Fetching** — Previously always used hardcoded demo data regardless of siteId. Now fetches real data from `/api/modules/booking/services` and `/api/modules/booking/staff` when siteId is available, falling back to demo data on error.
+
+**Zambia Defaults Verified:**
+- Settings view: Africa/Lusaka timezone, DD/MM/YYYY date format, 24h time, 16% VAT ✅
+- Service selector demo data: ZMW currency, K-prefixed prices ✅
+- Booking widget demo data: ZMW currency ✅
+- Embed route: ZMW, Africa/Lusaka, DD/MM/YYYY ✅
+
+**Files Added:**
+- `src/app/embed/booking/[siteId]/page.tsx` — Public booking embed route
+- `src/modules/booking/studio/components/BookingEmbedBlock.tsx` — Studio embed block
+
+**Files Fixed:**
+- `src/lib/studio/registry/module-loader.ts` — Guard null name in keywords
+- `src/lib/studio/registry/component-registry.ts` — Guard null keyword in search
+- `src/modules/booking/studio/index.ts` — Fix field editor text + register BookingEmbedBlock
+- `src/modules/booking/components/views/embed-code-view.tsx` — Fix embed URL pattern
+- `src/modules/booking/studio/components/BookingWidgetBlock.tsx` — Add real data fetching
+
+**TypeScript Status:** ✅ Zero errors
+**Commit:** `391ca4f` — Pushed to main
+
+---
+
+## Previous Session (Booking Module Enhancements - February 8, 2026)
 
 ### BOOKING MODULE UPGRADES COMPLETED ✅
 

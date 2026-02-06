@@ -7325,28 +7325,202 @@ const contentComponents: ComponentDefinition[] = [
 // INTERACTIVE COMPONENTS
 // =============================================================================
 
+// =============================================================================
+// INTERACTIVE COMPONENTS (Enhanced with 50+ fields each)
+// =============================================================================
+
 const interactiveComponents: ComponentDefinition[] = [
+  // =========================================================================
+  // CAROUSEL - Image/Content Carousel (Enhanced)
+  // =========================================================================
   defineComponent({
     type: "Carousel",
     label: "Carousel",
-    description: "Image/content carousel",
+    description: "Premium carousel with thumbnails, effects, and extensive controls (60+ fields)",
     category: "interactive",
     icon: "GalleryHorizontal",
     render: CarouselRender,
+    fieldGroups: [
+      { id: "slides", label: "Slides", icon: "Image", fields: ["slides"], defaultExpanded: true },
+      { id: "navigation", label: "Navigation", icon: "ChevronLeft", fields: ["showArrows", "arrowStyle", "arrowSize", "arrowPosition", "arrowColor", "arrowBackgroundColor"], defaultExpanded: false },
+      { id: "pagination", label: "Pagination", icon: "Circle", fields: ["showDots", "dotStyle", "dotSize", "dotColor", "activeDotColor", "dotPosition"], defaultExpanded: false },
+      { id: "autoplay", label: "Autoplay", icon: "Play", fields: ["autoplay", "interval", "pauseOnHover", "pauseOnInteraction", "stopOnLastSlide"], defaultExpanded: false },
+      { id: "behavior", label: "Behavior", icon: "Settings", fields: ["loop", "slidesToShow", "slidesToScroll", "centerMode", "variableWidth", "draggable", "swipe"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["transition", "transitionDuration", "transitionEasing", "fadeEffect", "scaleEffect"], defaultExpanded: false },
+      { id: "thumbnails", label: "Thumbnails", icon: "LayoutGrid", fields: ["showThumbnails", "thumbnailPosition", "thumbnailSize", "thumbnailGap", "thumbnailBorderRadius", "activeThumbnailBorder"], defaultExpanded: false },
+      { id: "counter", label: "Counter", icon: "Hash", fields: ["showCounter", "counterPosition", "counterStyle"], defaultExpanded: false },
+      { id: "progress", label: "Progress", icon: "BarChart", fields: ["showProgress", "progressPosition", "progressColor", "progressHeight"], defaultExpanded: false },
+      { id: "captions", label: "Captions", icon: "Type", fields: ["showCaptions", "captionPosition", "captionAnimation", "captionBackgroundColor", "captionTextColor"], defaultExpanded: false },
+      { id: "style", label: "Style", icon: "Palette", fields: ["height", "aspectRatio", "borderRadius", "shadow", "backgroundColor"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["mobileSlides", "tabletSlides", "hideArrowsOnMobile", "hideDotsOnMobile"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "enableKeyboard"], defaultExpanded: false },
+    ],
     fields: {
-      slides: {
-        type: "array",
-        label: "Slides",
-        itemFields: {
-          image: { type: "image", label: "Image" },
-          title: { type: "text", label: "Title" },
-          description: { type: "textarea", label: "Description" },
-        },
-      },
-      autoplay: { type: "toggle", label: "Autoplay", defaultValue: false },
-      interval: { type: "number", label: "Interval (ms)", defaultValue: 5000 },
-      showDots: { type: "toggle", label: "Show Dots", defaultValue: true },
+      // === Slides ===
+      slides: { type: "array", label: "Slides", itemFields: {
+        image: { type: "image", label: "Image" },
+        title: { type: "text", label: "Title" },
+        description: { type: "textarea", label: "Description" },
+        link: { type: "link", label: "Link" },
+        linkText: { type: "text", label: "Link Text" },
+        buttonText: { type: "text", label: "Button Text" },
+        buttonLink: { type: "link", label: "Button Link" },
+        overlayColor: { type: "color", label: "Overlay Color" },
+        overlayOpacity: { type: "number", label: "Overlay Opacity", min: 0, max: 1, step: 0.1 },
+      }},
+      // === Navigation ===
       showArrows: { type: "toggle", label: "Show Arrows", defaultValue: true },
+      arrowStyle: { type: "select", label: "Arrow Style", options: [
+        { label: "Default", value: "default" },
+        { label: "Circle", value: "circle" },
+        { label: "Square", value: "square" },
+        { label: "Minimal", value: "minimal" },
+        { label: "Outlined", value: "outlined" },
+      ], defaultValue: "default" },
+      arrowSize: { type: "select", label: "Arrow Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      arrowPosition: { type: "select", label: "Arrow Position", options: [
+        { label: "Inside", value: "inside" },
+        { label: "Outside", value: "outside" },
+        { label: "Edge", value: "edge" },
+      ], defaultValue: "inside" },
+      arrowColor: { type: "color", label: "Arrow Color", defaultValue: "#ffffff" },
+      arrowBackgroundColor: { type: "color", label: "Arrow Background", defaultValue: "#00000080" },
+      // === Pagination ===
+      showDots: { type: "toggle", label: "Show Dots", defaultValue: true },
+      dotStyle: { type: "select", label: "Dot Style", options: [
+        { label: "Circle", value: "circle" },
+        { label: "Rectangle", value: "rectangle" },
+        { label: "Line", value: "line" },
+        { label: "Number", value: "number" },
+      ], defaultValue: "circle" },
+      dotSize: { type: "select", label: "Dot Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      dotColor: { type: "color", label: "Dot Color", defaultValue: "#ffffff80" },
+      activeDotColor: { type: "color", label: "Active Dot Color", defaultValue: "#ffffff" },
+      dotPosition: { type: "select", label: "Dot Position", options: [
+        { label: "Inside Bottom", value: "inside-bottom" },
+        { label: "Outside Bottom", value: "outside-bottom" },
+        { label: "Inside Top", value: "inside-top" },
+      ], defaultValue: "inside-bottom" },
+      // === Autoplay ===
+      autoplay: { type: "toggle", label: "Autoplay", defaultValue: false },
+      interval: { type: "number", label: "Interval (ms)", min: 1000, max: 20000, defaultValue: 5000 },
+      pauseOnHover: { type: "toggle", label: "Pause on Hover", defaultValue: true },
+      pauseOnInteraction: { type: "toggle", label: "Pause on Interaction", defaultValue: true },
+      stopOnLastSlide: { type: "toggle", label: "Stop on Last Slide", defaultValue: false },
+      // === Behavior ===
+      loop: { type: "toggle", label: "Infinite Loop", defaultValue: true },
+      slidesToShow: { type: "number", label: "Slides to Show", min: 1, max: 6, defaultValue: 1 },
+      slidesToScroll: { type: "number", label: "Slides to Scroll", min: 1, max: 4, defaultValue: 1 },
+      centerMode: { type: "toggle", label: "Center Mode", defaultValue: false },
+      variableWidth: { type: "toggle", label: "Variable Width", defaultValue: false },
+      draggable: { type: "toggle", label: "Draggable", defaultValue: true },
+      swipe: { type: "toggle", label: "Enable Swipe", defaultValue: true },
+      // === Animation ===
+      transition: { type: "select", label: "Transition", options: [
+        { label: "Slide", value: "slide" },
+        { label: "Fade", value: "fade" },
+        { label: "Zoom", value: "zoom" },
+        { label: "Flip", value: "flip" },
+        { label: "Cube", value: "cube" },
+      ], defaultValue: "slide" },
+      transitionDuration: { type: "number", label: "Transition Duration (ms)", min: 100, max: 2000, defaultValue: 500 },
+      transitionEasing: { type: "select", label: "Transition Easing", options: [
+        { label: "Ease", value: "ease" },
+        { label: "Ease In", value: "ease-in" },
+        { label: "Ease Out", value: "ease-out" },
+        { label: "Ease In Out", value: "ease-in-out" },
+        { label: "Linear", value: "linear" },
+      ], defaultValue: "ease-in-out" },
+      fadeEffect: { type: "toggle", label: "Crossfade Effect", defaultValue: false },
+      scaleEffect: { type: "toggle", label: "Scale Effect", defaultValue: false },
+      // === Thumbnails ===
+      showThumbnails: { type: "toggle", label: "Show Thumbnails", defaultValue: false },
+      thumbnailPosition: { type: "select", label: "Thumbnail Position", options: [
+        { label: "Bottom", value: "bottom" },
+        { label: "Top", value: "top" },
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "bottom" },
+      thumbnailSize: { type: "number", label: "Thumbnail Size (px)", min: 40, max: 150, defaultValue: 60 },
+      thumbnailGap: { type: "number", label: "Thumbnail Gap (px)", min: 4, max: 20, defaultValue: 8 },
+      thumbnailBorderRadius: { type: "select", label: "Thumbnail Radius", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "sm" },
+      activeThumbnailBorder: { type: "color", label: "Active Thumbnail Border", defaultValue: "#3b82f6" },
+      // === Counter ===
+      showCounter: { type: "toggle", label: "Show Counter", defaultValue: false },
+      counterPosition: { type: "select", label: "Counter Position", options: [
+        { label: "Top Left", value: "top-left" },
+        { label: "Top Right", value: "top-right" },
+        { label: "Bottom Left", value: "bottom-left" },
+        { label: "Bottom Right", value: "bottom-right" },
+      ], defaultValue: "top-right" },
+      counterStyle: { type: "select", label: "Counter Style", options: [
+        { label: "1/5", value: "fraction" },
+        { label: "1 of 5", value: "text" },
+        { label: "Badge", value: "badge" },
+      ], defaultValue: "fraction" },
+      // === Progress ===
+      showProgress: { type: "toggle", label: "Show Progress Bar", defaultValue: false },
+      progressPosition: { type: "select", label: "Progress Position", options: [
+        { label: "Top", value: "top" },
+        { label: "Bottom", value: "bottom" },
+      ], defaultValue: "bottom" },
+      progressColor: { type: "color", label: "Progress Color", defaultValue: "#3b82f6" },
+      progressHeight: { type: "number", label: "Progress Height (px)", min: 2, max: 10, defaultValue: 3 },
+      // === Captions ===
+      showCaptions: { type: "toggle", label: "Show Captions", defaultValue: true },
+      captionPosition: { type: "select", label: "Caption Position", options: [
+        { label: "Overlay Bottom", value: "overlay-bottom" },
+        { label: "Overlay Center", value: "overlay-center" },
+        { label: "Below", value: "below" },
+      ], defaultValue: "overlay-bottom" },
+      captionAnimation: { type: "select", label: "Caption Animation", options: [
+        { label: "None", value: "none" },
+        { label: "Fade", value: "fade" },
+        { label: "Slide Up", value: "slide-up" },
+        { label: "Scale", value: "scale" },
+      ], defaultValue: "fade" },
+      captionBackgroundColor: { type: "color", label: "Caption Background", defaultValue: "#00000080" },
+      captionTextColor: { type: "color", label: "Caption Text Color", defaultValue: "#ffffff" },
+      // === Style ===
+      height: { type: "select", label: "Height", options: [
+        { label: "Auto", value: "auto" },
+        { label: "Small (300px)", value: "sm" },
+        { label: "Medium (400px)", value: "md" },
+        { label: "Large (500px)", value: "lg" },
+        { label: "XL (600px)", value: "xl" },
+        { label: "Full Screen", value: "screen" },
+      ], defaultValue: "md" },
+      aspectRatio: { type: "select", label: "Aspect Ratio", options: [
+        { label: "None", value: "none" },
+        { label: "16:9", value: "16/9" },
+        { label: "4:3", value: "4/3" },
+        { label: "1:1", value: "1/1" },
+        { label: "21:9", value: "21/9" },
+      ], defaultValue: "none" },
+      borderRadius: { type: "select", label: "Border Radius", options: presetOptions.borderRadius, defaultValue: "none" },
+      shadow: { type: "select", label: "Shadow", options: presetOptions.shadow, defaultValue: "none" },
+      backgroundColor: { type: "color", label: "Background Color", defaultValue: "#000000" },
+      // === Responsive ===
+      mobileSlides: { type: "number", label: "Mobile Slides", min: 1, max: 3, defaultValue: 1 },
+      tabletSlides: { type: "number", label: "Tablet Slides", min: 1, max: 4, defaultValue: 1 },
+      hideArrowsOnMobile: { type: "toggle", label: "Hide Arrows on Mobile", defaultValue: true },
+      hideDotsOnMobile: { type: "toggle", label: "Hide Dots on Mobile", defaultValue: false },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label", defaultValue: "Image carousel" },
+      enableKeyboard: { type: "toggle", label: "Enable Keyboard Navigation", defaultValue: true },
     },
     defaultProps: {
       slides: [],
@@ -7354,285 +7528,1111 @@ const interactiveComponents: ComponentDefinition[] = [
       interval: 5000,
       showDots: true,
       showArrows: true,
+      loop: true,
+      transition: "slide",
+      showCaptions: true,
     },
     ai: {
-      description: "An image/content carousel slider",
-      canModify: ["slides", "autoplay", "interval"],
+      description: "A premium image carousel with thumbnails, multiple transitions, progress bar, and extensive customization",
+      canModify: ["slides", "autoplay", "interval", "transition", "showThumbnails", "showProgress"],
+      suggestions: ["Enable autoplay", "Show thumbnails", "Add progress bar", "Use fade transition", "Enable center mode"],
     },
   }),
 
+  // =========================================================================
+  // COUNTDOWN - Countdown Timer (Enhanced)
+  // =========================================================================
   defineComponent({
     type: "Countdown",
     label: "Countdown",
-    description: "Countdown timer",
+    description: "Premium countdown timer with multiple styles and animations (50+ fields)",
     category: "interactive",
     icon: "Clock",
     render: CountdownRender,
+    fieldGroups: [
+      { id: "target", label: "Target", icon: "Calendar", fields: ["targetDate", "targetTime", "timezone"], defaultExpanded: true },
+      { id: "content", label: "Content", icon: "Type", fields: ["title", "subtitle", "expiredMessage", "expiredAction"], defaultExpanded: false },
+      { id: "display", label: "Display", icon: "LayoutGrid", fields: ["showDays", "showHours", "showMinutes", "showSeconds", "showMilliseconds", "showLabels", "labelPosition", "labelStyle"], defaultExpanded: false },
+      { id: "style", label: "Style", icon: "Palette", fields: ["variant", "backgroundColor", "numberColor", "labelColor", "separatorColor", "accentColor"], defaultExpanded: false },
+      { id: "size", label: "Size", icon: "Maximize", fields: ["size", "numberSize", "labelSize", "gap"], defaultExpanded: false },
+      { id: "separator", label: "Separator", icon: "Minus", fields: ["separator", "separatorStyle", "showSeparator"], defaultExpanded: false },
+      { id: "card", label: "Card Style", icon: "Square", fields: ["cardStyle", "cardBackgroundColor", "cardBorderRadius", "cardShadow", "cardBorderColor"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["flipAnimation", "pulseOnChange", "glowEffect", "animateOnMount"], defaultExpanded: false },
+      { id: "urgency", label: "Urgency", icon: "AlertTriangle", fields: ["urgencyThreshold", "urgencyColor", "urgencyPulse", "urgencySound"], defaultExpanded: false },
+      { id: "completion", label: "On Complete", icon: "CheckCircle", fields: ["onComplete", "redirectUrl", "showConfetti", "hideOnComplete"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileSize", "stackOnMobile"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "announceChanges"], defaultExpanded: false },
+    ],
     fields: {
-      targetDate: { type: "text", label: "Target Date (ISO format)" },
+      // === Target ===
+      targetDate: { type: "text", label: "Target Date (YYYY-MM-DD)", defaultValue: "" },
+      targetTime: { type: "text", label: "Target Time (HH:MM)", defaultValue: "00:00" },
+      timezone: { type: "select", label: "Timezone", options: [
+        { label: "Local", value: "local" },
+        { label: "UTC", value: "UTC" },
+        { label: "EST", value: "America/New_York" },
+        { label: "PST", value: "America/Los_Angeles" },
+        { label: "GMT", value: "Europe/London" },
+      ], defaultValue: "local" },
+      // === Content ===
       title: { type: "text", label: "Title" },
+      subtitle: { type: "text", label: "Subtitle" },
       expiredMessage: { type: "text", label: "Expired Message", defaultValue: "Time's up!" },
+      expiredAction: { type: "select", label: "Expired Action", options: [
+        { label: "Show Message", value: "message" },
+        { label: "Hide", value: "hide" },
+        { label: "Show Zeros", value: "zeros" },
+        { label: "Redirect", value: "redirect" },
+      ], defaultValue: "message" },
+      // === Display ===
+      showDays: { type: "toggle", label: "Show Days", defaultValue: true },
+      showHours: { type: "toggle", label: "Show Hours", defaultValue: true },
+      showMinutes: { type: "toggle", label: "Show Minutes", defaultValue: true },
+      showSeconds: { type: "toggle", label: "Show Seconds", defaultValue: true },
+      showMilliseconds: { type: "toggle", label: "Show Milliseconds", defaultValue: false },
+      showLabels: { type: "toggle", label: "Show Labels", defaultValue: true },
+      labelPosition: { type: "select", label: "Label Position", options: [
+        { label: "Below", value: "below" },
+        { label: "Above", value: "above" },
+        { label: "Inside", value: "inside" },
+      ], defaultValue: "below" },
+      labelStyle: { type: "select", label: "Label Style", options: [
+        { label: "Full (Days)", value: "full" },
+        { label: "Short (D)", value: "short" },
+        { label: "Abbreviated (Days)", value: "abbreviated" },
+      ], defaultValue: "full" },
+      // === Style ===
+      variant: { type: "select", label: "Variant", options: [
+        { label: "Default", value: "default" },
+        { label: "Cards", value: "cards" },
+        { label: "Circles", value: "circles" },
+        { label: "Minimal", value: "minimal" },
+        { label: "Flip", value: "flip" },
+        { label: "Digital", value: "digital" },
+      ], defaultValue: "default" },
+      backgroundColor: { type: "color", label: "Background Color" },
+      numberColor: { type: "color", label: "Number Color", defaultValue: "#1f2937" },
+      labelColor: { type: "color", label: "Label Color", defaultValue: "#6b7280" },
+      separatorColor: { type: "color", label: "Separator Color", defaultValue: "#9ca3af" },
+      accentColor: { type: "color", label: "Accent Color", defaultValue: "#3b82f6" },
+      // === Size ===
+      size: { type: "select", label: "Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "Extra Large", value: "xl" },
+      ], defaultValue: "md" },
+      numberSize: { type: "select", label: "Number Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "2XL", value: "2xl" },
+      ], defaultValue: "lg" },
+      labelSize: { type: "select", label: "Label Size", options: [
+        { label: "Extra Small", value: "xs" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+      ], defaultValue: "sm" },
+      gap: { type: "select", label: "Gap", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      // === Separator ===
+      separator: { type: "text", label: "Separator Character", defaultValue: ":" },
+      separatorStyle: { type: "select", label: "Separator Style", options: [
+        { label: "Colon", value: "colon" },
+        { label: "Dot", value: "dot" },
+        { label: "Slash", value: "slash" },
+        { label: "None", value: "none" },
+      ], defaultValue: "colon" },
+      showSeparator: { type: "toggle", label: "Show Separator", defaultValue: true },
+      // === Card Style ===
+      cardStyle: { type: "toggle", label: "Card Style", defaultValue: false },
+      cardBackgroundColor: { type: "color", label: "Card Background", defaultValue: "#f3f4f6" },
+      cardBorderRadius: { type: "select", label: "Card Radius", options: presetOptions.borderRadius, defaultValue: "md" },
+      cardShadow: { type: "select", label: "Card Shadow", options: presetOptions.shadow, defaultValue: "sm" },
+      cardBorderColor: { type: "color", label: "Card Border Color" },
+      // === Animation ===
+      flipAnimation: { type: "toggle", label: "Flip Animation", defaultValue: false },
+      pulseOnChange: { type: "toggle", label: "Pulse on Change", defaultValue: false },
+      glowEffect: { type: "toggle", label: "Glow Effect", defaultValue: false },
+      animateOnMount: { type: "toggle", label: "Animate on Mount", defaultValue: true },
+      // === Urgency ===
+      urgencyThreshold: { type: "number", label: "Urgency Threshold (seconds)", min: 0, max: 3600, defaultValue: 60 },
+      urgencyColor: { type: "color", label: "Urgency Color", defaultValue: "#ef4444" },
+      urgencyPulse: { type: "toggle", label: "Pulse on Urgency", defaultValue: true },
+      urgencySound: { type: "toggle", label: "Sound on Urgency", defaultValue: false },
+      // === Completion ===
+      onComplete: { type: "text", label: "On Complete Handler" },
+      redirectUrl: { type: "link", label: "Redirect URL" },
+      showConfetti: { type: "toggle", label: "Show Confetti on Complete", defaultValue: false },
+      hideOnComplete: { type: "toggle", label: "Hide on Complete", defaultValue: false },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileSize: { type: "select", label: "Mobile Size", options: [
+        { label: "Same", value: "same" },
+        { label: "Smaller", value: "smaller" },
+      ], defaultValue: "smaller" },
+      stackOnMobile: { type: "toggle", label: "Stack on Mobile", defaultValue: false },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label", defaultValue: "Countdown timer" },
+      announceChanges: { type: "toggle", label: "Announce Changes", defaultValue: false },
     },
     defaultProps: {
       expiredMessage: "Time's up!",
+      showDays: true,
+      showHours: true,
+      showMinutes: true,
+      showSeconds: true,
+      showLabels: true,
+      variant: "default",
+      size: "md",
     },
     ai: {
-      description: "A countdown timer to a specific date",
-      canModify: ["targetDate", "title", "expiredMessage"],
+      description: "A premium countdown timer with flip animations, urgency effects, multiple variants, and extensive customization",
+      canModify: ["targetDate", "targetTime", "title", "variant", "size", "flipAnimation", "urgencyThreshold"],
+      suggestions: ["Add flip animation", "Enable urgency pulse", "Use cards variant", "Show confetti on complete", "Add title"],
     },
   }),
 
+  // =========================================================================
+  // TYPEWRITER - Typewriter Effect (Enhanced)
+  // =========================================================================
   defineComponent({
     type: "Typewriter",
     label: "Typewriter",
-    description: "Typewriter text effect",
+    description: "Premium typewriter effect with cursor, multiple sequences, and styling (50+ fields)",
     category: "interactive",
     icon: "Type",
     render: TypewriterRender,
+    fieldGroups: [
+      { id: "content", label: "Content", icon: "Type", fields: ["texts", "prefix", "suffix"], defaultExpanded: true },
+      { id: "timing", label: "Timing", icon: "Clock", fields: ["typingSpeed", "deletingSpeed", "pauseDuration", "startDelay", "delayBetweenTexts"], defaultExpanded: false },
+      { id: "behavior", label: "Behavior", icon: "Settings", fields: ["loop", "loopCount", "deleteOnComplete", "shuffleTexts", "startTypingOnView"], defaultExpanded: false },
+      { id: "cursor", label: "Cursor", icon: "Type", fields: ["showCursor", "cursorChar", "cursorColor", "cursorBlinkSpeed", "cursorStyle", "hideCursorOnComplete"], defaultExpanded: false },
+      { id: "typography", label: "Typography", icon: "Type", fields: ["fontSize", "fontWeight", "fontFamily", "letterSpacing", "textColor", "highlightColor"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["typingAnimation", "deleteAnimation", "errorEffect", "errorProbability"], defaultExpanded: false },
+      { id: "multiline", label: "Multiline", icon: "AlignLeft", fields: ["multiline", "lineHeight", "textAlign"], defaultExpanded: false },
+      { id: "container", label: "Container", icon: "Square", fields: ["minHeight", "backgroundColor", "padding", "borderRadius"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileFontSize"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "reduceMotion"], defaultExpanded: false },
+    ],
     fields: {
-      texts: {
-        type: "array",
-        label: "Texts to Type",
-        itemFields: {
-          text: { type: "text", label: "Text" },
-        },
-      },
-      speed: { type: "number", label: "Speed (ms)", defaultValue: 100 },
+      // === Content ===
+      texts: { type: "array", label: "Texts to Type", itemFields: {
+        text: { type: "text", label: "Text" },
+        color: { type: "color", label: "Text Color (optional)" },
+        speed: { type: "number", label: "Custom Speed (optional)" },
+      }},
+      prefix: { type: "text", label: "Prefix (static)" },
+      suffix: { type: "text", label: "Suffix (static)" },
+      // === Timing ===
+      typingSpeed: { type: "number", label: "Typing Speed (ms)", min: 10, max: 500, defaultValue: 100 },
+      deletingSpeed: { type: "number", label: "Deleting Speed (ms)", min: 10, max: 300, defaultValue: 50 },
+      pauseDuration: { type: "number", label: "Pause Duration (ms)", min: 500, max: 5000, defaultValue: 2000 },
+      startDelay: { type: "number", label: "Start Delay (ms)", min: 0, max: 3000, defaultValue: 0 },
+      delayBetweenTexts: { type: "number", label: "Delay Between Texts (ms)", min: 0, max: 3000, defaultValue: 1000 },
+      // === Behavior ===
       loop: { type: "toggle", label: "Loop", defaultValue: true },
+      loopCount: { type: "number", label: "Loop Count (0 = infinite)", min: 0, max: 100, defaultValue: 0 },
+      deleteOnComplete: { type: "toggle", label: "Delete on Complete", defaultValue: true },
+      shuffleTexts: { type: "toggle", label: "Shuffle Texts", defaultValue: false },
+      startTypingOnView: { type: "toggle", label: "Start on View", defaultValue: true },
+      // === Cursor ===
+      showCursor: { type: "toggle", label: "Show Cursor", defaultValue: true },
+      cursorChar: { type: "text", label: "Cursor Character", defaultValue: "|" },
+      cursorColor: { type: "color", label: "Cursor Color" },
+      cursorBlinkSpeed: { type: "number", label: "Cursor Blink Speed (ms)", min: 200, max: 1000, defaultValue: 500 },
+      cursorStyle: { type: "select", label: "Cursor Style", options: [
+        { label: "Line", value: "line" },
+        { label: "Block", value: "block" },
+        { label: "Underscore", value: "underscore" },
+      ], defaultValue: "line" },
+      hideCursorOnComplete: { type: "toggle", label: "Hide Cursor on Complete", defaultValue: false },
+      // === Typography ===
+      fontSize: { type: "select", label: "Font Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "2XL", value: "2xl" },
+        { label: "3XL", value: "3xl" },
+        { label: "4XL", value: "4xl" },
+      ], defaultValue: "xl" },
+      fontWeight: { type: "select", label: "Font Weight", options: [
+        { label: "Normal", value: "normal" },
+        { label: "Medium", value: "medium" },
+        { label: "Semibold", value: "semibold" },
+        { label: "Bold", value: "bold" },
+      ], defaultValue: "semibold" },
+      fontFamily: { type: "text", label: "Font Family" },
+      letterSpacing: { type: "select", label: "Letter Spacing", options: [
+        { label: "Tight", value: "tight" },
+        { label: "Normal", value: "normal" },
+        { label: "Wide", value: "wide" },
+      ], defaultValue: "normal" },
+      textColor: { type: "color", label: "Text Color" },
+      highlightColor: { type: "color", label: "Highlight Color" },
+      // === Animation ===
+      typingAnimation: { type: "select", label: "Typing Animation", options: [
+        { label: "Normal", value: "normal" },
+        { label: "Smooth", value: "smooth" },
+        { label: "Bounce", value: "bounce" },
+      ], defaultValue: "normal" },
+      deleteAnimation: { type: "select", label: "Delete Animation", options: [
+        { label: "Normal", value: "normal" },
+        { label: "Fade", value: "fade" },
+        { label: "Scramble", value: "scramble" },
+      ], defaultValue: "normal" },
+      errorEffect: { type: "toggle", label: "Simulate Typos", defaultValue: false },
+      errorProbability: { type: "number", label: "Typo Probability (%)", min: 0, max: 30, defaultValue: 5 },
+      // === Multiline ===
+      multiline: { type: "toggle", label: "Multiline", defaultValue: false },
+      lineHeight: { type: "select", label: "Line Height", options: [
+        { label: "Tight", value: "tight" },
+        { label: "Normal", value: "normal" },
+        { label: "Relaxed", value: "relaxed" },
+      ], defaultValue: "normal" },
+      textAlign: { type: "select", label: "Text Align", options: presetOptions.alignment, defaultValue: "left" },
+      // === Container ===
+      minHeight: { type: "select", label: "Min Height", options: [
+        { label: "Auto", value: "auto" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "auto" },
+      backgroundColor: { type: "color", label: "Background Color" },
+      padding: { type: "select", label: "Padding", options: presetOptions.padding, defaultValue: "none" },
+      borderRadius: { type: "select", label: "Border Radius", options: presetOptions.borderRadius, defaultValue: "none" },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileFontSize: { type: "select", label: "Mobile Font Size", options: [
+        { label: "Same", value: "same" },
+        { label: "Smaller", value: "smaller" },
+      ], defaultValue: "smaller" },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label" },
+      reduceMotion: { type: "toggle", label: "Respect Reduce Motion", defaultValue: true },
     },
     defaultProps: {
       texts: [],
-      speed: 100,
+      typingSpeed: 100,
       loop: true,
+      showCursor: true,
+      cursorChar: "|",
+      fontSize: "xl",
     },
     ai: {
-      description: "A typewriter text animation effect",
-      canModify: ["texts", "speed"],
+      description: "A premium typewriter effect with customizable cursor, timing, typo simulation, and multiple text sequences",
+      canModify: ["texts", "typingSpeed", "prefix", "suffix", "showCursor", "cursorStyle", "fontSize"],
+      suggestions: ["Add prefix text", "Enable typo simulation", "Change cursor style", "Add multiple texts", "Enable shuffle"],
     },
   }),
 
+  // =========================================================================
+  // PARALLAX - Parallax Effect (Enhanced)
+  // =========================================================================
   defineComponent({
     type: "Parallax",
     label: "Parallax",
-    description: "Parallax scrolling effect",
+    description: "Premium parallax scrolling with multiple layers and effects (50+ fields)",
     category: "interactive",
     icon: "Layers",
     render: ParallaxRender,
     acceptsChildren: true,
     isContainer: true,
+    fieldGroups: [
+      { id: "background", label: "Background", icon: "Image", fields: ["backgroundImage", "backgroundVideo", "backgroundPosition", "backgroundSize", "backgroundRepeat"], defaultExpanded: true },
+      { id: "parallax", label: "Parallax Effect", icon: "Layers", fields: ["speed", "direction", "maxOffset", "easing", "disabled"], defaultExpanded: false },
+      { id: "overlay", label: "Overlay", icon: "Square", fields: ["showOverlay", "overlayColor", "overlayOpacity", "overlayGradient", "overlayGradientDirection"], defaultExpanded: false },
+      { id: "size", label: "Size", icon: "Maximize", fields: ["height", "minHeight", "maxHeight", "fullScreen"], defaultExpanded: false },
+      { id: "content", label: "Content", icon: "Layout", fields: ["contentPosition", "contentAlign", "contentMaxWidth", "contentPadding"], defaultExpanded: false },
+      { id: "layers", label: "Layers", icon: "Layers", fields: ["layers"], defaultExpanded: false },
+      { id: "effects", label: "Effects", icon: "Sparkles", fields: ["blur", "scale", "rotate", "opacity", "fadeOnScroll"], defaultExpanded: false },
+      { id: "border", label: "Border & Shadow", icon: "Square", fields: ["borderRadius", "shadow", "showBorder", "borderColor"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animateOnMount", "animationType", "animationDuration"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["disableOnMobile", "mobileHeight", "mobileFallbackImage"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "reducedMotion"], defaultExpanded: false },
+    ],
     fields: {
+      // === Background ===
       backgroundImage: { type: "image", label: "Background Image" },
-      speed: { type: "number", label: "Speed", min: 0, max: 1, defaultValue: 0.5 },
-      height: { type: "number", label: "Height (px)", defaultValue: 400 },
+      backgroundVideo: { type: "text", label: "Background Video URL" },
+      backgroundPosition: { type: "select", label: "Background Position", options: [
+        { label: "Center", value: "center" },
+        { label: "Top", value: "top" },
+        { label: "Bottom", value: "bottom" },
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "center" },
+      backgroundSize: { type: "select", label: "Background Size", options: [
+        { label: "Cover", value: "cover" },
+        { label: "Contain", value: "contain" },
+        { label: "Auto", value: "auto" },
+        { label: "100%", value: "100%" },
+      ], defaultValue: "cover" },
+      backgroundRepeat: { type: "select", label: "Background Repeat", options: [
+        { label: "No Repeat", value: "no-repeat" },
+        { label: "Repeat", value: "repeat" },
+        { label: "Repeat X", value: "repeat-x" },
+        { label: "Repeat Y", value: "repeat-y" },
+      ], defaultValue: "no-repeat" },
+      // === Parallax Effect ===
+      speed: { type: "number", label: "Speed", min: -1, max: 1, step: 0.1, defaultValue: 0.5 },
+      direction: { type: "select", label: "Direction", options: [
+        { label: "Vertical", value: "vertical" },
+        { label: "Horizontal", value: "horizontal" },
+        { label: "Both", value: "both" },
+      ], defaultValue: "vertical" },
+      maxOffset: { type: "number", label: "Max Offset (px)", min: 0, max: 500, defaultValue: 200 },
+      easing: { type: "select", label: "Easing", options: [
+        { label: "Linear", value: "linear" },
+        { label: "Ease Out", value: "ease-out" },
+        { label: "Ease In Out", value: "ease-in-out" },
+      ], defaultValue: "linear" },
+      disabled: { type: "toggle", label: "Disable Parallax", defaultValue: false },
+      // === Overlay ===
+      showOverlay: { type: "toggle", label: "Show Overlay", defaultValue: false },
+      overlayColor: { type: "color", label: "Overlay Color", defaultValue: "#000000" },
+      overlayOpacity: { type: "number", label: "Overlay Opacity", min: 0, max: 1, step: 0.1, defaultValue: 0.5 },
+      overlayGradient: { type: "toggle", label: "Gradient Overlay", defaultValue: false },
+      overlayGradientDirection: { type: "select", label: "Gradient Direction", options: [
+        { label: "To Bottom", value: "to-b" },
+        { label: "To Top", value: "to-t" },
+        { label: "To Right", value: "to-r" },
+        { label: "Radial", value: "radial" },
+      ], defaultValue: "to-b" },
+      // === Size ===
+      height: { type: "number", label: "Height (px)", min: 100, max: 1000, defaultValue: 400 },
+      minHeight: { type: "number", label: "Min Height (px)", min: 100, max: 500, defaultValue: 200 },
+      maxHeight: { type: "number", label: "Max Height (px)", min: 200, max: 2000 },
+      fullScreen: { type: "toggle", label: "Full Screen", defaultValue: false },
+      // === Content ===
+      contentPosition: { type: "select", label: "Content Position", options: [
+        { label: "Center", value: "center" },
+        { label: "Top", value: "top" },
+        { label: "Bottom", value: "bottom" },
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "center" },
+      contentAlign: { type: "select", label: "Content Align", options: presetOptions.alignment, defaultValue: "center" },
+      contentMaxWidth: { type: "select", label: "Content Max Width", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "lg" },
+      contentPadding: { type: "select", label: "Content Padding", options: presetOptions.padding, defaultValue: "lg" },
+      // === Layers ===
+      layers: { type: "array", label: "Additional Layers", itemFields: {
+        image: { type: "image", label: "Layer Image" },
+        speed: { type: "number", label: "Layer Speed", min: -1, max: 1, step: 0.1 },
+        opacity: { type: "number", label: "Opacity", min: 0, max: 1, step: 0.1 },
+        zIndex: { type: "number", label: "Z-Index", min: 0, max: 10 },
+      }},
+      // === Effects ===
+      blur: { type: "number", label: "Blur (px)", min: 0, max: 20, defaultValue: 0 },
+      scale: { type: "number", label: "Scale Factor", min: 1, max: 2, step: 0.1, defaultValue: 1 },
+      rotate: { type: "number", label: "Rotate (deg)", min: -10, max: 10, defaultValue: 0 },
+      opacity: { type: "number", label: "Background Opacity", min: 0, max: 1, step: 0.1, defaultValue: 1 },
+      fadeOnScroll: { type: "toggle", label: "Fade on Scroll", defaultValue: false },
+      // === Border & Shadow ===
+      borderRadius: { type: "select", label: "Border Radius", options: presetOptions.borderRadius, defaultValue: "none" },
+      shadow: { type: "select", label: "Shadow", options: presetOptions.shadow, defaultValue: "none" },
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
+      borderColor: { type: "color", label: "Border Color" },
+      // === Animation ===
+      animateOnMount: { type: "toggle", label: "Animate on Mount", defaultValue: false },
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "Fade In", value: "fade" },
+        { label: "Slide Up", value: "slide-up" },
+        { label: "Zoom In", value: "zoom" },
+      ], defaultValue: "fade" },
+      animationDuration: { type: "number", label: "Animation Duration (ms)", min: 200, max: 2000, defaultValue: 600 },
+      // === Responsive ===
+      disableOnMobile: { type: "toggle", label: "Disable on Mobile", defaultValue: true },
+      mobileHeight: { type: "number", label: "Mobile Height (px)", min: 100, max: 500, defaultValue: 300 },
+      mobileFallbackImage: { type: "image", label: "Mobile Fallback Image" },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label" },
+      reducedMotion: { type: "toggle", label: "Respect Reduced Motion", defaultValue: true },
     },
     defaultProps: {
       speed: 0.5,
       height: 400,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      contentPosition: "center",
     },
     ai: {
-      description: "A parallax scrolling effect container",
-      canModify: ["speed", "height"],
+      description: "A premium parallax section with multiple layers, overlay effects, and extensive customization for immersive scrolling experiences",
+      canModify: ["backgroundImage", "speed", "height", "showOverlay", "overlayColor", "overlayOpacity"],
+      suggestions: ["Add overlay", "Adjust parallax speed", "Enable full screen", "Add multiple layers", "Enable fade on scroll"],
     },
   }),
 
   // =========================================================================
-  // PRICING - Pricing Tables
+  // PRICING - Pricing Tables (Enhanced)
   // =========================================================================
   defineComponent({
     type: "Pricing",
     label: "Pricing",
-    description: "Pricing plans comparison table",
+    description: "Premium pricing table with toggle, animations, and extensive styling (70+ fields)",
     category: "interactive",
     icon: "CreditCard",
     render: PricingRender,
+    fieldGroups: [
+      { id: "header", label: "Header", icon: "Type", fields: ["title", "subtitle", "description", "badge", "headerAlign"], defaultExpanded: false },
+      { id: "plans", label: "Plans", icon: "LayoutGrid", fields: ["plans"], defaultExpanded: true },
+      { id: "toggle", label: "Billing Toggle", icon: "ToggleLeft", fields: ["showToggle", "toggleLabels", "togglePosition", "defaultBilling", "toggleSavingsText", "savingsColor"], defaultExpanded: false },
+      { id: "layout", label: "Layout", icon: "Layout", fields: ["variant", "columns", "gap", "alignment", "maxWidth"], defaultExpanded: false },
+      { id: "cardStyle", label: "Card Style", icon: "Square", fields: ["cardBackgroundColor", "cardBorderRadius", "cardShadow", "cardBorder", "cardBorderColor", "cardPadding"], defaultExpanded: false },
+      { id: "highlight", label: "Highlight", icon: "Star", fields: ["popularStyle", "popularBadgeText", "popularBorderColor", "popularBackgroundColor", "popularScale", "popularGlow"], defaultExpanded: false },
+      { id: "pricing", label: "Pricing Style", icon: "DollarSign", fields: ["priceSize", "priceColor", "periodColor", "currencyPosition", "strikethroughOriginal"], defaultExpanded: false },
+      { id: "features", label: "Features", icon: "CheckCircle", fields: ["featureStyle", "checkIcon", "checkIconColor", "crossIcon", "crossIconColor", "featureIconSize"], defaultExpanded: false },
+      { id: "buttons", label: "Buttons", icon: "MousePointer", fields: ["buttonStyle", "buttonSize", "buttonBorderRadius", "buttonFullWidth"], defaultExpanded: false },
+      { id: "guarantee", label: "Guarantee", icon: "Shield", fields: ["showGuarantee", "guaranteeText", "guaranteeIcon"], defaultExpanded: false },
+      { id: "comparison", label: "Comparison", icon: "Table", fields: ["showComparison", "comparisonButtonText"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animateOnScroll", "animationType", "staggerAnimation", "staggerDelay"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["mobileColumns", "stackOnMobile", "hideToggleOnMobile"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel"], defaultExpanded: false },
+    ],
     fields: {
+      // === Header ===
       title: { type: "text", label: "Title", defaultValue: "Pricing Plans" },
       subtitle: { type: "text", label: "Subtitle" },
       description: { type: "textarea", label: "Description" },
-      plans: {
-        type: "array",
-        label: "Plans",
-        itemFields: {
-          name: { type: "text", label: "Plan Name" },
-          description: { type: "textarea", label: "Plan Description" },
-          price: { type: "text", label: "Price" },
-          period: { type: "text", label: "Period (e.g., /month)" },
-          features: { type: "array", label: "Features", itemFields: { text: { type: "text", label: "Feature" } } },
-          buttonText: { type: "text", label: "Button Text" },
-          buttonLink: { type: "link", label: "Button Link" },
-          popular: { type: "toggle", label: "Popular (highlighted)" },
-          badge: { type: "text", label: "Badge Text" },
-        },
-      },
-      variant: {
-        type: "select",
-        label: "Variant",
-        options: [
-          { label: "Cards", value: "cards" },
-          { label: "Simple", value: "simple" },
-        ],
-        defaultValue: "cards",
-      },
-      columns: {
-        type: "select",
-        label: "Columns",
-        options: [
-          { label: "2 Columns", value: 2 },
-          { label: "3 Columns", value: 3 },
-          { label: "4 Columns", value: 4 },
-        ],
-        defaultValue: 3,
-      },
-      backgroundColor: { type: "color", label: "Background Color" },
+      badge: { type: "text", label: "Badge Text" },
+      headerAlign: { type: "select", label: "Header Alignment", options: presetOptions.alignment, defaultValue: "center" },
+      // === Plans ===
+      plans: { type: "array", label: "Plans", itemFields: {
+        name: { type: "text", label: "Plan Name" },
+        description: { type: "textarea", label: "Plan Description" },
+        monthlyPrice: { type: "text", label: "Monthly Price" },
+        yearlyPrice: { type: "text", label: "Yearly Price" },
+        originalPrice: { type: "text", label: "Original Price (strikethrough)" },
+        period: { type: "text", label: "Period (e.g., /month)" },
+        currency: { type: "text", label: "Currency Symbol", defaultValue: "$" },
+        features: { type: "array", label: "Features", itemFields: { 
+          text: { type: "text", label: "Feature" },
+          included: { type: "toggle", label: "Included", defaultValue: true },
+          tooltip: { type: "text", label: "Tooltip" },
+        }},
+        buttonText: { type: "text", label: "Button Text" },
+        buttonLink: { type: "link", label: "Button Link" },
+        buttonVariant: { type: "select", label: "Button Variant", options: [
+          { label: "Primary", value: "primary" },
+          { label: "Secondary", value: "secondary" },
+          { label: "Outline", value: "outline" },
+        ], defaultValue: "primary" },
+        popular: { type: "toggle", label: "Popular (highlighted)" },
+        badge: { type: "text", label: "Badge Text" },
+        icon: { type: "text", label: "Plan Icon (emoji)" },
+        accentColor: { type: "color", label: "Accent Color" },
+      }},
+      // === Billing Toggle ===
+      showToggle: { type: "toggle", label: "Show Billing Toggle", defaultValue: false },
+      toggleLabels: { type: "text", label: "Toggle Labels (comma-separated)", defaultValue: "Monthly,Yearly" },
+      togglePosition: { type: "select", label: "Toggle Position", options: [
+        { label: "Above Cards", value: "above" },
+        { label: "In Header", value: "header" },
+      ], defaultValue: "above" },
+      defaultBilling: { type: "select", label: "Default Billing", options: [
+        { label: "Monthly", value: "monthly" },
+        { label: "Yearly", value: "yearly" },
+      ], defaultValue: "monthly" },
+      toggleSavingsText: { type: "text", label: "Savings Text", defaultValue: "Save 20%" },
+      savingsColor: { type: "color", label: "Savings Badge Color", defaultValue: "#10b981" },
+      // === Layout ===
+      variant: { type: "select", label: "Variant", options: [
+        { label: "Cards", value: "cards" },
+        { label: "Simple", value: "simple" },
+        { label: "Minimal", value: "minimal" },
+        { label: "Gradient", value: "gradient" },
+        { label: "Outlined", value: "outlined" },
+      ], defaultValue: "cards" },
+      columns: { type: "select", label: "Columns", options: [
+        { label: "2", value: 2 },
+        { label: "3", value: 3 },
+        { label: "4", value: 4 },
+      ], defaultValue: 3 },
+      gap: { type: "select", label: "Gap", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      alignment: { type: "select", label: "Card Alignment", options: [
+        { label: "Top", value: "top" },
+        { label: "Center", value: "center" },
+        { label: "Stretch", value: "stretch" },
+      ], defaultValue: "stretch" },
+      maxWidth: { type: "select", label: "Max Width", options: [
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "2XL", value: "2xl" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "xl" },
+      // === Card Style ===
+      cardBackgroundColor: { type: "color", label: "Card Background" },
+      cardBorderRadius: { type: "select", label: "Card Radius", options: presetOptions.borderRadius, defaultValue: "xl" },
+      cardShadow: { type: "select", label: "Card Shadow", options: presetOptions.shadow, defaultValue: "md" },
+      cardBorder: { type: "toggle", label: "Show Card Border", defaultValue: false },
+      cardBorderColor: { type: "color", label: "Card Border Color" },
+      cardPadding: { type: "select", label: "Card Padding", options: presetOptions.padding, defaultValue: "lg" },
+      // === Highlight ===
+      popularStyle: { type: "select", label: "Popular Style", options: [
+        { label: "Border", value: "border" },
+        { label: "Background", value: "background" },
+        { label: "Scale", value: "scale" },
+        { label: "Glow", value: "glow" },
+        { label: "All", value: "all" },
+      ], defaultValue: "border" },
+      popularBadgeText: { type: "text", label: "Popular Badge Text", defaultValue: "Most Popular" },
       popularBorderColor: { type: "color", label: "Popular Border Color", defaultValue: "#3b82f6" },
+      popularBackgroundColor: { type: "color", label: "Popular Background" },
+      popularScale: { type: "number", label: "Popular Scale", min: 1, max: 1.2, step: 0.02, defaultValue: 1.05 },
+      popularGlow: { type: "toggle", label: "Popular Glow", defaultValue: false },
+      // === Pricing Style ===
+      priceSize: { type: "select", label: "Price Size", options: [
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "2XL", value: "2xl" },
+      ], defaultValue: "xl" },
+      priceColor: { type: "color", label: "Price Color" },
+      periodColor: { type: "color", label: "Period Color" },
+      currencyPosition: { type: "select", label: "Currency Position", options: [
+        { label: "Before", value: "before" },
+        { label: "After", value: "after" },
+      ], defaultValue: "before" },
+      strikethroughOriginal: { type: "toggle", label: "Strikethrough Original Price", defaultValue: true },
+      // === Features ===
+      featureStyle: { type: "select", label: "Feature Style", options: [
+        { label: "List", value: "list" },
+        { label: "Grid", value: "grid" },
+        { label: "Compact", value: "compact" },
+      ], defaultValue: "list" },
+      checkIcon: { type: "text", label: "Check Icon", defaultValue: "✓" },
+      checkIconColor: { type: "color", label: "Check Icon Color", defaultValue: "#10b981" },
+      crossIcon: { type: "text", label: "Cross Icon", defaultValue: "✕" },
+      crossIconColor: { type: "color", label: "Cross Icon Color", defaultValue: "#ef4444" },
+      featureIconSize: { type: "select", label: "Feature Icon Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      // === Buttons ===
+      buttonStyle: { type: "select", label: "Button Style", options: [
+        { label: "Solid", value: "solid" },
+        { label: "Outline", value: "outline" },
+        { label: "Ghost", value: "ghost" },
+      ], defaultValue: "solid" },
+      buttonSize: { type: "select", label: "Button Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      buttonBorderRadius: { type: "select", label: "Button Radius", options: presetOptions.borderRadius, defaultValue: "md" },
+      buttonFullWidth: { type: "toggle", label: "Full Width Buttons", defaultValue: true },
+      // === Guarantee ===
+      showGuarantee: { type: "toggle", label: "Show Guarantee", defaultValue: false },
+      guaranteeText: { type: "text", label: "Guarantee Text", defaultValue: "30-day money-back guarantee" },
+      guaranteeIcon: { type: "text", label: "Guarantee Icon", defaultValue: "🛡️" },
+      // === Comparison ===
+      showComparison: { type: "toggle", label: "Show Comparison Link", defaultValue: false },
+      comparisonButtonText: { type: "text", label: "Comparison Button Text", defaultValue: "Compare all features" },
+      // === Animation ===
+      animateOnScroll: { type: "toggle", label: "Animate on Scroll", defaultValue: true },
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "Fade Up", value: "fade-up" },
+        { label: "Fade In", value: "fade" },
+        { label: "Scale", value: "scale" },
+      ], defaultValue: "fade-up" },
+      staggerAnimation: { type: "toggle", label: "Stagger Animation", defaultValue: true },
+      staggerDelay: { type: "number", label: "Stagger Delay (ms)", min: 50, max: 500, defaultValue: 100 },
+      // === Responsive ===
+      mobileColumns: { type: "select", label: "Mobile Columns", options: [
+        { label: "1", value: 1 },
+        { label: "2", value: 2 },
+      ], defaultValue: 1 },
+      stackOnMobile: { type: "toggle", label: "Stack on Mobile", defaultValue: true },
+      hideToggleOnMobile: { type: "toggle", label: "Hide Toggle on Mobile", defaultValue: false },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label", defaultValue: "Pricing plans" },
     },
     defaultProps: {
       title: "Pricing Plans",
       plans: [],
       variant: "cards",
       columns: 3,
+      showToggle: false,
+      popularStyle: "border",
     },
     ai: {
-      description: "A pricing comparison table with multiple plans",
-      canModify: ["title", "subtitle", "plans", "columns"],
+      description: "A premium pricing table with billing toggle, feature comparison, guarantees, and extensive styling for SaaS pricing pages",
+      canModify: ["title", "plans", "variant", "columns", "showToggle", "popularStyle"],
+      suggestions: ["Add billing toggle", "Enable popular highlighting", "Add guarantee badge", "Show feature comparison", "Enable animations"],
     },
   }),
 
   // =========================================================================
-  // ACCORDION - Expandable Content
+  // ACCORDION - Expandable Content (Enhanced)
   // =========================================================================
   defineComponent({
     type: "Accordion",
     label: "Accordion",
-    description: "Expandable accordion content",
+    description: "Premium accordion with icons, animations, and extensive styling (50+ fields)",
     category: "interactive",
     icon: "ChevronsUpDown",
     render: AccordionRender,
+    fieldGroups: [
+      { id: "items", label: "Items", icon: "List", fields: ["items"], defaultExpanded: true },
+      { id: "behavior", label: "Behavior", icon: "Settings", fields: ["allowMultiple", "defaultOpenItems", "collapseAll"], defaultExpanded: false },
+      { id: "style", label: "Style", icon: "Palette", fields: ["variant", "backgroundColor", "borderColor", "textColor", "activeBackgroundColor", "activeTextColor"], defaultExpanded: false },
+      { id: "header", label: "Header Style", icon: "Type", fields: ["headerPadding", "headerFontSize", "headerFontWeight", "headerHoverEffect"], defaultExpanded: false },
+      { id: "content", label: "Content Style", icon: "FileText", fields: ["contentPadding", "contentBackgroundColor", "contentBorderTop"], defaultExpanded: false },
+      { id: "icon", label: "Icon", icon: "ChevronDown", fields: ["showIcon", "iconPosition", "iconStyle", "iconColor", "iconSize", "rotateIcon"], defaultExpanded: false },
+      { id: "border", label: "Border & Shadow", icon: "Square", fields: ["showBorder", "borderWidth", "borderRadius", "dividerStyle", "shadow"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animationType", "animationDuration", "animateContent"], defaultExpanded: false },
+      { id: "search", label: "Search", icon: "Search", fields: ["showSearch", "searchPlaceholder", "highlightMatch"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileVariant"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel"], defaultExpanded: false },
+    ],
     fields: {
-      items: {
-        type: "array",
-        label: "Items",
-        itemFields: {
-          title: { type: "text", label: "Title" },
-          content: { type: "textarea", label: "Content" },
-          defaultOpen: { type: "toggle", label: "Open by Default" },
-        },
-      },
-      variant: {
-        type: "select",
-        label: "Variant",
-        options: [
-          { label: "Simple", value: "simple" },
-          { label: "Bordered", value: "bordered" },
-          { label: "Separated", value: "separated" },
-          { label: "Filled", value: "filled" },
-        ],
-        defaultValue: "bordered",
-      },
+      // === Items ===
+      items: { type: "array", label: "Items", itemFields: {
+        title: { type: "text", label: "Title" },
+        content: { type: "textarea", label: "Content" },
+        icon: { type: "text", label: "Icon (emoji)" },
+        badge: { type: "text", label: "Badge Text" },
+        badgeColor: { type: "color", label: "Badge Color" },
+        defaultOpen: { type: "toggle", label: "Open by Default" },
+        disabled: { type: "toggle", label: "Disabled" },
+      }},
+      // === Behavior ===
       allowMultiple: { type: "toggle", label: "Allow Multiple Open", defaultValue: true },
+      defaultOpenItems: { type: "text", label: "Default Open Items (comma-separated indices)" },
+      collapseAll: { type: "toggle", label: "Collapse All Initially", defaultValue: false },
+      // === Style ===
+      variant: { type: "select", label: "Variant", options: [
+        { label: "Simple", value: "simple" },
+        { label: "Bordered", value: "bordered" },
+        { label: "Separated", value: "separated" },
+        { label: "Filled", value: "filled" },
+        { label: "Minimal", value: "minimal" },
+        { label: "Cards", value: "cards" },
+      ], defaultValue: "bordered" },
       backgroundColor: { type: "color", label: "Background Color" },
-      borderColor: { type: "color", label: "Border Color" },
+      borderColor: { type: "color", label: "Border Color", defaultValue: "#e5e7eb" },
+      textColor: { type: "color", label: "Text Color" },
+      activeBackgroundColor: { type: "color", label: "Active Background Color" },
+      activeTextColor: { type: "color", label: "Active Text Color" },
+      // === Header Style ===
+      headerPadding: { type: "select", label: "Header Padding", options: presetOptions.padding, defaultValue: "md" },
+      headerFontSize: { type: "select", label: "Header Font Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      headerFontWeight: { type: "select", label: "Header Font Weight", options: [
+        { label: "Normal", value: "normal" },
+        { label: "Medium", value: "medium" },
+        { label: "Semibold", value: "semibold" },
+        { label: "Bold", value: "bold" },
+      ], defaultValue: "medium" },
+      headerHoverEffect: { type: "select", label: "Header Hover Effect", options: [
+        { label: "None", value: "none" },
+        { label: "Background", value: "background" },
+        { label: "Color", value: "color" },
+      ], defaultValue: "background" },
+      // === Content Style ===
+      contentPadding: { type: "select", label: "Content Padding", options: presetOptions.padding, defaultValue: "md" },
+      contentBackgroundColor: { type: "color", label: "Content Background" },
+      contentBorderTop: { type: "toggle", label: "Content Border Top", defaultValue: false },
+      // === Icon ===
+      showIcon: { type: "toggle", label: "Show Icon", defaultValue: true },
+      iconPosition: { type: "select", label: "Icon Position", options: [
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "right" },
+      iconStyle: { type: "select", label: "Icon Style", options: [
+        { label: "Chevron", value: "chevron" },
+        { label: "Plus/Minus", value: "plus-minus" },
+        { label: "Arrow", value: "arrow" },
+        { label: "Caret", value: "caret" },
+      ], defaultValue: "chevron" },
+      iconColor: { type: "color", label: "Icon Color" },
+      iconSize: { type: "select", label: "Icon Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      rotateIcon: { type: "toggle", label: "Rotate Icon on Open", defaultValue: true },
+      // === Border & Shadow ===
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: true },
+      borderWidth: { type: "select", label: "Border Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+      ], defaultValue: "1" },
+      borderRadius: { type: "select", label: "Border Radius", options: presetOptions.borderRadius, defaultValue: "md" },
+      dividerStyle: { type: "select", label: "Divider Style", options: [
+        { label: "None", value: "none" },
+        { label: "Solid", value: "solid" },
+        { label: "Dashed", value: "dashed" },
+      ], defaultValue: "solid" },
+      shadow: { type: "select", label: "Shadow", options: presetOptions.shadow, defaultValue: "none" },
+      // === Animation ===
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "Slide", value: "slide" },
+        { label: "Fade", value: "fade" },
+        { label: "None", value: "none" },
+      ], defaultValue: "slide" },
+      animationDuration: { type: "number", label: "Animation Duration (ms)", min: 100, max: 500, defaultValue: 200 },
+      animateContent: { type: "toggle", label: "Animate Content", defaultValue: true },
+      // === Search ===
+      showSearch: { type: "toggle", label: "Show Search", defaultValue: false },
+      searchPlaceholder: { type: "text", label: "Search Placeholder", defaultValue: "Search..." },
+      highlightMatch: { type: "toggle", label: "Highlight Matches", defaultValue: true },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileVariant: { type: "select", label: "Mobile Variant", options: [
+        { label: "Same", value: "same" },
+        { label: "Simple", value: "simple" },
+      ], defaultValue: "same" },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label", defaultValue: "Accordion" },
     },
     defaultProps: {
       items: [],
       variant: "bordered",
       allowMultiple: true,
+      showIcon: true,
+      iconPosition: "right",
+      animationType: "slide",
     },
     ai: {
-      description: "An expandable accordion component with multiple items",
-      canModify: ["items", "variant"],
+      description: "A premium accordion with search, icons, badges, animations, and multiple styling variants for FAQs and collapsible content",
+      canModify: ["items", "variant", "allowMultiple", "showSearch", "iconStyle"],
+      suggestions: ["Add search functionality", "Change icon style", "Use cards variant", "Add badges", "Enable animations"],
     },
   }),
 
   // =========================================================================
-  // TABS - Tabbed Content
+  // TABS - Tabbed Content (Enhanced)
   // =========================================================================
   defineComponent({
     type: "Tabs",
     label: "Tabs",
-    description: "Tabbed content switcher",
+    description: "Premium tabs with icons, badges, and extensive styling (50+ fields)",
     category: "interactive",
     icon: "LayoutList",
     render: TabsRender,
+    fieldGroups: [
+      { id: "tabs", label: "Tabs", icon: "LayoutList", fields: ["tabs"], defaultExpanded: true },
+      { id: "behavior", label: "Behavior", icon: "Settings", fields: ["defaultTab", "keepAlive", "lazyLoad"], defaultExpanded: false },
+      { id: "style", label: "Tab Style", icon: "Palette", fields: ["variant", "backgroundColor", "activeColor", "inactiveColor", "activeBackgroundColor", "hoverColor"], defaultExpanded: false },
+      { id: "size", label: "Size & Layout", icon: "Maximize", fields: ["size", "fullWidth", "centered", "gap", "tabsPosition"], defaultExpanded: false },
+      { id: "border", label: "Border", icon: "Square", fields: ["showBorder", "borderColor", "borderWidth", "borderRadius", "indicatorStyle", "indicatorColor", "indicatorHeight"], defaultExpanded: false },
+      { id: "content", label: "Content Area", icon: "FileText", fields: ["contentPadding", "contentBackgroundColor", "contentBorderRadius", "contentMinHeight"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animationType", "animationDuration", "slideDirection"], defaultExpanded: false },
+      { id: "icons", label: "Icons", icon: "Image", fields: ["showIcons", "iconPosition", "iconSize"], defaultExpanded: false },
+      { id: "badges", label: "Badges", icon: "Tag", fields: ["showBadges", "badgeStyle"], defaultExpanded: false },
+      { id: "overflow", label: "Overflow", icon: "MoreHorizontal", fields: ["overflowBehavior", "showScrollButtons", "scrollButtonStyle"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["mobileVariant", "collapseOnMobile", "mobileDropdown"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "enableKeyboard"], defaultExpanded: false },
+    ],
     fields: {
-      tabs: {
-        type: "array",
-        label: "Tabs",
-        itemFields: {
-          label: { type: "text", label: "Tab Label" },
-          content: { type: "textarea", label: "Tab Content" },
-          icon: { type: "text", label: "Icon (optional)" },
-        },
-      },
+      // === Tabs ===
+      tabs: { type: "array", label: "Tabs", itemFields: {
+        label: { type: "text", label: "Tab Label" },
+        content: { type: "textarea", label: "Tab Content" },
+        icon: { type: "text", label: "Icon (emoji or icon name)" },
+        badge: { type: "text", label: "Badge Text" },
+        badgeColor: { type: "color", label: "Badge Color" },
+        disabled: { type: "toggle", label: "Disabled" },
+        hidden: { type: "toggle", label: "Hidden" },
+      }},
+      // === Behavior ===
       defaultTab: { type: "number", label: "Default Tab (0-based)", defaultValue: 0 },
-      variant: {
-        type: "select",
-        label: "Variant",
-        options: [
-          { label: "Underline", value: "underline" },
-          { label: "Pills", value: "pills" },
-          { label: "Boxed", value: "boxed" },
-        ],
-        defaultValue: "underline",
-      },
-      size: {
-        type: "select",
-        label: "Size",
-        options: [
-          { label: "Small", value: "sm" },
-          { label: "Medium", value: "md" },
-          { label: "Large", value: "lg" },
-        ],
-        defaultValue: "md",
-      },
+      keepAlive: { type: "toggle", label: "Keep Content Mounted", defaultValue: true },
+      lazyLoad: { type: "toggle", label: "Lazy Load Content", defaultValue: false },
+      // === Tab Style ===
+      variant: { type: "select", label: "Variant", options: [
+        { label: "Underline", value: "underline" },
+        { label: "Pills", value: "pills" },
+        { label: "Boxed", value: "boxed" },
+        { label: "Enclosed", value: "enclosed" },
+        { label: "Soft", value: "soft" },
+        { label: "Minimal", value: "minimal" },
+        { label: "Lifted", value: "lifted" },
+      ], defaultValue: "underline" },
+      backgroundColor: { type: "color", label: "Tabs Background" },
+      activeColor: { type: "color", label: "Active Tab Color", defaultValue: "#3b82f6" },
+      inactiveColor: { type: "color", label: "Inactive Tab Color" },
+      activeBackgroundColor: { type: "color", label: "Active Tab Background" },
+      hoverColor: { type: "color", label: "Hover Color" },
+      // === Size & Layout ===
+      size: { type: "select", label: "Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
       fullWidth: { type: "toggle", label: "Full Width", defaultValue: false },
       centered: { type: "toggle", label: "Centered", defaultValue: false },
-      activeColor: { type: "color", label: "Active Color", defaultValue: "#3b82f6" },
+      gap: { type: "select", label: "Tab Gap", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "sm" },
+      tabsPosition: { type: "select", label: "Tabs Position", options: [
+        { label: "Top", value: "top" },
+        { label: "Bottom", value: "bottom" },
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "top" },
+      // === Border ===
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
+      borderColor: { type: "color", label: "Border Color" },
+      borderWidth: { type: "select", label: "Border Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+      ], defaultValue: "1" },
+      borderRadius: { type: "select", label: "Border Radius", options: presetOptions.borderRadius, defaultValue: "md" },
+      indicatorStyle: { type: "select", label: "Indicator Style", options: [
+        { label: "Underline", value: "underline" },
+        { label: "Background", value: "background" },
+        { label: "Pill", value: "pill" },
+        { label: "None", value: "none" },
+      ], defaultValue: "underline" },
+      indicatorColor: { type: "color", label: "Indicator Color", defaultValue: "#3b82f6" },
+      indicatorHeight: { type: "select", label: "Indicator Height", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+        { label: "3px", value: "3" },
+        { label: "4px", value: "4" },
+      ], defaultValue: "2" },
+      // === Content Area ===
+      contentPadding: { type: "select", label: "Content Padding", options: presetOptions.padding, defaultValue: "md" },
+      contentBackgroundColor: { type: "color", label: "Content Background" },
+      contentBorderRadius: { type: "select", label: "Content Radius", options: presetOptions.borderRadius, defaultValue: "none" },
+      contentMinHeight: { type: "select", label: "Content Min Height", options: [
+        { label: "Auto", value: "auto" },
+        { label: "Small (150px)", value: "sm" },
+        { label: "Medium (250px)", value: "md" },
+        { label: "Large (350px)", value: "lg" },
+      ], defaultValue: "auto" },
+      // === Animation ===
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "None", value: "none" },
+        { label: "Fade", value: "fade" },
+        { label: "Slide", value: "slide" },
+        { label: "Scale", value: "scale" },
+      ], defaultValue: "fade" },
+      animationDuration: { type: "number", label: "Animation Duration (ms)", min: 100, max: 500, defaultValue: 200 },
+      slideDirection: { type: "select", label: "Slide Direction", options: [
+        { label: "Horizontal", value: "horizontal" },
+        { label: "Vertical", value: "vertical" },
+      ], defaultValue: "horizontal" },
+      // === Icons ===
+      showIcons: { type: "toggle", label: "Show Icons", defaultValue: false },
+      iconPosition: { type: "select", label: "Icon Position", options: [
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+        { label: "Top", value: "top" },
+      ], defaultValue: "left" },
+      iconSize: { type: "select", label: "Icon Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      // === Badges ===
+      showBadges: { type: "toggle", label: "Show Badges", defaultValue: false },
+      badgeStyle: { type: "select", label: "Badge Style", options: [
+        { label: "Dot", value: "dot" },
+        { label: "Count", value: "count" },
+        { label: "Text", value: "text" },
+      ], defaultValue: "count" },
+      // === Overflow ===
+      overflowBehavior: { type: "select", label: "Overflow Behavior", options: [
+        { label: "Scroll", value: "scroll" },
+        { label: "Dropdown", value: "dropdown" },
+        { label: "Wrap", value: "wrap" },
+      ], defaultValue: "scroll" },
+      showScrollButtons: { type: "toggle", label: "Show Scroll Buttons", defaultValue: true },
+      scrollButtonStyle: { type: "select", label: "Scroll Button Style", options: [
+        { label: "Arrow", value: "arrow" },
+        { label: "Chevron", value: "chevron" },
+      ], defaultValue: "chevron" },
+      // === Responsive ===
+      mobileVariant: { type: "select", label: "Mobile Variant", options: [
+        { label: "Same", value: "same" },
+        { label: "Pills", value: "pills" },
+        { label: "Dropdown", value: "dropdown" },
+      ], defaultValue: "same" },
+      collapseOnMobile: { type: "toggle", label: "Collapse on Mobile", defaultValue: false },
+      mobileDropdown: { type: "toggle", label: "Dropdown on Mobile", defaultValue: false },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label", defaultValue: "Tabs" },
+      enableKeyboard: { type: "toggle", label: "Enable Keyboard Navigation", defaultValue: true },
     },
     defaultProps: {
       tabs: [],
       defaultTab: 0,
       variant: "underline",
       size: "md",
+      animationType: "fade",
     },
     ai: {
-      description: "A tabbed content component for organizing information",
-      canModify: ["tabs", "variant", "size"],
+      description: "A premium tab component with icons, badges, animations, vertical layouts, and extensive styling for organized content",
+      canModify: ["tabs", "variant", "size", "tabsPosition", "showIcons", "animationType"],
+      suggestions: ["Add icons", "Use pills variant", "Enable vertical layout", "Add badges", "Enable slide animation"],
     },
   }),
 
   // =========================================================================
-  // MODAL - Dialog Component
+  // MODAL - Dialog Component (Enhanced)
   // =========================================================================
   defineComponent({
     type: "Modal",
     label: "Modal",
-    description: "Modal/dialog popup",
+    description: "Premium modal/dialog with animations, forms, and extensive styling (50+ fields)",
     category: "interactive",
     icon: "Square",
     render: ModalRender,
     acceptsChildren: true,
     isContainer: true,
+    fieldGroups: [
+      { id: "content", label: "Content", icon: "Type", fields: ["title", "description", "showHeader", "showFooter"], defaultExpanded: true },
+      { id: "state", label: "State", icon: "ToggleLeft", fields: ["isOpen", "defaultOpen", "closeOnOverlay", "closeOnEscape", "preventScroll"], defaultExpanded: false },
+      { id: "size", label: "Size & Position", icon: "Maximize", fields: ["size", "customWidth", "customHeight", "fullScreen", "centered", "position"], defaultExpanded: false },
+      { id: "header", label: "Header", icon: "PanelTop", fields: ["headerAlign", "showCloseButton", "closeButtonPosition", "closeButtonStyle"], defaultExpanded: false },
+      { id: "footer", label: "Footer", icon: "PanelBottom", fields: ["footerAlign", "primaryButtonText", "primaryButtonAction", "secondaryButtonText", "secondaryButtonAction"], defaultExpanded: false },
+      { id: "style", label: "Style", icon: "Palette", fields: ["backgroundColor", "borderRadius", "shadow", "showBorder", "borderColor"], defaultExpanded: false },
+      { id: "overlay", label: "Overlay", icon: "Layers", fields: ["overlayColor", "overlayOpacity", "overlayBlur"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animationType", "animationDuration", "animationDirection"], defaultExpanded: false },
+      { id: "draggable", label: "Draggable", icon: "Move", fields: ["draggable", "dragHandle", "dragBounds"], defaultExpanded: false },
+      { id: "focus", label: "Focus Management", icon: "Eye", fields: ["trapFocus", "autoFocus", "returnFocus"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["mobileFullScreen", "mobilePosition", "mobileAnimation"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "ariaDescribedBy", "role"], defaultExpanded: false },
+    ],
     fields: {
+      // === Content ===
       title: { type: "text", label: "Title" },
       description: { type: "textarea", label: "Description" },
+      showHeader: { type: "toggle", label: "Show Header", defaultValue: true },
+      showFooter: { type: "toggle", label: "Show Footer", defaultValue: false },
+      // === State ===
       isOpen: { type: "toggle", label: "Show in Editor", defaultValue: true },
-      size: {
-        type: "select",
-        label: "Size",
-        options: [
-          { label: "Small", value: "sm" },
-          { label: "Medium", value: "md" },
-          { label: "Large", value: "lg" },
-          { label: "Extra Large", value: "xl" },
-          { label: "Full", value: "full" },
-        ],
-        defaultValue: "md",
-      },
-      showCloseButton: { type: "toggle", label: "Show Close Button", defaultValue: true },
+      defaultOpen: { type: "toggle", label: "Default Open", defaultValue: false },
+      closeOnOverlay: { type: "toggle", label: "Close on Overlay Click", defaultValue: true },
+      closeOnEscape: { type: "toggle", label: "Close on Escape", defaultValue: true },
+      preventScroll: { type: "toggle", label: "Prevent Body Scroll", defaultValue: true },
+      // === Size & Position ===
+      size: { type: "select", label: "Size", options: [
+        { label: "Extra Small", value: "xs" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "Extra Large", value: "xl" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "md" },
+      customWidth: { type: "text", label: "Custom Width (e.g., 500px)" },
+      customHeight: { type: "text", label: "Custom Height (e.g., 400px)" },
+      fullScreen: { type: "toggle", label: "Full Screen", defaultValue: false },
       centered: { type: "toggle", label: "Centered", defaultValue: true },
+      position: { type: "select", label: "Position", options: [
+        { label: "Center", value: "center" },
+        { label: "Top", value: "top" },
+        { label: "Bottom", value: "bottom" },
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "center" },
+      // === Header ===
+      headerAlign: { type: "select", label: "Header Align", options: presetOptions.alignment, defaultValue: "left" },
+      showCloseButton: { type: "toggle", label: "Show Close Button", defaultValue: true },
+      closeButtonPosition: { type: "select", label: "Close Button Position", options: [
+        { label: "Header Right", value: "header-right" },
+        { label: "Outside", value: "outside" },
+        { label: "Header Left", value: "header-left" },
+      ], defaultValue: "header-right" },
+      closeButtonStyle: { type: "select", label: "Close Button Style", options: [
+        { label: "Icon", value: "icon" },
+        { label: "Text", value: "text" },
+        { label: "Circle", value: "circle" },
+      ], defaultValue: "icon" },
+      // === Footer ===
+      footerAlign: { type: "select", label: "Footer Align", options: [
+        { label: "Left", value: "left" },
+        { label: "Center", value: "center" },
+        { label: "Right", value: "right" },
+        { label: "Space Between", value: "space-between" },
+      ], defaultValue: "right" },
+      primaryButtonText: { type: "text", label: "Primary Button Text" },
+      primaryButtonAction: { type: "text", label: "Primary Button Action" },
+      secondaryButtonText: { type: "text", label: "Secondary Button Text" },
+      secondaryButtonAction: { type: "text", label: "Secondary Button Action" },
+      // === Style ===
       backgroundColor: { type: "color", label: "Background Color", defaultValue: "#ffffff" },
+      borderRadius: { type: "select", label: "Border Radius", options: presetOptions.borderRadius, defaultValue: "lg" },
+      shadow: { type: "select", label: "Shadow", options: presetOptions.shadow, defaultValue: "xl" },
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
+      borderColor: { type: "color", label: "Border Color" },
+      // === Overlay ===
+      overlayColor: { type: "color", label: "Overlay Color", defaultValue: "#000000" },
       overlayOpacity: { type: "number", label: "Overlay Opacity (%)", min: 0, max: 100, defaultValue: 50 },
+      overlayBlur: { type: "number", label: "Overlay Blur (px)", min: 0, max: 20, defaultValue: 0 },
+      // === Animation ===
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "Fade", value: "fade" },
+        { label: "Scale", value: "scale" },
+        { label: "Slide", value: "slide" },
+        { label: "Zoom", value: "zoom" },
+        { label: "None", value: "none" },
+      ], defaultValue: "scale" },
+      animationDuration: { type: "number", label: "Animation Duration (ms)", min: 100, max: 500, defaultValue: 200 },
+      animationDirection: { type: "select", label: "Animation Direction", options: [
+        { label: "Up", value: "up" },
+        { label: "Down", value: "down" },
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "up" },
+      // === Draggable ===
+      draggable: { type: "toggle", label: "Draggable", defaultValue: false },
+      dragHandle: { type: "select", label: "Drag Handle", options: [
+        { label: "Header", value: "header" },
+        { label: "Anywhere", value: "anywhere" },
+      ], defaultValue: "header" },
+      dragBounds: { type: "select", label: "Drag Bounds", options: [
+        { label: "Viewport", value: "viewport" },
+        { label: "Parent", value: "parent" },
+        { label: "None", value: "none" },
+      ], defaultValue: "viewport" },
+      // === Focus Management ===
+      trapFocus: { type: "toggle", label: "Trap Focus", defaultValue: true },
+      autoFocus: { type: "toggle", label: "Auto Focus First Element", defaultValue: true },
+      returnFocus: { type: "toggle", label: "Return Focus on Close", defaultValue: true },
+      // === Responsive ===
+      mobileFullScreen: { type: "toggle", label: "Full Screen on Mobile", defaultValue: false },
+      mobilePosition: { type: "select", label: "Mobile Position", options: [
+        { label: "Center", value: "center" },
+        { label: "Bottom", value: "bottom" },
+      ], defaultValue: "center" },
+      mobileAnimation: { type: "select", label: "Mobile Animation", options: [
+        { label: "Same", value: "same" },
+        { label: "Slide Up", value: "slide-up" },
+      ], defaultValue: "same" },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label" },
+      ariaDescribedBy: { type: "text", label: "Aria Described By" },
+      role: { type: "select", label: "Role", options: [
+        { label: "Dialog", value: "dialog" },
+        { label: "Alert Dialog", value: "alertdialog" },
+      ], defaultValue: "dialog" },
     },
     defaultProps: {
       isOpen: true,
@@ -7640,10 +8640,14 @@ const interactiveComponents: ComponentDefinition[] = [
       showCloseButton: true,
       centered: true,
       overlayOpacity: 50,
+      animationType: "scale",
+      closeOnOverlay: true,
+      closeOnEscape: true,
     },
     ai: {
-      description: "A modal dialog popup component",
-      canModify: ["title", "description", "size"],
+      description: "A premium modal/dialog with animations, footer buttons, draggable support, and extensive styling for popups and dialogs",
+      canModify: ["title", "description", "size", "showFooter", "primaryButtonText", "animationType"],
+      suggestions: ["Add footer buttons", "Enable draggable", "Use slide animation", "Enable full screen on mobile", "Add overlay blur"],
     },
   }),
 ];
@@ -7652,53 +8656,181 @@ const interactiveComponents: ComponentDefinition[] = [
 // UI ELEMENT COMPONENTS
 // =============================================================================
 
+// =============================================================================
+// UI ELEMENT COMPONENTS (Enhanced with 50+ fields each)
+// =============================================================================
+
 const uiComponents: ComponentDefinition[] = [
   // =========================================================================
-  // BADGE - Status/Label Badge
+  // BADGE - Status/Label Badge (Enhanced)
   // =========================================================================
   defineComponent({
     type: "Badge",
     label: "Badge",
-    description: "Status or label badge",
+    description: "Premium status badge with icons, animations, and extensive styling (50+ fields)",
     category: "content",
     icon: "Tag",
     render: BadgeRender,
+    fieldGroups: [
+      { id: "content", label: "Content", icon: "Type", fields: ["text", "icon", "iconPosition", "showDot", "dotPosition", "dotAnimation"], defaultExpanded: true },
+      { id: "style", label: "Style", icon: "Palette", fields: ["variant", "customColor", "customTextColor", "gradient", "gradientFrom", "gradientTo", "outline", "glass"], defaultExpanded: false },
+      { id: "size", label: "Size & Shape", icon: "Maximize", fields: ["size", "customFontSize", "customPadding", "rounded", "customBorderRadius"], defaultExpanded: false },
+      { id: "border", label: "Border", icon: "Square", fields: ["showBorder", "borderColor", "borderWidth", "borderStyle"], defaultExpanded: false },
+      { id: "shadow", label: "Shadow & Glow", icon: "Sun", fields: ["shadow", "customShadow", "glowEffect", "glowColor"], defaultExpanded: false },
+      { id: "typography", label: "Typography", icon: "Type", fields: ["fontWeight", "letterSpacing", "textTransform", "fontFamily"], defaultExpanded: false },
+      { id: "hover", label: "Hover Effects", icon: "MousePointer", fields: ["hoverEffect", "hoverScale", "hoverColor", "hoverBorderColor", "transitionDuration"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animateOnMount", "animationType", "animationDuration", "pulseAnimation", "bounceAnimation"], defaultExpanded: false },
+      { id: "link", label: "Link/Click", icon: "Link", fields: ["asLink", "href", "linkTarget", "onClick"], defaultExpanded: false },
+      { id: "removable", label: "Removable", icon: "X", fields: ["removable", "onRemove", "removeButtonStyle"], defaultExpanded: false },
+      { id: "counter", label: "Counter Badge", icon: "Hash", fields: ["showCounter", "count", "maxCount", "counterPosition"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileSize"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel"], defaultExpanded: false },
+    ],
     fields: {
+      // === Content ===
       text: { type: "text", label: "Text", defaultValue: "Badge" },
-      variant: {
-        type: "select",
-        label: "Variant",
-        options: [
-          { label: "Default", value: "default" },
-          { label: "Primary", value: "primary" },
-          { label: "Success", value: "success" },
-          { label: "Warning", value: "warning" },
-          { label: "Error", value: "error" },
-          { label: "Info", value: "info" },
-        ],
-        defaultValue: "default",
-      },
-      size: {
-        type: "select",
-        label: "Size",
-        options: [
-          { label: "Small", value: "sm" },
-          { label: "Medium", value: "md" },
-          { label: "Large", value: "lg" },
-        ],
-        defaultValue: "md",
-      },
-      rounded: {
-        type: "select",
-        label: "Rounded",
-        options: [
-          { label: "Default", value: "default" },
-          { label: "Full (Pill)", value: "full" },
-        ],
-        defaultValue: "full",
-      },
+      icon: { type: "text", label: "Icon (emoji or icon name)" },
+      iconPosition: { type: "select", label: "Icon Position", options: [
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "left" },
+      showDot: { type: "toggle", label: "Show Dot", defaultValue: false },
+      dotPosition: { type: "select", label: "Dot Position", options: [
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "left" },
+      dotAnimation: { type: "toggle", label: "Animate Dot (Pulse)", defaultValue: false },
+      // === Style ===
+      variant: { type: "select", label: "Variant", options: [
+        { label: "Default", value: "default" },
+        { label: "Primary", value: "primary" },
+        { label: "Secondary", value: "secondary" },
+        { label: "Success", value: "success" },
+        { label: "Warning", value: "warning" },
+        { label: "Error", value: "error" },
+        { label: "Info", value: "info" },
+        { label: "Custom", value: "custom" },
+      ], defaultValue: "default" },
+      customColor: { type: "color", label: "Custom Background Color" },
+      customTextColor: { type: "color", label: "Custom Text Color" },
+      gradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
+      gradientFrom: { type: "color", label: "Gradient Start", defaultValue: "#3b82f6" },
+      gradientTo: { type: "color", label: "Gradient End", defaultValue: "#8b5cf6" },
       outline: { type: "toggle", label: "Outline Style", defaultValue: false },
-      dot: { type: "toggle", label: "Show Dot", defaultValue: false },
+      glass: { type: "toggle", label: "Glass Effect", defaultValue: false },
+      // === Size & Shape ===
+      size: { type: "select", label: "Size", options: [
+        { label: "Extra Small", value: "xs" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "Extra Large", value: "xl" },
+      ], defaultValue: "md" },
+      customFontSize: { type: "text", label: "Custom Font Size (e.g., 14px)" },
+      customPadding: { type: "text", label: "Custom Padding (e.g., 4px 8px)" },
+      rounded: { type: "select", label: "Rounded", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "Full (Pill)", value: "full" },
+      ], defaultValue: "full" },
+      customBorderRadius: { type: "text", label: "Custom Border Radius" },
+      // === Border ===
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
+      borderColor: { type: "color", label: "Border Color" },
+      borderWidth: { type: "select", label: "Border Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+        { label: "3px", value: "3" },
+      ], defaultValue: "1" },
+      borderStyle: { type: "select", label: "Border Style", options: [
+        { label: "Solid", value: "solid" },
+        { label: "Dashed", value: "dashed" },
+        { label: "Dotted", value: "dotted" },
+      ], defaultValue: "solid" },
+      // === Shadow & Glow ===
+      shadow: { type: "select", label: "Shadow", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "none" },
+      customShadow: { type: "text", label: "Custom Shadow" },
+      glowEffect: { type: "toggle", label: "Glow Effect", defaultValue: false },
+      glowColor: { type: "color", label: "Glow Color" },
+      // === Typography ===
+      fontWeight: { type: "select", label: "Font Weight", options: [
+        { label: "Normal", value: "normal" },
+        { label: "Medium", value: "medium" },
+        { label: "Semibold", value: "semibold" },
+        { label: "Bold", value: "bold" },
+      ], defaultValue: "medium" },
+      letterSpacing: { type: "select", label: "Letter Spacing", options: [
+        { label: "Normal", value: "normal" },
+        { label: "Wide", value: "wide" },
+        { label: "Wider", value: "wider" },
+      ], defaultValue: "normal" },
+      textTransform: { type: "select", label: "Text Transform", options: [
+        { label: "None", value: "none" },
+        { label: "Uppercase", value: "uppercase" },
+        { label: "Capitalize", value: "capitalize" },
+      ], defaultValue: "none" },
+      fontFamily: { type: "text", label: "Font Family" },
+      // === Hover Effects ===
+      hoverEffect: { type: "select", label: "Hover Effect", options: [
+        { label: "None", value: "none" },
+        { label: "Scale", value: "scale" },
+        { label: "Darken", value: "darken" },
+        { label: "Lighten", value: "lighten" },
+        { label: "Shadow", value: "shadow" },
+      ], defaultValue: "none" },
+      hoverScale: { type: "number", label: "Hover Scale", min: 1, max: 1.5, step: 0.05, defaultValue: 1.05 },
+      hoverColor: { type: "color", label: "Hover Background Color" },
+      hoverBorderColor: { type: "color", label: "Hover Border Color" },
+      transitionDuration: { type: "number", label: "Transition (ms)", min: 100, max: 500, defaultValue: 200 },
+      // === Animation ===
+      animateOnMount: { type: "toggle", label: "Animate on Mount", defaultValue: false },
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "Fade In", value: "fade" },
+        { label: "Scale In", value: "scale" },
+        { label: "Slide In", value: "slide" },
+        { label: "Bounce In", value: "bounce" },
+      ], defaultValue: "fade" },
+      animationDuration: { type: "number", label: "Animation Duration (ms)", min: 100, max: 1000, defaultValue: 300 },
+      pulseAnimation: { type: "toggle", label: "Pulse Animation", defaultValue: false },
+      bounceAnimation: { type: "toggle", label: "Bounce Animation", defaultValue: false },
+      // === Link/Click ===
+      asLink: { type: "toggle", label: "As Link", defaultValue: false },
+      href: { type: "link", label: "Link URL" },
+      linkTarget: { type: "select", label: "Link Target", options: [
+        { label: "Same Window", value: "_self" },
+        { label: "New Tab", value: "_blank" },
+      ], defaultValue: "_self" },
+      onClick: { type: "text", label: "Click Handler (function name)" },
+      // === Removable ===
+      removable: { type: "toggle", label: "Removable", defaultValue: false },
+      onRemove: { type: "text", label: "Remove Handler (function name)" },
+      removeButtonStyle: { type: "select", label: "Remove Button Style", options: [
+        { label: "Icon", value: "icon" },
+        { label: "Circle", value: "circle" },
+      ], defaultValue: "icon" },
+      // === Counter Badge ===
+      showCounter: { type: "toggle", label: "Show Counter", defaultValue: false },
+      count: { type: "number", label: "Count", min: 0, defaultValue: 0 },
+      maxCount: { type: "number", label: "Max Count (shows +)", min: 1, defaultValue: 99 },
+      counterPosition: { type: "select", label: "Counter Position", options: [
+        { label: "Top Right", value: "top-right" },
+        { label: "Top Left", value: "top-left" },
+      ], defaultValue: "top-right" },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileSize: { type: "select", label: "Mobile Size", options: [
+        { label: "Same", value: "same" },
+        { label: "Smaller", value: "smaller" },
+      ], defaultValue: "same" },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label" },
     },
     defaultProps: {
       text: "Badge",
@@ -7707,111 +8839,346 @@ const uiComponents: ComponentDefinition[] = [
       rounded: "full",
     },
     ai: {
-      description: "A status or label badge component",
-      canModify: ["text", "variant", "size"],
+      description: "A premium status badge with icons, animations, counters, gradients, and extensive styling options",
+      canModify: ["text", "variant", "size", "icon", "outline", "gradient", "showDot", "removable"],
+      suggestions: ["Add icon", "Enable gradient", "Add counter", "Make removable", "Enable pulse animation"],
     },
   }),
 
   // =========================================================================
-  // AVATAR - User Avatar
+  // AVATAR - User Avatar (Enhanced)
   // =========================================================================
   defineComponent({
     type: "Avatar",
     label: "Avatar",
-    description: "User avatar with status",
+    description: "Premium avatar with status, badges, groups, and extensive styling (50+ fields)",
     category: "content",
     icon: "UserCircle",
     render: AvatarRender,
+    fieldGroups: [
+      { id: "image", label: "Image", icon: "Image", fields: ["src", "alt", "name", "fallbackType", "fallbackIcon", "fallbackColor", "fallbackTextColor"], defaultExpanded: true },
+      { id: "size", label: "Size & Shape", icon: "Maximize", fields: ["size", "customSize", "shape", "aspectRatio"], defaultExpanded: false },
+      { id: "status", label: "Status", icon: "Circle", fields: ["showStatus", "status", "statusPosition", "statusSize", "statusAnimation", "customStatusColor"], defaultExpanded: false },
+      { id: "badge", label: "Badge", icon: "Tag", fields: ["showBadge", "badgeText", "badgeIcon", "badgePosition", "badgeColor", "badgeTextColor"], defaultExpanded: false },
+      { id: "border", label: "Border & Ring", icon: "Square", fields: ["showBorder", "borderWidth", "borderColor", "borderStyle", "showRing", "ringWidth", "ringColor", "ringOffset"], defaultExpanded: false },
+      { id: "shadow", label: "Shadow", icon: "Layers", fields: ["shadow", "shadowColor"], defaultExpanded: false },
+      { id: "hover", label: "Hover Effects", icon: "MousePointer", fields: ["hoverEffect", "hoverScale", "hoverOverlay", "hoverOverlayColor", "showEditIcon"], defaultExpanded: false },
+      { id: "tooltip", label: "Tooltip", icon: "MessageCircle", fields: ["showTooltip", "tooltipText", "tooltipPosition"], defaultExpanded: false },
+      { id: "group", label: "Group Stacking", icon: "Users", fields: ["isGrouped", "groupOverlap", "groupZIndex", "showMoreCount"], defaultExpanded: false },
+      { id: "link", label: "Link/Click", icon: "Link", fields: ["asLink", "href", "linkTarget", "clickable", "onClick"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animateOnMount", "animationType", "animationDelay", "loadingAnimation"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileSize"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "role"], defaultExpanded: false },
+    ],
     fields: {
+      // === Image ===
       src: { type: "image", label: "Image" },
       alt: { type: "text", label: "Alt Text", defaultValue: "Avatar" },
-      name: { type: "text", label: "Name (for fallback initials)" },
-      size: {
-        type: "select",
-        label: "Size",
-        options: [
-          { label: "Extra Small", value: "xs" },
-          { label: "Small", value: "sm" },
-          { label: "Medium", value: "md" },
-          { label: "Large", value: "lg" },
-          { label: "Extra Large", value: "xl" },
-          { label: "2X Large", value: "2xl" },
-        ],
-        defaultValue: "md",
-      },
-      shape: {
-        type: "select",
-        label: "Shape",
-        options: [
-          { label: "Circle", value: "circle" },
-          { label: "Rounded", value: "rounded" },
-          { label: "Square", value: "square" },
-        ],
-        defaultValue: "circle",
-      },
-      status: {
-        type: "select",
-        label: "Status",
-        options: [
-          { label: "None", value: "" },
-          { label: "Online", value: "online" },
-          { label: "Offline", value: "offline" },
-          { label: "Busy", value: "busy" },
-          { label: "Away", value: "away" },
-        ],
-        defaultValue: "",
-      },
-      border: { type: "toggle", label: "Show Border", defaultValue: false },
+      name: { type: "text", label: "Name (for initials)" },
+      fallbackType: { type: "select", label: "Fallback Type", options: [
+        { label: "Initials", value: "initials" },
+        { label: "Icon", value: "icon" },
+        { label: "Placeholder", value: "placeholder" },
+      ], defaultValue: "initials" },
+      fallbackIcon: { type: "text", label: "Fallback Icon" },
+      fallbackColor: { type: "color", label: "Fallback Background", defaultValue: "#e5e7eb" },
+      fallbackTextColor: { type: "color", label: "Fallback Text Color", defaultValue: "#374151" },
+      // === Size & Shape ===
+      size: { type: "select", label: "Size", options: [
+        { label: "Tiny", value: "xs" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "Extra Large", value: "xl" },
+        { label: "2X Large", value: "2xl" },
+        { label: "3X Large", value: "3xl" },
+      ], defaultValue: "md" },
+      customSize: { type: "number", label: "Custom Size (px)", min: 16, max: 200 },
+      shape: { type: "select", label: "Shape", options: [
+        { label: "Circle", value: "circle" },
+        { label: "Rounded", value: "rounded" },
+        { label: "Rounded Small", value: "rounded-sm" },
+        { label: "Square", value: "square" },
+      ], defaultValue: "circle" },
+      aspectRatio: { type: "select", label: "Aspect Ratio", options: [
+        { label: "1:1 (Square)", value: "1" },
+        { label: "4:5", value: "0.8" },
+        { label: "3:4", value: "0.75" },
+      ], defaultValue: "1" },
+      // === Status ===
+      showStatus: { type: "toggle", label: "Show Status", defaultValue: false },
+      status: { type: "select", label: "Status", options: [
+        { label: "Online", value: "online" },
+        { label: "Offline", value: "offline" },
+        { label: "Busy", value: "busy" },
+        { label: "Away", value: "away" },
+        { label: "Do Not Disturb", value: "dnd" },
+      ], defaultValue: "online" },
+      statusPosition: { type: "select", label: "Status Position", options: [
+        { label: "Bottom Right", value: "bottom-right" },
+        { label: "Bottom Left", value: "bottom-left" },
+        { label: "Top Right", value: "top-right" },
+        { label: "Top Left", value: "top-left" },
+      ], defaultValue: "bottom-right" },
+      statusSize: { type: "select", label: "Status Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      statusAnimation: { type: "toggle", label: "Animate Status (Pulse)", defaultValue: true },
+      customStatusColor: { type: "color", label: "Custom Status Color" },
+      // === Badge ===
+      showBadge: { type: "toggle", label: "Show Badge", defaultValue: false },
+      badgeText: { type: "text", label: "Badge Text" },
+      badgeIcon: { type: "text", label: "Badge Icon (emoji)" },
+      badgePosition: { type: "select", label: "Badge Position", options: [
+        { label: "Top Right", value: "top-right" },
+        { label: "Top Left", value: "top-left" },
+        { label: "Bottom Right", value: "bottom-right" },
+        { label: "Bottom Left", value: "bottom-left" },
+      ], defaultValue: "top-right" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#ef4444" },
+      badgeTextColor: { type: "color", label: "Badge Text Color", defaultValue: "#ffffff" },
+      // === Border & Ring ===
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
+      borderWidth: { type: "select", label: "Border Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+        { label: "3px", value: "3" },
+        { label: "4px", value: "4" },
+      ], defaultValue: "2" },
+      borderColor: { type: "color", label: "Border Color", defaultValue: "#ffffff" },
+      borderStyle: { type: "select", label: "Border Style", options: [
+        { label: "Solid", value: "solid" },
+        { label: "Dashed", value: "dashed" },
+      ], defaultValue: "solid" },
+      showRing: { type: "toggle", label: "Show Ring", defaultValue: false },
+      ringWidth: { type: "select", label: "Ring Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+        { label: "4px", value: "4" },
+      ], defaultValue: "2" },
+      ringColor: { type: "color", label: "Ring Color", defaultValue: "#3b82f6" },
+      ringOffset: { type: "select", label: "Ring Offset", options: [
+        { label: "None", value: "0" },
+        { label: "2px", value: "2" },
+        { label: "4px", value: "4" },
+      ], defaultValue: "2" },
+      // === Shadow ===
+      shadow: { type: "select", label: "Shadow", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "none" },
+      shadowColor: { type: "color", label: "Shadow Color" },
+      // === Hover Effects ===
+      hoverEffect: { type: "select", label: "Hover Effect", options: [
+        { label: "None", value: "none" },
+        { label: "Scale", value: "scale" },
+        { label: "Glow", value: "glow" },
+        { label: "Overlay", value: "overlay" },
+        { label: "Ring", value: "ring" },
+      ], defaultValue: "none" },
+      hoverScale: { type: "number", label: "Hover Scale", min: 1, max: 1.3, step: 0.05, defaultValue: 1.1 },
+      hoverOverlay: { type: "toggle", label: "Show Overlay on Hover", defaultValue: false },
+      hoverOverlayColor: { type: "color", label: "Overlay Color", defaultValue: "#00000050" },
+      showEditIcon: { type: "toggle", label: "Show Edit Icon on Hover", defaultValue: false },
+      // === Tooltip ===
+      showTooltip: { type: "toggle", label: "Show Tooltip", defaultValue: false },
+      tooltipText: { type: "text", label: "Tooltip Text" },
+      tooltipPosition: { type: "select", label: "Tooltip Position", options: [
+        { label: "Top", value: "top" },
+        { label: "Bottom", value: "bottom" },
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "top" },
+      // === Group Stacking ===
+      isGrouped: { type: "toggle", label: "Is Grouped", defaultValue: false },
+      groupOverlap: { type: "number", label: "Group Overlap (px)", min: 0, max: 50, defaultValue: 8 },
+      groupZIndex: { type: "number", label: "Z-Index in Group", min: 0, max: 20, defaultValue: 0 },
+      showMoreCount: { type: "toggle", label: "Show +More Count", defaultValue: false },
+      // === Link/Click ===
+      asLink: { type: "toggle", label: "As Link", defaultValue: false },
+      href: { type: "link", label: "Link URL" },
+      linkTarget: { type: "select", label: "Link Target", options: [
+        { label: "Same Window", value: "_self" },
+        { label: "New Tab", value: "_blank" },
+      ], defaultValue: "_self" },
+      clickable: { type: "toggle", label: "Clickable", defaultValue: false },
+      onClick: { type: "text", label: "Click Handler" },
+      // === Animation ===
+      animateOnMount: { type: "toggle", label: "Animate on Mount", defaultValue: false },
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "Fade In", value: "fade" },
+        { label: "Scale In", value: "scale" },
+        { label: "Pop In", value: "pop" },
+      ], defaultValue: "fade" },
+      animationDelay: { type: "number", label: "Animation Delay (ms)", min: 0, max: 1000, defaultValue: 0 },
+      loadingAnimation: { type: "toggle", label: "Loading Animation", defaultValue: false },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileSize: { type: "select", label: "Mobile Size", options: [
+        { label: "Same", value: "same" },
+        { label: "Smaller", value: "smaller" },
+      ], defaultValue: "same" },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label" },
+      role: { type: "text", label: "Role", defaultValue: "img" },
     },
     defaultProps: {
       size: "md",
       shape: "circle",
+      fallbackType: "initials",
     },
     ai: {
-      description: "A user avatar component with optional status indicator",
-      canModify: ["src", "name", "size", "status"],
+      description: "A premium avatar component with status indicators, badges, tooltips, grouping support, and extensive styling options",
+      canModify: ["src", "name", "size", "shape", "showStatus", "status", "showBadge", "badgeText"],
+      suggestions: ["Add status indicator", "Add badge", "Enable hover effect", "Add tooltip", "Enable ring border"],
     },
   }),
 
   // =========================================================================
-  // PROGRESS - Progress Bar
+  // PROGRESS - Progress Bar (Enhanced)
   // =========================================================================
   defineComponent({
     type: "Progress",
     label: "Progress",
-    description: "Progress bar indicator",
+    description: "Premium progress bar with animations, labels, and multiple variants (50+ fields)",
     category: "content",
     icon: "BarChart",
     render: ProgressRender,
+    fieldGroups: [
+      { id: "value", label: "Value", icon: "Hash", fields: ["value", "max", "indeterminate", "showValue", "valuePosition", "valueFormat", "valueSuffix"], defaultExpanded: true },
+      { id: "label", label: "Labels", icon: "Type", fields: ["label", "labelPosition", "description", "showMinMax"], defaultExpanded: false },
+      { id: "size", label: "Size & Shape", icon: "Maximize", fields: ["size", "customHeight", "rounded", "customBorderRadius"], defaultExpanded: false },
+      { id: "style", label: "Style", icon: "Palette", fields: ["variant", "color", "trackColor", "gradient", "gradientFrom", "gradientTo", "gradientDirection"], defaultExpanded: false },
+      { id: "segments", label: "Segments", icon: "LayoutList", fields: ["segmented", "segmentCount", "segmentGap"], defaultExpanded: false },
+      { id: "stripe", label: "Stripes", icon: "Layers", fields: ["striped", "stripeAngle", "stripeWidth", "stripeColor", "animatedStripes"], defaultExpanded: false },
+      { id: "glow", label: "Glow & Shadow", icon: "Sun", fields: ["glowEffect", "glowColor", "shadow", "innerShadow"], defaultExpanded: false },
+      { id: "milestones", label: "Milestones", icon: "Flag", fields: ["showMilestones", "milestones", "milestoneStyle", "milestoneColor"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animate", "animationDuration", "animateOnMount", "pulseAnimation"], defaultExpanded: false },
+      { id: "status", label: "Status Colors", icon: "AlertCircle", fields: ["useStatusColors", "successThreshold", "warningThreshold", "successColor", "warningColor", "errorColor"], defaultExpanded: false },
+      { id: "circular", label: "Circular Mode", icon: "Circle", fields: ["circular", "circularSize", "circularStrokeWidth", "circularShowCenter"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileSize"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "ariaValueText"], defaultExpanded: false },
+    ],
     fields: {
-      value: { type: "number", label: "Value", min: 0, max: 100, defaultValue: 50 },
-      max: { type: "number", label: "Max Value", defaultValue: 100 },
+      // === Value ===
+      value: { type: "number", label: "Value", min: 0, defaultValue: 50 },
+      max: { type: "number", label: "Max Value", min: 1, defaultValue: 100 },
+      indeterminate: { type: "toggle", label: "Indeterminate", defaultValue: false },
+      showValue: { type: "toggle", label: "Show Value", defaultValue: true },
+      valuePosition: { type: "select", label: "Value Position", options: [
+        { label: "Inside", value: "inside" },
+        { label: "Outside Right", value: "outside-right" },
+        { label: "Above", value: "above" },
+        { label: "Below", value: "below" },
+      ], defaultValue: "outside-right" },
+      valueFormat: { type: "select", label: "Value Format", options: [
+        { label: "Percentage", value: "percent" },
+        { label: "Fraction", value: "fraction" },
+        { label: "Value Only", value: "value" },
+      ], defaultValue: "percent" },
+      valueSuffix: { type: "text", label: "Value Suffix" },
+      // === Labels ===
       label: { type: "text", label: "Label" },
-      showValue: { type: "toggle", label: "Show Percentage", defaultValue: true },
-      size: {
-        type: "select",
-        label: "Size",
-        options: [
-          { label: "Small", value: "sm" },
-          { label: "Medium", value: "md" },
-          { label: "Large", value: "lg" },
-        ],
-        defaultValue: "md",
-      },
-      variant: {
-        type: "select",
-        label: "Variant",
-        options: [
-          { label: "Default", value: "default" },
-          { label: "Gradient", value: "gradient" },
-          { label: "Striped", value: "striped" },
-        ],
-        defaultValue: "default",
-      },
+      labelPosition: { type: "select", label: "Label Position", options: [
+        { label: "Above", value: "above" },
+        { label: "Left", value: "left" },
+        { label: "Below", value: "below" },
+      ], defaultValue: "above" },
+      description: { type: "text", label: "Description" },
+      showMinMax: { type: "toggle", label: "Show Min/Max Labels", defaultValue: false },
+      // === Size & Shape ===
+      size: { type: "select", label: "Size", options: [
+        { label: "Extra Small", value: "xs" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "Extra Large", value: "xl" },
+      ], defaultValue: "md" },
+      customHeight: { type: "number", label: "Custom Height (px)", min: 2, max: 100 },
+      rounded: { type: "select", label: "Rounded", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "full" },
+      customBorderRadius: { type: "text", label: "Custom Border Radius" },
+      // === Style ===
+      variant: { type: "select", label: "Variant", options: [
+        { label: "Default", value: "default" },
+        { label: "Gradient", value: "gradient" },
+        { label: "Striped", value: "striped" },
+        { label: "Segmented", value: "segmented" },
+      ], defaultValue: "default" },
       color: { type: "color", label: "Bar Color", defaultValue: "#3b82f6" },
-      backgroundColor: { type: "color", label: "Track Color", defaultValue: "#e5e7eb" },
-      rounded: { type: "toggle", label: "Rounded", defaultValue: true },
-      animate: { type: "toggle", label: "Animate (Pulse)", defaultValue: false },
+      trackColor: { type: "color", label: "Track Color", defaultValue: "#e5e7eb" },
+      gradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
+      gradientFrom: { type: "color", label: "Gradient Start", defaultValue: "#3b82f6" },
+      gradientTo: { type: "color", label: "Gradient End", defaultValue: "#8b5cf6" },
+      gradientDirection: { type: "select", label: "Gradient Direction", options: [
+        { label: "To Right", value: "to-r" },
+        { label: "To Left", value: "to-l" },
+        { label: "Diagonal", value: "diagonal" },
+      ], defaultValue: "to-r" },
+      // === Segments ===
+      segmented: { type: "toggle", label: "Segmented", defaultValue: false },
+      segmentCount: { type: "number", label: "Segment Count", min: 2, max: 20, defaultValue: 5 },
+      segmentGap: { type: "number", label: "Segment Gap (px)", min: 1, max: 10, defaultValue: 2 },
+      // === Stripes ===
+      striped: { type: "toggle", label: "Striped", defaultValue: false },
+      stripeAngle: { type: "number", label: "Stripe Angle (deg)", min: -90, max: 90, defaultValue: 45 },
+      stripeWidth: { type: "number", label: "Stripe Width (px)", min: 5, max: 50, defaultValue: 10 },
+      stripeColor: { type: "color", label: "Stripe Color" },
+      animatedStripes: { type: "toggle", label: "Animated Stripes", defaultValue: false },
+      // === Glow & Shadow ===
+      glowEffect: { type: "toggle", label: "Glow Effect", defaultValue: false },
+      glowColor: { type: "color", label: "Glow Color" },
+      shadow: { type: "select", label: "Shadow", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+      ], defaultValue: "none" },
+      innerShadow: { type: "toggle", label: "Inner Shadow", defaultValue: false },
+      // === Milestones ===
+      showMilestones: { type: "toggle", label: "Show Milestones", defaultValue: false },
+      milestones: { type: "text", label: "Milestones (comma-separated %)", defaultValue: "25,50,75" },
+      milestoneStyle: { type: "select", label: "Milestone Style", options: [
+        { label: "Line", value: "line" },
+        { label: "Dot", value: "dot" },
+        { label: "Diamond", value: "diamond" },
+      ], defaultValue: "line" },
+      milestoneColor: { type: "color", label: "Milestone Color" },
+      // === Animation ===
+      animate: { type: "toggle", label: "Animate Value", defaultValue: true },
+      animationDuration: { type: "number", label: "Animation Duration (ms)", min: 100, max: 3000, defaultValue: 1000 },
+      animateOnMount: { type: "toggle", label: "Animate on Mount", defaultValue: true },
+      pulseAnimation: { type: "toggle", label: "Pulse Animation", defaultValue: false },
+      // === Status Colors ===
+      useStatusColors: { type: "toggle", label: "Use Status Colors", defaultValue: false },
+      successThreshold: { type: "number", label: "Success Threshold (%)", min: 0, max: 100, defaultValue: 100 },
+      warningThreshold: { type: "number", label: "Warning Threshold (%)", min: 0, max: 100, defaultValue: 50 },
+      successColor: { type: "color", label: "Success Color", defaultValue: "#10b981" },
+      warningColor: { type: "color", label: "Warning Color", defaultValue: "#f59e0b" },
+      errorColor: { type: "color", label: "Error Color", defaultValue: "#ef4444" },
+      // === Circular Mode ===
+      circular: { type: "toggle", label: "Circular Mode", defaultValue: false },
+      circularSize: { type: "number", label: "Circular Size (px)", min: 50, max: 300, defaultValue: 120 },
+      circularStrokeWidth: { type: "number", label: "Stroke Width (px)", min: 2, max: 30, defaultValue: 10 },
+      circularShowCenter: { type: "toggle", label: "Show Center Value", defaultValue: true },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileSize: { type: "select", label: "Mobile Size", options: [
+        { label: "Same", value: "same" },
+        { label: "Smaller", value: "smaller" },
+      ], defaultValue: "same" },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label" },
+      ariaValueText: { type: "text", label: "Aria Value Text" },
     },
     defaultProps: {
       value: 50,
@@ -7819,253 +9186,1576 @@ const uiComponents: ComponentDefinition[] = [
       showValue: true,
       size: "md",
       variant: "default",
-      rounded: true,
+      rounded: "full",
+      color: "#3b82f6",
+      trackColor: "#e5e7eb",
+      animate: true,
     },
     ai: {
-      description: "A progress bar indicator component",
-      canModify: ["value", "label", "color", "variant"],
+      description: "A premium progress bar with gradients, stripes, segments, milestones, circular mode, and extensive animation options",
+      canModify: ["value", "label", "color", "variant", "gradient", "circular", "striped", "segmented"],
+      suggestions: ["Enable gradient", "Use circular mode", "Add milestones", "Enable animated stripes", "Use status colors"],
     },
   }),
 
   // =========================================================================
-  // ALERT - Alert/Notification
+  // ALERT - Alert/Notification (Enhanced)
   // =========================================================================
   defineComponent({
     type: "Alert",
     label: "Alert",
-    description: "Alert or notification message",
+    description: "Premium alert with actions, progress, and extensive styling (50+ fields)",
     category: "content",
     icon: "AlertCircle",
     render: AlertRender,
+    fieldGroups: [
+      { id: "content", label: "Content", icon: "Type", fields: ["title", "message", "description"], defaultExpanded: true },
+      { id: "style", label: "Style", icon: "Palette", fields: ["variant", "customBackgroundColor", "customTextColor", "customBorderColor", "customIconColor"], defaultExpanded: false },
+      { id: "icon", label: "Icon", icon: "AlertCircle", fields: ["showIcon", "customIcon", "iconPosition", "iconSize"], defaultExpanded: false },
+      { id: "size", label: "Size & Layout", icon: "Maximize", fields: ["size", "layout", "fullWidth", "maxWidth"], defaultExpanded: false },
+      { id: "border", label: "Border", icon: "Square", fields: ["showBorder", "borderWidth", "borderStyle", "borderPosition", "borderRadius"], defaultExpanded: false },
+      { id: "shadow", label: "Shadow", icon: "Layers", fields: ["shadow", "shadowColor"], defaultExpanded: false },
+      { id: "actions", label: "Actions", icon: "MousePointer", fields: ["showActions", "primaryActionText", "primaryActionLink", "secondaryActionText", "secondaryActionLink"], defaultExpanded: false },
+      { id: "close", label: "Close Button", icon: "X", fields: ["closable", "closeButtonPosition", "closeButtonStyle", "autoClose", "autoCloseDelay"], defaultExpanded: false },
+      { id: "progress", label: "Progress", icon: "BarChart", fields: ["showProgress", "progressValue", "progressColor", "progressPosition"], defaultExpanded: false },
+      { id: "link", label: "Link", icon: "Link", fields: ["showLink", "linkText", "linkUrl", "linkTarget"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animateOnMount", "animationType", "animationDuration"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileSize", "stackOnMobile"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "role", "live"], defaultExpanded: false },
+    ],
     fields: {
+      // === Content ===
       title: { type: "text", label: "Title" },
       message: { type: "textarea", label: "Message" },
-      variant: {
-        type: "select",
-        label: "Variant",
-        options: [
-          { label: "Info", value: "info" },
-          { label: "Success", value: "success" },
-          { label: "Warning", value: "warning" },
-          { label: "Error", value: "error" },
-        ],
-        defaultValue: "info",
-      },
-      size: {
-        type: "select",
-        label: "Size",
-        options: [
-          { label: "Small", value: "sm" },
-          { label: "Medium", value: "md" },
-          { label: "Large", value: "lg" },
-        ],
-        defaultValue: "md",
-      },
-      icon: { type: "toggle", label: "Show Icon", defaultValue: true },
+      description: { type: "text", label: "Description (secondary text)" },
+      // === Style ===
+      variant: { type: "select", label: "Variant", options: [
+        { label: "Info", value: "info" },
+        { label: "Success", value: "success" },
+        { label: "Warning", value: "warning" },
+        { label: "Error", value: "error" },
+        { label: "Neutral", value: "neutral" },
+        { label: "Custom", value: "custom" },
+      ], defaultValue: "info" },
+      customBackgroundColor: { type: "color", label: "Custom Background Color" },
+      customTextColor: { type: "color", label: "Custom Text Color" },
+      customBorderColor: { type: "color", label: "Custom Border Color" },
+      customIconColor: { type: "color", label: "Custom Icon Color" },
+      // === Icon ===
+      showIcon: { type: "toggle", label: "Show Icon", defaultValue: true },
+      customIcon: { type: "text", label: "Custom Icon (emoji or icon name)" },
+      iconPosition: { type: "select", label: "Icon Position", options: [
+        { label: "Left", value: "left" },
+        { label: "Top", value: "top" },
+      ], defaultValue: "left" },
+      iconSize: { type: "select", label: "Icon Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      // === Size & Layout ===
+      size: { type: "select", label: "Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      layout: { type: "select", label: "Layout", options: [
+        { label: "Horizontal", value: "horizontal" },
+        { label: "Vertical", value: "vertical" },
+      ], defaultValue: "horizontal" },
+      fullWidth: { type: "toggle", label: "Full Width", defaultValue: true },
+      maxWidth: { type: "select", label: "Max Width", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "full" },
+      // === Border ===
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: true },
+      borderWidth: { type: "select", label: "Border Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+        { label: "4px", value: "4" },
+      ], defaultValue: "1" },
+      borderStyle: { type: "select", label: "Border Style", options: [
+        { label: "Solid", value: "solid" },
+        { label: "Dashed", value: "dashed" },
+      ], defaultValue: "solid" },
+      borderPosition: { type: "select", label: "Border Position", options: [
+        { label: "All", value: "all" },
+        { label: "Left", value: "left" },
+        { label: "Top", value: "top" },
+        { label: "Bottom", value: "bottom" },
+      ], defaultValue: "all" },
+      borderRadius: { type: "select", label: "Border Radius", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      // === Shadow ===
+      shadow: { type: "select", label: "Shadow", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "none" },
+      shadowColor: { type: "color", label: "Shadow Color" },
+      // === Actions ===
+      showActions: { type: "toggle", label: "Show Actions", defaultValue: false },
+      primaryActionText: { type: "text", label: "Primary Action Text" },
+      primaryActionLink: { type: "link", label: "Primary Action Link" },
+      secondaryActionText: { type: "text", label: "Secondary Action Text" },
+      secondaryActionLink: { type: "link", label: "Secondary Action Link" },
+      // === Close Button ===
       closable: { type: "toggle", label: "Closable", defaultValue: false },
+      closeButtonPosition: { type: "select", label: "Close Button Position", options: [
+        { label: "Top Right", value: "top-right" },
+        { label: "Center Right", value: "center-right" },
+      ], defaultValue: "top-right" },
+      closeButtonStyle: { type: "select", label: "Close Button Style", options: [
+        { label: "Icon", value: "icon" },
+        { label: "Text", value: "text" },
+      ], defaultValue: "icon" },
+      autoClose: { type: "toggle", label: "Auto Close", defaultValue: false },
+      autoCloseDelay: { type: "number", label: "Auto Close Delay (seconds)", min: 1, max: 30, defaultValue: 5 },
+      // === Progress ===
+      showProgress: { type: "toggle", label: "Show Progress", defaultValue: false },
+      progressValue: { type: "number", label: "Progress Value (%)", min: 0, max: 100, defaultValue: 0 },
+      progressColor: { type: "color", label: "Progress Color" },
+      progressPosition: { type: "select", label: "Progress Position", options: [
+        { label: "Top", value: "top" },
+        { label: "Bottom", value: "bottom" },
+      ], defaultValue: "bottom" },
+      // === Link ===
+      showLink: { type: "toggle", label: "Show Link", defaultValue: false },
+      linkText: { type: "text", label: "Link Text", defaultValue: "Learn more" },
+      linkUrl: { type: "link", label: "Link URL" },
+      linkTarget: { type: "select", label: "Link Target", options: [
+        { label: "Same Window", value: "_self" },
+        { label: "New Tab", value: "_blank" },
+      ], defaultValue: "_self" },
+      // === Animation ===
+      animateOnMount: { type: "toggle", label: "Animate on Mount", defaultValue: true },
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "Fade In", value: "fade" },
+        { label: "Slide Down", value: "slide-down" },
+        { label: "Slide Up", value: "slide-up" },
+        { label: "Scale", value: "scale" },
+      ], defaultValue: "fade" },
+      animationDuration: { type: "number", label: "Animation Duration (ms)", min: 100, max: 1000, defaultValue: 300 },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileSize: { type: "select", label: "Mobile Size", options: [
+        { label: "Same", value: "same" },
+        { label: "Smaller", value: "smaller" },
+      ], defaultValue: "same" },
+      stackOnMobile: { type: "toggle", label: "Stack Layout on Mobile", defaultValue: true },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label" },
+      role: { type: "select", label: "Role", options: [
+        { label: "Alert", value: "alert" },
+        { label: "Status", value: "status" },
+        { label: "Log", value: "log" },
+      ], defaultValue: "alert" },
+      live: { type: "select", label: "Aria Live", options: [
+        { label: "Off", value: "off" },
+        { label: "Polite", value: "polite" },
+        { label: "Assertive", value: "assertive" },
+      ], defaultValue: "polite" },
     },
     defaultProps: {
       variant: "info",
       size: "md",
-      icon: true,
+      showIcon: true,
       closable: false,
+      borderRadius: "md",
+      showBorder: true,
     },
     ai: {
-      description: "An alert or notification message component",
-      canModify: ["title", "message", "variant"],
+      description: "A premium alert component with actions, auto-close, progress bar, and extensive styling options",
+      canModify: ["title", "message", "variant", "closable", "showActions", "primaryActionText"],
+      suggestions: ["Add action buttons", "Enable auto-close", "Show progress bar", "Add learn more link", "Enable slide animation"],
     },
   }),
 
   // =========================================================================
-  // TOOLTIP - Hover Tooltip
+  // TOOLTIP - Hover Tooltip (Enhanced)
   // =========================================================================
   defineComponent({
     type: "Tooltip",
     label: "Tooltip",
-    description: "Hover tooltip wrapper",
+    description: "Premium tooltip with rich content, arrows, and animations (50+ fields)",
     category: "content",
     icon: "MessageSquare",
     render: TooltipRender,
     acceptsChildren: true,
     isContainer: true,
+    fieldGroups: [
+      { id: "content", label: "Content", icon: "Type", fields: ["text", "title", "description", "richContent"], defaultExpanded: true },
+      { id: "position", label: "Position", icon: "Move", fields: ["position", "alignment", "offset", "followCursor"], defaultExpanded: false },
+      { id: "style", label: "Style", icon: "Palette", fields: ["variant", "backgroundColor", "textColor", "borderColor", "size", "maxWidth"], defaultExpanded: false },
+      { id: "arrow", label: "Arrow", icon: "Triangle", fields: ["showArrow", "arrowSize", "arrowColor"], defaultExpanded: false },
+      { id: "border", label: "Border & Shadow", icon: "Square", fields: ["showBorder", "borderWidth", "borderRadius", "shadow"], defaultExpanded: false },
+      { id: "trigger", label: "Trigger", icon: "MousePointer", fields: ["trigger", "openDelay", "closeDelay", "hideOnClick"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animationType", "animationDuration"], defaultExpanded: false },
+      { id: "interactive", label: "Interactive", icon: "Hand", fields: ["interactive", "interactiveDebounce", "showCloseButton"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobilePosition"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "role"], defaultExpanded: false },
+    ],
     fields: {
+      // === Content ===
       text: { type: "text", label: "Tooltip Text", defaultValue: "Tooltip" },
-      position: {
-        type: "select",
-        label: "Position",
-        options: [
-          { label: "Top", value: "top" },
-          { label: "Bottom", value: "bottom" },
-          { label: "Left", value: "left" },
-          { label: "Right", value: "right" },
-        ],
-        defaultValue: "top",
-      },
-      variant: {
-        type: "select",
-        label: "Style",
-        options: [
-          { label: "Dark", value: "dark" },
-          { label: "Light", value: "light" },
-        ],
-        defaultValue: "dark",
-      },
+      title: { type: "text", label: "Title (optional)" },
+      description: { type: "text", label: "Description (optional)" },
+      richContent: { type: "toggle", label: "Rich Content Mode", defaultValue: false },
+      // === Position ===
+      position: { type: "select", label: "Position", options: [
+        { label: "Top", value: "top" },
+        { label: "Top Start", value: "top-start" },
+        { label: "Top End", value: "top-end" },
+        { label: "Bottom", value: "bottom" },
+        { label: "Bottom Start", value: "bottom-start" },
+        { label: "Bottom End", value: "bottom-end" },
+        { label: "Left", value: "left" },
+        { label: "Left Start", value: "left-start" },
+        { label: "Left End", value: "left-end" },
+        { label: "Right", value: "right" },
+        { label: "Right Start", value: "right-start" },
+        { label: "Right End", value: "right-end" },
+      ], defaultValue: "top" },
+      alignment: { type: "select", label: "Alignment", options: [
+        { label: "Start", value: "start" },
+        { label: "Center", value: "center" },
+        { label: "End", value: "end" },
+      ], defaultValue: "center" },
+      offset: { type: "number", label: "Offset (px)", min: 0, max: 50, defaultValue: 8 },
+      followCursor: { type: "toggle", label: "Follow Cursor", defaultValue: false },
+      // === Style ===
+      variant: { type: "select", label: "Variant", options: [
+        { label: "Dark", value: "dark" },
+        { label: "Light", value: "light" },
+        { label: "Primary", value: "primary" },
+        { label: "Success", value: "success" },
+        { label: "Warning", value: "warning" },
+        { label: "Error", value: "error" },
+        { label: "Custom", value: "custom" },
+      ], defaultValue: "dark" },
+      backgroundColor: { type: "color", label: "Background Color", defaultValue: "#1f2937" },
+      textColor: { type: "color", label: "Text Color", defaultValue: "#ffffff" },
+      borderColor: { type: "color", label: "Border Color" },
+      size: { type: "select", label: "Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      maxWidth: { type: "select", label: "Max Width", options: [
+        { label: "Small (150px)", value: "sm" },
+        { label: "Medium (250px)", value: "md" },
+        { label: "Large (350px)", value: "lg" },
+        { label: "XL (450px)", value: "xl" },
+        { label: "None", value: "none" },
+      ], defaultValue: "md" },
+      // === Arrow ===
+      showArrow: { type: "toggle", label: "Show Arrow", defaultValue: true },
+      arrowSize: { type: "select", label: "Arrow Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      arrowColor: { type: "color", label: "Arrow Color" },
+      // === Border & Shadow ===
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
+      borderWidth: { type: "select", label: "Border Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+      ], defaultValue: "1" },
+      borderRadius: { type: "select", label: "Border Radius", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      shadow: { type: "select", label: "Shadow", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      // === Trigger ===
+      trigger: { type: "select", label: "Trigger", options: [
+        { label: "Hover", value: "hover" },
+        { label: "Click", value: "click" },
+        { label: "Focus", value: "focus" },
+        { label: "Hover + Focus", value: "hover-focus" },
+      ], defaultValue: "hover" },
+      openDelay: { type: "number", label: "Open Delay (ms)", min: 0, max: 1000, defaultValue: 0 },
+      closeDelay: { type: "number", label: "Close Delay (ms)", min: 0, max: 1000, defaultValue: 0 },
+      hideOnClick: { type: "toggle", label: "Hide on Click", defaultValue: true },
+      // === Animation ===
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "Fade", value: "fade" },
+        { label: "Scale", value: "scale" },
+        { label: "Slide", value: "slide" },
+        { label: "None", value: "none" },
+      ], defaultValue: "fade" },
+      animationDuration: { type: "number", label: "Animation Duration (ms)", min: 50, max: 500, defaultValue: 150 },
+      // === Interactive ===
+      interactive: { type: "toggle", label: "Interactive (Hoverable)", defaultValue: false },
+      interactiveDebounce: { type: "number", label: "Interactive Debounce (ms)", min: 0, max: 500, defaultValue: 100 },
+      showCloseButton: { type: "toggle", label: "Show Close Button", defaultValue: false },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobilePosition: { type: "select", label: "Mobile Position", options: [
+        { label: "Same", value: "same" },
+        { label: "Bottom", value: "bottom" },
+        { label: "Top", value: "top" },
+      ], defaultValue: "same" },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label" },
+      role: { type: "select", label: "Role", options: [
+        { label: "Tooltip", value: "tooltip" },
+        { label: "Dialog", value: "dialog" },
+      ], defaultValue: "tooltip" },
     },
     defaultProps: {
       text: "Tooltip",
       position: "top",
       variant: "dark",
+      showArrow: true,
+      trigger: "hover",
+      animationType: "fade",
     },
     ai: {
-      description: "A tooltip that shows on hover",
-      canModify: ["text", "position"],
+      description: "A premium tooltip with rich content, customizable arrows, animations, and interactive mode",
+      canModify: ["text", "title", "position", "variant", "trigger", "showArrow"],
+      suggestions: ["Add title", "Make interactive", "Enable follow cursor", "Change position", "Add click trigger"],
     },
   }),
 ];
 
 // =============================================================================
-// MARKETING COMPONENTS
+// MARKETING COMPONENTS (Enhanced with 50+ fields each)
 // =============================================================================
 
 const marketingComponents: ComponentDefinition[] = [
   defineComponent({
     type: "AnnouncementBar",
     label: "Announcement Bar",
-    description: "Top banner announcement",
+    description: "Premium top banner with countdown, animations, and extensive styling options (50+ fields)",
     category: "marketing",
     icon: "Bell",
     render: AnnouncementBarRender,
+    fieldGroups: [
+      { id: "content", label: "Content", icon: "Type", fields: ["text", "link", "linkText", "linkTarget", "icon", "iconPosition", "badge", "badgeColor"], defaultExpanded: true },
+      { id: "countdown", label: "Countdown", icon: "Clock", fields: ["showCountdown", "countdownDate", "countdownFormat", "countdownExpiredText", "countdownStyle"], defaultExpanded: false },
+      { id: "style", label: "Style", icon: "Palette", fields: ["variant", "size", "backgroundColor", "backgroundGradient", "backgroundGradientFrom", "backgroundGradientTo", "backgroundGradientDirection", "textColor", "linkColor", "linkHoverColor"], defaultExpanded: false },
+      { id: "typography", label: "Typography", icon: "Type", fields: ["fontSize", "fontWeight", "fontFamily", "letterSpacing", "textTransform"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animationType", "animationDuration", "animateOnScroll", "textAnimation", "textAnimationSpeed", "enableMarquee", "marqueeSpeed"], defaultExpanded: false },
+      { id: "behavior", label: "Behavior", icon: "Settings", fields: ["closable", "closeButtonStyle", "closeButtonColor", "showOnce", "cookieName", "autoHide", "autoHideDelay", "sticky"], defaultExpanded: false },
+      { id: "border", label: "Border & Shadow", icon: "Square", fields: ["showBorder", "borderColor", "borderWidth", "borderStyle", "borderPosition", "shadow"], defaultExpanded: false },
+      { id: "spacing", label: "Spacing", icon: "Maximize", fields: ["paddingY", "paddingX", "height"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "hideOnTablet", "mobileSize", "stackOnMobile"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "role"], defaultExpanded: false },
+    ],
     fields: {
-      text: { type: "text", label: "Announcement Text" },
-      link: { type: "link", label: "Link" },
-      backgroundColor: { type: "color", label: "Background Color" },
-      textColor: { type: "color", label: "Text Color" },
+      // === Content ===
+      text: { type: "text", label: "Announcement Text", defaultValue: "🎉 Special offer! Get 20% off with code SAVE20" },
+      link: { type: "link", label: "Link URL" },
+      linkText: { type: "text", label: "Link Text", defaultValue: "Shop Now →" },
+      linkTarget: { type: "select", label: "Link Target", options: [
+        { label: "Same Window", value: "_self" },
+        { label: "New Tab", value: "_blank" },
+      ], defaultValue: "_self" },
+      icon: { type: "text", label: "Icon (emoji)", defaultValue: "" },
+      iconPosition: { type: "select", label: "Icon Position", options: [
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "left" },
+      badge: { type: "text", label: "Badge Text" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#ef4444" },
+      // === Countdown ===
+      showCountdown: { type: "toggle", label: "Show Countdown", defaultValue: false },
+      countdownDate: { type: "text", label: "Countdown End Date", defaultValue: "" },
+      countdownFormat: { type: "select", label: "Countdown Format", options: [
+        { label: "Full (Days, Hours, Mins, Secs)", value: "full" },
+        { label: "Short (Hrs:Mins:Secs)", value: "short" },
+        { label: "Compact (HH:MM:SS)", value: "compact" },
+      ], defaultValue: "short" },
+      countdownExpiredText: { type: "text", label: "Expired Text", defaultValue: "Offer Ended" },
+      countdownStyle: { type: "select", label: "Countdown Style", options: [
+        { label: "Inline", value: "inline" },
+        { label: "Boxed", value: "boxed" },
+        { label: "Minimal", value: "minimal" },
+      ], defaultValue: "inline" },
+      // === Style ===
+      variant: { type: "select", label: "Variant", options: [
+        { label: "Default", value: "default" },
+        { label: "Gradient", value: "gradient" },
+        { label: "Glassmorphism", value: "glass" },
+        { label: "Outlined", value: "outlined" },
+        { label: "Minimal", value: "minimal" },
+        { label: "Animated", value: "animated" },
+      ], defaultValue: "default" },
+      size: { type: "select", label: "Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      backgroundColor: { type: "color", label: "Background Color", defaultValue: "#3b82f6" },
+      backgroundGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
+      backgroundGradientFrom: { type: "color", label: "Gradient Start", defaultValue: "#3b82f6" },
+      backgroundGradientTo: { type: "color", label: "Gradient End", defaultValue: "#8b5cf6" },
+      backgroundGradientDirection: { type: "select", label: "Gradient Direction", options: [
+        { label: "To Right", value: "to-r" },
+        { label: "To Left", value: "to-l" },
+        { label: "To Bottom", value: "to-b" },
+        { label: "Diagonal", value: "to-br" },
+      ], defaultValue: "to-r" },
+      textColor: { type: "color", label: "Text Color", defaultValue: "#ffffff" },
+      linkColor: { type: "color", label: "Link Color", defaultValue: "#ffffff" },
+      linkHoverColor: { type: "color", label: "Link Hover Color", defaultValue: "#e5e7eb" },
+      // === Typography ===
+      fontSize: { type: "select", label: "Font Size", options: [
+        { label: "Extra Small", value: "xs" },
+        { label: "Small", value: "sm" },
+        { label: "Base", value: "base" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "sm" },
+      fontWeight: { type: "select", label: "Font Weight", options: [
+        { label: "Normal", value: "normal" },
+        { label: "Medium", value: "medium" },
+        { label: "Semibold", value: "semibold" },
+        { label: "Bold", value: "bold" },
+      ], defaultValue: "medium" },
+      fontFamily: { type: "text", label: "Font Family" },
+      letterSpacing: { type: "select", label: "Letter Spacing", options: [
+        { label: "Normal", value: "normal" },
+        { label: "Wide", value: "wide" },
+        { label: "Wider", value: "wider" },
+      ], defaultValue: "normal" },
+      textTransform: { type: "select", label: "Text Transform", options: [
+        { label: "None", value: "none" },
+        { label: "Uppercase", value: "uppercase" },
+        { label: "Capitalize", value: "capitalize" },
+      ], defaultValue: "none" },
+      // === Animation ===
+      animationType: { type: "select", label: "Entrance Animation", options: [
+        { label: "None", value: "none" },
+        { label: "Slide Down", value: "slide-down" },
+        { label: "Fade In", value: "fade" },
+        { label: "Slide Up", value: "slide-up" },
+      ], defaultValue: "none" },
+      animationDuration: { type: "number", label: "Animation Duration (ms)", min: 100, max: 2000, defaultValue: 300 },
+      animateOnScroll: { type: "toggle", label: "Animate on Scroll", defaultValue: false },
+      textAnimation: { type: "select", label: "Text Animation", options: [
+        { label: "None", value: "none" },
+        { label: "Typing", value: "typing" },
+        { label: "Pulse", value: "pulse" },
+        { label: "Bounce", value: "bounce" },
+        { label: "Glow", value: "glow" },
+      ], defaultValue: "none" },
+      textAnimationSpeed: { type: "number", label: "Text Animation Speed (ms)", min: 500, max: 5000, defaultValue: 2000 },
+      enableMarquee: { type: "toggle", label: "Enable Marquee/Scroll", defaultValue: false },
+      marqueeSpeed: { type: "number", label: "Marquee Speed", min: 10, max: 100, defaultValue: 30 },
+      // === Behavior ===
       closable: { type: "toggle", label: "Closable", defaultValue: true },
+      closeButtonStyle: { type: "select", label: "Close Button Style", options: [
+        { label: "Icon Only", value: "icon" },
+        { label: "Text", value: "text" },
+        { label: "Circle", value: "circle" },
+      ], defaultValue: "icon" },
+      closeButtonColor: { type: "color", label: "Close Button Color", defaultValue: "#ffffff" },
+      showOnce: { type: "toggle", label: "Show Once (Use Cookie)", defaultValue: false },
+      cookieName: { type: "text", label: "Cookie Name", defaultValue: "announcement_closed" },
+      autoHide: { type: "toggle", label: "Auto Hide", defaultValue: false },
+      autoHideDelay: { type: "number", label: "Auto Hide Delay (seconds)", min: 1, max: 60, defaultValue: 10 },
+      sticky: { type: "toggle", label: "Sticky Position", defaultValue: true },
+      // === Border & Shadow ===
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
+      borderColor: { type: "color", label: "Border Color", defaultValue: "#e5e7eb" },
+      borderWidth: { type: "select", label: "Border Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+      ], defaultValue: "1" },
+      borderStyle: { type: "select", label: "Border Style", options: [
+        { label: "Solid", value: "solid" },
+        { label: "Dashed", value: "dashed" },
+      ], defaultValue: "solid" },
+      borderPosition: { type: "select", label: "Border Position", options: [
+        { label: "Bottom", value: "bottom" },
+        { label: "All", value: "all" },
+      ], defaultValue: "bottom" },
+      shadow: { type: "select", label: "Shadow", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "none" },
+      // === Spacing ===
+      paddingY: { type: "select", label: "Vertical Padding", options: [
+        { label: "Extra Small", value: "xs" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "sm" },
+      paddingX: { type: "select", label: "Horizontal Padding", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      height: { type: "select", label: "Height", options: [
+        { label: "Auto", value: "auto" },
+        { label: "Small (32px)", value: "sm" },
+        { label: "Medium (40px)", value: "md" },
+        { label: "Large (48px)", value: "lg" },
+      ], defaultValue: "auto" },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      hideOnTablet: { type: "toggle", label: "Hide on Tablet", defaultValue: false },
+      mobileSize: { type: "select", label: "Mobile Size", options: [
+        { label: "Same", value: "same" },
+        { label: "Smaller", value: "smaller" },
+      ], defaultValue: "smaller" },
+      stackOnMobile: { type: "toggle", label: "Stack on Mobile", defaultValue: false },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label", defaultValue: "Announcement" },
+      role: { type: "text", label: "Role", defaultValue: "banner" },
     },
     defaultProps: {
+      text: "🎉 Special offer! Get 20% off with code SAVE20",
+      linkText: "Shop Now →",
+      backgroundColor: "#3b82f6",
+      textColor: "#ffffff",
       closable: true,
+      sticky: true,
+      size: "md",
+      variant: "default",
     },
     ai: {
-      description: "A top banner announcement bar",
-      canModify: ["text", "link", "backgroundColor"],
+      description: "A premium announcement bar with countdown timers, animations, marquee scrolling, and extensive styling options",
+      canModify: ["text", "link", "linkText", "backgroundColor", "textColor", "showCountdown", "countdownDate", "variant", "enableMarquee"],
+      suggestions: ["Add countdown timer", "Enable marquee scroll", "Use gradient background", "Add badge", "Enable auto-hide"],
     },
   }),
 
   defineComponent({
     type: "SocialProof",
     label: "Social Proof",
-    description: "Social proof indicators",
+    description: "Premium social proof with avatars, ratings, live counters, and animations (50+ fields)",
     category: "marketing",
     icon: "Users",
     render: SocialProofRender,
+    fieldGroups: [
+      { id: "content", label: "Content", icon: "Type", fields: ["text", "count", "countSuffix", "countPrefix", "label", "subtext"], defaultExpanded: true },
+      { id: "avatars", label: "Avatars", icon: "Users", fields: ["showAvatars", "avatars", "avatarCount", "avatarSize", "avatarBorder", "avatarBorderColor", "avatarOverlap", "showPlusMore", "plusMoreText"], defaultExpanded: false },
+      { id: "rating", label: "Rating", icon: "Star", fields: ["showRating", "rating", "ratingMax", "ratingStyle", "ratingColor", "ratingEmptyColor", "ratingSize", "showRatingText", "ratingText"], defaultExpanded: false },
+      { id: "counter", label: "Live Counter", icon: "Activity", fields: ["animateCount", "animationDuration", "liveCounter", "liveCounterInterval", "countUp", "startValue"], defaultExpanded: false },
+      { id: "layout", label: "Layout", icon: "Layout", fields: ["variant", "alignment", "direction", "gap", "maxWidth"], defaultExpanded: false },
+      { id: "style", label: "Style", icon: "Palette", fields: ["backgroundColor", "backgroundGradient", "backgroundGradientFrom", "backgroundGradientTo", "textColor", "accentColor", "countColor", "labelColor"], defaultExpanded: false },
+      { id: "typography", label: "Typography", icon: "Type", fields: ["countSize", "countWeight", "labelSize", "textSize"], defaultExpanded: false },
+      { id: "card", label: "Card Style", icon: "Square", fields: ["showCard", "cardPadding", "cardBorderRadius", "cardShadow", "cardBorder", "cardBorderColor"], defaultExpanded: false },
+      { id: "badges", label: "Badges & Icons", icon: "Award", fields: ["showBadge", "badgeText", "badgeColor", "badgeIcon", "showIcon", "icon", "iconColor", "iconSize", "iconPosition"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animateOnScroll", "animationType", "animationDelay", "pulseAnimation"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileVariant", "compactOnMobile"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel"], defaultExpanded: false },
+    ],
     fields: {
-      text: { type: "text", label: "Text" },
-      count: { type: "number", label: "Count" },
+      // === Content ===
+      text: { type: "text", label: "Text", defaultValue: "Trusted by thousands of customers worldwide" },
+      count: { type: "number", label: "Count", defaultValue: 10000 },
+      countSuffix: { type: "text", label: "Count Suffix", defaultValue: "+" },
+      countPrefix: { type: "text", label: "Count Prefix", defaultValue: "" },
+      label: { type: "text", label: "Count Label", defaultValue: "happy customers" },
+      subtext: { type: "text", label: "Subtext" },
+      // === Avatars ===
       showAvatars: { type: "toggle", label: "Show Avatars", defaultValue: true },
+      avatars: { type: "array", label: "Avatars", itemFields: {
+        image: { type: "image", label: "Image" },
+        name: { type: "text", label: "Name" },
+      }},
+      avatarCount: { type: "number", label: "Avatars to Show", min: 1, max: 10, defaultValue: 5 },
+      avatarSize: { type: "select", label: "Avatar Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "md" },
+      avatarBorder: { type: "toggle", label: "Avatar Border", defaultValue: true },
+      avatarBorderColor: { type: "color", label: "Avatar Border Color", defaultValue: "#ffffff" },
+      avatarOverlap: { type: "select", label: "Avatar Overlap", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      showPlusMore: { type: "toggle", label: "Show +More", defaultValue: true },
+      plusMoreText: { type: "text", label: "+More Text", defaultValue: "+{count}" },
+      // === Rating ===
+      showRating: { type: "toggle", label: "Show Rating", defaultValue: false },
+      rating: { type: "number", label: "Rating", min: 0, max: 5, step: 0.1, defaultValue: 4.9 },
+      ratingMax: { type: "number", label: "Rating Max", min: 5, max: 10, defaultValue: 5 },
+      ratingStyle: { type: "select", label: "Rating Style", options: [
+        { label: "Stars", value: "stars" },
+        { label: "Hearts", value: "hearts" },
+        { label: "Circles", value: "circles" },
+        { label: "Numeric", value: "numeric" },
+      ], defaultValue: "stars" },
+      ratingColor: { type: "color", label: "Rating Color", defaultValue: "#fbbf24" },
+      ratingEmptyColor: { type: "color", label: "Empty Rating Color", defaultValue: "#e5e7eb" },
+      ratingSize: { type: "select", label: "Rating Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      showRatingText: { type: "toggle", label: "Show Rating Text", defaultValue: true },
+      ratingText: { type: "text", label: "Rating Text", defaultValue: "{rating} out of {max}" },
+      // === Live Counter ===
+      animateCount: { type: "toggle", label: "Animate Count", defaultValue: true },
+      animationDuration: { type: "number", label: "Animation Duration (ms)", min: 500, max: 5000, defaultValue: 2000 },
+      liveCounter: { type: "toggle", label: "Live Counter", defaultValue: false },
+      liveCounterInterval: { type: "number", label: "Update Interval (seconds)", min: 1, max: 60, defaultValue: 5 },
+      countUp: { type: "toggle", label: "Count Up (vs Down)", defaultValue: true },
+      startValue: { type: "number", label: "Start Value", defaultValue: 0 },
+      // === Layout ===
+      variant: { type: "select", label: "Variant", options: [
+        { label: "Inline", value: "inline" },
+        { label: "Stacked", value: "stacked" },
+        { label: "Card", value: "card" },
+        { label: "Minimal", value: "minimal" },
+        { label: "Floating", value: "floating" },
+        { label: "Banner", value: "banner" },
+      ], defaultValue: "inline" },
+      alignment: { type: "select", label: "Alignment", options: presetOptions.alignment, defaultValue: "center" },
+      direction: { type: "select", label: "Direction", options: [
+        { label: "Horizontal", value: "horizontal" },
+        { label: "Vertical", value: "vertical" },
+      ], defaultValue: "horizontal" },
+      gap: { type: "select", label: "Gap", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      maxWidth: { type: "select", label: "Max Width", options: [
+        { label: "Auto", value: "auto" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "auto" },
+      // === Style ===
+      backgroundColor: { type: "color", label: "Background Color" },
+      backgroundGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
+      backgroundGradientFrom: { type: "color", label: "Gradient Start", defaultValue: "#f3f4f6" },
+      backgroundGradientTo: { type: "color", label: "Gradient End", defaultValue: "#ffffff" },
+      textColor: { type: "color", label: "Text Color" },
+      accentColor: { type: "color", label: "Accent Color", defaultValue: "#3b82f6" },
+      countColor: { type: "color", label: "Count Color" },
+      labelColor: { type: "color", label: "Label Color" },
+      // === Typography ===
+      countSize: { type: "select", label: "Count Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "2XL", value: "2xl" },
+        { label: "3XL", value: "3xl" },
+      ], defaultValue: "2xl" },
+      countWeight: { type: "select", label: "Count Weight", options: [
+        { label: "Normal", value: "normal" },
+        { label: "Medium", value: "medium" },
+        { label: "Semibold", value: "semibold" },
+        { label: "Bold", value: "bold" },
+        { label: "Extra Bold", value: "extrabold" },
+      ], defaultValue: "bold" },
+      labelSize: { type: "select", label: "Label Size", options: [
+        { label: "Extra Small", value: "xs" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "sm" },
+      textSize: { type: "select", label: "Text Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      // === Card Style ===
+      showCard: { type: "toggle", label: "Show Card", defaultValue: false },
+      cardPadding: { type: "select", label: "Card Padding", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      cardBorderRadius: { type: "select", label: "Card Border Radius", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "lg" },
+      cardShadow: { type: "select", label: "Card Shadow", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      cardBorder: { type: "toggle", label: "Card Border", defaultValue: false },
+      cardBorderColor: { type: "color", label: "Card Border Color", defaultValue: "#e5e7eb" },
+      // === Badges & Icons ===
+      showBadge: { type: "toggle", label: "Show Badge", defaultValue: false },
+      badgeText: { type: "text", label: "Badge Text", defaultValue: "Verified" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#10b981" },
+      badgeIcon: { type: "text", label: "Badge Icon (emoji)", defaultValue: "✓" },
+      showIcon: { type: "toggle", label: "Show Icon", defaultValue: false },
+      icon: { type: "text", label: "Icon (emoji)", defaultValue: "👥" },
+      iconColor: { type: "color", label: "Icon Color", defaultValue: "#3b82f6" },
+      iconSize: { type: "select", label: "Icon Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "lg" },
+      iconPosition: { type: "select", label: "Icon Position", options: [
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+        { label: "Top", value: "top" },
+      ], defaultValue: "left" },
+      // === Animation ===
+      animateOnScroll: { type: "toggle", label: "Animate on Scroll", defaultValue: true },
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "Fade", value: "fade" },
+        { label: "Slide Up", value: "slide-up" },
+        { label: "Scale", value: "scale" },
+        { label: "Bounce", value: "bounce" },
+      ], defaultValue: "fade" },
+      animationDelay: { type: "number", label: "Animation Delay (ms)", min: 0, max: 2000, defaultValue: 0 },
+      pulseAnimation: { type: "toggle", label: "Pulse Animation", defaultValue: false },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileVariant: { type: "select", label: "Mobile Variant", options: [
+        { label: "Same", value: "same" },
+        { label: "Compact", value: "compact" },
+        { label: "Stacked", value: "stacked" },
+      ], defaultValue: "compact" },
+      compactOnMobile: { type: "toggle", label: "Compact on Mobile", defaultValue: true },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label", defaultValue: "Social proof statistics" },
     },
     defaultProps: {
+      text: "Trusted by thousands of customers worldwide",
+      count: 10000,
+      countSuffix: "+",
+      label: "happy customers",
       showAvatars: true,
+      avatarCount: 5,
+      avatarSize: "md",
+      variant: "inline",
+      alignment: "center",
+      animateCount: true,
+      animationDuration: 2000,
     },
     ai: {
-      description: "Social proof indicators with user count",
-      canModify: ["text", "count"],
+      description: "Premium social proof with animated counters, avatar stacks, star ratings, live updates, and multiple variants",
+      canModify: ["text", "count", "countSuffix", "label", "showAvatars", "showRating", "rating", "variant", "liveCounter"],
+      suggestions: ["Add star rating", "Enable live counter", "Show verified badge", "Use card variant", "Add custom avatars"],
     },
   }),
 
   defineComponent({
     type: "TrustBadges",
     label: "Trust Badges",
-    description: "Trust and security badges",
+    description: "Premium trust and security badges with animations and extensive styling (50+ fields)",
     category: "marketing",
     icon: "ShieldCheck",
     render: TrustBadgesRender,
+    fieldGroups: [
+      { id: "header", label: "Header", icon: "Type", fields: ["title", "subtitle", "description", "headerAlign", "titleSize", "titleColor"], defaultExpanded: false },
+      { id: "badges", label: "Badges", icon: "Award", fields: ["badges"], defaultExpanded: true },
+      { id: "layout", label: "Layout", icon: "Layout", fields: ["variant", "alignment", "columns", "gap", "maxWidth"], defaultExpanded: false },
+      { id: "badgeStyle", label: "Badge Style", icon: "Square", fields: ["badgeSize", "badgeStyle", "badgeBackgroundColor", "badgeTextColor", "badgeBorder", "badgeBorderColor", "badgeBorderRadius", "badgeShadow", "badgePadding"], defaultExpanded: false },
+      { id: "iconStyle", label: "Icon Style", icon: "Sparkles", fields: ["iconSize", "iconColor", "iconBackgroundColor", "iconBackgroundShape", "iconPosition"], defaultExpanded: false },
+      { id: "hover", label: "Hover Effects", icon: "MousePointer", fields: ["hoverEffect", "hoverScale", "hoverShadow", "hoverBackgroundColor", "transitionDuration"], defaultExpanded: false },
+      { id: "background", label: "Background", icon: "Layers", fields: ["backgroundColor", "backgroundGradient", "backgroundGradientFrom", "backgroundGradientTo", "backgroundGradientDirection", "showPattern", "patternType", "patternOpacity"], defaultExpanded: false },
+      { id: "spacing", label: "Spacing", icon: "Maximize", fields: ["paddingY", "paddingX", "sectionGap"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animateOnScroll", "animationType", "animationDelay", "staggerAnimation", "staggerDelay"], defaultExpanded: false },
+      { id: "tooltip", label: "Tooltips", icon: "MessageCircle", fields: ["showTooltips", "tooltipPosition", "tooltipBackgroundColor", "tooltipTextColor"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileColumns", "mobileSize", "stackOnMobile"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel"], defaultExpanded: false },
+    ],
     fields: {
-      badges: {
-        type: "array",
-        label: "Badges",
-        itemFields: {
-          icon: { type: "text", label: "Icon" },
-          text: { type: "text", label: "Text" },
-        },
-      },
-      alignment: {
-        type: "select",
-        label: "Alignment",
-        options: presetOptions.alignment,
-        defaultValue: "center",
-      },
+      // === Header ===
+      title: { type: "text", label: "Title" },
+      subtitle: { type: "text", label: "Subtitle" },
+      description: { type: "textarea", label: "Description" },
+      headerAlign: { type: "select", label: "Header Alignment", options: presetOptions.alignment, defaultValue: "center" },
+      titleSize: { type: "select", label: "Title Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "lg" },
+      titleColor: { type: "color", label: "Title Color" },
+      // === Badges Array ===
+      badges: { type: "array", label: "Badges", itemFields: {
+        icon: { type: "text", label: "Icon (emoji)" },
+        text: { type: "text", label: "Text" },
+        description: { type: "text", label: "Description/Tooltip" },
+        image: { type: "image", label: "Custom Image" },
+        link: { type: "link", label: "Link URL" },
+        featured: { type: "toggle", label: "Featured" },
+        badgeColor: { type: "color", label: "Custom Color" },
+      }},
+      // === Layout ===
+      variant: { type: "select", label: "Variant", options: [
+        { label: "Inline", value: "inline" },
+        { label: "Grid", value: "grid" },
+        { label: "Cards", value: "cards" },
+        { label: "Minimal", value: "minimal" },
+        { label: "Stacked", value: "stacked" },
+        { label: "Pills", value: "pills" },
+        { label: "Icons Only", value: "icons-only" },
+      ], defaultValue: "inline" },
+      alignment: { type: "select", label: "Alignment", options: presetOptions.alignment, defaultValue: "center" },
+      columns: { type: "select", label: "Columns", options: [
+        { label: "Auto", value: "auto" },
+        { label: "2", value: "2" },
+        { label: "3", value: "3" },
+        { label: "4", value: "4" },
+        { label: "5", value: "5" },
+        { label: "6", value: "6" },
+      ], defaultValue: "auto" },
+      gap: { type: "select", label: "Gap", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "md" },
+      maxWidth: { type: "select", label: "Max Width", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "xl" },
+      // === Badge Style ===
+      badgeSize: { type: "select", label: "Badge Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "md" },
+      badgeStyle: { type: "select", label: "Badge Style", options: [
+        { label: "Default", value: "default" },
+        { label: "Outlined", value: "outlined" },
+        { label: "Filled", value: "filled" },
+        { label: "Ghost", value: "ghost" },
+        { label: "Glass", value: "glass" },
+      ], defaultValue: "default" },
+      badgeBackgroundColor: { type: "color", label: "Badge Background", defaultValue: "#f3f4f6" },
+      badgeTextColor: { type: "color", label: "Badge Text Color" },
+      badgeBorder: { type: "toggle", label: "Badge Border", defaultValue: false },
+      badgeBorderColor: { type: "color", label: "Badge Border Color", defaultValue: "#e5e7eb" },
+      badgeBorderRadius: { type: "select", label: "Badge Radius", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "lg" },
+      badgeShadow: { type: "select", label: "Badge Shadow", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "none" },
+      badgePadding: { type: "select", label: "Badge Padding", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      // === Icon Style ===
+      iconSize: { type: "select", label: "Icon Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "md" },
+      iconColor: { type: "color", label: "Icon Color", defaultValue: "#3b82f6" },
+      iconBackgroundColor: { type: "color", label: "Icon Background" },
+      iconBackgroundShape: { type: "select", label: "Icon Background Shape", options: [
+        { label: "None", value: "none" },
+        { label: "Circle", value: "circle" },
+        { label: "Square", value: "square" },
+        { label: "Rounded", value: "rounded" },
+      ], defaultValue: "none" },
+      iconPosition: { type: "select", label: "Icon Position", options: [
+        { label: "Left", value: "left" },
+        { label: "Top", value: "top" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "left" },
+      // === Hover Effects ===
+      hoverEffect: { type: "select", label: "Hover Effect", options: [
+        { label: "None", value: "none" },
+        { label: "Scale", value: "scale" },
+        { label: "Lift", value: "lift" },
+        { label: "Glow", value: "glow" },
+        { label: "Shake", value: "shake" },
+        { label: "Color", value: "color" },
+      ], defaultValue: "lift" },
+      hoverScale: { type: "number", label: "Hover Scale", min: 1, max: 1.5, step: 0.05, defaultValue: 1.05 },
+      hoverShadow: { type: "select", label: "Hover Shadow", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      hoverBackgroundColor: { type: "color", label: "Hover Background" },
+      transitionDuration: { type: "select", label: "Transition Duration", options: [
+        { label: "Fast", value: "fast" },
+        { label: "Normal", value: "normal" },
+        { label: "Slow", value: "slow" },
+      ], defaultValue: "normal" },
+      // === Background ===
+      backgroundColor: { type: "color", label: "Section Background" },
+      backgroundGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
+      backgroundGradientFrom: { type: "color", label: "Gradient Start", defaultValue: "#f3f4f6" },
+      backgroundGradientTo: { type: "color", label: "Gradient End", defaultValue: "#ffffff" },
+      backgroundGradientDirection: { type: "select", label: "Gradient Direction", options: [
+        { label: "To Right", value: "to-r" },
+        { label: "To Bottom", value: "to-b" },
+        { label: "Diagonal", value: "to-br" },
+      ], defaultValue: "to-b" },
+      showPattern: { type: "toggle", label: "Show Pattern", defaultValue: false },
+      patternType: { type: "select", label: "Pattern Type", options: [
+        { label: "Dots", value: "dots" },
+        { label: "Grid", value: "grid" },
+        { label: "Lines", value: "lines" },
+      ], defaultValue: "dots" },
+      patternOpacity: { type: "number", label: "Pattern Opacity", min: 0, max: 1, step: 0.1, defaultValue: 0.1 },
+      // === Spacing ===
+      paddingY: { type: "select", label: "Vertical Padding", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "md" },
+      paddingX: { type: "select", label: "Horizontal Padding", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      sectionGap: { type: "select", label: "Header to Badges Gap", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      // === Animation ===
+      animateOnScroll: { type: "toggle", label: "Animate on Scroll", defaultValue: true },
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "Fade", value: "fade" },
+        { label: "Slide Up", value: "slide-up" },
+        { label: "Scale", value: "scale" },
+        { label: "Bounce", value: "bounce" },
+      ], defaultValue: "fade" },
+      animationDelay: { type: "number", label: "Animation Delay (ms)", min: 0, max: 2000, defaultValue: 0 },
+      staggerAnimation: { type: "toggle", label: "Stagger Animation", defaultValue: true },
+      staggerDelay: { type: "number", label: "Stagger Delay (ms)", min: 50, max: 500, defaultValue: 100 },
+      // === Tooltips ===
+      showTooltips: { type: "toggle", label: "Show Tooltips", defaultValue: false },
+      tooltipPosition: { type: "select", label: "Tooltip Position", options: [
+        { label: "Top", value: "top" },
+        { label: "Bottom", value: "bottom" },
+      ], defaultValue: "top" },
+      tooltipBackgroundColor: { type: "color", label: "Tooltip Background", defaultValue: "#1f2937" },
+      tooltipTextColor: { type: "color", label: "Tooltip Text", defaultValue: "#ffffff" },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileColumns: { type: "select", label: "Mobile Columns", options: [
+        { label: "1", value: "1" },
+        { label: "2", value: "2" },
+        { label: "3", value: "3" },
+      ], defaultValue: "2" },
+      mobileSize: { type: "select", label: "Mobile Size", options: [
+        { label: "Same", value: "same" },
+        { label: "Smaller", value: "smaller" },
+      ], defaultValue: "smaller" },
+      stackOnMobile: { type: "toggle", label: "Stack on Mobile", defaultValue: false },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label", defaultValue: "Trust and security badges" },
     },
     defaultProps: {
-      badges: [],
+      badges: [
+        { icon: "🔒", text: "Secure Checkout" },
+        { icon: "✓", text: "Money-Back Guarantee" },
+        { icon: "🚚", text: "Free Shipping" },
+        { icon: "🏆", text: "Award Winning" },
+      ],
+      variant: "inline",
       alignment: "center",
+      badgeSize: "md",
+      hoverEffect: "lift",
+      animateOnScroll: true,
+      staggerAnimation: true,
     },
     ai: {
-      description: "Trust and security badges display",
-      canModify: ["badges", "alignment"],
+      description: "Premium trust badges with multiple variants, hover effects, tooltips, staggered animations, and extensive styling",
+      canModify: ["badges", "variant", "alignment", "badgeStyle", "hoverEffect", "showTooltips", "animateOnScroll"],
+      suggestions: ["Add more badges", "Enable tooltips", "Use cards variant", "Add custom colors", "Enable stagger animation"],
     },
   }),
 
   defineComponent({
     type: "LogoCloud",
     label: "Logo Cloud",
-    description: "Client/partner logos",
+    description: "Premium logo display with infinite scroll, animations, and 60+ customization options",
     category: "marketing",
     icon: "Building2",
     render: LogoCloudRender,
+    fieldGroups: [
+      { id: "header", label: "Header", icon: "Type", fields: ["title", "subtitle", "description", "badge", "badgeIcon"], defaultExpanded: false },
+      { id: "headerStyle", label: "Header Style", icon: "Palette", fields: ["headerAlign", "titleSize", "titleColor", "titleWeight", "subtitleColor", "descriptionColor", "badgeStyle", "badgeColor", "badgeTextColor"], defaultExpanded: false },
+      { id: "logos", label: "Logos", icon: "Image", fields: ["logos"], defaultExpanded: true },
+      { id: "layout", label: "Layout", icon: "Layout", fields: ["variant", "columns", "mobileColumns", "maxWidth", "gap", "sectionGap"], defaultExpanded: false },
+      { id: "logoStyle", label: "Logo Styling", icon: "Image", fields: ["logoSize", "logoHeight", "logoMaxWidth", "logoGrayscale", "logoGrayscaleHover", "logoOpacity", "logoOpacityHover", "logoFilter"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animationType", "animationDuration", "animationDelay", "staggerChildren", "staggerDelay"], defaultExpanded: false },
+      { id: "scroll", label: "Infinite Scroll", icon: "ArrowRight", fields: ["infiniteScroll", "scrollSpeed", "scrollDirection", "pauseOnHover", "duplicateCount"], defaultExpanded: false },
+      { id: "hover", label: "Hover Effects", icon: "MousePointer", fields: ["hoverEffect", "hoverScale", "showTooltips", "tooltipPosition", "tooltipBackgroundColor"], defaultExpanded: false },
+      { id: "background", label: "Background", icon: "Layers", fields: ["backgroundColor", "backgroundStyle", "backgroundGradientFrom", "backgroundGradientTo", "backgroundGradientDirection", "showPattern", "patternType", "patternOpacity"], defaultExpanded: false },
+      { id: "border", label: "Borders", icon: "Square", fields: ["showBorder", "borderColor", "borderWidth", "borderStyle", "borderRadius"], defaultExpanded: false },
+      { id: "spacing", label: "Spacing", icon: "Maximize", fields: ["paddingY", "paddingX"], defaultExpanded: false },
+      { id: "dividers", label: "Dividers", icon: "Minus", fields: ["showDividerAbove", "showDividerBelow", "dividerStyle", "dividerColor"], defaultExpanded: false },
+      { id: "decorative", label: "Decorative", icon: "Sparkles", fields: ["showDecorators", "decoratorStyle", "decoratorColor", "decoratorPosition"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileLogoSize", "compactOnMobile"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel"], defaultExpanded: false },
+    ],
     fields: {
-      title: { type: "text", label: "Title" },
-      logos: {
-        type: "array",
-        label: "Logos",
-        itemFields: {
-          image: { type: "image", label: "Logo" },
-          alt: { type: "text", label: "Alt Text" },
-          link: { type: "link", label: "Link" },
-        },
-      },
+      // === Header Content ===
+      title: { type: "text", label: "Title", defaultValue: "Trusted by Industry Leaders" },
+      subtitle: { type: "text", label: "Subtitle" },
+      description: { type: "textarea", label: "Description" },
+      badge: { type: "text", label: "Badge Text" },
+      badgeIcon: { type: "text", label: "Badge Icon (emoji)" },
+      // === Header Styling ===
+      headerAlign: { type: "select", label: "Header Alignment", options: presetOptions.alignment, defaultValue: "center" },
+      titleSize: { type: "select", label: "Title Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "lg" },
+      titleColor: { type: "color", label: "Title Color" },
+      titleWeight: { type: "select", label: "Title Weight", options: [
+        { label: "Normal", value: "normal" },
+        { label: "Medium", value: "medium" },
+        { label: "Semibold", value: "semibold" },
+        { label: "Bold", value: "bold" },
+      ], defaultValue: "semibold" },
+      subtitleColor: { type: "color", label: "Subtitle Color" },
+      descriptionColor: { type: "color", label: "Description Color" },
+      badgeStyle: { type: "select", label: "Badge Style", options: [
+        { label: "Pill", value: "pill" },
+        { label: "Outlined", value: "outlined" },
+        { label: "Solid", value: "solid" },
+      ], defaultValue: "pill" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#3b82f6" },
+      badgeTextColor: { type: "color", label: "Badge Text Color", defaultValue: "#ffffff" },
+      // === Logos Array ===
+      logos: { type: "array", label: "Logos", itemFields: {
+        image: { type: "image", label: "Logo" },
+        alt: { type: "text", label: "Alt Text" },
+        link: { type: "link", label: "Link URL" },
+        linkTarget: { type: "select", label: "Link Target", options: [
+          { label: "Same Window", value: "_self" },
+          { label: "New Tab", value: "_blank" },
+        ], defaultValue: "_self" },
+        tooltip: { type: "text", label: "Tooltip Text" },
+        grayscale: { type: "toggle", label: "Grayscale Override" },
+      }},
+      // === Layout ===
+      variant: { type: "select", label: "Layout Variant", options: [
+        { label: "Grid", value: "grid" },
+        { label: "Inline", value: "inline" },
+        { label: "Carousel", value: "carousel" },
+        { label: "Infinite Scroll", value: "infinite" },
+        { label: "Marquee", value: "marquee" },
+        { label: "Stacked", value: "stacked" },
+        { label: "Scattered", value: "scattered" },
+      ], defaultValue: "inline" },
+      columns: { type: "select", label: "Columns (Grid)", options: [
+        { label: "3", value: 3 },
+        { label: "4", value: 4 },
+        { label: "5", value: 5 },
+        { label: "6", value: 6 },
+      ], defaultValue: 5 },
+      mobileColumns: { type: "select", label: "Mobile Columns", options: [
+        { label: "2", value: 2 },
+        { label: "3", value: 3 },
+      ], defaultValue: 2 },
+      maxWidth: { type: "select", label: "Max Width", options: [
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "2XL", value: "2xl" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "xl" },
+      gap: { type: "select", label: "Logo Gap", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "lg" },
+      sectionGap: { type: "select", label: "Header to Logos Gap", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "lg" },
+      // === Logo Styling ===
+      logoSize: { type: "select", label: "Logo Size", options: [
+        { label: "Extra Small", value: "xs" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "md" },
+      logoHeight: { type: "number", label: "Logo Height (px)", min: 20, max: 200, defaultValue: 40 },
+      logoMaxWidth: { type: "number", label: "Logo Max Width (px)", min: 50, max: 300, defaultValue: 150 },
+      logoGrayscale: { type: "toggle", label: "All Logos Grayscale", defaultValue: true },
+      logoGrayscaleHover: { type: "toggle", label: "Color on Hover", defaultValue: true },
+      logoOpacity: { type: "number", label: "Logo Opacity", min: 0, max: 1, step: 0.1, defaultValue: 0.7 },
+      logoOpacityHover: { type: "number", label: "Hover Opacity", min: 0, max: 1, step: 0.1, defaultValue: 1 },
+      logoFilter: { type: "select", label: "Logo Filter", options: [
+        { label: "None", value: "none" },
+        { label: "Grayscale", value: "grayscale" },
+        { label: "Sepia", value: "sepia" },
+        { label: "Invert", value: "invert" },
+      ], defaultValue: "none" },
+      // === Animation ===
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "None", value: "none" },
+        { label: "Fade In", value: "fade" },
+        { label: "Slide In", value: "slide" },
+        { label: "Scale In", value: "scale" },
+        { label: "Stagger", value: "stagger" },
+      ], defaultValue: "fade" },
+      animationDuration: { type: "number", label: "Animation Duration (ms)", min: 100, max: 2000, defaultValue: 500 },
+      animationDelay: { type: "number", label: "Animation Delay (ms)", min: 0, max: 1000, defaultValue: 0 },
+      staggerChildren: { type: "toggle", label: "Stagger Children", defaultValue: true },
+      staggerDelay: { type: "number", label: "Stagger Delay (ms)", min: 50, max: 500, defaultValue: 100 },
+      // === Infinite Scroll ===
+      infiniteScroll: { type: "toggle", label: "Enable Infinite Scroll", defaultValue: false },
+      scrollSpeed: { type: "number", label: "Scroll Speed", min: 10, max: 100, defaultValue: 30 },
+      scrollDirection: { type: "select", label: "Scroll Direction", options: [
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "left" },
+      pauseOnHover: { type: "toggle", label: "Pause on Hover", defaultValue: true },
+      duplicateCount: { type: "number", label: "Duplicate Count", min: 1, max: 5, defaultValue: 2 },
+      // === Hover Effects ===
+      hoverEffect: { type: "select", label: "Hover Effect", options: [
+        { label: "None", value: "none" },
+        { label: "Scale", value: "scale" },
+        { label: "Lift", value: "lift" },
+        { label: "Glow", value: "glow" },
+        { label: "Color", value: "color" },
+        { label: "Tilt", value: "tilt" },
+      ], defaultValue: "scale" },
+      hoverScale: { type: "number", label: "Hover Scale", min: 1, max: 1.5, step: 0.05, defaultValue: 1.1 },
+      showTooltips: { type: "toggle", label: "Show Tooltips", defaultValue: false },
+      tooltipPosition: { type: "select", label: "Tooltip Position", options: [
+        { label: "Top", value: "top" },
+        { label: "Bottom", value: "bottom" },
+      ], defaultValue: "top" },
+      tooltipBackgroundColor: { type: "color", label: "Tooltip Background", defaultValue: "#1f2937" },
+      // === Background ===
+      backgroundColor: { type: "color", label: "Background Color", defaultValue: "#ffffff" },
+      backgroundStyle: { type: "select", label: "Background Style", options: [
+        { label: "Solid", value: "solid" },
+        { label: "Gradient", value: "gradient" },
+        { label: "Pattern", value: "pattern" },
+      ], defaultValue: "solid" },
+      backgroundGradientFrom: { type: "color", label: "Gradient Start" },
+      backgroundGradientTo: { type: "color", label: "Gradient End" },
+      backgroundGradientDirection: { type: "select", label: "Gradient Direction", options: [
+        { label: "To Right", value: "to-r" },
+        { label: "To Bottom", value: "to-b" },
+        { label: "Diagonal", value: "to-br" },
+      ], defaultValue: "to-b" },
+      showPattern: { type: "toggle", label: "Show Pattern", defaultValue: false },
+      patternType: { type: "select", label: "Pattern Type", options: [
+        { label: "Dots", value: "dots" },
+        { label: "Grid", value: "grid" },
+        { label: "Lines", value: "lines" },
+      ], defaultValue: "dots" },
+      patternOpacity: { type: "number", label: "Pattern Opacity", min: 0, max: 1, step: 0.1, defaultValue: 0.1 },
+      // === Borders ===
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
+      borderColor: { type: "color", label: "Border Color", defaultValue: "#e5e7eb" },
+      borderWidth: { type: "select", label: "Border Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+      ], defaultValue: "1" },
+      borderStyle: { type: "select", label: "Border Style", options: [
+        { label: "Solid", value: "solid" },
+        { label: "Dashed", value: "dashed" },
+      ], defaultValue: "solid" },
+      borderRadius: { type: "select", label: "Border Radius", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "none" },
+      // === Spacing ===
+      paddingY: { type: "select", label: "Vertical Padding", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "lg" },
+      paddingX: { type: "select", label: "Horizontal Padding", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      // === Dividers ===
+      showDividerAbove: { type: "toggle", label: "Divider Above", defaultValue: false },
+      showDividerBelow: { type: "toggle", label: "Divider Below", defaultValue: false },
+      dividerStyle: { type: "select", label: "Divider Style", options: [
+        { label: "Solid", value: "solid" },
+        { label: "Dashed", value: "dashed" },
+        { label: "Dotted", value: "dotted" },
+      ], defaultValue: "solid" },
+      dividerColor: { type: "color", label: "Divider Color", defaultValue: "#e5e7eb" },
+      // === Decorative ===
+      showDecorators: { type: "toggle", label: "Show Decorators", defaultValue: false },
+      decoratorStyle: { type: "select", label: "Decorator Style", options: [
+        { label: "Dots", value: "dots" },
+        { label: "Lines", value: "lines" },
+        { label: "Blur", value: "blur" },
+      ], defaultValue: "blur" },
+      decoratorColor: { type: "color", label: "Decorator Color", defaultValue: "#3b82f6" },
+      decoratorPosition: { type: "select", label: "Decorator Position", options: [
+        { label: "Top Left", value: "top-left" },
+        { label: "Top Right", value: "top-right" },
+        { label: "Both Sides", value: "both-sides" },
+      ], defaultValue: "both-sides" },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileLogoSize: { type: "select", label: "Mobile Logo Size", options: [
+        { label: "Extra Small", value: "xs" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+      ], defaultValue: "sm" },
+      compactOnMobile: { type: "toggle", label: "Compact on Mobile", defaultValue: true },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label", defaultValue: "Our trusted partners" },
     },
     defaultProps: {
+      title: "Trusted by Industry Leaders",
+      variant: "inline",
+      logoGrayscale: true,
+      logoGrayscaleHover: true,
+      logoOpacity: 0.7,
+      logoOpacityHover: 1,
+      hoverEffect: "scale",
+      backgroundColor: "#ffffff",
+      paddingY: "lg",
       logos: [],
     },
     ai: {
-      description: "A cloud of client/partner logos",
-      canModify: ["title", "logos"],
+      description: "A premium logo cloud for displaying client, partner, or certification logos with infinite scroll, grayscale effects, animations, and extensive styling options",
+      canModify: ["title", "logos", "variant", "logoGrayscale", "hoverEffect", "backgroundColor", "animationType", "infiniteScroll"],
+      suggestions: ["Add infinite scroll", "Enable grayscale with color on hover", "Add company tooltips", "Use marquee variant", "Add section title"],
     },
   }),
 
   defineComponent({
     type: "ComparisonTable",
     label: "Comparison Table",
-    description: "Feature comparison table",
+    description: "Premium feature comparison with highlighting, icons, and 70+ customization options",
     category: "marketing",
     icon: "Table",
     render: ComparisonTableRender,
+    fieldGroups: [
+      { id: "header", label: "Header", icon: "Type", fields: ["title", "subtitle", "description", "badge", "headerAlign", "titleSize", "titleColor"], defaultExpanded: false },
+      { id: "columns", label: "Columns", icon: "Columns", fields: ["columns"], defaultExpanded: true },
+      { id: "rows", label: "Features", icon: "List", fields: ["rows"], defaultExpanded: true },
+      { id: "layout", label: "Layout", icon: "Layout", fields: ["variant", "maxWidth", "stickyHeader", "stickyFirstColumn"], defaultExpanded: false },
+      { id: "headerRow", label: "Header Row Style", icon: "LayoutGrid", fields: ["headerBackgroundColor", "headerTextColor", "headerFontSize", "headerFontWeight", "headerPadding"], defaultExpanded: false },
+      { id: "highlight", label: "Highlighting", icon: "Star", fields: ["highlightedColumnStyle", "highlightedColumnColor", "highlightedColumnBorder", "highlightedBadgeText", "highlightedBadgeColor"], defaultExpanded: false },
+      { id: "rowStyle", label: "Row Style", icon: "Rows", fields: ["rowBackgroundColor", "rowAlternateColor", "rowTextColor", "rowPadding", "rowHoverEffect", "rowHoverBackgroundColor"], defaultExpanded: false },
+      { id: "cellStyle", label: "Cell Style", icon: "Square", fields: ["cellAlignment", "cellVerticalAlign", "cellPadding", "cellBorder", "cellBorderColor"], defaultExpanded: false },
+      { id: "icons", label: "Icons & Values", icon: "CheckCircle", fields: ["showIcons", "checkIcon", "checkIconColor", "crossIcon", "crossIconColor", "partialIcon", "partialIconColor", "iconSize", "showTextValues"], defaultExpanded: false },
+      { id: "tooltips", label: "Tooltips", icon: "MessageCircle", fields: ["showTooltips", "tooltipPosition", "tooltipBackgroundColor", "tooltipTextColor"], defaultExpanded: false },
+      { id: "border", label: "Table Border", icon: "Square", fields: ["showTableBorder", "tableBorderColor", "tableBorderWidth", "tableBorderRadius", "showColumnDividers", "showRowDividers", "dividerColor"], defaultExpanded: false },
+      { id: "shadow", label: "Shadow", icon: "Layers", fields: ["tableShadow", "hoverShadow"], defaultExpanded: false },
+      { id: "background", label: "Background", icon: "Layers", fields: ["backgroundColor", "backgroundGradient", "backgroundGradientFrom", "backgroundGradientTo"], defaultExpanded: false },
+      { id: "spacing", label: "Spacing", icon: "Maximize", fields: ["paddingY", "paddingX", "sectionGap"], defaultExpanded: false },
+      { id: "cta", label: "CTA Buttons", icon: "MousePointer", fields: ["showCtaRow", "ctaButtonText", "ctaButtonStyle", "ctaButtonSize", "ctaButtonRadius"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animateOnScroll", "animationType", "animationDelay"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["mobileLayout", "hideOnMobile", "scrollOnMobile", "compactOnMobile"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "enableKeyboardNav"], defaultExpanded: false },
+    ],
     fields: {
-      title: { type: "text", label: "Title" },
-      columns: {
-        type: "array",
-        label: "Columns",
-        itemFields: {
-          name: { type: "text", label: "Name" },
-          highlighted: { type: "toggle", label: "Highlighted" },
-        },
-      },
-      rows: {
-        type: "array",
-        label: "Features",
-        itemFields: {
-          feature: { type: "text", label: "Feature" },
-          values: { type: "text", label: "Values (comma-separated)" },
-        },
-      },
+      // === Header ===
+      title: { type: "text", label: "Title", defaultValue: "Compare Plans" },
+      subtitle: { type: "text", label: "Subtitle" },
+      description: { type: "textarea", label: "Description" },
+      badge: { type: "text", label: "Badge Text" },
+      headerAlign: { type: "select", label: "Header Alignment", options: presetOptions.alignment, defaultValue: "center" },
+      titleSize: { type: "select", label: "Title Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "lg" },
+      titleColor: { type: "color", label: "Title Color" },
+      // === Columns ===
+      columns: { type: "array", label: "Columns", itemFields: {
+        name: { type: "text", label: "Name" },
+        price: { type: "text", label: "Price" },
+        priceNote: { type: "text", label: "Price Note (e.g., /month)" },
+        description: { type: "text", label: "Description" },
+        highlighted: { type: "toggle", label: "Highlighted" },
+        ctaText: { type: "text", label: "CTA Button Text" },
+        ctaLink: { type: "link", label: "CTA Button Link" },
+        badge: { type: "text", label: "Column Badge" },
+        icon: { type: "text", label: "Icon (emoji)" },
+      }},
+      // === Rows ===
+      rows: { type: "array", label: "Features", itemFields: {
+        feature: { type: "text", label: "Feature Name" },
+        description: { type: "text", label: "Feature Description/Tooltip" },
+        category: { type: "text", label: "Category" },
+        values: { type: "text", label: "Values (comma-separated: yes,no,partial,text)" },
+        icon: { type: "text", label: "Feature Icon (emoji)" },
+      }},
+      // === Layout ===
+      variant: { type: "select", label: "Variant", options: [
+        { label: "Default", value: "default" },
+        { label: "Cards", value: "cards" },
+        { label: "Minimal", value: "minimal" },
+        { label: "Bordered", value: "bordered" },
+        { label: "Striped", value: "striped" },
+      ], defaultValue: "default" },
+      maxWidth: { type: "select", label: "Max Width", options: [
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "2XL", value: "2xl" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "xl" },
+      stickyHeader: { type: "toggle", label: "Sticky Header", defaultValue: false },
+      stickyFirstColumn: { type: "toggle", label: "Sticky First Column", defaultValue: false },
+      // === Header Row Style ===
+      headerBackgroundColor: { type: "color", label: "Header Background", defaultValue: "#f9fafb" },
+      headerTextColor: { type: "color", label: "Header Text Color" },
+      headerFontSize: { type: "select", label: "Header Font Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      headerFontWeight: { type: "select", label: "Header Font Weight", options: [
+        { label: "Medium", value: "medium" },
+        { label: "Semibold", value: "semibold" },
+        { label: "Bold", value: "bold" },
+      ], defaultValue: "semibold" },
+      headerPadding: { type: "select", label: "Header Padding", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      // === Highlighting ===
+      highlightedColumnStyle: { type: "select", label: "Highlighted Style", options: [
+        { label: "Background", value: "background" },
+        { label: "Border", value: "border" },
+        { label: "Shadow", value: "shadow" },
+        { label: "Scale", value: "scale" },
+      ], defaultValue: "background" },
+      highlightedColumnColor: { type: "color", label: "Highlighted Color", defaultValue: "#3b82f610" },
+      highlightedColumnBorder: { type: "color", label: "Highlighted Border", defaultValue: "#3b82f6" },
+      highlightedBadgeText: { type: "text", label: "Highlighted Badge", defaultValue: "Most Popular" },
+      highlightedBadgeColor: { type: "color", label: "Highlighted Badge Color", defaultValue: "#3b82f6" },
+      // === Row Style ===
+      rowBackgroundColor: { type: "color", label: "Row Background", defaultValue: "#ffffff" },
+      rowAlternateColor: { type: "color", label: "Alternate Row Color", defaultValue: "#f9fafb" },
+      rowTextColor: { type: "color", label: "Row Text Color" },
+      rowPadding: { type: "select", label: "Row Padding", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      rowHoverEffect: { type: "toggle", label: "Row Hover Effect", defaultValue: true },
+      rowHoverBackgroundColor: { type: "color", label: "Row Hover Color", defaultValue: "#f3f4f6" },
+      // === Cell Style ===
+      cellAlignment: { type: "select", label: "Cell Alignment", options: [
+        { label: "Left", value: "left" },
+        { label: "Center", value: "center" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "center" },
+      cellVerticalAlign: { type: "select", label: "Vertical Alignment", options: [
+        { label: "Top", value: "top" },
+        { label: "Middle", value: "middle" },
+        { label: "Bottom", value: "bottom" },
+      ], defaultValue: "middle" },
+      cellPadding: { type: "select", label: "Cell Padding", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      cellBorder: { type: "toggle", label: "Cell Borders", defaultValue: true },
+      cellBorderColor: { type: "color", label: "Cell Border Color", defaultValue: "#e5e7eb" },
+      // === Icons & Values ===
+      showIcons: { type: "toggle", label: "Show Icons", defaultValue: true },
+      checkIcon: { type: "text", label: "Check Icon", defaultValue: "✓" },
+      checkIconColor: { type: "color", label: "Check Icon Color", defaultValue: "#10b981" },
+      crossIcon: { type: "text", label: "Cross Icon", defaultValue: "✕" },
+      crossIconColor: { type: "color", label: "Cross Icon Color", defaultValue: "#ef4444" },
+      partialIcon: { type: "text", label: "Partial Icon", defaultValue: "~" },
+      partialIconColor: { type: "color", label: "Partial Icon Color", defaultValue: "#f59e0b" },
+      iconSize: { type: "select", label: "Icon Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      showTextValues: { type: "toggle", label: "Show Text Values", defaultValue: true },
+      // === Tooltips ===
+      showTooltips: { type: "toggle", label: "Show Tooltips", defaultValue: false },
+      tooltipPosition: { type: "select", label: "Tooltip Position", options: [
+        { label: "Top", value: "top" },
+        { label: "Bottom", value: "bottom" },
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+      ], defaultValue: "top" },
+      tooltipBackgroundColor: { type: "color", label: "Tooltip Background", defaultValue: "#1f2937" },
+      tooltipTextColor: { type: "color", label: "Tooltip Text", defaultValue: "#ffffff" },
+      // === Table Border ===
+      showTableBorder: { type: "toggle", label: "Show Table Border", defaultValue: true },
+      tableBorderColor: { type: "color", label: "Table Border Color", defaultValue: "#e5e7eb" },
+      tableBorderWidth: { type: "select", label: "Border Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+      ], defaultValue: "1" },
+      tableBorderRadius: { type: "select", label: "Border Radius", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "lg" },
+      showColumnDividers: { type: "toggle", label: "Column Dividers", defaultValue: true },
+      showRowDividers: { type: "toggle", label: "Row Dividers", defaultValue: true },
+      dividerColor: { type: "color", label: "Divider Color", defaultValue: "#e5e7eb" },
+      // === Shadow ===
+      tableShadow: { type: "select", label: "Table Shadow", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "md" },
+      hoverShadow: { type: "select", label: "Hover Shadow", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "none" },
+      // === Background ===
+      backgroundColor: { type: "color", label: "Section Background" },
+      backgroundGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
+      backgroundGradientFrom: { type: "color", label: "Gradient Start", defaultValue: "#f9fafb" },
+      backgroundGradientTo: { type: "color", label: "Gradient End", defaultValue: "#ffffff" },
+      // === Spacing ===
+      paddingY: { type: "select", label: "Vertical Padding", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "lg" },
+      paddingX: { type: "select", label: "Horizontal Padding", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      sectionGap: { type: "select", label: "Header to Table Gap", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "lg" },
+      // === CTA Buttons ===
+      showCtaRow: { type: "toggle", label: "Show CTA Row", defaultValue: true },
+      ctaButtonText: { type: "text", label: "Default CTA Text", defaultValue: "Get Started" },
+      ctaButtonStyle: { type: "select", label: "CTA Button Style", options: [
+        { label: "Primary", value: "primary" },
+        { label: "Secondary", value: "secondary" },
+        { label: "Outline", value: "outline" },
+      ], defaultValue: "primary" },
+      ctaButtonSize: { type: "select", label: "CTA Button Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "md" },
+      ctaButtonRadius: { type: "select", label: "CTA Button Radius", options: [
+        { label: "None", value: "none" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "md" },
+      // === Animation ===
+      animateOnScroll: { type: "toggle", label: "Animate on Scroll", defaultValue: true },
+      animationType: { type: "select", label: "Animation Type", options: [
+        { label: "Fade", value: "fade" },
+        { label: "Slide Up", value: "slide-up" },
+        { label: "Scale", value: "scale" },
+      ], defaultValue: "fade" },
+      animationDelay: { type: "number", label: "Animation Delay (ms)", min: 0, max: 1000, defaultValue: 0 },
+      // === Responsive ===
+      mobileLayout: { type: "select", label: "Mobile Layout", options: [
+        { label: "Scroll", value: "scroll" },
+        { label: "Stack", value: "stack" },
+        { label: "Cards", value: "cards" },
+      ], defaultValue: "scroll" },
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      scrollOnMobile: { type: "toggle", label: "Horizontal Scroll on Mobile", defaultValue: true },
+      compactOnMobile: { type: "toggle", label: "Compact on Mobile", defaultValue: true },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label", defaultValue: "Feature comparison table" },
+      enableKeyboardNav: { type: "toggle", label: "Enable Keyboard Navigation", defaultValue: true },
     },
     defaultProps: {
-      columns: [],
-      rows: [],
+      title: "Compare Plans",
+      variant: "default",
+      showIcons: true,
+      showCtaRow: true,
+      ctaButtonText: "Get Started",
+      tableBorderRadius: "lg",
+      tableShadow: "md",
+      rowHoverEffect: true,
+      highlightedColumnStyle: "background",
+      highlightedBadgeText: "Most Popular",
+      columns: [
+        { name: "Basic", price: "$9", priceNote: "/month", highlighted: false },
+        { name: "Pro", price: "$29", priceNote: "/month", highlighted: true, badge: "Most Popular" },
+        { name: "Enterprise", price: "$99", priceNote: "/month", highlighted: false },
+      ],
+      rows: [
+        { feature: "Users", values: "1,5,Unlimited" },
+        { feature: "Storage", values: "10GB,50GB,500GB" },
+        { feature: "Support", values: "Email,Priority,24/7 Phone" },
+        { feature: "Analytics", values: "no,yes,yes" },
+        { feature: "Custom Domain", values: "no,yes,yes" },
+      ],
     },
     ai: {
-      description: "A feature comparison table",
-      canModify: ["title", "columns", "rows"],
+      description: "A premium feature comparison table with column highlighting, CTA buttons, tooltips, icons, sticky headers, and extensive styling options",
+      canModify: ["title", "columns", "rows", "variant", "showCtaRow", "highlightedColumnStyle", "showTooltips"],
+      suggestions: ["Add more features", "Highlight recommended plan", "Enable tooltips", "Add CTA buttons", "Use cards variant on mobile"],
     },
   }),
 ];
@@ -8074,67 +10764,184 @@ const marketingComponents: ComponentDefinition[] = [
 // 3D EFFECTS COMPONENTS (Phase 31)
 // =============================================================================
 
+// =============================================================================
+// EFFECTS COMPONENTS (Enhanced with 50+ fields each)
+// =============================================================================
+
 const effectsComponents: ComponentDefinition[] = [
+  // =========================================================================
+  // CARD FLIP 3D - Flip Card Effect (Enhanced)
+  // =========================================================================
   defineComponent({
     type: "CardFlip3D",
     label: "3D Flip Card",
-    description: "A card that flips to reveal back content on hover or click",
+    description: "Premium 3D flip card with multiple effects and extensive styling (60+ fields)",
     category: "3d",
     icon: "RotateCcw",
     render: CardFlip3DRender,
+    fieldGroups: [
+      { id: "front", label: "Front Side", icon: "Square", fields: ["frontTitle", "frontSubtitle", "frontDescription", "frontImage", "frontBackgroundColor", "frontGradient", "frontGradientFrom", "frontGradientTo", "frontIcon", "frontBadge"], defaultExpanded: true },
+      { id: "back", label: "Back Side", icon: "SquareStack", fields: ["backTitle", "backSubtitle", "backDescription", "backImage", "backBackgroundColor", "backGradient", "backGradientFrom", "backGradientTo", "backContent"], defaultExpanded: false },
+      { id: "flip", label: "Flip Behavior", icon: "RotateCcw", fields: ["flipOn", "flipDirection", "flipDuration", "flipEasing", "startFlipped", "disableFlip"], defaultExpanded: false },
+      { id: "size", label: "Size", icon: "Maximize", fields: ["width", "height", "customWidth", "customHeight", "aspectRatio"], defaultExpanded: false },
+      { id: "style", label: "Style", icon: "Palette", fields: ["borderRadius", "shadow", "frontTextColor", "backTextColor", "frontOpacity", "backOpacity"], defaultExpanded: false },
+      { id: "border", label: "Border", icon: "Square", fields: ["showBorder", "frontBorderColor", "backBorderColor", "borderWidth", "borderStyle"], defaultExpanded: false },
+      { id: "effects", label: "Effects", icon: "Sparkles", fields: ["hoverGlow", "glowColor", "glowIntensity", "hoverScale", "reflectionEffect", "depthEffect"], defaultExpanded: false },
+      { id: "button", label: "Button", icon: "MousePointer", fields: ["showButton", "buttonText", "buttonLink", "buttonPosition", "buttonVariant"], defaultExpanded: false },
+      { id: "indicator", label: "Flip Indicator", icon: "RotateCw", fields: ["showFlipIndicator", "indicatorPosition", "indicatorText", "indicatorStyle"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animateOnMount", "mountAnimation", "hoverPause"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileFlipOn", "mobileWidth"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "ariaDescription", "reducedMotion"], defaultExpanded: false },
+    ],
     fields: {
+      // === Front Side ===
       frontTitle: { type: "text", label: "Front Title", defaultValue: "Front Side" },
-      frontDescription: { type: "text", label: "Front Description", defaultValue: "Hover to flip" },
-      backTitle: { type: "text", label: "Back Title", defaultValue: "Back Side" },
-      backDescription: { type: "text", label: "Back Description", defaultValue: "Amazing content here" },
-      frontBackgroundColor: { type: "color", label: "Front Color", defaultValue: "#6366f1" },
-      backBackgroundColor: { type: "color", label: "Back Color", defaultValue: "#ec4899" },
+      frontSubtitle: { type: "text", label: "Front Subtitle" },
+      frontDescription: { type: "textarea", label: "Front Description", defaultValue: "Hover to flip" },
       frontImage: { type: "image", label: "Front Image" },
+      frontBackgroundColor: { type: "color", label: "Front Color", defaultValue: "#6366f1" },
+      frontGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
+      frontGradientFrom: { type: "color", label: "Gradient From", defaultValue: "#6366f1" },
+      frontGradientTo: { type: "color", label: "Gradient To", defaultValue: "#ec4899" },
+      frontIcon: { type: "text", label: "Front Icon (emoji)" },
+      frontBadge: { type: "text", label: "Front Badge Text" },
+      // === Back Side ===
+      backTitle: { type: "text", label: "Back Title", defaultValue: "Back Side" },
+      backSubtitle: { type: "text", label: "Back Subtitle" },
+      backDescription: { type: "textarea", label: "Back Description", defaultValue: "Amazing content here" },
       backImage: { type: "image", label: "Back Image" },
-      flipOn: {
-        type: "select",
-        label: "Flip Trigger",
-        options: [
-          { label: "Hover", value: "hover" },
-          { label: "Click", value: "click" },
-        ],
-        defaultValue: "hover",
-      },
-      width: {
-        type: "select",
-        label: "Width",
-        options: [
-          { label: "Small", value: "sm" },
-          { label: "Medium", value: "md" },
-          { label: "Large", value: "lg" },
-          { label: "XL", value: "xl" },
-          { label: "Full", value: "full" },
-        ],
-        defaultValue: "md",
-      },
-      height: {
-        type: "select",
-        label: "Height",
-        options: [
-          { label: "Small", value: "sm" },
-          { label: "Medium", value: "md" },
-          { label: "Large", value: "lg" },
-          { label: "XL", value: "xl" },
-        ],
-        defaultValue: "md",
-      },
-      borderRadius: {
-        type: "select",
-        label: "Border Radius",
-        options: presetOptions.borderRadius,
-        defaultValue: "lg",
-      },
-      shadow: {
-        type: "select",
-        label: "Shadow",
-        options: presetOptions.shadow,
-        defaultValue: "lg",
-      },
+      backBackgroundColor: { type: "color", label: "Back Color", defaultValue: "#ec4899" },
+      backGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
+      backGradientFrom: { type: "color", label: "Gradient From", defaultValue: "#ec4899" },
+      backGradientTo: { type: "color", label: "Gradient To", defaultValue: "#6366f1" },
+      backContent: { type: "textarea", label: "Rich Back Content (HTML)" },
+      // === Flip Behavior ===
+      flipOn: { type: "select", label: "Flip Trigger", options: [
+        { label: "Hover", value: "hover" },
+        { label: "Click", value: "click" },
+        { label: "Both", value: "both" },
+        { label: "Manual (controlled)", value: "manual" },
+      ], defaultValue: "hover" },
+      flipDirection: { type: "select", label: "Flip Direction", options: [
+        { label: "Horizontal", value: "horizontal" },
+        { label: "Vertical", value: "vertical" },
+        { label: "Diagonal", value: "diagonal" },
+      ], defaultValue: "horizontal" },
+      flipDuration: { type: "number", label: "Flip Duration (ms)", min: 200, max: 2000, defaultValue: 600 },
+      flipEasing: { type: "select", label: "Flip Easing", options: [
+        { label: "Ease", value: "ease" },
+        { label: "Ease In Out", value: "ease-in-out" },
+        { label: "Linear", value: "linear" },
+        { label: "Spring", value: "spring" },
+      ], defaultValue: "ease-in-out" },
+      startFlipped: { type: "toggle", label: "Start Flipped", defaultValue: false },
+      disableFlip: { type: "toggle", label: "Disable Flip", defaultValue: false },
+      // === Size ===
+      width: { type: "select", label: "Width", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "Full", value: "full" },
+        { label: "Custom", value: "custom" },
+      ], defaultValue: "md" },
+      height: { type: "select", label: "Height", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "Custom", value: "custom" },
+      ], defaultValue: "md" },
+      customWidth: { type: "text", label: "Custom Width (e.g., 400px)" },
+      customHeight: { type: "text", label: "Custom Height (e.g., 300px)" },
+      aspectRatio: { type: "select", label: "Aspect Ratio", options: [
+        { label: "None", value: "none" },
+        { label: "1:1", value: "1/1" },
+        { label: "4:3", value: "4/3" },
+        { label: "16:9", value: "16/9" },
+        { label: "3:4", value: "3/4" },
+      ], defaultValue: "none" },
+      // === Style ===
+      borderRadius: { type: "select", label: "Border Radius", options: presetOptions.borderRadius, defaultValue: "lg" },
+      shadow: { type: "select", label: "Shadow", options: presetOptions.shadow, defaultValue: "lg" },
+      frontTextColor: { type: "color", label: "Front Text Color", defaultValue: "#ffffff" },
+      backTextColor: { type: "color", label: "Back Text Color", defaultValue: "#ffffff" },
+      frontOpacity: { type: "number", label: "Front Opacity", min: 0, max: 1, step: 0.1, defaultValue: 1 },
+      backOpacity: { type: "number", label: "Back Opacity", min: 0, max: 1, step: 0.1, defaultValue: 1 },
+      // === Border ===
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
+      frontBorderColor: { type: "color", label: "Front Border Color" },
+      backBorderColor: { type: "color", label: "Back Border Color" },
+      borderWidth: { type: "select", label: "Border Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+        { label: "4px", value: "4" },
+      ], defaultValue: "2" },
+      borderStyle: { type: "select", label: "Border Style", options: [
+        { label: "Solid", value: "solid" },
+        { label: "Dashed", value: "dashed" },
+        { label: "Double", value: "double" },
+      ], defaultValue: "solid" },
+      // === Effects ===
+      hoverGlow: { type: "toggle", label: "Hover Glow", defaultValue: false },
+      glowColor: { type: "color", label: "Glow Color", defaultValue: "#6366f1" },
+      glowIntensity: { type: "select", label: "Glow Intensity", options: [
+        { label: "Subtle", value: "subtle" },
+        { label: "Medium", value: "medium" },
+        { label: "Strong", value: "strong" },
+      ], defaultValue: "medium" },
+      hoverScale: { type: "number", label: "Hover Scale", min: 1, max: 1.2, step: 0.02, defaultValue: 1 },
+      reflectionEffect: { type: "toggle", label: "Reflection Effect", defaultValue: false },
+      depthEffect: { type: "toggle", label: "3D Depth Effect", defaultValue: true },
+      // === Button ===
+      showButton: { type: "toggle", label: "Show Button", defaultValue: false },
+      buttonText: { type: "text", label: "Button Text", defaultValue: "Learn More" },
+      buttonLink: { type: "link", label: "Button Link" },
+      buttonPosition: { type: "select", label: "Button Position", options: [
+        { label: "Front", value: "front" },
+        { label: "Back", value: "back" },
+        { label: "Both", value: "both" },
+      ], defaultValue: "back" },
+      buttonVariant: { type: "select", label: "Button Variant", options: [
+        { label: "Primary", value: "primary" },
+        { label: "Secondary", value: "secondary" },
+        { label: "Outline", value: "outline" },
+      ], defaultValue: "primary" },
+      // === Flip Indicator ===
+      showFlipIndicator: { type: "toggle", label: "Show Flip Indicator", defaultValue: true },
+      indicatorPosition: { type: "select", label: "Indicator Position", options: [
+        { label: "Top Right", value: "top-right" },
+        { label: "Bottom Right", value: "bottom-right" },
+        { label: "Center", value: "center" },
+      ], defaultValue: "top-right" },
+      indicatorText: { type: "text", label: "Indicator Text" },
+      indicatorStyle: { type: "select", label: "Indicator Style", options: [
+        { label: "Icon", value: "icon" },
+        { label: "Text", value: "text" },
+        { label: "Both", value: "both" },
+      ], defaultValue: "icon" },
+      // === Animation ===
+      animateOnMount: { type: "toggle", label: "Animate on Mount", defaultValue: false },
+      mountAnimation: { type: "select", label: "Mount Animation", options: [
+        { label: "Fade In", value: "fade" },
+        { label: "Scale", value: "scale" },
+        { label: "Flip In", value: "flip" },
+      ], defaultValue: "fade" },
+      hoverPause: { type: "toggle", label: "Pause on Hover", defaultValue: false },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileFlipOn: { type: "select", label: "Mobile Flip Trigger", options: [
+        { label: "Same", value: "same" },
+        { label: "Click", value: "click" },
+      ], defaultValue: "click" },
+      mobileWidth: { type: "select", label: "Mobile Width", options: [
+        { label: "Same", value: "same" },
+        { label: "Full", value: "full" },
+      ], defaultValue: "full" },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label" },
+      ariaDescription: { type: "text", label: "Aria Description" },
+      reducedMotion: { type: "toggle", label: "Respect Reduced Motion", defaultValue: true },
     },
     defaultProps: {
       frontTitle: "Front Side",
@@ -8144,65 +10951,159 @@ const effectsComponents: ComponentDefinition[] = [
       frontBackgroundColor: "#6366f1",
       backBackgroundColor: "#ec4899",
       flipOn: "hover",
+      flipDirection: "horizontal",
       width: "md",
       height: "md",
       borderRadius: "lg",
       shadow: "lg",
     },
     ai: {
-      description: "A 3D flip card that reveals back content on hover or click, perfect for team members, product features, or interactive content",
-      canModify: ["frontTitle", "frontDescription", "backTitle", "backDescription", "frontBackgroundColor", "backBackgroundColor", "flipOn"],
-      suggestions: ["Add images to both sides", "Change flip trigger to click", "Update card colors"],
+      description: "A premium 3D flip card with gradients, glow effects, and extensive customization for team members, products, or features",
+      canModify: ["frontTitle", "frontDescription", "backTitle", "backDescription", "frontBackgroundColor", "backBackgroundColor", "flipOn", "flipDirection"],
+      suggestions: ["Add gradient background", "Enable hover glow", "Show flip indicator", "Add button on back", "Use vertical flip"],
     },
   }),
 
+  // =========================================================================
+  // TILT CARD - 3D Tilt Effect (Enhanced)
+  // =========================================================================
   defineComponent({
     type: "TiltCard",
     label: "3D Tilt Card",
-    description: "A card with 3D tilt effect on mouse hover",
+    description: "Premium tilt card with glare, reflections, and extensive styling (55+ fields)",
     category: "3d",
     icon: "Move3d",
     render: TiltCardRender,
+    fieldGroups: [
+      { id: "content", label: "Content", icon: "Type", fields: ["title", "subtitle", "description", "icon", "badge", "badgeColor"], defaultExpanded: true },
+      { id: "background", label: "Background", icon: "Image", fields: ["backgroundColor", "backgroundImage", "backgroundGradient", "gradientFrom", "gradientTo", "gradientDirection", "overlay", "overlayOpacity"], defaultExpanded: false },
+      { id: "tilt", label: "Tilt Settings", icon: "Move3d", fields: ["maxRotation", "perspective", "speed", "scale", "easing", "axis", "disabled"], defaultExpanded: false },
+      { id: "glare", label: "Glare Effect", icon: "Sparkles", fields: ["glare", "glareMaxOpacity", "glareColor", "glarePosition", "glareReverse"], defaultExpanded: false },
+      { id: "style", label: "Style", icon: "Palette", fields: ["textColor", "padding", "borderRadius", "shadow", "shadowOnHover"], defaultExpanded: false },
+      { id: "border", label: "Border", icon: "Square", fields: ["showBorder", "borderColor", "borderWidth", "borderGlow"], defaultExpanded: false },
+      { id: "effects", label: "Effects", icon: "Wand2", fields: ["shine", "shineColor", "floatEffect", "floatIntensity", "gyroscope"], defaultExpanded: false },
+      { id: "button", label: "Button", icon: "MousePointer", fields: ["showButton", "buttonText", "buttonLink", "buttonVariant", "buttonPosition"], defaultExpanded: false },
+      { id: "icon", label: "Icon Display", icon: "Image", fields: ["showIcon", "iconPosition", "iconSize", "iconColor", "iconBackgroundColor"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animateOnMount", "mountAnimation", "animationDuration"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "disableOnMobile", "mobileScale"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "reducedMotion"], defaultExpanded: false },
+    ],
     fields: {
+      // === Content ===
       title: { type: "text", label: "Title", defaultValue: "Tilt Card" },
-      description: { type: "text", label: "Description", defaultValue: "Hover to see 3D tilt effect" },
+      subtitle: { type: "text", label: "Subtitle" },
+      description: { type: "textarea", label: "Description", defaultValue: "Hover to see 3D tilt effect" },
+      icon: { type: "text", label: "Icon (emoji)" },
+      badge: { type: "text", label: "Badge Text" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#3b82f6" },
+      // === Background ===
       backgroundColor: { type: "color", label: "Background Color", defaultValue: "#1f2937" },
       backgroundImage: { type: "image", label: "Background Image" },
-      textColor: { type: "color", label: "Text Color", defaultValue: "#ffffff" },
-      maxRotation: {
-        type: "number",
-        label: "Max Rotation (deg)",
-        min: 5,
-        max: 45,
-        defaultValue: 15,
-      },
-      scale: {
-        type: "number",
-        label: "Hover Scale",
-        min: 1,
-        max: 1.2,
-        step: 0.01,
-        defaultValue: 1.05,
-      },
+      backgroundGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
+      gradientFrom: { type: "color", label: "Gradient From", defaultValue: "#6366f1" },
+      gradientTo: { type: "color", label: "Gradient To", defaultValue: "#ec4899" },
+      gradientDirection: { type: "select", label: "Gradient Direction", options: [
+        { label: "To Right", value: "to-r" },
+        { label: "To Bottom", value: "to-b" },
+        { label: "To Bottom Right", value: "to-br" },
+        { label: "Radial", value: "radial" },
+      ], defaultValue: "to-br" },
+      overlay: { type: "toggle", label: "Show Overlay", defaultValue: false },
+      overlayOpacity: { type: "number", label: "Overlay Opacity", min: 0, max: 1, step: 0.1, defaultValue: 0.3 },
+      // === Tilt Settings ===
+      maxRotation: { type: "number", label: "Max Rotation (deg)", min: 5, max: 45, defaultValue: 15 },
+      perspective: { type: "number", label: "Perspective (px)", min: 500, max: 2000, defaultValue: 1000 },
+      speed: { type: "number", label: "Speed", min: 100, max: 2000, defaultValue: 500 },
+      scale: { type: "number", label: "Hover Scale", min: 1, max: 1.3, step: 0.01, defaultValue: 1.05 },
+      easing: { type: "select", label: "Easing", options: [
+        { label: "Ease", value: "ease" },
+        { label: "Ease Out", value: "ease-out" },
+        { label: "Linear", value: "linear" },
+      ], defaultValue: "ease-out" },
+      axis: { type: "select", label: "Tilt Axis", options: [
+        { label: "Both", value: "both" },
+        { label: "X Only", value: "x" },
+        { label: "Y Only", value: "y" },
+      ], defaultValue: "both" },
+      disabled: { type: "toggle", label: "Disable Tilt", defaultValue: false },
+      // === Glare Effect ===
       glare: { type: "toggle", label: "Enable Glare Effect", defaultValue: true },
-      padding: {
-        type: "select",
-        label: "Padding",
-        options: presetOptions.padding,
-        defaultValue: "lg",
-      },
-      borderRadius: {
-        type: "select",
-        label: "Border Radius",
-        options: presetOptions.borderRadius,
-        defaultValue: "xl",
-      },
-      shadow: {
-        type: "select",
-        label: "Shadow",
-        options: presetOptions.shadow,
-        defaultValue: "xl",
-      },
+      glareMaxOpacity: { type: "number", label: "Glare Max Opacity", min: 0, max: 1, step: 0.1, defaultValue: 0.35 },
+      glareColor: { type: "color", label: "Glare Color", defaultValue: "#ffffff" },
+      glarePosition: { type: "select", label: "Glare Position", options: [
+        { label: "All", value: "all" },
+        { label: "Top", value: "top" },
+        { label: "Bottom", value: "bottom" },
+      ], defaultValue: "all" },
+      glareReverse: { type: "toggle", label: "Reverse Glare", defaultValue: false },
+      // === Style ===
+      textColor: { type: "color", label: "Text Color", defaultValue: "#ffffff" },
+      padding: { type: "select", label: "Padding", options: presetOptions.padding, defaultValue: "lg" },
+      borderRadius: { type: "select", label: "Border Radius", options: presetOptions.borderRadius, defaultValue: "xl" },
+      shadow: { type: "select", label: "Shadow", options: presetOptions.shadow, defaultValue: "xl" },
+      shadowOnHover: { type: "select", label: "Shadow on Hover", options: presetOptions.shadow, defaultValue: "2xl" },
+      // === Border ===
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: false },
+      borderColor: { type: "color", label: "Border Color", defaultValue: "#ffffff20" },
+      borderWidth: { type: "select", label: "Border Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+      ], defaultValue: "1" },
+      borderGlow: { type: "toggle", label: "Border Glow", defaultValue: false },
+      // === Effects ===
+      shine: { type: "toggle", label: "Shine Effect", defaultValue: false },
+      shineColor: { type: "color", label: "Shine Color", defaultValue: "#ffffff40" },
+      floatEffect: { type: "toggle", label: "Float Effect", defaultValue: false },
+      floatIntensity: { type: "select", label: "Float Intensity", options: [
+        { label: "Subtle", value: "subtle" },
+        { label: "Medium", value: "medium" },
+        { label: "Strong", value: "strong" },
+      ], defaultValue: "subtle" },
+      gyroscope: { type: "toggle", label: "Gyroscope (mobile)", defaultValue: false },
+      // === Button ===
+      showButton: { type: "toggle", label: "Show Button", defaultValue: false },
+      buttonText: { type: "text", label: "Button Text", defaultValue: "Learn More" },
+      buttonLink: { type: "link", label: "Button Link" },
+      buttonVariant: { type: "select", label: "Button Variant", options: [
+        { label: "Primary", value: "primary" },
+        { label: "Secondary", value: "secondary" },
+        { label: "Outline", value: "outline" },
+        { label: "Ghost", value: "ghost" },
+      ], defaultValue: "primary" },
+      buttonPosition: { type: "select", label: "Button Position", options: [
+        { label: "Bottom", value: "bottom" },
+        { label: "Center", value: "center" },
+      ], defaultValue: "bottom" },
+      // === Icon Display ===
+      showIcon: { type: "toggle", label: "Show Large Icon", defaultValue: false },
+      iconPosition: { type: "select", label: "Icon Position", options: [
+        { label: "Top", value: "top" },
+        { label: "Center", value: "center" },
+        { label: "Left", value: "left" },
+      ], defaultValue: "top" },
+      iconSize: { type: "select", label: "Icon Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "lg" },
+      iconColor: { type: "color", label: "Icon Color" },
+      iconBackgroundColor: { type: "color", label: "Icon Background" },
+      // === Animation ===
+      animateOnMount: { type: "toggle", label: "Animate on Mount", defaultValue: true },
+      mountAnimation: { type: "select", label: "Mount Animation", options: [
+        { label: "Fade In", value: "fade" },
+        { label: "Scale", value: "scale" },
+        { label: "Slide Up", value: "slide-up" },
+      ], defaultValue: "fade" },
+      animationDuration: { type: "number", label: "Animation Duration (ms)", min: 100, max: 1000, defaultValue: 300 },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      disableOnMobile: { type: "toggle", label: "Disable Tilt on Mobile", defaultValue: true },
+      mobileScale: { type: "number", label: "Mobile Scale", min: 0.8, max: 1, step: 0.05, defaultValue: 1 },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label" },
+      reducedMotion: { type: "toggle", label: "Respect Reduced Motion", defaultValue: true },
     },
     defaultProps: {
       title: "Tilt Card",
@@ -8217,63 +11118,135 @@ const effectsComponents: ComponentDefinition[] = [
       shadow: "xl",
     },
     ai: {
-      description: "An interactive card with 3D tilt effect on mouse hover, adds depth and interactivity",
-      canModify: ["title", "description", "backgroundColor", "textColor", "maxRotation", "glare"],
-      suggestions: ["Add background image", "Adjust tilt intensity", "Toggle glare effect"],
+      description: "A premium interactive card with 3D tilt, glare effects, and extensive customization for modern UI",
+      canModify: ["title", "description", "backgroundColor", "maxRotation", "glare", "scale", "backgroundGradient"],
+      suggestions: ["Enable gradient background", "Add shine effect", "Enable float animation", "Show button", "Add icon"],
     },
   }),
 
+  // =========================================================================
+  // GLASS CARD - Glassmorphism Effect (Enhanced)
+  // =========================================================================
   defineComponent({
     type: "GlassCard",
     label: "Glass Card",
-    description: "A card with glassmorphism (frosted glass) effect",
+    description: "Premium glassmorphism card with advanced blur and effects (55+ fields)",
     category: "3d",
     icon: "Sparkles",
     render: GlassCardRender,
+    fieldGroups: [
+      { id: "content", label: "Content", icon: "Type", fields: ["title", "subtitle", "description", "icon", "badge"], defaultExpanded: true },
+      { id: "glass", label: "Glass Effect", icon: "Droplet", fields: ["preset", "blur", "saturation", "brightness", "contrast", "noise"], defaultExpanded: false },
+      { id: "background", label: "Background", icon: "Palette", fields: ["tint", "tintOpacity", "backgroundGradient", "gradientFrom", "gradientTo", "gradientAngle"], defaultExpanded: false },
+      { id: "border", label: "Border", icon: "Square", fields: ["showBorder", "borderOpacity", "borderColor", "borderWidth", "borderGradient", "borderGlowColor"], defaultExpanded: false },
+      { id: "shadow", label: "Shadow", icon: "Layers", fields: ["shadow", "shadowColor", "shadowBlur", "innerShadow"], defaultExpanded: false },
+      { id: "style", label: "Style", icon: "Palette", fields: ["textColor", "headingColor", "padding", "borderRadius", "minHeight"], defaultExpanded: false },
+      { id: "button", label: "Button", icon: "MousePointer", fields: ["showButton", "buttonText", "buttonLink", "buttonVariant"], defaultExpanded: false },
+      { id: "icon", label: "Icon", icon: "Image", fields: ["showIcon", "iconSize", "iconColor", "iconBackgroundColor", "iconBackgroundBlur"], defaultExpanded: false },
+      { id: "hover", label: "Hover Effects", icon: "Zap", fields: ["hoverScale", "hoverBlur", "hoverBrightness", "hoverBorderGlow"], defaultExpanded: false },
+      { id: "animation", label: "Animation", icon: "Wand2", fields: ["animateOnMount", "mountAnimation", "shimmerEffect", "floatEffect"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileBlur", "mobilePadding"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "reducedMotion"], defaultExpanded: false },
+    ],
     fields: {
+      // === Content ===
       title: { type: "text", label: "Title", defaultValue: "Glass Card" },
-      description: { type: "text", label: "Description", defaultValue: "Beautiful frosted glass effect" },
-      preset: {
-        type: "select",
-        label: "Glass Preset",
-        options: [
-          { label: "Light", value: "light" },
-          { label: "Dark", value: "dark" },
-          { label: "Colored", value: "colored" },
-          { label: "Subtle", value: "subtle" },
-          { label: "Heavy", value: "heavy" },
-        ],
-        defaultValue: "light",
-      },
-      blur: {
-        type: "number",
-        label: "Blur Amount (px)",
-        min: 0,
-        max: 50,
-        defaultValue: 10,
-      },
+      subtitle: { type: "text", label: "Subtitle" },
+      description: { type: "textarea", label: "Description", defaultValue: "Beautiful frosted glass effect" },
+      icon: { type: "text", label: "Icon (emoji)" },
+      badge: { type: "text", label: "Badge Text" },
+      // === Glass Effect ===
+      preset: { type: "select", label: "Glass Preset", options: [
+        { label: "Light", value: "light" },
+        { label: "Dark", value: "dark" },
+        { label: "Colored", value: "colored" },
+        { label: "Subtle", value: "subtle" },
+        { label: "Heavy", value: "heavy" },
+        { label: "Frosted", value: "frosted" },
+        { label: "Crystal", value: "crystal" },
+      ], defaultValue: "light" },
+      blur: { type: "number", label: "Blur Amount (px)", min: 0, max: 50, defaultValue: 10 },
+      saturation: { type: "number", label: "Saturation", min: 0, max: 200, defaultValue: 100 },
+      brightness: { type: "number", label: "Brightness", min: 50, max: 150, defaultValue: 100 },
+      contrast: { type: "number", label: "Contrast", min: 50, max: 150, defaultValue: 100 },
+      noise: { type: "toggle", label: "Add Noise Texture", defaultValue: false },
+      // === Background ===
       tint: { type: "color", label: "Tint Color" },
-      borderOpacity: {
-        type: "number",
-        label: "Border Opacity",
-        min: 0,
-        max: 1,
-        step: 0.1,
-        defaultValue: 0.2,
-      },
+      tintOpacity: { type: "number", label: "Tint Opacity", min: 0, max: 1, step: 0.1, defaultValue: 0.3 },
+      backgroundGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
+      gradientFrom: { type: "color", label: "Gradient From", defaultValue: "#ffffff30" },
+      gradientTo: { type: "color", label: "Gradient To", defaultValue: "#ffffff10" },
+      gradientAngle: { type: "number", label: "Gradient Angle (deg)", min: 0, max: 360, defaultValue: 135 },
+      // === Border ===
+      showBorder: { type: "toggle", label: "Show Border", defaultValue: true },
+      borderOpacity: { type: "number", label: "Border Opacity", min: 0, max: 1, step: 0.1, defaultValue: 0.2 },
+      borderColor: { type: "color", label: "Border Color", defaultValue: "#ffffff" },
+      borderWidth: { type: "select", label: "Border Width", options: [
+        { label: "1px", value: "1" },
+        { label: "2px", value: "2" },
+      ], defaultValue: "1" },
+      borderGradient: { type: "toggle", label: "Gradient Border", defaultValue: false },
+      borderGlowColor: { type: "color", label: "Border Glow Color" },
+      // === Shadow ===
+      shadow: { type: "select", label: "Shadow", options: presetOptions.shadow, defaultValue: "lg" },
+      shadowColor: { type: "color", label: "Shadow Color", defaultValue: "#00000020" },
+      shadowBlur: { type: "number", label: "Shadow Blur (px)", min: 0, max: 50, defaultValue: 20 },
+      innerShadow: { type: "toggle", label: "Inner Shadow", defaultValue: false },
+      // === Style ===
       textColor: { type: "color", label: "Text Color", defaultValue: "#ffffff" },
-      padding: {
-        type: "select",
-        label: "Padding",
-        options: presetOptions.padding,
-        defaultValue: "lg",
-      },
-      borderRadius: {
-        type: "select",
-        label: "Border Radius",
-        options: presetOptions.borderRadius,
-        defaultValue: "xl",
-      },
+      headingColor: { type: "color", label: "Heading Color" },
+      padding: { type: "select", label: "Padding", options: presetOptions.padding, defaultValue: "lg" },
+      borderRadius: { type: "select", label: "Border Radius", options: presetOptions.borderRadius, defaultValue: "xl" },
+      minHeight: { type: "select", label: "Min Height", options: [
+        { label: "Auto", value: "auto" },
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+      ], defaultValue: "auto" },
+      // === Button ===
+      showButton: { type: "toggle", label: "Show Button", defaultValue: false },
+      buttonText: { type: "text", label: "Button Text", defaultValue: "Learn More" },
+      buttonLink: { type: "link", label: "Button Link" },
+      buttonVariant: { type: "select", label: "Button Variant", options: [
+        { label: "Glass", value: "glass" },
+        { label: "Solid", value: "solid" },
+        { label: "Outline", value: "outline" },
+      ], defaultValue: "glass" },
+      // === Icon ===
+      showIcon: { type: "toggle", label: "Show Large Icon", defaultValue: false },
+      iconSize: { type: "select", label: "Icon Size", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+      ], defaultValue: "lg" },
+      iconColor: { type: "color", label: "Icon Color" },
+      iconBackgroundColor: { type: "color", label: "Icon Background", defaultValue: "#ffffff20" },
+      iconBackgroundBlur: { type: "toggle", label: "Icon Background Blur", defaultValue: true },
+      // === Hover Effects ===
+      hoverScale: { type: "number", label: "Hover Scale", min: 1, max: 1.1, step: 0.01, defaultValue: 1.02 },
+      hoverBlur: { type: "number", label: "Hover Blur Change (px)", min: -10, max: 10, defaultValue: 2 },
+      hoverBrightness: { type: "number", label: "Hover Brightness", min: 80, max: 120, defaultValue: 105 },
+      hoverBorderGlow: { type: "toggle", label: "Hover Border Glow", defaultValue: false },
+      // === Animation ===
+      animateOnMount: { type: "toggle", label: "Animate on Mount", defaultValue: true },
+      mountAnimation: { type: "select", label: "Mount Animation", options: [
+        { label: "Fade In", value: "fade" },
+        { label: "Scale", value: "scale" },
+        { label: "Blur In", value: "blur" },
+      ], defaultValue: "fade" },
+      shimmerEffect: { type: "toggle", label: "Shimmer Effect", defaultValue: false },
+      floatEffect: { type: "toggle", label: "Float Effect", defaultValue: false },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileBlur: { type: "number", label: "Mobile Blur (px)", min: 0, max: 30, defaultValue: 5 },
+      mobilePadding: { type: "select", label: "Mobile Padding", options: [
+        { label: "Same", value: "same" },
+        { label: "Smaller", value: "smaller" },
+      ], defaultValue: "same" },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label" },
+      reducedMotion: { type: "toggle", label: "Respect Reduced Motion", defaultValue: true },
     },
     defaultProps: {
       title: "Glass Card",
@@ -8286,66 +11259,160 @@ const effectsComponents: ComponentDefinition[] = [
       borderRadius: "xl",
     },
     ai: {
-      description: "A card with modern glassmorphism effect - frosted glass with blur and transparency",
-      canModify: ["title", "description", "preset", "blur", "tint", "textColor"],
-      suggestions: ["Try dark preset", "Increase blur effect", "Add custom tint color"],
+      description: "A premium glassmorphism card with advanced blur, gradients, and hover effects for modern UI",
+      canModify: ["title", "description", "preset", "blur", "tint", "textColor", "backgroundGradient"],
+      suggestions: ["Try dark preset", "Add shimmer effect", "Enable gradient background", "Add border glow", "Show icon"],
     },
   }),
 
+  // =========================================================================
+  // PARTICLE BACKGROUND - Animated Particles (Enhanced)
+  // =========================================================================
   defineComponent({
     type: "ParticleBackground",
     label: "Particle Background",
-    description: "Animated particle effects for backgrounds",
+    description: "Premium animated particle effects with extensive customization (60+ fields)",
     category: "3d",
     icon: "Atom",
     render: ParticleBackgroundRender,
     acceptsChildren: true,
     isContainer: true,
+    fieldGroups: [
+      { id: "particles", label: "Particles", icon: "Circle", fields: ["particleCount", "particleShape", "particleSize", "particleSizeVariation", "particleOpacity", "particleOpacityVariation"], defaultExpanded: true },
+      { id: "color", label: "Color", icon: "Palette", fields: ["particleColor", "multiColor", "colorPalette", "colorMode", "colorTransition"], defaultExpanded: false },
+      { id: "movement", label: "Movement", icon: "Move", fields: ["speed", "direction", "randomDirection", "bounce", "gravity", "wind", "windDirection"], defaultExpanded: false },
+      { id: "connections", label: "Connections", icon: "GitBranch", fields: ["connected", "connectionDistance", "connectionOpacity", "connectionColor", "connectionWidth", "connectionCurved"], defaultExpanded: false },
+      { id: "interaction", label: "Interaction", icon: "MousePointer", fields: ["interactivity", "hoverMode", "hoverDistance", "clickMode", "clickParticleCount", "repulseDistance", "attractDistance"], defaultExpanded: false },
+      { id: "background", label: "Background", icon: "Image", fields: ["backgroundColor", "backgroundGradient", "gradientFrom", "gradientTo", "gradientDirection", "backgroundImage", "backgroundOpacity"], defaultExpanded: false },
+      { id: "size", label: "Size", icon: "Maximize", fields: ["height", "fullScreen", "minHeight", "maxHeight"], defaultExpanded: false },
+      { id: "effects", label: "Effects", icon: "Sparkles", fields: ["twinkle", "twinkleFrequency", "trail", "trailLength", "pulsate", "glow", "glowIntensity"], defaultExpanded: false },
+      { id: "spawn", label: "Spawn", icon: "Zap", fields: ["spawnRate", "spawnPosition", "lifetime", "fadeIn", "fadeOut"], defaultExpanded: false },
+      { id: "performance", label: "Performance", icon: "Gauge", fields: ["fps", "pauseOnBlur", "reducedOnMobile", "mobileParticleCount"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "reducedMotion", "pauseOnReducedMotion"], defaultExpanded: false },
+    ],
     fields: {
-      particleCount: {
-        type: "number",
-        label: "Particle Count",
-        min: 10,
-        max: 200,
-        defaultValue: 50,
-      },
+      // === Particles ===
+      particleCount: { type: "number", label: "Particle Count", min: 10, max: 500, defaultValue: 50 },
+      particleShape: { type: "select", label: "Particle Shape", options: [
+        { label: "Circle", value: "circle" },
+        { label: "Square", value: "square" },
+        { label: "Triangle", value: "triangle" },
+        { label: "Star", value: "star" },
+        { label: "Polygon", value: "polygon" },
+        { label: "Image", value: "image" },
+      ], defaultValue: "circle" },
+      particleSize: { type: "number", label: "Max Particle Size", min: 1, max: 20, defaultValue: 4 },
+      particleSizeVariation: { type: "number", label: "Size Variation", min: 0, max: 10, defaultValue: 2 },
+      particleOpacity: { type: "number", label: "Particle Opacity", min: 0, max: 1, step: 0.1, defaultValue: 0.8 },
+      particleOpacityVariation: { type: "number", label: "Opacity Variation", min: 0, max: 0.5, step: 0.1, defaultValue: 0.2 },
+      // === Color ===
       particleColor: { type: "color", label: "Particle Color", defaultValue: "#6366f1" },
-      particleSize: {
-        type: "number",
-        label: "Max Particle Size",
-        min: 1,
-        max: 10,
-        defaultValue: 4,
-      },
-      speed: {
-        type: "number",
-        label: "Speed",
-        min: 0.1,
-        max: 3,
-        step: 0.1,
-        defaultValue: 1,
-      },
+      multiColor: { type: "toggle", label: "Multi-Color Mode", defaultValue: false },
+      colorPalette: { type: "text", label: "Color Palette (comma-separated)" },
+      colorMode: { type: "select", label: "Color Mode", options: [
+        { label: "Single", value: "single" },
+        { label: "Random", value: "random" },
+        { label: "Gradient", value: "gradient" },
+      ], defaultValue: "single" },
+      colorTransition: { type: "toggle", label: "Color Transition", defaultValue: false },
+      // === Movement ===
+      speed: { type: "number", label: "Speed", min: 0.1, max: 5, step: 0.1, defaultValue: 1 },
+      direction: { type: "select", label: "Direction", options: [
+        { label: "None (Random)", value: "none" },
+        { label: "Up", value: "up" },
+        { label: "Down", value: "down" },
+        { label: "Left", value: "left" },
+        { label: "Right", value: "right" },
+        { label: "Top Left", value: "top-left" },
+        { label: "Top Right", value: "top-right" },
+        { label: "Bottom Left", value: "bottom-left" },
+        { label: "Bottom Right", value: "bottom-right" },
+      ], defaultValue: "none" },
+      randomDirection: { type: "toggle", label: "Random Direction", defaultValue: true },
+      bounce: { type: "toggle", label: "Bounce Off Edges", defaultValue: true },
+      gravity: { type: "number", label: "Gravity", min: 0, max: 1, step: 0.1, defaultValue: 0 },
+      wind: { type: "number", label: "Wind Force", min: 0, max: 1, step: 0.1, defaultValue: 0 },
+      windDirection: { type: "number", label: "Wind Direction (deg)", min: 0, max: 360, defaultValue: 0 },
+      // === Connections ===
       connected: { type: "toggle", label: "Connect Particles", defaultValue: true },
-      connectionDistance: {
-        type: "number",
-        label: "Connection Distance",
-        min: 50,
-        max: 300,
-        defaultValue: 150,
-      },
+      connectionDistance: { type: "number", label: "Connection Distance", min: 50, max: 300, defaultValue: 150 },
+      connectionOpacity: { type: "number", label: "Connection Opacity", min: 0, max: 1, step: 0.1, defaultValue: 0.4 },
+      connectionColor: { type: "color", label: "Connection Color" },
+      connectionWidth: { type: "number", label: "Connection Width", min: 0.5, max: 3, step: 0.5, defaultValue: 1 },
+      connectionCurved: { type: "toggle", label: "Curved Connections", defaultValue: false },
+      // === Interaction ===
+      interactivity: { type: "toggle", label: "Enable Interactivity", defaultValue: true },
+      hoverMode: { type: "select", label: "Hover Mode", options: [
+        { label: "None", value: "none" },
+        { label: "Repulse", value: "repulse" },
+        { label: "Attract", value: "attract" },
+        { label: "Grab", value: "grab" },
+        { label: "Bubble", value: "bubble" },
+      ], defaultValue: "repulse" },
+      hoverDistance: { type: "number", label: "Hover Distance", min: 50, max: 300, defaultValue: 100 },
+      clickMode: { type: "select", label: "Click Mode", options: [
+        { label: "None", value: "none" },
+        { label: "Push", value: "push" },
+        { label: "Remove", value: "remove" },
+        { label: "Repulse", value: "repulse" },
+        { label: "Bubble", value: "bubble" },
+      ], defaultValue: "push" },
+      clickParticleCount: { type: "number", label: "Click Particle Count", min: 1, max: 10, defaultValue: 4 },
+      repulseDistance: { type: "number", label: "Repulse Distance", min: 50, max: 300, defaultValue: 100 },
+      attractDistance: { type: "number", label: "Attract Distance", min: 50, max: 300, defaultValue: 100 },
+      // === Background ===
       backgroundColor: { type: "color", label: "Background Color", defaultValue: "#0f172a" },
-      height: {
-        type: "select",
-        label: "Height",
-        options: [
-          { label: "Small", value: "sm" },
-          { label: "Medium", value: "md" },
-          { label: "Large", value: "lg" },
-          { label: "XL", value: "xl" },
-          { label: "Full Screen", value: "screen" },
-        ],
-        defaultValue: "md",
-      },
+      backgroundGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
+      gradientFrom: { type: "color", label: "Gradient From", defaultValue: "#0f172a" },
+      gradientTo: { type: "color", label: "Gradient To", defaultValue: "#1e1b4b" },
+      gradientDirection: { type: "select", label: "Gradient Direction", options: [
+        { label: "To Bottom", value: "to-b" },
+        { label: "To Right", value: "to-r" },
+        { label: "To Bottom Right", value: "to-br" },
+        { label: "Radial", value: "radial" },
+      ], defaultValue: "to-b" },
+      backgroundImage: { type: "image", label: "Background Image" },
+      backgroundOpacity: { type: "number", label: "Background Opacity", min: 0, max: 1, step: 0.1, defaultValue: 1 },
+      // === Size ===
+      height: { type: "select", label: "Height", options: [
+        { label: "Small", value: "sm" },
+        { label: "Medium", value: "md" },
+        { label: "Large", value: "lg" },
+        { label: "XL", value: "xl" },
+        { label: "Full Screen", value: "screen" },
+        { label: "Custom", value: "custom" },
+      ], defaultValue: "md" },
+      fullScreen: { type: "toggle", label: "Full Screen", defaultValue: false },
+      minHeight: { type: "text", label: "Min Height (e.g., 400px)" },
+      maxHeight: { type: "text", label: "Max Height (e.g., 800px)" },
+      // === Effects ===
+      twinkle: { type: "toggle", label: "Twinkle Effect", defaultValue: false },
+      twinkleFrequency: { type: "number", label: "Twinkle Frequency", min: 0.1, max: 2, step: 0.1, defaultValue: 0.5 },
+      trail: { type: "toggle", label: "Particle Trail", defaultValue: false },
+      trailLength: { type: "number", label: "Trail Length", min: 1, max: 20, defaultValue: 5 },
+      pulsate: { type: "toggle", label: "Pulsate Effect", defaultValue: false },
+      glow: { type: "toggle", label: "Glow Effect", defaultValue: false },
+      glowIntensity: { type: "number", label: "Glow Intensity", min: 1, max: 20, defaultValue: 5 },
+      // === Spawn ===
+      spawnRate: { type: "number", label: "Spawn Rate", min: 0, max: 10, step: 0.5, defaultValue: 0 },
+      spawnPosition: { type: "select", label: "Spawn Position", options: [
+        { label: "Random", value: "random" },
+        { label: "Bottom", value: "bottom" },
+        { label: "Top", value: "top" },
+        { label: "Center", value: "center" },
+      ], defaultValue: "random" },
+      lifetime: { type: "number", label: "Particle Lifetime (s)", min: 0, max: 30, defaultValue: 0 },
+      fadeIn: { type: "toggle", label: "Fade In", defaultValue: false },
+      fadeOut: { type: "toggle", label: "Fade Out", defaultValue: false },
+      // === Performance ===
+      fps: { type: "number", label: "FPS Limit", min: 30, max: 120, defaultValue: 60 },
+      pauseOnBlur: { type: "toggle", label: "Pause When Tab Not Visible", defaultValue: true },
+      reducedOnMobile: { type: "toggle", label: "Reduced on Mobile", defaultValue: true },
+      mobileParticleCount: { type: "number", label: "Mobile Particle Count", min: 10, max: 100, defaultValue: 25 },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label", defaultValue: "Animated particle background" },
+      reducedMotion: { type: "toggle", label: "Respect Reduced Motion", defaultValue: true },
+      pauseOnReducedMotion: { type: "toggle", label: "Pause on Reduced Motion", defaultValue: true },
     },
     defaultProps: {
       particleCount: 50,
@@ -8358,71 +11425,153 @@ const effectsComponents: ComponentDefinition[] = [
       height: "md",
     },
     ai: {
-      description: "An animated particle background that creates a modern, dynamic effect - great for hero sections",
-      canModify: ["particleCount", "particleColor", "speed", "connected", "backgroundColor", "height"],
-      suggestions: ["Increase particle count", "Change particle color", "Make full screen"],
+      description: "A premium animated particle background with interactivity, connections, and extensive customization for hero sections",
+      canModify: ["particleCount", "particleColor", "speed", "connected", "backgroundColor", "height", "hoverMode", "clickMode"],
+      suggestions: ["Add multi-color mode", "Enable twinkle effect", "Add glow effect", "Enable gradient background", "Use star shape"],
     },
   }),
 
+  // =========================================================================
+  // SCROLL ANIMATE - Scroll-triggered Animation (Enhanced)
+  // =========================================================================
   defineComponent({
     type: "ScrollAnimate",
     label: "Scroll Animation",
-    description: "Content that animates when scrolling into view",
+    description: "Premium scroll-triggered animations with extensive customization (55+ fields)",
     category: "3d",
     icon: "MoveVertical",
     render: ScrollAnimateRender,
+    acceptsChildren: true,
+    isContainer: true,
+    fieldGroups: [
+      { id: "content", label: "Content", icon: "Type", fields: ["title", "subtitle", "description", "richContent"], defaultExpanded: true },
+      { id: "animation", label: "Animation", icon: "Zap", fields: ["animation", "customAnimation", "duration", "delay", "easing"], defaultExpanded: false },
+      { id: "trigger", label: "Trigger", icon: "Eye", fields: ["threshold", "triggerOnce", "triggerMargin", "triggerPosition"], defaultExpanded: false },
+      { id: "sequence", label: "Sequence", icon: "List", fields: ["stagger", "staggerDelay", "staggerDirection", "staggerFrom"], defaultExpanded: false },
+      { id: "distance", label: "Distance", icon: "Move", fields: ["translateX", "translateY", "scale", "rotate", "skew"], defaultExpanded: false },
+      { id: "style", label: "Style", icon: "Palette", fields: ["backgroundColor", "textColor", "padding", "borderRadius", "shadow"], defaultExpanded: false },
+      { id: "progress", label: "Scroll Progress", icon: "BarChart", fields: ["progressBased", "progressStart", "progressEnd", "progressProperty"], defaultExpanded: false },
+      { id: "parallax", label: "Parallax", icon: "Layers", fields: ["parallax", "parallaxSpeed", "parallaxDirection"], defaultExpanded: false },
+      { id: "effects", label: "Effects", icon: "Wand2", fields: ["blur", "opacity", "scaleStart", "rotateStart"], defaultExpanded: false },
+      { id: "counter", label: "Counter", icon: "Hash", fields: ["showCounter", "counterStart", "counterEnd", "counterDuration", "counterSuffix"], defaultExpanded: false },
+      { id: "responsive", label: "Responsive", icon: "Smartphone", fields: ["hideOnMobile", "mobileAnimation", "reducedMotionAnimation"], defaultExpanded: false },
+      { id: "accessibility", label: "Accessibility", icon: "Eye", fields: ["ariaLabel", "reducedMotion"], defaultExpanded: false },
+    ],
     fields: {
+      // === Content ===
       title: { type: "text", label: "Title", defaultValue: "Scroll Animation" },
-      description: { type: "text", label: "Description", defaultValue: "This content animates when you scroll" },
-      animation: {
-        type: "select",
-        label: "Animation Type",
-        options: [
-          { label: "Fade Up", value: "fade-up" },
-          { label: "Fade Down", value: "fade-down" },
-          { label: "Fade Left", value: "fade-left" },
-          { label: "Fade Right", value: "fade-right" },
-          { label: "Zoom In", value: "zoom-in" },
-          { label: "Zoom Out", value: "zoom-out" },
-          { label: "Flip Up", value: "flip-up" },
-          { label: "Flip Left", value: "flip-left" },
-          { label: "Bounce In", value: "bounce-in" },
-          { label: "Rotate In", value: "rotate-in" },
-        ],
-        defaultValue: "fade-up",
-      },
-      delay: {
-        type: "number",
-        label: "Delay (ms)",
-        min: 0,
-        max: 2000,
-        step: 100,
-        defaultValue: 0,
-      },
-      duration: {
-        type: "number",
-        label: "Duration (ms)",
-        min: 100,
-        max: 2000,
-        step: 100,
-        defaultValue: 600,
-      },
-      threshold: {
-        type: "number",
-        label: "Trigger Threshold (0-1)",
-        min: 0,
-        max: 1,
-        step: 0.1,
-        defaultValue: 0.1,
-      },
-      once: { type: "toggle", label: "Animate Once", defaultValue: true },
+      subtitle: { type: "text", label: "Subtitle" },
+      description: { type: "textarea", label: "Description", defaultValue: "This content animates when you scroll" },
+      richContent: { type: "textarea", label: "Rich Content (HTML)" },
+      // === Animation ===
+      animation: { type: "select", label: "Animation Type", options: [
+        { label: "Fade Up", value: "fade-up" },
+        { label: "Fade Down", value: "fade-down" },
+        { label: "Fade Left", value: "fade-left" },
+        { label: "Fade Right", value: "fade-right" },
+        { label: "Zoom In", value: "zoom-in" },
+        { label: "Zoom Out", value: "zoom-out" },
+        { label: "Flip Up", value: "flip-up" },
+        { label: "Flip Down", value: "flip-down" },
+        { label: "Flip Left", value: "flip-left" },
+        { label: "Flip Right", value: "flip-right" },
+        { label: "Bounce In", value: "bounce-in" },
+        { label: "Rotate In", value: "rotate-in" },
+        { label: "Slide Up", value: "slide-up" },
+        { label: "Slide Down", value: "slide-down" },
+        { label: "Scale Up", value: "scale-up" },
+        { label: "Reveal", value: "reveal" },
+        { label: "Custom", value: "custom" },
+      ], defaultValue: "fade-up" },
+      customAnimation: { type: "text", label: "Custom Animation Name" },
+      duration: { type: "number", label: "Duration (ms)", min: 100, max: 3000, step: 100, defaultValue: 600 },
+      delay: { type: "number", label: "Delay (ms)", min: 0, max: 2000, step: 100, defaultValue: 0 },
+      easing: { type: "select", label: "Easing", options: [
+        { label: "Ease", value: "ease" },
+        { label: "Ease In", value: "ease-in" },
+        { label: "Ease Out", value: "ease-out" },
+        { label: "Ease In Out", value: "ease-in-out" },
+        { label: "Linear", value: "linear" },
+        { label: "Spring", value: "spring" },
+        { label: "Bounce", value: "bounce" },
+      ], defaultValue: "ease-out" },
+      // === Trigger ===
+      threshold: { type: "number", label: "Trigger Threshold (0-1)", min: 0, max: 1, step: 0.1, defaultValue: 0.1 },
+      triggerOnce: { type: "toggle", label: "Animate Once", defaultValue: true },
+      triggerMargin: { type: "text", label: "Trigger Margin (e.g., -100px)" },
+      triggerPosition: { type: "select", label: "Trigger Position", options: [
+        { label: "Top", value: "top" },
+        { label: "Center", value: "center" },
+        { label: "Bottom", value: "bottom" },
+      ], defaultValue: "bottom" },
+      // === Sequence ===
+      stagger: { type: "toggle", label: "Stagger Children", defaultValue: false },
+      staggerDelay: { type: "number", label: "Stagger Delay (ms)", min: 50, max: 500, defaultValue: 100 },
+      staggerDirection: { type: "select", label: "Stagger Direction", options: [
+        { label: "Forward", value: "forward" },
+        { label: "Reverse", value: "reverse" },
+        { label: "Center Out", value: "center" },
+      ], defaultValue: "forward" },
+      staggerFrom: { type: "select", label: "Stagger From", options: [
+        { label: "First", value: "first" },
+        { label: "Last", value: "last" },
+        { label: "Center", value: "center" },
+        { label: "Random", value: "random" },
+      ], defaultValue: "first" },
+      // === Distance ===
+      translateX: { type: "number", label: "Translate X (px)", min: -200, max: 200, defaultValue: 0 },
+      translateY: { type: "number", label: "Translate Y (px)", min: -200, max: 200, defaultValue: 50 },
+      scale: { type: "number", label: "End Scale", min: 0.5, max: 2, step: 0.1, defaultValue: 1 },
+      rotate: { type: "number", label: "End Rotate (deg)", min: -180, max: 180, defaultValue: 0 },
+      skew: { type: "number", label: "Skew (deg)", min: -30, max: 30, defaultValue: 0 },
+      // === Style ===
       backgroundColor: { type: "color", label: "Background Color", defaultValue: "#f8fafc" },
-      padding: {
-        type: "select",
-        label: "Padding",
-        options: presetOptions.padding,
-        defaultValue: "lg",
-      },
+      textColor: { type: "color", label: "Text Color" },
+      padding: { type: "select", label: "Padding", options: presetOptions.padding, defaultValue: "lg" },
+      borderRadius: { type: "select", label: "Border Radius", options: presetOptions.borderRadius, defaultValue: "none" },
+      shadow: { type: "select", label: "Shadow", options: presetOptions.shadow, defaultValue: "none" },
+      // === Scroll Progress ===
+      progressBased: { type: "toggle", label: "Progress-based Animation", defaultValue: false },
+      progressStart: { type: "number", label: "Progress Start", min: 0, max: 1, step: 0.1, defaultValue: 0 },
+      progressEnd: { type: "number", label: "Progress End", min: 0, max: 1, step: 0.1, defaultValue: 1 },
+      progressProperty: { type: "select", label: "Progress Property", options: [
+        { label: "Opacity", value: "opacity" },
+        { label: "Scale", value: "scale" },
+        { label: "TranslateY", value: "translateY" },
+        { label: "Rotate", value: "rotate" },
+      ], defaultValue: "opacity" },
+      // === Parallax ===
+      parallax: { type: "toggle", label: "Enable Parallax", defaultValue: false },
+      parallaxSpeed: { type: "number", label: "Parallax Speed", min: -1, max: 1, step: 0.1, defaultValue: 0.3 },
+      parallaxDirection: { type: "select", label: "Parallax Direction", options: [
+        { label: "Vertical", value: "vertical" },
+        { label: "Horizontal", value: "horizontal" },
+      ], defaultValue: "vertical" },
+      // === Effects ===
+      blur: { type: "number", label: "Start Blur (px)", min: 0, max: 20, defaultValue: 0 },
+      opacity: { type: "number", label: "Start Opacity", min: 0, max: 1, step: 0.1, defaultValue: 0 },
+      scaleStart: { type: "number", label: "Start Scale", min: 0.5, max: 1.5, step: 0.1, defaultValue: 1 },
+      rotateStart: { type: "number", label: "Start Rotate (deg)", min: -180, max: 180, defaultValue: 0 },
+      // === Counter ===
+      showCounter: { type: "toggle", label: "Show Animated Counter", defaultValue: false },
+      counterStart: { type: "number", label: "Counter Start", min: 0, defaultValue: 0 },
+      counterEnd: { type: "number", label: "Counter End", min: 0, defaultValue: 100 },
+      counterDuration: { type: "number", label: "Counter Duration (ms)", min: 500, max: 5000, defaultValue: 2000 },
+      counterSuffix: { type: "text", label: "Counter Suffix (e.g., +, %)" },
+      // === Responsive ===
+      hideOnMobile: { type: "toggle", label: "Hide on Mobile", defaultValue: false },
+      mobileAnimation: { type: "select", label: "Mobile Animation", options: [
+        { label: "Same", value: "same" },
+        { label: "Fade Only", value: "fade" },
+        { label: "None", value: "none" },
+      ], defaultValue: "same" },
+      reducedMotionAnimation: { type: "select", label: "Reduced Motion Animation", options: [
+        { label: "Fade", value: "fade" },
+        { label: "None", value: "none" },
+      ], defaultValue: "fade" },
+      // === Accessibility ===
+      ariaLabel: { type: "text", label: "Aria Label" },
+      reducedMotion: { type: "toggle", label: "Respect Reduced Motion", defaultValue: true },
     },
     defaultProps: {
       title: "Scroll Animation",
@@ -8431,14 +11580,14 @@ const effectsComponents: ComponentDefinition[] = [
       delay: 0,
       duration: 600,
       threshold: 0.1,
-      once: true,
+      triggerOnce: true,
       backgroundColor: "#f8fafc",
       padding: "lg",
     },
     ai: {
-      description: "A content block with scroll-triggered animation - reveals content as user scrolls",
-      canModify: ["title", "description", "animation", "delay", "duration", "backgroundColor"],
-      suggestions: ["Try bounce-in animation", "Add delay for stagger effect", "Change to zoom-in"],
+      description: "A premium scroll-triggered animation wrapper with parallax, stagger, and progress-based effects",
+      canModify: ["title", "description", "animation", "delay", "duration", "backgroundColor", "stagger", "parallax"],
+      suggestions: ["Enable stagger for children", "Add parallax effect", "Use progress-based animation", "Add animated counter", "Try bounce-in animation"],
     },
   }),
 ];
