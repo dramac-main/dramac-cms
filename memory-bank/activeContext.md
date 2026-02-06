@@ -1,6 +1,41 @@
 # Active Context
 
-## Latest Session Update (Booking Module Bug Fixes - February 8, 2026)
+## Latest Session Update (AI Website Designer AWD-08 & AWD-09 - February 2026)
+
+### AWD-08 & AWD-09 IMPLEMENTATION COMPLETED ✅
+
+**Goal:** Implement Phase AWD-08 (Preview & Iteration System) and Phase AWD-09 (Module Integration Intelligence) for the AI Website Designer.
+
+**AWD-08: Preview & Iteration System ✅**
+- **Types** (`src/lib/ai/website-designer/preview/types.ts`) — PreviewState, Iteration, Change, RefinementRequest, VersionSnapshot
+- **Store** (`src/lib/ai/website-designer/preview/store.ts`) — Zustand store with undo/redo, version history, device switching
+- **Iteration Engine** (`src/lib/ai/website-designer/preview/iteration-engine.ts`) — AI-powered refinement processing with Claude claude-sonnet-4-20250514
+- **React Hook** (`src/lib/ai/website-designer/preview/use-preview-state.ts`) — Convenient hook for components
+- **DeviceFrame** (`src/components/studio/website-designer/DeviceFrame.tsx`) — Mobile/tablet/desktop device previews
+- **IterationPanel** (`src/components/studio/website-designer/IterationPanel.tsx`) — Chat-style refinement UI with quick actions
+- **VersionHistory** (`src/components/studio/website-designer/VersionHistory.tsx`) — Visual timeline with restore/compare
+- **PreviewRenderer** (`src/components/studio/website-designer/PreviewRenderer.tsx`) — Main preview component with all features
+
+**AWD-09: Module Integration Intelligence ✅**
+- **Types** (`src/lib/ai/website-designer/modules/types.ts`) — ModuleType, ModuleConfig, industry mappings for 12 industries
+- **Default Configs** (`src/lib/ai/website-designer/modules/default-configs.ts`) — Zambia defaults (ZMW, Africa/Lusaka, 16% VAT)
+- **Analyzer** (`src/lib/ai/website-designer/modules/analyzer.ts`) — AI-powered module requirement detection
+- **Configurator** (`src/lib/ai/website-designer/modules/configurator.ts`) — Intelligent module configuration based on context
+- **Component Injector** (`src/lib/ai/website-designer/modules/component-injector.ts`) — Injects module components into generated pages
+- **Orchestrator** (`src/lib/ai/website-designer/modules/orchestrator.ts`) — Coordinates all module operations
+
+**Files Added (18 total):**
+- `src/lib/ai/website-designer/preview/` — 5 files
+- `src/lib/ai/website-designer/modules/` — 7 files  
+- `src/components/studio/website-designer/` — 5 UI components
+- Updated `src/lib/ai/website-designer/index.ts` — Exports AWD-08 and AWD-09
+
+**TypeScript Status:** ✅ Zero errors
+**Commit:** `d96de04` — Pushed to main
+
+---
+
+## Previous Session (Booking Module Bug Fixes - February 8, 2026)
 
 ### BOOKING MODULE PRODUCTION FIXES COMPLETED ✅
 
