@@ -161,7 +161,14 @@ const defaultLegalSettings: LegalSettings = {
   privacy_policy: '',
   refund_policy: '',
   shipping_policy: '',
-  terms_accepted_timestamp_required: true
+  cookie_policy: '',
+  terms_accepted_timestamp_required: true,
+  minimum_age_verification: undefined,
+  pages: [],
+  require_terms_acceptance: false,
+  require_privacy_acceptance: false,
+  gdpr_enabled: false,
+  show_cookie_banner: false
 }
 
 // ============================================================================

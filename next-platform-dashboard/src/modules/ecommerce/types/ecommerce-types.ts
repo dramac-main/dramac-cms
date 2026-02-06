@@ -415,27 +415,6 @@ export type EcommerceSettingsInput = Omit<EcommerceSettings, 'id' | 'created_at'
 export type EcommerceSettingsUpdate = Partial<EcommerceSettingsInput>
 
 // ============================================================================
-// SHIPPING
-// ============================================================================
-
-export interface ShippingZone {
-  id: string
-  name: string
-  countries: string[]
-  rates: ShippingRate[]
-}
-
-export interface ShippingRate {
-  id: string
-  name: string
-  price: number
-  min_order_amount?: number
-  max_order_amount?: number
-  estimated_days_min?: number
-  estimated_days_max?: number
-}
-
-// ============================================================================
 // PAYMENT PROVIDER CONFIGS
 // ============================================================================
 
@@ -952,8 +931,15 @@ export interface LegalSettings {
   pages: LegalPage[]
   require_terms_acceptance: boolean
   require_privacy_acceptance: boolean
+  require_age_verification?: boolean
+  minimum_age?: number
+  terms_url?: string
+  privacy_url?: string
+  cookie_policy_url?: string
   gdpr_enabled: boolean
   show_cookie_banner: boolean
+  allow_data_export?: boolean
+  allow_account_deletion?: boolean
 }
 
 export interface EcommerceSettingsComplete {

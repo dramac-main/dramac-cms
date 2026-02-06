@@ -96,13 +96,13 @@ export function InventoryView({ siteId, agencyId }: InventoryViewProps) {
       switch (type) {
         case 'all':
           // Export all products with stock levels
-          if (!report?.products?.length) {
+          if (!report?.items?.length) {
             toast.error('No inventory data to export')
             return
           }
           csvContent = 'Product Name,SKU,Current Stock,Low Stock Threshold,Status,Cost Price,Base Price\n'
-          report.products.forEach(p => {
-            csvContent += `"${p.name || ''}","${p.sku || ''}",${p.quantity || 0},${p.low_stock_threshold || 0},"${p.status || ''}",${((p.cost_price || 0) / 100).toFixed(2)},${((p.base_price || 0) / 100).toFixed(2)}\n`
+          report.items.forEach((p) => {
+            csvContent += `"${p.product_name || ''}","${p.sku || ''}",${p.current_quantity || 0},${p.low_stock_threshold || 0},"${p.status || ''}",${((p.cost_price || 0) / 100).toFixed(2)},${((p.base_price || 0) / 100).toFixed(2)}\n`
           })
           filename = `inventory-${new Date().toISOString().split('T')[0]}.csv`
           break
@@ -115,7 +115,7 @@ export function InventoryView({ siteId, agencyId }: InventoryViewProps) {
           }
           csvContent = 'Product Name,SKU,Current Stock,Alert Level,Threshold\n'
           alerts.forEach(a => {
-            csvContent += `"${a.name || ''}","${a.sku || ''}",${a.quantity || 0},"${a.alert_level || ''}",${a.low_stock_threshold || 0}\n`
+            csvContent += `"${a.product_name || ''}","${a.sku || ''}",${a.current_stock || 0},"${a.alert_level || ''}",${a.threshold || 0}\n`
           })
           filename = `low-stock-alerts-${new Date().toISOString().split('T')[0]}.csv`
           break
