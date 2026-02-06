@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getProducts, getProduct, getFeaturedProducts } from '@/modules/ecommerce/actions/ecommerce-actions'
+import type { Product } from '@/modules/ecommerce/types/ecommerce-types'
 
 export const dynamic = 'force-dynamic'
 
@@ -137,7 +138,7 @@ export async function GET(request: NextRequest) {
 /**
  * Transform database product to frontend-friendly format
  */
-function transformProduct(product: Record<string, unknown>) {
+function transformProduct(product: Product) {
   return {
     id: product.id,
     name: product.name,
@@ -153,7 +154,7 @@ function transformProduct(product: Record<string, unknown>) {
     sku: product.sku,
     quantity: product.quantity,
     is_featured: product.is_featured,
-    rating: product.rating || null,
+    rating: null, // Rating could be added to Product type in future
     // Additional fields for complete product view
     short_description: product.short_description,
     track_inventory: product.track_inventory,
