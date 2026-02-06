@@ -13,6 +13,16 @@
 export { WebsiteDesignerEngine, generateWebsiteFromPrompt } from "./engine";
 
 // =============================================================================
+// CONVERTER (AI output to Studio format)
+// =============================================================================
+
+export {
+  convertPageToStudioFormat,
+  convertOutputToStudioPages,
+  getEmptyStudioData,
+} from "./converter";
+
+// =============================================================================
 // TYPES
 // =============================================================================
 

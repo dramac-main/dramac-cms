@@ -1,6 +1,65 @@
 # Active Context
 
-## Latest Session Update (AI Website Designer AWD-08 & AWD-09 - February 2026)
+## Latest Session Update (AI Website Designer END-TO-END FIX - February 2026)
+
+### AI WEBSITE DESIGNER FULLY WORKING END-TO-END ✅
+
+**Issue:** The previously implemented AWD-08 preview system used placeholder components (`ComponentPlaceholder`) instead of the actual `StudioRenderer`, making the preview non-functional.
+
+**Root Cause Identified:**
+- `PreviewRenderer.tsx` at line 350+ used fake `ComponentPlaceholder` instead of real `StudioRenderer`
+- Test page didn't call the real API - used mocked data
+- No conversion from AI output format (`GeneratedPage`) to Studio format (`StudioPageData`)
+
+**Solution Implemented:**
+
+1. **Converter** (`src/lib/ai/website-designer/converter.ts`) - 353 lines
+   - `convertPageToStudioFormat()` - Transforms GeneratedPage → StudioPageData
+   - `convertComponentToStudio()` - Maps AI component types to Studio types
+   - `transformPropsForStudio()` - Component-specific prop mappings (Hero, Features, CTA, Team, ContactForm, FAQ, Stats, Pricing, Navbar, Footer)
+   - Handles type mapping: HeroBlock→Hero, FeaturesGridBlock→Features, CTABlock→CTA, etc.
+
+2. **New AI Designer Page** (`src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx`) - 595 lines
+   - Calls REAL `/api/ai/website-designer` API (authenticated, validated)
+   - Uses actual `StudioRenderer` for live preview
+   - Device preview selector (mobile: 375px, tablet: 768px, desktop: 1280px)
+   - Full form: prompt textarea, style selector, color preferences
+   - Preview mode: page tabs, component list, save/discard/regenerate actions
+   - Saves pages via `/api/pages` with proper content structure
+
+3. **Navigation Link Added**
+   - Site detail page (`dashboard/sites/[siteId]/page.tsx`) now has prominent "AI Designer" button
+   - Uses gradient styling (purple-blue) to stand out
+   - Uses `Wand2` icon from Lucide
+
+**Files Added/Modified:**
+- ✅ `src/lib/ai/website-designer/converter.ts` - NEW
+- ✅ `src/lib/ai/website-designer/index.ts` - Added converter exports
+- ✅ `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx` - NEW (replaces test page)
+- ✅ `src/app/(dashboard)/dashboard/sites/[siteId]/page.tsx` - Added AI Designer link
+
+**API Flow (End-to-End):**
+```
+User → AI Designer Page → POST /api/ai/website-designer
+                               ↓
+                        WebsiteDesignerEngine (uses Anthropic Claude)
+                               ↓
+                        WebsiteDesignerOutput (pages: GeneratedPage[])
+                               ↓
+                        convertPageToStudioFormat()
+                               ↓
+                        StudioPageData → StudioRenderer
+                               ↓
+                        Live Preview (real components!)
+                               ↓
+                        Save → POST /api/pages → Database
+```
+
+**TypeScript Status:** ✅ Zero errors (`npx tsc --noEmit` passed)
+
+---
+
+## Previous Session Update (AI Website Designer AWD-08 & AWD-09 - February 2026)
 
 ### AWD-08 & AWD-09 IMPLEMENTATION COMPLETED ✅
 
