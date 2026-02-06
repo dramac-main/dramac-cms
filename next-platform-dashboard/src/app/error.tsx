@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AlertCircle, Home, RefreshCw, ArrowLeft, Bug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,13 +12,36 @@ interface ErrorPageProps {
 }
 
 export default function Error({ error, reset }: ErrorPageProps) {
+  const [isAutoRefreshing, setIsAutoRefreshing] = useState(false);
+
+  // Check if it's a ChunkLoadError (happens after deployments when browser has stale cache)
+  const isChunkLoadError = error.name === "ChunkLoadError" || 
+                           error.message.includes("ChunkLoadError") ||
+                           error.message.includes("Failed to load chunk") ||
+                           error.message.includes("Loading chunk");
+
   useEffect(() => {
     // Log the error to the console for debugging
     console.error("App error:", error);
     
-    // In production, you would send this to an error tracking service
-    // Example: Sentry, LogRocket, etc.
-  }, [error]);
+    // Auto-refresh for ChunkLoadError (stale cache after deployment)
+    if (isChunkLoadError) {
+      // Check if we already tried refreshing to avoid infinite loops
+      const refreshKey = "chunk_error_refresh";
+      const lastRefresh = sessionStorage.getItem(refreshKey);
+      const now = Date.now();
+      
+      // Only auto-refresh if we haven't tried in the last 10 seconds
+      if (!lastRefresh || now - parseInt(lastRefresh) > 10000) {
+        setIsAutoRefreshing(true);
+        sessionStorage.setItem(refreshKey, now.toString());
+        // Force a hard refresh to get new chunks
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+    }
+  }, [error, isChunkLoadError]);
 
   // Check if it's a known error type based on the message
   const isNetworkError = error.message.toLowerCase().includes("network") ||
@@ -35,18 +58,30 @@ export default function Error({ error, reset }: ErrorPageProps) {
           </div>
           <CardTitle className="text-2xl">Something went wrong!</CardTitle>
           <CardDescription>
-            {isNetworkError 
-              ? "There was a problem connecting to the server."
-              : isAuthError
-                ? "There was an authentication issue."
-                : "An unexpected error occurred while loading this page."}
+            {isChunkLoadError
+              ? isAutoRefreshing 
+                ? "Refreshing to load the latest version..."
+                : "A new version was deployed. Please refresh the page."
+              : isNetworkError 
+                ? "There was a problem connecting to the server."
+                : isAuthError
+                  ? "There was an authentication issue."
+                  : "An unexpected error occurred while loading this page."}
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground text-center">
-            {error.message || "We're sorry for the inconvenience. Please try again."}
-          </p>
+          {isChunkLoadError ? (
+            <p className="text-sm text-muted-foreground text-center">
+              {isAutoRefreshing 
+                ? "Please wait while we refresh the page..."
+                : "This usually happens after a new deployment. Click the button below to refresh."}
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center">
+              {error.message || "We're sorry for the inconvenience. Please try again."}
+            </p>
+          )}
           
           {process.env.NODE_ENV === "development" && error.digest && (
             <details className="text-xs">
@@ -62,11 +97,16 @@ export default function Error({ error, reset }: ErrorPageProps) {
         </CardContent>
         
         <CardFooter className="flex flex-col sm:flex-row gap-2 justify-center">
-          <Button onClick={reset} variant="outline" className="w-full sm:w-auto">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Try again
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline" 
+            className="w-full sm:w-auto"
+            disabled={isAutoRefreshing}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isAutoRefreshing ? 'animate-spin' : ''}`} />
+            {isAutoRefreshing ? 'Refreshing...' : 'Try again'}
           </Button>
-          <Button asChild className="w-full sm:w-auto">
+          <Button asChild className="w-full sm:w-auto" disabled={isAutoRefreshing}>
             <Link href="/dashboard">
               <Home className="mr-2 h-4 w-4" />
               Go to Dashboard
