@@ -1,6 +1,78 @@
 # Active Context
 
-## Latest Session Update (AI Website Designer END-TO-END FIX - February 2026)
+## Latest Session Update (AI Website Designer Major UX Fixes - February 2026)
+
+### AI DESIGNER PRODUCTION-READY IMPROVEMENTS ✅
+
+**Issues Reported:**
+1. AI generates components without proper customization
+2. Text on hero images not readable (no overlay)
+3. Navigation not working properly
+4. Preview canvas affected by platform dark mode
+5. No consistency in colors, spacing, fonts
+6. Booking platforms should have forms on hero
+7. Navbar doesn't hide on scroll, hamburger menu no close button
+8. Random colors, poor spacing
+9. Links are placeholders, not functional
+
+**Fixes Implemented:**
+
+### 1. Preview Canvas Dark Mode Isolation
+- Added `light` class and `colorScheme: light` to preview container
+- Preview now ALWAYS renders in light mode regardless of platform theme
+- Location: [ai-designer/page.tsx](next-platform-dashboard/src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx)
+
+### 2. Mobile Menu Close Button Fix
+- Added visible close button for fullscreen mobile menu style
+- Close button positioned top-right with proper styling
+- Location: [premium-components.tsx](next-platform-dashboard/src/lib/studio/blocks/premium-components.tsx)
+
+### 3. Massively Improved AI Prompts
+- Added comprehensive design rules the AI MUST follow
+- Color contrast requirements (WCAG AA 4.5:1 ratio)
+- Hero overlay requirement (65-75% opacity when using images)
+- Navbar scroll behavior (hide on scroll down, show on scroll up)
+- Industry-specific intelligence (booking forms for restaurants/booking businesses)
+- Typography consistency (max 2 fonts, proper hierarchy)
+- Spacing system (8px grid)
+- Mobile-first requirements
+- ALL links must be functional - no placeholder "#" links
+
+### 4. Enhanced Converter Defaults
+**Hero Component:**
+- Auto-detects background image and adds overlay
+- Sets backgroundOverlay: true, backgroundOverlayOpacity: 70
+- White text colors for image backgrounds
+- Proper CTA button styling
+
+**Navbar Component:**
+- Forces `hideOnScroll: true` and `showOnScrollUp: true`
+- Sets `mobileMenuStyle: "fullscreen"` (has close button)
+- Sticky positioning by default
+- Link hover effects
+
+**Footer Component:**
+- Comprehensive prop mapping
+- Dark theme default (#1f2937)
+- Social links and contact info support
+
+**Files Modified:**
+- `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx`
+- `src/lib/ai/website-designer/prompts.ts`
+- `src/lib/ai/website-designer/converter.ts`
+- `src/lib/studio/blocks/premium-components.tsx`
+
+**Commit:** `18f3b3b` - Pushed to main
+
+### Future Considerations (From User Feedback):
+1. **Design inspiration from Dribbble** - Could integrate design pattern analysis in future
+2. **Module components** - Need to ensure booking, e-commerce modules integrate properly
+3. **Extended wait time acceptable** - User prefers 5-10 minute wait for perfect results
+4. **Zero edits goal** - The AI should produce websites that need no manual editing
+
+---
+
+## Previous Session Update (AI Website Designer END-TO-END FIX - February 2026)
 
 ### AI WEBSITE DESIGNER FULLY WORKING END-TO-END ✅
 
