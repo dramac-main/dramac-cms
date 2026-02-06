@@ -28,7 +28,7 @@ import { toast } from 'sonner'
 
 interface EmbedCodeGeneratorProps {
   siteId: string
-  _agencyId?: string
+  agencyId: string
   siteDomain?: string
 }
 
@@ -105,7 +105,7 @@ function CodeBlock({ code, language = 'html' }: { code: string; language?: strin
   )
 }
 
-export function EmbedCodeGenerator({ siteId, _agencyId, siteDomain }: EmbedCodeGeneratorProps) {
+export function EmbedCodeGenerator({ siteId, agencyId: _agencyId, siteDomain }: EmbedCodeGeneratorProps) {
   const [config, setConfig] = useState<EmbedConfig>(DEFAULT_CONFIG)
   const [_activeTab, setActiveTab] = useState<string>('product-grid')
 
