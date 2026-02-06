@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
 
       // Transform for frontend
       return NextResponse.json({ 
-        product: transformProduct(product) 
+        product: transformProduct(product as unknown as Record<string, unknown>) 
       })
     }
 
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform products for frontend consumption
-    const products = (result.data || []).map(transformProduct)
+    const products = (result.data || []).map((p) => transformProduct(p as unknown as Record<string, unknown>))
 
     return NextResponse.json({
       products,
