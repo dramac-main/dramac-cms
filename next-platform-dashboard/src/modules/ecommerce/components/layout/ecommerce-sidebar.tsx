@@ -28,7 +28,8 @@ import {
   Store,
   Warehouse,
   Megaphone,
-  Code2
+  Code2,
+  CodeXml
 } from 'lucide-react'
 import type { EcommerceView } from '../../types/ecommerce-types'
 
@@ -87,6 +88,7 @@ function getNavItems(pendingOrders: number, lowStockCount: number): NavItemConfi
     { id: 'quotes', label: 'Quotes', icon: FileText },
     { id: 'marketing', label: 'Marketing', icon: Megaphone },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'embed', label: 'Embed', icon: CodeXml },
     { id: 'developer', label: 'Developer', icon: Code2 },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]

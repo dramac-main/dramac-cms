@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
-import { Loader2, Upload, X } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { ImageGalleryUpload } from '../shared/image-upload'
 import type { Product, ProductStatus } from '../../types/ecommerce-types'
 
 interface EditProductDialogProps {
@@ -52,7 +53,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
   const [trackInventory, setTrackInventory] = useState(true)
   const [quantity, setQuantity] = useState('0')
   const [status, setStatus] = useState<ProductStatus>('draft')
-  const [imageUrl, setImageUrl] = useState('')
+  const [images, setImages] = useState<string[]>([])
 
   // Load product data when dialog opens
   useEffect(() => {
@@ -67,7 +68,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
       setTrackInventory(product.track_inventory)
       setQuantity(product.quantity?.toString() || '0')
       setStatus(product.status)
-      setImageUrl(product.images?.[0] || '')
+      setImages(product.images || [])
     }
   }, [open, product])
 
@@ -115,7 +116,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         track_inventory: trackInventory,
         quantity: parseInt(quantity) || 0,
         status,
-        images: imageUrl ? [imageUrl] : []
+        images: images
       }
 
       await editProduct(product.id, updateData)
@@ -142,42 +143,15 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Product Image */}
-          <div className="space-y-2">
-            <Label>Product Image</Label>
-            {imageUrl ? (
-              <div className="relative w-full h-48 border rounded-lg overflow-hidden bg-muted">
-                <img 
-                  src={imageUrl} 
-                  alt={name}
-                  className="w-full h-full object-cover"
-                />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-2 right-2"
-                  onClick={() => setImageUrl('')}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center w-full h-48 border-2 border-dashed rounded-lg bg-muted">
-                <div className="text-center">
-                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground mb-2">Click to upload or drag and drop</p>
-                  <Input
-                    type="url"
-                    placeholder="Or paste image URL..."
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    className="max-w-xs mx-auto"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Product Images */}
+          <ImageGalleryUpload
+            value={images}
+            onChange={setImages}
+            siteId={product.site_id}
+            folder="products"
+            label="Product Images"
+            maxImages={10}
+          />
 
           {/* Basic Info */}
           <div className="space-y-4">

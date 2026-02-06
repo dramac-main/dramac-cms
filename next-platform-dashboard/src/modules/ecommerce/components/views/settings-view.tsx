@@ -27,6 +27,12 @@ import { GeneralSettingsForm } from '../settings/general-settings'
 import { CurrencySettingsForm } from '../settings/currency-settings'
 import { InventorySettingsForm } from '../settings/inventory-settings'
 import { QuoteSettingsForm } from '../settings/quote-settings'
+import { TaxSettingsForm } from '../settings/tax-settings'
+import { ShippingSettingsForm } from '../settings/shipping-settings'
+import { PaymentSettingsForm } from '../settings/payment-settings'
+import { CheckoutSettingsForm } from '../settings/checkout-settings'
+import { NotificationSettingsForm } from '../settings/notification-settings'
+import { LegalSettingsForm } from '../settings/legal-settings'
 import type { SettingsTab } from '../../types/ecommerce-types'
 
 // ============================================================================
@@ -148,6 +154,18 @@ export function SettingsView({ siteId, agencyId }: SettingsViewProps) {
         return <InventorySettingsForm siteId={siteId} agencyId={agencyId} />
       case 'quotes':
         return <QuoteSettingsForm siteId={siteId} agencyId={agencyId} />
+      case 'tax':
+        return <TaxSettingsForm siteId={siteId} agencyId={agencyId} />
+      case 'shipping':
+        return <ShippingSettingsForm siteId={siteId} agencyId={agencyId} />
+      case 'payments':
+        return <PaymentSettingsForm siteId={siteId} agencyId={agencyId} />
+      case 'checkout':
+        return <CheckoutSettingsForm siteId={siteId} agencyId={agencyId} />
+      case 'notifications':
+        return <NotificationSettingsForm siteId={siteId} agencyId={agencyId} />
+      case 'legal':
+        return <LegalSettingsForm siteId={siteId} agencyId={agencyId} />
       default:
         const tab = tabs.find(t => t.id === tabId)!
         return <SettingsPlaceholder tab={tab} />

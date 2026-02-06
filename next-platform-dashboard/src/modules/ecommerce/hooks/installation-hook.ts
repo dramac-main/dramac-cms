@@ -236,15 +236,35 @@ export const ecommerceInstallationHook: ModuleInstallationHook = {
   
   /**
    * Handle module enable
+   * 
+   * This is called when an agency user enables the module on a site.
+   * We treat enable like a fresh install - creating pages if they don't exist.
    */
   async onEnable(siteId: string): Promise<void> {
     console.log(`[EcommerceHook] Enabling e-commerce on site: ${siteId}`);
     
-    // Re-add navigation items if they were removed
+    // 1. Create pages if they don't exist (idempotent operation)
+    try {
+      const pagesResult = await createEcommercePages(siteId);
+      if (pagesResult.pages.length > 0) {
+        console.log(`[EcommerceHook] Created ${pagesResult.pages.length} pages on enable`);
+      }
+    } catch (error) {
+      console.error('[EcommerceHook] Failed to create pages on enable:', error);
+    }
+    
+    // 2. Re-add navigation items if they were removed
     try {
       await addEcommerceNavigation(siteId);
     } catch (error) {
       console.error('[EcommerceHook] Failed to restore navigation on enable:', error);
+    }
+    
+    // 3. Apply default settings if not already set
+    try {
+      await applyDefaultEcommerceSettings(siteId);
+    } catch (error) {
+      console.error('[EcommerceHook] Failed to apply settings on enable:', error);
     }
   },
   

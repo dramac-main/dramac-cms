@@ -489,6 +489,7 @@ export interface ProductFilters {
   minPrice?: number
   maxPrice?: number
   inStock?: boolean
+  onSale?: boolean
 }
 
 export interface OrderFilters {
@@ -608,6 +609,7 @@ export type EcommerceView =
   | 'analytics'
   | 'marketing'
   | 'developer'
+  | 'embed'
   | 'settings'
 
 export interface EcommerceNavItem {

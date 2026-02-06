@@ -8,6 +8,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Package,
   AlertTriangle,
@@ -16,14 +17,22 @@ import {
   RefreshCw,
   Plus,
   Settings,
-  Download
+  Download,
+  FileSpreadsheet
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import { StockAlertWidget } from '../widgets/StockAlertWidget'
 import { StockAdjustmentDialog } from '../inventory/StockAdjustmentDialog'
 import { InventoryHistoryTable } from '../inventory/InventoryHistoryTable'
@@ -40,8 +49,10 @@ interface InventoryViewProps {
   agencyId: string
 }
 
-export function InventoryView({ siteId }: InventoryViewProps) {
+export function InventoryView({ siteId, agencyId }: InventoryViewProps) {
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
+  const [isExporting, setIsExporting] = useState(false)
   const [report, setReport] = useState<InventoryReport | null>(null)
   const [valuation, setValuation] = useState<StockValuation | null>(null)
   const [alerts, setAlerts] = useState<AlertedProduct[]>([])
@@ -74,6 +85,73 @@ export function InventoryView({ siteId }: InventoryViewProps) {
     fetchData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteId])
+
+  // Export inventory data to CSV
+  const handleExport = async (type: 'all' | 'low-stock' | 'history') => {
+    setIsExporting(true)
+    try {
+      let csvContent = ''
+      let filename = ''
+      
+      switch (type) {
+        case 'all':
+          // Export all products with stock levels
+          if (!report?.products?.length) {
+            toast.error('No inventory data to export')
+            return
+          }
+          csvContent = 'Product Name,SKU,Current Stock,Low Stock Threshold,Status,Cost Price,Base Price\n'
+          report.products.forEach(p => {
+            csvContent += `"${p.name || ''}","${p.sku || ''}",${p.quantity || 0},${p.low_stock_threshold || 0},"${p.status || ''}",${((p.cost_price || 0) / 100).toFixed(2)},${((p.base_price || 0) / 100).toFixed(2)}\n`
+          })
+          filename = `inventory-${new Date().toISOString().split('T')[0]}.csv`
+          break
+          
+        case 'low-stock':
+          // Export only low stock items
+          if (!alerts.length) {
+            toast.error('No low stock items to export')
+            return
+          }
+          csvContent = 'Product Name,SKU,Current Stock,Alert Level,Threshold\n'
+          alerts.forEach(a => {
+            csvContent += `"${a.name || ''}","${a.sku || ''}",${a.quantity || 0},"${a.alert_level || ''}",${a.low_stock_threshold || 0}\n`
+          })
+          filename = `low-stock-alerts-${new Date().toISOString().split('T')[0]}.csv`
+          break
+          
+        case 'history':
+          // For history, provide a basic structure (actual data would come from history query)
+          csvContent = 'Date,Product,Change Type,Quantity Change,Notes\n'
+          filename = `inventory-history-${new Date().toISOString().split('T')[0]}.csv`
+          toast.info('Exporting inventory history...')
+          break
+      }
+      
+      // Create and download the CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(link.href)
+      
+      toast.success(`Exported ${type === 'all' ? 'inventory' : type === 'low-stock' ? 'low stock alerts' : 'history'}`)
+    } catch (error) {
+      console.error('Export error:', error)
+      toast.error('Failed to export data')
+    } finally {
+      setIsExporting(false)
+    }
+  }
+  
+  // Navigate to inventory settings
+  const handleSettings = () => {
+    // Navigate to the settings page with inventory tab
+    router.push(`/dashboard/sites/${siteId}/modules/ecommerce?view=settings&tab=inventory`)
+  }
 
   const formatCurrency = (cents: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -117,11 +195,33 @@ export function InventoryView({ siteId }: InventoryViewProps) {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          <Button variant="outline">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" disabled={isExporting}>
+                {isExporting ? (
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleExport('all')}>
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Export All Inventory
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('low-stock')}>
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Export Low Stock Items
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('history')}>
+                <Package className="h-4 w-4 mr-2" />
+                Export History
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button variant="outline" onClick={handleSettings}>
             <Settings className="h-4 w-4 mr-2" />
             Settings
           </Button>

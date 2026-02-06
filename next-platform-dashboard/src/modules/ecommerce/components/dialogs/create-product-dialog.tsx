@@ -7,7 +7,7 @@
 
 import { useState } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
-import { Loader2, Plus, Upload, X } from 'lucide-react'
+import { Loader2, Plus } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { ImageGalleryUpload } from '../shared/image-upload'
 import type { ProductInput, ProductStatus } from '../../types/ecommerce-types'
 
 interface CreateProductDialogProps {
@@ -51,7 +52,7 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
   const [trackInventory, setTrackInventory] = useState(true)
   const [quantity, setQuantity] = useState('0')
   const [status, setStatus] = useState<ProductStatus>('draft')
-  const [imageUrl, setImageUrl] = useState('')
+  const [images, setImages] = useState<string[]>([])
 
   const generateSlug = (value: string) => {
     return value
@@ -77,7 +78,7 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
     setSku('')
     setTrackInventory(true)
     setQuantity('0')
-    setImageUrl('')
+    setImages([])
     setStatus('draft')
   }
 
@@ -120,7 +121,7 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
         is_featured: false,
         seo_title: null,
         seo_description: null,
-        images: imageUrl ? [imageUrl] : [],
+        images: images,
         metadata: {},
         created_by: null,
       }
@@ -148,42 +149,15 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Product Image */}
-          <div className="space-y-2">
-            <Label>Product Image</Label>
-            {imageUrl ? (
-              <div className="relative w-full h-48 border rounded-lg overflow-hidden bg-muted">
-                <img 
-                  src={imageUrl} 
-                  alt={name || 'Product'}
-                  className="w-full h-full object-cover"
-                />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-2 right-2"
-                  onClick={() => setImageUrl('')}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center w-full h-48 border-2 border-dashed rounded-lg bg-muted">
-                <div className="text-center">
-                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground mb-2">Click to upload or drag and drop</p>
-                  <Input
-                    type="url"
-                    placeholder="Or paste image URL..."
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    className="max-w-xs mx-auto"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Product Images */}
+          <ImageGalleryUpload
+            value={images}
+            onChange={setImages}
+            siteId={siteId}
+            folder="products"
+            label="Product Images"
+            maxImages={10}
+          />
 
           {/* Basic Info */}
           <div className="space-y-4">

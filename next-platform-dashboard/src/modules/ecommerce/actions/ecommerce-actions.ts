@@ -201,6 +201,10 @@ export async function getProducts(
   if (filters.inStock) {
     query = query.or('track_inventory.eq.false,quantity.gt.0')
   }
+  // On sale filter - products with compare_at_price set
+  if (filters.onSale) {
+    query = query.not('compare_at_price', 'is', null)
+  }
   
   // Pagination
   const from = (page - 1) * limit
@@ -217,6 +221,63 @@ export async function getProducts(
     data: (data || []) as Product[],
     total: count || 0,
     page,
+    totalPages: Math.ceil((count || 0) / limit),
+    limit
+  }
+}
+
+/**
+ * Get featured products for a site
+ * Used by Studio components to display featured products
+ */
+export async function getFeaturedProducts(
+  siteId: string,
+  limit = 8
+): Promise<PaginatedResponse<Product>> {
+  const supabase = await getModuleClient()
+  
+  const { data, count, error } = await supabase
+    .from(`${TABLE_PREFIX}_products`)
+    .select('*', { count: 'exact' })
+    .eq('site_id', siteId)
+    .eq('status', 'active')
+    .eq('is_featured', true)
+    .range(0, limit - 1)
+    .order('created_at', { ascending: false })
+  
+  if (error) {
+    console.error('Error fetching featured products:', error)
+    throw new Error(error.message)
+  }
+  
+  // If no featured products, fall back to all active products
+  if (!data || data.length === 0) {
+    const { data: fallbackData, count: fallbackCount, error: fallbackError } = await supabase
+      .from(`${TABLE_PREFIX}_products`)
+      .select('*', { count: 'exact' })
+      .eq('site_id', siteId)
+      .eq('status', 'active')
+      .range(0, limit - 1)
+      .order('created_at', { ascending: false })
+    
+    if (fallbackError) {
+      console.error('Error fetching fallback products:', fallbackError)
+      throw new Error(fallbackError.message)
+    }
+    
+    return {
+      data: (fallbackData || []) as Product[],
+      total: fallbackCount || 0,
+      page: 1,
+      totalPages: Math.ceil((fallbackCount || 0) / limit),
+      limit
+    }
+  }
+  
+  return {
+    data: (data || []) as Product[],
+    total: count || 0,
+    page: 1,
     totalPages: Math.ceil((count || 0) / limit),
     limit
   }
