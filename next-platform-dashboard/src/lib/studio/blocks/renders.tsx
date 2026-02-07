@@ -3306,7 +3306,7 @@ export function FeaturesRender({
     lift: "hover:-translate-y-2 transition-all duration-300",
     scale: "hover:scale-105 transition-transform duration-300",
     glow: "hover:ring-2 hover:ring-offset-2 transition-all duration-300",
-    border: "hover:border-blue-500 transition-all duration-300",
+    border: "transition-all duration-300",
   }[hoverEffect];
 
   // Gap classes
@@ -4058,20 +4058,23 @@ export function CTARender({
     full: "rounded-full",
   }[buttonRadius];
   
+  // Button shadow — use inline boxShadow for glow instead of hardcoded blue Tailwind
   const buttonShadowClasses = {
     none: "",
     sm: "shadow-sm",
     md: "shadow-md",
     lg: "shadow-lg",
     xl: "shadow-xl",
-    glow: "shadow-lg shadow-blue-500/50",
+    glow: "shadow-lg",
   }[buttonShadow];
+  // Dynamic glow shadow using the button's own color
+  const buttonGlowStyle: React.CSSProperties = buttonShadow === "glow" ? { boxShadow: `0 10px 25px -5px ${buttonColor}80` } : {};
   
   const buttonHoverClasses = {
     none: "",
     scale: "hover:scale-105",
     lift: "hover:-translate-y-1",
-    glow: "hover:shadow-xl hover:shadow-blue-500/40",
+    glow: "hover:shadow-xl",
     shine: "overflow-hidden relative",
     pulse: "hover:animate-pulse",
   }[buttonHoverEffect];
@@ -4245,14 +4248,17 @@ export function CTARender({
     if (buttonStyle === "3d") {
       return {
         backgroundColor: buttonColor,
-        color: buttonTextColor || backgroundColor,
+        color: buttonTextColor || "#ffffff",
         boxShadow: `0 4px 0 ${buttonColor}cc, 0 6px 20px rgba(0,0,0,0.2)`,
         transform: "translateY(-2px)",
       };
     }
+    // CRITICAL: Never use backgroundColor as text fallback — it creates invisible buttons
+    // (e.g. white button with white text, or blue button with blue text)
     return {
       backgroundColor: buttonColor,
-      color: buttonTextColor || backgroundColor,
+      color: buttonTextColor || "#ffffff",
+      ...buttonGlowStyle,
     };
   };
   
@@ -4857,7 +4863,7 @@ export function TestimonialsRender({
     lift: "hover:-translate-y-1 transition-transform duration-300",
     scale: "hover:scale-[1.02] transition-transform duration-300",
     glow: "hover:shadow-xl transition-shadow duration-300",
-    border: "hover:border-blue-500 transition-colors duration-300",
+    border: "transition-colors duration-300",
   }[cardHoverEffect];
   
   const avatarSizeClasses = {
@@ -7478,8 +7484,8 @@ export function TeamRender({
             href={link.href}
             target={link.icon !== "email" && link.icon !== "phone" ? "_blank" : undefined}
             rel="noopener noreferrer"
-            className={`transition-colors duration-200 ${socialStyle === "buttons" ? "p-2 rounded-lg bg-gray-100 hover:bg-gray-200" : socialStyle === "pills" ? "px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center gap-1 text-xs" : ""}`}
-            style={{ color: socialColor }}
+            className={`transition-colors duration-200 ${socialStyle === "buttons" ? "p-2 rounded-lg" : socialStyle === "pills" ? "px-3 py-1 rounded-full flex items-center gap-1 text-xs" : ""}`}
+            style={{ color: socialColor, backgroundColor: (socialStyle === "buttons" || socialStyle === "pills") ? `${socialColor}15` : undefined }}
             onMouseEnter={(e) => { e.currentTarget.style.color = socialHoverColor; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = socialColor; }}
             aria-label={link.label}
@@ -9542,10 +9548,10 @@ export function FormFieldRender({
     xl: "px-6 py-4 text-xl",
   }[size];
 
-  // Variant classes
+  // Variant classes — use inline backgroundColor instead of hardcoded Tailwind
   const variantClasses = {
-    default: "border bg-white",
-    filled: "border-0 bg-gray-100",
+    default: "border",
+    filled: "border-0",
     underline: "border-0 border-b-2 bg-transparent rounded-none",
     ghost: "border-0 bg-transparent",
   }[variant];
@@ -9575,12 +9581,12 @@ export function FormFieldRender({
     bold: "font-bold",
   }[labelWeight];
 
-  // State classes
+  // State classes — use focusBorderColor prop instead of hardcoded blue
   const stateClasses = error
     ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
     : success
     ? "border-green-500 focus:border-green-500 focus:ring-green-500/20"
-    : `focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20`;
+    : "focus:ring-2";
 
   // Base input classes
   const baseClasses = `
@@ -9595,6 +9601,31 @@ export function FormFieldRender({
     ${inputClassName}
   `.replace(/\s+/g, " ").trim();
 
+  // Inline styles for theme-aware input styling
+  const inputStyles: React.CSSProperties = {
+    backgroundColor: variant === "underline" || variant === "ghost" ? "transparent" : backgroundColor,
+    color: textColor || undefined,
+    borderColor: error ? "#ef4444" : success ? "#22c55e" : borderColor,
+    // Use focusBorderColor via CSS custom properties
+  };
+  const focusRingColor = error ? "rgba(239,68,68,0.2)" : success ? "rgba(34,197,94,0.2)" : `${focusBorderColor}33`;
+  const inputFocusHandlers = {
+    onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      if (!error && !success) {
+        e.currentTarget.style.borderColor = focusBorderColor;
+        e.currentTarget.style.boxShadow = `0 0 0 3px ${focusRingColor}`;
+      }
+      onFocus?.(e);
+    },
+    onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+      if (!error && !success) {
+        e.currentTarget.style.borderColor = borderColor;
+        e.currentTarget.style.boxShadow = "none";
+      }
+      onBlur?.(e);
+    },
+  };
+
   const fieldId = id || name;
   const inputType = type === "password" && showPassword ? "text" : type;
 
@@ -9608,10 +9639,9 @@ export function FormFieldRender({
 
   // Render the input element
   const renderInput = () => {
+    // Theme-aware styles using the resolved input styling
     const commonStyles: React.CSSProperties = {
-      borderColor: error ? undefined : borderColor,
-      backgroundColor: variant === "default" ? backgroundColor : undefined,
-      color: textColor,
+      ...inputStyles,
     };
 
     if (type === "textarea") {
@@ -9634,8 +9664,7 @@ export function FormFieldRender({
           className={baseClasses}
           style={{ ...commonStyles, resize }}
           onChange={handleChange}
-          onBlur={onBlur}
-          onFocus={onFocus}
+          {...inputFocusHandlers}
         />
       );
     }
@@ -9652,8 +9681,7 @@ export function FormFieldRender({
           className={baseClasses}
           style={commonStyles}
           onChange={handleChange}
-          onBlur={onBlur}
-          onFocus={onFocus}
+          {...inputFocusHandlers}
         >
           {placeholder && <option value="" disabled>{placeholder}</option>}
           {options.map((opt, i) => (
@@ -9713,8 +9741,7 @@ export function FormFieldRender({
         className={baseClasses}
         style={commonStyles}
         onChange={handleChange}
-        onBlur={onBlur}
-        onFocus={onFocus}
+        {...inputFocusHandlers}
       />
     );
   };
@@ -9841,6 +9868,13 @@ export interface ContactFormProps {
   borderRadius?: "none" | "sm" | "md" | "lg" | "xl";
   shadow?: "none" | "sm" | "md" | "lg" | "xl";
   padding?: "sm" | "md" | "lg";
+  buttonColor?: string;
+  buttonTextColor?: string;
+  textColor?: string;
+  inputBackgroundColor?: string;
+  inputBorderColor?: string;
+  inputTextColor?: string;
+  labelColor?: string;
   successMessage?: string;
   action?: string;
   id?: string;
@@ -9862,6 +9896,13 @@ export function ContactFormRender({
   borderRadius = "xl",
   shadow = "lg",
   padding = "lg",
+  buttonColor,
+  buttonTextColor = "#ffffff",
+  textColor,
+  inputBackgroundColor,
+  inputBorderColor,
+  inputTextColor,
+  labelColor,
   successMessage,
   action = "#",
   id,
@@ -9870,24 +9911,33 @@ export function ContactFormRender({
   const paddingClasses = { sm: "p-4 md:p-6", md: "p-6 md:p-8", lg: "p-8 md:p-10" }[padding];
   const radiusClasses = { none: "", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl" }[borderRadius];
   const shadowClasses = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" }[shadow];
+  // Detect if we're on a dark background
+  const isDark = backgroundColor ? parseInt(backgroundColor.replace('#','').substring(0,2), 16) < 100 : false;
+  const resolvedButtonColor = buttonColor || (isDark ? "#e5a956" : "#3b82f6");
+  const resolvedTextColor = textColor || (isDark ? "#f9fafb" : "#1f2937");
+  const resolvedSubtitleColor = isDark ? "#9ca3af" : "#6b7280";
+  const resolvedInputBg = inputBackgroundColor || (isDark ? "#374151" : "#ffffff");
+  const resolvedInputBorder = inputBorderColor || (isDark ? "#4b5563" : "#d1d5db");
+  const resolvedInputText = inputTextColor || (isDark ? "#f9fafb" : "#1f2937");
+  const resolvedLabelColor = labelColor || (isDark ? "#e5e7eb" : "#374151");
 
   return (
     <div id={id} className={`max-w-lg mx-auto ${paddingClasses} ${radiusClasses} ${shadowClasses} ${className}`} style={{ backgroundColor }}>
-      {title && <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-2">{title}</h2>}
-      {subtitle && <p className="text-gray-600 mb-6">{subtitle}</p>}
+      {title && <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-2" style={{ color: resolvedTextColor }}>{title}</h2>}
+      {subtitle && <p className="mb-6" style={{ color: resolvedSubtitleColor }}>{subtitle}</p>}
       <form action={action} method="POST" className="space-y-4 md:space-y-6">
         <div className="grid md:grid-cols-2 gap-4">
-          <FormFieldRender label={nameLabel} name="name" placeholder="John Doe" required />
-          <FormFieldRender label={emailLabel} name="email" type="email" placeholder="john@example.com" required />
+          <FormFieldRender label={nameLabel} name="name" placeholder="John Doe" required labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />
+          <FormFieldRender label={emailLabel} name="email" type="email" placeholder="john@example.com" required labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />
         </div>
         {(showPhone || showSubject) && (
           <div className="grid md:grid-cols-2 gap-4">
-            {showPhone && <FormFieldRender label={phoneLabel} name="phone" type="tel" placeholder="+1 (555) 000-0000" />}
-            {showSubject && <FormFieldRender label={subjectLabel} name="subject" placeholder="How can we help?" />}
+            {showPhone && <FormFieldRender label={phoneLabel} name="phone" type="tel" placeholder="+1 (555) 000-0000" labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />}
+            {showSubject && <FormFieldRender label={subjectLabel} name="subject" placeholder="How can we help?" labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />}
           </div>
         )}
-        <FormFieldRender label={messageLabel} name="message" type="textarea" placeholder="Your message..." rows={5} required />
-        <button type="submit" className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+        <FormFieldRender label={messageLabel} name="message" type="textarea" placeholder="Your message..." rows={5} required labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />
+        <button type="submit" className="w-full px-6 py-3 font-medium rounded-lg transition-all duration-200 hover:opacity-90 focus:ring-2 focus:ring-offset-2" style={{ backgroundColor: resolvedButtonColor, color: buttonTextColor, boxShadow: `0 0 0 0 transparent`, ['--tw-ring-color' as string]: resolvedButtonColor }}>
           {submitText}
         </button>
       </form>
@@ -9939,7 +9989,7 @@ export function NewsletterRender({
         <h3 className={`font-bold mb-2 ${size === "lg" ? "text-xl md:text-2xl" : "text-lg md:text-xl"}`} style={{ color: textColor }}>{title}</h3>
         <p className={`${sizeClasses} opacity-80 mb-6`} style={{ color: textColor }}>{description}</p>
         <form action={action} method="POST" className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-          <input type="email" name="email" placeholder={placeholder} required className={`flex-1 ${inputSizeClasses} border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`} />
+          <input type="email" name="email" placeholder={placeholder} required className={`flex-1 ${inputSizeClasses} border rounded-lg focus:ring-2 focus:outline-none`} style={{ borderColor: `${buttonColor}40`, backgroundColor: "transparent" }} />
           <button type="submit" className={`${inputSizeClasses} px-6 font-medium text-white rounded-lg transition-opacity hover:opacity-90 whitespace-nowrap`} style={{ backgroundColor: buttonColor }}>{buttonText}</button>
         </form>
       </div>
@@ -9951,7 +10001,7 @@ export function NewsletterRender({
       {title && <h3 className={`font-bold mb-2 ${size === "lg" ? "text-xl md:text-2xl" : "text-lg"}`} style={{ color: textColor }}>{title}</h3>}
       {description && <p className={`${sizeClasses} opacity-80 mb-4`} style={{ color: textColor }}>{description}</p>}
       <form action={action} method="POST" className={`flex ${variant === "stacked" ? "flex-col max-w-md mx-auto" : "flex-col sm:flex-row"} gap-3`}>
-        <input type="email" name="email" placeholder={placeholder} required className={`flex-1 ${inputSizeClasses} border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`} />
+        <input type="email" name="email" placeholder={placeholder} required className={`flex-1 ${inputSizeClasses} border rounded-lg focus:ring-2 focus:outline-none`} style={{ borderColor: `${buttonColor}40`, backgroundColor: "transparent" }} />
         <button type="submit" className={`${inputSizeClasses} px-6 font-medium text-white rounded-lg transition-opacity hover:opacity-90 whitespace-nowrap`} style={{ backgroundColor: buttonColor }}>{buttonText}</button>
       </form>
     </div>
@@ -10164,7 +10214,7 @@ export function PricingRender({
               className={`relative p-6 md:p-8 rounded-xl border-2 transition-all duration-300 hover:shadow-xl ${plan.popular ? "shadow-lg scale-[1.02]" : "hover:-translate-y-1"}`}
               style={{
                 backgroundColor: cardBackgroundColor,
-                borderColor: plan.popular ? popularBorderColor : "#e5e7eb",
+                borderColor: plan.popular ? popularBorderColor : `${textColor || "#000000"}15`,
               }}
             >
               {plan.popular && (
@@ -10195,7 +10245,7 @@ export function PricingRender({
               </ul>
               <a
                 href={plan.buttonLink || "#"}
-                className={`block w-full py-3 text-center font-medium rounded-lg transition-all ${plan.popular ? "text-white hover:opacity-90" : "border-2 hover:bg-gray-50"}`}
+                className={`block w-full py-3 text-center font-medium rounded-lg transition-all ${plan.popular ? "text-white hover:opacity-90" : "border-2 hover:opacity-80"}`}
                 style={plan.popular ? { backgroundColor: popularBorderColor } : { borderColor: popularBorderColor, color: popularBorderColor }}
               >
                 {plan.buttonText || "Get Started"}
@@ -10265,7 +10315,7 @@ export function AccordionRender({
           className={`group ${itemClasses}`}
           style={variant === "filled" ? { backgroundColor: "#f9fafb" } : { backgroundColor }}
         >
-          <summary className={`p-4 md:p-5 cursor-pointer list-none flex items-center ${iconPosition === "left" ? "flex-row-reverse justify-end" : "justify-between"} gap-4 font-medium hover:bg-gray-50 transition-colors`} style={{ color: textColor }}>
+          <summary className={`p-4 md:p-5 cursor-pointer list-none flex items-center ${iconPosition === "left" ? "flex-row-reverse justify-end" : "justify-between"} gap-4 font-medium transition-colors hover:opacity-80`} style={{ color: textColor }}>
             <span className="flex-1">{item.title}</span>
             <svg className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 group-open:rotate-180`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

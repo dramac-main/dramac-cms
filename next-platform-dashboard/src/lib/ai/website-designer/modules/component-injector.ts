@@ -118,6 +118,22 @@ export class ComponentInjector {
    * Create a new page from a module page template
    */
   private createModulePage(modulePage: ModulePage): GeneratedPage {
+    // Add a Hero header section to module pages for proper visual structure
+    const heroComponent: GeneratedComponent = {
+      id: crypto.randomUUID(),
+      type: "Hero",
+      props: {
+        title: modulePage.name,
+        description: `${modulePage.name} — browse and select from our available options below.`,
+        variant: "centered",
+        minHeight: "40vh",
+        titleSize: "lg",
+        contentAlign: "center",
+        animateOnLoad: true,
+        animationType: "fade-up",
+      },
+    };
+
     return {
       id: crypto.randomUUID(),
       name: modulePage.name,
@@ -125,17 +141,64 @@ export class ComponentInjector {
       title: modulePage.name,
       description: `${modulePage.name} page`,
       isHomepage: false,
-      components: modulePage.components.map((componentType) => ({
-        id: crypto.randomUUID(),
-        type: componentType,
-        props: {},
-      })),
+      components: [
+        heroComponent,
+        ...modulePage.components.map((componentType) => ({
+          id: crypto.randomUUID(),
+          type: componentType,
+          props: this.getDefaultModuleComponentProps(componentType),
+        })),
+      ],
       seo: {
         title: modulePage.name,
         description: `${modulePage.name} page`,
       },
       order: 100, // Lower priority for module pages
     };
+  }
+
+  /**
+   * Get sensible default props for module component types
+   * These ensure module components render properly even without AI-generated content
+   */
+  private getDefaultModuleComponentProps(componentType: string): Record<string, unknown> {
+    switch (componentType) {
+      case "BookingCalendar":
+        return {
+          title: "Select a Date & Time",
+          variant: "calendar",
+          showTimeSlots: true,
+        };
+      case "BookingServiceSelector":
+        return {
+          title: "Choose a Service",
+          variant: "cards",
+          columns: 3,
+        };
+      case "BookingForm":
+        return {
+          title: "Complete Your Booking",
+          submitText: "Confirm Booking",
+          variant: "standard",
+        };
+      case "BookingWidget":
+        return {
+          title: "Book an Appointment",
+          variant: "compact",
+        };
+      case "ProductGrid":
+        return {
+          title: "Our Products",
+          columns: 3,
+          variant: "cards",
+        };
+      case "CartItems":
+        return { title: "Your Cart" };
+      case "CheckoutForm":
+        return { title: "Checkout" };
+      default:
+        return {};
+    }
   }
 
   /**

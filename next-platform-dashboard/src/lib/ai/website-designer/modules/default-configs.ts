@@ -146,7 +146,7 @@ function getDefaultBookingConfig(features?: string[]): BookingConfig {
         props: {},
       },
       {
-        componentType: "ServiceSelector",
+        componentType: "BookingServiceSelector",
         placement: "page",
         page: "/book",
         props: {},
@@ -157,7 +157,7 @@ function getDefaultBookingConfig(features?: string[]): BookingConfig {
         name: "Book Now",
         slug: "/book",
         template: "booking",
-        components: ["BookingCalendar", "ServiceSelector", "BookingForm"],
+        components: ["BookingCalendar", "BookingServiceSelector", "BookingForm"],
       },
     ],
     integrations: [],

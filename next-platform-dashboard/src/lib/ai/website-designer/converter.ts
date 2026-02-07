@@ -338,6 +338,18 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
     "Button": "Button",
     "Divider": "Divider",
     "Spacer": "Spacer",
+    // Module component type mappings
+    "ServiceSelector": "BookingServiceSelector",
+    "BookingServiceSelector": "BookingServiceSelector",
+    "BookingWidget": "BookingWidget",
+    "BookingCalendar": "BookingCalendar",
+    "BookingForm": "BookingForm",
+    "BookingEmbed": "BookingEmbed",
+    "BookingStaffGrid": "BookingStaffGrid",
+    "ProductGrid": "ProductGrid",
+    "CartItems": "CartItems",
+    "CartSummary": "CartSummary",
+    "CheckoutForm": "CheckoutForm",
   };
 
   const studioType = typeMap[genComponent.type] || genComponent.type;
@@ -407,6 +419,12 @@ function transformPropsForStudio(
       // Background
       backgroundImage: props.backgroundImage || props.image || "",
       backgroundColor: props.backgroundColor || props.gradientFrom || (isDarkTheme() ? "#1f2937" : "#ffffff"),
+      
+      // Gradient background for modern look
+      backgroundGradient: props.backgroundGradient ?? (isDarkTheme() && !hasBackgroundImage),
+      backgroundGradientFrom: props.backgroundGradientFrom || (isDarkTheme() ? "#111827" : "#ffffff"),
+      backgroundGradientTo: props.backgroundGradientTo || (isDarkTheme() ? "#1e293b" : "#f9fafb"),
+      backgroundGradientDirection: props.backgroundGradientDirection || "to-b",
       
       // CRITICAL: Always add overlay when there's a background image for text readability
       backgroundOverlay: hasBackgroundImage ? true : (props.backgroundOverlay ?? false),
@@ -520,23 +538,26 @@ function transformPropsForStudio(
         title: f.title || f.name || `Feature ${i + 1}`,
         description: f.description || f.content || "",
         icon: f.icon || "star",
-        iconColor: f.iconColor || props.iconColor || "",
-        iconBackgroundColor: f.iconBackgroundColor || "",
+        iconColor: f.iconColor || props.iconColor || themePrimary(),
+        iconBackgroundColor: f.iconBackgroundColor || (isDarkTheme() ? `${themePrimary()}20` : ""),
       })) : [],
       variant: props.variant || "cards",
       columns: props.columns || 3,
       iconStyle: props.iconStyle || "emoji", // Use emoji by default — they render everywhere
-      // Card styling
+      // Card styling — dark theme needs visible card backgrounds
       showBorder: props.showBorder ?? true,
-      showShadow: props.showShadow ?? true,
-      cardBackgroundColor: props.cardBackgroundColor || "",
+      showShadow: props.showShadow ?? !isDarkTheme(),
+      cardBackgroundColor: props.cardBackgroundColor || (isDarkTheme() ? "#1e293b" : "#ffffff"),
+      cardBorderColor: props.cardBorderColor || (isDarkTheme() ? "#374151" : "#e5e7eb"),
       cardBorderRadius: props.cardBorderRadius || "lg",
       cardPadding: props.cardPadding || "lg",
       hoverEffect: props.hoverEffect || "lift",
       gap: props.gap || "md",
-      // Consistent styling — inherit site theme
-      backgroundColor: props.backgroundColor || "",
+      // Section background — must match site theme
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
       textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      titleColor: props.titleColor || (isDarkTheme() ? "#ffffff" : ""),
+      subtitleColor: props.subtitleColor || (isDarkTheme() ? themePrimary() : ""),
       accentColor: props.accentColor || themePrimary(),
     };
   }
@@ -544,6 +565,7 @@ function transformPropsForStudio(
   // CTA component — Studio uses 'buttonText' NOT 'ctaText'
   if (type === "CTA") {
     const buttonText = String(props.ctaText || props.buttonText || "Contact Us");
+    const ctaBg = props.backgroundColor || (isDarkTheme() ? "#111827" : "#1f2937");
     return {
       title: props.headline || props.title || "Ready to Get Started?",
       subtitle: props.subtitle || "",
@@ -551,20 +573,29 @@ function transformPropsForStudio(
       // Studio CTA uses buttonText/buttonLink
       buttonText,
       buttonLink: fixLink(String(props.ctaLink || props.buttonLink || ""), buttonText),
+      // CRITICAL: buttonColor must be the PRIMARY brand color, NOT white.
+      // The CTA render defaults buttonColor to #ffffff which is invisible on light bg.
       buttonColor: props.buttonColor || props.ctaColor || themePrimary(),
       buttonTextColor: props.buttonTextColor || props.ctaTextColor || "#ffffff",
       buttonSize: props.buttonSize || "lg",
       buttonRadius: props.buttonRadius || "md",
       buttonStyle: props.buttonStyle || "solid",
-      buttonIcon: props.buttonIcon || "",
-      // Secondary button
+      buttonIcon: props.buttonIcon || "arrow",
+      // Secondary button — ensure visible by using proper contrast colors
       secondaryButtonText: props.secondaryButtonText || props.secondaryCtaText || "",
       secondaryButtonLink: fixLink(
         String(props.secondaryButtonLink || props.secondaryCtaLink || ""),
         String(props.secondaryButtonText || "")
       ),
-      // Background
-      backgroundColor: props.backgroundColor || "#1f2937",
+      secondaryButtonColor: props.secondaryButtonColor || "#ffffff",
+      secondaryButtonTextColor: props.secondaryButtonTextColor || "#ffffff",
+      secondaryButtonStyle: props.secondaryButtonStyle || "outline",
+      // Background — use gradient for modern look
+      backgroundColor: ctaBg,
+      backgroundGradient: props.backgroundGradient ?? true,
+      backgroundGradientFrom: props.backgroundGradientFrom || ctaBg,
+      backgroundGradientTo: props.backgroundGradientTo || (isDarkTheme() ? "#1e293b" : "#111827"),
+      backgroundGradientDirection: props.backgroundGradientDirection || "to-br",
       backgroundImage: props.backgroundImage || "",
       backgroundOverlay: props.backgroundOverlay ?? false,
       backgroundOverlayColor: props.backgroundOverlayColor || "#000000",
@@ -577,7 +608,8 @@ function transformPropsForStudio(
       contentAlign: props.contentAlign || "center",
       // Badge
       badge: props.badge || "",
-      badgeColor: props.badgeColor || "",
+      badgeColor: props.badgeColor || themePrimary(),
+      badgeTextColor: props.badgeTextColor || "#ffffff",
     };
   }
 
@@ -609,11 +641,12 @@ function transformPropsForStudio(
       ratingColor: props.ratingColor || "#f59e0b",
       // Quote icon
       showQuoteIcon: props.showQuoteIcon ?? true,
-      // Card styling
-      cardBackgroundColor: props.cardBackgroundColor || "",
+      // Card styling — dark theme needs visible card backgrounds
+      cardBackgroundColor: props.cardBackgroundColor || (isDarkTheme() ? "#1e293b" : ""),
+      cardBorderColor: props.cardBorderColor || (isDarkTheme() ? "#374151" : ""),
       cardBorderRadius: props.cardBorderRadius || "lg",
-      // Background
-      backgroundColor: props.backgroundColor || "",
+      // Background — must match site theme
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
       textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
       accentColor: props.accentColor || themePrimary(),
     };
@@ -638,15 +671,18 @@ function transformPropsForStudio(
         email: m.email || "",
       })) : [],
       variant: props.variant || "cards",
-      columns: props.columns || 3,
+      columns: props.columns || 2,
       // Social & bio
       showSocial: props.showSocial ?? true,
       showBio: props.showBio ?? true,
       bioMaxLines: props.bioMaxLines || 3,
       // Image
       imageShape: props.imageShape || "circle",
-      // Styling
-      backgroundColor: props.backgroundColor || "",
+      imageBorderColor: props.imageBorderColor || themePrimary(),
+      // Styling — dark theme needs visible card backgrounds
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
+      cardBackgroundColor: props.cardBackgroundColor || (isDarkTheme() ? "#1e293b" : ""),
+      cardBorderColor: props.cardBorderColor || (isDarkTheme() ? "#374151" : ""),
       textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
       accentColor: props.accentColor || themePrimary(),
     };
@@ -661,10 +697,16 @@ function transformPropsForStudio(
       submitText: props.submitText || props.submitButtonText || props.buttonText || "Send Message",
       successMessage: props.successMessage || "Thank you for your message!",
       // Form styling to match site theme
-      backgroundColor: props.backgroundColor || (isDarkTheme() ? "#1f2937" : "#ffffff"),
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? "#1e293b" : "#ffffff"),
       textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : "#1f2937"),
+      // CRITICAL: buttonColor must use brand primary, NOT default blue-600
       buttonColor: props.buttonColor || themePrimary(),
       buttonTextColor: props.buttonTextColor || "#ffffff",
+      // Form field theming for dark mode
+      inputBackgroundColor: props.inputBackgroundColor || (isDarkTheme() ? "#374151" : "#ffffff"),
+      inputBorderColor: props.inputBorderColor || (isDarkTheme() ? "#4b5563" : "#d1d5db"),
+      inputTextColor: props.inputTextColor || (isDarkTheme() ? "#f9fafb" : "#1f2937"),
+      labelColor: props.labelColor || (isDarkTheme() ? "#e5e7eb" : "#374151"),
     };
   }
 
@@ -741,7 +783,7 @@ function transformPropsForStudio(
         answer: f.answer || f.content || f.response || "",
       })) : [],
       variant: props.variant || "accordion",
-      backgroundColor: props.backgroundColor || "",
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
       textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
       accentColor: props.accentColor || themePrimary(),
     };
@@ -771,8 +813,8 @@ function transformPropsForStudio(
       animationDuration: props.animationDuration || 2000,
       // Styling
       valueSize: props.valueSize || "3xl",
-      valueColor: props.valueColor || "",
-      backgroundColor: props.backgroundColor || "",
+      valueColor: props.valueColor || themePrimary(),
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
       textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
       accentColor: props.accentColor || themePrimary(),
     };
@@ -809,8 +851,10 @@ function transformPropsForStudio(
       }) : [],
       variant: props.variant || "cards",
       columns: props.columns || 3,
-      backgroundColor: props.backgroundColor || "",
-      textColor: props.textColor || "",
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
+      cardBackgroundColor: props.cardBackgroundColor || (isDarkTheme() ? "#1e293b" : ""),
+      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      popularBorderColor: props.popularBorderColor || themePrimary(),
     };
   }
 
@@ -857,13 +901,16 @@ function transformPropsForStudio(
         category: img.category || "",
       })) : [],
       variant: props.variant || "grid",
-      columns: props.columns || 3,
+      columns: props.columns || 4,
       gap: props.gap || "md",
       borderRadius: props.borderRadius || "lg",
       hoverEffect: props.hoverEffect || "zoom",
       lightbox: props.lightbox ?? true,
-      backgroundColor: props.backgroundColor || "",
-      textColor: props.textColor || "",
+      // Dark theme backgrounds
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
+      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      titleColor: props.titleColor || (isDarkTheme() ? "#ffffff" : ""),
+      subtitleColor: props.subtitleColor || (isDarkTheme() ? themePrimary() : ""),
     };
   }
 
@@ -871,11 +918,13 @@ function transformPropsForStudio(
   if (type === "Newsletter") {
     return {
       title: props.title || props.headline || "Stay Updated",
-      subtitle: props.subtitle || props.description || "Subscribe to our newsletter for the latest updates.",
-      submitText: props.buttonText || props.ctaText || props.submitText || "Subscribe",
+      description: props.description || props.subtitle || "Subscribe to our newsletter for the latest updates.",
+      buttonText: props.buttonText || props.ctaText || props.submitText || "Subscribe",
       placeholder: props.placeholder || "Enter your email",
-      layout: props.layout || "inline",
-      successMessage: props.successMessage || "Thank you for subscribing!",
+      variant: props.variant || props.layout || "inline",
+      buttonColor: props.buttonColor || themePrimary(),
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
+      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
     };
   }
 
