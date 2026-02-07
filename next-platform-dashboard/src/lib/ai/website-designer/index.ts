@@ -20,6 +20,7 @@ export {
   convertPageToStudioFormat,
   convertOutputToStudioPages,
   getEmptyStudioData,
+  setGeneratedPageSlugs,
 } from "./converter";
 
 // =============================================================================

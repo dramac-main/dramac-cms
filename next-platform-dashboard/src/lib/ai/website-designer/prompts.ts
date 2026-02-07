@@ -350,6 +350,37 @@ All components on a page must share:
 - Images should have responsive sizing
 - Stack layouts vertically on mobile
 
+## 🖼️ IMAGE SELECTION GUIDELINES (CRITICAL)
+
+### For backgroundImage fields:
+Use high-quality Unsplash images with SPECIFIC, relevant search terms:
+- Format: "https://images.unsplash.com/photo-{id}?w=1920&h=1080&fit=crop"
+- OR use placeholder: "https://images.unsplash.com/{industry}-specific-{subject}"
+
+### Industry-Specific Image Recommendations:
+- **Restaurant/Café**: Food close-ups, restaurant interiors, plating, chefs cooking
+- **Fitness/Gym**: People exercising, gym equipment, fitness classes, athletes
+- **Real Estate**: Beautiful homes, interiors, neighborhoods, skylines
+- **Professional Services**: Modern offices, handshakes, team meetings, cityscapes
+- **E-commerce**: Product photography, lifestyle shots, packaging
+- **Creative/Portfolio**: Design work, creative process, artistic shots
+- **Construction**: Building sites, completed projects, tools, skilled workers
+- **Healthcare**: Clean medical facilities, caring staff, modern equipment
+- **Spa/Wellness**: Serene environments, massage, candles, nature
+
+### Image Best Practices:
+1. **Hero images**: Wide landscape format (16:9), high resolution, subject relates to business
+2. **Team photos**: Professional headshots or candid work photos
+3. **Feature icons**: Use Lucide icon names (e.g., "star", "check", "phone") instead of images
+4. **Gallery images**: Consistent style, professional quality
+5. **Background images**: Always add overlay when text is on top
+
+### DO NOT USE:
+- Generic stock photo URLs
+- Placeholder text like "image.jpg" or "placeholder.png"
+- Low-resolution images
+- Images unrelated to the business type
+
 ### FEATURES/SERVICES COMPONENT
 - Use exactly 3, 4, or 6 items (grid-friendly)
 - Each item needs: icon, title (3-5 words), description (15-25 words)

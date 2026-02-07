@@ -15,57 +15,114 @@ import type { GeneratedPage, GeneratedComponent, WebsiteDesignerOutput } from ".
 // LINK VALIDATION & FIXING
 // =============================================================================
 
-/** Valid internal page routes */
-const VALID_ROUTES = ["/", "/about", "/services", "/contact", "/menu", "/portfolio", "/work", "/gallery", "/team", "/pricing", "/faq", "/blog", "/shop", "/products", "/book", "/reserve", "/packages"];
+/** 
+ * Default valid routes - these are common page types we expect
+ * The actual pages generated will be used to validate links
+ */
+const DEFAULT_ROUTES = ["/", "/about", "/services", "/contact", "/menu", "/portfolio", "/work", "/gallery", "/team", "/pricing", "/faq", "/blog", "/shop", "/products", "/book", "/reserve", "/packages"];
+
+/** Current page slugs being generated - set via setGeneratedPageSlugs() */
+let generatedPageSlugs: string[] = [];
+
+/**
+ * Set the actual page slugs from the generated website
+ * This should be called before converting pages to ensure links are valid
+ */
+export function setGeneratedPageSlugs(slugs: string[]): void {
+  generatedPageSlugs = slugs.map(s => s.startsWith('/') ? s : `/${s}`);
+}
+
+/**
+ * Get the combined list of valid routes (generated pages + defaults)
+ */
+function getValidRoutes(): string[] {
+  return [...new Set([...generatedPageSlugs, ...DEFAULT_ROUTES])];
+}
+
+/**
+ * Find the best matching route for a broken/placeholder link
+ */
+function findBestRoute(context: string, validRoutes: string[]): string {
+  const contextLower = context.toLowerCase();
+  
+  // Priority mappings - check in order
+  const mappings: [string[], string[]][] = [
+    [["contact", "quote", "reach", "call", "email"], ["/contact"]],
+    [["book", "reserve", "appointment", "schedule"], ["/book", "/reserve", "/contact"]],
+    [["menu", "food", "dish", "eat", "drink"], ["/menu"]],
+    [["service", "what we", "offer"], ["/services"]],
+    [["about", "story", "who we", "our team", "meet"], ["/about", "/team"]],
+    [["work", "portfolio", "project", "case stud"], ["/portfolio", "/work", "/gallery"]],
+    [["shop", "product", "buy", "store", "purchase"], ["/shop", "/products"]],
+    [["price", "pricing", "cost", "plan"], ["/pricing"]],
+    [["faq", "question", "help"], ["/faq"]],
+    [["blog", "news", "article", "post"], ["/blog"]],
+    [["gallery", "photo", "image"], ["/gallery"]],
+    [["home", "start", "get started", "learn more"], ["/"]],
+  ];
+
+  for (const [keywords, possibleRoutes] of mappings) {
+    if (keywords.some(kw => contextLower.includes(kw))) {
+      // Find first matching route that exists
+      for (const route of possibleRoutes) {
+        if (validRoutes.includes(route)) {
+          return route;
+        }
+      }
+    }
+  }
+  
+  // Default fallback - prefer contact if it exists, otherwise home
+  if (validRoutes.includes("/contact")) return "/contact";
+  return "/";
+}
 
 /**
  * Fix a link to ensure it's a valid route
  * Converts placeholder links (#, #section, empty) to appropriate pages
  */
 function fixLink(href: string | undefined | null, context: string = "default"): string {
+  const validRoutes = getValidRoutes();
+  
   if (!href || href === "#" || href === "" || href.startsWith("#section")) {
-    // Default conversion based on context
-    if (context.toLowerCase().includes("contact") || context.toLowerCase().includes("quote")) {
-      return "/contact";
-    }
-    if (context.toLowerCase().includes("book") || context.toLowerCase().includes("reserve")) {
-      return "/contact";
-    }
-    if (context.toLowerCase().includes("menu") || context.toLowerCase().includes("food")) {
-      return "/menu";
-    }
-    if (context.toLowerCase().includes("service") || context.toLowerCase().includes("what we")) {
-      return "/services";
-    }
-    if (context.toLowerCase().includes("about") || context.toLowerCase().includes("story")) {
-      return "/about";
-    }
-    if (context.toLowerCase().includes("work") || context.toLowerCase().includes("portfolio")) {
-      return "/portfolio";
-    }
-    if (context.toLowerCase().includes("shop") || context.toLowerCase().includes("product")) {
-      return "/shop";
-    }
-    // Default fallback
-    return "/contact";
+    return findBestRoute(context, validRoutes);
   }
   
-  // If it's already a valid-looking path, return as is
-  if (href.startsWith("/")) {
-    return href;
+  // Normalize the href
+  let normalizedHref = href.toLowerCase().trim();
+  
+  // If it's already a valid-looking path
+  if (normalizedHref.startsWith("/")) {
+    // Check if this exact route exists
+    if (validRoutes.includes(normalizedHref)) {
+      return normalizedHref;
+    }
+    // Try without trailing slash
+    const withoutTrailing = normalizedHref.replace(/\/$/, '');
+    if (validRoutes.includes(withoutTrailing)) {
+      return withoutTrailing;
+    }
+    // Route doesn't exist, find best match based on context
+    return findBestRoute(context || normalizedHref, validRoutes);
   }
   
   // If it looks like a URL fragment, try to make it a route
-  if (href.startsWith("#")) {
-    const routeGuess = href.replace("#", "/").toLowerCase();
-    if (VALID_ROUTES.includes(routeGuess)) {
+  if (normalizedHref.startsWith("#")) {
+    const routeGuess = normalizedHref.replace("#", "/");
+    if (validRoutes.includes(routeGuess)) {
       return routeGuess;
     }
-    return "/contact";
+    return findBestRoute(context || routeGuess, validRoutes);
   }
   
-  // Otherwise, prepend with /
-  return "/" + href.toLowerCase().replace(/\s+/g, "-");
+  // Otherwise, prepend with / and check
+  const asRoute = "/" + normalizedHref.replace(/\s+/g, "-");
+  if (validRoutes.includes(asRoute)) {
+    return asRoute;
+  }
+  
+  // Fallback to context-based matching
+  return findBestRoute(context, validRoutes);
 }
 
 /**
@@ -425,16 +482,19 @@ function transformPropsForStudio(
       logo: typeof props.logo === "string" && props.logo.includes("/") ? props.logo : "",
       tagline: props.tagline || props.description || "",
       
-      // Link columns
+      // Link columns - FIX: Apply fixLink to all footer links
       columns: Array.isArray(linkColumns) ? linkColumns.map((col: Record<string, unknown>, i: number) => ({
         title: col.title || col.heading || `Column ${i + 1}`,
-        links: Array.isArray(col.links) ? col.links.map((link: Record<string, unknown>) => ({
-          label: link.label || link.text || link.name || "",
-          href: link.href || link.url || "#",
-        })) : [],
+        links: Array.isArray(col.links) ? col.links.map((link: Record<string, unknown>) => {
+          const label = String(link.label || link.text || link.name || "");
+          return {
+            label,
+            href: fixLink(String(link.href || link.url || ""), label),
+          };
+        }) : [],
       })) : [],
       
-      // Social links
+      // Social links (external URLs - don't fix)
       socialLinks: Array.isArray(socialLinks) ? socialLinks.map((social: Record<string, unknown>) => ({
         platform: social.platform || social.name || "facebook",
         url: social.url || social.href || social.link || "#",
@@ -494,17 +554,20 @@ function transformPropsForStudio(
     return {
       headline: props.headline || props.title || "Pricing",
       description: props.description || "",
-      plans: Array.isArray(plans) ? plans.map((p: Record<string, unknown>, i: number) => ({
-        id: String(i + 1),
-        name: p.name || p.title || `Plan ${i + 1}`,
-        price: p.price || "0",
-        currency: p.currency || "ZMW",
-        period: p.period || "month",
-        features: p.features || [],
-        ctaText: p.ctaText || p.buttonText || "Get Started",
-        ctaLink: p.ctaLink || p.buttonLink || "#",
-        highlighted: p.highlighted || p.featured || false,
-      })) : [],
+      plans: Array.isArray(plans) ? plans.map((p: Record<string, unknown>, i: number) => {
+        const ctaText = String(p.ctaText || p.buttonText || "Get Started");
+        return {
+          id: String(i + 1),
+          name: p.name || p.title || `Plan ${i + 1}`,
+          price: p.price || "0",
+          currency: p.currency || "ZMW",
+          period: p.period || "month",
+          features: p.features || [],
+          ctaText,
+          ctaLink: fixLink(String(p.ctaLink || p.buttonLink || ""), ctaText),
+          highlighted: p.highlighted || p.featured || false,
+        };
+      }) : [],
       columns: props.columns || 3,
     };
   }

@@ -1,13 +1,41 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅**
 **Component Strategy**: Fresh premium components (NOT reusing basic Puck components)
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
 **Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
 **E-Commerce Module**: **ALL 6 WAVES COMPLETE** ✅ | **ZAMBIA DEFAULT** 🇿🇲
-**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + MAJOR PRODUCTION FIXES** ✅
+**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + MAJOR PRODUCTION FIXES + LINK/PUBLISH FIXES** ✅
+
+---
+
+## 🤖 AI WEBSITE DESIGNER - LINK & PUBLISHING FIX (February 2026) ✅
+
+### Critical Fixes Applied This Session
+
+| Issue | Root Cause | Fix Applied |
+|-------|------------|-------------|
+| Navigation links 404 | `fixLink()` checked static route list, not actual generated pages | Created `setGeneratedPageSlugs()` to register actual pages before conversion |
+| Footer links broken | Footer transformer used raw links without `fixLink()` | Added `fixLink()` call for all footer navigation links |
+| Pricing CTA broken | Pricing transformer didn't validate ctaLink | Added `fixLink()` call for pricing CTA links |
+| Pages not published | Saved pages weren't automatically published | Added auto-publish after successful save |
+| Image selection poor | No guidance in prompts for image selection | Added comprehensive image guidelines with industry-specific recommendations |
+
+### Link Validation System (NEW)
+**File:** `src/lib/ai/website-designer/converter.ts`
+
+- `setGeneratedPageSlugs(slugs)` - Register actual pages before conversion
+- `findBestRoute(context, validRoutes)` - Intelligent route matching with priority mappings
+- All link-related props now validated against actual generated pages
+- Falls back to closest matching page or `/contact`
+
+### Files Modified
+- `src/lib/ai/website-designer/converter.ts` - Smart link validation, footer/pricing fixes
+- `src/lib/ai/website-designer/index.ts` - Export `setGeneratedPageSlugs`
+- `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx` - Auto-publish, slug registration
+- `src/lib/ai/website-designer/prompts.ts` - Image selection guidelines
 
 ---
 

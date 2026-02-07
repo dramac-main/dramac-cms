@@ -36,7 +36,7 @@ import { Progress } from "@/components/ui/progress";
 
 // Import the real Studio Renderer
 import { StudioRenderer } from "@/lib/studio/engine/renderer";
-import { convertPageToStudioFormat } from "@/lib/ai/website-designer/converter";
+import { convertPageToStudioFormat, setGeneratedPageSlugs } from "@/lib/ai/website-designer/converter";
 
 import type { WebsiteDesignerOutput } from "@/lib/ai/website-designer/types";
 import type { StudioPageData } from "@/types/studio";
@@ -148,6 +148,11 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
   // Convert generated pages to Studio format when output changes
   useEffect(() => {
     if (output?.pages) {
+      // First, set the valid page slugs so links can be validated
+      const pageSlugs = output.pages.map(p => p.slug);
+      setGeneratedPageSlugs(pageSlugs);
+      
+      // Then convert pages (links will be validated against actual page slugs)
       const map = new Map<string, StudioPageData>();
       for (const page of output.pages) {
         const studioData = convertPageToStudioFormat(page);
@@ -384,7 +389,24 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       }
 
       if (savedCount > 0) {
-        toast.success(`Website saved! ${savedCount} pages created successfully.`);
+        // Auto-publish the site so pages are immediately accessible
+        try {
+          const publishResponse = await fetch(`/api/sites/${siteId}/publish`, {
+            method: "POST",
+          });
+          
+          if (publishResponse.ok) {
+            const publishResult = await publishResponse.json();
+            toast.success(`Website published! ${savedCount} pages live at ${publishResult.siteUrl || "your subdomain"}`);
+          } else {
+            // Publishing failed but pages were saved
+            toast.success(`Website saved! ${savedCount} pages created. Note: Publishing may be needed.`);
+          }
+        } catch (publishError) {
+          console.error("[AI Designer] Publish error:", publishError);
+          toast.success(`Website saved! ${savedCount} pages created. You may need to publish manually.`);
+        }
+        
         // Redirect to the studio for the homepage
         router.push(`/dashboard/sites/${siteId}/pages`);
       } else if (errorCount > 0) {

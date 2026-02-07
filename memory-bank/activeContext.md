@@ -1,53 +1,137 @@
 # Active Context
 
-## Latest Session Update (AI Website Designer MAJOR OVERHAUL - February 2026)
+## Latest Session Update (AI Website Designer COMPREHENSIVE FIX - February 2026)
 
-### AI DESIGNER ARCHITECTURE DEEP FIX ✅
+### AI DESIGNER LINK & PUBLISHING FIX ✅
 
 **Issues Reported By User:**
-1. Double headers and double footers appearing on pages
-2. Dark mode from dashboard affecting preview canvas components
-3. Colors still messed up and inconsistent
-4. AI not using the user's prompt (using site database settings instead)
-5. Duplicate/placeholder links everywhere
-6. No animations or creative elements
-7. Websites not industry-specific or impressive
+1. Navigation links going to 404 pages
+2. Footer links broken
+3. Internal page links not working
+4. Pages not publishing/accessible at their routes
+5. Modules not loading on pages
+6. Image selection needs improvement
+7. Overall creative quality needs work
 
 **Root Causes Identified:**
 
-1. **Double Headers/Footers**: The `applySharedElements()` function was adding navbar/footer to ALL pages, but the AI was ALSO generating Navbar/Footer components in page content. Result: duplicates.
+1. **Broken Links**: The `fixLink()` function in `converter.ts` was only checking against a static list of routes, not the ACTUAL pages being generated. Links to pages like `/menu` would be created even if the site only had `/about` and `/contact`.
 
-2. **Dark Mode Bleeding**: Light mode forcing was only on the preview container, but CSS variables and color-scheme could still leak into components.
+2. **Pages Not Publishing**: After saving pages via the AI Designer, the site wasn't being automatically published. Users would create pages but they wouldn't be accessible at their subdomain.
 
-3. **User Prompt Ignored**: The `buildArchitecturePrompt()` function passed the user's prompt, but it wasn't emphasized enough compared to database context. The AI was prioritizing site settings.
+3. **Footer Links Not Fixed**: The Footer component in `converter.ts` was using raw links (`link.href || link.url || "#"`) without calling `fixLink()`.
 
-4. **Placeholder Links**: AI still generating "#" and "#section" links despite prompt instructions.
+4. **Pricing Links Not Fixed**: Similar issue - Pricing component wasn't validating CTA links.
 
-5. **No Animations**: Animation guidance wasn't prominent in the prompts.
+5. **Image Selection**: No specific guidance in prompts for AI to select appropriate, high-quality images.
 
 ### Fixes Implemented:
 
-### 1. Double Headers/Footers Fix
-**File:** `engine.ts` - `applySharedElements()` method
+### 1. Smart Link Validation System
+**File:** `converter.ts`
+
+Created a context-aware link fixing system:
+- Added `setGeneratedPageSlugs(slugs)` function to register actual generated page slugs
+- Enhanced `fixLink()` to validate against actual generated pages + default routes
+- Added `findBestRoute()` function with intelligent context matching
+- Links now get fixed to the closest matching page that actually exists
 
 ```typescript
-// Now filters out any navbar/footer that were accidentally generated
-const filteredComponents = page.components.filter(
-  (c) => !["Navbar", "NavbarBlock", "Navigation", "Footer", "FooterBlock"].includes(c.type)
-);
-// Then applies the shared navbar at start and footer at end
+// Now validates links against actual pages being generated
+export function setGeneratedPageSlugs(slugs: string[]): void {
+  generatedPageSlugs = slugs.map(s => s.startsWith('/') ? s : `/${s}`);
+}
+
+function findBestRoute(context: string, validRoutes: string[]): string {
+  // Priority mappings - check in order
+  const mappings = [
+    [["contact", "quote"], ["/contact"]],
+    [["book", "reserve"], ["/book", "/reserve", "/contact"]],
+    // ... more intelligent mappings
+  ];
+  // Falls back to /contact or / if no match
+}
 ```
 
-Also added critical rule to PAGE_GENERATOR_PROMPT:
-- "NEVER include Navbar, NavbarBlock, Navigation, Footer, FooterBlock in your output"
-- "The system generates these separately and adds them automatically"
+### 2. Footer Links Fixed
+**File:** `converter.ts` - Footer component transformer
 
-### 2. Dark Mode Global Fix
+Now calls `fixLink()` on all footer navigation links:
+```typescript
+links: col.links.map((link) => {
+  const label = String(link.label || link.text || link.name || "");
+  return {
+    label,
+    href: fixLink(String(link.href || link.url || ""), label), // Fixed!
+  };
+})
+```
+
+### 3. Pricing CTA Links Fixed
+**File:** `converter.ts` - Pricing component transformer
+
+```typescript
+ctaLink: fixLink(String(p.ctaLink || p.buttonLink || ""), ctaText),
+```
+
+### 4. Auto-Publish After Save
+**File:** `ai-designer/page.tsx` - `handleSaveAndApply()`
+
+After saving all pages, the site is now automatically published:
+```typescript
+if (savedCount > 0) {
+  // Auto-publish the site
+  const publishResponse = await fetch(`/api/sites/${siteId}/publish`, {
+    method: "POST",
+  });
+  if (publishResponse.ok) {
+    toast.success(`Website published! ${savedCount} pages live at ...`);
+  }
+}
+```
+
+### 5. Page Slug Registration
 **File:** `ai-designer/page.tsx`
 
-Added comprehensive CSS variable isolation on preview wrapper:
+Added call to register page slugs before conversion:
 ```typescript
-<div className="studio-preview-wrapper" style={{
+useEffect(() => {
+  if (output?.pages) {
+    // Set valid page slugs BEFORE converting
+    const pageSlugs = output.pages.map(p => p.slug);
+    setGeneratedPageSlugs(pageSlugs);
+    
+    // Then convert pages (links validated against actual slugs)
+    const map = new Map<string, StudioPageData>();
+    for (const page of output.pages) {
+      const studioData = convertPageToStudioFormat(page);
+      map.set(page.slug, studioData);
+    }
+    setStudioDataMap(map);
+  }
+}, [output]);
+```
+
+### 6. Image Selection Guidance
+**File:** `prompts.ts` - PAGE_GENERATOR_PROMPT
+
+Added comprehensive image selection guidelines:
+- Industry-specific image recommendations
+- Unsplash image format guidance
+- Best practices for hero, team, gallery images
+- DO NOT use list (generic stock, placeholders, low-res)
+
+### Files Modified:
+- `src/lib/ai/website-designer/converter.ts` - Smart link validation system
+- `src/lib/ai/website-designer/index.ts` - Export `setGeneratedPageSlugs`
+- `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx` - Auto-publish, slug registration
+- `src/lib/ai/website-designer/prompts.ts` - Image selection guidelines
+
+### TypeScript Status: ✅ Zero errors
+
+---
+
+## Previous Session Update (AI Website Designer MAJOR OVERHAUL - February 2026)
   "--background": "0 0% 100%",
   "--foreground": "222.2 84% 4.9%",
   // ... all shadcn/ui CSS variables forced to light mode
