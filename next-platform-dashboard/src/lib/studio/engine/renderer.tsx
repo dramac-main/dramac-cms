@@ -289,9 +289,14 @@ export function StudioRenderer({
   return (
     <div 
       className={`studio-renderer ${className}`}
-      style={themeStyles}
+      style={{
+        ...themeStyles,
+        // Force light mode - prevents dark mode inheritance from parent page
+        colorScheme: "light",
+      }}
       data-site-id={siteId}
       data-page-id={pageId}
+      data-theme="light"
     >
       {/* Root children */}
       {studioData.root.children.map((id) => {

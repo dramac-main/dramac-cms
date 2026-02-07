@@ -685,19 +685,56 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
               maxHeight: "100%",
             }}
           >
-            {/* IMPORTANT: Force light mode for preview canvas - prevents dark mode inheritance */}
-            <div className="h-full overflow-auto light" style={{ colorScheme: "light" }} data-theme="light">
-              {currentStudioData ? (
-                <StudioRenderer
-                  data={currentStudioData}
-                  siteId={siteId}
-                  pageId={currentPage?.slug}
-                />
-              ) : (
-                <div className="h-full flex items-center justify-center text-gray-500 bg-white">
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                </div>
-              )}
+            {/* 
+              CRITICAL: Force light mode for preview canvas
+              This creates an isolated context that prevents dark mode inheritance 
+            */}
+            <div 
+              className="h-full overflow-auto light" 
+              style={{ 
+                colorScheme: "light",
+                backgroundColor: "#ffffff",
+                color: "#000000",
+              }} 
+              data-theme="light"
+              data-mode="light"
+            >
+              {/* Additional wrapper to ensure CSS isolation */}
+              <div className="studio-preview-wrapper" style={{
+                // Reset all colors to ensure no dark mode leakage
+                "--background": "0 0% 100%",
+                "--foreground": "222.2 84% 4.9%",
+                "--card": "0 0% 100%",
+                "--card-foreground": "222.2 84% 4.9%",
+                "--popover": "0 0% 100%",
+                "--popover-foreground": "222.2 84% 4.9%",
+                "--primary": "221.2 83.2% 53.3%",
+                "--primary-foreground": "210 40% 98%",
+                "--secondary": "210 40% 96.1%",
+                "--secondary-foreground": "222.2 47.4% 11.2%",
+                "--muted": "210 40% 96.1%",
+                "--muted-foreground": "215.4 16.3% 46.9%",
+                "--accent": "210 40% 96.1%",
+                "--accent-foreground": "222.2 47.4% 11.2%",
+                "--destructive": "0 84.2% 60.2%",
+                "--destructive-foreground": "210 40% 98%",
+                "--border": "214.3 31.8% 91.4%",
+                "--input": "214.3 31.8% 91.4%",
+                "--ring": "221.2 83.2% 53.3%",
+              } as React.CSSProperties}>
+                {currentStudioData ? (
+                  <StudioRenderer
+                    data={currentStudioData}
+                    siteId={siteId}
+                    pageId={currentPage?.slug}
+                    className="bg-white"
+                  />
+                ) : (
+                  <div className="h-full flex items-center justify-center text-gray-500 bg-white">
+                    <Loader2 className="h-8 w-8 animate-spin" />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

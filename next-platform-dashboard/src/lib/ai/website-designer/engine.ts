@@ -4,6 +4,11 @@
  *
  * This is the brain of the AI Website Designer - it orchestrates
  * all systems to generate complete, multi-page websites from a single prompt.
+ *
+ * ENHANCED with:
+ * - Design Inspiration Engine (Dribbble/Awwwards-level patterns)
+ * - Multi-Pass Refinement Engine (4-pass quality improvement)
+ * - Module Integration Orchestrator (Booking/E-commerce integration)
  */
 
 import { generateObject } from "ai";
@@ -12,6 +17,10 @@ import { buildDataContext } from "./data-context/builder";
 import { formatContextForAI } from "./data-context/formatter";
 import { checkDataAvailability } from "./data-context/checker";
 import { componentRegistry } from "@/lib/studio/registry";
+import { DesignInspirationEngine, type DesignRecommendation } from "./design/inspiration-engine";
+import { MultiPassRefinementEngine } from "./refinement/multi-pass-engine";
+import { ModuleIntegrationOrchestrator } from "./modules/orchestrator";
+import type { ModuleConfig } from "./modules/types";
 import {
   SITE_ARCHITECT_PROMPT,
   PAGE_GENERATOR_PROMPT,
@@ -44,6 +53,28 @@ import type {
 import type { BusinessDataContext, DataAvailability } from "./data-context/types";
 
 // =============================================================================
+// ENGINE CONFIGURATION
+// =============================================================================
+
+export interface EngineConfig {
+  /** Enable design inspiration engine for Dribbble/Awwwards-level designs */
+  enableDesignInspiration: boolean;
+  /** Enable multi-pass refinement for higher quality output */
+  enableRefinement: boolean;
+  /** Number of refinement passes (1-4). More passes = better quality but slower */
+  refinementPasses: 1 | 2 | 3 | 4;
+  /** Enable module integration (booking, e-commerce, etc.) */
+  enableModuleIntegration: boolean;
+}
+
+const DEFAULT_CONFIG: EngineConfig = {
+  enableDesignInspiration: true,
+  enableRefinement: true,
+  refinementPasses: 4,
+  enableModuleIntegration: true,
+};
+
+// =============================================================================
 // ENGINE CLASS
 // =============================================================================
 
@@ -52,11 +83,21 @@ export class WebsiteDesignerEngine {
   private context: BusinessDataContext | null = null;
   private availability: DataAvailability | null = null;
   private architecture: SiteArchitecture | null = null;
+  private userPrompt: string = ""; // Store user's original prompt
   private onProgress?: (progress: GenerationProgress) => void;
+  private config: EngineConfig;
+  
+  // Enhancement Engines
+  private moduleOrchestrator: ModuleIntegrationOrchestrator | null = null;
 
-  constructor(siteId: string, onProgress?: (progress: GenerationProgress) => void) {
+  constructor(
+    siteId: string, 
+    onProgress?: (progress: GenerationProgress) => void,
+    config: Partial<EngineConfig> = {}
+  ) {
     this.siteId = siteId;
     this.onProgress = onProgress;
+    this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
   /**
@@ -64,6 +105,7 @@ export class WebsiteDesignerEngine {
    */
   async generateWebsite(input: WebsiteDesignerInput): Promise<WebsiteDesignerOutput> {
     const startTime = Date.now();
+    this.userPrompt = input.prompt; // Store for use in page generation
 
     try {
       // Step 1: Build data context
@@ -72,13 +114,82 @@ export class WebsiteDesignerEngine {
       this.availability = checkDataAvailability(this.context);
       const formattedContext = formatContextForAI(this.context);
 
+      // Step 1.5: Get design inspiration (NEW)
+      let designInspiration: DesignRecommendation | null = null;
+      if (this.config.enableDesignInspiration) {
+        this.reportProgress("building-context", "Analyzing award-winning design patterns...", 0, 1);
+        try {
+          const industry = this.context?.client.industry?.toLowerCase() || "general";
+          const designEngine = new DesignInspirationEngine(industry, "modern", input.prompt);
+          designInspiration = await designEngine.getDesignRecommendations();
+        } catch (error) {
+          console.warn("[WebsiteDesignerEngine] Design inspiration failed, using defaults:", error);
+          // Continue without design inspiration
+        }
+      }
+
       // Step 2: Analyze prompt and create architecture
       this.reportProgress("analyzing-prompt", "Analyzing your requirements...", 0, 1);
       this.architecture = await this.createArchitecture(
         input.prompt,
         formattedContext,
-        input.preferences
+        input.preferences,
+        designInspiration
       );
+
+      // Step 2.5: Initialize module integration (NEW)
+      if (this.config.enableModuleIntegration && this.context) {
+        // Convert our context to module context format (simplified for module analysis)
+        const moduleContext = {
+          client: {
+            industry: this.context.client?.industry,
+            businessName: this.context.client?.company || this.context.branding?.business_name,
+          },
+          site: {
+            domain: this.context.site?.domain,
+            name: this.context.site?.name,
+          },
+          services: this.context.services?.map(s => ({
+            id: s.id,
+            name: s.name,
+            description: s.description,
+            price: typeof s.price === 'string' ? parseFloat(s.price) || undefined : s.price,
+            category: s.category,
+          })),
+          products: [], // Will be populated from e-commerce data if available
+          team: this.context.team?.map(t => ({
+            id: t.id,
+            name: t.name,
+            role: t.role,
+          })),
+          testimonials: this.context.testimonials?.map(t => ({
+            id: t.id,
+            author: t.name || t.author_name || "Anonymous",
+            content: t.content || "",
+          })),
+          social: this.context.social?.map(s => ({
+            platform: s.platform,
+            url: s.url,
+          })),
+          hours: this.context.hours?.map(h => ({
+            day: h.day,
+            open: h.open_time || "09:00",
+            close: h.close_time || "17:00",
+            closed: h.is_closed || false,
+          })),
+        };
+        
+        this.moduleOrchestrator = new ModuleIntegrationOrchestrator(moduleContext);
+        const { configs: moduleConfigs } = await this.moduleOrchestrator.analyzeAndConfigure(
+          input.prompt,
+          this.architecture.intent
+        );
+        
+        // Store module config in architecture for later use
+        if (moduleConfigs.length > 0) {
+          (this.architecture as SiteArchitecture & { moduleConfig?: ModuleConfig[] }).moduleConfig = moduleConfigs;
+        }
+      }
 
       // Apply constraints if provided
       if (input.constraints) {
@@ -87,7 +198,7 @@ export class WebsiteDesignerEngine {
 
       // Step 3: Generate each page
       const totalPages = this.architecture.pages.length;
-      const pages: GeneratedPage[] = [];
+      let pages: GeneratedPage[] = [];
 
       for (let i = 0; i < totalPages; i++) {
         const pagePlan = this.architecture.pages[i];
@@ -103,13 +214,46 @@ export class WebsiteDesignerEngine {
         pages.push(page);
       }
 
+      // Step 3.5: Integrate modules into pages (NEW)
+      if (this.config.enableModuleIntegration && this.moduleOrchestrator) {
+        this.reportProgress("generating-pages", "Integrating booking & e-commerce modules...", totalPages, totalPages);
+        const moduleConfigs = (this.architecture as SiteArchitecture & { moduleConfig?: ModuleConfig[] }).moduleConfig;
+        if (moduleConfigs && Array.isArray(moduleConfigs)) {
+          pages = this.moduleOrchestrator.integrateModules(pages, moduleConfigs);
+        }
+      }
+
       // Step 4: Generate shared elements (navbar, footer)
       this.reportProgress("generating-shared-elements", "Creating navigation...", 0, 1);
       const navbar = await this.generateNavbar(pages);
       const footer = await this.generateFooter();
 
       // Step 5: Apply navbar and footer to all pages
-      const pagesWithNav = this.applySharedElements(pages, navbar, footer);
+      let pagesWithNav = this.applySharedElements(pages, navbar, footer);
+
+      // Step 5.5: Run multi-pass refinement (NEW)
+      if (this.config.enableRefinement) {
+        this.reportProgress("finalizing", "Refining website quality...", 0, 1);
+        
+        const refinementEngine = new MultiPassRefinementEngine(
+          pagesWithNav,
+          this.architecture,
+          `${this.getBusinessName()} - ${this.context?.client.industry || "business"}: ${this.userPrompt}`,
+          (progress) => {
+            this.reportProgress(
+              "finalizing",
+              `Pass ${progress.pass}: ${progress.passName}...`,
+              progress.pass - 1,
+              4
+            );
+          }
+        );
+
+        const refinementResult = await refinementEngine.refine();
+        pagesWithNav = refinementResult.pages;
+        
+        console.log(`[WebsiteDesignerEngine] Refinement complete: ${refinementResult.totalImprovements} improvements, score: ${refinementResult.overallScore}/10`);
+      }
 
       // Step 6: Generate navigation structure
       const navigation = this.generateNavigation(pagesWithNav);
@@ -164,17 +308,53 @@ export class WebsiteDesignerEngine {
 
   /**
    * Create site architecture from user prompt
+   * Enhanced with design inspiration patterns
    */
   private async createArchitecture(
     prompt: string,
     context: string,
-    preferences?: WebsiteDesignerInput["preferences"]
+    preferences?: WebsiteDesignerInput["preferences"],
+    designInspiration?: DesignRecommendation | null
   ): Promise<SiteArchitecture> {
     const componentSummary = this.summarizeComponents();
 
+    // Enhance prompt with design inspiration if available
+    let inspirationContext = "";
+    if (designInspiration) {
+      inspirationContext = `
+## DESIGN INSPIRATION (Award-winning patterns to incorporate):
+
+### Hero Pattern
+Name: ${designInspiration.heroPattern.name}
+Description: ${designInspiration.heroPattern.description}
+Animation: ${designInspiration.heroPattern.animationSuggestion}
+
+### Color Scheme
+Style: ${designInspiration.colorScheme.name}
+Primary: ${designInspiration.colorScheme.primary}
+Secondary: ${designInspiration.colorScheme.secondary}
+Accent: ${designInspiration.colorScheme.accent}
+Background: ${designInspiration.colorScheme.background}
+
+### Typography
+Heading: ${designInspiration.typography.heading}
+Body: ${designInspiration.typography.body}
+Style: ${designInspiration.typography.style}
+
+### Layout Recommendations
+${designInspiration.layoutRecommendations.map((l) => `- ${l.section}: ${l.layout} (${l.animation})`).join("\n")}
+
+### Micro-Interactions to Include
+${designInspiration.microInteractions.map((m) => `- ${m}`).join("\n")}
+
+### Design Principles
+${designInspiration.designPrinciples.map((p) => `- ${p}`).join("\n")}
+`;
+    }
+
     const fullPrompt = buildArchitecturePrompt(
       prompt,
-      context,
+      context + inspirationContext,
       preferences as Record<string, unknown> | undefined,
       componentSummary
     );
@@ -186,7 +366,22 @@ export class WebsiteDesignerEngine {
       prompt: fullPrompt,
     });
 
-    return object as SiteArchitecture;
+    // Apply design inspiration colors to design tokens if available
+    const architecture = object as SiteArchitecture;
+    if (designInspiration) {
+      architecture.designTokens = {
+        ...architecture.designTokens,
+        primaryColor: designInspiration.colorScheme.primary,
+        secondaryColor: designInspiration.colorScheme.secondary,
+        accentColor: designInspiration.colorScheme.accent,
+        backgroundColor: designInspiration.colorScheme.background,
+        textColor: designInspiration.colorScheme.text,
+        fontHeading: designInspiration.typography.heading,
+        fontBody: designInspiration.typography.body,
+      };
+    }
+
+    return architecture;
   }
 
   /**
@@ -251,7 +446,8 @@ export class WebsiteDesignerEngine {
       pagePlan,
       context,
       (this.architecture?.designTokens || {}) as Record<string, unknown>,
-      componentDetails
+      componentDetails,
+      this.userPrompt // Pass user's original prompt for reference
     );
 
     const { object } = await generateObject({
@@ -361,16 +557,33 @@ Configure ALL footer fields for a comprehensive, professional footer.`,
 
   /**
    * Apply navbar and footer to all pages
+   * IMPORTANT: Only add if page doesn't already have these components to avoid duplicates
    */
   private applySharedElements(
     pages: GeneratedPage[],
     navbar: GeneratedComponent,
     footer: GeneratedComponent
   ): GeneratedPage[] {
-    return pages.map((page) => ({
-      ...page,
-      components: [navbar, ...page.components, footer],
-    }));
+    return pages.map((page) => {
+      // Check if page already has navbar/footer to avoid duplicates
+      const hasNavbar = page.components.some(
+        (c) => c.type === "Navbar" || c.type === "NavbarBlock" || c.type === "Navigation"
+      );
+      const hasFooter = page.components.some(
+        (c) => c.type === "Footer" || c.type === "FooterBlock"
+      );
+
+      // Filter out any navbar/footer components that were accidentally generated in page content
+      const filteredComponents = page.components.filter(
+        (c) => !["Navbar", "NavbarBlock", "Navigation", "Footer", "FooterBlock"].includes(c.type)
+      );
+
+      return {
+        ...page,
+        // Always use the shared navbar at start and shared footer at end
+        components: [navbar, ...filteredComponents, footer],
+      };
+    });
   }
 
   // ===========================================================================
@@ -699,11 +912,16 @@ Configure ALL footer fields for a comprehensive, professional footer.`,
 
 /**
  * Generate a website from a prompt (convenience function)
+ * 
+ * @param input - The website generation input
+ * @param onProgress - Optional progress callback
+ * @param config - Optional engine configuration for design inspiration, refinement, and modules
  */
 export async function generateWebsiteFromPrompt(
   input: WebsiteDesignerInput,
-  onProgress?: (progress: GenerationProgress) => void
+  onProgress?: (progress: GenerationProgress) => void,
+  config?: Partial<EngineConfig>
 ): Promise<WebsiteDesignerOutput> {
-  const engine = new WebsiteDesignerEngine(input.siteId, onProgress);
+  const engine = new WebsiteDesignerEngine(input.siteId, onProgress, config);
   return engine.generateWebsite(input);
 }

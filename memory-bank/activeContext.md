@@ -1,78 +1,148 @@
 # Active Context
 
-## Latest Session Update (AI Website Designer Major UX Fixes - February 2026)
+## Latest Session Update (AI Website Designer MAJOR OVERHAUL - February 2026)
 
-### AI DESIGNER PRODUCTION-READY IMPROVEMENTS ✅
+### AI DESIGNER ARCHITECTURE DEEP FIX ✅
 
-**Issues Reported:**
-1. AI generates components without proper customization
-2. Text on hero images not readable (no overlay)
-3. Navigation not working properly
-4. Preview canvas affected by platform dark mode
-5. No consistency in colors, spacing, fonts
-6. Booking platforms should have forms on hero
-7. Navbar doesn't hide on scroll, hamburger menu no close button
-8. Random colors, poor spacing
-9. Links are placeholders, not functional
+**Issues Reported By User:**
+1. Double headers and double footers appearing on pages
+2. Dark mode from dashboard affecting preview canvas components
+3. Colors still messed up and inconsistent
+4. AI not using the user's prompt (using site database settings instead)
+5. Duplicate/placeholder links everywhere
+6. No animations or creative elements
+7. Websites not industry-specific or impressive
 
-**Fixes Implemented:**
+**Root Causes Identified:**
 
-### 1. Preview Canvas Dark Mode Isolation
-- Added `light` class and `colorScheme: light` to preview container
-- Preview now ALWAYS renders in light mode regardless of platform theme
-- Location: [ai-designer/page.tsx](next-platform-dashboard/src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx)
+1. **Double Headers/Footers**: The `applySharedElements()` function was adding navbar/footer to ALL pages, but the AI was ALSO generating Navbar/Footer components in page content. Result: duplicates.
 
-### 2. Mobile Menu Close Button Fix
-- Added visible close button for fullscreen mobile menu style
-- Close button positioned top-right with proper styling
-- Location: [premium-components.tsx](next-platform-dashboard/src/lib/studio/blocks/premium-components.tsx)
+2. **Dark Mode Bleeding**: Light mode forcing was only on the preview container, but CSS variables and color-scheme could still leak into components.
 
-### 3. Massively Improved AI Prompts
-- Added comprehensive design rules the AI MUST follow
-- Color contrast requirements (WCAG AA 4.5:1 ratio)
-- Hero overlay requirement (65-75% opacity when using images)
-- Navbar scroll behavior (hide on scroll down, show on scroll up)
-- Industry-specific intelligence (booking forms for restaurants/booking businesses)
-- Typography consistency (max 2 fonts, proper hierarchy)
-- Spacing system (8px grid)
-- Mobile-first requirements
-- ALL links must be functional - no placeholder "#" links
+3. **User Prompt Ignored**: The `buildArchitecturePrompt()` function passed the user's prompt, but it wasn't emphasized enough compared to database context. The AI was prioritizing site settings.
 
-### 4. Enhanced Converter Defaults
-**Hero Component:**
-- Auto-detects background image and adds overlay
-- Sets backgroundOverlay: true, backgroundOverlayOpacity: 70
-- White text colors for image backgrounds
-- Proper CTA button styling
+4. **Placeholder Links**: AI still generating "#" and "#section" links despite prompt instructions.
 
-**Navbar Component:**
-- Forces `hideOnScroll: true` and `showOnScrollUp: true`
-- Sets `mobileMenuStyle: "fullscreen"` (has close button)
-- Sticky positioning by default
-- Link hover effects
+5. **No Animations**: Animation guidance wasn't prominent in the prompts.
 
-**Footer Component:**
-- Comprehensive prop mapping
-- Dark theme default (#1f2937)
-- Social links and contact info support
+### Fixes Implemented:
 
-**Files Modified:**
-- `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx`
-- `src/lib/ai/website-designer/prompts.ts`
-- `src/lib/ai/website-designer/converter.ts`
-- `src/lib/studio/blocks/premium-components.tsx`
+### 1. Double Headers/Footers Fix
+**File:** `engine.ts` - `applySharedElements()` method
 
-**Commit:** `18f3b3b` - Pushed to main
+```typescript
+// Now filters out any navbar/footer that were accidentally generated
+const filteredComponents = page.components.filter(
+  (c) => !["Navbar", "NavbarBlock", "Navigation", "Footer", "FooterBlock"].includes(c.type)
+);
+// Then applies the shared navbar at start and footer at end
+```
 
-### Future Considerations (From User Feedback):
-1. **Design inspiration from Dribbble** - Could integrate design pattern analysis in future
-2. **Module components** - Need to ensure booking, e-commerce modules integrate properly
-3. **Extended wait time acceptable** - User prefers 5-10 minute wait for perfect results
-4. **Zero edits goal** - The AI should produce websites that need no manual editing
+Also added critical rule to PAGE_GENERATOR_PROMPT:
+- "NEVER include Navbar, NavbarBlock, Navigation, Footer, FooterBlock in your output"
+- "The system generates these separately and adds them automatically"
+
+### 2. Dark Mode Global Fix
+**File:** `ai-designer/page.tsx`
+
+Added comprehensive CSS variable isolation on preview wrapper:
+```typescript
+<div className="studio-preview-wrapper" style={{
+  "--background": "0 0% 100%",
+  "--foreground": "222.2 84% 4.9%",
+  // ... all shadcn/ui CSS variables forced to light mode
+}}>
+```
+
+**File:** `renderer.tsx`
+
+Added `colorScheme: "light"` and `data-theme="light"` to StudioRenderer output.
+
+### 3. User Prompt Priority Fix
+**File:** `prompts.ts` - `buildArchitecturePrompt()` function
+
+Now parses user prompt to extract:
+- Business name (e.g., "Café Zambezi" from "Create a website for Café Zambezi")
+- Business type (restaurant, cafe, shop, etc.)
+- Location (e.g., "in Lusaka")
+- Key features (booking, menu, portfolio, etc.)
+
+Prompt structure changed to:
+```
+## ⚠️ CRITICAL: USER'S REQUEST (HIGHEST PRIORITY) ⚠️
+The user has SPECIFICALLY requested the following. This OVERRIDES any database context:
+"${userPrompt}"
+
+### EXTRACTED BUSINESS NAME: "${parsed.businessName}"
+YOU MUST USE THIS NAME in all headlines, content, and branding. DO NOT use any other name.
+```
+
+### 4. Link Validation & Fixing
+**File:** `converter.ts` - New link validation system
+
+Added `fixLink()` function that:
+- Converts "#" and "#section" to real page routes
+- Uses context clues (e.g., "Book Now" → "/contact")
+- Has fallback logic for different business types
+- Applied to all link props in Hero, Navbar, CTA, and other components
+
+```typescript
+function fixLink(href: string, context: string): string {
+  if (!href || href === "#" || href.startsWith("#section")) {
+    if (context.toLowerCase().includes("book")) return "/contact";
+    if (context.toLowerCase().includes("menu")) return "/menu";
+    // ... etc
+    return "/contact"; // Default fallback
+  }
+  return href;
+}
+```
+
+### 5. Industry-Specific Architectures
+**File:** `prompts.ts` - Complete rewrite of SITE_ARCHITECT_PROMPT
+
+Now includes detailed blueprints for:
+- 🍽️ Restaurant / Café / Bar (with reservation focus)
+- 🛍️ E-commerce / Retail / Shop (with product/trust focus)
+- 💼 Professional Services (law, medical, consulting)
+- 🎨 Portfolio / Creative / Freelancer
+- 🏋️ Fitness / Gym / Wellness / Spa
+- 🏠 Real Estate / Property
+- 🏗️ Construction / Home Services
+- 📸 Photography / Videography
+
+Each blueprint specifies:
+- Required pages
+- Hero requirements (specific CTAs for industry)
+- Page structure with exact sections
+
+### 6. Animation & Visual Creativity
+**File:** `prompts.ts`
+
+Added animation guidance:
+```
+## 🎨 ANIMATION & VISUAL CREATIVITY
+
+Add visual interest with TASTEFUL animations:
+- **Hero Sections**: Subtle fade-in/slide-up on load
+- **Features**: Staggered reveal as user scrolls
+- **Stats/Numbers**: Count-up animation effect
+- **Cards**: Gentle hover lift effect (transform: translateY(-4px))
+- **Buttons**: Smooth color/shadow transitions
+- **Images**: Subtle zoom on hover (scale: 1.02)
+- **Sections**: Fade-in as they enter viewport
+```
+
+### Files Modified:
+- `src/lib/ai/website-designer/engine.ts` - applySharedElements fix, userPrompt storage
+- `src/lib/ai/website-designer/prompts.ts` - Complete rewrite with industry blueprints
+- `src/lib/ai/website-designer/converter.ts` - Link validation system
+- `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx` - Dark mode isolation
+- `src/lib/studio/engine/renderer.tsx` - Light mode forcing
 
 ---
 
-## Previous Session Update (AI Website Designer END-TO-END FIX - February 2026)
+## Previous Session Update (AI Website Designer Production-Ready - February 2026)
 
 ### AI WEBSITE DESIGNER FULLY WORKING END-TO-END ✅
 

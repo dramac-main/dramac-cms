@@ -12,6 +12,96 @@ import type { StudioPageData, StudioComponent } from "@/types/studio";
 import type { GeneratedPage, GeneratedComponent, WebsiteDesignerOutput } from "./types";
 
 // =============================================================================
+// LINK VALIDATION & FIXING
+// =============================================================================
+
+/** Valid internal page routes */
+const VALID_ROUTES = ["/", "/about", "/services", "/contact", "/menu", "/portfolio", "/work", "/gallery", "/team", "/pricing", "/faq", "/blog", "/shop", "/products", "/book", "/reserve", "/packages"];
+
+/**
+ * Fix a link to ensure it's a valid route
+ * Converts placeholder links (#, #section, empty) to appropriate pages
+ */
+function fixLink(href: string | undefined | null, context: string = "default"): string {
+  if (!href || href === "#" || href === "" || href.startsWith("#section")) {
+    // Default conversion based on context
+    if (context.toLowerCase().includes("contact") || context.toLowerCase().includes("quote")) {
+      return "/contact";
+    }
+    if (context.toLowerCase().includes("book") || context.toLowerCase().includes("reserve")) {
+      return "/contact";
+    }
+    if (context.toLowerCase().includes("menu") || context.toLowerCase().includes("food")) {
+      return "/menu";
+    }
+    if (context.toLowerCase().includes("service") || context.toLowerCase().includes("what we")) {
+      return "/services";
+    }
+    if (context.toLowerCase().includes("about") || context.toLowerCase().includes("story")) {
+      return "/about";
+    }
+    if (context.toLowerCase().includes("work") || context.toLowerCase().includes("portfolio")) {
+      return "/portfolio";
+    }
+    if (context.toLowerCase().includes("shop") || context.toLowerCase().includes("product")) {
+      return "/shop";
+    }
+    // Default fallback
+    return "/contact";
+  }
+  
+  // If it's already a valid-looking path, return as is
+  if (href.startsWith("/")) {
+    return href;
+  }
+  
+  // If it looks like a URL fragment, try to make it a route
+  if (href.startsWith("#")) {
+    const routeGuess = href.replace("#", "/").toLowerCase();
+    if (VALID_ROUTES.includes(routeGuess)) {
+      return routeGuess;
+    }
+    return "/contact";
+  }
+  
+  // Otherwise, prepend with /
+  return "/" + href.toLowerCase().replace(/\s+/g, "-");
+}
+
+/**
+ * Recursively fix all links in an object
+ */
+function fixLinksInObject(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  
+  for (const [key, value] of Object.entries(obj)) {
+    // Check if this is a link field
+    if (key.toLowerCase().includes("link") || key.toLowerCase().includes("href") || key.toLowerCase().includes("url")) {
+      if (typeof value === "string") {
+        result[key] = fixLink(value, String(obj.label || obj.text || obj.title || obj.ctaText || ""));
+      } else {
+        result[key] = value;
+      }
+    } else if (Array.isArray(value)) {
+      // Recursively fix arrays
+      result[key] = value.map((item) => {
+        if (typeof item === "object" && item !== null) {
+          return fixLinksInObject(item as Record<string, unknown>);
+        }
+        return item;
+      });
+    } else if (typeof value === "object" && value !== null) {
+      // Recursively fix nested objects
+      result[key] = fixLinksInObject(value as Record<string, unknown>);
+    } else {
+      result[key] = value;
+    }
+  }
+  
+  return result;
+}
+
+// =============================================================================
 // CONVERTER FUNCTIONS
 // =============================================================================
 
@@ -104,8 +194,11 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
 
   const studioType = typeMap[genComponent.type] || genComponent.type;
 
+  // First, fix all links in the props
+  const fixedProps = fixLinksInObject(genComponent.props || {});
+  
   // Transform props to match Studio component expectations
-  const studioProps = transformPropsForStudio(studioType, genComponent.props);
+  const studioProps = transformPropsForStudio(studioType, fixedProps);
 
   return {
     id: genComponent.id || nanoid(10),
@@ -120,9 +213,10 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
  * 
  * CRITICAL: This converter ensures proper defaults for:
  * - Hero overlays (readability on images)
- * - Navbar scroll behavior
+ * - Navbar scroll behavior  
  * - Consistent styling
  * - Mobile-friendly configurations
+ * - Valid links (no placeholders!)
  */
 function transformPropsForStudio(
   type: string,
@@ -135,15 +229,19 @@ function transformPropsForStudio(
   // Hero component - ENSURE PROPER OVERLAY FOR READABILITY
   if (type === "Hero") {
     const hasBackgroundImage = !!(props.backgroundImage || props.image);
+    const ctaText = String(props.ctaText || props.buttonText || props.primaryButtonText || "Get Started");
     
     return {
       // Content
       title: props.headline || props.title || "Welcome",
       subtitle: props.subheadline || props.subtitle || props.description || "",
       
-      // CTA Buttons
-      primaryButtonText: props.ctaText || props.buttonText || props.primaryButtonText || "Get Started",
-      primaryButtonLink: props.ctaLink || props.buttonLink || props.primaryButtonLink || "#contact",
+      // CTA Buttons - ALWAYS use fixLink to ensure valid routes
+      primaryButtonText: ctaText,
+      primaryButtonLink: fixLink(
+        String(props.ctaLink || props.buttonLink || props.primaryButtonLink || ""),
+        ctaText
+      ),
       primaryButtonColor: props.primaryButtonColor || props.ctaColor || "#3b82f6",
       primaryButtonTextColor: props.primaryButtonTextColor || "#ffffff",
       primaryButtonStyle: props.primaryButtonStyle || "solid",
@@ -151,7 +249,10 @@ function transformPropsForStudio(
       primaryButtonRadius: props.primaryButtonRadius || "md",
       
       secondaryButtonText: props.secondaryButtonText || props.secondaryCtaText || "",
-      secondaryButtonLink: props.secondaryButtonLink || props.secondaryCtaLink || "#",
+      secondaryButtonLink: fixLink(
+        String(props.secondaryButtonLink || props.secondaryCtaLink || ""),
+        String(props.secondaryButtonText || "")
+      ),
       
       // Background
       backgroundImage: props.backgroundImage || props.image || "",
@@ -180,24 +281,25 @@ function transformPropsForStudio(
   // Navbar component - ENSURE PROPER SCROLL BEHAVIOR
   if (type === "Navbar") {
     const links = props.links || props.navLinks || props.navigation || [];
+    const ctaText = String(props.ctaText || props.buttonText || "Get Started");
     
     return {
       // Logo
       logoText: props.logoText || props.brandName || "Brand",
       logo: props.logo || props.logoImage || "",
-      logoLink: props.logoLink || "/",
+      logoLink: "/",
       logoHeight: props.logoHeight || 40,
       
-      // Links - ensure they're properly formatted
+      // Links - ensure they're properly formatted with valid routes
       links: Array.isArray(links) ? links.map((link: Record<string, unknown>) => ({
         label: link.label || link.text || link.name || "",
-        href: link.href || link.url || link.link || "#",
+        href: fixLink(String(link.href || link.url || link.link || ""), String(link.label || link.text || "")),
         target: link.target || "_self",
       })) : [],
       
-      // CTA
-      ctaText: props.ctaText || props.buttonText || "Get Started",
-      ctaLink: props.ctaLink || props.buttonLink || "#contact",
+      // CTA - ALWAYS use fixLink
+      ctaText,
+      ctaLink: fixLink(String(props.ctaLink || props.buttonLink || ""), ctaText),
       ctaStyle: props.ctaStyle || "solid",
       ctaColor: props.ctaColor || "#3b82f6",
       ctaTextColor: props.ctaTextColor || "#ffffff",
@@ -249,11 +351,12 @@ function transformPropsForStudio(
 
   // CTA component
   if (type === "CTA") {
+    const ctaText = String(props.ctaText || props.buttonText || "Get Started");
     return {
       headline: props.headline || props.title || "Ready to Get Started?",
       description: props.description || props.subtitle || "",
-      ctaText: props.ctaText || props.buttonText || "Get Started",
-      ctaLink: props.ctaLink || props.buttonLink || "#contact",
+      ctaText,
+      ctaLink: fixLink(String(props.ctaLink || props.buttonLink || ""), ctaText),
       backgroundColor: props.backgroundColor || "#1f2937",
       textColor: props.textColor || "#ffffff",
       variant: props.variant || "default",

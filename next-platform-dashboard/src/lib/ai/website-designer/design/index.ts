@@ -89,3 +89,10 @@ export {
   generateDesignSystemFromColor,
   generateDesignTokens,
 } from "./generator";
+
+// Design Inspiration Engine (Award-winning patterns)
+export {
+  DesignInspirationEngine,
+  AWARD_WINNING_PATTERNS,
+  type DesignRecommendation,
+} from "./inspiration-engine";

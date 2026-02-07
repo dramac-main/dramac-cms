@@ -1,13 +1,45 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅**
 **Component Strategy**: Fresh premium components (NOT reusing basic Puck components)
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
 **Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
 **E-Commerce Module**: **ALL 6 WAVES COMPLETE** ✅ | **ZAMBIA DEFAULT** 🇿🇲
-**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE** ✅
+**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + MAJOR PRODUCTION FIXES** ✅
+
+---
+
+## 🤖 AI WEBSITE DESIGNER - MAJOR UX OVERHAUL (February 2026) ✅
+
+### Critical Fixes Applied This Session
+
+| Issue | Root Cause | Fix Applied |
+|-------|------------|-------------|
+| Double headers/footers | `applySharedElements()` added navbar/footer to ALL pages, but AI also generated them in page components | Filters out Navbar/Footer from page components before adding shared elements |
+| Dark mode bleeding | Preview container had light mode, but components inherited CSS variables from dashboard | Added complete CSS variable reset on preview wrapper with all shadcn/ui variables |
+| User prompt ignored | `buildArchitecturePrompt()` didn't emphasize user's request enough vs database context | Rewrote to extract business name/type from prompt and mark as "HIGHEST PRIORITY" |
+| Placeholder links | AI generating "#" and "#section" despite instructions | Added `fixLink()` function in converter that auto-converts to real routes |
+| No industry-specific design | Generic prompts didn't guide AI properly for different business types | Complete rewrite with detailed blueprints for 8+ industries |
+| No animations | Animation guidance was missing from prompts | Added animation section with tasteful effects guidance |
+
+### Files Modified
+- `src/lib/ai/website-designer/engine.ts` - applySharedElements fix, userPrompt storage
+- `src/lib/ai/website-designer/prompts.ts` - Complete industry blueprints
+- `src/lib/ai/website-designer/converter.ts` - Link validation system
+- `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx` - Dark mode isolation
+- `src/lib/studio/engine/renderer.tsx` - Light mode forcing
+
+### Industry Architectures Now Included
+- 🍽️ Restaurant / Café / Bar (with reservation CTAs)
+- 🛍️ E-commerce / Retail / Shop (with trust badges)
+- 💼 Professional Services (law, medical, consulting)
+- 🎨 Portfolio / Creative / Freelancer
+- 🏋️ Fitness / Gym / Wellness / Spa
+- 🏠 Real Estate / Property
+- 🏗️ Construction / Home Services
+- 📸 Photography / Videography
 
 ---
 
