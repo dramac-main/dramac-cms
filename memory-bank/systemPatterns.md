@@ -196,6 +196,43 @@ Schema field name → AI outputs → Converter reads → Studio renders
 
 ---
 
+### AI Website Designer — Design Token Flow (CRITICAL)
+
+**Architecture (as of Feb 2026 theming overhaul):**
+```
+User Prompt → AI Architect → output.designSystem.colors
+                                    ↓
+Engine → passes to buildPagePrompt() → AI explicitly told to use these colors
+                                    ↓
+Front-end page.tsx → setDesignTokens(colors) → sets activeDesignTokens in converter.ts
+                                    ↓
+converter.ts → themePrimary(), isDarkTheme() → every component handler
+                                    ↓
+Studio Components → inline styles with correct theme colors
+```
+
+**Key Functions in converter.ts:**
+| Function | Purpose |
+|----------|---------|
+| `setDesignTokens(tokens)` | Sets module-level `activeDesignTokens` — call before conversion |
+| `themePrimary()` | Returns primary brand color (fallback: #3b82f6) |
+| `themeAccent()` | Returns accent color (fallback: primary or #f59e0b) |
+| `themeBackground()` | Returns site background (fallback: #ffffff) |
+| `themeText()` | Returns text color (fallback: #111827) |
+| `isDarkTheme()` | Luminance check on background: `(0.299*R + 0.587*G + 0.114*B) / 255 < 0.5` |
+
+**Dark Mode Double Defense:**
+1. **Converter** — `isDarkTheme()` sets dark-appropriate defaults for ALL component props
+2. **AI Prompts** — `buildPagePrompt()` detects dark theme and injects explicit instructions
+3. **Result**: Even if AI ignores prompts, converter catches it. Even if converter misses something, AI was told to set colors.
+
+**Module Integration (enabled by default):**
+- `engine.ts` DEFAULT_CONFIG: `enableModuleIntegration: true`
+- Industry → Module mapping in `modules/types.ts` (barbershop→booking, restaurant→booking, etc.)
+- Adds ~10-15s for 2 AI calls (analysis + configuration), well within 300s Vercel timeout
+
+---
+
 ### Project Structure
 
 ```

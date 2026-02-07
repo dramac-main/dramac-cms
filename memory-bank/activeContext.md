@@ -1,80 +1,83 @@
 # Active Context
 
-## Latest Session Update (AI Website Designer Complete System Overhaul - February 2026)
+## Latest Session Update (Design Token Theming & Dark Mode Overhaul - February 2026)
 
-### COMPLETE AI PIPELINE OVERHAUL ✅
+### DESIGN TOKEN THEMING, DARK MODE, SPACING & MODULE INTEGRATION OVERHAUL ✅
 
 **Context:**
-Executed a comprehensive 3-phase system overhaul of the AI Website Designer pipeline, fixing 17+ bugs/issues, rewriting component handlers, enhancing prompts, and performing a cross-file consistency audit.
+User tested the previous system overhaul by generating a barbershop website ("Besto") and found 5 critical issues: (1) Blue buttons appearing everywhere instead of themed colors, (2) Dark mode not working — text drowning, components ignoring dark themes, (3) Spacing issues on hero sections, (4) Mobile hamburger menu with white background and blue CTA, (5) Module integration not working (no booking module for barbershop).
 
-**What Was Fixed:**
+**Root Causes Found:**
+1. **Blue Buttons**: Converter hardcoded `#3b82f6` as fallback for every button/CTA. Engine had design tokens from blueprints but NEVER passed them to converter.
+2. **Dark Mode Broken**: Navbar defaulted white bg/dark text. Mobile menu defaulted white. All components used light-mode defaults. No design token flow to component colors.
+3. **Bad Spacing**: Hero `minHeight` defaulted to `"600px"` instead of `"75vh"`, `paddingTop`/`paddingBottom` defaulted to `""` (empty).
+4. **White Mobile Menu**: `mobileMenuBackground: "#ffffff"` and `mobileMenuTextColor: "#1f2937"` hardcoded. Converter never set these.
+5. **No Module Integration**: `enableModuleIntegration: false` in DEFAULT_CONFIG, front-end never sent `engineConfig`, missing industry mappings for barbershop/salon/spa.
 
-#### 🔴 CRITICAL BUGS FIXED
-1. **Bug #1: API Routes Don't Pass EngineConfig** — Added `engineConfig` to RequestSchema in both `route.ts` and `stream/route.ts`, now passed to `WebsiteDesignerEngine` constructor
-2. **Bug #2: Navbar Prop Name Mismatch** — Engine now outputs both `links` and `navItems`; converter reads `props.navItems` in fallback chain
-3. **Bug #3: Platform Description Leaking** — Hero default in `core-components.ts` changed from platform text to `""`; converter always sets description (never falls to registry default); PAGE_GENERATOR_PROMPT has explicit RULE #4
-4. **Bug #4: Footer Shows Generic Services** — FOOTER_GENERATOR_PROMPT completely rewritten with industry-specific column guidance
-5. **Bug #5: Copyright Symbol Encoding** — Verified `©` encoding correct
-6. **Bug #6: Thread Safety** — `convertOutputToStudioPages()` sets slugs internally; `setGeneratedPageSlugs()` deprecated
+**What Was Fixed (7 files, 266 insertions, 43 deletions):**
 
-#### 🟡 MEDIUM ISSUES FIXED
-7. **Issue #7: Feature Icons Render as Text** — Converter sets `iconStyle: "emoji"`; RULE #6 added to prompts
-8. **Issue #8: CTA Text Not Industry-Appropriate** — RULE #5 added with per-industry CTA guidance; default changed to "Contact Us"
-9. **Issue #9: Footer Missing Industry Context** — `generateFooter()` enhanced with industry, services, pages, description context
-10. **Issue #10: Footer Schema Missing Fields** — Added `companyName`, `description`, `legalLinks`, `linkColor`, `linkHoverColor` to schema
-11. **Issue #11: Footer Converter Wrong Prop Names** — Complete Footer handler rewrite with `companyName`, `showSocialLinks`, `showContactInfo`, etc.
-12. **Issue #12: Cost Estimation Wrong** — Changed from GPT-4o pricing to Claude ($3/$15 per 1M tokens)
-13. **Issue #13: All Tiers Same Model** — Fast tier now uses `claude-3-5-haiku-20241022`
-14. **Issue #14: Hardcoded Timezone** — Now reads from site settings, defaults to "UTC"
-15. **Issue #15: getModelInfo() Ignores Provider** — Now accepts `providerOverride` parameter
-16. **Issue #16: Missing Converter Handlers** — Added Gallery, Newsletter, LogoCloud, TrustBadges, Quote handlers
-17. **Issue #17: parseUserPrompt Regex** — Improved with multiple patterns, expanded business types, false positive filtering
+#### converter.ts — Design Token System
+- Added `DesignTokens` interface and `activeDesignTokens` module state
+- Added helper functions: `themePrimary()`, `themeAccent()`, `themeBackground()`, `themeText()`, `isDarkTheme()` (luminance-based)
+- ALL component handlers now use `themePrimary()` instead of `#3b82f6` for buttons/accents
+- ALL components check `isDarkTheme()` to adapt text/bg/border colors for dark themes
+- Hero: `minHeight: "75vh"`, `paddingTop/paddingBottom: "xl"`, dark mode text colors
+- Navbar: CTA uses `themePrimary()`, mobile menu bg/text/hamburger inherit theme
+- CTA, Features, ContactForm, Testimonials, Team, FAQ, Stats, Footer: all themed
+- `convertOutputToStudioPages()` accepts optional `DesignTokens` param
+- New `setDesignTokens()` export function
 
-#### Component Enhancements (converter.ts)
-- **Hero**: Added titleSize, badge, image, padding, animation fields; description always set
-- **Features**: `headline`→`title`, iconStyle: "emoji", variant, card styling (showBorder, showShadow, hoverEffect, gap)
-- **CTA**: `ctaText`→`buttonText`, `ctaLink`→`buttonLink` (Studio field names), variant, badge, background
-- **Testimonials**: company, rating, variant, showAvatar/showRating/showQuoteIcon
-- **Team**: Social links (linkedin/twitter/instagram/email), variant, showSocial/showBio, imageShape
-- **Stats**: variant, animateNumbers/animationDuration, valueSize/valueColor, per-stat icon
-- **Footer**: Complete rewrite with companyName, description, showSocialLinks, showContactInfo, copyright, legalLinks
-- **FAQ**: `headline`→`title`, `faqs`→`items`, variant
-- **Pricing**: Improved features array, `highlighted`→`popular`, `price`→`monthlyPrice`
+#### prompts.ts — Dark Mode AI Guidance
+- PAGE_GENERATOR_PROMPT: Added "DARK THEME AWARENESS" section with 12 rules
+- `buildPagePrompt()`: Dynamically detects dark theme and injects explicit dark-mode instructions
+- NAVBAR_GENERATOR_PROMPT: Added "DARK THEME NAVBAR" section with mobile menu guidance
+- FOOTER_GENERATOR_PROMPT: Added "RULE #7: DARK THEME FOOTER" with comprehensive rules
 
-#### Phase 2 Self-Review Findings & Fixes
-- **CRITICAL: `fixLink()` corrupted external URLs** — Added early-return guard for http/https/mailto/tel
-- **CRITICAL: `fixLinksInObject()` corrupted asset URLs** — Rewrote to use allowlist of nav link keys, skip asset/image keys
-- **Engine copyright override ignored** — Changed engine to set `copyrightText` (matching schema) instead of `copyright`
-- **Navbar `isExternal` not consumed** — Added `isExternal` → `target: "_blank"` mapping
+#### engine.ts — Module Integration Enabled
+- Changed `enableModuleIntegration` from `false` to `true` in DEFAULT_CONFIG
 
-#### Prompt Engineering
-- SITE_ARCHITECT_PROMPT: Added barbershop/salon/spa/beauty industry architecture
-- PAGE_GENERATOR_PROMPT: Added Rules #4-#7 (description mandatory, CTA industry-appropriate, emoji icons, variant required)
-- NAVBAR_GENERATOR_PROMPT: Added CTA text rules per industry
-- FOOTER_GENERATOR_PROMPT: Complete rewrite with industry-specific column guidance
+#### modules/types.ts — Industry Mappings
+- Added 7 industry mappings: barbershop, salon, spa, beauty (require booking), dental, veterinary (require booking + CRM), photography (require CRM, recommend social + ecommerce)
 
-#### Dead Code Cleanup
-- Removed unused `findDesignReference`, `formatReferenceForAI`, `DesignReference` imports from engine.ts
+#### page.tsx — Front-End Token Flow
+- Added `setDesignTokens` + `DesignTokens` imports
+- `useEffect` now calls `setDesignTokens()` with colors from `output.designSystem` before conversion
+- API call body now includes `engineConfig: { enableModuleIntegration: true, useQuickDesignTokens: true }`
 
-#### Technical
-- Zero TypeScript errors (verified with `npx tsc --noEmit`)
-- All 10 files modified successfully
+#### renderer.tsx — Remove Forced Light Mode
+- Changed `colorScheme: "light"` to `colorScheme: "normal"`
+- Removed `data-theme="light"` attribute
 
-### Files Modified
-| File | Changes |
-|------|---------|
-| `converter.ts` | Complete handler rewrite, fixLink guard, fixLinksInObject rewrite, 5 new handlers |
-| `engine.ts` | Navbar dual output, footer context, copyright fix, timezone fix, dead import cleanup |
-| `prompts.ts` | Footer prompt rewrite, 4 new PAGE_GENERATOR rules, barbershop architecture, navbar CTA guidance, improved parseUserPrompt |
-| `schemas.ts` | Footer schema: companyName, description, legalLinks, linkColor, linkHoverColor |
-| `ai-provider.ts` | Claude pricing, Haiku fast tier, getModelInfo provider param |
-| `route.ts` | EngineConfig in RequestSchema, passed to engine |
-| `stream/route.ts` | EngineConfig in RequestSchema, passed to engine |
-| `core-components.ts` | Hero default description → empty string |
+#### premium-components.tsx — Theme-Aware Hover Effects
+- Fixed 3 hardcoded `hover:bg-gray-100` instances on hamburger button and mobile close buttons
+- Now use `onMouseEnter`/`onMouseLeave` with theme-aware colors
+
+### Commits
+- `d7addd3` — "fix: comprehensive theming, dark mode, spacing, mobile menu & module integration overhaul"
+
+### Current Architecture: Design Token Flow
+```
+User Prompt → AI Architect → designSystem.colors (primary, secondary, accent, bg, text)
+                                    ↓
+Engine → output.designSystem → passed to buildPagePrompt() → AI Page Generator
+                                    ↓
+Front-end page.tsx → setDesignTokens(colors) → converter.ts (activeDesignTokens)
+                                    ↓
+converter.ts → themePrimary(), isDarkTheme() → every component handler
+                                    ↓
+Studio Components → inline styles with correct theme colors
+```
+
+### Key Design Decisions
+- **Module-level state** (`activeDesignTokens`) in converter.ts — simpler than threading through every function param
+- **Luminance-based dark detection** — `(0.299*R + 0.587*G + 0.114*B) / 255 < 0.5`
+- **Double defense** — Converter sets theme-aware defaults AND AI prompts tell the AI to use design tokens explicitly
+- **`colorScheme: "normal"`** — Don't force light or dark on the renderer; let inline styles control everything
+- **Module integration on by default** — Industry mappings + 300s Vercel timeout make it safe
 
 ---
 
-## Previous Session Update (Industry Blueprints System - February 2026)
+## Previous Session Update (AI Website Designer Complete System Overhaul - February 2026)
 
 ### REVERTED TO ANTHROPIC CLAUDE ✅
 

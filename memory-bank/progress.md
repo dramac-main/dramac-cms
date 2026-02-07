@@ -1,13 +1,43 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅**
 **Component Strategy**: Fresh premium components (NOT reusing basic Puck components)
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
 **Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
 **E-Commerce Module**: **ALL 6 WAVES COMPLETE** ✅ | **ZAMBIA DEFAULT** 🇿🇲
-**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + INDUSTRY BLUEPRINTS + COMPLETE SYSTEM OVERHAUL** ✅
+**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + INDUSTRY BLUEPRINTS + SYSTEM OVERHAUL + DESIGN TOKEN THEMING** ✅
+
+---
+
+## 🎨 AI WEBSITE DESIGNER - DESIGN TOKEN THEMING & DARK MODE OVERHAUL (February 2026) ✅
+
+### What
+Fixed 5 critical issues found during barbershop website testing: blue buttons everywhere, broken dark mode, bad spacing, white mobile menu on dark sites, and module integration not working.
+
+### Root Causes & Fixes
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| Blue buttons everywhere | Converter hardcoded `#3b82f6` as fallback | Added DesignTokens system; all handlers use `themePrimary()` |
+| Dark mode broken | No design token flow; all defaults were light mode | `isDarkTheme()` luminance check; all components auto-adapt |
+| Bad hero spacing | `minHeight: "600px"`, empty padding | `minHeight: "75vh"`, `padding: "xl"` |
+| White mobile menu | `mobileMenuBackground: "#ffffff"` hardcoded | Mobile menu bg/text/hamburger inherit theme via `isDarkTheme()` |
+| No module integration | `enableModuleIntegration: false`, no industry mappings | Enabled by default, added 7 industry mappings, front-end sends config |
+
+### Files Modified (7 files, 266 insertions, 43 deletions)
+| File | Changes |
+|------|---------|
+| `converter.ts` | DesignTokens interface, 5 helper functions, all handlers themed, `setDesignTokens()` export |
+| `prompts.ts` | Dark theme rules in PAGE/NAVBAR/FOOTER prompts, dynamic dark detection in buildPagePrompt |
+| `engine.ts` | `enableModuleIntegration: true` |
+| `modules/types.ts` | 7 industry mappings (barbershop, salon, spa, beauty, dental, vet, photography) |
+| `page.tsx` | `setDesignTokens()` before conversion, `engineConfig` in API call |
+| `renderer.tsx` | `colorScheme: "normal"`, removed `data-theme="light"` |
+| `premium-components.tsx` | Theme-aware hover effects on hamburger/close buttons |
+
+### Commit
+- `d7addd3` — "fix: comprehensive theming, dark mode, spacing, mobile menu & module integration overhaul"
 
 ---
 
