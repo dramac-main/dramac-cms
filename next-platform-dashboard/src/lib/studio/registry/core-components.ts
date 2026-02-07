@@ -2195,7 +2195,7 @@ const sectionComponents: ComponentDefinition[] = [
     ],
     defaultProps: {
       title: "Build Something Amazing",
-      description: "Create beautiful, responsive websites with our powerful drag-and-drop builder.",
+      description: "",
       titleSize: "xl",
       titleWeight: "bold",
       titleAlign: "center",

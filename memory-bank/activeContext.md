@@ -1,52 +1,80 @@
 # Active Context
 
-## Latest Session Update (Industry Blueprints System - February 2026)
+## Latest Session Update (AI Website Designer Complete System Overhaul - February 2026)
 
-### INDUSTRY BLUEPRINTS SYSTEM IMPLEMENTED ✅
+### COMPLETE AI PIPELINE OVERHAUL ✅
 
 **Context:**
-After reverting to Anthropic Claude (commit d6b3ce2), performed a deep platform scan and implemented production-proven industry architecture blueprints to dramatically improve website generation quality and consistency.
+Executed a comprehensive 3-phase system overhaul of the AI Website Designer pipeline, fixing 17+ bugs/issues, rewriting component handlers, enhancing prompts, and performing a cross-file consistency audit.
 
-**What Was Built (commit 34a4ef1):**
-- Created `config/industry-blueprints.ts` (1625 lines) — comprehensive battle-tested website architectures
-- 9 industries covered with EXACT specifications:
-  1. **Restaurant** — menu-first, reservation CTA, food imagery, hours/location
-  2. **Law Firm** — trust-first, credentials, free consultation CTA, practice areas
-  3. **E-commerce** — product-first, trust badges, category nav, newsletter
-  4. **SaaS** — clarity-first, product screenshot, logo cloud, pricing transparency
-  5. **Healthcare** — patient-centered, appointment booking, provider credentials
-  6. **Portfolio** — work-first, minimal text, bold typography, hire CTA
-  7. **Fitness/Wellness** — energy/calm, membership pricing, transformation stories
-  8. **Construction** — trust/licensed, before/after photos, free quote CTA
-  9. **Real Estate** — listings, agent credentials, home valuation CTA
-  10. **Education** — outcome-focused, programs, instructor credentials
+**What Was Fixed:**
 
-**Each Blueprint Contains:**
-- Exact page list with section order and rationale
-- Content formulas (headline patterns, CTA patterns, item counts)
-- 2 proven color palettes with exact hex values
-- 2 proven typography pairings
-- Layout settings (border radius, shadows, spacing)
-- Image guidelines with Unsplash keywords
-- Content tone guide with do's and don'ts
-- Conversion optimization rules (CTA placements, trust signals, social proof)
-- SEO blueprint patterns
+#### 🔴 CRITICAL BUGS FIXED
+1. **Bug #1: API Routes Don't Pass EngineConfig** — Added `engineConfig` to RequestSchema in both `route.ts` and `stream/route.ts`, now passed to `WebsiteDesignerEngine` constructor
+2. **Bug #2: Navbar Prop Name Mismatch** — Engine now outputs both `links` and `navItems`; converter reads `props.navItems` in fallback chain
+3. **Bug #3: Platform Description Leaking** — Hero default in `core-components.ts` changed from platform text to `""`; converter always sets description (never falls to registry default); PAGE_GENERATOR_PROMPT has explicit RULE #4
+4. **Bug #4: Footer Shows Generic Services** — FOOTER_GENERATOR_PROMPT completely rewritten with industry-specific column guidance
+5. **Bug #5: Copyright Symbol Encoding** — Verified `©` encoding correct
+6. **Bug #6: Thread Safety** — `convertOutputToStudioPages()` sets slugs internally; `setGeneratedPageSlugs()` deprecated
 
-**Integration Points:**
-- `engine.ts`: Blueprint lookup in `generateWebsite()`, injected into `createArchitecture()` and `generatePage()`
-- Blueprint design tokens (colors + typography) take HIGHEST priority over quick tokens and design inspiration
-- `prompts.ts`: `SITE_ARCHITECT_PROMPT` updated to follow blueprints EXACTLY when present
-- `buildPagePrompt()` now accepts and injects page-specific blueprint guidance
-- Key functions: `findBlueprint()`, `formatBlueprintForAI()`, `formatBlueprintPageForAI()`
+#### 🟡 MEDIUM ISSUES FIXED
+7. **Issue #7: Feature Icons Render as Text** — Converter sets `iconStyle: "emoji"`; RULE #6 added to prompts
+8. **Issue #8: CTA Text Not Industry-Appropriate** — RULE #5 added with per-industry CTA guidance; default changed to "Contact Us"
+9. **Issue #9: Footer Missing Industry Context** — `generateFooter()` enhanced with industry, services, pages, description context
+10. **Issue #10: Footer Schema Missing Fields** — Added `companyName`, `description`, `legalLinks`, `linkColor`, `linkHoverColor` to schema
+11. **Issue #11: Footer Converter Wrong Prop Names** — Complete Footer handler rewrite with `companyName`, `showSocialLinks`, `showContactInfo`, etc.
+12. **Issue #12: Cost Estimation Wrong** — Changed from GPT-4o pricing to Claude ($3/$15 per 1M tokens)
+13. **Issue #13: All Tiers Same Model** — Fast tier now uses `claude-3-5-haiku-20241022`
+14. **Issue #14: Hardcoded Timezone** — Now reads from site settings, defaults to "UTC"
+15. **Issue #15: getModelInfo() Ignores Provider** — Now accepts `providerOverride` parameter
+16. **Issue #16: Missing Converter Handlers** — Added Gallery, Newsletter, LogoCloud, TrustBadges, Quote handlers
+17. **Issue #17: parseUserPrompt Regex** — Improved with multiple patterns, expanded business types, false positive filtering
 
-**Architecture Decision:**
-The blueprints are injected as authoritative AI context — the AI is instructed to follow them EXACTLY rather than improvising. This ensures consistent, proven output while still allowing the AI to adapt content to the specific business.
+#### Component Enhancements (converter.ts)
+- **Hero**: Added titleSize, badge, image, padding, animation fields; description always set
+- **Features**: `headline`→`title`, iconStyle: "emoji", variant, card styling (showBorder, showShadow, hoverEffect, gap)
+- **CTA**: `ctaText`→`buttonText`, `ctaLink`→`buttonLink` (Studio field names), variant, badge, background
+- **Testimonials**: company, rating, variant, showAvatar/showRating/showQuoteIcon
+- **Team**: Social links (linkedin/twitter/instagram/email), variant, showSocial/showBio, imageShape
+- **Stats**: variant, animateNumbers/animationDuration, valueSize/valueColor, per-stat icon
+- **Footer**: Complete rewrite with companyName, description, showSocialLinks, showContactInfo, copyright, legalLinks
+- **FAQ**: `headline`→`title`, `faqs`→`items`, variant
+- **Pricing**: Improved features array, `highlighted`→`popular`, `price`→`monthlyPrice`
 
-**Priority Chain:** Blueprint > Design Inspiration > Quick Tokens > AI Freeform
+#### Phase 2 Self-Review Findings & Fixes
+- **CRITICAL: `fixLink()` corrupted external URLs** — Added early-return guard for http/https/mailto/tel
+- **CRITICAL: `fixLinksInObject()` corrupted asset URLs** — Rewrote to use allowlist of nav link keys, skip asset/image keys
+- **Engine copyright override ignored** — Changed engine to set `copyrightText` (matching schema) instead of `copyright`
+- **Navbar `isExternal` not consumed** — Added `isExternal` → `target: "_blank"` mapping
+
+#### Prompt Engineering
+- SITE_ARCHITECT_PROMPT: Added barbershop/salon/spa/beauty industry architecture
+- PAGE_GENERATOR_PROMPT: Added Rules #4-#7 (description mandatory, CTA industry-appropriate, emoji icons, variant required)
+- NAVBAR_GENERATOR_PROMPT: Added CTA text rules per industry
+- FOOTER_GENERATOR_PROMPT: Complete rewrite with industry-specific column guidance
+
+#### Dead Code Cleanup
+- Removed unused `findDesignReference`, `formatReferenceForAI`, `DesignReference` imports from engine.ts
+
+#### Technical
+- Zero TypeScript errors (verified with `npx tsc --noEmit`)
+- All 10 files modified successfully
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `converter.ts` | Complete handler rewrite, fixLink guard, fixLinksInObject rewrite, 5 new handlers |
+| `engine.ts` | Navbar dual output, footer context, copyright fix, timezone fix, dead import cleanup |
+| `prompts.ts` | Footer prompt rewrite, 4 new PAGE_GENERATOR rules, barbershop architecture, navbar CTA guidance, improved parseUserPrompt |
+| `schemas.ts` | Footer schema: companyName, description, legalLinks, linkColor, linkHoverColor |
+| `ai-provider.ts` | Claude pricing, Haiku fast tier, getModelInfo provider param |
+| `route.ts` | EngineConfig in RequestSchema, passed to engine |
+| `stream/route.ts` | EngineConfig in RequestSchema, passed to engine |
+| `core-components.ts` | Hero default description → empty string |
 
 ---
 
-## Previous Session Update (Reverted to Anthropic Claude - February 2026)
+## Previous Session Update (Industry Blueprints System - February 2026)
 
 ### REVERTED TO ANTHROPIC CLAUDE ✅
 

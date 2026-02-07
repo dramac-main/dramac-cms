@@ -258,6 +258,42 @@ NEVER overdo animations - they should enhance, not distract!
 - "Book Your Session" CTA
 - Specialty mentioned
 
+### 💈 BARBERSHOP / SALON / SPA / BEAUTY
+**Required Pages**: Home, Services, Gallery, About, Contact
+**Hero Must Include**:
+- Stylish interior or service photo with overlay
+- "Book Appointment" or "Reserve Your Spot" CTA
+- Operating hours visible
+
+**Page Structure**:
+1. **Home**:
+   - Hero: Stylish service/interior photo, "Premium Grooming Experience", "Book Now" CTA
+   - Services Overview: 3-6 signature services with prices
+   - Gallery Preview: 4-6 best work photos
+   - Testimonials: 3 client reviews with ratings
+   - Stats: Years in business, happy clients, barbers/stylists, rating
+   - CTA: "Book Your Appointment Today"
+
+2. **Services**:
+   - Service categories with descriptions and prices
+   - Duration for each service
+   - "Book This Service" buttons
+
+3. **Gallery**:
+   - Before/after photos
+   - Salon/shop interior
+   - Team at work
+
+4. **About**:
+   - Shop story and founding
+   - Team members with specialties
+   - Philosophy/approach
+
+5. **Contact**:
+   - Booking form
+   - Map with location
+   - Hours, phone, walk-in policy
+
 ## 📋 AVAILABLE COMPONENTS
 
 ### SECTIONS (Primary Building Blocks)
@@ -318,6 +354,47 @@ export const PAGE_GENERATOR_PROMPT = `You are a SENIOR UI designer creating pixe
 - ALL href values must point to real pages: "/", "/about", "/services", "/contact", "/menu", etc.
 - NEVER use "#", "#section", or empty strings as link targets
 - CTA buttons must link to actual conversion pages (e.g., "/contact", "/book", "/quote")
+
+### RULE #4: ALWAYS PROVIDE DESCRIPTION TEXT FOR HERO
+- Every Hero component MUST have a custom "description" prop with business-specific text
+- NEVER leave description empty or undefined — the system will fill in generic platform text
+- The description should be 1-2 sentences about THIS specific business
+- Example for a barbershop: "Experience premium grooming services at Besto. Our master barbers deliver precision cuts and styling in the heart of Lusaka."
+
+### RULE #5: CTA TEXT MUST BE INDUSTRY-APPROPRIATE
+- NEVER use generic text like "Get Started" or "Get Started Free" unless it's a SaaS product
+- Match the CTA to the business type:
+  - Barbershop/Salon: "Book Appointment", "Schedule Visit", "Book Now"
+  - Restaurant: "Reserve a Table", "Order Now", "View Menu"
+  - Fitness/Gym: "Start Free Trial", "Join Now", "Book a Class"
+  - Professional Services: "Schedule Consultation", "Get a Quote", "Contact Us"
+  - E-commerce: "Shop Now", "Browse Collection", "View Products"
+  - Real Estate: "Browse Listings", "Schedule Viewing", "Contact Agent"
+  - Construction: "Get Free Estimate", "Request Quote"
+  - Healthcare: "Book Appointment", "Schedule Visit"
+
+### RULE #6: USE EMOJI ICONS FOR FEATURES
+- For the Features component, use EMOJI icons, not text icon names
+- ✂️ not "scissors", 💈 not "barbershop", 📞 not "phone", ⭐ not "star"
+- The system renders emojis directly but cannot render text icon names
+- Match icons to the business type:
+  - Barbershop: ✂️ 💈 🪒 👔 💇‍♂️ ⭐
+  - Restaurant: 🍽️ 👨‍🍳 🍷 🌿 ⭐ 🏆
+  - Fitness: 💪 🏋️ 🧘 🏃 ❤️ ⭐
+  - Professional: 📊 🎯 💼 🏆 ⚖️ 🔒
+  - E-commerce: 🛒 📦 🔒 💳 🚚 ⭐
+
+### RULE #7: EVERY COMPONENT MUST HAVE A VARIANT
+- Specify the "variant" prop for every component
+- Available variants differ per component type:
+  - Hero: centered, split, splitReverse, fullscreen, video, minimal
+  - Features: cards, minimal, centered, icons-left, icons-top, bento
+  - CTA: centered, left, split, banner, floating, gradient, glass
+  - Testimonials: cards, minimal, quote, carousel, masonry, grid
+  - Stats: simple, cards, bordered, icons, minimal, gradient
+  - Team: cards, minimal, detailed, grid, modern, hover-reveal
+  - FAQ: simple, bordered, cards, minimal
+  - Pricing: cards, simple, comparison, minimal
 
 ## ABSOLUTE REQUIREMENTS - FOLLOW EXACTLY
 
@@ -468,6 +545,17 @@ export const NAVBAR_GENERATOR_PROMPT = `You are designing a premium navigation b
 - ctaTextColor: Ensure contrast (usually white)
 - ctaBorderRadius: "md" or "full" (consistent with site style)
 
+### CTA TEXT RULES
+- The CTA button text must match the business type:
+  - Barbershop/Salon: "Book Now" → link to /contact or /book
+  - Restaurant: "Reserve" → link to /reserve or /contact
+  - E-commerce: "Shop Now" → link to /shop or /products
+  - Professional: "Free Consultation" → link to /contact
+  - Fitness/Gym: "Join Now" → link to /contact or /pricing
+  - Real Estate: "Browse Listings" → link to /listings
+  - Construction: "Get Estimate" → link to /contact or /quote
+- NEVER use generic "Get Started" for service businesses
+
 ### Mobile Configuration
 - mobileBreakpoint: "md" (768px)
 - mobileMenuStyle: "fullscreen" (includes close button)
@@ -490,18 +578,58 @@ Remember: Navigation is crucial for UX. Every link MUST work. The mobile menu MU
 // FOOTER GENERATOR PROMPT
 // =============================================================================
 
-export const FOOTER_GENERATOR_PROMPT = `You are designing a comprehensive footer.
+export const FOOTER_GENERATOR_PROMPT = `You are designing a premium footer for a specific business website.
 
-Create a professional footer that:
-1. Includes logo and tagline
-2. Provides navigation links organized by category
-3. Shows contact information
-4. Displays social media links
-5. Includes newsletter signup if requested
-6. Has proper copyright notice
-7. Works well on all screen sizes
+## ⚠️ CRITICAL RULES
 
-Configure ALL footer props for a complete, professional result.`;
+### RULE #1: USE REAL BUSINESS DATA
+- The tagline/description MUST describe THIS specific business (e.g., "Premium barbershop in Lusaka" NOT "Building the future of web design")
+- Footer column link labels must be REAL pages of THIS website
+- NEVER use generic corporate text like "Premium Consulting" or "Strategic Planning"
+
+### RULE #2: COLUMN CONTENT MUST MATCH THE BUSINESS
+Column titles and links should be relevant to the business type:
+
+**For Service Businesses (barbershop, salon, spa, clinic):**
+- Column 1: "Services" → links to actual services (Haircuts, Beard Trims, Hot Towel Shave, etc.)
+- Column 2: "Quick Links" → Home, About, Gallery, Contact
+- Column 3: "Visit Us" → Address, Hours, Directions
+
+**For Restaurants/Cafés:**
+- Column 1: "Menu" → Appetizers, Main Course, Desserts, Drinks
+- Column 2: "Visit" → Reservations, Location, Hours, Catering
+- Column 3: "About" → Our Story, Chef, Events, Careers
+
+**For Professional Services:**
+- Column 1: "Services" → relevant service categories
+- Column 2: "Company" → About, Team, Careers, Blog
+- Column 3: "Support" → Contact, FAQ, Consultation
+
+**For E-commerce:**
+- Column 1: "Shop" → Categories, New Arrivals, Best Sellers, Sale
+- Column 2: "Help" → Shipping, Returns, FAQ, Size Guide
+- Column 3: "Company" → About, Blog, Contact, Careers
+
+### RULE #3: SOCIAL LINKS
+- Only include social platforms the business actually uses
+- If no social data is provided, include common defaults (Facebook, Instagram) with "#" URLs
+
+### RULE #4: COPYRIGHT
+- Format: "© {year} {Business Name}. All rights reserved."
+- Use the EXACT business name from context
+
+### RULE #5: TAGLINE/DESCRIPTION
+- Must be specific to this business, 1 sentence
+- Examples:
+  - Barbershop: "Premium grooming services in Lusaka since 2016"
+  - Restaurant: "Authentic Italian cuisine in the heart of downtown"
+  - Law Firm: "Trusted legal counsel for families and businesses"
+- NEVER use generic taglines about web design, technology, or platforms
+
+### RULE #6: LEGAL LINKS
+- Always include Privacy Policy (/privacy) and Terms of Service (/terms)
+
+Configure ALL footer props for a complete, polished result.`;
 
 // =============================================================================
 // CONTENT GENERATION PROMPTS
@@ -610,17 +738,41 @@ function parseUserPrompt(userPrompt: string): {
   location: string | null;
   keyFeatures: string[];
 } {
-  // Try to extract business name (often in format "for X" or "X website" or "a X called Y")
-  const businessNameMatch = userPrompt.match(
-    /(?:for|called|named|website for|site for)\s+["']?([^"'\n,]+?)["']?(?:\s+(?:in|located|based|that|which|with)|\s*$|,)/i
-  ) || userPrompt.match(/^create\s+(?:a\s+)?(?:website\s+for\s+)?["']?([^"'\n,]+?)["']?\s+/i);
+  // Try multiple patterns for business name extraction (order: most specific → least)
+  const patterns = [
+    // "called X" or "named X"
+    /(?:called|named)\s+["']?([^"'\n,]+?)["']?\s*(?:in|located|based|that|which|with|\.|,|$)/i,
+    // "for X in Y" or "for X"
+    /(?:for|website for|site for)\s+["']?([^"'\n,]+?)["']?\s*(?:in|located|based|that|which|with|\.|,|$)/i,
+    // "create a X website" pattern
+    /^(?:create|build|make|design)\s+(?:a\s+)?(?:website\s+)?(?:for\s+)?["']?([^"'\n,]+?)["']?\s+/i,
+    // Anything in quotes
+    /["']([^"']+)["']/i,
+  ];
+  
+  let businessName: string | null = null;
+  const falsePositives = ["a", "the", "my", "our", "this", "website", "site", "page", "me", "us"];
+  
+  for (const pattern of patterns) {
+    const match = userPrompt.match(pattern);
+    if (match) {
+      const candidate = match[1].trim();
+      if (!falsePositives.includes(candidate.toLowerCase()) && candidate.length > 1) {
+        businessName = candidate;
+        break;
+      }
+    }
+  }
   
   // Try to extract business type (restaurant, cafe, shop, etc.)
   const businessTypes = ["restaurant", "café", "cafe", "bakery", "coffee shop", "bar", "hotel", "spa", 
-    "gym", "fitness", "salon", "barbershop", "clinic", "dental", "medical", "law firm", "legal",
+    "gym", "fitness", "salon", "barbershop", "barber shop", "hair salon", "beauty salon", "nail salon",
+    "clinic", "dental", "medical", "law firm", "legal",
     "accounting", "consulting", "agency", "studio", "gallery", "boutique", "shop", "store", 
     "ecommerce", "startup", "tech", "software", "real estate", "construction", "plumbing",
-    "electrician", "photography", "wedding", "event", "catering", "landscaping", "cleaning"];
+    "electrician", "photography", "wedding", "event", "catering", "landscaping", "cleaning",
+    "veterinarian", "vet clinic", "pet store", "florist", "tattoo", "music school", "daycare",
+    "car wash", "auto repair", "brewery", "winery", "car dealership", "insurance"];
   const businessType = businessTypes.find(type => userPrompt.toLowerCase().includes(type));
   
   // Try to extract location
@@ -635,9 +787,12 @@ function parseUserPrompt(userPrompt: string): {
   if (userPrompt.toLowerCase().includes("shop") || userPrompt.toLowerCase().includes("store") || userPrompt.toLowerCase().includes("ecommerce")) features.push("e-commerce");
   if (userPrompt.toLowerCase().includes("contact")) features.push("contact form");
   if (userPrompt.toLowerCase().includes("testimonial")) features.push("testimonials");
+  if (userPrompt.toLowerCase().includes("gallery")) features.push("gallery");
+  if (userPrompt.toLowerCase().includes("pricing") || userPrompt.toLowerCase().includes("price")) features.push("pricing");
+  if (userPrompt.toLowerCase().includes("blog")) features.push("blog");
   
   return {
-    businessName: businessNameMatch ? businessNameMatch[1].trim() : null,
+    businessName: businessName,
     businessType: businessType || null,
     location: locationMatch ? locationMatch[1].trim() : null,
     keyFeatures: features,

@@ -167,6 +167,35 @@ src/components/studio/blocks/
 
 ---
 
+### AI Website Designer — Converter Prop Mapping (CRITICAL REFERENCE)
+
+**The prop name chain that MUST be aligned:**
+```
+Schema field name → AI outputs → Converter reads → Studio renders
+```
+
+**Key Mappings (as of Feb 2026 overhaul):**
+| AI Output | Converter Reads | Studio Field | Notes |
+|-----------|----------------|--------------|-------|
+| `navItems` | `links \| navItems` | `links` | Engine outputs both |
+| `copyrightText` | `copyrightText \| copyright` | `copyright` | Engine overrides with `copyrightText` |
+| `headline \| title` | both → `title` | `title` | All components use `title` |
+| `ctaText \| buttonText` | both → `buttonText` | `buttonText` | CTA component |
+| `faqs \| items` | both → `items` | `items` | FAQ component |
+| `price \| monthlyPrice` | both → `monthlyPrice` | `monthlyPrice` | Pricing component |
+| `highlighted \| popular` | both → `popular` | `popular` | Pricing plan |
+| `businessName \| companyName` | both → `companyName` | `companyName` | Footer |
+
+**fixLink() Rules:**
+- External URLs (http/https/mailto/tel): preserved unchanged
+- Asset URLs (logoUrl, imageUrl, src, backgroundImage): NEVER processed
+- Navigation links (href, link, ctaLink, buttonLink): validated against generated page slugs
+- Placeholders (#, empty): resolved to best-matching route
+
+**Priority Chain:** Blueprint > Design Inspiration > Quick Tokens > AI Freeform
+
+---
+
 ### Project Structure
 
 ```

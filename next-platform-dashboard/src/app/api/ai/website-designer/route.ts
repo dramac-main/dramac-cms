@@ -41,6 +41,15 @@ const RequestSchema = z.object({
       mustIncludeComponents: z.array(z.string()).optional(),
     })
     .optional(),
+  engineConfig: z
+    .object({
+      enableDesignInspiration: z.boolean().optional(),
+      useQuickDesignTokens: z.boolean().optional(),
+      enableRefinement: z.boolean().optional(),
+      refinementPasses: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
+      enableModuleIntegration: z.boolean().optional(),
+    })
+    .optional(),
 });
 
 // =============================================================================
@@ -113,7 +122,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Run the website designer engine
-    const engine = new WebsiteDesignerEngine(input.siteId);
+    const engine = new WebsiteDesignerEngine(input.siteId, undefined, input.engineConfig);
     const result = await engine.generateWebsite({
       siteId: input.siteId,
       prompt: input.prompt,

@@ -201,7 +201,9 @@ export const NavbarComponentSchema = z.object({
 // =============================================================================
 
 export const FooterComponentSchema = z.object({
-  variant: z.string().optional(),
+  variant: z.string().optional().describe("Footer variant: standard, centered, simple, extended"),
+  companyName: z.string().optional().describe("The business name to display in the footer"),
+  description: z.string().optional().describe("A one-line tagline describing this specific business — NOT generic platform text"),
   columns: z
     .array(
       z.object({
@@ -214,14 +216,15 @@ export const FooterComponentSchema = z.object({
         ),
       })
     )
-    .optional(),
+    .optional()
+    .describe("Footer link columns with business-relevant content"),
   logoUrl: z.string().optional(),
   logoText: z.string().optional(),
-  tagline: z.string().optional(),
+  tagline: z.string().optional().describe("Short tagline about this specific business"),
   businessName: z.string().optional(),
-  email: z.string().optional(),
-  phone: z.string().optional(),
-  address: z.string().optional(),
+  email: z.string().optional().describe("Contact email"),
+  phone: z.string().optional().describe("Contact phone"),
+  address: z.string().optional().describe("Business address"),
   socialLinks: z
     .array(
       z.object({
@@ -234,8 +237,19 @@ export const FooterComponentSchema = z.object({
   newsletterTitle: z.string().optional(),
   newsletterDescription: z.string().optional(),
   copyrightText: z.string().optional(),
+  legalLinks: z
+    .array(
+      z.object({
+        label: z.string(),
+        href: z.string(),
+      })
+    )
+    .optional()
+    .describe("Legal links like Privacy Policy, Terms of Service"),
   backgroundColor: z.string().optional(),
   textColor: z.string().optional(),
+  linkColor: z.string().optional(),
+  linkHoverColor: z.string().optional(),
   borderTop: z.boolean().optional(),
 });
 

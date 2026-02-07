@@ -14,7 +14,6 @@
 
 import { generateObject } from "ai";
 import { getAIModel, getModelInfo } from "./config/ai-provider";
-import { findDesignReference, formatReferenceForAI, type DesignReference } from "./config/design-references";
 import { findBlueprint, formatBlueprintForAI, formatBlueprintPageForAI, type IndustryBlueprint } from "./config/industry-blueprints";
 import { buildDataContext } from "./data-context/builder";
 import { formatContextForAI } from "./data-context/formatter";
@@ -615,12 +614,14 @@ Design Tokens: ${JSON.stringify(this.architecture?.designTokens || {})}
 Configure ALL navbar fields for a modern, responsive navigation.`,
     });
 
+    const allNavLinks = [{ label: "Home", href: "/" }, ...navItems];
     return {
       id: "shared-navbar",
       type: "Navbar",
       props: {
         ...object,
-        navItems: [{ label: "Home", href: "/" }, ...navItems],
+        links: allNavLinks,
+        navItems: allNavLinks, // backward compat
       },
     };
   }
@@ -629,6 +630,15 @@ Configure ALL navbar fields for a modern, responsive navigation.`,
    * Generate footer component
    */
   private async generateFooter(): Promise<GeneratedComponent> {
+    // Build context about what pages exist
+    const pageLinks = this.architecture?.pages.map(p => ({
+      label: p.name,
+      href: p.slug,
+    })) || [];
+
+    // Get services for footer columns
+    const services = this.context?.services?.slice(0, 6).map(s => s.name) || [];
+
     const { object } = await generateObject({
       model: getAIModel("footer"),
       schema: FooterComponentSchema,
@@ -636,6 +646,10 @@ Configure ALL navbar fields for a modern, responsive navigation.`,
       prompt: `Generate a premium footer configuration.
 
 Business: ${this.getBusinessName()}
+Industry: ${this.context?.client.industry || "general"}
+Business Description: ${this.context?.client.description || `A ${this.context?.client.industry || "professional"} business`}
+Services Offered: ${services.length > 0 ? services.join(", ") : "Not specified"}
+Pages on This Website: ${JSON.stringify(pageLinks)}
 Logo: ${this.context?.branding.logo_url || ""}
 Contact Email: ${this.context?.contact.email || ""}
 Contact Phone: ${this.context?.contact.phone || ""}
@@ -643,11 +657,15 @@ Address: ${JSON.stringify(this.context?.contact.address || {})}
 Social Links: ${JSON.stringify(this.context?.social || [])}
 Business Hours: ${JSON.stringify(this.context?.hours || [])}
 Style: ${this.architecture?.sharedElements.footer.style || "comprehensive"}
-Columns: ${this.architecture?.sharedElements.footer.columns || 4}
+Columns: ${this.architecture?.sharedElements.footer.columns || 3}
 Show Newsletter: ${this.architecture?.sharedElements.footer.newsletter}
 Design Tokens: ${JSON.stringify(this.architecture?.designTokens || {})}
 
-Configure ALL footer fields for a comprehensive, professional footer.`,
+CRITICAL: Footer columns must contain links relevant to "${this.context?.client.industry || "this"}" business.
+Use the ACTUAL services and pages listed above, NOT generic corporate services.
+The tagline must describe this specific business, not a generic company.
+
+Configure ALL footer props for a complete, professional result.`,
     });
 
     return {
@@ -655,8 +673,8 @@ Configure ALL footer fields for a comprehensive, professional footer.`,
       type: "Footer",
       props: {
         ...object,
-        businessName: this.getBusinessName(),
-        copyrightText: `┬⌐ ${new Date().getFullYear()} ${this.getBusinessName()}. All rights reserved.`,
+        companyName: this.getBusinessName(),
+        copyrightText: `© ${new Date().getFullYear()} ${this.getBusinessName()}. All rights reserved.`,
       },
     };
   }
@@ -724,7 +742,7 @@ Configure ALL footer fields for a comprehensive, professional footer.`,
     return {
       theme: "light",
       language: "en",
-      timezone: "Africa/Lusaka", // Zambia default
+      timezone: (this.context?.site?.settings as Record<string, unknown>)?.timezone as string || "UTC",
       favicon: this.context?.branding.favicon_url,
       socialImage: this.context?.branding.logo_url,
     };
@@ -929,7 +947,7 @@ Configure ALL footer fields for a comprehensive, professional footer.`,
     return {
       theme: "light",
       language: "en",
-      timezone: "Africa/Lusaka",
+      timezone: "UTC",
     };
   }
 

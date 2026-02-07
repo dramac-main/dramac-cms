@@ -53,17 +53,17 @@ const MODEL_CONFIGS: Record<AIProvider, Record<AIModelTier, AIModelConfig>> = {
     premium: {
       provider: "anthropic",
       model: "claude-sonnet-4-20250514",
-      description: "Best structured output quality",
+      description: "Best quality for architecture and page content",
     },
     standard: {
       provider: "anthropic",
       model: "claude-sonnet-4-20250514",
-      description: "Same as premium for Anthropic",
+      description: "Good quality for navbar and footer",
     },
     fast: {
       provider: "anthropic",
-      model: "claude-sonnet-4-20250514",
-      description: "Anthropic doesn't have a fast tier",
+      model: "claude-3-5-haiku-20241022",
+      description: "Fast and cheap for simple analysis tasks",
     },
   },
 };
@@ -135,12 +135,15 @@ export function getAIModel(
 /**
  * Get model info for logging/debugging
  */
-export function getModelInfo(task: keyof typeof TASK_TIERS | string): {
+export function getModelInfo(
+  task: keyof typeof TASK_TIERS | string,
+  providerOverride?: AIProvider
+): {
   provider: AIProvider;
   model: string;
   tier: AIModelTier;
 } {
-  const provider = DEFAULT_PROVIDER;
+  const provider = providerOverride || DEFAULT_PROVIDER;
   const tier = TASK_TIERS[task] || "standard";
   const config = MODEL_CONFIGS[provider][tier];
   
@@ -180,9 +183,9 @@ export function estimateCost(tasks: (keyof typeof TASK_TIERS)[]): {
     totalOutput += estimate.output;
   }
 
-  // GPT-4o pricing
-  const inputCostPer1M = 5;
-  const outputCostPer1M = 15;
+  // Claude Sonnet 4 pricing (as of 2025)
+  const inputCostPer1M = 3;    // $3 per 1M input tokens
+  const outputCostPer1M = 15;  // $15 per 1M output tokens
   
   const estimatedCostUSD = 
     (totalInput / 1_000_000) * inputCostPer1M +

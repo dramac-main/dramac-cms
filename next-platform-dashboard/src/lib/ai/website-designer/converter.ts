@@ -22,11 +22,15 @@ import type { GeneratedPage, GeneratedComponent, WebsiteDesignerOutput } from ".
 const DEFAULT_ROUTES = ["/", "/about", "/services", "/contact", "/menu", "/portfolio", "/work", "/gallery", "/team", "/pricing", "/faq", "/blog", "/shop", "/products", "/book", "/reserve", "/packages"];
 
 /** Current page slugs being generated - set via setGeneratedPageSlugs() */
+// NOTE: This is module-level mutable state. For thread safety in concurrent
+// generations, the caller should use convertOutputToStudioPages() which 
+// internally sets this before processing. For sequential use this is fine.
 let generatedPageSlugs: string[] = [];
 
 /**
  * Set the actual page slugs from the generated website
  * This should be called before converting pages to ensure links are valid
+ * @deprecated Use convertOutputToStudioPages() which sets slugs automatically
  */
 export function setGeneratedPageSlugs(slugs: string[]): void {
   generatedPageSlugs = slugs.map(s => s.startsWith('/') ? s : `/${s}`);
@@ -88,6 +92,11 @@ function fixLink(href: string | undefined | null, context: string = "default"): 
     return findBestRoute(context, validRoutes);
   }
   
+  // Preserve external URLs — never modify these
+  if (href.startsWith("http://") || href.startsWith("https://") || href.startsWith("mailto:") || href.startsWith("tel:")) {
+    return href;
+  }
+  
   // Normalize the href
   let normalizedHref = href.toLowerCase().trim();
   
@@ -131,9 +140,25 @@ function fixLink(href: string | undefined | null, context: string = "default"): 
 function fixLinksInObject(obj: Record<string, unknown>): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   
+  // Keys that are navigation links (should be fixed)
+  const navLinkKeys = ["link", "href", "ctaLink", "buttonLink", "primaryButtonLink", "secondaryButtonLink", "logoLink"];
+  // Keys that are asset/image URLs (should NOT be fixed)
+  const assetUrlKeys = ["logoUrl", "logo_url", "imageUrl", "image_url", "src", "image", "backgroundImage", "videoPoster", "videoSrc", "avatarUrl", "avatar_url", "icon"];
+  
   for (const [key, value] of Object.entries(obj)) {
-    // Check if this is a link field
-    if (key.toLowerCase().includes("link") || key.toLowerCase().includes("href") || key.toLowerCase().includes("url")) {
+    const keyLower = key.toLowerCase();
+    
+    // Skip asset/image URL keys entirely
+    if (assetUrlKeys.some(k => keyLower === k.toLowerCase())) {
+      result[key] = value;
+      continue;
+    }
+    
+    // Check if this is a navigation link field
+    const isNavLink = navLinkKeys.some(k => keyLower === k.toLowerCase()) || 
+                      (keyLower.includes("link") || keyLower.includes("href")) && !keyLower.includes("url");
+    
+    if (isNavLink) {
       if (typeof value === "string") {
         result[key] = fixLink(value, String(obj.label || obj.text || obj.title || obj.ctaText || ""));
       } else {
@@ -291,7 +316,8 @@ function transformPropsForStudio(
     return {
       // Content
       title: props.headline || props.title || "Welcome",
-      subtitle: props.subheadline || props.subtitle || props.description || "",
+      subtitle: props.subheadline || props.subtitle || "",
+      description: props.description || props.subheadline || props.subtitle || "", // NEVER let it fall to registry default
       
       // CTA Buttons - ALWAYS use fixLink to ensure valid routes
       primaryButtonText: ctaText,
@@ -330,15 +356,40 @@ function transformPropsForStudio(
       variant: props.variant || "centered",
       verticalAlign: props.verticalAlign || "center",
       
+      // Typography sizing
+      titleSize: props.titleSize || "xl",
+      titleWeight: props.titleWeight || "bold",
+      titleAlign: props.titleAlign || "",
+      subtitleSize: props.subtitleSize || "",
+      descriptionSize: props.descriptionSize || "",
+      descriptionMaxWidth: props.descriptionMaxWidth || "",
+      
+      // Badge
+      badge: props.badge || "",
+      badgeColor: props.badgeColor || "",
+      badgeTextColor: props.badgeTextColor || "",
+      
+      // Split variant image
+      image: props.image || props.heroImage || "",
+      imageAlt: props.imageAlt || "",
+      imagePosition: props.imagePosition || "right",
+      
       // Size
       minHeight: props.minHeight || "600px",
+      maxWidth: props.maxWidth || "",
+      paddingTop: props.paddingTop || "",
+      paddingBottom: props.paddingBottom || "",
+      
+      // Animation
+      animateOnLoad: props.animateOnLoad ?? true,
+      animationType: props.animationType || "fade-up",
     };
   }
 
   // Navbar component - ENSURE PROPER SCROLL BEHAVIOR
   if (type === "Navbar") {
-    const links = props.links || props.navLinks || props.navigation || [];
-    const ctaText = String(props.ctaText || props.buttonText || "Get Started");
+    const links = props.links || props.navItems || props.navLinks || props.navigation || [];
+    const ctaText = String(props.ctaText || props.buttonText || "Contact Us");
     
     return {
       // Logo
@@ -351,7 +402,7 @@ function transformPropsForStudio(
       links: Array.isArray(links) ? links.map((link: Record<string, unknown>) => ({
         label: link.label || link.text || link.name || "",
         href: fixLink(String(link.href || link.url || link.link || ""), String(link.label || link.text || "")),
-        target: link.target || "_self",
+        target: link.isExternal ? "_blank" : (link.target || "_self"),
       })) : [],
       
       // CTA - ALWAYS use fixLink
@@ -390,36 +441,72 @@ function transformPropsForStudio(
   if (type === "Features") {
     const features = props.features || props.items || [];
     return {
-      headline: props.headline || props.title || "Features",
-      description: props.description || props.subtitle || "",
+      title: props.headline || props.title || "Features",
+      subtitle: props.subtitle || "",
+      description: props.description || "",
       features: Array.isArray(features) ? features.map((f: Record<string, unknown>, i: number) => ({
         id: String(i + 1),
         title: f.title || f.name || `Feature ${i + 1}`,
         description: f.description || f.content || "",
         icon: f.icon || "star",
+        iconColor: f.iconColor || props.iconColor || "",
+        iconBackgroundColor: f.iconBackgroundColor || "",
       })) : [],
+      variant: props.variant || "cards",
       columns: props.columns || 3,
-      layout: props.layout || "grid",
+      iconStyle: props.iconStyle || "emoji", // Use emoji by default — they render everywhere
+      // Card styling
+      showBorder: props.showBorder ?? true,
+      showShadow: props.showShadow ?? true,
+      cardBackgroundColor: props.cardBackgroundColor || "",
+      cardBorderRadius: props.cardBorderRadius || "lg",
+      cardPadding: props.cardPadding || "lg",
+      hoverEffect: props.hoverEffect || "lift",
+      gap: props.gap || "md",
       // Consistent styling
-      backgroundColor: props.backgroundColor || "#ffffff",
-      textColor: props.textColor || "#1f2937",
+      backgroundColor: props.backgroundColor || "",
+      textColor: props.textColor || "",
+      accentColor: props.accentColor || "",
     };
   }
 
-  // CTA component
+  // CTA component — Studio uses 'buttonText' NOT 'ctaText'
   if (type === "CTA") {
-    const ctaText = String(props.ctaText || props.buttonText || "Get Started");
+    const buttonText = String(props.ctaText || props.buttonText || "Contact Us");
     return {
-      headline: props.headline || props.title || "Ready to Get Started?",
-      description: props.description || props.subtitle || "",
-      ctaText,
-      ctaLink: fixLink(String(props.ctaLink || props.buttonLink || ""), ctaText),
-      backgroundColor: props.backgroundColor || "#1f2937",
-      textColor: props.textColor || "#ffffff",
-      variant: props.variant || "default",
-      // Ensure button styling
+      title: props.headline || props.title || "Ready to Get Started?",
+      subtitle: props.subtitle || "",
+      description: props.description || "",
+      // Studio CTA uses buttonText/buttonLink
+      buttonText,
+      buttonLink: fixLink(String(props.ctaLink || props.buttonLink || ""), buttonText),
       buttonColor: props.buttonColor || props.ctaColor || "#3b82f6",
-      buttonTextColor: props.buttonTextColor || "#ffffff",
+      buttonTextColor: props.buttonTextColor || props.ctaTextColor || "#ffffff",
+      buttonSize: props.buttonSize || "lg",
+      buttonRadius: props.buttonRadius || "md",
+      buttonStyle: props.buttonStyle || "solid",
+      buttonIcon: props.buttonIcon || "",
+      // Secondary button
+      secondaryButtonText: props.secondaryButtonText || props.secondaryCtaText || "",
+      secondaryButtonLink: fixLink(
+        String(props.secondaryButtonLink || props.secondaryCtaLink || ""),
+        String(props.secondaryButtonText || "")
+      ),
+      // Background
+      backgroundColor: props.backgroundColor || "#1f2937",
+      backgroundImage: props.backgroundImage || "",
+      backgroundOverlay: props.backgroundOverlay ?? false,
+      backgroundOverlayColor: props.backgroundOverlayColor || "#000000",
+      backgroundOverlayOpacity: props.backgroundOverlayOpacity || 60,
+      // Text
+      textColor: props.textColor || "#ffffff",
+      titleColor: props.titleColor || "",
+      // Layout
+      variant: props.variant || "centered",
+      contentAlign: props.contentAlign || "center",
+      // Badge
+      badge: props.badge || "",
+      badgeColor: props.badgeColor || "",
     };
   }
 
@@ -427,15 +514,37 @@ function transformPropsForStudio(
   if (type === "Testimonials") {
     const testimonials = props.testimonials || props.items || [];
     return {
-      headline: props.headline || props.title || "What Our Customers Say",
+      title: props.headline || props.title || "What Our Customers Say",
+      subtitle: props.subtitle || "",
+      description: props.description || "",
       testimonials: Array.isArray(testimonials) ? testimonials.map((t: Record<string, unknown>, i: number) => ({
         id: String(i + 1),
         quote: t.quote || t.text || t.content || "",
         author: t.author || t.name || `Customer ${i + 1}`,
         role: t.role || t.title || t.position || "",
-        avatar: t.avatar || t.image || "",
+        company: t.company || t.organization || "",
+        image: t.avatar || t.image || "",
+        rating: t.rating ?? 5,
       })) : [],
-      layout: props.layout || "grid",
+      variant: props.variant || "cards",
+      columns: props.columns || 3,
+      // Avatar settings
+      showAvatar: props.showAvatar ?? true,
+      avatarSize: props.avatarSize || "md",
+      avatarShape: props.avatarShape || "circle",
+      // Rating
+      showRating: props.showRating ?? true,
+      ratingStyle: props.ratingStyle || "stars",
+      ratingColor: props.ratingColor || "#f59e0b",
+      // Quote icon
+      showQuoteIcon: props.showQuoteIcon ?? true,
+      // Card styling
+      cardBackgroundColor: props.cardBackgroundColor || "",
+      cardBorderRadius: props.cardBorderRadius || "lg",
+      // Background
+      backgroundColor: props.backgroundColor || "",
+      textColor: props.textColor || "",
+      accentColor: props.accentColor || "",
     };
   }
 
@@ -443,16 +552,32 @@ function transformPropsForStudio(
   if (type === "Team") {
     const members = props.members || props.team || props.items || [];
     return {
-      headline: props.headline || props.title || "Meet Our Team",
+      title: props.headline || props.title || "Meet Our Team",
+      subtitle: props.subtitle || "",
       description: props.description || "",
       members: Array.isArray(members) ? members.map((m: Record<string, unknown>, i: number) => ({
         id: String(i + 1),
         name: m.name || `Team Member ${i + 1}`,
         role: m.role || m.title || m.position || "",
         bio: m.bio || m.description || "",
-        avatar: m.avatar || m.image || "",
+        image: m.avatar || m.image || "",
+        linkedin: m.linkedin || "",
+        twitter: m.twitter || "",
+        instagram: m.instagram || "",
+        email: m.email || "",
       })) : [],
+      variant: props.variant || "cards",
       columns: props.columns || 3,
+      // Social & bio
+      showSocial: props.showSocial ?? true,
+      showBio: props.showBio ?? true,
+      bioMaxLines: props.bioMaxLines || 3,
+      // Image
+      imageShape: props.imageShape || "circle",
+      // Styling
+      backgroundColor: props.backgroundColor || "",
+      textColor: props.textColor || "",
+      accentColor: props.accentColor || "",
     };
   }
 
@@ -471,18 +596,19 @@ function transformPropsForStudio(
     };
   }
 
-  // Footer component - ensure consistent styling
+  // Footer component - aligned with Studio Footer fields
   if (type === "Footer") {
     const linkColumns = props.columns || props.sections || props.linkColumns || [];
     const socialLinks = props.socialLinks || props.social || [];
     
     return {
-      // Logo
-      logoText: props.logoText || props.logo || props.siteName || "Brand",
+      // Branding — use Studio's actual field names
+      companyName: props.companyName || props.businessName || props.logoText || "Brand",
       logo: typeof props.logo === "string" && props.logo.includes("/") ? props.logo : "",
-      tagline: props.tagline || props.description || "",
+      logoText: props.logoText || props.companyName || props.businessName || "",
+      description: props.description || props.tagline || "",
       
-      // Link columns - FIX: Apply fixLink to all footer links
+      // Link columns
       columns: Array.isArray(linkColumns) ? linkColumns.map((col: Record<string, unknown>, i: number) => ({
         title: col.title || col.heading || `Column ${i + 1}`,
         links: Array.isArray(col.links) ? col.links.map((link: Record<string, unknown>) => {
@@ -495,26 +621,37 @@ function transformPropsForStudio(
       })) : [],
       
       // Social links (external URLs - don't fix)
+      showSocialLinks: Array.isArray(socialLinks) && socialLinks.length > 0,
       socialLinks: Array.isArray(socialLinks) ? socialLinks.map((social: Record<string, unknown>) => ({
         platform: social.platform || social.name || "facebook",
         url: social.url || social.href || social.link || "#",
       })) : [],
       
       // Contact info
-      email: props.email || props.contactEmail || "",
-      phone: props.phone || props.contactPhone || "",
-      address: props.address || "",
+      showContactInfo: !!(props.email || props.contactEmail || props.phone || props.contactPhone || props.address || props.contactAddress),
+      contactEmail: props.email || props.contactEmail || "",
+      contactPhone: props.phone || props.contactPhone || "",
+      contactAddress: props.address || props.contactAddress || "",
       
-      // Copyright
-      copyright: props.copyright || `© ${new Date().getFullYear()} All rights reserved.`,
+      // Copyright & Legal
+      copyright: props.copyrightText || props.copyright || `© ${new Date().getFullYear()} All rights reserved.`,
+      legalLinks: props.legalLinks || [
+        { label: "Privacy Policy", href: "/privacy" },
+        { label: "Terms of Service", href: "/terms" },
+      ],
       
-      // Styling - consistent dark footer
-      backgroundColor: props.backgroundColor || "#1f2937",
-      textColor: props.textColor || "#ffffff",
-      
-      // Layout
-      layout: props.layout || "columns",
+      // Newsletter
       showNewsletter: props.showNewsletter ?? false,
+      newsletterTitle: props.newsletterTitle || "Stay Updated",
+      newsletterDescription: props.newsletterDescription || "",
+      
+      // Styling
+      variant: props.variant || "standard",
+      backgroundColor: props.backgroundColor || "#111827",
+      textColor: props.textColor || "#f9fafb",
+      linkColor: props.linkColor || "#9ca3af",
+      linkHoverColor: props.linkHoverColor || "#ffffff",
+      borderTop: props.borderTop ?? false,
     };
   }
 
@@ -522,13 +659,18 @@ function transformPropsForStudio(
   if (type === "FAQ") {
     const faqs = props.faqs || props.items || props.questions || [];
     return {
-      headline: props.headline || props.title || "Frequently Asked Questions",
+      title: props.headline || props.title || "Frequently Asked Questions",
+      subtitle: props.subtitle || "",
       description: props.description || "",
-      faqs: Array.isArray(faqs) ? faqs.map((f: Record<string, unknown>, i: number) => ({
+      items: Array.isArray(faqs) ? faqs.map((f: Record<string, unknown>, i: number) => ({
         id: String(i + 1),
         question: f.question || f.title || `Question ${i + 1}`,
         answer: f.answer || f.content || f.response || "",
       })) : [],
+      variant: props.variant || "accordion",
+      backgroundColor: props.backgroundColor || "",
+      textColor: props.textColor || "",
+      accentColor: props.accentColor || "",
     };
   }
 
@@ -536,15 +678,30 @@ function transformPropsForStudio(
   if (type === "Stats") {
     const stats = props.stats || props.items || [];
     return {
-      headline: props.headline || props.title || "",
+      title: props.headline || props.title || "",
+      subtitle: props.subtitle || "",
+      description: props.description || "",
       stats: Array.isArray(stats) ? stats.map((s: Record<string, unknown>, i: number) => ({
         id: String(i + 1),
         value: s.value || s.number || "0",
         label: s.label || s.title || s.name || `Stat ${i + 1}`,
+        description: s.description || "",
         suffix: s.suffix || "",
         prefix: s.prefix || "",
+        icon: s.icon || "",
+        iconColor: s.iconColor || "",
       })) : [],
+      variant: props.variant || "simple",
       columns: props.columns || 4,
+      // Number animation
+      animateNumbers: props.animateNumbers ?? true,
+      animationDuration: props.animationDuration || 2000,
+      // Styling
+      valueSize: props.valueSize || "3xl",
+      valueColor: props.valueColor || "",
+      backgroundColor: props.backgroundColor || "",
+      textColor: props.textColor || "",
+      accentColor: props.accentColor || "",
     };
   }
 
@@ -552,23 +709,35 @@ function transformPropsForStudio(
   if (type === "Pricing") {
     const plans = props.plans || props.tiers || props.items || [];
     return {
-      headline: props.headline || props.title || "Pricing",
+      title: props.headline || props.title || "Pricing",
+      subtitle: props.subtitle || "",
       description: props.description || "",
       plans: Array.isArray(plans) ? plans.map((p: Record<string, unknown>, i: number) => {
-        const ctaText = String(p.ctaText || p.buttonText || "Get Started");
+        const btnText = String(p.ctaText || p.buttonText || "Get Started");
         return {
           id: String(i + 1),
           name: p.name || p.title || `Plan ${i + 1}`,
-          price: p.price || "0",
+          description: p.description || "",
+          monthlyPrice: p.price || p.monthlyPrice || "0",
           currency: p.currency || "ZMW",
           period: p.period || "month",
-          features: p.features || [],
-          ctaText,
-          ctaLink: fixLink(String(p.ctaLink || p.buttonLink || ""), ctaText),
-          highlighted: p.highlighted || p.featured || false,
+          features: Array.isArray(p.features) ? p.features.map((f: unknown) => {
+            if (typeof f === "string") return { text: f, included: true };
+            if (typeof f === "object" && f !== null) {
+              const feat = f as Record<string, unknown>;
+              return { text: feat.text || feat.name || "", included: feat.included ?? true };
+            }
+            return { text: String(f), included: true };
+          }) : [],
+          buttonText: btnText,
+          buttonLink: fixLink(String(p.ctaLink || p.buttonLink || ""), btnText),
+          popular: p.highlighted || p.featured || p.popular || false,
         };
       }) : [],
+      variant: props.variant || "cards",
       columns: props.columns || 3,
+      backgroundColor: props.backgroundColor || "",
+      textColor: props.textColor || "",
     };
   }
 
@@ -599,16 +768,109 @@ function transformPropsForStudio(
     };
   }
 
+  // Gallery component
+  if (type === "Gallery") {
+    const images = props.images || props.items || props.gallery || [];
+    return {
+      title: props.title || props.headline || "Gallery",
+      subtitle: props.subtitle || "",
+      description: props.description || "",
+      images: Array.isArray(images) ? images.map((img: Record<string, unknown>, i: number) => ({
+        id: String(i + 1),
+        src: img.src || img.url || img.image || "",
+        alt: img.alt || img.caption || img.title || `Image ${i + 1}`,
+        title: img.title || "",
+        caption: img.caption || "",
+        category: img.category || "",
+      })) : [],
+      variant: props.variant || "grid",
+      columns: props.columns || 3,
+      gap: props.gap || "md",
+      borderRadius: props.borderRadius || "lg",
+      hoverEffect: props.hoverEffect || "zoom",
+      lightbox: props.lightbox ?? true,
+      backgroundColor: props.backgroundColor || "",
+      textColor: props.textColor || "",
+    };
+  }
+
+  // Newsletter component
+  if (type === "Newsletter") {
+    return {
+      title: props.title || props.headline || "Stay Updated",
+      subtitle: props.subtitle || props.description || "Subscribe to our newsletter for the latest updates.",
+      submitText: props.buttonText || props.ctaText || props.submitText || "Subscribe",
+      placeholder: props.placeholder || "Enter your email",
+      layout: props.layout || "inline",
+      successMessage: props.successMessage || "Thank you for subscribing!",
+    };
+  }
+
+  // LogoCloud component
+  if (type === "LogoCloud") {
+    const logos = props.logos || props.items || props.brands || props.partners || [];
+    return {
+      title: props.title || props.headline || "Trusted By",
+      subtitle: props.subtitle || "",
+      description: props.description || "",
+      logos: Array.isArray(logos) ? logos.map((logo: Record<string, unknown>, i: number) => ({
+        image: logo.image || logo.src || logo.logo || logo.url || "",
+        alt: logo.alt || logo.name || `Partner ${i + 1}`,
+        link: logo.link || logo.url || logo.href || "",
+      })) : [],
+      variant: props.variant || "simple",
+      columns: props.columns || 5,
+      logoGrayscale: props.logoGrayscale ?? true,
+      logoGrayscaleHover: props.logoGrayscaleHover ?? false,
+      backgroundColor: props.backgroundColor || "",
+    };
+  }
+
+  // TrustBadges component
+  if (type === "TrustBadges") {
+    const badges = props.badges || props.items || [];
+    return {
+      title: props.title || props.headline || "",
+      subtitle: props.subtitle || "",
+      badges: Array.isArray(badges) ? badges.map((b: Record<string, unknown>, i: number) => ({
+        icon: b.icon || "shield-check",
+        text: b.text || b.title || b.label || `Badge ${i + 1}`,
+        description: b.description || "",
+      })) : [],
+      variant: props.variant || "horizontal",
+      alignment: props.alignment || "center",
+      backgroundColor: props.backgroundColor || "",
+      textColor: props.textColor || "",
+    };
+  }
+
+  // Quote component
+  if (type === "Quote") {
+    return {
+      text: props.text || props.quote || props.content || "",
+      author: props.author || props.attribution || "",
+      source: props.source || props.role || props.company || "",
+      style: props.style || props.variant || "default",
+    };
+  }
+
   // Return original props for unknown types
   return transformed;
 }
 
 /**
  * Convert entire WebsiteDesignerOutput to a map of page slug -> StudioPageData
+ * 
+ * This function sets the page slugs internally before conversion to ensure
+ * all links are validated against actual generated pages.
  */
 export function convertOutputToStudioPages(
   output: WebsiteDesignerOutput
 ): Map<string, { page: GeneratedPage; studioData: StudioPageData }> {
+  // Set page slugs BEFORE conversion for link validation (thread-safe per call)
+  const allSlugs = output.pages.map(p => p.slug.startsWith('/') ? p.slug : `/${p.slug}`);
+  generatedPageSlugs = allSlugs;
+  
   const result = new Map<string, { page: GeneratedPage; studioData: StudioPageData }>();
 
   for (const page of output.pages) {

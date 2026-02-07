@@ -1,13 +1,75 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅**
 **Component Strategy**: Fresh premium components (NOT reusing basic Puck components)
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
 **Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
 **E-Commerce Module**: **ALL 6 WAVES COMPLETE** ✅ | **ZAMBIA DEFAULT** 🇿🇲
-**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + INDUSTRY BLUEPRINTS + REVERTED TO CLAUDE** ✅
+**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + INDUSTRY BLUEPRINTS + COMPLETE SYSTEM OVERHAUL** ✅
+
+---
+
+## 🔧 AI WEBSITE DESIGNER - COMPLETE SYSTEM OVERHAUL (February 2026) ✅
+
+### What
+Comprehensive 3-phase overhaul fixing 17+ bugs, rewriting all converter handlers, enhancing AI prompts, and performing cross-file consistency audit.
+
+### Bugs Fixed
+| Bug | Impact | Fix |
+|-----|--------|-----|
+| API routes don't pass EngineConfig | Features permanently disabled | Added engineConfig to both RequestSchemas |
+| Navbar prop name mismatch | Empty navigation links | Engine outputs both `links` and `navItems`; converter reads both |
+| Platform description leaking | "Create beautiful websites..." on barbershop sites | Hero default `""`, converter always sets description, prompt Rule #4 |
+| Footer shows generic services | "Premium Consulting" on barbershop sites | Complete FOOTER_GENERATOR_PROMPT rewrite with industry guidance |
+| Copyright encoding | `┬⌐` instead of `©` | Verified correct encoding |
+| Thread safety | Concurrent generations could corrupt slugs | `convertOutputToStudioPages()` sets slugs internally |
+| Feature icons as text | "map-pin" visible text | `iconStyle: "emoji"` in converter, emoji guidance in prompts |
+| CTA text generic | "Get Started" for barbershops | Industry-specific CTA rules, default "Contact Us" |
+| Footer missing context | AI can't generate relevant content | Enhanced `generateFooter()` with industry/services/pages |
+| Footer schema incomplete | Missing companyName, description, legalLinks | Added fields to FooterComponentSchema |
+| Footer converter wrong props | `logoText` instead of `companyName` | Complete Footer handler rewrite |
+| Cost estimation wrong | GPT-4o pricing for Claude | $3/$15 per 1M tokens |
+| All tiers same model | Wasted money on simple tasks | Fast tier uses Haiku |
+| Hardcoded timezone | Africa/Lusaka for all | Reads from site settings, defaults UTC |
+| getModelInfo ignores provider | Can't debug other providers | Accepts providerOverride |
+| Missing converter handlers | Raw AI props pass through | Added Gallery, Newsletter, LogoCloud, TrustBadges, Quote |
+| parseUserPrompt fragile | Fails common patterns | Multiple regex patterns, expanded business types |
+
+### Phase 2 Audit Findings (Additional Fixes)
+| Finding | Fix |
+|---------|-----|
+| `fixLink()` corrupts external URLs (http/https/mailto/tel) | Added early-return guard |
+| `fixLinksInObject()` corrupts asset URLs (logoUrl, imageUrl, src) | Rewrote to allowlist nav link keys only |
+| Engine copyright override ignored (copyrightText vs copyright) | Changed engine to use `copyrightText` |
+| Navbar `isExternal` not consumed | Added `isExternal` → `target: "_blank"` mapping |
+
+### Converter Prop Mapping Reference
+| Component | Schema → Converter → Studio |
+|-----------|---------------------------|
+| Navbar | `navItems` → reads `links\|navItems` → Studio `links` |
+| Footer | `companyName`+`copyrightText` → reads both → Studio `companyName`+`copyright` |
+| Hero | generic props → reads `headline\|title`, always sets `description` → Studio fields |
+| Features | generic props → `title` (not headline), `iconStyle: "emoji"` → Studio fields |
+| CTA | generic props → `buttonText` (not ctaText), `buttonLink` → Studio fields |
+| Testimonials | generic props → `title`, `company`, `rating` per item → Studio fields |
+| Stats | generic props → `title`, `animateNumbers`, per-stat `icon` → Studio fields |
+| Team | generic props → `title`, social links per member → Studio fields |
+| FAQ | generic props → `title`, `items` (not faqs) → Studio fields |
+| Pricing | generic props → `monthlyPrice` (not price), `popular` (not highlighted) → Studio fields |
+
+### Files Modified (8 files, ~800+ lines changed)
+- `converter.ts` — Complete handler rewrite + fixLink guard + 5 new handlers
+- `engine.ts` — Navbar dual output, footer context, copyright fix, timezone fix, dead import cleanup
+- `prompts.ts` — Footer prompt rewrite, 4 new rules, barbershop architecture, navbar CTA, improved regex
+- `schemas.ts` — Footer schema enhanced
+- `ai-provider.ts` — Claude pricing, Haiku fast tier, getModelInfo fix
+- `route.ts` — EngineConfig passthrough
+- `stream/route.ts` — EngineConfig passthrough
+- `core-components.ts` — Hero default description cleared
+
+### TypeScript: Zero errors ✅
 
 ---
 
