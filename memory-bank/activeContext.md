@@ -1,6 +1,52 @@
 # Active Context
 
-## Latest Session Update (Reverted to Anthropic Claude - February 2026)
+## Latest Session Update (Industry Blueprints System - February 2026)
+
+### INDUSTRY BLUEPRINTS SYSTEM IMPLEMENTED ✅
+
+**Context:**
+After reverting to Anthropic Claude (commit d6b3ce2), performed a deep platform scan and implemented production-proven industry architecture blueprints to dramatically improve website generation quality and consistency.
+
+**What Was Built (commit 34a4ef1):**
+- Created `config/industry-blueprints.ts` (1625 lines) — comprehensive battle-tested website architectures
+- 9 industries covered with EXACT specifications:
+  1. **Restaurant** — menu-first, reservation CTA, food imagery, hours/location
+  2. **Law Firm** — trust-first, credentials, free consultation CTA, practice areas
+  3. **E-commerce** — product-first, trust badges, category nav, newsletter
+  4. **SaaS** — clarity-first, product screenshot, logo cloud, pricing transparency
+  5. **Healthcare** — patient-centered, appointment booking, provider credentials
+  6. **Portfolio** — work-first, minimal text, bold typography, hire CTA
+  7. **Fitness/Wellness** — energy/calm, membership pricing, transformation stories
+  8. **Construction** — trust/licensed, before/after photos, free quote CTA
+  9. **Real Estate** — listings, agent credentials, home valuation CTA
+  10. **Education** — outcome-focused, programs, instructor credentials
+
+**Each Blueprint Contains:**
+- Exact page list with section order and rationale
+- Content formulas (headline patterns, CTA patterns, item counts)
+- 2 proven color palettes with exact hex values
+- 2 proven typography pairings
+- Layout settings (border radius, shadows, spacing)
+- Image guidelines with Unsplash keywords
+- Content tone guide with do's and don'ts
+- Conversion optimization rules (CTA placements, trust signals, social proof)
+- SEO blueprint patterns
+
+**Integration Points:**
+- `engine.ts`: Blueprint lookup in `generateWebsite()`, injected into `createArchitecture()` and `generatePage()`
+- Blueprint design tokens (colors + typography) take HIGHEST priority over quick tokens and design inspiration
+- `prompts.ts`: `SITE_ARCHITECT_PROMPT` updated to follow blueprints EXACTLY when present
+- `buildPagePrompt()` now accepts and injects page-specific blueprint guidance
+- Key functions: `findBlueprint()`, `formatBlueprintForAI()`, `formatBlueprintPageForAI()`
+
+**Architecture Decision:**
+The blueprints are injected as authoritative AI context — the AI is instructed to follow them EXACTLY rather than improvising. This ensures consistent, proven output while still allowing the AI to adapt content to the specific business.
+
+**Priority Chain:** Blueprint > Design Inspiration > Quick Tokens > AI Freeform
+
+---
+
+## Previous Session Update (Reverted to Anthropic Claude - February 2026)
 
 ### REVERTED TO ANTHROPIC CLAUDE ✅
 
