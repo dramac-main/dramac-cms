@@ -57,21 +57,33 @@ import type { BusinessDataContext, DataAvailability } from "./data-context/types
 // =============================================================================
 
 export interface EngineConfig {
-  /** Enable design inspiration engine for Dribbble/Awwwards-level designs */
+  /** Enable design inspiration engine for Dribbble/Awwwards-level designs (adds ~30s) */
   enableDesignInspiration: boolean;
-  /** Enable multi-pass refinement for higher quality output */
+  /** Use quick design tokens instead of full AI analysis (fast, no AI call) */
+  useQuickDesignTokens: boolean;
+  /** Enable multi-pass refinement for higher quality output (adds 2-4 minutes!) */
   enableRefinement: boolean;
   /** Number of refinement passes (1-4). More passes = better quality but slower */
   refinementPasses: 1 | 2 | 3 | 4;
-  /** Enable module integration (booking, e-commerce, etc.) */
+  /** Enable module integration (booking, e-commerce, etc.) (adds ~30s) */
   enableModuleIntegration: boolean;
 }
 
+/**
+ * DEFAULT CONFIG - Optimized for Vercel's 300s timeout
+ * 
+ * Heavy features are DISABLED by default to prevent timeouts.
+ * For higher quality, enable features in the API call:
+ * - enableDesignInspiration: true (for award-winning patterns)
+ * - enableRefinement: true (for multi-pass quality improvement)
+ * - enableModuleIntegration: true (for booking/e-commerce)
+ */
 const DEFAULT_CONFIG: EngineConfig = {
-  enableDesignInspiration: true,
-  enableRefinement: true,
-  refinementPasses: 4,
-  enableModuleIntegration: true,
+  enableDesignInspiration: false, // Disabled - adds AI call
+  useQuickDesignTokens: true,     // Fast industry-based tokens (no AI)
+  enableRefinement: false,        // Disabled - adds 4 AI calls!
+  refinementPasses: 2,            // If enabled, use 2 passes max
+  enableModuleIntegration: false, // Disabled - adds AI call
 };
 
 // =============================================================================
@@ -114,18 +126,25 @@ export class WebsiteDesignerEngine {
       this.availability = checkDataAvailability(this.context);
       const formattedContext = formatContextForAI(this.context);
 
-      // Step 1.5: Get design inspiration (NEW)
+      // Step 1.5: Get design inspiration
       let designInspiration: DesignRecommendation | null = null;
+      let quickDesignTokens: ReturnType<DesignInspirationEngine["getQuickDesignTokens"]> | null = null;
+      
+      const industry = this.context?.client.industry?.toLowerCase() || "general";
+      const designEngine = new DesignInspirationEngine(industry, "modern", input.prompt);
+      
       if (this.config.enableDesignInspiration) {
+        // Full AI-powered design analysis (slower but better)
         this.reportProgress("building-context", "Analyzing award-winning design patterns...", 0, 1);
         try {
-          const industry = this.context?.client.industry?.toLowerCase() || "general";
-          const designEngine = new DesignInspirationEngine(industry, "modern", input.prompt);
           designInspiration = await designEngine.getDesignRecommendations();
         } catch (error) {
-          console.warn("[WebsiteDesignerEngine] Design inspiration failed, using defaults:", error);
-          // Continue without design inspiration
+          console.warn("[WebsiteDesignerEngine] Design inspiration failed, using quick tokens:", error);
+          quickDesignTokens = designEngine.getQuickDesignTokens();
         }
+      } else if (this.config.useQuickDesignTokens) {
+        // Quick design tokens (instant, no AI call)
+        quickDesignTokens = designEngine.getQuickDesignTokens();
       }
 
       // Step 2: Analyze prompt and create architecture
@@ -134,11 +153,13 @@ export class WebsiteDesignerEngine {
         input.prompt,
         formattedContext,
         input.preferences,
-        designInspiration
+        designInspiration,
+        quickDesignTokens
       );
 
-      // Step 2.5: Initialize module integration (NEW)
+      // Step 2.5: Initialize module integration (only if enabled)
       if (this.config.enableModuleIntegration && this.context) {
+        this.reportProgress("analyzing-prompt", "Analyzing module requirements...", 0, 1);
         // Convert our context to module context format (simplified for module analysis)
         const moduleContext = {
           client: {
@@ -308,19 +329,21 @@ export class WebsiteDesignerEngine {
 
   /**
    * Create site architecture from user prompt
-   * Enhanced with design inspiration patterns
+   * Enhanced with design inspiration patterns or quick tokens
    */
   private async createArchitecture(
     prompt: string,
     context: string,
     preferences?: WebsiteDesignerInput["preferences"],
-    designInspiration?: DesignRecommendation | null
+    designInspiration?: DesignRecommendation | null,
+    quickDesignTokens?: ReturnType<DesignInspirationEngine["getQuickDesignTokens"]> | null
   ): Promise<SiteArchitecture> {
     const componentSummary = this.summarizeComponents();
 
     // Enhance prompt with design inspiration if available
     let inspirationContext = "";
     if (designInspiration) {
+      // Full AI-powered design inspiration
       inspirationContext = `
 ## DESIGN INSPIRATION (Award-winning patterns to incorporate):
 
@@ -350,6 +373,27 @@ ${designInspiration.microInteractions.map((m) => `- ${m}`).join("\n")}
 ### Design Principles
 ${designInspiration.designPrinciples.map((p) => `- ${p}`).join("\n")}
 `;
+    } else if (quickDesignTokens) {
+      // Quick design tokens (pre-curated, no AI call)
+      inspirationContext = `
+## DESIGN TOKENS (Industry-optimized design system):
+
+### Color Scheme: ${quickDesignTokens.colors.name}
+Primary: ${quickDesignTokens.colors.primary}
+Secondary: ${quickDesignTokens.colors.secondary}
+Accent: ${quickDesignTokens.colors.accent}
+Background: ${quickDesignTokens.colors.background}
+Text: ${quickDesignTokens.colors.text}
+
+### Typography: ${quickDesignTokens.typography.name}
+Heading Font: ${quickDesignTokens.typography.heading}
+Body Font: ${quickDesignTokens.typography.body}
+Style: ${quickDesignTokens.typography.style}
+
+### Hero Pattern: ${quickDesignTokens.heroPattern.name}
+${quickDesignTokens.heroPattern.description}
+Animation: ${quickDesignTokens.heroPattern.animation}
+`;
     }
 
     const fullPrompt = buildArchitecturePrompt(
@@ -366,9 +410,11 @@ ${designInspiration.designPrinciples.map((p) => `- ${p}`).join("\n")}
       prompt: fullPrompt,
     });
 
-    // Apply design inspiration colors to design tokens if available
+    // Apply design tokens to architecture
     const architecture = object as SiteArchitecture;
+    
     if (designInspiration) {
+      // Apply full AI-powered design inspiration
       architecture.designTokens = {
         ...architecture.designTokens,
         primaryColor: designInspiration.colorScheme.primary,
@@ -378,6 +424,18 @@ ${designInspiration.designPrinciples.map((p) => `- ${p}`).join("\n")}
         textColor: designInspiration.colorScheme.text,
         fontHeading: designInspiration.typography.heading,
         fontBody: designInspiration.typography.body,
+      };
+    } else if (quickDesignTokens) {
+      // Apply quick design tokens
+      architecture.designTokens = {
+        ...architecture.designTokens,
+        primaryColor: quickDesignTokens.colors.primary,
+        secondaryColor: quickDesignTokens.colors.secondary,
+        accentColor: quickDesignTokens.colors.accent,
+        backgroundColor: quickDesignTokens.colors.background,
+        textColor: quickDesignTokens.colors.text,
+        fontHeading: quickDesignTokens.typography.heading,
+        fontBody: quickDesignTokens.typography.body,
       };
     }
 
