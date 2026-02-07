@@ -7,7 +7,7 @@
  */
 
 import { generateText } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { getAIModel } from "../config/ai-provider";
 import { HEADLINE_OPTIMIZER_PROMPT } from "./prompts";
 import type {
   ContentGenerationContext,
@@ -240,7 +240,7 @@ export async function optimizeHeadline(
 ): Promise<string[]> {
   try {
     const { text } = await generateText({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("content-generation"),
       system: HEADLINE_OPTIMIZER_PROMPT,
       prompt: `Given this headline: "${headline}"
     
@@ -281,7 +281,7 @@ export async function generateHeadlineVariations(
 ): Promise<string[]> {
   try {
     const { text } = await generateText({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("content-generation"),
       system: HEADLINE_OPTIMIZER_PROMPT,
       prompt: `Create ${count} headline variations for: "${topic}"
 
@@ -394,7 +394,7 @@ export async function optimizeForSEO(
 
   try {
     const { text: optimized } = await generateText({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("content-generation"),
       prompt: `Optimize this text for SEO while maintaining readability and the ${context.tone} tone.
 
 Original text:
@@ -430,7 +430,7 @@ export async function generateMetaDescription(
 ): Promise<string> {
   try {
     const { text } = await generateText({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("content-generation"),
       prompt: `Generate an SEO-optimized meta description for this page content.
 
 Page summary:
@@ -488,7 +488,7 @@ export async function enhanceContent(
 
   try {
     const { text: enhanced } = await generateText({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("content-generation"),
       prompt: `Enhance this text by adding ${enhancements.join(" and ")}.
 
 Original text:

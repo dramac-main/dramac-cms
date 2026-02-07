@@ -100,6 +100,7 @@ const TASK_TIERS: Record<string, AIModelTier> = {
   "design-inspiration": "fast",
   "module-analysis": "fast",
   "content-optimization": "fast",
+  "responsive": "fast",
   
   // Default fallback
   "default": "standard",

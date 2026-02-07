@@ -7,7 +7,7 @@
  */
 
 import { generateObject } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { getAIModel } from "../config/ai-provider";
 import { z } from "zod";
 import {
   CONTENT_GENERATOR_SYSTEM_PROMPT,
@@ -49,12 +49,11 @@ const HeroContentSchema = z.object({
   headline: z.string().describe("Compelling headline, 5-10 words"),
   subheadline: z.string().describe("Supporting subheadline, 15-25 words"),
   ctaPrimary: z.string().describe("Primary CTA text, 2-4 words"),
-  ctaSecondary: z.string().optional().describe("Secondary CTA text, 2-4 words"),
-  badge: z.string().optional().describe("Small badge/tagline text, 2-5 words"),
+  ctaSecondary: z.string().describe("Secondary CTA text, 2-4 words, or empty string if none"),
+  badge: z.string().describe("Small badge/tagline text, 2-5 words, or empty string if none"),
   socialProof: z
     .string()
-    .optional()
-    .describe("Social proof statement like '10,000+ customers'"),
+    .describe("Social proof statement like '10,000+ customers', or empty string if none"),
 });
 
 const FeaturesContentSchema = z.object({
@@ -77,19 +76,17 @@ const CTAContentSchema = z.object({
   ctaText: z.string().describe("Button text, 2-4 words"),
   urgencyText: z
     .string()
-    .optional()
-    .describe("Urgency element if appropriate, 5-10 words"),
+    .describe("Urgency element if appropriate, 5-10 words, or empty string if none"),
   trustIndicators: z
     .array(z.string())
-    .optional()
-    .describe("Trust indicators like 'No credit card required'"),
+    .describe("Trust indicators like 'No credit card required', empty array if none"),
 });
 
 const AboutContentSchema = z.object({
   headline: z.string().describe("About section headline"),
   story: z.string().describe("Company story, 50-100 words"),
-  mission: z.string().optional().describe("Mission statement, 15-25 words"),
-  vision: z.string().optional().describe("Vision statement, 15-25 words"),
+  mission: z.string().describe("Mission statement, 15-25 words, or empty string if none"),
+  vision: z.string().describe("Vision statement, 15-25 words, or empty string if none"),
   values: z
     .array(
       z.object({
@@ -97,8 +94,7 @@ const AboutContentSchema = z.object({
         description: z.string(),
       })
     )
-    .optional()
-    .describe("Core values"),
+    .describe("Core values, empty array if none"),
   stats: z
     .array(
       z.object({
@@ -106,8 +102,7 @@ const AboutContentSchema = z.object({
         label: z.string(),
       })
     )
-    .optional()
-    .describe("Key statistics"),
+    .describe("Key statistics, empty array if none"),
 });
 
 const FAQContentSchema = z.object({
@@ -135,7 +130,7 @@ const PricingContentSchema = z.object({
         period: z.string().describe("Billing period (e.g., '/month')"),
         features: z.array(z.string()).describe("Included features"),
         ctaText: z.string().describe("CTA button text"),
-        isPopular: z.boolean().optional().describe("Is this the popular/recommended plan"),
+        isPopular: z.boolean().describe("Is this the popular/recommended plan"),
       })
     )
     .describe("Pricing plans"),
@@ -144,7 +139,7 @@ const PricingContentSchema = z.object({
 const ContactContentSchema = z.object({
   headline: z.string().describe("Contact section headline"),
   subheadline: z.string().describe("Contact section subheadline"),
-  formTitle: z.string().optional().describe("Form title if applicable"),
+  formTitle: z.string().describe("Form title if applicable, or empty string if none"),
   submitButtonText: z.string().describe("Form submit button text"),
   contactMethods: z
     .array(
@@ -154,8 +149,7 @@ const ContactContentSchema = z.object({
         icon: z.string(),
       })
     )
-    .optional()
-    .describe("Contact methods"),
+    .describe("Contact methods, empty array if none"),
 });
 
 const TeamContentSchema = z.object({
@@ -163,8 +157,7 @@ const TeamContentSchema = z.object({
   sectionSubtitle: z.string().describe("Team section subtitle, 15-25 words"),
   memberBioTemplate: z
     .string()
-    .optional()
-    .describe("Template for member bios if not provided"),
+    .describe("Template for member bios if not provided, or empty string if none"),
 });
 
 const ServicesContentSchema = z.object({
@@ -175,8 +168,8 @@ const ServicesContentSchema = z.object({
       z.object({
         title: z.string().describe("Service title"),
         description: z.string().describe("Service description, 25-50 words"),
-        features: z.array(z.string()).optional().describe("Key features/benefits"),
-        ctaText: z.string().optional().describe("CTA text for this service"),
+        features: z.array(z.string()).describe("Key features/benefits, empty array if none"),
+        ctaText: z.string().describe("CTA text for this service, or empty string if none"),
       })
     )
     .describe("Services list"),
@@ -185,29 +178,29 @@ const ServicesContentSchema = z.object({
 const TestimonialsContentSchema = z.object({
   sectionTitle: z.string().describe("Testimonials section title"),
   sectionSubtitle: z.string().describe("Testimonials section subtitle, 10-20 words"),
-  ctaText: z.string().optional().describe("CTA text if applicable"),
+  ctaText: z.string().describe("CTA text if applicable, or empty string if none"),
 });
 
 const GalleryContentSchema = z.object({
   sectionTitle: z.string().describe("Gallery section title"),
   sectionSubtitle: z.string().describe("Gallery section subtitle, 10-20 words"),
-  ctaText: z.string().optional().describe("CTA text like 'View All'"),
+  ctaText: z.string().describe("CTA text like 'View All', or empty string if none"),
 });
 
 const BlogContentSchema = z.object({
   sectionTitle: z.string().describe("Blog section title"),
   sectionSubtitle: z.string().describe("Blog section subtitle, 10-20 words"),
-  ctaText: z.string().optional().describe("CTA text like 'Read More'"),
+  ctaText: z.string().describe("CTA text like 'Read More', or empty string if none"),
 });
 
 const StatsContentSchema = z.object({
-  sectionTitle: z.string().optional().describe("Stats section title if needed"),
+  sectionTitle: z.string().describe("Stats section title, or empty string if none"),
   stats: z
     .array(
       z.object({
         value: z.string().describe("Stat value (e.g., '500+', '99%')"),
         label: z.string().describe("Stat label (e.g., 'Happy Customers')"),
-        description: z.string().optional().describe("Optional description"),
+        description: z.string().describe("Description of the stat, or empty string if none"),
       })
     )
     .describe("Statistics to display"),
@@ -237,7 +230,7 @@ export async function generateHeroContent(
   );
 
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: HeroContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt,
@@ -274,7 +267,7 @@ export async function generateFeaturesContent(
   );
 
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: FeaturesContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt,
@@ -306,7 +299,7 @@ export async function generateCTAContent(
   );
 
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: CTAContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt,
@@ -337,7 +330,7 @@ export async function generateAboutContent(
   );
 
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: AboutContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt,
@@ -374,7 +367,7 @@ export async function generateFAQContent(
   );
 
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: FAQContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt,
@@ -414,7 +407,7 @@ export async function generatePricingContent(
   );
 
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: PricingContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt,
@@ -447,7 +440,7 @@ export async function generateContactContent(
   );
 
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: ContactContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt,
@@ -475,7 +468,7 @@ export async function generateTeamContent(
   );
 
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: TeamContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt,
@@ -511,7 +504,7 @@ export async function generateServicesContent(
   );
 
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: ServicesContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt,
@@ -531,7 +524,7 @@ export async function generateTestimonialsContent(
   context: ContentGenerationContext
 ): Promise<TestimonialsContent> {
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: TestimonialsContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt: `Generate testimonials section content for ${context.business.name}, a ${context.business.industry} business.
@@ -560,7 +553,7 @@ export async function generateGalleryContent(
   context: ContentGenerationContext
 ): Promise<GalleryContent> {
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: GalleryContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt: `Generate gallery/portfolio section content for ${context.business.name}, a ${context.business.industry} business.
@@ -589,7 +582,7 @@ export async function generateBlogContent(
   context: ContentGenerationContext
 ): Promise<BlogContent> {
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: BlogContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt: `Generate blog/news section content for ${context.business.name}, a ${context.business.industry} business.
@@ -619,7 +612,7 @@ export async function generateStatsContent(
   businessContext: BusinessDataContext
 ): Promise<StatsContent> {
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("content-generation"),
     schema: StatsContentSchema,
     system: CONTENT_GENERATOR_SYSTEM_PROMPT,
     prompt: `Generate impressive statistics section content for ${context.business.name}, a ${context.business.industry} business.

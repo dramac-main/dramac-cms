@@ -42,10 +42,10 @@ const ComponentChangeSchema = z.object({
 
 const StyleChangeSchema = z.object({
   designSystemChanges: z.object({
-    colors: z.record(z.string(), z.string()).optional(),
-    typography: z.record(z.string(), z.string()).optional(),
-    spacing: z.record(z.string(), z.string()).optional(),
-    borders: z.record(z.string(), z.string()).optional(),
+    colors: z.record(z.string(), z.string()).describe("Color changes to apply, empty object if none"),
+    typography: z.record(z.string(), z.string()).describe("Typography changes to apply, empty object if none"),
+    spacing: z.record(z.string(), z.string()).describe("Spacing changes to apply, empty object if none"),
+    borders: z.record(z.string(), z.string()).describe("Border changes to apply, empty object if none"),
   }),
   componentStyleChanges: z.array(
     z.object({

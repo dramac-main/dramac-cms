@@ -2,8 +2,12 @@
  * PHASE AWD-03: AI Website Designer Core Engine
  * Zod Schemas for AI Output Validation
  *
- * These schemas validate the structured outputs from Claude
+ * These schemas validate the structured outputs from the AI model
  * to ensure type safety and data integrity.
+ * 
+ * IMPORTANT: OpenAI structured output requires ALL properties to be REQUIRED.
+ * Use .default() instead of .optional() to provide fallback values.
+ * Never use .optional() in schemas passed to generateObject() with OpenAI.
  */
 
 import { z } from "zod";
@@ -14,10 +18,10 @@ import { z } from "zod";
 
 export const DesignTokensSchema = z.object({
   primaryColor: z.string().describe("Primary brand color in hex format"),
-  secondaryColor: z.string().optional().describe("Secondary color in hex format"),
-  accentColor: z.string().optional().describe("Accent color for highlights"),
-  backgroundColor: z.string().optional().describe("Background color"),
-  textColor: z.string().optional().describe("Main text color"),
+  secondaryColor: z.string().describe("Secondary color in hex format"),
+  accentColor: z.string().describe("Accent color for highlights"),
+  backgroundColor: z.string().describe("Background color"),
+  textColor: z.string().describe("Main text color"),
   fontHeading: z.string().describe("Font family for headings"),
   fontBody: z.string().describe("Font family for body text"),
   borderRadius: z
@@ -63,8 +67,8 @@ export const NavbarPlanSchema = z.object({
   style: z.enum(["sticky", "fixed", "static"]).describe("Navbar positioning style"),
   variant: z.enum(["minimal", "modern", "classic", "transparent"]).describe("Visual variant"),
   ctaButton: z.boolean().describe("Whether to show a CTA button"),
-  ctaText: z.string().optional().describe("CTA button text"),
-  ctaLink: z.string().optional().describe("CTA button link"),
+  ctaText: z.string().describe("CTA button text, e.g. 'Contact Us' or 'Get Started'"),
+  ctaLink: z.string().describe("CTA button link, e.g. '/contact'"),
 });
 
 // =============================================================================
@@ -131,7 +135,7 @@ export const GeneratedComponentSchema = z.object({
   id: z.string().describe("Unique component ID"),
   type: z.string().describe("Component type from registry"),
   props: z.record(z.string(), z.unknown()).describe("Component props"),
-  aiNotes: z.string().optional().describe("AI reasoning for this configuration"),
+  aiNotes: z.string().describe("AI reasoning for this configuration"),
 });
 
 // =============================================================================
@@ -141,9 +145,9 @@ export const GeneratedComponentSchema = z.object({
 export const PageSEOSchema = z.object({
   title: z.string().describe("Page title for SEO"),
   description: z.string().describe("Meta description"),
-  keywords: z.array(z.string()).optional().describe("SEO keywords"),
-  ogImage: z.string().optional().describe("Open Graph image URL"),
-  noIndex: z.boolean().optional().describe("Whether to hide from search engines"),
+  keywords: z.array(z.string()).describe("SEO keywords"),
+  ogImage: z.string().describe("Open Graph image URL or empty string if none"),
+  noIndex: z.boolean().describe("Whether to hide from search engines"),
 });
 
 // =============================================================================
@@ -156,7 +160,7 @@ export const GeneratedPageSchema = z.object({
   title: z.string(),
   description: z.string(),
   components: z.array(GeneratedComponentSchema),
-  seo: PageSEOSchema.optional(),
+  seo: PageSEOSchema,
 });
 
 // =============================================================================
@@ -172,28 +176,28 @@ export const PageComponentsOutputSchema = z.object({
 // =============================================================================
 
 export const NavbarComponentSchema = z.object({
-  variant: z.string().optional(),
-  position: z.enum(["sticky", "fixed", "static"]).optional(),
-  logoUrl: z.string().optional(),
-  logoText: z.string().optional(),
-  logoAlt: z.string().optional(),
+  variant: z.string().describe("Navbar visual variant"),
+  position: z.enum(["sticky", "fixed", "static"]).describe("Navbar positioning"),
+  logoUrl: z.string().describe("Logo image URL or empty string"),
+  logoText: z.string().describe("Logo text fallback when no image"),
+  logoAlt: z.string().describe("Logo alt text"),
   navItems: z
     .array(
       z.object({
         label: z.string(),
         href: z.string(),
-        isExternal: z.boolean().optional(),
+        isExternal: z.boolean().describe("Whether this link opens externally"),
       })
     )
-    .optional(),
-  ctaText: z.string().optional(),
-  ctaLink: z.string().optional(),
-  ctaVariant: z.string().optional(),
-  backgroundColor: z.string().optional(),
-  textColor: z.string().optional(),
-  shadow: z.boolean().optional(),
-  transparent: z.boolean().optional(),
-  mobileMenuStyle: z.string().optional(),
+    .describe("Navigation menu items"),
+  ctaText: z.string().describe("CTA button text"),
+  ctaLink: z.string().describe("CTA button link"),
+  ctaVariant: z.string().describe("CTA button style variant"),
+  backgroundColor: z.string().describe("Navbar background color"),
+  textColor: z.string().describe("Navbar text color"),
+  shadow: z.boolean().describe("Whether navbar has shadow"),
+  transparent: z.boolean().describe("Whether navbar starts transparent"),
+  mobileMenuStyle: z.string().describe("Mobile menu style: slide, dropdown, fullscreen"),
 });
 
 // =============================================================================
@@ -201,7 +205,7 @@ export const NavbarComponentSchema = z.object({
 // =============================================================================
 
 export const FooterComponentSchema = z.object({
-  variant: z.string().optional(),
+  variant: z.string().describe("Footer visual variant"),
   columns: z
     .array(
       z.object({
@@ -214,14 +218,14 @@ export const FooterComponentSchema = z.object({
         ),
       })
     )
-    .optional(),
-  logoUrl: z.string().optional(),
-  logoText: z.string().optional(),
-  tagline: z.string().optional(),
-  businessName: z.string().optional(),
-  email: z.string().optional(),
-  phone: z.string().optional(),
-  address: z.string().optional(),
+    .describe("Footer link columns"),
+  logoUrl: z.string().describe("Footer logo URL or empty string"),
+  logoText: z.string().describe("Footer logo text fallback"),
+  tagline: z.string().describe("Business tagline"),
+  businessName: z.string().describe("Business name"),
+  email: z.string().describe("Contact email"),
+  phone: z.string().describe("Contact phone"),
+  address: z.string().describe("Business address"),
   socialLinks: z
     .array(
       z.object({
@@ -229,14 +233,14 @@ export const FooterComponentSchema = z.object({
         url: z.string(),
       })
     )
-    .optional(),
-  showNewsletter: z.boolean().optional(),
-  newsletterTitle: z.string().optional(),
-  newsletterDescription: z.string().optional(),
-  copyrightText: z.string().optional(),
-  backgroundColor: z.string().optional(),
-  textColor: z.string().optional(),
-  borderTop: z.boolean().optional(),
+    .describe("Social media links"),
+  showNewsletter: z.boolean().describe("Whether to show newsletter signup"),
+  newsletterTitle: z.string().describe("Newsletter section title"),
+  newsletterDescription: z.string().describe("Newsletter section description"),
+  copyrightText: z.string().describe("Copyright text"),
+  backgroundColor: z.string().describe("Footer background color"),
+  textColor: z.string().describe("Footer text color"),
+  borderTop: z.boolean().describe("Whether footer has top border"),
 });
 
 // =============================================================================

@@ -8,7 +8,7 @@
 
 import { z } from "zod";
 import { generateObject } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { getAIModel } from "../config/ai-provider";
 
 import type {
   ComponentResponsiveConfig,
@@ -52,7 +52,7 @@ const responsiveConfigSchema = z.object({
     columnsPerBreakpoint: breakpointValuesSchema,
     gapPerBreakpoint: breakpointStringValuesSchema,
     alignment: z.enum(["start", "center", "end", "between"]),
-    maxWidth: z.string().optional(),
+    maxWidth: z.string().describe("Maximum width constraint, e.g. '1200px' or 'none'"),
   }),
 
   // Typography recommendations
@@ -162,7 +162,7 @@ export async function generateResponsiveConfig(
 
   try {
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("responsive"),
       schema: responsiveConfigSchema,
       system: RESPONSIVE_SYSTEM_PROMPT,
       prompt,

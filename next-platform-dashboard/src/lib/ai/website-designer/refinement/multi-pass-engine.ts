@@ -25,7 +25,7 @@ const ContentRefinementSchema = z.object({
     componentId: z.string(),
     refinements: z.array(z.object({
       prop: z.string(),
-      originalValue: z.string().optional(),
+      originalValue: z.string().describe("The original value before refinement"),
       refinedValue: z.string(),
       reason: z.string(),
     })),
