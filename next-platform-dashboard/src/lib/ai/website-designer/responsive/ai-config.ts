@@ -7,7 +7,8 @@
  */
 
 import { z } from "zod";
-import { getAIModel, generateObject } from "../config/ai-provider";
+import { generateObject } from "ai";
+import { getAIModel } from "../config/ai-provider";
 
 import type {
   ComponentResponsiveConfig,

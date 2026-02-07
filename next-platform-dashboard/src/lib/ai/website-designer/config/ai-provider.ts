@@ -2,19 +2,18 @@
  * AI Provider Configuration
  * 
  * Centralized configuration for AI models used throughout the website designer.
- * Switch between OpenAI and Anthropic easily. OpenAI is default for cost efficiency.
+ * Anthropic Claude is the default provider for superior structured output quality.
+ * OpenAI kept as fallback option.
  * 
- * COST COMPARISON (as of 2026):
- * - GPT-4o: ~$5/1M input, $15/1M output
- * - GPT-4o-mini: ~$0.15/1M input, $0.60/1M output  
- * - Claude Sonnet 4: ~$3/1M input, $15/1M output
- * 
- * For high-volume usage, OpenAI provides better value with comparable quality.
+ * QUALITY NOTE:
+ * OpenAI's strict structured output mode rejects many valid Zod patterns
+ * (z.record, .optional, .min/.max, z.unknown) and even with strictJsonSchema:false
+ * produces inferior creative output. Claude handles complex schemas natively
+ * and produces significantly better website designs.
  */
 
 import { anthropic } from "@ai-sdk/anthropic";
 import { openai } from "@ai-sdk/openai";
-import { generateObject as aiGenerateObject } from "ai";
 
 // =============================================================================
 // PROVIDER CONFIGURATION
@@ -74,9 +73,9 @@ const MODEL_CONFIGS: Record<AIProvider, Record<AIModelTier, AIModelConfig>> = {
 // =============================================================================
 
 /**
- * Default provider - SET TO OPENAI FOR COST EFFICIENCY
+ * Default provider - ANTHROPIC for quality. OpenAI structured output too restrictive.
  */
-const DEFAULT_PROVIDER: AIProvider = "openai";
+const DEFAULT_PROVIDER: AIProvider = "anthropic";
 
 /**
  * Task-specific model tier assignments
@@ -201,45 +200,3 @@ export function estimateCost(tasks: (keyof typeof TASK_TIERS)[]): {
 // =============================================================================
 
 export { DEFAULT_PROVIDER, TASK_TIERS, MODEL_CONFIGS };
-
-// =============================================================================
-// GENERATE OBJECT WRAPPER
-// =============================================================================
-
-/**
- * Wrapper around AI SDK's generateObject that automatically disables strict
- * JSON schema validation for OpenAI.
- * 
- * OpenAI's strict structured output mode rejects many valid Zod patterns:
- * - z.record() (generates propertyNames)
- * - z.unknown() (generates empty schema {})
- * - .optional() (requires all properties to be required)
- * - .min()/.max() on arrays
- * - z.union([z.literal()]) (generates const)
- * 
- * By setting strictJsonSchema: false, OpenAI uses its non-strict JSON mode
- * which accepts all these patterns while still producing valid JSON output.
- * This preserves our natural, expressive Zod schemas that give the AI model
- * better context for high-quality generation.
- */
-// Re-export generateObject with OpenAI strictJsonSchema disabled by default
-export const generateObject: typeof aiGenerateObject = ((options: Record<string, unknown>) => {
-  const isOpenAI = DEFAULT_PROVIDER === "openai";
-  
-  const providerOptions = (options.providerOptions || {}) as Record<string, unknown>;
-  
-  return aiGenerateObject({
-    ...options,
-    providerOptions: {
-      ...providerOptions,
-      ...(isOpenAI ? {
-        openai: {
-          strictJsonSchema: false,
-          ...((providerOptions.openai as Record<string, unknown>) || {}),
-        },
-      } : {}),
-    },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-}) as any;

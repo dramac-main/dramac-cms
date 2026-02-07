@@ -6,7 +6,8 @@
  * Uses Claude AI to generate conversion-optimized, tailored content.
  */
 
-import { getAIModel, generateObject } from "../config/ai-provider";
+import { generateObject } from "ai";
+import { getAIModel } from "../config/ai-provider";
 import { z } from "zod";
 import {
   CONTENT_GENERATOR_SYSTEM_PROMPT,

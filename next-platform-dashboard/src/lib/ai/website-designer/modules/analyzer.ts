@@ -6,7 +6,8 @@
  * using both industry defaults and AI analysis.
  */
 
-import { getAIModel, generateObject } from "../config/ai-provider";
+import { generateObject } from "ai";
+import { getAIModel } from "../config/ai-provider";
 import { z } from "zod";
 import type {
   ModuleRequirement,

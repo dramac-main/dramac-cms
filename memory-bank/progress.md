@@ -1,13 +1,46 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + OPENAI QUALITY FIX ✅**
 **Component Strategy**: Fresh premium components (NOT reusing basic Puck components)
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
 **Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
 **E-Commerce Module**: **ALL 6 WAVES COMPLETE** ✅ | **ZAMBIA DEFAULT** 🇿🇲
-**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + MAJOR PRODUCTION FIXES + LINK/PUBLISH FIXES** ✅
+**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + MAJOR PRODUCTION FIXES + OPENAI QUALITY FIX** ✅
+
+---
+
+## 🤖 AI WEBSITE DESIGNER - OPENAI QUALITY FIX (February 2026) ✅
+
+### Problem
+After migrating from Claude to OpenAI GPT-4o, strict structured output mode forced schema butchering that produced terrible website quality.
+
+### Solution: `strictJsonSchema: false` via wrapper
+| Change | Details |
+|--------|---------|
+| `ai-provider.ts` | Added `generateObject` wrapper that sets `providerOptions.openai.strictJsonSchema = false` |
+| `schemas.ts` | Restored natural Zod schemas (z.record, .optional, .min/.max, z.unknown) |
+| All 8 engine files | Import `generateObject` from ai-provider instead of "ai" |
+| `processAIComponents()` | Removed — no longer needed with natural schemas |
+| TypeScript | Zero errors — wrapper uses `typeof aiGenerateObject` for type safety |
+
+### Key Technical Pattern
+```typescript
+// ai-provider.ts
+import { generateObject as aiGenerateObject } from "ai";
+export const generateObject: typeof aiGenerateObject = ((options) => {
+  return aiGenerateObject({
+    ...options,
+    providerOptions: {
+      ...options.providerOptions,
+      openai: { strictJsonSchema: false, ...options.providerOptions?.openai },
+    },
+  });
+}) as any;
+```
+
+### Git: commit 227a597
 
 ---
 

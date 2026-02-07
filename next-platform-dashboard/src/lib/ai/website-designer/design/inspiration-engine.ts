@@ -8,7 +8,8 @@
  * typography combinations, and layout structures from successful websites.
  */
 
-import { getAIModel, generateObject } from "../config/ai-provider";
+import { generateObject } from "ai";
+import { getAIModel } from "../config/ai-provider";
 import { z } from "zod";
 
 // =============================================================================

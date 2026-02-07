@@ -11,8 +11,8 @@
  * This ensures jaw-dropping, production-ready results.
  */
 
-import { generateText } from "ai";
-import { getAIModel, generateObject } from "../config/ai-provider";
+import { generateObject, generateText } from "ai";
+import { getAIModel } from "../config/ai-provider";
 import { z } from "zod";
 import type { GeneratedPage, GeneratedComponent, SiteArchitecture } from "../types";
 

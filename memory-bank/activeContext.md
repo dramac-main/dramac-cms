@@ -1,18 +1,61 @@
 # Active Context
 
-## Latest Session Update (OpenAI Migration & Design Reference System - February 2026)
+## Latest Session Update (OpenAI Quality Fix - strictJsonSchema: false - February 2026)
 
-### MAJOR AI INFRASTRUCTURE OVERHAUL ✅
+### CRITICAL QUALITY FIX: OpenAI Strict JSON Schema Disabled ✅
 
-**User Request:**
-- Switch from Anthropic (Claude) to OpenAI (GPT-4o) for cost savings
-- Implement design reference system for professional designs
-- Fix color application issues (AI not applying design tokens)
-- Fix navigation links being forgotten
-- Fix pages not rendering at their URLs
-- Implement smart multi-pass refinement
+**Problem:**
+After migrating from Anthropic Claude to OpenAI GPT-4o, the AI Website Designer produced terrible quality websites. This was caused by two rounds of schema butchering to satisfy OpenAI's strict structured output mode:
+1. First: Removed all `.optional()` from schemas (commit 874d169)
+2. Second: Replaced `z.record()` with key-value arrays, `z.unknown()` with `z.string()`, removed `.min()/.max()` constraints, added `processAIComponents()` converter (commit d594983)
 
-### Changes Implemented:
+These unnatural schemas confused the AI model and degraded output quality significantly.
+
+**Root Cause:**
+In AI SDK v6 (`ai@6.0.33`, `@ai-sdk/openai@3.0.26`), the `strictJsonSchema` option defaults to `true` for OpenAI. This enforces strict JSON Schema validation that rejects many valid Zod patterns:
+- `z.record()` → generates `propertyNames` keyword (rejected)
+- `z.unknown()` → generates empty schema `{}` (rejected)  
+- `.optional()` → requires `additionalProperties: false` (rejected)
+- `.min()/.max()` on arrays (rejected)
+- `z.union([z.literal()])` → generates `const` keyword (rejected)
+
+**Solution (commit 227a597):**
+1. **Restored ALL schemas** to their original natural Zod form from commit 28b33b4
+2. **Removed `processAIComponents()`** converter utility (no longer needed)
+3. **Created `generateObject` wrapper** in `ai-provider.ts` that automatically sets `providerOptions.openai.strictJsonSchema = false`
+4. **Updated all 8 files** to import `generateObject` from `ai-provider` instead of `ai`
+5. **Zero TypeScript errors** — wrapper uses `typeof aiGenerateObject` cast to preserve full generic type inference
+
+**Key Technical Details:**
+- AI SDK v6 removed `mode` parameter from `generateObject` (was available in v3/v4)
+- AI SDK v6 deprecated `generateObject` in favor of `generateText` with `Output.object()` — but generateObject still works
+- The correct v6 approach: `providerOptions: { openai: { strictJsonSchema: false } }`
+- Wrapper in `ai-provider.ts` centralizes this so all 30 `generateObject` calls automatically get non-strict mode
+
+### Files Modified:
+- `config/ai-provider.ts` — Added `generateObject` wrapper with `strictJsonSchema: false`
+- `schemas.ts` — Restored from commit 28b33b4 (natural Zod schemas)
+- `engine.ts` — Restored from 28b33b4, imports generateObject from ai-provider
+- `preview/iteration-engine.ts` — Restored from 28b33b4, imports from ai-provider
+- `content/section-generators.ts` — Restored from 874d169, imports from ai-provider
+- `content/optimizer.ts` — Restored from 874d169
+- `refinement/multi-pass-engine.ts` — Restored from 874d169, imports from ai-provider
+- `design/inspiration-engine.ts` — Imports from ai-provider
+- `modules/analyzer.ts` — Restored from 874d169, imports from ai-provider
+- `modules/configurator.ts` — Restored from 874d169, imports from ai-provider
+- `responsive/ai-config.ts` — Restored from 874d169, imports from ai-provider
+
+### Git History for OpenAI Migration:
+| Commit | Description |
+|--------|-------------|
+| 28b33b4 | Initial OpenAI migration with `getAIModel()` — natural schemas |
+| 874d169 | Removed `.optional()` from schemas |
+| d594983 | Butchered schemas (key-value arrays, removed constraints) |
+| **227a597** | **Fixed: Restored natural schemas + `strictJsonSchema: false`** |
+
+---
+
+## Previous Session Context (OpenAI Migration & Design Reference System - February 2026)
 
 ### 1. AI Provider Configuration System
 **File:** `src/lib/ai/website-designer/config/ai-provider.ts` (NEW)

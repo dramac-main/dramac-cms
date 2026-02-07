@@ -12,7 +12,8 @@
  * - Module Integration Orchestrator (Booking/E-commerce integration)
  */
 
-import { getAIModel, getModelInfo, generateObject } from "./config/ai-provider";
+import { generateObject } from "ai";
+import { getAIModel, getModelInfo } from "./config/ai-provider";
 import { findDesignReference, formatReferenceForAI, type DesignReference } from "./config/design-references";
 import { buildDataContext } from "./data-context/builder";
 import { formatContextForAI } from "./data-context/formatter";
