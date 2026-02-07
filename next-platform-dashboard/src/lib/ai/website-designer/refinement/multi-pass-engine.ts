@@ -30,7 +30,7 @@ const ContentRefinementSchema = z.object({
       reason: z.string(),
     })),
   })),
-  overallScore: z.number().min(1).max(10),
+  overallScore: z.number().describe("Overall quality score from 1 to 10"),
   improvements: z.array(z.string()),
 });
 
@@ -53,7 +53,7 @@ const VisualConsistencySchema = z.object({
     isConsistent: z.boolean(),
     issues: z.array(z.string()),
   }),
-  overallScore: z.number().min(1).max(10),
+  overallScore: z.number().describe("Overall visual consistency score from 1 to 10"),
 });
 
 const ConversionOptimizationSchema = z.object({
@@ -69,7 +69,7 @@ const ConversionOptimizationSchema = z.object({
     suggestedPlacement: z.string(),
     suggestedText: z.string(),
   })),
-  conversionScore: z.number().min(1).max(10),
+  conversionScore: z.number().describe("Conversion optimization score from 1 to 10"),
   recommendations: z.array(z.string()),
 });
 
@@ -85,7 +85,7 @@ const AccessibilityAuditSchema = z.object({
     issue: z.string(),
     fix: z.string(),
   })),
-  score: z.number().min(1).max(10),
+  score: z.number().describe("Accessibility score from 1 to 10"),
   wcagLevel: z.enum(["A", "AA", "AAA"]),
 });
 

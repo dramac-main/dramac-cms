@@ -36,6 +36,7 @@ import {
   PageComponentsOutputSchema,
   NavbarComponentSchema,
   FooterComponentSchema,
+  processAIComponents,
 } from "./schemas";
 import type {
   WebsiteDesignerInput,
@@ -517,8 +518,9 @@ Animation: ${quickDesignTokens.heroPattern.animation}
       prompt: fullPrompt,
     });
 
-    // Ensure all components have unique IDs
-    const components = (object.components || []).map((c, index) => ({
+    // Ensure all components have unique IDs and convert props from key-value arrays
+    const rawComponents = processAIComponents(object.components || []);
+    const components = rawComponents.map((c, index) => ({
       ...c,
       id: c.id || `${pagePlan.slug.replace(/\//g, "-")}-component-${index}`,
     }));

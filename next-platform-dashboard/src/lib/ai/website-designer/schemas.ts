@@ -56,7 +56,7 @@ export const PagePlanSchema = z.object({
   slug: z.string().describe("URL slug for the page (e.g., '/' for home, '/about' for about)"),
   purpose: z.string().describe("Purpose of this page"),
   sections: z.array(SectionPlanSchema).describe("Sections to include on this page"),
-  priority: z.number().int().min(1).max(99).describe("Page priority (1 = highest)"),
+  priority: z.number().int().describe("Page priority from 1-99 where 1 is highest"),
 });
 
 // =============================================================================
@@ -77,7 +77,7 @@ export const NavbarPlanSchema = z.object({
 
 export const FooterPlanSchema = z.object({
   style: z.enum(["minimal", "simple", "comprehensive", "centered"]).describe("Footer style"),
-  columns: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).describe("Number of link columns"),
+  columns: z.number().int().describe("Number of link columns, must be 1, 2, 3, or 4"),
   newsletter: z.boolean().describe("Include newsletter signup"),
   socialLinks: z.boolean().describe("Include social media links"),
   copyright: z.boolean().describe("Include copyright notice"),
@@ -119,7 +119,7 @@ export const SiteArchitectureSchema = z.object({
       "innovative",
     ])
     .describe("Brand voice and tone"),
-  pages: z.array(PagePlanSchema).min(1).max(20).describe("Pages to generate"),
+  pages: z.array(PagePlanSchema).describe("Pages to generate, between 1 and 20 pages"),
   sharedElements: z.object({
     navbar: NavbarPlanSchema,
     footer: FooterPlanSchema,
@@ -134,7 +134,12 @@ export const SiteArchitectureSchema = z.object({
 export const GeneratedComponentSchema = z.object({
   id: z.string().describe("Unique component ID"),
   type: z.string().describe("Component type from registry"),
-  props: z.record(z.string(), z.unknown()).describe("Component props"),
+  props: z.array(
+    z.object({
+      key: z.string().describe("Property name"),
+      value: z.string().describe("Property value as a JSON string"),
+    })
+  ).describe("Component props as key-value pairs. Use JSON strings for complex values."),
   aiNotes: z.string().describe("AI reasoning for this configuration"),
 });
 
@@ -242,6 +247,49 @@ export const FooterComponentSchema = z.object({
   textColor: z.string().describe("Footer text color"),
   borderTop: z.boolean().describe("Whether footer has top border"),
 });
+
+// =============================================================================
+// POST-PROCESSING UTILITIES
+// =============================================================================
+
+/**
+ * Convert AI-generated key-value pair arrays back to plain objects.
+ * OpenAI doesn't support z.record() (generates 'propertyNames' keyword),
+ * so we use arrays of {key, value} in schemas and convert back here.
+ */
+export function convertPropsArrayToObject(
+  propsArray: Array<{ key: string; value: string }>
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const { key, value } of propsArray) {
+    try {
+      // Try to parse as JSON (for arrays, objects, booleans, numbers)
+      result[key] = JSON.parse(value);
+    } catch {
+      // If not valid JSON, use as plain string
+      result[key] = value;
+    }
+  }
+  return result;
+}
+
+/**
+ * Process AI-generated components to convert props from key-value arrays to objects.
+ * Call this after every generateObject() that uses GeneratedComponentSchema.
+ */
+export function processAIComponents(
+  components: Array<{
+    id: string;
+    type: string;
+    props: Array<{ key: string; value: string }>;
+    aiNotes: string;
+  }>
+): Array<{ id: string; type: string; props: Record<string, unknown>; aiNotes: string }> {
+  return components.map((c) => ({
+    ...c,
+    props: convertPropsArrayToObject(c.props),
+  }));
+}
 
 // =============================================================================
 // TYPE EXPORTS

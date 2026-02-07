@@ -27,14 +27,14 @@ const RefinementScopeSchema = z.object({
   type: z.enum(["component", "page", "style", "content", "general"]),
   targets: z.array(z.string()).describe("Component IDs or page slugs to modify"),
   requiresRegeneration: z.boolean().describe("Whether full page regeneration is needed"),
-  confidence: z.number().min(0).max(1),
+  confidence: z.number().describe("Confidence score from 0 to 1"),
 });
 
 const ComponentChangeSchema = z.object({
   changes: z.array(
     z.object({
       field: z.string(),
-      newValue: z.unknown(),
+      newValue: z.string().describe("New value as a JSON string"),
       reason: z.string(),
     })
   ),
@@ -42,15 +42,15 @@ const ComponentChangeSchema = z.object({
 
 const StyleChangeSchema = z.object({
   designSystemChanges: z.object({
-    colors: z.record(z.string(), z.string()).describe("Color changes to apply, empty object if none"),
-    typography: z.record(z.string(), z.string()).describe("Typography changes to apply, empty object if none"),
-    spacing: z.record(z.string(), z.string()).describe("Spacing changes to apply, empty object if none"),
-    borders: z.record(z.string(), z.string()).describe("Border changes to apply, empty object if none"),
+    colors: z.array(z.object({ key: z.string(), value: z.string() })).describe("Color changes as key-value pairs, empty array if none"),
+    typography: z.array(z.object({ key: z.string(), value: z.string() })).describe("Typography changes as key-value pairs, empty array if none"),
+    spacing: z.array(z.object({ key: z.string(), value: z.string() })).describe("Spacing changes as key-value pairs, empty array if none"),
+    borders: z.array(z.object({ key: z.string(), value: z.string() })).describe("Border changes as key-value pairs, empty array if none"),
   }),
   componentStyleChanges: z.array(
     z.object({
       componentType: z.string(),
-      props: z.record(z.string(), z.unknown()),
+      props: z.array(z.object({ key: z.string(), value: z.string().describe("Prop value as JSON string") })).describe("Component props as key-value pairs"),
     })
   ),
 });
@@ -180,12 +180,19 @@ Return the specific prop changes needed. Only include props that need to change.
         });
 
         for (const change of object.changes) {
+          // Parse the JSON string value back to its original type
+          let parsedValue: unknown = change.newValue;
+          try {
+            parsedValue = JSON.parse(change.newValue);
+          } catch {
+            // If not valid JSON, use as plain string
+          }
           changes.push({
             type: "component",
             target: component.id,
             field: change.field,
             oldValue: component.props[change.field],
-            newValue: change.newValue,
+            newValue: parsedValue,
             description: change.reason,
           });
         }
@@ -248,35 +255,46 @@ Return:
       });
 
       // Design system color changes
-      if (object.designSystemChanges.colors) {
+      if (object.designSystemChanges.colors.length > 0) {
+        const colorMap: Record<string, string> = {};
+        for (const { key, value } of object.designSystemChanges.colors) {
+          colorMap[key] = value;
+        }
         changes.push({
           type: "style",
           target: "global",
           field: "colors",
-          newValue: object.designSystemChanges.colors,
+          newValue: colorMap,
           description: "Updated color palette",
         });
       }
 
       // Design system typography changes
-      if (object.designSystemChanges.typography) {
+      if (object.designSystemChanges.typography.length > 0) {
+        const typoMap: Record<string, string> = {};
+        for (const { key, value } of object.designSystemChanges.typography) {
+          typoMap[key] = value;
+        }
         changes.push({
           type: "style",
           target: "global",
           field: "typography",
-          newValue: object.designSystemChanges.typography,
+          newValue: typoMap,
           description: "Updated typography",
         });
       }
 
       // Component style changes
       for (const componentChange of object.componentStyleChanges) {
+        // Convert props array to object for processing
+        const propsMap: Record<string, string> = {};
+        for (const { key, value } of componentChange.props) {
+          propsMap[key] = value;
+        }
         for (const page of this.previewState.pages) {
           for (const component of page.components) {
             if (component.type === componentChange.componentType) {
-              for (const [field, value] of Object.entries(
-                componentChange.props
-              )) {
+              for (const [field, value] of Object.entries(propsMap)) {
                 changes.push({
                   type: "component",
                   target: component.id,
