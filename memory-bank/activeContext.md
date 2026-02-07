@@ -1,6 +1,104 @@
 # Active Context
 
-## Latest Session Update (AI Website Designer COMPREHENSIVE FIX - February 2026)
+## Latest Session Update (OpenAI Migration & Design Reference System - February 2026)
+
+### MAJOR AI INFRASTRUCTURE OVERHAUL ✅
+
+**User Request:**
+- Switch from Anthropic (Claude) to OpenAI (GPT-4o) for cost savings
+- Implement design reference system for professional designs
+- Fix color application issues (AI not applying design tokens)
+- Fix navigation links being forgotten
+- Fix pages not rendering at their URLs
+- Implement smart multi-pass refinement
+
+### Changes Implemented:
+
+### 1. AI Provider Configuration System
+**File:** `src/lib/ai/website-designer/config/ai-provider.ts` (NEW)
+
+Centralized AI model configuration allowing easy switching between providers:
+- Default provider: OpenAI (GPT-4o for cost efficiency)
+- Task-specific model tiers (premium, standard, fast)
+- Functions: `getAIModel(task)`, `getModelInfo(task)`, `estimateCost(tasks)`
+
+```typescript
+const TASK_TIERS = {
+  "architecture": "premium",    // GPT-4o
+  "page-content": "premium",    // GPT-4o  
+  "navbar": "standard",         // GPT-4o
+  "footer": "standard",         // GPT-4o
+  "refinement": "standard",     // GPT-4o
+  "design-inspiration": "fast", // GPT-4o-mini
+  "module-analysis": "fast",    // GPT-4o-mini
+};
+```
+
+### 2. Design Reference System
+**File:** `src/lib/ai/website-designer/config/design-references.ts` (NEW)
+
+Curated design patterns database for AI to follow (Dribbble/Awwwards level):
+- 7 industry-specific references with exact specifications
+- Each reference includes: colors (exact hex), typography, page structures
+- Functions: `findDesignReference(industry, style)`, `formatReferenceForAI()`
+
+Industries covered:
+- Restaurant (elegant dark, modern light)
+- Professional Corporate
+- Portfolio Bold Creative
+- E-commerce Modern Minimal
+- Fitness Energy Bold
+- Spa Serene Elegant
+
+### 3. Files Updated to Use OpenAI
+Replaced all `anthropic()` calls with `getAIModel(task)`:
+- `engine.ts` - Main orchestration engine
+- `preview/iteration-engine.ts` - Preview refinement
+- `modules/analyzer.ts` - Module detection
+- `modules/configurator.ts` - Module configuration
+- `design/inspiration-engine.ts` - Design patterns
+- `refinement/multi-pass-engine.ts` - Quality refinement
+
+### 4. Enhanced Page Prompt for Color Application
+**File:** `prompts.ts` - `buildPagePrompt()`
+
+Added explicit color application rules in the prompt:
+```typescript
+## 🎨 COLOR APPLICATION RULES (MANDATORY) 🎨
+You MUST apply these exact colors from the design tokens to every component:
+
+**PRIMARY COLOR: ${designTokens.primaryColor}**
+- Use for: Main CTA buttons, accent elements, links, highlights
+- Apply to props: primaryButtonColor, ctaColor, accentColor, linkColor
+
+**SECONDARY COLOR: ${designTokens.secondaryColor}**
+- Use for: Secondary buttons, subtle highlights, secondary text
+...
+
+⚠️ NEVER use default component colors - ALWAYS override with these design tokens!
+```
+
+### 5. Fixed Page URL Slug Matching
+**Files:** 
+- `src/app/site/[domain]/[[...slug]]/page.tsx`
+- `src/app/api/site/[domain]/[[...slug]]/route.ts`
+
+Fixed page not found issue by normalizing slug comparisons:
+```typescript
+// Now handles both "/about" and "about" formats
+const normalizedSlug = pageSlug ? (pageSlug.startsWith('/') ? pageSlug : `/${pageSlug}`) : '';
+const page = pages.find((p) => {
+  const pSlug = p.slug?.startsWith('/') ? p.slug : `/${p.slug}`;
+  return pSlug === normalizedSlug || p.slug === pageSlug;
+});
+```
+
+### 6. Package Installed
+- Added `@ai-sdk/openai` to dependencies
+
+---
+
+## Previous Session Update (AI Website Designer COMPREHENSIVE FIX - February 2026)
 
 ### AI DESIGNER LINK & PUBLISHING FIX ✅
 

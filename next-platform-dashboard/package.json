@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.12",
+    "@ai-sdk/openai": "^3.0.26",
     "@anthropic-ai/sdk": "^0.71.2",
     "@craftjs/core": "^0.2.12",
     "@craftjs/layers": "^0.2.7",

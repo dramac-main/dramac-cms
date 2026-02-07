@@ -12,7 +12,7 @@
  */
 
 import { generateObject, generateText } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { getAIModel } from "../config/ai-provider";
 import { z } from "zod";
 import type { GeneratedPage, GeneratedComponent, SiteArchitecture } from "../types";
 
@@ -312,7 +312,7 @@ export class MultiPassRefinementEngine {
     );
 
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("refinement"),
       schema: ContentRefinementSchema,
       system: CONTENT_REFINEMENT_PROMPT,
       prompt: `Analyze and refine this website content:
@@ -352,7 +352,7 @@ Focus on headlines, descriptions, and CTAs.`,
     );
 
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("refinement"),
       schema: VisualConsistencySchema,
       system: VISUAL_CONSISTENCY_PROMPT,
       prompt: `Audit this website for visual consistency:
@@ -393,7 +393,7 @@ Check that colors, spacing, and typography are consistent across all components.
     );
 
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("refinement"),
       schema: ConversionOptimizationSchema,
       system: CONVERSION_PROMPT,
       prompt: `Optimize this website for conversions:
@@ -430,7 +430,7 @@ Consider the industry and what action the user should take.`,
     );
 
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("refinement"),
       schema: AccessibilityAuditSchema,
       system: ACCESSIBILITY_PROMPT,
       prompt: `Audit this website for accessibility:
@@ -625,7 +625,7 @@ export async function quickRefine(
   businessContext: string
 ): Promise<GeneratedPage[]> {
   const { text } = await generateText({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("refinement"),
     system: `You are a senior web developer. Quickly review the website and suggest 3-5 critical improvements as JSON patches.`,
     prompt: `Review this website and suggest improvements:
     

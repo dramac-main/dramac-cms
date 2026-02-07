@@ -7,7 +7,7 @@
  */
 
 import { generateObject } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { getAIModel } from "../config/ai-provider";
 import { z } from "zod";
 import type {
   ModuleRequirement,
@@ -55,7 +55,7 @@ export async function analyzeModuleRequirements(
 
   // Use AI to analyze prompt for additional module needs
   const { object } = await generateObject({
-    model: anthropic("claude-sonnet-4-20250514"),
+    model: getAIModel("module-analysis"),
     schema: ModuleAnalysisSchema,
     prompt: `Analyze this website request and determine which modules are needed.
 

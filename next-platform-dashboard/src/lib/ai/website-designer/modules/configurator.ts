@@ -6,7 +6,7 @@
  */
 
 import { generateObject } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { getAIModel } from "../config/ai-provider";
 import { z } from "zod";
 import type {
   ModuleConfig,
@@ -93,7 +93,7 @@ export class ModuleConfigurator {
       ];
 
       const { object } = await generateObject({
-        model: anthropic("claude-sonnet-4-20250514"),
+        model: getAIModel("module-configurator"),
         schema: EcommerceOptionsSchema,
         prompt: `Configure e-commerce display settings.
 
@@ -155,7 +155,7 @@ Determine optimal e-commerce configuration for best user experience.
 
     try {
       const { object } = await generateObject({
-        model: anthropic("claude-sonnet-4-20250514"),
+        model: getAIModel("module-configurator"),
         schema: BookingOptionsSchema,
         prompt: `Configure booking settings.
 

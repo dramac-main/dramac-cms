@@ -9,7 +9,7 @@
  */
 
 import { generateObject } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { getAIModel } from "../config/ai-provider";
 import { z } from "zod";
 
 // =============================================================================
@@ -418,7 +418,7 @@ export class DesignInspirationEngine {
 
     // Use AI to select the best combination
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("design-inspiration"),
       schema: DesignRecommendationSchema,
       system: `You are a WORLD-CLASS UI/UX designer who has won multiple Awwwards and has designed for Fortune 500 companies.
       

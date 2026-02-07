@@ -697,11 +697,36 @@ export function buildPagePrompt(
   return `## Page: ${pagePlan.name}
 Purpose: ${pagePlan.purpose}
 
-## ⚠️ CRITICAL RULES ⚠️
+## ⚠️ CRITICAL RULES - READ CAREFULLY ⚠️
 1. DO NOT generate Navbar or Footer components - they are added automatically
 2. Use the EXACT business name from context
 3. ALL links must be real page URLs (/, /about, /contact, etc.) - NO "#" placeholders
-4. Apply design tokens CONSISTENTLY across all components
+
+## 🎨 COLOR APPLICATION RULES (MANDATORY) 🎨
+You MUST apply these exact colors from the design tokens to every component:
+
+**PRIMARY COLOR: ${designTokens.primaryColor || "Not specified"}**
+- Use for: Main CTA buttons, accent elements, links, highlights
+- Apply to props: primaryButtonColor, ctaColor, accentColor, linkColor
+
+**SECONDARY COLOR: ${designTokens.secondaryColor || "Not specified"}**
+- Use for: Secondary buttons, subtle highlights, secondary text
+- Apply to props: secondaryButtonColor, secondaryColor
+
+**ACCENT COLOR: ${designTokens.accentColor || "Not specified"}**
+- Use for: Icons, badges, hover states, decorative elements
+- Apply to props: iconColor, badgeColor, hoverColor
+
+**BACKGROUND COLOR: ${designTokens.backgroundColor || "Not specified"}**
+- Use for: Section backgrounds, card backgrounds
+- Apply to props: backgroundColor, cardBackground, sectionBackground
+
+**TEXT COLOR: ${designTokens.textColor || "Not specified"}**
+- Use for: Body text, descriptions
+- Apply to props: textColor, descriptionColor, bodyColor
+
+⚠️ NEVER use default component colors - ALWAYS override with these design tokens!
+⚠️ Every component MUST have its color props explicitly set to these values!
 
 ${userPrompt ? `
 ## User's Original Request (Reference)
@@ -711,7 +736,7 @@ ${userPrompt ? `
 ## Business Context
 ${context}
 
-## Design Tokens (Apply Consistently)
+## Complete Design Tokens (Use These EXACT Values)
 ${JSON.stringify(designTokens, null, 2)}
 
 ## Sections to Generate
@@ -720,8 +745,10 @@ ${JSON.stringify(pagePlan.sections, null, 2)}
 ## Component Field Details
 ${JSON.stringify(componentDetails, null, 2)}
 
-Generate complete component configurations for this page.
-Every prop must be fully specified - no undefined values.
-Use the design tokens consistently across all components.
-Generate professional, compelling content where real data is not available.`;
+## OUTPUT REQUIREMENTS
+1. Generate complete component configurations for this page
+2. Every prop must be fully specified - no undefined values
+3. APPLY design tokens colors to EVERY component - do not leave colors as defaults
+4. Generate professional, compelling content where real data is not available
+5. Ensure color consistency - the same color values should appear throughout`;
 }

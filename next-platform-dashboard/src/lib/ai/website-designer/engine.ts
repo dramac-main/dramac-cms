@@ -6,13 +6,15 @@
  * all systems to generate complete, multi-page websites from a single prompt.
  *
  * ENHANCED with:
- * - Design Inspiration Engine (Dribbble/Awwwards-level patterns)
- * - Multi-Pass Refinement Engine (4-pass quality improvement)
+ * - OpenAI GPT-4o for cost-effective generation (configurable)
+ * - Design Reference System (curated industry patterns)
+ * - Multi-Pass Refinement Engine (quality improvement)
  * - Module Integration Orchestrator (Booking/E-commerce integration)
  */
 
 import { generateObject } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { getAIModel, getModelInfo } from "./config/ai-provider";
+import { findDesignReference, formatReferenceForAI, type DesignReference } from "./config/design-references";
 import { buildDataContext } from "./data-context/builder";
 import { formatContextForAI } from "./data-context/formatter";
 import { checkDataAvailability } from "./data-context/checker";
@@ -404,7 +406,7 @@ Animation: ${quickDesignTokens.heroPattern.animation}
     );
 
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("architecture"),
       schema: SiteArchitectureSchema,
       system: SITE_ARCHITECT_PROMPT,
       prompt: fullPrompt,
@@ -509,7 +511,7 @@ Animation: ${quickDesignTokens.heroPattern.animation}
     );
 
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("page-content"),
       schema: PageComponentsOutputSchema,
       system: PAGE_GENERATOR_PROMPT,
       prompt: fullPrompt,
@@ -550,7 +552,7 @@ Animation: ${quickDesignTokens.heroPattern.animation}
       }));
 
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("navbar"),
       schema: NavbarComponentSchema,
       system: NAVBAR_GENERATOR_PROMPT,
       prompt: `Generate a premium navbar configuration.
@@ -582,7 +584,7 @@ Configure ALL navbar fields for a modern, responsive navigation.`,
    */
   private async generateFooter(): Promise<GeneratedComponent> {
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("footer"),
       schema: FooterComponentSchema,
       system: FOOTER_GENERATOR_PROMPT,
       prompt: `Generate a premium footer configuration.

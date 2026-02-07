@@ -7,7 +7,7 @@
  */
 
 import { generateObject } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { getAIModel } from "../config/ai-provider";
 import { z } from "zod";
 import type {
   PreviewState,
@@ -124,7 +124,7 @@ export class IterationEngine {
       .join("\n");
 
     const { object } = await generateObject({
-      model: anthropic("claude-sonnet-4-20250514"),
+      model: getAIModel("iteration"),
       schema: RefinementScopeSchema,
       prompt: `Analyze this refinement request and determine its scope.
 
@@ -166,7 +166,7 @@ Examples:
 
       try {
         const { object } = await generateObject({
-          model: anthropic("claude-sonnet-4-20250514"),
+          model: getAIModel("iteration"),
           schema: ComponentChangeSchema,
           prompt: `Refine this component based on the user's request.
 
@@ -233,7 +233,7 @@ Return the specific prop changes needed. Only include props that need to change.
 
     try {
       const { object } = await generateObject({
-        model: anthropic("claude-sonnet-4-20250514"),
+        model: getAIModel("iteration"),
         schema: StyleChangeSchema,
         prompt: `Apply style changes based on the user's request.
 
@@ -334,7 +334,7 @@ Return:
 
       try {
         const { object } = await generateObject({
-          model: anthropic("claude-sonnet-4-20250514"),
+          model: getAIModel("iteration"),
           schema: ComponentChangeSchema,
           prompt: `Rewrite content based on the user's request.
 

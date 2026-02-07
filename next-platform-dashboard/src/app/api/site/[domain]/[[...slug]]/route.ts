@@ -103,9 +103,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 function processAndReturnSiteData(site: any, pageSlug: string) {
   // Find the requested page
+  // IMPORTANT: Normalize slug comparison to handle both with and without leading slashes
   const pages = site.pages || [];
+  const normalizedSlug = pageSlug ? (pageSlug.startsWith('/') ? pageSlug : `/${pageSlug}`) : '';
+  
   const page = pageSlug
-    ? pages.find((p: any) => p.slug === pageSlug)
+    ? pages.find((p: any) => {
+        // Compare normalized slugs
+        const pSlug = p.slug?.startsWith('/') ? p.slug : `/${p.slug}`;
+        return pSlug === normalizedSlug || p.slug === pageSlug;
+      })
     : pages.find((p: any) => p.is_homepage);
 
   if (!page) {
