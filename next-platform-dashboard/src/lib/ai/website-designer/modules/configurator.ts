@@ -1,12 +1,11 @@
-/**
+﻿/**
  * PHASE AWD-09: Module Integration Intelligence
  * Module Configurator
  *
  * Configures modules based on business context and AI analysis.
  */
 
-import { generateObject } from "ai";
-import { getAIModel } from "../config/ai-provider";
+import { getAIModel, generateObject } from "../config/ai-provider";
 import { z } from "zod";
 import type {
   ModuleConfig,
@@ -24,7 +23,7 @@ import type {
 // =============================================================================
 
 const EcommerceOptionsSchema = z.object({
-  productGridColumns: z.number().describe("Number of product grid columns, between 2 and 5"),
+  productGridColumns: z.number().min(2).max(5),
   showFilters: z.boolean(),
   showQuickView: z.boolean(),
   showCompare: z.boolean(),

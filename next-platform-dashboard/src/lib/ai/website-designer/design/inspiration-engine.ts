@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PHASE AWD-INSPIRATION: Design Inspiration Engine
  * 
  * Analyzes award-winning design patterns from Dribbble, Awwwards, and other
@@ -8,8 +8,7 @@
  * typography combinations, and layout structures from successful websites.
  */
 
-import { generateObject } from "ai";
-import { getAIModel } from "../config/ai-provider";
+import { getAIModel, generateObject } from "../config/ai-provider";
 import { z } from "zod";
 
 // =============================================================================

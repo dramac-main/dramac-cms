@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PHASE AWD-03: AI Website Designer Core Engine
  * Main WebsiteDesignerEngine Class
  *
@@ -12,8 +12,7 @@
  * - Module Integration Orchestrator (Booking/E-commerce integration)
  */
 
-import { generateObject } from "ai";
-import { getAIModel, getModelInfo } from "./config/ai-provider";
+import { getAIModel, getModelInfo, generateObject } from "./config/ai-provider";
 import { findDesignReference, formatReferenceForAI, type DesignReference } from "./config/design-references";
 import { buildDataContext } from "./data-context/builder";
 import { formatContextForAI } from "./data-context/formatter";
@@ -36,7 +35,6 @@ import {
   PageComponentsOutputSchema,
   NavbarComponentSchema,
   FooterComponentSchema,
-  processAIComponents,
 } from "./schemas";
 import type {
   WebsiteDesignerInput,
@@ -518,9 +516,8 @@ Animation: ${quickDesignTokens.heroPattern.animation}
       prompt: fullPrompt,
     });
 
-    // Ensure all components have unique IDs and convert props from key-value arrays
-    const rawComponents = processAIComponents(object.components || []);
-    const components = rawComponents.map((c, index) => ({
+    // Ensure all components have unique IDs
+    const components = (object.components || []).map((c, index) => ({
       ...c,
       id: c.id || `${pagePlan.slug.replace(/\//g, "-")}-component-${index}`,
     }));
@@ -612,7 +609,7 @@ Configure ALL footer fields for a comprehensive, professional footer.`,
       props: {
         ...object,
         businessName: this.getBusinessName(),
-        copyrightText: `© ${new Date().getFullYear()} ${this.getBusinessName()}. All rights reserved.`,
+        copyrightText: `┬⌐ ${new Date().getFullYear()} ${this.getBusinessName()}. All rights reserved.`,
       },
     };
   }

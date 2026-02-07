@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PHASE AWD-09: Module Integration Intelligence
  * Module Analyzer
  *
@@ -6,8 +6,7 @@
  * using both industry defaults and AI analysis.
  */
 
-import { generateObject } from "ai";
-import { getAIModel } from "../config/ai-provider";
+import { getAIModel, generateObject } from "../config/ai-provider";
 import { z } from "zod";
 import type {
   ModuleRequirement,
@@ -24,7 +23,7 @@ import { getDefaultModuleConfig } from "./default-configs";
 
 const DetectedModuleSchema = z.object({
   module: z.enum(["ecommerce", "booking", "crm", "automation", "social-media"]),
-  confidence: z.number().describe("Confidence score from 0 to 1"),
+  confidence: z.number().min(0).max(1),
   reason: z.string(),
   features: z.array(z.string()),
 });
@@ -81,11 +80,11 @@ Analyze the prompt and determine which modules would benefit this website.
 Be conservative - only suggest modules that are clearly needed.
 
 Consider these signals:
-- "shop" or "store" or "buy" or "products" → ecommerce
-- "book" or "appointment" or "schedule" or "reservation" → booking
-- "contact" or "leads" or "newsletter" → crm
-- "email sequences" or "automated" or "follow up" → automation
-- "instagram" or "social feed" or "share" → social-media
+- "shop" or "store" or "buy" or "products" ΓåÆ ecommerce
+- "book" or "appointment" or "schedule" or "reservation" ΓåÆ booking
+- "contact" or "leads" or "newsletter" ΓåÆ crm
+- "email sequences" or "automated" or "follow up" ΓåÆ automation
+- "instagram" or "social feed" or "share" ΓåÆ social-media
 `,
   });
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PHASE AWD-06: Content Generation Engine
  * Section Content Generators
  *
@@ -6,8 +6,7 @@
  * Uses Claude AI to generate conversion-optimized, tailored content.
  */
 
-import { generateObject } from "ai";
-import { getAIModel } from "../config/ai-provider";
+import { getAIModel, generateObject } from "../config/ai-provider";
 import { z } from "zod";
 import {
   CONTENT_GENERATOR_SYSTEM_PROMPT,

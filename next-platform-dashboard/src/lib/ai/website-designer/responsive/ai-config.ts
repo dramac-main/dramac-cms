@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PHASE AWD-07: Responsive & Mobile-First System
  * AI Responsive Configuration Generator
  *
@@ -7,8 +7,7 @@
  */
 
 import { z } from "zod";
-import { generateObject } from "ai";
-import { getAIModel } from "../config/ai-provider";
+import { getAIModel, generateObject } from "../config/ai-provider";
 
 import type {
   ComponentResponsiveConfig,

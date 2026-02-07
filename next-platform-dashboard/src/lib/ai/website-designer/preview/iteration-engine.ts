@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PHASE AWD-08: Preview & Iteration System
  * Iteration Engine
  *
@@ -6,8 +6,7 @@
  * processes them through AI, and applies changes to the preview state.
  */
 
-import { generateObject } from "ai";
-import { getAIModel } from "../config/ai-provider";
+import { getAIModel, generateObject } from "../config/ai-provider";
 import { z } from "zod";
 import type {
   PreviewState,
@@ -27,14 +26,14 @@ const RefinementScopeSchema = z.object({
   type: z.enum(["component", "page", "style", "content", "general"]),
   targets: z.array(z.string()).describe("Component IDs or page slugs to modify"),
   requiresRegeneration: z.boolean().describe("Whether full page regeneration is needed"),
-  confidence: z.number().describe("Confidence score from 0 to 1"),
+  confidence: z.number().min(0).max(1),
 });
 
 const ComponentChangeSchema = z.object({
   changes: z.array(
     z.object({
       field: z.string(),
-      newValue: z.string().describe("New value as a JSON string"),
+      newValue: z.unknown(),
       reason: z.string(),
     })
   ),
@@ -42,15 +41,15 @@ const ComponentChangeSchema = z.object({
 
 const StyleChangeSchema = z.object({
   designSystemChanges: z.object({
-    colors: z.array(z.object({ key: z.string(), value: z.string() })).describe("Color changes as key-value pairs, empty array if none"),
-    typography: z.array(z.object({ key: z.string(), value: z.string() })).describe("Typography changes as key-value pairs, empty array if none"),
-    spacing: z.array(z.object({ key: z.string(), value: z.string() })).describe("Spacing changes as key-value pairs, empty array if none"),
-    borders: z.array(z.object({ key: z.string(), value: z.string() })).describe("Border changes as key-value pairs, empty array if none"),
+    colors: z.record(z.string(), z.string()).optional(),
+    typography: z.record(z.string(), z.string()).optional(),
+    spacing: z.record(z.string(), z.string()).optional(),
+    borders: z.record(z.string(), z.string()).optional(),
   }),
   componentStyleChanges: z.array(
     z.object({
       componentType: z.string(),
-      props: z.array(z.object({ key: z.string(), value: z.string().describe("Prop value as JSON string") })).describe("Component props as key-value pairs"),
+      props: z.record(z.string(), z.unknown()),
     })
   ),
 });
@@ -141,10 +140,10 @@ Determine:
 3. Requires Regeneration: Can this be done with prop changes or does it need regeneration?
 
 Examples:
-- "Make the hero bigger" → component, target: Hero, no regen
-- "Change all colors to blue" → style, no targets, no regen
-- "Rewrite the about section" → content, target: About page, no regen
-- "Add a testimonials section" → general, requires regen
+- "Make the hero bigger" ΓåÆ component, target: Hero, no regen
+- "Change all colors to blue" ΓåÆ style, no targets, no regen
+- "Rewrite the about section" ΓåÆ content, target: About page, no regen
+- "Add a testimonials section" ΓåÆ general, requires regen
 `,
     });
 
@@ -166,7 +165,7 @@ Examples:
 
       try {
         const { object } = await generateObject({
-          model: getAIModel("iteration"),
+      model: getAIModel("iteration"),
           schema: ComponentChangeSchema,
           prompt: `Refine this component based on the user's request.
 
@@ -180,19 +179,12 @@ Return the specific prop changes needed. Only include props that need to change.
         });
 
         for (const change of object.changes) {
-          // Parse the JSON string value back to its original type
-          let parsedValue: unknown = change.newValue;
-          try {
-            parsedValue = JSON.parse(change.newValue);
-          } catch {
-            // If not valid JSON, use as plain string
-          }
           changes.push({
             type: "component",
             target: component.id,
             field: change.field,
             oldValue: component.props[change.field],
-            newValue: parsedValue,
+            newValue: change.newValue,
             description: change.reason,
           });
         }
@@ -240,7 +232,7 @@ Return the specific prop changes needed. Only include props that need to change.
 
     try {
       const { object } = await generateObject({
-        model: getAIModel("iteration"),
+      model: getAIModel("iteration"),
         schema: StyleChangeSchema,
         prompt: `Apply style changes based on the user's request.
 
@@ -255,46 +247,35 @@ Return:
       });
 
       // Design system color changes
-      if (object.designSystemChanges.colors.length > 0) {
-        const colorMap: Record<string, string> = {};
-        for (const { key, value } of object.designSystemChanges.colors) {
-          colorMap[key] = value;
-        }
+      if (object.designSystemChanges.colors) {
         changes.push({
           type: "style",
           target: "global",
           field: "colors",
-          newValue: colorMap,
+          newValue: object.designSystemChanges.colors,
           description: "Updated color palette",
         });
       }
 
       // Design system typography changes
-      if (object.designSystemChanges.typography.length > 0) {
-        const typoMap: Record<string, string> = {};
-        for (const { key, value } of object.designSystemChanges.typography) {
-          typoMap[key] = value;
-        }
+      if (object.designSystemChanges.typography) {
         changes.push({
           type: "style",
           target: "global",
           field: "typography",
-          newValue: typoMap,
+          newValue: object.designSystemChanges.typography,
           description: "Updated typography",
         });
       }
 
       // Component style changes
       for (const componentChange of object.componentStyleChanges) {
-        // Convert props array to object for processing
-        const propsMap: Record<string, string> = {};
-        for (const { key, value } of componentChange.props) {
-          propsMap[key] = value;
-        }
         for (const page of this.previewState.pages) {
           for (const component of page.components) {
             if (component.type === componentChange.componentType) {
-              for (const [field, value] of Object.entries(propsMap)) {
+              for (const [field, value] of Object.entries(
+                componentChange.props
+              )) {
                 changes.push({
                   type: "component",
                   target: component.id,
@@ -352,7 +333,7 @@ Return:
 
       try {
         const { object } = await generateObject({
-          model: getAIModel("iteration"),
+      model: getAIModel("iteration"),
           schema: ComponentChangeSchema,
           prompt: `Rewrite content based on the user's request.
 
