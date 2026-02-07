@@ -606,7 +606,10 @@ export function PremiumNavbarRender({
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`md:hidden p-2 rounded-lg hover:bg-gray-100/80 transition-colors ml-auto ${logoPosition === "center" ? "order-3" : ""}`}
+            className={`md:hidden p-2 rounded-lg transition-colors ml-auto ${logoPosition === "center" ? "order-3" : ""}`}
+            style={{ ['--hover-bg' as string]: effectiveHamburgerColor ? `${effectiveHamburgerColor}15` : 'rgba(0,0,0,0.05)' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = effectiveHamburgerColor ? `${effectiveHamburgerColor}15` : 'rgba(0,0,0,0.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileMenuOpen}
             aria-controls="mobile-menu"
@@ -693,7 +696,9 @@ export function PremiumNavbarRender({
             )}
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-2 rounded-lg transition-colors"
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = mobileMenuTextColor ? `${mobileMenuTextColor}15` : 'rgba(0,0,0,0.05)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               aria-label="Close menu"
             >
               <CloseIcon color={mobileMenuTextColor} />
@@ -707,7 +712,9 @@ export function PremiumNavbarRender({
           {mobileMenuStyle === "fullscreen" && (
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="absolute top-4 right-4 p-3 rounded-full hover:bg-gray-100/10 transition-colors z-50"
+              className="absolute top-4 right-4 p-3 rounded-full transition-colors z-50"
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = mobileMenuTextColor ? `${mobileMenuTextColor}15` : 'rgba(255,255,255,0.1)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               aria-label="Close menu"
             >
               <CloseIcon className="w-8 h-8" color={mobileMenuTextColor} />

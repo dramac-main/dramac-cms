@@ -12,6 +12,64 @@ import type { StudioPageData, StudioComponent } from "@/types/studio";
 import type { GeneratedPage, GeneratedComponent, WebsiteDesignerOutput } from "./types";
 
 // =============================================================================
+// DESIGN TOKENS — Color system from AI architecture
+// =============================================================================
+
+/**
+ * Design tokens from the AI architecture phase.
+ * These ensure ALL components use consistent, themed colors
+ * instead of hardcoded fallbacks like #3b82f6.
+ */
+export interface DesignTokens {
+  primaryColor?: string;
+  secondaryColor?: string;
+  accentColor?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  fontHeading?: string;
+  fontBody?: string;
+  borderRadius?: string;
+  shadowStyle?: string;
+}
+
+/** Current design tokens for the active conversion — set per-conversion call */
+let activeDesignTokens: DesignTokens = {};
+
+/** Get the themed primary color, falling back to a sensible neutral if no tokens */
+function themePrimary(): string {
+  return activeDesignTokens.primaryColor || "#3b82f6";
+}
+
+/** Get the themed accent color */
+function themeAccent(): string {
+  return activeDesignTokens.accentColor || activeDesignTokens.primaryColor || "#f59e0b";
+}
+
+/** Get the themed background color */
+function themeBackground(): string {
+  return activeDesignTokens.backgroundColor || "#ffffff";
+}
+
+/** Get the themed text color */
+function themeText(): string {
+  return activeDesignTokens.textColor || "#111827";
+}
+
+/** Determine if the site theme is dark (dark background) */
+function isDarkTheme(): boolean {
+  const bg = themeBackground().toLowerCase();
+  // Parse hex to check luminance
+  if (bg.startsWith("#") && bg.length >= 7) {
+    const r = parseInt(bg.slice(1, 3), 16);
+    const g = parseInt(bg.slice(3, 5), 16);
+    const b = parseInt(bg.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.5;
+  }
+  return false;
+}
+
+// =============================================================================
 // LINK VALIDATION & FIXING
 // =============================================================================
 
@@ -34,6 +92,14 @@ let generatedPageSlugs: string[] = [];
  */
 export function setGeneratedPageSlugs(slugs: string[]): void {
   generatedPageSlugs = slugs.map(s => s.startsWith('/') ? s : `/${s}`);
+}
+
+/**
+ * Set design tokens for the converter to use as themed color defaults.
+ * Call this BEFORE convertPageToStudioFormat() when not using convertOutputToStudioPages().
+ */
+export function setDesignTokens(tokens: DesignTokens): void {
+  activeDesignTokens = tokens;
 }
 
 /**
@@ -325,7 +391,7 @@ function transformPropsForStudio(
         String(props.ctaLink || props.buttonLink || props.primaryButtonLink || ""),
         ctaText
       ),
-      primaryButtonColor: props.primaryButtonColor || props.ctaColor || "#3b82f6",
+      primaryButtonColor: props.primaryButtonColor || props.ctaColor || themePrimary(),
       primaryButtonTextColor: props.primaryButtonTextColor || "#ffffff",
       primaryButtonStyle: props.primaryButtonStyle || "solid",
       primaryButtonSize: props.primaryButtonSize || "lg",
@@ -336,10 +402,11 @@ function transformPropsForStudio(
         String(props.secondaryButtonLink || props.secondaryCtaLink || ""),
         String(props.secondaryButtonText || "")
       ),
+      secondaryButtonColor: props.secondaryButtonColor || themePrimary(),
       
       // Background
       backgroundImage: props.backgroundImage || props.image || "",
-      backgroundColor: props.backgroundColor || props.gradientFrom || "#1f2937",
+      backgroundColor: props.backgroundColor || props.gradientFrom || (isDarkTheme() ? "#1f2937" : "#ffffff"),
       
       // CRITICAL: Always add overlay when there's a background image for text readability
       backgroundOverlay: hasBackgroundImage ? true : (props.backgroundOverlay ?? false),
@@ -347,9 +414,9 @@ function transformPropsForStudio(
       backgroundOverlayOpacity: hasBackgroundImage ? (props.backgroundOverlayOpacity || 70) : 0,
       
       // Text colors - ensure readability
-      titleColor: hasBackgroundImage ? "#ffffff" : (props.titleColor || "#1f2937"),
-      subtitleColor: hasBackgroundImage ? "rgba(255,255,255,0.9)" : (props.subtitleColor || "#4b5563"),
-      descriptionColor: hasBackgroundImage ? "rgba(255,255,255,0.85)" : (props.descriptionColor || "#6b7280"),
+      titleColor: hasBackgroundImage ? "#ffffff" : (props.titleColor || (isDarkTheme() ? "#ffffff" : "#1f2937")),
+      subtitleColor: hasBackgroundImage ? "rgba(255,255,255,0.9)" : (props.subtitleColor || (isDarkTheme() ? "rgba(255,255,255,0.9)" : "#4b5563")),
+      descriptionColor: hasBackgroundImage ? "rgba(255,255,255,0.85)" : (props.descriptionColor || (isDarkTheme() ? "rgba(255,255,255,0.85)" : "#6b7280")),
       
       // Layout
       contentAlign: props.alignment || props.contentAlign || "center",
@@ -374,11 +441,11 @@ function transformPropsForStudio(
       imageAlt: props.imageAlt || "",
       imagePosition: props.imagePosition || "right",
       
-      // Size
-      minHeight: props.minHeight || "600px",
-      maxWidth: props.maxWidth || "",
-      paddingTop: props.paddingTop || "",
-      paddingBottom: props.paddingBottom || "",
+      // Size — proper defaults prevent squished hero sections
+      minHeight: props.minHeight || "75vh",
+      maxWidth: props.maxWidth || "7xl",
+      paddingTop: props.paddingTop || "xl",
+      paddingBottom: props.paddingBottom || "xl",
       
       // Animation
       animateOnLoad: props.animateOnLoad ?? true,
@@ -409,7 +476,7 @@ function transformPropsForStudio(
       ctaText,
       ctaLink: fixLink(String(props.ctaLink || props.buttonLink || ""), ctaText),
       ctaStyle: props.ctaStyle || "solid",
-      ctaColor: props.ctaColor || "#3b82f6",
+      ctaColor: props.ctaColor || themePrimary(),
       ctaTextColor: props.ctaTextColor || "#ffffff",
       ctaSize: props.ctaSize || "md",
       ctaBorderRadius: props.ctaBorderRadius || "md",
@@ -419,17 +486,21 @@ function transformPropsForStudio(
       hideOnScroll: true,
       showOnScrollUp: true,
       
-      // Mobile menu - ensure close button is accessible
+      // Mobile menu - MUST match site theme (not hardcoded white)
       mobileMenuStyle: props.mobileMenuStyle || "fullscreen",
       mobileBreakpoint: props.mobileBreakpoint || "md",
       showCtaInMobileMenu: true,
       mobileMenuLinkSpacing: props.mobileMenuLinkSpacing || "spacious",
+      mobileMenuBackground: props.mobileMenuBackground || (isDarkTheme() ? "#111827" : "#ffffff"),
+      mobileMenuTextColor: props.mobileMenuTextColor || (isDarkTheme() ? "#f9fafb" : "#1f2937"),
+      hamburgerColor: props.hamburgerColor || (isDarkTheme() ? "#f9fafb" : "#1f2937"),
       
-      // Appearance
-      backgroundColor: props.backgroundColor || "#ffffff",
-      textColor: props.textColor || "#1f2937",
-      shadow: props.shadow || "sm",
-      borderBottom: props.borderBottom ?? true,
+      // Appearance — inherit site theme colors
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? "#111827" : "#ffffff"),
+      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : "#1f2937"),
+      shadow: props.shadow || (isDarkTheme() ? "none" : "sm"),
+      borderBottom: props.borderBottom ?? !isDarkTheme(),
+      borderColor: props.borderColor || (isDarkTheme() ? "#374151" : "#e5e7eb"),
       
       // Link styling
       linkHoverEffect: props.linkHoverEffect || "opacity",
@@ -463,10 +534,10 @@ function transformPropsForStudio(
       cardPadding: props.cardPadding || "lg",
       hoverEffect: props.hoverEffect || "lift",
       gap: props.gap || "md",
-      // Consistent styling
+      // Consistent styling — inherit site theme
       backgroundColor: props.backgroundColor || "",
-      textColor: props.textColor || "",
-      accentColor: props.accentColor || "",
+      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      accentColor: props.accentColor || themePrimary(),
     };
   }
 
@@ -480,7 +551,7 @@ function transformPropsForStudio(
       // Studio CTA uses buttonText/buttonLink
       buttonText,
       buttonLink: fixLink(String(props.ctaLink || props.buttonLink || ""), buttonText),
-      buttonColor: props.buttonColor || props.ctaColor || "#3b82f6",
+      buttonColor: props.buttonColor || props.ctaColor || themePrimary(),
       buttonTextColor: props.buttonTextColor || props.ctaTextColor || "#ffffff",
       buttonSize: props.buttonSize || "lg",
       buttonRadius: props.buttonRadius || "md",
@@ -543,8 +614,8 @@ function transformPropsForStudio(
       cardBorderRadius: props.cardBorderRadius || "lg",
       // Background
       backgroundColor: props.backgroundColor || "",
-      textColor: props.textColor || "",
-      accentColor: props.accentColor || "",
+      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      accentColor: props.accentColor || themePrimary(),
     };
   }
 
@@ -576,8 +647,8 @@ function transformPropsForStudio(
       imageShape: props.imageShape || "circle",
       // Styling
       backgroundColor: props.backgroundColor || "",
-      textColor: props.textColor || "",
-      accentColor: props.accentColor || "",
+      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      accentColor: props.accentColor || themePrimary(),
     };
   }
 
@@ -590,8 +661,9 @@ function transformPropsForStudio(
       submitText: props.submitText || props.submitButtonText || props.buttonText || "Send Message",
       successMessage: props.successMessage || "Thank you for your message!",
       // Form styling to match site theme
-      backgroundColor: props.backgroundColor || "#ffffff",
-      buttonColor: props.buttonColor || "#3b82f6",
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? "#1f2937" : "#ffffff"),
+      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : "#1f2937"),
+      buttonColor: props.buttonColor || themePrimary(),
       buttonTextColor: props.buttonTextColor || "#ffffff",
     };
   }
@@ -644,6 +716,7 @@ function transformPropsForStudio(
       showNewsletter: props.showNewsletter ?? false,
       newsletterTitle: props.newsletterTitle || "Stay Updated",
       newsletterDescription: props.newsletterDescription || "",
+      newsletterButtonColor: props.newsletterButtonColor || themePrimary(),
       
       // Styling
       variant: props.variant || "standard",
@@ -669,8 +742,8 @@ function transformPropsForStudio(
       })) : [],
       variant: props.variant || "accordion",
       backgroundColor: props.backgroundColor || "",
-      textColor: props.textColor || "",
-      accentColor: props.accentColor || "",
+      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      accentColor: props.accentColor || themePrimary(),
     };
   }
 
@@ -700,8 +773,8 @@ function transformPropsForStudio(
       valueSize: props.valueSize || "3xl",
       valueColor: props.valueColor || "",
       backgroundColor: props.backgroundColor || "",
-      textColor: props.textColor || "",
-      accentColor: props.accentColor || "",
+      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      accentColor: props.accentColor || themePrimary(),
     };
   }
 
@@ -861,15 +934,28 @@ function transformPropsForStudio(
 /**
  * Convert entire WebsiteDesignerOutput to a map of page slug -> StudioPageData
  * 
- * This function sets the page slugs internally before conversion to ensure
- * all links are validated against actual generated pages.
+ * This function sets the page slugs AND design tokens internally before conversion
+ * to ensure all links are validated and colors are themed consistently.
+ * 
+ * @param output - The AI-generated website output
+ * @param designTokens - Optional design tokens from architecture for consistent theming
  */
 export function convertOutputToStudioPages(
-  output: WebsiteDesignerOutput
+  output: WebsiteDesignerOutput,
+  designTokens?: DesignTokens
 ): Map<string, { page: GeneratedPage; studioData: StudioPageData }> {
   // Set page slugs BEFORE conversion for link validation (thread-safe per call)
   const allSlugs = output.pages.map(p => p.slug.startsWith('/') ? p.slug : `/${p.slug}`);
   generatedPageSlugs = allSlugs;
+  
+  // Set design tokens for themed color defaults across all components
+  activeDesignTokens = designTokens || output.designSystem?.colors ? {
+    primaryColor: output.designSystem?.colors?.primary,
+    secondaryColor: output.designSystem?.colors?.secondary,
+    accentColor: output.designSystem?.colors?.accent,
+    backgroundColor: output.designSystem?.colors?.background,
+    textColor: output.designSystem?.colors?.text,
+  } : {};
   
   const result = new Map<string, { page: GeneratedPage; studioData: StudioPageData }>();
 

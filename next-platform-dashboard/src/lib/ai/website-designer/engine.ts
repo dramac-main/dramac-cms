@@ -85,7 +85,7 @@ const DEFAULT_CONFIG: EngineConfig = {
   useQuickDesignTokens: true,     // Fast industry-based tokens (no AI)
   enableRefinement: false,        // Disabled - adds 4 AI calls!
   refinementPasses: 2,            // If enabled, use 2 passes max
-  enableModuleIntegration: false, // Disabled - adds AI call
+  enableModuleIntegration: true,  // Enabled - adds ~10-15s (2 AI calls), detects booking/ecommerce/CRM
 };
 
 // =============================================================================

@@ -267,6 +267,34 @@ export const INDUSTRY_MODULE_MAPPING: Record<string, IndustryModuleMapping> = {
     required: ["booking", "crm"],
     recommended: ["automation"],
   },
+  barbershop: {
+    required: ["booking"],
+    recommended: ["crm", "social-media"],
+  },
+  salon: {
+    required: ["booking"],
+    recommended: ["crm", "social-media"],
+  },
+  spa: {
+    required: ["booking"],
+    recommended: ["crm", "social-media"],
+  },
+  beauty: {
+    required: ["booking"],
+    recommended: ["crm", "social-media"],
+  },
+  dental: {
+    required: ["booking", "crm"],
+    recommended: ["automation"],
+  },
+  veterinary: {
+    required: ["booking", "crm"],
+    recommended: ["automation"],
+  },
+  photography: {
+    required: ["crm"],
+    recommended: ["social-media", "ecommerce"],
+  },
   portfolio: {
     required: [],
     recommended: ["crm", "social-media"],

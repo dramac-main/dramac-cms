@@ -36,7 +36,8 @@ import { Progress } from "@/components/ui/progress";
 
 // Import the real Studio Renderer
 import { StudioRenderer } from "@/lib/studio/engine/renderer";
-import { convertPageToStudioFormat, setGeneratedPageSlugs } from "@/lib/ai/website-designer/converter";
+import { convertPageToStudioFormat, setGeneratedPageSlugs, setDesignTokens } from "@/lib/ai/website-designer/converter";
+import type { DesignTokens } from "@/lib/ai/website-designer/converter";
 
 import type { WebsiteDesignerOutput } from "@/lib/ai/website-designer/types";
 import type { StudioPageData } from "@/types/studio";
@@ -152,7 +153,20 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       const pageSlugs = output.pages.map(p => p.slug);
       setGeneratedPageSlugs(pageSlugs);
       
-      // Then convert pages (links will be validated against actual page slugs)
+      // Set design tokens from the AI output so all components get themed colors
+      if (output.designSystem?.colors) {
+        const tokens: DesignTokens = {
+          primaryColor: output.designSystem.colors.primary,
+          secondaryColor: output.designSystem.colors.secondary,
+          accentColor: output.designSystem.colors.accent,
+          backgroundColor: output.designSystem.colors.background,
+          textColor: output.designSystem.colors.text,
+        };
+        setDesignTokens(tokens);
+      }
+      
+      // Then convert pages (links will be validated against actual page slugs,
+      // colors will use design tokens instead of hardcoded defaults)
       const map = new Map<string, StudioPageData>();
       for (const page of output.pages) {
         const studioData = convertPageToStudioFormat(page);
@@ -211,6 +225,10 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             colorPreference,
             layoutDensity: "balanced",
             animationLevel: "subtle",
+          },
+          engineConfig: {
+            enableModuleIntegration: true,  // Detect & integrate booking, ecommerce, CRM, etc.
+            useQuickDesignTokens: true,     // Fast industry-based color tokens
           },
         }),
       });

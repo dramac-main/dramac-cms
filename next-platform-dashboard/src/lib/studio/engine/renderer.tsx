@@ -291,12 +291,13 @@ export function StudioRenderer({
       className={`studio-renderer ${className}`}
       style={{
         ...themeStyles,
-        // Force light mode - prevents dark mode inheritance from parent page
-        colorScheme: "light",
+        // Prevent OS dark-mode from overriding our inline styles
+        // The AI-generated components set all colors explicitly via inline styles,
+        // so we just need to prevent the browser from inverting anything.
+        colorScheme: "normal",
       }}
       data-site-id={siteId}
       data-page-id={pageId}
-      data-theme="light"
     >
       {/* Root children */}
       {studioData.root.children.map((id) => {

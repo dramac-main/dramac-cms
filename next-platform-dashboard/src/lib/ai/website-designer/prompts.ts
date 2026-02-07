@@ -428,6 +428,25 @@ For BOOKING/RESTAURANT businesses specifically:
 - Feature descriptions should mention actual services/products
 - Testimonials should feel authentic and specific
 
+### DARK THEME AWARENESS (CRITICAL)
+When the design tokens specify a DARK background color (e.g., #1a1a2e, #0f172a, #111827, #1b1b1b, etc.):
+- ALL section backgrounds MUST use dark colors — NEVER leave them as white/default
+- Text colors MUST be light (#ffffff, #f3f4f6, rgba(255,255,255,0.9))
+- Card backgrounds should use slightly lighter dark shades (#1e293b, #374151, #2d2d2d)
+- Borders and dividers should use subtle light colors (rgba(255,255,255,0.1))
+- Form inputs should have dark backgrounds with light text and subtle borders
+- The primary/accent color should POP against the dark background
+- Ensure ALL component props explicitly set backgroundColor, textColor, etc. — never rely on defaults
+- Hero overlays should be darker (80-90% opacity) to maintain readability
+
+When the design tokens specify a LIGHT background:
+- Standard light mode colors apply
+- Use dark text colors (#111827, #374151)
+- Cards can use white or very light backgrounds
+
+⚠️ NEVER mix light and dark — if the theme is dark, EVERY section must be dark!
+⚠️ The AI MUST explicitly set background and text colors on EVERY component — no defaults!
+
 ### CONSISTENT STYLING
 All components on a page must share:
 - Same primary color for CTAs and accents
@@ -567,6 +586,27 @@ export const NAVBAR_GENERATOR_PROMPT = `You are designing a premium navigation b
 - textColor: Ensure contrast with background
 - Use consistent colors from the design tokens
 
+### DARK THEME NAVBAR (CRITICAL)
+When the design tokens indicate a dark background:
+- backgroundColor: Use the SAME dark color as the site background (e.g., "#1a1a2e", "#0f172a")
+- textColor: Use light text (#ffffff or #f3f4f6)
+- shadow: "none" or very subtle — avoid light shadows on dark backgrounds
+- borderBottom: Use subtle separator (rgba(255,255,255,0.1))
+- mobileMenuBackground: MUST match the dark theme — NEVER white (#ffffff)
+- mobileMenuTextColor: Use light text (#ffffff) — NEVER dark text on dark background
+- hamburgerColor: Use light color (#ffffff) — visible against dark background
+- ctaColor: Use the primary/accent brand color (visible against dark navbar)
+- ctaTextColor: Ensure contrast with ctaColor button
+- linkHoverEffect: "opacity" works best for dark themes
+
+When the design tokens indicate a light background:
+- backgroundColor: "#ffffff" or light brand color
+- textColor: "#111827" or dark brand color
+- Standard light mode settings apply
+
+⚠️ NEVER default mobile menu to white background if the site is dark-themed!
+⚠️ The hamburger icon and all mobile links MUST be visible against the menu background!
+
 ### Visual Polish
 - shadow: "sm" (subtle professional shadow)
 - borderBottom: true
@@ -628,6 +668,22 @@ Column titles and links should be relevant to the business type:
 
 ### RULE #6: LEGAL LINKS
 - Always include Privacy Policy (/privacy) and Terms of Service (/terms)
+
+### RULE #7: DARK THEME FOOTER (CRITICAL)
+When the design tokens indicate a dark background:
+- backgroundColor: Use the SAME dark color or slightly darker shade
+- textColor: Use light text (#ffffff or #e5e7eb)
+- linkColor: Use primary/accent color for links — must be visible against dark background
+- newsletterButtonColor: Use the primary brand color — NEVER default blue
+- borderColor: Use subtle light borders (rgba(255,255,255,0.1))
+- socialIconColor: Use light colors visible against dark background
+- DO NOT use white background or dark text on dark-themed sites
+
+When the design tokens indicate a light background:
+- Standard dark footer text on light background is typical
+- Or use inverted dark footer for contrast
+
+⚠️ Footer MUST match the overall site theme — a white footer on a dark site is a GLARING inconsistency!
 
 Configure ALL footer props for a complete, polished result.`;
 
@@ -905,6 +961,33 @@ You MUST apply these exact colors from the design tokens to every component:
 **TEXT COLOR: ${designTokens.textColor || "Not specified"}**
 - Use for: Body text, descriptions
 - Apply to props: textColor, descriptionColor, bodyColor
+
+${(() => {
+    const bg = String(designTokens.backgroundColor || "#ffffff").toLowerCase();
+    let isDark = false;
+    if (bg.startsWith("#") && bg.length >= 7) {
+      const r = parseInt(bg.slice(1, 3), 16);
+      const g = parseInt(bg.slice(3, 5), 16);
+      const b = parseInt(bg.slice(5, 7), 16);
+      isDark = (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
+    }
+    return isDark ? `
+⚠️ THIS IS A DARK-THEMED SITE ⚠️
+The background color "${designTokens.backgroundColor}" is DARK. You MUST:
+- Set ALL section backgrounds to dark colors (use "${designTokens.backgroundColor}" or similar dark shades)
+- Set ALL text to light colors (#ffffff, #f3f4f6, rgba(255,255,255,0.9))
+- Use the PRIMARY color "${designTokens.primaryColor || "accent"}" to make buttons and accents POP
+- Card backgrounds should be slightly lighter dark shades
+- NEVER use white (#ffffff) as ANY section background
+- NEVER use dark text (#111827, #374151) on dark backgrounds
+- Form inputs need dark backgrounds with light text
+- Borders should use rgba(255,255,255,0.1) or similar subtle light borders
+` : `
+This is a LIGHT-themed site. Standard light mode colors apply.
+- Backgrounds: white or very light shades
+- Text: dark colors (#111827, #374151)
+`;
+  })()}
 
 ⚠️ NEVER use default component colors - ALWAYS override with these design tokens!
 ⚠️ Every component MUST have its color props explicitly set to these values!
