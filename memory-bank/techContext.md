@@ -82,11 +82,11 @@
 
 ### AI & Automation
 - **AI SDK**: 6.0.33 (Vercel AI SDK)
-- **@ai-sdk/openai**: 3.0.26 (OpenAI GPT-4o — **PRIMARY PROVIDER**)
-- **@ai-sdk/anthropic**: 3.0.12 (Claude — fallback only, kept in ai-provider.ts)
+- **@ai-sdk/anthropic**: 3.0.12 (Claude — **PRIMARY PROVIDER**)
+- **@ai-sdk/openai**: 3.0.26 (OpenAI — fallback only, not used for website generation)
 - **@anthropic-ai/sdk**: 0.71.2 (Anthropic API)
-- **AI Provider Config**: `config/ai-provider.ts` — centralized model selection + `generateObject` wrapper
-- **⚠️ CRITICAL**: All website-designer files import `generateObject` from `ai-provider`, NOT from `"ai"` directly. The wrapper sets `providerOptions.openai.strictJsonSchema = false` to allow natural Zod schemas.
+- **AI Provider Config**: `config/ai-provider.ts` — centralized model selection via `getAIModel(task)`
+- **⚠️ IMPORTANT**: OpenAI was tried and reverted. Its strict structured output mode is incompatible with our rich Zod schemas. Do NOT switch back without solving schema compatibility.
 - **Automation Engine**: ✅ COMPLETE (EM-57) - Workflows, triggers, event processing
 - **AI Agents System**: (Phase EM-58) - Intelligent agents with memory, tools, goals
 

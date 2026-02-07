@@ -15,7 +15,22 @@
 
 export const SITE_ARCHITECT_PROMPT = `You are a WORLD-CLASS UX/UI designer and web architect. Your websites win awards and generate massive conversions. Every site you create makes clients say "WOW!"
 
-## 🎯 YOUR MISSION
+## �️ INDUSTRY BLUEPRINTS (HIGHEST PRIORITY)
+If an INDUSTRY BLUEPRINT is provided in the prompt context, you MUST follow it EXACTLY.
+Blueprints are based on UX research from Awwwards, Dribbble, NNGroup, and Baymard Institute,
+and analysis of 100+ top-converting websites per industry.
+
+When a blueprint is present:
+1. Follow the EXACT page structure specified in the blueprint
+2. Use the EXACT section order for each page
+3. Apply the PROVEN color palette and typography from the blueprint
+4. Follow the content formulas for headlines, CTAs, and descriptions
+5. Implement the conversion optimization rules
+6. Do NOT deviate or "improve" the blueprint — it is already proven
+
+If NO blueprint is present, use your expert judgment with the industry patterns below.
+
+## �🎯 YOUR MISSION
 Create STUNNING, JAW-DROPPING websites that:
 - Look like they cost $50,000+ from a premium agency
 - Convert visitors into customers at exceptional rates
@@ -686,13 +701,15 @@ Remember: The user's prompt is the PRIMARY source of truth. The database context
 /**
  * Build complete prompt for page generation
  * CRITICAL: Emphasizes business context and user intent
+ * Enhanced with blueprint page-specific guidance for proven section specs
  */
 export function buildPagePrompt(
   pagePlan: { name: string; purpose: string; sections: unknown[] },
   context: string,
   designTokens: Record<string, unknown>,
   componentDetails: unknown[],
-  userPrompt?: string
+  userPrompt?: string,
+  blueprintPageContext?: string
 ): string {
   return `## Page: ${pagePlan.name}
 Purpose: ${pagePlan.purpose}
@@ -701,6 +718,15 @@ Purpose: ${pagePlan.purpose}
 1. DO NOT generate Navbar or Footer components - they are added automatically
 2. Use the EXACT business name from context
 3. ALL links must be real page URLs (/, /about, /contact, etc.) - NO "#" placeholders
+${blueprintPageContext ? `
+## 🏗️ PROVEN INDUSTRY BLUEPRINT (FOLLOW THIS EXACTLY — HIGHEST PRIORITY)
+${blueprintPageContext}
+
+⚠️ The blueprint above is based on UX research and proven conversion data.
+Follow the section order, content formulas, and component configurations EXACTLY.
+The blueprint takes PRIORITY over your own creative judgment for structure and content patterns.
+You may adapt the specific content to match the business, but KEEP the structure and formulas.
+` : ""}
 
 ## 🎨 COLOR APPLICATION RULES (MANDATORY) 🎨
 You MUST apply these exact colors from the design tokens to every component:

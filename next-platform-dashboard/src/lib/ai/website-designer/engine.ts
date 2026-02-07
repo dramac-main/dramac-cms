@@ -15,6 +15,7 @@
 import { generateObject } from "ai";
 import { getAIModel, getModelInfo } from "./config/ai-provider";
 import { findDesignReference, formatReferenceForAI, type DesignReference } from "./config/design-references";
+import { findBlueprint, formatBlueprintForAI, formatBlueprintPageForAI, type IndustryBlueprint } from "./config/industry-blueprints";
 import { buildDataContext } from "./data-context/builder";
 import { formatContextForAI } from "./data-context/formatter";
 import { checkDataAvailability } from "./data-context/checker";
@@ -100,6 +101,7 @@ export class WebsiteDesignerEngine {
   private userPrompt: string = ""; // Store user's original prompt
   private onProgress?: (progress: GenerationProgress) => void;
   private config: EngineConfig;
+  private activeBlueprint: IndustryBlueprint | null = null; // Proven industry blueprint
   
   // Enhancement Engines
   private moduleOrchestrator: ModuleIntegrationOrchestrator | null = null;
@@ -134,6 +136,14 @@ export class WebsiteDesignerEngine {
       
       const industry = this.context?.client.industry?.toLowerCase() || "general";
       const designEngine = new DesignInspirationEngine(industry, "modern", input.prompt);
+
+      // Step 1.6: Find proven industry blueprint (NEW — CRITICAL for quality)
+      this.activeBlueprint = findBlueprint(industry, input.prompt);
+      if (this.activeBlueprint) {
+        console.log(`[WebsiteDesignerEngine] ✅ Found industry blueprint: ${this.activeBlueprint.name} (${this.activeBlueprint.id})`);
+      } else {
+        console.log(`[WebsiteDesignerEngine] ⚠️ No blueprint found for industry: ${industry} — using AI freeform generation`);
+      }
       
       if (this.config.enableDesignInspiration) {
         // Full AI-powered design analysis (slower but better)
@@ -156,7 +166,8 @@ export class WebsiteDesignerEngine {
         formattedContext,
         input.preferences,
         designInspiration,
-        quickDesignTokens
+        quickDesignTokens,
+        this.activeBlueprint
       );
 
       // Step 2.5: Initialize module integration (only if enabled)
@@ -338,9 +349,17 @@ export class WebsiteDesignerEngine {
     context: string,
     preferences?: WebsiteDesignerInput["preferences"],
     designInspiration?: DesignRecommendation | null,
-    quickDesignTokens?: ReturnType<DesignInspirationEngine["getQuickDesignTokens"]> | null
+    quickDesignTokens?: ReturnType<DesignInspirationEngine["getQuickDesignTokens"]> | null,
+    blueprint?: IndustryBlueprint | null
   ): Promise<SiteArchitecture> {
     const componentSummary = this.summarizeComponents();
+
+    // BLUEPRINT CONTEXT — Proven industry architecture (HIGHEST PRIORITY)
+    let blueprintContext = "";
+    if (blueprint) {
+      blueprintContext = formatBlueprintForAI(blueprint);
+      console.log(`[WebsiteDesignerEngine] 📋 Injecting ${blueprint.name} blueprint into architecture prompt`);
+    }
 
     // Enhance prompt with design inspiration if available
     let inspirationContext = "";
@@ -400,7 +419,7 @@ Animation: ${quickDesignTokens.heroPattern.animation}
 
     const fullPrompt = buildArchitecturePrompt(
       prompt,
-      context + inspirationContext,
+      context + inspirationContext + blueprintContext,
       preferences as Record<string, unknown> | undefined,
       componentSummary
     );
@@ -415,7 +434,23 @@ Animation: ${quickDesignTokens.heroPattern.animation}
     // Apply design tokens to architecture
     const architecture = object as SiteArchitecture;
     
-    if (designInspiration) {
+    // Priority: Blueprint > Design Inspiration > Quick Tokens
+    // Blueprint provides proven, tested color/typography combinations
+    if (blueprint) {
+      const palette = blueprint.design.palettes[0]; // Primary proven palette
+      const typo = blueprint.design.typography[0]; // Primary proven typography
+      architecture.designTokens = {
+        ...architecture.designTokens,
+        primaryColor: palette.primary,
+        secondaryColor: palette.secondary,
+        accentColor: palette.accent,
+        backgroundColor: palette.background,
+        textColor: palette.text,
+        fontHeading: typo.heading,
+        fontBody: typo.body,
+      };
+      console.log(`[WebsiteDesignerEngine] 🎨 Applied blueprint palette: ${palette.name} (${palette.mood})`);
+    } else if (designInspiration) {
       // Apply full AI-powered design inspiration
       architecture.designTokens = {
         ...architecture.designTokens,
@@ -489,6 +524,7 @@ Animation: ${quickDesignTokens.heroPattern.animation}
 
   /**
    * Generate a single page with all its components
+   * Enhanced with blueprint page-specific guidance for proven section order + content formulas
    */
   private async generatePage(pagePlan: PagePlan, context: string): Promise<GeneratedPage> {
     // Get detailed field info for suggested components
@@ -502,12 +538,22 @@ Animation: ${quickDesignTokens.heroPattern.animation}
       };
     });
 
+    // Inject blueprint page guidance if available (PROVEN section-by-section specifications)
+    let blueprintPageContext = "";
+    if (this.activeBlueprint) {
+      blueprintPageContext = formatBlueprintPageForAI(this.activeBlueprint, pagePlan.name);
+      if (blueprintPageContext) {
+        console.log(`[WebsiteDesignerEngine] 📄 Injecting blueprint guidance for page: ${pagePlan.name}`);
+      }
+    }
+
     const fullPrompt = buildPagePrompt(
       pagePlan,
       context,
       (this.architecture?.designTokens || {}) as Record<string, unknown>,
       componentDetails,
-      this.userPrompt // Pass user's original prompt for reference
+      this.userPrompt, // Pass user's original prompt for reference
+      blueprintPageContext // Pass proven blueprint guidance for this specific page
     );
 
     const { object } = await generateObject({

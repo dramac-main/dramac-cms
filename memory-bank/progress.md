@@ -7,11 +7,28 @@
 **Total Templates**: 32 (7 starter + 25 premium)
 **Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
 **E-Commerce Module**: **ALL 6 WAVES COMPLETE** ✅ | **ZAMBIA DEFAULT** 🇿🇲
-**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + MAJOR PRODUCTION FIXES + OPENAI QUALITY FIX** ✅
+**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + MAJOR PRODUCTION FIXES + REVERTED TO CLAUDE** ✅
 
 ---
 
-## 🤖 AI WEBSITE DESIGNER - OPENAI QUALITY FIX (February 2026) ✅
+## 🤖 AI WEBSITE DESIGNER - REVERTED TO ANTHROPIC CLAUDE (February 2026) ✅
+
+### Why
+Three failed attempts to use OpenAI GPT-4o for website generation. Each attempt degraded quality.
+
+### What Changed
+- `DEFAULT_PROVIDER = "anthropic"` in `ai-provider.ts`
+- Removed `generateObject` wrapper (not needed)
+- Direct `import { generateObject } from "ai"` restored in all files
+- Natural Zod schemas preserved
+- Git: commit d6b3ce2
+
+### Lesson Learned
+OpenAI's structured output mode is too restrictive for complex creative generation with rich Zod schemas. Claude handles these natively with better creative quality.
+
+---
+
+## 🤖 AI WEBSITE DESIGNER - OPENAI QUALITY FIX (February 2026) ❌ FAILED
 
 ### Problem
 After migrating from Claude to OpenAI GPT-4o, strict structured output mode forced schema butchering that produced terrible website quality.

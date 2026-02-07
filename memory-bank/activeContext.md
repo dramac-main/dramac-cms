@@ -1,6 +1,33 @@
 # Active Context
 
-## Latest Session Update (OpenAI Quality Fix - strictJsonSchema: false - February 2026)
+## Latest Session Update (Reverted to Anthropic Claude - February 2026)
+
+### REVERTED TO ANTHROPIC CLAUDE ✅
+
+**Context:**
+After three failed attempts to make OpenAI GPT-4o work for website generation:
+1. Commit 874d169: Removed `.optional()` from schemas → runtime errors with `z.record()`
+2. Commit d594983: Butchered schemas (key-value arrays, removed constraints) → terrible quality
+3. Commit 227a597: `strictJsonSchema: false` + natural schemas → even worse quality
+
+**Decision:** OpenAI is fundamentally unsuited for this complex creative structured output task. Switched back to Claude.
+
+**Changes (commit d6b3ce2):**
+- `DEFAULT_PROVIDER` set to `"anthropic"` in `ai-provider.ts`
+- Removed `generateObject` wrapper (not needed for Claude)
+- Restored direct `import { generateObject } from "ai"` in all 8 files
+- Natural Zod schemas preserved (Claude handles them natively)
+- OpenAI config kept as fallback option
+- Zero TypeScript errors
+
+**Current State:**
+- All files use `getAIModel(task)` which returns `anthropic("claude-sonnet-4-20250514")`
+- Natural schemas with `z.record()`, `.optional()`, `.min()/.max()`, `z.unknown()` all work with Claude
+- Website generation should be back to original quality level
+
+---
+
+## Previous Session Update (OpenAI Quality Fix - strictJsonSchema: false - February 2026)
 
 ### CRITICAL QUALITY FIX: OpenAI Strict JSON Schema Disabled ✅
 
