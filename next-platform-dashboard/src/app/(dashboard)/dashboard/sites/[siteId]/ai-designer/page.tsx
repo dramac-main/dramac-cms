@@ -328,12 +328,17 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
     }
 
     setIsSaving(true);
+    let savedCount = 0;
+    let errorCount = 0;
 
     try {
       // Save each page
       for (const page of output.pages) {
         const studioData = studioDataMap.get(page.slug);
-        if (!studioData) continue;
+        if (!studioData) {
+          console.warn(`[AI Designer] No studio data for page ${page.slug}`);
+          continue;
+        }
 
         // Create page in database
         const createResponse = await fetch("/api/pages", {
@@ -341,19 +346,25 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             siteId,
-            name: page.title,
+            name: page.name || page.title,
             slug: page.slug,
             isHomepage: page.isHomepage,
+            description: page.description,
           }),
         });
 
         if (!createResponse.ok) {
-          // Page might already exist, try to find it
-          console.log(`Page ${page.slug} might already exist, continuing...`);
+          const errorData = await createResponse.json().catch(() => ({}));
+          console.error(`[AI Designer] Failed to create page ${page.slug}:`, errorData);
+          errorCount++;
           continue;
         }
 
-        const { pageId } = await createResponse.json();
+        const { pageId, exists } = await createResponse.json();
+        
+        if (exists) {
+          console.log(`[AI Designer] Page ${page.slug} already exists, updating content...`);
+        }
 
         // Save page content
         const contentResponse = await fetch(`/api/pages/${pageId}/content`, {
@@ -363,17 +374,27 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
         });
 
         if (!contentResponse.ok) {
-          console.error(`Failed to save content for page ${page.slug}`);
+          const errorData = await contentResponse.json().catch(() => ({}));
+          console.error(`[AI Designer] Failed to save content for page ${page.slug}:`, errorData);
+          errorCount++;
+        } else {
+          savedCount++;
+          console.log(`[AI Designer] Saved page ${page.slug} (${pageId})`);
         }
       }
 
-      toast.success("Website saved successfully!");
-      
-      // Redirect to the page builder
-      router.push(`/studio/${siteId}/home`);
+      if (savedCount > 0) {
+        toast.success(`Website saved! ${savedCount} pages created successfully.`);
+        // Redirect to the studio for the homepage
+        router.push(`/dashboard/sites/${siteId}/pages`);
+      } else if (errorCount > 0) {
+        toast.error(`Failed to save pages. ${errorCount} errors occurred.`);
+      } else {
+        toast.warning("No pages were saved. Please try generating again.");
+      }
     } catch (error) {
       console.error("[AI Designer] Save error:", error);
-      toast.error("Failed to save website");
+      toast.error("Failed to save website. Please try again.");
     } finally {
       setIsSaving(false);
     }
