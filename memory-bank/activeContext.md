@@ -1,6 +1,45 @@
 # Active Context
 
-## Latest Session Update (AI Website Designer Quality Overhaul — February 2026)
+## Latest Session Update (Booking Public Data Fix — February 2026)
+
+### BOOKING MODULE: 500 ERRORS FIXED + DEMO DATA ELIMINATED ON LIVE SITES ✅
+
+**Problem:**
+- Module components on published sites were showing mock/demo data instead of real database data
+- Console errors: `[Booking] Error fetching slots: Error: An error occurred in the Server Components render`
+- Booking creation failing with same 500 Server Components render error
+
+**Root Cause:**
+`getModuleClient()` in `booking-actions.ts` (line 46) used `createClient()` from `@/lib/supabase/server` which creates a **cookie-authenticated** client. Anonymous visitors on public sites have NO auth cookies → RLS blocks ALL queries → 500 errors → components fall back to demo/mock data.
+
+**Solution — Two-Part Fix:**
+
+#### Part 1: New Public Server Actions (bypass RLS for public reads)
+- **NEW FILE**: `src/modules/booking/actions/public-booking-actions.ts` (404 lines)
+  - Uses `createAdminClient()` (service role key) instead of `createClient()`
+  - 5 public functions: `getPublicServices()`, `getPublicStaff()`, `getPublicSettings()`, `getPublicAvailableSlots()`, `createPublicAppointment()`
+  - All functions return safe defaults (empty arrays, null) instead of throwing — prevents 500 errors
+  - `createPublicAppointment()` includes conflict checking and service verification
+
+#### Part 2: Fixed All 5 Hooks + 5 Components
+- **5 Hooks Updated**: All now import from `public-booking-actions` instead of `booking-actions`
+  - `useBookingServices` → `getPublicServices`
+  - `useBookingStaff` → `getPublicStaff`
+  - `useBookingSettings` → `getPublicSettings`
+  - `useBookingSlots` → `getPublicAvailableSlots`
+  - `useCreateBooking` → `createPublicAppointment` (with camelCase→snakeCase field translation)
+
+- **5 Components Fixed**: Demo data fallback now ONLY triggers when `!siteId` (Studio editor)
+  - Before: `if (!siteId || realData.length === 0) → DEMO_DATA` (showed demo on live sites when DB returned empty)
+  - After: `if (!siteId) → DEMO_DATA` (only in Studio editor; live sites always show real data)
+  - Components: ServiceSelectorBlock, StaffGridBlock, BookingWidgetBlock, BookingCalendarBlock, BookingFormBlock
+
+### Commit
+- `a53c137` — "fix: booking module uses admin client for public pages, eliminates demo data on live sites"
+
+---
+
+## Previous Session (AI Website Designer Quality Overhaul — February 2026)
 
 ### COMPREHENSIVE QUALITY OVERHAUL — 6 CRITICAL ISSUES FIXED + 3 NEW SYSTEMS ✅
 

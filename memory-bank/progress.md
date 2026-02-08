@@ -1,7 +1,41 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅**
+
+---
+
+## 🔧 BOOKING MODULE PUBLIC DATA FIX (February 2026) ✅
+
+### What
+Fixed 500 server errors and demo/mock data appearing on published sites. Root cause: cookie-authenticated Supabase client fails for anonymous visitors → RLS blocks → 500 errors → fallback to demo data.
+
+### New Files Created
+| File | Purpose | Size |
+|------|---------|------|
+| `actions/public-booking-actions.ts` | Public server actions using admin client (bypasses RLS) | 404 lines |
+
+### Files Modified (10)
+| File | Change |
+|------|--------|
+| `hooks/useBookingServices.ts` | Import `getPublicServices` from public-booking-actions |
+| `hooks/useBookingStaff.ts` | Import `getPublicStaff` from public-booking-actions |
+| `hooks/useBookingSlots.ts` | Import `getPublicAvailableSlots` from public-booking-actions |
+| `hooks/useBookingSettings.ts` | Import `getPublicSettings` from public-booking-actions |
+| `hooks/useCreateBooking.ts` | Import `createPublicAppointment` + field translation |
+| `components/ServiceSelectorBlock.tsx` | Demo data only when `!siteId` |
+| `components/StaffGridBlock.tsx` | Demo data only when `!siteId` |
+| `components/BookingWidgetBlock.tsx` | Demo data only when `!siteId` for services, staff, slots |
+| `components/BookingCalendarBlock.tsx` | Demo slots only when `!siteId` |
+| `components/BookingFormBlock.tsx` | Fake delay only when `!siteId` |
+
+### Key Pattern
+- **Dashboard/Admin**: Uses `booking-actions.ts` with `createClient()` (cookie-auth) — requires authenticated user
+- **Public/Visitor**: Uses `public-booking-actions.ts` with `createAdminClient()` (service role) — works for anonymous visitors
+- **Demo Data**: Only shows when `!siteId` (Studio editor preview mode), never on published sites
+
+### Commit
+- `a53c137` — "fix: booking module uses admin client for public pages, eliminates demo data on live sites"
 
 ---
 
