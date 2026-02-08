@@ -1,52 +1,73 @@
 # Active Context
 
-## Latest Session Update (Booking Module Studio Components Rebuilt — February 2026)
+## Latest Session Update (Real Data Integration — All Modules — February 2026)
 
-### ALL 6 BOOKING COMPONENTS REBUILT WITH 50+ PROPERTIES + INFRASTRUCTURE FIXES ✅
+### ALL MODULE COMPONENTS WIRED TO REAL DATABASE DATA ✅
 
 **Context:**
-User tested Studio editor and found booking module components broken:
-1. BookingCalendarBlock: "Custom field type 'booking:service-selector' not found"
-2. BookingFormBlock: Same custom field errors for staff-selector
-3. BookingEmbedBlock: Just placeholder text, no real functionality
-4. All components had only 6-10 customization properties (far below 50+ target)
+User reported seeing mock/demo data in site components: "I can see some module components on the sites But I see mock data in them and that's upsetting! I want every module component to be showing/pulling real data from the module/dashboard itself!"
 
-**Root Causes Found & Fixed:**
+**What was done:**
 
-#### Bug 1: Double-Prefix Bug in module-loader.ts
-Booking module exports `studioFields` with already-prefixed keys (`"booking:service-selector"`), but module loader added ANOTHER prefix creating `"booking:booking:service-selector"` → custom field lookup failed.
-**Fix:** Check `fieldType.startsWith(\`${moduleInfo.slug}:\`)` before adding prefix.
+#### 1. Architecture Fix: siteId Injection in StudioRenderer
+Modified `renderer.tsx` to inject `siteId` into every component's props automatically:
+- `ComponentRenderer` builds `injectedProps = { ...component.props, siteId: component.props?.siteId || siteId }`
+- Threaded through all recursive rendering paths (ComponentRenderer, ZoneRenderer, root, zones)
 
-#### Bug 2: Built-In Registration Missing Custom Fields
-`registerBuiltInModuleComponents()` in registry/index.ts only registered component definitions, NOT custom field renderers from `studioFields`.
-**Fix:** Now registers BOTH components AND custom field renderers.
+#### 2. Booking Module — New Data Layer (7 new files)
+Created 5 hooks + 1 context following the ecommerce pattern:
+- `hooks/useBookingServices.ts` — Fetch real services (is_active + allow_online_booking)
+- `hooks/useBookingStaff.ts` — Fetch real staff (is_active + accept_bookings)
+- `hooks/useBookingSlots.ts` — Fetch real time slots for service/date/staff
+- `hooks/useBookingSettings.ts` — Fetch booking module settings
+- `hooks/useCreateBooking.ts` — Create real appointments in database
+- `hooks/index.ts` — Re-exports all hooks
+- `context/booking-storefront-context.tsx` — BookingStorefrontProvider with settings/currency/timezone
 
-#### All 6 Components Rebuilt with 50+ Properties Each
-| Component | Fields | Groups | Key Features |
-|-----------|--------|--------|-------------|
-| BookingCalendarBlock | 68 | 9 | Interactive calendar, time slots, month navigation |
-| ServiceSelectorBlock | 80 | 7 | Grid/list/cards, search, category filters, ratings |
-| BookingFormBlock | 86 | 9 | Multi-field form, validation, floating labels |
-| BookingWidgetBlock | 96 | 10 | 5-step wizard, step indicators, booking summary |
-| BookingEmbedBlock | 70 | 8 | iframe/popup/inline, preview/code tabs, copy-to-clipboard |
-| StaffGridBlock | 88 | 7 | Staff cards, ratings, specialties, availability dots |
+#### 3. All 6 Booking Components Wired to Real Data
+| Component | Hooks Used | Behavior |
+|-----------|-----------|----------|
+| ServiceSelectorBlock | useBookingServices | Shows real services; demo fallback in editor |
+| BookingCalendarBlock | useBookingSlots | Shows real available slots; demo fallback |
+| BookingFormBlock | useCreateBooking | Creates real appointments in DB |
+| StaffGridBlock | useBookingStaff | Shows real staff with avatars; demo fallback |
+| BookingWidgetBlock | ALL 4 hooks | Full 5-step wizard with real data + real booking |
+| BookingEmbedBlock | N/A | Already uses siteId for embed URL (no demo data) |
 
-All components render demo data out of the box — no site connection required for Studio preview.
+#### 4. Ecommerce Module — 2 Fixes
+- `product-grid-block.tsx` — Replaced raw `fetch()` with `useStorefrontProducts` hook
+- `SearchBarBlock.tsx` — Trending searches now from real categories (useStorefrontCategories), configurable via Studio props
 
-### Files Modified (8 files, 3946 insertions, 2314 deletions)
+#### 5. Full Module Audit Results
+| Module | Studio Components | Data Status |
+|--------|:-:|:-:|
+| Booking | 6 | ✅ All wired to real data |
+| Ecommerce | 61 (38 desktop + 23 mobile) | ✅ All wired (hooks + StorefrontProvider) |
+| CRM | 0 (placeholder) | 🔴 No studio components yet |
+| Automation | 0 (placeholder) | 🔴 No studio components yet |
+| Social Media | 0 (placeholder) | 🔴 No studio components yet |
+
+### Files Modified/Created (17 files, 832 insertions, 127 deletions)
 | File | Changes |
 |------|---------|
-| `module-loader.ts` | Double-prefix fix for custom field registration |
-| `registry/index.ts` | Built-in module registration now includes custom fields |
-| `BookingCalendarBlock.tsx` | Complete rebuild — 68 fields |
-| `ServiceSelectorBlock.tsx` | Complete rebuild — 80 fields |
-| `BookingFormBlock.tsx` | Complete rebuild — 86 fields |
-| `BookingWidgetBlock.tsx` | Complete rebuild — 96 fields |
-| `BookingEmbedBlock.tsx` | Complete rebuild — 70 fields |
-| `StaffGridBlock.tsx` | Complete rebuild — 88 fields |
+| `renderer.tsx` | siteId injection into all component props |
+| `booking/hooks/useBookingServices.ts` | NEW — service fetching hook |
+| `booking/hooks/useBookingStaff.ts` | NEW — staff fetching hook |
+| `booking/hooks/useBookingSlots.ts` | NEW — slot fetching hook |
+| `booking/hooks/useBookingSettings.ts` | NEW — settings hook |
+| `booking/hooks/useCreateBooking.ts` | NEW — appointment creation hook |
+| `booking/hooks/index.ts` | NEW — re-exports |
+| `booking/context/booking-storefront-context.tsx` | NEW — storefront provider |
+| `ServiceSelectorBlock.tsx` | Wired to useBookingServices |
+| `BookingCalendarBlock.tsx` | Wired to useBookingSlots |
+| `BookingFormBlock.tsx` | Wired to useCreateBooking |
+| `StaffGridBlock.tsx` | Wired to useBookingStaff |
+| `BookingWidgetBlock.tsx` | Wired to all 4 hooks |
+| `product-grid-block.tsx` | useStorefrontProducts hook |
+| `SearchBarBlock.tsx` | useStorefrontCategories + configurable trending |
 
 ### Commit
-- `b645b6b` — "Rebuild all 6 booking components with 50+ customization properties each"
+- `7921a4b` — "feat: wire all module components to real data — eliminate demo/mock data"
 
 ---
 
