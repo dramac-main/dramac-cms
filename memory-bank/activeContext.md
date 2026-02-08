@@ -1,6 +1,93 @@
 # Active Context
 
-## Latest Session Update (Real Data Integration — All Modules — February 2026)
+## Latest Session Update (AI Website Designer Quality Overhaul — February 2026)
+
+### COMPREHENSIVE QUALITY OVERHAUL — 6 CRITICAL ISSUES FIXED + 3 NEW SYSTEMS ✅
+
+**Context:**
+Deep scan of the entire AI Website Designer system revealed 6 interconnected quality issues:
+1. Module components don't respect branding and fill the whole screen
+2. Footer links barely visible in light/dark mode
+3. Need intelligent color palettes, contrast checking, imperfection detection
+4. No booking widget in hero sections for booking-oriented businesses
+5. AI generates good cards on some sites but terrible on others
+6. Every AI-generated website looks the same — no variety
+
+**Root Causes Found:**
+- Module components (BookingWidget, ProductGrid, etc.) had ZERO prop transformation in converter.ts — fell straight through to `return transformed`
+- StudioRenderer rendered components flat with NO containment wrapper in renderer.tsx
+- Converter hardcoded footer to `backgroundColor: "#111827"`, `linkColor: "#9ca3af"` regardless of site theme
+- FooterRender used `textColor` with `opacity-75` for links instead of dedicated `linkColor` props
+- NewsletterRender had NO outer `<section>` wrapper — no max-width, no padding, stretched edge-to-edge
+- Only 8 blueprints × 2 palettes with `enableDesignInspiration: false` → every site looked the same
+- No booking widget component defined in any hero section blueprint
+
+### What Was Done:
+
+#### NEW FILES CREATED (3 new intelligent systems)
+
+**1. color-intelligence.ts** (1300+ lines)
+- 60+ curated, industry-specific color palettes organized by mood
+- 20 mood categories: elegant, bold, minimal, warm, cool, playful, corporate, luxury, natural, tech, creative, energetic, calm, dark, vibrant, earthy, pastel, monochrome, retro, futuristic
+- Industry coverage: 40+ industries with specific palettes
+- `checkContrast()` — WCAG 2.1 contrast ratio checker
+- `ensureReadable()` — auto-adjust text for readability
+- `getRandomPalette()` — pick industry-appropriate palette with variety
+- `generateHarmonies()` — color theory harmonies
+- `auditPalette()` — validate entire palette for issues
+
+**2. variety-engine.ts** (472 lines)
+- 8 unique design personalities: modern-clean, bold-editorial, soft-elegant, minimal-stark, dark-immersive, split-dynamic, playful-rounded, asymmetric-creative
+- Each personality defines: density, heroStyle (8 types), cardStyle (6 types), backgroundPattern (7 types), animationStyle (5 types), borderRadius, shadowStyle, typographyScale, sectionDivider
+- Industry→personality mapping for 25+ industries
+- `getDesignPersonality()` — randomly selects from industry-appropriate personalities
+- `formatPersonalityForAI()` — injects personality context into AI prompts
+- `getVariantForComponent()` — provides unique section variants
+- `getSectionBackgrounds()` — alternating section backgrounds for visual rhythm
+
+**3. design-auditor.ts** (592 lines)
+- Post-generation quality auditor that catches and auto-fixes imperfections
+- 10 audit categories: contrast, spacing, typography, containment, branding, footer, module, content, responsive, variety
+- `auditWebsite()` — scans all components, returns issues with auto-fix data
+- Auto-fixes: contrast failures, missing containment, default blue leaking, footer link visibility, newsletter theming, module component theming
+- Score system: 0-100 quality score per page
+
+#### FILES MODIFIED (5 existing files)
+
+**converter.ts** — 2 critical fixes:
+- Added MODULE_TYPES handler block for all 10 module types (BookingServiceSelector, BookingWidget, BookingCalendar, BookingForm, BookingEmbed, BookingStaffGrid, ProductGrid, CartItems, CartSummary, CheckoutForm) — injects containment (maxWidth, containerClassName), brand colors (primaryColor, accentColor, textColor, cardBackgroundColor), section padding, and border radius
+- Footer handler now uses `isDarkTheme()` and `palette()` instead of hardcoded dark colors: `linkColor` defaults to `palette().textSecondary` (light) or `"#94a3b8"` (dark), `linkHoverColor` to `themePrimary()` (light) or `"#ffffff"` (dark)
+
+**renders.tsx** — 6 precision fixes:
+- FooterRender: Added `linkColor` and `linkHoverColor` as proper props with defaults
+- Footer column links: Changed from `textColor` + `opacity-75 hover:opacity-100` to dedicated `linkColor` with `onMouseEnter/onMouseLeave` hover handlers
+- Footer bottom/legal links: Same linkColor/linkHoverColor treatment
+- Footer newsletter border: Changed from hardcoded `border-white/10` to theme-aware `borderColor: textColor + "15"`
+- Footer bottom border: Same theme-aware treatment
+- NewsletterRender: Complete rewrite — now wrapped in `<section>` with `py-12 md:py-16 px-4`, `max-w-2xl mx-auto`, theme-aware input styling with dark mode detection, both card and inline variants properly contained
+
+**renderer.tsx** — Module component containment:
+- Added `MODULE_COMPONENT_TYPES` set (10 types)
+- `ComponentRenderer` now detects module components and wraps them in `<section>` with `max-w-screen-xl mx-auto` and padding
+- Regular components render unchanged
+
+**engine.ts** — Pipeline integration:
+- Imports and calls `getDesignPersonality()` + `formatPersonalityForAI()` from variety-engine
+- Personality context injected into `createArchitecture()` prompt
+- Imports and calls `auditWebsite()` from design-auditor after refinement step
+- Quality audit auto-applies fixes (iterates issues where `autoFixed: true`, applies `fixedValue` to component `props[field]`)
+
+**industry-blueprints.ts** — BookingWidget added to 3 blueprints:
+- Restaurant: BookingWidget with `variant: "inline"`, `showDate/Time/Guests: true` after hero on homepage
+- Healthcare: BookingWidget with `showServices/Staff/Date: true` after hero on homepage
+- Fitness/Wellness: BookingWidget with `showServices: true` after hero on homepage
+
+### Commit
+- `5a16688` — "feat(ai-designer): comprehensive quality overhaul — fix module containment, footer visibility, newsletter wrapping, add variety engine, quality auditor, color intelligence, and booking widgets"
+
+---
+
+## Previous Session Update (Real Data Integration — All Modules — February 2026)
 
 ### ALL MODULE COMPONENTS WIRED TO REAL DATABASE DATA ✅
 
