@@ -1,6 +1,68 @@
 # Active Context
 
-## Latest Session Update (Design Token Theming & Dark Mode Overhaul - February 2026)
+## Latest Session Update (Dark Mode Hardcoded Colors, Invisible Buttons, Module Fix — February 2026)
+
+### COMPREHENSIVE DARK MODE, INVISIBLE BUTTONS, MODULE INTEGRATION FIX ✅
+
+**Context:**
+User tested the Besto barbershop website AGAIN after Session 2 fixes and found remaining issues:
+1. **Invisible buttons** — CTA buttonColor defaulted to `#ffffff` (white) creating invisible buttons
+2. **Footer/Gallery/About/Contact pages** — Still had light/dark issues, blue titles, messed up Team cards, wrong ContactForm styling
+3. **Homepage cards** — Wrong spacing/alignment, blue titles appearing
+4. **No gradient effects** — User wanted modern gradients
+5. **Module components not working** — `/book` page showed only footer, `ServiceSelector` type mismatch with `BookingServiceSelector`
+
+**Root Causes Found:**
+1. **Invisible Buttons**: CTARender defaults `buttonColor = "#ffffff"` and `color: buttonTextColor || backgroundColor` — when both white, invisible. Converter DID set `themePrimary()` but render defaults still kicked in via hardcoded fallbacks.
+2. **~50+ Hardcoded Tailwind Classes**: renders.tsx had `bg-blue-600`, `hover:border-blue-500`, `bg-gray-100 hover:bg-gray-200`, `hover:bg-gray-50`, `focus:ring-blue-500`, `border-gray-300`, `bg-white` etc. ALL ignoring theme props.
+3. **Converter Empty Strings**: Features/Team/Testimonials/Gallery converter set `backgroundColor: ""` (empty) causing render defaults `#ffffff` to take effect on dark sites.
+4. **Module Type Mismatch**: `default-configs.ts` used `"ServiceSelector"` but booking studio exports `"BookingServiceSelector"`.
+5. **Empty Module Page Props**: `component-injector.ts` created module pages with `props: {}` and no Hero header.
+
+**What Was Fixed (4 files, 236 insertions, 74 deletions — commit `e13c67d`):**
+
+#### converter.ts — Dark Mode Defaults & Gradients
+- CTA: `buttonColor` always uses `themePrimary()` (never white). Added gradient bg support (backgroundGradient, From, To, Direction). Secondary button gets proper contrast colors. Badge uses `themePrimary()`.
+- Features: Dark theme → explicit `cardBackgroundColor: "#1e293b"`, `cardBorderColor: "#374151"`. Added `titleColor`, `subtitleColor`.
+- Team: Dark card backgrounds, `cardBorderColor`, `imageBorderColor: themePrimary()`. Changed default columns to 2.
+- Testimonials: Dark card backgrounds and border colors.
+- Gallery: Dark backgrounds, `titleColor`, `subtitleColor`. Changed columns to 4.
+- ContactForm: Added `inputBackgroundColor`, `inputBorderColor`, `inputTextColor`, `labelColor` for dark form fields. `buttonColor: themePrimary()`.
+- Stats: `valueColor: themePrimary()`, dark backgrounds.
+- FAQ, Pricing, Newsletter: Dark theme backgrounds and text colors.
+- Hero: Gradient background support for dark themes.
+- TypeMap: Added ALL module component type mappings. `ServiceSelector` → `BookingServiceSelector`.
+
+#### renders.tsx — Removed ~15 Hardcoded Light-Mode Issues
+- **ContactFormRender**: Removed `bg-blue-600` submit button → uses `buttonColor` prop via inline style. Added dark-mode detection from bg luminance. Passes theme-aware colors to FormFieldRender.
+- **CTARender**: Fixed invisible button — text color NEVER falls back to `backgroundColor`. Button glow uses `buttonColor` instead of `shadow-blue-500/50`. Hover glow uses dynamic color.
+- **FeaturesRender**: Removed `hover:border-blue-500`.
+- **TestimonialsRender**: Removed `hover:border-blue-500`.
+- **TeamRender**: Social buttons use `socialColor` alpha bg instead of `bg-gray-100 hover:bg-gray-200`.
+- **FAQRender**: Replaced `hover:bg-gray-50` with `hover:opacity-80`.
+- **FormFieldRender**: Removed `bg-white`/`bg-gray-100` from variants. Focus ring uses `focusBorderColor` prop with inline handlers instead of `focus:border-blue-500`.
+- **NewsletterRender**: Input border uses `buttonColor` alpha, no hardcoded `gray-300`/`blue-500`.
+- **PricingRender**: Non-popular card border uses `textColor` alpha. Removed `hover:bg-gray-50`.
+
+#### modules/default-configs.ts — Type Mismatch Fix
+- Changed `ServiceSelector` → `BookingServiceSelector` in both components array and pages list.
+
+#### modules/component-injector.ts — Module Pages Enhancement
+- Module pages now include a Hero section header for proper visual structure.
+- Added `getDefaultModuleComponentProps()` with sensible defaults for BookingCalendar, BookingServiceSelector, BookingForm, BookingWidget, ProductGrid.
+
+### Commits
+- `e13c67d` — "fix: comprehensive dark mode theming, invisible buttons, module integration & gradient support"
+
+### Key Architecture Notes
+- **Two-Layer Defense**: Converter sets explicit dark-mode props (e.g., `cardBackgroundColor: "#1e293b"`) AND render components now have removed hardcoded Tailwind → inline styles. The converter "overrides" render defaults.
+- **Luminance Detection in ContactForm**: Uses `parseInt(backgroundColor.replace('#','').substring(0,2), 16) < 100` for quick dark detection within the render component itself.
+- **Module Rendering**: Two paths exist — Path A (StudioRenderer → dynamic import from `@/modules/booking/studio`) works for built-in modules. Path B (ModuleInjector → DB `render_code`) is for custom modules. "No studio modules with render code" log is EXPECTED and harmless.
+- **CTA Gradient Default**: Converter now sets `backgroundGradient: true` by default for CTA sections, adding modern gradient look.
+
+---
+
+## Previous Session Update (Design Token Theming & Dark Mode Overhaul - February 2026)
 
 ### DESIGN TOKEN THEMING, DARK MODE, SPACING & MODULE INTEGRATION OVERHAUL ✅
 

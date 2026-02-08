@@ -110,8 +110,59 @@ export function initializeRegistry(): void {
   registerCoreComponents();
   registerPremiumComponents();
   
+  // Register module components as built-in fallbacks
+  // This ensures booking/ecommerce components always render on public sites
+  // even if site_module_installations has no rows for the site.
+  // When loadModuleComponents() runs later with actual module data, it will
+  // simply overwrite these entries (componentRegistry.register uses Map.set).
+  registerBuiltInModuleComponents();
+  
   initialized = true;
-  console.log("[Studio] Registry initialized with core and premium components");
+  console.log("[Studio] Registry initialized with core, premium, and built-in module components");
+}
+
+/**
+ * Register built-in module components (booking, ecommerce) as fallbacks.
+ * These render on public sites without requiring site_module_installations rows.
+ */
+function registerBuiltInModuleComponents(): void {
+  try {
+    // Booking module components
+    const bookingStudio = require("@/modules/booking/studio");
+    if (bookingStudio?.studioComponents) {
+      const { componentRegistry: registry } = require("./component-registry");
+      let count = 0;
+      for (const [_key, def] of Object.entries(bookingStudio.studioComponents)) {
+        const compDef = def as import("@/types/studio").ComponentDefinition;
+        if (compDef?.type && compDef?.render) {
+          registry.register(compDef, "module", "built-in-booking");
+          count++;
+        }
+      }
+      console.log(`[Studio] Registered ${count} booking module components as built-in`);
+    }
+  } catch (e) {
+    console.debug("[Studio] Booking module not available for built-in registration:", (e as Error).message);
+  }
+
+  try {
+    // E-commerce module components
+    const ecomStudio = require("@/modules/ecommerce/studio");
+    if (ecomStudio?.studioComponents) {
+      const { componentRegistry: registry } = require("./component-registry");
+      let count = 0;
+      for (const [_key, def] of Object.entries(ecomStudio.studioComponents)) {
+        const compDef = def as import("@/types/studio").ComponentDefinition;
+        if (compDef?.type && compDef?.render) {
+          registry.register(compDef, "module", "built-in-ecommerce");
+          count++;
+        }
+      }
+      console.log(`[Studio] Registered ${count} ecommerce module components as built-in`);
+    }
+  } catch (e) {
+    console.debug("[Studio] Ecommerce module not available for built-in registration:", (e as Error).message);
+  }
 }
 
 /**

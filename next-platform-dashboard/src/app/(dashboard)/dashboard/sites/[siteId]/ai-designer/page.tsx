@@ -407,6 +407,35 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       }
 
       if (savedCount > 0) {
+        // Auto-install modules based on component types used in the generated pages
+        try {
+          const allComponentTypes = new Set<string>();
+          for (const [, pageData] of studioDataMap) {
+            const components = (pageData as any)?.components;
+            if (components && typeof components === "object") {
+              for (const comp of Object.values(components)) {
+                const c = comp as any;
+                if (c?.type) allComponentTypes.add(c.type);
+              }
+            }
+          }
+          if (allComponentTypes.size > 0) {
+            const autoInstallRes = await fetch(`/api/sites/${siteId}/modules/auto-install`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ componentTypes: [...allComponentTypes] }),
+            });
+            if (autoInstallRes.ok) {
+              const { installed } = await autoInstallRes.json();
+              if (installed?.length > 0) {
+                console.log("[AI Designer] Auto-installed modules:", installed);
+              }
+            }
+          }
+        } catch (moduleErr) {
+          console.error("[AI Designer] Module auto-install error (non-fatal):", moduleErr);
+        }
+
         // Auto-publish the site so pages are immediately accessible
         try {
           const publishResponse = await fetch(`/api/sites/${siteId}/publish`, {

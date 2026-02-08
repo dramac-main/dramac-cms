@@ -35,6 +35,255 @@ export interface DesignTokens {
 /** Current design tokens for the active conversion — set per-conversion call */
 let activeDesignTokens: DesignTokens = {};
 
+// =============================================================================
+// PROFESSIONAL COLOR HARMONY SYSTEM
+// =============================================================================
+// Based on WCAG 2.1 guidelines, Material Design color system,
+// and proven color theory: complementary, analogous, split-complementary,
+// triadic, and monochromatic harmonies.
+// =============================================================================
+
+/** Parse hex color to RGB */
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  const clean = hex.replace("#", "");
+  const full = clean.length === 3
+    ? clean.split("").map(c => c + c).join("")
+    : clean;
+  return {
+    r: parseInt(full.slice(0, 2), 16),
+    g: parseInt(full.slice(2, 4), 16),
+    b: parseInt(full.slice(4, 6), 16),
+  };
+}
+
+/** Convert RGB to hex */
+function rgbToHex(r: number, g: number, b: number): string {
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+  return `#${clamp(r).toString(16).padStart(2, "0")}${clamp(g).toString(16).padStart(2, "0")}${clamp(b).toString(16).padStart(2, "0")}`;
+}
+
+/** Convert RGB to HSL */
+function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return { h: 0, s: 0, l };
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h = 0;
+  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  else if (max === g) h = ((b - r) / d + 2) / 6;
+  else h = ((r - g) / d + 4) / 6;
+  return { h: h * 360, s, l };
+}
+
+/** Convert HSL to RGB */
+function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
+  h = ((h % 360) + 360) % 360;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; }
+  else if (h < 120) { r = x; g = c; }
+  else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; }
+  else if (h < 300) { r = x; b = c; }
+  else { r = c; b = x; }
+  return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255) };
+}
+
+/**
+ * Calculate WCAG 2.1 contrast ratio between two colors
+ * Returns ratio value (1:1 to 21:1). Minimum 4.5:1 for normal text, 3:1 for large.
+ */
+function getContrastRatio(hex1: string, hex2: string): number {
+  const relativeLuminance = (hex: string) => {
+    const { r, g, b } = hexToRgb(hex);
+    const [rs, gs, bs] = [r / 255, g / 255, b / 255].map(c =>
+      c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+    );
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+  };
+  const l1 = relativeLuminance(hex1);
+  const l2 = relativeLuminance(hex2);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/**
+ * Ensure text color has sufficient contrast against background
+ * Adjusts the text color to meet WCAG AA (4.5:1) if needed
+ */
+function ensureContrast(textHex: string, bgHex: string, minRatio = 4.5): string {
+  const ratio = getContrastRatio(textHex, bgHex);
+  if (ratio >= minRatio) return textHex;
+  // If contrast is insufficient, pick white or dark text
+  const whiteRatio = getContrastRatio("#ffffff", bgHex);
+  const darkRatio = getContrastRatio("#111827", bgHex);
+  return whiteRatio > darkRatio ? "#ffffff" : "#111827";
+}
+
+/** Lighten a hex color by a percentage (0-100) */
+function lightenColor(hex: string, amount: number): string {
+  const { h, s, l } = rgbToHsl(...Object.values(hexToRgb(hex)) as [number, number, number]);
+  const newL = Math.min(1, l + (amount / 100) * (1 - l));
+  const rgb = hslToRgb(h, s, newL);
+  return rgbToHex(rgb.r, rgb.g, rgb.b);
+}
+
+/** Darken a hex color by a percentage (0-100) */
+function darkenColor(hex: string, amount: number): string {
+  const { h, s, l } = rgbToHsl(...Object.values(hexToRgb(hex)) as [number, number, number]);
+  const newL = Math.max(0, l - (amount / 100) * l);
+  const rgb = hslToRgb(h, s, newL);
+  return rgbToHex(rgb.r, rgb.g, rgb.b);
+}
+
+/** Add alpha (transparency) to a hex color, returns rgba string */
+function withAlpha(hex: string, alpha: number): string {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/**
+ * Generate a complete, harmonious color palette from a primary color.
+ * This ensures ALL components look professional together.
+ * 
+ * Produces colors for:
+ * - Cards, borders, inputs (surface variants)
+ * - Hover states, focus rings, shadows
+ * - Text hierarchy (heading, body, muted)
+ * - Button variants (primary, secondary, outline)
+ * - Gradients
+ */
+interface ColorPalette {
+  // Surfaces
+  cardBg: string;
+  cardBorder: string;
+  cardHoverBorder: string;
+  inputBg: string;
+  inputBorder: string;
+  inputFocusBorder: string;
+  surfaceElevated: string;
+  surfaceOverlay: string;
+  // Text hierarchy
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  textOnPrimary: string;
+  textOnDark: string;
+  // Accent & interactive
+  primary: string;
+  primaryHover: string;
+  primaryMuted: string;  // 10-15% opacity for backgrounds
+  secondary: string;
+  accent: string;
+  // Borders & dividers
+  borderDefault: string;
+  borderStrong: string;
+  divider: string;
+  // Focus & feedback
+  focusRing: string;
+  shadowColor: string;
+  // Gradients
+  gradientFrom: string;
+  gradientTo: string;
+}
+
+function generateColorPalette(tokens: DesignTokens): ColorPalette {
+  const primary = tokens.primaryColor || "#3b82f6";
+  const accent = tokens.accentColor || tokens.secondaryColor || lightenColor(primary, 20);
+  const bg = tokens.backgroundColor || "#ffffff";
+  const text = tokens.textColor || "#111827";
+  const dark = isDarkTheme();
+
+  if (dark) {
+    // === DARK THEME PALETTE ===
+    // Industry-proven dark mode colors (Material Design 3 / Tailwind dark patterns)
+    return {
+      // Surfaces — layered dark (elevated surfaces get lighter)
+      cardBg: "#1e293b",          // slate-800
+      cardBorder: "#334155",       // slate-700
+      cardHoverBorder: lightenColor(primary, 15),
+      inputBg: "#1e293b",          // slightly raised
+      inputBorder: "#475569",      // slate-600
+      inputFocusBorder: primary,
+      surfaceElevated: "#1e293b",
+      surfaceOverlay: "rgba(0,0,0,0.6)",
+      // Text — high contrast for readability
+      textPrimary: "#f8fafc",      // slate-50
+      textSecondary: "#cbd5e1",    // slate-300
+      textMuted: "#94a3b8",        // slate-400
+      textOnPrimary: ensureContrast("#ffffff", primary),
+      textOnDark: "#f8fafc",
+      // Accent
+      primary,
+      primaryHover: lightenColor(primary, 15),
+      primaryMuted: withAlpha(primary, 0.15),
+      secondary: accent,
+      accent,
+      // Borders
+      borderDefault: "#334155",
+      borderStrong: "#475569",
+      divider: "#1e293b",
+      // Focus
+      focusRing: withAlpha(primary, 0.5),
+      shadowColor: "rgba(0,0,0,0.4)",
+      // Gradients
+      gradientFrom: bg || "#0f172a",
+      gradientTo: "#1e293b",
+    };
+  } else {
+    // === LIGHT THEME PALETTE ===
+    return {
+      // Surfaces — clean whites with subtle elevation
+      cardBg: "#ffffff",
+      cardBorder: "#e2e8f0",       // slate-200
+      cardHoverBorder: lightenColor(primary, 30),
+      inputBg: "#ffffff",
+      inputBorder: "#cbd5e1",      // slate-300
+      inputFocusBorder: primary,
+      surfaceElevated: "#ffffff",
+      surfaceOverlay: "rgba(0,0,0,0.5)",
+      // Text
+      textPrimary: text || "#0f172a",
+      textSecondary: "#475569",    // slate-600
+      textMuted: "#94a3b8",        // slate-400
+      textOnPrimary: ensureContrast("#ffffff", primary),
+      textOnDark: "#ffffff",
+      // Accent
+      primary,
+      primaryHover: darkenColor(primary, 12),
+      primaryMuted: withAlpha(primary, 0.08),
+      secondary: accent,
+      accent,
+      // Borders
+      borderDefault: "#e2e8f0",
+      borderStrong: "#cbd5e1",
+      divider: "#f1f5f9",
+      // Focus
+      focusRing: withAlpha(primary, 0.3),
+      shadowColor: "rgba(0,0,0,0.08)",
+      // Gradients
+      gradientFrom: "#ffffff",
+      gradientTo: "#f8fafc",
+    };
+  }
+}
+
+/** Cached palette — regenerated when design tokens change */
+let cachedPalette: ColorPalette | null = null;
+
+/** Get the current color palette (generates if needed) */
+function palette(): ColorPalette {
+  if (!cachedPalette) {
+    cachedPalette = generateColorPalette(activeDesignTokens);
+  }
+  return cachedPalette;
+}
+
 /** Get the themed primary color, falling back to a sensible neutral if no tokens */
 function themePrimary(): string {
   return activeDesignTokens.primaryColor || "#3b82f6";
@@ -100,6 +349,7 @@ export function setGeneratedPageSlugs(slugs: string[]): void {
  */
 export function setDesignTokens(tokens: DesignTokens): void {
   activeDesignTokens = tokens;
+  cachedPalette = null; // Regenerate palette for new tokens
 }
 
 /**
@@ -544,20 +794,20 @@ function transformPropsForStudio(
       variant: props.variant || "cards",
       columns: props.columns || 3,
       iconStyle: props.iconStyle || "emoji", // Use emoji by default — they render everywhere
-      // Card styling — dark theme needs visible card backgrounds
+      // Card styling — use palette for consistent theming
       showBorder: props.showBorder ?? true,
       showShadow: props.showShadow ?? !isDarkTheme(),
-      cardBackgroundColor: props.cardBackgroundColor || (isDarkTheme() ? "#1e293b" : "#ffffff"),
-      cardBorderColor: props.cardBorderColor || (isDarkTheme() ? "#374151" : "#e5e7eb"),
+      cardBackgroundColor: props.cardBackgroundColor || palette().cardBg,
+      cardBorderColor: props.cardBorderColor || palette().cardBorder,
       cardBorderRadius: props.cardBorderRadius || "lg",
       cardPadding: props.cardPadding || "lg",
       hoverEffect: props.hoverEffect || "lift",
       gap: props.gap || "md",
       // Section background — must match site theme
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
-      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
-      titleColor: props.titleColor || (isDarkTheme() ? "#ffffff" : ""),
-      subtitleColor: props.subtitleColor || (isDarkTheme() ? themePrimary() : ""),
+      textColor: props.textColor || palette().textPrimary,
+      titleColor: props.titleColor || palette().textPrimary,
+      subtitleColor: props.subtitleColor || (isDarkTheme() ? palette().accent : ""),
       accentColor: props.accentColor || themePrimary(),
     };
   }
@@ -641,13 +891,13 @@ function transformPropsForStudio(
       ratingColor: props.ratingColor || "#f59e0b",
       // Quote icon
       showQuoteIcon: props.showQuoteIcon ?? true,
-      // Card styling — dark theme needs visible card backgrounds
-      cardBackgroundColor: props.cardBackgroundColor || (isDarkTheme() ? "#1e293b" : ""),
-      cardBorderColor: props.cardBorderColor || (isDarkTheme() ? "#374151" : ""),
+      // Card styling — use palette for harmonious colors
+      cardBackgroundColor: props.cardBackgroundColor || palette().cardBg,
+      cardBorderColor: props.cardBorderColor || palette().cardBorder,
       cardBorderRadius: props.cardBorderRadius || "lg",
       // Background — must match site theme
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
-      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      textColor: props.textColor || palette().textPrimary,
       accentColor: props.accentColor || themePrimary(),
     };
   }
@@ -679,11 +929,11 @@ function transformPropsForStudio(
       // Image
       imageShape: props.imageShape || "circle",
       imageBorderColor: props.imageBorderColor || themePrimary(),
-      // Styling — dark theme needs visible card backgrounds
+      // Styling — use palette for harmonious colors
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
-      cardBackgroundColor: props.cardBackgroundColor || (isDarkTheme() ? "#1e293b" : ""),
-      cardBorderColor: props.cardBorderColor || (isDarkTheme() ? "#374151" : ""),
-      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      cardBackgroundColor: props.cardBackgroundColor || palette().cardBg,
+      cardBorderColor: props.cardBorderColor || palette().cardBorder,
+      textColor: props.textColor || palette().textPrimary,
       accentColor: props.accentColor || themePrimary(),
     };
   }
@@ -697,16 +947,16 @@ function transformPropsForStudio(
       submitText: props.submitText || props.submitButtonText || props.buttonText || "Send Message",
       successMessage: props.successMessage || "Thank you for your message!",
       // Form styling to match site theme
-      backgroundColor: props.backgroundColor || (isDarkTheme() ? "#1e293b" : "#ffffff"),
-      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : "#1f2937"),
+      backgroundColor: props.backgroundColor || palette().cardBg,
+      textColor: props.textColor || palette().textPrimary,
       // CRITICAL: buttonColor must use brand primary, NOT default blue-600
       buttonColor: props.buttonColor || themePrimary(),
-      buttonTextColor: props.buttonTextColor || "#ffffff",
-      // Form field theming for dark mode
-      inputBackgroundColor: props.inputBackgroundColor || (isDarkTheme() ? "#374151" : "#ffffff"),
-      inputBorderColor: props.inputBorderColor || (isDarkTheme() ? "#4b5563" : "#d1d5db"),
-      inputTextColor: props.inputTextColor || (isDarkTheme() ? "#f9fafb" : "#1f2937"),
-      labelColor: props.labelColor || (isDarkTheme() ? "#e5e7eb" : "#374151"),
+      buttonTextColor: props.buttonTextColor || palette().textOnPrimary,
+      // Form field theming — uses harmonious palette
+      inputBackgroundColor: props.inputBackgroundColor || palette().inputBg,
+      inputBorderColor: props.inputBorderColor || palette().inputBorder,
+      inputTextColor: props.inputTextColor || palette().textPrimary,
+      labelColor: props.labelColor || palette().textSecondary,
     };
   }
 
@@ -742,10 +992,30 @@ function transformPropsForStudio(
       })) : [],
       
       // Contact info
-      showContactInfo: !!(props.email || props.contactEmail || props.phone || props.contactPhone || props.address || props.contactAddress),
-      contactEmail: props.email || props.contactEmail || "",
-      contactPhone: props.phone || props.contactPhone || "",
-      contactAddress: props.address || props.contactAddress || "",
+      // Contact info — filter out generic placeholders
+      showContactInfo: (() => {
+        const email = props.email || props.contactEmail || "";
+        const phone = props.phone || props.contactPhone || "";
+        const address = props.address || props.contactAddress || "";
+        // Don't show contact info if it's all placeholder data
+        const isPlaceholder = (v: unknown) => {
+          const s = String(v || "");
+          return !s || s.includes("555") || s.includes("hello@company") || s.includes("123 Main") || s.includes("info@company");
+        };
+        return !isPlaceholder(email) || !isPlaceholder(phone) || !isPlaceholder(address);
+      })(),
+      contactEmail: (() => {
+        const e = String(props.email || props.contactEmail || "");
+        return e.includes("hello@company") || e.includes("info@company") ? "" : e;
+      })(),
+      contactPhone: (() => {
+        const p = String(props.phone || props.contactPhone || "");
+        return p.includes("555") || p.includes("(555)") ? "" : p;
+      })(),
+      contactAddress: (() => {
+        const a = String(props.address || props.contactAddress || "");
+        return a.includes("123 Main") ? "" : a;
+      })(),
       
       // Copyright & Legal
       copyright: props.copyrightText || props.copyright || `© ${new Date().getFullYear()} All rights reserved.`,
@@ -784,7 +1054,7 @@ function transformPropsForStudio(
       })) : [],
       variant: props.variant || "accordion",
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
-      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      textColor: props.textColor || palette().textPrimary,
       accentColor: props.accentColor || themePrimary(),
     };
   }
@@ -815,7 +1085,7 @@ function transformPropsForStudio(
       valueSize: props.valueSize || "3xl",
       valueColor: props.valueColor || themePrimary(),
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
-      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      textColor: props.textColor || palette().textPrimary,
       accentColor: props.accentColor || themePrimary(),
     };
   }
@@ -852,8 +1122,8 @@ function transformPropsForStudio(
       variant: props.variant || "cards",
       columns: props.columns || 3,
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
-      cardBackgroundColor: props.cardBackgroundColor || (isDarkTheme() ? "#1e293b" : ""),
-      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      cardBackgroundColor: props.cardBackgroundColor || palette().cardBg,
+      textColor: props.textColor || palette().textPrimary,
       popularBorderColor: props.popularBorderColor || themePrimary(),
     };
   }
@@ -906,11 +1176,11 @@ function transformPropsForStudio(
       borderRadius: props.borderRadius || "lg",
       hoverEffect: props.hoverEffect || "zoom",
       lightbox: props.lightbox ?? true,
-      // Dark theme backgrounds
+      // Dark theme backgrounds — use palette
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
-      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
-      titleColor: props.titleColor || (isDarkTheme() ? "#ffffff" : ""),
-      subtitleColor: props.subtitleColor || (isDarkTheme() ? themePrimary() : ""),
+      textColor: props.textColor || palette().textPrimary,
+      titleColor: props.titleColor || palette().textPrimary,
+      subtitleColor: props.subtitleColor || (isDarkTheme() ? palette().accent : ""),
     };
   }
 
@@ -924,7 +1194,7 @@ function transformPropsForStudio(
       variant: props.variant || props.layout || "inline",
       buttonColor: props.buttonColor || themePrimary(),
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
-      textColor: props.textColor || (isDarkTheme() ? "#f9fafb" : ""),
+      textColor: props.textColor || palette().textPrimary,
     };
   }
 
@@ -1005,6 +1275,7 @@ export function convertOutputToStudioPages(
     backgroundColor: output.designSystem?.colors?.background,
     textColor: output.designSystem?.colors?.text,
   } : {};
+  cachedPalette = null; // Regenerate palette for new tokens
   
   const result = new Map<string, { page: GeneratedPage; studioData: StudioPageData }>();
 

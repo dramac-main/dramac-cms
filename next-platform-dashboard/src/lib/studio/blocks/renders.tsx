@@ -1034,13 +1034,14 @@ export function ButtonRender({
     xl: "px-8 py-4 text-lg md:text-xl",
   }[size];
 
-  // Variant classes
+  // Variant classes — structural only; colors applied via inline styles (backgroundColor, textColor props)
+  // This avoids hardcoded Tailwind colors that break on dark/themed sites
   const variantClasses = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800 border-transparent",
-    secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 active:bg-gray-300 border-transparent",
-    outline: "bg-transparent text-gray-900 hover:bg-gray-50 active:bg-gray-100 border-gray-300",
-    ghost: "bg-transparent text-gray-700 hover:bg-gray-100 active:bg-gray-200 border-transparent",
-    link: "bg-transparent text-blue-600 hover:text-blue-700 hover:underline border-transparent p-0",
+    primary: "hover:opacity-90 active:opacity-80 border-transparent",
+    secondary: "hover:opacity-90 active:opacity-80 border-transparent",
+    outline: "bg-transparent border-2 hover:opacity-80 active:opacity-70",
+    ghost: "bg-transparent hover:opacity-80 active:opacity-70 border-transparent",
+    link: "bg-transparent hover:underline border-transparent p-0",
     destructive: "bg-red-600 text-white hover:bg-red-700 active:bg-red-800 border-transparent",
     success: "bg-green-600 text-white hover:bg-green-700 active:bg-green-800 border-transparent",
     warning: "bg-yellow-500 text-white hover:bg-yellow-600 active:bg-yellow-700 border-transparent",
@@ -1176,6 +1177,19 @@ export function ButtonRender({
     }[gradientDirection];
     customStyles.background = `linear-gradient(${gradientDir}, ${gradientFrom}, ${gradientTo})`;
     customStyles.color = textColor || "#ffffff";
+  } else if (variant === "primary") {
+    customStyles.backgroundColor = backgroundColor || "#3b82f6";
+    customStyles.color = textColor || "#ffffff";
+  } else if (variant === "secondary") {
+    customStyles.backgroundColor = backgroundColor || "rgba(107,114,128,0.12)";
+    customStyles.color = textColor || "inherit";
+  } else if (variant === "outline") {
+    customStyles.borderColor = borderColor || backgroundColor || "currentColor";
+    customStyles.color = textColor || backgroundColor || "inherit";
+  } else if (variant === "ghost") {
+    customStyles.color = textColor || "inherit";
+  } else if (variant === "link") {
+    customStyles.color = textColor || backgroundColor || "inherit";
   } else {
     if (backgroundColor) customStyles.backgroundColor = backgroundColor;
     if (textColor) customStyles.color = textColor;
@@ -2751,7 +2765,7 @@ export function HeroRender({
             {secondaryButtonText && (
               <a
                 href={secondaryButtonLink}
-                className="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-medium border-2 rounded-lg hover:bg-gray-50 transition-all"
+                className="inline-flex items-center justify-center px-6 py-3 md:px-8 md:py-4 text-base md:text-lg font-medium border-2 rounded-lg hover:opacity-80 transition-all"
                 style={{ borderColor: textColor || "#374151", color: textColor || "#374151" }}
               >
                 {secondaryButtonText}
@@ -2789,7 +2803,7 @@ export function HeroRender({
                 {primaryButtonText}
               </a>
               {secondaryButtonText && (
-                <a href={secondaryButtonLink} className="inline-flex items-center justify-center px-6 py-3 text-base font-medium border-2 rounded-lg hover:bg-gray-50 transition-all" style={{ borderColor: textColor || "#374151", color: textColor || "#374151" }}>
+                <a href={secondaryButtonLink} className="inline-flex items-center justify-center px-6 py-3 text-base font-medium border-2 rounded-lg hover:opacity-80 transition-all" style={{ borderColor: textColor || "#374151", color: textColor || "#374151" }}>
                   {secondaryButtonText}
                 </a>
               )}
@@ -2873,7 +2887,8 @@ export function HeroRender({
             {secondaryButtonText && (
               <a 
                 href={secondaryButtonLink} 
-                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium border-2 border-white text-white rounded-lg hover:bg-white/10 transition-all"
+                className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium border-2 rounded-lg hover:opacity-80 transition-all"
+                style={{ borderColor: textColor || "#ffffff", color: textColor || "#ffffff" }}
               >
                 {secondaryButtonText}
               </a>
@@ -2903,7 +2918,7 @@ export function HeroRender({
         <p className="text-lg md:text-xl lg:text-2xl mb-8 opacity-90 max-w-2xl" style={{ color: textColor || "#ffffff" }}>{description}</p>
         <div className="flex flex-col sm:flex-row gap-4">
           <a href={primaryButtonLink} className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium text-white rounded-lg hover:opacity-90 transition-all shadow-lg" style={{ backgroundColor: primaryButtonColor }}>{primaryButtonText}</a>
-          {secondaryButtonText && <a href={secondaryButtonLink} className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium border-2 border-white text-white rounded-lg hover:bg-white/10 transition-all">{secondaryButtonText}</a>}
+          {secondaryButtonText && <a href={secondaryButtonLink} className="inline-flex items-center justify-center px-8 py-4 text-lg font-medium border-2 rounded-lg hover:opacity-80 transition-all" style={{ borderColor: textColor || "#ffffff", color: textColor || "#ffffff" }}>{secondaryButtonText}</a>}
         </div>
       </div>
     </section>
@@ -5797,10 +5812,10 @@ export function FAQRender({
     return (
       <div className="flex items-center gap-3 mt-4 pt-4 border-t" style={{ borderColor: dividerColor }}>
         <span className="text-sm opacity-70" style={{ color: textColor }}>{helpfulText}</span>
-        <button className="px-3 py-1 text-sm rounded border hover:bg-gray-50 transition-colors" style={{ borderColor: dividerColor, color: textColor }}>
+        <button className="px-3 py-1 text-sm rounded border hover:opacity-80 transition-colors" style={{ borderColor: dividerColor, color: textColor }}>
           {helpfulYesText}
         </button>
-        <button className="px-3 py-1 text-sm rounded border hover:bg-gray-50 transition-colors" style={{ borderColor: dividerColor, color: textColor }}>
+        <button className="px-3 py-1 text-sm rounded border hover:opacity-80 transition-colors" style={{ borderColor: dividerColor, color: textColor }}>
           {helpfulNoText}
         </button>
       </div>
@@ -8689,7 +8704,7 @@ function NavbarWithMenu({
                 className={`hidden md:inline-flex items-center ${ctaSizeClasses} ${ctaRadiusClass} font-medium transition-all
                   ${secondaryCtaVariant === "solid" ? "text-white" : ""}
                   ${secondaryCtaVariant === "outline" ? "border-2" : ""}
-                  ${secondaryCtaVariant === "ghost" ? "hover:bg-gray-100" : ""}
+                  ${secondaryCtaVariant === "ghost" ? "hover:opacity-80" : ""}
                 `}
                 style={{
                   backgroundColor: secondaryCtaVariant === "solid" ? ctaColor : "transparent",
@@ -8707,7 +8722,7 @@ function NavbarWithMenu({
                 className={`${showCtaOnMobile ? "" : "hidden md:inline-flex"} ${showCtaOnMobile ? "inline-flex" : ""} items-center ${ctaSizeClasses} ${ctaRadiusClass} font-medium transition-all
                   ${ctaVariant === "solid" ? "text-white hover:opacity-90" : ""}
                   ${ctaVariant === "outline" ? "border-2 hover:bg-opacity-10" : ""}
-                  ${ctaVariant === "ghost" ? "hover:bg-gray-100" : ""}
+                  ${ctaVariant === "ghost" ? "hover:opacity-80" : ""}
                 `}
                 style={{
                   backgroundColor: ctaVariant === "solid" ? ctaColor : "transparent",
@@ -8723,7 +8738,7 @@ function NavbarWithMenu({
             {showMobileMenu && (
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="md:hidden p-2 rounded-lg hover:opacity-80 transition-colors"
                 aria-label="Toggle menu"
                 aria-expanded={mobileMenuOpen}
               >
@@ -8763,7 +8778,7 @@ function NavbarWithMenu({
               key={i}
               href={link.href || "#"}
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 rounded-lg text-base font-medium hover:bg-gray-100 transition-colors"
+              className="block px-4 py-3 rounded-lg text-base font-medium hover:opacity-80 transition-colors"
               style={{ color: textColor }}
             >
               {link.label || link.text || `Link ${i + 1}`}
@@ -8965,7 +8980,7 @@ export function SocialLinksRender({
 }: SocialLinksProps) {
   const sizeClasses = { sm: "w-4 h-4", md: "w-5 h-5", lg: "w-6 h-6" }[size];
   const gapClasses = { sm: "gap-2", md: "gap-4", lg: "gap-6" }[gap];
-  const containerClasses = { icons: "", buttons: "p-2 rounded-lg hover:bg-gray-100", rounded: "p-2 rounded-full border hover:bg-gray-50" }[variant];
+  const containerClasses = { icons: "", buttons: "p-2 rounded-lg hover:opacity-80", rounded: "p-2 rounded-full border hover:opacity-80" }[variant];
 
   return (
     <div id={id} className={`flex items-center ${gapClasses} ${className}`}>
@@ -9222,11 +9237,11 @@ export function FormRender({
     full: "",
   }[submitPosition];
 
-  // Submit button variant classes
+  // Submit button variant classes — colors applied via inline styles (submitColor prop)
   const submitButtonClasses = {
-    primary: `bg-blue-600 text-white hover:bg-blue-700`,
-    secondary: `bg-gray-200 text-gray-900 hover:bg-gray-300`,
-    outline: `bg-transparent border-2 border-current text-blue-600 hover:bg-blue-50`,
+    primary: `text-white hover:opacity-90`,
+    secondary: `hover:opacity-90`,
+    outline: `bg-transparent border-2 border-current hover:opacity-80`,
   }[submitVariant];
 
   // Submit size classes
@@ -9308,7 +9323,7 @@ export function FormRender({
           {showResetButton && (
             <button
               type="reset"
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="px-4 py-2 opacity-70 hover:opacity-100 transition-opacity"
               disabled={disabled || isLoading}
             >
               {resetText}
@@ -9318,7 +9333,7 @@ export function FormRender({
             <button
               type="submit"
               className={`${submitButtonClasses} ${submitSizeClasses} ${submitFullWidth || submitPosition === "full" ? "w-full" : ""} rounded-lg font-medium transition-all disabled:opacity-50`}
-              style={submitVariant === "primary" ? { backgroundColor: submitColor } : undefined}
+              style={submitVariant === "primary" ? { backgroundColor: submitColor } : submitVariant === "secondary" ? { backgroundColor: `${submitColor}18`, color: submitColor } : { borderColor: submitColor, color: submitColor }}
               disabled={disabled || isLoading}
             >
               {isLoading ? (
@@ -9704,11 +9719,12 @@ export function FormFieldRender({
             defaultValue={defaultValue}
             required={required}
             disabled={disabled}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            className="w-4 h-4 rounded"
+            style={{ accentColor: focusBorderColor || "#3b82f6" }}
             onChange={handleChange}
           />
           {label && !hideLabel && (
-            <label htmlFor={fieldId} className="text-sm text-gray-700">
+            <label htmlFor={fieldId} className="text-sm" style={{ color: labelColor || "inherit" }}>
               {label}
             </label>
           )}
@@ -9812,7 +9828,7 @@ export function FormFieldRender({
         {type === "password" && showPasswordToggle && (
           <button
             type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-80"
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? "👁️" : "👁️‍🗨️"}
@@ -9823,7 +9839,7 @@ export function FormFieldRender({
         {showClearButton && value && (
           <button
             type="button"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-80"
           >
             ✕
           </button>
@@ -9833,14 +9849,14 @@ export function FormFieldRender({
       {/* Help Text / Error / Success */}
       <div className="flex justify-between mt-1.5">
         <div>
-          {helpText && !error && !success && <p className="text-sm text-gray-500">{helpText}</p>}
+          {helpText && !error && !success && <p className="text-sm opacity-60">{helpText}</p>}
           {error && <p className="text-sm text-red-600">{error}</p>}
           {success && !error && <p className="text-sm text-green-600">{success}</p>}
         </div>
         
         {/* Character Count */}
         {(showCharCount || maxLength) && type !== "select" && (
-          <span className="text-xs text-gray-400">
+          <span className="text-xs opacity-50">
             {charCount}{maxLength ? `/${maxLength}` : ""}
           </span>
         )}
@@ -10062,7 +10078,7 @@ export function CarouselRender({
               <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                 {item.title && <h3 className="text-xl md:text-3xl lg:text-4xl font-bold mb-2 md:mb-4" style={{ color: textColor }}>{item.title}</h3>}
                 {item.description && <p className="text-sm md:text-lg max-w-2xl mb-4" style={{ color: textColor }}>{item.description}</p>}
-                {item.link && item.buttonText && <a href={item.link} className="px-6 py-2 bg-white text-gray-900 rounded-lg font-medium hover:bg-gray-100 transition-colors">{item.buttonText}</a>}
+                {item.link && item.buttonText && <a href={item.link} className="px-6 py-2 rounded-lg font-medium hover:opacity-90 transition-colors" style={{ backgroundColor: "rgba(255,255,255,0.95)", color: "#111827" }}>{item.buttonText}</a>}
               </div>
             )}
           </div>
@@ -10070,17 +10086,17 @@ export function CarouselRender({
       </div>
       {showArrows && items.length > 1 && (
         <>
-          <button className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-lg transition-colors" aria-label="Previous slide">
+          <button className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full shadow-lg transition-colors" style={{ backgroundColor: "rgba(255,255,255,0.8)" }} aria-label="Previous slide">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
           </button>
-          <button className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 hover:bg-white rounded-full shadow-lg transition-colors" aria-label="Next slide">
+          <button className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full shadow-lg transition-colors" style={{ backgroundColor: "rgba(255,255,255,0.8)" }} aria-label="Next slide">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
           </button>
         </>
       )}
       {showDots && items.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-          {items.map((_, i) => <button key={i} className={`w-2.5 h-2.5 rounded-full transition-colors ${i === 0 ? "bg-white" : "bg-white/50 hover:bg-white/75"}`} aria-label={`Go to slide ${i + 1}`} />)}
+          {items.map((_, i) => <button key={i} className={`w-2.5 h-2.5 rounded-full transition-colors`} style={{ backgroundColor: i === 0 ? "rgba(255,255,255,1)" : "rgba(255,255,255,0.5)" }} aria-label={`Go to slide ${i + 1}`} />)}
         </div>
       )}
     </div>
@@ -10440,14 +10456,14 @@ export function ModalRender({
       <div className="absolute inset-0 bg-black transition-opacity" style={{ opacity: overlayOpacity / 100 }} onClick={closeOnOverlay ? onClose : undefined} aria-hidden="true" />
       <div className={`relative ${sizeClasses} w-full p-6 md:p-8 rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200`} style={{ backgroundColor }}>
         {showCloseButton && (
-          <button className="absolute top-4 right-4 p-1 rounded-lg hover:bg-gray-100 transition-colors" onClick={onClose} aria-label="Close modal">
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button className="absolute top-4 right-4 p-1 rounded-lg hover:opacity-80 transition-colors" onClick={onClose} aria-label="Close modal">
+            <svg className="w-5 h-5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         )}
         {title && <h2 className="text-xl md:text-2xl font-bold mb-2">{title}</h2>}
-        {description && <p className="text-gray-600 mb-6">{description}</p>}
+        {description && <p className="opacity-70 mb-6">{description}</p>}
         {children}
       </div>
     </div>

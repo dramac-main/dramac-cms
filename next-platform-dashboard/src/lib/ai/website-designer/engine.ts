@@ -668,13 +668,68 @@ The tagline must describe this specific business, not a generic company.
 Configure ALL footer props for a complete, professional result.`,
     });
 
+    // Validate that description actually references this business
+    const businessName = this.getBusinessName();
+    const industry = this.context?.client.industry || "";
+    let description = object.description || object.tagline || "";
+    
+    // Detect generic/placeholder descriptions that don't mention the business
+    const genericPatterns = [
+      /innovative\s+technology\s+solutions/i,
+      /building\s+the\s+future/i,
+      /professional\s+business\s+solutions/i,
+      /your\s+trusted\s+partner/i,
+      /premium\s+consulting/i,
+      /strategic\s+planning/i,
+      /cutting[\s-]edge\s+solutions/i,
+      /empowering\s+businesses/i,
+      /transforming\s+the\s+way/i,
+      /leading\s+provider\s+of/i,
+    ];
+    
+    const isGeneric = genericPatterns.some(p => p.test(description)) ||
+      (!description.toLowerCase().includes(businessName.toLowerCase().split(" ")[0]) && 
+       !description.toLowerCase().includes(industry.toLowerCase()));
+    
+    if (isGeneric && businessName !== "Your Business") {
+      // Build a contextual description from actual business data
+      const desc = this.context?.client.description || "";
+      if (desc && desc.length > 10 && desc.length < 200) {
+        description = desc;
+      } else {
+        description = industry
+          ? `${industry.charAt(0).toUpperCase() + industry.slice(1)} services by ${businessName}`
+          : `Welcome to ${businessName}`;
+      }
+    }
+
+    // Fix contact info — use real data, never leave placeholders
+    const contactEmail = object.email || this.context?.contact?.email || "";
+    const contactPhone = object.phone || this.context?.contact?.phone || "";
+    const contactAddress = (() => {
+      if (object.address && !object.address.includes("123 Main")) return object.address;
+      const addr = this.context?.contact?.address;
+      if (addr && typeof addr === "object") {
+        return [addr.street, addr.city, addr.state, addr.country].filter(Boolean).join(", ");
+      }
+      return typeof addr === "string" ? addr : "";
+    })();
+
     return {
       id: "shared-footer",
       type: "Footer",
       props: {
         ...object,
-        companyName: this.getBusinessName(),
-        copyrightText: `© ${new Date().getFullYear()} ${this.getBusinessName()}. All rights reserved.`,
+        companyName: businessName,
+        description,
+        logoText: object.logoText || businessName,
+        email: contactEmail,
+        contactEmail,
+        phone: contactPhone,
+        contactPhone,
+        address: contactAddress,
+        contactAddress,
+        copyrightText: `© ${new Date().getFullYear()} ${businessName}. All rights reserved.`,
       },
     };
   }
