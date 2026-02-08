@@ -329,15 +329,14 @@ export function BookingFormBlock({
 
     try {
       // If siteId is available, create a REAL appointment in the database
-      if (siteId && serviceId) {
+      if (siteId) {
         await createBooking({
-          service_id: serviceId,
+          service_id: serviceId || undefined,
           staff_id: staffId || undefined,
           customer_name: formData.name || 'Guest',
           customer_email: formData.email || undefined,
           customer_phone: formData.phone || undefined,
           customer_notes: formData.notes || undefined,
-          // Start/end times should be passed via props from a parent widget
           start_time: formData._startTime || new Date().toISOString(),
           end_time: formData._endTime || new Date(Date.now() + 3600000).toISOString(),
           status: 'pending',
@@ -349,7 +348,7 @@ export function BookingFormBlock({
           },
         })
       } else {
-        // Demo mode — just simulate
+        // Demo mode (Studio editor only) — simulate delay
         await new Promise(resolve => setTimeout(resolve, 1500))
       }
       onSubmit?.(formData)

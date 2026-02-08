@@ -262,9 +262,10 @@ export function BookingCalendarBlock({
     staffId: staffId || undefined,
   })
 
-  // Map real slots to display format, or generate demo slots
+  // Map real slots to display format — demo only when no siteId (Studio editor)
   const timeSlots = useMemo((): TimeSlot[] => {
-    if (siteId && serviceId && selectedDate && realSlots.length > 0) {
+    if (!selectedDate) return []
+    if (siteId) {
       return realSlots.map(s => {
         const startDate = s.start instanceof Date ? s.start : new Date(s.start)
         return {
@@ -274,8 +275,7 @@ export function BookingCalendarBlock({
         }
       })
     }
-    // Demo slots when no real data
-    if (!selectedDate) return []
+    // Demo slots only in Studio editor (no siteId)
     const slots: TimeSlot[] = []
     for (let hour = slotStartHour; hour < slotEndHour; hour++) {
       for (let min = 0; min < 60; min += slotInterval) {

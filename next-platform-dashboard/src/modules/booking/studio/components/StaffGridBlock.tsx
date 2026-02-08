@@ -308,9 +308,9 @@ export function StaffGridBlock({
   // Fetch real staff data when siteId is available
   const { staff: realStaff, isLoading } = useBookingStaff(siteId || '')
 
-  // Map DB staff to display format, or use demo data
+  // Map DB staff to display format — demo only when no siteId (Studio editor)
   const dataStaff: StaffMember[] = useMemo(() => {
-    if (!siteId || realStaff.length === 0) return DEMO_STAFF
+    if (!siteId) return DEMO_STAFF
     return realStaff.map((s: Staff) => ({
       id: s.id,
       name: s.name,

@@ -353,34 +353,30 @@ export function BookingWidgetBlock({
   })
   const { createBooking, isSubmitting: isCreatingBooking } = useCreateBooking(siteId || '')
 
-  // Map DB services to display format, fallback to demo
+  // Map DB services to display format — demo only when no siteId (Studio editor)
   const dataServices: ServiceItem[] = useMemo(() => {
-    if (siteId && realServices.length > 0) {
-      return realServices.map((s: Service) => ({
-        id: s.id,
-        name: s.name,
-        description: s.description || undefined,
-        duration: s.duration_minutes,
-        price: s.price,
-        currency: s.currency || 'USD',
-        category: s.category || undefined,
-      }))
-    }
-    return DEMO_SERVICES
+    if (!siteId) return DEMO_SERVICES
+    return realServices.map((s: Service) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description || undefined,
+      duration: s.duration_minutes,
+      price: s.price,
+      currency: s.currency || 'USD',
+      category: s.category || undefined,
+    }))
   }, [siteId, realServices])
 
-  // Map DB staff to display format, fallback to demo
+  // Map DB staff to display format — demo only when no siteId (Studio editor)
   const dataStaff: StaffMember[] = useMemo(() => {
-    if (siteId && realStaff.length > 0) {
-      return realStaff.map((s: Staff) => ({
-        id: s.id,
-        name: s.name,
-        role: s.bio ? s.bio.split('.')[0] : undefined,
-        avatar: s.avatar_url || undefined,
-        rating: 4.8,
-      }))
-    }
-    return DEMO_STAFF
+    if (!siteId) return DEMO_STAFF
+    return realStaff.map((s: Staff) => ({
+      id: s.id,
+      name: s.name,
+      role: s.bio ? s.bio.split('.')[0] : undefined,
+      avatar: s.avatar_url || undefined,
+      rating: 4.8,
+    }))
   }, [siteId, realStaff])
 
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December']
@@ -416,8 +412,8 @@ export function BookingWidgetBlock({
 
   const timeSlots = useMemo((): TimeSlot[] => {
     if (!selectedDate) return []
-    // Use real slots from the database when available
-    if (siteId && selectedService?.id && realSlots.length > 0) {
+    // Use real slots from the database when siteId is present
+    if (siteId) {
       return realSlots.map(s => {
         const startDate = s.start instanceof Date ? s.start : new Date(s.start)
         return {
@@ -427,7 +423,7 @@ export function BookingWidgetBlock({
         }
       })
     }
-    // Fallback: generate demo slots
+    // Demo slots only in Studio editor (no siteId)
     const slots: TimeSlot[] = []
     for (let h = slotStartHour; h < slotEndHour; h++) {
       for (let m = 0; m < 60; m += slotInterval) {

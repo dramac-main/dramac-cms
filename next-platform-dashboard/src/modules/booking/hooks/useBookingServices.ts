@@ -7,7 +7,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { getServices } from '../actions/booking-actions'
+import { getPublicServices } from '../actions/public-booking-actions'
 import type { Service } from '../types/booking-types'
 
 export interface UseBookingServicesResult {
@@ -32,10 +32,10 @@ export function useBookingServices(siteId: string): UseBookingServicesResult {
     setError(null)
 
     try {
-      const data = await getServices(siteId)
-      // Only show active services on public-facing components
-      const activeServices = data.filter(s => s.is_active && s.allow_online_booking)
-      setServices(activeServices)
+      // Uses admin client — safe for public site visitors (bypasses RLS)
+      const data = await getPublicServices(siteId)
+      // Public action already filters to active + online booking only
+      setServices(data)
     } catch (err) {
       console.error('[Booking] Error fetching services:', err)
       setError(err instanceof Error ? err.message : 'Failed to load services')

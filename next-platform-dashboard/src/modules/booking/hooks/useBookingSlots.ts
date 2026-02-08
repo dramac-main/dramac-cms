@@ -7,7 +7,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { getAvailableSlots } from '../actions/booking-actions'
+import { getPublicAvailableSlots } from '../actions/public-booking-actions'
 import type { TimeSlot } from '../types/booking-types'
 
 export interface UseBookingSlotsOptions {
@@ -43,7 +43,8 @@ export function useBookingSlots(
     setError(null)
 
     try {
-      const data = await getAvailableSlots(siteId, serviceId, date, staffId)
+      // Uses admin client — safe for public site visitors (bypasses RLS)
+      const data = await getPublicAvailableSlots(siteId, serviceId, date, staffId)
       setSlots(data)
     } catch (err) {
       console.error('[Booking] Error fetching slots:', err)

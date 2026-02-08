@@ -7,7 +7,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { getStaff } from '../actions/booking-actions'
+import { getPublicStaff } from '../actions/public-booking-actions'
 import type { Staff } from '../types/booking-types'
 
 export interface UseBookingStaffResult {
@@ -32,10 +32,10 @@ export function useBookingStaff(siteId: string): UseBookingStaffResult {
     setError(null)
 
     try {
-      const data = await getStaff(siteId)
-      // Only show active staff who accept bookings
-      const activeStaff = data.filter(s => s.is_active && s.accept_bookings)
-      setStaff(activeStaff)
+      // Uses admin client — safe for public site visitors (bypasses RLS)
+      const data = await getPublicStaff(siteId)
+      // Public action already filters to active + accepting bookings only
+      setStaff(data)
     } catch (err) {
       console.error('[Booking] Error fetching staff:', err)
       setError(err instanceof Error ? err.message : 'Failed to load staff')

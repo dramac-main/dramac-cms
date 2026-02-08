@@ -7,7 +7,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { getSettings } from '../actions/booking-actions'
+import { getPublicSettings } from '../actions/public-booking-actions'
 import type { BookingSettings } from '../types/booking-types'
 
 export interface UseBookingSettingsResult {
@@ -32,7 +32,7 @@ export function useBookingSettings(siteId: string): UseBookingSettingsResult {
     setError(null)
 
     try {
-      const data = await getSettings(siteId)
+      const data = await getPublicSettings(siteId)
       setSettings(data)
     } catch (err) {
       console.error('[Booking] Error fetching settings:', err)

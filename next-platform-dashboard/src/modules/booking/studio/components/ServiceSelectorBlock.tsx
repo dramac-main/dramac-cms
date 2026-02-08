@@ -269,9 +269,9 @@ export function ServiceSelectorBlock({
   // Fetch real data when siteId is available
   const { services: realServices, isLoading } = useBookingServices(siteId || '')
 
-  // Map DB services to display format
+  // Map DB services to display format — demo only when no siteId (Studio editor)
   const dataServices: ServiceItem[] = useMemo(() => {
-    if (!siteId || realServices.length === 0) return DEMO_SERVICES
+    if (!siteId) return DEMO_SERVICES
     return realServices.map((s: Service) => ({
       id: s.id,
       name: s.name,
