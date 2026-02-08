@@ -10,8 +10,10 @@
 
 import React, { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
-import { Star, Clock, Search, User, Award, MapPin, Calendar, ChevronRight, Filter } from 'lucide-react'
+import { Star, Clock, Search, User, Award, MapPin, Calendar, ChevronRight, Filter, Loader2 } from 'lucide-react'
 import type { ComponentDefinition } from '@/types/studio'
+import { useBookingStaff } from '../../hooks/useBookingStaff'
+import type { Staff } from '../../types/booking-types'
 
 // =============================================================================
 // TYPES
@@ -303,14 +305,36 @@ export function StaffGridBlock({
   const [searchQuery, setSearchQuery] = useState('')
   const [activeSpecialty, setActiveSpecialty] = useState<string | null>(filterBySpecialty || null)
 
+  // Fetch real staff data when siteId is available
+  const { staff: realStaff, isLoading } = useBookingStaff(siteId || '')
+
+  // Map DB staff to display format, or use demo data
+  const dataStaff: StaffMember[] = useMemo(() => {
+    if (!siteId || realStaff.length === 0) return DEMO_STAFF
+    return realStaff.map((s: Staff) => ({
+      id: s.id,
+      name: s.name,
+      role: s.bio?.split('.')[0] || 'Team Member',
+      bio: s.bio || undefined,
+      avatar: s.avatar_url || undefined,
+      rating: 5.0,
+      reviewCount: 0,
+      specialties: s.services?.map(svc => svc.name) || [],
+      availability: s.timezone || 'Flexible',
+      experience: undefined,
+      location: undefined,
+      bookable: s.accept_bookings && s.is_active,
+    }))
+  }, [siteId, realStaff])
+
   const allSpecialties = useMemo(() => {
     const s = new Set<string>()
-    DEMO_STAFF.forEach(staff => staff.specialties.forEach(sp => s.add(sp)))
+    dataStaff.forEach(staff => staff.specialties.forEach(sp => s.add(sp)))
     return Array.from(s)
-  }, [])
+  }, [dataStaff])
 
   const filteredStaff = useMemo(() => {
-    let staff = DEMO_STAFF
+    let staff = dataStaff
     if (activeSpecialty) staff = staff.filter(s => s.specialties.includes(activeSpecialty))
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
@@ -319,7 +343,7 @@ export function StaffGridBlock({
     if (sortBy === 'rating') staff = [...staff].sort((a, b) => b.rating - a.rating)
     else if (sortBy === 'name') staff = [...staff].sort((a, b) => a.name.localeCompare(b.name))
     return staff.slice(0, maxStaff)
-  }, [searchQuery, activeSpecialty, maxStaff, sortBy])
+  }, [dataStaff, searchQuery, activeSpecialty, maxStaff, sortBy])
 
   const btnBg = buttonBackgroundColor || primaryColor
   const avSize = AVATAR_SIZES[avatarSize]
@@ -328,6 +352,18 @@ export function StaffGridBlock({
   const specText = specialtyTextColor || primaryColor
   const isGrid = layout === 'grid' || layout === 'cards'
   const isList = layout === 'list'
+
+  // Loading state when fetching real data
+  if (siteId && isLoading) {
+    return (
+      <div className={cn('staff-grid-block', className)} style={{ backgroundColor: backgroundColor || undefined, borderRadius, border: `${borderWidth} solid ${borderColor || '#e5e7eb'}`, padding, minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="region" aria-label={ariaLabel}>
+        <div style={{ textAlign: 'center', opacity: 0.6 }}>
+          <Loader2 style={{ width: 24, height: 24, animation: 'spin 1s linear infinite', margin: '0 auto 8px' }} />
+          <p style={{ fontSize: '14px', margin: 0 }}>Loading team members...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div

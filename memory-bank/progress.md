@@ -1,13 +1,33 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅**
-**Component Strategy**: Fresh premium components (NOT reusing basic Puck components)
-**Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
-**Total Templates**: 32 (7 starter + 25 premium)
-**Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
-**E-Commerce Module**: **ALL 6 WAVES COMPLETE** ✅ | **ZAMBIA DEFAULT** 🇿🇲
-**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + INDUSTRY BLUEPRINTS + SYSTEM OVERHAUL + DESIGN TOKEN THEMING + HARDCODED COLOR FIX + BOOKING MODULE RENDERING + PRO COLOR SYSTEM** ✅
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅**
+
+---
+
+## 🔧 BOOKING STUDIO COMPONENTS REBUILT (February 2026) ✅
+
+### What
+Rebuilt all 6 booking module Studio components from ~8 fields to 50-96 fields each. Fixed double-prefix bug in module-loader.ts and missing custom field registration in registry/index.ts. All components now render interactive demo data out of the box.
+
+### Root Causes & Fixes
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| Custom field type not found | module-loader.ts double-prefixed keys (booking:booking:service-selector) | Check if key already prefixed before adding module slug |
+| Custom fields not rendering | registerBuiltInModuleComponents() only registered components, not field renderers | Now registers both components AND studioFields custom renderers |
+| Components had 6-10 fields | Old components were minimal placeholders | Complete rebuild with 50-96 fields per component |
+| BookingEmbed just placeholder | No real embed logic, just "Connect a site" text | Full iframe/popup/inline with preview/code tabs |
+
+### Component Field Counts
+- BookingCalendarBlock: 68 fields, 9 groups
+- ServiceSelectorBlock: 80 fields, 7 groups
+- BookingFormBlock: 86 fields, 9 groups
+- BookingWidgetBlock: 96 fields, 10 groups
+- BookingEmbedBlock: 70 fields, 8 groups
+- StaffGridBlock: 88 fields, 7 groups
+
+### Commit
+- `b645b6b` — "Rebuild all 6 booking components with 50+ customization properties each"
 
 ---
 

@@ -49,6 +49,8 @@ interface ComponentRendererProps {
   component: StudioComponent;
   components: Record<string, StudioComponent>;
   depth?: number;
+  /** Site ID injected by StudioRenderer so every component can fetch real data */
+  siteId?: string;
 }
 
 // ============================================================================
@@ -62,6 +64,7 @@ function ComponentRenderer({
   component, 
   components,
   depth = 0,
+  siteId,
 }: ComponentRendererProps): React.ReactElement | null {
   // Get component definition from registry
   const definition = getComponent(component.type);
@@ -101,17 +104,21 @@ function ComponentRenderer({
             component={childComponent}
             components={components}
             depth={depth + 1}
+            siteId={siteId}
           />
         );
       }).filter(Boolean)
     : null;
   
   // Only pass children prop if the component accepts children AND has children
+  // Build props with siteId injection — components can use this to fetch real data
+  const injectedProps = { ...component.props, siteId: component.props?.siteId || siteId };
+
   if (acceptsChildren && children && children.length > 0) {
     return (
       <RenderComponent
         key={component.id}
-        {...component.props}
+        {...injectedProps}
         id={component.id}
       >
         {children}
@@ -123,7 +130,7 @@ function ComponentRenderer({
   return (
     <RenderComponent
       key={component.id}
-      {...component.props}
+      {...injectedProps}
       id={component.id}
     />
   );
@@ -137,6 +144,7 @@ interface ZoneRendererProps {
   zoneId: string;
   componentIds: string[];
   components: Record<string, StudioComponent>;
+  siteId?: string;
 }
 
 /**
@@ -146,6 +154,7 @@ function ZoneRenderer({
   zoneId, 
   componentIds, 
   components,
+  siteId,
 }: ZoneRendererProps): React.ReactElement {
   return (
     <div data-zone={zoneId} className="studio-zone">
@@ -158,6 +167,7 @@ function ZoneRenderer({
             key={id}
             component={component}
             components={components}
+            siteId={siteId}
           />
         );
       })}
@@ -309,6 +319,7 @@ export function StudioRenderer({
             key={id}
             component={component}
             components={studioData.components}
+            siteId={siteId}
           />
         );
       })}
@@ -320,6 +331,7 @@ export function StudioRenderer({
           zoneId={zoneId}
           componentIds={componentIds}
           components={studioData.components}
+          siteId={siteId}
         />
       ))}
     </div>

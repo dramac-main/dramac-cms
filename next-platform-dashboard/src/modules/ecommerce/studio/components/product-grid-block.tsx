@@ -8,9 +8,10 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import { ShoppingBag, Loader2 } from "lucide-react";
+import { useStorefrontProducts } from "../../hooks";
 
 // =============================================================================
 // TYPES
@@ -40,6 +41,9 @@ interface ProductGridProps {
   showRating: boolean;
   cardVariant: "card" | "minimal";
   
+  // Data (injected by renderer)
+  siteId?: string;
+  
   // Editor context props (passed by canvas)
   _isEditor?: boolean;
   _siteId?: string;
@@ -59,68 +63,46 @@ export function ProductGridBlock({
   showRating: _showRating = true,
   showPrice = true,
   cardVariant = "card",
+  siteId,
   _isEditor = false,
   _siteId,
 }: ProductGridProps) {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(!_isEditor);
-  const [error, setError] = useState<string | null>(null);
-  
-  // Demo products for editor preview - use deterministic values
-  const demoProducts: Product[] = Array.from({ length: limit }, (_, i) => ({
+  // Resolve siteId from either new renderer injection or legacy _siteId
+  const resolvedSiteId = siteId || _siteId || '';
+
+  // Demo products for editor preview when no site is connected
+  const demoProducts: Product[] = useMemo(() => Array.from({ length: limit }, (_, i) => ({
     id: `demo-${i + 1}`,
     name: `Product ${i + 1}`,
     price: 49.99 + i * 10,
     image: undefined,
     rating: 4 + (i % 10) * 0.1,
-  }));
-  
-  // Fetch real products - if siteId is available, always try to fetch real data
-  // Even in editor mode, we want to show real products when a site context exists
-  useEffect(() => {
-    // Only show demo data if we're in editor mode AND have no siteId
-    if (_isEditor && !_siteId) {
-      setProducts(demoProducts);
-      setIsLoading(false);
-      return;
+  })), [limit]);
+
+  // Use the storefront products hook for real data
+  const { products: realProducts, isLoading: hookLoading } = useStorefrontProducts(resolvedSiteId, {
+    categoryId: _categoryId || undefined,
+    featured: source === 'featured' ? true : undefined,
+    limit,
+    sortBy: source === 'new' ? 'newest' : undefined,
+  });
+
+  // Map real products to the display format
+  const mappedProducts: Product[] = useMemo(() => {
+    if (resolvedSiteId && realProducts.length > 0) {
+      return realProducts.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        price: p.base_price ?? p.price ?? 0,
+        image: p.images?.[0]?.url || p.image_url || undefined,
+        rating: p.average_rating || undefined,
+      }));
     }
-    
-    // Fetch real data (in editor with siteId, or on live site)
-    async function fetchProducts() {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const params = new URLSearchParams({
-          source,
-          limit: String(limit),
-        });
-        if (_siteId) params.append("siteId", _siteId);
-        if (_categoryId) params.append("categoryId", _categoryId);
-        
-        const response = await fetch(`/api/modules/ecommerce/products?${params}`);
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
-        
-        const data = await response.json();
-        setProducts(data.products || []);
-      } catch (err) {
-        console.error("[ProductGrid] Error fetching products:", err);
-        setError("Failed to load products");
-        // Fallback to demo data on error
-        setProducts(demoProducts);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
-    fetchProducts();
-  }, [_isEditor, _siteId, source, _categoryId, limit]);
-  
-  // Use products (real or demo)
-  const displayProducts = products.length > 0 ? products : demoProducts;
+    return [];
+  }, [resolvedSiteId, realProducts]);
+
+  const isLoading = resolvedSiteId ? hookLoading : false;
+  const displayProducts = mappedProducts.length > 0 ? mappedProducts : demoProducts;
 
   // Get responsive values
   const columnsValue = typeof columns === "object" ? columns : { mobile: columns };
@@ -138,13 +120,6 @@ export function ProductGridBlock({
       {isLoading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      )}
-      
-      {/* Error State */}
-      {error && !isLoading && (
-        <div className="text-center py-8 text-muted-foreground">
-          <p>{error}</p>
         </div>
       )}
       

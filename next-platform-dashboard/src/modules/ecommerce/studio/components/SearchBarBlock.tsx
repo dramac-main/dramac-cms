@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Search, X, Loader2, TrendingUp, History, Package } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { useStorefrontSearch, useRecentlyViewed } from '@/modules/ecommerce/hooks'
+import { useStorefrontSearch, useRecentlyViewed, useStorefrontCategories } from '@/modules/ecommerce/hooks'
 import { useStorefront } from '@/modules/ecommerce/context/storefront-context'
 
 // ============================================================================
@@ -38,6 +38,7 @@ export interface SearchBarBlockProps {
   // Results
   maxSuggestions?: number
   searchUrl?: string
+  trendingTerms?: string
   
   className?: string
 }
@@ -71,6 +72,7 @@ export function SearchBarBlock({
   debounceMs = 300,
   maxSuggestions = 6,
   searchUrl = '/shop/search',
+  trendingTerms,
   className
 }: SearchBarBlockProps) {
   const router = useRouter()
@@ -82,6 +84,7 @@ export function SearchBarBlock({
   
   const { results, isSearching, setQuery: performSearch } = useStorefrontSearch(siteId || '')
   const { products: recentItems } = useRecentlyViewed(siteId || '')
+  const { categories } = useStorefrontCategories(siteId || '')
 
   const variantValue = getResponsiveValue(variant, 'default')
   const showDropdown = isFocused && (localQuery.length >= minSearchLength || showRecentSearches)
@@ -122,8 +125,19 @@ export function SearchBarBlock({
     setLocalQuery('')
   }
 
-  // Trending searches (mock - could come from analytics)
-  const trendingSearches = ['Electronics', 'Clothing', 'Home & Garden', 'Sports']
+  // Trending searches — use real category names, custom terms, or fallback
+  const trendingSearches = React.useMemo(() => {
+    // If custom terms are provided via Studio props, use those
+    if (trendingTerms) {
+      return trendingTerms.split(',').map(t => t.trim()).filter(Boolean)
+    }
+    // Otherwise, derive from real categories
+    if (categories && categories.length > 0) {
+      return categories.slice(0, 6).map((c: any) => c.name)
+    }
+    // Fallback only when no data available
+    return ['New Arrivals', 'On Sale', 'Best Sellers', 'Featured']
+  }, [trendingTerms, categories])
 
   return (
     <div className={cn('relative', className)}>
@@ -351,6 +365,13 @@ export const searchBarBlockConfig = {
       label: 'Show Trending',
       type: 'toggle',
       defaultValue: true
+    },
+    {
+      name: 'trendingTerms',
+      label: 'Trending Terms (comma-separated)',
+      type: 'text',
+      description: 'Custom trending search terms. Leave empty to auto-populate from store categories.',
+      placeholder: 'e.g., Electronics, Clothing, Home & Garden'
     },
     {
       name: 'maxSuggestions',

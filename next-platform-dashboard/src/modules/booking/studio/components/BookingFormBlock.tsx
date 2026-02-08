@@ -12,6 +12,7 @@ import React, { useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { User, Mail, Phone, FileText, Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 import type { ComponentDefinition } from '@/types/studio'
+import { useCreateBooking } from '../../hooks/useCreateBooking'
 
 // =============================================================================
 // TYPES
@@ -271,6 +272,9 @@ export function BookingFormBlock({
   const [isSuccess, setIsSuccess] = useState(false)
   const [submitError, setSubmitError] = useState(false)
 
+  // Real booking creation hook — only active when siteId exists
+  const { createBooking } = useCreateBooking(siteId || '')
+
   const btnBg = buttonBackgroundColor || primaryColor
   const focusBorder = inputFocusBorderColor || primaryColor
   const asteriskColor = requiredAsteriskColor || errorColor
@@ -324,7 +328,30 @@ export function BookingFormBlock({
     setSubmitError(false)
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // If siteId is available, create a REAL appointment in the database
+      if (siteId && serviceId) {
+        await createBooking({
+          service_id: serviceId,
+          staff_id: staffId || undefined,
+          customer_name: formData.name || 'Guest',
+          customer_email: formData.email || undefined,
+          customer_phone: formData.phone || undefined,
+          customer_notes: formData.notes || undefined,
+          // Start/end times should be passed via props from a parent widget
+          start_time: formData._startTime || new Date().toISOString(),
+          end_time: formData._endTime || new Date(Date.now() + 3600000).toISOString(),
+          status: 'pending',
+          payment_status: 'not_required',
+          metadata: {
+            company: formData.company,
+            address: formData.address,
+            source: 'website_form',
+          },
+        })
+      } else {
+        // Demo mode — just simulate
+        await new Promise(resolve => setTimeout(resolve, 1500))
+      }
       onSubmit?.(formData)
       setIsSuccess(true)
     } catch {

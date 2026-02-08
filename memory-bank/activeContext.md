@@ -1,6 +1,56 @@
 # Active Context
 
-## Latest Session Update (Module Rendering Fix + Pro Color System + Footer Validation — February 2026)
+## Latest Session Update (Booking Module Studio Components Rebuilt — February 2026)
+
+### ALL 6 BOOKING COMPONENTS REBUILT WITH 50+ PROPERTIES + INFRASTRUCTURE FIXES ✅
+
+**Context:**
+User tested Studio editor and found booking module components broken:
+1. BookingCalendarBlock: "Custom field type 'booking:service-selector' not found"
+2. BookingFormBlock: Same custom field errors for staff-selector
+3. BookingEmbedBlock: Just placeholder text, no real functionality
+4. All components had only 6-10 customization properties (far below 50+ target)
+
+**Root Causes Found & Fixed:**
+
+#### Bug 1: Double-Prefix Bug in module-loader.ts
+Booking module exports `studioFields` with already-prefixed keys (`"booking:service-selector"`), but module loader added ANOTHER prefix creating `"booking:booking:service-selector"` → custom field lookup failed.
+**Fix:** Check `fieldType.startsWith(\`${moduleInfo.slug}:\`)` before adding prefix.
+
+#### Bug 2: Built-In Registration Missing Custom Fields
+`registerBuiltInModuleComponents()` in registry/index.ts only registered component definitions, NOT custom field renderers from `studioFields`.
+**Fix:** Now registers BOTH components AND custom field renderers.
+
+#### All 6 Components Rebuilt with 50+ Properties Each
+| Component | Fields | Groups | Key Features |
+|-----------|--------|--------|-------------|
+| BookingCalendarBlock | 68 | 9 | Interactive calendar, time slots, month navigation |
+| ServiceSelectorBlock | 80 | 7 | Grid/list/cards, search, category filters, ratings |
+| BookingFormBlock | 86 | 9 | Multi-field form, validation, floating labels |
+| BookingWidgetBlock | 96 | 10 | 5-step wizard, step indicators, booking summary |
+| BookingEmbedBlock | 70 | 8 | iframe/popup/inline, preview/code tabs, copy-to-clipboard |
+| StaffGridBlock | 88 | 7 | Staff cards, ratings, specialties, availability dots |
+
+All components render demo data out of the box — no site connection required for Studio preview.
+
+### Files Modified (8 files, 3946 insertions, 2314 deletions)
+| File | Changes |
+|------|---------|
+| `module-loader.ts` | Double-prefix fix for custom field registration |
+| `registry/index.ts` | Built-in module registration now includes custom fields |
+| `BookingCalendarBlock.tsx` | Complete rebuild — 68 fields |
+| `ServiceSelectorBlock.tsx` | Complete rebuild — 80 fields |
+| `BookingFormBlock.tsx` | Complete rebuild — 86 fields |
+| `BookingWidgetBlock.tsx` | Complete rebuild — 96 fields |
+| `BookingEmbedBlock.tsx` | Complete rebuild — 70 fields |
+| `StaffGridBlock.tsx` | Complete rebuild — 88 fields |
+
+### Commit
+- `b645b6b` — "Rebuild all 6 booking components with 50+ customization properties each"
+
+---
+
+## Previous Session Update (Module Rendering Fix + Pro Color System + Footer Validation — February 2026)
 
 ### BOOKING MODULES ALWAYS RENDER + PRO COLOR SYSTEM + FOOTER FIX ✅
 

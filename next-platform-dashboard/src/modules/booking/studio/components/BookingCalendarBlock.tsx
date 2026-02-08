@@ -10,8 +10,9 @@
 
 import React, { useState, useMemo, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, ChevronRight, Clock, Calendar } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, Calendar, Loader2 } from 'lucide-react'
 import type { ComponentDefinition } from '@/types/studio'
+import { useBookingSlots } from '../../hooks/useBookingSlots'
 
 // =============================================================================
 // TYPES
@@ -144,6 +145,15 @@ const SHADOW_MAP: Record<string, string> = {
   xl: '0 20px 25px -5px rgba(0,0,0,0.1)',
 }
 
+function formatTimeHelper(hour: number, min: number, format: string): string {
+  if (format === '12h') {
+    const h = hour % 12 || 12
+    const ampm = hour < 12 ? 'AM' : 'PM'
+    return `${h}:${min.toString().padStart(2, '0')} ${ampm}`
+  }
+  return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`
+}
+
 // =============================================================================
 // COMPONENT
 // =============================================================================
@@ -244,8 +254,42 @@ export function BookingCalendarBlock({
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
-  const [isLoadingSlots, setIsLoadingSlots] = useState(false)
+
+  // Fetch real availability from DB when siteId and serviceId are available
+  const { slots: realSlots, isLoading: isLoadingRealSlots } = useBookingSlots(siteId || '', {
+    serviceId: serviceId || undefined,
+    date: selectedDate,
+    staffId: staffId || undefined,
+  })
+
+  // Map real slots to display format, or generate demo slots
+  const timeSlots = useMemo((): TimeSlot[] => {
+    if (siteId && serviceId && selectedDate && realSlots.length > 0) {
+      return realSlots.map(s => {
+        const startDate = s.start instanceof Date ? s.start : new Date(s.start)
+        return {
+          time: `${startDate.getHours().toString().padStart(2, '0')}:${startDate.getMinutes().toString().padStart(2, '0')}`,
+          display: formatTimeHelper(startDate.getHours(), startDate.getMinutes(), timeFormat),
+          available: s.available,
+        }
+      })
+    }
+    // Demo slots when no real data
+    if (!selectedDate) return []
+    const slots: TimeSlot[] = []
+    for (let hour = slotStartHour; hour < slotEndHour; hour++) {
+      for (let min = 0; min < 60; min += slotInterval) {
+        slots.push({
+          time: `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`,
+          display: formatTimeHelper(hour, min, timeFormat),
+          available: Math.random() > 0.3,
+        })
+      }
+    }
+    return slots
+  }, [siteId, serviceId, selectedDate, realSlots, slotStartHour, slotEndHour, slotInterval, timeFormat])
+
+  const isLoadingSlots = siteId ? isLoadingRealSlots : false
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -286,14 +330,7 @@ export function BookingCalendarBlock({
   }
   const isSelected = (date: Date) => selectedDate?.toDateString() === date.toDateString()
 
-  const formatTime = (hour: number, min: number): string => {
-    if (timeFormat === '12h') {
-      const h = hour % 12 || 12
-      const ampm = hour < 12 ? 'AM' : 'PM'
-      return `${h}:${min.toString().padStart(2, '0')} ${ampm}`
-    }
-    return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`
-  }
+  const formatTime = (hour: number, min: number): string => formatTimeHelper(hour, min, timeFormat)
 
   const formatDate = (date: Date): string => {
     const opts: Intl.DateTimeFormatOptions = dateFormat === 'short'
@@ -309,26 +346,8 @@ export function BookingCalendarBlock({
     setSelectedDate(date)
     setSelectedTime(null)
     onDateSelect?.(date)
-
-    if (showTimeSlots) {
-      setIsLoadingSlots(true)
-      setTimeout(() => {
-        const slots: TimeSlot[] = []
-        for (let hour = slotStartHour; hour < slotEndHour; hour++) {
-          for (let min = 0; min < 60; min += slotInterval) {
-            slots.push({
-              time: `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`,
-              display: formatTime(hour, min),
-              available: Math.random() > 0.3,
-            })
-          }
-        }
-        setTimeSlots(slots)
-        setIsLoadingSlots(false)
-      }, 400)
-    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showTimeSlots, slotStartHour, slotEndHour, slotInterval, onDateSelect, timeFormat, allowPastDates])
+  }, [onDateSelect, allowPastDates])
 
   const handleTimeSelect = (slot: TimeSlot) => {
     if (!slot.available || !selectedDate) return

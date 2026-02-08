@@ -17,6 +17,8 @@ import {
   Send, Loader2, ArrowRight, Check
 } from 'lucide-react'
 import type { ComponentDefinition } from '@/types/studio'
+import { useBookingServices, useBookingStaff, useBookingSlots, useCreateBooking } from '../../hooks'
+import type { Service, Staff } from '../../types/booking-types'
 
 // =============================================================================
 // TYPES
@@ -341,6 +343,46 @@ export function BookingWidgetBlock({
   const calYear = calendarDate.getFullYear()
   const calMonth = calendarDate.getMonth()
 
+  // ── Real Data Hooks ──────────────────────────────────────────────────────
+  const { services: realServices, isLoading: loadingServices } = useBookingServices(siteId || '')
+  const { staff: realStaff, isLoading: loadingStaff } = useBookingStaff(siteId || '')
+  const { slots: realSlots, isLoading: loadingSlots } = useBookingSlots(siteId || '', {
+    serviceId: selectedService?.id,
+    date: selectedDate || undefined,
+    staffId: selectedStaff?.id,
+  })
+  const { createBooking, isSubmitting: isCreatingBooking } = useCreateBooking(siteId || '')
+
+  // Map DB services to display format, fallback to demo
+  const dataServices: ServiceItem[] = useMemo(() => {
+    if (siteId && realServices.length > 0) {
+      return realServices.map((s: Service) => ({
+        id: s.id,
+        name: s.name,
+        description: s.description || undefined,
+        duration: s.duration_minutes,
+        price: s.price,
+        currency: s.currency || 'USD',
+        category: s.category || undefined,
+      }))
+    }
+    return DEMO_SERVICES
+  }, [siteId, realServices])
+
+  // Map DB staff to display format, fallback to demo
+  const dataStaff: StaffMember[] = useMemo(() => {
+    if (siteId && realStaff.length > 0) {
+      return realStaff.map((s: Staff) => ({
+        id: s.id,
+        name: s.name,
+        role: s.bio ? s.bio.split('.')[0] : undefined,
+        avatar: s.avatar_url || undefined,
+        rating: 4.8,
+      }))
+    }
+    return DEMO_STAFF
+  }, [siteId, realStaff])
+
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December']
   const dayNames = firstDayOfWeek === 'monday' ? ['Mo','Tu','We','Th','Fr','Sa','Su'] : ['Su','Mo','Tu','We','Th','Fr','Sa']
 
@@ -374,6 +416,18 @@ export function BookingWidgetBlock({
 
   const timeSlots = useMemo((): TimeSlot[] => {
     if (!selectedDate) return []
+    // Use real slots from the database when available
+    if (siteId && selectedService?.id && realSlots.length > 0) {
+      return realSlots.map(s => {
+        const startDate = s.start instanceof Date ? s.start : new Date(s.start)
+        return {
+          time: startDate.toTimeString().slice(0, 5),
+          display: formatTime(startDate.getHours(), startDate.getMinutes()),
+          available: s.available !== false,
+        }
+      })
+    }
+    // Fallback: generate demo slots
     const slots: TimeSlot[] = []
     for (let h = slotStartHour; h < slotEndHour; h++) {
       for (let m = 0; m < 60; m += slotInterval) {
@@ -382,7 +436,7 @@ export function BookingWidgetBlock({
     }
     return slots
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, slotStartHour, slotEndHour, slotInterval, timeFormat])
+  }, [selectedDate, slotStartHour, slotEndHour, slotInterval, timeFormat, siteId, selectedService?.id, realSlots])
 
   // Derived colors
   const btnBg = buttonBackgroundColor || primaryColor
@@ -415,7 +469,43 @@ export function BookingWidgetBlock({
 
   const handleConfirm = async () => {
     setIsSubmitting(true)
-    await new Promise(r => setTimeout(r, 1500))
+    try {
+      if (siteId && selectedService?.id) {
+        // Build start/end times from selected date + time
+        let startTime = new Date().toISOString()
+        let endTime = new Date().toISOString()
+        if (selectedDate && selectedTime) {
+          const [h, m] = selectedTime.split(':').map(Number)
+          const start = new Date(selectedDate)
+          start.setHours(h, m, 0, 0)
+          startTime = start.toISOString()
+          const end = new Date(start.getTime() + (selectedService.duration || 60) * 60000)
+          endTime = end.toISOString()
+        }
+        await createBooking({
+          service_id: selectedService.id,
+          staff_id: selectedStaff?.id || null,
+          customer_name: formData.name || '',
+          customer_email: formData.email || '',
+          customer_phone: formData.phone || '',
+          customer_notes: formData.notes || '',
+          start_time: startTime,
+          end_time: endTime,
+          status: 'pending',
+          payment_status: 'not_required',
+          metadata: {
+            source: 'website_widget',
+            service_name: selectedService.name,
+            staff_name: selectedStaff?.name || '',
+          },
+        })
+      } else {
+        // Demo mode — simulate delay
+        await new Promise(r => setTimeout(r, 1500))
+      }
+    } catch (err) {
+      console.error('Booking failed:', err)
+    }
     setIsSubmitting(false)
     setIsComplete(true)
     onComplete?.({ service: selectedService, staff: selectedStaff, date: selectedDate, time: selectedTime, ...formData })
@@ -541,7 +631,13 @@ export function BookingWidgetBlock({
         {/* SERVICE STEP */}
         {currentStepId === 'service' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap }}>
-            {DEMO_SERVICES.map(service => (
+            {loadingServices && siteId ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+                <Loader2 style={{ width: 24, height: 24, animation: 'spin 1s linear infinite', color: primaryColor }} />
+              </div>
+            ) : dataServices.length === 0 ? (
+              <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>{noServicesMessage}</p>
+            ) : dataServices.map(service => (
               <div key={service.id} onClick={() => { setSelectedService(service); if (autoAdvance) goNext() }}
                 style={{
                   padding: '14px', borderRadius: cardBorderRadius,
@@ -572,7 +668,13 @@ export function BookingWidgetBlock({
         {/* STAFF STEP */}
         {currentStepId === 'staff' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap }}>
-            {DEMO_STAFF.map(staff => (
+            {loadingStaff && siteId ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+                <Loader2 style={{ width: 24, height: 24, animation: 'spin 1s linear infinite', color: primaryColor }} />
+              </div>
+            ) : dataStaff.length === 0 ? (
+              <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>{noStaffMessage}</p>
+            ) : dataStaff.map(staff => (
               <div key={staff.id} onClick={() => { setSelectedStaff(staff); if (autoAdvance) goNext() }}
                 style={{
                   padding: '14px', borderRadius: cardBorderRadius,
@@ -583,13 +685,19 @@ export function BookingWidgetBlock({
                   transition: animateSteps ? 'all 0.2s ease' : 'none',
                 }}
               >
-                <div style={{
-                  width: 44, height: 44, borderRadius: '50%', backgroundColor: `${primaryColor}15`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: primaryColor, fontWeight: 700, fontSize: '16px',
-                }}>
-                  {staff.name.charAt(0)}
-                </div>
+                {staff.avatar ? (
+                  <img src={staff.avatar} alt={staff.name} style={{
+                    width: 44, height: 44, borderRadius: '50%', objectFit: 'cover',
+                  }} />
+                ) : (
+                  <div style={{
+                    width: 44, height: 44, borderRadius: '50%', backgroundColor: `${primaryColor}15`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: primaryColor, fontWeight: 700, fontSize: '16px',
+                  }}>
+                    {staff.name.charAt(0)}
+                  </div>
+                )}
                 <div style={{ flex: 1 }}>
                   <h4 style={{ fontWeight: '600', fontSize: '15px', margin: 0 }}>{staff.name}</h4>
                   {staff.role && <p style={{ fontSize: '13px', opacity: 0.6, margin: '2px 0 0' }}>{staff.role}</p>}
@@ -651,7 +759,11 @@ export function BookingWidgetBlock({
                   <Clock style={{ width: 14, height: 14, opacity: 0.6 }} />
                   Available Times
                 </p>
-                {timeSlots.length === 0 ? (
+                {loadingSlots && siteId ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
+                    <Loader2 style={{ width: 20, height: 20, animation: 'spin 1s linear infinite', color: primaryColor }} />
+                  </div>
+                ) : timeSlots.length === 0 ? (
                   <p style={{ fontSize: '14px', opacity: 0.6, textAlign: 'center', padding: '16px 0' }}>{noSlotsMessage}</p>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>

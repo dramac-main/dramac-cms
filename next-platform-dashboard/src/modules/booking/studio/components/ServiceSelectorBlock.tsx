@@ -10,8 +10,10 @@
 
 import React, { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
-import { Clock, DollarSign, Star, Search, Filter, ChevronRight, Tag, Grid, List } from 'lucide-react'
+import { Clock, DollarSign, Star, Search, Filter, ChevronRight, Tag, Grid, List, Loader2 } from 'lucide-react'
 import type { ComponentDefinition } from '@/types/studio'
+import { useBookingServices } from '../../hooks/useBookingServices'
+import type { Service } from '../../types/booking-types'
 
 // =============================================================================
 // TYPES
@@ -264,15 +266,35 @@ export function ServiceSelectorBlock({
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(filterByCategory || null)
 
+  // Fetch real data when siteId is available
+  const { services: realServices, isLoading } = useBookingServices(siteId || '')
+
+  // Map DB services to display format
+  const dataServices: ServiceItem[] = useMemo(() => {
+    if (!siteId || realServices.length === 0) return DEMO_SERVICES
+    return realServices.map((s: Service) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description || undefined,
+      duration: s.duration_minutes,
+      price: s.price,
+      currency: s.currency || 'USD',
+      category: s.category || undefined,
+      image: s.image_url || undefined,
+      available: s.is_active,
+      featured: false,
+    }))
+  }, [siteId, realServices])
+
   // Get unique categories
   const categories = useMemo(() => {
-    const cats = new Set(DEMO_SERVICES.map(s => s.category).filter(Boolean))
+    const cats = new Set(dataServices.map(s => s.category).filter(Boolean))
     return Array.from(cats) as string[]
-  }, [])
+  }, [dataServices])
 
   // Filter services
   const filteredServices = useMemo(() => {
-    let services = DEMO_SERVICES
+    let services = dataServices
     if (activeCategory) {
       services = services.filter(s => s.category === activeCategory)
     }
@@ -281,7 +303,7 @@ export function ServiceSelectorBlock({
       services = services.filter(s => s.name.toLowerCase().includes(q) || s.description?.toLowerCase().includes(q) || s.category?.toLowerCase().includes(q))
     }
     return services.slice(0, maxServices)
-  }, [searchQuery, activeCategory, maxServices])
+  }, [dataServices, searchQuery, activeCategory, maxServices])
 
   const handleSelect = (service: ServiceItem) => {
     setSelectedServiceId(service.id)
@@ -302,6 +324,18 @@ export function ServiceSelectorBlock({
   const badgeBg = featuredBadgeBgColor || primaryColor
 
   const isGrid = layout === 'grid' || layout === 'cards'
+
+  // Loading state when fetching real data
+  if (siteId && isLoading) {
+    return (
+      <div className={cn('service-selector-block', className)} style={{ backgroundColor: backgroundColor || undefined, borderRadius, border: `${borderWidth} solid ${cardBorderColor || '#e5e7eb'}`, padding, minHeight: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} role="region" aria-label={ariaLabel}>
+        <div style={{ textAlign: 'center', opacity: 0.6 }}>
+          <Loader2 style={{ width: 24, height: 24, animation: 'spin 1s linear infinite', margin: '0 auto 8px' }} />
+          <p style={{ fontSize: '14px', margin: 0 }}>Loading services...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
