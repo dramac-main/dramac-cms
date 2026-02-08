@@ -126,11 +126,13 @@ export function initializeRegistry(): void {
  * These render on public sites without requiring site_module_installations rows.
  */
 function registerBuiltInModuleComponents(): void {
+  const { componentRegistry: registry } = require("./component-registry");
+  const { fieldRegistry: fields } = require("./field-registry");
+
   try {
-    // Booking module components
+    // Booking module — components + custom fields
     const bookingStudio = require("@/modules/booking/studio");
     if (bookingStudio?.studioComponents) {
-      const { componentRegistry: registry } = require("./component-registry");
       let count = 0;
       for (const [_key, def] of Object.entries(bookingStudio.studioComponents)) {
         const compDef = def as import("@/types/studio").ComponentDefinition;
@@ -141,15 +143,23 @@ function registerBuiltInModuleComponents(): void {
       }
       console.log(`[Studio] Registered ${count} booking module components as built-in`);
     }
+    // Register booking custom field renderers
+    if (bookingStudio?.studioFields) {
+      for (const [fieldType, editor] of Object.entries(bookingStudio.studioFields)) {
+        // Keys may be "booking:service-selector" (already prefixed) or "service-selector"
+        const key = fieldType.includes(":") ? fieldType : `booking:${fieldType}`;
+        fields.registerCustomRenderer(key, editor as React.ComponentType<any>);
+      }
+      console.log(`[Studio] Registered booking custom fields as built-in`);
+    }
   } catch (e) {
     console.debug("[Studio] Booking module not available for built-in registration:", (e as Error).message);
   }
 
   try {
-    // E-commerce module components
+    // E-commerce module — components + custom fields
     const ecomStudio = require("@/modules/ecommerce/studio");
     if (ecomStudio?.studioComponents) {
-      const { componentRegistry: registry } = require("./component-registry");
       let count = 0;
       for (const [_key, def] of Object.entries(ecomStudio.studioComponents)) {
         const compDef = def as import("@/types/studio").ComponentDefinition;
@@ -159,6 +169,14 @@ function registerBuiltInModuleComponents(): void {
         }
       }
       console.log(`[Studio] Registered ${count} ecommerce module components as built-in`);
+    }
+    // Register ecommerce custom field renderers
+    if (ecomStudio?.studioFields) {
+      for (const [fieldType, editor] of Object.entries(ecomStudio.studioFields)) {
+        const key = fieldType.includes(":") ? fieldType : `ecommerce:${fieldType}`;
+        fields.registerCustomRenderer(key, editor as React.ComponentType<any>);
+      }
+      console.log(`[Studio] Registered ecommerce custom fields as built-in`);
     }
   } catch (e) {
     console.debug("[Studio] Ecommerce module not available for built-in registration:", (e as Error).message);

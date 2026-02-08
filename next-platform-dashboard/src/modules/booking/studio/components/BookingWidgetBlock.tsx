@@ -1,23 +1,20 @@
 /**
  * Booking Widget Block - Studio Component
  * 
- * Complete all-in-one booking widget that combines
- * service selection, staff selection, calendar, and form.
+ * All-in-one multi-step booking wizard. 5 steps:
+ * Service → Staff → Date/Time → Details → Confirmation.
+ * 50+ customization properties with full theme support.
+ * 
+ * @module booking
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-import { 
-  Calendar, 
-  ChevronLeft, 
-  ChevronRight, 
-  Check, 
-  Clock, 
-  User, 
-  Briefcase,
-  ArrowLeft,
-  Loader2
+import {
+  Tag, User, Calendar, FileText, CheckCircle,
+  ChevronLeft, ChevronRight, Clock, Star, Mail, Phone,
+  Send, Loader2, ArrowRight, Check
 } from 'lucide-react'
 import type { ComponentDefinition } from '@/types/studio'
 
@@ -25,488 +22,618 @@ import type { ComponentDefinition } from '@/types/studio'
 // TYPES
 // =============================================================================
 
-type ResponsiveValue<T> = T | { mobile?: T; tablet?: T; desktop?: T }
+interface ServiceItem {
+  id: string; name: string; description?: string; duration: number; price: number; currency: string; category?: string
+}
+
+interface StaffMember {
+  id: string; name: string; role?: string; avatar?: string; rating?: number
+}
+
+interface TimeSlot {
+  time: string; display: string; available: boolean
+}
 
 export interface BookingWidgetBlockProps {
-  siteId?: string
+  // Content / Labels
   title?: string
   subtitle?: string
-  showStaffSelection?: boolean
-  showServiceSelection?: boolean
-  primaryColor?: string
-  borderRadius?: ResponsiveValue<string>
-  className?: string
-  onBookingComplete?: (booking: BookingData) => void
-}
+  showHeader?: boolean
+  showStepIndicator?: boolean
+  showStepLabels?: boolean
+  stepServiceLabel?: string
+  stepStaffLabel?: string
+  stepDateLabel?: string
+  stepDetailsLabel?: string
+  stepConfirmLabel?: string
+  nextButtonText?: string
+  prevButtonText?: string
+  confirmButtonText?: string
+  confirmingText?: string
+  successTitle?: string
+  successMessage?: string
+  bookAnotherText?: string
+  noServicesMessage?: string
+  noStaffMessage?: string
+  noSlotsMessage?: string
 
-interface BookingData {
-  serviceId: string
+  // Widget Settings
+  showServiceStep?: boolean
+  showStaffStep?: boolean
+  showSummary?: boolean
+  autoAdvance?: boolean
+  requireStaff?: boolean
+  allowSkipStaff?: boolean
+
+  // Data
+  siteId?: string
+  serviceId?: string
   staffId?: string
-  date: Date
-  time: string
-  customerName: string
-  customerEmail: string
-  customerPhone?: string
-  customerNotes?: string
+
+  // Calendar Settings
+  firstDayOfWeek?: 'sunday' | 'monday'
+  slotInterval?: number
+  slotStartHour?: number
+  slotEndHour?: number
+  timeFormat?: '12h' | '24h'
+
+  // Form Settings
+  showNameField?: boolean
+  showEmailField?: boolean
+  showPhoneField?: boolean
+  showNotesField?: boolean
+  nameRequired?: boolean
+  emailRequired?: boolean
+
+  // Layout
+  layout?: 'standard' | 'compact' | 'wide'
+  stepIndicatorStyle?: 'dots' | 'numbers' | 'progress-bar' | 'pills'
+  headerAlignment?: 'left' | 'center' | 'right'
+  width?: string
+  minHeight?: string
+  padding?: string
+  gap?: string
+
+  // Colors
+  primaryColor?: string
+  secondaryColor?: string
+  backgroundColor?: string
+  textColor?: string
+  headerBackgroundColor?: string
+  headerTextColor?: string
+  stepActiveColor?: string
+  stepCompletedColor?: string
+  stepInactiveColor?: string
+  cardBackgroundColor?: string
+  cardBorderColor?: string
+  cardSelectedBorderColor?: string
+  cardSelectedBgColor?: string
+  buttonBackgroundColor?: string
+  buttonTextColor?: string
+  buttonHoverColor?: string
+  secondaryButtonBgColor?: string
+  secondaryButtonTextColor?: string
+  slotBgColor?: string
+  slotSelectedBgColor?: string
+  slotSelectedTextColor?: string
+  summaryBgColor?: string
+  successColor?: string
+  errorColor?: string
+  borderColor?: string
+  dividerColor?: string
+  progressBarBgColor?: string
+  inputBorderColor?: string
+  inputFocusBorderColor?: string
+  priceColor?: string
+  ratingColor?: string
+
+  // Typography
+  titleFontSize?: string
+  titleFontWeight?: string
+  titleFontFamily?: string
+  subtitleFontSize?: string
+  stepLabelFontSize?: string
+  serviceNameFontSize?: string
+  priceFontSize?: string
+  priceFontWeight?: string
+  buttonFontSize?: string
+  buttonFontWeight?: string
+  summaryFontSize?: string
+
+  // Shape & Effects
+  borderRadius?: string
+  cardBorderRadius?: string
+  buttonBorderRadius?: string
+  inputBorderRadius?: string
+  borderWidth?: string
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl'
+  cardShadow?: 'none' | 'sm' | 'md' | 'lg'
+  hoverScale?: boolean
+  animateSteps?: boolean
+  showSuccessAnimation?: boolean
+
+  // Accessibility
+  ariaLabel?: string
+
+  // Events
+  className?: string
+  onComplete?: (booking: Record<string, unknown>) => void
 }
 
-interface Service {
-  id: string
-  name: string
-  duration_minutes: number
-  price: number
-  currency: string
-  color: string
-}
+// =============================================================================
+// DEMO DATA
+// =============================================================================
 
-interface Staff {
-  id: string
-  name: string
-  avatar_url?: string
-}
+const DEMO_SERVICES: ServiceItem[] = [
+  { id: '1', name: 'Full Body Massage', description: 'Relaxing full body massage therapy.', duration: 60, price: 85, currency: 'USD', category: 'Massage' },
+  { id: '2', name: 'Deep Tissue Massage', description: 'Intensive deep muscle treatment.', duration: 90, price: 120, currency: 'USD', category: 'Massage' },
+  { id: '3', name: 'Facial Treatment', description: 'Premium facial with skincare.', duration: 45, price: 65, currency: 'USD', category: 'Skincare' },
+  { id: '4', name: 'Hair Styling', description: 'Professional hair styling consultation.', duration: 30, price: 45, currency: 'USD', category: 'Hair' },
+]
 
-type BookingStep = 'service' | 'staff' | 'datetime' | 'details' | 'confirmation'
+const DEMO_STAFF: StaffMember[] = [
+  { id: '1', name: 'Sarah Johnson', role: 'Senior Therapist', rating: 4.9 },
+  { id: '2', name: 'Michael Chen', role: 'Massage Specialist', rating: 4.8 },
+  { id: '3', name: 'Emma Williams', role: 'Skincare Expert', rating: 4.7 },
+]
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+const SHADOW_MAP: Record<string, string> = {
+  none: 'none',
+  sm: '0 1px 2px rgba(0,0,0,0.05)',
+  md: '0 4px 6px -1px rgba(0,0,0,0.1)',
+  lg: '0 10px 15px -3px rgba(0,0,0,0.1)',
+  xl: '0 20px 25px -5px rgba(0,0,0,0.1)',
+}
 
 // =============================================================================
 // COMPONENT
 // =============================================================================
 
 export function BookingWidgetBlock({
-  siteId,
+  // Content
   title = 'Book an Appointment',
-  subtitle = 'Select a service and time that works for you',
-  showStaffSelection = true,
-  showServiceSelection = true,
+  subtitle,
+  showHeader = true,
+  showStepIndicator = true,
+  showStepLabels = true,
+  stepServiceLabel = 'Service',
+  stepStaffLabel = 'Staff',
+  stepDateLabel = 'Date & Time',
+  stepDetailsLabel = 'Details',
+  stepConfirmLabel = 'Confirm',
+  nextButtonText = 'Continue',
+  prevButtonText = 'Back',
+  confirmButtonText = 'Confirm Booking',
+  confirmingText = 'Booking...',
+  successTitle = 'Booking Confirmed!',
+  successMessage = 'Your appointment has been booked. Check your email for confirmation.',
+  bookAnotherText = 'Book Another',
+  noServicesMessage = 'No services available.',
+  noStaffMessage = 'No staff available.',
+  noSlotsMessage = 'No time slots available for this date.',
+
+  // Widget Settings
+  showServiceStep = true,
+  showStaffStep = true,
+  showSummary = true,
+  autoAdvance = false,
+  requireStaff = false,
+
+  // Data
+  siteId,
+  serviceId,
+  staffId,
+
+  // Calendar
+  firstDayOfWeek = 'sunday',
+  slotInterval = 30,
+  slotStartHour = 9,
+  slotEndHour = 17,
+  timeFormat = '24h',
+
+  // Form
+  showNameField = true,
+  showEmailField = true,
+  showPhoneField = true,
+  showNotesField = true,
+  nameRequired = true,
+  emailRequired = true,
+
+  // Layout
+  layout = 'standard',
+  stepIndicatorStyle = 'dots',
+  headerAlignment = 'center',
+  width,
+  minHeight,
+  padding = '20px',
+  gap = '16px',
+
+  // Colors
   primaryColor = '#8B5CF6',
-  borderRadius,
+  secondaryColor,
+  backgroundColor,
+  textColor,
+  headerBackgroundColor,
+  headerTextColor,
+  stepActiveColor,
+  stepCompletedColor,
+  stepInactiveColor,
+  cardBackgroundColor,
+  cardBorderColor,
+  cardSelectedBorderColor,
+  cardSelectedBgColor,
+  buttonBackgroundColor,
+  buttonTextColor = '#ffffff',
+  buttonHoverColor,
+  secondaryButtonBgColor,
+  secondaryButtonTextColor,
+  slotBgColor,
+  slotSelectedBgColor,
+  slotSelectedTextColor = '#ffffff',
+  summaryBgColor,
+  successColor = '#22c55e',
+  errorColor = '#ef4444',
+  borderColor,
+  dividerColor,
+  progressBarBgColor,
+  inputBorderColor,
+  inputFocusBorderColor,
+  priceColor,
+  ratingColor = '#f59e0b',
+
+  // Typography
+  titleFontSize = '20px',
+  titleFontWeight = '700',
+  titleFontFamily,
+  subtitleFontSize = '14px',
+  stepLabelFontSize = '12px',
+  serviceNameFontSize = '15px',
+  priceFontSize = '16px',
+  priceFontWeight = '700',
+  buttonFontSize = '14px',
+  buttonFontWeight = '600',
+  summaryFontSize = '14px',
+
+  // Shape & Effects
+  borderRadius = '16px',
+  cardBorderRadius = '10px',
+  buttonBorderRadius = '10px',
+  inputBorderRadius = '8px',
+  borderWidth = '1px',
+  shadow = 'md',
+  cardShadow = 'sm',
+  hoverScale = true,
+  animateSteps = true,
+  showSuccessAnimation = true,
+
+  // Accessibility
+  ariaLabel = 'Booking Widget',
+
+  // Events
   className,
-  onBookingComplete,
+  onComplete,
 }: BookingWidgetBlockProps) {
-  // State
-  const [step, setStep] = useState<BookingStep>(showServiceSelection ? 'service' : 'datetime')
-  const [services, setServices] = useState<Service[]>([])
-  const [staff, setStaff] = useState<Staff[]>([])
-  const [selectedService, setSelectedService] = useState<Service | null>(null)
-  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null)
+  // Steps setup
+  const steps = useMemo(() => {
+    const s = []
+    if (showServiceStep) s.push({ id: 'service', label: stepServiceLabel, icon: Tag })
+    if (showStaffStep) s.push({ id: 'staff', label: stepStaffLabel, icon: User })
+    s.push({ id: 'datetime', label: stepDateLabel, icon: Calendar })
+    s.push({ id: 'details', label: stepDetailsLabel, icon: FileText })
+    s.push({ id: 'confirm', label: stepConfirmLabel, icon: CheckCircle })
+    return s
+  }, [showServiceStep, showStaffStep, stepServiceLabel, stepStaffLabel, stepDateLabel, stepDetailsLabel, stepConfirmLabel])
+
+  const [currentStep, setCurrentStep] = useState(0)
+  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null)
+  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
-  const [timeSlots, setTimeSlots] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [formData, setFormData] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formData, setFormData] = useState({
-    customerName: '',
-    customerEmail: '',
-    customerPhone: '',
-    customerNotes: '',
-  })
-  
-  // Calendar state
-  const [currentMonth, setCurrentMonth] = useState(new Date())
-  
-  // Load services and staff data
-  useEffect(() => {
-    if (siteId) {
-      // Fetch real data from the booking module API
-      const fetchData = async () => {
-        setIsLoading(true)
-        try {
-          const [servicesRes, staffRes] = await Promise.all([
-            fetch(`/api/modules/booking/services?siteId=${siteId}`),
-            fetch(`/api/modules/booking/staff?siteId=${siteId}`),
-          ])
-          
-          if (servicesRes.ok) {
-            const data = await servicesRes.json()
-            setServices(data.services || data || [])
-          }
-          if (staffRes.ok) {
-            const data = await staffRes.json()
-            setStaff(data.staff || data || [])
-          }
-        } catch {
-          // Fall back to demo data on error
-          setServices([
-            { id: '1', name: 'Consultation', duration_minutes: 30, price: 5000, currency: 'ZMW', color: '#3B82F6' },
-            { id: '2', name: 'Full Session', duration_minutes: 60, price: 15000, currency: 'ZMW', color: '#10B981' },
-            { id: '3', name: 'Premium Package', duration_minutes: 90, price: 25000, currency: 'ZMW', color: '#F59E0B' },
-          ])
-          setStaff([
-            { id: '1', name: 'Dr. Sarah Johnson' },
-            { id: '2', name: 'Michael Chen' },
-            { id: '3', name: 'Emily Rodriguez' },
-          ])
-        }
-        setIsLoading(false)
-      }
-      fetchData()
-    } else {
-      // No siteId — use demo data for Studio preview
-      setServices([
-        { id: '1', name: 'Consultation', duration_minutes: 30, price: 5000, currency: 'ZMW', color: '#3B82F6' },
-        { id: '2', name: 'Full Session', duration_minutes: 60, price: 15000, currency: 'ZMW', color: '#10B981' },
-        { id: '3', name: 'Premium Package', duration_minutes: 90, price: 25000, currency: 'ZMW', color: '#F59E0B' },
-      ])
-      setStaff([
-        { id: '1', name: 'Dr. Sarah Johnson' },
-        { id: '2', name: 'Michael Chen' },
-        { id: '3', name: 'Emily Rodriguez' },
-      ])
-      setIsLoading(false)
-    }
-  }, [siteId])
-  
-  // Generate time slots when date is selected
-  useEffect(() => {
-    if (selectedDate) {
-      const slots: string[] = []
-      for (let hour = 9; hour < 17; hour++) {
-        for (let min = 0; min < 60; min += 30) {
-          if (Math.random() > 0.2) { // Simulate some unavailable slots
-            slots.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`)
-          }
-        }
-      }
-      setTimeSlots(slots)
-    }
-  }, [selectedDate])
-  
-  // Format price
-  const formatPrice = (price: number, currency: string): string => {
-    return new Intl.NumberFormat('en-ZM', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-    }).format(price / 100)
-  }
-  
-  // Format duration
-  const formatDuration = (minutes: number): string => {
-    if (minutes < 60) return `${minutes} min`
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
-  }
-  
-  // Calendar helpers
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-  const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-  
-  const getCalendarDays = () => {
-    const year = currentMonth.getFullYear()
-    const month = currentMonth.getMonth()
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    const days: (Date | null)[] = []
-    
-    for (let i = 0; i < firstDay.getDay(); i++) {
-      days.push(null)
-    }
-    
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-      days.push(new Date(year, month, i))
-    }
-    
-    return days
-  }
-  
-  const isDateDisabled = (date: Date): boolean => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    return date < today
-  }
-  
-  // Navigation
-  const getStepIndex = (): number => {
-    const steps: BookingStep[] = []
-    if (showServiceSelection) steps.push('service')
-    if (showStaffSelection) steps.push('staff')
-    steps.push('datetime', 'details', 'confirmation')
-    return steps.indexOf(step)
-  }
-  
-  const getTotalSteps = (): number => {
-    return 2 + (showServiceSelection ? 1 : 0) + (showStaffSelection ? 1 : 0)
-  }
-  
-  const canGoNext = (): boolean => {
-    switch (step) {
-      case 'service': return !!selectedService
-      case 'staff': return true // Staff is optional
-      case 'datetime': return !!selectedDate && !!selectedTime
-      case 'details': return !!formData.customerName && !!formData.customerEmail
-      default: return false
-    }
-  }
-  
-  const goNext = () => {
-    switch (step) {
-      case 'service':
-        setStep(showStaffSelection ? 'staff' : 'datetime')
-        break
-      case 'staff':
-        setStep('datetime')
-        break
-      case 'datetime':
-        setStep('details')
-        break
-      case 'details':
-        handleSubmit()
-        break
-    }
-  }
-  
-  const goBack = () => {
-    switch (step) {
-      case 'staff':
-        setStep('service')
-        break
-      case 'datetime':
-        setStep(showStaffSelection ? 'staff' : 'service')
-        break
-      case 'details':
-        setStep('datetime')
-        break
-    }
-  }
-  
-  // Submit
-  const handleSubmit = async () => {
-    if (!selectedService || !selectedDate || !selectedTime) return
-    
-    setIsSubmitting(true)
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    const booking: BookingData = {
-      serviceId: selectedService.id,
-      staffId: selectedStaff?.id,
-      date: selectedDate,
-      time: selectedTime,
-      ...formData,
-    }
-    
-    onBookingComplete?.(booking)
-    setStep('confirmation')
-    setIsSubmitting(false)
-  }
-  
-  // Responsive border radius
-  const radius = typeof borderRadius === 'object' 
-    ? borderRadius.mobile 
-    : borderRadius || '16px'
+  const [isComplete, setIsComplete] = useState(false)
 
-  if (isLoading) {
+  const [calendarDate, setCalendarDate] = useState(new Date())
+  const calYear = calendarDate.getFullYear()
+  const calMonth = calendarDate.getMonth()
+
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December']
+  const dayNames = firstDayOfWeek === 'monday' ? ['Mo','Tu','We','Th','Fr','Sa','Su'] : ['Su','Mo','Tu','We','Th','Fr','Sa']
+
+  const calendarDays = useMemo(() => {
+    const first = new Date(calYear, calMonth, 1)
+    let startDay = first.getDay()
+    if (firstDayOfWeek === 'monday') startDay = startDay === 0 ? 6 : startDay - 1
+    const totalDays = new Date(calYear, calMonth + 1, 0).getDate()
+    const days: (Date | null)[] = []
+    for (let i = 0; i < startDay; i++) days.push(null)
+    for (let i = 1; i <= totalDays; i++) days.push(new Date(calYear, calMonth, i))
+    return days
+  }, [calYear, calMonth, firstDayOfWeek])
+
+  const formatTime = (h: number, m: number) => {
+    if (timeFormat === '12h') {
+      const hh = h % 12 || 12; const ap = h < 12 ? 'AM' : 'PM'
+      return `${hh}:${m.toString().padStart(2,'0')} ${ap}`
+    }
+    return `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`
+  }
+
+  const formatPrice = (price: number, currency: string) => {
+    try { return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(price) }
+    catch { return `${currency} ${price}` }
+  }
+
+  const isToday = (d: Date) => d.toDateString() === new Date().toDateString()
+  const isPast = (d: Date) => { const t = new Date(); t.setHours(0,0,0,0); return d < t }
+  const isDateSelected = (d: Date) => selectedDate?.toDateString() === d.toDateString()
+
+  const timeSlots = useMemo((): TimeSlot[] => {
+    if (!selectedDate) return []
+    const slots: TimeSlot[] = []
+    for (let h = slotStartHour; h < slotEndHour; h++) {
+      for (let m = 0; m < 60; m += slotInterval) {
+        slots.push({ time: `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`, display: formatTime(h, m), available: Math.random() > 0.3 })
+      }
+    }
+    return slots
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, slotStartHour, slotEndHour, slotInterval, timeFormat])
+
+  // Derived colors
+  const btnBg = buttonBackgroundColor || primaryColor
+  const activeStep = stepActiveColor || primaryColor
+  const completedStep = stepCompletedColor || primaryColor
+  const inactiveStep = stepInactiveColor || '#d1d5db'
+  const selBorder = cardSelectedBorderColor || primaryColor
+  const selBg = cardSelectedBgColor || `${primaryColor}08`
+  const slotSelBg = slotSelectedBgColor || primaryColor
+  const focusBorder = inputFocusBorderColor || primaryColor
+  const summaryBg = summaryBgColor || `${primaryColor}05`
+  const secBtnBg = secondaryButtonBgColor || 'transparent'
+  const secBtnText = secondaryButtonTextColor || textColor || undefined
+
+  const canGoNext = () => {
+    const step = steps[currentStep]
+    if (step.id === 'service') return !!selectedService
+    if (step.id === 'staff') return !requireStaff || !!selectedStaff
+    if (step.id === 'datetime') return !!selectedDate && !!selectedTime
+    if (step.id === 'details') {
+      if (nameRequired && !formData.name?.trim()) return false
+      if (emailRequired && !formData.email?.trim()) return false
+      return true
+    }
+    return true
+  }
+
+  const goNext = () => { if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1) }
+  const goPrev = () => { if (currentStep > 0) setCurrentStep(currentStep - 1) }
+
+  const handleConfirm = async () => {
+    setIsSubmitting(true)
+    await new Promise(r => setTimeout(r, 1500))
+    setIsSubmitting(false)
+    setIsComplete(true)
+    onComplete?.({ service: selectedService, staff: selectedStaff, date: selectedDate, time: selectedTime, ...formData })
+  }
+
+  const resetWidget = () => {
+    setCurrentStep(0); setSelectedService(null); setSelectedStaff(null)
+    setSelectedDate(null); setSelectedTime(null); setFormData({}); setIsComplete(false)
+  }
+
+  // Success screen
+  if (isComplete) {
     return (
-      <div 
-        className={cn("booking-widget-block bg-card border shadow-lg flex items-center justify-center", className)}
-        style={{ borderRadius: radius, minHeight: '400px' }}
-      >
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className={cn('booking-widget-block', className)} style={{
+        backgroundColor: backgroundColor || undefined, borderRadius, width: width || '100%',
+        border: `${borderWidth} solid ${borderColor || '#e5e7eb'}`, boxShadow: SHADOW_MAP[shadow] || 'none',
+        padding: '40px 20px', textAlign: 'center',
+      }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: '50%', backgroundColor: `${successColor}15`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
+          animation: showSuccessAnimation ? 'bounceIn 0.5s ease' : undefined,
+        }}>
+          <CheckCircle style={{ width: 32, height: 32, color: successColor }} />
+        </div>
+        <h3 style={{ fontWeight: '700', fontSize: '20px', margin: '0 0 8px', color: successColor }}>{successTitle}</h3>
+        <p style={{ fontSize: '14px', opacity: 0.7, margin: '0 0 20px', lineHeight: 1.5 }}>{successMessage}</p>
+        <button onClick={resetWidget} style={{
+          padding: '10px 24px', borderRadius: buttonBorderRadius, backgroundColor: btnBg,
+          color: buttonTextColor, border: 'none', fontSize: buttonFontSize, fontWeight: buttonFontWeight, cursor: 'pointer',
+        }}>
+          {bookAnotherText}
+        </button>
+        <style>{`@keyframes bounceIn { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }`}</style>
       </div>
     )
   }
 
+  const currentStepId = steps[currentStep]?.id
+
   return (
-    <div 
-      className={cn("booking-widget-block bg-card border shadow-lg overflow-hidden", className)}
-      style={{ borderRadius: radius }}
-    >
+    <div className={cn('booking-widget-block', className)} style={{
+      backgroundColor: backgroundColor || undefined, color: textColor || undefined,
+      borderRadius, border: `${borderWidth} solid ${borderColor || '#e5e7eb'}`,
+      boxShadow: SHADOW_MAP[shadow] || 'none', width: width || '100%', minHeight: minHeight || undefined,
+      fontFamily: titleFontFamily || undefined, overflow: 'hidden',
+    }} role="region" aria-label={ariaLabel}>
+
       {/* Header */}
-      <div 
-        className="p-6 text-white"
-        style={{ backgroundColor: primaryColor }}
-      >
-        {step !== 'confirmation' && (
-          <div className="flex items-center gap-3 mb-4">
-            {step !== 'service' && showServiceSelection && (
-              <button
-                onClick={goBack}
-                className="p-1 hover:bg-white/20 rounded-md transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-            )}
-            {step !== 'service' && !showServiceSelection && step !== 'datetime' && (
-              <button
-                onClick={goBack}
-                className="p-1 hover:bg-white/20 rounded-md transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-            )}
-            <div>
-              <h2 className="text-xl font-bold">{title}</h2>
-              <p className="text-white/80 text-sm">{subtitle}</p>
+      {showHeader && (
+        <div style={{
+          padding, backgroundColor: headerBackgroundColor || undefined,
+          color: headerTextColor || textColor || undefined,
+          borderBottom: `1px solid ${dividerColor || borderColor || '#e5e7eb'}`,
+          textAlign: headerAlignment,
+        }}>
+          <h3 style={{ fontWeight: titleFontWeight, fontSize: titleFontSize, margin: 0 }}>{title}</h3>
+          {subtitle && <p style={{ fontSize: subtitleFontSize, opacity: 0.7, marginTop: '4px', marginBottom: 0 }}>{subtitle}</p>}
+        </div>
+      )}
+
+      {/* Step Indicator */}
+      {showStepIndicator && (
+        <div style={{ padding: `12px ${padding}`, borderBottom: `1px solid ${dividerColor || borderColor || '#e5e7eb'}` }}>
+          {stepIndicatorStyle === 'progress-bar' ? (
+            <div style={{ height: 4, borderRadius: 2, backgroundColor: progressBarBgColor || '#e5e7eb' }}>
+              <div style={{
+                height: '100%', borderRadius: 2, backgroundColor: activeStep,
+                width: `${((currentStep + 1) / steps.length) * 100}%`,
+                transition: animateSteps ? 'width 0.3s ease' : 'none',
+              }} />
             </div>
-          </div>
-        )}
-        
-        {/* Progress Steps */}
-        {step !== 'confirmation' && (
-          <div className="flex gap-2">
-            {Array.from({ length: getTotalSteps() }).map((_, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "h-1.5 flex-1 rounded-full transition-all",
-                  i <= getStepIndex() ? 'bg-white' : 'bg-white/30'
-                )}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-      
-      {/* Content */}
-      <div className="p-6">
-        {/* Service Selection */}
-        {step === 'service' && (
-          <div className="space-y-3">
-            <h3 className="font-semibold flex items-center gap-2 mb-4">
-              <Briefcase className="h-5 w-5" />
-              Select a Service
-            </h3>
-            {services.map((service) => (
-              <button
-                key={service.id}
-                onClick={() => setSelectedService(service)}
-                className={cn(
-                  "w-full text-left p-4 rounded-lg border-2 transition-all",
-                  selectedService?.id === service.id 
-                    ? 'border-primary ring-2 ring-primary/20' 
-                    : 'hover:border-muted-foreground/30'
-                )}
-                style={{
-                  borderColor: selectedService?.id === service.id ? primaryColor : undefined,
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: service.color }}
-                    />
-                    <div>
-                      <p className="font-medium">{service.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDuration(service.duration_minutes)}
-                      </p>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: stepIndicatorStyle === 'pills' ? '4px' : '8px' }}>
+              {steps.map((step, idx) => {
+                const isActive = idx === currentStep
+                const isDone = idx < currentStep
+                return (
+                  <React.Fragment key={step.id}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                      {stepIndicatorStyle === 'numbers' ? (
+                        <div style={{
+                          width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          backgroundColor: isDone ? completedStep : isActive ? activeStep : 'transparent',
+                          color: isDone || isActive ? '#fff' : inactiveStep,
+                          border: `2px solid ${isDone ? completedStep : isActive ? activeStep : inactiveStep}`,
+                          fontSize: '12px', fontWeight: 600, transition: 'all 0.2s ease',
+                        }}>
+                          {isDone ? <Check style={{ width: 14, height: 14 }} /> : idx + 1}
+                        </div>
+                      ) : stepIndicatorStyle === 'pills' ? (
+                        <div style={{
+                          height: 4, width: isActive ? 24 : 12, borderRadius: 2,
+                          backgroundColor: isDone ? completedStep : isActive ? activeStep : inactiveStep,
+                          transition: 'all 0.2s ease',
+                        }} />
+                      ) : (
+                        <div style={{
+                          width: 10, height: 10, borderRadius: '50%',
+                          backgroundColor: isDone ? completedStep : isActive ? activeStep : inactiveStep,
+                          transition: 'all 0.2s ease',
+                        }} />
+                      )}
+                      {showStepLabels && stepIndicatorStyle !== 'pills' && (
+                        <span style={{ fontSize: stepLabelFontSize, opacity: isActive ? 1 : 0.5, fontWeight: isActive ? 600 : 400 }}>
+                          {step.label}
+                        </span>
+                      )}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-semibold">
-                      {formatPrice(service.price, service.currency)}
-                    </span>
-                    {selectedService?.id === service.id && (
-                      <Check className="h-5 w-5" style={{ color: primaryColor }} />
+                    {idx < steps.length - 1 && stepIndicatorStyle !== 'pills' && (
+                      <div style={{ flex: 1, height: 1, backgroundColor: isDone ? completedStep : inactiveStep, maxWidth: 40 }} />
                     )}
+                  </React.Fragment>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Step Content */}
+      <div style={{ padding, minHeight: '200px' }}>
+        {/* SERVICE STEP */}
+        {currentStepId === 'service' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap }}>
+            {DEMO_SERVICES.map(service => (
+              <div key={service.id} onClick={() => { setSelectedService(service); if (autoAdvance) goNext() }}
+                style={{
+                  padding: '14px', borderRadius: cardBorderRadius,
+                  border: `${selectedService?.id === service.id ? '2px' : borderWidth} solid ${selectedService?.id === service.id ? selBorder : (cardBorderColor || '#e5e7eb')}`,
+                  backgroundColor: selectedService?.id === service.id ? selBg : (cardBackgroundColor || undefined),
+                  boxShadow: SHADOW_MAP[cardShadow] || 'none', cursor: 'pointer',
+                  transition: animateSteps ? 'all 0.2s ease' : 'none',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                }}
+                onMouseEnter={(e) => hoverScale && ((e.currentTarget as HTMLElement).style.transform = 'scale(1.01)')}
+                onMouseLeave={(e) => hoverScale && ((e.currentTarget as HTMLElement).style.transform = 'none')}
+              >
+                <div>
+                  <h4 style={{ fontWeight: '600', fontSize: serviceNameFontSize, margin: '0 0 4px' }}>{service.name}</h4>
+                  {service.description && <p style={{ fontSize: '13px', opacity: 0.7, margin: '0 0 6px' }}>{service.description}</p>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', opacity: 0.7 }}>
+                    <Clock style={{ width: 14, height: 14 }} /> {service.duration} min
                   </div>
                 </div>
-              </button>
+                <span style={{ fontWeight: priceFontWeight, fontSize: priceFontSize, color: priceColor || primaryColor }}>
+                  {formatPrice(service.price, service.currency)}
+                </span>
+              </div>
             ))}
           </div>
         )}
-        
-        {/* Staff Selection */}
-        {step === 'staff' && (
-          <div className="space-y-3">
-            <h3 className="font-semibold flex items-center gap-2 mb-4">
-              <User className="h-5 w-5" />
-              Choose a Staff Member (Optional)
-            </h3>
-            <button
-              onClick={() => setSelectedStaff(null)}
-              className={cn(
-                "w-full text-left p-4 rounded-lg border-2 transition-all",
-                !selectedStaff ? 'border-primary ring-2 ring-primary/20' : 'hover:border-muted-foreground/30'
-              )}
-              style={{
-                borderColor: !selectedStaff ? primaryColor : undefined,
-              }}
-            >
-              <p className="font-medium">No preference</p>
-              <p className="text-sm text-muted-foreground">Any available staff member</p>
-            </button>
-            {staff.map((member) => (
-              <button
-                key={member.id}
-                onClick={() => setSelectedStaff(member)}
-                className={cn(
-                  "w-full text-left p-4 rounded-lg border-2 transition-all flex items-center gap-4",
-                  selectedStaff?.id === member.id 
-                    ? 'border-primary ring-2 ring-primary/20' 
-                    : 'hover:border-muted-foreground/30'
-                )}
+
+        {/* STAFF STEP */}
+        {currentStepId === 'staff' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap }}>
+            {DEMO_STAFF.map(staff => (
+              <div key={staff.id} onClick={() => { setSelectedStaff(staff); if (autoAdvance) goNext() }}
                 style={{
-                  borderColor: selectedStaff?.id === member.id ? primaryColor : undefined,
+                  padding: '14px', borderRadius: cardBorderRadius,
+                  border: `${selectedStaff?.id === staff.id ? '2px' : borderWidth} solid ${selectedStaff?.id === staff.id ? selBorder : (cardBorderColor || '#e5e7eb')}`,
+                  backgroundColor: selectedStaff?.id === staff.id ? selBg : (cardBackgroundColor || undefined),
+                  boxShadow: SHADOW_MAP[cardShadow] || 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  transition: animateSteps ? 'all 0.2s ease' : 'none',
                 }}
               >
-                <div 
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-medium"
-                  style={{ backgroundColor: primaryColor }}
-                >
-                  {member.name.split(' ').map(n => n[0]).join('')}
+                <div style={{
+                  width: 44, height: 44, borderRadius: '50%', backgroundColor: `${primaryColor}15`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: primaryColor, fontWeight: 700, fontSize: '16px',
+                }}>
+                  {staff.name.charAt(0)}
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium">{member.name}</p>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ fontWeight: '600', fontSize: '15px', margin: 0 }}>{staff.name}</h4>
+                  {staff.role && <p style={{ fontSize: '13px', opacity: 0.6, margin: '2px 0 0' }}>{staff.role}</p>}
                 </div>
-                {selectedStaff?.id === member.id && (
-                  <Check className="h-5 w-5" style={{ color: primaryColor }} />
+                {staff.rating && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Star style={{ width: 14, height: 14, fill: ratingColor, color: ratingColor }} />
+                    <span style={{ fontSize: '13px', fontWeight: 500 }}>{staff.rating}</span>
+                  </div>
                 )}
-              </button>
+              </div>
             ))}
           </div>
         )}
-        
-        {/* Date & Time Selection */}
-        {step === 'datetime' && (
-          <div className="space-y-6">
-            {/* Calendar */}
-            <div>
-              <h3 className="font-semibold flex items-center gap-2 mb-4">
-                <Calendar className="h-5 w-5" />
-                Select Date
-              </h3>
-              
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                  className="p-2 hover:bg-muted rounded-md"
-                >
-                  <ChevronLeft className="h-4 w-4" />
+
+        {/* DATE/TIME STEP */}
+        {currentStepId === 'datetime' && (
+          <div>
+            {/* Mini Calendar */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <button onClick={() => setCalendarDate(new Date(calYear, calMonth - 1, 1))} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '4px', display: 'flex' }}>
+                  <ChevronLeft style={{ width: 18, height: 18 }} />
                 </button>
-                <span className="font-medium">
-                  {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-                </span>
-                <button
-                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                  className="p-2 hover:bg-muted rounded-md"
-                >
-                  <ChevronRight className="h-4 w-4" />
+                <span style={{ fontWeight: '600', fontSize: '16px' }}>{monthNames[calMonth]} {calYear}</span>
+                <button onClick={() => setCalendarDate(new Date(calYear, calMonth + 1, 1))} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '4px', display: 'flex' }}>
+                  <ChevronRight style={{ width: 18, height: 18 }} />
                 </button>
               </div>
-              
-              <div className="grid grid-cols-7 gap-1 text-center">
-                {dayNames.map((day) => (
-                  <div key={day} className="text-xs font-medium text-muted-foreground py-2">
-                    {day}
-                  </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px' }}>
+                {dayNames.map(d => (
+                  <div key={d} style={{ textAlign: 'center', fontSize: '11px', fontWeight: 500, opacity: 0.5, padding: '4px 0' }}>{d}</div>
                 ))}
-                {getCalendarDays().map((date, i) => (
-                  <div key={i} className="aspect-square">
+                {calendarDays.map((date, idx) => (
+                  <div key={idx} style={{ aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {date && (
-                      <button
-                        onClick={() => !isDateDisabled(date) && setSelectedDate(date)}
-                        disabled={isDateDisabled(date)}
-                        className={cn(
-                          "w-full h-full flex items-center justify-center rounded-md text-sm transition-all",
-                          isDateDisabled(date) && "text-muted-foreground/40 cursor-not-allowed",
-                          !isDateDisabled(date) && "hover:bg-muted cursor-pointer",
-                          selectedDate?.toDateString() === date.toDateString() && "text-white"
-                        )}
+                      <button onClick={() => { setSelectedDate(date); setSelectedTime(null) }} disabled={isPast(date)}
                         style={{
-                          backgroundColor: selectedDate?.toDateString() === date.toDateString() ? primaryColor : undefined,
+                          width: '100%', height: '100%', borderRadius: '6px', border: isToday(date) && !isDateSelected(date) ? `2px solid ${primaryColor}` : '2px solid transparent',
+                          backgroundColor: isDateSelected(date) ? primaryColor : undefined,
+                          color: isDateSelected(date) ? '#fff' : isPast(date) ? '#d1d5db' : undefined,
+                          fontSize: '13px', fontWeight: isDateSelected(date) ? 600 : 400,
+                          cursor: isPast(date) ? 'not-allowed' : 'pointer', opacity: isPast(date) ? 0.4 : 1,
+                          transition: 'all 0.15s ease',
                         }}
                       >
                         {date.getDate()}
@@ -516,245 +643,397 @@ export function BookingWidgetBlock({
                 ))}
               </div>
             </div>
-            
+
             {/* Time Slots */}
             {selectedDate && (
               <div>
-                <h3 className="font-semibold flex items-center gap-2 mb-4">
-                  <Clock className="h-5 w-5" />
-                  Select Time
-                </h3>
-                <div className="grid grid-cols-4 gap-2">
-                  {timeSlots.map((time) => (
-                    <button
-                      key={time}
-                      onClick={() => setSelectedTime(time)}
-                      className={cn(
-                        "py-2 px-3 rounded-md text-sm font-medium transition-all border",
-                        selectedTime === time 
-                          ? "text-white border-transparent" 
-                          : "hover:border-primary"
-                      )}
-                      style={{
-                        backgroundColor: selectedTime === time ? primaryColor : undefined,
-                        borderColor: selectedTime !== time ? undefined : primaryColor,
-                      }}
-                    >
-                      {time}
-                    </button>
-                  ))}
-                </div>
+                <p style={{ fontSize: '14px', fontWeight: 500, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Clock style={{ width: 14, height: 14, opacity: 0.6 }} />
+                  Available Times
+                </p>
+                {timeSlots.length === 0 ? (
+                  <p style={{ fontSize: '14px', opacity: 0.6, textAlign: 'center', padding: '16px 0' }}>{noSlotsMessage}</p>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                    {timeSlots.map(slot => (
+                      <button key={slot.time} onClick={() => slot.available && setSelectedTime(slot.time)} disabled={!slot.available}
+                        style={{
+                          padding: '7px 10px', borderRadius: '6px', fontSize: '13px',
+                          backgroundColor: selectedTime === slot.time ? slotSelBg : slot.available ? (slotBgColor || 'transparent') : '#f3f4f6',
+                          color: selectedTime === slot.time ? slotSelectedTextColor : slot.available ? undefined : '#d1d5db',
+                          border: `1px solid ${selectedTime === slot.time ? slotSelBg : slot.available ? (cardBorderColor || '#e5e7eb') : 'transparent'}`,
+                          cursor: slot.available ? 'pointer' : 'not-allowed', fontWeight: selectedTime === slot.time ? 600 : 400,
+                          textDecoration: !slot.available ? 'line-through' : 'none', opacity: !slot.available ? 0.5 : 1,
+                        }}
+                      >
+                        {slot.display}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
         )}
-        
-        {/* Customer Details */}
-        {step === 'details' && (
-          <div className="space-y-4">
-            <h3 className="font-semibold mb-4">Your Details</h3>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Full Name *</label>
-              <input
-                type="text"
-                value={formData.customerName}
-                onChange={(e) => setFormData(p => ({ ...p, customerName: e.target.value }))}
-                placeholder="John Doe"
-                className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Email *</label>
-              <input
-                type="email"
-                value={formData.customerEmail}
-                onChange={(e) => setFormData(p => ({ ...p, customerEmail: e.target.value }))}
-                placeholder="john@example.com"
-                className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Phone</label>
-              <input
-                type="tel"
-                value={formData.customerPhone}
-                onChange={(e) => setFormData(p => ({ ...p, customerPhone: e.target.value }))}
-                placeholder="+260 97X XXX XXX"
-                className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium mb-1.5">Notes</label>
-              <textarea
-                value={formData.customerNotes}
-                onChange={(e) => setFormData(p => ({ ...p, customerNotes: e.target.value }))}
-                placeholder="Any special requests..."
-                rows={3}
-                className="w-full px-4 py-2.5 rounded-lg border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-              />
-            </div>
-            
-            {/* Summary */}
-            <div className="p-4 bg-muted/50 rounded-lg">
-              <h4 className="font-medium text-sm mb-2">Booking Summary</h4>
-              <div className="space-y-1 text-sm">
+
+        {/* DETAILS STEP */}
+        {currentStepId === 'details' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {showNameField && (
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                  <User style={{ width: 14, height: 14, opacity: 0.6 }} /> Full Name {nameRequired && <span style={{ color: errorColor }}>*</span>}
+                </label>
+                <input type="text" value={formData.name || ''} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
+                  placeholder="Enter your name" style={{
+                    width: '100%', padding: '10px 12px', borderRadius: inputBorderRadius,
+                    border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '14px', outline: 'none',
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = focusBorder}
+                  onBlur={(e) => e.target.style.borderColor = inputBorderColor || '#e5e7eb'}
+                />
+              </div>
+            )}
+            {showEmailField && (
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                  <Mail style={{ width: 14, height: 14, opacity: 0.6 }} /> Email {emailRequired && <span style={{ color: errorColor }}>*</span>}
+                </label>
+                <input type="email" value={formData.email || ''} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
+                  placeholder="you@example.com" style={{
+                    width: '100%', padding: '10px 12px', borderRadius: inputBorderRadius,
+                    border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '14px', outline: 'none',
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = focusBorder}
+                  onBlur={(e) => e.target.style.borderColor = inputBorderColor || '#e5e7eb'}
+                />
+              </div>
+            )}
+            {showPhoneField && (
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                  <Phone style={{ width: 14, height: 14, opacity: 0.6 }} /> Phone
+                </label>
+                <input type="tel" value={formData.phone || ''} onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))}
+                  placeholder="+1 (555) 000-0000" style={{
+                    width: '100%', padding: '10px 12px', borderRadius: inputBorderRadius,
+                    border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '14px', outline: 'none',
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = focusBorder}
+                  onBlur={(e) => e.target.style.borderColor = inputBorderColor || '#e5e7eb'}
+                />
+              </div>
+            )}
+            {showNotesField && (
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                  <FileText style={{ width: 14, height: 14, opacity: 0.6 }} /> Notes
+                </label>
+                <textarea value={formData.notes || ''} onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))}
+                  placeholder="Any special requests..." rows={3} style={{
+                    width: '100%', padding: '10px 12px', borderRadius: inputBorderRadius,
+                    border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '14px', outline: 'none', resize: 'vertical',
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = focusBorder}
+                  onBlur={(e) => e.target.style.borderColor = inputBorderColor || '#e5e7eb'}
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* CONFIRM STEP */}
+        {currentStepId === 'confirm' && (
+          <div>
+            {showSummary && (
+              <div style={{ padding: '16px', borderRadius: cardBorderRadius, backgroundColor: summaryBg, marginBottom: '16px', fontSize: summaryFontSize }}>
+                <h4 style={{ fontWeight: '600', fontSize: '15px', margin: '0 0 12px' }}>Booking Summary</h4>
                 {selectedService && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Service</span>
-                    <span>{selectedService.name}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ opacity: 0.7 }}>Service</span>
+                    <span style={{ fontWeight: 500 }}>{selectedService.name}</span>
                   </div>
                 )}
                 {selectedStaff && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Staff</span>
-                    <span>{selectedStaff.name}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ opacity: 0.7 }}>Staff</span>
+                    <span style={{ fontWeight: 500 }}>{selectedStaff.name}</span>
                   </div>
                 )}
                 {selectedDate && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Date</span>
-                    <span>{selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ opacity: 0.7 }}>Date</span>
+                    <span style={{ fontWeight: 500 }}>{selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                   </div>
                 )}
                 {selectedTime && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Time</span>
-                    <span>{selectedTime}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ opacity: 0.7 }}>Time</span>
+                    <span style={{ fontWeight: 500 }}>{selectedTime}</span>
                   </div>
                 )}
                 {selectedService && (
-                  <div className="flex justify-between pt-2 border-t mt-2">
-                    <span className="font-medium">Total</span>
-                    <span className="font-bold">{formatPrice(selectedService.price, selectedService.currency)}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: `1px solid ${dividerColor || '#e5e7eb'}`, marginTop: '4px' }}>
+                    <span style={{ fontWeight: 600 }}>Total</span>
+                    <span style={{ fontWeight: priceFontWeight, fontSize: priceFontSize, color: priceColor || primaryColor }}>
+                      {formatPrice(selectedService.price, selectedService.currency)}
+                    </span>
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Confirmation */}
-        {step === 'confirmation' && (
-          <div className="text-center py-8">
-            <div 
-              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-              style={{ backgroundColor: `${primaryColor}20` }}
-            >
-              <Check className="h-8 w-8" style={{ color: primaryColor }} />
-            </div>
-            <h3 className="text-xl font-bold mb-2">Booking Confirmed!</h3>
-            <p className="text-muted-foreground mb-6">
-              Thank you for your booking. We&apos;ve sent a confirmation email with all the details.
-            </p>
-            <div className="p-4 bg-muted/50 rounded-lg text-left max-w-sm mx-auto">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Service</span>
-                  <span className="font-medium">{selectedService?.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date</span>
-                  <span className="font-medium">
-                    {selectedDate?.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Time</span>
-                  <span className="font-medium">{selectedTime}</span>
-                </div>
-              </div>
+            )}
+
+            {/* Contact Info */}
+            <div style={{ padding: '12px', borderRadius: cardBorderRadius, border: `1px solid ${cardBorderColor || '#e5e7eb'}`, fontSize: '13px' }}>
+              <h4 style={{ fontWeight: '600', fontSize: '14px', margin: '0 0 8px' }}>Contact Details</h4>
+              {formData.name && <p style={{ margin: '0 0 4px' }}>{formData.name}</p>}
+              {formData.email && <p style={{ margin: '0 0 4px', opacity: 0.7 }}>{formData.email}</p>}
+              {formData.phone && <p style={{ margin: '0 0 4px', opacity: 0.7 }}>{formData.phone}</p>}
+              {formData.notes && <p style={{ margin: '0', opacity: 0.7, fontStyle: 'italic' }}>&ldquo;{formData.notes}&rdquo;</p>}
             </div>
           </div>
         )}
       </div>
-      
-      {/* Footer */}
-      {step !== 'confirmation' && (
-        <div className="p-6 pt-0">
-          <button
-            onClick={goNext}
-            disabled={!canGoNext() || isSubmitting}
-            className={cn(
-              "w-full py-3 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2",
-              (!canGoNext() || isSubmitting) ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
-            )}
-            style={{ backgroundColor: primaryColor }}
-          >
+
+      {/* Navigation Buttons */}
+      <div style={{
+        padding, borderTop: `1px solid ${dividerColor || borderColor || '#e5e7eb'}`,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px',
+      }}>
+        {currentStep > 0 ? (
+          <button onClick={goPrev} style={{
+            padding: '10px 20px', borderRadius: buttonBorderRadius,
+            backgroundColor: secBtnBg, color: secBtnText,
+            border: `1px solid ${borderColor || '#e5e7eb'}`, fontSize: buttonFontSize, fontWeight: buttonFontWeight,
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+          }}>
+            <ChevronLeft style={{ width: 16, height: 16 }} /> {prevButtonText}
+          </button>
+        ) : <div />}
+
+        {currentStepId === 'confirm' ? (
+          <button onClick={handleConfirm} disabled={isSubmitting} style={{
+            padding: '10px 24px', borderRadius: buttonBorderRadius,
+            backgroundColor: isSubmitting ? `${btnBg}80` : btnBg, color: buttonTextColor,
+            border: 'none', fontSize: buttonFontSize, fontWeight: buttonFontWeight,
+            cursor: isSubmitting ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+            transition: 'all 0.2s ease',
+          }}>
             {isSubmitting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : step === 'details' ? (
-              'Confirm Booking'
+              <><Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} /> {confirmingText}</>
             ) : (
-              'Continue'
+              <><CheckCircle style={{ width: 16, height: 16 }} /> {confirmButtonText}</>
             )}
           </button>
-        </div>
-      )}
+        ) : (
+          <button onClick={goNext} disabled={!canGoNext()} style={{
+            padding: '10px 24px', borderRadius: buttonBorderRadius,
+            backgroundColor: canGoNext() ? btnBg : `${btnBg}40`, color: buttonTextColor,
+            border: 'none', fontSize: buttonFontSize, fontWeight: buttonFontWeight,
+            cursor: canGoNext() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '6px',
+            transition: 'all 0.2s ease',
+          }}>
+            {nextButtonText} <ArrowRight style={{ width: 16, height: 16 }} />
+          </button>
+        )}
+      </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
 
 // =============================================================================
-// STUDIO DEFINITION
+// STUDIO DEFINITION — 50+ fields with field groups
 // =============================================================================
 
-export const bookingWidgetDefinition: Omit<ComponentDefinition, 'module' | 'render'> & { render?: React.ComponentType<BookingWidgetBlockProps> } = {
-  type: 'BookingWidgetBlock',
+export const bookingWidgetDefinition: ComponentDefinition = {
+  type: 'BookingWidget',
   label: 'Booking Widget',
-  description: 'Complete all-in-one booking widget with multi-step flow',
+  description: 'All-in-one multi-step booking wizard — 50+ customization options',
   category: 'interactive',
   icon: 'CalendarCheck',
+  keywords: ['booking', 'widget', 'wizard', 'multi-step', 'appointment', 'schedule', 'all-in-one'],
   defaultProps: {
     title: 'Book an Appointment',
-    subtitle: 'Select a service and time that works for you',
-    showStaffSelection: true,
-    showServiceSelection: true,
+    showHeader: true,
+    showStepIndicator: true,
+    showStepLabels: true,
+    showServiceStep: true,
+    showStaffStep: true,
+    showSummary: true,
+    autoAdvance: false,
+    stepIndicatorStyle: 'dots',
+    headerAlignment: 'center',
+    layout: 'standard',
+    firstDayOfWeek: 'sunday',
+    slotInterval: 30,
+    slotStartHour: 9,
+    slotEndHour: 17,
+    timeFormat: '24h',
+    showNameField: true,
+    showEmailField: true,
+    showPhoneField: true,
+    showNotesField: true,
+    nameRequired: true,
+    emailRequired: true,
     primaryColor: '#8B5CF6',
-    borderRadius: { mobile: '12px', tablet: '16px', desktop: '16px' },
+    buttonTextColor: '#ffffff',
+    slotSelectedTextColor: '#ffffff',
+    successColor: '#22c55e',
+    errorColor: '#ef4444',
+    ratingColor: '#f59e0b',
+    borderRadius: '16px',
+    cardBorderRadius: '10px',
+    buttonBorderRadius: '10px',
+    inputBorderRadius: '8px',
+    borderWidth: '1px',
+    shadow: 'md',
+    cardShadow: 'sm',
+    hoverScale: true,
+    animateSteps: true,
+    showSuccessAnimation: true,
+    titleFontSize: '20px',
+    titleFontWeight: '700',
+    priceFontWeight: '700',
+    buttonFontSize: '14px',
+    buttonFontWeight: '600',
+    padding: '20px',
+    gap: '16px',
   },
   fields: {
-    title: {
-      type: 'text',
-      label: 'Title',
-    },
-    subtitle: {
-      type: 'text',
-      label: 'Subtitle',
-    },
-    showServiceSelection: {
-      type: 'toggle',
-      label: 'Show Service Selection',
-      description: 'Allow users to choose a service',
-    },
-    showStaffSelection: {
-      type: 'toggle',
-      label: 'Show Staff Selection',
-      description: 'Allow users to choose a staff member',
-    },
-    primaryColor: {
-      type: 'color',
-      label: 'Primary Color',
-    },
-    borderRadius: {
-      type: 'spacing',
-      label: 'Border Radius',
-    },
+    // Content (19)
+    title: { type: 'text', label: 'Title' },
+    subtitle: { type: 'text', label: 'Subtitle' },
+    showHeader: { type: 'toggle', label: 'Show Header' },
+    showStepIndicator: { type: 'toggle', label: 'Show Step Indicator' },
+    showStepLabels: { type: 'toggle', label: 'Show Step Labels' },
+    stepServiceLabel: { type: 'text', label: 'Service Step Label' },
+    stepStaffLabel: { type: 'text', label: 'Staff Step Label' },
+    stepDateLabel: { type: 'text', label: 'Date Step Label' },
+    stepDetailsLabel: { type: 'text', label: 'Details Step Label' },
+    stepConfirmLabel: { type: 'text', label: 'Confirm Step Label' },
+    nextButtonText: { type: 'text', label: 'Next Button Text' },
+    prevButtonText: { type: 'text', label: 'Back Button Text' },
+    confirmButtonText: { type: 'text', label: 'Confirm Button Text' },
+    confirmingText: { type: 'text', label: 'Confirming Text' },
+    successTitle: { type: 'text', label: 'Success Title' },
+    successMessage: { type: 'text', label: 'Success Message' },
+    bookAnotherText: { type: 'text', label: 'Book Another Text' },
+    noSlotsMessage: { type: 'text', label: 'No Slots Message' },
+    noServicesMessage: { type: 'text', label: 'No Services Message' },
+
+    // Widget Settings (5)
+    showServiceStep: { type: 'toggle', label: 'Show Service Step' },
+    showStaffStep: { type: 'toggle', label: 'Show Staff Step' },
+    showSummary: { type: 'toggle', label: 'Show Summary' },
+    autoAdvance: { type: 'toggle', label: 'Auto-Advance After Selection' },
+    requireStaff: { type: 'toggle', label: 'Require Staff Selection' },
+
+    // Data (2)
+    serviceId: { type: 'custom', customType: 'booking:service-selector', label: 'Pre-Selected Service' },
+    staffId: { type: 'custom', customType: 'booking:staff-selector', label: 'Pre-Selected Staff' },
+
+    // Calendar (5)
+    firstDayOfWeek: { type: 'select', label: 'First Day of Week', options: [{ label: 'Sunday', value: 'sunday' }, { label: 'Monday', value: 'monday' }] },
+    slotInterval: { type: 'number', label: 'Slot Interval (min)', min: 5, max: 120 },
+    slotStartHour: { type: 'number', label: 'Start Hour', min: 0, max: 23 },
+    slotEndHour: { type: 'number', label: 'End Hour', min: 1, max: 24 },
+    timeFormat: { type: 'select', label: 'Time Format', options: [{ label: '12-Hour', value: '12h' }, { label: '24-Hour', value: '24h' }] },
+
+    // Form (6)
+    showNameField: { type: 'toggle', label: 'Show Name' },
+    showEmailField: { type: 'toggle', label: 'Show Email' },
+    showPhoneField: { type: 'toggle', label: 'Show Phone' },
+    showNotesField: { type: 'toggle', label: 'Show Notes' },
+    nameRequired: { type: 'toggle', label: 'Name Required' },
+    emailRequired: { type: 'toggle', label: 'Email Required' },
+
+    // Layout (7)
+    layout: { type: 'select', label: 'Layout', options: [{ label: 'Standard', value: 'standard' }, { label: 'Compact', value: 'compact' }, { label: 'Wide', value: 'wide' }] },
+    stepIndicatorStyle: { type: 'select', label: 'Step Indicator Style', options: [{ label: 'Dots', value: 'dots' }, { label: 'Numbers', value: 'numbers' }, { label: 'Progress Bar', value: 'progress-bar' }, { label: 'Pills', value: 'pills' }] },
+    headerAlignment: { type: 'select', label: 'Header Alignment', options: [{ label: 'Left', value: 'left' }, { label: 'Center', value: 'center' }, { label: 'Right', value: 'right' }] },
+    width: { type: 'text', label: 'Width' },
+    minHeight: { type: 'text', label: 'Min Height' },
+    padding: { type: 'text', label: 'Padding' },
+    gap: { type: 'text', label: 'Gap' },
+
+    // Colors (31)
+    primaryColor: { type: 'color', label: 'Primary Color' },
+    secondaryColor: { type: 'color', label: 'Secondary Color' },
+    backgroundColor: { type: 'color', label: 'Background' },
+    textColor: { type: 'color', label: 'Text' },
+    headerBackgroundColor: { type: 'color', label: 'Header Background' },
+    headerTextColor: { type: 'color', label: 'Header Text' },
+    stepActiveColor: { type: 'color', label: 'Active Step Color' },
+    stepCompletedColor: { type: 'color', label: 'Completed Step Color' },
+    stepInactiveColor: { type: 'color', label: 'Inactive Step Color' },
+    cardBackgroundColor: { type: 'color', label: 'Card Background' },
+    cardBorderColor: { type: 'color', label: 'Card Border' },
+    cardSelectedBorderColor: { type: 'color', label: 'Selected Card Border' },
+    cardSelectedBgColor: { type: 'color', label: 'Selected Card Background' },
+    buttonBackgroundColor: { type: 'color', label: 'Button Background' },
+    buttonTextColor: { type: 'color', label: 'Button Text' },
+    buttonHoverColor: { type: 'color', label: 'Button Hover' },
+    secondaryButtonBgColor: { type: 'color', label: 'Back Button Background' },
+    secondaryButtonTextColor: { type: 'color', label: 'Back Button Text' },
+    slotBgColor: { type: 'color', label: 'Slot Background' },
+    slotSelectedBgColor: { type: 'color', label: 'Selected Slot Background' },
+    slotSelectedTextColor: { type: 'color', label: 'Selected Slot Text' },
+    summaryBgColor: { type: 'color', label: 'Summary Background' },
+    successColor: { type: 'color', label: 'Success Color' },
+    errorColor: { type: 'color', label: 'Error Color' },
+    borderColor: { type: 'color', label: 'Border Color' },
+    dividerColor: { type: 'color', label: 'Divider Color' },
+    progressBarBgColor: { type: 'color', label: 'Progress Bar Background' },
+    inputBorderColor: { type: 'color', label: 'Input Border' },
+    inputFocusBorderColor: { type: 'color', label: 'Input Focus Border' },
+    priceColor: { type: 'color', label: 'Price Color' },
+    ratingColor: { type: 'color', label: 'Rating Color' },
+
+    // Typography (11)
+    titleFontSize: { type: 'text', label: 'Title Font Size' },
+    titleFontWeight: { type: 'select', label: 'Title Weight', options: [{ label: 'Medium', value: '500' }, { label: 'Semi Bold', value: '600' }, { label: 'Bold', value: '700' }, { label: 'Extra Bold', value: '800' }] },
+    titleFontFamily: { type: 'text', label: 'Font Family' },
+    subtitleFontSize: { type: 'text', label: 'Subtitle Font Size' },
+    stepLabelFontSize: { type: 'text', label: 'Step Label Font Size' },
+    serviceNameFontSize: { type: 'text', label: 'Service Name Font Size' },
+    priceFontSize: { type: 'text', label: 'Price Font Size' },
+    priceFontWeight: { type: 'select', label: 'Price Weight', options: [{ label: 'Normal', value: '400' }, { label: 'Semi Bold', value: '600' }, { label: 'Bold', value: '700' }, { label: 'Extra Bold', value: '800' }] },
+    buttonFontSize: { type: 'text', label: 'Button Font Size' },
+    buttonFontWeight: { type: 'select', label: 'Button Weight', options: [{ label: 'Normal', value: '400' }, { label: 'Medium', value: '500' }, { label: 'Semi Bold', value: '600' }, { label: 'Bold', value: '700' }] },
+    summaryFontSize: { type: 'text', label: 'Summary Font Size' },
+
+    // Shape & Effects (10)
+    borderRadius: { type: 'text', label: 'Container Radius' },
+    cardBorderRadius: { type: 'text', label: 'Card Radius' },
+    buttonBorderRadius: { type: 'text', label: 'Button Radius' },
+    inputBorderRadius: { type: 'text', label: 'Input Radius' },
+    borderWidth: { type: 'text', label: 'Border Width' },
+    shadow: { type: 'select', label: 'Container Shadow', options: [{ label: 'None', value: 'none' }, { label: 'Small', value: 'sm' }, { label: 'Medium', value: 'md' }, { label: 'Large', value: 'lg' }, { label: 'Extra Large', value: 'xl' }] },
+    cardShadow: { type: 'select', label: 'Card Shadow', options: [{ label: 'None', value: 'none' }, { label: 'Small', value: 'sm' }, { label: 'Medium', value: 'md' }, { label: 'Large', value: 'lg' }] },
+    hoverScale: { type: 'toggle', label: 'Hover Scale' },
+    animateSteps: { type: 'toggle', label: 'Animate Steps' },
+    showSuccessAnimation: { type: 'toggle', label: 'Success Animation' },
+
+    // Accessibility (1)
+    ariaLabel: { type: 'text', label: 'ARIA Label' },
   },
+  fieldGroups: [
+    { id: 'content', label: 'Content & Labels', icon: 'Type', fields: ['title', 'subtitle', 'showHeader', 'showStepIndicator', 'showStepLabels', 'stepServiceLabel', 'stepStaffLabel', 'stepDateLabel', 'stepDetailsLabel', 'stepConfirmLabel', 'nextButtonText', 'prevButtonText', 'confirmButtonText', 'confirmingText', 'successTitle', 'successMessage', 'bookAnotherText', 'noSlotsMessage', 'noServicesMessage'], defaultExpanded: true },
+    { id: 'widgetSettings', label: 'Widget Settings', icon: 'Settings', fields: ['showServiceStep', 'showStaffStep', 'showSummary', 'autoAdvance', 'requireStaff'], defaultExpanded: true },
+    { id: 'data', label: 'Data Connection', icon: 'Database', fields: ['serviceId', 'staffId'], defaultExpanded: false },
+    { id: 'calendar', label: 'Calendar Settings', icon: 'Calendar', fields: ['firstDayOfWeek', 'slotInterval', 'slotStartHour', 'slotEndHour', 'timeFormat'], defaultExpanded: false },
+    { id: 'form', label: 'Form Fields', icon: 'FormInput', fields: ['showNameField', 'showEmailField', 'showPhoneField', 'showNotesField', 'nameRequired', 'emailRequired'], defaultExpanded: false },
+    { id: 'layout', label: 'Layout', icon: 'Layout', fields: ['layout', 'stepIndicatorStyle', 'headerAlignment', 'width', 'minHeight', 'padding', 'gap'], defaultExpanded: false },
+    { id: 'colors', label: 'Colors', icon: 'Palette', fields: ['primaryColor', 'secondaryColor', 'backgroundColor', 'textColor', 'headerBackgroundColor', 'headerTextColor', 'stepActiveColor', 'stepCompletedColor', 'stepInactiveColor', 'cardBackgroundColor', 'cardBorderColor', 'cardSelectedBorderColor', 'cardSelectedBgColor', 'buttonBackgroundColor', 'buttonTextColor', 'buttonHoverColor', 'secondaryButtonBgColor', 'secondaryButtonTextColor', 'slotBgColor', 'slotSelectedBgColor', 'slotSelectedTextColor', 'summaryBgColor', 'successColor', 'errorColor', 'borderColor', 'dividerColor', 'progressBarBgColor', 'inputBorderColor', 'inputFocusBorderColor', 'priceColor', 'ratingColor'], defaultExpanded: false },
+    { id: 'typography', label: 'Typography', icon: 'ALargeSmall', fields: ['titleFontSize', 'titleFontWeight', 'titleFontFamily', 'subtitleFontSize', 'stepLabelFontSize', 'serviceNameFontSize', 'priceFontSize', 'priceFontWeight', 'buttonFontSize', 'buttonFontWeight', 'summaryFontSize'], defaultExpanded: false },
+    { id: 'shape', label: 'Shape & Effects', icon: 'Square', fields: ['borderRadius', 'cardBorderRadius', 'buttonBorderRadius', 'inputBorderRadius', 'borderWidth', 'shadow', 'cardShadow', 'hoverScale', 'animateSteps', 'showSuccessAnimation'], defaultExpanded: false },
+    { id: 'accessibility', label: 'Accessibility', icon: 'Accessibility', fields: ['ariaLabel'], defaultExpanded: false },
+  ],
   ai: {
-    description: 'Complete booking widget with service, staff, date/time selection and form',
-    canModify: ['title', 'subtitle', 'showServiceSelection', 'showStaffSelection', 'primaryColor', 'borderRadius'],
-    suggestions: [
-      'Change the title',
-      'Hide staff selection',
-      'Update colors to match brand',
-    ],
+    description: 'Complete multi-step booking wizard — fully customizable with 50+ properties',
+    canModify: ['title', 'subtitle', 'stepIndicatorStyle', 'primaryColor', 'backgroundColor', 'showServiceStep', 'showStaffStep', 'autoAdvance', 'shadow', 'borderRadius', 'layout'],
+    suggestions: ['Use progress bar indicator', 'Change to brand colors', 'Skip staff selection', 'Make compact', 'Enable auto-advance'],
   },
   render: BookingWidgetBlock,
 }

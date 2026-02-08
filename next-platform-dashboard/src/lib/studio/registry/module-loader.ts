@@ -180,11 +180,15 @@ export async function loadModuleComponents(
       // Process custom fields
       if (exports.studioFields) {
         for (const [fieldType, editor] of Object.entries(exports.studioFields)) {
-          // Prefix with module slug to avoid collisions
-          const prefixedType = `${moduleInfo.slug}:${fieldType}`;
-          allFields[prefixedType] = editor;
+          // Only prefix if not already prefixed with module slug
+          // e.g., booking module may export "booking:service-selector" (already prefixed)
+          // or "service-selector" (needs prefix) — handle both correctly
+          const registrationKey = fieldType.startsWith(`${moduleInfo.slug}:`)
+            ? fieldType
+            : `${moduleInfo.slug}:${fieldType}`;
+          allFields[registrationKey] = editor;
           // Cast to ComponentType since our CustomFieldEditor is compatible
-          fieldRegistry.registerCustomRenderer(prefixedType, editor as React.ComponentType<import("@/types/studio").FieldRenderProps>);
+          fieldRegistry.registerCustomRenderer(registrationKey, editor as React.ComponentType<import("@/types/studio").FieldRenderProps>);
         }
       }
 

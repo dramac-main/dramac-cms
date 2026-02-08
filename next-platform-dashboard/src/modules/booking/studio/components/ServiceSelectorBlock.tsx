@@ -1,476 +1,683 @@
 /**
  * Service Selector Block - Studio Component
  * 
- * Display services in a grid/list for booking selection.
- * Visitors can browse and select services before booking.
+ * Displays bookable services in grid, list, or card layout.
+ * 50+ customization properties with full theme support.
+ * 
+ * @module booking
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
-import { Clock, DollarSign, Users, Check, ChevronRight } from 'lucide-react'
+import { Clock, DollarSign, Star, Search, Filter, ChevronRight, Tag, Grid, List } from 'lucide-react'
 import type { ComponentDefinition } from '@/types/studio'
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
-type ResponsiveValue<T> = T | { mobile?: T; tablet?: T; desktop?: T }
-
-export interface ServiceSelectorBlockProps {
-  siteId?: string
-  categoryFilter?: string
-  layout?: 'grid' | 'list' | 'cards'
-  columns?: ResponsiveValue<number>
-  showPrice?: boolean
-  showDuration?: boolean
-  showDescription?: boolean
-  showCapacity?: boolean
-  primaryColor?: string
-  borderRadius?: ResponsiveValue<string>
-  className?: string
-  onServiceSelect?: (serviceId: string) => void
-  selectedServiceId?: string
-}
-
-interface Service {
+export interface ServiceItem {
   id: string
   name: string
   description?: string
-  duration_minutes: number
+  duration: number
   price: number
   currency: string
-  max_attendees: number
-  color: string
-  image_url?: string
   category?: string
+  image?: string
+  rating?: number
+  reviewCount?: number
+  available?: boolean
+  featured?: boolean
 }
+
+export interface ServiceSelectorBlockProps {
+  // Content
+  title?: string
+  subtitle?: string
+  showHeader?: boolean
+  showSearch?: boolean
+  showFilter?: boolean
+  emptyMessage?: string
+  searchPlaceholder?: string
+  selectButtonText?: string
+  selectedButtonText?: string
+  durationLabel?: string
+  priceLabel?: string
+  showDescription?: boolean
+  showDuration?: boolean
+  showPrice?: boolean
+  showRating?: boolean
+  showImage?: boolean
+  showCategory?: boolean
+  showFeaturedBadge?: boolean
+  featuredBadgeText?: string
+
+  // Data
+  siteId?: string
+  serviceId?: string
+  maxServices?: number
+  filterByCategory?: string
+
+  // Layout
+  layout?: 'grid' | 'list' | 'cards' | 'compact'
+  columns?: number
+  mobileColumns?: number
+  headerAlignment?: 'left' | 'center' | 'right'
+  imagePosition?: 'top' | 'left' | 'right' | 'background'
+  imageAspectRatio?: 'square' | 'landscape' | 'portrait'
+  width?: string
+  minHeight?: string
+  padding?: string
+  gap?: string
+  cardPadding?: string
+
+  // Style - Colors
+  primaryColor?: string
+  secondaryColor?: string
+  backgroundColor?: string
+  textColor?: string
+  headerBackgroundColor?: string
+  headerTextColor?: string
+  cardBackgroundColor?: string
+  cardHoverBgColor?: string
+  cardBorderColor?: string
+  cardSelectedBgColor?: string
+  cardSelectedBorderColor?: string
+  buttonBackgroundColor?: string
+  buttonTextColor?: string
+  buttonHoverColor?: string
+  priceColor?: string
+  durationColor?: string
+  ratingColor?: string
+  categoryColor?: string
+  categoryBgColor?: string
+  searchBgColor?: string
+  searchBorderColor?: string
+  featuredBadgeBgColor?: string
+  featuredBadgeTextColor?: string
+  dividerColor?: string
+  descriptionColor?: string
+
+  // Typography
+  titleFontSize?: string
+  titleFontWeight?: string
+  titleFontFamily?: string
+  subtitleFontSize?: string
+  serviceNameFontSize?: string
+  serviceNameFontWeight?: string
+  descriptionFontSize?: string
+  priceFontSize?: string
+  priceFontWeight?: string
+  durationFontSize?: string
+  buttonFontSize?: string
+  buttonFontWeight?: string
+  categoryFontSize?: string
+
+  // Shape & Effects
+  borderRadius?: string
+  cardBorderRadius?: string
+  buttonBorderRadius?: string
+  imageBorderRadius?: string
+  borderWidth?: string
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl'
+  cardShadow?: 'none' | 'sm' | 'md' | 'lg'
+  hoverShadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl'
+  hoverScale?: boolean
+  animateCards?: boolean
+
+  // Accessibility
+  ariaLabel?: string
+
+  // Events
+  className?: string
+  onServiceSelect?: (service: ServiceItem) => void
+}
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+const SHADOW_MAP: Record<string, string> = {
+  none: 'none',
+  sm: '0 1px 2px rgba(0,0,0,0.05)',
+  md: '0 4px 6px -1px rgba(0,0,0,0.1)',
+  lg: '0 10px 15px -3px rgba(0,0,0,0.1)',
+  xl: '0 20px 25px -5px rgba(0,0,0,0.1)',
+}
+
+const DEMO_SERVICES: ServiceItem[] = [
+  { id: '1', name: 'Full Body Massage', description: 'Relaxing full body massage therapy to relieve stress and tension.', duration: 60, price: 85, currency: 'USD', category: 'Massage', rating: 4.8, reviewCount: 124, available: true, featured: true },
+  { id: '2', name: 'Deep Tissue Massage', description: 'Intensive massage targeting deep muscle layers for pain relief.', duration: 90, price: 120, currency: 'USD', category: 'Massage', rating: 4.9, reviewCount: 89, available: true },
+  { id: '3', name: 'Facial Treatment', description: 'Rejuvenating facial treatment with premium skincare products.', duration: 45, price: 65, currency: 'USD', category: 'Skincare', rating: 4.7, reviewCount: 56, available: true },
+  { id: '4', name: 'Hair Styling', description: 'Professional hair styling and consultation with expert stylists.', duration: 30, price: 45, currency: 'USD', category: 'Hair', rating: 4.6, reviewCount: 201, available: true },
+  { id: '5', name: 'Manicure & Pedicure', description: 'Complete nail care with polish and cuticle treatment.', duration: 75, price: 55, currency: 'USD', category: 'Nails', rating: 4.5, reviewCount: 167, available: false },
+  { id: '6', name: 'Aromatherapy Session', description: 'Essential oil therapy session for deep relaxation and healing.', duration: 60, price: 95, currency: 'USD', category: 'Wellness', rating: 4.9, reviewCount: 43, available: true, featured: true },
+]
 
 // =============================================================================
 // COMPONENT
 // =============================================================================
 
 export function ServiceSelectorBlock({
-  siteId,
-  categoryFilter,
-  layout = 'cards',
-  columns = { mobile: 1, tablet: 2, desktop: 3 },
-  showPrice = true,
-  showDuration = true,
+  // Content
+  title = 'Select a Service',
+  subtitle,
+  showHeader = true,
+  showSearch = true,
+  showFilter = false,
+  emptyMessage = 'No services available at this time.',
+  searchPlaceholder = 'Search services...',
+  selectButtonText = 'Select',
+  selectedButtonText = 'Selected ✓',
+  durationLabel = 'min',
   showDescription = true,
-  showCapacity = false,
+  showDuration = true,
+  showPrice = true,
+  showRating = true,
+  showImage = false,
+  showCategory = true,
+  showFeaturedBadge = true,
+  featuredBadgeText = 'Popular',
+
+  // Data
+  siteId,
+  serviceId,
+  maxServices = 20,
+  filterByCategory,
+
+  // Layout
+  layout = 'cards',
+  columns = 2,
+  mobileColumns = 1,
+  headerAlignment = 'left',
+  imagePosition = 'top',
+  width,
+  minHeight,
+  padding = '16px',
+  gap = '12px',
+  cardPadding = '16px',
+
+  // Colors
   primaryColor = '#8B5CF6',
-  borderRadius,
+  secondaryColor,
+  backgroundColor,
+  textColor,
+  headerBackgroundColor,
+  headerTextColor,
+  cardBackgroundColor,
+  cardHoverBgColor,
+  cardBorderColor,
+  cardSelectedBgColor,
+  cardSelectedBorderColor,
+  buttonBackgroundColor,
+  buttonTextColor = '#ffffff',
+  buttonHoverColor,
+  priceColor,
+  durationColor,
+  ratingColor = '#f59e0b',
+  categoryColor,
+  categoryBgColor,
+  searchBgColor,
+  searchBorderColor,
+  featuredBadgeBgColor,
+  featuredBadgeTextColor = '#ffffff',
+  dividerColor,
+  descriptionColor,
+
+  // Typography
+  titleFontSize = '18px',
+  titleFontWeight = '600',
+  titleFontFamily,
+  subtitleFontSize,
+  serviceNameFontSize = '15px',
+  serviceNameFontWeight = '600',
+  descriptionFontSize = '13px',
+  priceFontSize = '16px',
+  priceFontWeight = '700',
+  durationFontSize = '13px',
+  buttonFontSize = '13px',
+  buttonFontWeight = '500',
+  categoryFontSize = '11px',
+
+  // Shape & Effects
+  borderRadius = '12px',
+  cardBorderRadius = '10px',
+  buttonBorderRadius = '8px',
+  imageBorderRadius,
+  borderWidth = '1px',
+  shadow = 'none',
+  cardShadow = 'sm',
+  hoverShadow = 'md',
+  hoverScale = true,
+  animateCards = true,
+
+  // Accessibility
+  ariaLabel = 'Service Selection',
+
+  // Events
   className,
   onServiceSelect,
-  selectedServiceId,
 }: ServiceSelectorBlockProps) {
-  const [services, setServices] = useState<Service[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [selectedId, setSelectedId] = useState<string | null>(selectedServiceId || null)
-  
-  // Fetch services
-  useEffect(() => {
-    if (!siteId) {
-      // Demo data for editor preview
-      setServices([
-        {
-          id: '1',
-          name: 'Consultation',
-          description: 'Initial consultation to discuss your needs and goals.',
-          duration_minutes: 30,
-          price: 5000, // in cents
-          currency: 'ZMW',
-          max_attendees: 1,
-          color: '#3B82F6',
-          category: 'General',
-        },
-        {
-          id: '2',
-          name: 'Full Session',
-          description: 'Complete service session with personalized attention.',
-          duration_minutes: 60,
-          price: 15000,
-          currency: 'ZMW',
-          max_attendees: 1,
-          color: '#10B981',
-          category: 'Premium',
-        },
-        {
-          id: '3',
-          name: 'Group Workshop',
-          description: 'Interactive group session for team building.',
-          duration_minutes: 120,
-          price: 25000,
-          currency: 'ZMW',
-          max_attendees: 10,
-          color: '#F59E0B',
-          category: 'Groups',
-        },
-      ])
-      setIsLoading(false)
-      return
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(serviceId || null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState<string | null>(filterByCategory || null)
+
+  // Get unique categories
+  const categories = useMemo(() => {
+    const cats = new Set(DEMO_SERVICES.map(s => s.category).filter(Boolean))
+    return Array.from(cats) as string[]
+  }, [])
+
+  // Filter services
+  const filteredServices = useMemo(() => {
+    let services = DEMO_SERVICES
+    if (activeCategory) {
+      services = services.filter(s => s.category === activeCategory)
     }
-    
-    // Fetch from API
-    const fetchServices = async () => {
-      try {
-        const response = await fetch(`/api/modules/booking/services?siteId=${siteId}`)
-        if (response.ok) {
-          const data = await response.json()
-          setServices(data.services || [])
-        }
-      } catch (error) {
-        console.error('Failed to fetch services:', error)
-      } finally {
-        setIsLoading(false)
-      }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      services = services.filter(s => s.name.toLowerCase().includes(q) || s.description?.toLowerCase().includes(q) || s.category?.toLowerCase().includes(q))
     }
-    
-    fetchServices()
-  }, [siteId])
-  
-  // Handle selection
-  const handleSelect = (serviceId: string) => {
-    setSelectedId(serviceId)
-    onServiceSelect?.(serviceId)
-  }
-  
-  // Format duration
-  const formatDuration = (minutes: number): string => {
-    if (minutes < 60) return `${minutes} min`
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
-  }
-  
-  // Format price
-  const formatPrice = (price: number, currency: string): string => {
-    const amount = price / 100
-    return new Intl.NumberFormat('en-ZM', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-    }).format(amount)
-  }
-  
-  // Get column classes
-  const getGridCols = () => {
-    const cols = typeof columns === 'object' ? columns : { mobile: columns, tablet: columns, desktop: columns }
-    return cn(
-      `grid-cols-${cols.mobile}`,
-      `sm:grid-cols-${cols.tablet || cols.mobile}`,
-      `lg:grid-cols-${cols.desktop || cols.tablet || cols.mobile}`
-    )
-  }
-  
-  // Responsive border radius
-  const radius = typeof borderRadius === 'object' 
-    ? borderRadius.mobile 
-    : borderRadius || '12px'
+    return services.slice(0, maxServices)
+  }, [searchQuery, activeCategory, maxServices])
 
-  // Filter by category
-  const filteredServices = categoryFilter
-    ? services.filter(s => s.category?.toLowerCase() === categoryFilter.toLowerCase())
-    : services
-
-  if (isLoading) {
-    return (
-      <div className={cn("service-selector-block", className)}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="bg-card border rounded-lg p-4 animate-pulse"
-              style={{ borderRadius: radius }}
-            >
-              <div className="h-6 bg-muted rounded mb-3 w-3/4" />
-              <div className="h-4 bg-muted rounded mb-2 w-full" />
-              <div className="h-4 bg-muted rounded w-1/2" />
-            </div>
-          ))}
-        </div>
-      </div>
-    )
+  const handleSelect = (service: ServiceItem) => {
+    setSelectedServiceId(service.id)
+    onServiceSelect?.(service)
   }
 
-  if (filteredServices.length === 0) {
-    return (
-      <div className={cn("service-selector-block", className)}>
-        <div 
-          className="text-center py-12 px-4 bg-card border rounded-lg"
-          style={{ borderRadius: radius }}
-        >
-          <p className="text-muted-foreground">No services available.</p>
-        </div>
-      </div>
-    )
+  const formatPrice = (price: number, currency: string) => {
+    try {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(price)
+    } catch {
+      return `${currency} ${price}`
+    }
   }
+
+  const btnBg = buttonBackgroundColor || primaryColor
+  const selectedBorder = cardSelectedBorderColor || primaryColor
+  const selectedBg = cardSelectedBgColor || `${primaryColor}08`
+  const badgeBg = featuredBadgeBgColor || primaryColor
+
+  const isGrid = layout === 'grid' || layout === 'cards'
 
   return (
-    <div className={cn("service-selector-block", className)}>
-      {/* Grid Layout */}
-      {layout === 'grid' && (
-        <div className={cn("grid gap-4", getGridCols())}>
-          {filteredServices.map((service) => (
-            <button
-              key={service.id}
-              onClick={() => handleSelect(service.id)}
-              className={cn(
-                "text-left bg-card border-2 p-4 transition-all hover:shadow-md",
-                selectedId === service.id ? 'ring-2' : 'hover:border-muted-foreground/30'
-              )}
-              style={{ 
-                borderRadius: radius,
-                borderColor: selectedId === service.id ? primaryColor : undefined,
-                boxShadow: selectedId === service.id ? `0 0 0 2px ${primaryColor}` : undefined,
-              }}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: service.color }}
-                />
-                {selectedId === service.id && (
-                  <Check className="h-5 w-5" style={{ color: primaryColor }} />
-                )}
-              </div>
-              
-              <h3 className="font-semibold text-lg mb-1">{service.name}</h3>
-              
-              {showDescription && service.description && (
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                  {service.description}
-                </p>
-              )}
-              
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                {showDuration && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    {formatDuration(service.duration_minutes)}
-                  </span>
-                )}
-                {showPrice && (
-                  <span className="flex items-center gap-1 font-medium text-foreground">
-                    {formatPrice(service.price, service.currency)}
-                  </span>
-                )}
-              </div>
-            </button>
-          ))}
+    <div
+      className={cn('service-selector-block', className)}
+      style={{
+        backgroundColor: backgroundColor || undefined,
+        color: textColor || undefined,
+        borderRadius,
+        border: `${borderWidth} solid ${cardBorderColor || '#e5e7eb'}`,
+        boxShadow: SHADOW_MAP[shadow] || 'none',
+        width: width || '100%',
+        minHeight: minHeight || undefined,
+        fontFamily: titleFontFamily || undefined,
+        overflow: 'hidden',
+      }}
+      role="region"
+      aria-label={ariaLabel}
+    >
+      {/* Header */}
+      {showHeader && (
+        <div style={{
+          padding,
+          backgroundColor: headerBackgroundColor || undefined,
+          color: headerTextColor || textColor || undefined,
+          borderBottom: `1px solid ${dividerColor || cardBorderColor || '#e5e7eb'}`,
+          textAlign: headerAlignment,
+        }}>
+          <h3 style={{ fontWeight: titleFontWeight, fontSize: titleFontSize, margin: 0 }}>{title}</h3>
+          {subtitle && <p style={{ fontSize: subtitleFontSize || '14px', opacity: 0.7, marginTop: '4px', marginBottom: 0 }}>{subtitle}</p>}
         </div>
       )}
-      
-      {/* List Layout */}
-      {layout === 'list' && (
-        <div className="space-y-2">
-          {filteredServices.map((service) => (
-            <button
-              key={service.id}
-              onClick={() => handleSelect(service.id)}
-              className={cn(
-                "w-full text-left bg-card border-2 p-4 flex items-center justify-between transition-all hover:shadow-sm",
-                selectedId === service.id && 'ring-2'
-              )}
-              style={{ 
-                borderRadius: radius,
-                borderColor: selectedId === service.id ? primaryColor : undefined,
-                boxShadow: selectedId === service.id ? `0 0 0 2px ${primaryColor}` : undefined,
-              }}
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className="w-2 h-12 rounded-full"
-                  style={{ backgroundColor: service.color }}
+
+      <div style={{ padding }}>
+        {/* Search & Filter Bar */}
+        {(showSearch || showFilter) && (
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+            {showSearch && (
+              <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
+                <Search style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: 16, height: 16, opacity: 0.4 }} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  style={{
+                    width: '100%', padding: '8px 8px 8px 32px', borderRadius: buttonBorderRadius,
+                    border: `1px solid ${searchBorderColor || cardBorderColor || '#e5e7eb'}`,
+                    backgroundColor: searchBgColor || 'transparent', fontSize: '14px', outline: 'none',
+                  }}
+                  aria-label="Search services"
                 />
-                <div>
-                  <h3 className="font-semibold">{service.name}</h3>
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    {showDuration && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {formatDuration(service.duration_minutes)}
-                      </span>
-                    )}
-                    {showCapacity && service.max_attendees > 1 && (
-                      <span className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        Up to {service.max_attendees}
-                      </span>
-                    )}
-                  </div>
-                </div>
               </div>
-              
-              <div className="flex items-center gap-3">
-                {showPrice && (
-                  <span className="font-semibold">
-                    {formatPrice(service.price, service.currency)}
-                  </span>
-                )}
-                {selectedId === service.id ? (
-                  <Check className="h-5 w-5" style={{ color: primaryColor }} />
-                ) : (
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                )}
+            )}
+            {showFilter && categories.length > 0 && (
+              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <button
+                  onClick={() => setActiveCategory(null)}
+                  style={{
+                    padding: '6px 12px', borderRadius: '9999px', fontSize: categoryFontSize, fontWeight: 500,
+                    border: `1px solid ${!activeCategory ? primaryColor : (cardBorderColor || '#e5e7eb')}`,
+                    backgroundColor: !activeCategory ? primaryColor : 'transparent',
+                    color: !activeCategory ? '#fff' : undefined, cursor: 'pointer',
+                  }}
+                >
+                  All
+                </button>
+                {categories.map(cat => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    style={{
+                      padding: '6px 12px', borderRadius: '9999px', fontSize: categoryFontSize, fontWeight: 500,
+                      border: `1px solid ${activeCategory === cat ? primaryColor : (cardBorderColor || '#e5e7eb')}`,
+                      backgroundColor: activeCategory === cat ? primaryColor : (categoryBgColor || 'transparent'),
+                      color: activeCategory === cat ? '#fff' : (categoryColor || undefined), cursor: 'pointer',
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
               </div>
-            </button>
-          ))}
-        </div>
-      )}
-      
-      {/* Cards Layout */}
-      {layout === 'cards' && (
-        <div className={cn("grid gap-6", getGridCols())}>
-          {filteredServices.map((service) => (
-            <div
-              key={service.id}
-              onClick={() => handleSelect(service.id)}
-              className={cn(
-                "bg-card border-2 overflow-hidden cursor-pointer transition-all hover:shadow-lg",
-                selectedId === service.id && 'ring-2'
-              )}
-              style={{ 
-                borderRadius: radius,
-                borderColor: selectedId === service.id ? primaryColor : undefined,
-                boxShadow: selectedId === service.id ? `0 0 0 2px ${primaryColor}` : undefined,
-              }}
-            >
-              {/* Color Bar */}
-              <div
-                className="h-2"
-                style={{ backgroundColor: service.color }}
-              />
-              
-              <div className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="font-semibold text-lg">{service.name}</h3>
-                  {selectedId === service.id && (
-                    <div 
-                      className="w-6 h-6 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      <Check className="h-4 w-4 text-white" />
-                    </div>
-                  )}
-                </div>
-                
-                {showDescription && service.description && (
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {service.description}
-                  </p>
-                )}
-                
-                <div className="flex items-center justify-between pt-3 border-t">
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                    {showDuration && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {formatDuration(service.duration_minutes)}
-                      </span>
-                    )}
-                    {showCapacity && service.max_attendees > 1 && (
-                      <span className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        {service.max_attendees}
-                      </span>
-                    )}
-                  </div>
-                  
-                  {showPrice && (
-                    <span className="font-bold text-lg">
-                      {formatPrice(service.price, service.currency)}
+            )}
+          </div>
+        )}
+
+        {/* Services */}
+        {filteredServices.length === 0 ? (
+          <p style={{ textAlign: 'center', fontSize: '14px', opacity: 0.6, padding: '32px 0', margin: 0 }}>{emptyMessage}</p>
+        ) : (
+          <div style={{
+            display: isGrid ? 'grid' : 'flex',
+            gridTemplateColumns: isGrid ? `repeat(${columns}, 1fr)` : undefined,
+            flexDirection: !isGrid ? 'column' : undefined,
+            gap,
+          }}>
+            {filteredServices.map((service) => {
+              const isActive = selectedServiceId === service.id
+              return (
+                <div
+                  key={service.id}
+                  onClick={() => handleSelect(service)}
+                  style={{
+                    padding: cardPadding,
+                    borderRadius: cardBorderRadius,
+                    border: `${isActive ? '2px' : borderWidth} solid ${isActive ? selectedBorder : (cardBorderColor || '#e5e7eb')}`,
+                    backgroundColor: isActive ? selectedBg : (cardBackgroundColor || undefined),
+                    boxShadow: SHADOW_MAP[cardShadow] || 'none',
+                    cursor: 'pointer',
+                    transition: animateCards ? 'all 0.2s ease' : 'none',
+                    transform: hoverScale ? undefined : undefined,
+                    position: 'relative',
+                    opacity: service.available === false ? 0.5 : 1,
+                    display: layout === 'list' ? 'flex' : 'block',
+                    alignItems: layout === 'list' ? 'center' : undefined,
+                    gap: layout === 'list' ? '16px' : undefined,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (animateCards) {
+                      (e.currentTarget as HTMLElement).style.boxShadow = SHADOW_MAP[hoverShadow] || SHADOW_MAP.md
+                      if (hoverScale) (e.currentTarget as HTMLElement).style.transform = 'scale(1.02)'
+                      if (cardHoverBgColor) (e.currentTarget as HTMLElement).style.backgroundColor = cardHoverBgColor
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (animateCards) {
+                      (e.currentTarget as HTMLElement).style.boxShadow = SHADOW_MAP[cardShadow] || 'none'
+                      if (hoverScale) (e.currentTarget as HTMLElement).style.transform = 'none'
+                      ;(e.currentTarget as HTMLElement).style.backgroundColor = isActive ? selectedBg : (cardBackgroundColor || '')
+                    }
+                  }}
+                  role="button"
+                  aria-pressed={isActive}
+                  aria-label={`Select ${service.name}`}
+                >
+                  {/* Featured Badge */}
+                  {showFeaturedBadge && service.featured && (
+                    <span style={{
+                      position: 'absolute', top: '8px', right: '8px',
+                      padding: '2px 8px', borderRadius: '9999px', fontSize: '10px', fontWeight: 600,
+                      backgroundColor: badgeBg, color: featuredBadgeTextColor,
+                    }}>
+                      {featuredBadgeText}
                     </span>
                   )}
+
+                  {/* Category */}
+                  {showCategory && service.category && layout !== 'list' && (
+                    <span style={{
+                      display: 'inline-block', fontSize: categoryFontSize, fontWeight: 500,
+                      padding: '2px 8px', borderRadius: '4px', marginBottom: '8px',
+                      backgroundColor: categoryBgColor || `${primaryColor}10`, color: categoryColor || primaryColor,
+                    }}>
+                      {service.category}
+                    </span>
+                  )}
+
+                  <div style={{ flex: 1 }}>
+                    {/* Service Name */}
+                    <h4 style={{ fontWeight: serviceNameFontWeight, fontSize: serviceNameFontSize, margin: '0 0 4px 0' }}>
+                      {service.name}
+                    </h4>
+
+                    {/* Description */}
+                    {showDescription && service.description && (
+                      <p style={{ fontSize: descriptionFontSize, opacity: 0.7, margin: '0 0 8px 0', color: descriptionColor || undefined, lineHeight: 1.4 }}>
+                        {service.description}
+                      </p>
+                    )}
+
+                    {/* Meta Row */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      {showDuration && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: durationFontSize, color: durationColor || undefined, opacity: 0.7 }}>
+                          <Clock style={{ width: 14, height: 14 }} />
+                          {service.duration} {durationLabel}
+                        </span>
+                      )}
+                      {showRating && service.rating && (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: durationFontSize }}>
+                          <Star style={{ width: 14, height: 14, fill: ratingColor, color: ratingColor }} />
+                          <span style={{ color: ratingColor, fontWeight: 500 }}>{service.rating}</span>
+                          {service.reviewCount && <span style={{ opacity: 0.5 }}>({service.reviewCount})</span>}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Price + Select */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: layout === 'list' ? 0 : '12px', gap: '8px' }}>
+                    {showPrice && (
+                      <span style={{ fontWeight: priceFontWeight, fontSize: priceFontSize, color: priceColor || primaryColor }}>
+                        {formatPrice(service.price, service.currency)}
+                      </span>
+                    )}
+                    <button
+                      style={{
+                        padding: '6px 16px', borderRadius: buttonBorderRadius,
+                        backgroundColor: isActive ? `${primaryColor}20` : btnBg,
+                        color: isActive ? primaryColor : buttonTextColor,
+                        border: isActive ? `1px solid ${primaryColor}` : '1px solid transparent',
+                        fontSize: buttonFontSize, fontWeight: buttonFontWeight, cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {isActive ? selectedButtonText : selectButtonText}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+              )
+            })}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
 // =============================================================================
-// STUDIO DEFINITION
+// STUDIO DEFINITION — 50+ fields with field groups
 // =============================================================================
 
-export const serviceSelectorDefinition: Omit<ComponentDefinition, 'module' | 'render'> & { render?: React.ComponentType<ServiceSelectorBlockProps> } = {
-  type: 'ServiceSelectorBlock',
+export const serviceSelectorDefinition: ComponentDefinition = {
+  type: 'ServiceSelector',
   label: 'Service Selector',
-  description: 'Display bookable services in grid, list, or card format',
+  description: 'Display bookable services in grid, list, or card layout — 50+ customization options',
   category: 'interactive',
-  icon: 'Briefcase',
+  icon: 'Tag',
+  keywords: ['booking', 'service', 'selector', 'menu', 'price', 'catalog', 'appointment'],
   defaultProps: {
-    layout: 'cards',
-    columns: { mobile: 1, tablet: 2, desktop: 3 },
-    showPrice: true,
-    showDuration: true,
+    title: 'Select a Service',
+    showHeader: true,
+    showSearch: true,
+    showFilter: false,
     showDescription: true,
-    showCapacity: false,
+    showDuration: true,
+    showPrice: true,
+    showRating: true,
+    showImage: false,
+    showCategory: true,
+    showFeaturedBadge: true,
+    featuredBadgeText: 'Popular',
+    layout: 'cards',
+    columns: 2,
+    mobileColumns: 1,
+    headerAlignment: 'left',
     primaryColor: '#8B5CF6',
-    borderRadius: { mobile: '8px', tablet: '12px', desktop: '12px' },
+    buttonTextColor: '#ffffff',
+    featuredBadgeTextColor: '#ffffff',
+    ratingColor: '#f59e0b',
+    borderRadius: '12px',
+    cardBorderRadius: '10px',
+    buttonBorderRadius: '8px',
+    borderWidth: '1px',
+    shadow: 'none',
+    cardShadow: 'sm',
+    hoverShadow: 'md',
+    hoverScale: true,
+    animateCards: true,
+    titleFontSize: '18px',
+    titleFontWeight: '600',
+    serviceNameFontSize: '15px',
+    serviceNameFontWeight: '600',
+    priceFontSize: '16px',
+    priceFontWeight: '700',
+    padding: '16px',
+    gap: '12px',
+    cardPadding: '16px',
   },
   fields: {
-    categoryFilter: {
-      type: 'text',
-      label: 'Category Filter',
-      description: 'Only show services from this category',
-    },
-    layout: {
-      type: 'select',
-      label: 'Layout',
-      options: [
-        { value: 'grid', label: 'Grid' },
-        { value: 'list', label: 'List' },
-        { value: 'cards', label: 'Cards' },
-      ],
-    },
-    columns: {
-      type: 'number',
-      responsive: true,
-      label: 'Columns',
-      description: 'Number of columns in grid/cards layout',
-      min: 1,
-      max: 4,
-    },
-    showPrice: {
-      type: 'toggle',
-      label: 'Show Price',
-    },
-    showDuration: {
-      type: 'toggle',
-      label: 'Show Duration',
-    },
-    showDescription: {
-      type: 'toggle',
-      label: 'Show Description',
-    },
-    showCapacity: {
-      type: 'toggle',
-      label: 'Show Capacity',
-      description: 'Show max attendees for group services',
-    },
-    primaryColor: {
-      type: 'color',
-      label: 'Primary Color',
-    },
-    borderRadius: {
-      type: 'spacing',
-      label: 'Border Radius',
-    },
+    // Content (18)
+    title: { type: 'text', label: 'Title' },
+    subtitle: { type: 'text', label: 'Subtitle' },
+    showHeader: { type: 'toggle', label: 'Show Header' },
+    showSearch: { type: 'toggle', label: 'Show Search Bar' },
+    showFilter: { type: 'toggle', label: 'Show Category Filter' },
+    emptyMessage: { type: 'text', label: 'Empty Message' },
+    searchPlaceholder: { type: 'text', label: 'Search Placeholder' },
+    selectButtonText: { type: 'text', label: 'Select Button Text' },
+    selectedButtonText: { type: 'text', label: 'Selected Button Text' },
+    durationLabel: { type: 'text', label: 'Duration Label' },
+    showDescription: { type: 'toggle', label: 'Show Description' },
+    showDuration: { type: 'toggle', label: 'Show Duration' },
+    showPrice: { type: 'toggle', label: 'Show Price' },
+    showRating: { type: 'toggle', label: 'Show Rating' },
+    showImage: { type: 'toggle', label: 'Show Image' },
+    showCategory: { type: 'toggle', label: 'Show Category' },
+    showFeaturedBadge: { type: 'toggle', label: 'Show Featured Badge' },
+    featuredBadgeText: { type: 'text', label: 'Featured Badge Text' },
+
+    // Data (3)
+    serviceId: { type: 'custom', customType: 'booking:service-selector', label: 'Pre-Selected Service' },
+    maxServices: { type: 'number', label: 'Max Services Shown', min: 1, max: 50 },
+    filterByCategory: { type: 'text', label: 'Filter by Category' },
+
+    // Layout (10)
+    layout: { type: 'select', label: 'Layout', options: [{ label: 'Grid', value: 'grid' }, { label: 'List', value: 'list' }, { label: 'Cards', value: 'cards' }, { label: 'Compact', value: 'compact' }] },
+    columns: { type: 'number', label: 'Columns', min: 1, max: 6 },
+    mobileColumns: { type: 'number', label: 'Mobile Columns', min: 1, max: 3 },
+    headerAlignment: { type: 'select', label: 'Header Alignment', options: [{ label: 'Left', value: 'left' }, { label: 'Center', value: 'center' }, { label: 'Right', value: 'right' }] },
+    imagePosition: { type: 'select', label: 'Image Position', options: [{ label: 'Top', value: 'top' }, { label: 'Left', value: 'left' }, { label: 'Right', value: 'right' }, { label: 'Background', value: 'background' }] },
+    width: { type: 'text', label: 'Width' },
+    minHeight: { type: 'text', label: 'Min Height' },
+    padding: { type: 'text', label: 'Padding' },
+    gap: { type: 'text', label: 'Gap' },
+    cardPadding: { type: 'text', label: 'Card Padding' },
+
+    // Colors (25)
+    primaryColor: { type: 'color', label: 'Primary Color' },
+    secondaryColor: { type: 'color', label: 'Secondary Color' },
+    backgroundColor: { type: 'color', label: 'Background Color' },
+    textColor: { type: 'color', label: 'Text Color' },
+    headerBackgroundColor: { type: 'color', label: 'Header Background' },
+    headerTextColor: { type: 'color', label: 'Header Text' },
+    cardBackgroundColor: { type: 'color', label: 'Card Background' },
+    cardHoverBgColor: { type: 'color', label: 'Card Hover Background' },
+    cardBorderColor: { type: 'color', label: 'Card Border Color' },
+    cardSelectedBgColor: { type: 'color', label: 'Selected Card Background' },
+    cardSelectedBorderColor: { type: 'color', label: 'Selected Card Border' },
+    buttonBackgroundColor: { type: 'color', label: 'Button Background' },
+    buttonTextColor: { type: 'color', label: 'Button Text' },
+    buttonHoverColor: { type: 'color', label: 'Button Hover' },
+    priceColor: { type: 'color', label: 'Price Color' },
+    durationColor: { type: 'color', label: 'Duration Color' },
+    ratingColor: { type: 'color', label: 'Rating Color' },
+    categoryColor: { type: 'color', label: 'Category Text' },
+    categoryBgColor: { type: 'color', label: 'Category Background' },
+    searchBgColor: { type: 'color', label: 'Search Background' },
+    searchBorderColor: { type: 'color', label: 'Search Border' },
+    featuredBadgeBgColor: { type: 'color', label: 'Featured Badge Background' },
+    featuredBadgeTextColor: { type: 'color', label: 'Featured Badge Text' },
+    dividerColor: { type: 'color', label: 'Divider Color' },
+    descriptionColor: { type: 'color', label: 'Description Color' },
+
+    // Typography (13)
+    titleFontSize: { type: 'text', label: 'Title Font Size' },
+    titleFontWeight: { type: 'select', label: 'Title Font Weight', options: [{ label: 'Normal', value: '400' }, { label: 'Medium', value: '500' }, { label: 'Semi Bold', value: '600' }, { label: 'Bold', value: '700' }] },
+    titleFontFamily: { type: 'text', label: 'Title Font Family' },
+    subtitleFontSize: { type: 'text', label: 'Subtitle Font Size' },
+    serviceNameFontSize: { type: 'text', label: 'Service Name Font Size' },
+    serviceNameFontWeight: { type: 'select', label: 'Service Name Weight', options: [{ label: 'Normal', value: '400' }, { label: 'Medium', value: '500' }, { label: 'Semi Bold', value: '600' }, { label: 'Bold', value: '700' }] },
+    descriptionFontSize: { type: 'text', label: 'Description Font Size' },
+    priceFontSize: { type: 'text', label: 'Price Font Size' },
+    priceFontWeight: { type: 'select', label: 'Price Weight', options: [{ label: 'Normal', value: '400' }, { label: 'Semi Bold', value: '600' }, { label: 'Bold', value: '700' }, { label: 'Extra Bold', value: '800' }] },
+    durationFontSize: { type: 'text', label: 'Duration Font Size' },
+    buttonFontSize: { type: 'text', label: 'Button Font Size' },
+    buttonFontWeight: { type: 'select', label: 'Button Weight', options: [{ label: 'Normal', value: '400' }, { label: 'Medium', value: '500' }, { label: 'Semi Bold', value: '600' }, { label: 'Bold', value: '700' }] },
+    categoryFontSize: { type: 'text', label: 'Category Font Size' },
+
+    // Shape & Effects (10)
+    borderRadius: { type: 'text', label: 'Container Radius' },
+    cardBorderRadius: { type: 'text', label: 'Card Radius' },
+    buttonBorderRadius: { type: 'text', label: 'Button Radius' },
+    imageBorderRadius: { type: 'text', label: 'Image Radius' },
+    borderWidth: { type: 'text', label: 'Border Width' },
+    shadow: { type: 'select', label: 'Container Shadow', options: [{ label: 'None', value: 'none' }, { label: 'Small', value: 'sm' }, { label: 'Medium', value: 'md' }, { label: 'Large', value: 'lg' }, { label: 'Extra Large', value: 'xl' }] },
+    cardShadow: { type: 'select', label: 'Card Shadow', options: [{ label: 'None', value: 'none' }, { label: 'Small', value: 'sm' }, { label: 'Medium', value: 'md' }, { label: 'Large', value: 'lg' }] },
+    hoverShadow: { type: 'select', label: 'Hover Shadow', options: [{ label: 'None', value: 'none' }, { label: 'Small', value: 'sm' }, { label: 'Medium', value: 'md' }, { label: 'Large', value: 'lg' }, { label: 'Extra Large', value: 'xl' }] },
+    hoverScale: { type: 'toggle', label: 'Hover Scale' },
+    animateCards: { type: 'toggle', label: 'Animate Cards' },
+
+    // Accessibility (1)
+    ariaLabel: { type: 'text', label: 'ARIA Label' },
   },
+  fieldGroups: [
+    { id: 'content', label: 'Content', icon: 'Type', fields: ['title', 'subtitle', 'showHeader', 'showSearch', 'showFilter', 'emptyMessage', 'searchPlaceholder', 'selectButtonText', 'selectedButtonText', 'durationLabel', 'showDescription', 'showDuration', 'showPrice', 'showRating', 'showImage', 'showCategory', 'showFeaturedBadge', 'featuredBadgeText'], defaultExpanded: true },
+    { id: 'data', label: 'Data Connection', icon: 'Database', fields: ['serviceId', 'maxServices', 'filterByCategory'], defaultExpanded: true },
+    { id: 'layout', label: 'Layout', icon: 'Layout', fields: ['layout', 'columns', 'mobileColumns', 'headerAlignment', 'imagePosition', 'width', 'minHeight', 'padding', 'gap', 'cardPadding'], defaultExpanded: false },
+    { id: 'colors', label: 'Colors', icon: 'Palette', fields: ['primaryColor', 'secondaryColor', 'backgroundColor', 'textColor', 'headerBackgroundColor', 'headerTextColor', 'cardBackgroundColor', 'cardHoverBgColor', 'cardBorderColor', 'cardSelectedBgColor', 'cardSelectedBorderColor', 'buttonBackgroundColor', 'buttonTextColor', 'buttonHoverColor', 'priceColor', 'durationColor', 'ratingColor', 'categoryColor', 'categoryBgColor', 'searchBgColor', 'searchBorderColor', 'featuredBadgeBgColor', 'featuredBadgeTextColor', 'dividerColor', 'descriptionColor'], defaultExpanded: false },
+    { id: 'typography', label: 'Typography', icon: 'ALargeSmall', fields: ['titleFontSize', 'titleFontWeight', 'titleFontFamily', 'subtitleFontSize', 'serviceNameFontSize', 'serviceNameFontWeight', 'descriptionFontSize', 'priceFontSize', 'priceFontWeight', 'durationFontSize', 'buttonFontSize', 'buttonFontWeight', 'categoryFontSize'], defaultExpanded: false },
+    { id: 'shape', label: 'Shape & Effects', icon: 'Square', fields: ['borderRadius', 'cardBorderRadius', 'buttonBorderRadius', 'imageBorderRadius', 'borderWidth', 'shadow', 'cardShadow', 'hoverShadow', 'hoverScale', 'animateCards'], defaultExpanded: false },
+    { id: 'accessibility', label: 'Accessibility', icon: 'Accessibility', fields: ['ariaLabel'], defaultExpanded: false },
+  ],
   ai: {
-    description: 'Service selection grid for booking widget',
-    canModify: ['layout', 'columns', 'showPrice', 'showDuration', 'showDescription', 'primaryColor', 'borderRadius'],
-    suggestions: [
-      'Make it compact',
-      'Show as list',
-      'Emphasize pricing',
-      'Hide descriptions',
-    ],
+    description: 'Service selection catalog with prices, ratings, and categories — 50+ properties',
+    canModify: ['title', 'subtitle', 'layout', 'columns', 'primaryColor', 'backgroundColor', 'showSearch', 'showFilter', 'showRating', 'showPrice', 'cardBorderRadius', 'cardShadow'],
+    suggestions: ['Show as list', 'Make 3 columns', 'Hide ratings', 'Change to brand colors', 'Enable search and filters'],
   },
   render: ServiceSelectorBlock,
 }
