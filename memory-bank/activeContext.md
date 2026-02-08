@@ -1,53 +1,76 @@
 # Active Context
 
-## Latest Session Update (Dark Mode Hardcoded Colors, Invisible Buttons, Module Fix — February 2026)
+## Latest Session Update (Module Rendering Fix + Pro Color System + Footer Validation — February 2026)
 
-### COMPREHENSIVE DARK MODE, INVISIBLE BUTTONS, MODULE INTEGRATION FIX ✅
+### BOOKING MODULES ALWAYS RENDER + PRO COLOR SYSTEM + FOOTER FIX ✅
 
 **Context:**
-User tested the Besto barbershop website AGAIN after Session 2 fixes and found remaining issues:
-1. **Invisible buttons** — CTA buttonColor defaulted to `#ffffff` (white) creating invisible buttons
-2. **Footer/Gallery/About/Contact pages** — Still had light/dark issues, blue titles, messed up Team cards, wrong ContactForm styling
-3. **Homepage cards** — Wrong spacing/alignment, blue titles appearing
-4. **No gradient effects** — User wanted modern gradients
-5. **Module components not working** — `/book` page showed only footer, `ServiceSelector` type mismatch with `BookingServiceSelector`
+User tested live sites (besto.sites.dramacagency.com, mesto.sites.dramacagency.com) and found:
+1. **Booking module components NOT appearing on /book pages** — BookingCalendar, BookingServiceSelector, BookingForm all silently dropped
+2. **45+ hardcoded Tailwind color classes** still overriding theme props across renders.tsx
+3. **Footer showing generic content** — "Tens and Tens - Innovative technology solutions" / "Professional business solutions" / placeholder contact info (555 numbers, hello@company.com)
 
-**Root Causes Found:**
-1. **Invisible Buttons**: CTARender defaults `buttonColor = "#ffffff"` and `color: buttonTextColor || backgroundColor` — when both white, invisible. Converter DID set `themePrimary()` but render defaults still kicked in via hardcoded fallbacks.
-2. **~50+ Hardcoded Tailwind Classes**: renders.tsx had `bg-blue-600`, `hover:border-blue-500`, `bg-gray-100 hover:bg-gray-200`, `hover:bg-gray-50`, `focus:ring-blue-500`, `border-gray-300`, `bg-white` etc. ALL ignoring theme props.
-3. **Converter Empty Strings**: Features/Team/Testimonials/Gallery converter set `backgroundColor: ""` (empty) causing render defaults `#ffffff` to take effect on dark sites.
-4. **Module Type Mismatch**: `default-configs.ts` used `"ServiceSelector"` but booking studio exports `"BookingServiceSelector"`.
-5. **Empty Module Page Props**: `component-injector.ts` created module pages with `props: {}` and no Hero header.
+**Root Causes Found & Fixed:**
 
-**What Was Fixed (4 files, 236 insertions, 74 deletions — commit `e13c67d`):**
+#### ROOT CAUSE #1: Empty /book Pages
+The complete failure chain:
+1. AI Designer creates /book page with BookingCalendar, BookingServiceSelector, BookingForm components
+2. Public site page queries `site_module_installations` → EMPTY (no booking module installed)
+3. `modules` prop is `[]` → StudioRenderer never loads booking module → `getComponent("BookingCalendar")` returns `undefined` → returns `null` in production
 
-#### converter.ts — Dark Mode Defaults & Gradients
-- CTA: `buttonColor` always uses `themePrimary()` (never white). Added gradient bg support (backgroundGradient, From, To, Direction). Secondary button gets proper contrast colors. Badge uses `themePrimary()`.
-- Features: Dark theme → explicit `cardBackgroundColor: "#1e293b"`, `cardBorderColor: "#374151"`. Added `titleColor`, `subtitleColor`.
-- Team: Dark card backgrounds, `cardBorderColor`, `imageBorderColor: themePrimary()`. Changed default columns to 2.
-- Testimonials: Dark card backgrounds and border colors.
-- Gallery: Dark backgrounds, `titleColor`, `subtitleColor`. Changed columns to 4.
-- ContactForm: Added `inputBackgroundColor`, `inputBorderColor`, `inputTextColor`, `labelColor` for dark form fields. `buttonColor: themePrimary()`.
-- Stats: `valueColor: themePrimary()`, dark backgrounds.
-- FAQ, Pricing, Newsletter: Dark theme backgrounds and text colors.
-- Hero: Gradient background support for dark themes.
-- TypeMap: Added ALL module component type mappings. `ServiceSelector` → `BookingServiceSelector`.
+**The AI Designer NEVER inserted rows into `site_module_installations`!**
 
-#### renders.tsx — Removed ~15 Hardcoded Light-Mode Issues
-- **ContactFormRender**: Removed `bg-blue-600` submit button → uses `buttonColor` prop via inline style. Added dark-mode detection from bg luminance. Passes theme-aware colors to FormFieldRender.
-- **CTARender**: Fixed invisible button — text color NEVER falls back to `backgroundColor`. Button glow uses `buttonColor` instead of `shadow-blue-500/50`. Hover glow uses dynamic color.
-- **FeaturesRender**: Removed `hover:border-blue-500`.
-- **TestimonialsRender**: Removed `hover:border-blue-500`.
-- **TeamRender**: Social buttons use `socialColor` alpha bg instead of `bg-gray-100 hover:bg-gray-200`.
-- **FAQRender**: Replaced `hover:bg-gray-50` with `hover:opacity-80`.
-- **FormFieldRender**: Removed `bg-white`/`bg-gray-100` from variants. Focus ring uses `focusBorderColor` prop with inline handlers instead of `focus:border-blue-500`.
-- **NewsletterRender**: Input border uses `buttonColor` alpha, no hardcoded `gray-300`/`blue-500`.
-- **PricingRender**: Non-popular card border uses `textColor` alpha. Removed `hover:bg-gray-50`.
+**Fix (2 approaches, both implemented):**
+- **registry/index.ts**: `initializeRegistry()` now calls `registerBuiltInModuleComponents()` which imports booking + ecommerce studio modules and registers all their components as built-in fallbacks. Components ALWAYS available even without DB rows.
+- **auto-install API**: New `/api/sites/[siteId]/modules/auto-install` endpoint. `handleSaveAndApply()` in ai-designer/page.tsx now scans all studioData component types, detects Booking*/Product* prefixes, and auto-inserts `site_module_installations` rows.
 
-#### modules/default-configs.ts — Type Mismatch Fix
-- Changed `ServiceSelector` → `BookingServiceSelector` in both components array and pages list.
+#### ROOT CAUSE #2: 45+ Hardcoded Colors
+Full audit found critical hardcoded Tailwind classes across 9+ components:
+- ButtonRender: ALL 5 variant classes (`bg-blue-600`, `bg-gray-100`, etc.)
+- HeroRender: 4 secondary button `hover:bg-gray-50`
+- NavbarRender: 4 mobile menu `hover:bg-gray-100`
+- FormRender: submit `bg-blue-600`, reset `text-gray-600`
+- FormFieldRender: checkbox `text-blue-600`, label `text-gray-700`, helpers `text-gray-400/500`
+- CarouselRender: CTA `bg-white text-gray-900`, arrows `bg-white/80`, dots `bg-white`
+- SocialLinksRender: `hover:bg-gray-100/50`
+- ModalRender: close `hover:bg-gray-100`, description `text-gray-600`
+- FAQ: helpful buttons `hover:bg-gray-50`
 
-#### modules/component-injector.ts — Module Pages Enhancement
+**Fix:** All replaced with structural-only Tailwind + inline styles from theme props or opacity-based hovers.
+
+#### ROOT CAUSE #3: Generic Footer Content
+AI model sometimes generates generic descriptions like "Professional business solutions" despite prompt instructions. Engine only overrode `companyName` and `copyrightText` but NOT `description`.
+
+**Fix (engine.ts + converter.ts):**
+- engine.ts: After footer generation, validate description against 10 generic patterns. Replace with real business description from context. Force real contact info (email, phone, address) from context data.
+- converter.ts: Filter placeholder contact data — strip "555" phone numbers, "hello@company.com" emails, "123 Main Street" addresses.
+
+### PRO COLOR HARMONY SYSTEM (converter.ts)
+Added complete professional color system (~200 lines):
+- `hexToRgb()`, `rgbToHex()`, `rgbToHsl()`, `hslToRgb()` — color conversion
+- `getContrastRatio()` — WCAG 2.1 contrast calculation
+- `ensureContrast()` — auto-adjusts text for WCAG AA (4.5:1) compliance
+- `lightenColor()`, `darkenColor()`, `withAlpha()` — color manipulation
+- `ColorPalette` interface with 26 harmonious colors for dark/light themes
+- `generateColorPalette()` + cached `palette()` accessor
+- ALL component handlers updated to use `palette()` colors instead of raw hardcoded values
+
+### Files Modified (7 files, 723 insertions, 77 deletions)
+| File | Changes |
+|------|---------|
+| `renders.tsx` | ~30 hardcoded color fixes across ButtonRender, HeroRender, NavbarRender, FormRender, FormFieldRender, CarouselRender, SocialLinksRender, ModalRender, FAQ |
+| `converter.ts` | Pro color harmony system + palette() usage in all component handlers + placeholder contact filtering |
+| `registry/index.ts` | `registerBuiltInModuleComponents()` — booking + ecommerce always available |
+| `auto-install/route.ts` | NEW — auto-installs modules based on detected component types |
+| `ai-designer/page.tsx` | handleSaveAndApply calls auto-install after saving pages |
+| `engine.ts` | Footer description validation + real contact info enforcement |
+
+### Commit
+- `05dc91c` — "fix: booking modules always render + pro color system + footer validation"
+
+---
+
+## Previous Session: Hardcoded Color & Module Integration Fix ✅
 - Module pages now include a Hero section header for proper visual structure.
 - Added `getDefaultModuleComponentProps()` with sensible defaults for BookingCalendar, BookingServiceSelector, BookingForm, BookingWidget, ProductGrid.
 

@@ -1,53 +1,52 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅**
 **Component Strategy**: Fresh premium components (NOT reusing basic Puck components)
 **Responsive System**: Mobile-first with ResponsiveValue<T> for all visual props
 **Total Templates**: 32 (7 starter + 25 premium)
 **Domain Module**: DM-01 ✅ | DM-02 ✅ | DM-03 ✅ | DM-04 ✅ | DM-05 ✅ | Migration Applied ✅
 **E-Commerce Module**: **ALL 6 WAVES COMPLETE** ✅ | **ZAMBIA DEFAULT** 🇿🇲
-**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + INDUSTRY BLUEPRINTS + SYSTEM OVERHAUL + DESIGN TOKEN THEMING + HARDCODED COLOR FIX** ✅
+**AI Website Designer**: **AWD-01 to AWD-09 COMPLETE + INDUSTRY BLUEPRINTS + SYSTEM OVERHAUL + DESIGN TOKEN THEMING + HARDCODED COLOR FIX + BOOKING MODULE RENDERING + PRO COLOR SYSTEM** ✅
 
 ---
 
-## 🎨 AI WEBSITE DESIGNER - HARDCODED COLOR & MODULE INTEGRATION FIX (February 2026) ✅
+## 🎯 BOOKING MODULE RENDERING + PRO COLOR SYSTEM + FOOTER VALIDATION (February 2026) ✅
 
 ### What
-Fixed ~15 remaining hardcoded light-mode Tailwind classes across render components, invisible CTA buttons, module type mismatch (`ServiceSelector` → `BookingServiceSelector`), and added gradient support for modern look.
+Fixed the #1 user complaint: booking module components not appearing on /book pages. Also fixed 45+ remaining hardcoded color classes, built a professional WCAG-compliant color harmony system, and added footer content validation.
 
 ### Root Causes & Fixes
 | Issue | Root Cause | Fix |
 |-------|-----------|-----|
-| Invisible CTA buttons | `buttonColor="#ffffff"`, text fallback to `backgroundColor` | `buttonColor: themePrimary()`, text always `#ffffff` |
-| Contact form blue submit | `bg-blue-600` hardcoded in JSX class | Replaced with inline `style={{ backgroundColor: resolvedButtonColor }}` |
-| Team social buttons white bg | `bg-gray-100 hover:bg-gray-200` hardcoded | Uses `socialColor` alpha (`${socialColor}15`) |
-| Features/Testimonials blue hover | `hover:border-blue-500` hardcoded | Removed, uses `transition-only` class |
-| FAQ gray hover | `hover:bg-gray-50` hardcoded | `hover:opacity-80` (works on any bg) |
-| Form inputs white bg | `bg-white` in FormFieldRender variant | Inline `backgroundColor` via props |
-| Form focus blue ring | `focus:border-blue-500 focus:ring-blue-500/20` | `focusBorderColor` prop with onFocus/onBlur handlers |
-| Converter empty strings | `backgroundColor: ""` → render default `#ffffff` | Explicit dark values: `isDarkTheme() ? "#1e293b" : ""` |
-| Module /book page empty | `ServiceSelector` ≠ `BookingServiceSelector`, `props: {}` | Fixed type name, added default props + Hero header |
-| No gradients | CTA/Hero had gradient props but converter never set them | `backgroundGradient: true` default on CTA/dark Hero |
-| Newsletter/Pricing blue | Focus rings and borders hardcoded blue | Theme-aware inline styles via props |
+| Empty /book page | AI Designer never inserts `site_module_installations` rows; `getComponent()` returns undefined for booking types | Register booking/ecommerce as built-in core components + auto-install API |
+| 45+ hardcoded colors | ButtonRender, HeroRender, NavbarRender, FormRender, etc. all had Tailwind color classes overriding theme props | Structural-only Tailwind + inline styles from theme props |
+| Generic footer text | AI model generates "Professional business solutions" despite prompt | Post-generation validation + pattern detection + real business data override |
+| Placeholder contact info | "555" numbers, "hello@company.com" in footers | Filter function strips known placeholder patterns |
+| No color harmony | Raw hex values without contrast checking | WCAG 2.1 color system with 26-property ColorPalette |
 
-### Files Modified (4 files, 236 insertions, 74 deletions)
+### Key Architectural Decisions
+1. **Built-in Module Registration**: `initializeRegistry()` now loads booking + ecommerce modules as fallbacks. If `loadModuleComponents()` runs later with actual module data, it simply overwrites (Map.set). Zero conflicts.
+2. **Auto-Install API**: Lightweight `/api/sites/[siteId]/modules/auto-install` bypasses subscription checks (since AI designer creates the content — modules must work).
+3. **Color Palette Caching**: `palette()` accessor generates `ColorPalette` on first call, caches it. Cache invalidated in `setDesignTokens()` and `convertOutputToStudioPages()`.
+4. **Footer Validation**: 10 generic description patterns detected and replaced with real business data from context.
+
+### Files Modified (7 files, 723 insertions, 77 deletions)
 | File | Changes |
 |------|---------|
-| `converter.ts` | All component handlers set explicit dark-mode card/text colors, gradient support, module type mappings |
-| `renders.tsx` | ContactForm, CTA, Features, Testimonials, Team, FAQ, FormField, Newsletter, Pricing — ~15 hardcoded fixes |
-| `modules/default-configs.ts` | `ServiceSelector` → `BookingServiceSelector` |
-| `modules/component-injector.ts` | Module pages get Hero header + `getDefaultModuleComponentProps()` |
+| `renders.tsx` | ~30 hardcoded color fixes across 9 components |
+| `converter.ts` | Pro color harmony system + palette() in all handlers + placeholder filtering |
+| `registry/index.ts` | `registerBuiltInModuleComponents()` for booking + ecommerce |
+| `auto-install/route.ts` | NEW — auto-install modules based on component type detection |
+| `ai-designer/page.tsx` | handleSaveAndApply calls auto-install API |
+| `engine.ts` | Footer description validation + contact info enforcement |
 
 ### Commit
-- `e13c67d` — "fix: comprehensive dark mode theming, invisible buttons, module integration & gradient support"
+- `05dc91c` — "fix: booking modules always render + pro color system + footer validation"
 
 ---
 
-## 🎨 AI WEBSITE DESIGNER - DESIGN TOKEN THEMING & DARK MODE OVERHAUL (February 2026) ✅
-
-### What
-Fixed 5 critical issues found during barbershop website testing: blue buttons everywhere, broken dark mode, bad spacing, white mobile menu on dark sites, and module integration not working.
+## 🎨 AI WEBSITE DESIGNER - HARDCODED COLOR & MODULE FIX (February 2026) ✅
 
 ### Root Causes & Fixes
 | Issue | Root Cause | Fix |
