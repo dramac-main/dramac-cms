@@ -20,7 +20,9 @@ import { formatContextForAI } from "./data-context/formatter";
 import { checkDataAvailability } from "./data-context/checker";
 import { componentRegistry } from "@/lib/studio/registry";
 import { DesignInspirationEngine, type DesignRecommendation } from "./design/inspiration-engine";
+import { getDesignPersonality, formatPersonalityForAI } from "./design/variety-engine";
 import { MultiPassRefinementEngine } from "./refinement/multi-pass-engine";
+import { auditWebsite } from "./quality/design-auditor";
 import { ModuleIntegrationOrchestrator } from "./modules/orchestrator";
 import type { ModuleConfig } from "./modules/types";
 import {
@@ -144,6 +146,11 @@ export class WebsiteDesignerEngine {
         console.log(`[WebsiteDesignerEngine] ⚠️ No blueprint found for industry: ${industry} — using AI freeform generation`);
       }
       
+      // Step 1.7: Generate unique design personality for variety
+      const designPersonality = getDesignPersonality(industry);
+      const personalityContext = formatPersonalityForAI(designPersonality);
+      console.log(`[WebsiteDesignerEngine] 🎭 Design personality: ${designPersonality.name} (hero: ${designPersonality.heroStyle}, cards: ${designPersonality.cardStyle})`);
+      
       if (this.config.enableDesignInspiration) {
         // Full AI-powered design analysis (slower but better)
         this.reportProgress("building-context", "Analyzing award-winning design patterns...", 0, 1);
@@ -166,7 +173,8 @@ export class WebsiteDesignerEngine {
         input.preferences,
         designInspiration,
         quickDesignTokens,
-        this.activeBlueprint
+        this.activeBlueprint,
+        personalityContext
       );
 
       // Step 2.5: Initialize module integration (only if enabled)
@@ -291,6 +299,26 @@ export class WebsiteDesignerEngine {
       // Step 6: Generate navigation structure
       const navigation = this.generateNavigation(pagesWithNav);
 
+      // Step 6.5: Quality audit — detect and auto-fix imperfections
+      this.reportProgress("finalizing", "Running quality audit...", 0, 1);
+      const designTokens = this.architecture.designTokens || {};
+      for (let i = 0; i < pagesWithNav.length; i++) {
+        const page = pagesWithNav[i];
+        const auditResult = auditWebsite(page.components, designTokens);
+        
+        // Apply auto-fixes from the audit
+        if (auditResult.autoFixed > 0) {
+          const autoFixedIssues = auditResult.issues.filter(issue => issue.autoFixed);
+          for (const fix of autoFixedIssues) {
+            const comp = page.components.find(c => c.id === fix.componentId);
+            if (comp && fix.field && fix.fixedValue !== undefined) {
+              (comp.props as Record<string, unknown>)[fix.field] = fix.fixedValue;
+            }
+          }
+          console.log(`[WebsiteDesignerEngine] 🔧 Quality audit fixed ${auditResult.autoFixed} issues on "${page.name}" (score: ${auditResult.score}/100)`);
+        }
+      }
+
       // Step 7: Finalize
       this.reportProgress("finalizing", "Finalizing website...", 0, 1);
       const siteSettings = this.generateSiteSettings();
@@ -349,7 +377,8 @@ export class WebsiteDesignerEngine {
     preferences?: WebsiteDesignerInput["preferences"],
     designInspiration?: DesignRecommendation | null,
     quickDesignTokens?: ReturnType<DesignInspirationEngine["getQuickDesignTokens"]> | null,
-    blueprint?: IndustryBlueprint | null
+    blueprint?: IndustryBlueprint | null,
+    personalityContext?: string
   ): Promise<SiteArchitecture> {
     const componentSummary = this.summarizeComponents();
 
@@ -418,7 +447,7 @@ Animation: ${quickDesignTokens.heroPattern.animation}
 
     const fullPrompt = buildArchitecturePrompt(
       prompt,
-      context + inspirationContext + blueprintContext,
+      context + inspirationContext + blueprintContext + (personalityContext ? "\n\n" + personalityContext : ""),
       preferences as Record<string, unknown> | undefined,
       componentSummary
     );

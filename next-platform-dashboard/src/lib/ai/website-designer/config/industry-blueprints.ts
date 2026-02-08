@@ -180,6 +180,14 @@ export const INDUSTRY_BLUEPRINTS: IndustryBlueprint[] = [
             }
           },
           {
+            component: "BookingWidget", intent: "quick-reservation",
+            rationale: "Inline reservation widget immediately below hero — lets diners pick date, time, party size without leaving the page. Reduces booking friction by 40%. Compact horizontal layout works perfectly on both mobile and desktop.",
+            config: { variant: "inline", compact: true, showDate: true, showTime: true, showGuests: true },
+            contentFormula: {
+              headline: { pattern: "Make a Reservation", examples: ["Reserve Your Table", "Book Your Experience"], maxWords: 4 },
+            }
+          },
+          {
             component: "Features", intent: "highlights",
             rationale: "3 key differentiators build immediate trust. Icons provide visual anchoring. This section answers 'Why this restaurant?' within 5 seconds of scrolling.",
             config: { columns: 3, layout: "icons", iconColor: "primary" },
@@ -837,6 +845,11 @@ export const INDUSTRY_BLUEPRINTS: IndustryBlueprint[] = [
             config: { variant: "split", minHeight: "85vh", backgroundOverlay: false },
             contentFormula: { headline: { pattern: "[Patient-centered] + [Care/Health] + You Can [Trust/Rely On]", examples: ["Compassionate Care You Can Trust", "Your Health, Our Priority", "Expert Care for Your Family"], maxWords: 8 }, subheadline: { pattern: "Mention specialties + patient focus", examples: ["Providing comprehensive {specialty} care for {city} families. Same-day appointments available."], maxWords: 20 }, cta: { pattern: "Book/Schedule + Appointment", examples: ["Book an Appointment", "Schedule Your Visit", "Request Appointment"], maxWords: 4 } }
           },
+          { component: "BookingWidget", intent: "quick-appointment",
+            rationale: "Inline appointment booking widget reduces scheduling friction. Online scheduling reduces no-shows by 30%. Patients can pick provider, service, date/time without navigating away. Critical for conversion — 65% of patients prefer online booking.",
+            config: { variant: "inline", compact: true, showServices: true, showStaff: true, showDate: true },
+            contentFormula: { headline: { pattern: "Book Your Appointment", examples: ["Schedule Your Visit", "Book an Appointment Online"], maxWords: 4 } }
+          },
           { component: "Features", intent: "services-overview",
             rationale: "3-6 service cards with icons. Each links to detailed service page. Clean, easy to scan.",
             config: { columns: 3, layout: "cards", showLearnMore: true },
@@ -1052,6 +1065,11 @@ export const INDUSTRY_BLUEPRINTS: IndustryBlueprint[] = [
             rationale: "Motivational hero with dynamic imagery (gym) or serene imagery (spa). Full-screen with strong overlay. CTA drives signup or booking.",
             config: { variant: "fullscreen", minHeight: "100vh", backgroundOverlay: true, backgroundOverlayOpacity: 70 },
             contentFormula: { headline: { pattern: "[Motivational verb] + Your + [Transformation/Journey/Potential]", examples: ["Transform Your Body, Transform Your Life", "Unleash Your Potential", "Your Wellness Journey Starts Here", "Restore. Renew. Relax."], maxWords: 8 }, subheadline: { pattern: "What you offer + for whom", examples: ["State-of-the-art facilities, expert trainers, and programs designed to help you achieve your fitness goals", "A sanctuary of peace and rejuvenation in the heart of {city}"], maxWords: 20 }, cta: { pattern: "Join/Book + Now/Today", examples: ["Start Your Free Trial", "Join Now", "Book Your Session"], maxWords: 4 } }
+          },
+          { component: "BookingWidget", intent: "quick-booking",
+            rationale: "Inline booking widget immediately below hero lets visitors book without scrolling. Mobile-friendly, responsive. 60%+ of fitness bookings happen on mobile. Reduces friction between interest and conversion.",
+            config: { variant: "inline", showServices: true, showStaff: false, compact: true },
+            contentFormula: { headline: { pattern: "Book Your [Session/Class/Appointment]", examples: ["Book Your Session", "Schedule a Class", "Reserve Your Spot"], maxWords: 4 } }
           },
           { component: "Features", intent: "services-classes",
             rationale: "3-6 services/classes with icons. Each card describes the offering and links to detail.",

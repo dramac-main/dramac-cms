@@ -58,6 +58,16 @@ interface ComponentRendererProps {
 // ============================================================================
 
 /**
+ * Module component types that need containment wrappers
+ * These come from Booking/E-commerce modules and should not stretch full-screen
+ */
+const MODULE_COMPONENT_TYPES = new Set([
+  "BookingServiceSelector", "BookingWidget", "BookingCalendar",
+  "BookingForm", "BookingEmbed", "BookingStaffGrid",
+  "ProductGrid", "CartItems", "CartSummary", "CheckoutForm",
+]);
+
+/**
  * Renders a single component and its children recursively
  */
 function ComponentRenderer({ 
@@ -114,8 +124,13 @@ function ComponentRenderer({
   // Build props with siteId injection — components can use this to fetch real data
   const injectedProps = { ...component.props, siteId: component.props?.siteId || siteId };
 
+  // Determine if this is a module component that needs containment wrapping
+  const isModuleComponent = MODULE_COMPONENT_TYPES.has(component.type);
+  
+  let rendered: React.ReactElement;
+  
   if (acceptsChildren && children && children.length > 0) {
-    return (
+    rendered = (
       <RenderComponent
         key={component.id}
         {...injectedProps}
@@ -124,16 +139,35 @@ function ComponentRenderer({
         {children}
       </RenderComponent>
     );
+  } else {
+    rendered = (
+      <RenderComponent
+        key={component.id}
+        {...injectedProps}
+        id={component.id}
+      />
+    );
   }
   
-  // For components that don't accept children, render without children prop
-  return (
-    <RenderComponent
-      key={component.id}
-      {...injectedProps}
-      id={component.id}
-    />
-  );
+  // Wrap module components in a containment section so they don't stretch full-screen
+  if (isModuleComponent) {
+    const bgColor = (component.props?.backgroundColor as string) || undefined;
+    const paddingY = (component.props?.sectionPaddingY as string) || "py-12 md:py-16";
+    const paddingX = (component.props?.sectionPaddingX as string) || "px-4 sm:px-6 lg:px-8";
+    return (
+      <section 
+        key={`module-wrap-${component.id}`}
+        className={`w-full ${paddingY}`}
+        style={bgColor ? { backgroundColor: bgColor } : undefined}
+      >
+        <div className={`max-w-screen-xl mx-auto ${paddingX}`}>
+          {rendered}
+        </div>
+      </section>
+    );
+  }
+  
+  return rendered;
 }
 
 // ============================================================================

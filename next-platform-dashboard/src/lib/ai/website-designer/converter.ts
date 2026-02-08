@@ -1030,12 +1030,13 @@ function transformPropsForStudio(
       newsletterDescription: props.newsletterDescription || "",
       newsletterButtonColor: props.newsletterButtonColor || themePrimary(),
       
-      // Styling
+      // Styling — theme-aware footer colors
       variant: props.variant || "standard",
-      backgroundColor: props.backgroundColor || "#111827",
-      textColor: props.textColor || "#f9fafb",
-      linkColor: props.linkColor || "#9ca3af",
-      linkHoverColor: props.linkHoverColor || "#ffffff",
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? "#111827" : palette().cardBg),
+      textColor: props.textColor || (isDarkTheme() ? "#f8fafc" : palette().textPrimary),
+      // Footer links: readable in ALL themes — gray on dark, muted text on light
+      linkColor: props.linkColor || (isDarkTheme() ? "#94a3b8" : palette().textSecondary),
+      linkHoverColor: props.linkHoverColor || (isDarkTheme() ? "#ffffff" : themePrimary()),
       borderTop: props.borderTop ?? false,
     };
   }
@@ -1243,6 +1244,43 @@ function transformPropsForStudio(
       author: props.author || props.attribution || "",
       source: props.source || props.role || props.company || "",
       style: props.style || props.variant || "default",
+    };
+  }
+
+  // =============================================================================
+  // MODULE COMPONENT HANDLERS
+  // Booking & E-commerce modules: inject branding, containment, and theming
+  // so they don't stretch full-screen or look unbranded
+  // =============================================================================
+
+  const MODULE_TYPES = [
+    "BookingServiceSelector", "BookingWidget", "BookingCalendar",
+    "BookingForm", "BookingEmbed", "BookingStaffGrid",
+    "ProductGrid", "CartItems", "CartSummary", "CheckoutForm",
+  ];
+
+  if (MODULE_TYPES.includes(type)) {
+    const pal = palette();
+    return {
+      ...transformed,
+      // Containment — prevent edge-to-edge stretching
+      maxWidth: props.maxWidth || "1280px",
+      containerClassName: props.containerClassName || "max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8",
+      // Branding — apply site design tokens
+      primaryColor: props.primaryColor || themePrimary(),
+      accentColor: props.accentColor || themeAccent(),
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
+      textColor: props.textColor || pal.textPrimary,
+      cardBackgroundColor: props.cardBackgroundColor || pal.cardBg,
+      cardBorderColor: props.cardBorderColor || pal.cardBorder,
+      buttonColor: props.buttonColor || themePrimary(),
+      buttonTextColor: props.buttonTextColor || pal.textOnPrimary,
+      // Section wrapper props
+      sectionPaddingY: props.sectionPaddingY || "py-12 md:py-16",
+      sectionPaddingX: props.sectionPaddingX || "px-4 sm:px-6 lg:px-8",
+      // Ensure module title matches brand
+      headingColor: props.headingColor || pal.textPrimary,
+      borderRadius: props.borderRadius || activeDesignTokens.borderRadius || "0.75rem",
     };
   }
 

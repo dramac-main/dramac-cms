@@ -8867,12 +8867,14 @@ export function FooterRender({
   newsletterButtonText = "Subscribe",
   backgroundColor = "#111827",
   textColor = "#ffffff",
+  linkColor = "#94a3b8",
+  linkHoverColor = "#ffffff",
   accentColor = "#3b82f6",
   variant = "columns",
   paddingY = "lg",
   id,
   className = "",
-}: FooterProps) {
+}: FooterProps & { linkColor?: string; linkHoverColor?: string }) {
   // Normalize logo image
   const logoUrl = getImageUrl(logo);
   
@@ -8915,7 +8917,13 @@ export function FooterRender({
                 <ul className="space-y-2">
                   {(column.links || []).map((link, j) => (
                     <li key={j}>
-                      <a href={link.href || "#"} className="text-sm opacity-75 hover:opacity-100 transition-opacity" style={{ color: textColor }}>{link.label}</a>
+                      <a 
+                        href={link.href || "#"} 
+                        className="text-sm transition-colors"
+                        style={{ color: linkColor }}
+                        onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}
+                      >{link.label}</a>
                     </li>
                   ))}
                 </ul>
@@ -8924,7 +8932,7 @@ export function FooterRender({
           </div>
         )}
         {newsletter && (
-          <div className="border-t border-white/10 pt-8 mb-8">
+          <div className="border-t pt-8 mb-8" style={{ borderColor: `${textColor}15` }}>
             <div className="max-w-md">
               <h3 className="font-semibold mb-4" style={{ color: textColor }}>{newsletterTitle}</h3>
               <form className="flex flex-col sm:flex-row gap-2">
@@ -8934,12 +8942,19 @@ export function FooterRender({
             </div>
           </div>
         )}
-        <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="border-t pt-8 flex flex-col md:flex-row items-center justify-between gap-4" style={{ borderColor: `${textColor}15` }}>
           <p className="text-sm opacity-75" style={{ color: textColor }}>{copyright}</p>
           {bottomLinks.length > 0 && (
             <div className="flex flex-wrap gap-4 md:gap-6">
               {bottomLinks.map((link, i) => (
-                <a key={i} href={link.href || "#"} className="text-sm opacity-75 hover:opacity-100 transition-opacity" style={{ color: textColor }}>{link.label}</a>
+                <a 
+                  key={i} 
+                  href={link.href || "#"} 
+                  className="text-sm transition-colors"
+                  style={{ color: linkColor }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = linkHoverColor; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = linkColor; }}
+                >{link.label}</a>
               ))}
             </div>
           )}
@@ -9999,28 +10014,50 @@ export function NewsletterRender({
   const sizeClasses = { sm: "text-sm", md: "text-base", lg: "text-lg" }[size];
   const inputSizeClasses = { sm: "px-3 py-2", md: "px-4 py-2.5", lg: "px-5 py-3" }[size];
 
+  // Determine input styling based on background darkness
+  const bgDark = backgroundColor ? (() => {
+    const hex = backgroundColor.replace('#', '');
+    if (hex.length < 6) return false;
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.5;
+  })() : false;
+
+  const resolvedTextColor = textColor || (bgDark ? "#f8fafc" : "#1f2937");
+  const inputBorderColor = bgDark ? "rgba(255,255,255,0.2)" : `${buttonColor}30`;
+  const inputTextColor = bgDark ? "#f8fafc" : "#1f2937";
+  const placeholderStyle = bgDark ? "placeholder-white/50" : "placeholder-gray-400";
+
   if (variant === "card") {
     return (
-      <div id={id} className={`p-6 md:p-8 rounded-xl shadow-lg text-center ${className}`} style={{ backgroundColor: backgroundColor || "#ffffff" }}>
-        <h3 className={`font-bold mb-2 ${size === "lg" ? "text-xl md:text-2xl" : "text-lg md:text-xl"}`} style={{ color: textColor }}>{title}</h3>
-        <p className={`${sizeClasses} opacity-80 mb-6`} style={{ color: textColor }}>{description}</p>
-        <form action={action} method="POST" className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-          <input type="email" name="email" placeholder={placeholder} required className={`flex-1 ${inputSizeClasses} border rounded-lg focus:ring-2 focus:outline-none`} style={{ borderColor: `${buttonColor}40`, backgroundColor: "transparent" }} />
-          <button type="submit" className={`${inputSizeClasses} px-6 font-medium text-white rounded-lg transition-opacity hover:opacity-90 whitespace-nowrap`} style={{ backgroundColor: buttonColor }}>{buttonText}</button>
-        </form>
-      </div>
+      <section id={id} className={`w-full py-12 md:py-16 px-4 ${className}`} style={{ backgroundColor: backgroundColor || undefined }}>
+        <div className="max-w-2xl mx-auto">
+          <div className="p-8 md:p-10 rounded-2xl shadow-lg text-center" style={{ backgroundColor: bgDark ? "rgba(255,255,255,0.05)" : "#ffffff", border: bgDark ? "1px solid rgba(255,255,255,0.1)" : "1px solid #e5e7eb" }}>
+            <h3 className={`font-bold mb-3 ${size === "lg" ? "text-xl md:text-2xl" : "text-lg md:text-xl"}`} style={{ color: resolvedTextColor }}>{title}</h3>
+            <p className={`${sizeClasses} mb-6`} style={{ color: resolvedTextColor, opacity: 0.8 }}>{description}</p>
+            <form action={action} method="POST" className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input type="email" name="email" placeholder={placeholder} required className={`flex-1 ${inputSizeClasses} border rounded-lg focus:ring-2 focus:outline-none ${placeholderStyle}`} style={{ borderColor: inputBorderColor, backgroundColor: bgDark ? "rgba(255,255,255,0.08)" : "transparent", color: inputTextColor }} />
+              <button type="submit" className={`${inputSizeClasses} px-6 font-medium text-white rounded-lg transition-opacity hover:opacity-90 whitespace-nowrap`} style={{ backgroundColor: buttonColor }}>{buttonText}</button>
+            </form>
+          </div>
+        </div>
+      </section>
     );
   }
 
+  // Inline/stacked variant — ALWAYS wrapped in a proper section container
   return (
-    <div id={id} className={`${variant === "stacked" ? "text-center" : ""} ${className}`} style={{ backgroundColor }}>
-      {title && <h3 className={`font-bold mb-2 ${size === "lg" ? "text-xl md:text-2xl" : "text-lg"}`} style={{ color: textColor }}>{title}</h3>}
-      {description && <p className={`${sizeClasses} opacity-80 mb-4`} style={{ color: textColor }}>{description}</p>}
-      <form action={action} method="POST" className={`flex ${variant === "stacked" ? "flex-col max-w-md mx-auto" : "flex-col sm:flex-row"} gap-3`}>
-        <input type="email" name="email" placeholder={placeholder} required className={`flex-1 ${inputSizeClasses} border rounded-lg focus:ring-2 focus:outline-none`} style={{ borderColor: `${buttonColor}40`, backgroundColor: "transparent" }} />
-        <button type="submit" className={`${inputSizeClasses} px-6 font-medium text-white rounded-lg transition-opacity hover:opacity-90 whitespace-nowrap`} style={{ backgroundColor: buttonColor }}>{buttonText}</button>
-      </form>
-    </div>
+    <section id={id} className={`w-full py-12 md:py-16 px-4 ${className}`} style={{ backgroundColor: backgroundColor || undefined }}>
+      <div className={`max-w-2xl mx-auto ${variant === "stacked" ? "text-center" : ""}`}>
+        {title && <h3 className={`font-bold mb-3 ${size === "lg" ? "text-xl md:text-2xl" : "text-lg"}`} style={{ color: resolvedTextColor }}>{title}</h3>}
+        {description && <p className={`${sizeClasses} mb-6`} style={{ color: resolvedTextColor, opacity: 0.8 }}>{description}</p>}
+        <form action={action} method="POST" className={`flex ${variant === "stacked" ? "flex-col max-w-md mx-auto" : "flex-col sm:flex-row"} gap-3`}>
+          <input type="email" name="email" placeholder={placeholder} required className={`flex-1 ${inputSizeClasses} border rounded-lg focus:ring-2 focus:outline-none ${placeholderStyle}`} style={{ borderColor: inputBorderColor, backgroundColor: bgDark ? "rgba(255,255,255,0.08)" : "transparent", color: inputTextColor }} />
+          <button type="submit" className={`${inputSizeClasses} px-6 font-medium text-white rounded-lg transition-opacity hover:opacity-90 whitespace-nowrap`} style={{ backgroundColor: buttonColor }}>{buttonText}</button>
+        </form>
+      </div>
+    </section>
   );
 }
 // ============================================================================
