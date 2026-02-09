@@ -11,9 +11,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { AnalyticsDashboard } from "@/modules/automation/components/analytics-dashboard"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Analytics | Automation | DRAMAC",
+  title: `Analytics | Automation | ${PLATFORM.name}`,
   description: "Automation workflow analytics and performance metrics"
 }
 

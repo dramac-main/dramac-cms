@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { TemplateGalleryPage } from "./template-gallery-page";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Templates | DramaC CMS",
+  title: `Templates | ${PLATFORM.name}`,
   description: "Browse industry templates for your website",
 };
 

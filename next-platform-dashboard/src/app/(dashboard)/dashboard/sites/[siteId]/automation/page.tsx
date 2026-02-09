@@ -40,9 +40,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CreateWorkflowButton } from "@/modules/automation/components/create-workflow-button"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Automation | DRAMAC",
+  title: `Automation | ${PLATFORM.name}`,
   description: "Automation workflows - Automate repetitive tasks and processes"
 }
 

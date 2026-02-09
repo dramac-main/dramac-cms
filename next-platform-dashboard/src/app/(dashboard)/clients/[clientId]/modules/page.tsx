@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ClientModulesList } from "@/components/modules/client/client-modules-list";
 import { AvailableModulesGrid } from "@/components/modules/client/available-modules-grid";
+import { PLATFORM } from "@/lib/constants/platform";
 
 interface PageProps {
   params: Promise<{ clientId: string }>;
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     .single();
 
   return {
-    title: `Modules - ${client?.name || "Client"} | DRAMAC`,
+    title: `Modules - ${client?.name || "Client"} | ${PLATFORM.name}`,
     description: "Manage modules for this client",
   };
 }

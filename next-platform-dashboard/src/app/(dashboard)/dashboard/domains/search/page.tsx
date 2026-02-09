@@ -2,9 +2,10 @@ import { Globe, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { DomainSearchClient } from "./domain-search-client";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata = {
-  title: "Search Domains | DRAMAC CMS",
+  title: `Search Domains | ${PLATFORM.name}`,
   description: "Search and register domain names for your websites",
 };
 

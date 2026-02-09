@@ -7,9 +7,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getAgencyPricingConfig } from "@/lib/actions/domain-billing";
 import { PricingPageClient } from "./pricing-client";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Pricing Configuration | Domain Settings | DRAMAC",
+  title: `Pricing Configuration | Domain Settings | ${PLATFORM.name}`,
   description: "Configure domain pricing and markup rates",
 };
 

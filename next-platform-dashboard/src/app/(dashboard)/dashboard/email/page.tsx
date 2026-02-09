@@ -8,9 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmailOrdersList } from "@/components/email/email-orders-list";
 import { EmailStatsCards } from "@/components/email/email-stats-cards";
 import { getBusinessEmailOrders, getBusinessEmailStats } from "@/lib/actions/business-email";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Email Management | DRAMAC",
+  title: `Email Management | ${PLATFORM.name}`,
   description: "Manage your business email accounts",
 };
 

@@ -10,9 +10,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getAgencyPricingConfig } from "@/lib/actions/domain-billing";
 import { DomainBrandingConfig } from "@/components/domains/settings";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Branding | Domain Settings | DRAMAC",
+  title: `Branding | Domain Settings | ${PLATFORM.name}`,
   description: "Configure white-label branding for domain services",
 };
 

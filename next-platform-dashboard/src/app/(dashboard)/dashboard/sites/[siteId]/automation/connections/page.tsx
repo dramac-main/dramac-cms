@@ -11,9 +11,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { ConnectionSetup } from "@/modules/automation/components/connection-setup"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Connections | Automation | DRAMAC",
+  title: `Connections | Automation | ${PLATFORM.name}`,
   description: "Manage external service connections for automation"
 }
 

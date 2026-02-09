@@ -41,9 +41,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "AI Agents | DRAMAC",
+  title: `AI Agents | ${PLATFORM.name}`,
   description: "AI Agents - Intelligent automation agents for your business"
 }
 

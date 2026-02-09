@@ -13,9 +13,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { createClient } from "@/lib/supabase/server"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Pending Approvals | DRAMAC",
+  title: `Pending Approvals | ${PLATFORM.name}`,
   description: "Review and approve AI agent actions"
 }
 

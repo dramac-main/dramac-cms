@@ -11,9 +11,10 @@ import { ArrowLeft, CreditCard } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { UsageDashboard } from "@/components/ai-agents/billing"
 import { TIER_LIMITS } from "@/lib/ai-agents/billing/usage-tracker"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Usage & Billing | DRAMAC",
+  title: `Usage & Billing | ${PLATFORM.name}`,
   description: "Monitor AI agent usage and manage billing"
 }
 

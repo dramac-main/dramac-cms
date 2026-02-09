@@ -2,9 +2,10 @@ import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 import { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Forgot Password | DRAMAC",
+  title: `Forgot Password | ${PLATFORM.name}`,
   description: "Reset your password",
 };
 

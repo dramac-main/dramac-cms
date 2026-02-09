@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
-import { DOMAINS, extractSubdomain, isAppDomain as checkIsAppDomain } from "@/lib/constants/domains";
+import { DOMAINS, isAppDomain as checkIsAppDomain } from "@/lib/constants/domains";
 
 export async function proxy(request: NextRequest) {
   const hostname = request.headers.get("host") || "";

@@ -20,9 +20,10 @@ import {
   SubscriptionMetricsComponent,
   BillingActivityComponent,
 } from "@/components/admin";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Revenue Analytics | Admin | DRAMAC",
+  title: `Revenue Analytics | Admin | ${PLATFORM.name}`,
   description: "Revenue metrics and billing analytics",
 };
 

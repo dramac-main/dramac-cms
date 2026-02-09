@@ -6,6 +6,7 @@ import { getPages } from "@/lib/actions/pages";
 import { CreatePageForm } from "@/components/pages/create-page-form";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { PLATFORM } from "@/lib/constants/platform";
 
 interface NewPagePageProps {
   params: Promise<{ siteId: string }>;
@@ -15,7 +16,7 @@ export async function generateMetadata({ params }: NewPagePageProps): Promise<Me
   const { siteId } = await params;
   const site = await getSite(siteId).catch(() => null);
   return {
-    title: site ? `New Page - ${site.name} | DRAMAC` : "New Page",
+    title: site ? `New Page - ${site.name} | ${PLATFORM.name}` : "New Page",
   };
 }
 

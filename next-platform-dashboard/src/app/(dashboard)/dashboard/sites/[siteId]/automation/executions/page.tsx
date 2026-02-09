@@ -32,9 +32,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Executions | Automation | DRAMAC",
+  title: `Executions | Automation | ${PLATFORM.name}`,
   description: "View and monitor workflow executions"
 }
 

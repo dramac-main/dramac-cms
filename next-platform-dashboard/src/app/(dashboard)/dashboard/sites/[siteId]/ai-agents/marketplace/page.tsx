@@ -10,9 +10,10 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AgentMarketplace } from "@/components/ai-agents/marketplace"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Agent Marketplace | DRAMAC",
+  title: `Agent Marketplace | ${PLATFORM.name}`,
   description: "Browse and install pre-built AI agents for your business"
 }
 

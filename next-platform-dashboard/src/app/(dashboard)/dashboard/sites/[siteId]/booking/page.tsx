@@ -13,9 +13,10 @@ import { BookingDashboard } from '@/modules/booking/components/booking-dashboard
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import { PLATFORM } from '@/lib/constants/platform'
 
 export const metadata: Metadata = {
-  title: 'Booking | DRAMAC',
+  title: `Booking | ${PLATFORM.name}`,
   description: 'Appointment scheduling and calendar management'
 }
 

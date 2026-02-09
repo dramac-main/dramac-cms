@@ -1,8 +1,9 @@
 import { Metadata } from "next";
 import { ModuleRequestForm } from "@/components/modules/agency/module-request-form";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Request Module | DRAMAC",
+  title: `Request Module | ${PLATFORM.name}`,
   description: "Request a custom module to be built",
 };
 

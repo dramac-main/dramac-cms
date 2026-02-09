@@ -3,9 +3,10 @@
 
 import { Metadata } from 'next';
 import { AIModuleBuilder } from '@/components/modules/AIModuleBuilder';
+import { PLATFORM } from '@/lib/constants/platform';
 
 export const metadata: Metadata = {
-  title: 'AI Module Builder | DRAMAC Studio',
+  title: `AI Module Builder | ${PLATFORM.name} Studio`,
   description: 'Build modules from natural language descriptions using AI',
 };
 

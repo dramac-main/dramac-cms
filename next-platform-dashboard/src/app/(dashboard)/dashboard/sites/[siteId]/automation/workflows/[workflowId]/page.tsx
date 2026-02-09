@@ -12,9 +12,10 @@ import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { Skeleton } from "@/components/ui/skeleton"
 import { WorkflowBuilder } from "@/modules/automation/components/workflow-builder"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Edit Workflow | Automation | DRAMAC",
+  title: `Edit Workflow | Automation | ${PLATFORM.name}`,
   description: "Edit your automation workflow"
 }
 

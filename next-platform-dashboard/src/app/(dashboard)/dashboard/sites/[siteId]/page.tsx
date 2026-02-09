@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Pencil, ExternalLink, BarChart3 } from "lucide-react";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
+import { PLATFORM } from "@/lib/constants/platform";
 
 interface SiteDetailPageProps {
   params: Promise<{ siteId: string }>;
@@ -29,7 +30,7 @@ export async function generateMetadata({
   const { siteId } = await params;
   const site = await getSite(siteId).catch(() => null);
   return {
-    title: site ? `${site.name} | DRAMAC` : "Site Not Found",
+    title: site ? `${site.name} | ${PLATFORM.name}` : "Site Not Found",
   };
 }
 

@@ -2,13 +2,14 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSite } from "@/lib/actions/sites";
 import { AIBuilderWizard } from "@/components/ai-builder/ai-builder-wizard";
+import { PLATFORM } from "@/lib/constants/platform";
 
 interface BuilderPageProps {
   params: Promise<{ siteId: string }>;
 }
 
 export const metadata: Metadata = {
-  title: "AI Website Builder | DRAMAC",
+  title: `AI Website Builder | ${PLATFORM.name}`,
   description: "Generate your website with AI",
 };
 

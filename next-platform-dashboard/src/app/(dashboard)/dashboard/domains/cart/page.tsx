@@ -2,9 +2,10 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CartPageClient } from "./cart-page-client";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata = {
-  title: "Domain Cart | DRAMAC CMS",
+  title: `Domain Cart | ${PLATFORM.name}`,
   description: "Review and complete your domain registration",
 };
 

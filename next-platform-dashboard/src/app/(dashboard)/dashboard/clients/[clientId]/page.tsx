@@ -9,6 +9,7 @@ import { ImpersonateClientButton } from "@/components/clients/impersonate-client
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import type { ClientStatus } from "@/types/client";
+import { PLATFORM } from "@/lib/constants/platform";
 
 interface ClientDetailPageProps {
   params: Promise<{ clientId: string }>;
@@ -20,7 +21,7 @@ export async function generateMetadata({
   const { clientId } = await params;
   const client = await getClient(clientId).catch(() => null);
   return {
-    title: client ? `${client.name} | DRAMAC` : "Client Not Found",
+    title: client ? `${client.name} | ${PLATFORM.name}` : "Client Not Found",
   };
 }
 

@@ -12,9 +12,10 @@ import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { TemplateGallery } from "@/modules/automation/components/template-gallery"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Templates | Automation | DRAMAC",
+  title: `Templates | Automation | ${PLATFORM.name}`,
   description: "Browse pre-built automation workflow templates"
 }
 

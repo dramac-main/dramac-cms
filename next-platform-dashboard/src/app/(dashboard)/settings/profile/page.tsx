@@ -5,9 +5,10 @@ import { ProfileForm } from "@/components/settings/profile-form";
 import { AvatarUpload } from "@/components/settings/avatar-upload";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Profile Settings | DRAMAC",
+  title: `Profile Settings | ${PLATFORM.name}`,
 };
 
 export default async function ProfileSettingsPage() {

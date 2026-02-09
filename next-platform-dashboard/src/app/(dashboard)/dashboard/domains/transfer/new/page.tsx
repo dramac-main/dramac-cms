@@ -5,9 +5,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { TransferWizard } from "@/components/domains/transfer";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata = {
-  title: "Transfer Domain | DRAMAC",
+  title: `Transfer Domain | ${PLATFORM.name}`,
   description: "Transfer a domain to your account",
 };
 

@@ -6,9 +6,10 @@
  */
 
 import "@/styles/studio.css";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata = {
-  title: "DRAMAC Studio",
+  title: `${PLATFORM.name} Studio`,
   description: "Visual website editor",
 };
 

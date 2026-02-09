@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModuleCard } from "@/components/marketplace/ModuleCard";
 import { getDeveloperBySlug, getDeveloperModules, getDeveloperReviews } from "@/lib/marketplace";
+import { PLATFORM } from "@/lib/constants/platform";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: Props) {
   }
 
   return {
-    title: `${developer.display_name} - Developer Profile | DRAMAC Marketplace`,
+    title: `${developer.display_name} - Developer Profile | ${PLATFORM.name} Marketplace`,
     description: developer.bio || `Check out modules by ${developer.display_name}`,
   };
 }

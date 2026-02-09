@@ -2,9 +2,10 @@ import { Metadata } from "next";
 import { PageHeader } from "@/components/layout/page-header";
 import { CreateSiteForm } from "@/components/sites/create-site-form";
 import { getClients } from "@/lib/actions/clients";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Create Site | DRAMAC",
+  title: `Create Site | ${PLATFORM.name}`,
   description: "Create a new website",
 };
 

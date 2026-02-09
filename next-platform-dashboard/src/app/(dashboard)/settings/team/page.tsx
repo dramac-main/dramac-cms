@@ -5,9 +5,10 @@ import { TeamMembersList } from "@/components/settings/team-members-list";
 import { InviteMemberDialog } from "@/components/settings/invite-member-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Team Management | DRAMAC",
+  title: `Team Management | ${PLATFORM.name}`,
 };
 
 export default async function TeamSettingsPage() {

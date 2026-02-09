@@ -18,9 +18,10 @@ import { createClient } from "@/lib/supabase/server"
 import { getAgent, deleteAgent } from "@/lib/ai-agents/actions"
 import { AgentBuilder } from "@/components/ai-agents/agent-builder"
 import { AGENT_TEMPLATES } from "@/lib/ai-agents/templates"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Agent Details | DRAMAC",
+  title: `Agent Details | ${PLATFORM.name}`,
   description: "View and manage AI agent"
 }
 

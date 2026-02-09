@@ -4,9 +4,10 @@ import { getAgency } from "@/lib/actions/agency";
 import { AgencyForm } from "@/components/settings/agency-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Agency Settings | DRAMAC",
+  title: `Agency Settings | ${PLATFORM.name}`,
 };
 
 export default async function AgencySettingsPage() {

@@ -17,9 +17,10 @@ import {
   Globe,
   Construction,
 } from "lucide-react";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Admin Settings | DRAMAC",
+  title: `Admin Settings | ${PLATFORM.name}`,
   description: "Configure platform settings",
 };
 

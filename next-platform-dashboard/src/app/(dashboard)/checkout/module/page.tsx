@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
 import { DEFAULT_CURRENCY, DEFAULT_LOCALE } from "@/lib/locale-config";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Checkout | DRAMAC",
+  title: `Checkout | ${PLATFORM.name}`,
   description: "Complete your module purchase",
 };
 

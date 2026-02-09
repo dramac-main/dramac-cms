@@ -8,9 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { getBusinessEmailOrder } from "@/lib/actions/business-email";
 import { format } from "date-fns";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Email Order Settings | DRAMAC",
+  title: `Email Order Settings | ${PLATFORM.name}`,
   description: "Configure your email order settings",
 };
 

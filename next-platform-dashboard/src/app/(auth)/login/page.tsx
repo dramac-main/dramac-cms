@@ -1,9 +1,10 @@
 import { LoginForm } from "@/components/auth/login-form";
 import { Metadata } from "next";
 import Link from "next/link";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Login | DRAMAC",
+  title: `Login | ${PLATFORM.name}`,
   description: "Sign in to your account",
 };
 

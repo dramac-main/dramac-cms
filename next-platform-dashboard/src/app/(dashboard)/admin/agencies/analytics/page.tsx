@@ -20,9 +20,10 @@ import {
   AgencyGrowthComponent,
   AgencySegmentationComponent,
 } from "@/components/admin";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Agency Analytics | Admin | DRAMAC",
+  title: `Agency Analytics | Admin | ${PLATFORM.name}`,
   description: "Agency performance metrics and insights",
 };
 

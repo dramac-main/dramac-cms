@@ -21,8 +21,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getAgencyPricingConfig, getUsageSummary, getRevenueAnalytics } from "@/lib/actions/domain-billing";
 
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { PLATFORM } from "@/lib/constants/platform";
 export const metadata: Metadata = {
-  title: "Domain Settings | DRAMAC",
+  title: `Domain Settings | ${PLATFORM.name}`,
   description: "Configure domain pricing, branding, and billing settings",
 };
 

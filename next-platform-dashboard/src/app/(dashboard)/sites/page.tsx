@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Redirecting... | DRAMAC",
+  title: `Redirecting... | ${PLATFORM.name}`,
 };
 
 interface SitesPageProps {

@@ -10,9 +10,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { getAgencyPricingConfig } from "@/lib/actions/domain-billing";
 import { BillingIntegration } from "@/components/domains/settings";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Billing Integration | Domain Settings | DRAMAC",
+  title: `Billing Integration | Domain Settings | ${PLATFORM.name}`,
   description: "Configure Paddle billing for domain services",
 };
 

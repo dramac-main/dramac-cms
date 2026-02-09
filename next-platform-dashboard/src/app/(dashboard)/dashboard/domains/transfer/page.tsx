@@ -9,9 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, ArrowDownToLine, ArrowUpFromLine, Globe } from "lucide-react";
 import { TransferList } from "@/components/domains/transfer";
 import { getTransfers } from "@/lib/actions/transfers";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata = {
-  title: "Domain Transfers | DRAMAC",
+  title: `Domain Transfers | ${PLATFORM.name}`,
   description: "Manage domain transfers in and out of your account",
 };
 

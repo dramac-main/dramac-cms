@@ -26,9 +26,10 @@ import {
   Mail,
 } from "lucide-react";
 import Link from "next/link";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Agency Details | Admin | DRAMAC",
+  title: `Agency Details | Admin | ${PLATFORM.name}`,
 };
 
 interface AgencyDetailPageProps {

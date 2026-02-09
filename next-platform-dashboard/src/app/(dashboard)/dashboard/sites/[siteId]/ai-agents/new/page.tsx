@@ -11,9 +11,10 @@ import { AgentBuilder } from "@/components/ai-agents/agent-builder"
 import { AGENT_TEMPLATES } from "@/lib/ai-agents/templates"
 import { createAgent } from "@/lib/ai-agents/actions"
 import { redirect } from "next/navigation"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Create Agent | DRAMAC",
+  title: `Create Agent | ${PLATFORM.name}`,
   description: "Create a new AI agent"
 }
 

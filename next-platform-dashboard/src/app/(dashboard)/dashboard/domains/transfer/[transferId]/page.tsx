@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { TransferStatusTracker } from "@/components/domains/transfer";
 import { getTransferById } from "@/lib/actions/transfers";
+import { PLATFORM } from "@/lib/constants/platform";
 
 interface TransferDetailPageProps {
   params: Promise<{ transferId: string }>;
@@ -17,11 +18,11 @@ export async function generateMetadata({ params }: TransferDetailPageProps) {
   const result = await getTransferById(transferId);
 
   if (!result.success || !result.data) {
-    return { title: "Transfer Not Found | DRAMAC" };
+    return { title: `Transfer Not Found | ${PLATFORM.name}` };
   }
 
   return {
-    title: `Transfer: ${result.data.domain_name} | DRAMAC`,
+    title: `Transfer: ${result.data.domain_name} | ${PLATFORM.name}`,
     description: `Domain transfer details for ${result.data.domain_name}`,
   };
 }

@@ -4,9 +4,10 @@ import { getNotificationPreferences } from "@/lib/actions/notifications";
 import { NotificationPreferencesForm } from "@/components/settings/notification-preferences-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Notification Settings | DRAMAC",
+  title: `Notification Settings | ${PLATFORM.name}`,
 };
 
 export default async function NotificationSettingsPage() {

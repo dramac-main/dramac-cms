@@ -4,9 +4,10 @@ import { ArrowLeft, Mail, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmailPurchaseWizard } from "@/components/email/email-purchase-wizard";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Purchase Email | DRAMAC",
+  title: `Purchase Email | ${PLATFORM.name}`,
   description: "Purchase business email for your domain",
 };
 

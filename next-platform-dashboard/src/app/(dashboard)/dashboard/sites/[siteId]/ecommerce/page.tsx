@@ -16,9 +16,10 @@ import { ArrowLeft } from 'lucide-react'
 import { getSite } from '@/lib/actions/sites'
 import { getCurrentUserId } from '@/lib/auth/permissions'
 import { createClient } from '@/lib/supabase/server'
+import { PLATFORM } from '@/lib/constants/platform'
 
 export const metadata: Metadata = {
-  title: 'E-Commerce | DRAMAC',
+  title: `E-Commerce | ${PLATFORM.name}`,
   description: 'Product catalog and order management'
 }
 

@@ -10,6 +10,7 @@ import { BackupList } from "@/components/sites/backup-list";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft } from "lucide-react";
+import { PLATFORM } from "@/lib/constants/platform";
 
 interface SiteSettingsPageProps {
   params: Promise<{ siteId: string }>;
@@ -22,7 +23,7 @@ export async function generateMetadata({
   const { siteId } = await params;
   const site = await getSite(siteId).catch(() => null);
   return {
-    title: site ? `Settings - ${site.name} | DRAMAC` : "Site Not Found",
+    title: site ? `Settings - ${site.name} | ${PLATFORM.name}` : "Site Not Found",
   };
 }
 

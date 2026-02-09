@@ -8,9 +8,10 @@
 import { redirect } from "next/navigation";
 
 import { Metadata } from "next";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Billing | DRAMAC",
+  title: `Billing | ${PLATFORM.name}`,
   description: "Redirecting to billing settings",
 };
 

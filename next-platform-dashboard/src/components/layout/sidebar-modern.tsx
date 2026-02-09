@@ -16,6 +16,8 @@ import {
 import { useSidebar } from "./sidebar-context";
 import { mainNavigation, bottomNavigation, adminNavigation, type NavGroup, type NavItem } from "@/config/navigation";
 import { LAYOUT } from "@/config/layout";
+import { useBrandingOptional } from "@/components/providers/branding-provider";
+import { PLATFORM } from "@/lib/constants/platform";
 
 // ============================================
 // TYPES
@@ -91,6 +93,57 @@ function AdminFooter() {
   );
 }
 
+/**
+ * Branding-aware sidebar logo.
+ * Uses BrandingProvider context if available, falls back to PLATFORM constants.
+ */
+function SidebarLogo({
+  isCollapsed,
+  closeMobile,
+}: {
+  isCollapsed: boolean;
+  closeMobile: () => void;
+}) {
+  const branding = useBrandingOptional();
+  const displayName = branding?.getDisplayName() ?? PLATFORM.name;
+  const logoUrl = branding?.getLogoUrl();
+  const initial = displayName.charAt(0).toUpperCase();
+
+  return (
+    <Link
+      href="/dashboard"
+      className="flex items-center gap-2 overflow-hidden"
+      onClick={closeMobile}
+    >
+      <motion.div
+        className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center shrink-0 overflow-hidden"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={displayName} className="h-full w-full object-contain" />
+        ) : (
+          <span className="text-lg font-bold text-primary-foreground">{initial}</span>
+        )}
+      </motion.div>
+      <AnimatePresence mode="wait">
+        {!isCollapsed && (
+          <motion.span
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            variants={logoTextVariants}
+            className="font-semibold text-lg whitespace-nowrap overflow-hidden text-sidebar-foreground"
+          >
+            {displayName}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </Link>
+  );
+}
+
 // ============================================
 // MAIN SIDEBAR COMPONENT
 // ============================================
@@ -148,32 +201,7 @@ export function Sidebar({
       {/* Header Section */}
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-3">
         {showLogo ? (
-          <Link 
-            href="/dashboard" 
-            className="flex items-center gap-2 overflow-hidden"
-            onClick={closeMobile}
-          >
-            <motion.div 
-              className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center shrink-0"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <span className="text-lg font-bold text-primary-foreground">D</span>
-            </motion.div>
-            <AnimatePresence mode="wait">
-              {!isCollapsed && (
-                <motion.span
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                  variants={logoTextVariants}
-                  className="font-semibold text-lg whitespace-nowrap overflow-hidden text-sidebar-foreground"
-                >
-                  DRAMAC
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </Link>
+          <SidebarLogo isCollapsed={isCollapsed} closeMobile={closeMobile} />
         ) : header ? (
           <div className="flex-1 overflow-hidden">{header}</div>
         ) : (

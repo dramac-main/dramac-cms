@@ -1,9 +1,10 @@
 import { SignupForm } from "@/components/auth/signup-form";
 import { Metadata } from "next";
 import Link from "next/link";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Sign Up | DRAMAC",
+  title: `Sign Up | ${PLATFORM.name}`,
   description: "Create your account",
 };
 

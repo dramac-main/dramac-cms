@@ -8,9 +8,10 @@
 
 import { Metadata } from "next"
 import { WorkflowBuilder } from "@/modules/automation/components/workflow-builder"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "New Workflow | Automation | DRAMAC",
+  title: `New Workflow | Automation | ${PLATFORM.name}`,
   description: "Create a new automation workflow"
 }
 

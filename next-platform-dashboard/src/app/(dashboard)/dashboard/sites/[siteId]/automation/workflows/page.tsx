@@ -23,9 +23,10 @@ import {
 } from "@/components/ui/select"
 import { ArrowLeft, Plus, Search } from "lucide-react"
 import { WorkflowListCard } from "@/modules/automation/components/workflow-list-card"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Workflows | Automation | DRAMAC",
+  title: `Workflows | Automation | ${PLATFORM.name}`,
   description: "Manage your automation workflows"
 }
 

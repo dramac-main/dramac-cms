@@ -10,9 +10,10 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AgentAnalytics } from "@/components/ai-agents/analytics"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Agent Analytics | DRAMAC",
+  title: `Agent Analytics | ${PLATFORM.name}`,
   description: "Monitor AI agent performance and execution history"
 }
 

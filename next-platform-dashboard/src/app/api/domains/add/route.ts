@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { handleDomainChange } from "@/lib/services/domain-cascade";
+import { DOMAINS } from "@/lib/constants/domains";
 
 export async function POST(request: NextRequest) {
   try {
@@ -158,7 +159,7 @@ export async function DELETE(request: NextRequest) {
     const result = await handleDomainChange({
       siteId,
       previousDomain: site.custom_domain,
-      newDomain: `${site.subdomain}.${process.env.NEXT_PUBLIC_SITES_DOMAIN ?? "sites.dramacagency.com"}`,
+      newDomain: `${site.subdomain}.${DOMAINS.SITES_BASE}`,
       changeType: "custom_domain_removed",
       userId: user.id,
     });

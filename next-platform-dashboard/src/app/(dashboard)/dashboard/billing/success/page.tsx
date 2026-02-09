@@ -3,9 +3,10 @@ import Link from "next/link";
 import { CheckCircle, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Welcome! | DRAMAC",
+  title: `Welcome! | ${PLATFORM.name}`,
   description: "Your subscription is now active",
 };
 

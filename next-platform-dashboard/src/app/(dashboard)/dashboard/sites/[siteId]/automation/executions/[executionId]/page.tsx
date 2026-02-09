@@ -40,9 +40,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Execution Details | Automation | DRAMAC",
+  title: `Execution Details | Automation | ${PLATFORM.name}`,
   description: "View detailed workflow execution information"
 }
 

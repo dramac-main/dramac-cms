@@ -12,9 +12,10 @@ import { EmailDnsSetup } from "@/components/email/email-dns-setup";
 import { EmailWebmailLink } from "@/components/email/email-webmail-link";
 import { getBusinessEmailOrder, getBusinessEmailAccounts } from "@/lib/actions/business-email";
 import { format } from "date-fns";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Email Order Details | DRAMAC",
+  title: `Email Order Details | ${PLATFORM.name}`,
   description: "Manage your email order",
 };
 

@@ -20,9 +20,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { ROLE_LABELS, type UserRole } from "@/types/roles";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "User Details | Admin | DRAMAC",
+  title: `User Details | Admin | ${PLATFORM.name}`,
 };
 
 interface UserDetailPageProps {

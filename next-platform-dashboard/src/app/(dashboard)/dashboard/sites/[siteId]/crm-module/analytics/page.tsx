@@ -12,9 +12,10 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CRMAnalyticsDashboard } from "./crm-analytics-dashboard";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "CRM Analytics | DRAMAC",
+  title: `CRM Analytics | ${PLATFORM.name}`,
   description: "CRM Analytics - Pipeline metrics, deal velocity, contact insights, and revenue tracking",
 };
 

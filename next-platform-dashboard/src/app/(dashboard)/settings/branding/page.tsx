@@ -4,9 +4,10 @@ import { getAgency, getAgencyBranding } from "@/lib/actions/agency";
 import { BrandingForm } from "@/components/settings/branding-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Branding Settings | DRAMAC",
+  title: `Branding Settings | ${PLATFORM.name}`,
 };
 
 export default async function BrandingSettingsPage() {

@@ -13,9 +13,10 @@ import { CRMDashboard } from '@/modules/crm/components/crm-dashboard'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import { PLATFORM } from '@/lib/constants/platform'
 
 export const metadata: Metadata = {
-  title: 'CRM | DRAMAC',
+  title: `CRM | ${PLATFORM.name}`,
   description: 'Customer Relationship Management - Manage contacts, companies, and deals'
 }
 

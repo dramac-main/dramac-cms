@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
 import { OnboardingRedirect } from "@/components/onboarding/onboarding-redirect";
 import { DashboardLayoutClient } from "@/components/layout/dashboard-layout-client";
+import { BrandingProvider } from "@/components/providers/branding-provider";
 import { getProfile } from "@/lib/actions/profile";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,36 +23,49 @@ export default async function DashboardLayout({
   const isImpersonating = !!impersonatedUser;
 
   // Check if current user is super_admin for sidebar admin link
+  // Also fetch agency_id for BrandingProvider
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   let isSuperAdmin = false;
+  let agencyId: string | null = null;
   
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, agency_id")
       .eq("id", user.id)
       .single();
     isSuperAdmin = profile?.role === "super_admin";
+    agencyId = profile?.agency_id ?? null;
   }
+
+  const dashboardContent = (
+    <DashboardLayoutClient
+      isSuperAdmin={isSuperAdmin}
+      isImpersonating={isImpersonating}
+      impersonationBanner={
+        isImpersonating && impersonatedUser ? (
+          <ImpersonationBanner
+            userName={impersonatedUser.name || impersonatedUser.email || "User"}
+            userEmail={impersonatedUser.email}
+          />
+        ) : undefined
+      }
+    >
+      {children}
+    </DashboardLayoutClient>
+  );
 
   return (
     <TooltipProvider>
       <OnboardingRedirect>
-        <DashboardLayoutClient
-          isSuperAdmin={isSuperAdmin}
-          isImpersonating={isImpersonating}
-          impersonationBanner={
-            isImpersonating && impersonatedUser ? (
-              <ImpersonationBanner
-                userName={impersonatedUser.name || impersonatedUser.email || "User"}
-                userEmail={impersonatedUser.email}
-              />
-            ) : undefined
-          }
-        >
-          {children}
-        </DashboardLayoutClient>
+        {agencyId ? (
+          <BrandingProvider agencyId={agencyId}>
+            {dashboardContent}
+          </BrandingProvider>
+        ) : (
+          dashboardContent
+        )}
       </OnboardingRedirect>
     </TooltipProvider>
   );

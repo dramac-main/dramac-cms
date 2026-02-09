@@ -7,9 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { EmailAccountsTable } from "@/components/email/email-accounts-table";
 import { getBusinessEmailOrder, getBusinessEmailAccounts } from "@/lib/actions/business-email";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Email Accounts | DRAMAC",
+  title: `Email Accounts | ${PLATFORM.name}`,
   description: "Manage email accounts for your domain",
 };
 

@@ -2,9 +2,10 @@ import { Metadata } from "next";
 import { getSession } from "@/lib/actions/auth";
 import { SubscriptionDetails } from "@/components/settings/subscription-details";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Subscription | DRAMAC",
+  title: `Subscription | ${PLATFORM.name}`,
 };
 
 export default async function SubscriptionSettingsPage() {

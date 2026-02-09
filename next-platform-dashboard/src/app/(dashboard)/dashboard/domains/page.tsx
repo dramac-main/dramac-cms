@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { getDomains, getDomainStats } from "@/lib/actions/domains";
 import { DomainListClient } from "./domain-list-client";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata = {
-  title: "Domains | DRAMAC CMS",
+  title: `Domains | ${PLATFORM.name}`,
   description: "Manage your domain portfolio - search, register, and configure domains",
 };
 

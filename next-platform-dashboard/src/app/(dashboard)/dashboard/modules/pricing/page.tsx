@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
 import { MarkupPricingList } from "@/components/modules/agency/markup-pricing-list";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Module Pricing | DRAMAC",
+  title: `Module Pricing | ${PLATFORM.name}`,
   description: "Set your markup pricing for clients",
 };
 

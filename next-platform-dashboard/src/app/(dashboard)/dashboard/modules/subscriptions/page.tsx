@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { SubscriptionList } from "@/components/modules/agency/subscription-list";
 import { InstallModulePrompt } from "@/components/modules/install-module-prompt";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "My Modules | DRAMAC",
+  title: `My Modules | ${PLATFORM.name}`,
   description: "Manage your module subscriptions",
 };
 

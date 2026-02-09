@@ -4,9 +4,10 @@ import { SessionsManager } from "@/components/settings/sessions-manager";
 import { TwoFactorSetup } from "@/components/settings/two-factor-setup";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/layout/page-header";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Security Settings | DRAMAC",
+  title: `Security Settings | ${PLATFORM.name}`,
 };
 
 export default function SecuritySettingsPage() {

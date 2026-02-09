@@ -12,9 +12,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { createClient } from "@/lib/supabase/server"
 import { AgentTestRunner } from "@/components/ai-agents/testing"
+import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata: Metadata = {
-  title: "Agent Testing | DRAMAC",
+  title: `Agent Testing | ${PLATFORM.name}`,
   description: "Test and validate your AI agents"
 }
 
