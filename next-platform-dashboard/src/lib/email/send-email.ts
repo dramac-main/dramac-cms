@@ -20,7 +20,7 @@ import type { SendEmailOptions, EmailResult, EmailRecipient } from "./email-type
  * const result = await sendEmail({
  *   to: { email: "user@example.com", name: "John" },
  *   type: "welcome",
- *   data: { name: "John", dashboardUrl: "https://app.dramac.app/dashboard" }
+ *   data: { name: "John", dashboardUrl: "https://app.dramacagency.com/dashboard" }
  * });
  * ```
  */
