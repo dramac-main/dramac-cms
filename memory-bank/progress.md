@@ -1,7 +1,44 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅**
+
+---
+
+## 🔧 BOOKING & ECOMMERCE MODULE BUGS FIXED (February 2026) ✅
+
+### What
+Fixed booking INSERT failure (invalid DB columns), incorrect "Booking Confirmed!" status, success screen showing on error, and ecommerce same cookie-auth bug affecting all 7 storefront hooks.
+
+### Booking Fixes
+| Issue | Root Cause | Fix |
+|-------|-----------|-----|
+| INSERT fails with 500 error | `source: 'online'` column doesn't exist, `notes` column wrong name | Moved source to `metadata` JSONB, renamed `notes` → `customer_notes` |
+| "Booking Confirmed!" when require_confirmation=true | UI hardcoded status, hook hardcoded `'pending'` | Server returns actual status, UI shows "Submitted" vs "Confirmed" |
+| Success screen on error | `setIsComplete(true)` ran after catch block | Moved inside try block, added error display |
+
+### Ecommerce Fixes
+
+#### New File
+| File | Purpose | Size |
+|------|---------|------|
+| `actions/public-ecommerce-actions.ts` | 15 public storefront functions using admin client | ~500 lines |
+
+#### Files Modified (9)
+| File | Change |
+|------|--------|
+| `hooks/useStorefrontProducts.ts` | Import from public-ecommerce-actions |
+| `hooks/useStorefrontProduct.ts` | Import from public-ecommerce-actions |
+| `hooks/useStorefrontCategories.ts` | Import from public-ecommerce-actions |
+| `hooks/useStorefrontCart.ts` | Import from public-ecommerce-actions |
+| `hooks/useStorefrontSearch.ts` | Import from public-ecommerce-actions |
+| `hooks/useStorefrontWishlist.ts` | Import from public-ecommerce-actions |
+| `hooks/useRecentlyViewed.ts` | Import from public-ecommerce-actions |
+| `components/product-grid-block.tsx` | Demo data only when `!resolvedSiteId` |
+| `components/product-card-block.tsx` | Demo data only when `!effectiveSiteId` |
+
+### Commits
+- `4430a20` — "fix: booking & ecommerce module bugs - public data access & UI correctness"
 
 ---
 

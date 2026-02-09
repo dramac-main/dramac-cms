@@ -1,6 +1,52 @@
 # Active Context
 
-## Latest Session Update (Booking Public Data Fix — February 2026)
+## Latest Session Update (Booking + Ecommerce Module Fixes — February 2026)
+
+### BOOKING: INSERT FAILURE + CONFIRMATION STATUS + ERROR HANDLING FIXED ✅
+
+**Problems:**
+1. Console error: `Booking failed: Error: Failed to create appointment. Please try again.`
+2. "Booking Confirmed!" showing even when service has `require_confirmation` enabled
+3. Success screen appeared even when booking actually failed
+
+**Root Causes:**
+1. `createPublicAppointment()` tried to INSERT `source: 'online'` — column doesn't exist on `mod_bookmod01_appointments` table. Also used `notes` instead of actual column `customer_notes`.
+2. `useCreateBooking` hardcoded `status: 'pending' as const` — never read server response
+3. `BookingWidgetBlock` ran `setIsComplete(true)` AFTER the catch block — success screen showed regardless of error
+
+**Fixes Applied:**
+- **public-booking-actions.ts**: Removed `source` from INSERT, moved to `metadata: { source: 'online' }` (JSONB). Changed `notes` → `customer_notes`. Return type now includes `status` field.
+- **useCreateBooking.ts**: Reads `result.status` from server instead of hardcoding
+- **BookingWidgetBlock.tsx**: `setIsComplete(true)` only on success; error shown inline; status-aware success screen — "Booking Submitted!" (amber/Clock) when pending vs "Booking Confirmed!" (green/CheckCircle) when confirmed
+- **BookingFormBlock.tsx**: Same status-aware pattern; added `Clock` icon import; tracks `bookingStatus` state
+
+### ECOMMERCE: SAME COOKIE-AUTH BUG FIXED + DEMO DATA FALLBACK FIXED ✅
+
+**Problem:**
+All 7 ecommerce storefront hooks used `ecommerce-actions.ts` with `createClient()` (cookie-auth) — fails for anonymous visitors on published sites (same root cause as booking).
+
+**Fixes Applied:**
+- **NEW FILE**: `src/modules/ecommerce/actions/public-ecommerce-actions.ts` (~500 lines)
+  - Uses `createAdminClient()` (service role key) — works for anonymous visitors
+  - 15 public functions: categories, products (5 variants), cart CRUD (6 functions), discounts (2 functions)
+  - All return safe defaults instead of throwing
+- **7 Storefront Hooks Updated**: All imports + 16 call sites changed to public action functions
+  - `useStorefrontProducts`, `useStorefrontProduct`, `useStorefrontCategories`, `useStorefrontCart`, `useStorefrontSearch`, `useStorefrontWishlist`, `useRecentlyViewed`
+- **product-grid-block.tsx**: Demo data fallback `mappedProducts.length > 0 ? mappedProducts : demoProducts` → `!resolvedSiteId ? demoProducts : mappedProducts`
+- **product-card-block.tsx**: Demo data fallback `fetchedProduct || DEMO_PRODUCT` → `!effectiveSiteId ? DEMO_PRODUCT : (fetchedProduct || DEMO_PRODUCT)`
+
+### Key Pattern Established
+- **Dashboard/Admin**: Uses module-specific `*-actions.ts` with `createClient()` (cookie-auth)
+- **Public/Visitor**: Uses `public-*-actions.ts` with `createAdminClient()` (service role)
+- **Demo Data**: Only shows when `!siteId` (Studio editor), never on published sites
+
+### Commits
+- `a53c137` — "fix: booking module uses admin client for public pages"
+- `4430a20` — "fix: booking & ecommerce module bugs - public data access & UI correctness"
+
+---
+
+## Previous Session (Booking Public Data Fix — February 2026)
 
 ### BOOKING MODULE: 500 ERRORS FIXED + DEMO DATA ELIMINATED ON LIVE SITES ✅
 
@@ -15,27 +61,13 @@
 **Solution — Two-Part Fix:**
 
 #### Part 1: New Public Server Actions (bypass RLS for public reads)
-- **NEW FILE**: `src/modules/booking/actions/public-booking-actions.ts` (404 lines)
+- **NEW FILE**: `src/modules/booking/actions/public-booking-actions.ts`
   - Uses `createAdminClient()` (service role key) instead of `createClient()`
   - 5 public functions: `getPublicServices()`, `getPublicStaff()`, `getPublicSettings()`, `getPublicAvailableSlots()`, `createPublicAppointment()`
-  - All functions return safe defaults (empty arrays, null) instead of throwing — prevents 500 errors
-  - `createPublicAppointment()` includes conflict checking and service verification
 
 #### Part 2: Fixed All 5 Hooks + 5 Components
 - **5 Hooks Updated**: All now import from `public-booking-actions` instead of `booking-actions`
-  - `useBookingServices` → `getPublicServices`
-  - `useBookingStaff` → `getPublicStaff`
-  - `useBookingSettings` → `getPublicSettings`
-  - `useBookingSlots` → `getPublicAvailableSlots`
-  - `useCreateBooking` → `createPublicAppointment` (with camelCase→snakeCase field translation)
-
 - **5 Components Fixed**: Demo data fallback now ONLY triggers when `!siteId` (Studio editor)
-  - Before: `if (!siteId || realData.length === 0) → DEMO_DATA` (showed demo on live sites when DB returned empty)
-  - After: `if (!siteId) → DEMO_DATA` (only in Studio editor; live sites always show real data)
-  - Components: ServiceSelectorBlock, StaffGridBlock, BookingWidgetBlock, BookingCalendarBlock, BookingFormBlock
-
-### Commit
-- `a53c137` — "fix: booking module uses admin client for public pages, eliminates demo data on live sites"
 
 ---
 
