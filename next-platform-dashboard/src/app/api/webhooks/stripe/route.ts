@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { stripe } from "@/lib/stripe/config";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail } from "@/lib/email/send-email";
+import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 import { createNotification } from "@/lib/services/notifications";
 import Stripe from "stripe";
 
@@ -195,9 +195,10 @@ async function handleInvoiceFailed(
       .single()
 
     if (profile?.email) {
-      await sendEmail({
+      await sendBrandedEmail(agencyId, {
         to: { email: profile.email, name: profile.full_name || undefined },
-        type: 'payment_failed',
+        emailType: 'payment_failed',
+        recipientUserId: agency.owner_id,
         data: {
           updatePaymentUrl: invoice.hosted_invoice_url || '',
         },
@@ -244,9 +245,10 @@ async function handleTrialEnding(
       .single()
 
     if (profile?.email) {
-      await sendEmail({
+      await sendBrandedEmail(agencyId, {
         to: { email: profile.email, name: profile.full_name || undefined },
-        type: 'trial_ending',
+        emailType: 'trial_ending',
+        recipientUserId: agency.owner_id,
         data: {
           daysLeft,
           upgradeUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'}/billing`,

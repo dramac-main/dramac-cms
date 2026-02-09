@@ -37,6 +37,14 @@ const notificationIcons: Record<string, string> = {
   mention: "@",
   security_alert: "🔒",
   system: "📢",
+  // Phase UX-02: Booking & E-Commerce notification types
+  new_booking: "📅",
+  booking_confirmed: "✅",
+  booking_cancelled: "🚫",
+  new_order: "🛒",
+  order_shipped: "📦",
+  order_delivered: "✔️",
+  form_submission: "📝",
 };
 
 export function NotificationBell() {

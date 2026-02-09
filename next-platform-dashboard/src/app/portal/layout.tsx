@@ -4,6 +4,7 @@ import { getUnreadNotificationCount } from "@/lib/portal/notification-service";
 import { getTicketStats } from "@/lib/portal/support-service";
 import { PortalHeader } from "@/components/portal/portal-header";
 import { PortalLayoutClient } from "@/components/portal/portal-layout-client";
+import { BrandingProvider } from "@/components/providers/branding-provider";
 import { redirect } from "next/navigation";
 
 export default async function PortalLayout({
@@ -28,8 +29,9 @@ export default async function PortalLayout({
   ]);
 
   const openTicketCount = ticketStats.open + ticketStats.inProgress;
+  const agencyId = clientInfo?.agencyId;
 
-  return (
+  const portalContent = (
     <PortalLayoutClient
       user={session.user}
       openTicketCount={openTicketCount}
@@ -47,5 +49,13 @@ export default async function PortalLayout({
     >
       {children}
     </PortalLayoutClient>
+  );
+
+  return agencyId ? (
+    <BrandingProvider agencyId={agencyId}>
+      {portalContent}
+    </BrandingProvider>
+  ) : (
+    portalContent
   );
 }

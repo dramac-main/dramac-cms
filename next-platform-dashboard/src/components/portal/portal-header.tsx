@@ -16,7 +16,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { stopImpersonatingClient } from "@/lib/actions/clients";
 import { portalSignOut } from "@/lib/portal/portal-auth";
+import { useBrandingOptional } from "@/components/providers/branding-provider";
 import { toast } from "sonner";
+import Image from "next/image";
 import type { PortalUser } from "@/lib/portal/portal-auth";
 
 interface PortalHeaderProps {
@@ -43,8 +45,10 @@ export function PortalHeader({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Get display name from either legacy or new props
+  const branding = useBrandingOptional();
   const displayName = user?.fullName || clientName || "Client";
-  const displayAgencyName = agencyName || "Your Agency";
+  const displayAgencyName = branding?.getDisplayName() || agencyName || "Your Agency";
+  const agencyLogoUrl = branding?.getLogoUrl();
 
   const initials = displayName
     .split(" ")
@@ -109,7 +113,10 @@ export function PortalHeader({
       
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-4">
-          <Link href="/portal" className="font-bold text-xl">
+          <Link href="/portal" className="flex items-center gap-2 font-bold text-xl">
+            {agencyLogoUrl && (
+              <Image src={agencyLogoUrl} alt={displayAgencyName} width={28} height={28} className="h-7 w-7 object-contain" />
+            )}
             {displayAgencyName}
           </Link>
           <Badge variant="secondary">Client Portal</Badge>

@@ -3,7 +3,7 @@
  * Uses Resend for email delivery via the centralized email system.
  */
 
-import { sendEmail } from '@/lib/email/send-email'
+import { sendBrandedEmail } from '@/lib/email/send-branded-email'
 
 export interface NotificationPayload {
   to: string[];
@@ -15,6 +15,7 @@ export interface NotificationPayload {
   submittedAt: string;
   pageUrl?: string;
   data: Record<string, unknown>;
+  agencyId?: string;
 }
 
 export interface NotificationResult {
@@ -46,9 +47,9 @@ export async function sendSubmissionNotification(
       value: value,
     }));
 
-    const result = await sendEmail({
+    const result = await sendBrandedEmail(payload.agencyId || null, {
       to: payload.to.map(email => ({ email })),
-      type: 'form_submission_owner',
+      emailType: 'form_submission_owner',
       data: {
         formName: payload.formName,
         siteName: payload.siteName || '',

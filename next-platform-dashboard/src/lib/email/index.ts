@@ -2,6 +2,7 @@
  * Email Library Index
  * 
  * Exports all email-related utilities for transactional email sending.
+ * Phase WL-02: Added branded email exports.
  */
 
 // Types
@@ -30,6 +31,10 @@ export type {
 
 export { isValidEmailType } from "./email-types";
 
+// Branding types (Phase WL-02)
+export type { EmailBranding } from "./email-branding";
+export { buildEmailBranding } from "./email-branding";
+
 // Client
 export { 
   resend, 
@@ -41,8 +46,12 @@ export {
   isEmailEnabled 
 } from "./resend-client";
 
-// Templates
+// Templates (legacy)
 export { EMAIL_TEMPLATES } from "./templates";
 
 // Send functions
 export { sendEmail, sendEmails, previewEmail } from "./send-email";
+
+// Branded email (Phase WL-02)
+export { sendBrandedEmail } from "./send-branded-email";
+export type { SendBrandedEmailOptions } from "./send-branded-email";

@@ -10,8 +10,10 @@ import { cn } from "@/lib/utils";
 import { useBreakpointDown } from "@/hooks/use-media-query";
 import { getPortalNavigationGroups, type PortalUserPermissions } from "@/config/portal-navigation";
 import type { PortalUser } from "@/lib/portal/portal-auth";
+import { useBrandingOptional } from "@/components/providers/branding-provider";
 import { Globe } from "lucide-react";
 import { LAYOUT } from "@/config/layout";
+import Image from "next/image";
 
 interface PortalLayoutClientProps {
   children: ReactNode;
@@ -28,17 +30,25 @@ interface PortalLayoutClientProps {
 }
 
 /**
- * PortalHeader - Sidebar header showing company and user info
+ * PortalHeader - Sidebar header showing company and user info with branding
  */
 function PortalSidebarHeader({ user }: { user: PortalUser }) {
+  const branding = useBrandingOptional();
+  const logoUrl = branding?.getLogoUrl();
+  const displayName = branding?.getDisplayName() || user.companyName || "Client Portal";
+
   return (
     <div className="flex items-center gap-2 px-3 py-2">
-      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-        <Globe className="w-4 h-4 text-primary" />
+      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+        {logoUrl ? (
+          <Image src={logoUrl} alt={displayName} width={32} height={32} className="w-full h-full object-contain" />
+        ) : (
+          <Globe className="w-4 h-4 text-primary" />
+        )}
       </div>
       <div className="overflow-hidden">
         <h2 className="font-semibold text-sm text-sidebar-foreground truncate">
-          {user.companyName || "Client Portal"}
+          {displayName}
         </h2>
         <p className="text-xs text-sidebar-foreground/60 truncate">{user.fullName}</p>
       </div>

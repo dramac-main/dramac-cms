@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
-import { sendEmail } from "@/lib/email/send-email";
+import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 
 // Type alias for the admin Supabase client
 type SupabaseAdmin = SupabaseClient;
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Verify site exists
     const { data: site, error: siteError } = await supabase
       .from("sites")
-      .select("id, domain")
+      .select("id, domain, agency_id")
       .eq("id", siteId)
       .single();
 
@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
 
     // Send notifications (async, don't wait)
     if (formSettings.notify_on_submission && !isSpam) {
-      sendNotifications(supabase, submission, formSettings).catch((err) => {
+      sendNotifications(supabase, submission, formSettings, site.agency_id).catch((err) => {
         console.error("[FormSubmit] Notification error:", err);
       });
     }
@@ -299,7 +299,8 @@ function detectSpam(data: Record<string, unknown>): boolean {
 async function sendNotifications(
   supabase: SupabaseAdmin,
   submission: Record<string, unknown>,
-  settings: Record<string, unknown>
+  settings: Record<string, unknown>,
+  agencyId?: string
 ): Promise<void> {
   const emails = settings.notify_emails as string[];
   if (!emails || emails.length === 0) {
@@ -316,11 +317,11 @@ async function sendNotifications(
   const formName = (settings.form_name as string) || 'Contact Form';
   const siteName = (settings.site_name as string) || '';
 
-  // Send email to each recipient using the centralized email system
+  // Send branded email to each recipient
   for (const email of emails) {
-    await sendEmail({
+    await sendBrandedEmail(agencyId || null, {
       to: { email },
-      type: 'form_submission_owner',
+      emailType: 'form_submission_owner',
       data: {
         formName,
         siteName,

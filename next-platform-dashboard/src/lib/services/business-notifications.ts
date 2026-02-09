@@ -11,7 +11,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendEmail } from '@/lib/email/send-email'
+import { sendBrandedEmail } from '@/lib/email/send-branded-email'
 import { createNotification } from '@/lib/services/notifications'
 import { formatCurrency, formatDate, formatTime } from '@/lib/locale-config'
 
@@ -141,9 +141,10 @@ export async function notifyNewBooking(data: BookingNotificationData): Promise<v
 
     // 2. Email to business owner
     if (ownerProfile?.email) {
-      await sendEmail({
+      await sendBrandedEmail(site.agency_id, {
         to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
-        type: 'booking_confirmation_owner',
+        emailType: 'booking_confirmation_owner',
+        recipientUserId: agency.owner_id,
         data: {
           customerName: data.customerName,
           customerEmail: data.customerEmail,
@@ -163,9 +164,9 @@ export async function notifyNewBooking(data: BookingNotificationData): Promise<v
 
     // 3. Email to customer
     if (data.customerEmail) {
-      await sendEmail({
+      await sendBrandedEmail(site.agency_id, {
         to: { email: data.customerEmail, name: data.customerName },
-        type: 'booking_confirmation_customer',
+        emailType: 'booking_confirmation_customer',
         data: {
           customerName: data.customerName,
           serviceName: data.serviceName,
@@ -258,9 +259,10 @@ export async function notifyBookingCancelled(data: BookingCancellationData): Pro
 
     // 2. Email to business owner
     if (ownerProfile?.email) {
-      await sendEmail({
+      await sendBrandedEmail(site.agency_id, {
         to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
-        type: 'booking_cancelled_owner',
+        emailType: 'booking_cancelled_owner',
+        recipientUserId: agency.owner_id,
         data: {
           customerName: data.customerName,
           customerEmail: data.customerEmail,
@@ -280,9 +282,9 @@ export async function notifyBookingCancelled(data: BookingCancellationData): Pro
 
     // 3. Email to customer
     if (data.customerEmail) {
-      await sendEmail({
+      await sendBrandedEmail(site.agency_id, {
         to: { email: data.customerEmail, name: data.customerName },
-        type: 'booking_cancelled_customer',
+        emailType: 'booking_cancelled_customer',
         data: {
           customerName: data.customerName,
           serviceName: data.serviceName,
@@ -380,9 +382,10 @@ export async function notifyNewOrder(data: OrderNotificationData): Promise<void>
 
     // 2. Email to business owner
     if (ownerProfile?.email) {
-      await sendEmail({
+      await sendBrandedEmail(site.agency_id, {
         to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
-        type: 'order_confirmation_owner',
+        emailType: 'order_confirmation_owner',
+        recipientUserId: agency.owner_id,
         data: {
           customerName: data.customerName,
           customerEmail: data.customerEmail,
@@ -397,9 +400,9 @@ export async function notifyNewOrder(data: OrderNotificationData): Promise<void>
 
     // 3. Email to customer
     if (data.customerEmail) {
-      await sendEmail({
+      await sendBrandedEmail(site.agency_id, {
         to: { email: data.customerEmail, name: data.customerName },
-        type: 'order_confirmation_customer',
+        emailType: 'order_confirmation_customer',
         data: {
           customerName: data.customerName,
           orderNumber: data.orderNumber,
@@ -435,13 +438,13 @@ export async function notifyOrderShipped(
     const supabase = createAdminClient()
     const { data: site } = await supabase
       .from('sites')
-      .select('name')
+      .select('name, agency_id')
       .eq('id', siteId)
       .single()
 
-    await sendEmail({
+    await sendBrandedEmail(site?.agency_id || null, {
       to: { email: customerEmail, name: customerName },
-      type: 'order_shipped_customer',
+      emailType: 'order_shipped_customer',
       data: {
         customerName,
         orderNumber,
