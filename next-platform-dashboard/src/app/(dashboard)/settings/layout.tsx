@@ -2,9 +2,10 @@ import { Metadata } from "next";
 import { SettingsSidebar } from "@/components/settings/settings-sidebar";
 import { cn } from "@/lib/utils";
 import { LAYOUT } from "@/config/layout";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Settings | DRAMAC",
+  title: `Settings | ${PLATFORM.name}`,
   description: "Manage your account and agency settings",
 };
 

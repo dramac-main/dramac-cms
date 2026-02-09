@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { requireSuperAdmin } from "@/lib/auth/permissions";
+import { PageHeader } from "@/components/layout/page-header";
 import {
   Settings,
   Mail,
@@ -13,6 +15,7 @@ import {
   Shield,
   Database,
   Globe,
+  Construction,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -25,20 +28,32 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Platform Settings</h1>
-        <p className="text-muted-foreground">
-          Configure global platform settings and preferences
-        </p>
+      <PageHeader
+        title="Platform Settings"
+        description="Configure global platform settings and preferences"
+      />
+
+      {/* Coming Soon Banner */}
+      <div className="flex items-center gap-3 p-4 rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30">
+        <Construction className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
+        <div>
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            Settings are under development
+          </p>
+          <p className="text-sm text-amber-700 dark:text-amber-300">
+            Configuration changes are not yet available. These controls will be functional in a future update.
+          </p>
+        </div>
       </div>
 
       {/* General Settings */}
-      <Card>
+      <Card className="opacity-60 pointer-events-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
-            General Settings
-          </CardTitle>
+            <CardTitle>General Settings</CardTitle>
+            <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+          </div>
           <CardDescription>
             Basic platform configuration
           </CardDescription>
@@ -50,7 +65,7 @@ export default async function AdminSettingsPage() {
               <Input
                 id="platform-name"
                 defaultValue="DRAMAC"
-                placeholder="Enter platform name"
+                disabled
               />
             </div>
             <div className="space-y-2">
@@ -59,7 +74,7 @@ export default async function AdminSettingsPage() {
                 id="support-email"
                 type="email"
                 defaultValue="support@dramac.app"
-                placeholder="support@example.com"
+                disabled
               />
             </div>
           </div>
@@ -68,20 +83,21 @@ export default async function AdminSettingsPage() {
             <Input
               id="platform-url"
               defaultValue={process.env.NEXT_PUBLIC_APP_URL || "https://dramac.app"}
-              placeholder="https://your-platform.com"
+              disabled
             />
           </div>
-          <Button>Save Changes</Button>
+          <Button disabled>Save Changes</Button>
         </CardContent>
       </Card>
 
       {/* Email Settings */}
-      <Card>
+      <Card className="opacity-60 pointer-events-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Mail className="w-5 h-5" />
-            Email Settings
-          </CardTitle>
+            <CardTitle>Email Settings</CardTitle>
+            <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+          </div>
           <CardDescription>
             Configure email notifications and templates
           </CardDescription>
@@ -94,7 +110,7 @@ export default async function AdminSettingsPage() {
                 Send welcome emails to new users
               </p>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked disabled />
           </div>
           <Separator />
           <div className="flex items-center justify-between">
@@ -104,7 +120,7 @@ export default async function AdminSettingsPage() {
                 Notify agencies when sites are published
               </p>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked disabled />
           </div>
           <Separator />
           <div className="flex items-center justify-between">
@@ -114,18 +130,19 @@ export default async function AdminSettingsPage() {
                 Send billing reminder emails
               </p>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked disabled />
           </div>
         </CardContent>
       </Card>
 
       {/* Notifications */}
-      <Card>
+      <Card className="opacity-60 pointer-events-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Bell className="w-5 h-5" />
-            Admin Notifications
-          </CardTitle>
+            <CardTitle>Admin Notifications</CardTitle>
+            <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+          </div>
           <CardDescription>
             Configure notifications for platform administrators
           </CardDescription>
@@ -138,7 +155,7 @@ export default async function AdminSettingsPage() {
                 Get notified when new agencies sign up
               </p>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked disabled />
           </div>
           <Separator />
           <div className="flex items-center justify-between">
@@ -148,7 +165,7 @@ export default async function AdminSettingsPage() {
                 Get notified about failed payment attempts
               </p>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked disabled />
           </div>
           <Separator />
           <div className="flex items-center justify-between">
@@ -158,18 +175,19 @@ export default async function AdminSettingsPage() {
                 Get notified about security-related events
               </p>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked disabled />
           </div>
         </CardContent>
       </Card>
 
       {/* Security Settings */}
-      <Card>
+      <Card className="opacity-60 pointer-events-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Shield className="w-5 h-5" />
-            Security Settings
-          </CardTitle>
+            <CardTitle>Security Settings</CardTitle>
+            <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+          </div>
           <CardDescription>
             Configure platform security options
           </CardDescription>
@@ -182,7 +200,7 @@ export default async function AdminSettingsPage() {
                 Require 2FA for admin accounts
               </p>
             </div>
-            <Switch />
+            <Switch disabled />
           </div>
           <Separator />
           <div className="flex items-center justify-between">
@@ -192,7 +210,7 @@ export default async function AdminSettingsPage() {
                 Auto-logout after 1 hour of inactivity
               </p>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked disabled />
           </div>
           <Separator />
           <div className="flex items-center justify-between">
@@ -202,18 +220,19 @@ export default async function AdminSettingsPage() {
                 Restrict admin access to specific IPs
               </p>
             </div>
-            <Switch />
+            <Switch disabled />
           </div>
         </CardContent>
       </Card>
 
       {/* Database & Maintenance */}
-      <Card>
+      <Card className="opacity-60 pointer-events-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Database className="w-5 h-5" />
-            Database & Maintenance
-          </CardTitle>
+            <CardTitle>Database & Maintenance</CardTitle>
+            <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+          </div>
           <CardDescription>
             Database management and maintenance options
           </CardDescription>
@@ -226,7 +245,7 @@ export default async function AdminSettingsPage() {
                 Create a manual backup of the database
               </p>
             </div>
-            <Button variant="outline">Create Backup</Button>
+            <Button variant="outline" disabled>Create Backup</Button>
           </div>
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
@@ -235,7 +254,7 @@ export default async function AdminSettingsPage() {
                 Clear all cached data and regenerate
               </p>
             </div>
-            <Button variant="outline">Clear Cache</Button>
+            <Button variant="outline" disabled>Clear Cache</Button>
           </div>
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div>
@@ -244,20 +263,19 @@ export default async function AdminSettingsPage() {
                 Put the platform in maintenance mode
               </p>
             </div>
-            <Button variant="outline" className="text-yellow-600">
-              Enable
-            </Button>
+            <Button variant="outline" disabled>Enable</Button>
           </div>
         </CardContent>
       </Card>
 
       {/* Domain Settings */}
-      <Card>
+      <Card className="opacity-60 pointer-events-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Globe className="w-5 h-5" />
-            Domain Settings
-          </CardTitle>
+            <CardTitle>Domain Settings</CardTitle>
+            <Badge variant="secondary" className="text-xs">Coming Soon</Badge>
+          </div>
           <CardDescription>
             Configure custom domain settings for rendered sites
           </CardDescription>
@@ -268,7 +286,7 @@ export default async function AdminSettingsPage() {
             <Input
               id="default-domain"
               defaultValue="sites.dramac.app"
-              placeholder="sites.yourdomain.com"
+              disabled
             />
             <p className="text-sm text-muted-foreground">
               Sites will be accessible at [slug].sites.dramac.app by default
@@ -281,9 +299,9 @@ export default async function AdminSettingsPage() {
                 Allow agencies to use custom domains
               </p>
             </div>
-            <Switch defaultChecked />
+            <Switch defaultChecked disabled />
           </div>
-          <Button>Save Domain Settings</Button>
+          <Button disabled>Save Domain Settings</Button>
         </CardContent>
       </Card>
     </div>

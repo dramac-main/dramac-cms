@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { DOMAINS, extractSubdomain, isAppDomain as checkIsAppDomain } from "@/lib/constants/domains";
 
 export async function proxy(request: NextRequest) {
   const hostname = request.headers.get("host") || "";
@@ -17,8 +18,8 @@ export async function proxy(request: NextRequest) {
   // DETERMINE DOMAIN TYPE FIRST
   // ========================================
   
-  // Get configuration from env
-  const baseDomain = process.env.NEXT_PUBLIC_BASE_DOMAIN || "sites.dramacagency.com";
+  // Use centralized domain constants
+  const baseDomain = DOMAINS.SITES_BASE;
   const appDomain = process.env.NEXT_PUBLIC_APP_URL || "localhost:3000";
 
   // Parse the app domain host
@@ -31,7 +32,7 @@ export async function proxy(request: NextRequest) {
 
   // Check domain type
   const isLocalhost = hostname.includes("localhost");
-  const isAppDomain = hostname === appHost || hostname === "app.dramacagency.com" || isLocalhost;
+  const isAppDomain = checkIsAppDomain(hostname) || hostname === appHost;
   const isClientSite = !isLocalhost && hostname.endsWith(`.${baseDomain}`);
   const isCustomDomain = !isAppDomain && !isClientSite && !isLocalhost;
 
@@ -65,6 +66,26 @@ export async function proxy(request: NextRequest) {
   
   // Route custom domains FIRST - before any auth checks
   if (isCustomDomain) {
+    // Check for 301 redirect from old domain (domain_redirects table)
+    // NOTE: This uses a lightweight edge-compatible lookup
+    // For production, consider caching redirects at the edge
+    try {
+      const redirectUrl = `${DOMAINS.PROTOCOL}://${new URL(DOMAINS.APP_DOMAIN).hostname}/api/domains/${encodeURIComponent(hostname)}/redirect`;
+      const redirectCheck = await fetch(redirectUrl, {
+        method: "HEAD",
+        redirect: "manual",
+      });
+      if (redirectCheck.status === 301) {
+        const location = redirectCheck.headers.get("location");
+        if (location) {
+          console.log("[proxy] ✅ 301 redirect:", hostname, "→", location);
+          return NextResponse.redirect(location + pathname, { status: 301 });
+        }
+      }
+    } catch {
+      // Redirect lookup failed — fall through to normal custom domain handling
+    }
+
     const url = request.nextUrl.clone();
     url.pathname = `/site/${hostname}${pathname}`;
     console.log("[proxy] ✅ Custom domain rewrite:", hostname, "→", url.pathname);

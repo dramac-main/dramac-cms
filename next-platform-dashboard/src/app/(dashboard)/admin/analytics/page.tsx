@@ -18,9 +18,10 @@ import {
   PlatformActivityComponent,
 } from "@/components/admin";
 import { PageHeader } from "@/components/layout/page-header";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Analytics | Admin | DRAMAC",
+  title: `Analytics | Admin | ${PLATFORM.name}`,
   description: "Platform analytics and insights",
 };
 

@@ -6,7 +6,7 @@ import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Bold,
   Italic,
@@ -31,6 +31,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -54,6 +63,10 @@ export function PostEditor({
   className,
   disabled = false,
 }: PostEditorProps) {
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -112,26 +125,15 @@ export function PostEditor({
   }, [content, editor]);
 
   const addImage = useCallback(() => {
-    const url = window.prompt("Enter image URL:");
-    if (url && editor) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
-  }, [editor]);
+    setImageUrl("");
+    setShowImageDialog(true);
+  }, []);
 
   const addLink = useCallback(() => {
     if (!editor) return;
-    
     const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt("Enter link URL:", previousUrl);
-    
-    if (url === null) return;
-    
-    if (url === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
-      return;
-    }
-    
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    setLinkUrl(previousUrl || "");
+    setShowLinkDialog(true);
   }, [editor]);
 
   const removeLink = useCallback(() => {
@@ -454,6 +456,102 @@ export function PostEditor({
         {/* Editor */}
         <EditorContent editor={editor} />
       </div>
+
+      {/* Image URL Dialog */}
+      <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Insert Image</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="image-url">Image URL</Label>
+            <Input
+              id="image-url"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (imageUrl && editor) {
+                    editor.chain().focus().setImage({ src: imageUrl }).run();
+                    setShowImageDialog(false);
+                  }
+                }
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowImageDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (imageUrl && editor) {
+                  editor.chain().focus().setImage({ src: imageUrl }).run();
+                  setShowImageDialog(false);
+                }
+              }}
+              disabled={!imageUrl}
+            >
+              Insert
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Link URL Dialog */}
+      <Dialog open={showLinkDialog} onOpenChange={setShowLinkDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Insert Link</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="link-url">URL</Label>
+            <Input
+              id="link-url"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              placeholder="https://example.com"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (editor) {
+                    if (linkUrl === "") {
+                      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                    } else {
+                      editor.chain().focus().extendMarkRange("link").setLink({ href: linkUrl }).run();
+                    }
+                    setShowLinkDialog(false);
+                  }
+                }
+              }}
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave empty and click Apply to remove an existing link.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLinkDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (editor) {
+                  if (linkUrl === "") {
+                    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                  } else {
+                    editor.chain().focus().extendMarkRange("link").setLink({ href: linkUrl }).run();
+                  }
+                  setShowLinkDialog(false);
+                }
+              }}
+            >
+              Apply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 }

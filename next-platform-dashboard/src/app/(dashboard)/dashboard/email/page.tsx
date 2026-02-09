@@ -1,9 +1,8 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
 import Link from "next/link";
-import { Plus, Mail, Search, Filter } from "lucide-react";
+import { Plus, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmailOrdersList } from "@/components/email/email-orders-list";
@@ -71,17 +70,7 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
         <EmailStats />
       </Suspense>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search by domain..." className="pl-9" />
-        </div>
-        <Button variant="outline">
-          <Filter className="h-4 w-4 mr-2" />
-          Filter
-        </Button>
-      </div>
+
 
       {/* Orders List */}
       <Suspense fallback={<Skeleton className="h-64" />}>

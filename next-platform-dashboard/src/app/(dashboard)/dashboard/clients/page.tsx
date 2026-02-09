@@ -9,9 +9,10 @@ import { ClientFiltersBar } from "@/components/clients/client-filters-bar";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import type { ClientFilters, ClientStatus } from "@/types/client";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Clients | DRAMAC",
+  title: `Clients | ${PLATFORM.name}`,
   description: "Manage your clients",
 };
 

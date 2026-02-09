@@ -35,7 +35,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="dramac-theme">
+      <ThemeProvider defaultTheme="system" storageKey="dramac-theme">
         <AuthProvider>
           <LoadingProvider>
             <GlobalErrorBoundary>

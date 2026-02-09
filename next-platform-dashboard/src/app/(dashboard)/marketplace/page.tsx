@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Zap, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Module Marketplace | DRAMAC",
+  title: `Module Marketplace | ${PLATFORM.name}`,
   description: "Discover and install powerful modules to extend your platform",
 };
 

@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import type { SiteFilters, SiteStatus } from "@/types/site";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Sites | DRAMAC",
+  title: `Sites | ${PLATFORM.name}`,
   description: "Manage your websites",
 };
 

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Globe, Search, PlusCircle, AlertCircle, RefreshCw, Mail } from "lucide-react";
+import { Globe, PlusCircle, AlertCircle, RefreshCw, Mail } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -128,12 +128,6 @@ export default function DomainsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/domains/search">
-              <Search className="h-4 w-4 mr-2" />
-              Search Domains
-            </Link>
-          </Button>
           <Button asChild>
             <Link href="/dashboard/domains/search">
               <PlusCircle className="h-4 w-4 mr-2" />

@@ -58,11 +58,11 @@ const defaultSocials: SocialLink[] = [
 ];
 
 export function Footer({
-  logoText = "DRAMAC",
+  logoText = "Your Brand",
   tagline = "Build beautiful websites with ease",
   columns = defaultColumns,
   socialLinks = defaultSocials,
-  copyright = `© ${new Date().getFullYear()} DRAMAC. All rights reserved.`,
+  copyright = `© ${new Date().getFullYear()} Your Company. All rights reserved.`,
   backgroundColor = "#1a1a2e",
   textColor = "#ffffff",
 }: FooterProps) {
@@ -138,11 +138,11 @@ export function Footer({
 Footer.craft = {
   displayName: "Footer",
   props: {
-    logoText: "DRAMAC",
+    logoText: "Your Brand",
     tagline: "Build beautiful websites with ease",
     columns: defaultColumns,
     socialLinks: defaultSocials,
-    copyright: `© ${new Date().getFullYear()} DRAMAC. All rights reserved.`,
+    copyright: `© ${new Date().getFullYear()} Your Company. All rights reserved.`,
     backgroundColor: "#1a1a2e",
     textColor: "#ffffff",
   },

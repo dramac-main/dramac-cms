@@ -8,9 +8,10 @@ import { QuickActions } from "@/components/admin/quick-actions";
 import { getPlatformStats, getRecentActivity } from "@/lib/admin/stats-service";
 import { PageHeader } from "@/components/layout/page-header";
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard | DRAMAC",
+  title: `Admin Dashboard | ${PLATFORM.name}`,
   description: "Platform administration and monitoring",
 };
 

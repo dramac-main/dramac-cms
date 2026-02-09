@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-// useRouter removed - not needed
+import { useState, useEffect } from "react";
 import { User, Mail, Phone, Building, Key, Bell, Shield } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { updateClientSettings, changePortalPassword } from "@/lib/portal/portal-auth";
 import { PageHeader } from "@/components/layout/page-header";
+import { createClient } from "@/lib/supabase/client";
 
 interface SettingsFormData {
   name: string;
@@ -30,6 +31,7 @@ interface NotificationSettings {
 export default function PortalSettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(true);
   
   const [formData, setFormData] = useState<SettingsFormData>({
     name: "",
@@ -51,17 +53,28 @@ export default function PortalSettingsPage() {
     confirmPassword: "",
   });
 
-  // Load user data on mount
-  useState(() => {
-    // In a real app, this would fetch from the server
-    // For now, we'll simulate with placeholder data
-    setFormData({
-      name: "Client User",
-      email: "client@example.com",
-      phone: "",
-      company: "",
-    });
-  });
+  // Load real user data on mount
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setFormData({
+            name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? "",
+            email: user.email ?? "",
+            phone: user.user_metadata?.phone ?? "",
+            company: user.user_metadata?.company ?? "",
+          });
+        }
+      } catch {
+        toast.error("Failed to load profile");
+      } finally {
+        setIsProfileLoading(false);
+      }
+    }
+    loadProfile();
+  }, []);
 
   async function handleProfileSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -142,6 +155,30 @@ export default function PortalSettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {isProfileLoading ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+            </div>
+          ) : (
           <form onSubmit={handleProfileSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -205,6 +242,7 @@ export default function PortalSettingsPage() {
               </Button>
             </div>
           </form>
+          )}
         </CardContent>
       </Card>
 

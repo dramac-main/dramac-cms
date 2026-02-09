@@ -1,7 +1,6 @@
 import { Metadata } from "next";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,13 +9,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CreditCard, Users, TrendingUp, DollarSign } from "lucide-react";
+import { CreditCard, Users, TrendingUp, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireSuperAdmin } from "@/lib/auth/permissions";
 import { StatCard } from "@/components/admin/stat-card";
+import { PageHeader } from "@/components/layout/page-header";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Subscriptions | Admin | DRAMAC",
+  title: `Subscriptions | Admin | ${PLATFORM.name}`,
   description: "Manage platform subscriptions and billing",
 };
 
@@ -24,27 +26,42 @@ async function getSubscriptionData() {
   await requireSuperAdmin();
   const supabase = await createClient();
 
-  // Get subscription counts (mock data since we may not have Stripe set up)
+  // Get real agency count
   const { count: totalAgencies } = await supabase
     .from("agencies")
     .select("*", { count: "exact", head: true });
 
-  // Mock subscription data
-  const plans = [
-    { name: "Free", count: Math.floor((totalAgencies || 0) * 0.4), price: 0 },
-    { name: "Starter", count: Math.floor((totalAgencies || 0) * 0.35), price: 19 },
-    { name: "Professional", count: Math.floor((totalAgencies || 0) * 0.2), price: 49 },
-    { name: "Enterprise", count: Math.floor((totalAgencies || 0) * 0.05), price: 99 },
-  ];
+  // Get real subscription data if available
+  const { data: subscriptions } = await supabase
+    .from("subscriptions")
+    .select("status, plan_id")
+    .eq("status", "active");
 
-  const mrr = plans.reduce((acc, plan) => acc + plan.count * plan.price, 0);
+  const plans = new Map<string, { count: number; price: number }>();
+  if (subscriptions && subscriptions.length > 0) {
+    for (const sub of subscriptions) {
+      const name = sub.plan_id || "Unknown";
+      const existing = plans.get(name) || { count: 0, price: 0 };
+      existing.count += 1;
+      plans.set(name, existing);
+    }
+  }
+
+  const planList = Array.from(plans.entries()).map(([name, data]) => ({
+    name,
+    count: data.count,
+    price: data.price,
+  }));
+
+  const mrr = planList.reduce((acc, plan) => acc + plan.count * plan.price, 0);
+  const activeSubscribers = planList.reduce((acc, plan) => acc + plan.count, 0);
 
   return {
-    totalSubscribers: totalAgencies || 0,
+    totalAgencies: totalAgencies || 0,
+    activeSubscribers,
     mrr,
-    plans,
-    churnRate: 2.5,
-    growthRate: 8.3,
+    plans: planList,
+    hasRealData: planList.length > 0,
   };
 }
 
@@ -53,97 +70,96 @@ export default async function AdminSubscriptionsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Subscriptions</h1>
-        <p className="text-muted-foreground">
-          Monitor and manage platform subscriptions
-        </p>
-      </div>
+      <PageHeader
+        title="Subscriptions"
+        description="Monitor and manage platform subscriptions"
+      />
+
+      {!data.hasRealData && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            No active subscriptions found. Subscription data will appear here once agencies subscribe to paid plans via Paddle billing.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard
-          title="Total Subscribers"
-          value={data.totalSubscribers}
+          title="Total Agencies"
+          value={data.totalAgencies}
           icon={Users}
-          change={data.growthRate}
+        />
+        <StatCard
+          title="Active Subscribers"
+          value={data.activeSubscribers}
+          icon={CreditCard}
         />
         <StatCard
           title="Monthly Revenue"
-          value={`$${data.mrr.toLocaleString()}`}
-          icon={DollarSign}
-          isCurrency
-        />
-        <StatCard
-          title="Churn Rate"
-          value={`${data.churnRate}%`}
+          value={data.hasRealData ? `K ${data.mrr.toLocaleString("en-ZM")}` : "—"}
           icon={TrendingUp}
-          change={-0.3}
-        />
-        <StatCard
-          title="Avg Revenue/User"
-          value={`$${data.totalSubscribers > 0 ? Math.round(data.mrr / data.totalSubscribers) : 0}`}
-          icon={CreditCard}
         />
       </div>
 
       {/* Plans Breakdown */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Subscription Plans</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Plan</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Subscribers</TableHead>
-                <TableHead>Revenue</TableHead>
-                <TableHead>% of Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.plans.map((plan) => (
-                <TableRow key={plan.name}>
-                  <TableCell className="font-medium">{plan.name}</TableCell>
-                  <TableCell>
-                    {plan.price === 0 ? (
-                      <Badge variant="secondary">Free</Badge>
-                    ) : (
-                      `$${plan.price}/mo`
-                    )}
-                  </TableCell>
-                  <TableCell>{plan.count}</TableCell>
-                  <TableCell>${(plan.count * plan.price).toLocaleString()}</TableCell>
-                  <TableCell>
-                    {data.totalSubscribers > 0
-                      ? Math.round((plan.count / data.totalSubscribers) * 100)
-                      : 0}
-                    %
-                  </TableCell>
+      {data.hasRealData && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Active Plans</CardTitle>
+            <CardDescription>Breakdown of current subscriptions by plan</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Plan</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Subscribers</TableHead>
+                  <TableHead>Revenue</TableHead>
+                  <TableHead>% of Total</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {data.plans.map((plan) => (
+                  <TableRow key={plan.name}>
+                    <TableCell className="font-medium">{plan.name}</TableCell>
+                    <TableCell>
+                      {plan.price === 0 ? (
+                        <Badge variant="secondary">Free</Badge>
+                      ) : (
+                        `K ${plan.price}/mo`
+                      )}
+                    </TableCell>
+                    <TableCell>{plan.count}</TableCell>
+                    <TableCell>K {(plan.count * plan.price).toLocaleString("en-ZM")}</TableCell>
+                    <TableCell>
+                      {data.activeSubscribers > 0
+                        ? Math.round((plan.count / data.activeSubscribers) * 100)
+                        : 0}
+                      %
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Recent Transactions */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Transactions</CardTitle>
-          <Button variant="outline" size="sm">
-            View All
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-8">
-            Payment integration not configured. Connect a payment provider to see
-            transactions.
-          </p>
-        </CardContent>
-      </Card>
+      {!data.hasRealData && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Subscription Plans</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No subscription data available yet. Plans will appear here once agencies subscribe via Paddle billing.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

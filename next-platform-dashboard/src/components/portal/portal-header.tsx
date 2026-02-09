@@ -44,7 +44,7 @@ export function PortalHeader({
 
   // Get display name from either legacy or new props
   const displayName = user?.fullName || clientName || "Client";
-  const displayAgencyName = agencyName || "DRAMAC";
+  const displayAgencyName = agencyName || "Your Agency";
 
   const initials = displayName
     .split(" ")

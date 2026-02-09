@@ -22,9 +22,10 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Activity Log | Admin | DRAMAC",
+  title: `Activity Log | Admin | ${PLATFORM.name}`,
   description: "View platform activity and audit logs",
 };
 

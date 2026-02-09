@@ -208,7 +208,7 @@ Navigation.craft = {
   displayName: "Navigation",
   props: {
     logo: "",
-    logoText: "DRAMAC",
+    logoText: "Your Brand",
     links: defaultLinks,
     ctaText: "Get Started",
     ctaHref: "#",

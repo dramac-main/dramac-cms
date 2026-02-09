@@ -6,9 +6,10 @@ import { PageHeader } from "@/components/layout/page-header";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { NotificationsFilters } from "@/components/notifications/notifications-filters";
 import { Card, CardContent } from "@/components/ui/card";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Notifications | DRAMAC",
+  title: `Notifications | ${PLATFORM.name}`,
   description: "View and manage your notifications",
 };
 

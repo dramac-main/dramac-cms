@@ -12,14 +12,14 @@ import {
   Database,
   Server,
   Globe,
-  HardDrive,
-  Cpu,
   RefreshCw,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
+import Link from "next/link";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "System Health | Admin | DRAMAC",
+  title: `System Health | Admin | ${PLATFORM.name}`,
   description: "Monitor system health and status",
 };
 
@@ -143,10 +143,12 @@ export default async function AdminHealthPage() {
         title="System Health"
         description="Monitor platform health and performance"
         actions={
-          <Button variant="outline" onClick={() => window.location.reload()}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
+          <Link href="/admin/health" prefetch={false}>
+            <Button variant="outline">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+          </Link>
         }
       />
 
@@ -241,48 +243,7 @@ export default async function AdminHealthPage() {
         </CardContent>
       </Card>
 
-      {/* System Resources (Mock) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>System Resources</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">CPU Usage</span>
-                </div>
-                <span className="text-sm text-muted-foreground">23%</span>
-              </div>
-              <Progress value={23} />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <HardDrive className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Memory</span>
-                </div>
-                <span className="text-sm text-muted-foreground">45%</span>
-              </div>
-              <Progress value={45} />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Database className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Storage</span>
-                </div>
-                <span className="text-sm text-muted-foreground">12%</span>
-              </div>
-              <Progress value={12} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* System Resources — use Vercel/Supabase dashboards for real metrics */}
 
       {/* Info */}
       <Card>

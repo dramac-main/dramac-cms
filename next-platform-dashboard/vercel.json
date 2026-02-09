@@ -12,5 +12,11 @@
     "src/app/api/ai/**/*.ts": {
       "maxDuration": 120
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/domain-health",
+      "schedule": "0 */6 * * *"
+    }
+  ]
 }

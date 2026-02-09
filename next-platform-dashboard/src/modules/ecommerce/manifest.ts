@@ -35,7 +35,7 @@ export const EcommerceModuleManifest: ModuleManifest = {
   // ==========================================================================
   
   author: {
-    name: 'DRAMAC CMS',
+    name: 'DRAMAC CMS', // Internal module author — not shown to end users
     email: 'support@dramac.dev',
     url: 'https://dramac.dev'
   },

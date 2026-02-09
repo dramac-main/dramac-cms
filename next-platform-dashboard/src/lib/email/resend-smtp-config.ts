@@ -43,11 +43,13 @@
  */
 
 // This file is documentation-only. Auth SMTP is configured in Supabase Dashboard.
+import { PLATFORM } from '@/lib/constants/platform';
+
 export const RESEND_SMTP_CONFIG = {
   host: 'smtp.resend.com',
   port: 465,
   username: 'resend',
   // password: process.env.RESEND_API_KEY (set in Supabase Dashboard)
-  senderEmail: 'noreply@app.dramacagency.com',
-  senderName: 'Dramac',
+  senderEmail: `noreply@${PLATFORM.emailDomain}`,
+  senderName: PLATFORM.name, // Platform default — overridden by agency branding when available
 } as const

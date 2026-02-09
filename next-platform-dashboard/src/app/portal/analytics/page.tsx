@@ -1,10 +1,11 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { BarChart3, Users, Eye, Clock, TrendingUp, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { BarChart3, Users, Eye, Clock, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { requirePortalAuth } from "@/lib/portal/portal-auth";
 import { getClientSites, getPortalAnalytics } from "@/lib/portal/portal-service";
 import { format } from "date-fns";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const metadata: Metadata = {
   title: "Analytics | Client Portal",
@@ -34,13 +35,10 @@ export default async function PortalAnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Analytics</h1>
-        <p className="text-muted-foreground mt-1">
-          Performance overview for all your websites
-        </p>
-      </div>
+      <PageHeader
+        title="Analytics"
+        description="Performance overview for all your websites"
+      />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -55,10 +53,7 @@ export default async function PortalAnalyticsPage() {
                 <Eye className="h-6 w-6 text-primary" />
               </div>
             </div>
-            <div className="flex items-center gap-1 mt-2 text-sm text-green-600">
-              <ArrowUpRight className="h-4 w-4" />
-              <span>12% from last month</span>
-            </div>
+            <p className="text-xs text-muted-foreground mt-2">All time</p>
           </CardContent>
         </Card>
 
@@ -73,10 +68,7 @@ export default async function PortalAnalyticsPage() {
                 <Users className="h-6 w-6 text-blue-600" />
               </div>
             </div>
-            <div className="flex items-center gap-1 mt-2 text-sm text-green-600">
-              <ArrowUpRight className="h-4 w-4" />
-              <span>8% from last month</span>
-            </div>
+            <p className="text-xs text-muted-foreground mt-2">All time</p>
           </CardContent>
         </Card>
 
@@ -91,10 +83,7 @@ export default async function PortalAnalyticsPage() {
                 <TrendingUp className="h-6 w-6 text-green-600" />
               </div>
             </div>
-            <div className="flex items-center gap-1 mt-2 text-sm text-green-600">
-              <ArrowUpRight className="h-4 w-4" />
-              <span>15% from last month</span>
-            </div>
+            <p className="text-xs text-muted-foreground mt-2">All time</p>
           </CardContent>
         </Card>
 
@@ -111,10 +100,7 @@ export default async function PortalAnalyticsPage() {
                 <Clock className="h-6 w-6 text-orange-600" />
               </div>
             </div>
-            <div className="flex items-center gap-1 mt-2 text-sm text-red-600">
-              <ArrowDownRight className="h-4 w-4" />
-              <span>3% from last month</span>
-            </div>
+            <p className="text-xs text-muted-foreground mt-2">All time</p>
           </CardContent>
         </Card>
       </div>

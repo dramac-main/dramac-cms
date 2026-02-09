@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PageHeader } from "@/components/layout/page-header";
 import { AgencyCRMDashboard } from "@/components/crm/agency-crm-dashboard";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "CRM | DRAMAC",
+  title: `CRM | ${PLATFORM.name}`,
   description: "Customer Relationship Management across all your sites",
 };
 

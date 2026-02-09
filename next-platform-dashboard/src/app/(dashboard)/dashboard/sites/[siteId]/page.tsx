@@ -12,9 +12,10 @@ import { SiteSocialTab } from "@/components/sites/site-social-tab";
 import { SitePublishButton } from "@/components/sites/site-publish-button";
 import { CloneSiteDialog } from "@/components/sites/clone-site-dialog";
 import { ExportSiteButton } from "@/components/sites/export-site-button";
+import { SiteDetailOverflowMenu } from "@/components/sites/site-detail-overflow-menu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, Settings, ExternalLink, Search, Copy, Bot, Zap, Share2, Users, BarChart3, Wand2 } from "lucide-react";
+import { Pencil, ExternalLink, BarChart3 } from "lucide-react";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 
 interface SiteDetailPageProps {
@@ -61,6 +62,12 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
         title={site.name}
         description={getSiteDomain(site.subdomain, site.custom_domain)}
       >
+        <Link href={`/dashboard/sites/${site.id}/pages`}>
+          <Button variant="outline">
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit Pages
+          </Button>
+        </Link>
         {site.published && (
           <a
             href={getSiteUrl(site.subdomain, site.custom_domain)}
@@ -73,80 +80,12 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
             </Button>
           </a>
         )}
-        <Link href={`/dashboard/sites/${site.id}/seo`}>
-          <Button variant="outline">
-            <Search className="mr-2 h-4 w-4" />
-            SEO
-          </Button>
-        </Link>
-        <Link href={`/dashboard/sites/${site.id}/ai-designer`}>
-          <Button variant="default" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
-            <Wand2 className="mr-2 h-4 w-4" />
-            AI Designer
-          </Button>
-        </Link>
-        <Link href={`/sites/${site.id}/analytics`}>
-          <Button variant="outline">
-            <BarChart3 className="mr-2 h-4 w-4" />
-            Analytics
-          </Button>
-        </Link>
-        {hasAutomation && (
-          <Link href={`/dashboard/sites/${site.id}/automation`}>
-            <Button variant="outline">
-              <Zap className="mr-2 h-4 w-4" />
-              Automation
-            </Button>
-          </Link>
-        )}
-        {hasAIAgents && (
-          <Link href={`/dashboard/sites/${site.id}/ai-agents`}>
-            <Button variant="outline">
-              <Bot className="mr-2 h-4 w-4" />
-              AI Agents
-            </Button>
-          </Link>
-        )}
-        {hasSocial && (
-          <Link href={`/dashboard/sites/${site.id}/social`}>
-            <Button variant="outline">
-              <Share2 className="mr-2 h-4 w-4" />
-              Social
-            </Button>
-          </Link>
-        )}
-        {hasCRM && (
-          <Link href={`/dashboard/sites/${site.id}/crm-module`}>
-            <Button variant="outline">
-              <Users className="mr-2 h-4 w-4" />
-              CRM
-            </Button>
-          </Link>
-        )}
-        <Link href={`/dashboard/sites/${site.id}/settings`}>
-          <Button variant="outline">
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </Button>
-        </Link>
-        <Link href={`/dashboard/sites/${site.id}/pages`}>
-          <Button variant="outline">
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit Pages
-          </Button>
-        </Link>
-        <CloneSiteDialog
+        <SiteDetailOverflowMenu
           siteId={site.id}
           siteName={site.name}
           clientId={site.client_id}
           agencyId={site.agency_id}
-        >
-          <Button variant="outline">
-            <Copy className="mr-2 h-4 w-4" />
-            Clone
-          </Button>
-        </CloneSiteDialog>
-        <ExportSiteButton siteId={site.id} siteName={site.name} />
+        />
         <SitePublishButton site={site} />
       </PageHeader>
 

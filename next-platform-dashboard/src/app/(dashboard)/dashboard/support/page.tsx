@@ -19,9 +19,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
-  title: "Help & Support | DRAMAC",
+  title: `Help & Support | ${PLATFORM.name}`,
   description: "Get help with DRAMAC CMS",
 };
 
