@@ -44,6 +44,7 @@ import type {
 } from '../types'
 import { PLATFORM_CONFIGS } from '../types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // Import new UI components
 import {
   SocialMetricCard,
@@ -100,7 +101,7 @@ function generateMockEngagementData(days: number): EngagementDataPoint[] {
     const date = new Date(now)
     date.setDate(date.getDate() - i)
     data.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      date: date.toLocaleDateString(DEFAULT_LOCALE, { month: 'short', day: 'numeric' }),
       likes: Math.floor(Math.random() * 500) + 100,
       comments: Math.floor(Math.random() * 100) + 20,
       shares: Math.floor(Math.random() * 50) + 10,
@@ -121,7 +122,7 @@ function generateMockAudienceData(days: number, baseFollowers: number): Audience
     date.setDate(date.getDate() - i)
     total += Math.floor(Math.random() * 100) + 20
     data.push({
-      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      date: date.toLocaleDateString(DEFAULT_LOCALE, { month: 'short', day: 'numeric' }),
       total,
     })
   }
@@ -435,7 +436,7 @@ function UpcomingPostsWidget({ posts, accounts, onViewCalendar, onCreatePost }: 
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {post.scheduledAt 
-                            ? new Date(post.scheduledAt).toLocaleDateString('en-US', {
+                            ? new Date(post.scheduledAt).toLocaleDateString(DEFAULT_LOCALE, {
                                 month: 'short',
                                 day: 'numeric',
                                 hour: 'numeric',

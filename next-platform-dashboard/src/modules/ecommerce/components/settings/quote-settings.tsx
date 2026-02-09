@@ -29,6 +29,7 @@ import {
 import { toast } from 'sonner'
 import { getQuoteSiteSettings, upsertQuoteSiteSettings } from '../../actions/quote-template-actions'
 
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -80,7 +81,7 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
       next_quote_number: 1,
       default_validity_days: 30,
       default_tax_rate: 0,
-      default_currency: 'USD',
+      default_currency: DEFAULT_CURRENCY,
       auto_expire_enabled: true,
       auto_reminder_enabled: false,
       reminder_days_before: 3,

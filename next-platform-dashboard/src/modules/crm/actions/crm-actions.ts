@@ -11,6 +11,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { logAutomationEvent } from '@/modules/automation/services/event-processor'
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import type { 
   Contact, ContactInput, ContactUpdate,
   Company, CompanyInput, CompanyUpdate,
@@ -391,7 +392,7 @@ export async function createDeal(siteId: string, input: Partial<DealInput>): Pro
       pipeline_id: input.pipeline_id || null,
       stage_id: input.stage_id || null,
       amount: input.amount || null,
-      currency: input.currency || 'USD',
+      currency: input.currency || DEFAULT_CURRENCY,
       probability: input.probability ?? 50,
       status: input.status || 'open',
       close_reason: input.close_reason || null,

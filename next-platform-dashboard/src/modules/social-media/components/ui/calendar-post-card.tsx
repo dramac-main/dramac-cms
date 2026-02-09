@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import type { SocialPost } from '../../types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -71,7 +72,7 @@ function getStatusConfig(status: string) {
 
 function formatTime(dateStr: string): string {
   const date = new Date(dateStr)
-  return date.toLocaleTimeString('en-US', {
+  return date.toLocaleTimeString(DEFAULT_LOCALE, {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,

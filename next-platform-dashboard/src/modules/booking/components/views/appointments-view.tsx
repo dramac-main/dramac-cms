@@ -52,6 +52,7 @@ import { cn } from '@/lib/utils'
 import type { Appointment, AppointmentStatus } from '../../types/booking-types'
 import { toast } from 'sonner'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface AppointmentsViewProps {
   searchQuery?: string
   onAppointmentClick?: (appointment: Appointment) => void
@@ -89,7 +90,7 @@ function getTimeFromTimestamp(timestamp: string): string {
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr + 'T00:00:00')
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(DEFAULT_LOCALE, {
     weekday: 'short',
     month: 'short',
     day: 'numeric',

@@ -14,6 +14,7 @@ import { ChevronLeft, ChevronRight, Clock, Calendar, Loader2 } from 'lucide-reac
 import type { ComponentDefinition } from '@/types/studio'
 import { useBookingSlots } from '../../hooks/useBookingSlots'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -338,7 +339,7 @@ export function BookingCalendarBlock({
       : dateFormat === 'long'
         ? { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
         : { weekday: 'short', month: 'short', day: 'numeric' }
-    return date.toLocaleDateString('en-US', opts)
+    return date.toLocaleDateString(DEFAULT_LOCALE, opts)
   }
 
   const handleDateSelect = useCallback((date: Date) => {

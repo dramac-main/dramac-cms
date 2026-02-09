@@ -13,6 +13,7 @@
 
 import { paddle, isPaddleConfigured, isPaddleSandbox } from '../client';
 
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // Test Credit Card Numbers (Paddle Sandbox)
 // ============================================================================
@@ -118,7 +119,7 @@ export function mockTransactionCompletedWebhook(params: {
         tax: '0',
       },
     },
-    currency_code: params.currency || 'USD',
+    currency_code: params.currency || DEFAULT_CURRENCY,
     billed_at: new Date().toISOString(),
   });
 }

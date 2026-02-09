@@ -12,6 +12,7 @@
 'use client'
 
 import React, { useState, useEffect, createContext, useContext, useCallback, ReactNode } from 'react'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 import {
   getProducts,
   getCategories,
@@ -432,7 +433,7 @@ export function StorefrontWidget({
                   product={product} 
                   primaryColor={primaryColor}
                   isDark={isDark}
-                  currency={settings?.currency || 'USD'}
+                  currency={settings?.currency || DEFAULT_CURRENCY}
                 />
               ))}
             </div>
@@ -469,7 +470,7 @@ export function StorefrontWidget({
             onClose={() => setCartOpen(false)}
             primaryColor={primaryColor}
             isDark={isDark}
-            currency={settings?.currency || 'USD'}
+            currency={settings?.currency || DEFAULT_CURRENCY}
             onCheckout={onCheckout}
           />
         )}
@@ -602,7 +603,7 @@ function getDisplayPrice(product: Product, variantId: string | null, currency: s
     }
   }
 
-  const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency })
+  const formatter = new Intl.NumberFormat(DEFAULT_LOCALE, { style: 'currency', currency })
   
   if (comparePrice && comparePrice > price) {
     return (
@@ -679,7 +680,7 @@ function CartDrawer({ isOpen, onClose, primaryColor, isDark, currency, onCheckou
     }
   }
 
-  const formatter = new Intl.NumberFormat('en-US', { style: 'currency', currency })
+  const formatter = new Intl.NumberFormat(DEFAULT_LOCALE, { style: 'currency', currency })
 
   if (!isOpen) return null
 

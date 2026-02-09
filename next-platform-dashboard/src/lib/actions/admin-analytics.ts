@@ -12,6 +12,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireSuperAdmin } from "@/lib/auth/permissions";
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 import type {
   AdminTimeRange,
   PlatformOverviewMetrics,
@@ -84,9 +85,9 @@ function generateSeededRandom(seed: string, index: number = 0): number {
 }
 
 function formatCurrency(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: "currency",
-    currency: "USD",
+    currency: DEFAULT_CURRENCY,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(cents / 100);
@@ -357,8 +358,8 @@ export async function getPlatformTrends(
 
     trends.push({
       label: granularity === "month" 
-        ? current.toLocaleDateString("en-US", { month: "short", year: "2-digit" })
-        : current.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        ? current.toLocaleDateString(DEFAULT_LOCALE, { month: "short", year: "2-digit" })
+        : current.toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" }),
       date: dateStr,
       users: cumulativeUsers,
       agencies: cumulativeAgencies,
@@ -1078,7 +1079,7 @@ export async function getBillingActivity(
       agencyId: agency.id,
       agencyName: agency.name,
       amount,
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
       status: generateSeededRandom(seed, 3) > 0.05 ? "completed" : "pending",
       plan: agency.plan || "starter",
       timestamp: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),

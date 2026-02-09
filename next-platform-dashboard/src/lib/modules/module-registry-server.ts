@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { ModuleDefinition, ModuleCategory, ModulePricingType } from "./module-types";
 import { MODULE_CATALOG } from "./module-catalog";
 
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 /**
  * Server actions for loading dynamic modules from the database
  * These can be called from Server Components to get modules from Module Studio
@@ -72,7 +73,7 @@ export async function getPublishedStudioModules(): Promise<ModuleDefinition[]> {
       pricing: {
         type: "free", // Studio modules use tier-based pricing system
         amount: 0,
-        currency: "USD",
+        currency: DEFAULT_CURRENCY,
       },
       author: {
         name: "DRAMAC",
@@ -127,7 +128,7 @@ export async function getTestingStudioModules(): Promise<ModuleDefinition[]> {
       pricing: {
         type: "free",
         amount: 0,
-        currency: "USD",
+        currency: DEFAULT_CURRENCY,
       },
       author: {
         name: "DRAMAC",
@@ -357,7 +358,7 @@ export async function getModuleById(moduleIdOrSlug: string): Promise<ModuleDefin
         pricing: {
           type: "free",
           amount: 0,
-          currency: "USD",
+          currency: DEFAULT_CURRENCY,
         },
         author: {
           name: "DRAMAC",
@@ -465,7 +466,7 @@ function mapCatalogModuleToDefinition(m: Record<string, unknown>): ModuleDefinit
     pricing: {
       type: priceType,
       amount,
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     author: {
       name: (m.author_name as string) || "DRAMAC",

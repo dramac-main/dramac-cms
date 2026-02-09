@@ -17,6 +17,7 @@ import { Trash2, Package, Edit2, Check, X } from 'lucide-react'
 import type { QuoteItem } from '../../types/ecommerce-types'
 import type { QuoteBuilderItem } from '../../hooks/useQuotations'
 
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -49,7 +50,7 @@ export interface QuoteItemCardProps {
 // DEFAULT FORMATTER
 // ============================================================================
 
-function defaultFormatPrice(price: number, currency = '$'): string {
+function defaultFormatPrice(price: number, currency = DEFAULT_CURRENCY_SYMBOL): string {
   return `${currency}${price.toFixed(2)}`
 }
 
@@ -61,7 +62,7 @@ export function QuoteItemCard({
   item,
   builderItem,
   variant = 'readonly',
-  currency = '$',
+  currency = DEFAULT_CURRENCY_SYMBOL,
   formatPrice,
   onQuantityChange,
   onNotesChange,

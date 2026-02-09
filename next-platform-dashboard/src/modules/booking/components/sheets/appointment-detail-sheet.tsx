@@ -46,6 +46,7 @@ import { cn } from '@/lib/utils'
 import type { Appointment, AppointmentStatus } from '../../types/booking-types'
 import { toast } from 'sonner'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 interface AppointmentDetailSheetProps {
   appointment: Appointment | null
   open: boolean
@@ -63,7 +64,7 @@ const STATUS_OPTIONS: { value: AppointmentStatus; label: string; color: string }
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(DEFAULT_LOCALE, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -83,8 +84,8 @@ function formatTime(timestamp: string, format: '12h' | '24h' = '12h'): string {
   return `${h}:${minutes.toString().padStart(2, '0')} ${period}`
 }
 
-function formatCurrency(amount: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(amount: number, currency: string = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency: currency,
   }).format(amount)

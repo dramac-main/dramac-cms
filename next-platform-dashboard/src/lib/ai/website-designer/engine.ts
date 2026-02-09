@@ -56,6 +56,7 @@ import type {
 } from "./types";
 import type { BusinessDataContext, DataAvailability } from "./data-context/types";
 
+import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
 // =============================================================================
 // ENGINE CONFIGURATION
 // =============================================================================
@@ -826,7 +827,7 @@ Configure ALL footer props for a complete, professional result.`,
     return {
       theme: "light",
       language: "en",
-      timezone: (this.context?.site?.settings as Record<string, unknown>)?.timezone as string || "UTC",
+      timezone: (this.context?.site?.settings as Record<string, unknown>)?.timezone as string || DEFAULT_TIMEZONE,
       favicon: this.context?.branding.favicon_url,
       socialImage: this.context?.branding.logo_url,
     };
@@ -1031,7 +1032,7 @@ Configure ALL footer props for a complete, professional result.`,
     return {
       theme: "light",
       language: "en",
-      timezone: "UTC",
+      timezone: DEFAULT_TIMEZONE,
     };
   }
 

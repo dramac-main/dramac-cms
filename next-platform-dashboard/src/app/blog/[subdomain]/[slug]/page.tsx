@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // Create a Supabase client with service role for public access
 function getSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -143,7 +144,7 @@ export default async function PublicPostPage({
             <p className="font-medium text-gray-900">{author?.full_name || "Unknown Author"}</p>
             <div className="flex items-center gap-2 text-sm">
               <span>
-                {new Date(post.published_at).toLocaleDateString("en-US", {
+                {new Date(post.published_at).toLocaleDateString(DEFAULT_LOCALE, {
                   month: "long",
                   day: "numeric",
                   year: "numeric",
@@ -216,7 +217,7 @@ export default async function PublicPostPage({
                   {relatedPost.title}
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  {new Date(relatedPost.published_at).toLocaleDateString("en-US", {
+                  {new Date(relatedPost.published_at).toLocaleDateString(DEFAULT_LOCALE, {
                     month: "short",
                     day: "numeric",
                   })}

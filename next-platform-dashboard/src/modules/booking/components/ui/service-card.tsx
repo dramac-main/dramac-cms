@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { Service, Staff } from '../../types/booking-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -79,7 +80,7 @@ function formatDuration(minutes: number): string {
 }
 
 function formatPrice(price: number, currency: string): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
     minimumFractionDigits: 0,
@@ -103,7 +104,7 @@ function getInitials(name: string): string {
 export function ServiceCard({
   service,
   variant = 'grid',
-  currency = 'USD',
+  currency = DEFAULT_CURRENCY,
   bookingCount = 0,
   assignedStaff = [],
   onClick,

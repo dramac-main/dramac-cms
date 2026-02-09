@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/tooltip"
 import type { Appointment, AppointmentStatus } from '../../types/booking-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -177,9 +178,9 @@ export function CalendarTimeline({
                 <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="text-sm font-medium px-2 min-w-[140px] text-center">
-                {weekDates[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {weekDates[0].toLocaleDateString(DEFAULT_LOCALE, { month: 'short', day: 'numeric' })}
                 {' - '}
-                {weekDates[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                {weekDates[6].toLocaleDateString(DEFAULT_LOCALE, { month: 'short', day: 'numeric', year: 'numeric' })}
               </span>
               <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigateWeek('next')}>
                 <ChevronRight className="h-4 w-4" />
@@ -206,7 +207,7 @@ export function CalendarTimeline({
                     )}
                   >
                     <div className="text-xs text-muted-foreground uppercase">
-                      {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                      {date.toLocaleDateString(DEFAULT_LOCALE, { weekday: 'short' })}
                     </div>
                     <div className={cn(
                       "text-lg font-semibold mt-1",
@@ -305,13 +306,13 @@ export function CalendarTimeline({
                                     <p className="text-sm text-muted-foreground">{appointment.service.name}</p>
                                   )}
                                   <p className="text-xs">
-                                    {new Date(appointment.start_time).toLocaleTimeString('en-US', { 
+                                    {new Date(appointment.start_time).toLocaleTimeString(DEFAULT_LOCALE, { 
                                       hour: 'numeric', 
                                       minute: '2-digit',
                                       hour12: true 
                                     })}
                                     {' - '}
-                                    {new Date(appointment.end_time).toLocaleTimeString('en-US', { 
+                                    {new Date(appointment.end_time).toLocaleTimeString(DEFAULT_LOCALE, { 
                                       hour: 'numeric', 
                                       minute: '2-digit',
                                       hour12: true 
@@ -391,7 +392,7 @@ export function DayTimeline({
         >
           <div className="flex-shrink-0 text-sm">
             <Clock className="h-4 w-4 inline mr-1" />
-            {new Date(appointment.start_time).toLocaleTimeString('en-US', { 
+            {new Date(appointment.start_time).toLocaleTimeString(DEFAULT_LOCALE, { 
               hour: 'numeric', 
               minute: '2-digit',
               hour12: true 

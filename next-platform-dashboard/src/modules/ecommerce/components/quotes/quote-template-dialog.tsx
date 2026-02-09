@@ -8,6 +8,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import {
   Dialog,
   DialogContent,
@@ -78,7 +79,7 @@ export function QuoteTemplateDialog({
   const [discountValue, setDiscountValue] = useState(0)
   const [taxRate, setTaxRate] = useState(0)
   const [validityDays, setValidityDays] = useState(30)
-  const [currency, setCurrency] = useState('USD')
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
   
   const [primaryColor, setPrimaryColor] = useState('#2563eb')
   const [showLogo, setShowLogo] = useState(true)
@@ -98,7 +99,7 @@ export function QuoteTemplateDialog({
       setDiscountValue(template.default_discount_value)
       setTaxRate(0) // Not in existing interface
       setValidityDays(template.default_validity_days)
-      setCurrency('USD') // Not in existing interface
+      setCurrency(DEFAULT_CURRENCY) // Not in existing interface
       setPrimaryColor('#3b82f6') // Not in existing interface
       setShowLogo(true) // Not in existing interface
     } else if (open) {
@@ -115,7 +116,7 @@ export function QuoteTemplateDialog({
       setDiscountValue(0)
       setTaxRate(0)
       setValidityDays(30)
-      setCurrency('USD')
+      setCurrency(DEFAULT_CURRENCY)
       setPrimaryColor('#2563eb')
       setShowLogo(true)
     }

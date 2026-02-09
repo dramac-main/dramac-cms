@@ -35,6 +35,7 @@ import { QuoteStatusBadge, getQuoteStatusLabel } from './QuoteStatusBadge'
 import { QuotePriceBreakdown } from './QuotePriceBreakdown'
 import type { Quote, QuoteStatus } from '../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -82,7 +83,7 @@ const STATUS_OPTIONS: { value: QuoteStatus | 'all'; label: string }[] = [
 // ============================================================================
 
 function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('en-US', {
+  return new Date(date).toLocaleDateString(DEFAULT_LOCALE, {
     year: 'numeric',
     month: 'short',
     day: 'numeric'

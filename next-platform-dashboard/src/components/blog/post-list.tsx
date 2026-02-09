@@ -45,6 +45,7 @@ import { updatePost, deletePost, type BlogPost } from "@/lib/blog/post-service";
 import { toast } from "sonner";
 import { useState } from "react";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface PostListProps {
   posts: BlogPost[];
   siteId: string;
@@ -128,7 +129,7 @@ export function PostList({
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
       month: "short",
       day: "numeric",
       year: "numeric",

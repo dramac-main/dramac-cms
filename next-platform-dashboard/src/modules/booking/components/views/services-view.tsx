@@ -52,6 +52,7 @@ import { cn } from '@/lib/utils'
 import type { Service } from '../../types/booking-types'
 import { toast } from 'sonner'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 interface ServicesViewProps {
   onServiceClick?: (service: Service) => void
   onCreateClick?: () => void
@@ -65,8 +66,8 @@ function formatDuration(minutes: number): string {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`
 }
 
-function formatPrice(price: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatPrice(price: number, currency: string = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency: currency,
   }).format(price)
@@ -269,7 +270,7 @@ export function ServicesView({ onServiceClick, onCreateClick, onEditClick }: Ser
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">
-                        {formatPrice(service.price ?? 0, service.currency || 'USD')}
+                        {formatPrice(service.price ?? 0, service.currency || DEFAULT_CURRENCY)}
                       </div>
                     </TableCell>
                     <TableCell>

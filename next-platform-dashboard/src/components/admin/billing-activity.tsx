@@ -32,6 +32,7 @@ import { getBillingActivity, getInvoiceMetrics } from "@/lib/actions/admin-analy
 import type { BillingActivityItem, InvoiceMetrics, AdminTimeRange } from "@/types/admin-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // Types
 // ============================================================================
@@ -97,7 +98,7 @@ function formatRelativeTime(date: Date): string {
   if (diffMins < 60) return `${diffMins}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return date.toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" });
 }
 
 // ============================================================================

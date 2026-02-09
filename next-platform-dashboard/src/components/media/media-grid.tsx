@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import type { MediaFile } from "@/lib/media/media-service";
 import { toast } from "sonner";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface MediaGridProps {
   files: MediaFile[];
   selectedIds: string[];
@@ -58,7 +59,7 @@ export function MediaGrid({
   };
 
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
       month: "short",
       day: "numeric",
       year: "numeric",

@@ -41,6 +41,7 @@ import { getAgencyGrowth } from "@/lib/actions/admin-analytics";
 import type { AgencyGrowthData, AdminTimeRange } from "@/types/admin-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // Types
 // ============================================================================
@@ -136,7 +137,7 @@ function NewVsChurnedChart({ data }: { data: AgencyGrowthData[] }) {
             axisLine={false}
             tickFormatter={(value) => {
               const date = new Date(value + "-01");
-              return date.toLocaleDateString("en-US", { month: "short" });
+              return date.toLocaleDateString(DEFAULT_LOCALE, { month: "short" });
             }}
           />
           <YAxis
@@ -151,7 +152,7 @@ function NewVsChurnedChart({ data }: { data: AgencyGrowthData[] }) {
               return (
                 <div className="rounded-lg border bg-background p-3 shadow-md">
                   <p className="font-medium mb-2">
-                    {date.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                    {date.toLocaleDateString(DEFAULT_LOCALE, { month: "long", year: "numeric" })}
                   </p>
                   {payload.map((entry, i) => (
                     <div key={i} className="flex items-center gap-2 text-sm">
@@ -203,7 +204,7 @@ function ConversionRateChart({ data }: { data: AgencyGrowthData[] }) {
             axisLine={false}
             tickFormatter={(value) => {
               const date = new Date(value + "-01");
-              return date.toLocaleDateString("en-US", { month: "short" });
+              return date.toLocaleDateString(DEFAULT_LOCALE, { month: "short" });
             }}
           />
           <YAxis
@@ -219,7 +220,7 @@ function ConversionRateChart({ data }: { data: AgencyGrowthData[] }) {
               return (
                 <div className="rounded-lg border bg-background p-2 shadow-md">
                   <p className="font-medium">
-                    {date.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                    {date.toLocaleDateString(DEFAULT_LOCALE, { month: "long", year: "numeric" })}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Conversion Rate: <span className="font-medium">{payload[0].value?.toFixed(1)}%</span>
@@ -260,7 +261,7 @@ function LTVChart({ data }: { data: AgencyGrowthData[] }) {
             axisLine={false}
             tickFormatter={(value) => {
               const date = new Date(value + "-01");
-              return date.toLocaleDateString("en-US", { month: "short" });
+              return date.toLocaleDateString(DEFAULT_LOCALE, { month: "short" });
             }}
           />
           <YAxis
@@ -276,7 +277,7 @@ function LTVChart({ data }: { data: AgencyGrowthData[] }) {
               return (
                 <div className="rounded-lg border bg-background p-2 shadow-md">
                   <p className="font-medium">
-                    {date.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                    {date.toLocaleDateString(DEFAULT_LOCALE, { month: "long", year: "numeric" })}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Avg LTV: <span className="font-medium">${((payload[0].value as number) / 100).toLocaleString()}</span>
@@ -435,7 +436,7 @@ export function AgencyGrowthComponent({
                   return (
                     <tr key={row.period} className="border-b last:border-0">
                       <td className="py-2">
-                        {date.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                        {date.toLocaleDateString(DEFAULT_LOCALE, { month: "short", year: "numeric" })}
                       </td>
                       <td className="text-right py-2 text-green-600">+{row.newAgencies}</td>
                       <td className="text-right py-2 text-red-600">-{row.churnedAgencies}</td>

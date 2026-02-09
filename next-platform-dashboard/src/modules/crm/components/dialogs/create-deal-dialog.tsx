@@ -32,6 +32,7 @@ import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import type { DealStatus, PipelineStage } from '../../types/crm-types'
 
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 // Local form data interface (excludes site_id which is added by context)
 interface FormData {
   name: string
@@ -82,7 +83,7 @@ export function CreateDealDialog({
     probability: '0',
     expected_close_date: '',
     description: '',
-    currency: 'USD'
+    currency: DEFAULT_CURRENCY
   })
 
   // Load stages when pipeline changes
@@ -129,7 +130,7 @@ export function CreateDealDialog({
       probability: '0',
       expected_close_date: '',
       description: '',
-      currency: 'USD'
+      currency: DEFAULT_CURRENCY
     })
   }
 

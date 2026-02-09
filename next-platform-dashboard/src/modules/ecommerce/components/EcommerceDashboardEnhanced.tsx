@@ -51,6 +51,7 @@ import { InventoryAlert, InventoryAlertBanner } from './ui/inventory-alert'
 // Import types
 import type { Product, Order, Category, ProductStatus, OrderStatus } from '../types/ecommerce-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -107,7 +108,7 @@ function generateMockRevenueData(): RevenueDataPoint[] {
       date: date.toISOString().split('T')[0],
       revenue: Math.floor(Math.random() * 5000) + 1000,
       orders: Math.floor(Math.random() * 30) + 5,
-      label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      label: date.toLocaleDateString(DEFAULT_LOCALE, { month: 'short', day: 'numeric' }),
     })
   }
   
@@ -131,7 +132,7 @@ export function EcommerceDashboardEnhanced({
   categories = [],
   isLoading = false,
   error,
-  currency = 'USD',
+  currency = DEFAULT_CURRENCY,
   onCreateProduct,
   onCreateCategory,
   onCreateDiscount,

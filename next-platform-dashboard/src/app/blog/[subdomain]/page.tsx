@@ -3,6 +3,7 @@ import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
 import { Badge } from "@/components/ui/badge";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // Create a Supabase client with service role for public access
 function getSupabaseClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -132,7 +133,7 @@ export default async function PublicBlogPage({
                   <span>{author?.full_name || "Unknown Author"}</span>
                   <span>•</span>
                   <span>
-                    {new Date(post.published_at).toLocaleDateString("en-US", {
+                    {new Date(post.published_at).toLocaleDateString(DEFAULT_LOCALE, {
                       month: "long",
                       day: "numeric",
                       year: "numeric",

@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { CalendarPostCard } from './calendar-post-card'
 import type { SocialPost } from '../../types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -131,8 +132,8 @@ export function CalendarWeekView({
   const weekRangeStr = useMemo(() => {
     const start = weekDates[0]
     const end = weekDates[6]
-    const startMonth = start.toLocaleDateString('en-US', { month: 'short' })
-    const endMonth = end.toLocaleDateString('en-US', { month: 'short' })
+    const startMonth = start.toLocaleDateString(DEFAULT_LOCALE, { month: 'short' })
+    const endMonth = end.toLocaleDateString(DEFAULT_LOCALE, { month: 'short' })
     
     if (startMonth === endMonth) {
       return `${startMonth} ${start.getDate()} - ${end.getDate()}, ${end.getFullYear()}`

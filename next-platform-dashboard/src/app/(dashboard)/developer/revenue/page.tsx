@@ -4,6 +4,7 @@
 "use client";
 
 import { useState } from "react";
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 import {
   DollarSign,
   TrendingUp,
@@ -64,9 +65,9 @@ export default function RevenueDashboardPage() {
   const exportRevenue = useExportRevenue();
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: "currency",
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     }).format(amount);
   };
 

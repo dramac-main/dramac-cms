@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -56,8 +57,8 @@ export interface RevenueChartProps {
 // HELPERS
 // =============================================================================
 
-function formatCurrency(value: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(value: number, currency: string = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
     minimumFractionDigits: 0,
@@ -65,7 +66,7 @@ function formatCurrency(value: number, currency: string = 'USD'): string {
   }).format(value)
 }
 
-function formatCompactCurrency(value: number, currency: string = 'USD'): string {
+function formatCompactCurrency(value: number, currency: string = DEFAULT_CURRENCY): string {
   if (value >= 1000000) {
     return `${(value / 1000000).toFixed(1)}M`
   }
@@ -227,7 +228,7 @@ function ChartBar({
 export function RevenueChart({
   data,
   title = "Revenue",
-  currency = "USD",
+  currency = DEFAULT_CURRENCY,
   timeRange = "30d",
   onTimeRangeChange,
   showTimeRangeSelector = true,
@@ -424,7 +425,7 @@ export function RevenueChart({
                         textAnchor="middle"
                         className="text-[10px] fill-muted-foreground"
                       >
-                        {d.label || new Date(d.date).toLocaleDateString('en-US', { 
+                        {d.label || new Date(d.date).toLocaleDateString(DEFAULT_LOCALE, { 
                           month: 'short', 
                           day: 'numeric' 
                         })}

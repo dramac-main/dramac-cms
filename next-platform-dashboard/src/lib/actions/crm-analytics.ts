@@ -8,6 +8,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 import type {
   CRMTimeRange,
   PipelineOverview,
@@ -156,7 +157,7 @@ export async function getDealVelocity(
   
   let currentDate = new Date(start);
   while (currentDate <= end) {
-    const month = currentDate.toLocaleDateString("en-US", { month: "short" });
+    const month = currentDate.toLocaleDateString(DEFAULT_LOCALE, { month: "short" });
     const day = currentDate.getDate();
     const period = interval === 30 ? month : `${month} ${day}`;
     
@@ -353,7 +354,7 @@ export async function getContactGrowth(
     total += newContacts;
 
     data.push({
-      date: currentDate.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      date: currentDate.toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" }),
       total,
       new: newContacts,
       converted,
@@ -430,7 +431,7 @@ export async function getActivityTimeline(
     const tasks = Math.floor(2 + random() * 6);
 
     data.push({
-      date: currentDate.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      date: currentDate.toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" }),
       calls,
       emails,
       meetings,

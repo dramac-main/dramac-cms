@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 export interface PlatformStats {
   users: {
     total: number;
@@ -237,7 +238,7 @@ export async function getAgencyGrowthData(months = 6): Promise<{ month: string; 
       .select("id", { count: "exact", head: true })
       .lte("created_at", endDate.toISOString());
 
-    const monthName = date.toLocaleDateString("en-US", { month: "short" });
+    const monthName = date.toLocaleDateString(DEFAULT_LOCALE, { month: "short" });
     const agencyCount = count || 0;
     
     data.push({
@@ -265,7 +266,7 @@ export async function getUserGrowthData(months = 6): Promise<{ month: string; us
       .select("id", { count: "exact", head: true })
       .lte("created_at", endDate.toISOString());
 
-    const monthName = date.toLocaleDateString("en-US", { month: "short" });
+    const monthName = date.toLocaleDateString(DEFAULT_LOCALE, { month: "short" });
     
     data.push({
       month: monthName,

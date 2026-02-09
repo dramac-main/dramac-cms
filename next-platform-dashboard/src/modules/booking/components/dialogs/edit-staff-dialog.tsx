@@ -34,6 +34,7 @@ import { assignStaffToService, removeStaffFromService } from '../../actions/book
 import { toast } from 'sonner'
 import type { Staff } from '../../types/booking-types'
 
+import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
 // Common timezones
 const TIMEZONES = [
   { value: 'UTC', label: 'UTC' },
@@ -64,7 +65,7 @@ export function EditStaffDialog({ staff, open, onOpenChange }: EditStaffDialogPr
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [bio, setBio] = useState('')
-  const [timezone, setTimezone] = useState('UTC')
+  const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE)
   const [acceptBookings, setAcceptBookings] = useState(true)
   
   // Service assignment state
@@ -78,7 +79,7 @@ export function EditStaffDialog({ staff, open, onOpenChange }: EditStaffDialogPr
       setEmail(staff.email || '')
       setPhone(staff.phone || '')
       setBio(staff.bio || '')
-      setTimezone(staff.timezone || 'UTC')
+      setTimezone(staff.timezone || DEFAULT_TIMEZONE)
       setAcceptBookings(staff.accept_bookings)
       
       // Load assigned services

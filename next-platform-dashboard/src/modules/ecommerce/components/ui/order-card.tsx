@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { Order, OrderStatus, PaymentStatus, FulfillmentStatus } from "../../types/ecommerce-types"
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -127,15 +128,15 @@ const fulfillmentStatusConfig: Record<FulfillmentStatus, { label: string; classN
 // HELPERS
 // =============================================================================
 
-function formatPrice(price: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatPrice(price: number, currency: string = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
   }).format(price)
 }
 
 function formatDate(date: string): string {
-  return new Date(date).toLocaleDateString('en-US', {
+  return new Date(date).toLocaleDateString(DEFAULT_LOCALE, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -267,7 +268,7 @@ function OrderDefaultCard({
   onRefund,
   onCancel,
   onMarkDelivered,
-  currency = 'USD',
+  currency = DEFAULT_CURRENCY,
   className,
   animationDelay = 0,
 }: OrderCardProps) {
@@ -420,7 +421,7 @@ function OrderDefaultCard({
 function OrderCompactCard({
   order,
   onClick,
-  currency = 'USD',
+  currency = DEFAULT_CURRENCY,
   className,
   animationDelay = 0,
 }: OrderCardProps) {

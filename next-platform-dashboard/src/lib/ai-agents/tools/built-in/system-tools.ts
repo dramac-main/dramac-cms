@@ -7,6 +7,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type { ToolDefinitionConfig } from '../types'
 
+import { DEFAULT_LOCALE, DEFAULT_TIMEZONE } from '@/lib/locale-config'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AgentDB = any
 
@@ -168,18 +169,18 @@ export const systemTools: ToolDefinitionConfig[] = [
       properties: {
         timezone: { 
           type: 'string', 
-          description: 'Timezone (e.g., "America/New_York")',
-          default: 'UTC'
+          description: 'Timezone (e.g., "Africa/Lusaka")',
+          default: 'Africa/Lusaka'
         }
       }
     },
     
     handler: async (input) => {
-      const timezone = (input.timezone as string) || 'UTC'
+      const timezone = (input.timezone as string) || DEFAULT_TIMEZONE
       const now = new Date()
       
       try {
-        const formatted = now.toLocaleString('en-US', { 
+        const formatted = now.toLocaleString(DEFAULT_LOCALE, { 
           timeZone: timezone,
           dateStyle: 'full',
           timeStyle: 'long'
@@ -200,7 +201,7 @@ export const systemTools: ToolDefinitionConfig[] = [
           data: {
             iso: now.toISOString(),
             formatted: now.toString(),
-            timezone: 'UTC',
+            timezone: DEFAULT_TIMEZONE,
             timestamp: now.getTime()
           }
         }

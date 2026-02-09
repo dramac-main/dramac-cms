@@ -140,8 +140,8 @@ export const CRMModuleManifest: ModuleManifest = {
         type: 'string',
         title: 'Default Currency',
         description: 'Default currency for deal values',
-        default: 'USD',
-        enum: ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
+        default: 'ZMW',
+        enum: ['ZMW', 'USD', 'EUR', 'GBP', 'ZAR', 'CAD', 'AUD']
       },
       enableEmailTracking: {
         type: 'boolean',

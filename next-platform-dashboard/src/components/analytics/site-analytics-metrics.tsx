@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { SiteOverviewMetrics, AnalyticsMetric } from "@/types/site-analytics";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface AnalyticsMetricCardProps {
   title: string;
   metric: AnalyticsMetric;
@@ -38,7 +39,7 @@ export function formatDuration(seconds: number): string {
 
 // Format number with commas
 export function formatNumber(value: number): string {
-  return new Intl.NumberFormat("en-US").format(Math.round(value));
+  return new Intl.NumberFormat(DEFAULT_LOCALE).format(Math.round(value));
 }
 
 // Format percentage

@@ -1,7 +1,9 @@
 /**
  * Email notification service for form submissions
- * In production, integrate with Resend, SendGrid, Postmark, etc.
+ * Uses Resend for email delivery via the centralized email system.
  */
+
+import { sendEmail } from '@/lib/email/send-email'
 
 export interface NotificationPayload {
   to: string[];
@@ -37,28 +39,35 @@ export async function sendSubmissionNotification(
     
     // Build email content
     const subject = payload.subject || `New submission from ${payload.formName}`;
-    const textContent = buildTextEmail(payload, formattedData);
-    const _htmlContent = buildHtmlEmail(payload, formattedData);
 
-    // In production, send via email provider
-    // Example with Resend:
-    // const { data, error } = await resend.emails.send({
-    //   from: "notifications@yourdomain.com",
-    //   to: payload.to,
-    //   subject,
-    //   text: textContent,
-    //   html: htmlContent,
-    // });
+    // Send via centralized email system using Resend
+    const fields = formattedData.map(({ key, value }) => ({
+      label: key,
+      value: value,
+    }));
+
+    const result = await sendEmail({
+      to: payload.to.map(email => ({ email })),
+      type: 'form_submission_owner',
+      data: {
+        formName: payload.formName,
+        siteName: payload.siteName || '',
+        submittedAt: new Date(payload.submittedAt).toLocaleString('en-ZM', { timeZone: 'Africa/Lusaka' }),
+        fields,
+        dashboardUrl: payload.pageUrl || '',
+      },
+    });
+
+    if (!result.success) {
+      console.error("[NotificationService] Email send failed:", result.error);
+      return { success: false, error: result.error };
+    }
+
+    console.log(`[NotificationService] Sent form submission email for "${payload.formName}" to ${payload.to.join(", ")}`);
     
-    // For now, just log the email
-    console.log("[NotificationService] Would send email:");
-    console.log("  To:", payload.to.join(", "));
-    console.log("  Subject:", subject);
-    console.log("  Content:\n", textContent);
-
     return { 
       success: true, 
-      messageId: `mock-${Date.now()}` 
+      messageId: result.messageId 
     };
   } catch (error) {
     console.error("[NotificationService] Failed to send notification:", error);

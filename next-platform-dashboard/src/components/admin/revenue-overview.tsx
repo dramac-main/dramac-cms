@@ -36,6 +36,7 @@ import { getRevenueMetrics, getRevenueTrends, getRevenueByPlan } from "@/lib/act
 import type { RevenueMetrics, RevenueTrendData, RevenueByPlan, AdminTimeRange } from "@/types/admin-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // Types
 // ============================================================================
@@ -194,7 +195,7 @@ function RevenueTrendChart({ data }: { data: RevenueTrendData[] }) {
                 axisLine={false}
                 tickFormatter={(value) => {
                   const date = new Date(value + "-01");
-                  return date.toLocaleDateString("en-US", { month: "short" });
+                  return date.toLocaleDateString(DEFAULT_LOCALE, { month: "short" });
                 }}
               />
               <YAxis
@@ -210,7 +211,7 @@ function RevenueTrendChart({ data }: { data: RevenueTrendData[] }) {
                   return (
                     <div className="rounded-lg border bg-background p-2 shadow-md">
                       <p className="font-medium">
-                        {date.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                        {date.toLocaleDateString(DEFAULT_LOCALE, { month: "long", year: "numeric" })}
                       </p>
                       <p className="text-sm">
                         MRR: <span className="font-medium">{formatCurrency(payload[0].payload.mrr)}</span>

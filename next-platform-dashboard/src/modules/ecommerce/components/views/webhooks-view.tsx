@@ -64,6 +64,7 @@ import { useWebhooks } from '../../hooks/use-integrations'
 import { WebhookEndpointDialog } from '../dialogs/webhook-endpoint-dialog'
 import type { WebhookEndpoint, WebhookDelivery, CreateWebhookInput } from '../../types/integration-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface WebhooksViewProps {
   siteId: string
 }
@@ -137,7 +138,7 @@ export function WebhooksView({ siteId }: WebhooksViewProps) {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
       month: 'short',
       day: 'numeric',
       hour: 'numeric',

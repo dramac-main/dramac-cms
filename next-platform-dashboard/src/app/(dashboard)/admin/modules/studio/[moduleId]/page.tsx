@@ -81,6 +81,7 @@ import {
 } from "@/components/ui/tooltip";
 import { createClient } from "@/lib/supabase/client";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 const statusConfig = {
   draft: {
     label: "Draft",
@@ -110,7 +111,7 @@ const deploymentStatusIcons = {
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString(DEFAULT_LOCALE, {
     month: "short",
     day: "numeric",
     year: "numeric",

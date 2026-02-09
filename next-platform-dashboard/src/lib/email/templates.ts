@@ -352,4 +352,342 @@ ${data.upgradeUrl ? `Choose a plan: ${data.upgradeUrl}` : ''}
 Have questions? Reply to this email and we'll help you find the right plan.
     `.trim(),
   },
+
+  // ============================================
+  // BOOKING EMAILS
+  // ============================================
+
+  booking_confirmation_customer: {
+    subject: (data) => `Booking ${data.status === 'confirmed' ? 'Confirmed' : 'Received'} - ${data.serviceName}`,
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">Your Booking is ${data.status === 'confirmed' ? 'Confirmed! ✅' : 'Received! 📅'}</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || 'there'},</p>
+      <p style="${STYLES.text}">
+        ${data.status === 'confirmed' 
+          ? 'Your booking has been confirmed. Here are the details:' 
+          : 'We have received your booking request. You\'ll receive a confirmation once it\'s approved.'}
+      </p>
+      <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 8px 0; color: #6b7280; width: 120px;">Service:</td><td style="padding: 8px 0; font-weight: 600;">${data.serviceName}</td></tr>
+          ${data.staffName ? `<tr><td style="padding: 8px 0; color: #6b7280;">With:</td><td style="padding: 8px 0;">${data.staffName}</td></tr>` : ''}
+          <tr><td style="padding: 8px 0; color: #6b7280;">Date:</td><td style="padding: 8px 0;">${data.date}</td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280;">Time:</td><td style="padding: 8px 0;">${data.time}</td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280;">Duration:</td><td style="padding: 8px 0;">${data.duration}</td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280;">Price:</td><td style="padding: 8px 0; font-weight: 600;">${data.price}</td></tr>
+        </table>
+      </div>
+      <p style="${STYLES.text}">Booking ID: <code style="background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">${data.bookingId}</code></p>
+      <p style="${STYLES.muted}">If you need to make changes, please contact ${data.businessName}.</p>
+    `),
+    text: (data) => `
+Your Booking is ${data.status === 'confirmed' ? 'Confirmed!' : 'Received!'}
+
+Hi ${data.customerName || 'there'},
+
+${data.status === 'confirmed' ? 'Your booking has been confirmed.' : 'We have received your booking request.'}
+
+Service: ${data.serviceName}
+${data.staffName ? `With: ${data.staffName}` : ''}
+Date: ${data.date}
+Time: ${data.time}
+Duration: ${data.duration}
+Price: ${data.price}
+
+Booking ID: ${data.bookingId}
+
+If you need to make changes, please contact ${data.businessName}.
+    `.trim(),
+  },
+
+  booking_confirmation_owner: {
+    subject: (data) => `🔔 New Booking: ${data.serviceName} - ${data.customerName}`,
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">📅 New Booking Received!</h1>
+      <p style="${STYLES.text}">You have a new booking from <strong>${data.customerName}</strong>.</p>
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 20px 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 8px 0; color: #6b7280; width: 120px;">Customer:</td><td style="padding: 8px 0; font-weight: 600;">${data.customerName}</td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280;">Email:</td><td style="padding: 8px 0;">${data.customerEmail}</td></tr>
+          ${data.customerPhone ? `<tr><td style="padding: 8px 0; color: #6b7280;">Phone:</td><td style="padding: 8px 0;">${data.customerPhone}</td></tr>` : ''}
+          <tr><td style="padding: 8px 0; color: #6b7280;">Service:</td><td style="padding: 8px 0; font-weight: 600;">${data.serviceName}</td></tr>
+          ${data.staffName ? `<tr><td style="padding: 8px 0; color: #6b7280;">Staff:</td><td style="padding: 8px 0;">${data.staffName}</td></tr>` : ''}
+          <tr><td style="padding: 8px 0; color: #6b7280;">Date:</td><td style="padding: 8px 0;">${data.date}</td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280;">Time:</td><td style="padding: 8px 0;">${data.time}</td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280;">Duration:</td><td style="padding: 8px 0;">${data.duration}</td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280;">Price:</td><td style="padding: 8px 0; font-weight: 600;">${data.price}</td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280;">Status:</td><td style="padding: 8px 0;"><span style="background: ${data.status === 'confirmed' ? '#dcfce7; color: #166534' : '#fef9c3; color: #854d0e'}; padding: 2px 8px; border-radius: 12px; font-size: 13px;">${data.status}</span></td></tr>
+        </table>
+      </div>
+      <p style="margin: 24px 0;">
+        <a href="${data.dashboardUrl}" style="${STYLES.button}">View in Dashboard</a>
+      </p>
+    `),
+    text: (data) => `
+📅 New Booking Received!
+
+Customer: ${data.customerName}
+Email: ${data.customerEmail}
+${data.customerPhone ? `Phone: ${data.customerPhone}` : ''}
+
+Service: ${data.serviceName}
+${data.staffName ? `Staff: ${data.staffName}` : ''}
+Date: ${data.date}
+Time: ${data.time}
+Duration: ${data.duration}
+Price: ${data.price}
+Status: ${data.status}
+
+View in dashboard: ${data.dashboardUrl}
+    `.trim(),
+  },
+
+  booking_cancelled_customer: {
+    subject: () => 'Booking Cancelled',
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">Booking Cancelled</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || 'there'},</p>
+      <p style="${STYLES.text}">Your booking for <strong>${data.serviceName}</strong> on ${data.date} at ${data.time} has been cancelled.</p>
+      <p style="${STYLES.text}">If you'd like to rebook, please visit our booking page.</p>
+      <p style="${STYLES.muted}">Booking ID: ${data.bookingId}</p>
+    `),
+    text: (data) => `
+Booking Cancelled
+
+Hi ${data.customerName || 'there'},
+
+Your booking for ${data.serviceName} on ${data.date} at ${data.time} has been cancelled.
+
+If you'd like to rebook, please visit our booking page.
+
+Booking ID: ${data.bookingId}
+    `.trim(),
+  },
+
+  booking_cancelled_owner: {
+    subject: (data) => `❌ Booking Cancelled: ${data.customerName} - ${data.serviceName}`,
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">Booking Cancelled</h1>
+      <p style="${STYLES.text}">A booking has been cancelled.</p>
+      <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 8px 0; color: #6b7280;">Customer:</td><td style="padding: 8px 0;">${data.customerName}</td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280;">Service:</td><td style="padding: 8px 0;">${data.serviceName}</td></tr>
+          <tr><td style="padding: 8px 0; color: #6b7280;">Date/Time:</td><td style="padding: 8px 0;">${data.date} at ${data.time}</td></tr>
+        </table>
+      </div>
+      <p style="margin: 24px 0;">
+        <a href="${data.dashboardUrl}" style="${STYLES.button}">View in Dashboard</a>
+      </p>
+    `),
+    text: (data) => `
+Booking Cancelled
+
+Customer: ${data.customerName}
+Service: ${data.serviceName}
+Date/Time: ${data.date} at ${data.time}
+
+View in dashboard: ${data.dashboardUrl}
+    `.trim(),
+  },
+
+  // ============================================
+  // E-COMMERCE EMAILS
+  // ============================================
+
+  order_confirmation_customer: {
+    subject: (data) => `Order Confirmed - #${data.orderNumber}`,
+    html: (data) => {
+      const items = (data.items as Array<{ name: string; quantity: number; price: string }>) || [];
+      const itemRows = items.map(item => `
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #f3f4f6;">${item.name}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #f3f4f6; text-align: center;">${item.quantity}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #f3f4f6; text-align: right;">${item.price}</td>
+        </tr>
+      `).join('');
+
+      return wrapHtml(`
+        <h1 style="${STYLES.heading}">Order Confirmed! 🎉</h1>
+        <p style="${STYLES.text}">Hi ${data.customerName || 'there'},</p>
+        <p style="${STYLES.text}">Thank you for your order! Here's your order summary:</p>
+        <p style="${STYLES.text}"><strong>Order #${data.orderNumber}</strong></p>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <thead>
+            <tr style="background: #f9fafb;">
+              <th style="padding: 10px; text-align: left; border-bottom: 2px solid #e5e7eb;">Item</th>
+              <th style="padding: 10px; text-align: center; border-bottom: 2px solid #e5e7eb;">Qty</th>
+              <th style="padding: 10px; text-align: right; border-bottom: 2px solid #e5e7eb;">Price</th>
+            </tr>
+          </thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+        <div style="background: #f9fafb; border-radius: 8px; padding: 16px; margin: 20px 0;">
+          <table style="width: 100%;">
+            <tr><td style="padding: 4px 0; color: #6b7280;">Subtotal:</td><td style="padding: 4px 0; text-align: right;">${data.subtotal}</td></tr>
+            <tr><td style="padding: 4px 0; color: #6b7280;">Shipping:</td><td style="padding: 4px 0; text-align: right;">${data.shipping}</td></tr>
+            <tr><td style="padding: 4px 0; color: #6b7280;">Tax:</td><td style="padding: 4px 0; text-align: right;">${data.tax}</td></tr>
+            <tr><td style="padding: 8px 0 0; font-weight: 700; border-top: 2px solid #e5e7eb;">Total:</td><td style="padding: 8px 0 0; text-align: right; font-weight: 700; font-size: 18px; border-top: 2px solid #e5e7eb;">${data.total}</td></tr>
+          </table>
+        </div>
+        ${data.shippingAddress ? `<p style="${STYLES.text}"><strong>Shipping to:</strong> ${data.shippingAddress}</p>` : ''}
+        <p style="${STYLES.muted}">If you have any questions about your order, please contact ${data.businessName}.</p>
+      `);
+    },
+    text: (data) => {
+      const items = (data.items as Array<{ name: string; quantity: number; price: string }>) || [];
+      const itemLines = items.map(item => `  ${item.name} x${item.quantity} - ${item.price}`).join('\n');
+      return `
+Order Confirmed! 🎉
+
+Hi ${data.customerName || 'there'},
+
+Thank you for your order!
+
+Order #${data.orderNumber}
+
+Items:
+${itemLines}
+
+Subtotal: ${data.subtotal}
+Shipping: ${data.shipping}
+Tax: ${data.tax}
+Total: ${data.total}
+
+${data.shippingAddress ? `Shipping to: ${data.shippingAddress}` : ''}
+
+If you have any questions, please contact ${data.businessName}.
+      `.trim();
+    },
+  },
+
+  order_confirmation_owner: {
+    subject: (data) => `🛒 New Order #${data.orderNumber} - ${data.total}`,
+    html: (data) => {
+      const items = (data.items as Array<{ name: string; quantity: number; price: string }>) || [];
+      const itemRows = items.map(item => `
+        <tr>
+          <td style="padding: 8px; border-bottom: 1px solid #f3f4f6;">${item.name}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #f3f4f6; text-align: center;">${item.quantity}</td>
+          <td style="padding: 8px; border-bottom: 1px solid #f3f4f6; text-align: right;">${item.price}</td>
+        </tr>
+      `).join('');
+
+      return wrapHtml(`
+        <h1 style="${STYLES.heading}">🛒 New Order Received!</h1>
+        <p style="${STYLES.text}">You have a new order from <strong>${data.customerName}</strong>.</p>
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <p style="margin: 0 0 8px;"><strong>Order #${data.orderNumber}</strong></p>
+          <p style="margin: 0 0 4px; color: #6b7280;">Customer: ${data.customerName} (${data.customerEmail})</p>
+          <p style="margin: 0 0 4px; color: #6b7280;">Payment: <span style="background: ${data.paymentStatus === 'paid' ? '#dcfce7; color: #166534' : '#fef9c3; color: #854d0e'}; padding: 2px 8px; border-radius: 12px; font-size: 13px;">${data.paymentStatus}</span></p>
+          <p style="margin: 0; font-size: 24px; font-weight: 700; color: #166534;">${data.total}</p>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <thead>
+            <tr style="background: #f9fafb;">
+              <th style="padding: 8px; text-align: left;">Item</th>
+              <th style="padding: 8px; text-align: center;">Qty</th>
+              <th style="padding: 8px; text-align: right;">Price</th>
+            </tr>
+          </thead>
+          <tbody>${itemRows}</tbody>
+        </table>
+        <p style="margin: 24px 0;">
+          <a href="${data.dashboardUrl}" style="${STYLES.button}">View Order in Dashboard</a>
+        </p>
+      `);
+    },
+    text: (data) => {
+      const items = (data.items as Array<{ name: string; quantity: number; price: string }>) || [];
+      const itemLines = items.map(item => `  ${item.name} x${item.quantity} - ${item.price}`).join('\n');
+      return `
+🛒 New Order Received!
+
+Order #${data.orderNumber}
+Customer: ${data.customerName} (${data.customerEmail})
+Payment: ${data.paymentStatus}
+Total: ${data.total}
+
+Items:
+${itemLines}
+
+View in dashboard: ${data.dashboardUrl}
+      `.trim();
+    },
+  },
+
+  order_shipped_customer: {
+    subject: (data) => `Your Order #${data.orderNumber} Has Shipped! 📦`,
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">Your Order Has Shipped! 📦</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || 'there'},</p>
+      <p style="${STYLES.text}">Great news! Your order <strong>#${data.orderNumber}</strong> is on its way.</p>
+      ${data.trackingNumber ? `
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <p style="margin: 0 0 8px; color: #6b7280;">Tracking Number:</p>
+          <p style="margin: 0; font-weight: 600; font-size: 18px;">${data.trackingNumber}</p>
+          ${data.trackingUrl ? `<p style="margin: 8px 0 0;"><a href="${data.trackingUrl}" style="color: #2563eb;">Track Your Package →</a></p>` : ''}
+        </div>
+      ` : ''}
+      <p style="${STYLES.muted}">If you have any questions, please contact ${data.businessName}.</p>
+    `),
+    text: (data) => `
+Your Order Has Shipped! 📦
+
+Hi ${data.customerName || 'there'},
+
+Your order #${data.orderNumber} is on its way.
+
+${data.trackingNumber ? `Tracking Number: ${data.trackingNumber}` : ''}
+${data.trackingUrl ? `Track your package: ${data.trackingUrl}` : ''}
+
+If you have any questions, please contact ${data.businessName}.
+    `.trim(),
+  },
+
+  // ============================================
+  // FORM SUBMISSION EMAILS
+  // ============================================
+
+  form_submission_owner: {
+    subject: (data) => `📝 New Form Submission: ${data.formName}`,
+    html: (data) => {
+      const fields = (data.fields as Array<{ label: string; value: string }>) || [];
+      const fieldRows = fields.map(f => `
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #f3f4f6; font-weight: 500; color: #374151; width: 40%;">${f.label}</td>
+          <td style="padding: 10px; border-bottom: 1px solid #f3f4f6; color: #6b7280;">${f.value}</td>
+        </tr>
+      `).join('');
+
+      return wrapHtml(`
+        <h1 style="${STYLES.heading}">📝 New Form Submission</h1>
+        <p style="${STYLES.text}">You have a new submission from <strong>${data.formName}</strong>${data.siteName ? ` on ${data.siteName}` : ''}.</p>
+        <p style="${STYLES.text}; color: #6b7280; font-size: 14px;">Submitted: ${data.submittedAt}</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          ${fieldRows}
+        </table>
+        ${data.dashboardUrl ? `
+        <p style="margin: 24px 0;">
+          <a href="${data.dashboardUrl}" style="${STYLES.button}">View in Dashboard</a>
+        </p>
+        ` : ''}
+      `);
+    },
+    text: (data) => {
+      const fields = (data.fields as Array<{ label: string; value: string }>) || [];
+      const fieldLines = fields.map(f => `${f.label}: ${f.value}`).join('\n');
+      return `
+📝 New Form Submission
+
+Form: ${data.formName}
+${data.siteName ? `Site: ${data.siteName}` : ''}
+Submitted: ${data.submittedAt}
+
+${fieldLines}
+
+${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ''}
+      `.trim();
+    },
+  },
 };

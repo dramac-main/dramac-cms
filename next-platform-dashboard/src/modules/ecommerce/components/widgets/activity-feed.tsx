@@ -21,6 +21,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { ActivityItem } from '../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -93,7 +94,7 @@ export function ActivityFeed({
     } else if (diffDays < 7) {
       return `${diffDays}d ago`
     } else {
-      return date.toLocaleDateString('en-US', { 
+      return date.toLocaleDateString(DEFAULT_LOCALE, { 
         month: 'short', 
         day: 'numeric',
         hour: '2-digit',

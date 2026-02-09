@@ -11,6 +11,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { notifyNewOrder } from '@/lib/services/business-notifications'
 import type {
   Product, ProductInput, ProductUpdate, ProductFilters,
   Category, CategoryInput, CategoryUpdate,
@@ -1112,7 +1113,51 @@ export async function createOrderFromCart(input: CreateOrderInput): Promise<Orde
         .from(`${TABLE_PREFIX}_carts`)
         .update({ status: 'converted' })
         .eq('id', input.cart_id)
+
+      // Build order items for notification
+      const notificationItems = cart.items.map((item: CartItem) => ({
+        name: item.product?.name || 'Unknown Product',
+        quantity: item.quantity,
+        unitPrice: item.unit_price,
+      }))
+
+      // Send notifications to business owner + customer (async, non-blocking)
+      notifyNewOrder({
+        siteId: input.site_id,
+        orderId: order.id,
+        orderNumber,
+        customerName: input.customer_name || `${input.shipping_address?.first_name || ''} ${input.shipping_address?.last_name || ''}`.trim() || input.customer_email?.split('@')[0] || 'Customer',
+        customerEmail: input.customer_email,
+        customerPhone: input.customer_phone || undefined,
+        items: notificationItems,
+        subtotal: input.subtotal,
+        shipping: input.shipping || 0,
+        tax: input.tax || 0,
+        total: input.total,
+        currency: input.currency,
+        paymentStatus: input.payment_status || 'pending',
+        shippingAddress: input.shipping_address
+          ? `${input.shipping_address.address_line_1 || ''}${input.shipping_address.address_line_2 ? ', ' + input.shipping_address.address_line_2 : ''}, ${input.shipping_address.city || ''} ${input.shipping_address.state || ''} ${input.shipping_address.postal_code || ''}, ${input.shipping_address.country || ''}`
+          : undefined,
+      }).catch(err => console.error('[Ecommerce] Notification error:', err))
     }
+  } else {
+    // No cart - still send notification with available data
+    notifyNewOrder({
+      siteId: input.site_id,
+      orderId: order.id,
+      orderNumber,
+      customerName: input.customer_name || `${input.shipping_address?.first_name || ''} ${input.shipping_address?.last_name || ''}`.trim() || input.customer_email?.split('@')[0] || 'Customer',
+      customerEmail: input.customer_email,
+      customerPhone: input.customer_phone || undefined,
+      items: [],
+      subtotal: input.subtotal,
+      shipping: input.shipping || 0,
+      tax: input.tax || 0,
+      total: input.total,
+      currency: input.currency,
+      paymentStatus: input.payment_status || 'pending',
+    }).catch(err => console.error('[Ecommerce] Notification error:', err))
   }
   
   return order as Order

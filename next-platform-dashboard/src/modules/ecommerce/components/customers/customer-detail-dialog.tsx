@@ -39,6 +39,7 @@ import { cn } from '@/lib/utils'
 import { getCustomerDetail, addCustomerNote } from '../../actions/customer-actions'
 import type { CustomerDetailData, CustomerStatus, Order } from '../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -76,8 +77,8 @@ const statusConfig: Record<CustomerStatus, { label: string; className: string }>
 // HELPERS
 // ============================================================================
 
-function formatCurrency(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency
   }).format(amount / 100)

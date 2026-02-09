@@ -53,6 +53,7 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface FlashSalesViewProps {
   siteId: string
   searchQuery?: string
@@ -133,7 +134,7 @@ export function FlashSalesView({ siteId, searchQuery = '' }: FlashSalesViewProps
       hour: 'numeric',
       minute: '2-digit'
     }
-    return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`
+    return `${start.toLocaleDateString(DEFAULT_LOCALE, options)} - ${end.toLocaleDateString(DEFAULT_LOCALE, options)}`
   }
 
   const getTimeStatus = (sale: FlashSale) => {

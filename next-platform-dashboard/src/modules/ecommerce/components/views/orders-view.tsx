@@ -52,6 +52,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Order, OrderStatus, PaymentStatus } from '../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface OrdersViewProps {
   searchQuery?: string
 }
@@ -135,7 +136,7 @@ export function OrdersView({ searchQuery = '' }: OrdersViewProps) {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',

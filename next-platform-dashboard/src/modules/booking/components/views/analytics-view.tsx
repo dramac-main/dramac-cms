@@ -35,6 +35,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Appointment, AppointmentStatus } from '../../types/booking-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 type DateRange = '7d' | '30d' | '90d' | '1y' | 'all'
 
 interface StatCardProps {
@@ -79,8 +80,8 @@ function StatCard({ title, value, description, icon: Icon, trend, className }: S
   )
 }
 
-function formatCurrency(amount: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(amount: number, currency: string = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency: currency,
   }).format(amount)

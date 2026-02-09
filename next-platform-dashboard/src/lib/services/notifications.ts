@@ -123,9 +123,22 @@ function shouldSendEmail(
     mention: "email_updates",
     security_alert: "email_security",
     system: "email_updates",
+    // Booking & ecommerce always email - business critical
+    new_booking: "email_updates",
+    booking_confirmed: "email_updates",
+    booking_cancelled: "email_updates",
+    new_order: "email_updates",
+    order_shipped: "email_updates",
+    order_delivered: "email_updates",
+    form_submission: "email_updates",
   };
 
   const prefKey = emailMapping[type];
+  // For business-critical types, always send email
+  const alwaysSendTypes: NotificationType[] = [
+    "new_booking", "booking_cancelled", "new_order", "payment_failed"
+  ];
+  if (alwaysSendTypes.includes(type)) return true;
   return prefs[prefKey] ?? true;
 }
 
@@ -237,4 +250,14 @@ export const notificationTypeInfo: Record<
   mention: { icon: "@", color: "text-purple-500", label: "Mention" },
   security_alert: { icon: "🔒", color: "text-red-500", label: "Security Alert" },
   system: { icon: "📢", color: "text-gray-500", label: "System" },
+  // Booking notifications
+  new_booking: { icon: "📅", color: "text-green-500", label: "New Booking" },
+  booking_confirmed: { icon: "✅", color: "text-blue-500", label: "Booking Confirmed" },
+  booking_cancelled: { icon: "❌", color: "text-red-500", label: "Booking Cancelled" },
+  // E-Commerce notifications
+  new_order: { icon: "🛒", color: "text-green-500", label: "New Order" },
+  order_shipped: { icon: "📦", color: "text-blue-500", label: "Order Shipped" },
+  order_delivered: { icon: "✅", color: "text-green-500", label: "Order Delivered" },
+  // Form submissions
+  form_submission: { icon: "📝", color: "text-blue-500", label: "Form Submission" },
 };

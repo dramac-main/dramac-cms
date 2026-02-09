@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils'
 import type { Service } from '../../types/booking-types'
 import { toast } from 'sonner'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 interface ServiceDetailSheetProps {
   service: Service | null
   open: boolean
@@ -45,8 +46,8 @@ function formatDuration(minutes: number): string {
   return mins > 0 ? `${hours}h ${mins}m` : `${hours} hour${hours > 1 ? 's' : ''}`
 }
 
-function formatCurrency(amount: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(amount: number, currency: string = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency: currency,
   }).format(amount)

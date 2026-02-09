@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 
+import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -594,7 +595,7 @@ function getDefaultSettings(type: TriggerType): Record<string, unknown> {
         frequency: 'daily',
         interval: 1,
         timeOfDay: '09:00',
-        timezone: 'UTC',
+        timezone: DEFAULT_TIMEZONE,
       }
     case 'webhook':
       return {

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 import {
   ArrowLeft,
   Star,
@@ -30,9 +31,9 @@ function formatPrice(pricing: { type: string; amount: number; currency: string }
   }
   
   const amount = pricing.amount / 100; // Convert cents to dollars
-  const formatted = new Intl.NumberFormat("en-US", {
+  const formatted = new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: "currency",
-    currency: pricing.currency || "USD",
+    currency: pricing.currency || DEFAULT_CURRENCY,
   }).format(amount);
   
   if (pricing.type === "monthly") {

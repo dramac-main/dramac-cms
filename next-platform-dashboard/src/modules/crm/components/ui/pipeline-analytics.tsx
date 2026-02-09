@@ -36,6 +36,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Deal, Pipeline, PipelineStage } from '../../types/crm-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -72,8 +73,8 @@ interface FunnelMetrics {
 // HELPERS
 // =============================================================================
 
-function formatCurrency(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
     maximumFractionDigits: 0,

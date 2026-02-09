@@ -13,6 +13,7 @@ import { motion } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Sparkline } from '@/components/charts'
 import { cn } from '@/lib/utils'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 import {
   Users,
   Building2,
@@ -52,10 +53,10 @@ export interface CRMMetricCardsProps {
 // HELPERS
 // =============================================================================
 
-function formatValue(value: number, format: CRMMetric['format'] = 'number', currency = 'USD'): string {
+function formatValue(value: number, format: CRMMetric['format'] = 'number', currency = DEFAULT_CURRENCY): string {
   switch (format) {
     case 'currency':
-      return new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat(DEFAULT_LOCALE, {
         style: 'currency',
         currency,
         maximumFractionDigits: 0,

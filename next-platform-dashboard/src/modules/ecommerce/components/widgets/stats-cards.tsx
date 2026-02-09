@@ -29,6 +29,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { DashboardStats, StatsPeriod } from '../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -60,11 +61,11 @@ export function StatsCards({
   stats,
   period,
   onPeriodChange,
-  currency = 'USD',
+  currency = DEFAULT_CURRENCY,
   isLoading = false
 }: StatsCardsProps) {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 0,

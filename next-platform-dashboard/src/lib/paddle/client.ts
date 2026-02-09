@@ -16,6 +16,7 @@
 
 import { Paddle, Environment } from '@paddle/paddle-node-sdk';
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // Environment Validation
 // ============================================================================
@@ -285,7 +286,7 @@ export function getPlanTypeFromPriceId(priceId: string): {
  * Format price for display
  */
 export function formatPrice(cents: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
   }).format(cents / 100);

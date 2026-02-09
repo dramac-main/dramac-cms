@@ -63,6 +63,7 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface GiftCardsViewProps {
   siteId: string
   searchQuery?: string
@@ -150,7 +151,7 @@ export function GiftCardsView({ siteId, searchQuery = '' }: GiftCardsViewProps) 
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -158,7 +159,7 @@ export function GiftCardsView({ siteId, searchQuery = '' }: GiftCardsViewProps) 
   }
 
   const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
+    return new Date(dateString).toLocaleString(DEFAULT_LOCALE, {
       month: 'short',
       day: 'numeric',
       hour: 'numeric',

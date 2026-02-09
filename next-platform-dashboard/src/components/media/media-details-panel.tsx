@@ -37,6 +37,7 @@ import {
 import { updateMediaFile, deleteMediaFile, type MediaFile } from "@/lib/media/media-service";
 import { toast } from "sonner";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface MediaDetailsPanelProps {
   file: MediaFile;
   onClose: () => void;
@@ -132,7 +133,7 @@ export function MediaDetailsPanel({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
       year: "numeric",
       month: "long",
       day: "numeric",

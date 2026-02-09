@@ -22,6 +22,7 @@ import { Switch } from '@/components/ui/switch'
 import { useBooking } from '../../context/booking-context'
 import { toast } from 'sonner'
 
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 interface CreateServiceDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -73,7 +74,7 @@ export function CreateServiceDialog({ open, onOpenChange }: CreateServiceDialogP
         require_confirmation: requireConfirmation,
         max_attendees: maxAttendees,
         is_active: true,
-        currency: 'USD',
+        currency: DEFAULT_CURRENCY,
         buffer_before_minutes: 0,
         buffer_after_minutes: 0,
         sort_order: 0,

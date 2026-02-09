@@ -39,6 +39,7 @@ import { ProductSelector, ProductSelection } from './product-selector'
 import { calculateItemLineTotal, formatQuoteCurrency } from '../../lib/quote-utils'
 import type { QuoteItem, QuoteItemInput } from '../../types/ecommerce-types'
 
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -332,7 +333,7 @@ function EditableItemRow({
 
 export function QuoteItemsEditor({
   items,
-  currency = 'USD',
+  currency = DEFAULT_CURRENCY,
   onAddItems,
   onUpdateItem,
   onRemoveItem,

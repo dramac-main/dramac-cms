@@ -59,6 +59,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Deal, Activity as CRMActivity, Contact, Company } from '../../types/crm-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -81,8 +82,8 @@ export interface DealQuickViewProps {
 // HELPERS
 // =============================================================================
 
-function formatCurrency(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
     maximumFractionDigits: 0,
@@ -90,7 +91,7 @@ function formatCurrency(amount: number, currency = 'USD'): string {
 }
 
 function formatDate(date: string | Date): string {
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(DEFAULT_LOCALE, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

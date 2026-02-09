@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -140,7 +141,7 @@ const variantConfig: Record<BookingMetricVariant, {
 function AnimatedNumber({ 
   value, 
   isCurrency = false,
-  currency = 'USD',
+  currency = DEFAULT_CURRENCY,
   suffix = '',
 }: { 
   value: number
@@ -151,7 +152,7 @@ function AnimatedNumber({
   const spring = useSpring(0, { stiffness: 100, damping: 30 })
   const display = useTransform(spring, (current) => {
     if (isCurrency) {
-      return new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat(DEFAULT_LOCALE, {
         style: 'currency',
         currency,
         minimumFractionDigits: 0,
@@ -238,7 +239,7 @@ export function BookingMetricCard({
   variant = 'appointments',
   icon: IconOverride,
   isCurrency = false,
-  currency = 'USD',
+  currency = DEFAULT_CURRENCY,
   change,
   sparklineData,
   isLoading = false,

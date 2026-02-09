@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner";
 import { useState } from "react";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface SubmissionDetailProps {
   submission: FormSubmission;
   onClose: () => void;
@@ -68,7 +69,7 @@ export function SubmissionDetail({
   const [copied, setCopied] = useState<string | null>(null);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("en-US", {
+    return new Date(dateString).toLocaleString(DEFAULT_LOCALE, {
       weekday: "long",
       year: "numeric",
       month: "long",

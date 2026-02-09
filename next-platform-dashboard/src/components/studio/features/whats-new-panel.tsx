@@ -30,6 +30,7 @@ import {
 } from "@/lib/studio/onboarding/changelog";
 import type { LucideIcon } from "lucide-react";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // =============================================================================
 // CHANGE TYPE CONFIG
 // =============================================================================
@@ -151,7 +152,7 @@ interface ReleaseSectionProps {
 }
 
 function ReleaseSection({ release, isLatest }: ReleaseSectionProps) {
-  const formattedDate = new Date(release.date).toLocaleDateString("en-US", {
+  const formattedDate = new Date(release.date).toLocaleDateString(DEFAULT_LOCALE, {
     month: "short",
     day: "numeric",
     year: "numeric",

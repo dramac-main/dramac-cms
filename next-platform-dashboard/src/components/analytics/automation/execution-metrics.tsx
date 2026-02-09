@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 import type { ExecutionOverview, ExecutionTrend, ExecutionsByStatus } from "@/types/automation-analytics";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // EXECUTION OVERVIEW CARDS
 // ============================================================================
@@ -199,7 +200,7 @@ export function ExecutionTrendChart({
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="date"
-              tickFormatter={(value) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              tickFormatter={(value) => new Date(value).toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" })}
               className="text-xs"
             />
             <YAxis className="text-xs" />
@@ -262,7 +263,7 @@ export function ExecutionLineChart({
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="date"
-              tickFormatter={(value) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              tickFormatter={(value) => new Date(value).toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" })}
               className="text-xs"
             />
             <YAxis className="text-xs" />
@@ -396,7 +397,7 @@ export function ExecutionDurationChart({
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="date"
-              tickFormatter={(value) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+              tickFormatter={(value) => new Date(value).toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" })}
               className="text-xs"
             />
             <YAxis

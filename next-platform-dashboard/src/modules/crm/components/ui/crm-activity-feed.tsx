@@ -40,6 +40,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Activity, ActivityType } from '../../types/crm-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -131,7 +132,7 @@ function formatRelativeTime(dateString: string): string {
   if (diffDays === 1) return 'Yesterday'
   if (diffDays < 7) return `${diffDays}d ago`
   
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(DEFAULT_LOCALE, {
     month: 'short',
     day: 'numeric',
   })
@@ -158,7 +159,7 @@ function groupActivitiesByDate(activities: Activity[]): Map<string, Activity[]> 
     } else if (activityDate >= weekAgo) {
       groupKey = 'This Week'
     } else {
-      groupKey = activityDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      groupKey = activityDate.toLocaleDateString(DEFAULT_LOCALE, { month: 'long', year: 'numeric' })
     }
 
     const existing = groups.get(groupKey) || []

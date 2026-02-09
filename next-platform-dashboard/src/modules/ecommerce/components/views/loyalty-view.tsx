@@ -55,6 +55,7 @@ import { Progress } from '@/components/ui/progress'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface LoyaltyViewProps {
   siteId: string
   searchQuery?: string
@@ -111,7 +112,7 @@ export function LoyaltyView({ siteId, searchQuery = '' }: LoyaltyViewProps) {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
       month: 'short',
       day: 'numeric',
       year: 'numeric'

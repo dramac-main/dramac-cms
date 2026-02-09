@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MODULE_CATALOG } from "./module-catalog";
 import type { ModuleDefinition, ModuleCategory } from "./module-types";
 
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 // Type for database rows
 interface ModulesV2Row {
   id: string;
@@ -258,7 +259,7 @@ function convertToModuleDefinition(m: ModulesV2Row): ModuleDefinition {
           ? "yearly"
           : "monthly",
       amount: m.wholesale_price_monthly || 0,
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: m.features || [],
     status: m.status === "active" ? "active" : m.status === "beta" ? "beta" : "inactive",

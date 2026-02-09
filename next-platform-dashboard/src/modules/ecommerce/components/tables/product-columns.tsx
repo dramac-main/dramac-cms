@@ -36,6 +36,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Product, ProductStatus } from '../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // STATUS CONFIG
 // ============================================================================
@@ -66,13 +67,13 @@ interface InlineEditCellProps {
   currency?: string
 }
 
-function InlineEditCell({ value, onSave, type = 'text', currency = 'USD' }: InlineEditCellProps) {
+function InlineEditCell({ value, onSave, type = 'text', currency = DEFAULT_CURRENCY }: InlineEditCellProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(String(value))
   const [isSaving, setIsSaving] = useState(false)
 
   const displayValue = type === 'currency' 
-    ? new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(Number(value) / 100)
+    ? new Intl.NumberFormat(DEFAULT_LOCALE, { style: 'currency', currency }).format(Number(value) / 100)
     : value
 
   const handleSave = async () => {
@@ -169,7 +170,7 @@ export function createProductColumns({
   onArchive,
   onDelete,
   onInlineEdit,
-  currency = 'USD'
+  currency = DEFAULT_CURRENCY
 }: CreateColumnsProps): ColumnDef<Product>[] {
   return [
     // Checkbox column

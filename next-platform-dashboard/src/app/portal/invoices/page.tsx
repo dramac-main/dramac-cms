@@ -26,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 import { 
   getPortalInvoices, 
   getPortalBillingOverview,
@@ -33,15 +34,15 @@ import {
   type PortalBillingOverview 
 } from "@/lib/portal/portal-billing-service";
 
-function formatCurrency(amount: number, currency = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
+function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: "currency",
     currency: currency,
   }).format(amount / 100); // LemonSqueezy amounts are in cents
 }
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
+  return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
     year: "numeric",
     month: "short",
     day: "numeric",

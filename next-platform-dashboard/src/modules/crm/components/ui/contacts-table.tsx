@@ -52,6 +52,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Contact, LeadStatus } from '../../types/crm-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -109,7 +110,7 @@ function formatDate(dateString: string | null | undefined): string {
   if (diffDays === 1) return 'Yesterday'
   if (diffDays < 7) return `${diffDays} days ago`
   
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(DEFAULT_LOCALE, {
     month: 'short',
     day: 'numeric',
     year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,

@@ -43,14 +43,15 @@ import {
 import { cn } from '@/lib/utils'
 import type { Deal, Activity as CRMActivity } from '../../types/crm-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // HELPERS
 // ============================================================================
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
-    currency: 'USD',
+    currency: DEFAULT_CURRENCY,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(value)

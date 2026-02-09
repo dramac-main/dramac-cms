@@ -21,6 +21,7 @@ import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
 import { useSwipeGesture } from '../../../hooks/useSwipeGesture'
 import type { Product, ProductVariant } from '../../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -69,9 +70,9 @@ const COLOR_MAP: Record<string, string> = {
 // ============================================================================
 
 function formatPrice(price: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
-    currency: 'USD',
+    currency: DEFAULT_CURRENCY,
   }).format(price)
 }
 

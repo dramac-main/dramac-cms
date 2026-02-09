@@ -37,6 +37,7 @@ import {
 } from "recharts";
 import type { EngagementMetrics, EngagementTrend, EngagementByType } from "@/types/social-analytics";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
@@ -111,7 +112,7 @@ export function EngagementTrendChart({ data }: { data: EngagementTrend[] }) {
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
                 dataKey="date" 
-                tickFormatter={(value) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                tickFormatter={(value) => new Date(value).toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" })}
                 className="text-xs"
               />
               <YAxis tickFormatter={formatNumber} className="text-xs" />
@@ -151,7 +152,7 @@ export function EngagementLineChart({ data }: { data: EngagementTrend[] }) {
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
                 dataKey="date" 
-                tickFormatter={(value) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                tickFormatter={(value) => new Date(value).toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" })}
                 className="text-xs"
               />
               <YAxis tickFormatter={formatNumber} className="text-xs" />

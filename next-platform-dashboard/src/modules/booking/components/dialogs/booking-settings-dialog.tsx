@@ -31,6 +31,7 @@ import { updateSettings } from '../../actions/booking-actions'
 import { toast } from 'sonner'
 import type { BookingSettingsUpdate } from '../../types/booking-types'
 
+import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
 // Common timezones
 const TIMEZONES = [
   { value: 'UTC', label: 'UTC' },
@@ -57,7 +58,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
   
   // Form state
   const [businessName, setBusinessName] = useState('')
-  const [timezone, setTimezone] = useState('UTC')
+  const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE)
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h')
   const [slotInterval, setSlotInterval] = useState(30)
   const [minBookingNotice, setMinBookingNotice] = useState(24)
@@ -73,7 +74,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
   useEffect(() => {
     if (open && settings) {
       setBusinessName(settings.business_name || '')
-      setTimezone(settings.timezone || 'UTC')
+      setTimezone(settings.timezone || DEFAULT_TIMEZONE)
       setTimeFormat(settings.time_format || '12h')
       setSlotInterval(settings.slot_interval_minutes || 30)
       setMinBookingNotice(settings.min_booking_notice_hours || 24)

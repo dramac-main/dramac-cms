@@ -44,6 +44,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Deal, DealStatus } from '../../types/crm-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -68,9 +69,9 @@ export type DealCardVariant = 'default' | 'compact' | 'detailed'
 // HELPERS
 // =============================================================================
 
-function formatCurrency(amount: number | null | undefined, currency = 'USD'): string {
+function formatCurrency(amount: number | null | undefined, currency = DEFAULT_CURRENCY): string {
   if (amount == null) return '-'
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
     maximumFractionDigits: 0,
@@ -94,7 +95,7 @@ function formatDate(dateString: string | null | undefined): string {
     return `${diffDays}d`
   }
 
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(DEFAULT_LOCALE, {
     month: 'short',
     day: 'numeric',
   })

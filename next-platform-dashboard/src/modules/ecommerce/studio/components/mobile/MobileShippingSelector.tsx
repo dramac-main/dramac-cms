@@ -22,6 +22,7 @@ import {
 import { cn } from '@/lib/utils'
 import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -67,9 +68,9 @@ function getShippingIcon(speed: ShippingSpeed): React.ReactNode {
 
 function defaultFormatPrice(price: number): string {
   if (price === 0) return 'FREE'
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
-    currency: 'USD',
+    currency: DEFAULT_CURRENCY,
   }).format(price)
 }
 

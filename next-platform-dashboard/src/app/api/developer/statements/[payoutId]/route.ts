@@ -4,6 +4,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { revenueService, payoutService } from "@/lib/revenue";
+import { DEFAULT_LOCALE } from "@/lib/locale-config";
 
 interface RouteParams {
   params: Promise<{ payoutId: string }>;
@@ -66,7 +67,7 @@ function generateStatementHtml(
   payout: Awaited<ReturnType<typeof payoutService.getPayoutDetails>>
 ): string {
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-US", {
+    new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: "currency",
       currency: payout.currency,
     }).format(amount);

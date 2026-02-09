@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { updateAgencyPricingConfig } from "@/lib/actions/domain-billing";
 import type { TldPricingConfig, TldPricingEntry, PricingMarkupType } from "@/types/domain-pricing";
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 interface TldPricingTableProps {
   currentConfig: TldPricingConfig;
   defaultMarkupType: PricingMarkupType;
@@ -112,9 +113,9 @@ export function TldPricingTable({
   };
   
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
-      currency: 'USD',
+      currency: DEFAULT_CURRENCY,
     }).format(price);
   };
   

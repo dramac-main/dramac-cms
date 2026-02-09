@@ -27,6 +27,7 @@ import {
 import { getModuleSources } from "@/lib/modules/module-builder";
 import { isSuperAdmin } from "@/lib/auth/permissions";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 const statusConfig = {
   draft: {
     label: "Draft",
@@ -63,7 +64,7 @@ function formatDate(dateString: string): string {
   } else if (diffDays < 7) {
     return `${diffDays} days ago`;
   } else {
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(DEFAULT_LOCALE, {
       month: "short",
       day: "numeric",
       year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,

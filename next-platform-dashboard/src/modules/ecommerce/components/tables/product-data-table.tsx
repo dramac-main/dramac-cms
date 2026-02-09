@@ -56,6 +56,7 @@ import { ProductFilters, defaultProductFilters } from '../filters/product-filter
 import { BulkActionsToolbar } from '../bulk/bulk-actions-toolbar'
 import type { Product, Category, ProductTableFilters, BulkAction } from '../../types/ecommerce-types'
 
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -92,7 +93,7 @@ export function ProductDataTable({
   onBulkAction,
   onExport,
   onImport,
-  currency = 'USD',
+  currency = DEFAULT_CURRENCY,
   isLoading = false
 }: ProductDataTableProps) {
   // Table state

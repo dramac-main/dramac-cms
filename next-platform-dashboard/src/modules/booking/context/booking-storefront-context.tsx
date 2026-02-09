@@ -11,16 +11,19 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react'
 import { getSettings } from '../actions/booking-actions'
 import type { BookingSettings } from '../types/booking-types'
+import {
+  DEFAULT_CURRENCY,
+  DEFAULT_CURRENCY_SYMBOL,
+  DEFAULT_TIMEZONE,
+  CURRENCY_SYMBOLS,
+  formatCurrency,
+} from '@/lib/locale-config'
 
 // ============================================================================
 // Currency Symbols (shared with ecommerce)
 // ============================================================================
 
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  USD: '$', EUR: '€', GBP: '£', ZMW: 'K', KES: 'KSh', NGN: '₦', ZAR: 'R',
-  TZS: 'TSh', UGX: 'USh', RWF: 'FRw', GHS: '₵', XOF: 'CFA', XAF: 'FCFA',
-  INR: '₹', JPY: '¥', CNY: '¥', AUD: 'A$', CAD: 'C$',
-}
+// Currency symbols imported from @/lib/locale-config
 
 // ============================================================================
 // Context Type
@@ -40,11 +43,11 @@ export interface BookingStorefrontContextValue {
 const defaultValue: BookingStorefrontContextValue = {
   siteId: '',
   settings: null,
-  currency: 'USD',
-  currencySymbol: '$',
-  timezone: 'UTC',
+  currency: DEFAULT_CURRENCY,
+  currencySymbol: DEFAULT_CURRENCY_SYMBOL,
+  timezone: DEFAULT_TIMEZONE,
   slotInterval: 30,
-  formatPrice: () => '$0.00',
+  formatPrice: () => `${DEFAULT_CURRENCY_SYMBOL}0.00`,
   isInitialized: false,
 }
 
@@ -88,14 +91,16 @@ export function BookingStorefrontProvider({ children, siteId }: BookingStorefron
     loadSettings()
   }, [siteId])
 
-  const currency = 'USD' // Default, could come from service prices
-  const currencySymbol = CURRENCY_SYMBOLS[currency] || currency
-  const timezone = settings?.timezone || 'UTC'
+  // BookingSettings type may or may not have a currency field depending on the site config
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const currency = (settings as any)?.currency as string || DEFAULT_CURRENCY
+  const currencySymbol = CURRENCY_SYMBOLS[currency] || DEFAULT_CURRENCY_SYMBOL
+  const timezone = settings?.timezone || DEFAULT_TIMEZONE
   const slotInterval = settings?.slot_interval_minutes || 30
 
   const formatPrice = useCallback((amount: number): string => {
-    return `${currencySymbol}${amount.toFixed(2)}`
-  }, [currencySymbol])
+    return formatCurrency(amount, currency)
+  }, [currency])
 
   const value = useMemo((): BookingStorefrontContextValue => ({
     siteId,

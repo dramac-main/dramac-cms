@@ -13,12 +13,13 @@ import type { StepComponentProps } from '../../../types/onboarding-types';
 import { AVAILABLE_CURRENCIES } from '../../../types/onboarding-types';
 import { Switch } from '../ui/Switch';
 
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 export function CurrencyTaxStep({
   data,
   onDataChange,
 }: StepComponentProps) {
   const currencyTax = data.currencyTax || {
-    currency: 'USD',
+    currency: DEFAULT_CURRENCY,
     currencySymbol: '$',
     currencyPosition: 'before' as const,
     thousandsSeparator: ',',

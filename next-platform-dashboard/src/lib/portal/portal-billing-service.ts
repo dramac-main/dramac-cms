@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import {
   getSubscription,
   lemonSqueezySetup,
@@ -149,7 +150,7 @@ async function getInvoicesFromDatabase(agencyId: string): Promise<{
       productName: planName,
       description: `${planName} Subscription`,
       amount: getPlanPrice(sub.plan_id), // Helper to get price
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
       status: sub.status === "active" ? "paid" : "pending",
       createdAt: sub.created_at || new Date().toISOString(),
       paidAt: sub.status === "active" ? sub.created_at : null,
@@ -174,7 +175,7 @@ export async function getPortalBillingOverview(): Promise<PortalBillingOverview>
       planStatus: null,
       totalPaidThisYear: 0,
       invoiceCount: 0,
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
       nextPaymentDate: null,
       nextPaymentAmount: null,
       customerId: null,
@@ -237,7 +238,7 @@ export async function getPortalBillingOverview(): Promise<PortalBillingOverview>
     planStatus: subscription?.status as PortalBillingOverview["planStatus"] || null,
     totalPaidThisYear,
     invoiceCount: count || 0,
-    currency: "USD",
+    currency: DEFAULT_CURRENCY,
     nextPaymentDate,
     nextPaymentAmount,
     customerId: context.lemonCustomerId,

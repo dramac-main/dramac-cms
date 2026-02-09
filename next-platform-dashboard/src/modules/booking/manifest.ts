@@ -11,6 +11,7 @@
 
 import type { ModuleManifest } from '../_types'
 
+import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
 export const BookingModuleManifest: ModuleManifest = {
   // ==========================================================================
   // IDENTIFICATION
@@ -225,7 +226,7 @@ export const BookingModuleManifest: ModuleManifest = {
         type: 'string',
         title: 'Default Timezone',
         description: 'Default timezone for appointments',
-        default: 'UTC'
+        default: DEFAULT_TIMEZONE
       },
       time_format: {
         type: 'string',

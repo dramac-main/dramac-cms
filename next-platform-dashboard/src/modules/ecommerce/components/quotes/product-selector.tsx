@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { useEcommerce } from '../../context/ecommerce-context'
 import type { Product, ProductVariant } from '../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -68,9 +69,9 @@ function ProductItem({
   
   const formatPrice = (price: number) => {
     // Convert cents to dollars (database stores prices as cents)
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
-      currency: 'USD'
+      currency: DEFAULT_CURRENCY
     }).format(price / 100)
   }
 

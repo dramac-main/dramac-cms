@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 /**
  * Module Utility Functions
  * 
@@ -148,7 +149,7 @@ export function calculateYearlyPrice(monthlyPriceCents: number, discountPercent 
  */
 export function formatModuleDate(date: string | Date): string {
   const d = new Date(date);
-  return d.toLocaleDateString('en-US', {
+  return d.toLocaleDateString(DEFAULT_LOCALE, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

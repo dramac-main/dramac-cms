@@ -48,6 +48,7 @@ import {
 } from 'lucide-react'
 import type { CompanyUpdate, CompanyStatus, CompanyType, Contact } from '../../types/crm-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 interface CompanyDetailSheetProps {
   companyId: string | null
   open: boolean
@@ -56,9 +57,9 @@ interface CompanyDetailSheetProps {
 
 function formatCurrency(value: number | null | undefined): string {
   if (!value) return '-'
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
-    currency: 'USD',
+    currency: DEFAULT_CURRENCY,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(value)

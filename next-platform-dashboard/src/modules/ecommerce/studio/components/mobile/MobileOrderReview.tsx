@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import type { CartItem } from '../../../types/ecommerce-types'
 import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -47,9 +48,9 @@ export interface MobileOrderReviewProps {
 // ============================================================================
 
 function defaultFormatPrice(price: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
-    currency: 'USD',
+    currency: DEFAULT_CURRENCY,
   }).format(price)
 }
 

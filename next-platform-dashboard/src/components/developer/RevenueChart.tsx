@@ -12,6 +12,7 @@ import {
   Area,
   AreaChart,
 } from "recharts";
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 
 interface RevenueChartProps {
   data: Array<{
@@ -23,16 +24,16 @@ interface RevenueChartProps {
 
 export function RevenueChart({ data }: RevenueChartProps) {
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: "currency",
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString(DEFAULT_LOCALE, {
       month: "short",
       day: "numeric",
     });

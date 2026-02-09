@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import type { Quote, QuoteItem } from '../../types/ecommerce-types'
 import type { QuoteBuilderItem } from '../../hooks/useQuotations'
 
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -45,7 +46,7 @@ export interface QuotePriceBreakdownProps {
 // DEFAULT FORMATTER
 // ============================================================================
 
-function defaultFormatPrice(price: number, currency = '$'): string {
+function defaultFormatPrice(price: number, currency = DEFAULT_CURRENCY_SYMBOL): string {
   return `${currency}${price.toFixed(2)}`
 }
 
@@ -56,7 +57,7 @@ function defaultFormatPrice(price: number, currency = '$'): string {
 export function QuotePriceBreakdown({
   quote,
   builderItems,
-  currency = '$',
+  currency = DEFAULT_CURRENCY_SYMBOL,
   formatPrice,
   taxRate = 0,
   discountPercent = 0,
@@ -240,7 +241,7 @@ export function QuoteSavingsDisplay({
   originalTotal,
   quotedTotal,
   formatPrice,
-  currency = '$',
+  currency = DEFAULT_CURRENCY_SYMBOL,
   className
 }: QuoteSavingsDisplayProps) {
   const format = formatPrice || ((p: number) => defaultFormatPrice(p, currency))

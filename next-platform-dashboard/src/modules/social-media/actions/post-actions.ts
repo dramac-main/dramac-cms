@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
 import type { 
   SocialPost, 
   PostStatus, 
@@ -157,7 +158,7 @@ export async function createPost(
         platform_content: data.platformContent || {},
         target_accounts: data.targetAccounts,
         scheduled_at: data.scheduledAt,
-        timezone: data.timezone || 'UTC',
+        timezone: data.timezone || DEFAULT_TIMEZONE,
         status,
         labels: data.labels || [],
         campaign_id: data.campaignId,
@@ -303,7 +304,7 @@ export async function schedulePost(
       .from('social_posts')
       .update({
         scheduled_at: scheduledAt,
-        timezone: timezone || 'UTC',
+        timezone: timezone || DEFAULT_TIMEZONE,
         status,
         updated_at: new Date().toISOString(),
       })

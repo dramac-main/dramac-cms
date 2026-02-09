@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { searchDomains } from "@/lib/actions/domains";
 import type { DomainSearchResult } from "@/types/domain";
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 const POPULAR_TLDS = ['.com', '.net', '.org', '.io', '.co', '.app', '.dev'];
 
 interface DomainSearchProps {
@@ -94,9 +95,9 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
   };
   
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
-      currency: 'USD',
+      currency: DEFAULT_CURRENCY,
     }).format(price);
   };
   

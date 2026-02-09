@@ -7,6 +7,7 @@ import { ActivityFeed } from "@/components/admin/activity-feed";
 import { QuickActions } from "@/components/admin/quick-actions";
 import { getPlatformStats, getRecentActivity } from "@/lib/admin/stats-service";
 import { PageHeader } from "@/components/layout/page-header";
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 
 export const metadata: Metadata = {
   title: "Admin Dashboard | DRAMAC",
@@ -38,9 +39,9 @@ export default async function AdminDashboardPage() {
 
   // Format currency
   const formatCurrency = (cents: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: "currency",
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
       minimumFractionDigits: 0,
     }).format(cents / 100);
   };

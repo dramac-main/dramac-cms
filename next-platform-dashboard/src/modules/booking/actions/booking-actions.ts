@@ -9,6 +9,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from '@/lib/locale-config'
 import type {
   Service,
   ServiceInput,
@@ -103,7 +104,7 @@ export async function createService(siteId: string, input: Partial<ServiceInput>
       buffer_before_minutes: input.buffer_before_minutes || 0,
       buffer_after_minutes: input.buffer_after_minutes || 0,
       price: input.price || null,
-      currency: input.currency || 'USD',
+      currency: input.currency || DEFAULT_CURRENCY,
       max_attendees: input.max_attendees || 1,
       allow_online_booking: input.allow_online_booking ?? true,
       require_confirmation: input.require_confirmation ?? false,
@@ -266,7 +267,7 @@ export async function createStaff(siteId: string, input: Partial<StaffInput>): P
       avatar_url: input.avatar_url || null,
       bio: input.bio || null,
       default_availability: input.default_availability || {},
-      timezone: input.timezone || 'UTC',
+      timezone: input.timezone || DEFAULT_TIMEZONE,
       accept_bookings: input.accept_bookings ?? true,
       is_active: input.is_active ?? true
     })
@@ -530,7 +531,7 @@ export async function createAppointment(
       crm_contact_id: input.crm_contact_id || null,
       start_time: input.start_time,
       end_time: input.end_time,
-      timezone: input.timezone || 'UTC',
+      timezone: input.timezone || DEFAULT_TIMEZONE,
       status: input.status || 'pending',
       payment_status: input.payment_status || 'not_required',
       payment_amount: input.payment_amount || null,
@@ -668,7 +669,7 @@ export async function createCalendar(
       description: input.description || null,
       type: input.type || 'staff',
       staff_id: input.staff_id || null,
-      timezone: input.timezone || 'UTC',
+      timezone: input.timezone || DEFAULT_TIMEZONE,
       external_calendar_url: input.external_calendar_url || null,
       external_calendar_type: input.external_calendar_type || null,
       is_active: input.is_active ?? true
@@ -1247,7 +1248,7 @@ export async function initializeBookingForSite(siteId: string): Promise<void> {
       .from(`${TABLE_PREFIX}_settings`)
       .insert({
         site_id: siteId,
-        timezone: 'UTC',
+        timezone: DEFAULT_TIMEZONE,
         date_format: 'YYYY-MM-DD',
         time_format: '12h',
         min_booking_notice_hours: 24,

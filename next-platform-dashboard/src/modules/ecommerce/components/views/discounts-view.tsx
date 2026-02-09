@@ -42,6 +42,7 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface DiscountsViewProps {
   searchQuery?: string
   onCreateDiscount?: () => void
@@ -105,7 +106,7 @@ export function DiscountsView({ searchQuery = '', onCreateDiscount }: DiscountsV
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
       month: 'short',
       day: 'numeric',
       year: 'numeric'

@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 import {
   Tooltip,
   TooltipContent,
@@ -120,7 +121,7 @@ const variantConfig = {
 function AnimatedNumber({ 
   value, 
   isCurrency = false,
-  currency = 'USD'
+  currency = DEFAULT_CURRENCY
 }: { 
   value: number
   isCurrency?: boolean
@@ -129,7 +130,7 @@ function AnimatedNumber({
   const spring = useSpring(0, { stiffness: 100, damping: 30 })
   const display = useTransform(spring, (v) => {
     if (isCurrency) {
-      return new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat(DEFAULT_LOCALE, {
         style: 'currency',
         currency,
         minimumFractionDigits: 0,
@@ -302,7 +303,7 @@ export function EcommerceMetricCard({
   variant = "default",
   animationDelay = 0,
   isCurrency = false,
-  currency = "USD",
+  currency = DEFAULT_CURRENCY,
 }: EcommerceMetricCardProps) {
   if (loading) {
     return <MetricCardSkeleton />

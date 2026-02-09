@@ -23,6 +23,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { RecentOrderSummary, OrderStatus, PaymentStatus } from '../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -99,7 +100,7 @@ export function RecentOrdersWidget({
   isLoading = false
 }: RecentOrdersWidgetProps) {
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 2
@@ -121,7 +122,7 @@ export function RecentOrdersWidget({
     } else if (diffDays < 7) {
       return `${diffDays}d ago`
     } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      return date.toLocaleDateString(DEFAULT_LOCALE, { month: 'short', day: 'numeric' })
     }
   }
 

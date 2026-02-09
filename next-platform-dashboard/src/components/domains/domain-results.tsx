@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { DomainSearchResult } from "@/types/domain";
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 interface DomainResultsProps {
   results: DomainSearchResult[];
   onSelect: (domain: DomainSearchResult) => void;
@@ -21,9 +22,9 @@ export function DomainResults({
   className,
 }: DomainResultsProps) {
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
-      currency: 'USD',
+      currency: DEFAULT_CURRENCY,
     }).format(price);
   };
 

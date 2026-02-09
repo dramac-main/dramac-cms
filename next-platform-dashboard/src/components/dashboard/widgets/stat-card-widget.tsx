@@ -3,6 +3,7 @@
 import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 import { 
   ArrowUpRight, 
   ArrowDownRight,
@@ -46,9 +47,9 @@ const formatValue = (
   
   switch (format) {
     case 'currency':
-      formatted = new Intl.NumberFormat('en-US', {
+      formatted = new Intl.NumberFormat(DEFAULT_LOCALE, {
         style: 'currency',
-        currency: 'USD',
+        currency: DEFAULT_CURRENCY,
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       }).format(value);
@@ -57,14 +58,14 @@ const formatValue = (
       formatted = `${value.toFixed(1)}%`;
       break;
     case 'compact':
-      formatted = new Intl.NumberFormat('en-US', {
+      formatted = new Intl.NumberFormat(DEFAULT_LOCALE, {
         notation: 'compact',
         compactDisplay: 'short',
       }).format(value);
       break;
     case 'number':
     default:
-      formatted = new Intl.NumberFormat('en-US').format(value);
+      formatted = new Intl.NumberFormat(DEFAULT_LOCALE).format(value);
   }
   
   return `${prefix || ''}${formatted}${suffix || ''}`;

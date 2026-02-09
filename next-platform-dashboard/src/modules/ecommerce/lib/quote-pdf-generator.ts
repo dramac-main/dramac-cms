@@ -10,6 +10,7 @@
 import type { Quote, QuoteItem, QuoteSettings } from '../types/ecommerce-types'
 import { formatQuoteCurrency, calculateItemLineTotal } from './quote-utils'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -67,13 +68,13 @@ export function formatQuoteForPDF(data: QuotePDFData) {
     header: {
       title: quote.title || `Quote ${quote.quote_number}`,
       quoteNumber: quote.quote_number,
-      date: new Date(quote.created_at).toLocaleDateString('en-US', {
+      date: new Date(quote.created_at).toLocaleDateString(DEFAULT_LOCALE, {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       }),
       validUntil: quote.valid_until 
-        ? new Date(quote.valid_until).toLocaleDateString('en-US', {
+        ? new Date(quote.valid_until).toLocaleDateString(DEFAULT_LOCALE, {
             year: 'numeric',
             month: 'long',
             day: 'numeric'

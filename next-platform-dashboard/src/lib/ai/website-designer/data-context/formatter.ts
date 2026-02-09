@@ -23,6 +23,7 @@ import type {
   FAQItem,
   EnabledModule,
 } from "./types";
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 
 // =============================================================================
 // MAIN FORMATTER
@@ -704,7 +705,7 @@ function truncate(str: string, maxLength: number): string {
  */
 function formatDate(dateStr: string): string {
   try {
-    return new Date(dateStr).toLocaleDateString("en-US", {
+    return new Date(dateStr).toLocaleDateString(DEFAULT_LOCALE, {
       year: "numeric",
       month: "short",
       day: "numeric",

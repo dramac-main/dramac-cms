@@ -13,6 +13,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { notifyNewBooking } from '@/lib/services/business-notifications'
 import type {
   Service,
   Staff,
@@ -333,7 +334,7 @@ export async function createPublicAppointment(
     // Verify service exists and is bookable
     const { data: service } = await supabase
       .from(`${TABLE_PREFIX}_services`)
-      .select('id, require_confirmation')
+      .select('id, name, price, duration, currency, require_confirmation')
       .eq('site_id', siteId)
       .eq('id', input.serviceId)
       .eq('is_active', true)
@@ -383,6 +384,34 @@ export async function createPublicAppointment(
       console.error('[Booking Public] createPublicAppointment error:', error)
       return { success: false, error: 'Failed to create appointment. Please try again.' }
     }
+    
+    // Get staff name if assigned
+    let staffName: string | undefined
+    if (input.staffId) {
+      const { data: staff } = await supabase
+        .from(`${TABLE_PREFIX}_staff`)
+        .select('name')
+        .eq('id', input.staffId)
+        .single()
+      staffName = staff?.name
+    }
+
+    // Send notifications to business owner + customer (async, non-blocking)
+    notifyNewBooking({
+      siteId,
+      appointmentId: appointment?.id || '',
+      serviceName: service.name || 'Service',
+      servicePrice: service.price || 0,
+      serviceDuration: service.duration || 30,
+      staffName,
+      customerName: input.customerName,
+      customerEmail: input.customerEmail,
+      customerPhone: input.customerPhone,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      status: status as 'pending' | 'confirmed',
+      currency: service.currency,
+    }).catch(err => console.error('[Booking Public] Notification error:', err))
     
     return { success: true, appointmentId: appointment?.id, status }
   } catch (err) {

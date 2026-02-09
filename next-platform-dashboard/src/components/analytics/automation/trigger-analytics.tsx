@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 import {
   AreaChart,
   Area,
@@ -195,7 +196,7 @@ export function TriggerTrendChart({
             <XAxis
               dataKey="date"
               tickFormatter={(value) =>
-                new Date(value).toLocaleDateString("en-US", {
+                new Date(value).toLocaleDateString(DEFAULT_LOCALE, {
                   month: "short",
                   day: "numeric",
                 })

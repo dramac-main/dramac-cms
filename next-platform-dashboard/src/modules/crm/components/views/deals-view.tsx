@@ -45,13 +45,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import type { Deal, PipelineStage } from '../../types/crm-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // HELPERS
 // ============================================================================
 
-function formatCurrency(amount: number | null | undefined, currency = 'USD'): string {
+function formatCurrency(amount: number | null | undefined, currency = DEFAULT_CURRENCY): string {
   if (amount == null) return '-'
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
     maximumFractionDigits: 0
@@ -60,7 +61,7 @@ function formatCurrency(amount: number | null | undefined, currency = 'USD'): st
 
 function formatDate(dateString: string | null | undefined): string {
   if (!dateString) return '-'
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
     month: 'short',
     day: 'numeric'
   })

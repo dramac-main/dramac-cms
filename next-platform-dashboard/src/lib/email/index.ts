@@ -20,6 +20,12 @@ export type {
   SubscriptionCreatedData,
   PaymentFailedData,
   TrialEndingData,
+  BookingConfirmationCustomerData,
+  BookingConfirmationOwnerData,
+  OrderConfirmationCustomerData,
+  OrderConfirmationOwnerData,
+  OrderShippedCustomerData,
+  FormSubmissionOwnerData,
 } from "./email-types";
 
 export { isValidEmailType } from "./email-types";

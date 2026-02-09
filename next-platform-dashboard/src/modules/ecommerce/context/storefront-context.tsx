@@ -13,37 +13,21 @@ import type {
   EcommerceSettings,
   StorefrontContextValue 
 } from '../types/ecommerce-types'
-
-// Currency symbols map
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  ZMW: 'K',
-  KES: 'KSh',
-  NGN: '₦',
-  ZAR: 'R',
-  TZS: 'TSh',
-  UGX: 'USh',
-  RWF: 'FRw',
-  GHS: '₵',
-  XOF: 'CFA',
-  XAF: 'FCFA',
-  INR: '₹',
-  JPY: '¥',
-  CNY: '¥',
-  AUD: 'A$',
-  CAD: 'C$',
-}
+import {
+  DEFAULT_CURRENCY,
+  DEFAULT_CURRENCY_SYMBOL,
+  CURRENCY_SYMBOLS,
+  formatCurrency,
+} from '@/lib/locale-config'
 
 // Default context value
 const defaultContextValue: StorefrontContextValue = {
   siteId: '',
   settings: null,
-  currency: 'USD',
-  currencySymbol: '$',
+  currency: DEFAULT_CURRENCY,
+  currencySymbol: DEFAULT_CURRENCY_SYMBOL,
   taxRate: 0,
-  formatPrice: () => '$0.00',
+  formatPrice: () => `${DEFAULT_CURRENCY_SYMBOL}0.00`,
   isInitialized: false
 }
 
@@ -93,15 +77,14 @@ export function StorefrontProvider({ children, siteId }: StorefrontProviderProps
   }, [siteId])
 
   // Derived values
-  const currency = settings?.currency || 'USD'
-  const currencySymbol = CURRENCY_SYMBOLS[currency] || currency
+  const currency = settings?.currency || DEFAULT_CURRENCY
+  const currencySymbol = CURRENCY_SYMBOLS[currency] || DEFAULT_CURRENCY_SYMBOL
   const taxRate = settings?.tax_rate || 0
 
   // Format price utility
   const formatPrice = useCallback((amount: number): string => {
-    const formatted = amount.toFixed(2)
-    return `${currencySymbol}${formatted}`
-  }, [currencySymbol])
+    return formatCurrency(amount, currency)
+  }, [currency])
 
   // Context value
   const value = useMemo((): StorefrontContextValue => ({

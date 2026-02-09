@@ -41,6 +41,7 @@ import { cn } from '@/lib/utils'
 import { DealCard } from './deal-card'
 import type { Deal, PipelineStage } from '../../types/crm-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -70,8 +71,8 @@ export interface PipelineStageProps {
 // HELPERS
 // =============================================================================
 
-function formatCurrency(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
     maximumFractionDigits: 0,

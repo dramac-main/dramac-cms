@@ -52,12 +52,13 @@ import { CreateCompanyDialog } from '../dialogs/create-company-dialog'
 import { CompanyDetailSheet } from '../sheets/company-detail-sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // HELPERS
 // ============================================================================
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'
@@ -66,9 +67,9 @@ function formatDate(dateString: string): string {
 
 function formatCurrency(amount: number | null | undefined): string {
   if (amount == null) return '-'
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
-    currency: 'USD',
+    currency: DEFAULT_CURRENCY,
     maximumFractionDigits: 0
   }).format(amount)
 }

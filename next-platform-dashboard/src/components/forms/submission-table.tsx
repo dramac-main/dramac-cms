@@ -35,6 +35,7 @@ import {
 } from "@/lib/forms/submission-service";
 import { toast } from "sonner";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface SubmissionTableProps {
   submissions: FormSubmission[];
   selectedIds: string[];
@@ -117,16 +118,16 @@ export function SubmissionTable({
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) {
-      return date.toLocaleTimeString("en-US", {
+      return date.toLocaleTimeString(DEFAULT_LOCALE, {
         hour: "numeric",
         minute: "2-digit",
       });
     } else if (diffDays === 1) {
       return "Yesterday";
     } else if (diffDays < 7) {
-      return date.toLocaleDateString("en-US", { weekday: "short" });
+      return date.toLocaleDateString(DEFAULT_LOCALE, { weekday: "short" });
     } else {
-      return date.toLocaleDateString("en-US", {
+      return date.toLocaleDateString(DEFAULT_LOCALE, {
         month: "short",
         day: "numeric",
       });

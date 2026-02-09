@@ -27,6 +27,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Appointment, Staff, AppointmentStatus } from '../../types/booking-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface CalendarViewProps {
   onAppointmentClick?: (appointment: Appointment) => void
   onSlotClick?: (date: Date, time: string) => void
@@ -139,7 +140,7 @@ export function CalendarView({ onAppointmentClick, onSlotClick }: CalendarViewPr
   
   // Format date header
   const formatDateHeader = (date: Date): string => {
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(DEFAULT_LOCALE, {
       month: 'short',
       day: 'numeric',
     })
@@ -230,13 +231,13 @@ export function CalendarView({ onAppointmentClick, onSlotClick }: CalendarViewPr
           <h3 className="font-semibold">
             {viewMode === 'week' ? (
               <>
-                {weekDates[0].toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                {weekDates[0].toLocaleDateString(DEFAULT_LOCALE, { month: 'long', year: 'numeric' })}
                 {weekDates[0].getMonth() !== weekDates[6].getMonth() && (
-                  <> - {weekDates[6].toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</>
+                  <> - {weekDates[6].toLocaleDateString(DEFAULT_LOCALE, { month: 'long', year: 'numeric' })}</>
                 )}
               </>
             ) : (
-              selectedDate.toLocaleDateString('en-US', {
+              selectedDate.toLocaleDateString(DEFAULT_LOCALE, {
                 weekday: 'long',
                 month: 'long',
                 day: 'numeric',
@@ -396,7 +397,7 @@ export function CalendarView({ onAppointmentClick, onSlotClick }: CalendarViewPr
                               {getServiceName(apt.service_id)}
                             </div>
                             <div className="text-sm opacity-75">
-                              {startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - {endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                              {startTime.toLocaleTimeString(DEFAULT_LOCALE, { hour: 'numeric', minute: '2-digit' })} - {endTime.toLocaleTimeString(DEFAULT_LOCALE, { hour: 'numeric', minute: '2-digit' })}
                             </div>
                             {staffMember && (
                               <div className="text-sm opacity-75 mt-1">

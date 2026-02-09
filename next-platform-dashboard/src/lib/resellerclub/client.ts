@@ -2,6 +2,7 @@
 // ResellerClub API Client with Rate Limiting and Retry Logic
 
 import { RESELLERCLUB_CONFIG, isConfigured, getApiUrl } from './config';
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import { 
   ResellerClubError, 
   ConfigurationError,
@@ -247,7 +248,7 @@ export class ResellerClubClient {
     const data = await this.get<Record<string, unknown>>('billing/reseller-balance.json');
     return {
       balance: Number(data.sellingcurrencybalance || data.resellerbalance || 0),
-      currency: String(data.sellingcurrency || 'USD'),
+      currency: String(data.sellingcurrency || DEFAULT_CURRENCY),
     };
   }
   

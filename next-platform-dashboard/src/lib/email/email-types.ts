@@ -19,7 +19,18 @@ export type EmailType =
   // Billing (LemonSqueezy)
   | "subscription_created"
   | "payment_failed"
-  | "trial_ending";
+  | "trial_ending"
+  // Booking
+  | "booking_confirmation_customer"
+  | "booking_confirmation_owner"
+  | "booking_cancelled_customer"
+  | "booking_cancelled_owner"
+  // E-Commerce
+  | "order_confirmation_customer"
+  | "order_confirmation_owner"
+  | "order_shipped_customer"
+  // Forms
+  | "form_submission_owner";
 
 export interface EmailRecipient {
   email: string;
@@ -48,6 +59,17 @@ export function isValidEmailType(type: string): type is EmailType {
     "team_member_joined",
     "site_published",
     "domain_connected",
+    "subscription_created",
+    "payment_failed",
+    "trial_ending",
+    "booking_confirmation_customer",
+    "booking_confirmation_owner",
+    "booking_cancelled_customer",
+    "booking_cancelled_owner",
+    "order_confirmation_customer",
+    "order_confirmation_owner",
+    "order_shipped_customer",
+    "form_submission_owner",
     "subscription_created",
     "payment_failed",
     "trial_ending",
@@ -101,4 +123,73 @@ export interface PaymentFailedData {
 export interface TrialEndingData {
   daysLeft: number;
   upgradeUrl?: string;
+}
+
+// Booking email data
+export interface BookingConfirmationCustomerData {
+  customerName: string;
+  serviceName: string;
+  staffName?: string;
+  date: string;
+  time: string;
+  duration: string;
+  price: string;
+  status: string;
+  businessName: string;
+  bookingId: string;
+}
+
+export interface BookingConfirmationOwnerData {
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  serviceName: string;
+  staffName?: string;
+  date: string;
+  time: string;
+  duration: string;
+  price: string;
+  status: string;
+  dashboardUrl: string;
+  bookingId: string;
+}
+
+// E-Commerce email data
+export interface OrderConfirmationCustomerData {
+  customerName: string;
+  orderNumber: string;
+  items: Array<{ name: string; quantity: number; price: string }>;
+  subtotal: string;
+  shipping: string;
+  tax: string;
+  total: string;
+  shippingAddress?: string;
+  businessName: string;
+}
+
+export interface OrderConfirmationOwnerData {
+  customerName: string;
+  customerEmail: string;
+  orderNumber: string;
+  items: Array<{ name: string; quantity: number; price: string }>;
+  total: string;
+  paymentStatus: string;
+  dashboardUrl: string;
+}
+
+export interface OrderShippedCustomerData {
+  customerName: string;
+  orderNumber: string;
+  trackingNumber?: string;
+  trackingUrl?: string;
+  businessName: string;
+}
+
+// Form submission email data
+export interface FormSubmissionOwnerData {
+  formName: string;
+  siteName?: string;
+  submittedAt: string;
+  fields: Array<{ label: string; value: string }>;
+  dashboardUrl?: string;
 }

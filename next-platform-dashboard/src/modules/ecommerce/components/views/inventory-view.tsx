@@ -44,6 +44,7 @@ import {
 import type { InventoryReport, StockValuation, AlertedProduct } from '../../types/inventory-types'
 import type { Product } from '../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 interface InventoryViewProps {
   siteId: string
   agencyId: string
@@ -154,9 +155,9 @@ export function InventoryView({ siteId, agencyId }: InventoryViewProps) {
   }
 
   const formatCurrency = (cents: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
-      currency: 'USD'
+      currency: DEFAULT_CURRENCY
     }).format(cents / 100)
   }
 

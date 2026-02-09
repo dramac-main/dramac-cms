@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
 import type { Product } from '../../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -62,9 +63,9 @@ const ACTION_COLORS = {
 // ============================================================================
 
 function formatPrice(price: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
-    currency: 'USD',
+    currency: DEFAULT_CURRENCY,
   }).format(price)
 }
 

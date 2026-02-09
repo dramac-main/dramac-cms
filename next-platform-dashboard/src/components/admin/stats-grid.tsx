@@ -2,14 +2,15 @@ import { StatsCard } from "./stats-card";
 import type { PlatformStats } from "@/lib/admin/stats-service";
 import { Users, Building2, Globe, DollarSign, Package, Activity } from "lucide-react";
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 interface StatsGridProps {
   stats: PlatformStats;
 }
 
 function formatCurrency(cents: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: "currency",
-    currency: "USD",
+    currency: DEFAULT_CURRENCY,
     minimumFractionDigits: 0,
   }).format(cents / 100);
 }

@@ -55,6 +55,7 @@ import { CreateApiKeyDialog } from '../dialogs/create-api-key-dialog'
 import { maskApiKey } from '../../lib/api-key-utils'
 import type { ApiKey } from '../../types/integration-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface ApiKeysViewProps {
   siteId: string
 }
@@ -101,7 +102,7 @@ export function ApiKeysView({ siteId }: ApiKeysViewProps) {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Never'
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',

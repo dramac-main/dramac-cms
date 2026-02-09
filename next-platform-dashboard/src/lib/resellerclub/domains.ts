@@ -8,6 +8,7 @@ import {
   DomainNotFoundError,
 } from './errors';
 import { SUPPORTED_TLDS, TLD_CATEGORIES } from './config';
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import type {
   DomainAvailability,
   DomainPrice,
@@ -154,7 +155,7 @@ export class DomainService {
           },
           transfer: this.extractPrice(tldData, 'transferdomain', 1),
           restore: this.extractPrice(tldData, 'restoredomain', 1),
-          currency: 'USD',
+          currency: DEFAULT_CURRENCY,
         };
       }
     }

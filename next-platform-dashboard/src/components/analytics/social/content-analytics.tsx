@@ -10,6 +10,7 @@
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 import {
   Image,
   Video,
@@ -359,7 +360,7 @@ export function PostingTrendChart({ data }: { data: PostingTrend[] }) {
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
                 dataKey="date" 
-                tickFormatter={(value) => new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                tickFormatter={(value) => new Date(value).toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" })}
                 className="text-xs"
               />
               <YAxis className="text-xs" />

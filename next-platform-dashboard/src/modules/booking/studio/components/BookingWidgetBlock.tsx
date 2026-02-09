@@ -20,6 +20,7 @@ import type { ComponentDefinition } from '@/types/studio'
 import { useBookingServices, useBookingStaff, useBookingSlots, useCreateBooking } from '../../hooks'
 import type { Service, Staff } from '../../types/booking-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -167,10 +168,10 @@ export interface BookingWidgetBlockProps {
 // =============================================================================
 
 const DEMO_SERVICES: ServiceItem[] = [
-  { id: '1', name: 'Full Body Massage', description: 'Relaxing full body massage therapy.', duration: 60, price: 85, currency: 'USD', category: 'Massage' },
-  { id: '2', name: 'Deep Tissue Massage', description: 'Intensive deep muscle treatment.', duration: 90, price: 120, currency: 'USD', category: 'Massage' },
-  { id: '3', name: 'Facial Treatment', description: 'Premium facial with skincare.', duration: 45, price: 65, currency: 'USD', category: 'Skincare' },
-  { id: '4', name: 'Hair Styling', description: 'Professional hair styling consultation.', duration: 30, price: 45, currency: 'USD', category: 'Hair' },
+  { id: '1', name: 'Full Body Massage', description: 'Relaxing full body massage therapy.', duration: 60, price: 85, currency: DEFAULT_CURRENCY, category: 'Massage' },
+  { id: '2', name: 'Deep Tissue Massage', description: 'Intensive deep muscle treatment.', duration: 90, price: 120, currency: DEFAULT_CURRENCY, category: 'Massage' },
+  { id: '3', name: 'Facial Treatment', description: 'Premium facial with skincare.', duration: 45, price: 65, currency: DEFAULT_CURRENCY, category: 'Skincare' },
+  { id: '4', name: 'Hair Styling', description: 'Professional hair styling consultation.', duration: 30, price: 45, currency: DEFAULT_CURRENCY, category: 'Hair' },
 ]
 
 const DEMO_STAFF: StaffMember[] = [
@@ -364,7 +365,7 @@ export function BookingWidgetBlock({
       description: s.description || undefined,
       duration: s.duration_minutes,
       price: s.price,
-      currency: s.currency || 'USD',
+      currency: s.currency || DEFAULT_CURRENCY,
       category: s.category || undefined,
     }))
   }, [siteId, realServices])
@@ -404,7 +405,7 @@ export function BookingWidgetBlock({
   }
 
   const formatPrice = (price: number, currency: string) => {
-    try { return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(price) }
+    try { return new Intl.NumberFormat(DEFAULT_LOCALE, { style: 'currency', currency }).format(price) }
     catch { return `${currency} ${price}` }
   }
 
@@ -885,7 +886,7 @@ export function BookingWidgetBlock({
                 {selectedDate && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{ opacity: 0.7 }}>Date</span>
-                    <span style={{ fontWeight: 500 }}>{selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                    <span style={{ fontWeight: 500 }}>{selectedDate.toLocaleDateString(DEFAULT_LOCALE, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                   </div>
                 )}
                 {selectedTime && (

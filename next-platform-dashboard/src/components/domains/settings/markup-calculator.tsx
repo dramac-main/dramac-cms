@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import type { TldPricingConfig, PricingMarkupType } from "@/types/domain-pricing";
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 interface MarkupCalculatorProps {
   tldConfig: TldPricingConfig;
   defaultMarkupType: PricingMarkupType;
@@ -72,9 +73,9 @@ export function MarkupCalculator({
   const profitMargin = retail > 0 ? (profit / retail) * 100 : 0;
   
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: 'currency',
-      currency: 'USD',
+      currency: DEFAULT_CURRENCY,
     }).format(price);
   };
   

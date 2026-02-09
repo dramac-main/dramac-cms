@@ -8,6 +8,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import {
   Dialog,
   DialogContent,
@@ -114,7 +115,7 @@ export function QuoteBuilderDialog({
   const [discountValue, setDiscountValue] = useState(0)
   const [taxRate, setTaxRate] = useState(0)
   const [shippingAmount, setShippingAmount] = useState(0)
-  const [currency, setCurrency] = useState('USD')
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
   const [validUntil, setValidUntil] = useState(
     format(getDefaultExpiryDate(30), 'yyyy-MM-dd')
   )
@@ -166,7 +167,7 @@ export function QuoteBuilderDialog({
     setDiscountValue(0)
     setTaxRate(0)
     setShippingAmount(0)
-    setCurrency('USD')
+    setCurrency(DEFAULT_CURRENCY)
     setValidUntil(format(getDefaultExpiryDate(30), 'yyyy-MM-dd'))
     setTitle('')
     setIntroduction('')

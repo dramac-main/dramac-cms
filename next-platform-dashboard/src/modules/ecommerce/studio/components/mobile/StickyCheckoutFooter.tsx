@@ -17,6 +17,7 @@ import { Loader2, Lock, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -38,9 +39,9 @@ export interface StickyCheckoutFooterProps {
 // ============================================================================
 
 function defaultFormatPrice(price: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
-    currency: 'USD',
+    currency: DEFAULT_CURRENCY,
   }).format(price)
 }
 

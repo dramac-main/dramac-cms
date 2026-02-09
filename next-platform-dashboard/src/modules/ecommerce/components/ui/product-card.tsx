@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/tooltip"
 import type { Product, ProductStatus } from "../../types/ecommerce-types"
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -97,8 +98,8 @@ const statusConfig: Record<ProductStatus, { label: string; className: string }> 
 // FORMAT HELPERS
 // =============================================================================
 
-function formatPrice(price: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatPrice(price: number, currency: string = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
   }).format(price)
@@ -240,7 +241,7 @@ function ProductGridCard({
   onView,
   selected,
   onSelect,
-  currency = 'USD',
+  currency = DEFAULT_CURRENCY,
   className,
   animationDelay = 0,
 }: ProductCardProps) {
@@ -429,7 +430,7 @@ function ProductListCard({
   onView,
   selected,
   onSelect,
-  currency = 'USD',
+  currency = DEFAULT_CURRENCY,
   className,
   animationDelay = 0,
 }: ProductCardProps) {

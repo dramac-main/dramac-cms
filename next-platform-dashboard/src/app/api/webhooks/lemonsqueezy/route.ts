@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import { getPlanByVariantId } from "@/config/plans";
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import {
   handleModuleSubscriptionCreated,
   handleModuleSubscriptionRenewed,
@@ -327,7 +328,7 @@ async function handlePaymentSuccess(data: any, meta: any) {
       subscription_id: subscription.id,
       lemonsqueezy_order_id: String(orderId),
       amount: (attributes.total || 0) / 100, // LemonSqueezy amounts are in cents
-      currency: attributes.currency || "USD",
+      currency: attributes.currency || DEFAULT_CURRENCY,
       status: "paid",
       invoice_url: attributes.urls?.invoice_url || "",
       receipt_url: attributes.urls?.receipt_url || "",

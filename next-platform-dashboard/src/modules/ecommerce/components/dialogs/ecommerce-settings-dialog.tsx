@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 interface EcommerceSettingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -41,7 +42,7 @@ export function EcommerceSettingsDialog({ open, onOpenChange }: EcommerceSetting
   
   // Store Settings
   const [storeName, setStoreName] = useState(settings?.store_name || '')
-  const [currency, setCurrency] = useState(settings?.currency || 'USD')
+  const [currency, setCurrency] = useState(settings?.currency || DEFAULT_CURRENCY)
   const [taxEnabled, setTaxEnabled] = useState(true)
   const [taxRate, setTaxRate] = useState(settings?.tax_rate?.toString() || '0')
   

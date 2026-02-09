@@ -41,12 +41,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import type { Activity, ActivityType } from '../../types/crm-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // HELPERS
 // ============================================================================
 
 function formatDateTime(dateString: string): string {
-  return new Date(dateString).toLocaleString('en-US', {
+  return new Date(dateString).toLocaleString(DEFAULT_LOCALE, {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
@@ -247,7 +248,7 @@ export function ActivitiesView() {
     const groups = new Map<string, Activity[]>()
     
     filteredActivities.forEach(activity => {
-      const date = new Date(activity.created_at).toLocaleDateString('en-US', {
+      const date = new Date(activity.created_at).toLocaleDateString(DEFAULT_LOCALE, {
         weekday: 'long',
         month: 'long',
         day: 'numeric',

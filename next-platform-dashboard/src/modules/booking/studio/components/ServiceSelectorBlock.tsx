@@ -15,6 +15,7 @@ import type { ComponentDefinition } from '@/types/studio'
 import { useBookingServices } from '../../hooks/useBookingServices'
 import type { Service } from '../../types/booking-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -150,12 +151,12 @@ const SHADOW_MAP: Record<string, string> = {
 }
 
 const DEMO_SERVICES: ServiceItem[] = [
-  { id: '1', name: 'Full Body Massage', description: 'Relaxing full body massage therapy to relieve stress and tension.', duration: 60, price: 85, currency: 'USD', category: 'Massage', rating: 4.8, reviewCount: 124, available: true, featured: true },
-  { id: '2', name: 'Deep Tissue Massage', description: 'Intensive massage targeting deep muscle layers for pain relief.', duration: 90, price: 120, currency: 'USD', category: 'Massage', rating: 4.9, reviewCount: 89, available: true },
-  { id: '3', name: 'Facial Treatment', description: 'Rejuvenating facial treatment with premium skincare products.', duration: 45, price: 65, currency: 'USD', category: 'Skincare', rating: 4.7, reviewCount: 56, available: true },
-  { id: '4', name: 'Hair Styling', description: 'Professional hair styling and consultation with expert stylists.', duration: 30, price: 45, currency: 'USD', category: 'Hair', rating: 4.6, reviewCount: 201, available: true },
-  { id: '5', name: 'Manicure & Pedicure', description: 'Complete nail care with polish and cuticle treatment.', duration: 75, price: 55, currency: 'USD', category: 'Nails', rating: 4.5, reviewCount: 167, available: false },
-  { id: '6', name: 'Aromatherapy Session', description: 'Essential oil therapy session for deep relaxation and healing.', duration: 60, price: 95, currency: 'USD', category: 'Wellness', rating: 4.9, reviewCount: 43, available: true, featured: true },
+  { id: '1', name: 'Full Body Massage', description: 'Relaxing full body massage therapy to relieve stress and tension.', duration: 60, price: 85, currency: DEFAULT_CURRENCY, category: 'Massage', rating: 4.8, reviewCount: 124, available: true, featured: true },
+  { id: '2', name: 'Deep Tissue Massage', description: 'Intensive massage targeting deep muscle layers for pain relief.', duration: 90, price: 120, currency: DEFAULT_CURRENCY, category: 'Massage', rating: 4.9, reviewCount: 89, available: true },
+  { id: '3', name: 'Facial Treatment', description: 'Rejuvenating facial treatment with premium skincare products.', duration: 45, price: 65, currency: DEFAULT_CURRENCY, category: 'Skincare', rating: 4.7, reviewCount: 56, available: true },
+  { id: '4', name: 'Hair Styling', description: 'Professional hair styling and consultation with expert stylists.', duration: 30, price: 45, currency: DEFAULT_CURRENCY, category: 'Hair', rating: 4.6, reviewCount: 201, available: true },
+  { id: '5', name: 'Manicure & Pedicure', description: 'Complete nail care with polish and cuticle treatment.', duration: 75, price: 55, currency: DEFAULT_CURRENCY, category: 'Nails', rating: 4.5, reviewCount: 167, available: false },
+  { id: '6', name: 'Aromatherapy Session', description: 'Essential oil therapy session for deep relaxation and healing.', duration: 60, price: 95, currency: DEFAULT_CURRENCY, category: 'Wellness', rating: 4.9, reviewCount: 43, available: true, featured: true },
 ]
 
 // =============================================================================
@@ -278,7 +279,7 @@ export function ServiceSelectorBlock({
       description: s.description || undefined,
       duration: s.duration_minutes,
       price: s.price,
-      currency: s.currency || 'USD',
+      currency: s.currency || DEFAULT_CURRENCY,
       category: s.category || undefined,
       image: s.image_url || undefined,
       available: s.is_active,
@@ -312,7 +313,7 @@ export function ServiceSelectorBlock({
 
   const formatPrice = (price: number, currency: string) => {
     try {
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(price)
+      return new Intl.NumberFormat(DEFAULT_LOCALE, { style: 'currency', currency }).format(price)
     } catch {
       return `${currency} ${price}`
     }

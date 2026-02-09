@@ -1,34 +1,28 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
+import {
+  DEFAULT_LOCALE,
+  DEFAULT_CURRENCY,
+  formatCurrency as localeFormatCurrency,
+  formatNumber as localeFormatNumber,
+  formatDate as localeFormatDate,
+  formatDateRange as localeFormatDateRange,
+} from "@/lib/locale-config"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
 export function formatDate(date: string | Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(new Date(date));
+  return localeFormatDate(date, DEFAULT_LOCALE);
 }
 
-export function formatCurrency(amount: number, currency = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(amount);
+export function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
+  return localeFormatCurrency(amount, currency, DEFAULT_LOCALE);
 }
 
 export function formatNumber(num: number): string {
-  if (num >= 1000000) {
-    return new Intl.NumberFormat("en-US", {
-      notation: "compact",
-      compactDisplay: "short",
-      maximumFractionDigits: 1,
-    }).format(num);
-  }
-  return new Intl.NumberFormat("en-US").format(num);
+  return localeFormatNumber(num, DEFAULT_LOCALE);
 }
 
 export function formatDuration(seconds: number): string {
@@ -46,13 +40,5 @@ export function formatDuration(seconds: number): string {
 }
 
 export function formatDateRange(start: string | Date, end: string | Date): string {
-  const startDate = new Date(start);
-  const endDate = new Date(end);
-  
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-  });
-  
-  return `${formatter.format(startDate)} - ${formatter.format(endDate)}`;
+  return localeFormatDateRange(start, end, DEFAULT_LOCALE);
 }

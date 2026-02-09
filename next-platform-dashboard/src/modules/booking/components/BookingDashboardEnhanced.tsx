@@ -55,6 +55,7 @@ import type {
 } from '../types/booking-types'
 import type { DateRange } from "react-day-picker"
 
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -124,7 +125,7 @@ export function BookingDashboardEnhanced({
   staff = [],
   isLoading = false,
   error,
-  currency = 'USD',
+  currency = DEFAULT_CURRENCY,
   onCreateAppointment,
   onCreateService,
   onAddStaff,

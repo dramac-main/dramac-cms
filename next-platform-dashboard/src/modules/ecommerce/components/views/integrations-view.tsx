@@ -62,6 +62,7 @@ import { toast } from 'sonner'
 import { useIntegrations } from '../../hooks/use-integrations'
 import type { Integration, IntegrationLog, IntegrationCategory } from '../../types/integration-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface IntegrationsViewProps {
   siteId: string
 }
@@ -202,7 +203,7 @@ export function IntegrationsView({ siteId }: IntegrationsViewProps) {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
       month: 'short',
       day: 'numeric',
       hour: 'numeric',

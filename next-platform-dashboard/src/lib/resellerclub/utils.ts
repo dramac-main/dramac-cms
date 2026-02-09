@@ -3,6 +3,7 @@
 
 import { SUPPORTED_TLDS, TLD_CATEGORIES } from './config';
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 /**
  * Parse a domain name into its components
  */
@@ -74,8 +75,8 @@ export function getTldCategory(tld: string): string | null {
 /**
  * Format price for display
  */
-export function formatPrice(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+export function formatPrice(amount: number, currency = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
   }).format(amount);
@@ -122,7 +123,7 @@ export function isExpired(expiryDate: string | Date): boolean {
  */
 export function formatExpiryDate(expiryDate: string | Date): string {
   const date = new Date(expiryDate);
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(DEFAULT_LOCALE, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

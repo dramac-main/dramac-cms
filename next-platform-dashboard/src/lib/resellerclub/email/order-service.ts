@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { businessEmailApi } from './client';
 import { dnsService } from '@/lib/cloudflare';
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import type { 
   CreateEmailOrderInput,
   EmailOrder,
@@ -65,7 +66,7 @@ export const emailOrderService = {
         expiry_date: expiryDate.toISOString(),
         wholesale_price: wholesalePrice,
         retail_price: params.retailPrice,
-        currency: params.currency || 'USD',
+        currency: params.currency || DEFAULT_CURRENCY,
       })
       .select()
       .single();

@@ -5,6 +5,7 @@ import { getResellerClubClient } from './client';
 import { OrderNotFoundError } from './errors';
 import type { Order, Transaction, SearchResponse } from './types';
 
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 /**
  * Order Service
  * 
@@ -157,7 +158,7 @@ export class OrderService {
       creationTime: String(data.creationdt || data.creationtime || ''),
       customerId: String(data.customerid || data['customer-id'] || ''),
       amount: Number(data.amount || data.total || 0),
-      currency: String(data.currency || 'USD'),
+      currency: String(data.currency || DEFAULT_CURRENCY),
     };
   }
   
@@ -170,7 +171,7 @@ export class OrderService {
       transactionType: String(data.transtype || data.transactiontype || ''),
       description: String(data.description || ''),
       amount: Number(data.amount || 0),
-      currency: String(data.currency || 'USD'),
+      currency: String(data.currency || DEFAULT_CURRENCY),
       transactionDate: String(data.transdate || data.transactiondate || ''),
       balance: Number(data.balance || 0),
     };

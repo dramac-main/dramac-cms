@@ -40,6 +40,7 @@ import { Button } from "@/components/ui/button";
 import { formatNumber, formatCurrency } from "@/lib/utils";
 import type { AnalyticsDashboardData, TopEvent, HealthStatus } from "@/lib/modules/analytics/module-analytics";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface ModuleAnalyticsDashboardProps {
   moduleId: string;
   siteId?: string;
@@ -278,7 +279,7 @@ export function ModuleAnalyticsDashboard({
                       <XAxis
                         dataKey="stat_date"
                         tickFormatter={(v: string) =>
-                          new Date(v).toLocaleDateString("en-US", {
+                          new Date(v).toLocaleDateString(DEFAULT_LOCALE, {
                             month: "short",
                             day: "numeric",
                           })
@@ -287,7 +288,7 @@ export function ModuleAnalyticsDashboard({
                       <YAxis />
                       <Tooltip
                         labelFormatter={(v) =>
-                          new Date(String(v)).toLocaleDateString("en-US", {
+                          new Date(String(v)).toLocaleDateString(DEFAULT_LOCALE, {
                             month: "long",
                             day: "numeric",
                             year: "numeric",
@@ -327,7 +328,7 @@ export function ModuleAnalyticsDashboard({
                       <XAxis
                         dataKey="stat_date"
                         tickFormatter={(v: string) =>
-                          new Date(v).toLocaleDateString("en-US", {
+                          new Date(v).toLocaleDateString(DEFAULT_LOCALE, {
                             month: "short",
                             day: "numeric",
                           })
@@ -336,7 +337,7 @@ export function ModuleAnalyticsDashboard({
                       <YAxis />
                       <Tooltip
                         labelFormatter={(v) =>
-                          new Date(String(v)).toLocaleDateString("en-US", {
+                          new Date(String(v)).toLocaleDateString(DEFAULT_LOCALE, {
                             month: "long",
                             day: "numeric",
                             year: "numeric",
@@ -381,7 +382,7 @@ export function ModuleAnalyticsDashboard({
                       <XAxis
                         dataKey="stat_date"
                         tickFormatter={(v: string) =>
-                          new Date(v).toLocaleDateString("en-US", {
+                          new Date(v).toLocaleDateString(DEFAULT_LOCALE, {
                             month: "short",
                             day: "numeric",
                           })
@@ -391,7 +392,7 @@ export function ModuleAnalyticsDashboard({
                       <YAxis yAxisId="right" orientation="right" />
                       <Tooltip
                         labelFormatter={(v) =>
-                          new Date(String(v)).toLocaleDateString("en-US", {
+                          new Date(String(v)).toLocaleDateString(DEFAULT_LOCALE, {
                             month: "long",
                             day: "numeric",
                             year: "numeric",

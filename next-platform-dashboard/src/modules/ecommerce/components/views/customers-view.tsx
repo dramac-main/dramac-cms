@@ -29,6 +29,7 @@ import { toast } from 'sonner'
 import { CustomerTable } from '../customers/customer-table'
 import { CustomerDetailDialog } from '../customers/customer-detail-dialog'
 import { CreateCustomerDialog } from '../customers/create-customer-dialog'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 import { 
   getCustomers, 
   getCustomerStats,
@@ -59,8 +60,8 @@ interface CustomersViewProps {
 // HELPERS
 // ============================================================================
 
-function formatCurrency(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency
   }).format(amount / 100)

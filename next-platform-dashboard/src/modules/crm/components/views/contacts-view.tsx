@@ -52,12 +52,13 @@ import { CreateContactDialog } from '../dialogs/create-contact-dialog'
 import { ContactDetailSheet } from '../sheets/contact-detail-sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // HELPERS
 // ============================================================================
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
     month: 'short',
     day: 'numeric',
     year: 'numeric'

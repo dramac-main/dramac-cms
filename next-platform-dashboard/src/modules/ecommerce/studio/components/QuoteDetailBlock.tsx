@@ -32,6 +32,7 @@ import { QuotePriceBreakdown, QuoteSavingsDisplay } from './QuotePriceBreakdown'
 import { QuoteActionButtons } from './QuoteActionButtons'
 import type { Quote } from '../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -69,7 +70,7 @@ export interface QuoteDetailBlockProps {
 // ============================================================================
 
 function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString('en-US', {
+  return new Date(date).toLocaleDateString(DEFAULT_LOCALE, {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
@@ -77,7 +78,7 @@ function formatDate(date: string | Date): string {
 }
 
 function formatDateTime(date: string | Date): string {
-  return new Date(date).toLocaleString('en-US', {
+  return new Date(date).toLocaleString(DEFAULT_LOCALE, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

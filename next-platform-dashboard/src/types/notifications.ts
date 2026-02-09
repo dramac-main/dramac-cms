@@ -13,7 +13,17 @@ export type NotificationType =
   | "comment_added"
   | "mention"
   | "security_alert"
-  | "system";
+  | "system"
+  // Booking notifications
+  | "new_booking"
+  | "booking_confirmed"
+  | "booking_cancelled"
+  // E-Commerce notifications
+  | "new_order"
+  | "order_shipped"
+  | "order_delivered"
+  // Form submissions
+  | "form_submission";
 
 export interface Notification {
   id: string;

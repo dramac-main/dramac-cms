@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type { Staff, Appointment } from '../../types/booking-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -240,7 +241,7 @@ export function AvailabilityAlert({
                   {issue.date && (
                     <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      {new Date(issue.date).toLocaleDateString('en-US', {
+                      {new Date(issue.date).toLocaleDateString(DEFAULT_LOCALE, {
                         weekday: 'short',
                         month: 'short',
                         day: 'numeric',
@@ -421,13 +422,13 @@ export function PendingAppointmentsAlert({
                 </p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Calendar className="h-3 w-3" />
-                  {new Date(appointment.start_time).toLocaleDateString('en-US', {
+                  {new Date(appointment.start_time).toLocaleDateString(DEFAULT_LOCALE, {
                     weekday: 'short',
                     month: 'short',
                     day: 'numeric',
                   })}
                   <span>•</span>
-                  {new Date(appointment.start_time).toLocaleTimeString('en-US', {
+                  {new Date(appointment.start_time).toLocaleTimeString(DEFAULT_LOCALE, {
                     hour: 'numeric',
                     minute: '2-digit',
                   })}

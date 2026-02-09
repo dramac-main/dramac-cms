@@ -41,6 +41,7 @@ import { toast } from 'sonner'
 import { createRefund } from '../../actions/order-actions'
 import type { Order, OrderItem } from '../../types/ecommerce-types'
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -68,8 +69,8 @@ interface RefundItemState {
 // HELPERS
 // ============================================================================
 
-function formatCurrency(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency
   }).format(amount / 100)

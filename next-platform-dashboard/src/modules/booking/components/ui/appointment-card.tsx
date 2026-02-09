@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/tooltip"
 import type { Appointment, AppointmentStatus, PaymentStatus } from '../../types/booking-types'
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -144,7 +145,7 @@ const paymentStatusConfig: Record<PaymentStatus, {
 
 function formatTime(dateString: string): string {
   const date = new Date(dateString)
-  return date.toLocaleTimeString('en-US', { 
+  return date.toLocaleTimeString(DEFAULT_LOCALE, { 
     hour: 'numeric', 
     minute: '2-digit',
     hour12: true 
@@ -153,7 +154,7 @@ function formatTime(dateString: string): string {
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { 
+  return date.toLocaleDateString(DEFAULT_LOCALE, { 
     month: 'short', 
     day: 'numeric',
     year: 'numeric',

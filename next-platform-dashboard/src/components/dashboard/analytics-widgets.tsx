@@ -22,6 +22,7 @@ import {
 } from "@/components/dashboard/widgets";
 import { TimeRange } from "@/types/dashboard-widgets";
 
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // Sample data for charts
 const revenueData = [
   { label: "Jan", value: 4500 },
@@ -70,9 +71,9 @@ export function AnalyticsWidgets({ className }: AnalyticsWidgetsProps) {
 
   // Format functions
   const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-US", {
+    new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: "currency",
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
       minimumFractionDigits: 0,
     }).format(value);
 

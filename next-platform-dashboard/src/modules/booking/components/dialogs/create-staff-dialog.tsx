@@ -6,6 +6,7 @@
 'use client'
 
 import { useState } from 'react'
+import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
 import {
   Dialog,
   DialogContent,
@@ -58,7 +59,7 @@ export function CreateStaffDialog({ open, onOpenChange }: CreateStaffDialogProps
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [bio, setBio] = useState('')
-  const [timezone, setTimezone] = useState('UTC')
+  const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE)
   const [acceptBookings, setAcceptBookings] = useState(true)
   
   const resetForm = () => {
@@ -66,7 +67,7 @@ export function CreateStaffDialog({ open, onOpenChange }: CreateStaffDialogProps
     setEmail('')
     setPhone('')
     setBio('')
-    setTimezone('UTC')
+    setTimezone(DEFAULT_TIMEZONE)
     setAcceptBookings(true)
   }
   

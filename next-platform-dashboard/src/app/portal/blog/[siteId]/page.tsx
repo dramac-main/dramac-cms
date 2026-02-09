@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getPosts, type BlogPost } from "@/lib/blog/post-service";
 
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 export default function PortalSiteBlogPage({
   params,
 }: {
@@ -38,7 +39,7 @@ export default function PortalSiteBlogPage({
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "";
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
       month: "long",
       day: "numeric",
       year: "numeric",
