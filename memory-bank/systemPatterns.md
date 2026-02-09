@@ -1,6 +1,6 @@
 # System Patterns: DRAMAC Architecture
 
-**Last Updated**: February 2, 2026
+**Last Updated**: February 2026
 
 ## Development Workflow
 
@@ -35,6 +35,73 @@ git push
 - **State**: Zustand, TanStack Query
 - **Editor**: DRAMAC Studio (custom dnd-kit based) - Replacing Puck (Feb 2026)
 - **Rich Text**: TipTap
+- **Email**: Resend (transactional + auth SMTP)
+
+---
+
+## 🇿🇲 Locale & Currency Pattern (CRITICAL)
+
+### Centralized Locale Config
+**ALL locale/currency/timezone defaults MUST come from `src/lib/locale-config.ts`.**
+
+```typescript
+import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE, formatCurrency } from '@/lib/locale-config';
+```
+
+**NEVER hardcode** `'en-US'`, `'USD'`, `'$'`, `'UTC'` anywhere. Always use:
+- `DEFAULT_LOCALE` (`'en-ZM'`)
+- `DEFAULT_CURRENCY` (`'ZMW'`)
+- `DEFAULT_CURRENCY_SYMBOL` (`'K'`)
+- `DEFAULT_TIMEZONE` (`'Africa/Lusaka'`)
+- `DEFAULT_COUNTRY` (`'ZM'`)
+- `DEFAULT_TAX_RATE` (`16`)
+- `formatCurrency(amount)`, `formatDate(date)`, etc.
+
+### When Adding New Modules
+1. Import from `@/lib/locale-config` — NOT hardcode defaults
+2. Use `formatCurrency()` for all money displays
+3. Use `DEFAULT_TIMEZONE` for all date/time calculations
+4. Add ZMW to any currency enum/dropdown
+
+---
+
+## 📧 Email & Notification Pattern
+
+### Email Architecture
+```
+src/lib/email/
+├── resend-client.ts      # Resend SDK init (getResend(), isEmailEnabled(), getEmailFrom())
+├── send-email.ts         # Core sendEmail(to, type, data) function
+├── email-types.ts        # EmailType union + data interfaces
+├── templates.ts          # HTML+text template generators per type
+└── index.ts              # Re-exports
+```
+
+### Notification Architecture
+```
+src/lib/services/
+├── notifications.ts              # createNotification() → DB insert + optional email
+└── business-notifications.ts     # Orchestrator: notifyNewBooking(), notifyNewOrder()
+```
+
+### Adding New Notification Types
+1. Add type to `NotificationType` union in `src/types/notifications.ts`
+2. Add email type to `EmailType` union in `email-types.ts`
+3. Add data interface in `email-types.ts`
+4. Add HTML+text template in `templates.ts`
+5. Add to `shouldSendEmail()` mapping in `notifications.ts`
+6. Add to `notificationTypeInfo` display map
+7. Create orchestrator function in `business-notifications.ts`
+8. Wire into the server action that creates the entity
+
+### Business-Critical Notifications
+These types ALWAYS send email (bypass user preferences):
+- `new_booking`, `booking_cancelled`, `new_order`, `payment_failed`
+
+### Auth Email (Supabase SMTP)
+Login/signup/reset emails go through Supabase Auth SMTP → Resend:
+- Configure in Supabase Dashboard → Authentication → SMTP Settings
+- See `src/lib/email/resend-smtp-config.ts`
 
 ---
 

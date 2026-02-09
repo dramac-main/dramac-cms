@@ -1,6 +1,52 @@
 # Active Context
 
-## Latest Session Update (Booking + Ecommerce Module Fixes — February 2026)
+## Latest Session Update (Zambia Localization + Notification System — February 2026)
+
+### ZAMBIA LOCALIZATION — ENTIRE PLATFORM DEFAULTS UPDATED ✅
+
+**Problem:**
+~250 hardcoded instances of `en-US`, `USD`, `$`, `UTC` scattered across ~46 files in all modules. Not appropriate for a Zambia-based business.
+
+**Solution:**
+1. Created centralized `src/lib/locale-config.ts` — single source of truth for all locale/currency/timezone defaults
+2. Automated bulk replacement via `scripts/fix-locale.js` — fixed ~250 instances
+3. Manual fixes for edge cases: TypeScript typed params (`currency: string = 'USD'`), `useState('USD')`, `useState('UTC')`, CRM manifest, demo data arrays
+
+**Key Constants:**
+- `DEFAULT_LOCALE = 'en-ZM'`, `DEFAULT_CURRENCY = 'ZMW'`, `DEFAULT_CURRENCY_SYMBOL = 'K'`
+- `DEFAULT_TIMEZONE = 'Africa/Lusaka'`, `DEFAULT_COUNTRY = 'ZM'`, `DEFAULT_TAX_RATE = 16`
+
+**Modules Affected:** booking, ecommerce, CRM, social-media, admin, domains, AI agents, AI website designer, developer, marketplace, blog, portal, forms, analytics, billing
+
+### BOOKING/ORDER/FORM NOTIFICATION SYSTEM — FULLY WIRED ✅
+
+**Problem:**
+Booking creation and order creation had ZERO notification triggers. Business owner could miss every booking and order. Form submission notification was a console.log stub.
+
+**Solution:**
+1. Created `src/lib/services/business-notifications.ts` — orchestrator with `notifyNewBooking()`, `notifyNewOrder()`, `notifyOrderShipped()`
+2. Added 8 new email types + data interfaces to `src/lib/email/email-types.ts`
+3. Added 8 HTML+text email templates to `src/lib/email/templates.ts`
+4. Wired booking creation → notifications in `public-booking-actions.ts`
+5. Wired order creation → notifications in `ecommerce-actions.ts`
+6. Replaced form notification stub with real `sendEmail()` call
+7. Business-critical notifications (new_booking, booking_cancelled, new_order, payment_failed) ALWAYS send email
+
+**Notification Flow:**
+- Booking created → owner in-app notification + owner email + customer email
+- Order created → owner in-app notification + owner email + customer email
+- Form submitted → owner email with all field data
+
+**Manual Action Needed:**
+- Configure Resend SMTP in Supabase Dashboard for auth emails (login/signup/reset)
+- See `src/lib/email/resend-smtp-config.ts` for instructions
+
+### Commit
+- `6b3dc28` — "feat: Zambia localization (ZMW/Africa/Lusaka) + booking/order/form notification system"
+
+---
+
+## Previous Session (Booking + Ecommerce Module Fixes — February 2026)
 
 ### BOOKING: INSERT FAILURE + CONFIRMATION STATUS + ERROR HANDLING FIXED ✅
 

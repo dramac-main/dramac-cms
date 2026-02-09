@@ -1,7 +1,74 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅**
+
+---
+
+## 🇿🇲 ZAMBIA LOCALIZATION + NOTIFICATION SYSTEM (February 2026) ✅
+
+### Localization — What Was Done
+Entire platform defaults changed from en-US/USD/UTC to en-ZM/ZMW/Africa/Lusaka.
+
+| Item | Before | After |
+|------|--------|-------|
+| Locale | `en-US` | `en-ZM` |
+| Currency | `USD` | `ZMW` |
+| Currency Symbol | `$` | `K` |
+| Timezone | `UTC` | `Africa/Lusaka` |
+| Country | `US` | `ZM` |
+| Tax Rate | — | `16%` (VAT) |
+
+**Centralized Config**: `src/lib/locale-config.ts` (NEW, ~250 lines)
+- Exports: `DEFAULT_LOCALE`, `DEFAULT_CURRENCY`, `DEFAULT_CURRENCY_SYMBOL`, `DEFAULT_TIMEZONE`, `DEFAULT_COUNTRY`, `DEFAULT_TAX_RATE`
+- Formatting: `formatCurrency()`, `formatPrice()`, `formatNumber()`, `formatDate()`, `formatDateTime()`, `formatTime()`, `formatDateRange()`
+- Lists: `CURRENCY_SYMBOLS`, `SUPPORTED_CURRENCIES`, `AFRICAN_TIMEZONES`, `ALL_TIMEZONES`
+- ~250 hardcoded instances replaced across ~140 files via automated script + manual fixes
+- Modules affected: booking, ecommerce, CRM, social-media, admin, domains, AI, developer, marketplace, blog, portal, forms, analytics
+
+### Notification System — What Was Done
+Business-critical notifications (bookings, orders, form submissions) now trigger both in-app notifications and email via Resend.
+
+| New File | Purpose |
+|----------|---------|
+| `src/lib/services/business-notifications.ts` | Orchestrator: `notifyNewBooking()`, `notifyNewOrder()`, `notifyOrderShipped()` |
+| `src/lib/email/resend-smtp-config.ts` | Documentation for Supabase auth SMTP via Resend |
+
+| Modified File | Change |
+|---------------|--------|
+| `src/lib/email/email-types.ts` | +8 email types + data interfaces (booking/order/form) |
+| `src/lib/email/templates.ts` | +8 HTML+text email templates |
+| `src/types/notifications.ts` | +7 notification types (new_booking, new_order, etc.) |
+| `src/lib/services/notifications.ts` | Business-critical types ALWAYS send email |
+| `src/modules/booking/actions/public-booking-actions.ts` | Calls `notifyNewBooking()` after creation |
+| `src/modules/ecommerce/actions/ecommerce-actions.ts` | Calls `notifyNewOrder()` after creation |
+| `src/lib/forms/notification-service.ts` | Replaced stub with real Resend `sendEmail()` |
+
+### Notification Flow
+```
+Customer creates booking → Server creates appointment → notifyNewBooking()
+  → In-app notification to business owner (DB insert)
+  → Email to owner (Resend: booking_confirmation_owner template)
+  → Email to customer (Resend: booking_confirmation_customer template)
+
+Customer places order → Server creates order → notifyNewOrder()
+  → In-app notification to business owner
+  → Email to owner (order_confirmation_owner template)
+  → Email to customer (order_confirmation_customer template)
+
+Visitor submits form → Form handler → sendEmail()
+  → Email to site owner (form_submission_owner template)
+```
+
+### Manual Action Required
+⚠️ **Supabase Auth SMTP**: Configure Resend SMTP in Supabase Dashboard for login/signup/reset emails:
+- SMTP Host: `smtp.resend.com`, Port: `465`
+- Username: `resend`, Password: Resend API key
+- Sender: `noreply@dramac.app`
+- See `src/lib/email/resend-smtp-config.ts` for full instructions
+
+### Commit
+- `6b3dc28` — "feat: Zambia localization (ZMW/Africa/Lusaka) + booking/order/form notification system"
 
 ---
 

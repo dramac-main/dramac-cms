@@ -91,8 +91,19 @@
 - **AI Agents System**: (Phase EM-58) - Intelligent agents with memory, tools, goals
 
 ### Communication
-- **Resend**: 6.7.0 (transactional emails)
+- **Resend**: 6.7.0 (transactional emails via REST API)
+  - SDK: `src/lib/email/resend-client.ts` — `getResend()`, `isEmailEnabled()`, `getEmailFrom()`
+  - Sender: `Dramac <noreply@dramac.app>`
+  - Also used as Supabase Auth SMTP (login/signup/reset emails)
+  - SMTP: `smtp.resend.com:465` — configured in Supabase Dashboard
 - **Handlebars**: 4.7.8 (email templates)
+
+### Localization
+- **Default Locale**: `en-ZM` (Zambia)
+- **Default Currency**: `ZMW` (Zambian Kwacha, symbol: `K`)
+- **Default Timezone**: `Africa/Lusaka` (UTC+2)
+- **Config**: `src/lib/locale-config.ts` — centralized, all modules import from here
+- **NEVER hardcode** `en-US`, `USD`, `$`, `UTC` — use constants from locale-config
 
 ### Utilities
 - **date-fns**: 4.1.0 (date manipulation)
