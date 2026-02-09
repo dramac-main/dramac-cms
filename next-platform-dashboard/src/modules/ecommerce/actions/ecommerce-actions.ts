@@ -11,7 +11,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { notifyNewOrder } from '@/lib/services/business-notifications'
+import { notifyNewOrder, notifyOrderShipped } from '@/lib/services/business-notifications'
 import type {
   Product, ProductInput, ProductUpdate, ProductFilters,
   Category, CategoryInput, CategoryUpdate,
@@ -1344,7 +1344,22 @@ export async function updateOrderFulfillment(
     .single()
   
   if (error) throw new Error(error.message)
-  return data as Order
+  
+  const order = data as Order
+  
+  // Send shipping notification to customer when order is fulfilled
+  if (fulfillmentStatus === 'fulfilled' && order.customer_email) {
+    notifyOrderShipped(
+      siteId,
+      order.order_number,
+      order.customer_email,
+      order.customer_name,
+      trackingNumber,
+      trackingUrl,
+    ).catch(err => console.error('[Ecommerce] Shipping notification error:', err))
+  }
+  
+  return order
 }
 
 export async function markOrderDelivered(siteId: string, orderId: string): Promise<Order> {

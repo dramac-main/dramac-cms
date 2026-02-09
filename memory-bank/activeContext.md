@@ -1,6 +1,48 @@
 # Active Context
 
-## Latest Session Update (Zambia Localization + Notification System — February 2026)
+## Latest Session Update (Deep Currency Sweep + Email Domain Fix — February 2026)
+
+### EMAIL DOMAIN FIX ✅
+
+**Problem:** Email sender domain was `dramac.app` but Resend verified domain is `app.dramacagency.com`.
+**Fix:** Updated `resend-smtp-config.ts` and `resend-client.ts` to use `@app.dramacagency.com`.
+**Commit:** `1d4996b`
+
+### DEEP CURRENCY SWEEP — ALL REMAINING USD ELIMINATED ✅
+
+**Problem:**
+First localization pass (commit `6b3dc28`) missed ~60 remaining USD/$ instances across 26 files. Currency dropdowns in module settings were hardcoded to 5 currencies (USD/EUR/GBP/CAD/AUD) — missing ZMW entirely. Booking module had NO currency setting at all.
+
+**Solution — Second-Pass Deep Scan + Fixes (26 files modified):**
+
+1. **Module Catalog** (`module-catalog.ts`): All 22 `currency: "USD"` → `DEFAULT_CURRENCY`, `formatPrice()` uses `DEFAULT_CURRENCY_SYMBOL`
+2. **CRM Analytics** (3 files): Local `formatCurrency()` hardcoded `$` → uses `DEFAULT_CURRENCY_SYMBOL`
+3. **Booking Module** — full currency support added:
+   - `manifest.ts`: Added `currency` setting with `DEFAULT_CURRENCY` default + enum of supported currencies
+   - `booking-types.ts`: Added `currency: string` to `BookingSettings` interface
+   - `booking-storefront-context.tsx`: Removed unsafe `(settings as any)?.currency` cast → properly typed
+   - `booking-settings-dialog.tsx`: Added currency picker UI using `SUPPORTED_CURRENCIES`, Africa/Lusaka first in timezone list
+4. **Ecommerce Settings Dialog**: Hardcoded 5-currency dropdown → dynamic `SUPPORTED_CURRENCIES.map()`
+5. **CRM Create-Deal Dialog**: Hardcoded 5-currency dropdown → dynamic `SUPPORTED_CURRENCIES.map()`
+6. **Quote Dialogs** (2 files): Hardcoded currency dropdowns → dynamic `SUPPORTED_CURRENCIES.map()`
+7. **Onboarding Steps** (4 files): All `'$'` fallbacks → `'K'` or `DEFAULT_CURRENCY_SYMBOL`
+8. **Deal Detail Sheet**: `'$0'` → `` `${DEFAULT_CURRENCY_SYMBOL}0` ``
+9. **Analytics Cards**: `'$0.00'` → `'K0.00'`
+10. **Checkout Page**: `formatPrice` defaults → `DEFAULT_CURRENCY`/`DEFAULT_LOCALE`
+11. **Module-Pricing Types**: `formatPrice`/`formatPriceWithCycle` defaults → `ZMW`/`en-ZM`
+12. **Studio Components** (3 files): All demo pricing `$9/$29/$99` → `K9/K29/K99`
+13. **Paddle Billing** (3 files): USD intentionally kept (platform billing currency) — added clarifying comments
+
+**Architecture — 3 Distinct Currency Systems:**
+- **Module Settings** (per-site): Each module stores currency in its DB table, UI reads from `SUPPORTED_CURRENCIES`, defaults to `DEFAULT_CURRENCY` (ZMW)
+- **Module Marketplace Pricing** (catalog): All use `DEFAULT_CURRENCY` from locale-config
+- **Platform Billing** (Paddle): USD is correct — Paddle determines billing currency
+
+**Commit:** `8a71ade`
+
+---
+
+## Previous Session (Zambia Localization + Notification System — February 2026)
 
 ### ZAMBIA LOCALIZATION — ENTIRE PLATFORM DEFAULTS UPDATED ✅
 

@@ -1,7 +1,38 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅**
+
+---
+
+## 💰 DEEP CURRENCY SWEEP — ALL REMAINING USD ELIMINATED (February 2026) ✅
+
+### What Was Done
+Second-pass deep scan found ~60 remaining USD/$ instances the first localization pass missed. Fixed all 26 files.
+
+### Files Modified (26)
+| Category | Files | Change |
+|----------|-------|--------|
+| Module catalog | `module-catalog.ts` | 22 `currency: "USD"` → `DEFAULT_CURRENCY` + formatPrice fix |
+| CRM analytics | `revenue-metrics.tsx`, `pipeline-metrics.tsx`, `deal-velocity-chart.tsx` | Local `formatCurrency` hardcoded `$` → `DEFAULT_CURRENCY_SYMBOL` |
+| Booking module | `manifest.ts`, `booking-types.ts`, `booking-storefront-context.tsx`, `booking-settings-dialog.tsx` | Added `currency` field to manifest/types/dialog/context |
+| Ecommerce settings | `ecommerce-settings-dialog.tsx` | Hardcoded 5-currency → `SUPPORTED_CURRENCIES` |
+| CRM deal dialog | `create-deal-dialog.tsx` | Hardcoded 5-currency → `SUPPORTED_CURRENCIES` |
+| Quote dialogs | `quote-template-dialog.tsx`, `quote-builder-dialog.tsx` | Hardcoded currency → `SUPPORTED_CURRENCIES` |
+| Onboarding | `CurrencyTaxStep.tsx`, `FirstProductStep.tsx`, `LaunchStep.tsx`, `ShippingStep.tsx` | `$` fallbacks → `K` |
+| Deal sheet | `deal-detail-sheet.tsx` | `$0` → `DEFAULT_CURRENCY_SYMBOL + 0` |
+| Analytics | `analytics-cards.tsx` | `$0.00` → `K0.00` |
+| Checkout | `checkout/module/page.tsx` | formatPrice defaults → ZMW/en-ZM |
+| Module pricing | `module-pricing.ts` | formatPrice/formatPriceWithCycle defaults → ZMW |
+| Studio | `core-components.ts`, `renders.tsx`, `starter-templates.ts` | Demo pricing `$` → `K` |
+| Paddle billing | `webhook-handlers.ts`, `subscription-service.ts`, `enterprise-service.ts` | USD kept (correct) + comments |
+
+### Email Domain Fix
+- `resend-smtp-config.ts` and `resend-client.ts`: `@dramac.app` → `@app.dramacagency.com`
+
+### Commits
+- `1d4996b` — "fix: use correct verified email domain app.dramacagency.com"
+- `8a71ade` — "fix: eliminate all remaining USD defaults, add currency settings to all modules"
 
 ---
 

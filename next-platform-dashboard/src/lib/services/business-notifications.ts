@@ -36,6 +36,21 @@ interface BookingNotificationData {
   timezone?: string
 }
 
+interface BookingCancellationData {
+  siteId: string
+  appointmentId: string
+  serviceName: string
+  servicePrice: number
+  serviceDuration: number
+  staffName?: string
+  customerName: string
+  customerEmail: string
+  startTime: Date
+  cancelledBy: 'customer' | 'staff' | 'system'
+  reason?: string
+  currency?: string
+}
+
 interface OrderNotificationData {
   siteId: string
   orderId: string
@@ -170,6 +185,121 @@ export async function notifyNewBooking(data: BookingNotificationData): Promise<v
   } catch (error) {
     // Never let notification errors break the main flow
     console.error('[BusinessNotify] Error sending booking notifications:', error)
+  }
+}
+
+// =============================================================================
+// BOOKING CANCELLATION NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send all notifications for a cancelled booking:
+ * 1. In-app notification to business owner (if cancelled by client)
+ * 2. Email to business owner
+ * 3. Email to customer (confirmation of cancellation)
+ * 
+ * Runs async - does not block the cancellation response
+ */
+export async function notifyBookingCancelled(data: BookingCancellationData): Promise<void> {
+  try {
+    const supabase = createAdminClient()
+    
+    const { data: site } = await supabase
+      .from('sites')
+      .select('name, agency_id')
+      .eq('id', data.siteId)
+      .single()
+    
+    if (!site) {
+      console.error('[BusinessNotify] Site not found:', data.siteId)
+      return
+    }
+
+    const { data: agency } = await supabase
+      .from('agencies')
+      .select('owner_id')
+      .eq('id', site.agency_id)
+      .single()
+    
+    if (!agency?.owner_id) {
+      console.error('[BusinessNotify] Agency owner not found for site:', data.siteId)
+      return
+    }
+
+    const { data: ownerProfile } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', agency.owner_id)
+      .single()
+
+    const businessName = site.name || 'Our Business'
+    const currency = data.currency || 'ZMW'
+    const dateStr = formatDate(data.startTime)
+    const timeStr = formatTime(data.startTime)
+    const priceStr = formatCurrency(data.servicePrice, currency)
+    const durationStr = data.serviceDuration >= 60 
+      ? `${Math.floor(data.serviceDuration / 60)}h ${data.serviceDuration % 60 > 0 ? `${data.serviceDuration % 60}m` : ''}`
+      : `${data.serviceDuration}m`
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'}/sites/${data.siteId}/booking`
+
+    // 1. In-app notification to business owner
+    await createNotification({
+      userId: agency.owner_id,
+      type: 'booking_cancelled',
+      title: `Booking Cancelled: ${data.serviceName}`,
+      message: `${data.customerName}'s booking for ${data.serviceName} on ${dateStr} at ${timeStr} has been cancelled${data.reason ? `: ${data.reason}` : ''}.`,
+      link: dashboardUrl,
+      metadata: {
+        appointmentId: data.appointmentId,
+        siteId: data.siteId,
+        cancelledBy: data.cancelledBy,
+      },
+    })
+
+    // 2. Email to business owner
+    if (ownerProfile?.email) {
+      await sendEmail({
+        to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
+        type: 'booking_cancelled_owner',
+        data: {
+          customerName: data.customerName,
+          customerEmail: data.customerEmail,
+          serviceName: data.serviceName,
+          staffName: data.staffName || '',
+          date: dateStr,
+          time: timeStr,
+          duration: durationStr,
+          price: priceStr,
+          cancelledBy: data.cancelledBy,
+          reason: data.reason || '',
+          dashboardUrl,
+          bookingId: data.appointmentId,
+        },
+      })
+    }
+
+    // 3. Email to customer
+    if (data.customerEmail) {
+      await sendEmail({
+        to: { email: data.customerEmail, name: data.customerName },
+        type: 'booking_cancelled_customer',
+        data: {
+          customerName: data.customerName,
+          serviceName: data.serviceName,
+          staffName: data.staffName || '',
+          date: dateStr,
+          time: timeStr,
+          duration: durationStr,
+          price: priceStr,
+          businessName,
+          bookingId: data.appointmentId,
+        },
+      })
+    }
+
+    console.log(`[BusinessNotify] Booking cancellation notifications sent for appointment ${data.appointmentId}`)
+  } catch (error) {
+    console.error('[BusinessNotify] Error sending booking cancellation notifications:', error)
   }
 }
 

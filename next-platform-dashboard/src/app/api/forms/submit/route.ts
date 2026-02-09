@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { headers } from "next/headers";
+import { sendEmail } from "@/lib/email/send-email";
 
 // Type alias for the admin Supabase client
 type SupabaseAdmin = SupabaseClient;
@@ -307,21 +308,28 @@ async function sendNotifications(
 
   // Format submission data for email
   const formData = submission.data as Record<string, unknown>;
-  const formattedData = Object.entries(formData)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join("\n");
+  const formattedFields = Object.entries(formData).map(([key, value]) => ({
+    label: key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+    value: String(value ?? ''),
+  }));
 
-  console.log("[FormSubmit] Sending notification to:", emails.join(", "));
-  console.log("[FormSubmit] Submission data:\n", formattedData);
+  const formName = (settings.form_name as string) || 'Contact Form';
+  const siteName = (settings.site_name as string) || '';
 
-  // In production, integrate with email service (Resend, SendGrid, etc.)
-  // Example with Resend:
-  // await resend.emails.send({
-  //   from: "noreply@yourdomain.com",
-  //   to: emails,
-  //   subject: `New form submission from ${settings.form_name || "Contact Form"}`,
-  //   text: `New submission received:\n\n${formattedData}`,
-  // });
+  // Send email to each recipient using the centralized email system
+  for (const email of emails) {
+    await sendEmail({
+      to: { email },
+      type: 'form_submission_owner',
+      data: {
+        formName,
+        siteName,
+        submittedAt: new Date().toISOString(),
+        fields: formattedFields,
+        dashboardUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'}/forms`,
+      },
+    })
+  }
 
   // Mark as notified
   await supabase

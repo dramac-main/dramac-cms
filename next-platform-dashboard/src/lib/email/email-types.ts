@@ -70,9 +70,6 @@ export function isValidEmailType(type: string): type is EmailType {
     "order_confirmation_owner",
     "order_shipped_customer",
     "form_submission_owner",
-    "subscription_created",
-    "payment_failed",
-    "trial_ending",
   ];
   return validTypes.includes(type as EmailType);
 }
@@ -150,6 +147,33 @@ export interface BookingConfirmationOwnerData {
   duration: string;
   price: string;
   status: string;
+  dashboardUrl: string;
+  bookingId: string;
+}
+
+export interface BookingCancelledCustomerData {
+  customerName: string;
+  serviceName: string;
+  staffName?: string;
+  date: string;
+  time: string;
+  duration: string;
+  price: string;
+  businessName: string;
+  bookingId: string;
+}
+
+export interface BookingCancelledOwnerData {
+  customerName: string;
+  customerEmail: string;
+  serviceName: string;
+  staffName?: string;
+  date: string;
+  time: string;
+  duration: string;
+  price: string;
+  cancelledBy: string;
+  reason?: string;
   dashboardUrl: string;
   bookingId: string;
 }

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { stripe } from "@/lib/stripe/config";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendEmail } from "@/lib/email/send-email";
+import { createNotification } from "@/lib/services/notifications";
 import Stripe from "stripe";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -167,7 +169,41 @@ async function handleInvoiceFailed(
     }
   );
 
-  // TODO: Send notification email about failed payment
+  // Send payment failed notification to business owner
+  const { data: agency } = await (supabase as any)
+    .from('agencies')
+    .select('owner_id')
+    .eq('id', agencyId)
+    .single()
+
+  if (agency?.owner_id) {
+    // In-app notification
+    await createNotification({
+      userId: agency.owner_id,
+      type: 'payment_failed',
+      title: 'Payment Failed',
+      message: `Your payment of ${(invoice.amount_due / 100).toFixed(2)} ${(invoice.currency || 'USD').toUpperCase()} has failed. Please update your payment method.`,
+      link: invoice.hosted_invoice_url || undefined,
+      metadata: { invoiceId: invoice.id, agencyId },
+    })
+
+    // Email notification
+    const { data: profile } = await (supabase as any)
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', agency.owner_id)
+      .single()
+
+    if (profile?.email) {
+      await sendEmail({
+        to: { email: profile.email, name: profile.full_name || undefined },
+        type: 'payment_failed',
+        data: {
+          updatePaymentUrl: invoice.hosted_invoice_url || '',
+        },
+      })
+    }
+  }
 }
 
 async function handleTrialEnding(
@@ -177,6 +213,45 @@ async function handleTrialEnding(
   const agencyId = subscription.metadata.agency_id;
   if (!agencyId) return;
 
-  // TODO: Send trial ending notification email
-  console.log(`Trial ending for agency ${agencyId}`);
+  // Send trial ending notification to business owner
+  const { data: agency } = await (supabase as any)
+    .from('agencies')
+    .select('owner_id')
+    .eq('id', agencyId)
+    .single()
+
+  if (agency?.owner_id) {
+    const trialEnd = subscription.trial_end
+      ? new Date(subscription.trial_end * 1000)
+      : new Date()
+    const daysLeft = Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+
+    // In-app notification
+    await createNotification({
+      userId: agency.owner_id,
+      type: 'system',
+      title: 'Trial Ending Soon',
+      message: `Your trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}. Upgrade to keep your account active.`,
+      link: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'}/billing`,
+      metadata: { agencyId, daysLeft },
+    })
+
+    // Email notification
+    const { data: profile } = await (supabase as any)
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', agency.owner_id)
+      .single()
+
+    if (profile?.email) {
+      await sendEmail({
+        to: { email: profile.email, name: profile.full_name || undefined },
+        type: 'trial_ending',
+        data: {
+          daysLeft,
+          upgradeUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'}/billing`,
+        },
+      })
+    }
+  }
 }

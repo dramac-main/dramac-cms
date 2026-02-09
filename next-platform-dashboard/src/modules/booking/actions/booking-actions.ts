@@ -10,6 +10,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE } from '@/lib/locale-config'
+import { notifyBookingCancelled } from '@/lib/services/business-notifications'
 import type {
   Service,
   ServiceInput,
@@ -610,7 +611,24 @@ export async function cancelAppointment(
     throw new Error(error.message)
   }
   
-  return data as Appointment
+  // Send cancellation notifications (async, don't block)
+  const appointment = data as Appointment
+  notifyBookingCancelled({
+    siteId,
+    appointmentId,
+    serviceName: (appointment as any).service?.name || 'Service',
+    servicePrice: (appointment as any).service?.price || 0,
+    serviceDuration: (appointment as any).service?.duration || 30,
+    staffName: (appointment as any).staff?.name,
+    customerName: appointment.customer_name || 'Customer',
+    customerEmail: appointment.customer_email || '',
+    startTime: new Date(appointment.start_time),
+    cancelledBy,
+    reason,
+    currency: (appointment as any).service?.currency,
+  }).catch(err => console.error('[Booking] Cancellation notification error:', err))
+
+  return appointment
 }
 
 export async function deleteAppointment(
