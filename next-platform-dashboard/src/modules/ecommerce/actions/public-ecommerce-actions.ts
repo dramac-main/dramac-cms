@@ -13,11 +13,14 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { notifyNewOrder } from '@/lib/services/business-notifications'
 import type {
   Product, ProductFilters,
   Category,
   ProductVariant, ProductOption,
   Cart, CartItem,
+  Order, CreateOrderInput,
+  EcommerceSettings,
   PaginatedResponse,
 } from '../types/ecommerce-types'
 
@@ -560,4 +563,254 @@ export async function removePublicDiscountFromCart(cartId: string): Promise<void
     .from(`${TABLE_PREFIX}_carts`)
     .update({ discount_code: null, discount_amount: 0 })
     .eq('id', cartId)
+}
+
+// ============================================================================
+// SETTINGS (public reads — needed by checkout + webhooks)
+// ============================================================================
+
+export async function getPublicEcommerceSettings(siteId: string): Promise<EcommerceSettings | null> {
+  try {
+    const supabase = getPublicClient()
+    const { data, error } = await supabase
+      .from(`${TABLE_PREFIX}_settings`)
+      .select('*')
+      .eq('site_id', siteId)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') return null
+      console.error('[Ecom Public] getPublicEcommerceSettings error:', error)
+      return null
+    }
+    return data as EcommerceSettings
+  } catch (err) {
+    console.error('[Ecom Public] getPublicEcommerceSettings unexpected error:', err)
+    return null
+  }
+}
+
+// ============================================================================
+// ORDERS (public writes — checkout + payment webhooks)
+// ============================================================================
+
+/**
+ * Create an order from a cart (public / subdomain context).
+ * Uses admin client to bypass RLS for anonymous visitors.
+ */
+export async function createPublicOrderFromCart(input: CreateOrderInput): Promise<Order> {
+  const supabase = getPublicClient()
+
+  // Generate order number
+  const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+
+  // Get the site's agency_id
+  const { data: site } = await supabase
+    .from('sites')
+    .select('agency_id')
+    .eq('id', input.site_id)
+    .single()
+
+  const agencyId = site?.agency_id
+
+  // Create the order
+  const { data: order, error: orderError } = await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .insert({
+      site_id: input.site_id,
+      agency_id: agencyId,
+      order_number: orderNumber,
+      customer_id: input.user_id || null,
+      customer_email: input.customer_email,
+      customer_phone: input.customer_phone || null,
+      shipping_address: input.shipping_address,
+      billing_address: input.billing_address,
+      subtotal: input.subtotal,
+      discount_amount: input.discount || 0,
+      discount_code: input.discount_code || null,
+      shipping_amount: input.shipping || 0,
+      tax_amount: input.tax || 0,
+      total: input.total,
+      currency: input.currency,
+      status: input.status || 'pending',
+      payment_status: input.payment_status || 'pending',
+      payment_provider: input.payment_provider,
+      fulfillment_status: 'unfulfilled',
+      customer_notes: input.notes || null,
+      metadata: input.metadata || {}
+    })
+    .select()
+    .single()
+
+  if (orderError) {
+    console.error('[Ecom Public] Error creating order:', orderError)
+    throw new Error(orderError.message)
+  }
+
+  // Copy cart items to order_items
+  if (input.cart_id) {
+    const cart = await getPublicCart(input.cart_id)
+    if (cart && cart.items.length > 0) {
+      const orderItems = cart.items.map((item: CartItem) => ({
+        order_id: order.id,
+        product_id: item.product_id,
+        variant_id: item.variant_id || null,
+        product_name: item.product?.name || 'Unknown Product',
+        product_sku: item.product?.sku || null,
+        variant_options: item.variant?.options || {},
+        image_url: item.product?.images?.[0] || null,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+        total_price: item.unit_price * item.quantity,
+        fulfilled_quantity: 0
+      }))
+
+      const { error: itemsError } = await supabase
+        .from(`${TABLE_PREFIX}_order_items`)
+        .insert(orderItems)
+
+      if (itemsError) {
+        console.error('[Ecom Public] Error creating order items:', itemsError)
+      }
+
+      // Mark cart as converted
+      await supabase
+        .from(`${TABLE_PREFIX}_carts`)
+        .update({ status: 'converted' })
+        .eq('id', input.cart_id)
+
+      // Send notifications (async, non-blocking)
+      const notificationItems = cart.items.map((item: CartItem) => ({
+        name: item.product?.name || 'Unknown Product',
+        quantity: item.quantity,
+        unitPrice: item.unit_price,
+      }))
+
+      notifyNewOrder({
+        siteId: input.site_id,
+        orderId: order.id,
+        orderNumber,
+        customerName: input.customer_name || `${input.shipping_address?.first_name || ''} ${input.shipping_address?.last_name || ''}`.trim() || input.customer_email?.split('@')[0] || 'Customer',
+        customerEmail: input.customer_email,
+        customerPhone: input.customer_phone || undefined,
+        items: notificationItems,
+        subtotal: input.subtotal,
+        shipping: input.shipping || 0,
+        tax: input.tax || 0,
+        total: input.total,
+        currency: input.currency,
+        paymentStatus: input.payment_status || 'pending',
+        shippingAddress: input.shipping_address
+          ? `${input.shipping_address.address_line_1 || ''}${input.shipping_address.address_line_2 ? ', ' + input.shipping_address.address_line_2 : ''}, ${input.shipping_address.city || ''} ${input.shipping_address.state || ''} ${input.shipping_address.postal_code || ''}, ${input.shipping_address.country || ''}`
+          : undefined,
+      }).catch(err => console.error('[Ecom Public] Notification error:', err))
+    }
+  } else {
+    // No cart — still fire notification
+    notifyNewOrder({
+      siteId: input.site_id,
+      orderId: order.id,
+      orderNumber,
+      customerName: input.customer_name || `${input.shipping_address?.first_name || ''} ${input.shipping_address?.last_name || ''}`.trim() || input.customer_email?.split('@')[0] || 'Customer',
+      customerEmail: input.customer_email,
+      customerPhone: input.customer_phone || undefined,
+      items: [],
+      subtotal: input.subtotal,
+      shipping: input.shipping || 0,
+      tax: input.tax || 0,
+      total: input.total,
+      currency: input.currency,
+      paymentStatus: input.payment_status || 'pending',
+    }).catch(err => console.error('[Ecom Public] Notification error:', err))
+  }
+
+  return order as Order
+}
+
+/**
+ * Update order status (public / webhook context).
+ */
+export async function updatePublicOrderStatus(
+  siteId: string,
+  orderId: string,
+  status: Order['status']
+): Promise<Order> {
+  const supabase = getPublicClient()
+
+  const { data, error } = await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .update({ status })
+    .eq('site_id', siteId)
+    .eq('id', orderId)
+    .select()
+    .single()
+
+  if (error) throw new Error(error.message)
+  return data as Order
+}
+
+/**
+ * Update order payment status (public / webhook context).
+ */
+export async function updatePublicOrderPaymentStatus(
+  siteId: string,
+  orderId: string,
+  paymentStatus: Order['payment_status'],
+  transactionId?: string
+): Promise<Order> {
+  const supabase = getPublicClient()
+
+  const updates: Record<string, unknown> = { payment_status: paymentStatus }
+  if (transactionId) updates.payment_transaction_id = transactionId
+
+  // Auto-update order status based on payment
+  if (paymentStatus === 'paid') {
+    updates.status = 'confirmed'
+  } else if (paymentStatus === 'failed') {
+    updates.status = 'cancelled'
+  }
+
+  const { data, error } = await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .update(updates)
+    .eq('site_id', siteId)
+    .eq('id', orderId)
+    .select()
+    .single()
+
+  if (error) throw new Error(error.message)
+  return data as Order
+}
+
+/**
+ * Generic partial order update (public / webhook context).
+ */
+export async function updatePublicOrder(
+  siteId: string,
+  orderId: string,
+  updates: Partial<Order>
+): Promise<Order> {
+  const supabase = getPublicClient()
+
+  // Only allow certain fields
+  const allowedUpdates: Record<string, unknown> = {}
+  if (updates.status) allowedUpdates.status = updates.status
+  if (updates.payment_status) allowedUpdates.payment_status = updates.payment_status
+  if (updates.fulfillment_status) allowedUpdates.fulfillment_status = updates.fulfillment_status
+  if (updates.tracking_number !== undefined) allowedUpdates.tracking_number = updates.tracking_number
+  if (updates.tracking_url !== undefined) allowedUpdates.tracking_url = updates.tracking_url
+  if (updates.internal_notes !== undefined) allowedUpdates.internal_notes = updates.internal_notes
+  if (updates.shipped_at !== undefined) allowedUpdates.shipped_at = updates.shipped_at
+  if (updates.delivered_at !== undefined) allowedUpdates.delivered_at = updates.delivered_at
+
+  const { data, error } = await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .update(allowedUpdates)
+    .eq('site_id', siteId)
+    .eq('id', orderId)
+    .select()
+    .single()
+
+  if (error) throw new Error(error.message)
+  return data as Order
 }

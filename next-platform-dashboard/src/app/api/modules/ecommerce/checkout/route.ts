@@ -8,10 +8,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import {
-  getCart,
-  createOrderFromCart,
-  getEcommerceSettings
-} from '@/modules/ecommerce/actions/ecommerce-actions'
+  getPublicCart,
+  createPublicOrderFromCart,
+  getPublicEcommerceSettings
+} from '@/modules/ecommerce/actions/public-ecommerce-actions'
 import type { 
   Address, 
   CreateOrderInput,
@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'paymentProvider is required' }, { status: 400 })
     }
 
-    // Get cart
-    const cart = await getCart(cartId)
+    // Get cart (uses admin client — works for anonymous subdomain visitors)
+    const cart = await getPublicCart(cartId)
     if (!cart) {
       return NextResponse.json({ error: 'Cart not found' }, { status: 404 })
     }
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get settings for tax calculation and payment config
-    const settings = await getEcommerceSettings(cart.site_id)
+    const settings = await getPublicEcommerceSettings(cart.site_id)
     if (!settings) {
       return NextResponse.json({ error: 'Store settings not found' }, { status: 400 })
     }
@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
       metadata: {}
     }
 
-    const order = await createOrderFromCart(orderInput)
+    const order = await createPublicOrderFromCart(orderInput)
 
     // Generate payment URL based on provider
     const paymentUrl: string | null = null

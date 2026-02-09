@@ -8,13 +8,13 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { 
-  updateOrderStatus,
-  updateOrderPaymentStatus,
-  updateOrder,
-  getEcommerceSettings 
-} from '@/modules/ecommerce/actions/ecommerce-actions'
+  updatePublicOrderStatus,
+  updatePublicOrderPaymentStatus,
+  updatePublicOrder,
+  getPublicEcommerceSettings 
+} from '@/modules/ecommerce/actions/public-ecommerce-actions'
 import type {
   PaddleConfig,
   FlutterwaveConfig
@@ -85,8 +85,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL('/checkout/error', request.url))
     }
 
-    // Get order to find site_id
-    const supabase = await createClient()
+    // Get order to find site_id (uses admin client — webhooks have no auth cookies)
+    const supabase = createAdminClient() as any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
       .from('mod_ecommod01_orders')
@@ -110,10 +110,10 @@ export async function GET(request: NextRequest) {
         if (status === 'successful' && transactionId) {
           // Verify transaction with Flutterwave API
           // In production, call Flutterwave verify endpoint
-          await updateOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
+          await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
           return NextResponse.redirect(new URL(`/checkout/success?orderId=${orderId}`, request.url))
         } else {
-          await updateOrderPaymentStatus(siteId, orderId, 'failed')
+          await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
           return NextResponse.redirect(new URL(`/checkout/error?orderId=${orderId}`, request.url))
         }
       }
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
         if (pesapalTransactionId) {
           // Query Pesapal for payment status
           // In production, call Pesapal QueryPaymentStatus endpoint
-          await updateOrder(siteId, orderId, {
+          await updatePublicOrder(siteId, orderId, {
             payment_transaction_id: pesapalTransactionId,
             metadata: { pesapal_tracking_id: pesapalTransactionId }
           })
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
         
         if (transToken && ccdApproval) {
           // Verify with DPO API
-          await updateOrderPaymentStatus(siteId, orderId, 'paid', transToken)
+          await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transToken)
           return NextResponse.redirect(new URL(`/checkout/success?orderId=${orderId}`, request.url))
         }
         return NextResponse.redirect(new URL(`/checkout/error?orderId=${orderId}`, request.url))
@@ -172,7 +172,7 @@ async function handlePaddleWebhook(body: string, signature: string | null): Prom
     }
 
     // Get order to find site settings for verification
-    const supabase = await createClient()
+    const supabase = createAdminClient() as any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
       .from('mod_ecommod01_orders')
@@ -188,7 +188,7 @@ async function handlePaddleWebhook(body: string, signature: string | null): Prom
     const siteId = (order as { site_id: string }).site_id
 
     // Get settings for signature verification
-    const settings = await getEcommerceSettings(siteId)
+    const settings = await getPublicEcommerceSettings(siteId)
     const paddleConfig = settings?.paddle_config as PaddleConfig | null
     
     // Verify signature if configured
@@ -216,19 +216,19 @@ async function handlePaddleWebhook(body: string, signature: string | null): Prom
     switch (eventType) {
       case 'payment_succeeded':
       case 'subscription_payment_succeeded':
-        await updateOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
-        await updateOrderStatus(siteId, orderId, 'confirmed')
+        await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
+        await updatePublicOrderStatus(siteId, orderId, 'confirmed')
         break
         
       case 'payment_failed':
       case 'subscription_payment_failed':
-        await updateOrderPaymentStatus(siteId, orderId, 'failed')
+        await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
         break
         
       case 'payment_refunded':
       case 'subscription_payment_refunded':
-        await updateOrderPaymentStatus(siteId, orderId, 'refunded')
-        await updateOrderStatus(siteId, orderId, 'refunded')
+        await updatePublicOrderPaymentStatus(siteId, orderId, 'refunded')
+        await updatePublicOrderStatus(siteId, orderId, 'refunded')
         break
     }
 
@@ -257,7 +257,7 @@ async function handleFlutterwaveWebhook(body: string, signature: string | null):
     }
 
     // Get order to find site settings for verification
-    const supabase = await createClient()
+    const supabase = createAdminClient() as any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
       .from('mod_ecommod01_orders')
@@ -273,7 +273,7 @@ async function handleFlutterwaveWebhook(body: string, signature: string | null):
     const siteId = (order as { site_id: string }).site_id
 
     // Get settings for signature verification
-    const settings = await getEcommerceSettings(siteId)
+    const settings = await getPublicEcommerceSettings(siteId)
     const fwConfig = settings?.flutterwave_config as FlutterwaveConfig | null
 
     // Verify signature
@@ -289,10 +289,10 @@ async function handleFlutterwaveWebhook(body: string, signature: string | null):
     const transactionId = data.data?.id || data.id
 
     if (status === 'successful') {
-      await updateOrderPaymentStatus(siteId, orderId, 'paid', String(transactionId))
-      await updateOrderStatus(siteId, orderId, 'confirmed')
+      await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', String(transactionId))
+      await updatePublicOrderStatus(siteId, orderId, 'confirmed')
     } else if (status === 'failed') {
-      await updateOrderPaymentStatus(siteId, orderId, 'failed')
+      await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
     }
 
     return NextResponse.json({ received: true })
@@ -322,7 +322,7 @@ async function handlePesapalWebhook(body: string, params: URLSearchParams): Prom
     }
 
     // Get order
-    const supabase = await createClient()
+    const supabase = createAdminClient() as any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
       .from('mod_ecommod01_orders')
@@ -340,10 +340,10 @@ async function handlePesapalWebhook(body: string, params: URLSearchParams): Prom
     // In production, query Pesapal API for transaction status
     // For now, update based on notification type
     if (orderNotificationType === 'COMPLETED') {
-      await updateOrderPaymentStatus(siteId, orderId, 'paid', orderTrackingId || undefined)
-      await updateOrderStatus(siteId, orderId, 'confirmed')
+      await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', orderTrackingId || undefined)
+      await updatePublicOrderStatus(siteId, orderId, 'confirmed')
     } else if (orderNotificationType === 'FAILED') {
-      await updateOrderPaymentStatus(siteId, orderId, 'failed')
+      await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
     }
 
     // Pesapal expects specific response
@@ -374,7 +374,7 @@ async function handleDpoWebhook(body: string, params: URLSearchParams): Promise<
     }
 
     // Get order
-    const supabase = await createClient()
+    const supabase = createAdminClient() as any
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: order } = await (supabase as any)
       .from('mod_ecommod01_orders')
@@ -393,10 +393,10 @@ async function handleDpoWebhook(body: string, params: URLSearchParams): Promise<
     const resultCode = params.get('Result') || extractFromXml(body, 'Result')
     
     if (resultCode === '000' || transactionApproval) {
-      await updateOrderPaymentStatus(siteId, orderId, 'paid', transToken || undefined)
-      await updateOrderStatus(siteId, orderId, 'confirmed')
+      await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transToken || undefined)
+      await updatePublicOrderStatus(siteId, orderId, 'confirmed')
     } else {
-      await updateOrderPaymentStatus(siteId, orderId, 'failed')
+      await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
     }
 
     return NextResponse.json({ received: true })
