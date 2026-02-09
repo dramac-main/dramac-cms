@@ -1,6 +1,82 @@
 # Active Context
 
-## Latest Session Update (Subdomain Ecommerce Fix — February 2026)
+## Latest Session Update (UX Audit + Conflict Prevention — February 2026)
+
+### FULL PAGE-BY-PAGE UX AUDIT + PHASE HARDENING ✅
+
+**What Was Done:**
+1. Audited **every existing page** (200+ files) across all user types for UX issues
+2. Found **63 total UX issues** (10 critical, 6 high, 8 medium, rest low)
+3. Created `PHASE-UX-00-PAGE-SIMPLIFICATION.md` — 16 tasks to fix ALL found issues (runs FIRST)
+4. Created `PHASE-IMPLEMENTATION-CONTRACT.md` — 13 rules for AI agents implementing any phase
+5. Updated Master Plan with conflict matrix, execution order, and stronger instructions
+
+### Critical Issues Found
+
+**Runtime-Breaking (6 issues):**
+- `admin/health/page.tsx` — onClick handler in server component (crashes at runtime)
+- `admin/settings/page.tsx` — 5 dead buttons, 9 dead switches, all hardcoded values
+- `portal/settings/page.tsx` — Hardcoded "Client User"/"client@example.com", useState misuse
+- `portal/analytics/page.tsx` — Hardcoded "12% from last month" trend percentages
+- `admin/subscriptions/page.tsx` — Fabricated plan distribution data
+- `dashboard/email/page.tsx` — Cosmetic search input with no state/handler
+
+**UX Clutter (4 critical):**
+- `sites/[siteId]/page.tsx` — **13 buttons** in toolbar (industry standard: 3 + overflow menu)
+- `dashboard/domains/page.tsx` — 2 buttons linking to same URL (duplicate)
+- 3 separate billing pages that should be 1
+- 3 separate module pages that should be 1
+
+**Inconsistency Patterns:**
+- 4 different page header patterns across dashboard
+- 5 different empty state patterns
+- 3 different loading patterns
+- 4 different date formatters (should all use locale-config.ts)
+- 4 different currency formatters (should all use locale-config.ts)
+- `admin-navigation.ts` — 11 flat ungrouped items, duplicate icons
+
+### New Phase Documents Created
+
+| Phase | File | Description |
+|-------|------|-------------|
+| UX-00 | `phases/PHASE-UX-00-PAGE-SIMPLIFICATION.md` | 16 tasks fixing all 63 UX issues — runs FIRST |
+| Contract | `phases/PHASE-IMPLEMENTATION-CONTRACT.md` | 13 rules for AI agents — prevents conflicts |
+
+### Updated Master Plan
+
+- **Now 8 phases** (was 7): UX-00 added as first phase
+- **61 tasks** across 8 phases (was 45 across 7)
+- **~120 files** to create/modify (was ~100)
+- **20-28 days** estimated (was 17-24)
+- **Execution order**: UX-00 → UX-01 → parallel WL-01/DM-01 → WL-02 → WL-03 → UX-02 → UX-03
+- **Shared file conflict matrix**: 13 files tracked across phases with modification order
+- **Strengthened instructions**: 5-step process + "What NOT to Do" list for AI agents
+
+### All Phase Documents (Complete List)
+
+| Phase | File | Status |
+|-------|------|--------|
+| Master Plan | `phases/PHASE-MASTER-WHITE-LABEL-UX-DOMAINS.md` | ✅ Updated |
+| Contract | `phases/PHASE-IMPLEMENTATION-CONTRACT.md` | ✅ Created |
+| PHASE-UX-00 | `phases/PHASE-UX-00-PAGE-SIMPLIFICATION.md` | 📝 Ready (run FIRST) |
+| PHASE-UX-01 | `phases/PHASE-UX-01-GLOBAL-UX-POLISH.md` | 📝 Ready |
+| PHASE-WL-01 | `phases/PHASE-WL-01-BRANDING-FOUNDATION.md` | 📝 Ready |
+| PHASE-WL-02 | `phases/PHASE-WL-02-EMAIL-SYSTEM-OVERHAUL.md` | 📝 Ready |
+| PHASE-DM-01 | `phases/PHASE-DM-01-DOMAIN-MANAGEMENT-OVERHAUL.md` | 📝 Ready |
+| PHASE-WL-03 | `phases/PHASE-WL-03-PORTAL-WHITE-LABEL.md` | 📝 Ready |
+| PHASE-UX-02 | `phases/PHASE-UX-02-NOTIFICATION-CENTER.md` | 📝 Ready |
+| PHASE-UX-03 | `phases/PHASE-UX-03-E2E-JOURNEY-VERIFICATION.md` | 📝 Ready (run LAST) |
+
+### Next Steps
+- Execute PHASE-UX-00 first (page simplification — fixes all existing UX issues)
+- Then UX-01 (global UX polish)
+- Then WL-01 + DM-01 in parallel (branding + domains)
+- Always read PHASE-IMPLEMENTATION-CONTRACT.md before starting any phase
+- PHASE-UX-03 must be last (verification phase)
+
+---
+
+## Previous Session Update (Subdomain Ecommerce Fix — February 2026)
 
 ### ECOMMERCE CHECKOUT + PAYMENT WEBHOOKS — SUBDOMAIN COMPATIBLE ✅
 
