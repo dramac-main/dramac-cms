@@ -10,7 +10,7 @@
 
 import React, { useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-import { User, Mail, Phone, FileText, Send, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { User, Mail, Phone, FileText, Send, CheckCircle, AlertCircle, Loader2, Clock } from 'lucide-react'
 import type { ComponentDefinition } from '@/types/studio'
 import { useCreateBooking } from '../../hooks/useCreateBooking'
 
@@ -271,6 +271,7 @@ export function BookingFormBlock({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [submitError, setSubmitError] = useState(false)
+  const [bookingStatus, setBookingStatus] = useState<'confirmed' | 'pending'>('confirmed')
 
   // Real booking creation hook — only active when siteId exists
   const { createBooking } = useCreateBooking(siteId || '')
@@ -330,7 +331,7 @@ export function BookingFormBlock({
     try {
       // If siteId is available, create a REAL appointment in the database
       if (siteId) {
-        await createBooking({
+        const result = await createBooking({
           service_id: serviceId || undefined,
           staff_id: staffId || undefined,
           customer_name: formData.name || 'Guest',
@@ -347,6 +348,7 @@ export function BookingFormBlock({
             source: 'website_form',
           },
         })
+        setBookingStatus(result.status === 'confirmed' ? 'confirmed' : 'pending')
       } else {
         // Demo mode (Studio editor only) — simulate delay
         await new Promise(resolve => setTimeout(resolve, 1500))
@@ -424,13 +426,20 @@ export function BookingFormBlock({
 
   // Success State
   if (isSuccess) {
+    const isPending = bookingStatus === 'pending'
+    const displayTitle = isPending ? 'Booking Submitted!' : successTitle
+    const displayMessage = isPending
+      ? 'Your appointment request has been submitted and is awaiting confirmation. You will receive an email once confirmed.'
+      : successMessage
+    const displayColor = isPending ? '#f59e0b' : successColor
+    const DisplayIcon = isPending ? Clock : CheckCircle
     return (
       <div
         className={cn('booking-form-block', className)}
         style={{
           backgroundColor: successBg,
           borderRadius,
-          border: `${borderWidth} solid ${successColor}30`,
+          border: `${borderWidth} solid ${displayColor}30`,
           padding: '40px 20px',
           textAlign: 'center',
           width: width || '100%',
@@ -438,14 +447,14 @@ export function BookingFormBlock({
         role="status"
       >
         <div style={{
-          width: 56, height: 56, borderRadius: '50%', backgroundColor: `${successColor}15`,
+          width: 56, height: 56, borderRadius: '50%', backgroundColor: `${displayColor}15`,
           display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
           animation: showSuccessAnimation ? 'bounceIn 0.5s ease' : undefined,
         }}>
-          <CheckCircle style={{ width: 28, height: 28, color: successColor }} />
+          <DisplayIcon style={{ width: 28, height: 28, color: displayColor }} />
         </div>
-        <h3 style={{ fontWeight: successFontWeight, fontSize: successFontSize, margin: '0 0 8px', color: successColor }}>{successTitle}</h3>
-        <p style={{ fontSize: '14px', opacity: 0.7, margin: 0, lineHeight: 1.5 }}>{successMessage}</p>
+        <h3 style={{ fontWeight: successFontWeight, fontSize: successFontSize, margin: '0 0 8px', color: displayColor }}>{displayTitle}</h3>
+        <p style={{ fontSize: '14px', opacity: 0.7, margin: 0, lineHeight: 1.5 }}>{displayMessage}</p>
         <style>{`@keyframes bounceIn { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }`}</style>
       </div>
     )

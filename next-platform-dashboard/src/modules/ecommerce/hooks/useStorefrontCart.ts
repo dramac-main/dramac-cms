@@ -9,15 +9,15 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
-  getOrCreateCart,
-  getCart,
-  addCartItem,
-  updateCartItemQuantity as updateCartItemQty,
-  removeCartItem as removeCartItemAction,
-  clearCart as clearCartAction,
-  applyDiscountToCart,
-  removeDiscountFromCart,
-} from '../actions/ecommerce-actions'
+  getPublicOrCreateCart,
+  getPublicCart,
+  addPublicCartItem,
+  updatePublicCartItemQuantity as updateCartItemQty,
+  removePublicCartItem as removeCartItemAction,
+  clearPublicCart as clearCartAction,
+  applyPublicDiscountToCart,
+  removePublicDiscountFromCart,
+} from '../actions/public-ecommerce-actions'
 import type { 
   Cart, 
   CartTotals,
@@ -78,7 +78,7 @@ export function useStorefrontCart(
 
     try {
       const sessionId = userId ? undefined : getOrCreateSessionId()
-      const cartData = await getOrCreateCart(siteId, userId, sessionId)
+      const cartData = await getPublicOrCreateCart(siteId, userId, sessionId)
       setCart(cartData)
     } catch (err) {
       console.error('Error initializing cart:', err)
@@ -97,7 +97,7 @@ export function useStorefrontCart(
     if (!cart?.id) return
     
     try {
-      const refreshedCart = await getCart(cart.id)
+      const refreshedCart = await getPublicCart(cart.id)
       if (refreshedCart) {
         setCart(refreshedCart)
       }
@@ -134,9 +134,9 @@ export function useStorefrontCart(
 
     try {
       // addCartItem returns CartItem, not Cart - so we need to refresh
-      await addCartItem(cart.id, productId, variantId, quantity)
+      await addPublicCartItem(cart.id, productId, variantId, quantity)
       // Refresh to get the full updated cart with all items
-      const refreshedCart = await getCart(cart.id)
+      const refreshedCart = await getPublicCart(cart.id)
       if (refreshedCart) {
         setCart(refreshedCart)
       }
@@ -237,7 +237,7 @@ export function useStorefrontCart(
     try {
       // Calculate subtotal
       const subtotal = cart.items?.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0) || 0
-      const result = await applyDiscountToCart(cart.id, code, subtotal)
+      const result = await applyPublicDiscountToCart(cart.id, code, subtotal)
       if (result.success) {
         await refresh()
       }
@@ -267,7 +267,7 @@ export function useStorefrontCart(
     setError(null)
 
     try {
-      await removeDiscountFromCart(cart.id)
+      await removePublicDiscountFromCart(cart.id)
       await refresh()
       return true
     } catch (err) {

@@ -55,7 +55,7 @@ export function useCreateBooking(siteId: string): UseCreateBookingResult {
         staff_id: input.staff_id || null,
         start_time: input.start_time || new Date().toISOString(),
         end_time: input.end_time || new Date().toISOString(),
-        status: 'pending' as const,
+        status: (result.status || 'pending') as 'pending' | 'confirmed',
         customer_name: input.customer_name || 'Guest',
         customer_email: input.customer_email || '',
       } as Appointment

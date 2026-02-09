@@ -125,9 +125,9 @@ export function ProductCardBlock({
   const [addingToCart, setAddingToCart] = useState(false);
   const [imageError, setImageError] = useState(false);
   
-  // Use fetched product or demo data
-  const product = fetchedProduct || DEMO_PRODUCT;
-  const isDemo = !fetchedProduct;
+  // Use fetched product or demo data - only show demo in editor when no site connected
+  const product = !effectiveSiteId ? DEMO_PRODUCT : (fetchedProduct || DEMO_PRODUCT);
+  const isDemo = !effectiveSiteId;
   const inWishlist = productId ? isInWishlist(productId) : false;
   
   // Access product properties with fallbacks

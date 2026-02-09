@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { getProducts, getProductsByCategory } from '../actions/ecommerce-actions'
+import { getPublicProducts, getPublicProductsByCategory } from '../actions/public-ecommerce-actions'
 import type { 
   Product, 
   StorefrontProductsOptions, 
@@ -94,14 +94,14 @@ export function useStorefrontProducts(
 
       // Fetch by category or all products
       if (categoryId || categorySlug) {
-        result = await getProductsByCategory(
+        result = await getPublicProductsByCategory(
           siteId,
           categoryId || categorySlug || '',
           page,
           limit
         )
       } else {
-        result = await getProducts(siteId, filters, page, limit)
+        result = await getPublicProducts(siteId, filters, page, limit)
       }
 
       // Filter to only active products for storefront

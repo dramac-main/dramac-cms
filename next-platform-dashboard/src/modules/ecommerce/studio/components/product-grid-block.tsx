@@ -102,7 +102,7 @@ export function ProductGridBlock({
   }, [resolvedSiteId, realProducts]);
 
   const isLoading = resolvedSiteId ? hookLoading : false;
-  const displayProducts = mappedProducts.length > 0 ? mappedProducts : demoProducts;
+  const displayProducts = !resolvedSiteId ? demoProducts : mappedProducts;
 
   // Get responsive values
   const columnsValue = typeof columns === "object" ? columns : { mobile: columns };

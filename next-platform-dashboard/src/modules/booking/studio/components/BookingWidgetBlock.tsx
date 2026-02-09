@@ -338,6 +338,8 @@ export function BookingWidgetBlock({
   const [formData, setFormData] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
+  const [bookingError, setBookingError] = useState<string | null>(null)
+  const [bookingStatus, setBookingStatus] = useState<'confirmed' | 'pending'>('confirmed')
 
   const [calendarDate, setCalendarDate] = useState(new Date())
   const calYear = calendarDate.getFullYear()
@@ -465,6 +467,7 @@ export function BookingWidgetBlock({
 
   const handleConfirm = async () => {
     setIsSubmitting(true)
+    setBookingError(null)
     try {
       if (siteId && selectedService?.id) {
         // Build start/end times from selected date + time
@@ -478,7 +481,7 @@ export function BookingWidgetBlock({
           const end = new Date(start.getTime() + (selectedService.duration || 60) * 60000)
           endTime = end.toISOString()
         }
-        await createBooking({
+        const result = await createBooking({
           service_id: selectedService.id,
           staff_id: selectedStaff?.id || null,
           customer_name: formData.name || '',
@@ -495,25 +498,36 @@ export function BookingWidgetBlock({
             staff_name: selectedStaff?.name || '',
           },
         })
+        setBookingStatus(result.status === 'confirmed' ? 'confirmed' : 'pending')
       } else {
         // Demo mode — simulate delay
         await new Promise(r => setTimeout(r, 1500))
       }
+      setIsSubmitting(false)
+      setIsComplete(true)
+      onComplete?.({ service: selectedService, staff: selectedStaff, date: selectedDate, time: selectedTime, ...formData })
     } catch (err) {
       console.error('Booking failed:', err)
+      setBookingError(err instanceof Error ? err.message : 'Booking failed. Please try again.')
+      setIsSubmitting(false)
     }
-    setIsSubmitting(false)
-    setIsComplete(true)
-    onComplete?.({ service: selectedService, staff: selectedStaff, date: selectedDate, time: selectedTime, ...formData })
   }
 
   const resetWidget = () => {
     setCurrentStep(0); setSelectedService(null); setSelectedStaff(null)
     setSelectedDate(null); setSelectedTime(null); setFormData({}); setIsComplete(false)
+    setBookingError(null); setBookingStatus('confirmed')
   }
 
   // Success screen
   if (isComplete) {
+    const isPending = bookingStatus === 'pending'
+    const displayTitle = isPending ? 'Booking Submitted!' : successTitle
+    const displayMessage = isPending
+      ? 'Your appointment request has been submitted and is awaiting confirmation. You will receive an email once confirmed.'
+      : successMessage
+    const displayColor = isPending ? '#f59e0b' : successColor
+    const DisplayIcon = isPending ? Clock : CheckCircle
     return (
       <div className={cn('booking-widget-block', className)} style={{
         backgroundColor: backgroundColor || undefined, borderRadius, width: width || '100%',
@@ -521,14 +535,14 @@ export function BookingWidgetBlock({
         padding: '40px 20px', textAlign: 'center',
       }}>
         <div style={{
-          width: 64, height: 64, borderRadius: '50%', backgroundColor: `${successColor}15`,
+          width: 64, height: 64, borderRadius: '50%', backgroundColor: `${displayColor}15`,
           display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
           animation: showSuccessAnimation ? 'bounceIn 0.5s ease' : undefined,
         }}>
-          <CheckCircle style={{ width: 32, height: 32, color: successColor }} />
+          <DisplayIcon style={{ width: 32, height: 32, color: displayColor }} />
         </div>
-        <h3 style={{ fontWeight: '700', fontSize: '20px', margin: '0 0 8px', color: successColor }}>{successTitle}</h3>
-        <p style={{ fontSize: '14px', opacity: 0.7, margin: '0 0 20px', lineHeight: 1.5 }}>{successMessage}</p>
+        <h3 style={{ fontWeight: '700', fontSize: '20px', margin: '0 0 8px', color: displayColor }}>{displayTitle}</h3>
+        <p style={{ fontSize: '14px', opacity: 0.7, margin: '0 0 20px', lineHeight: 1.5 }}>{displayMessage}</p>
         <button onClick={resetWidget} style={{
           padding: '10px 24px', borderRadius: buttonBorderRadius, backgroundColor: btnBg,
           color: buttonTextColor, border: 'none', fontSize: buttonFontSize, fontWeight: buttonFontWeight, cursor: 'pointer',
@@ -919,7 +933,13 @@ export function BookingWidgetBlock({
           </button>
         ) : <div />}
 
-        {currentStepId === 'confirm' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+          {bookingError && (
+            <p style={{ fontSize: '13px', color: errorColor, margin: 0, textAlign: 'right' }}>
+              {bookingError}
+            </p>
+          )}
+          {currentStepId === 'confirm' ? (
           <button onClick={handleConfirm} disabled={isSubmitting} style={{
             padding: '10px 24px', borderRadius: buttonBorderRadius,
             backgroundColor: isSubmitting ? `${btnBg}80` : btnBg, color: buttonTextColor,
@@ -944,6 +964,7 @@ export function BookingWidgetBlock({
             {nextButtonText} <ArrowRight style={{ width: 16, height: 16 }} />
           </button>
         )}
+        </div>
       </div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>

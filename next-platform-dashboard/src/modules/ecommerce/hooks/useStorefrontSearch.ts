@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { getProducts } from '../actions/ecommerce-actions'
+import { getPublicProducts } from '../actions/public-ecommerce-actions'
 import type { 
   Product, 
   StorefrontSearchResult 
@@ -81,7 +81,7 @@ export function useStorefrontSearch(siteId: string): StorefrontSearchResult {
     setError(null)
 
     try {
-      const response = await getProducts(siteId, {
+      const response = await getPublicProducts(siteId, {
         search: searchQuery,
         status: 'active'
       }, 1, 10)

@@ -326,7 +326,7 @@ export async function createPublicAppointment(
     customerPhone?: string
     notes?: string
   }
-): Promise<{ success: boolean; appointmentId?: string; error?: string }> {
+): Promise<{ success: boolean; appointmentId?: string; status?: string; error?: string }> {
   try {
     const supabase = getPublicClient()
     
@@ -373,8 +373,8 @@ export async function createPublicAppointment(
         customer_name: input.customerName,
         customer_email: input.customerEmail,
         customer_phone: input.customerPhone || null,
-        notes: input.notes || null,
-        source: 'online',
+        customer_notes: input.notes || null,
+        metadata: { source: 'online' },
       })
       .select('id')
       .single()
@@ -384,7 +384,7 @@ export async function createPublicAppointment(
       return { success: false, error: 'Failed to create appointment. Please try again.' }
     }
     
-    return { success: true, appointmentId: appointment?.id }
+    return { success: true, appointmentId: appointment?.id, status }
   } catch (err) {
     console.error('[Booking Public] createPublicAppointment unexpected error:', err)
     return { success: false, error: 'An unexpected error occurred. Please try again.' }

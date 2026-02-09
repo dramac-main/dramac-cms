@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { getProduct } from '../actions/ecommerce-actions'
+import { getPublicProduct } from '../actions/public-ecommerce-actions'
 import type { 
   Product, 
   RecentlyViewedResult 
@@ -72,7 +72,7 @@ export function useRecentlyViewed(
 
     async function fetchProducts() {
       const productPromises = items.map(item => 
-        getProduct(siteId, item.productId).catch(() => null)
+        getPublicProduct(siteId, item.productId).catch(() => null)
       )
       
       const results = await Promise.all(productPromises)

@@ -9,12 +9,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { 
-  getProduct, 
-  getProductBySlug, 
-  getProductVariants, 
-  getProductOptions,
-  getProducts 
-} from '../actions/ecommerce-actions'
+  getPublicProduct, 
+  getPublicProductBySlug, 
+  getPublicProductVariants, 
+  getPublicProductOptions,
+  getPublicProducts 
+} from '../actions/public-ecommerce-actions'
 import type { 
   Product, 
   ProductVariant, 
@@ -49,9 +49,9 @@ export function useStorefrontProduct(
       let productData: Product | null = null
       
       if (isUUID) {
-        productData = await getProduct(siteId, idOrSlug)
+        productData = await getPublicProduct(siteId, idOrSlug)
       } else {
-        productData = await getProductBySlug(siteId, idOrSlug)
+        productData = await getPublicProductBySlug(siteId, idOrSlug)
       }
 
       if (!productData) {
@@ -71,8 +71,8 @@ export function useStorefrontProduct(
 
       // Fetch variants and options in parallel
       const [variantsData, optionsData] = await Promise.all([
-        getProductVariants(productData.id).catch(() => []),
-        getProductOptions(productData.id).catch(() => [])
+        getPublicProductVariants(productData.id).catch(() => []),
+        getPublicProductOptions(productData.id).catch(() => [])
       ])
 
       setVariants(variantsData.filter(v => v.is_active))
@@ -80,7 +80,7 @@ export function useStorefrontProduct(
 
       // Fetch related products (same category, excluding this product)
       try {
-        const relatedResult = await getProducts(siteId, {
+        const relatedResult = await getPublicProducts(siteId, {
           status: 'active'
         }, 1, 8)
         

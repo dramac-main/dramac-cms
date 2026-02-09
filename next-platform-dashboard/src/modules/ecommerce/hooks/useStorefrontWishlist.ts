@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { getProduct } from '../actions/ecommerce-actions'
+import { getPublicProduct } from '../actions/public-ecommerce-actions'
 import type { 
   Product, 
   WishlistItem,
@@ -64,7 +64,7 @@ export function useStorefrontWishlist(siteId: string): StorefrontWishlistResult 
 
     async function fetchProducts() {
       const productPromises = items.map(item => 
-        getProduct(siteId, item.productId).catch(() => null)
+        getPublicProduct(siteId, item.productId).catch(() => null)
       )
       
       const results = await Promise.all(productPromises)

@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { getCategories } from '../actions/ecommerce-actions'
+import { getPublicCategories } from '../actions/public-ecommerce-actions'
 import type { 
   Category, 
   CategoryTreeNode,
@@ -73,7 +73,7 @@ export function useStorefrontCategories(siteId: string): StorefrontCategoriesRes
     setError(null)
 
     try {
-      const data = await getCategories(siteId)
+      const data = await getPublicCategories(siteId)
       // Only show active categories
       const activeCategories = data.filter(c => c.is_active)
       setCategories(activeCategories)
