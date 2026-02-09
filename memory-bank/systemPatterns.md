@@ -523,12 +523,31 @@ export async function installModule(moduleId: string, siteId: string) {
 
 **API Routes (For Webhooks/External):**
 ```typescript
-// src/app/api/modules/[id]/webhook/route.ts
+// IMPORTANT: Webhooks and subdomain routes MUST use admin client (service role)
+// because they have no auth cookies. createClient() will fail silently.
+// src/app/api/modules/ecommerce/webhooks/payment/route.ts
+import { createAdminClient } from '@/lib/supabase/admin'
 export async function POST(request: Request) {
-  const body = await request.json();
+  const supabase = createAdminClient() as any  // Bypasses RLS
   // Process webhook
   return Response.json({ success: true });
 }
+```
+
+**Auth Client Pattern:**
+```
+Dashboard (logged-in user)   → createClient()     (cookie-auth, RLS enforced)
+Subdomain / Public visitors  → createAdminClient() (service role, bypasses RLS)
+Payment webhooks (S2S)       → createAdminClient() (no cookies available)
+Form submissions             → createAdminClient() (anonymous visitors)
+```
+
+**Public vs Dashboard Action Files:**
+```
+ecommerce-actions.ts        → Dashboard CRUD (cookie-auth)
+public-ecommerce-actions.ts → Storefront reads + checkout + order updates (admin client)
+booking-actions.ts          → Dashboard CRUD (cookie-auth)
+public-booking-actions.ts   → Storefront reads + appointment creation (admin client)
 ```
 
 ### 4B. Server→Client Component Wrapper Pattern (NEW)

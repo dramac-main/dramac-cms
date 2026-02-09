@@ -1,6 +1,59 @@
 # Active Context
 
-## Latest Session Update (Notification System Overhaul — February 2026)
+## Latest Session Update (Subdomain Ecommerce Fix — February 2026)
+
+### ECOMMERCE CHECKOUT + PAYMENT WEBHOOKS — SUBDOMAIN COMPATIBLE ✅
+
+**Problem Discovered (Subdomain Flow Audit):**
+User asked "does this all work from a customer subdomain (e.g. `sisto.sites.dramacagency.com`)?"
+
+Traced 6 flows from subdomain context:
+- ✅ **Booking**: Uses `createAdminClient()` → works for anonymous visitors
+- ❌ **Ecommerce Checkout**: Used `createClient()` (cookie-auth) → RLS blocks anonymous subdomain visitors → order never created
+- ❌ **Payment Webhooks**: Used `createClient()` (cookie-auth) → webhooks are server-to-server with NO cookies → all 4 payment providers broken
+- ✅ **Form submission**: Uses service-role client directly → works
+- ✅ **Email sender**: Server-side env vars, domain-independent
+- ✅ **Middleware**: Properly handles `*.sites.dramacagency.com`
+
+**Fix Applied (3 files, 293 additions):**
+
+1. **`public-ecommerce-actions.ts`** — Added 5 new public functions using `createAdminClient()`:
+   - `getPublicEcommerceSettings()` — settings reads for checkout/webhooks
+   - `createPublicOrderFromCart()` — full order creation with notifications (mirrors `createOrderFromCart` logic)
+   - `updatePublicOrderStatus()` — order status updates
+   - `updatePublicOrderPaymentStatus()` — payment status with auto-status cascade
+   - `updatePublicOrder()` — generic partial order updates
+
+2. **`checkout/route.ts`** — Switched imports from `ecommerce-actions.ts` → `public-ecommerce-actions.ts`:
+   - `getCart` → `getPublicCart`
+   - `getEcommerceSettings` → `getPublicEcommerceSettings`
+   - `createOrderFromCart` → `createPublicOrderFromCart`
+
+3. **`webhooks/payment/route.ts`** — Switched to admin client + public functions:
+   - `createClient()` → `createAdminClient()` (5 occurrences: GET handler + 4 POST handlers)
+   - All `updateOrderStatus/PaymentStatus/Order` → `updatePublicOrderStatus/PaymentStatus/Order`
+   - All `getEcommerceSettings` → `getPublicEcommerceSettings`
+   - All 4 payment providers fixed: Paddle, Flutterwave, Pesapal, DPO
+
+**Commit:** `1d41bb1`
+
+### Auth Client Pattern (Updated)
+
+```
+DASHBOARD (cookie-auth, user must be logged in):
+  createClient() via ecommerce-actions.ts  → Dashboard CRUD
+  createClient() via booking-actions.ts     → Dashboard CRUD
+
+PUBLIC / SUBDOMAIN / WEBHOOKS (admin client, bypasses RLS):
+  createAdminClient() via public-ecommerce-actions.ts → Storefront reads + checkout + order updates
+  createAdminClient() via public-booking-actions.ts   → Storefront reads + appointment creation
+  createAdminClient() via api/forms/submit/route.ts   → Form submissions
+  createAdminClient() via webhooks/payment/route.ts   → Payment provider callbacks (Paddle/FW/Pesapal/DPO)
+```
+
+---
+
+## Previous Session (Notification System Overhaul — February 2026)
 
 ### NOTIFICATION SYSTEM OVERHAUL — ALL SCENARIOS WIRED ✅
 

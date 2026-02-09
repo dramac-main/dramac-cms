@@ -1,7 +1,32 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅**
+
+---
+
+## 🌐 SUBDOMAIN ECOMMERCE FIX (February 2026) ✅
+
+### What Was Done
+Subdomain flow audit revealed ecommerce checkout + payment webhooks were broken for customer subdomains (e.g. `sisto.sites.dramacagency.com`). Both used `createClient()` (cookie-auth) instead of `createAdminClient()` (service role).
+
+### Critical Fixes
+| Fix | Files |
+|-----|-------|
+| Public checkout functions | `public-ecommerce-actions.ts` — added 5 new functions using admin client |
+| Checkout route | `checkout/route.ts` — switched to public-ecommerce-actions imports |
+| Payment webhooks | `webhooks/payment/route.ts` — `createClient` → `createAdminClient` everywhere, all 4 providers fixed |
+
+### Auth Client Pattern
+| Context | Client | Example Files |
+|---------|--------|---------------|
+| Dashboard (logged-in user) | `createClient()` (cookie-auth) | `ecommerce-actions.ts`, `booking-actions.ts` |
+| Subdomain / Public | `createAdminClient()` (service role) | `public-ecommerce-actions.ts`, `public-booking-actions.ts` |
+| Payment webhooks | `createAdminClient()` (service role) | `webhooks/payment/route.ts` |
+| Form submission | `createAdminClient()` (service role) | `api/forms/submit/route.ts` |
+
+### Commit
+- `1d41bb1` — "fix: ecommerce checkout + payment webhooks use admin client for subdomain/webhook compatibility"
 
 ---
 
