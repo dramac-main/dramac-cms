@@ -39,8 +39,8 @@
 
 | Phase | File | Description |
 |-------|------|-------------|
-| UX-00 | `phases/PHASE-UX-00-PAGE-SIMPLIFICATION.md` | 16 tasks fixing all 63 UX issues — runs FIRST |
-| Contract | `phases/PHASE-IMPLEMENTATION-CONTRACT.md` | 13 rules for AI agents — prevents conflicts |
+| UX-00 | `phases/white-label-ux-domains/PHASE-UX-00-PAGE-SIMPLIFICATION.md` | 16 tasks fixing all 63 UX issues — runs FIRST |
+| Contract | `phases/white-label-ux-domains/PHASE-IMPLEMENTATION-CONTRACT.md` | 13 rules for AI agents — prevents conflicts |
 
 ### Updated Master Plan
 
@@ -56,16 +56,16 @@
 
 | Phase | File | Status |
 |-------|------|--------|
-| Master Plan | `phases/PHASE-MASTER-WHITE-LABEL-UX-DOMAINS.md` | ✅ Updated |
-| Contract | `phases/PHASE-IMPLEMENTATION-CONTRACT.md` | ✅ Created |
-| PHASE-UX-00 | `phases/PHASE-UX-00-PAGE-SIMPLIFICATION.md` | 📝 Ready (run FIRST) |
-| PHASE-UX-01 | `phases/PHASE-UX-01-GLOBAL-UX-POLISH.md` | 📝 Ready |
-| PHASE-WL-01 | `phases/PHASE-WL-01-BRANDING-FOUNDATION.md` | 📝 Ready |
-| PHASE-WL-02 | `phases/PHASE-WL-02-EMAIL-SYSTEM-OVERHAUL.md` | 📝 Ready |
-| PHASE-DM-01 | `phases/PHASE-DM-01-DOMAIN-MANAGEMENT-OVERHAUL.md` | 📝 Ready |
-| PHASE-WL-03 | `phases/PHASE-WL-03-PORTAL-WHITE-LABEL.md` | 📝 Ready |
-| PHASE-UX-02 | `phases/PHASE-UX-02-NOTIFICATION-CENTER.md` | 📝 Ready |
-| PHASE-UX-03 | `phases/PHASE-UX-03-E2E-JOURNEY-VERIFICATION.md` | 📝 Ready (run LAST) |
+| Master Plan | `phases/white-label-ux-domains/PHASE-MASTER-WHITE-LABEL-UX-DOMAINS.md` | ✅ Updated |
+| Contract | `phases/white-label-ux-domains/PHASE-IMPLEMENTATION-CONTRACT.md` | ✅ Created |
+| PHASE-UX-00 | `phases/white-label-ux-domains/PHASE-UX-00-PAGE-SIMPLIFICATION.md` | 📝 Ready (run FIRST) |
+| PHASE-UX-01 | `phases/white-label-ux-domains/PHASE-UX-01-GLOBAL-UX-POLISH.md` | 📝 Ready |
+| PHASE-WL-01 | `phases/white-label-ux-domains/PHASE-WL-01-BRANDING-FOUNDATION.md` | 📝 Ready |
+| PHASE-WL-02 | `phases/white-label-ux-domains/PHASE-WL-02-EMAIL-SYSTEM-OVERHAUL.md` | 📝 Ready |
+| PHASE-DM-01 | `phases/white-label-ux-domains/PHASE-DM-01-DOMAIN-MANAGEMENT-OVERHAUL.md` | 📝 Ready |
+| PHASE-WL-03 | `phases/white-label-ux-domains/PHASE-WL-03-PORTAL-WHITE-LABEL.md` | 📝 Ready |
+| PHASE-UX-02 | `phases/white-label-ux-domains/PHASE-UX-02-NOTIFICATION-CENTER.md` | 📝 Ready |
+| PHASE-UX-03 | `phases/white-label-ux-domains/PHASE-UX-03-E2E-JOURNEY-VERIFICATION.md` | 📝 Ready (run LAST) |
 
 ### Next Steps
 - Execute PHASE-UX-00 first (page simplification — fixes all existing UX issues)

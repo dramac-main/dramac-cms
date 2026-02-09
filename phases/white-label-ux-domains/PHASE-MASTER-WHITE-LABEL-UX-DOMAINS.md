@@ -250,7 +250,7 @@ Each phase document is designed to be **self-contained and actionable** in an in
 4. Read /memory-bank/techContext.md
 5. Read /memory-bank/activeContext.md
 6. Read /memory-bank/progress.md
-7. Read /phases/PHASE-IMPLEMENTATION-CONTRACT.md
+7. Read /phases/white-label-ux-domains/PHASE-IMPLEMENTATION-CONTRACT.md
 8. Read your assigned phase document
 ```
 
