@@ -95,7 +95,7 @@ export class SubscriptionService {
         currentPeriodEnd: new Date(data.current_period_end ?? Date.now()),
         cancelAtPeriodEnd: data.cancel_at_period_end ?? false,
         unitPrice: data.unit_price,
-        currency: data.currency ?? 'USD',
+        currency: data.currency ?? 'USD', // Paddle billing currency - USD for platform billing
         includedUsage: {
           automationRuns: data.included_automation_runs ?? 0,
           aiActions: data.included_ai_actions ?? 0,
@@ -163,7 +163,7 @@ export class SubscriptionService {
       
       // Extract unit price (in smallest currency unit, e.g., cents)
       const unitPrice = parseInt(paddleSub.items?.[0]?.price?.unitPrice?.amount || '0', 10);
-      const currency = paddleSub.currencyCode || 'USD';
+      const currency = paddleSub.currencyCode || 'USD'; // Paddle billing currency
       
       // Save to local database - use correct column names from schema
       const { data: insertedSub, error: insertError } = await this.supabase

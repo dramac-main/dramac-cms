@@ -91,9 +91,8 @@ export function BookingStorefrontProvider({ children, siteId }: BookingStorefron
     loadSettings()
   }, [siteId])
 
-  // BookingSettings type may or may not have a currency field depending on the site config
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const currency = (settings as any)?.currency as string || DEFAULT_CURRENCY
+  // Currency from booking settings (now properly typed)
+  const currency = settings?.currency || DEFAULT_CURRENCY
   const currencySymbol = CURRENCY_SYMBOLS[currency] || DEFAULT_CURRENCY_SYMBOL
   const timezone = settings?.timezone || DEFAULT_TIMEZONE
   const slotInterval = settings?.slot_interval_minutes || 30

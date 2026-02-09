@@ -52,7 +52,7 @@ import {
 import type { DealUpdate, PipelineStage, Activity } from '../../types/crm-types'
 import { CreateActivityDialog } from '../dialogs/create-activity-dialog'
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY, DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 interface DealDetailSheetProps {
   dealId: string | null
   open: boolean
@@ -60,7 +60,7 @@ interface DealDetailSheetProps {
 }
 
 function formatCurrency(value: number | null | undefined): string {
-  if (!value) return '$0'
+  if (!value) return `${DEFAULT_CURRENCY_SYMBOL}0`
   return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency: DEFAULT_CURRENCY,

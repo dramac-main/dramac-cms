@@ -31,9 +31,15 @@ import { updateSettings } from '../../actions/booking-actions'
 import { toast } from 'sonner'
 import type { BookingSettingsUpdate } from '../../types/booking-types'
 
-import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
+import { DEFAULT_TIMEZONE, DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from '@/lib/locale-config'
 // Common timezones
 const TIMEZONES = [
+  { value: 'Africa/Lusaka', label: 'Lusaka (Zambia)' },
+  { value: 'Africa/Harare', label: 'Harare (Zimbabwe)' },
+  { value: 'Africa/Johannesburg', label: 'Johannesburg (South Africa)' },
+  { value: 'Africa/Nairobi', label: 'Nairobi (Kenya)' },
+  { value: 'Africa/Lagos', label: 'Lagos (Nigeria)' },
+  { value: 'Africa/Cairo', label: 'Cairo (Egypt)' },
   { value: 'UTC', label: 'UTC' },
   { value: 'America/New_York', label: 'Eastern Time (US)' },
   { value: 'America/Chicago', label: 'Central Time (US)' },
@@ -41,9 +47,7 @@ const TIMEZONES = [
   { value: 'America/Los_Angeles', label: 'Pacific Time (US)' },
   { value: 'Europe/London', label: 'London (UK)' },
   { value: 'Europe/Paris', label: 'Paris (CET)' },
-  { value: 'Europe/Berlin', label: 'Berlin (CET)' },
   { value: 'Asia/Tokyo', label: 'Tokyo (Japan)' },
-  { value: 'Asia/Shanghai', label: 'Shanghai (China)' },
   { value: 'Australia/Sydney', label: 'Sydney (Australia)' },
 ]
 
@@ -58,6 +62,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
   
   // Form state
   const [businessName, setBusinessName] = useState('')
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
   const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE)
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h')
   const [slotInterval, setSlotInterval] = useState(30)
@@ -74,6 +79,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
   useEffect(() => {
     if (open && settings) {
       setBusinessName(settings.business_name || '')
+      setCurrency(settings.currency || DEFAULT_CURRENCY)
       setTimezone(settings.timezone || DEFAULT_TIMEZONE)
       setTimeFormat(settings.time_format || '12h')
       setSlotInterval(settings.slot_interval_minutes || 30)
@@ -94,6 +100,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
     try {
       const updates: BookingSettingsUpdate = {
         business_name: businessName.trim() || undefined,
+        currency,
         timezone,
         time_format: timeFormat,
         slot_interval_minutes: slotInterval,
@@ -148,6 +155,23 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                 />
+              </div>
+              
+              {/* Currency */}
+              <div className="grid gap-2">
+                <Label>Currency</Label>
+                <Select value={currency} onValueChange={setCurrency}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.symbol} {c.code} — {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               {/* Timezone */}

@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 
-import { DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from '@/lib/locale-config'
 interface EcommerceSettingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -133,11 +133,11 @@ export function EcommerceSettingsDialog({ open, onOpenChange }: EcommerceSetting
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USD">USD ($)</SelectItem>
-                    <SelectItem value="EUR">EUR (€)</SelectItem>
-                    <SelectItem value="GBP">GBP (£)</SelectItem>
-                    <SelectItem value="CAD">CAD (C$)</SelectItem>
-                    <SelectItem value="AUD">AUD (A$)</SelectItem>
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.code} ({c.symbol}) — {c.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

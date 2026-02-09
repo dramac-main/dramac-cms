@@ -1,4 +1,5 @@
 import type { ModuleDefinition, ModuleCategory, ModulePricing } from "./module-types";
+import { DEFAULT_CURRENCY, DEFAULT_CURRENCY_SYMBOL, DEFAULT_LOCALE } from "@/lib/locale-config";
 
 // Core platform modules - built-in and ready to use
 export const MODULE_CATALOG: ModuleDefinition[] = [
@@ -32,7 +33,7 @@ Get insights into how users interact with your site and optimize for better perf
     pricing: {
       type: "free",
       amount: 0,
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Automatic page tracking",
@@ -69,7 +70,7 @@ Understand where users click, scroll, and what they ignore.
     pricing: {
       type: "monthly",
       amount: 999, // $9.99
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Click heatmaps",
@@ -108,7 +109,7 @@ Generate sitemaps, manage meta tags, add schema markup, and monitor SEO health.
     pricing: {
       type: "monthly",
       amount: 1499, // $14.99
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Auto-generated sitemaps",
@@ -148,7 +149,7 @@ Support for one-time payments, subscriptions, and checkout pages.
     pricing: {
       type: "monthly",
       amount: 2499, // $24.99
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "One-time payments",
@@ -186,7 +187,7 @@ Manage products, handle cart operations, and process checkouts.
     pricing: {
       type: "monthly",
       amount: 3999, // $39.99
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Product catalog",
@@ -226,7 +227,7 @@ Connect to email services, CRMs, and webhooks.
     pricing: {
       type: "monthly",
       amount: 1999, // $19.99
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Multi-step forms",
@@ -267,7 +268,7 @@ Customizable buttons, share counts, and floating share bars.
     pricing: {
       type: "free",
       amount: 0,
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Share buttons",
@@ -304,7 +305,7 @@ Automatic updates, customizable layouts, and click-through to Instagram.
     pricing: {
       type: "monthly",
       amount: 799, // $7.99
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Auto-sync feed",
@@ -343,7 +344,7 @@ Exit-intent detection, A/B testing, and conversion tracking.
     pricing: {
       type: "monthly",
       amount: 1499, // $14.99
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Exit-intent triggers",
@@ -381,7 +382,7 @@ Build lists, create campaigns, and track performance.
     pricing: {
       type: "monthly",
       amount: 2999, // $29.99
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Email templates",
@@ -421,7 +422,7 @@ Free Let's Encrypt certificates with auto-renewal.
     pricing: {
       type: "free",
       amount: 0,
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Auto SSL provisioning",
@@ -458,7 +459,7 @@ Store backups in the cloud and restore with one click.
     pricing: {
       type: "monthly",
       amount: 999, // $9.99
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Daily backups",
@@ -498,7 +499,7 @@ Automatic image compression and lazy loading.
     pricing: {
       type: "monthly",
       amount: 1999, // $19.99
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Global CDN",
@@ -538,7 +539,7 @@ Customizable widget, chat history, and offline messages.
     pricing: {
       type: "monthly",
       amount: 2499, // $24.99
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Real-time chat",
@@ -578,7 +579,7 @@ Categories, tags, comments, and SEO optimization built-in.
     pricing: {
       type: "free",
       amount: 0,
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Post management",
@@ -618,7 +619,7 @@ Trigger Zaps from form submissions, purchases, and more.
     pricing: {
       type: "monthly",
       amount: 999, // $9.99
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Webhook triggers",
@@ -655,7 +656,7 @@ Sync customer data and trigger automations.
     pricing: {
       type: "free",
       amount: 0,
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "List sync",
@@ -694,7 +695,7 @@ Customizable banners, cookie categories, and consent logging.
     pricing: {
       type: "free",
       amount: 0,
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Consent banner",
@@ -732,7 +733,7 @@ Set up redirects, track 404s, and maintain SEO value.
     pricing: {
       type: "free",
       amount: 0,
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "301 redirects",
@@ -779,7 +780,7 @@ Trigger Zapier automations from form submissions, page views, and custom events.
     pricing: {
       type: "monthly",
       amount: 999,
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Unlimited Zap connections",
@@ -838,7 +839,7 @@ Perfect for salons, spas, consultants, medical offices, and any business that ta
     pricing: {
       type: "monthly",
       amount: 2999, // $29.99/month
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Service management",
@@ -907,7 +908,7 @@ Supports both physical and digital products with variant management, inventory t
     pricing: {
       type: "monthly",
       amount: 4999, // $49.99/month
-      currency: "USD",
+      currency: DEFAULT_CURRENCY,
     },
     features: [
       "Product catalog",
@@ -983,5 +984,5 @@ export function formatPrice(pricing: ModulePricing): string {
   if (pricing.type === "free") return "Free";
   const amount = (pricing.amount / 100).toFixed(2);
   const suffix = pricing.type === "monthly" ? "/mo" : pricing.type === "yearly" ? "/yr" : "";
-  return `$${amount}${suffix}`;
+  return `${DEFAULT_CURRENCY_SYMBOL}${amount}${suffix}`;
 }

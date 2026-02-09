@@ -32,19 +32,21 @@ import type {
   PipelineStageMetrics,
   PipelineFunnelData,
 } from "@/types/crm-analytics";
+import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
 
 // ============================================================================
 // HELPERS
 // ============================================================================
 
 function formatCurrency(value: number): string {
+  const s = DEFAULT_CURRENCY_SYMBOL;
   if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(1)}M`;
+    return `${s}${(value / 1000000).toFixed(1)}M`;
   }
   if (value >= 1000) {
-    return `$${(value / 1000).toFixed(0)}K`;
+    return `${s}${(value / 1000).toFixed(0)}K`;
   }
-  return `$${value.toFixed(0)}`;
+  return `${s}${value.toFixed(0)}`;
 }
 
 function formatNumber(value: number): string {

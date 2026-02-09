@@ -168,7 +168,7 @@ async function handleSubscriptionCreated(event: PaddleWebhookEvent): Promise<voi
       current_period_end: data.currentBillingPeriod?.endsAt,
       trial_end: data.trialPeriod?.endsAt || null,
       unit_price: parseInt(data.items?.[0]?.price?.unitPrice?.amount || '0'),
-      currency: data.currencyCode || 'USD',
+      currency: data.currencyCode || 'USD', // Paddle billing currency - USD is correct for platform billing
       included_automation_runs: product?.included_automation_runs || 0,
       included_ai_actions: product?.included_ai_actions || 0,
       included_api_calls: product?.included_api_calls || 0,
@@ -452,7 +452,7 @@ async function handleTransactionCompleted(event: PaddleWebhookEvent): Promise<vo
       subtotal: parseInt(data.details?.totals?.subtotal || '0'),
       tax: parseInt(data.details?.totals?.tax || '0'),
       total: parseInt(data.details?.totals?.total || '0'),
-      currency: data.currencyCode || 'USD',
+      currency: data.currencyCode || 'USD', // Paddle billing currency - USD is correct for platform billing
       line_items: data.items || [],
       billing_period_start: data.billingPeriod?.startsAt,
       billing_period_end: data.billingPeriod?.endsAt,
@@ -467,7 +467,7 @@ async function handleTransactionCompleted(event: PaddleWebhookEvent): Promise<vo
   await emitBillingEvent(sub.agency_id, 'billing.payment.succeeded', {
     transaction_id: data.id,
     amount: parseInt(data.details?.totals?.total || '0'),
-    currency: data.currencyCode || 'USD',
+    currency: data.currencyCode || 'USD' // Paddle billing currency - USD is correct for platform billing,
   });
   
   // If this is a renewal, emit renewal event
@@ -510,7 +510,7 @@ async function handleTransactionBilled(event: PaddleWebhookEvent): Promise<void>
       subtotal: parseInt(data.details?.totals?.subtotal || '0'),
       tax: parseInt(data.details?.totals?.tax || '0'),
       total: parseInt(data.details?.totals?.total || '0'),
-      currency: data.currencyCode || 'USD',
+      currency: data.currencyCode || 'USD', // Paddle billing currency - USD is correct for platform billing
       line_items: data.items || [],
       billing_period_start: data.billingPeriod?.startsAt,
       billing_period_end: data.billingPeriod?.endsAt,

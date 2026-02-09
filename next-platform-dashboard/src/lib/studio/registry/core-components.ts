@@ -8015,7 +8015,7 @@ const interactiveComponents: ComponentDefinition[] = [
         yearlyPrice: { type: "text", label: "Yearly Price" },
         originalPrice: { type: "text", label: "Original Price (strikethrough)" },
         period: { type: "text", label: "Period (e.g., /month)" },
-        currency: { type: "text", label: "Currency Symbol", defaultValue: "$" },
+        currency: { type: "text", label: "Currency Symbol", defaultValue: "K" },
         features: { type: "array", label: "Features", itemFields: { 
           text: { type: "text", label: "Feature" },
           included: { type: "toggle", label: "Included", defaultValue: true },
@@ -10740,9 +10740,9 @@ const marketingComponents: ComponentDefinition[] = [
       highlightedColumnStyle: "background",
       highlightedBadgeText: "Most Popular",
       columns: [
-        { name: "Basic", price: "$9", priceNote: "/month", highlighted: false },
-        { name: "Pro", price: "$29", priceNote: "/month", highlighted: true, badge: "Most Popular" },
-        { name: "Enterprise", price: "$99", priceNote: "/month", highlighted: false },
+        { name: "Basic", price: "K9", priceNote: "/month", highlighted: false },
+        { name: "Pro", price: "K29", priceNote: "/month", highlighted: true, badge: "Most Popular" },
+        { name: "Enterprise", price: "K99", priceNote: "/month", highlighted: false },
       ],
       rows: [
         { feature: "Users", values: "1,5,Unlimited" },

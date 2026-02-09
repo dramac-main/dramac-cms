@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from '@/lib/locale-config'
 import {
   Dialog,
   DialogContent,
@@ -295,14 +295,11 @@ export function QuoteTemplateDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro</SelectItem>
-                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                    <SelectItem value="CAD">CAD - Canadian Dollar</SelectItem>
-                    <SelectItem value="AUD">AUD - Australian Dollar</SelectItem>
-                    <SelectItem value="KES">KES - Kenyan Shilling</SelectItem>
-                    <SelectItem value="NGN">NGN - Nigerian Naira</SelectItem>
-                    <SelectItem value="ZAR">ZAR - South African Rand</SelectItem>
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.code} - {c.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

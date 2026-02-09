@@ -11,7 +11,7 @@
 
 import type { ModuleManifest } from '../_types'
 
-import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
+import { DEFAULT_TIMEZONE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 export const BookingModuleManifest: ModuleManifest = {
   // ==========================================================================
   // IDENTIFICATION
@@ -222,6 +222,13 @@ export const BookingModuleManifest: ModuleManifest = {
   settings: {
     type: 'object',
     properties: {
+      currency: {
+        type: 'string',
+        title: 'Currency',
+        description: 'Currency for service pricing',
+        default: DEFAULT_CURRENCY,
+        enum: ['ZMW', 'USD', 'EUR', 'GBP', 'ZAR', 'CAD', 'AUD']
+      },
       timezone: {
         type: 'string',
         title: 'Default Timezone',

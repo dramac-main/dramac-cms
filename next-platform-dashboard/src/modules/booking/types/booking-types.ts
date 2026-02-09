@@ -329,6 +329,7 @@ export interface BookingSettings {
   
   // General
   business_name?: string | null
+  currency: string
   timezone: string
   date_format: string
   time_format: TimeFormat

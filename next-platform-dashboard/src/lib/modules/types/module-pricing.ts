@@ -192,8 +192,8 @@ export function calculateMarkupPercentage(
  */
 export function formatPrice(
   cents: number,
-  currency: string = "USD",
-  locale: string = "en-US"
+  currency: string = "ZMW",
+  locale: string = "en-ZM"
 ): string {
   return new Intl.NumberFormat(locale, {
     style: "currency",
@@ -209,7 +209,7 @@ export function formatPrice(
 export function formatPriceWithCycle(
   cents: number,
   cycle: BillingCycle,
-  currency: string = "USD"
+  currency: string = "ZMW"
 ): string {
   const price = formatPrice(cents, currency);
   

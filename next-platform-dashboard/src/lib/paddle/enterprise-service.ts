@@ -337,7 +337,7 @@ export class EnterpriseService {
       description: `Monthly subscription for ${quote.companyName}`,
       unitPrice: {
         amount: quote.proposedPricing.totalMonthly.toString(),
-        currencyCode: 'USD',
+        currencyCode: 'USD', // Paddle billing currency - platform subscriptions are in USD
       },
       billingCycle: {
         interval: 'month',

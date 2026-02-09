@@ -40,7 +40,7 @@ export function FirstProductStep({
   };
 
   // Get currency symbol from earlier step
-  const currencySymbol = data.currencyTax?.currencySymbol || '$';
+  const currencySymbol = data.currencyTax?.currencySymbol || 'K';
 
   return (
     <div className="space-y-6">

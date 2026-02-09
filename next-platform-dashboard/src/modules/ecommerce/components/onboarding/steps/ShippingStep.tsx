@@ -37,7 +37,7 @@ export function ShippingStep({
   };
 
   // Get currency symbol from previous step
-  const currencySymbol = data.currencyTax?.currencySymbol || '$';
+  const currencySymbol = data.currencyTax?.currencySymbol || 'K';
 
   return (
     <div className="space-y-6">

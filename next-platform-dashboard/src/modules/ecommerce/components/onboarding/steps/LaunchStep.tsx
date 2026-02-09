@@ -71,7 +71,7 @@ export function LaunchStep({
   const completionPercentage = Math.round((completedCount / checklist.length) * 100);
 
   // Get currency symbol
-  const currencySymbol = data.currencyTax?.currencySymbol || '$';
+  const currencySymbol = data.currencyTax?.currencySymbol || 'K';
 
   return (
     <div className="space-y-6">

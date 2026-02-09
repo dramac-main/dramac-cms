@@ -509,7 +509,7 @@ export const STARTER_TEMPLATES: SectionTemplate[] = [
       {
         id: 'starter-price',
         type: 'Heading',
-        props: { text: '$29/mo', level: 'h2', fontSize: '48px', fontWeight: 'bold', marginBottom: '8px' },
+        props: { text: 'K29/mo', level: 'h2', fontSize: '48px', fontWeight: 'bold', marginBottom: '8px' },
         parentId: 'pricing-starter',
       },
       {
@@ -558,7 +558,7 @@ export const STARTER_TEMPLATES: SectionTemplate[] = [
       {
         id: 'pro-price',
         type: 'Heading',
-        props: { text: '$79/mo', level: 'h2', fontSize: '48px', fontWeight: 'bold', color: '#FFFFFF', marginBottom: '8px' },
+        props: { text: 'K79/mo', level: 'h2', fontSize: '48px', fontWeight: 'bold', color: '#FFFFFF', marginBottom: '8px' },
         parentId: 'pricing-pro',
       },
       {

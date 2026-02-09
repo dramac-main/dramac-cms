@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ShieldCheck, ArrowLeft } from "lucide-react";
+import { DEFAULT_CURRENCY, DEFAULT_LOCALE } from "@/lib/locale-config";
 
 export const metadata: Metadata = {
   title: "Checkout | DRAMAC",
@@ -58,9 +59,9 @@ export default async function CheckoutModulePage({ searchParams }: CheckoutModul
     notFound();
   }
 
-  const formatPrice = (amount?: number, currency = "USD") => {
+  const formatPrice = (amount?: number, currency = DEFAULT_CURRENCY) => {
     if (!amount) return "Free";
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(DEFAULT_LOCALE, {
       style: "currency",
       currency,
     }).format(amount / 100);
