@@ -48,13 +48,13 @@ export const resend = {
 
 // Email configuration
 export function getEmailFrom(): string {
-  return process.env.EMAIL_FROM || "Dramac <noreply@dramacagency.com>";
+  return process.env.EMAIL_FROM || "Dramac <noreply@app.dramacagency.com>";
 }
 
 export function getEmailReplyTo(): string {
-  return process.env.EMAIL_REPLY_TO || "support@dramacagency.com";
+  return process.env.EMAIL_REPLY_TO || "support@app.dramacagency.com";
 }
 
 // Legacy exports (deprecated - use get functions instead)
-export const EMAIL_FROM = process.env.EMAIL_FROM || "Dramac <noreply@dramacagency.com>";
-export const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || "support@dramacagency.com";
+export const EMAIL_FROM = process.env.EMAIL_FROM || "Dramac <noreply@app.dramacagency.com>";
+export const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || "support@app.dramacagency.com";

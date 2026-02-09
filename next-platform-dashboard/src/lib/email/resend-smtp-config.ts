@@ -13,13 +13,13 @@
  *    - Port: 465
  *    - Username: resend
  *    - Password: <your RESEND_API_KEY>
- *    - Sender email: noreply@dramacagency.com (must be verified in Resend)
+ *    - Sender email: noreply@app.dramacagency.com (must be verified in Resend)
  *    - Sender name: Dramac
  *    - Minimum interval: 60 seconds
  * 
  * 3. Verify your domain in Resend Dashboard:
  *    - Go to https://resend.com/domains
- *    - Add domain: dramacagency.com
+ *    - Add domain: app.dramacagency.com (already verified ✅)
  *    - Add the DNS records (SPF, DKIM, DMARC) to your DNS provider
  * 
  * 4. Customize email templates in Supabase Dashboard → Authentication → Email Templates:
@@ -31,15 +31,15 @@
  * 
  * ENVIRONMENT VARIABLES NEEDED:
  *   RESEND_API_KEY=re_xxxxxxxxxxxxx  (already configured)
- *   EMAIL_FROM=Dramac <noreply@dramacagency.com>
- *   EMAIL_REPLY_TO=support@dramacagency.com
+ *   EMAIL_FROM=Dramac <noreply@app.dramacagency.com>
+ *   EMAIL_REPLY_TO=support@app.dramacagency.com
  * 
  * IMPORTANT NOTES:
  * - The RESEND_API_KEY used for SMTP password is the same key used for 
  *   transactional emails in the app
  * - Supabase free tier uses their built-in SMTP which has rate limits
  * - Using Resend SMTP removes those rate limits
- * - Ensure dramacagency.com domain is verified in Resend before switching
+ * - Ensure app.dramacagency.com domain is verified in Resend (already done ✅)
  */
 
 // This file is documentation-only. Auth SMTP is configured in Supabase Dashboard.
@@ -48,6 +48,6 @@ export const RESEND_SMTP_CONFIG = {
   port: 465,
   username: 'resend',
   // password: process.env.RESEND_API_KEY (set in Supabase Dashboard)
-  senderEmail: 'noreply@dramacagency.com',
+  senderEmail: 'noreply@app.dramacagency.com',
   senderName: 'Dramac',
 } as const
