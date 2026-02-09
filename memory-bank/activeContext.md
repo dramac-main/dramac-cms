@@ -1,6 +1,84 @@
 # Active Context
 
-## Latest Session Update (Deep Currency Sweep + Email Domain Fix — February 2026)
+## Latest Session Update (Notification System Overhaul — February 2026)
+
+### NOTIFICATION SYSTEM OVERHAUL — ALL SCENARIOS WIRED ✅
+
+**Deep Scan Findings:**
+Comprehensive audit of the entire email + notification system revealed 8 critical issues:
+
+| # | Issue | Severity |
+|---|-------|----------|
+| 1 | **Dual-email bug** — `createNotification()` internally sent email via raw `fetch` to Resend, AND `business-notifications.ts` sent another email via centralized `sendEmail()`. Owners got **2 emails** per booking/order. | 🔴 Critical |
+| 2 | **Form submission emails were a stub** — commented-out Resend code, only console.log, but marked `notified_at` as if sent. | 🔴 Critical |
+| 3 | **`notifyOrderShipped()` never called** — function + template existed but `updateOrderFulfillment()` didn't invoke it. | 🔴 Critical |
+| 4 | **No booking cancellation notifications** — no `notifyBookingCancelled()` function existed. `cancelAppointment()` sent nothing. Templates existed unused. | 🔴 Critical |
+| 5 | **Stripe webhook TODOs** — `payment_failed` and `trial_ending` were bare `// TODO` comments with no implementation. | 🟡 Medium |
+| 6 | **Missing data interfaces** — `BookingCancelledCustomerData` and `BookingCancelledOwnerData` not defined. | 🟡 Medium |
+| 7 | **Duplicate entries in `isValidEmailType()`** — 3 types listed twice. | 🟡 Low |
+| 8 | **Dead code** — `lib/actions/email.ts` (12 functions, 0 imports), `lib/forms/notification-service.ts` (never imported). | ℹ️ Info |
+
+**All Fixes Applied:**
+
+1. **Dual-email eliminated**: Removed entire legacy email pipeline from `notifications.ts` (raw `fetch`, generic HTML template, `sendEmailNotificationIfEnabled`, `shouldSendEmail`). `createNotification()` is now in-app only.
+
+2. **Booking cancellation wired**: New `notifyBookingCancelled()` in `business-notifications.ts`. `cancelAppointment()` auto-calls it with service/customer/staff data.
+
+3. **Order shipped wired**: `updateOrderFulfillment()` now calls `notifyOrderShipped()` when fulfillment_status = 'fulfilled'.
+
+4. **Form submission email fixed**: Replaced commented-out stub with real `sendEmail()` using `form_submission_owner` template.
+
+5. **Stripe webhooks wired**: `handleInvoiceFailed()` and `handleTrialEnding()` now create in-app notifications AND send emails.
+
+6. **Type fixes**: Added `BookingCancelledCustomerData` and `BookingCancelledOwnerData` interfaces. Removed duplicate entries from `isValidEmailType()`.
+
+**Commit:** `d18f331`
+
+### COMPLETE EMAIL/NOTIFICATION SCENARIO MAP (Post-Fix)
+
+| Scenario | In-App | Owner Email | Customer Email | Template |
+|----------|--------|-------------|----------------|----------|
+| New Booking | ✅ | ✅ | ✅ | `booking_confirmation_*` |
+| Booking Cancelled | ✅ | ✅ | ✅ | `booking_cancelled_*` |
+| New Order | ✅ | ✅ | ✅ | `order_confirmation_*` |
+| Order Shipped | — | — | ✅ | `order_shipped_customer` |
+| Form Submission | — | ✅ | — | `form_submission_owner` |
+| Payment Failed (Paddle) | ✅ | ✅ | — | `payment_failed` |
+| Payment Failed (Stripe) | ✅ | ✅ | — | `payment_failed` |
+| Trial Ending (Stripe) | ✅ | ✅ | — | `trial_ending` |
+| Payment Recovered (Paddle) | ✅ | ✅ | — | `payment_success` |
+
+### Architecture After Overhaul
+
+```
+EMAIL SYSTEM (single pipeline):
+  src/lib/email/resend-client.ts → Resend SDK init
+  src/lib/email/send-email.ts → sendEmail() → Resend API
+  src/lib/email/email-types.ts → 18 types + data interfaces
+  src/lib/email/templates.ts → 18 HTML+text templates
+
+NOTIFICATION SYSTEM:
+  src/lib/services/notifications.ts → createNotification() (IN-APP ONLY, no email)
+  src/lib/services/business-notifications.ts → orchestrator:
+    notifyNewBooking() → in-app + owner email + customer email
+    notifyBookingCancelled() → in-app + owner email + customer email  [NEW]
+    notifyNewOrder() → in-app + owner email + customer email
+    notifyOrderShipped() → customer email only
+
+TRIGGERS:
+  booking-actions.ts → cancelAppointment() → notifyBookingCancelled()  [NEW]
+  public-booking-actions.ts → createPublicAppointment() → notifyNewBooking()
+  ecommerce-actions.ts → createOrder() → notifyNewOrder()
+  ecommerce-actions.ts → updateOrderFulfillment() → notifyOrderShipped()  [NEW]
+  api/forms/submit/route.ts → sendNotifications() → sendEmail()  [FIXED]
+  api/webhooks/stripe/ → handleInvoiceFailed() → notification + email  [NEW]
+  api/webhooks/stripe/ → handleTrialEnding() → notification + email  [NEW]
+  paddle/dunning-service.ts → payment failed/recovered emails (already worked)
+```
+
+---
+
+## Previous Session (Deep Currency Sweep + Email Domain Fix — February 2026)
 
 ### EMAIL DOMAIN FIX ✅
 

@@ -93,7 +93,7 @@
 ### Communication
 - **Resend**: 6.7.0 (transactional emails via REST API)
   - SDK: `src/lib/email/resend-client.ts` — `getResend()`, `isEmailEnabled()`, `getEmailFrom()`
-  - Sender: `Dramac <noreply@dramac.app>`
+  - Sender: `Dramac <noreply@app.dramacagency.com>` (verified domain: `app.dramacagency.com`)
   - Also used as Supabase Auth SMTP (login/signup/reset emails)
   - SMTP: `smtp.resend.com:465` — configured in Supabase Dashboard
 - **Handlebars**: 4.7.8 (email templates)

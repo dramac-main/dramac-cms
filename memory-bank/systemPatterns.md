@@ -67,36 +67,52 @@ import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE, formatCurrency } from '@/lib/locale
 
 ## 📧 Email & Notification Pattern
 
-### Email Architecture
+### Email Architecture (Single Pipeline)
 ```
 src/lib/email/
 ├── resend-client.ts      # Resend SDK init (getResend(), isEmailEnabled(), getEmailFrom())
-├── send-email.ts         # Core sendEmail(to, type, data) function
-├── email-types.ts        # EmailType union + data interfaces
-├── templates.ts          # HTML+text template generators per type
+├── send-email.ts         # Core sendEmail(to, type, data) function → Resend API
+├── email-types.ts        # EmailType union (18 types) + data interfaces
+├── templates.ts          # HTML+text template generators per type (18 templates)
 └── index.ts              # Re-exports
 ```
 
 ### Notification Architecture
 ```
 src/lib/services/
-├── notifications.ts              # createNotification() → DB insert + optional email
-└── business-notifications.ts     # Orchestrator: notifyNewBooking(), notifyNewOrder()
+├── notifications.ts              # createNotification() → DB insert ONLY (no email!)
+└── business-notifications.ts     # Orchestrator (handles BOTH in-app + email):
+                                  #   notifyNewBooking(), notifyBookingCancelled()
+                                  #   notifyNewOrder(), notifyOrderShipped()
 ```
+
+### ⚠️ CRITICAL: No Dual Email
+`createNotification()` is IN-APP ONLY. It inserts into the `notifications` table and returns.
+It does NOT send email. All email is handled by the caller via `sendEmail()` from `@/lib/email/send-email`.
+This prevents duplicate emails (the old bug where owners got 2 emails per event).
 
 ### Adding New Notification Types
 1. Add type to `NotificationType` union in `src/types/notifications.ts`
 2. Add email type to `EmailType` union in `email-types.ts`
 3. Add data interface in `email-types.ts`
 4. Add HTML+text template in `templates.ts`
-5. Add to `shouldSendEmail()` mapping in `notifications.ts`
-6. Add to `notificationTypeInfo` display map
-7. Create orchestrator function in `business-notifications.ts`
-8. Wire into the server action that creates the entity
+5. Add to `notificationTypeInfo` display map in `notifications.ts`
+6. Create orchestrator function in `business-notifications.ts` that calls:
+   - `createNotification()` for in-app notification
+   - `sendEmail()` for each recipient (owner, customer)
+7. Wire into the server action that creates the entity
 
-### Business-Critical Notifications
-These types ALWAYS send email (bypass user preferences):
-- `new_booking`, `booking_cancelled`, `new_order`, `payment_failed`
+### Business-Critical Notification Scenarios
+| Scenario | Trigger File | In-App | Owner Email | Customer Email |
+|----------|-------------|--------|-------------|----------------|
+| New Booking | `public-booking-actions.ts` | ✅ | ✅ | ✅ |
+| Booking Cancelled | `booking-actions.ts` | ✅ | ✅ | ✅ |
+| New Order | `ecommerce-actions.ts` | ✅ | ✅ | ✅ |
+| Order Shipped | `ecommerce-actions.ts` | — | — | ✅ |
+| Form Submission | `api/forms/submit/route.ts` | — | ✅ | — |
+| Payment Failed | `dunning-service.ts` + `stripe/route.ts` | ✅ | ✅ | — |
+| Trial Ending | `stripe/route.ts` | ✅ | ✅ | — |
+| Payment Recovered | `dunning-service.ts` | ✅ | ✅ | — |
 
 ### Auth Email (Supabase SMTP)
 Login/signup/reset emails go through Supabase Auth SMTP → Resend:
