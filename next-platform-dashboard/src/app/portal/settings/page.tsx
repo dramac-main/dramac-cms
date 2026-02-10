@@ -53,7 +53,7 @@ export default function PortalSettingsPage() {
     confirmPassword: "",
   });
 
-  // Load real user data on mount
+  // Load real user data and notification prefs on mount
   useEffect(() => {
     async function loadProfile() {
       try {
@@ -66,6 +66,17 @@ export default function PortalSettingsPage() {
             phone: user.user_metadata?.phone ?? "",
             company: user.user_metadata?.company ?? "",
           });
+
+          // Load notification preferences from user metadata
+          const savedPrefs = user.user_metadata?.notification_preferences;
+          if (savedPrefs) {
+            setNotifications({
+              emailNotifications: savedPrefs.emailNotifications ?? true,
+              ticketUpdates: savedPrefs.ticketUpdates ?? true,
+              siteAlerts: savedPrefs.siteAlerts ?? true,
+              marketingEmails: savedPrefs.marketingEmails ?? false,
+            });
+          }
         }
       } catch {
         toast.error("Failed to load profile");
@@ -130,9 +141,26 @@ export default function PortalSettingsPage() {
   }
 
   async function handleNotificationChange(key: keyof NotificationSettings, value: boolean) {
-    setNotifications(prev => ({ ...prev, [key]: value }));
-    // In a real app, this would save to the server
-    toast.success("Notification preference updated");
+    const updated = { ...notifications, [key]: value };
+    setNotifications(updated);
+
+    // Persist to user metadata via Supabase Auth
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({
+        data: { notification_preferences: updated },
+      });
+      if (error) {
+        toast.error("Failed to save preference");
+        // Revert
+        setNotifications(notifications);
+        return;
+      }
+      toast.success("Notification preference updated");
+    } catch {
+      toast.error("Failed to save preference");
+      setNotifications(notifications);
+    }
   }
 
   return (

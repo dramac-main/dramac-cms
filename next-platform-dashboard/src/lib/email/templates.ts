@@ -690,4 +690,57 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ''}
       `.trim();
     },
   },
+
+  // ============================================
+  // QUOTE EMAILS
+  // ============================================
+
+  quote_sent_customer: {
+    subject: (data) => `Quote ${data.quoteNumber} from ${data.businessName || 'us'}`,
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">Your Quote is Ready</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || 'there'},</p>
+      <p style="${STYLES.text}">We've prepared a quote for you.</p>
+      <p style="${STYLES.text}"><strong>Quote #:</strong> ${data.quoteNumber}<br><strong>Total:</strong> ${data.totalAmount}${data.expiryDate ? `<br><strong>Valid until:</strong> ${data.expiryDate}` : ''}</p>
+      ${data.message ? `<p style="${STYLES.text}">${data.message}</p>` : ''}
+      ${data.viewQuoteUrl ? `<p style="margin: 24px 0;"><a href="${data.viewQuoteUrl}" style="${STYLES.button}">View Quote</a></p>` : ''}
+    `),
+    text: (data) => `Your Quote is Ready\n\nHi ${data.customerName || 'there'},\n\nQuote #: ${data.quoteNumber}\nTotal: ${data.totalAmount}${data.expiryDate ? `\nValid until: ${data.expiryDate}` : ''}\n\n${data.message || ''}${data.viewQuoteUrl ? `\n\nView quote: ${data.viewQuoteUrl}` : ''}`,
+  },
+
+  quote_reminder_customer: {
+    subject: (data) => `Reminder: Quote ${data.quoteNumber} is awaiting your response`,
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">Quote Reminder</h1>
+      <p style="${STYLES.text}">Hi ${data.customerName || 'there'},</p>
+      <p style="${STYLES.text}">This is a friendly reminder about quote <strong>${data.quoteNumber}</strong> (${data.totalAmount}).</p>
+      ${data.expiryDate ? `<p style="${STYLES.text}">This quote is valid until <strong>${data.expiryDate}</strong>.</p>` : ''}
+      ${data.message ? `<p style="${STYLES.text}">${data.message}</p>` : ''}
+      ${data.viewQuoteUrl ? `<p style="margin: 24px 0;"><a href="${data.viewQuoteUrl}" style="${STYLES.button}">View Quote</a></p>` : ''}
+    `),
+    text: (data) => `Quote Reminder\n\nHi ${data.customerName || 'there'},\n\nReminder about quote ${data.quoteNumber} (${data.totalAmount}).${data.expiryDate ? ` Valid until ${data.expiryDate}.` : ''}\n\n${data.message || ''}${data.viewQuoteUrl ? `\n\nView quote: ${data.viewQuoteUrl}` : ''}`,
+  },
+
+  quote_accepted_owner: {
+    subject: (data) => `✅ Quote ${data.quoteNumber} Accepted by ${data.customerName}`,
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">✅ Quote Accepted</h1>
+      <p style="${STYLES.text}">Great news! <strong>${data.customerName}</strong> has accepted quote <strong>${data.quoteNumber}</strong>.</p>
+      <p style="${STYLES.text}"><strong>Total:</strong> ${data.totalAmount}</p>
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View in Dashboard</a></p>` : ''}
+    `),
+    text: (data) => `Quote Accepted\n\n${data.customerName} has accepted quote ${data.quoteNumber}.\nTotal: ${data.totalAmount}\n\n${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ''}`,
+  },
+
+  quote_rejected_owner: {
+    subject: (data) => `❌ Quote ${data.quoteNumber} Rejected by ${data.customerName}`,
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">❌ Quote Rejected</h1>
+      <p style="${STYLES.text}"><strong>${data.customerName}</strong> has rejected quote <strong>${data.quoteNumber}</strong>.</p>
+      <p style="${STYLES.text}"><strong>Total:</strong> ${data.totalAmount}</p>
+      ${data.rejectionReason ? `<p style="${STYLES.text}"><strong>Reason:</strong> ${data.rejectionReason}</p>` : ''}
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View in Dashboard</a></p>` : ''}
+    `),
+    text: (data) => `Quote Rejected\n\n${data.customerName} has rejected quote ${data.quoteNumber}.\nTotal: ${data.totalAmount}${data.rejectionReason ? `\nReason: ${data.rejectionReason}` : ''}\n\n${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ''}`,
+  },
 };

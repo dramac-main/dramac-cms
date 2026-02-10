@@ -4,11 +4,10 @@
  * CRM Analytics Server Actions
  * 
  * PHASE-DS-03A: CRM Analytics Dashboard
- * Server actions for fetching CRM analytics data
+ * Server actions using REAL database queries against mod_crmmod01_* tables.
  */
 
 import { createClient } from "@/lib/supabase/server";
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
 import type {
   CRMTimeRange,
   PipelineOverview,
@@ -32,240 +31,240 @@ import type {
   CRMAnalyticsData,
 } from "@/types/crm-analytics";
 
+const TABLE_PREFIX = "mod_crmmod01";
+
 // ============================================================================
-// HELPER FUNCTIONS
+// HELPER
 // ============================================================================
 
 function getDateRange(timeRange: CRMTimeRange): { start: Date; end: Date } {
   const end = new Date();
   const start = new Date();
-
   switch (timeRange) {
-    case "7d":
-      start.setDate(end.getDate() - 7);
-      break;
-    case "30d":
-      start.setDate(end.getDate() - 30);
-      break;
-    case "90d":
-      start.setDate(end.getDate() - 90);
-      break;
-    case "12m":
-      start.setMonth(end.getMonth() - 12);
-      break;
-    case "1y":
-      start.setFullYear(end.getFullYear() - 1);
-      break;
-    case "all":
-      start.setFullYear(2020);
-      break;
-    default:
-      start.setDate(end.getDate() - 30);
+    case "7d": start.setDate(end.getDate() - 7); break;
+    case "30d": start.setDate(end.getDate() - 30); break;
+    case "90d": start.setDate(end.getDate() - 90); break;
+    case "12m": start.setMonth(end.getMonth() - 12); break;
+    case "1y": start.setFullYear(end.getFullYear() - 1); break;
+    case "all": start.setFullYear(2020); break;
+    default: start.setDate(end.getDate() - 30);
   }
-
   return { start, end };
 }
 
-// Seeded random for consistent mock data
-function seededRandom(seed: string): () => number {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    const char = seed.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return () => {
-    hash = Math.sin(hash) * 10000;
-    return hash - Math.floor(hash);
-  };
-}
-
-const PIPELINE_STAGES = [
-  { name: "Lead", color: "hsl(var(--chart-1))" },
-  { name: "Qualified", color: "hsl(var(--chart-2))" },
-  { name: "Proposal", color: "hsl(var(--chart-3))" },
-  { name: "Negotiation", color: "hsl(var(--chart-4))" },
-  { name: "Closed Won", color: "hsl(var(--chart-5))" },
-];
-
-const SOURCES = ["Website", "Referral", "LinkedIn", "Cold Call", "Trade Show", "Email Campaign"];
-const ACTIVITY_TYPES = ["call", "email", "meeting", "note", "task"] as const;
-
 // ============================================================================
-// PIPELINE ANALYTICS
+// PIPELINE
 // ============================================================================
 
 export async function getPipelineOverview(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<PipelineOverview> {
-  const random = seededRandom(`${siteId}-pipeline-${timeRange}`);
+  const supabase = await createClient();
+  const { start, end } = getDateRange(timeRange);
 
-  // Generate mock deal counts using seeded random
-  const baseDealCount = Math.floor(random() * 150) + 50;
-  const baseValue = Math.floor(random() * 800000) + 200000;
+  const { data: pipeline } = await supabase
+    .from(`${TABLE_PREFIX}_pipelines`)
+    .select("id, name")
+    .eq("site_id", siteId)
+    .eq("is_default", true)
+    .single();
 
-  // Generate pipeline stage metrics
-  const stages: PipelineStageMetrics[] = PIPELINE_STAGES.map((stage, index) => {
-    const dropoffRate = 0.15 + random() * 0.15;
-    const stageDeals = Math.floor(baseDealCount * Math.pow(1 - dropoffRate, index));
-    const stageValue = Math.floor(baseValue * Math.pow(1 - dropoffRate * 0.8, index));
-    
+  const pipelineId = pipeline?.id || "default";
+  const pipelineName = pipeline?.name || "Sales Pipeline";
+
+  const { data: stages } = await supabase
+    .from(`${TABLE_PREFIX}_pipeline_stages`)
+    .select("id, name, color, position, probability, stage_type")
+    .eq("pipeline_id", pipelineId)
+    .order("position");
+
+  const { data: deals } = await supabase
+    .from(`${TABLE_PREFIX}_deals`)
+    .select("id, amount, status, stage_id, created_at")
+    .eq("site_id", siteId)
+    .eq("pipeline_id", pipelineId)
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString());
+
+  const allDeals = deals || [];
+  const totalDeals = allDeals.length;
+  const totalValue = allDeals.reduce((s, d) => s + (Number(d.amount) || 0), 0);
+  const wonDeals = allDeals.filter(d => d.status === "won");
+  const wonValue = wonDeals.reduce((s, d) => s + (Number(d.amount) || 0), 0);
+
+  const stageMetrics: PipelineStageMetrics[] = (stages || []).map((stage) => {
+    const sd = allDeals.filter(d => d.stage_id === stage.id);
+    const sv = sd.reduce((s, d) => s + (Number(d.amount) || 0), 0);
     return {
-      stageId: `stage-${index + 1}`,
+      stageId: stage.id,
       stageName: stage.name,
-      stagePosition: index + 1,
-      dealCount: stageDeals,
-      dealValue: stageValue,
-      avgTimeInStage: Math.floor(3 + random() * 10),
-      conversionRate: index < PIPELINE_STAGES.length - 1 
-        ? Math.floor(60 + random() * 30) 
-        : 100,
-      color: stage.color,
+      stagePosition: stage.position,
+      dealCount: sd.length,
+      dealValue: sv,
+      avgTimeInStage: 0,
+      conversionRate: stage.probability || 0,
+      color: stage.color || "hsl(var(--chart-1))",
     };
   });
 
-  const wonDeals = Math.floor(baseDealCount * (0.2 + random() * 0.15));
-  const wonValue = Math.floor(baseValue * (0.25 + random() * 0.15));
-
   return {
-    pipelineId: "default",
-    pipelineName: "Sales Pipeline",
-    totalDeals: baseDealCount,
-    totalValue: baseValue,
-    avgDealSize: Math.floor(baseValue / baseDealCount),
-    winRate: Math.floor((wonDeals / Math.max(baseDealCount, 1)) * 100),
-    avgSalesCycle: Math.floor(25 + random() * 20),
-    stages,
+    pipelineId,
+    pipelineName,
+    totalDeals,
+    totalValue,
+    avgDealSize: totalDeals > 0 ? Math.floor(totalValue / totalDeals) : 0,
+    winRate: totalDeals > 0 ? Math.floor((wonDeals.length / totalDeals) * 100) : 0,
+    avgSalesCycle: 0,
+    stages: stageMetrics,
   };
 }
 
 // ============================================================================
-// DEAL ANALYTICS
+// DEALS
 // ============================================================================
 
 export async function getDealVelocity(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<DealVelocityData[]> {
-  const random = seededRandom(`${siteId}-velocity-${timeRange}`);
+  const supabase = await createClient();
   const { start, end } = getDateRange(timeRange);
-  const data: DealVelocityData[] = [];
 
-  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  const interval = days <= 30 ? 1 : days <= 90 ? 7 : 30;
-  
-  let currentDate = new Date(start);
-  while (currentDate <= end) {
-    const month = currentDate.toLocaleDateString(DEFAULT_LOCALE, { month: "short" });
-    const day = currentDate.getDate();
-    const period = interval === 30 ? month : `${month} ${day}`;
-    
-    const newDeals = Math.floor(5 + random() * 15);
-    const wonDeals = Math.floor(newDeals * (0.2 + random() * 0.2));
-    const lostDeals = Math.floor(newDeals * (0.1 + random() * 0.15));
-    
-    data.push({
-      period,
-      newDeals,
-      wonDeals,
-      lostDeals,
-      dealValue: newDeals * (8000 + random() * 12000),
-      wonValue: wonDeals * (10000 + random() * 15000),
-    });
+  const { data: deals } = await supabase
+    .from(`${TABLE_PREFIX}_deals`)
+    .select("id, amount, status, created_at")
+    .eq("site_id", siteId)
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString())
+    .order("created_at");
 
-    currentDate.setDate(currentDate.getDate() + interval);
+  const grouped = new Map<string, { newDeals: number; wonDeals: number; lostDeals: number; dealValue: number; wonValue: number }>();
+  for (const deal of deals || []) {
+    const key = new Date(deal.created_at).toLocaleDateString("en-ZM", { month: "short", year: "2-digit" });
+    const e = grouped.get(key) || { newDeals: 0, wonDeals: 0, lostDeals: 0, dealValue: 0, wonValue: 0 };
+    e.newDeals++;
+    e.dealValue += Number(deal.amount) || 0;
+    if (deal.status === "won") { e.wonDeals++; e.wonValue += Number(deal.amount) || 0; }
+    if (deal.status === "lost") e.lostDeals++;
+    grouped.set(key, e);
   }
 
-  return data.slice(-12);
+  return Array.from(grouped.entries()).map(([period, data]) => ({ period, ...data }));
 }
 
 export async function getDealsByStatus(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<DealsByStatus[]> {
-  const random = seededRandom(`${siteId}-status-${timeRange}`);
+  const supabase = await createClient();
+  const { start, end } = getDateRange(timeRange);
 
-  const openDeals = Math.floor(30 + random() * 30);
-  const wonDeals = Math.floor(15 + random() * 20);
-  const lostDeals = Math.floor(10 + random() * 15);
-  
-  const total = openDeals + wonDeals + lostDeals;
+  const { data: deals } = await supabase
+    .from(`${TABLE_PREFIX}_deals`)
+    .select("id, amount, status")
+    .eq("site_id", siteId)
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString());
 
-  const openValue = Math.floor(openDeals * (8000 + random() * 7000));
-  const wonValue = Math.floor(wonDeals * (12000 + random() * 8000));
-  const lostValue = Math.floor(lostDeals * (6000 + random() * 5000));
+  const all = deals || [];
+  const total = all.length;
 
-  return [
-    {
-      status: "open",
-      count: openDeals,
-      value: openValue,
-      avgValue: Math.floor(openValue / Math.max(openDeals, 1)),
-      percentage: Math.floor((openDeals / Math.max(total, 1)) * 100),
-    },
-    {
-      status: "won",
-      count: wonDeals,
-      value: wonValue,
-      avgValue: Math.floor(wonValue / Math.max(wonDeals, 1)),
-      percentage: Math.floor((wonDeals / Math.max(total, 1)) * 100),
-    },
-    {
-      status: "lost",
-      count: lostDeals,
-      value: lostValue,
-      avgValue: Math.floor(lostValue / Math.max(lostDeals, 1)),
-      percentage: Math.floor((lostDeals / Math.max(total, 1)) * 100),
-    },
-  ];
+  return (["open", "won", "lost"] as const).map((status) => {
+    const f = all.filter(d => d.status === status);
+    const v = f.reduce((s, d) => s + (Number(d.amount) || 0), 0);
+    return {
+      status,
+      count: f.length,
+      value: v,
+      avgValue: f.length > 0 ? Math.floor(v / f.length) : 0,
+      percentage: total > 0 ? Math.floor((f.length / total) * 100) : 0,
+    };
+  });
 }
 
 export async function getDealsBySource(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<DealsBySource[]> {
-  const random = seededRandom(`${siteId}-source-${timeRange}`);
+  const supabase = await createClient();
+  const { start, end } = getDateRange(timeRange);
 
-  return SOURCES.map(source => {
-    const dealCount = Math.floor(5 + random() * 25);
-    const dealValue = dealCount * (5000 + random() * 15000);
-    const winRate = Math.floor(15 + random() * 40);
-    
-    return {
+  const { data: deals } = await supabase
+    .from(`${TABLE_PREFIX}_deals`)
+    .select(`id, amount, status, contact:${TABLE_PREFIX}_contacts(source)`)
+    .eq("site_id", siteId)
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString());
+
+  const grouped = new Map<string, { dealCount: number; dealValue: number; wonCount: number }>();
+  for (const deal of deals || []) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const source = (deal.contact as any)?.source || "Unknown";
+    const e = grouped.get(source) || { dealCount: 0, dealValue: 0, wonCount: 0 };
+    e.dealCount++;
+    e.dealValue += Number(deal.amount) || 0;
+    if (deal.status === "won") e.wonCount++;
+    grouped.set(source, e);
+  }
+
+  return Array.from(grouped.entries())
+    .map(([source, d]) => ({
       source,
-      dealCount,
-      dealValue: Math.floor(dealValue),
-      winRate,
-      avgDealSize: Math.floor(dealValue / dealCount),
-    };
-  }).sort((a, b) => b.dealValue - a.dealValue);
+      dealCount: d.dealCount,
+      dealValue: Math.floor(d.dealValue),
+      winRate: d.dealCount > 0 ? Math.floor((d.wonCount / d.dealCount) * 100) : 0,
+      avgDealSize: d.dealCount > 0 ? Math.floor(d.dealValue / d.dealCount) : 0,
+    }))
+    .sort((a, b) => b.dealValue - a.dealValue);
 }
 
 // ============================================================================
-// CONTACT ANALYTICS
+// CONTACTS
 // ============================================================================
 
 export async function getContactMetrics(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<ContactMetrics> {
-  const random = seededRandom(`${siteId}-contacts-${timeRange}`);
+  const supabase = await createClient();
+  const { start, end } = getDateRange(timeRange);
 
-  const baseContacts = Math.floor(150 + random() * 150);
-  const newContacts = Math.floor(baseContacts * (0.1 + random() * 0.1));
-  const activeContacts = Math.floor(baseContacts * (0.4 + random() * 0.2));
-  const qualifiedLeads = Math.floor(baseContacts * (0.2 + random() * 0.15));
+  const [
+    { count: totalContacts },
+    { count: newContacts },
+    { count: activeContacts },
+    { count: qualifiedLeads },
+    { count: convertedLeads },
+    { count: contactsWithDeals },
+  ] = await Promise.all([
+    supabase.from(`${TABLE_PREFIX}_contacts`).select("id", { count: "exact", head: true }).eq("site_id", siteId),
+    supabase.from(`${TABLE_PREFIX}_contacts`).select("id", { count: "exact", head: true }).eq("site_id", siteId).gte("created_at", start.toISOString()).lte("created_at", end.toISOString()),
+    supabase.from(`${TABLE_PREFIX}_contacts`).select("id", { count: "exact", head: true }).eq("site_id", siteId).eq("status", "active"),
+    supabase.from(`${TABLE_PREFIX}_contacts`).select("id", { count: "exact", head: true }).eq("site_id", siteId).eq("lead_status", "qualified"),
+    supabase.from(`${TABLE_PREFIX}_contacts`).select("id", { count: "exact", head: true }).eq("site_id", siteId).eq("lead_status", "converted"),
+    supabase.from(`${TABLE_PREFIX}_deals`).select("contact_id", { count: "exact", head: true }).eq("site_id", siteId).not("contact_id", "is", null),
+  ]);
+
+  const { data: scoreData } = await supabase
+    .from(`${TABLE_PREFIX}_contacts`)
+    .select("lead_score")
+    .eq("site_id", siteId);
+
+  const scores = (scoreData || []).map(c => c.lead_score || 0);
+  const avgLeadScore = scores.length > 0 ? Math.floor(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+  const total = totalContacts || 0;
+  const convRate = total > 0 ? Math.floor(((convertedLeads || 0) / total) * 100) : 0;
 
   return {
-    totalContacts: baseContacts,
-    newContacts,
-    activeContacts,
-    qualifiedLeads,
-    conversionRate: Math.floor(10 + random() * 20),
-    avgLeadScore: Math.floor(45 + random() * 30),
-    contactsWithDeals: Math.floor(baseContacts * (0.15 + random() * 0.1)),
-    contactsTrend: Math.floor(-10 + random() * 30),
+    totalContacts: total,
+    newContacts: newContacts || 0,
+    activeContacts: activeContacts || 0,
+    qualifiedLeads: qualifiedLeads || 0,
+    conversionRate: convRate,
+    avgLeadScore,
+    contactsWithDeals: contactsWithDeals || 0,
+    contactsTrend: 0,
   };
 }
 
@@ -273,119 +272,165 @@ export async function getContactsBySource(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<ContactsBySource[]> {
-  const random = seededRandom(`${siteId}-contact-source-${timeRange}`);
-  
-  const data = SOURCES.map(source => ({
-    source,
-    count: Math.floor(20 + random() * 80),
-    percentage: 0,
-    conversionRate: Math.floor(5 + random() * 25),
-  }));
+  const supabase = await createClient();
+  const { start, end } = getDateRange(timeRange);
 
-  const total = data.reduce((sum, d) => sum + d.count, 0);
-  data.forEach(d => {
-    d.percentage = Math.floor((d.count / total) * 100);
-  });
+  const { data: contacts } = await supabase
+    .from(`${TABLE_PREFIX}_contacts`)
+    .select("source, lead_status")
+    .eq("site_id", siteId)
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString());
 
-  return data.sort((a, b) => b.count - a.count);
+  const all = contacts || [];
+  const grouped = new Map<string, { count: number; converted: number }>();
+  for (const c of all) {
+    const src = c.source || "Unknown";
+    const e = grouped.get(src) || { count: 0, converted: 0 };
+    e.count++;
+    if (c.lead_status === "converted") e.converted++;
+    grouped.set(src, e);
+  }
+
+  const total = all.length;
+  return Array.from(grouped.entries())
+    .map(([source, d]) => ({
+      source,
+      count: d.count,
+      percentage: total > 0 ? Math.floor((d.count / total) * 100) : 0,
+      conversionRate: d.count > 0 ? Math.floor((d.converted / d.count) * 100) : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
 }
 
 export async function getContactsByStatus(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<ContactsByStatus[]> {
-  const random = seededRandom(`${siteId}-contact-status-${timeRange}`);
-  
-  const statuses = [
-    { status: "Active", count: Math.floor(100 + random() * 150) },
-    { status: "New Lead", count: Math.floor(50 + random() * 80) },
-    { status: "Qualified", count: Math.floor(40 + random() * 60) },
-    { status: "Contacted", count: Math.floor(30 + random() * 50) },
-    { status: "Inactive", count: Math.floor(20 + random() * 40) },
-  ];
+  const supabase = await createClient();
 
-  const total = statuses.reduce((sum, s) => sum + s.count, 0);
-  
-  return statuses.map(s => ({
-    ...s,
-    percentage: Math.floor((s.count / total) * 100),
-  }));
+  const { data: contacts } = await supabase
+    .from(`${TABLE_PREFIX}_contacts`)
+    .select("status")
+    .eq("site_id", siteId);
+
+  const all = contacts || [];
+  const grouped = new Map<string, number>();
+  for (const c of all) grouped.set(c.status || "unknown", (grouped.get(c.status || "unknown") || 0) + 1);
+
+  const total = all.length;
+  return Array.from(grouped.entries())
+    .map(([status, count]) => ({
+      status: status.charAt(0).toUpperCase() + status.slice(1),
+      count,
+      percentage: total > 0 ? Math.floor((count / total) * 100) : 0,
+    }))
+    .sort((a, b) => b.count - a.count);
 }
 
 export async function getLeadScoreDistribution(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<LeadScoreDistribution[]> {
-  const random = seededRandom(`${siteId}-score-${timeRange}`);
-  
+  const supabase = await createClient();
+
+  const { data: contacts } = await supabase
+    .from(`${TABLE_PREFIX}_contacts`)
+    .select("lead_score")
+    .eq("site_id", siteId);
+
   const ranges = [
-    { range: "0-20", minScore: 0, maxScore: 20, count: Math.floor(20 + random() * 30) },
-    { range: "21-40", minScore: 21, maxScore: 40, count: Math.floor(30 + random() * 40) },
-    { range: "41-60", minScore: 41, maxScore: 60, count: Math.floor(50 + random() * 60) },
-    { range: "61-80", minScore: 61, maxScore: 80, count: Math.floor(40 + random() * 50) },
-    { range: "81-100", minScore: 81, maxScore: 100, count: Math.floor(15 + random() * 25) },
+    { range: "0-20", minScore: 0, maxScore: 20, count: 0 },
+    { range: "21-40", minScore: 21, maxScore: 40, count: 0 },
+    { range: "41-60", minScore: 41, maxScore: 60, count: 0 },
+    { range: "61-80", minScore: 61, maxScore: 80, count: 0 },
+    { range: "81-100", minScore: 81, maxScore: 100, count: 0 },
   ];
 
-  const total = ranges.reduce((sum, r) => sum + r.count, 0);
-  
-  return ranges.map(r => ({
-    ...r,
-    percentage: Math.floor((r.count / total) * 100),
-  }));
+  for (const c of contacts || []) {
+    const score = c.lead_score || 0;
+    const r = ranges.find(r => score >= r.minScore && score <= r.maxScore);
+    if (r) r.count++;
+  }
+
+  const total = (contacts || []).length;
+  return ranges.map(r => ({ ...r, percentage: total > 0 ? Math.floor((r.count / total) * 100) : 0 }));
 }
 
 export async function getContactGrowth(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<ContactGrowth[]> {
-  const random = seededRandom(`${siteId}-growth-${timeRange}`);
+  const supabase = await createClient();
   const { start, end } = getDateRange(timeRange);
-  const data: ContactGrowth[] = [];
 
-  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  const interval = days <= 30 ? 1 : days <= 90 ? 7 : 30;
-  
-  let total = Math.floor(150 + random() * 100);
-  let currentDate = new Date(start);
-  
-  while (currentDate <= end) {
-    const newContacts = Math.floor(3 + random() * 10);
-    const converted = Math.floor(newContacts * (0.1 + random() * 0.2));
-    total += newContacts;
+  const { data: contacts } = await supabase
+    .from(`${TABLE_PREFIX}_contacts`)
+    .select("created_at, lead_status")
+    .eq("site_id", siteId)
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString())
+    .order("created_at");
 
-    data.push({
-      date: currentDate.toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" }),
-      total,
-      new: newContacts,
-      converted,
-    });
+  const { count: previousTotal } = await supabase
+    .from(`${TABLE_PREFIX}_contacts`)
+    .select("id", { count: "exact", head: true })
+    .eq("site_id", siteId)
+    .lt("created_at", start.toISOString());
 
-    currentDate.setDate(currentDate.getDate() + interval);
+  const grouped = new Map<string, { new: number; converted: number }>();
+  for (const c of contacts || []) {
+    const date = new Date(c.created_at).toLocaleDateString("en-ZM", { month: "short", day: "numeric" });
+    const e = grouped.get(date) || { new: 0, converted: 0 };
+    e.new++;
+    if (c.lead_status === "converted") e.converted++;
+    grouped.set(date, e);
   }
 
-  return data.slice(-12);
+  let total = previousTotal || 0;
+  return Array.from(grouped.entries()).map(([date, d]) => {
+    total += d.new;
+    return { date, total, new: d.new, converted: d.converted };
+  });
 }
 
 // ============================================================================
-// ACTIVITY ANALYTICS
+// ACTIVITIES
 // ============================================================================
 
 export async function getActivityMetrics(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<ActivityMetrics> {
-  const random = seededRandom(`${siteId}-activity-${timeRange}`);
+  const supabase = await createClient();
+  const { start, end } = getDateRange(timeRange);
 
-  const totalActivities = Math.floor(300 + random() * 400);
-  const activitiesThisPeriod = Math.floor(totalActivities * (0.3 + random() * 0.2));
+  const [
+    { count: totalActivities },
+    { count: periodActivities },
+  ] = await Promise.all([
+    supabase.from(`${TABLE_PREFIX}_activities`).select("id", { count: "exact", head: true }).eq("site_id", siteId),
+    supabase.from(`${TABLE_PREFIX}_activities`).select("id", { count: "exact", head: true }).eq("site_id", siteId).gte("created_at", start.toISOString()).lte("created_at", end.toISOString()),
+  ]);
+
+  const { data: typeData } = await supabase
+    .from(`${TABLE_PREFIX}_activities`)
+    .select("activity_type")
+    .eq("site_id", siteId)
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString());
+
+  const typeCounts = new Map<string, number>();
+  for (const a of typeData || []) typeCounts.set(a.activity_type, (typeCounts.get(a.activity_type) || 0) + 1);
+  const topType = Array.from(typeCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || "email";
 
   return {
-    totalActivities,
-    activitiesThisPeriod,
-    activitiesTrend: Math.floor(-15 + random() * 40),
-    avgActivitiesPerDeal: Math.floor(5 + random() * 8),
-    topActivityType: ACTIVITY_TYPES[Math.floor(random() * 3)],
-    responseRate: Math.floor(40 + random() * 35),
+    totalActivities: totalActivities || 0,
+    activitiesThisPeriod: periodActivities || 0,
+    activitiesTrend: 0,
+    avgActivitiesPerDeal: 0,
+    topActivityType: topType as "call" | "email" | "meeting" | "note" | "task",
+    responseRate: 0,
   };
 }
 
@@ -393,108 +438,175 @@ export async function getActivitiesByType(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<ActivitiesByType[]> {
-  const random = seededRandom(`${siteId}-activity-type-${timeRange}`);
+  const supabase = await createClient();
+  const { start, end } = getDateRange(timeRange);
 
-  const data: ActivitiesByType[] = ACTIVITY_TYPES.map(type => ({
-    type,
-    count: Math.floor(30 + random() * 100),
-    percentage: 0,
-    trend: Math.floor(-20 + random() * 50),
-  }));
+  const { data: activities } = await supabase
+    .from(`${TABLE_PREFIX}_activities`)
+    .select("activity_type")
+    .eq("site_id", siteId)
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString());
 
-  const total = data.reduce((sum, d) => sum + d.count, 0);
-  data.forEach(d => {
-    d.percentage = Math.floor((d.count / total) * 100);
-  });
+  const grouped = new Map<string, number>();
+  for (const a of activities || []) grouped.set(a.activity_type, (grouped.get(a.activity_type) || 0) + 1);
 
-  return data.sort((a, b) => b.count - a.count);
+  const total = (activities || []).length;
+  return Array.from(grouped.entries())
+    .map(([type, count]) => ({
+      type: type as "call" | "email" | "meeting" | "note" | "task",
+      count,
+      percentage: total > 0 ? Math.floor((count / total) * 100) : 0,
+      trend: 0,
+    }))
+    .sort((a, b) => b.count - a.count);
 }
 
 export async function getActivityTimeline(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<ActivityTimeline[]> {
-  const random = seededRandom(`${siteId}-timeline-${timeRange}`);
+  const supabase = await createClient();
   const { start, end } = getDateRange(timeRange);
-  const data: ActivityTimeline[] = [];
 
-  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  const interval = days <= 30 ? 1 : days <= 90 ? 7 : 30;
-  
-  let currentDate = new Date(start);
-  
-  while (currentDate <= end) {
-    const calls = Math.floor(2 + random() * 8);
-    const emails = Math.floor(5 + random() * 15);
-    const meetings = Math.floor(1 + random() * 4);
-    const notes = Math.floor(3 + random() * 10);
-    const tasks = Math.floor(2 + random() * 6);
+  const { data: activities } = await supabase
+    .from(`${TABLE_PREFIX}_activities`)
+    .select("activity_type, created_at")
+    .eq("site_id", siteId)
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString())
+    .order("created_at");
 
-    data.push({
-      date: currentDate.toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" }),
-      calls,
-      emails,
-      meetings,
-      notes,
-      tasks,
-      total: calls + emails + meetings + notes + tasks,
-    });
-
-    currentDate.setDate(currentDate.getDate() + interval);
+  const grouped = new Map<string, { calls: number; emails: number; meetings: number; notes: number; tasks: number }>();
+  for (const a of activities || []) {
+    const date = new Date(a.created_at).toLocaleDateString("en-ZM", { month: "short", day: "numeric" });
+    const e = grouped.get(date) || { calls: 0, emails: 0, meetings: 0, notes: 0, tasks: 0 };
+    switch (a.activity_type) {
+      case "call": e.calls++; break;
+      case "email": e.emails++; break;
+      case "meeting": e.meetings++; break;
+      case "note": e.notes++; break;
+      case "task": e.tasks++; break;
+    }
+    grouped.set(date, e);
   }
 
-  return data.slice(-12);
+  return Array.from(grouped.entries()).map(([date, d]) => ({
+    date,
+    ...d,
+    total: d.calls + d.emails + d.meetings + d.notes + d.tasks,
+  }));
 }
 
 export async function getTeamActivityMetrics(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<TeamActivityMetrics[]> {
-  const random = seededRandom(`${siteId}-team-${timeRange}`);
+  const supabase = await createClient();
+  const { start, end } = getDateRange(timeRange);
 
-  const teamMembers = [
-    { name: "John Smith", avatar: "JS" },
-    { name: "Sarah Johnson", avatar: "SJ" },
-    { name: "Mike Williams", avatar: "MW" },
-    { name: "Emily Davis", avatar: "ED" },
-    { name: "Chris Brown", avatar: "CB" },
-  ];
+  const { data: activities } = await supabase
+    .from(`${TABLE_PREFIX}_activities`)
+    .select("created_by")
+    .eq("site_id", siteId)
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString())
+    .not("created_by", "is", null);
 
-  return teamMembers.map((member, index) => ({
-    userId: `user-${index + 1}`,
-    userName: member.name,
-    userAvatar: member.avatar,
-    totalActivities: Math.floor(40 + random() * 80),
-    deals: Math.floor(5 + random() * 15),
-    wonDeals: Math.floor(2 + random() * 8),
-    revenue: Math.floor(20000 + random() * 80000),
-  })).sort((a, b) => b.revenue - a.revenue);
+  const activityCounts = new Map<string, number>();
+  for (const a of activities || []) {
+    if (a.created_by) activityCounts.set(a.created_by, (activityCounts.get(a.created_by) || 0) + 1);
+  }
+
+  const { data: deals } = await supabase
+    .from(`${TABLE_PREFIX}_deals`)
+    .select("owner_id, status, amount")
+    .eq("site_id", siteId)
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString())
+    .not("owner_id", "is", null);
+
+  const dealData = new Map<string, { deals: number; wonDeals: number; revenue: number }>();
+  for (const d of deals || []) {
+    if (d.owner_id) {
+      const e = dealData.get(d.owner_id) || { deals: 0, wonDeals: 0, revenue: 0 };
+      e.deals++;
+      if (d.status === "won") { e.wonDeals++; e.revenue += Number(d.amount) || 0; }
+      dealData.set(d.owner_id, e);
+    }
+  }
+
+  const userIds = new Set<string>([...activityCounts.keys(), ...dealData.keys()]);
+  if (userIds.size === 0) return [];
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", Array.from(userIds));
+
+  const profileMap = new Map<string, { name: string; initials: string }>();
+  for (const p of profiles || []) {
+    const name = p.full_name || p.email || "Unknown";
+    const initials = name.split(" ").map((w: string) => w[0] || "").join("").toUpperCase().slice(0, 2);
+    profileMap.set(p.id, { name, initials });
+  }
+
+  return Array.from(userIds)
+    .map((userId) => {
+      const p = profileMap.get(userId) || { name: "Unknown", initials: "??" };
+      const dd = dealData.get(userId) || { deals: 0, wonDeals: 0, revenue: 0 };
+      return {
+        userId,
+        userName: p.name,
+        userAvatar: p.initials,
+        totalActivities: activityCounts.get(userId) || 0,
+        deals: dd.deals,
+        wonDeals: dd.wonDeals,
+        revenue: Math.floor(dd.revenue),
+      };
+    })
+    .sort((a, b) => b.revenue - a.revenue);
 }
 
 // ============================================================================
-// REVENUE ANALYTICS
+// REVENUE
 // ============================================================================
 
 export async function getRevenueMetrics(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<RevenueMetrics> {
-  const random = seededRandom(`${siteId}-revenue-${timeRange}`);
+  const supabase = await createClient();
+  const { start, end } = getDateRange(timeRange);
 
-  const totalRevenue = Math.floor(150000 + random() * 350000);
-  const pipeline = Math.floor(300000 + random() * 500000);
-  const wonThisPeriod = Math.floor(totalRevenue * (0.15 + random() * 0.15));
-  const lostThisPeriod = Math.floor(wonThisPeriod * (0.3 + random() * 0.3));
+  const [
+    { data: allWon },
+    { data: periodWon },
+    { data: periodLost },
+    { data: openDeals },
+  ] = await Promise.all([
+    supabase.from(`${TABLE_PREFIX}_deals`).select("amount").eq("site_id", siteId).eq("status", "won"),
+    supabase.from(`${TABLE_PREFIX}_deals`).select("amount").eq("site_id", siteId).eq("status", "won").gte("created_at", start.toISOString()).lte("created_at", end.toISOString()),
+    supabase.from(`${TABLE_PREFIX}_deals`).select("amount").eq("site_id", siteId).eq("status", "lost").gte("created_at", start.toISOString()).lte("created_at", end.toISOString()),
+    supabase.from(`${TABLE_PREFIX}_deals`).select("amount").eq("site_id", siteId).eq("status", "open"),
+  ]);
+
+  const sum = (arr: Array<{ amount: number | null }> | null) => (arr || []).reduce((s, d) => s + (Number(d.amount) || 0), 0);
+  const totalRevenue = sum(allWon);
+  const wonThisPeriod = sum(periodWon);
+  const lostThisPeriod = sum(periodLost);
+  const pipeline = sum(openDeals);
+  const count = (allWon || []).length;
 
   return {
-    totalRevenue,
-    revenueTrend: Math.floor(-10 + random() * 35),
-    avgDealValue: Math.floor(8000 + random() * 12000),
-    avgDealValueTrend: Math.floor(-5 + random() * 20),
-    projectedRevenue: Math.floor(totalRevenue * (1.1 + random() * 0.3)),
-    pipeline,
-    wonThisPeriod,
-    lostThisPeriod,
+    totalRevenue: Math.floor(totalRevenue),
+    revenueTrend: 0,
+    avgDealValue: count > 0 ? Math.floor(totalRevenue / count) : 0,
+    avgDealValueTrend: 0,
+    projectedRevenue: Math.floor(pipeline * 0.3 + wonThisPeriod),
+    pipeline: Math.floor(pipeline),
+    wonThisPeriod: Math.floor(wonThisPeriod),
+    lostThisPeriod: Math.floor(lostThisPeriod),
   };
 }
 
@@ -502,87 +614,124 @@ export async function getRevenueByMonth(
   siteId: string,
   timeRange: CRMTimeRange = "12m"
 ): Promise<RevenueByMonth[]> {
-  const random = seededRandom(`${siteId}-revenue-month-${timeRange}`);
-  const data: RevenueByMonth[] = [];
+  const supabase = await createClient();
+  const { start, end } = getDateRange(timeRange);
 
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const currentMonth = new Date().getMonth();
+  const { data: deals } = await supabase
+    .from(`${TABLE_PREFIX}_deals`)
+    .select("amount, status, created_at")
+    .eq("site_id", siteId)
+    .in("status", ["won", "lost"])
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString())
+    .order("created_at");
 
-  for (let i = 0; i < 12; i++) {
-    const monthIndex = (currentMonth - 11 + i + 12) % 12;
-    const won = Math.floor(30000 + random() * 60000);
-    const lost = Math.floor(won * (0.2 + random() * 0.3));
-    const target = Math.floor(50000 + random() * 30000);
-    
-    data.push({
-      month: months[monthIndex],
-      won,
-      lost,
-      projected: i >= 9 ? Math.floor(won * (0.8 + random() * 0.4)) : 0,
-      target,
-    });
+  const grouped = new Map<string, { won: number; lost: number }>();
+  for (const d of deals || []) {
+    const month = new Date(d.created_at).toLocaleDateString("en-ZM", { month: "short" });
+    const e = grouped.get(month) || { won: 0, lost: 0 };
+    if (d.status === "won") e.won += Number(d.amount) || 0;
+    if (d.status === "lost") e.lost += Number(d.amount) || 0;
+    grouped.set(month, e);
   }
 
-  return data;
+  return Array.from(grouped.entries()).map(([month, d]) => ({
+    month,
+    won: Math.floor(d.won),
+    lost: Math.floor(d.lost),
+    projected: 0,
+    target: 0,
+  }));
 }
 
 export async function getRevenueByOwner(
   siteId: string,
   timeRange: CRMTimeRange = "30d"
 ): Promise<RevenueByOwner[]> {
-  const random = seededRandom(`${siteId}-revenue-owner-${timeRange}`);
+  const supabase = await createClient();
+  const { start, end } = getDateRange(timeRange);
 
-  const owners = [
-    { name: "John Smith", avatar: "JS" },
-    { name: "Sarah Johnson", avatar: "SJ" },
-    { name: "Mike Williams", avatar: "MW" },
-    { name: "Emily Davis", avatar: "ED" },
-  ];
+  const { data: deals } = await supabase
+    .from(`${TABLE_PREFIX}_deals`)
+    .select("owner_id, amount, status")
+    .eq("site_id", siteId)
+    .eq("status", "won")
+    .gte("created_at", start.toISOString())
+    .lte("created_at", end.toISOString())
+    .not("owner_id", "is", null);
 
-  return owners.map((owner, index) => {
-    const deals = Math.floor(8 + random() * 20);
-    const revenue = Math.floor(30000 + random() * 100000);
-    
-    return {
-      ownerId: `owner-${index + 1}`,
-      ownerName: owner.name,
-      ownerAvatar: owner.avatar,
-      revenue,
-      deals,
-      avgDealSize: Math.floor(revenue / deals),
-      winRate: Math.floor(20 + random() * 40),
-    };
-  }).sort((a, b) => b.revenue - a.revenue);
+  const grouped = new Map<string, { revenue: number; deals: number }>();
+  for (const d of deals || []) {
+    if (d.owner_id) {
+      const e = grouped.get(d.owner_id) || { revenue: 0, deals: 0 };
+      e.revenue += Number(d.amount) || 0;
+      e.deals++;
+      grouped.set(d.owner_id, e);
+    }
+  }
+
+  if (grouped.size === 0) return [];
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .in("id", Array.from(grouped.keys()));
+
+  return Array.from(grouped.entries())
+    .map(([ownerId, d]) => {
+      const p = (profiles || []).find(x => x.id === ownerId);
+      const name = p?.full_name || p?.email || "Unknown";
+      const initials = name.split(" ").map((w: string) => w[0] || "").join("").toUpperCase().slice(0, 2);
+      return {
+        ownerId,
+        ownerName: name,
+        ownerAvatar: initials,
+        revenue: Math.floor(d.revenue),
+        deals: d.deals,
+        avgDealSize: d.deals > 0 ? Math.floor(d.revenue / d.deals) : 0,
+        winRate: 100,
+      };
+    })
+    .sort((a, b) => b.revenue - a.revenue);
 }
 
 export async function getRevenueForecast(
   siteId: string,
   timeRange: CRMTimeRange = "90d"
 ): Promise<RevenueForecast[]> {
-  const random = seededRandom(`${siteId}-forecast-${timeRange}`);
-  const data: RevenueForecast[] = [];
+  const supabase = await createClient();
 
-  const months = ["Jan", "Feb", "Mar"];
-  const currentMonth = new Date().getMonth();
+  const { data: openDeals } = await supabase
+    .from(`${TABLE_PREFIX}_deals`)
+    .select("amount, probability, expected_close_date")
+    .eq("site_id", siteId)
+    .eq("status", "open")
+    .not("expected_close_date", "is", null);
 
-  for (let i = 0; i < 3; i++) {
-    const monthIndex = (currentMonth + i) % 12;
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    
-    data.push({
-      month: monthNames[monthIndex],
-      committed: Math.floor(30000 + random() * 40000),
-      upside: Math.floor(15000 + random() * 25000),
-      pipeline: Math.floor(40000 + random() * 60000),
-      target: Math.floor(60000 + random() * 30000),
-    });
+  const grouped = new Map<string, { committed: number; upside: number; pipeline: number }>();
+  for (const d of openDeals || []) {
+    if (!d.expected_close_date) continue;
+    const month = new Date(d.expected_close_date).toLocaleDateString("en-ZM", { month: "short" });
+    const e = grouped.get(month) || { committed: 0, upside: 0, pipeline: 0 };
+    const amt = Number(d.amount) || 0;
+    const prob = d.probability || 0;
+    if (prob >= 80) e.committed += amt;
+    else if (prob >= 50) e.upside += amt;
+    else e.pipeline += amt;
+    grouped.set(month, e);
   }
 
-  return data;
+  return Array.from(grouped.entries()).slice(0, 3).map(([month, d]) => ({
+    month,
+    committed: Math.floor(d.committed),
+    upside: Math.floor(d.upside),
+    pipeline: Math.floor(d.pipeline),
+    target: 0,
+  }));
 }
 
 // ============================================================================
-// COMBINED DATA
+// COMBINED
 // ============================================================================
 
 export async function getCRMAnalytics(

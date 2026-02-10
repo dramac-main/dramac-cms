@@ -29,6 +29,11 @@ export type EmailType =
   | "order_confirmation_customer"
   | "order_confirmation_owner"
   | "order_shipped_customer"
+  // Quotes
+  | "quote_sent_customer"
+  | "quote_reminder_customer"
+  | "quote_accepted_owner"
+  | "quote_rejected_owner"
   // Forms
   | "form_submission_owner";
 
@@ -69,6 +74,10 @@ export function isValidEmailType(type: string): type is EmailType {
     "order_confirmation_customer",
     "order_confirmation_owner",
     "order_shipped_customer",
+    "quote_sent_customer",
+    "quote_reminder_customer",
+    "quote_accepted_owner",
+    "quote_rejected_owner",
     "form_submission_owner",
   ];
   return validTypes.includes(type as EmailType);
@@ -216,4 +225,45 @@ export interface FormSubmissionOwnerData {
   submittedAt: string;
   fields: Array<{ label: string; value: string }>;
   dashboardUrl?: string;
+}
+
+// Quote email data
+export interface QuoteSentCustomerData {
+  customerName: string;
+  quoteNumber: string;
+  subject?: string;
+  message?: string;
+  totalAmount: string;
+  expiryDate?: string;
+  viewQuoteUrl: string;
+  businessName: string;
+}
+
+export interface QuoteReminderCustomerData {
+  customerName: string;
+  quoteNumber: string;
+  message?: string;
+  totalAmount: string;
+  expiryDate?: string;
+  viewQuoteUrl: string;
+  businessName: string;
+}
+
+export interface QuoteAcceptedOwnerData {
+  customerName: string;
+  customerEmail: string;
+  quoteNumber: string;
+  totalAmount: string;
+  acceptedByName: string;
+  dashboardUrl: string;
+}
+
+export interface QuoteRejectedOwnerData {
+  customerName: string;
+  customerEmail: string;
+  quoteNumber: string;
+  totalAmount: string;
+  rejectedByName?: string;
+  rejectionReason?: string;
+  dashboardUrl: string;
 }

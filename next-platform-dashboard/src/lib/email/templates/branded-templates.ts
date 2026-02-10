@@ -468,6 +468,97 @@ const form_submission_owner: BrandedTemplate = {
 // TEMPLATE REGISTRY
 // ============================================================================
 
+// ============================================================================
+// QUOTE TEMPLATES
+// ============================================================================
+
+const quote_sent_customer: BrandedTemplate = {
+  subject: (data) => data.subject ? String(data.subject) : `Quote ${data.quoteNumber} from ${data._agencyName || "us"}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">You&rsquo;ve Received a Quote</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">${b.agency_name} has sent you a quote.</p>
+      ${data.message ? `<p style="${EMAIL_STYLES.text}">${String(data.message).replace(/\n/g, "<br>")}</p>` : ""}
+      ${emailInfoBox([
+        { label: "Quote", value: String(data.quoteNumber) },
+        { label: "Total", value: String(data.totalAmount) },
+        ...(data.expiryDate ? [{ label: "Expires", value: String(data.expiryDate) }] : []),
+      ])}
+      ${emailButton(b, String(data.viewQuoteUrl), "View Quote")}
+      <p style="${EMAIL_STYLES.muted}">Click the button above to view, accept, or decline this quote.</p>`,
+      `Quote ${data.quoteNumber} from ${b.agency_name}`
+    ),
+  text: (data, b) =>
+    `You've received a quote from ${b.agency_name}.\n\nQuote: ${data.quoteNumber}\nTotal: ${data.totalAmount}\n${data.expiryDate ? `Expires: ${data.expiryDate}\n` : ""}\n${data.message ? `Message:\n${data.message}\n\n` : ""}View your quote: ${data.viewQuoteUrl}`,
+};
+
+const quote_reminder_customer: BrandedTemplate = {
+  subject: (data) => `Reminder: Quote ${data.quoteNumber} awaiting your response`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Quote Reminder</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">This is a friendly reminder that you have a pending quote from ${b.agency_name}.</p>
+      ${data.message ? `<p style="${EMAIL_STYLES.text}">${String(data.message).replace(/\n/g, "<br>")}</p>` : ""}
+      ${emailInfoBox([
+        { label: "Quote", value: String(data.quoteNumber) },
+        { label: "Total", value: String(data.totalAmount) },
+        ...(data.expiryDate ? [{ label: "Expires", value: String(data.expiryDate) }] : []),
+      ])}
+      ${emailButton(b, String(data.viewQuoteUrl), "View Quote")}
+      <p style="${EMAIL_STYLES.muted}">Click the button above to view, accept, or decline this quote.</p>`,
+      `Reminder: Quote ${data.quoteNumber}`
+    ),
+  text: (data, b) =>
+    `Quote Reminder from ${b.agency_name}\n\nQuote: ${data.quoteNumber}\nTotal: ${data.totalAmount}\n${data.expiryDate ? `Expires: ${data.expiryDate}\n` : ""}\n${data.message ? `${data.message}\n\n` : ""}View your quote: ${data.viewQuoteUrl}`,
+};
+
+const quote_accepted_owner: BrandedTemplate = {
+  subject: (data) => `✅ Quote ${data.quoteNumber} accepted by ${data.customerName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Quote Accepted!</h1>
+      <p style="${EMAIL_STYLES.text}">Great news! A customer has accepted your quote.</p>
+      ${emailInfoBox([
+        { label: "Quote", value: String(data.quoteNumber) },
+        { label: "Customer", value: String(data.customerName) },
+        { label: "Email", value: String(data.customerEmail) },
+        { label: "Total", value: String(data.totalAmount) },
+        { label: "Accepted by", value: String(data.acceptedByName) },
+      ])}
+      ${emailButton(b, String(data.dashboardUrl), "View in Dashboard")}`,
+      `Quote ${data.quoteNumber} accepted`
+    ),
+  text: (data) =>
+    `Quote Accepted!\n\nQuote: ${data.quoteNumber}\nCustomer: ${data.customerName} (${data.customerEmail})\nTotal: ${data.totalAmount}\nAccepted by: ${data.acceptedByName}\n\nView in dashboard: ${data.dashboardUrl}`,
+};
+
+const quote_rejected_owner: BrandedTemplate = {
+  subject: (data) => `❌ Quote ${data.quoteNumber} declined by ${data.customerName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Quote Declined</h1>
+      <p style="${EMAIL_STYLES.text}">A customer has declined your quote.</p>
+      ${emailInfoBox([
+        { label: "Quote", value: String(data.quoteNumber) },
+        { label: "Customer", value: String(data.customerName) },
+        { label: "Email", value: String(data.customerEmail) },
+        { label: "Total", value: String(data.totalAmount) },
+        ...(data.rejectionReason ? [{ label: "Reason", value: String(data.rejectionReason) }] : []),
+      ])}
+      ${emailButton(b, String(data.dashboardUrl), "View in Dashboard")}
+      <p style="${EMAIL_STYLES.text}">Consider reaching out to the customer to discuss alternatives.</p>`,
+      `Quote ${data.quoteNumber} declined`
+    ),
+  text: (data) =>
+    `Quote Declined\n\nQuote: ${data.quoteNumber}\nCustomer: ${data.customerName} (${data.customerEmail})\nTotal: ${data.totalAmount}\n${data.rejectionReason ? `Reason: ${data.rejectionReason}\n` : ""}\nView in dashboard: ${data.dashboardUrl}`,
+};
+
 export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   welcome,
   password_reset,
@@ -486,6 +577,10 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   order_confirmation_customer,
   order_confirmation_owner,
   order_shipped_customer,
+  quote_sent_customer,
+  quote_reminder_customer,
+  quote_accepted_owner,
+  quote_rejected_owner,
   form_submission_owner,
 };
 

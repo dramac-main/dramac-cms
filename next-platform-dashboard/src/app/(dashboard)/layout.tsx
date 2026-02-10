@@ -37,6 +37,17 @@ export default async function DashboardLayout({
       .single();
     isSuperAdmin = profile?.role === "super_admin";
     agencyId = profile?.agency_id ?? null;
+
+    // Fallback: if profile has no agency_id, check agency_members table
+    if (!agencyId) {
+      const { data: membership } = await supabase
+        .from("agency_members")
+        .select("agency_id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .single();
+      agencyId = membership?.agency_id ?? null;
+    }
   }
 
   const dashboardContent = (

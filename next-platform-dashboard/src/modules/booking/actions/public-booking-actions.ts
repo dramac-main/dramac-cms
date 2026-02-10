@@ -334,7 +334,7 @@ export async function createPublicAppointment(
     // Verify service exists and is bookable
     const { data: service } = await supabase
       .from(`${TABLE_PREFIX}_services`)
-      .select('id, name, price, duration, currency, require_confirmation')
+      .select('id, name, price, duration_minutes, currency, require_confirmation')
       .eq('site_id', siteId)
       .eq('id', input.serviceId)
       .eq('is_active', true)

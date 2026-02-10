@@ -55,6 +55,8 @@ import type { Order, OrderStatus, PaymentStatus } from '../../types/ecommerce-ty
 import { DEFAULT_LOCALE } from '@/lib/locale-config'
 interface OrdersViewProps {
   searchQuery?: string
+  userId?: string
+  userName?: string
 }
 
 const orderStatusConfig: Record<OrderStatus, { label: string; icon: typeof Clock; className: string }> = {
@@ -75,17 +77,13 @@ const paymentStatusConfig: Record<PaymentStatus, { label: string; className: str
   failed: { label: 'Failed', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
 }
 
-export function OrdersView({ searchQuery = '' }: OrdersViewProps) {
+export function OrdersView({ searchQuery = '', userId = '', userName = 'Store Manager' }: OrdersViewProps) {
   const router = useRouter()
   const { orders, isLoading, changeOrderStatus, siteId, settings } = useEcommerce()
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all')
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | 'all'>('all')
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
-  
-  // Get user info from session (would be from useSession in real app)
-  const userId = 'user-id' // TODO: Get from useSession()
-  const userName = 'Store Manager' // TODO: Get from useSession()
   
   // Get store info from settings
   const storeName = settings?.store_name || 'My Store'

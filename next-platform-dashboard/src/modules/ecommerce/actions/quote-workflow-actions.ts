@@ -8,6 +8,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { sendBrandedEmail } from '@/lib/email/send-branded-email'
 import { revalidatePath } from 'next/cache'
 import type {
   Quote,
@@ -139,13 +140,29 @@ export async function sendQuote(input: SendQuoteInput): Promise<WorkflowResult> 
     })
     
     // TODO: Send actual email via email service (Resend, SendGrid, etc.)
-    // await sendQuoteEmail({
-    //   to: quote.customer_email,
-    //   subject: input.subject || `Quote ${quote.quote_number}`,
-    //   quote: updatedQuote,
-    //   message: input.message,
-    //   portalUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/quote/${accessToken}`
-    // })
+    const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/quote/${accessToken}`
+    const totalAmount = quote.items
+      ? (quote.items as Array<{ quantity: number; unit_price: number }>).reduce(
+          (sum: number, item: { quantity: number; unit_price: number }) => sum + item.quantity * item.unit_price,
+          0
+        )
+      : quote.total_amount || 0
+    const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
+
+    await sendBrandedEmail(quote.agency_id || null, {
+      to: { email: quote.customer_email, name: quote.customer_name || undefined },
+      emailType: 'quote_sent_customer',
+      data: {
+        customerName: quote.customer_name || 'Customer',
+        quoteNumber: quote.quote_number,
+        subject: input.subject,
+        message: input.message,
+        totalAmount: formatted,
+        expiryDate: quote.expiry_date ? new Date(quote.expiry_date).toLocaleDateString('en-ZM') : undefined,
+        viewQuoteUrl: portalUrl,
+        businessName: quote.business_name || '',
+      },
+    })
     
     revalidatePath(`/sites/${input.site_id}/ecommerce`)
     
@@ -203,7 +220,25 @@ export async function resendQuote(
       metadata: { subject, message }
     })
     
-    // TODO: Actually resend email
+    // Send resend email
+    const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/quote/${quote.access_token}`
+    const totalAmount = quote.total_amount || 0
+    const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
+
+    await sendBrandedEmail(quote.agency_id || null, {
+      to: { email: quote.customer_email, name: quote.customer_name || undefined },
+      emailType: 'quote_sent_customer',
+      data: {
+        customerName: quote.customer_name || 'Customer',
+        quoteNumber: quote.quote_number,
+        subject,
+        message,
+        totalAmount: formatted,
+        expiryDate: quote.expiry_date ? new Date(quote.expiry_date).toLocaleDateString('en-ZM') : undefined,
+        viewQuoteUrl: portalUrl,
+        businessName: quote.business_name || '',
+      },
+    })
     
     revalidatePath(`/sites/${siteId}/ecommerce`)
     
@@ -249,7 +284,24 @@ export async function sendQuoteReminder(
       metadata: { message }
     })
     
-    // TODO: Send reminder email
+    // Send reminder email
+    const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/quote/${quote.access_token}`
+    const totalAmount = quote.total_amount || 0
+    const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
+
+    await sendBrandedEmail(quote.agency_id || null, {
+      to: { email: quote.customer_email, name: quote.customer_name || undefined },
+      emailType: 'quote_reminder_customer',
+      data: {
+        customerName: quote.customer_name || 'Customer',
+        quoteNumber: quote.quote_number,
+        message,
+        totalAmount: formatted,
+        expiryDate: quote.expiry_date ? new Date(quote.expiry_date).toLocaleDateString('en-ZM') : undefined,
+        viewQuoteUrl: portalUrl,
+        businessName: quote.business_name || '',
+      },
+    })
     
     revalidatePath(`/sites/${siteId}/ecommerce`)
     
@@ -400,7 +452,50 @@ export async function acceptQuote(input: AcceptQuoteInput): Promise<WorkflowResu
       }
     })
     
-    // TODO: Send acceptance notification email to site owner
+    // Send acceptance notification email to site owner
+    const totalAmount = quote.total_amount || 0
+    const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/dashboard/sites/${quote.site_id}/ecommerce`
+
+    // Look up site owner email
+    const ownerSupabase = await getModuleClient()
+    const { data: siteData } = await ownerSupabase
+      .from('sites')
+      .select('agency_id')
+      .eq('id', quote.site_id)
+      .single()
+    
+    if (siteData?.agency_id) {
+      const { data: agency } = await ownerSupabase
+        .from('agencies')
+        .select('owner_id')
+        .eq('id', siteData.agency_id)
+        .single()
+      
+      if (agency?.owner_id) {
+        const { data: ownerProfile } = await ownerSupabase
+          .from('profiles')
+          .select('email, full_name')
+          .eq('id', agency.owner_id)
+          .single()
+        
+        if (ownerProfile?.email) {
+          await sendBrandedEmail(siteData.agency_id, {
+            to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
+            emailType: 'quote_accepted_owner',
+            recipientUserId: agency.owner_id,
+            data: {
+              customerName: quote.customer_name || 'Customer',
+              customerEmail: quote.customer_email || '',
+              quoteNumber: quote.quote_number,
+              totalAmount: formatted,
+              acceptedByName: input.accepted_by_name || quote.customer_name || 'Customer',
+              dashboardUrl,
+            },
+          })
+        }
+      }
+    }
     
     return { success: true, quote: updatedQuote }
   } catch (error) {
@@ -468,7 +563,50 @@ export async function rejectQuote(input: RejectQuoteInput): Promise<WorkflowResu
       }
     })
     
-    // TODO: Send rejection notification to site owner
+    // Send rejection notification to site owner
+    const totalAmount = quote.total_amount || 0
+    const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/dashboard/sites/${quote.site_id}/ecommerce`
+
+    const ownerSupabase2 = await getModuleClient()
+    const { data: siteData2 } = await ownerSupabase2
+      .from('sites')
+      .select('agency_id')
+      .eq('id', quote.site_id)
+      .single()
+    
+    if (siteData2?.agency_id) {
+      const { data: agency2 } = await ownerSupabase2
+        .from('agencies')
+        .select('owner_id')
+        .eq('id', siteData2.agency_id)
+        .single()
+      
+      if (agency2?.owner_id) {
+        const { data: ownerProfile2 } = await ownerSupabase2
+          .from('profiles')
+          .select('email, full_name')
+          .eq('id', agency2.owner_id)
+          .single()
+        
+        if (ownerProfile2?.email) {
+          await sendBrandedEmail(siteData2.agency_id, {
+            to: { email: ownerProfile2.email, name: ownerProfile2.full_name || undefined },
+            emailType: 'quote_rejected_owner',
+            recipientUserId: agency2.owner_id,
+            data: {
+              customerName: quote.customer_name || 'Customer',
+              customerEmail: quote.customer_email || '',
+              quoteNumber: quote.quote_number,
+              totalAmount: formatted,
+              rejectedByName: input.rejected_by_name,
+              rejectionReason: input.rejection_reason,
+              dashboardUrl,
+            },
+          })
+        }
+      }
+    }
     
     return { success: true, quote: updatedQuote }
   } catch (error) {

@@ -235,7 +235,10 @@ function EcommerceDashboardContent({
           )}
 
           {activeView === 'orders' && (
-            <OrdersView />
+            <OrdersView
+              userId={userId || ''}
+              userName={userName}
+            />
           )}
 
           {activeView === 'customers' && (

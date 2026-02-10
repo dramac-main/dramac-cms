@@ -7,6 +7,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { sendBrandedEmail } from '@/lib/email/send-branded-email'
 import { addDays, differenceInDays } from 'date-fns'
 import type { Quote } from '../types/ecommerce-types'
 
@@ -180,8 +181,24 @@ export async function processQuoteReminders(siteId: string): Promise<{ sent: num
         description: `Automatic reminder #${reminder_number} sent`
       })
       
-      // TODO: Actually send reminder email
-      // await sendReminderEmail(quote, reminder_number)
+      // Send reminder email
+      const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/quote/${quote.access_token}`
+      const totalAmount = quote.total || 0
+      const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
+
+      await sendBrandedEmail(quote.agency_id || null, {
+        to: { email: quote.customer_email, name: quote.customer_name || undefined },
+        emailType: 'quote_reminder_customer',
+        data: {
+          customerName: quote.customer_name || 'Customer',
+          quoteNumber: quote.quote_number,
+          message: `This is reminder #${reminder_number} for your pending quote.`,
+          totalAmount: formatted,
+          expiryDate: quote.valid_until ? new Date(quote.valid_until).toLocaleDateString('en-ZM') : undefined,
+          viewQuoteUrl: portalUrl,
+          businessName: '',
+        },
+      })
       
       sent++
     }

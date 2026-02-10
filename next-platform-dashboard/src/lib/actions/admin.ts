@@ -491,42 +491,74 @@ export interface ActivityLogEntry {
 export async function getRecentActivity(limit = 10): Promise<ActivityLogEntry[]> {
   await requireSuperAdmin();
   
-  // Note: This would require an activity_log table in your database
-  // For now, we'll return mock data
-  const mockActivity: ActivityLogEntry[] = [
-    {
-      id: "1",
-      action: "user.created",
-      user_email: "admin@example.com",
-      user_name: "Admin User",
-      resource_type: "user",
-      resource_id: "123",
-      details: {},
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      action: "agency.created",
-      user_email: "user@example.com",
-      user_name: "Test User",
-      resource_type: "agency",
-      resource_id: "456",
-      details: { agency_name: "Test Agency" },
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-    },
-    {
-      id: "3",
-      action: "site.published",
-      user_email: "designer@example.com",
-      user_name: "Designer",
-      resource_type: "site",
-      resource_id: "789",
-      details: { site_name: "Client Website" },
-      created_at: new Date(Date.now() - 7200000).toISOString(),
-    },
-  ];
+  const supabase = await createClient();
+  const activities: ActivityLogEntry[] = [];
 
-  return mockActivity.slice(0, limit);
+  // Fetch recent real events from the database as proxy activity log
+  // 1. Recent user sign-ups
+  const { data: recentUsers } = await supabase
+    .from("profiles")
+    .select("id, email, full_name, created_at")
+    .order("created_at", { ascending: false })
+    .limit(Math.ceil(limit / 3));
+
+  for (const user of recentUsers || []) {
+    activities.push({
+      id: `user-${user.id}`,
+      action: "user.created",
+      user_email: user.email || "unknown",
+      user_name: user.full_name || null,
+      resource_type: "user",
+      resource_id: user.id,
+      details: {},
+      created_at: user.created_at || new Date().toISOString(),
+    });
+  }
+
+  // 2. Recent site creations
+  const { data: recentSites } = await supabase
+    .from("sites")
+    .select("id, name, created_at, agency_id")
+    .order("created_at", { ascending: false })
+    .limit(Math.ceil(limit / 3));
+
+  for (const site of recentSites || []) {
+    activities.push({
+      id: `site-${site.id}`,
+      action: "site.created",
+      user_email: "system",
+      user_name: null,
+      resource_type: "site",
+      resource_id: site.id,
+      details: { site_name: site.name },
+      created_at: site.created_at || new Date().toISOString(),
+    });
+  }
+
+  // 3. Recent agency creations
+  const { data: recentAgencies } = await supabase
+    .from("agencies")
+    .select("id, name, created_at")
+    .order("created_at", { ascending: false })
+    .limit(Math.ceil(limit / 3));
+
+  for (const agency of recentAgencies || []) {
+    activities.push({
+      id: `agency-${agency.id}`,
+      action: "agency.created",
+      user_email: "system",
+      user_name: null,
+      resource_type: "agency",
+      resource_id: agency.id,
+      details: { agency_name: agency.name },
+      created_at: agency.created_at || new Date().toISOString(),
+    });
+  }
+
+  // Sort by created_at descending and return up to limit
+  return activities
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, limit);
 }
 
 export interface SystemAlert {
@@ -541,12 +573,10 @@ export interface SystemAlert {
 export async function getSystemAlerts(): Promise<SystemAlert[]> {
   await requireSuperAdmin();
   
-  // Note: This would require a system_alerts table
-  // For now, we'll return mock data based on actual system checks
   const alerts: SystemAlert[] = [];
+  const supabase = await createClient();
 
   // Check database connection
-  const supabase = await createClient();
   const { error: dbError } = await supabase.from("profiles").select("id").limit(1);
   
   if (dbError) {
@@ -560,10 +590,7 @@ export async function getSystemAlerts(): Promise<SystemAlert[]> {
     });
   }
 
-  // Check for pending migrations (mock)
-  // In production, you'd check actual migration status
-
-  // Check for users without agencies (orphaned users)
+  // Check user count for capacity planning
   const { count: orphanedUsers } = await supabase
     .from("profiles")
     .select("id", { count: "exact", head: true })

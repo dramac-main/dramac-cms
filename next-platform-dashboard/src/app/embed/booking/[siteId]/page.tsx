@@ -7,7 +7,7 @@
  * 
  * URL: /embed/booking/{siteId}?type=full&color=8B5CF6&...
  */
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface BookingEmbedPageProps {
   params: Promise<{ siteId: string }>
@@ -54,7 +54,7 @@ export default async function BookingEmbedPage({ params, searchParams }: Booking
   } = await searchParams
 
   // Verify module is installed & enabled
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
 
@@ -114,13 +114,13 @@ export default async function BookingEmbedPage({ params, searchParams }: Booking
   // Load services and staff
   const [servicesResult, staffResult] = await Promise.all([
     db
-      .from('booking_services')
+      .from('mod_bookmod01_services')
       .select('id, name, duration_minutes, price, currency, color, description')
       .eq('site_id', siteId)
       .eq('is_active', true)
       .order('sort_order', { ascending: true }),
     db
-      .from('booking_staff')
+      .from('mod_bookmod01_staff')
       .select('id, name, avatar_url, title')
       .eq('site_id', siteId)
       .eq('is_active', true)

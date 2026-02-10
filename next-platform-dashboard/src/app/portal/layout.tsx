@@ -5,7 +5,9 @@ import { getTicketStats } from "@/lib/portal/support-service";
 import { PortalHeader } from "@/components/portal/portal-header";
 import { PortalLayoutClient } from "@/components/portal/portal-layout-client";
 import { BrandingProvider } from "@/components/providers/branding-provider";
+import { getAgencyBrandingBySlug } from "@/lib/queries/branding";
 import { redirect } from "next/navigation";
+import { cookies, headers } from "next/headers";
 
 export default async function PortalLayout({
   children,
@@ -14,11 +16,25 @@ export default async function PortalLayout({
 }) {
   const session = await getPortalSession();
   
-  // If no user and not impersonating, this will be handled by individual pages
-  // (login page doesn't need auth, but other pages do)
-  
   if (!session.user) {
-    // Allow login page to render without auth
+    // For login page: try to get agency branding from URL search params
+    // Portal login URLs can include ?agency=slug for branding
+    const headersList = await headers();
+    const url = headersList.get("x-url") || headersList.get("referer") || "";
+    const urlObj = url ? (() => { try { return new URL(url); } catch { return null; } })() : null;
+    const agencySlug = urlObj?.searchParams?.get("agency") || null;
+
+    if (agencySlug) {
+      const branding = await getAgencyBrandingBySlug(agencySlug);
+      if (branding) {
+        return (
+          <BrandingProvider agencyId={branding.agency_id} initialBranding={branding}>
+            {children}
+          </BrandingProvider>
+        );
+      }
+    }
+
     return children;
   }
 
