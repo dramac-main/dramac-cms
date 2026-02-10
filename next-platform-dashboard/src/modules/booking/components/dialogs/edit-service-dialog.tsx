@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 import {
   Dialog,
   DialogContent,
@@ -164,7 +165,7 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="price">Price (USD)</Label>
+                <Label htmlFor="price">Price ({DEFAULT_CURRENCY_SYMBOL})</Label>
                 <Input
                   id="price"
                   type="number"

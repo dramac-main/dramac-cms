@@ -345,15 +345,20 @@ export async function createPublicAppointment(
       return { success: false, error: 'Service not available for online booking' }
     }
     
-    // Check for conflicts
-    const { data: conflicts } = await supabase
+    // Check for conflicts (only check same staff if staffId provided)
+    let conflictQuery = supabase
       .from(`${TABLE_PREFIX}_appointments`)
       .select('id')
       .eq('site_id', siteId)
-      .eq('staff_id', input.staffId || '')
       .neq('status', 'cancelled')
       .lt('start_time', input.endTime.toISOString())
       .gt('end_time', input.startTime.toISOString())
+    
+    if (input.staffId) {
+      conflictQuery = conflictQuery.eq('staff_id', input.staffId)
+    }
+    
+    const { data: conflicts } = await conflictQuery
     
     if (conflicts && conflicts.length > 0) {
       return { success: false, error: 'This time slot is no longer available' }

@@ -122,7 +122,7 @@ const ModuleUsageWidget = React.forwardRef<HTMLDivElement, ModuleUsageWidgetProp
     return (
       <div ref={ref} className={cn("space-y-4", className)} {...props}>
         {displayModules.map((module, _index) => {
-          const category = module.category.toLowerCase();
+          const category = (module.category || 'other').toLowerCase();
           const Icon = moduleIcons[category] || moduleIcons.default;
           const colors = moduleColors[category] || moduleColors.default;
           const percentage = module.total > 0 

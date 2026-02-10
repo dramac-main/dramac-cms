@@ -63,18 +63,18 @@ export function LemonSqueezyInvoiceHistory({ invoices }: LemonSqueezyInvoiceHist
               return (
                 <TableRow key={invoice.id}>
                   <TableCell className="font-medium font-mono text-sm">
-                    #{invoice.lemonsqueezy_order_id.slice(-8).toUpperCase()}
+                    #{(invoice.lemonsqueezy_order_id || '').slice(-8).toUpperCase()}
                   </TableCell>
                   <TableCell>
                     {format(new Date(invoice.created_at), "MMM d, yyyy")}
                   </TableCell>
                   <TableCell>
-                    ${invoice.amount.toFixed(2)} {invoice.currency.toUpperCase()}
+                    ${(invoice.amount ?? 0).toFixed(2)} {(invoice.currency || 'ZMW').toUpperCase()}
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className={`${status.bg} ${status.color} border-0`}>
                       <StatusIcon className="w-3 h-3 mr-1" />
-                      {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                      {(invoice.status || 'unknown').charAt(0).toUpperCase() + (invoice.status || 'unknown').slice(1)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">

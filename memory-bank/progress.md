@@ -1,7 +1,31 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅**
+
+---
+
+## 🔧 BRANDING, BOOKING, CURRENCY & SETTINGS BUG FIXES (February 2026) ✅
+
+### What Was Done
+User reported branding only showing logo (colors not changing), double logos in sidebar, booking staff not recorded, currency showing USD instead of ZMW, and settings page crashes (TypeError, React #310, 404s). Deep investigation with 4 subagents found all root causes.
+
+### Fixes Applied (10 files)
+| # | Fix | Root Cause | Files |
+|---|-----|-----------|-------|
+| 1 | **Branding CSS vars fixed** | BrandingProvider injected `--primary`/`--accent` but Tailwind reads `--color-primary`/`--color-accent` | `branding-provider.tsx` |
+| 2 | **Double logo removed** | Logo img + displayName text both rendered when logo already contains brand name | `sidebar-modern.tsx` |
+| 3 | **Booking staff conflict fix** | `.eq('staff_id', '')` when staffId undefined instead of conditional filter | `public-booking-actions.ts` |
+| 4 | **Currency USD→ZMW** | 3 hardcoded "USD" labels | `create-service-dialog.tsx`, `edit-service-dialog.tsx`, `quote-settings.tsx` |
+| 5 | **StatusBadge null crash** | `.charAt(0)` on undefined status prop | `badge.tsx` |
+| 6 | **Module category crash** | `.toLowerCase()` on undefined `module.category` | `module-usage-widget.tsx` |
+| 7 | **Team members role crash** | `.charAt(0)` on undefined `member.role` | `team-members-list.tsx` |
+| 8 | **Invoice history crash** | Multiple `.toUpperCase()`/`.toFixed()` on nullable fields | `lemonsqueezy-invoice-history.tsx` |
+| 9 | **Settings branding 404** | Redirect to `/dashboard/settings/branding` (different route tree) | `settings/branding/page.tsx` — renders inline now |
+
+### Key Pattern Documented
+- **CSS vars**: Tailwind uses `--color-*` prefix (HSL), NOT `--primary` (OKLCH from shadcn defaults)
+- **All dynamic CSS injection must use `--color-` prefix** for Tailwind to pick it up
 
 ---
 

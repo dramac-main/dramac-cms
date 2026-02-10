@@ -86,6 +86,22 @@ function StatusBadge({
   className, 
   ...props 
 }: StatusBadgeProps) {
+  // Guard against undefined/null status
+  if (!status) {
+    return (
+      <div 
+        className={cn(
+          "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
+          "bg-muted text-muted-foreground",
+          className
+        )} 
+        {...props}
+      >
+        {label ?? 'Unknown'}
+      </div>
+    );
+  }
+
   const statusType = mapToStatusType(status);
   const statusClasses = getStatusClasses(statusType, intensity);
   

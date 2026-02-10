@@ -112,7 +112,7 @@ export function TeamMembersList({ members }: TeamMembersListProps) {
 
             <div className="flex items-center gap-4">
               <Badge variant="secondary" className={roleColors[member.role]}>
-                {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                {(member.role || 'member').charAt(0).toUpperCase() + (member.role || 'member').slice(1)}
               </Badge>
 
               {member.role !== "owner" && (

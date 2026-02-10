@@ -1,6 +1,80 @@
 # Active Context
 
-## Latest Session Update (Deep Platform Audit & Critical Fixes — February 2026)
+## Latest Session Update (Critical Bug Fixes — Branding, Booking, Currency, Settings — February 2026)
+
+### CRITICAL BUG FIXES ✅
+
+**Files Changed:** 10 files  
+**TypeScript:** Zero new errors in all changed files
+
+Following user reports of multiple non-working features (branding colors not applying, double logo, booking staff not recorded, USD showing instead of ZMW, settings page crashes), a deep investigation found root causes and all were fixed.
+
+---
+
+### Fixes Applied
+
+#### 1. BRANDING CSS VARIABLE NAME MISMATCH — ROOT CAUSE FIX 🎨
+**Problem:** BrandingProvider injected `--primary` and `--accent` CSS variables, but Tailwind reads from `--color-primary` and `--color-accent` (via `generateColorScale()` in tailwind.config.ts → `hsl(var(--color-primary))`). The injected variables were completely dead — colors never changed.
+
+**Root Cause:** The globals.css has `--primary` in OKLCH format (shadcn defaults), but brand-variables.css and tailwind.config.ts use `--color-primary` in HSL format. BrandingProvider was writing to the wrong variable names.
+
+**Fix:** In `branding-provider.tsx`:
+- Changed `--primary: ${primaryHSL}` → `--color-primary: ${primaryHSL}`
+- Changed `--accent: ${accentHSL}` → `--color-accent: ${accentHSL}`
+- Added `--color-primary-foreground` and `--color-accent-foreground` injection
+- Added full HSL shade scale generation (50-950) for both primary and accent
+- Added `portal_custom_css` injection into DOM
+- Removed orphaned `--brand-primary-foreground` / `--brand-accent-foreground` hex vars
+
+#### 2. DOUBLE LOGO IN SIDEBAR 🖼️
+**Problem:** SidebarLogo rendered both a logo `<img>` and `displayName` text. When the logo image already contains the brand name, it appeared as two logos stacked.
+
+**Fix:** In `sidebar-modern.tsx`, the `displayName` text is now hidden when `logoUrl` is present — only shows logo image OR text, not both.
+
+#### 3. BOOKING STAFF NOT RECORDED 📅
+**Problem:** Conflict check in `createPublicAppointment()` used `.eq('staff_id', input.staffId || '')` — when staffId is undefined, this queries for `staff_id = ''` (empty string match), which is wrong. Should either check for specific staff or skip the staff filter.
+
+**Fix:** In `public-booking-actions.ts`, replaced the single chained query with a conditional approach:
+- If `staffId` provided → adds `.eq('staff_id', staffId)` to conflict query
+- If no `staffId` → skips staff filter, checks all conflicts for the time slot
+
+#### 4. CURRENCY USD → ZMW 💰
+**Problem:** 3 hardcoded "USD" labels despite `locale-config.ts` having `DEFAULT_CURRENCY = 'ZMW'`.
+
+**Files Fixed:**
+| File | Change |
+|------|--------|
+| `create-service-dialog.tsx` | `Price (USD)` → `Price ({DEFAULT_CURRENCY_SYMBOL})` + import |
+| `edit-service-dialog.tsx` | `Price (USD)` → `Price ({DEFAULT_CURRENCY_SYMBOL})` + import |
+| `quote-settings.tsx` | `placeholder="USD"` → `placeholder="ZMW"` |
+
+#### 5. StatusBadge `.toLowerCase()` CRASH 💥
+**Problem:** `StatusBadge` component called `status.charAt(0).toUpperCase()` without null guard. When `status` prop was undefined, it threw TypeError.
+
+**Fix:** Added early return with fallback rendering when `status` is falsy — shows "Unknown" badge with muted styling.
+
+#### 6. SETTINGS PAGE CRASHES 🔧
+**Multiple null-safety fixes:**
+| File | Fix |
+|------|-----|
+| `module-usage-widget.tsx` | `module.category.toLowerCase()` → `(module.category \|\| 'other').toLowerCase()` |
+| `team-members-list.tsx` | `member.role.charAt(0)` → `(member.role \|\| 'member').charAt(0)` |
+| `lemonsqueezy-invoice-history.tsx` | Added null guards on `.slice()`, `.toUpperCase()`, `.toFixed()` for invoice fields |
+| `settings/branding/page.tsx` | Replaced redirect to `/dashboard/settings/branding` with direct component rendering (eliminated 404) |
+
+---
+
+### Key Technical Pattern Discovered
+
+**CSS Variable Naming Convention:**
+- `globals.css` defines `--primary`, `--accent` etc. in **OKLCH** format (shadcn defaults) — these are NOT used by Tailwind
+- `brand-variables.css` defines `--color-primary`, `--color-accent` in **HSL** format — these ARE what Tailwind uses
+- `tailwind.config.ts` → `generateColorScale("primary")` → `hsl(var(--color-primary))` — confirms HSL + `--color-` prefix
+- **All dynamic CSS injection MUST use `--color-` prefix** to be picked up by Tailwind
+
+---
+
+## Previous Session (Deep Platform Audit & Critical Fixes)
 
 ### DEEP PLATFORM AUDIT & CRITICAL FIXES ✅
 

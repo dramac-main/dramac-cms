@@ -128,7 +128,7 @@ function SidebarLogo({
         )}
       </motion.div>
       <AnimatePresence mode="wait">
-        {!isCollapsed && (
+        {!isCollapsed && !logoUrl && (
           <motion.span
             initial="hidden"
             animate="visible"
