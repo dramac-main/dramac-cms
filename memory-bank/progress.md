@@ -1,7 +1,40 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅**
+
+---
+
+## 🔍 DEEP PLATFORM AUDIT & CRITICAL FIXES (February 2026) ✅
+
+### What Was Done
+4 parallel subagent deep scan catalogued 52 issues (9 P0, 15 P1, 28 P2). The 11 most critical were fixed.
+
+### Commit
+- `af1e736` — "fix: critical platform bugs - branding, booking, portal, emails, analytics" (20 files, +1388/-902)
+
+### Critical Fixes Applied
+| # | Fix | Root Cause | Files |
+|---|-----|-----------|-------|
+| 1 | **Branding system unified** | Split-brain: `agencies.custom_branding` vs non-existent `agency_branding` table | 5 files (API route, queries, provider, layout, settings) |
+| 2 | **Booking "Service not available"** | Column name `duration` vs `duration_minutes` | `public-booking-actions.ts` |
+| 3 | **Embed booking page** | `createClient()` on public page + wrong table names | `embed/booking/[siteId]/page.tsx` |
+| 4 | **Portal analytics de-mocked** | 100% fake hash-based data | `portal-service.ts` |
+| 5 | **Portal notification prefs** | Not persisted | `portal/settings/page.tsx` |
+| 6 | **Portal login branding** | No branding on login page | `portal/layout.tsx` (via `?agency=slug`) |
+| 7 | **Orders hardcoded user** | `userId = 'user-id'` literal | `orders-view.tsx`, `ecommerce-dashboard.tsx` |
+| 8 | **Quote emails (6 stubs)** | All TODO, none sent | 5 files + 4 new EmailType values + 8 templates |
+| 9 | **Site analytics mock data** | `seededRandom()` fake data | `site-analytics.ts` — real queries + zeros |
+| 10 | **CRM analytics mock data** | 627 lines of `seededRandom()` | `crm-analytics.ts` — complete rewrite (real `mod_crmmod01_*` queries) |
+| 11 | **Admin activity log mock** | 3 hardcoded fake entries | `admin.ts` — queries recent users/sites/agencies |
+
+### New Email Types Added
+`quote_sent_customer`, `quote_reminder_customer`, `quote_accepted_owner`, `quote_rejected_owner` — with data interfaces, branded templates, and plain templates.
+
+### Remaining Issues (Not Fixed This Session)
+**P0:** Admin settings disabled, automation connection stubs, workflow "coming soon" toasts, screenshot API SVG placeholder
+**P1:** PDF quote generation stub, domain stats zeros, billing usage zeros, various minor stubs
+**P2:** 28 low-priority issues (cosmetic, edge cases, nice-to-haves)
 
 ---
 

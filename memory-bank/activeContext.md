@@ -1,113 +1,115 @@
 # Active Context
 
-## Latest Session Update (Deep Verification & Gap Fixes — February 2026)
+## Latest Session Update (Deep Platform Audit & Critical Fixes — February 2026)
 
-### DEEP VERIFICATION AND FIX SESSION ✅
+### DEEP PLATFORM AUDIT & CRITICAL FIXES ✅
 
-After the initial 4-phase implementation (commit `09cf9a1`), a thorough verification session was performed using 3 parallel subagents to audit every task in PHASE-UX-00, UX-01, WL-01, and DM-01 against the phase specs. Multiple gaps were identified and fixed.
+**Commit:** `af1e736` — 20 files changed, +1388/-902 lines  
+**TypeScript:** Zero errors (`tsc --noEmit` — exit code 0)
 
-**TypeScript**: Zero errors (`tsc --noEmit` — exit code 0)
-
----
-
-### Verification Results (Before Fixes)
-
-| Phase | Status |
-|-------|--------|
-| UX-00 | ✅ 12/12 implemented tasks ALL PASS |
-| UX-01 | 3/8 tasks done (Tasks 2,3,5). Tasks 1,4,6,7,8 deferred (larger scope) |
-| WL-01 | 3.5/5 tasks. Task 3 PARTIAL (13 fixed, 87+ remain). Task 5 NOT DONE |
-| DM-01 | Tasks 2,4,6 PASS. Task 1 PARTIAL. Task 3 FAIL (stub). Task 5 missing redirect route |
+A comprehensive deep scan using 4 parallel subagents catalogued 52 issues across the platform (9 P0, 15 P1, 28 P2). The most critical 11 issues were fixed in this session.
 
 ---
 
-### Fixes Applied This Session
+### Critical Fixes Applied
 
-#### DM-01 Fixes
-1. **Created `/api/domains/[domain]/redirect/route.ts`** — Missing 301 redirect lookup API for proxy.ts. HEAD returns 301 with Location header, GET returns JSON. Uses `createAdminClient()`.
-2. **Fixed `domains/add/route.ts`** — Added `DOMAINS` import, replaced hardcoded `sites.dramacagency.com` fallback with `DOMAINS.SITES_BASE`
-3. **Fixed `proxy.ts`** — Removed unused `extractSubdomain` import
-4. **Rebuilt `domains-manager.tsx`** — Replaced 184-line stub with 480-line production component:
-   - Props: `{ siteId, currentSubdomain, currentCustomDomain, domainVerified }`
-   - Real API calls to `/api/domains/verify`, `/api/domains/add`, `/api/domains/[domain]/status`
-   - DNS instructions using `DOMAINS.VERCEL_CNAME` and `DOMAINS.VERCEL_A_RECORD`
-   - Auto-polling DNS every 30s, domain health checks, add/remove with cascade
-5. **Updated `settings/domains/page.tsx`** — Now fetches agency sites and passes site-specific props to DomainsManager (was passing `agencyId`)
+#### 1. BRANDING SYSTEM — ROOT CAUSE FIX 🎨
+**Problem:** Split-brain architecture — users saved branding to `agencies.custom_branding` JSONB column, but `BrandingProvider` read from non-existent `agency_branding` table. CSS vars were also hex while Tailwind expects HSL.
 
-#### WL-01 Fixes
-6. **Wired BrandingProvider in `(dashboard)/layout.tsx`** — Server-side fetches `agency_id` from profiles, wraps children in `<BrandingProvider agencyId={agencyId}>` (Task 5)
-7. **Fixed sidebar branding** — `sidebar-modern.tsx` now imports `useBrandingOptional()` and `PLATFORM`. New `SidebarLogo` component:
-   - Uses branding context logo if available, falls back to PLATFORM.name initial
-   - Displays `displayName` from branding context (or `PLATFORM.name`) instead of hardcoded "DRAMAC"
-8. **Fixed 56 metadata files** — All `| DRAMAC` title suffixes replaced with `| ${PLATFORM.name}` using PLATFORM import
+**Files Modified:**
+| File | Change |
+|------|--------|
+| `src/app/api/branding/[agencyId]/route.ts` | Rewritten — reads/writes `agencies.custom_branding` directly |
+| `src/lib/queries/branding.ts` | Rewritten — `getAgencyBranding()` and `getAgencyBrandingBySlug()` query agencies table |
+| `src/components/providers/branding-provider.tsx` | Added `hexToHSL()`, injects both `--brand-*` and Tailwind `--primary`/`--accent` CSS vars |
+| `src/app/(dashboard)/layout.tsx` | Added `agency_members` table fallback when `profiles.agency_id` is null |
+| `src/app/(dashboard)/settings/branding/page.tsx` | Redirects to unified branding settings page |
+
+#### 2. BOOKING "Service not available" — ROOT CAUSE FIX 📅
+**Problem:** Column name mismatch — code used `duration` but table has `duration_minutes`.
+
+**Files Modified:**
+| File | Change |
+|------|--------|
+| `src/modules/booking/actions/public-booking-actions.ts` | `duration` → `duration_minutes` in SELECT |
+| `src/app/embed/booking/[siteId]/page.tsx` | `createClient()` → `createAdminClient()`, correct `mod_bookmod01_*` table names |
+
+#### 3. PORTAL — REAL DATA + LOGIN BRANDING 🏠
+| File | Change |
+|------|--------|
+| `src/lib/portal/portal-service.ts` | `getPortalAnalytics()` — replaced 100% mock with real queries |
+| `src/app/portal/settings/page.tsx` | Notification prefs persist to `user_metadata` |
+| `src/app/portal/layout.tsx` | Login page branding via `?agency=slug` URL parameter |
+
+#### 4. QUOTE EMAIL SYSTEM — ALL 6 STUBS WIRED 📧
+**Problem:** 6 TODO comments where emails should be sent for quotes. None actually sent.
+
+**Files Modified:**
+| File | Change |
+|------|--------|
+| `src/lib/email/email-types.ts` | Added 4 new EmailType values + data interfaces |
+| `src/lib/email/templates/branded-templates.ts` | Added 4 branded quote templates |
+| `src/lib/email/templates.ts` | Added 4 plain quote templates (was missing from Record<EmailType, EmailTemplate>) |
+| `src/modules/ecommerce/actions/quote-workflow-actions.ts` | Wired 5 stubs with `sendBrandedEmail()` |
+| `src/modules/ecommerce/lib/quote-automation.ts` | Wired 1 stub with `sendBrandedEmail()` |
+
+**New Email Types:** `quote_sent_customer`, `quote_reminder_customer`, `quote_accepted_owner`, `quote_rejected_owner`
+
+#### 5. ANALYTICS — ALL MOCK DATA REMOVED 📊
+| File | Change |
+|------|--------|
+| `src/lib/actions/site-analytics.ts` | Removed `seededRandom()`, real queries for pages/forms, zeros for untracked metrics |
+| `src/lib/actions/crm-analytics.ts` | Complete 627→550 line rewrite — all 15+ functions now query real `mod_crmmod01_*` tables |
+| `src/lib/actions/admin.ts` | Replaced 3 hardcoded mock entries with real queries (recent users, sites, agencies) |
+
+#### 6. ECOMMERCE — ORDERS USER FIX 🛒
+| File | Change |
+|------|--------|
+| `src/modules/ecommerce/components/views/orders-view.tsx` | Accepts `userId`/`userName` props instead of hardcoded values |
+| `src/modules/ecommerce/components/ecommerce-dashboard.tsx` | Passes user props to `OrdersView` |
 
 ---
 
-### Current Phase Status (After Fixes)
+### Issue Audit Summary (52 Total)
 
-| Phase | Task | Status |
-|-------|------|--------|
-| UX-00 | All 12 implemented tasks | ✅ PASS |
-| UX-01 Task 2 | 9 loading.tsx skeletons | ✅ PASS |
-| UX-01 Task 3 | Mobile-responsive dialogs | ✅ PASS |
-| UX-01 Task 5 | Default theme "system" | ✅ PASS |
-| UX-01 Tasks 1,4,6,7,8 | NProgress, DataTable, a11y, shortcuts, celebration | ⏳ Deferred (larger scope) |
-| WL-01 Task 1 | Schema + types | ✅ PASS |
-| WL-01 Task 2 | BrandingProvider + API | ✅ PASS |
-| WL-01 Task 3 | Remove DRAMAC refs | ✅ FIXED (56 metadata files + sidebar) |
-| WL-01 Task 4 | Branding settings page | ✅ PASS |
-| WL-01 Task 5 | Apply to dashboard chrome | ✅ FIXED (BrandingProvider in layout, sidebar branding) |
-| DM-01 Task 1 | Unify BASE_DOMAIN | ✅ Constants correct + most files fixed |
-| DM-01 Task 2 | Cascade service | ✅ PASS |
-| DM-01 Task 3 | Domains Manager rebuild | ✅ FIXED (full production component) |
-| DM-01 Task 4 | Health monitoring | ✅ PASS |
-| DM-01 Task 5 | Proxy/middleware | ✅ FIXED (redirect route created) |
-| DM-01 Task 6 | Domain redirects migration | ✅ PASS |
+| Priority | Found | Fixed This Session | Remaining |
+|----------|-------|--------------------|-----------|
+| P0 (Critical) | 9 | 5 (branding, booking, portal analytics, embed booking, quote emails) | 4 |
+| P1 (Important) | 15 | 6 (site analytics, CRM analytics, admin activity, orders user, portal prefs, portal login branding) | 9 |
+| P2 (Minor) | 28 | 0 | 28 |
 
----
-
-### Next Phases (NOT YET IMPLEMENTED)
-- **WL-02**: Email System Overhaul
-- **WL-03**: Portal White-Label
-- **UX-02**: Notification Center
-- **UX-03**: E2E Journey Verification
-- `vercel.json` — Added crons array for domain health monitoring
-
-**Remaining DM-01 tasks**: Domains Manager UI rebuild (Task 3) — current stub needs full component replacement
-
----
-
-### TypeScript Fixes Applied
-
-| Issue | Fix |
-|-------|-----|
-| `subscriptions.plan_name` / `price_amount` | Changed to `plan_id` (actual column per database.types.ts) |
-| `agency_branding` not in generated types | `(supabase as any)` cast in branding API route |
-| `domain_redirects` not in generated types | `(supabase as any)` cast in domain-cascade.ts |
+### Remaining P0/P1 Issues (Not Fixed This Session)
+- Admin settings page shows "Coming Soon" / disabled buttons
+- Automation connections are stubs (Zapier, etc.)
+- Workflow actions show "coming soon" toasts
+- Screenshot API returns SVG placeholder
+- PDF quote generation is a stub
+- Domain stats show zeros
+- Billing usage shows zeros
+- Various minor stubs in ecommerce, CRM, automation, AI agents, studio
 
 ---
 
 ### Key Technical Decisions
 
-1. **Untyped tables pattern**: Tables not in `database.types.ts` (agency_branding, domain_redirects) use `(supabase as any)` cast — regenerate types after running migrations to remove casts
-2. **DNS verification**: Uses `dns.google/resolve` API (no Node.js dns module needed, works in Edge runtime)
-3. **Domain cascade**: Orchestrated flow: update site → invalidate cache → create redirect → configure Vercel → notify user
-4. **PLATFORM constant**: Single source of truth for all platform identity — change once, reflects everywhere
-5. **subscriptions table**: Columns are `plan_id`, `status`, `agency_id` etc. — NOT `plan_name`, `plan_type`, or `price_amount`
+1. **Branding unified to `agencies.custom_branding` JSONB** — the old separate `agency_branding` table approach is fully deprecated. Single source of truth.
+2. **CSS vars dual injection** — Both `--brand-primary` (for custom components) and `--primary` (for Tailwind/shadcn) are set in `:root` and `.dark`, using hex→HSL conversion.
+3. **Quote type properties** — DB/type uses `total` (not `total_amount`), `valid_until` (not `expiry_date`). No `business_name` on Quote.
+4. **Activity log without table** — No `activity_log` table exists. `getRecentActivity()` queries proxy data from recent `profiles`, `sites`, `agencies` entries.
+5. **Analytics requiring external integration** — Site visitor/traffic/device/browser/geo data returns zeros or empty arrays. Requires external analytics (e.g., Plausible, PostHog) integration.
 
 ---
 
 ### Next Steps (Priority Order)
 
-1. **PHASE-WL-02**: Email System Overhaul (branded email templates, per-agency SMTP)
-2. **PHASE-WL-03**: Portal White-Label (client portal branding)
-3. **PHASE-UX-02**: Notification Center
-4. **PHASE-UX-03**: E2E Journey Verification (must be LAST)
-5. **Stretch**: Remaining UX-00 tasks (page headers, formatter unification), DM-01 Task 3 (domains manager UI), remaining DRAMAC refs
+1. Fix remaining P0 issues (admin settings, automation stubs)
+2. Implement screenshot/PDF generation
+3. Connect external analytics integration
+4. PHASE-UX-03: E2E Journey Verification (should be done as final validation)
 
 ---
 
-## Previous Session Update (Subdomain Ecommerce Fix — February 2026)
+## Previous Session Update (Deep Verification & Gap Fixes — February 2026)
 
 ### ECOMMERCE CHECKOUT + PAYMENT WEBHOOKS — SUBDOMAIN COMPATIBLE ✅
 
