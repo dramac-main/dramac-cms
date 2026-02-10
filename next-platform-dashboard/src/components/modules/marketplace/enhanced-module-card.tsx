@@ -166,8 +166,8 @@ export function EnhancedModuleCard({
           <Button 
             asChild 
             size="sm" 
-            variant="ghost" 
-            className="group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
+            variant="outline" 
+            className="transition-all duration-200 group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary"
           >
             <Link href={`${linkPrefix}/${module.slug}`}>
               View

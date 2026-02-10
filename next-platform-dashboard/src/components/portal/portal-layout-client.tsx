@@ -124,6 +124,7 @@ function PortalLayoutInner({
     <div className="flex min-h-screen bg-background">
       {/* Portal Sidebar - uses unified component with portal variant */}
       <Sidebar
+        key="portal-sidebar"
         variant="portal"
         customNavigation={portalNavGroups}
         headerComponent={<PortalSidebarHeader user={user} />}

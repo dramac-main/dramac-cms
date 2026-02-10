@@ -265,7 +265,7 @@ function GooglePreview({ title, description, url }: GooglePreviewProps) {
   const displayUrl = url || "https://example.com/page";
   
   return (
-    <div className="border rounded-lg p-4 bg-white">
+    <div className="border rounded-lg p-4 bg-white dark:bg-card">
       <p className="text-xs text-muted-foreground mb-2">Google Search Preview</p>
       <div className="space-y-1">
         <p className="text-sm text-green-700 truncate">{displayUrl}</p>
@@ -291,7 +291,7 @@ interface SocialPreviewProps {
 
 function SocialPreview({ title, description, image, platform }: SocialPreviewProps) {
   return (
-    <div className="border rounded-lg overflow-hidden bg-white">
+    <div className="border rounded-lg overflow-hidden bg-white dark:bg-card">
       <p className="text-xs text-muted-foreground p-2 border-b">
         {platform === "facebook" ? "Facebook" : "Twitter/X"} Preview
       </p>

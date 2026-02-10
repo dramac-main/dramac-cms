@@ -215,15 +215,15 @@
   --color-danger-foreground: 0 0% 100%;
   --color-info: 199 89% 55%;
   --color-info-foreground: 0 0% 100%;
-  --color-background: 220 20% 6%;
-  --color-foreground: 0 0% 100%;
-  --color-card: 220 18% 9%;
-  --color-card-foreground: 0 0% 100%;
-  --color-popover: 220 16% 12%;
-  --color-popover-foreground: 0 0% 100%;
-  --color-muted: 220 14% 15%;
-  --color-muted-foreground: 220 5% 65%;
-  --color-border: 215 13% 18%;
-  --color-input: 215 13% 18%;
+  --color-background: 222 45% 11%;
+  --color-foreground: 210 40% 98%;
+  --color-card: 220 50% 9%;
+  --color-card-foreground: 210 40% 98%;
+  --color-popover: 220 44% 13%;
+  --color-popover-foreground: 210 40% 98%;
+  --color-muted: 220 40% 15%;
+  --color-muted-foreground: 218 11% 65%;
+  --color-border: 220 30% 18%;
+  --color-input: 220 30% 18%;
   --color-ring: 215 48% 66%;
 }

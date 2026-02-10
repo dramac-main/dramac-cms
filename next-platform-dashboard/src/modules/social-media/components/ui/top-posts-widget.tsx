@@ -272,12 +272,17 @@ function PostCard({ post, account, rank, isExpanded, onToggle, onClick }: PostCa
                         View Details
                       </Button>
                     )}
-                    <Button variant="ghost" size="sm" asChild>
-                      <a href="#" target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        View Original
-                      </a>
-                    </Button>
+                    {(() => {
+                      const postUrl = post.publishResults ? Object.values(post.publishResults)[0]?.url : null
+                      return postUrl ? (
+                        <Button variant="ghost" size="sm" asChild>
+                          <a href={postUrl} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                            View Original
+                          </a>
+                        </Button>
+                      ) : null
+                    })()}
                   </div>
                 </motion.div>
               )}

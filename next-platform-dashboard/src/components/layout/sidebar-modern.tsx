@@ -199,6 +199,15 @@ export function Sidebar({
     };
   }, [mobileOpen]);
 
+  // Collect ALL nav item hrefs across all groups + bottom nav for cross-group
+  // sibling conflict detection (prevents double-active when parent routes in
+  // one group are prefixes of child routes in another group)
+  const allHrefs = [
+    ...navigation.flatMap((g) => g.items.map((i) => i.href)),
+    ...bottomNav.map((i) => i.href),
+    ...(isSuperAdmin && isMainVariant ? [adminNavigation.href] : []),
+  ];
+
   const sidebarContent = (
     <TooltipProvider delayDuration={0}>
       {/* Header Section */}
@@ -260,6 +269,7 @@ export function Sidebar({
             collapsed={isCollapsed}
             pathname={pathname}
             onItemClick={closeMobile}
+            allHrefs={allHrefs}
           />
         ))}
       </nav>
@@ -274,6 +284,7 @@ export function Sidebar({
               collapsed={isCollapsed}
               pathname={pathname}
               onItemClick={closeMobile}
+              siblingHrefs={allHrefs}
             />
           )}
           {bottomNav.map((item) => (
@@ -283,6 +294,7 @@ export function Sidebar({
               collapsed={isCollapsed}
               pathname={pathname}
               onItemClick={closeMobile}
+              siblingHrefs={allHrefs}
             />
           ))}
           {footer}
@@ -357,11 +369,14 @@ function NavGroupComponent({
   collapsed,
   pathname,
   onItemClick,
+  allHrefs,
 }: {
   group: NavGroup;
   collapsed: boolean;
   pathname: string;
   onItemClick?: () => void;
+  /** All nav item hrefs across the entire sidebar for cross-group conflict detection */
+  allHrefs: string[];
 }) {
   return (
     <div className="mb-4">
@@ -390,6 +405,7 @@ function NavGroupComponent({
             collapsed={collapsed}
             pathname={pathname}
             onItemClick={onItemClick}
+            siblingHrefs={allHrefs}
           />
         ))}
       </div>
@@ -402,36 +418,35 @@ function NavItemComponent({
   collapsed,
   pathname,
   onItemClick,
+  siblingHrefs,
 }: {
   item: NavItem;
   collapsed: boolean;
   pathname: string;
   onItemClick?: () => void;
+  /** All sibling nav item hrefs (including this item's) for conflict detection */
+  siblingHrefs?: string[];
 }) {
-  // Improved active state logic:
-  // - Exact match for items like /dashboard, /settings, /admin, /portal
-  // - Child route match only for items that aren't top-level sections
-  // This prevents /dashboard from being active when on /dashboard/crm
-  // and prevents /portal from being active when on /portal/sites
+  // Active state logic — dynamic sibling-aware approach:
+  // 1. Exact match always wins
+  // 2. Child route match (pathname starts with href/) is allowed UNLESS
+  //    a sibling nav item has a more specific (longer) href that also matches.
+  //    This prevents e.g. /admin/modules being active when on /admin/modules/pricing
+  //    because /admin/modules/pricing is a sibling with a longer, better match.
   const isExactMatch = pathname === item.href;
   const isChildRoute = pathname.startsWith(`${item.href}/`);
   
-  // Only consider child routes as active if the item href has more than one segment
-  // e.g., /dashboard/crm should match /dashboard/crm/contacts
-  // but /dashboard should NOT match /dashboard/crm
-  // and /portal should NOT match /portal/sites
-  // SPECIAL CASE: /dashboard/domains should NOT match /dashboard/domains/transfer
-  // because Transfers has its own nav item
-  const isTopLevelItem = item.href === '/dashboard' || 
-                          item.href === '/settings' || 
-                          item.href === '/admin' || 
-                          item.href === '/marketplace' ||
-                          item.href === '/portal';
+  // Check if a sibling has a more specific match for this pathname.
+  // If another nav item's href is a longer prefix match, this item should
+  // only be active on exact match — not via prefix/child route matching.
+  const hasSiblingWithBetterMatch = isChildRoute && (siblingHrefs ?? []).some(
+    (href) =>
+      href !== item.href &&
+      href.startsWith(`${item.href}/`) &&
+      (pathname === href || pathname.startsWith(`${href}/`))
+  );
   
-  // Items that have sub-items as separate nav entries shouldn't highlight for child routes
-  const hasChildNavItems = item.href === '/dashboard/domains';
-  
-  const isActive = isExactMatch || (!isTopLevelItem && !hasChildNavItems && isChildRoute);
+  const isActive = isExactMatch || (isChildRoute && !hasSiblingWithBetterMatch);
   const Icon = item.icon;
 
   const content = (

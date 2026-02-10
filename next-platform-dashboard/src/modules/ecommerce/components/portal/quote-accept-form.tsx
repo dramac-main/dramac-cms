@@ -222,7 +222,7 @@ export function QuoteAcceptForm({
                 Clear
               </Button>
             </div>
-            <div className="border rounded-lg overflow-hidden bg-white">
+            <div className="border rounded-lg overflow-hidden bg-white dark:bg-muted">
               <canvas
                 ref={canvasRef}
                 width={400}

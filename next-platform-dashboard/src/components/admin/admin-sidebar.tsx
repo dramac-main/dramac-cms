@@ -13,22 +13,24 @@ import type { NavGroup } from "@/config/navigation";
  * - "Back to Dashboard" footer link
  * - Proper admin styling using CSS variables
  */
-export function AdminSidebar() {
-  // Transform admin navigation to NavGroup format for the unified sidebar
-  const adminNavGroups: NavGroup[] = [
-    {
-      title: "Administration",
-      items: adminNavigationItems.map((item) => ({
-        title: item.name,
-        href: item.href,
-        icon: item.icon,
-        badge: item.badge,
-      })),
-    },
-  ];
 
+// Pre-compute admin navigation groups outside component to avoid re-creation
+const adminNavGroups: NavGroup[] = [
+  {
+    title: "Administration",
+    items: adminNavigationItems.map((item) => ({
+      title: item.name,
+      href: item.href,
+      icon: item.icon,
+      badge: item.badge,
+    })),
+  },
+];
+
+export function AdminSidebar() {
   return (
     <Sidebar
+      key="admin-sidebar"
       variant="admin"
       customNavigation={adminNavGroups}
       showLogo={true}

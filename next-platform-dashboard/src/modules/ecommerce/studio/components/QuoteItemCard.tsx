@@ -139,7 +139,7 @@ export function QuoteItemCard({
 
   return (
     <div className={cn(
-      'rounded-lg border bg-white p-4',
+      'rounded-lg border bg-white dark:bg-card p-4',
       className
     )}>
       <div className="flex gap-4">

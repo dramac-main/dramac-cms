@@ -168,7 +168,7 @@ function QuoteListItem({ quote, formatPrice, detailUrl }: QuoteListItemProps) {
 
   return (
     <Link href={href} className="block">
-      <div className="flex items-center gap-4 rounded-lg border bg-white p-4 transition-colors hover:bg-gray-50">
+      <div className="flex items-center gap-4 rounded-lg border bg-white dark:bg-card p-4 transition-colors hover:bg-gray-50 dark:hover:bg-muted">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
           <FileText className="h-5 w-5 text-gray-600" />
         </div>

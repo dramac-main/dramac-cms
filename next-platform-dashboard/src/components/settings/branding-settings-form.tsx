@@ -192,7 +192,7 @@ export default function BrandingSettingsForm() {
               />
               <p className="text-xs text-muted-foreground">For light backgrounds</p>
               {formData.logo_url && (
-                <div className="p-4 border rounded bg-white">
+                <div className="p-4 border rounded bg-white dark:bg-muted">
                   <img src={formData.logo_url} alt="Logo preview" className="max-h-12 object-contain" />
                 </div>
               )}

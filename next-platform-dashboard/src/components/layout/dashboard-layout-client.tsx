@@ -99,7 +99,7 @@ function DashboardLayoutInner({
       {isImpersonating && impersonationBanner}
       
       {/* Sidebar */}
-      <Sidebar isSuperAdmin={isSuperAdmin} />
+      <Sidebar key="main-sidebar" isSuperAdmin={isSuperAdmin} />
       
       {/* Main content area */}
       <div 
