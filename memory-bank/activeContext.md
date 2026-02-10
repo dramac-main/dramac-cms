@@ -1,27 +1,66 @@
 # Active Context
 
-## Latest Session Update (Phase FIX-06 + FIX-06b Complete — February 2026)
+## Latest Session Update (Phase FIX-07 Complete — February 2026)
 
-### PHASE FIX-06b: Light Mode Contrast Fix ✅
+### PHASE FIX-07: Studio Light-Mode Isolation, AI Designer Preview Overhaul, Published Site Layout, Form Fixes ✅
 
-**2 files changed**, 35 insertions, 5 deletions  
-**Commit:** `d0bcdf3` — pushed to `main`
-
-**Problem:** In light mode, page background AND cards were both pure white (`oklch(1 0 0)` / `0 0% 100%`), causing zero contrast — cards blended into the page background. This was the "white issue" the user reported on the Social Media page and elsewhere.
-
-**Fix:** Changed light mode page background from pure white to a subtle cool gray:
-- `--background`: `oklch(1 0 0)` → `oklch(0.965 0.005 250)` (subtle blue-gray tint, ~#F2F4F8)
-- `--card`: remains `oklch(1 0 0)` (pure white) — cards now **stand out** against the gray bg
-- `--sidebar`: `oklch(0.985 0 0)` → `oklch(0.975 0.008 250)` (slightly darker tint for depth)
-- `--muted`/`--secondary`/`--accent`: `oklch(0.97 0 0)` → `oklch(0.945-0.955 0.005 250)` (subtle tint)
-- `--border`/`--input`: `oklch(0.922 0 0)` → `oklch(0.905 0.005 250)` (slightly more visible)
-- Applied to both `brand-variables.css` (HSL) and `globals.css` (oklch)
-
-**Key Insight:** The 3-source CSS system means light mode was also split across files — `brand-variables.css` sets HSL `--color-*` defaults for `:root`, while `globals.css` has oklch vars in the same `:root` block. Both must match.
+**6 files changed**, 237 insertions, 78 deletions  
+**Commit:** `d9a0225` — pushed to `main`  
+**TypeScript:** Zero errors (verified with `tsc --noEmit --skipLibCheck`)
 
 ---
 
-### PHASE FIX-06: Dark Mode Theme, React #310 Mitigation, Global UI Audit ✅
+#### 1. StudioRenderer Light-Mode Isolation
+- **File:** `src/lib/studio/engine/renderer.tsx`
+- **Problem:** StudioRenderer only set `colorScheme: "normal"` — dashboard dark mode could bleed into website preview/published content. Block renderers (`renders.tsx`, `premium-components.tsx`) have ZERO `dark:` Tailwind variants — they are light-only by design.
+- **Fix:** Added `className="studio-renderer light"` + `colorScheme: "light"` + `backgroundColor: "#ffffff"` + `color: "#111827"` to the main render div. This forces all studio-rendered content into light mode regardless of dashboard theme.
+
+#### 2. Published Site Layout Isolation
+- **File:** `src/app/site/[domain]/layout.tsx` (NEW)
+- **Problem:** Published/live websites had NO dedicated layout — inherited root layout's ThemeProvider. If site admin had dark mode enabled, `<html>` got `class="dark"` which affected semantic tokens.
+- **Fix:** Created dedicated layout wrapping children in `<div className="light">` with `colorScheme: "light"`, `minHeight: "100vh"`, `backgroundColor: "#ffffff"`. Does NOT include ThemeProvider or dashboard providers.
+
+#### 3. AI Designer Preview Complete Rewrite
+- **File:** `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx`
+- **Problem:** Preview was rendered as inline `<div>` at fixed pixel sizes with `maxWidth: 100%` — content got clipped/squished, no CSS isolation from dashboard, no device frames.
+- **Fix:** Created `PreviewCanvas` component featuring:
+  - CSS `transform: scale()` for accurate responsive preview (industry standard — Wix, Squarespace, Webflow approach)
+  - `ResizeObserver` dynamically calculates scale factor from container size
+  - Device frames: Desktop with title bar + traffic light dots + URL bar; Mobile with notch + home indicator; Tablet with rounded frame
+  - Content rendered at FULL device dimensions, then scaled to fit panel
+  - Forced light mode via `className="light"` + `colorScheme: "light"`
+  - Smooth CSS transitions between device sizes
+  - Scale capped at 1 (never upscales)
+  - Fixed TS error: coerce `currentStudioData` undefined → null with `?? null`
+
+#### 4. Ecommerce Settings Dialog — Mock → Real Save
+- **File:** `src/modules/ecommerce/components/dialogs/ecommerce-settings-dialog.tsx`
+- **Problem:** `handleSubmit` showed `toast.success('Settings saved')` but NEVER actually saved — comment said "In a real implementation..."
+- **Fix:** Replaced mock with actual `await updateSettings({ store_name, currency, tax_rate, tax_included_in_price, continue_selling_when_out_of_stock, free_shipping_threshold, send_order_confirmation, order_notification_email })` using the already-available `updateSettings` from `useEcommerce()` context.
+
+#### 5. Edit Discount Dialog — alert() → toast.error()
+- **File:** `src/modules/ecommerce/components/dialogs/edit-discount-dialog.tsx`
+- **Problem:** Used `alert()` at 4 locations for validation/error feedback
+- **Fix:** Added `import { toast } from 'sonner'`; replaced all 4 `alert()` calls with `toast.error()`
+
+#### 6. Edit Category Dialog — alert() → toast.error()
+- **File:** `src/modules/ecommerce/components/dialogs/edit-category-dialog.tsx`
+- **Problem:** Used `alert()` at 2 locations for validation/error feedback
+- **Fix:** Added `import { toast } from 'sonner'`; replaced both `alert()` calls with `toast.error()`
+
+---
+
+### Key Patterns Discovered (FIX-07)
+- **Studio block renderers are light-only by design** — `renders.tsx` (12,203 lines) and `premium-components.tsx` (2,983 lines) have ZERO `dark:` Tailwind variants. Colors come from inline styles and theme CSS variables, not Tailwind dark mode.
+- **StudioRenderer is the single rendering engine** shared by AI Designer preview, published sites, and studio canvas. Forcing light mode here covers all three contexts.
+- **Industry-standard preview** = content rendered at actual device dimensions + CSS transform: scale() to fit container. NOT iframe (though iframe would provide full CSS isolation — future enhancement).
+- **Published sites need their own layout** to prevent dashboard ThemeProvider from applying dark mode to live websites.
+- **Form audit results**: 47/52 forms fully functional; 3 had issues (1 mock, 2 using alert()); 1 console.log stub (low priority). All 3 now fixed.
+- **`EcommerceSettingsUpdate = Partial<EcommerceSettingsInput>`** — accepts partial updates; `updateSettings` in context wraps `updateEcommerceSettings(siteId, agencyId, data)` server action.
+
+---
+
+## Previous Session (Phase FIX-06 + FIX-06b Complete — February 2026)
 
 **15 files changed**, 124 insertions, 101 deletions  
 **TypeScript:** Zero errors (verified with `tsc --noEmit --skipLibCheck`)  

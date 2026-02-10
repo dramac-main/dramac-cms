@@ -1,7 +1,39 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅ + PHASE FIX-03 COMPLETE ✅ + PHASE FIX-04 COMPLETE ✅ + PHASE FIX-05 COMPLETE ✅ + PHASE FIX-06 COMPLETE ✅ + PHASE FIX-06b LIGHT MODE CONTRAST ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅ + PHASE FIX-03 COMPLETE ✅ + PHASE FIX-04 COMPLETE ✅ + PHASE FIX-05 COMPLETE ✅ + PHASE FIX-06 COMPLETE ✅ + PHASE FIX-06b LIGHT MODE CONTRAST ✅ + PHASE FIX-07 STUDIO/PREVIEW/FORMS ✅**
+
+---
+
+## 🎨 PHASE FIX-07: Studio Light-Mode Isolation, AI Designer Preview, Form Fixes (February 2026) ✅
+
+### Commit: `d9a0225` — 6 files, +237/-78
+
+| # | Task | Description | Status |
+|---|------|-------------|--------|
+| 1 | StudioRenderer light-mode | Force light class + colorScheme + bg white on renderer div | ✅ |
+| 2 | Published site layout | New /site/[domain]/layout.tsx with forced light mode isolation | ✅ |
+| 3 | AI Designer preview rewrite | PreviewCanvas with CSS transform:scale(), device frames, ResizeObserver | ✅ |
+| 4 | Ecommerce settings dialog | Replace mock handleSubmit with actual updateSettings() call | ✅ |
+| 5 | Edit discount dialog | Replace 4 alert() calls with toast.error() from sonner | ✅ |
+| 6 | Edit category dialog | Replace 2 alert() calls with toast.error() from sonner | ✅ |
+| 7 | TypeScript fix | Coerce currentStudioData undefined → null for PreviewCanvas prop | ✅ |
+
+### Files Created
+- `src/app/site/[domain]/layout.tsx` — Published site light-mode layout
+
+### Files Modified
+- `src/lib/studio/engine/renderer.tsx` — Force light mode on studio render div
+- `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx` — PreviewCanvas component + TS fix
+- `src/modules/ecommerce/components/dialogs/ecommerce-settings-dialog.tsx` — Real save
+- `src/modules/ecommerce/components/dialogs/edit-discount-dialog.tsx` — toast.error()
+- `src/modules/ecommerce/components/dialogs/edit-category-dialog.tsx` — toast.error()
+
+### Platform Form Audit Results (FIX-07)
+- **47/52 forms**: Fully functional ✅
+- **3 forms fixed this session**: ecommerce-settings (mock→real), edit-discount (alert→toast), edit-category (alert→toast)
+- **1 console.log stub**: useForms hook (low priority — actual form API works fine)
+- **1 remaining**: useForms hook console.log (non-blocking)
 
 ---
 
