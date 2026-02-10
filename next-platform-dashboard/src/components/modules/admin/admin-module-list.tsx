@@ -12,6 +12,8 @@ import {
   ToggleRight,
   ExternalLink
 } from "lucide-react";
+import { icons } from "lucide-react";
+import { resolveIconName } from "@/lib/utils/icon-map";
 import {
   Table,
   TableBody,
@@ -134,7 +136,7 @@ export function AdminModuleList({ modules }: AdminModuleListProps) {
             <TableRow key={module.id}>
               <TableCell>
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{module.icon || "📦"}</span>
+                  {(() => { const I = icons[resolveIconName(module.icon) as keyof typeof icons] || icons.Package; return <I className="w-6 h-6 text-muted-foreground" strokeWidth={1.5} />; })()}
                   <div>
                     <Link 
                       href={`/admin/modules/${module.id}`}

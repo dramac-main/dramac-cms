@@ -1,4 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { icons } from "lucide-react";
+import { resolveIconName } from "@/lib/utils/icon-map";
 
 interface ModuleWidget {
   moduleId: string;
@@ -39,7 +41,7 @@ export function ModuleWidgetsGrid({ widgets }: ModuleWidgetsGridProps) {
           <Card key={`${widget.moduleId}-${index}`} className={getWidgetCols(widget.widgetSize)}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <span>{widget.moduleIcon || "📊"}</span>
+                {(() => { const I = icons[resolveIconName(widget.moduleIcon) as keyof typeof icons] || icons.ChartBar; return <I className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />; })()}
                 {widget.moduleName}
               </CardTitle>
             </CardHeader>

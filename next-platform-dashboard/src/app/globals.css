@@ -1477,3 +1477,42 @@ html.theme-transition *::after {
     height: auto !important;
   }
 }
+
+/* =============================================
+   ICON STROKE-DRAW ANIMATION
+   Animates Lucide line icon strokes on hover.
+   Applied via group-hover on card containers.
+   ============================================= */
+
+@keyframes strokeDraw {
+  0% {
+    stroke-dashoffset: 60;
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.icon-stroke-draw {
+  animation: strokeDraw 0.6s ease-out forwards;
+}
+
+.icon-stroke-draw * {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: strokeDraw 0.6s ease-out forwards;
+}
+
+/* Ensure icons reset when not hovered */
+.group:not(:hover) .icon-stroke-draw,
+.group:not(:hover) .icon-stroke-draw * {
+  animation: none;
+  stroke-dasharray: none;
+  stroke-dashoffset: 0;
+  opacity: 1;
+}

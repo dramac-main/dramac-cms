@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
+import { icons } from "lucide-react";
+import { resolveIconName } from "@/lib/utils/icon-map";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AppIframeSandbox } from "./app-iframe-sandbox";
 
@@ -85,7 +87,7 @@ export function AppLauncher({ module, installation, clientId, agencyId }: AppLau
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center max-w-md">
-          <span className="text-6xl mb-4 block">{module.icon || "🔗"}</span>
+          <span className="text-6xl mb-4 block">{(() => { const I = icons[resolveIconName(module.icon) as keyof typeof icons] || icons.Link; return <I className="w-14 h-14 mx-auto text-muted-foreground" strokeWidth={1.5} />; })()}</span>
           <h2 className="text-xl font-semibold mb-2">{module.name}</h2>
           <p className="text-muted-foreground mb-4">
             This app opens in a new window
@@ -109,7 +111,7 @@ export function AppLauncher({ module, installation, clientId, agencyId }: AppLau
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <span className="text-6xl mb-4 block">{module.icon || "📦"}</span>
+          <span className="text-6xl mb-4 block">{(() => { const I = icons[resolveIconName(module.icon) as keyof typeof icons] || icons.Package; return <I className="w-14 h-14 mx-auto text-muted-foreground" strokeWidth={1.5} />; })()}</span>
           <h2 className="text-xl font-semibold mb-2">{module.name}</h2>
           <p className="text-muted-foreground">
             Native component: {module.entry_component || "Not configured"}
@@ -123,7 +125,7 @@ export function AppLauncher({ module, installation, clientId, agencyId }: AppLau
   return (
     <div className="h-full flex items-center justify-center">
       <div className="text-center max-w-md">
-        <span className="text-6xl mb-4 block">{module.icon || "📦"}</span>
+        <span className="text-6xl mb-4 block">{(() => { const I = icons[resolveIconName(module.icon) as keyof typeof icons] || icons.Package; return <I className="w-14 h-14 mx-auto text-muted-foreground" strokeWidth={1.5} />; })()}</span>
         <h2 className="text-xl font-semibold mb-2">{module.name}</h2>
         <p className="text-muted-foreground">{module.description}</p>
         <p className="text-sm text-muted-foreground mt-4">

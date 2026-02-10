@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Star, Check } from "lucide-react";
+import { icons } from "lucide-react";
+import { resolveIconName } from "@/lib/utils/icon-map";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,8 +51,8 @@ export function AvailableAppsGrid({ modules, clientId }: AvailableAppsGridProps)
             <Card key={module.id} className="group hover:border-primary/30 hover:shadow-md transition-all duration-300">
               <CardHeader className="pb-2">
                 <div className="flex items-start gap-3">
-                  <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center text-3xl flex-shrink-0 transition-all duration-300 group-hover:animate-iconBreathe">
-                    {module.icon || "📦"}
+                  <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:animate-iconBreathe">
+                    {(() => { const I = icons[resolveIconName(module.icon) as keyof typeof icons] || icons.Package; return <I className="w-7 h-7 text-muted-foreground" strokeWidth={1.5} />; })()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">

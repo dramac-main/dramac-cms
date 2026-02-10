@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Globe, User, File, Users, CreditCard, Settings, type LucideIcon } from "lucide-react";
 import { getAgencyActivityAction } from "@/lib/actions/activity";
 import type { ActivityLogEntry } from "@/types/notifications";
 
@@ -44,13 +44,13 @@ const actionLabels: Record<string, string> = {
   "billing.subscription_cancelled": "cancelled subscription",
 };
 
-const resourceTypeIcons: Record<string, string> = {
-  site: "🌐",
-  client: "👤",
-  page: "📄",
-  team: "👥",
-  billing: "💳",
-  settings: "⚙️",
+const resourceTypeIcons: Record<string, LucideIcon> = {
+  site: Globe,
+  client: User,
+  page: File,
+  team: Users,
+  billing: CreditCard,
+  settings: Settings,
 };
 
 export function ActivityFeed({
@@ -156,8 +156,11 @@ export function ActivityFeed({
                       {activity.resource_name && (
                         <>
                           {" "}
-                          <span className="font-medium">
-                            {resourceTypeIcons[activity.resource_type] || ""}{" "}
+                          <span className="font-medium inline-flex items-center gap-1">
+                            {(() => {
+                              const Icon = resourceTypeIcons[activity.resource_type];
+                              return Icon ? <Icon className="inline w-3.5 h-3.5" strokeWidth={1.5} /> : null;
+                            })()}
                             {activity.resource_name}
                           </span>
                         </>

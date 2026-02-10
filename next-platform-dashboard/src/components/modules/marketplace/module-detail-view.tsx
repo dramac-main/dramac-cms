@@ -22,6 +22,8 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { MODULE_CATEGORIES } from '@/lib/modules/module-categories';
+import { icons } from 'lucide-react';
+import { resolveIconName } from '@/lib/utils/icon-map';
 import { formatCurrency } from '@/lib/locale-config';
 import { 
   getModuleDetails, 
@@ -124,7 +126,9 @@ export function ModuleDetailView({
         <div className="lg:col-span-2 space-y-6">
           {/* Module Header */}
           <div className="flex items-start gap-4">
-            <div className="text-6xl">{module.icon || '📦'}</div>
+            <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+              {(() => { const I = icons[resolveIconName(module.icon) as keyof typeof icons] || icons.Package; return <I className="w-9 h-9 text-muted-foreground" strokeWidth={1.5} />; })()}
+            </div>
             <div className="flex-1">
               <h1 className="text-3xl font-bold">{module.name}</h1>
               <p className="text-muted-foreground mt-1">

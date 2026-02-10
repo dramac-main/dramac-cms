@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Loader2, Send, MessageSquare } from "lucide-react";
+import { icons } from "lucide-react";
+import { resolveIconName } from "@/lib/utils/icon-map";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -83,7 +85,7 @@ export function RequestAppDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <span className="text-3xl">{module.icon || "📦"}</span>
+            {(() => { const I = icons[resolveIconName(module.icon) as keyof typeof icons] || icons.Package; return <I className="w-7 h-7 text-muted-foreground" strokeWidth={1.5} />; })()}
             Request {module.name}
           </DialogTitle>
           <DialogDescription>

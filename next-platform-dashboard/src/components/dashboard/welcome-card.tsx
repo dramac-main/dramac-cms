@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowUpRight, Lightbulb, TrendingUp, Clock } from "lucide-react";
+import { Sparkles, ArrowUpRight, Lightbulb, TrendingUp, Clock, Sunrise, Sun, Sunset, Moon, type LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -42,16 +42,16 @@ const quickTips = [
   },
 ];
 
-function getGreeting(): { greeting: string; emoji: string } {
+function getGreeting(): { greeting: string; Icon: LucideIcon } {
   const hour = new Date().getHours();
   if (hour < 12) {
-    return { greeting: "Good morning", emoji: "🌅" };
+    return { greeting: "Good morning", Icon: Sunrise };
   } else if (hour < 17) {
-    return { greeting: "Good afternoon", emoji: "☀️" };
+    return { greeting: "Good afternoon", Icon: Sun };
   } else if (hour < 21) {
-    return { greeting: "Good evening", emoji: "🌆" };
+    return { greeting: "Good evening", Icon: Sunset };
   }
-  return { greeting: "Good night", emoji: "🌙" };
+  return { greeting: "Good night", Icon: Moon };
 }
 
 export function WelcomeCard({ 
@@ -63,7 +63,7 @@ export function WelcomeCard({
   const displayName = userName || "there";
   const plan = subscriptionPlan?.toLowerCase() || "free";
   const planColor = planColors[plan] || planColors.free;
-  const { greeting, emoji } = getGreeting();
+  const { greeting, Icon } = getGreeting();
 
   // Pick a random tip on mount using lazy initialization
   const [randomTip] = useState(() => quickTips[Math.floor(Math.random() * quickTips.length)]);
@@ -93,7 +93,7 @@ export function WelcomeCard({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1, duration: 0.3 }}
               >
-                {greeting}, {displayName}! {emoji}
+                {greeting}, {displayName}! <Icon className="inline w-6 h-6 ml-1" strokeWidth={1.5} />
               </motion.h1>
               <motion.div 
                 className="flex flex-wrap items-center gap-2 text-muted-foreground"

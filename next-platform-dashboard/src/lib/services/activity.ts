@@ -134,12 +134,12 @@ export const actionLabels: Record<string, string> = {
   "billing.subscription_cancelled": "cancelled subscription",
 };
 
-// Resource type icons for display
+// Resource type icons for display (Lucide icon names)
 export const resourceTypeIcons: Record<string, string> = {
-  site: "🌐",
-  client: "👤",
-  page: "📄",
-  team: "👥",
-  billing: "💳",
-  settings: "⚙️",
+  site: "Globe",
+  client: "User",
+  page: "File",
+  team: "Users",
+  billing: "CreditCard",
+  settings: "Settings",
 };

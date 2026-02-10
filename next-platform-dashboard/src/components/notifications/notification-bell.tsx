@@ -20,32 +20,7 @@ import {
 } from "@/lib/actions/notifications";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/types/notifications";
-
-const notificationIcons: Record<string, string> = {
-  site_published: "🚀",
-  site_updated: "✏️",
-  client_created: "👤",
-  client_updated: "👤",
-  team_invite: "📧",
-  team_joined: "🎉",
-  team_left: "👋",
-  payment_success: "💳",
-  payment_failed: "⚠️",
-  subscription_renewed: "🔄",
-  subscription_cancelled: "❌",
-  comment_added: "💬",
-  mention: "@",
-  security_alert: "🔒",
-  system: "📢",
-  // Phase UX-02: Booking & E-Commerce notification types
-  new_booking: "📅",
-  booking_confirmed: "✅",
-  booking_cancelled: "🚫",
-  new_order: "🛒",
-  order_shipped: "📦",
-  order_delivered: "✔️",
-  form_submission: "📝",
-};
+import { NotificationIcon } from "./notification-icon";
 
 export function NotificationBell() {
   const router = useRouter();
@@ -163,7 +138,7 @@ export function NotificationBell() {
                 >
                   <div className="flex gap-3">
                     <span className="text-xl shrink-0">
-                      {notificationIcons[notification.type] || "📌"}
+                      <NotificationIcon type={notification.type} size="sm" />
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">

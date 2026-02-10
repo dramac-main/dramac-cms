@@ -21,7 +21,7 @@ Get insights into how users interact with your site and optimize for better perf
 - Real-time reporting integration
     `,
     version: "1.0.0",
-    icon: "📊",
+    icon: "ChartBar",
     screenshots: ["/modules/ga4/screenshot-1.png", "/modules/ga4/screenshot-2.png"],
     category: "analytics",
     tags: ["analytics", "google", "tracking", "reporting"],
@@ -59,7 +59,7 @@ Visualize user behavior with heatmaps, session recordings, and feedback polls.
 Understand where users click, scroll, and what they ignore.
     `,
     version: "1.2.0",
-    icon: "🔥",
+    icon: "Flame",
     screenshots: [],
     category: "analytics",
     tags: ["heatmaps", "recordings", "ux", "analytics"],
@@ -98,7 +98,7 @@ Everything you need to optimize your site for search engines.
 Generate sitemaps, manage meta tags, add schema markup, and monitor SEO health.
     `,
     version: "2.0.0",
-    icon: "🎯",
+    icon: "Target",
     screenshots: [],
     category: "seo",
     tags: ["seo", "sitemap", "meta", "schema", "search"],
@@ -138,7 +138,7 @@ Seamlessly accept payments on your website with Stripe.
 Support for one-time payments, subscriptions, and checkout pages.
     `,
     version: "1.5.0",
-    icon: "💳",
+    icon: "CreditCard",
     screenshots: [],
     category: "ecommerce",
     tags: ["payments", "stripe", "checkout", "subscriptions"],
@@ -176,7 +176,7 @@ Add e-commerce capabilities to any site with our shopping cart module.
 Manage products, handle cart operations, and process checkouts.
     `,
     version: "1.0.0",
-    icon: "🛒",
+    icon: "ShoppingCart",
     screenshots: [],
     category: "ecommerce",
     tags: ["cart", "products", "checkout", "ecommerce"],
@@ -216,7 +216,7 @@ Build powerful forms with multi-step flows, conditional logic, and validation.
 Connect to email services, CRMs, and webhooks.
     `,
     version: "1.3.0",
-    icon: "📝",
+    icon: "FileText",
     screenshots: [],
     category: "forms",
     tags: ["forms", "contact", "leads", "surveys"],
@@ -257,7 +257,7 @@ Let visitors share your content across social media platforms.
 Customizable buttons, share counts, and floating share bars.
     `,
     version: "1.1.0",
-    icon: "📢",
+    icon: "Megaphone",
     screenshots: [],
     category: "social",
     tags: ["social", "sharing", "facebook", "twitter", "linkedin"],
@@ -294,7 +294,7 @@ Showcase your Instagram content directly on your website.
 Automatic updates, customizable layouts, and click-through to Instagram.
     `,
     version: "1.0.0",
-    icon: "📸",
+    icon: "Camera",
     screenshots: [],
     category: "social",
     tags: ["instagram", "feed", "gallery", "social"],
@@ -333,7 +333,7 @@ Capture leads and reduce bounce rate with smart popups.
 Exit-intent detection, A/B testing, and conversion tracking.
     `,
     version: "2.0.0",
-    icon: "💬",
+    icon: "MessageCircle",
     screenshots: [],
     category: "marketing",
     tags: ["popup", "leads", "conversion", "marketing"],
@@ -371,7 +371,7 @@ Full email marketing platform integrated into your dashboard.
 Build lists, create campaigns, and track performance.
     `,
     version: "1.0.0",
-    icon: "📧",
+    icon: "Mail",
     screenshots: [],
     category: "marketing",
     tags: ["email", "newsletter", "campaigns", "automation"],
@@ -411,7 +411,7 @@ Ensure your sites are always secure with automatic SSL.
 Free Let's Encrypt certificates with auto-renewal.
     `,
     version: "1.0.0",
-    icon: "🔒",
+    icon: "Lock",
     screenshots: [],
     category: "security",
     tags: ["ssl", "https", "security", "certificates"],
@@ -448,7 +448,7 @@ Never lose your work with automated daily backups.
 Store backups in the cloud and restore with one click.
     `,
     version: "1.2.0",
-    icon: "💾",
+    icon: "HardDrive",
     screenshots: [],
     category: "security",
     tags: ["backup", "restore", "security", "recovery"],
@@ -488,7 +488,7 @@ Deliver content faster with edge caching and optimization.
 Automatic image compression and lazy loading.
     `,
     version: "1.0.0",
-    icon: "⚡",
+    icon: "Zap",
     screenshots: [],
     category: "performance",
     tags: ["cdn", "speed", "caching", "optimization"],
@@ -528,7 +528,7 @@ Engage visitors with real-time chat support.
 Customizable widget, chat history, and offline messages.
     `,
     version: "1.5.0",
-    icon: "💬",
+    icon: "MessageCircle",
     screenshots: [],
     category: "communication",
     tags: ["chat", "support", "customer-service", "messaging"],
@@ -568,7 +568,7 @@ Add a professional blog to any site.
 Categories, tags, comments, and SEO optimization built-in.
     `,
     version: "2.0.0",
-    icon: "📰",
+    icon: "Newspaper",
     screenshots: [],
     category: "content",
     tags: ["blog", "posts", "articles", "cms"],
@@ -608,7 +608,7 @@ Automatically add form submissions to Mailchimp audiences.
 Sync customer data and trigger automations.
     `,
     version: "1.1.0",
-    icon: "🐵",
+    icon: "Zap",
     screenshots: [],
     category: "integrations",
     tags: ["mailchimp", "email", "lists", "marketing"],
@@ -647,7 +647,7 @@ Stay compliant with GDPR and cookie laws.
 Customizable banners, cookie categories, and consent logging.
     `,
     version: "1.2.0",
-    icon: "🍪",
+    icon: "Wrench",
     screenshots: [],
     category: "utilities",
     tags: ["cookies", "gdpr", "consent", "compliance"],
@@ -685,7 +685,7 @@ Handle URL changes gracefully with redirect management.
 Set up redirects, track 404s, and maintain SEO value.
     `,
     version: "1.0.0",
-    icon: "↪️",
+    icon: "CornerDownRight",
     screenshots: [],
     category: "utilities",
     tags: ["redirects", "301", "404", "seo"],
@@ -731,7 +731,7 @@ Trigger Zapier automations from form submissions, page views, and custom events.
 - Easy setup with Zapier templates
     `,
     version: "1.0.0",
-    icon: "⚡",
+    icon: "Zap",
     screenshots: ["/modules/zapier/screenshot-1.png"],
     category: "integrations",
     tags: ["zapier", "automation", "webhook", "integration"],
@@ -899,18 +899,18 @@ Supports both physical and digital products with variant management, inventory t
 
 // Category metadata
 export const MODULE_CATEGORIES: { id: ModuleCategory; label: string; icon: string; description: string }[] = [
-  { id: "analytics", label: "Analytics", icon: "📊", description: "Track and analyze visitor behavior" },
-  { id: "seo", label: "SEO", icon: "🎯", description: "Optimize for search engines" },
-  { id: "ecommerce", label: "E-Commerce", icon: "🛒", description: "Sell products and services" },
-  { id: "forms", label: "Forms", icon: "📝", description: "Collect leads and data" },
-  { id: "social", label: "Social", icon: "📢", description: "Social media integration" },
-  { id: "marketing", label: "Marketing", icon: "📧", description: "Email and campaigns" },
-  { id: "security", label: "Security", icon: "🔒", description: "Protect your site" },
-  { id: "performance", label: "Performance", icon: "⚡", description: "Speed optimization" },
-  { id: "communication", label: "Communication", icon: "💬", description: "Chat and messaging" },
-  { id: "content", label: "Content", icon: "📰", description: "CMS and publishing" },
-  { id: "integrations", label: "Integrations", icon: "🔗", description: "Connect third-party apps" },
-  { id: "utilities", label: "Utilities", icon: "🔧", description: "Helpful tools" },
+  { id: "analytics", label: "Analytics", icon: "ChartBar", description: "Track and analyze visitor behavior" },
+  { id: "seo", label: "SEO", icon: "Target", description: "Optimize for search engines" },
+  { id: "ecommerce", label: "E-Commerce", icon: "ShoppingCart", description: "Sell products and services" },
+  { id: "forms", label: "Forms", icon: "FileText", description: "Collect leads and data" },
+  { id: "social", label: "Social", icon: "Megaphone", description: "Social media integration" },
+  { id: "marketing", label: "Marketing", icon: "Mail", description: "Email and campaigns" },
+  { id: "security", label: "Security", icon: "Lock", description: "Protect your site" },
+  { id: "performance", label: "Performance", icon: "Zap", description: "Speed optimization" },
+  { id: "communication", label: "Communication", icon: "MessageCircle", description: "Chat and messaging" },
+  { id: "content", label: "Content", icon: "Newspaper", description: "CMS and publishing" },
+  { id: "integrations", label: "Integrations", icon: "Link", description: "Connect third-party apps" },
+  { id: "utilities", label: "Utilities", icon: "Wrench", description: "Helpful tools" },
 ];
 
 // Helper functions

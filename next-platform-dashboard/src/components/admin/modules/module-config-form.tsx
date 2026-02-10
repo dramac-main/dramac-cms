@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Info } from "lucide-react";
+import { icons } from "lucide-react";
+import { resolveIconName } from "@/lib/utils/icon-map";
 import {
   Tooltip,
   TooltipContent,
@@ -35,17 +37,17 @@ interface ModuleConfigFormProps {
 }
 
 const CATEGORIES = [
-  { value: "analytics", label: "Analytics & Tracking", icon: "📊" },
-  { value: "seo", label: "SEO & Marketing", icon: "🔍" },
-  { value: "ecommerce", label: "E-Commerce", icon: "🛒" },
-  { value: "forms", label: "Forms & Lead Gen", icon: "📝" },
-  { value: "chat", label: "Chat & Support", icon: "💬" },
-  { value: "social", label: "Social Media", icon: "📱" },
-  { value: "content", label: "Content & Media", icon: "🎬" },
-  { value: "security", label: "Security & Privacy", icon: "🔒" },
-  { value: "performance", label: "Performance", icon: "⚡" },
-  { value: "integration", label: "Integrations", icon: "🔗" },
-  { value: "other", label: "Other", icon: "📦" },
+  { value: "analytics", label: "Analytics & Tracking", icon: "BarChart3" },
+  { value: "seo", label: "SEO & Marketing", icon: "Search" },
+  { value: "ecommerce", label: "E-Commerce", icon: "ShoppingCart" },
+  { value: "forms", label: "Forms & Lead Gen", icon: "FileText" },
+  { value: "chat", label: "Chat & Support", icon: "MessageCircle" },
+  { value: "social", label: "Social Media", icon: "Share2" },
+  { value: "content", label: "Content & Media", icon: "Clapperboard" },
+  { value: "security", label: "Security & Privacy", icon: "Lock" },
+  { value: "performance", label: "Performance", icon: "Zap" },
+  { value: "integration", label: "Integrations", icon: "Link" },
+  { value: "other", label: "Other", icon: "Package" },
 ];
 
 const PRICING_TIERS = [
@@ -53,32 +55,32 @@ const PRICING_TIERS = [
     value: "free", 
     label: "Free", 
     description: "No charge",
-    color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" 
+    color: "bg-muted text-muted-foreground" 
   },
   { 
     value: "starter", 
     label: "Starter", 
     description: "$5-$15/mo",
-    color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400" 
+    color: "bg-muted text-muted-foreground" 
   },
   { 
     value: "pro", 
     label: "Pro", 
     description: "$20-$50/mo",
-    color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400" 
+    color: "bg-muted text-muted-foreground" 
   },
   { 
     value: "enterprise", 
     label: "Enterprise", 
     description: "$100+/mo",
-    color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400" 
+    color: "bg-muted text-muted-foreground" 
   },
 ];
 
 const ICON_SUGGESTIONS = [
-  "📊", "📈", "🔍", "💬", "📧", "🛒", "💳", "🔒", "⚡",
-  "🎨", "📱", "🌐", "📝", "🔗", "🎯", "📢", "💡", "🚀",
-  "⭐", "🔔", "📅", "🗂️", "💾", "🔄", "✅", "🏷️", "📌",
+  "BarChart3", "TrendingUp", "Search", "MessageCircle", "Mail", "ShoppingCart", "CreditCard", "Lock", "Zap",
+  "Palette", "Smartphone", "Globe", "FileText", "Link", "Target", "Megaphone", "Lightbulb", "Rocket",
+  "Star", "Bell", "Calendar", "FolderOpen", "HardDrive", "RefreshCw", "CheckCircle", "Tag", "Pin",
 ];
 
 export function ModuleConfigForm({
@@ -205,25 +207,33 @@ export function ModuleConfigForm({
         <div className="space-y-2">
           <Label>Icon</Label>
           <div className="flex items-start gap-4">
-            <div className="text-4xl border rounded-lg p-3 bg-muted/50 flex-shrink-0">
-              {icon || "📦"}
+            <div className="border rounded-lg p-3 bg-muted/50 flex-shrink-0 flex items-center justify-center w-16 h-16">
+              {(() => {
+                const iconName = resolveIconName(icon);
+                const LucideIcon = icons[iconName as keyof typeof icons] || icons.Package;
+                return <LucideIcon className="w-8 h-8 text-muted-foreground" strokeWidth={1.5} />;
+              })()}
             </div>
             <div className="flex-1">
               <div className="flex flex-wrap gap-1">
-                {displayedIcons.map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    className={`text-xl p-1.5 rounded-md transition-colors hover:bg-muted ${
-                      icon === emoji 
-                        ? "bg-primary/20 ring-2 ring-primary" 
-                        : ""
-                    }`}
-                    onClick={() => onChange("icon", emoji)}
-                  >
-                    {emoji}
-                  </button>
-                ))}
+                {displayedIcons.map((iconName) => {
+                  const LucideIcon = icons[iconName as keyof typeof icons] || icons.Package;
+                  return (
+                    <button
+                      key={iconName}
+                      type="button"
+                      className={`p-2 rounded-md transition-colors hover:bg-muted ${
+                        icon === iconName 
+                          ? "bg-primary/20 ring-2 ring-primary" 
+                          : ""
+                      }`}
+                      onClick={() => onChange("icon", iconName)}
+                      title={iconName}
+                    >
+                      <LucideIcon className="w-5 h-5" strokeWidth={1.5} />
+                    </button>
+                  );
+                })}
               </div>
               {ICON_SUGGESTIONS.length > 18 && (
                 <Button

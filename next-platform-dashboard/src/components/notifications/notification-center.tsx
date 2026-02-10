@@ -18,6 +18,7 @@ import {
 } from "@/lib/actions/notifications";
 import type { Notification } from "@/types/notifications";
 import { cn } from "@/lib/utils";
+import { NotificationIcon } from "./notification-icon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
@@ -205,26 +206,6 @@ export function NotificationCenter({ initialUnreadCount = 0 }: NotificationCente
 // Notification Item
 // ============================================================================
 
-const NOTIFICATION_TYPE_ICONS: Record<string, string> = {
-  new_booking: "📅",
-  booking_confirmed: "✅",
-  booking_cancelled: "❌",
-  new_order: "🛒",
-  order_shipped: "📦",
-  order_delivered: "✔️",
-  payment_success: "💳",
-  payment_failed: "⚠️",
-  site_published: "🚀",
-  site_updated: "🔄",
-  team_invite: "👋",
-  team_joined: "🤝",
-  form_submission: "📝",
-  comment_added: "💬",
-  mention: "📢",
-  security_alert: "🔒",
-  system: "ℹ️",
-};
-
 function NotificationItem({
   notification,
   onClick,
@@ -238,7 +219,6 @@ function NotificationItem({
   onDelete: () => void;
   isPending: boolean;
 }) {
-  const icon = NOTIFICATION_TYPE_ICONS[notification.type] || "📌";
   const timeAgo = formatDistanceToNow(new Date(notification.created_at), {
     addSuffix: true,
   });
@@ -264,9 +244,7 @@ function NotificationItem({
       </div>
 
       {/* Icon */}
-      <span className="text-lg flex-shrink-0 pt-0.5" role="img" aria-label={notification.type}>
-        {icon}
-      </span>
+      <NotificationIcon type={notification.type} size="sm" />
 
       {/* Content */}
       <div className="flex-1 min-w-0">

@@ -14,6 +14,7 @@ import {
   deleteNotification,
 } from "@/lib/actions/notifications";
 import type { Notification } from "@/types/notifications";
+import { NotificationIcon } from "./notification-icon";
 
 interface NotificationsListProps {
   notifications: Notification[];
@@ -35,24 +36,6 @@ const typeLabels: Record<string, string> = {
   mention: "Mention",
   security_alert: "Security",
   system: "System",
-};
-
-const typeIcons: Record<string, string> = {
-  site_published: "🚀",
-  site_updated: "✏️",
-  client_created: "👤",
-  client_updated: "👤",
-  team_invite: "📧",
-  team_joined: "🎉",
-  team_left: "👋",
-  payment_success: "💳",
-  payment_failed: "⚠️",
-  subscription_renewed: "🔄",
-  subscription_cancelled: "❌",
-  comment_added: "💬",
-  mention: "@",
-  security_alert: "🔒",
-  system: "📢",
 };
 
 export function NotificationsList({
@@ -138,9 +121,7 @@ export function NotificationsList({
           >
             <CardContent className="p-4">
               <div className="flex items-start gap-4">
-                <span className="text-2xl shrink-0">
-                  {typeIcons[notification.type] || "📌"}
-                </span>
+                <NotificationIcon type={notification.type} size="md" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">

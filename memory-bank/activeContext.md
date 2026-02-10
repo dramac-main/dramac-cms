@@ -1,6 +1,65 @@
 # Active Context
 
-## Latest Session Update (Phase FIX-10 Complete — February 2026)
+## Latest Session Update (Phase FIX-11 Complete — February 2026)
+
+### PHASE FIX-11: Module Card UI Redesign — Unified Icons, Themed Animations, Color Cleanup ✅
+
+**11 files changed**, 185 insertions, 110 deletions  
+**Commit:** `ec2cb6c` — pushed to `main`  
+**TypeScript:** Zero errors
+
+---
+
+#### Problem: Module Card Visual Inconsistency
+- **5 different icon rendering patterns** across the platform: plain emoji, bg-muted container, primary gradient container, shared ModuleIcon component (never used), and Lucide icons with colored backgrounds
+- **Hardcoded colors duplicated across 8+ files**: purple/blue/green for install levels, yellow for beta badges, green for status badges, yellow-400/500 for star ratings, green-600 for "Free" text, blue-500 for verified badges
+- **MODULE_CATEGORIES with 40+ hex colors** used inconsistently — some components applied hex as full background, others as border color, others ignored entirely
+- **No hover animations** on module cards/icons — flat, lifeless interaction
+
+#### Solution Implemented
+1. **Created `ModuleIconContainer`** (`src/components/modules/shared/module-icon-container.tsx`) — Unified shared component for ALL module cards. Uses category hex color as 8% opacity background tint with subtle 1px border. Supports `sm/md/lg/xl` sizes. Falls back to `bg-muted` when no category color.
+2. **Added `iconBreathe` animation** to `tailwind.config.ts` — Gentle `scale(1) → scale(1.08) → scale(1)` keyframe, 2s ease-in-out infinite. Activates via `group-hover:animate-iconBreathe` on card hover.
+3. **Systematic color cleanup** across 10 components — Replaced ALL hardcoded status/badge/price colors with semantic tokens (`variant="outline"`, `variant="secondary"`, `variant="destructive"`, `text-muted-foreground`).
+
+#### Files Modified
+| File | Changes |
+|------|---------|
+| `tailwind.config.ts` | Added `iconBreathe` keyframe + animation |
+| `modules/shared/module-icon-container.tsx` | **NEW** — unified themed icon container |
+| `modules/marketplace/enhanced-module-card.tsx` | Full rewrite: ModuleIconContainer, semantic badges, no hardcoded colors |
+| `marketplace/ModuleCard.tsx` | Full rewrite: ModuleIconContainer, semantic badges |
+| `modules/marketplace/marketplace-grid.tsx` | Removed `getInstallLevelColor()`, ModuleIconContainer, neutral badges |
+| `modules/agency/subscription-list.tsx` | Removed install level colors + status colors + section header colors |
+| `modules/client/client-modules-list.tsx` | ModuleIconContainer, outline category badge |
+| `modules/client/available-modules-grid.tsx` | ModuleIconContainer, removed text-primary/green-600 |
+| `portal/apps/available-apps-grid.tsx` | Removed gradient icon, yellow star → amber, removed text-primary |
+| `portal/apps/app-card.tsx` | Removed gradient, added hover animation |
+| `modules/marketplace/module-detail-view.tsx` | Removed hex category badge, blue/green/yellow colors |
+
+#### Color Standardization Rules Applied
+- **Star ratings**: `fill-current text-amber-500` (was yellow-400, yellow-500 across files)
+- **"Free" text**: `text-muted-foreground` or `text-foreground` (was green-600)
+- **Verified badges**: `text-muted-foreground/70` (was blue-500)
+- **Category badges**: `variant="outline"` (was hex backgroundColor with white text)
+- **Install level badges**: `text-muted-foreground` (was purple-600/blue-600/green-600)
+- **Status active**: `variant="secondary"` (was bg-green-500)
+- **Status past due**: `variant="destructive"` (was bg-red-500)
+- **Beta badges**: `variant="outline"` (was yellow-100/800)
+- **Subscribed badges**: `variant="secondary"` (was bg-green-500)
+- **Module icon containers**: Category-tinted bg at 8% opacity (was gradient/plain/hardcoded)
+
+### Key Patterns Discovered (FIX-11)
+- **`ModuleIconContainer` is now the standard** — All module/app cards should use this component. It provides consistent sizing, category-aware tinting, and hover animation.
+- **`group` class on Card + `group-hover:` on icon** — Standard pattern for hover-driven child animations across all cards.
+- **Semantic badge variants over hardcoded colors** — `variant="outline"` for categories/labels, `variant="secondary"` for active status, `variant="destructive"` for errors. No raw color classes on badges.
+- **`text-amber-500` is the standard star color** — Not yellow-400 or yellow-500. Amber is more refined and consistent across light/dark modes.
+
+### PHASE FIX-10 Build Fix ✅
+- **Commit `782e110`**: Restored `runtime: 'nodejs'` in middleware.ts — removing it caused Vercel build failure (`ENOENT: middleware.js.nft.json`). The `runtime: 'nodejs'` is REQUIRED for Vercel's build system to generate trace files.
+
+---
+
+## Previous Session (Phase FIX-10 Complete — February 2026)
 
 ### PHASE FIX-10: Published Sites Static Asset 404s ✅
 
@@ -8,22 +67,19 @@
 **Commit:** `cc07298` — pushed to `main`  
 **TypeScript:** Zero errors
 
----
-
 #### Root Cause: Subdomain Static Asset 404s
-- **Problem:** Published sites on `*.sites.dramacagency.com` had ALL `_next/static` assets returning 404. Fonts (woff2), JS chunks, CSS — everything returned `text/html` (the 404 page). This meant the site rendered raw SSR HTML with no interactivity, no styles, and stale "Loading components..." text.
-- **Why:** When `sisto.sites.dramacagency.com` renders a page, the HTML includes relative asset URLs like `/_next/static/chunks/abc.js`. The browser then requests `https://sisto.sites.dramacagency.com/_next/static/chunks/abc.js`. Vercel's CDN cannot serve `_next/static` assets from wildcard subdomain origins — they only exist on the primary deployment domain.
-- **Contributing factor:** `runtime: 'nodejs'` in middleware config is invalid (middleware runs on Edge on Vercel). This may have caused the matcher regex to be ignored, letting `_next/static` requests through to the proxy function where they got rewritten to `/site/[subdomain]/_next/static/...` — which doesn't exist.
+- Published sites on `*.sites.dramacagency.com` had ALL `_next/static` assets returning 404
+- Vercel's CDN cannot serve `_next/static` assets from wildcard subdomain origins
+- `runtime: 'nodejs'` removal broke Vercel build (restored in FIX-11 session)
 
 #### Fixes Applied
-1. **`assetPrefix` in next.config.ts** — In production, all `_next/static` asset URLs are prefixed with `https://app.dramacagency.com`, so browsers load them from the primary Vercel domain where they exist.
-2. **Removed `runtime: 'nodejs'` from middleware config** — Middleware runs on Edge on Vercel. Invalid runtime may have caused matcher to be ignored.
-3. **Static asset guard in proxy.ts** — Safety net: if any `_next/*`, favicon, or common asset extension (`.js`, `.css`, `.woff2`, etc.) reaches the proxy function, it passes through without rewriting.
+1. **`assetPrefix` in next.config.ts** — All `_next/static` asset URLs prefixed with `https://app.dramacagency.com`
+2. **Static asset guard in proxy.ts** — Safety net for `_next/*`, favicon, asset file extensions
 
-### Key Patterns Discovered (FIX-10)
-- **Multi-tenant Vercel apps MUST use `assetPrefix`** — Wildcard subdomains cannot serve `_next/static` assets. The `assetPrefix` must point to the primary app domain.
-- **Middleware `runtime: 'nodejs'` is invalid on Vercel** — Middleware always runs on Edge. Setting `runtime: 'nodejs'` may cause undefined behavior including matcher being ignored.
-- **Defense in depth for proxy** — Even though middleware matcher should exclude static assets, having a guard inside the proxy function prevents accidental rewrites.
+### Key Patterns (FIX-10)
+- **Multi-tenant Vercel apps MUST use `assetPrefix`**
+- **`runtime: 'nodejs'` in middleware IS required** — tells Vercel build system to generate nft.json trace file
+- **Defense in depth for proxy**
 
 ---
 

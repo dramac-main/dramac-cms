@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ArrowLeft, Settings, Maximize2, ExternalLink } from "lucide-react";
+import { icons } from "lucide-react";
+import { resolveIconName } from "@/lib/utils/icon-map";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AppLauncher } from "@/components/portal/apps/app-launcher";
@@ -117,7 +119,7 @@ export default async function PortalAppPage({ params }: PageProps) {
           </Button>
           
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{moduleData.icon || "📦"}</span>
+            {(() => { const I = icons[resolveIconName(moduleData.icon) as keyof typeof icons] || icons.Package; return <I className="w-6 h-6 text-muted-foreground" strokeWidth={1.5} />; })()}
             <div>
               <h1 className="font-semibold">{moduleData.name}</h1>
               <p className="text-xs text-muted-foreground">{moduleData.category}</p>
