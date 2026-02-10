@@ -364,7 +364,7 @@ export class DomainService {
 
       const response = await fetch(`https://${domain}`, {
         headers: { 
-          'User-Agent': 'DramacBot/1.0 (+https://dramac.io/bot)',
+          'User-Agent': 'DramacBot/1.0 (+https://dramacagency.com/bot)',
           'Accept': 'text/html'
         },
         signal: controller.signal

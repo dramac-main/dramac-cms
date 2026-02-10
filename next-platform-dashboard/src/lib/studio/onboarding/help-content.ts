@@ -6,6 +6,8 @@
  * @phase STUDIO-26
  */
 
+import { PLATFORM } from '@/lib/constants/platform';
+
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -123,13 +125,13 @@ export const HELP_SECTIONS: HelpSection[] = [
         title: "Community Forum",
         description: "Get help from other DRAMAC users",
         icon: "users",
-        link: "https://community.dramac.io",
+        link: `https://community.${PLATFORM.domain}`,
       },
       {
         title: "Contact Support",
         description: "Reach out to our support team",
         icon: "mail",
-        link: "mailto:support@dramac.io",
+        link: `mailto:${PLATFORM.supportEmail}`,
       },
     ],
   },

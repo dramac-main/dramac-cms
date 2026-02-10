@@ -6,10 +6,7 @@
  */
 
 import type { PuckTemplate } from "@/types/puck-templates";
-
-function generateId(): string {
-  return `component-${Math.random().toString(36).substring(2, 11)}`;
-}
+import { generateComponentId as generateId } from "@/lib/utils/generate-id";
 
 // ============================================
 // 1. RESTAURANT / FOOD SERVICE

@@ -460,7 +460,7 @@ Private - All rights reserved.
 
 ---
 
-Generated with [Dramac Module Templates](https://dramac.io) on ${new Date().toLocaleDateString()}
+Generated with [Dramac Module Templates](https://dramacagency.com) on ${new Date().toLocaleDateString()}
 `;
 
   const filePath = path.join(outputDir, "README.md");

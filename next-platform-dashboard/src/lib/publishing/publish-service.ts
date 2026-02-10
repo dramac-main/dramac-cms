@@ -214,7 +214,16 @@ export async function publishPage(pageId: string): Promise<PublishResult> {
       return { success: false, error: "Page not found" };
     }
 
+    // Note: Individual page publishing requires a `published` column on the pages table.
+    // Currently, publishing is site-level (sites.published). Per-page publish
+    // control is planned for a future migration. For now, this marks the page
+    // as "touched" by updating its timestamp.
     const publishedAt = new Date().toISOString();
+
+    await supabase
+      .from("pages")
+      .update({ updated_at: publishedAt })
+      .eq("id", pageId);
 
     return { success: true, publishedAt };
   } catch (_error) {
@@ -236,6 +245,9 @@ export async function unpublishPage(pageId: string): Promise<PublishResult> {
       return { success: false, error: "Page not found" };
     }
 
+    // Note: Individual page unpublishing requires a `published` column on the pages table.
+    // Currently, publishing is site-level only. This is a no-op until
+    // per-page publish control is added via migration.
     return { success: true };
   } catch (_error) {
     return { success: false, error: "Unexpected error" };

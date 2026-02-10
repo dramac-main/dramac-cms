@@ -3,7 +3,7 @@
  * CDN-hosted script for embedding modules on external websites
  * 
  * Usage:
- * <script src="https://cdn.dramac.io/embed.js"></script>
+ * <script src="https://cdn.dramacagency.com/embed.js"></script>
  * <script>
  *   const widget = Dramac.embed({
  *     siteId: 'your-site-id',
@@ -66,7 +66,7 @@ interface DramacSDK {
   // Configuration
   const EMBED_API_URL = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_APP_URL 
     ? process.env.NEXT_PUBLIC_APP_URL 
-    : 'https://embed.dramac.io';
+    : 'https://embed.dramacagency.com';
   const SDK_VERSION = '1.0.0';
 
   // Styles
@@ -458,8 +458,8 @@ interface DramacSDK {
       // Verify origin - must be from Dramac
       const allowedOrigins = [
         EMBED_API_URL,
-        'https://dramac.io',
-        'https://embed.dramac.io'
+        'https://dramacagency.com',
+        'https://embed.dramacagency.com'
       ];
 
       // Also allow same origin for development

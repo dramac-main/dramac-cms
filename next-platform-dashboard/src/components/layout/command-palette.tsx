@@ -246,7 +246,7 @@ export function CommandPalette({ sites = [], clients = [], isSuperAdmin = false 
                   <Globe className="mr-2 h-4 w-4" />
                   <span>{site.name}</span>
                   <span className="ml-2 text-xs text-muted-foreground">
-                    {site.subdomain}.dramac.io
+                    {site.subdomain}.{process.env.NEXT_PUBLIC_BASE_DOMAIN || 'dramacagency.com'}
                   </span>
                 </CommandItem>
               ))}

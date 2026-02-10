@@ -15,9 +15,7 @@ import type { PuckData } from "@/types/puck";
 // HELPER: Generate Unique IDs
 // ============================================
 
-function generateId(): string {
-  return `component-${Math.random().toString(36).substring(2, 11)}`;
-}
+import { generateComponentId as generateId } from "@/lib/utils/generate-id";
 
 // ============================================
 // BLANK STARTER TEMPLATE

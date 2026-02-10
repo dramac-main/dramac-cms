@@ -16,6 +16,7 @@ import type {
   SocialLinks, 
   AnalyticsConfig,
 } from './types';
+import { PLATFORM } from '@/lib/constants/platform';
 
 // =============================================================================
 // BRAND IDENTITY
@@ -42,16 +43,16 @@ export const identity: BrandIdentity = {
     'visual editor, AI assistance, and extensible module marketplace.',
   
   /** Primary domain (without protocol) */
-  domain: 'dramac.io',
+  domain: PLATFORM.domain,
   
   /** Full site URL (with protocol) */
-  url: 'https://dramac.io',
+  url: `https://${PLATFORM.domain}`,
   
   /** Support email address */
-  supportEmail: 'support@dramac.io',
+  supportEmail: PLATFORM.supportEmail,
   
   /** Sales/inquiries email */
-  salesEmail: 'hello@dramac.io',
+  salesEmail: `hello@${PLATFORM.domain}`,
   
   /** Copyright holder name */
   copyrightName: 'DRAMAC Technologies',
@@ -116,7 +117,7 @@ export const seo: SEOConfig = {
   twitterCard: 'summary_large_image',
   
   /** Twitter handle (without @) */
-  twitterHandle: 'dramac_io',
+  twitterHandle: 'dramacagency',
   
   /** Canonical URL base */
   canonicalBase: identity.url,
@@ -135,7 +136,7 @@ export const seo: SEOConfig = {
  */
 export const social: SocialLinks = {
   /** Twitter/X profile */
-  twitter: 'https://twitter.com/dramac_io',
+  twitter: 'https://twitter.com/dramacagency',
   
   /** GitHub organization */
   github: 'https://github.com/dramac-main',

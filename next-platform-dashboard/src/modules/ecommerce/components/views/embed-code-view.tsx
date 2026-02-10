@@ -109,7 +109,7 @@ export function EmbedCodeGenerator({ siteId, agencyId: _agencyId, siteDomain }: 
   const [config, setConfig] = useState<EmbedConfig>(DEFAULT_CONFIG)
   const [_activeTab, setActiveTab] = useState<string>('product-grid')
 
-  const baseUrl = siteDomain || `${process.env.NEXT_PUBLIC_APP_URL || 'https://dramac.io'}`
+  const baseUrl = siteDomain || `${process.env.NEXT_PUBLIC_APP_URL || 'https://dramacagency.com'}`
   const embedUrl = `${baseUrl}/api/embed/${siteId}`
 
   const updateConfig = <K extends keyof EmbedConfig>(key: K, value: EmbedConfig[K]) => {

@@ -2,9 +2,7 @@ export { AdminSidebar } from "./admin-sidebar";
 export { StatCard } from "./stat-card";
 export { RecentActivity } from "./recent-activity";
 export { SystemAlerts } from "./system-alerts";
-export { UsersTable } from "./users-table";
 export { UsersFilters } from "./users-filters";
-export { AgenciesTable } from "./agencies-table";
 export { AgenciesFilters } from "./agencies-filters";
 export { ImpersonationBanner } from "./impersonation-banner";
 

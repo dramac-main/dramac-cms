@@ -599,43 +599,6 @@ Categories, tags, comments, and SEO optimization built-in.
 
   // INTEGRATIONS
   {
-    id: "mod_integration_zapier",
-    slug: "zapier",
-    name: "Zapier Integration",
-    description: "Connect to 5000+ apps with Zapier automations.",
-    longDescription: `
-Automate workflows between your site and thousands of apps.
-Trigger Zaps from form submissions, purchases, and more.
-    `,
-    version: "1.0.0",
-    icon: "🔗",
-    screenshots: [],
-    category: "integrations",
-    tags: ["zapier", "automation", "integrations", "workflows"],
-    author: {
-      name: "DRAMAC",
-      verified: true,
-    },
-    pricing: {
-      type: "monthly",
-      amount: 999, // $9.99
-      currency: DEFAULT_CURRENCY,
-    },
-    features: [
-      "Webhook triggers",
-      "5000+ app connections",
-      "Multi-step Zaps",
-      "Custom triggers",
-      "Data mapping",
-    ],
-    status: "active",
-    rating: 4.7,
-    reviewCount: 67,
-    installCount: 1890,
-    createdAt: new Date("2024-02-15"),
-    updatedAt: new Date("2024-06-01"),
-  },
-  {
     id: "mod_integration_mailchimp",
     slug: "mailchimp",
     name: "Mailchimp",

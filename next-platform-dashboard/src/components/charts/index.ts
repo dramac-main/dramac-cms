@@ -55,13 +55,7 @@ export {
   type TrendLineProps,
 } from "./sparkline";
 
-// Metric cards
-export {
-  MetricCard,
-  ComparisonCard,
-  type MetricCardProps,
-  type ComparisonCardProps,
-} from "./metric-card";
+// Metric cards (removed — metric-card.tsx was dead code)
 
 // =============================================================================
 // COMMON CHART COLORS

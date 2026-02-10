@@ -140,7 +140,7 @@ export async function sendQuote(input: SendQuoteInput): Promise<WorkflowResult> 
     })
     
     // TODO: Send actual email via email service (Resend, SendGrid, etc.)
-    const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/quote/${accessToken}`
+    const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/quote/${accessToken}`
     const totalAmount = quote.items
       ? (quote.items as Array<{ quantity: number; unit_price: number }>).reduce(
           (sum: number, item: { quantity: number; unit_price: number }) => sum + item.quantity * item.unit_price,
@@ -285,7 +285,7 @@ export async function sendQuoteReminder(
     })
     
     // Send reminder email
-    const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/quote/${quote.access_token}`
+    const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/quote/${quote.access_token}`
     const totalAmount = quote.total_amount || 0
     const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
 
@@ -455,7 +455,7 @@ export async function acceptQuote(input: AcceptQuoteInput): Promise<WorkflowResu
     // Send acceptance notification email to site owner
     const totalAmount = quote.total_amount || 0
     const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/dashboard/sites/${quote.site_id}/ecommerce`
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/sites/${quote.site_id}/ecommerce`
 
     // Look up site owner email
     const ownerSupabase = await getModuleClient()
@@ -566,7 +566,7 @@ export async function rejectQuote(input: RejectQuoteInput): Promise<WorkflowResu
     // Send rejection notification to site owner
     const totalAmount = quote.total_amount || 0
     const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
-    const dashboardUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/dashboard/sites/${quote.site_id}/ecommerce`
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/sites/${quote.site_id}/ecommerce`
 
     const ownerSupabase2 = await getModuleClient()
     const { data: siteData2 } = await ownerSupabase2

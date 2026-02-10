@@ -125,35 +125,17 @@ export {
 
 export { Alert, AlertTitle, AlertDescription, AlertWithIcon, alertVariants } from "./alert";
 
-export { RateLimitError, RateLimitErrorInline } from "./rate-limit-error";
-
 export { RadioGroup, RadioGroupItem } from "./radio-group";
 
 // Part 4 - PHASE-UI-04A: Core UI Polish Components
 export { LoadingButton } from "./loading-button";
-export { EmptyState, EmptyStatePresets } from "./empty-state";
-export { Stat, StatCard, StatGrid, Trend } from "./stat";
 export { Spinner, SpinnerOverlay, LoadingDots } from "./spinner";
-export { Divider, DividerPresets } from "./divider";
 export { Progress, StageProgress, progressVariants, indicatorVariants } from "./progress";
 
 // Part 5 - PHASE-UI-04C: Forms & Inputs Polish Components
-export { InputWithIcon } from "./input-with-icon";
 export { SearchInput } from "./search-input";
 export { TextareaWithCounter } from "./textarea-with-counter";
-export { FormSection, FormCardSection } from "./form-section";
-export { FormFieldGroup, FormFieldRow, OptionalFieldWrapper, FieldHint } from "./form-field-group";
-export { PasswordInput } from "./password-input";
-export { DateInput, DateRangeInput } from "./date-input";
 
-// Part 6 - PHASE-EH-03: Form Validation UI Components
-export { StandaloneFormField, SimpleFormField } from "./standalone-form-field";
-export { FormErrorSummary, CompactErrorSummary } from "./form-error-summary";
-export { 
-  InlineMessage, 
-  InlineError, 
-  InlineWarning, 
-  InlineSuccess, 
-  InlineInfo,
-  FieldError 
-} from "./inline-error";
+// Note: Additional UI Polish and Form components planned for future phases
+// (EmptyState, Stat, Divider, InputWithIcon, FormSection, FormFieldGroup,
+//  PasswordInput, DateInput, StandaloneFormField, FormErrorSummary, InlineError)

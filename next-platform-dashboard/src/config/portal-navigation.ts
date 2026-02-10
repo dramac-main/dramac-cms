@@ -18,6 +18,7 @@ import {
   Search,
   Server,
   Mail,
+  Bell,
   type LucideIcon,
 } from "lucide-react";
 import type { NavGroup, NavItem } from "./navigation";
@@ -67,7 +68,8 @@ export function getPortalNavigation(
     { href: "/portal/media", label: "Media", icon: Image },
     { href: "/portal/submissions", label: "Form Submissions", icon: Inbox },
     { href: "/portal/blog", label: "Blog Posts", icon: BookOpen },
-    { href: "/portal/seo", label: "SEO", icon: Search }
+    { href: "/portal/seo", label: "SEO", icon: Search },
+    { href: "/portal/notifications", label: "Notifications", icon: Bell }
   );
 
   const supportLinks: PortalNavItem[] = [

@@ -17,11 +17,23 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Client module uninstall - coming soon
-    // For now, return success as placeholder
+    // Delete the client module installation
+    const { error } = await (supabase as any)
+      .from("client_module_installations")
+      .delete()
+      .eq("client_id", clientId)
+      .eq("module_id", moduleId);
+
+    if (error) {
+      console.error("Delete module installation error:", error);
+      return NextResponse.json({ 
+        error: "Failed to uninstall module" 
+      }, { status: 500 });
+    }
+
     return NextResponse.json({ 
       success: true, 
-      message: "Client module management coming soon" 
+      message: "Module uninstalled successfully" 
     });
   } catch (error) {
     console.error("Uninstall module error:", error);
@@ -56,10 +68,19 @@ export async function GET(
       return NextResponse.json({ error: "Module not found" }, { status: 404 });
     }
 
+    // Check if module is installed for this client
+    const { data: installation } = await (supabase as any)
+      .from("client_module_installations")
+      .select("*")
+      .eq("client_id", clientId)
+      .eq("module_id", moduleId)
+      .single();
+
     return NextResponse.json({ 
       module,
       clientId,
-      installed: false, // Placeholder - client module installations coming soon
+      installed: !!installation,
+      installation: installation || null,
     });
   } catch (error) {
     console.error("Get module error:", error);

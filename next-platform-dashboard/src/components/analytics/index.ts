@@ -44,16 +44,4 @@ export {
   GeoCompactList,
 } from "./geo-analytics";
 
-// Realtime Analytics (DS-02B)
-export {
-  RealtimeWidget,
-  RealtimeCompact,
-  RealtimePulse,
-} from "./realtime-widget";
-
-// Performance Metrics (DS-02B)
-export {
-  PerformanceMetrics,
-  PerformanceCompact,
-  WebVitalsCompact,
-} from "./performance-metrics";
+// Realtime Analytics & Performance Metrics — planned (DS-02B)

@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { InstallLevelBadge } from "@/components/modules/shared/install-level-badge";
 import { formatCurrency } from "@/lib/locale-config";
+import { PLATFORM } from "@/lib/constants/platform";
 
 export const metadata: Metadata = {
   title: "Module Details | Super Admin",
@@ -407,7 +408,7 @@ export default async function ModuleDetailPage({ params }: PageProps) {
               )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Author</span>
-                <span>{module.author_name || "DRAMAC"}</span>
+                <span>{module.author_name || PLATFORM.name}</span>
               </div>
             </CardContent>
           </Card>

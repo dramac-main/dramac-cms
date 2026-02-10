@@ -182,7 +182,7 @@ export async function processQuoteReminders(siteId: string): Promise<{ sent: num
       })
       
       // Send reminder email
-      const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/quote/${quote.access_token}`
+      const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/quote/${quote.access_token}`
       const totalAmount = quote.total || 0
       const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
 

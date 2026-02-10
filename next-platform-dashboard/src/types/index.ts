@@ -3,15 +3,6 @@ export * from "./roles";
 export * from "./notifications";
 export * from "./studio-history";
 
-// UI Types
-export interface NavItem {
-  title: string;
-  href: string;
-  icon?: string;
-  disabled?: boolean;
-  badge?: string;
-}
-
 // API Response Types
 export interface ApiResponse<T> {
   data?: T;

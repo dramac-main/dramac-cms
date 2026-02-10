@@ -282,7 +282,7 @@ export function MobileCommandSheet({
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">{site.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            {site.subdomain}.dramac.io
+                            {site.subdomain}.{process.env.NEXT_PUBLIC_BASE_DOMAIN || 'dramacagency.com'}
                           </p>
                         </div>
                       </button>

@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,6 +8,10 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function ComponentsTestPage() {
+  if (process.env.NODE_ENV !== 'development') {
+    redirect('/dashboard');
+  }
+
   return (
     <div className="p-8 space-y-8 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold">UI Components Test</h1>

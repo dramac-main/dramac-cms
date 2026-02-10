@@ -404,6 +404,6 @@ export function canConvertToOrder(quote: {
  * Get quote portal URL for customer access
  */
 export function getQuotePortalUrl(accessToken: string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
   return `${baseUrl}/quote/${accessToken}`
 }

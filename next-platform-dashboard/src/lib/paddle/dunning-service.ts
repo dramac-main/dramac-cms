@@ -13,6 +13,7 @@
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { PLATFORM } from '@/lib/constants/platform';
 import { sendEmail } from '@/lib/email';
 
 // ============================================================================
@@ -305,7 +306,7 @@ export class DunningService {
         subject: subjects[severity],
         severity,
         updatePaymentUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings/billing`,
-        supportEmail: 'support@dramac.io',
+        supportEmail: PLATFORM.supportEmail,
       }
     });
   }

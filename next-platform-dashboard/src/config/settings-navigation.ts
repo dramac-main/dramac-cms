@@ -17,6 +17,7 @@ import {
   Globe2,
   Activity,
   Puzzle,
+  Receipt,
   type LucideIcon,
 } from "lucide-react";
 
@@ -56,6 +57,7 @@ export const settingsNavigation: SettingsNavSection[] = [
     title: "Billing",
     items: [
       { name: "Subscription", href: "/settings/subscription", icon: CreditCard },
+      { name: "Billing", href: "/settings/billing", icon: Receipt },
     ],
   },
 ];

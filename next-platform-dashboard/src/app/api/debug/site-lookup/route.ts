@@ -4,8 +4,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 /**
  * Debug endpoint to test site rendering pipeline
  * GET /api/debug/site-lookup?subdomain=ten-and-ten
+ * 
+ * ⚠️ Development only — blocked in production
  */
 export async function GET(request: Request) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not available in production" }, { status: 404 });
+  }
+
   const { searchParams } = new URL(request.url);
   const subdomain = searchParams.get("subdomain");
   const domain = searchParams.get("domain");

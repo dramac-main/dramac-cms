@@ -192,7 +192,7 @@ export async function POST(request: NextRequest) {
       minify: options.minify ?? true,
       optimizeAssets: options.optimizeAssets ?? true,
       inlineCriticalCSS: options.inlineCriticalCSS ?? true,
-      baseUrl: options.baseUrl || `https://${site.name}.dramac.io`,
+      baseUrl: options.baseUrl || `https://${site.name}.${process.env.NEXT_PUBLIC_BASE_DOMAIN || 'dramacagency.com'}`,
       mode: options.mode || "production",
       generateSitemap: true,
       generateRobots: true,

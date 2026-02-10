@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ContentWarning, ContentWarningBadge, SafetyStatus } from "@/components/safety";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { checkContent, type SafetyViolation } from "@/lib/safety";
 
 export default function SafetyTestPage() {
+  const router = useRouter();
+  if (process.env.NODE_ENV !== 'development') {
+    router.push('/dashboard');
+    return null;
+  }
   const [content, setContent] = useState("");
   const [violations, setViolations] = useState<SafetyViolation[]>([]);
   const [isSafe, setIsSafe] = useState(true);

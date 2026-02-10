@@ -1,18 +1,5 @@
-// Error Boundary Components
-export { 
-  ErrorBoundary, 
-  WithErrorBoundary,
-  AsyncErrorBoundary,
-  MinimalErrorBoundary,
-} from "./error-boundary";
-
-// Inline Error Components
-export {
-  InlineError,
-  FieldError,
-  ErrorList,
-  ErrorEmptyState,
-} from "./inline-error";
+// Error Handling Components
+// Note: ErrorBoundary and InlineError planned for future phase
 
 // Toast Notifications
 export {

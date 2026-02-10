@@ -177,7 +177,7 @@ export function CreateSiteDialog({
                   className="rounded-r-none"
                 />
                 <span className="px-3 py-2 bg-muted border border-l-0 rounded-r-md text-sm text-muted-foreground">
-                  .dramac.io
+                  .{process.env.NEXT_PUBLIC_BASE_DOMAIN || 'dramacagency.com'}
                 </span>
               </div>
             </div>

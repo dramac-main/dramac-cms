@@ -18,6 +18,11 @@ import {
   Package,
   PieChart,
   TrendingUp,
+  DollarSign,
+  Inbox,
+  FileSearch,
+  FlaskConical,
+  Blocks,
   type LucideIcon,
 } from "lucide-react";
 
@@ -37,6 +42,10 @@ export const adminNavigationItems: AdminNavItem[] = [
   { name: "Agencies", href: "/admin/agencies", icon: Building2, group: "Management" },
   { name: "Users", href: "/admin/users", icon: Users, group: "Management" },
   { name: "Modules", href: "/admin/modules", icon: Package, group: "Management" },
+  { name: "Module Pricing", href: "/admin/modules/pricing", icon: DollarSign, group: "Management" },
+  { name: "Module Requests", href: "/admin/modules/requests", icon: Inbox, group: "Management" },
+  { name: "Module Analytics", href: "/admin/modules/analytics", icon: BarChart3, group: "Management" },
+  { name: "Module Studio", href: "/admin/modules/studio", icon: Blocks, group: "Management" },
   
   // Revenue & Analytics
   { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard, group: "Revenue" },
@@ -46,6 +55,8 @@ export const adminNavigationItems: AdminNavItem[] = [
   
   // System
   { name: "Activity Log", href: "/admin/activity", icon: Activity, group: "System" },
+  { name: "Audit Log", href: "/admin/audit", icon: FileSearch, group: "System" },
   { name: "System Health", href: "/admin/health", icon: AlertTriangle, group: "System" },
+  { name: "Module Testing", href: "/admin/modules/testing", icon: FlaskConical, group: "System" },
   { name: "Settings", href: "/admin/settings", icon: Settings, group: "System" },
 ];
