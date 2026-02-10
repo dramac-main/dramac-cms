@@ -1,6 +1,56 @@
 # Active Context
 
-## Latest Session Update (Phase FIX-05 Complete — February 2026)
+## Latest Session Update (Phase FIX-06 Complete — February 2026)
+
+### PHASE FIX-06: Dark Mode Theme, React #310 Mitigation, Global UI Audit ✅
+
+**15 files changed**, 124 insertions, 101 deletions  
+**TypeScript:** Zero errors (verified with `tsc --noEmit --skipLibCheck`)  
+**Commit:** `130357c` — pushed to `main`
+
+---
+
+### FIX-06 Changes
+
+#### 1. Dark Mode Theme — Deep Navy (3 CSS Sources Synchronized)
+- `brand-variables.css` `.dark` block — Updated all HSL `--color-*` vars to deep navy (hue 220-222)
+- `globals.css` HSL `.dark` block — Synchronized to match: `--color-background: 222 50% 7%`, `--color-card: 220 50% 9%`, `--color-muted: 220 40% 15%`, `--color-border: 220 30% 18%`
+- `globals.css` oklch `.dark` block — Synchronized: `--background: oklch(0.12 0.02 250)`, `--card: oklch(0.15 0.02 250)`, `--sidebar: oklch(0.13 0.02 250)`
+- **CRITICAL PATTERN**: 3 competing `.dark` blocks must ALWAYS be kept in sync — HSL brand-variables.css, HSL globals.css, oklch globals.css
+
+#### 2. React Error #310 Mitigation
+- `settings-sidebar.tsx` — Added `useMemo` for nav groups and header, `key="settings"` on Sidebar
+- `admin-sidebar.tsx` — Pre-computed `adminNavGroups` as module-level constant, `key="admin"` on Sidebar
+- `dashboard-layout-client.tsx` — Added `key="main"` on main Sidebar
+- `portal-layout-client.tsx` — Added `key="portal"` on portal Sidebar
+- All 4 Sidebar instances now have unique `key` props to prevent React fiber reuse between routes
+
+#### 3. Enhanced Module Card Hover Visibility Fix
+- `enhanced-module-card.tsx` — Changed "View" button from `ghost` to `outline` variant, added explicit `text-foreground` default so text visible during hover transition
+
+#### 4. Dark Mode `bg-white` Fixes (7 instances across 6 files)
+- `QuoteListBlock.tsx` — Added `dark:bg-card` + `dark:hover:bg-muted`
+- `QuoteItemCard.tsx` — Added `dark:bg-card`
+- `QuoteDetailBlock.tsx` — Added `dark:bg-card` (print variant)
+- `quote-accept-form.tsx` — Added `dark:bg-muted` (signature canvas)
+- `branding-settings-form.tsx` — Added `dark:bg-muted` (logo preview)
+- `seo-settings-panel.tsx` — Added `dark:bg-card` on Google + Social preview containers
+
+#### 5. Broken Link Fix
+- `top-posts-widget.tsx` — Replaced `href="#"` with actual URL from `post.publishResults`; hides button if no URL available
+
+### Key Patterns Discovered (FIX-06)
+- **3 CSS dark mode sources**: `brand-variables.css`, `globals.css` HSL block (lines ~186-209), `globals.css` oklch block (lines ~211-241) — ALL MUST MATCH
+- **`@theme inline` block** (globals.css lines ~243-310) maps HSL → Tailwind + oklch → sidebar vars
+- **BrandingProvider does NOT override surface colors** — only brand colors (primary, accent, ring, secondary)
+- **ServerBrandingStyle also does NOT override surfaces** — safe to change bg/card/sidebar without breaking branding
+- **Studio block renderers** (`renders.tsx`, `premium-components.tsx`) use `bg-white` intentionally — they render inside force-light preview contexts
+- **`SocialPost.publishResults`** is `Record<string, PublishResult>` where `PublishResult.url` contains the platform post URL
+- **React #310** = "Rendered more hooks than during the previous render" — caused by React fiber reuse when navigating between layouts with different Sidebar instances
+
+---
+
+## Previous Session (Phase FIX-05 Complete — February 2026)
 
 ### PHASE FIX-05: Post-Review Bug Fixes — Branding, Navigation, Execution ✅
 
