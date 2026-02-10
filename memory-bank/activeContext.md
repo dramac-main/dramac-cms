@@ -1,6 +1,47 @@
 # Active Context
 
-## Latest Session Update (Phase FIX-07 Complete — February 2026)
+## Latest Session Update (Phase FIX-08 Complete — February 2026)
+
+### PHASE FIX-08: Portal Branding Flash Elimination + Platform-Wide Neutral Loaders ✅
+
+**24 files changed**, 43 insertions, 32 deletions  
+**Commit:** `c690514` — pushed to `main`  
+**TypeScript:** Zero errors (verified with `tsc --noEmit --skipLibCheck`)
+
+---
+
+#### 1. Portal Branding Flash Fix (ROOT CAUSE)
+- **File:** `src/app/portal/layout.tsx`
+- **Problem:** Portal layout was MISSING both `ServerBrandingStyle` SSR injection AND `initialBranding` prop for logged-in users. Colors started as default CSS vars (blue/teal primary from `brand-variables.css`) then flashed to agency branding after client-side fetch completed.
+- **Root Cause Comparison:**
+  - Dashboard: ✅ Has `ServerBrandingStyle` + `initialBranding` + server-side branding fetch
+  - Portal: ❌ Had NONE of these — `BrandingProvider` received no `initialBranding`, started with `isLoading=true`, fired client-side fetch
+- **Fix:** Added server-side branding fetch via `getAgencyBranding(agencyId)`, `<ServerBrandingStyle branding={initialBranding} />` SSR injection before `<BrandingProvider>`, and `initialBranding={initialBranding}` prop. Same pattern as dashboard layout. Branding now correct from FIRST PAINT — no flash.
+- **Login page also fixed:** Added `<ServerBrandingStyle>` to the login page branding path (previously had `initialBranding` but no SSR style injection).
+
+#### 2. Platform-Wide Loader Neutralization (24 files)
+- **Problem:** `Loader2` spinners used `text-primary` which resolves to branding color AFTER hydration but starts as default CSS var color BEFORE. Also some used hardcoded `text-blue-500/600` or `text-gray-400`.
+- **Fix:** Replaced ALL spinner colors with `text-muted-foreground` — a neutral semantic token that works consistently in both light/dark mode without any color flash:
+  - 18 × `text-primary` → `text-muted-foreground`
+  - 4 × `text-blue-500/600` → `text-muted-foreground`  
+  - 2 × `text-gray-400` → `text-muted-foreground`
+  - 1 × `bg-gray-50 dark:bg-gray-900` → `bg-background`
+- **Note:** Automation "running" status BADGES (`bg-blue-100 text-blue-800`) were left as-is — those are semantic status indicators, not loading spinners.
+
+#### 3. Portal Branding Access Audit
+- **Confirmed:** Clients CANNOT change branding in the portal. Portal settings page only contains: Profile Information, Change Password, Notification Preferences, Account Security. No branding settings route exists in `/portal/`.
+- **Branding is agency-level only** — set via dashboard at `/settings/branding`.
+
+### Key Patterns Discovered (FIX-08)
+- **Portal vs Dashboard branding gap:** The dashboard had a 3-part no-flash strategy (server fetch → SSR style injection → initialBranding prop). The portal was missing ALL three parts for logged-in users. This is now fixed — same pattern in both.
+- **`text-muted-foreground` is the correct spinner color** — it's neutral in both light (`oklch(0.556 0 0)`) and dark (`oklch(0.708 0 0)`) mode, doesn't flash with branding changes, and looks professional.
+- **`getAgencyBranding(agencyId)` exists** in `src/lib/queries/branding.ts` — uses admin client, has caching. Different from `getAgencyBrandingBySlug()` which takes a slug (used for login page).
+- **17 loading.tsx files exist** — 9 use `SkeletonComposer` (already theme-aware via `bg-muted`), 6 use custom `Skeleton` layouts, 2 use `Loader2` spinners.
+- **Central `Spinner` component exists** at `src/components/ui/spinner.tsx` with variants (default, primary, secondary, etc.) — but most code uses `Loader2` from lucide-react directly instead.
+
+---
+
+## Previous Session (Phase FIX-07 Complete — February 2026)
 
 ### PHASE FIX-07: Studio Light-Mode Isolation, AI Designer Preview Overhaul, Published Site Layout, Form Fixes ✅
 

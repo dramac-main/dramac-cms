@@ -1,7 +1,51 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅ + PHASE FIX-03 COMPLETE ✅ + PHASE FIX-04 COMPLETE ✅ + PHASE FIX-05 COMPLETE ✅ + PHASE FIX-06 COMPLETE ✅ + PHASE FIX-06b LIGHT MODE CONTRAST ✅ + PHASE FIX-07 STUDIO/PREVIEW/FORMS ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅ + PHASE FIX-03 COMPLETE ✅ + PHASE FIX-04 COMPLETE ✅ + PHASE FIX-05 COMPLETE ✅ + PHASE FIX-06 COMPLETE ✅ + PHASE FIX-06b LIGHT MODE CONTRAST ✅ + PHASE FIX-07 STUDIO/PREVIEW/FORMS ✅ + PHASE FIX-08 PORTAL BRANDING/LOADERS ✅**
+
+---
+
+## 🎨 PHASE FIX-08: Portal Branding Flash + Platform-Wide Neutral Loaders (February 2026) ✅
+
+### Commit: `c690514` — 24 files, +43/-32
+
+| # | Task | Description | Status |
+|---|------|-------------|--------|
+| 1 | Portal ServerBrandingStyle | SSR inject branding CSS vars in portal layout (was completely missing) | ✅ |
+| 2 | Portal initialBranding prop | Pass server-fetched branding to BrandingProvider (skip client fetch) | ✅ |
+| 3 | Portal server branding fetch | Added getAgencyBranding(agencyId) call in portal layout | ✅ |
+| 4 | Login page SSR style | Added ServerBrandingStyle to login branding path | ✅ |
+| 5 | Loader2 text-primary sweep | 18 instances → text-muted-foreground | ✅ |
+| 6 | Loader2 text-blue sweep | 4 instances → text-muted-foreground | ✅ |
+| 7 | Loader2 text-gray sweep | 2 instances → text-muted-foreground | ✅ |
+| 8 | Quote loading bg | bg-gray-50/bg-gray-900 → bg-background | ✅ |
+| 9 | Portal branding access audit | Confirmed: clients cannot change branding in portal | ✅ |
+
+### Files Modified (24 total)
+- `src/app/portal/layout.tsx` — ServerBrandingStyle + initialBranding + server fetch
+- `src/app/portal/login/page.tsx` — spinner color
+- `src/app/portal/verify/page.tsx` — 2 spinner colors
+- `src/app/quote/[token]/loading.tsx` — spinner color + background
+- `src/app/(auth)/onboarding/page.tsx` — spinner color
+- `src/app/(auth)/reset-password/page.tsx` — spinner color
+- `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx` — spinner color
+- `src/app/(dashboard)/dashboard/sites/[siteId]/automation/executions/[executionId]/page.tsx` — spinner color
+- `src/app/preview/[siteId]/[pageId]/page.tsx` — spinner color
+- `src/components/portal/apps/app-launcher.tsx` — spinner color
+- `src/components/studio/panels/component-library.tsx` — spinner color
+- `src/components/studio/features/export-button.tsx` — spinner color
+- `src/components/media/media-upload-zone.tsx` — spinner color
+- `src/components/domains/domain-checkout.tsx` — spinner color
+- `src/components/ai-builder/steps/step-generating.tsx` — spinner color
+- `src/components/admin/modules/test-runner.tsx` — spinner color
+- `src/modules/social-media/components/ui/composer-media-uploader.tsx` — spinner color
+- `src/modules/automation/components/WorkflowBuilderEnhanced.tsx` — spinner color
+- `src/modules/automation/components/workflow-builder/workflow-builder.tsx` — spinner color
+- `src/modules/automation/components/ui/execution-timeline.tsx` — spinner color
+- `src/modules/automation/components/ui/execution-filter-bar.tsx` — spinner color
+- `src/modules/ecommerce/components/shared/image-upload.tsx` — spinner color
+- `src/modules/ecommerce/components/onboarding/OnboardingWizard.tsx` — spinner color
+- `src/modules/ecommerce/studio/components/QuoteListBlock.tsx` — spinner color
 
 ---
 
