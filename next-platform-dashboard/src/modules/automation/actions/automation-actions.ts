@@ -992,6 +992,16 @@ export async function triggerWorkflow(
       return { success: false, error: createError.message }
     }
     
+    // Actually execute the workflow steps inline for manual/test triggers
+    try {
+      const { executeWorkflow } = await import('../services/execution-engine')
+      await executeWorkflow(execution.id)
+    } catch (execError) {
+      // Execution errors are logged in the execution record itself
+      // Don't fail the trigger — the execution row exists for inspection
+      console.error('[triggerWorkflow] Execution error:', execError)
+    }
+    
     revalidatePath('/automation')
     return { success: true, executionId: execution.id }
   } catch (error) {

@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { 
   SocialAccount, 
   SocialPost,
@@ -541,8 +542,9 @@ export function SocialDashboard({
     return (
       <SocialOnboarding 
         onConnectAccount={(platform) => {
-          // TODO: Implement OAuth connection
-          alert(`Connect ${platform} - OAuth coming soon!`)
+          toast.info(`Social media connection for ${platform} is coming soon! We're working on OAuth integration for all major platforms.`, {
+            duration: 5000,
+          })
         }} 
       />
     )

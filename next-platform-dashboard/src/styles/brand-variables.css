@@ -5,18 +5,18 @@
    ============================================================================= */
 
 :root {
-  --color-primary-50: 258 23% 97%;
-  --color-primary-100: 258 31% 94%;
-  --color-primary-200: 258 45% 86%;
-  --color-primary-300: 258 63% 77%;
-  --color-primary-400: 258 77% 66%;
-  --color-primary-500: 258 90% 55%;
-  --color-primary-600: 258 90% 47%;
-  --color-primary-700: 258 86% 39%;
-  --color-primary-800: 258 81% 32%;
-  --color-primary-900: 258 77% 24%;
-  --color-primary-950: 258 72% 14%;
-  --color-primary: 258 90% 55%;
+  --color-primary-50: 215 14% 97%;
+  --color-primary-100: 215 19% 94%;
+  --color-primary-200: 215 28% 86%;
+  --color-primary-300: 215 39% 77%;
+  --color-primary-400: 215 48% 66%;
+  --color-primary-500: 215 56% 55%;
+  --color-primary-600: 215 56% 47%;
+  --color-primary-700: 215 53% 39%;
+  --color-primary-800: 215 50% 32%;
+  --color-primary-900: 215 47% 24%;
+  --color-primary-950: 215 44% 14%;
+  --color-primary: 215 56% 55%;
   --color-secondary-50: 173 20% 97%;
   --color-secondary-100: 173 28% 94%;
   --color-secondary-200: 173 40% 86%;
@@ -106,7 +106,7 @@
   --color-muted-foreground: 215 19% 35%;
   --color-border: 214 32% 91%;
   --color-input: 214 32% 91%;
-  --color-ring: 258 90% 55%;
+  --color-ring: 215 56% 55%;
   --spacing-0: 0;
   --spacing-1: 0.25rem;
   --spacing-2: 0.5rem;
@@ -201,7 +201,7 @@
 }
 
 .dark {
-  --color-primary: 258 90% 55%;
+  --color-primary: 215 56% 55%;
   --color-primary-foreground: 0 0% 100%;
   --color-secondary: 173 80% 55%;
   --color-secondary-foreground: 0 0% 100%;
@@ -215,15 +215,15 @@
   --color-danger-foreground: 0 0% 100%;
   --color-info: 199 89% 55%;
   --color-info-foreground: 0 0% 100%;
-  --color-background: 252 33% 6%;
+  --color-background: 220 20% 6%;
   --color-foreground: 0 0% 100%;
-  --color-card: 255 27% 9%;
+  --color-card: 220 18% 9%;
   --color-card-foreground: 0 0% 100%;
-  --color-popover: 256 25% 12%;
+  --color-popover: 220 16% 12%;
   --color-popover-foreground: 0 0% 100%;
-  --color-muted: 257 23% 15%;
-  --color-muted-foreground: 240 5% 65%;
-  --color-border: 258 22% 18%;
-  --color-input: 258 22% 18%;
-  --color-ring: 258 77% 66%;
+  --color-muted: 220 14% 15%;
+  --color-muted-foreground: 220 5% 65%;
+  --color-border: 215 13% 18%;
+  --color-input: 215 13% 18%;
+  --color-ring: 215 48% 66%;
 }

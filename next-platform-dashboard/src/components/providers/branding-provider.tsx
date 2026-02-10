@@ -8,7 +8,7 @@
  */
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { AgencyBranding, DEFAULT_BRANDING } from "@/types/branding";
 
 interface BrandingContextType {
@@ -25,6 +25,8 @@ interface BrandingContextType {
   getPrimaryColor: () => string;
   /** Get accent brand color */
   getAccentColor: () => string;
+  /** Force re-fetch branding from server */
+  refetch: () => void;
 }
 
 const BrandingContext = createContext<BrandingContextType | undefined>(undefined);
@@ -45,29 +47,41 @@ export function BrandingProvider({
   const [isLoading, setIsLoading] = useState(!initialBranding);
   const [error, setError] = useState<Error | null>(null);
 
+  const fetchBranding = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/branding/${agencyId}`, {
+        cache: "no-store",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data) setBranding(data);
+      }
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [agencyId]);
+
   useEffect(() => {
     if (initialBranding) return;
-
-    let cancelled = false;
-
-    async function fetchBranding() {
-      try {
-        const response = await fetch(`/api/branding/${agencyId}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (!cancelled && data) setBranding(data);
-        }
-        // If 404, branding stays null — components will use DEFAULT_BRANDING fallbacks
-      } catch (err) {
-        if (!cancelled) setError(err as Error);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-
     fetchBranding();
-    return () => { cancelled = true; };
-  }, [agencyId, initialBranding]);
+  }, [initialBranding, fetchBranding]);
+
+  // Listen for branding-updated events (fired by branding settings form after save)
+  useEffect(() => {
+    const handleBrandingUpdated = (e: Event) => {
+      const detail = (e as CustomEvent<AgencyBranding>).detail;
+      if (detail) {
+        setBranding(detail);
+      } else {
+        fetchBranding();
+      }
+    };
+    window.addEventListener("branding-updated", handleBrandingUpdated);
+    return () => window.removeEventListener("branding-updated", handleBrandingUpdated);
+  }, [fetchBranding]);
 
   // Inject CSS custom properties for brand colors
   // Maps to --color-primary/--color-accent which Tailwind reads via generateColorScale()
@@ -218,6 +232,7 @@ export function BrandingProvider({
       branding?.primary_color ?? DEFAULT_BRANDING.primary_color,
     getAccentColor: () =>
       branding?.accent_color ?? DEFAULT_BRANDING.accent_color,
+    refetch: fetchBranding,
   };
 
   return (

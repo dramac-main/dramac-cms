@@ -11,8 +11,7 @@ export type AdminSettingsMap = Record<string, Record<string, unknown>>;
 export async function loadAdminSettings(): Promise<AdminSettingsMap> {
   try {
     const supabase = createAdminClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin_settings table not in generated types
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("admin_settings")
       .select("key, value");
 
@@ -23,7 +22,7 @@ export async function loadAdminSettings(): Promise<AdminSettingsMap> {
 
     const map: AdminSettingsMap = {};
     for (const row of data ?? []) {
-      map[row.key] = row.value;
+      map[row.key] = (row.value as Record<string, unknown>) ?? {};
     }
     return map;
   } catch (err) {
@@ -42,11 +41,10 @@ export async function saveAdminSetting(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = createAdminClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- admin_settings table not in generated types
-    const { error } = await (supabase as any)
+    const { error } = await supabase
       .from("admin_settings")
       .upsert(
-        { key, value, updated_at: new Date().toISOString() },
+        { key, value: value as unknown as import('@/types/database').Json, updated_at: new Date().toISOString() },
         { onConflict: "key" }
       );
 

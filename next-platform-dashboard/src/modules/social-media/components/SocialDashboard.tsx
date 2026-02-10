@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { 
   SocialAccount, 
   SocialPost,
@@ -215,8 +216,9 @@ export function SocialDashboard({
                   variant="outline"
                   className="h-auto flex-col py-4 hover:border-primary/50"
                   onClick={() => {
-                    // TODO: Implement OAuth connection
-                    alert(`Connect ${platform.name} - OAuth coming soon!`)
+                    toast.info(`Social media connection for ${platform.name} is coming soon! We're working on OAuth integration for all major platforms.`, {
+                      duration: 5000,
+                    })
                   }}
                 >
                   <span className="text-2xl mb-1">{platform.icon}</span>

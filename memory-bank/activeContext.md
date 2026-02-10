@@ -1,53 +1,127 @@
 # Active Context
 
-## Latest Session Update (Phase FIX-01 & FIX-02 Complete — February 2026)
+## Latest Session Update (Phase FIX-03 & FIX-04 Complete — February 2026)
 
-### PHASE FIX-01: Global Branding, Smart Currency & Complete Theming ✅
+### PHASE FIX-03: Navigation, Routing & Platform Polish ✅
+### PHASE FIX-04: Platform Integrity — Deep Cleanup & Hardening ✅
 
-**106 files changed**, 4687 insertions, 2065 deletions  
-**TypeScript:** Zero errors (verified with `tsc --noEmit`)  
-**Commit:** `8cdf815` — pushed to `main`
+**251 files changed**, 967 insertions, 35,400 deletions  
+**TypeScript:** Zero errors (verified with `tsc --noEmit --skipLibCheck`)  
+**Commit:** `fdb5b17` — pushed to `main`
 
 ---
 
-### Phase FIX-01 Changes
+### Phase FIX-03 Changes
 
-#### 1. Double Logo Fix (Task 1)
-- `sidebar-modern.tsx`: SidebarLogo uses `cn()` to conditionally apply `bg-transparent` when `logoUrl` exists, `bg-primary` only for fallback initial
+#### 1. Orphaned /sites/ Tree Removed
+- Deleted entire `src/app/(dashboard)/sites/` directory (17 files) — these were superseded by `/dashboard/sites/`
 
-#### 2. Sidebar CSS Variables Follow Branding (Task 2)
-- `globals.css`: `@theme inline` block maps sidebar-primary/foreground from `hsl(var(--color-primary))`
-- `branding-provider.tsx`: Injects sidebar vars (primary, accent, ring, border) + `--color-ring`, `--color-secondary`, `--color-secondary-foreground`
+#### 2. Branding Form Extracted
+- Created `src/components/settings/branding-settings-form.tsx` (556 lines shared component)
+- Both `/settings/branding` and `/dashboard/settings/branding` pages now use the shared form
+- `/dashboard/settings/branding/page.tsx` is now a redirect to `/settings/branding`
 
-#### 3. Hardcoded Purples Removed (Task 3)
-- `tailwind.config.ts`: All 7 hardcoded purple rgba/hex values replaced with `hsl(var(--color-primary) / ...)`
+#### 3. Settings Nav — Added Billing
+- `settings-navigation.ts`: Added `Billing` nav item with Receipt icon to `/settings/billing`
 
-#### 4. Database Migration (Task 4)
-- `migrations/20250210_agency_regional_preferences.sql`: Adds 8 columns to agencies table (default_currency, default_locale, default_timezone, date_format, tax_rate, tax_inclusive, weight_unit, dimension_unit)
+#### 4. Admin Nav — Added 6 Items
+- `admin-navigation.ts`: Added Module Pricing, Module Requests, Module Analytics, Module Studio (Management), Audit Log, Module Testing (System)
 
-#### 5. Regional Settings Page (Task 5)
-- `settings/regional/page.tsx`: Full settings page for currency, locale, timezone, date format, tax, units
+#### 5. Error Boundaries (7 + 1 not-found)
+- Created error.tsx for: dashboard, sites/[siteId], billing, settings, admin, marketplace, portal
+- Created portal/not-found.tsx
 
-#### 6. Settings Navigation Updated (Task 6)
-- `settings-navigation.ts`: Added Regional, Activity Log, Modules nav items
+#### 6. Middleware Route Exclusions
+- Portal login/verify — accessible without auth
+- `/embed/` routes — fully public
+- `/test-*` and `/debug-*` blocked in production
 
-#### 7. Currency Provider (Task 7)
-- `currency-provider.tsx`: React context providing agency currency/locale/timezone to all components
-- Mounted in `(dashboard)/layout.tsx`
+#### 7. Duplicate Zapier Module Removed
+- Removed first Zapier entry (slug: "zapier"), kept second (slug: "zapier-integration", more detailed)
 
-#### 8. Hardcoded $ Fixed (Task 8)
-- 60+ files: All hardcoded `$` currency symbols replaced with `formatCurrency()` or `DEFAULT_CURRENCY_SYMBOL`
-- AI agent USD costs intentionally kept as `$` (API billing)
+#### 8. Portal Nav — Added Notifications
+- `portal-navigation.ts`: Added Notifications item with Bell icon
 
-### Phase FIX-02 Changes
+#### 9. Test Page Guards
+- `test-components/page.tsx`: Server-side redirect in production
+- `test-safety/page.tsx`: Client-side redirect in production
 
-#### Social Analytics De-mocked (Task 1)
-- `social-analytics.ts`: 21 functions, 812→378 lines, all `seededRandom()` removed, returns zeros/empty arrays with `connected: false`
+#### 10. Analytics Empty States
+- Orphaned consumer page was deleted with /sites/ tree
 
-#### Admin Analytics De-mocked (Task 2)
-- `admin-analytics.ts`: `generateSeededRandom()` removed, real Supabase queries where feasible, zeros with `dataSource: 'placeholder'` elsewhere
+#### 11. Client Module API Wired
+- `api/clients/[clientId]/modules/[moduleId]/route.ts`: DELETE wired to `client_module_installations` table, GET checks installation status
 
-#### Admin Settings Enabled (Task 3)
+---
+
+### Phase FIX-04 Changes
+
+#### 1. database.types.ts Eliminated
+- Fixed import in `api/pages/[pageId]/content/route.ts` from `@/types/database.types` → `@/types/database`
+- Deleted `src/types/database.types.ts` (10,153 lines)
+
+#### 2. Dead Directories Deleted
+- `components/feedback/` (11 files) — 0 imports
+- `components/publishing/` (6 files) — 0 imports
+- `components/seo/` (6 files) — 0 imports
+- `components/editor/` (~65 files) — 0 imports
+- `components/renderer/` (5 files) — kept `module-injector.tsx`
+
+#### 3. Dead Component Files Deleted (50+)
+- 12 module components (module-card, module-grid, TemplateBrowser, etc.)
+- 7 billing components + barrel
+- 2 admin tables (users-table, agencies-table)
+- UI components (data-table, divider, empty-state, stat, rate-limit-error, etc.)
+- Charts (metric-card)
+- Marketplace (marketplace-client, ReviewList, ReviewForm)
+- Onboarding (product-tour)
+- Analytics (realtime-widget, performance-metrics)
+- Errors (error-boundary, inline-error)
+
+#### 4. Barrel Files Cleaned
+- `admin/index.ts`: Removed UsersTable, AgenciesTable exports
+- `charts/index.ts`: Removed MetricCard, ComparisonCard exports
+- `ui/index.ts`: Removed 15+ dead exports (EmptyState, Stat, Divider, FormSection, etc.)
+- `errors/index.ts`: Removed ErrorBoundary, InlineError exports
+- `analytics/index.ts`: Removed RealtimeWidget, PerformanceMetrics exports
+- `marketplace/index.ts`: Removed MarketplaceClient, ReviewList, ReviewForm exports
+- `onboarding/index.ts`: Removed ProductTour export
+
+#### 5. Domain Identity Fixed
+- `config/brand/identity.ts`: All `dramac.io` → PLATFORM constants (imported from `@/lib/constants/platform`)
+- 10 files updated: create-site-dialog, command-palette, mobile-command-sheet, help-content, dunning-service, embed-sdk, studio/export, domain-service, embed-code-view, template-generator
+- Social links and twitter handle updated to `dramacagency`
+
+#### 6. NEXT_PUBLIC_BASE_URL → NEXT_PUBLIC_APP_URL
+- 7 callsites fixed in ecommerce module (quote-utils, quote-automation, quote-workflow-actions)
+
+#### 7. Hardcoded "DRAMAC" → PLATFORM.name
+- `admin/modules/[moduleId]/page.tsx`: Author fallback now uses `PLATFORM.name`
+
+#### 8. Debug Endpoints Secured
+- `api/debug/proxy-check/route.ts`: Returns 404 in production
+- `api/debug/site-lookup/route.ts`: Returns 404 in production
+
+#### 9. Proxy Console.logs Wrapped
+- All 18 `console.log` statements in `proxy.ts` wrapped in `if (DEBUG)` (where `DEBUG = process.env.NODE_ENV !== 'production'`)
+- Removed redundant `config` export (already in middleware.ts)
+
+#### 10. publishPage/unpublishPage Fixed
+- `lib/publishing/publish-service.ts`: publishPage now updates `updated_at`, unpublishPage documented as no-op (pages table lacks `published` column — site-level only)
+
+#### 11. Dead NavItem Removed
+- `types/index.ts`: Removed dead `NavItem` interface (never imported)
+
+#### 12. generateId() Consolidated
+- Created `lib/utils/generate-id.ts` with shared `generateComponentId()`
+- 7 template files updated to import shared utility instead of inline function
+
+#### 13. Quick Actions Stub Created
+- `components/layout/quick-actions.tsx`: Minimal stub (returns null) for dashboard layout compatibility
+
+---
+
+## Previous Session (Phase FIX-01 & FIX-02 — Commit 8cdf815)
 - `admin/settings/page.tsx` + new `actions.ts` + `settings-client.tsx`: 4/6 sections enabled (General, Email, Notifications, Security), Database & Domains kept disabled with badges
 
 #### Automation Connections Wired to DB (Task 4)

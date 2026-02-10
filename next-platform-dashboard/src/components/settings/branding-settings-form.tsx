@@ -82,7 +82,13 @@ export default function BrandingSettingsForm() {
       });
 
       if (response.ok) {
+        const updatedBranding = await response.json();
         toast.success("Branding saved successfully");
+        
+        // Dispatch event so BrandingProvider updates immediately
+        window.dispatchEvent(
+          new CustomEvent("branding-updated", { detail: updatedBranding })
+        );
       } else {
         const err = await response.json();
         toast.error(err.error || "Failed to save branding");

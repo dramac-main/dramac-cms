@@ -390,107 +390,113 @@ export function AdminSettingsClient({
         </CardContent>
       </Card>
 
-      {/* Database & Maintenance — disabled (requires infrastructure) */}
-      <Card className="opacity-60 pointer-events-none">
+      {/* Database & Maintenance — informational (requires Supabase Dashboard) */}
+      <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <Database className="w-5 h-5" />
             <CardTitle>Database & Maintenance</CardTitle>
             <Badge variant="secondary" className="text-xs">
-              Requires infrastructure setup
+              Managed via Supabase
             </Badge>
           </div>
           <CardDescription>
-            Database management and maintenance options
+            Database management and maintenance operations
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-2 p-3 rounded-md bg-muted text-muted-foreground text-sm">
+          <div className="flex items-center gap-2 p-3 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 text-sm">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>
-              Database backup, cache clearing, and maintenance mode require
-              additional infrastructure setup and are not yet available.
+              Database backups are managed automatically by Supabase. For manual backups, cache management, or maintenance mode, use the{' '}
+              <a
+                href="https://supabase.com/dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline font-medium hover:no-underline"
+              >
+                Supabase Dashboard
+              </a>.
             </span>
           </div>
-          <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex items-center justify-between p-4 border rounded-lg opacity-60">
             <div>
               <p className="font-medium">Database Backup</p>
               <p className="text-sm text-muted-foreground">
-                Create a manual backup of the database
+                Automatic daily backups via Supabase Pro plan
               </p>
             </div>
-            <Button variant="outline" disabled>
-              Create Backup
-            </Button>
+            <Badge variant="outline">Automatic</Badge>
           </div>
-          <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex items-center justify-between p-4 border rounded-lg opacity-60">
             <div>
               <p className="font-medium">Clear Cache</p>
               <p className="text-sm text-muted-foreground">
-                Clear all cached data and regenerate
+                Application cache clears automatically on deploy
               </p>
             </div>
-            <Button variant="outline" disabled>
-              Clear Cache
-            </Button>
+            <Badge variant="outline">On Deploy</Badge>
           </div>
-          <div className="flex items-center justify-between p-4 border rounded-lg">
+          <div className="flex items-center justify-between p-4 border rounded-lg opacity-60">
             <div>
               <p className="font-medium">Maintenance Mode</p>
               <p className="text-sm text-muted-foreground">
-                Put the platform in maintenance mode
+                Configure via Vercel environment variables
               </p>
             </div>
-            <Button variant="outline" disabled>
-              Enable
-            </Button>
+            <Badge variant="outline">Via Vercel</Badge>
           </div>
         </CardContent>
       </Card>
 
-      {/* Domain Settings — disabled (requires DNS integration) */}
-      <Card className="opacity-60 pointer-events-none">
+      {/* Domain Settings — informational (managed via Vercel + Supabase) */}
+      <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <Globe className="w-5 h-5" />
             <CardTitle>Domain Settings</CardTitle>
             <Badge variant="secondary" className="text-xs">
-              Requires DNS integration
+              Managed via Vercel
             </Badge>
           </div>
           <CardDescription>
-            Configure custom domain settings for rendered sites
+            Custom domain settings for rendered sites
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-2 p-3 rounded-md bg-muted text-muted-foreground text-sm">
+          <div className="flex items-center gap-2 p-3 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300 text-sm">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             <span>
-              Custom domain management requires DNS integration and is not yet
-              available.
+              Custom domains are configured per-site in the Sites dashboard. Platform-level domain settings are managed via{' '}
+              <a
+                href="https://vercel.com/dashboard"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline font-medium hover:no-underline"
+              >
+                Vercel Dashboard
+              </a>.
             </span>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="default-domain">Default Domain</Label>
+          <div className="space-y-2 opacity-60">
+            <Label>Default Domain</Label>
             <Input
-              id="default-domain"
-              defaultValue="sites.dramac.app"
+              defaultValue={PLATFORM.domain}
               disabled
             />
             <p className="text-sm text-muted-foreground">
-              Sites will be accessible at [slug].sites.dramac.app by default
+              Sites are accessible at [slug].{PLATFORM.domain} by default
             </p>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between opacity-60">
             <div className="space-y-0.5">
               <Label>Custom Domains</Label>
               <p className="text-sm text-muted-foreground">
-                Allow agencies to use custom domains
+                Agencies can add custom domains per site
               </p>
             </div>
-            <Switch defaultChecked disabled />
+            <Badge variant="outline">Enabled</Badge>
           </div>
-          <Button disabled>Save Domain Settings</Button>
         </CardContent>
       </Card>
     </>

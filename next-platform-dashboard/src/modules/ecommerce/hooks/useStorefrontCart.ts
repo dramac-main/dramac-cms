@@ -47,19 +47,33 @@ function calculateLocalTotals(cart: Cart, taxRate: number, settings?: EcommerceS
   const tax = (taxableAmount * taxRate) / 100
 
   // Calculate shipping from settings if available
+  // Note: Shipping is only calculated when a real shipping address exists (at checkout)
+  // In the cart summary, we show $0 / "Calculated at checkout"
   let shipping = 0
-  if (settings) {
-    try {
-      const result = calculateShipping({
-        items: cart.items,
-        shippingAddress: { first_name: '', last_name: '', address_line_1: '', city: '', state: '', postal_code: '', country: '' },
-        settings,
-        subtotal: taxableAmount,
-      })
-      shipping = result.cost
-    } catch {
-      // Fallback to free shipping on error
-      shipping = 0
+  const shippingAddr = (cart as unknown as Record<string, unknown>).shipping_address as Record<string, string> | undefined
+  if (settings && shippingAddr) {
+    // Only calculate if a real country is provided (not empty placeholder)
+    if (shippingAddr.country) {
+      try {
+        const result = calculateShipping({
+          items: cart.items,
+          shippingAddress: {
+            first_name: shippingAddr.first_name || '',
+            last_name: shippingAddr.last_name || '',
+            address_line_1: shippingAddr.address_line_1 || '',
+            city: shippingAddr.city || '',
+            state: shippingAddr.state || '',
+            postal_code: shippingAddr.postal_code || '',
+            country: shippingAddr.country,
+          },
+          settings,
+          subtotal: taxableAmount,
+        })
+        shipping = result.cost
+      } catch {
+        // Fallback to free shipping on error
+        shipping = 0
+      }
     }
   }
 

@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { 
-  Plus, 
   RefreshCw, 
   Trash2, 
   AlertCircle,
@@ -111,10 +110,10 @@ async function AccountsContent({ siteId }: { siteId: string }) {
             Manage your social media accounts and connections
           </p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Connect Account
-        </Button>
+        <Badge variant="secondary" className="text-sm">
+          <Clock className="h-4 w-4 mr-1" />
+          OAuth Integration Coming Soon
+        </Badge>
       </div>
 
       {/* Connected Accounts */}
@@ -219,24 +218,22 @@ async function AccountsContent({ siteId }: { siteId: string }) {
               )
               
               return (
-                <Button
+                <div
                   key={platform.id}
-                  variant="outline"
-                  className="h-auto flex-col py-4 hover:border-primary/50 relative"
-                  onClick={() => {
-                    // TODO: Implement OAuth connection
-                    alert(`Connect ${platform.name} - OAuth coming soon!`)
-                  }}
+                  className="relative flex flex-col items-center py-4 px-3 rounded-md border border-input hover:bg-muted/50 transition-colors cursor-default"
                 >
+                  <Badge variant="secondary" className="absolute top-1.5 right-1.5 text-[10px] px-1.5 py-0">
+                    Soon
+                  </Badge>
                   {isConnected && (
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 left-2">
                       <CheckCircle className="h-4 w-4 text-green-600" />
                     </div>
                   )}
                   <span className="text-2xl mb-1">{platform.icon}</span>
-                  <span className="font-medium">{platform.name}</span>
+                  <span className="font-medium text-sm">{platform.name}</span>
                   <span className="text-xs text-muted-foreground">{platform.desc}</span>
-                </Button>
+                </div>
               )
             })}
           </div>

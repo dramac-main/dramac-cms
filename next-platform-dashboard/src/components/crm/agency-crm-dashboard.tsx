@@ -87,7 +87,7 @@ export function AgencyCRMDashboard({ agencyId, sites }: AgencyCRMDashboardProps)
       setSelectedSiteId("all");
     } else {
       // Redirect to site-specific CRM
-      router.push(`/dashboard/${value}/crm`);
+      router.push(`/dashboard/sites/${value}/crm-module`);
     }
   };
 
@@ -258,7 +258,7 @@ export function AgencyCRMDashboard({ agencyId, sites }: AgencyCRMDashboardProps)
                   {sites.slice(0, 5).map((site) => (
                     <Link
                       key={site.id}
-                      href={`/dashboard/sites/${site.id}/crm`}
+                      href={`/dashboard/sites/${site.id}/crm-module`}
                       className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
                     >
                       <div className="flex items-center gap-3">

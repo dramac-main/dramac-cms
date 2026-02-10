@@ -1,7 +1,57 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅ + PHASE FIX-03 COMPLETE ✅ + PHASE FIX-04 COMPLETE ✅**
+
+---
+
+## 🧭 PHASE FIX-03: Navigation, Routing & Platform Polish (February 2026) ✅
+
+### Commit: `fdb5b17` — 251 files, +967/-35,400
+
+| Task | Description | Status |
+|------|-------------|--------|
+| 1 | Delete orphaned /sites/ tree (17 files) | ✅ |
+| 2 | Extract shared BrandingSettingsForm component | ✅ |
+| 3 | Add Billing to settings navigation | ✅ |
+| 4 | Add 6 items to admin navigation | ✅ |
+| 5 | Create 7 error boundaries + portal not-found | ✅ |
+| 6 | Add portal/embed/test middleware exclusions | ✅ |
+| 7 | Remove duplicate Zapier from module catalog | ✅ |
+| 8 | Add Notifications to portal navigation | ✅ |
+| 9 | Add dev-only guards to test pages | ✅ |
+| 10 | Analytics empty state (orphaned page deleted) | ✅ |
+| 11 | Wire client module API DELETE/GET to DB | ✅ |
+
+---
+
+## 🔒 PHASE FIX-04: Platform Integrity — Deep Cleanup & Hardening (February 2026) ✅
+
+### Same commit: `fdb5b17`
+
+| Task | Description | Status |
+|------|-------------|--------|
+| 1 | Eliminate database.types.ts duplicate | ✅ |
+| 2 | Delete dead directories (feedback, publishing, seo, editor, renderer) | ✅ |
+| 3 | Delete 50+ dead component files | ✅ |
+| 4 | Clean all barrel files (7 barrels) | ✅ |
+| 5 | Fix domain identity (dramac.io → PLATFORM constants) | ✅ |
+| 6 | Fix NEXT_PUBLIC_BASE_URL → NEXT_PUBLIC_APP_URL (7 sites) | ✅ |
+| 7 | Replace hardcoded DRAMAC with PLATFORM.name | ✅ |
+| 8 | Secure debug API endpoints (dev-only) | ✅ |
+| 9 | Wrap proxy console.logs in DEBUG flag | ✅ |
+| 10 | Fix publishPage/unpublishPage stubs | ✅ |
+| 11 | Remove dead NavItem interface | ✅ |
+| 12 | Consolidate generateId() into shared utility | ✅ |
+| 13 | Create quick-actions.tsx stub | ✅ |
+
+### Key Findings During FIX-04
+- `brand.ts` does NOT exist at `src/lib/constants/brand.ts` — actual file is `src/config/brand/identity.ts`
+- pages table has NO `published` column — publishing is site-level only
+- 22 barrel exports referenced files that never existed (planned but unimplemented)
+- Inline Supabase clients already fixed in prior sessions (0 matches found)
+- No @react-three/@splinetool/three imports exist (already clean)
+- `useSitePages` is inlined in link-field-editor.tsx, not a standalone hook
 
 ---
 
