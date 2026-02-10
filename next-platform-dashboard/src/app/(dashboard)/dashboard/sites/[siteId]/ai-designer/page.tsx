@@ -760,7 +760,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                     
                     {/* Status Message */}
                     <div className="flex items-center justify-center gap-2 py-2">
-                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                       <span className="font-medium">{progressMessage}</span>
                     </div>
                     

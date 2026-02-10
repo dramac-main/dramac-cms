@@ -82,7 +82,7 @@ function VerifyContent() {
         <CardContent className="pt-8 pb-8">
           {status === "verifying" && (
             <>
-              <Loader2 className="h-16 w-16 mx-auto text-primary animate-spin mb-4" />
+              <Loader2 className="h-16 w-16 mx-auto text-muted-foreground animate-spin mb-4" />
               <h2 className="text-xl font-bold">Verifying...</h2>
               <p className="text-muted-foreground mt-2">
                 Please wait while we log you in
@@ -127,7 +127,7 @@ export default function VerifyPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     }>
       <VerifyContent />

@@ -13,7 +13,7 @@ export function StepGenerating({ progress, status }: StepGeneratingProps) {
         {progress >= 100 ? (
           <Sparkles className="w-10 h-10 text-primary animate-pulse" />
         ) : (
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
+          <Loader2 className="w-10 h-10 text-muted-foreground animate-spin" />
         )}
       </div>
 

@@ -340,7 +340,7 @@ export default function OnboardingPage() {
     return (
       <div className="min-h-screen bg-linear-to-br from-background to-muted/20 flex items-center justify-center p-4">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>

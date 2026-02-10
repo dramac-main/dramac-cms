@@ -48,7 +48,7 @@ export function AppLauncher({ module, installation, clientId, agencyId }: AppLau
     return (
       <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
           <p className="text-muted-foreground">Loading {module.name}...</p>
         </div>
       </div>

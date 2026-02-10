@@ -151,7 +151,7 @@ export function DomainCheckout({
         <div className="text-center py-12">
           {isSubmitting ? (
             <>
-              <Loader2 className="h-16 w-16 mx-auto animate-spin text-primary" />
+              <Loader2 className="h-16 w-16 mx-auto animate-spin text-muted-foreground" />
               <h2 className="mt-4 text-xl font-semibold">Processing your order...</h2>
               <p className="text-muted-foreground mt-2">
                 Please wait while we register your domains.

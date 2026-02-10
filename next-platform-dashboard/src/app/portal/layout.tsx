@@ -5,7 +5,8 @@ import { getTicketStats } from "@/lib/portal/support-service";
 import { PortalHeader } from "@/components/portal/portal-header";
 import { PortalLayoutClient } from "@/components/portal/portal-layout-client";
 import { BrandingProvider } from "@/components/providers/branding-provider";
-import { getAgencyBrandingBySlug } from "@/lib/queries/branding";
+import { ServerBrandingStyle } from "@/components/providers/server-branding-style";
+import { getAgencyBranding, getAgencyBrandingBySlug } from "@/lib/queries/branding";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 
@@ -28,9 +29,12 @@ export default async function PortalLayout({
       const branding = await getAgencyBrandingBySlug(agencySlug);
       if (branding) {
         return (
-          <BrandingProvider agencyId={branding.agency_id} initialBranding={branding}>
-            {children}
-          </BrandingProvider>
+          <>
+            <ServerBrandingStyle branding={branding} />
+            <BrandingProvider agencyId={branding.agency_id} initialBranding={branding}>
+              {children}
+            </BrandingProvider>
+          </>
         );
       }
     }
@@ -46,6 +50,10 @@ export default async function PortalLayout({
 
   const openTicketCount = ticketStats.open + ticketStats.inProgress;
   const agencyId = clientInfo?.agencyId;
+
+  // Server-side branding fetch — eliminates color flash on portal load
+  // Same pattern as dashboard layout: SSR inject CSS vars before hydration
+  const initialBranding = agencyId ? await getAgencyBranding(agencyId) : null;
 
   const portalContent = (
     <PortalLayoutClient
@@ -68,9 +76,12 @@ export default async function PortalLayout({
   );
 
   return agencyId ? (
-    <BrandingProvider agencyId={agencyId}>
-      {portalContent}
-    </BrandingProvider>
+    <>
+      <ServerBrandingStyle branding={initialBranding} />
+      <BrandingProvider agencyId={agencyId} initialBranding={initialBranding}>
+        {portalContent}
+      </BrandingProvider>
+    </>
   ) : (
     portalContent
   );

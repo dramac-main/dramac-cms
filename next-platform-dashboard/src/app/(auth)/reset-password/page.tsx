@@ -115,7 +115,7 @@ export default function ResetPasswordPage() {
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="pt-8 pb-6 text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-muted-foreground" />
             <p className="text-muted-foreground">Verifying reset link...</p>
           </CardContent>
         </Card>

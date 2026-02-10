@@ -298,7 +298,7 @@ export function TestRunner({
                   <TestResultsViewer testRun={testResults.get(test.type)!} />
                 ) : runningTests.has(test.type) ? (
                   <div className="text-center py-8">
-                    <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-primary" />
+                    <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-muted-foreground" />
                     <p className="text-muted-foreground">Running {test.name.toLowerCase()}...</p>
                   </div>
                 ) : (

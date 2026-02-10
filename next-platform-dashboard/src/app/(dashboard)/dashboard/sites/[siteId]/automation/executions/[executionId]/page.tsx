@@ -242,7 +242,7 @@ function StatusBadge({ status }: { status: ExecutionDetail['status'] }) {
 function StepStatusIcon({ status }: { status: StepLog['status'] }) {
   const config = {
     pending: { icon: Clock, className: 'text-yellow-500' },
-    running: { icon: Loader2, className: 'text-blue-500 animate-spin' },
+    running: { icon: Loader2, className: 'text-muted-foreground animate-spin' },
     completed: { icon: CheckCircle2, className: 'text-green-500' },
     failed: { icon: XCircle, className: 'text-red-500' },
     skipped: { icon: SkipForward, className: 'text-gray-500' },

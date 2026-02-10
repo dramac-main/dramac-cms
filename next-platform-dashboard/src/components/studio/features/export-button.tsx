@@ -371,7 +371,7 @@ export function ExportButton({
         {status.state === "exporting" && (
           <div className="py-8 space-y-4">
             <div className="flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
             <div className="text-center">
               <p className="font-medium">{status.message}</p>

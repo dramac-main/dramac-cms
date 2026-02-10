@@ -47,7 +47,7 @@ const statusConfig: Record<StepStatus, {
 }> = {
   completed: { icon: CheckCircle2, color: "text-green-600", bg: "bg-green-500" },
   failed: { icon: XCircle, color: "text-red-600", bg: "bg-red-500" },
-  running: { icon: Loader2, color: "text-blue-600", bg: "bg-blue-500", animate: true },
+  running: { icon: Loader2, color: "text-muted-foreground", bg: "bg-blue-500", animate: true },
   pending: { icon: Clock, color: "text-yellow-600", bg: "bg-yellow-500" },
   skipped: { icon: ChevronRight, color: "text-muted-foreground", bg: "bg-muted" },
   cancelled: { icon: StopCircle, color: "text-muted-foreground", bg: "bg-muted" },

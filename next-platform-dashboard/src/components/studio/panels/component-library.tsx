@@ -212,7 +212,7 @@ export function ComponentLibrary() {
                 {/* Module Loading Indicator */}
                 {isLoadingModules && (
                   <div className="flex items-center gap-2 px-3 py-2 border-b border-border bg-muted/50">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                     <span className="text-xs text-muted-foreground">Loading module components...</span>
                   </div>
                 )}

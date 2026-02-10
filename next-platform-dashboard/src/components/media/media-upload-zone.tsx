@@ -414,7 +414,7 @@ export function MediaUploadZone({
               {/* Status Icon */}
               <div className="flex-shrink-0">
                 {file.status === "uploading" ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 ) : file.status === "complete" ? (
                   <CheckCircle className="h-5 w-5 text-green-500" />
                 ) : (

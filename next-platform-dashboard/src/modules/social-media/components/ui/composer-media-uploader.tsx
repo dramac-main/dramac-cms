@@ -266,7 +266,7 @@ export function ComposerMediaUploader({
               {file.error ? (
                 <AlertCircle className="h-5 w-5 text-destructive" />
               ) : (
-                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               )}
             </div>
             <div className="flex-1 min-w-0">
