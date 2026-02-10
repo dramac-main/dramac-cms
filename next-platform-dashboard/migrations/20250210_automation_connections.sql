@@ -2,9 +2,13 @@
 -- Phase EM-57B: Automation Engine - Connection Setup
 -- Created: 2025-02-10
 
-CREATE TABLE IF NOT EXISTS automation_connections (
+-- Drop existing table if it exists (in case of partial previous migration)
+DROP TABLE IF EXISTS automation_connections CASCADE;
+
+-- Create automation_connections table
+CREATE TABLE automation_connections (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  agency_id UUID REFERENCES agencies(id) ON DELETE CASCADE,
+  agency_id UUID NOT NULL REFERENCES agencies(id) ON DELETE CASCADE,
   site_id UUID REFERENCES sites(id) ON DELETE SET NULL,
   provider TEXT NOT NULL,
   name TEXT,
@@ -15,5 +19,6 @@ CREATE TABLE IF NOT EXISTS automation_connections (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_automation_connections_agency ON automation_connections(agency_id);
-CREATE INDEX IF NOT EXISTS idx_automation_connections_site ON automation_connections(site_id);
+-- Create indexes
+CREATE INDEX idx_automation_connections_agency ON automation_connections(agency_id);
+CREATE INDEX idx_automation_connections_site ON automation_connections(site_id);
