@@ -8,6 +8,7 @@ interface Module {
   name: string;
   description?: string | null;
   icon?: string;
+  category?: string | null;
 }
 
 interface AppCardProps {
@@ -25,9 +26,9 @@ export function AppCard({ module, className, showDescription = false }: AppCardP
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center p-4 rounded-xl",
-        "bg-card border hover:border-primary/50 transition-all cursor-pointer",
-        "hover:shadow-lg hover:-translate-y-0.5",
+        "group flex flex-col items-center justify-center p-4 rounded-xl",
+        "bg-card border hover:border-primary/30 transition-all duration-300 cursor-pointer",
+        "hover:shadow-md hover:-translate-y-0.5",
         isPressed && "scale-95",
         className
       )}
@@ -38,7 +39,7 @@ export function AppCard({ module, className, showDescription = false }: AppCardP
       onTouchEnd={() => setIsPressed(false)}
     >
       {/* App Icon */}
-      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center text-4xl mb-3 shadow-sm">
+      <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center text-4xl mb-3 transition-all duration-300 group-hover:animate-iconBreathe">
         {displayIcon}
       </div>
       

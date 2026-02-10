@@ -130,12 +130,12 @@ export function ModuleDetailView({
               <p className="text-muted-foreground mt-1">
                 by {module.author_name || 'Unknown'}
                 {module.author_verified && (
-                  <span className="ml-1 text-blue-500" title="Verified Author">✓</span>
+                  <span className="ml-1 text-muted-foreground/70" title="Verified Author">✓</span>
                 )}
               </p>
               <div className="flex items-center gap-3 mt-3 flex-wrap">
                 {category && (
-                  <Badge style={{ backgroundColor: category.color, color: 'white' }}>
+                  <Badge variant="outline">
                     {category.label}
                   </Badge>
                 )}
@@ -144,7 +144,7 @@ export function ModuleDetailView({
                 )}
                 {module.rating_average !== null && module.rating_average > 0 && (
                   <div className="flex items-center gap-1 text-sm">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <Star className="h-4 w-4 fill-current text-amber-500" />
                     <span className="font-medium">{module.rating_average.toFixed(1)}</span>
                     <span className="text-muted-foreground">
                       ({module.rating_count} reviews)
@@ -225,7 +225,7 @@ export function ModuleDetailView({
                     <ul className="space-y-2">
                       {module.features.map((feature, index) => (
                         <li key={index} className="flex items-start gap-2">
-                          <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                          <Check className="h-5 w-5 text-muted-foreground shrink-0 mt-0.5" />
                           <span>{feature}</span>
                         </li>
                       ))}
@@ -281,7 +281,7 @@ export function ModuleDetailView({
               <div className="text-center">
                 <div className="text-4xl font-bold">
                   {module.pricing_type === 'free' ? (
-                    <span className="text-green-600">Free</span>
+                    <span className="text-foreground">Free</span>
                   ) : (
                     <span>{formatPrice(module.wholesale_price_monthly)}<span className="text-lg font-normal text-muted-foreground">/mo</span></span>
                   )}

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/locale-config";
+import { ModuleIconContainer } from "@/components/modules/shared/module-icon-container";
 
 interface Subscription {
   id: string;
@@ -46,14 +47,14 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
     switch (status) {
       case "active":
         return (
-          <Badge className="bg-green-500">
+          <Badge variant="secondary">
             <Check className="h-3 w-3 mr-1" />
             Active
           </Badge>
         );
       case "past_due":
         return (
-          <Badge className="bg-red-500">
+          <Badge variant="destructive">
             <AlertCircle className="h-3 w-3 mr-1" />
             Past Due
           </Badge>
@@ -70,14 +71,7 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
     }
   };
 
-  const getInstallLevelColor = (level: string) => {
-    switch (level) {
-      case "agency": return "text-purple-600 bg-purple-100 dark:bg-purple-900";
-      case "client": return "text-blue-600 bg-blue-100 dark:bg-blue-900";
-      case "site": return "text-green-600 bg-green-100 dark:bg-green-900";
-      default: return "";
-    }
-  };
+
 
   const calculateRetailPrice = (sub: Subscription): number => {
     const wholesale = (sub.module?.wholesale_price_monthly || 0) / 100;
@@ -113,18 +107,19 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
     const profit = retail - wholesale;
 
     return (
-      <Card key={sub.id} className="hover:border-primary/50 transition-colors">
+      <Card key={sub.id} className="group hover:border-primary/30 hover:shadow-md transition-all duration-300">
         <CardContent className="pt-4">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">{sub.module?.icon || "📦"}</span>
+              <ModuleIconContainer
+                icon={sub.module?.icon}
+                category={sub.module?.category}
+                size="md"
+              />
               <div>
                 <h3 className="font-medium">{sub.module?.name}</h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs ${getInstallLevelColor(sub.module?.install_level || "")}`}
-                  >
+                  <Badge variant="outline" className="text-xs text-muted-foreground">
                     {sub.module?.install_level}
                   </Badge>
                   {getStatusBadge(sub.status)}
@@ -157,7 +152,7 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
               </div>
               <div>
                 <p className="text-muted-foreground text-xs">Profit</p>
-                <p className="font-medium text-green-600">{formatCurrency(profit)}/mo</p>
+                <p className="font-medium">{formatCurrency(profit)}/mo</p>
               </div>
             </div>
           )}
@@ -180,7 +175,7 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
       {testingModules.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Badge variant="outline" className="text-yellow-600 bg-yellow-100">Beta Testing</Badge>
+            <Badge variant="outline">Beta Testing</Badge>
             Testing Modules
             <span className="text-sm font-normal text-muted-foreground ml-2">
               (configure install level in module settings)
@@ -196,7 +191,7 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
       {agencyModules.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Badge variant="outline" className="text-purple-600 bg-purple-100">Agency</Badge>
+            <Badge variant="outline">Agency</Badge>
             Agency Tools
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -209,7 +204,7 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
       {clientModules.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Badge variant="outline" className="text-blue-600 bg-blue-100">Client</Badge>
+            <Badge variant="outline">Client</Badge>
             Client Apps
             <span className="text-sm font-normal text-muted-foreground ml-2">
               (install for clients to use)
@@ -225,7 +220,7 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
       {siteModules.length > 0 && (
         <section>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Badge variant="outline" className="text-green-600 bg-green-100">Site</Badge>
+            <Badge variant="outline">Site</Badge>
             Site Modules
             <span className="text-sm font-normal text-muted-foreground ml-2">
               (install on websites)

@@ -3,6 +3,7 @@ import { Package, Users, Building2, Globe, Check, Sparkles, FlaskConical } from 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/locale-config";
+import { ModuleIconContainer } from "@/components/modules/shared/module-icon-container";
 
 interface Module {
   id: string;
@@ -52,15 +53,6 @@ export function MarketplaceGrid({ modules, subscribedModuleIds }: MarketplaceGri
     }
   };
 
-  const getInstallLevelColor = (level: string) => {
-    switch (level) {
-      case "agency": return "text-purple-600 bg-purple-100 dark:bg-purple-900";
-      case "client": return "text-blue-600 bg-blue-100 dark:bg-blue-900";
-      case "site": return "text-green-600 bg-green-100 dark:bg-green-900";
-      default: return "";
-    }
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {modules.map((module) => {
@@ -74,20 +66,24 @@ export function MarketplaceGrid({ modules, subscribedModuleIds }: MarketplaceGri
         
         return (
           <Link key={module.id} href={`/marketplace/${module.slug}`}>
-            <Card className="h-full hover:border-primary/50 transition-colors cursor-pointer">
+            <Card className="group h-full hover:shadow-md hover:border-primary/30 transition-all duration-300 cursor-pointer">
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <span className="text-3xl flex-shrink-0">{module.icon || "📦"}</span>
+                    <ModuleIconContainer
+                      icon={module.icon}
+                      category={module.category}
+                      size="lg"
+                    />
                     <div className="min-w-0">
                       <CardTitle className="text-lg line-clamp-1">{module.name}</CardTitle>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <Badge 
                           variant="outline" 
-                          className={`text-xs ${getInstallLevelColor(module.install_level)}`}
+                          className="text-xs text-muted-foreground gap-1"
                         >
                           {getInstallLevelIcon(module.install_level)}
-                          <span className="ml-1 capitalize">{module.install_level}</span>
+                          <span className="capitalize">{module.install_level}</span>
                         </Badge>
                         {isStudioModule && (
                           <Badge variant="secondary" className="text-xs">
@@ -96,8 +92,8 @@ export function MarketplaceGrid({ modules, subscribedModuleIds }: MarketplaceGri
                           </Badge>
                         )}
                         {module.status === "testing" && (
-                          <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700">
-                            <FlaskConical className="h-3 w-3 mr-1" />
+                          <Badge variant="outline" className="text-xs gap-1">
+                            <FlaskConical className="h-3 w-3" />
                             Beta
                           </Badge>
                         )}
@@ -105,8 +101,8 @@ export function MarketplaceGrid({ modules, subscribedModuleIds }: MarketplaceGri
                     </div>
                   </div>
                   {isSubscribed && (
-                    <Badge className="bg-green-500 hover:bg-green-600 flex-shrink-0">
-                      <Check className="h-3 w-3 mr-1" />
+                    <Badge variant="secondary" className="flex-shrink-0 gap-1 text-xs">
+                      <Check className="h-3 w-3" />
                       Subscribed
                     </Badge>
                   )}
@@ -119,7 +115,7 @@ export function MarketplaceGrid({ modules, subscribedModuleIds }: MarketplaceGri
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-lg font-semibold text-primary">
+                    <span className="text-lg font-semibold">
                       {formatPrice(module.wholesale_price_monthly)}
                     </span>
                     <span className="text-xs text-muted-foreground ml-1">wholesale</span>

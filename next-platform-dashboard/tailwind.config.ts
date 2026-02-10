@@ -285,6 +285,11 @@ const config: Config = {
           "0%, 100%": { boxShadow: "0 0 5px hsl(var(--color-primary) / 0.4)" },
           "50%": { boxShadow: "0 0 20px hsl(var(--color-primary) / 0.8)" },
         },
+        // Module card icon hover animation
+        iconBreathe: {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.08)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -322,6 +327,7 @@ const config: Config = {
         flip3d: "flip3d 0.6s ease-in-out",
         flipX3d: "flipX3d 0.6s ease-in-out",
         glowPulse: "glowPulse 2s ease-in-out infinite",
+        iconBreathe: "iconBreathe 2s ease-in-out infinite",
       },
     },
   },

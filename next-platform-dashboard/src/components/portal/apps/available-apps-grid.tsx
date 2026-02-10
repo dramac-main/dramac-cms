@@ -46,17 +46,17 @@ export function AvailableAppsGrid({ modules, clientId }: AvailableAppsGridProps)
           const isRequested = requestedModules.has(module.id);
           
           return (
-            <Card key={module.id} className="hover:border-primary/50 transition-colors">
+            <Card key={module.id} className="group hover:border-primary/30 hover:shadow-md transition-all duration-300">
               <CardHeader className="pb-2">
                 <div className="flex items-start gap-3">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center text-3xl flex-shrink-0">
+                  <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center text-3xl flex-shrink-0 transition-all duration-300 group-hover:animate-iconBreathe">
                     {module.icon || "📦"}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <CardTitle className="text-lg truncate">{module.name}</CardTitle>
                       {module.is_featured && (
-                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                        <Star className="h-4 w-4 fill-current text-amber-500 flex-shrink-0" />
                       )}
                     </div>
                     <Badge variant="outline" className="mt-1">{module.category}</Badge>
@@ -69,7 +69,7 @@ export function AvailableAppsGrid({ modules, clientId }: AvailableAppsGridProps)
                 </p>
                 
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-primary">
+                  <span className="font-semibold">
                     {formatPrice(module.agencyPrice)}
                   </span>
                   

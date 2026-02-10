@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/locale-config";
+import { ModuleIconContainer } from "@/components/modules/shared/module-icon-container";
 
 interface ModuleSubscription {
   id: string;
@@ -124,10 +125,14 @@ export function AvailableModulesGrid({
           const clientPrice = calculateClientPrice(sub);
           
           return (
-            <Card key={sub.id} className="hover:border-primary/50 transition-colors">
+            <Card key={sub.id} className="group hover:border-primary/30 hover:shadow-md transition-all duration-300">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">{sub.module.icon || '📦'}</span>
+                  <ModuleIconContainer
+                    icon={sub.module.icon}
+                    category={sub.module.category}
+                    size="md"
+                  />
                   <div>
                     <CardTitle className="text-lg">{sub.module.name}</CardTitle>
                     <Badge variant="secondary" className="mt-1">
@@ -143,9 +148,9 @@ export function AvailableModulesGrid({
 
                 <div className="flex items-center justify-between text-sm mb-4">
                   <span className="text-muted-foreground">Client pays:</span>
-                  <span className="font-semibold text-primary">
+                  <span className="font-semibold">
                     {clientPrice === 0 
-                      ? <span className="text-green-600">Free</span>
+                      ? <span className="text-muted-foreground">Free</span>
                       : `${formatCurrency(clientPrice / 100)}/mo`
                     }
                   </span>
@@ -177,7 +182,11 @@ export function AvailableModulesGrid({
           {installModule && (
             <div className="space-y-4">
               <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-                <span className="text-3xl">{installModule.module.icon || '📦'}</span>
+                <ModuleIconContainer
+                  icon={installModule.module.icon}
+                  category={installModule.module.category}
+                  size="md"
+                />
                 <div>
                   <p className="font-medium">{installModule.module.name}</p>
                   <p className="text-sm text-muted-foreground">
@@ -195,7 +204,7 @@ export function AvailableModulesGrid({
                 </div>
                 <div className="p-3 bg-primary/10 rounded-lg">
                   <p className="text-muted-foreground mb-1">Client pays</p>
-                  <p className="font-semibold text-primary">
+                  <p className="font-semibold">
                     {formatCurrency(calculateClientPrice(installModule) / 100)}/mo
                   </p>
                 </div>

@@ -7,6 +7,7 @@ import { Star, Download, Shield, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/locale-config";
+import { ModuleIconContainer } from "@/components/modules/shared/module-icon-container";
 
 interface ModuleCardProps {
   module: {
@@ -41,16 +42,18 @@ export function ModuleCard({ module, featured }: ModuleCardProps) {
   return (
     <Link href={`/marketplace/modules/${module.slug}`}>
       <Card
-        className={`h-full hover:shadow-lg transition-shadow cursor-pointer ${
+        className={`group h-full hover:shadow-md hover:border-primary/30 transition-all duration-300 cursor-pointer ${
           featured ? "border-2 border-primary" : ""
         }`}
       >
         <CardContent className="p-4">
           {/* Header */}
           <div className="flex items-start gap-3 mb-3">
-            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center text-2xl shrink-0">
-              {module.icon || "📦"}
-            </div>
+            <ModuleIconContainer
+              icon={module.icon}
+              category={module.category}
+              size="md"
+            />
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold truncate">{module.name}</h3>
               {module.developer && (
@@ -61,14 +64,14 @@ export function ModuleCard({ module, featured }: ModuleCardProps) {
                 >
                   {module.developer.name}
                   {module.developer.is_verified && (
-                    <Shield className="h-3 w-3 text-blue-500" />
+                    <Shield className="h-3 w-3 text-muted-foreground/70" />
                   )}
                 </Link>
               )}
             </div>
             {featured && (
-              <Badge variant="default" className="shrink-0">
-                <Sparkles className="h-3 w-3 mr-1" />
+              <Badge variant="secondary" className="shrink-0 gap-1 text-xs">
+                <Sparkles className="h-3 w-3" />
                 Featured
               </Badge>
             )}
@@ -82,12 +85,12 @@ export function ModuleCard({ module, featured }: ModuleCardProps) {
           {/* Stats */}
           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
             <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-              <span>{module.rating.toFixed(1)}</span>
+              <Star className="h-3.5 w-3.5 fill-current text-amber-500" />
+              <span className="text-foreground font-medium">{module.rating.toFixed(1)}</span>
               <span className="text-xs">({module.review_count})</span>
             </div>
             <div className="flex items-center gap-1">
-              <Download className="h-4 w-4" />
+              <Download className="h-3.5 w-3.5" />
               <span>{formatDownloads(module.install_count)}</span>
             </div>
           </div>
@@ -96,12 +99,12 @@ export function ModuleCard({ module, featured }: ModuleCardProps) {
           <div className="flex items-center justify-between">
             <div className="flex gap-1 flex-wrap">
               {module.type && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs text-muted-foreground">
                   {module.type}
                 </Badge>
               )}
               {module.category && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="outline" className="text-xs text-muted-foreground">
                   {module.category}
                 </Badge>
               )}
@@ -109,7 +112,7 @@ export function ModuleCard({ module, featured }: ModuleCardProps) {
             <div className="font-semibold text-sm">
               {module.price && module.price > 0
                 ? `${formatCurrency(module.price)}/mo`
-                : "Free"}
+                : <span className="text-muted-foreground">Free</span>}
             </div>
           </div>
         </CardContent>

@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/locale-config";
+import { ModuleIconContainer } from "@/components/modules/shared/module-icon-container";
 
 interface ClientModule {
   id: string;
@@ -106,14 +107,18 @@ export function ClientModulesList({ modules, clientId }: ClientModulesListProps)
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {modules.map((item) => (
-          <Card key={item.id} className={!item.is_enabled ? "opacity-60" : ""}>
+          <Card key={item.id} className={`group ${!item.is_enabled ? "opacity-60" : ""}`}>
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">{item.module.icon || '📦'}</span>
+                  <ModuleIconContainer
+                    icon={item.module.icon}
+                    category={item.module.category}
+                    size="md"
+                  />
                   <div>
                     <CardTitle className="text-lg">{item.module.name}</CardTitle>
-                    <Badge variant="secondary" className="mt-1">
+                    <Badge variant="outline" className="mt-1 text-muted-foreground">
                       {item.module.category}
                     </Badge>
                   </div>
@@ -132,7 +137,7 @@ export function ClientModulesList({ modules, clientId }: ClientModulesListProps)
                 <span className="text-muted-foreground">Monthly cost:</span>
                 <span className="font-medium">
                   {item.price_paid === 0 
-                    ? <span className="text-green-600">Free</span>
+                    ? <span className="text-muted-foreground">Free</span>
                     : `${formatCurrency(item.price_paid / 100)}/mo`
                   }
                 </span>
