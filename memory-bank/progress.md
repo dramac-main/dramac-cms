@@ -5,6 +5,26 @@
 
 ---
 
+## 🌐 PHASE FIX-10: Published Sites Static Asset 404s (February 2026) ✅
+
+### Commit: `cc07298` — 3 files, +22/-1
+
+| # | Task | Description | Status |
+|---|------|-------------|--------|
+| 1 | assetPrefix config | Serve _next/static from app.dramacagency.com in production | ✅ |
+| 2 | Remove nodejs runtime | Middleware runs on Edge, not Node.js — invalid runtime removed | ✅ |
+| 3 | Proxy static asset guard | Safety net: never rewrite _next/*, favicon, or asset file extensions | ✅ |
+
+### Files Modified
+- `next.config.ts` — Added `assetPrefix` for production
+- `middleware.ts` — Removed `runtime: 'nodejs'`
+- `src/proxy.ts` — Added static asset guard before subdomain routing
+
+### Root Cause Analysis
+Published sites on `*.sites.dramacagency.com` had ALL `_next/static` assets returning 404. Vercel CDN cannot serve static assets from wildcard subdomain origins. Additionally, `runtime: 'nodejs'` in middleware config is invalid on Vercel Edge and may have caused the matcher regex to be ignored, letting static asset requests reach the proxy where they got rewritten to non-existent paths.
+
+---
+
 ## 🔧 PHASE FIX-09: Site Rendering Fix + Professional Loading (February 2026) ✅
 
 ### Commit: `dcfc498` — 4 files, +49/-25

@@ -1,37 +1,33 @@
 # Active Context
 
-## Latest Session Update (Phase FIX-09 Complete — February 2026)
+## Latest Session Update (Phase FIX-10 Complete — February 2026)
 
-### PHASE FIX-09: Site Rendering Fix + Professional Loading States ✅
+### PHASE FIX-10: Published Sites Static Asset 404s ✅
 
-**4 files changed**, 49 insertions, 25 deletions  
-**Commit:** `dcfc498` — pushed to `main`  
-**TypeScript:** Zero errors (verified with `tsc --noEmit --skipLibCheck`)
-
----
-
-#### 1. ROOT CAUSE: Dark Mode Leaking Into Published Sites
-- **Problem:** FIX-07 added `<div className="light">` to the published site layout, but Tailwind config uses `darkMode: ["class", "html"]` — meaning it ONLY checks the `<html>` element for the `dark` class. A `<div className="light">` does absolutely nothing for Tailwind.
-- **The ThemeProvider** (in root `<Providers>`) applies `dark` class to `<html>` for ALL routes — including `/site/` published sites. Block renderers have ZERO `dark:` variants, so dark mode on `<html>` broke all semantic color tokens.
-- **Fix:** ThemeProvider now checks `window.location.pathname` — routes starting with `/site/`, `/preview/`, `/embed/`, `/quote/` always get `light` class on `<html>`. Dashboard routes continue using user's theme preference.
-
-#### 2. Professional Loading Experience
-- **Problem:** StudioRenderer showed "Loading components..." text while modules loaded. Every site had the same generic spinner. This is not how industry leaders do it — Wix/Squarespace/Webflow render server-side, so published sites NEVER show loading states.
-- **Fix:** Replaced "Loading components..." with an invisible white div. Added 3-second timeout to module loading to prevent infinite hang. Preview route also cleaned up — no more spinner + "Loading preview..." text.
-
-#### 3. Published Site Layout Simplified
-- Removed useless `className="light"` (Tailwind ignores it — see above)
-- Removed hardcoded `backgroundColor`/`color` (StudioRenderer handles it)
-- Kept `colorScheme: "light"` for browser-level light mode hints
-
-### Key Patterns Discovered (FIX-09)
-- **`darkMode: ["class", "html"]` in tailwind.config.ts** — Tailwind ONLY checks `<html>` for the `dark` class. Putting `className="light"` on any other element does NOTHING for Tailwind dark: variants. This is critical knowledge for all future dark mode work.
-- **ThemeProvider runs on ALL routes** — it's in root layout's `<Providers>`. Must use pathname detection for route-specific behavior since we can't easily exclude routes from the root layout.
-- **Industry standard for published sites** — no loading spinners, no loading text. Content should appear seamlessly. Server components handle data fetching, client components should have minimal/invisible loading states.
+**3 files changed**, 22 insertions, 1 deletion  
+**Commit:** `cc07298` — pushed to `main`  
+**TypeScript:** Zero errors
 
 ---
 
-## Previous Session (Phase FIX-08 Complete — February 2026)
+#### Root Cause: Subdomain Static Asset 404s
+- **Problem:** Published sites on `*.sites.dramacagency.com` had ALL `_next/static` assets returning 404. Fonts (woff2), JS chunks, CSS — everything returned `text/html` (the 404 page). This meant the site rendered raw SSR HTML with no interactivity, no styles, and stale "Loading components..." text.
+- **Why:** When `sisto.sites.dramacagency.com` renders a page, the HTML includes relative asset URLs like `/_next/static/chunks/abc.js`. The browser then requests `https://sisto.sites.dramacagency.com/_next/static/chunks/abc.js`. Vercel's CDN cannot serve `_next/static` assets from wildcard subdomain origins — they only exist on the primary deployment domain.
+- **Contributing factor:** `runtime: 'nodejs'` in middleware config is invalid (middleware runs on Edge on Vercel). This may have caused the matcher regex to be ignored, letting `_next/static` requests through to the proxy function where they got rewritten to `/site/[subdomain]/_next/static/...` — which doesn't exist.
+
+#### Fixes Applied
+1. **`assetPrefix` in next.config.ts** — In production, all `_next/static` asset URLs are prefixed with `https://app.dramacagency.com`, so browsers load them from the primary Vercel domain where they exist.
+2. **Removed `runtime: 'nodejs'` from middleware config** — Middleware runs on Edge on Vercel. Invalid runtime may have caused matcher to be ignored.
+3. **Static asset guard in proxy.ts** — Safety net: if any `_next/*`, favicon, or common asset extension (`.js`, `.css`, `.woff2`, etc.) reaches the proxy function, it passes through without rewriting.
+
+### Key Patterns Discovered (FIX-10)
+- **Multi-tenant Vercel apps MUST use `assetPrefix`** — Wildcard subdomains cannot serve `_next/static` assets. The `assetPrefix` must point to the primary app domain.
+- **Middleware `runtime: 'nodejs'` is invalid on Vercel** — Middleware always runs on Edge. Setting `runtime: 'nodejs'` may cause undefined behavior including matcher being ignored.
+- **Defense in depth for proxy** — Even though middleware matcher should exclude static assets, having a guard inside the proxy function prevents accidental rewrites.
+
+---
+
+## Previous Session (Phase FIX-09 Complete — February 2026)
 
 ### PHASE FIX-08: Portal Branding Flash Elimination + Platform-Wide Neutral Loaders ✅
 
