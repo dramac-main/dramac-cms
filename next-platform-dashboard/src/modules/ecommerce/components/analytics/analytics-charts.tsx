@@ -48,6 +48,7 @@ import {
   getChartColors,
   formatPeriodLabel
 } from '../../lib/analytics-utils'
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 
 // ============================================================================
 // CHART WRAPPER COMPONENT
@@ -145,7 +146,7 @@ export function RevenueChart({
           <YAxis 
             className="text-xs"
             tick={{ fill: 'currentColor' }}
-            tickFormatter={(value: number) => `$${formatNumber(value)}`}
+            tickFormatter={(value: number) => `${DEFAULT_CURRENCY_SYMBOL}${formatNumber(value)}`}
           />
           <Tooltip
             content={({ active, payload }) => {
@@ -364,7 +365,7 @@ export function TopProductsChart({
             type="number" 
             className="text-xs"
             tick={{ fill: 'currentColor' }}
-            tickFormatter={(value: number) => `$${formatNumber(value)}`}
+            tickFormatter={(value: number) => `${DEFAULT_CURRENCY_SYMBOL}${formatNumber(value)}`}
           />
           <YAxis 
             type="category" 
@@ -443,7 +444,7 @@ export function CategoryPerformanceChart({
           <YAxis 
             className="text-xs"
             tick={{ fill: 'currentColor' }}
-            tickFormatter={(value: number) => `$${formatNumber(value)}`}
+            tickFormatter={(value: number) => `${DEFAULT_CURRENCY_SYMBOL}${formatNumber(value)}`}
           />
           <Tooltip
             content={({ active, payload }) => {

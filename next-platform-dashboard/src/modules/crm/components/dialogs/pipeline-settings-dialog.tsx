@@ -40,10 +40,15 @@ import {
   Loader2, 
   Settings2, 
   Trash2, 
-  GripVertical,
-  AlertTriangle
+  AlertTriangle,
+  Plus,
+  ArrowUp,
+  ArrowDown,
+  Pencil,
+  Check,
+  X,
 } from 'lucide-react'
-import type { Pipeline } from '../../types/crm-types'
+import type { Pipeline, PipelineStage } from '../../types/crm-types'
 
 interface PipelineSettingsDialogProps {
   open: boolean
@@ -61,6 +66,9 @@ export function PipelineSettingsDialog({
   const { 
     editPipeline, 
     removePipeline,
+    addStage,
+    editStage,
+    removeStage,
     stages,
     deals,
     pipelines
@@ -69,6 +77,10 @@ export function PipelineSettingsDialog({
   // State
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [editingStageId, setEditingStageId] = useState<string | null>(null)
+  const [editingStageName, setEditingStageName] = useState('')
+  const [showAddStage, setShowAddStage] = useState(false)
+  const [newStage, setNewStage] = useState({ name: '', color: '#6366f1', probability: 50, stage_type: 'open' as 'open' | 'won' | 'lost' })
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -243,41 +255,252 @@ export function PipelineSettingsDialog({
 
               <Separator />
 
-              {/* Stages Overview */}
+              {/* Stages Management */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-medium">Pipeline Stages</h4>
-                  <Badge variant="secondary">{pipelineStages.length} stages</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{pipelineStages.length} stages</Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => { setShowAddStage(true); setNewStage({ name: '', color: '#6366f1', probability: 50, stage_type: 'open' }) }}
+                      disabled={isSubmitting}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add
+                    </Button>
+                  </div>
                 </div>
+
+                {/* Add Stage Form */}
+                {showAddStage && (
+                  <div className="p-3 border rounded-lg space-y-3 bg-muted/30">
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        placeholder="Stage name"
+                        value={newStage.name}
+                        onChange={(e) => setNewStage(prev => ({ ...prev, name: e.target.value }))}
+                        disabled={isSubmitting}
+                      />
+                      <Input
+                        type="color"
+                        value={newStage.color}
+                        onChange={(e) => setNewStage(prev => ({ ...prev, color: e.target.value }))}
+                        className="h-9 w-16"
+                        disabled={isSubmitting}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Probability %</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={newStage.probability}
+                          onChange={(e) => setNewStage(prev => ({ ...prev, probability: parseInt(e.target.value) || 0 }))}
+                          disabled={isSubmitting}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Type</Label>
+                        <select
+                          className="w-full h-9 rounded-md border bg-background px-3 text-sm"
+                          value={newStage.stage_type}
+                          onChange={(e) => setNewStage(prev => ({ ...prev, stage_type: e.target.value as 'open' | 'won' | 'lost' }))}
+                          disabled={isSubmitting}
+                        >
+                          <option value="open">Open</option>
+                          <option value="won">Won</option>
+                          <option value="lost">Lost</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => setShowAddStage(false)} disabled={isSubmitting}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" disabled={!newStage.name.trim() || isSubmitting} onClick={async () => {
+                        if (!pipeline) return
+                        setIsSubmitting(true)
+                        try {
+                          await addStage(pipeline.id, {
+                            name: newStage.name.trim(),
+                            color: newStage.color,
+                            probability: newStage.probability,
+                            stage_type: newStage.stage_type,
+                            position: pipelineStages.length,
+                          })
+                          setShowAddStage(false)
+                          toast.success('Stage added')
+                        } catch (error) {
+                          console.error('Error adding stage:', error)
+                          toast.error('Failed to add stage')
+                        } finally {
+                          setIsSubmitting(false)
+                        }
+                      }}>
+                        {isSubmitting ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Check className="h-3 w-3 mr-1" />}
+                        Add Stage
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="space-y-2">
-                  {pipelineStages.map((stage, _index) => (
+                  {pipelineStages.map((stage, index) => (
                     <div 
                       key={stage.id}
-                      className="flex items-center gap-3 p-2 rounded-md bg-muted/50"
+                      className="flex items-center gap-2 p-2 rounded-md bg-muted/50"
                     >
-                      <GripVertical className="h-4 w-4 text-muted-foreground" />
+                      {/* Reorder buttons */}
+                      <div className="flex flex-col">
+                        <button
+                          className="p-0.5 hover:bg-muted rounded disabled:opacity-30"
+                          disabled={index === 0 || isSubmitting}
+                          onClick={async () => {
+                            setIsSubmitting(true)
+                            try {
+                              const prev = pipelineStages[index - 1]
+                              await editStage(stage.id, { position: prev.position })
+                              await editStage(prev.id, { position: stage.position })
+                            } catch (error) {
+                              console.error('Error reordering:', error)
+                              toast.error('Failed to reorder stages')
+                            } finally {
+                              setIsSubmitting(false)
+                            }
+                          }}
+                        >
+                          <ArrowUp className="h-3 w-3" />
+                        </button>
+                        <button
+                          className="p-0.5 hover:bg-muted rounded disabled:opacity-30"
+                          disabled={index === pipelineStages.length - 1 || isSubmitting}
+                          onClick={async () => {
+                            setIsSubmitting(true)
+                            try {
+                              const next = pipelineStages[index + 1]
+                              await editStage(stage.id, { position: next.position })
+                              await editStage(next.id, { position: stage.position })
+                            } catch (error) {
+                              console.error('Error reordering:', error)
+                              toast.error('Failed to reorder stages')
+                            } finally {
+                              setIsSubmitting(false)
+                            }
+                          }}
+                        >
+                          <ArrowDown className="h-3 w-3" />
+                        </button>
+                      </div>
+
                       <div 
-                        className="w-3 h-3 rounded-full" 
+                        className="w-3 h-3 rounded-full shrink-0" 
                         style={{ backgroundColor: stage.color }}
                       />
-                      <span className="flex-1 text-sm">{stage.name}</span>
-                      <Badge variant="outline" className="text-xs">
+
+                      {/* Inline rename */}
+                      {editingStageId === stage.id ? (
+                        <Input
+                          className="h-7 text-sm flex-1"
+                          value={editingStageName}
+                          onChange={(e) => setEditingStageName(e.target.value)}
+                          onKeyDown={async (e) => {
+                            if (e.key === 'Enter' && editingStageName.trim()) {
+                              setIsSubmitting(true)
+                              try {
+                                await editStage(stage.id, { name: editingStageName.trim() })
+                                setEditingStageId(null)
+                                toast.success('Stage renamed')
+                              } catch (error) {
+                                console.error('Error renaming stage:', error)
+                                toast.error('Failed to rename stage')
+                              } finally {
+                                setIsSubmitting(false)
+                              }
+                            } else if (e.key === 'Escape') {
+                              setEditingStageId(null)
+                            }
+                          }}
+                          autoFocus
+                          disabled={isSubmitting}
+                        />
+                      ) : (
+                        <span className="flex-1 text-sm">{stage.name}</span>
+                      )}
+
+                      <Badge variant="outline" className="text-xs shrink-0">
                         {stage.probability}%
                       </Badge>
                       <Badge 
                         variant={stage.stage_type === 'won' ? 'default' : stage.stage_type === 'lost' ? 'destructive' : 'secondary'}
-                        className="text-xs"
+                        className="text-xs shrink-0"
                       >
                         {stage.stage_type}
                       </Badge>
+
+                      {/* Action buttons */}
+                      {editingStageId === stage.id ? (
+                        <div className="flex gap-1">
+                          <button
+                            className="p-1 hover:bg-muted rounded"
+                            disabled={isSubmitting}
+                            onClick={async () => {
+                              if (!editingStageName.trim()) return
+                              setIsSubmitting(true)
+                              try {
+                                await editStage(stage.id, { name: editingStageName.trim() })
+                                setEditingStageId(null)
+                                toast.success('Stage renamed')
+                              } catch (error) {
+                                console.error('Error renaming stage:', error)
+                                toast.error('Failed to rename stage')
+                              } finally {
+                                setIsSubmitting(false)
+                              }
+                            }}
+                          >
+                            <Check className="h-3 w-3 text-green-600" />
+                          </button>
+                          <button className="p-1 hover:bg-muted rounded" onClick={() => setEditingStageId(null)}>
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-1">
+                          <button
+                            className="p-1 hover:bg-muted rounded"
+                            disabled={isSubmitting}
+                            onClick={() => { setEditingStageId(stage.id); setEditingStageName(stage.name) }}
+                          >
+                            <Pencil className="h-3 w-3 text-muted-foreground" />
+                          </button>
+                          <button
+                            className="p-1 hover:bg-muted rounded disabled:opacity-30"
+                            disabled={isSubmitting || pipelineStages.length <= 1}
+                            onClick={async () => {
+                              if (!confirm(`Delete stage "${stage.name}"? Deals in this stage will need to be moved.`)) return
+                              setIsSubmitting(true)
+                              try {
+                                await removeStage(stage.id)
+                                toast.success('Stage deleted')
+                              } catch (error) {
+                                console.error('Error deleting stage:', error)
+                                toast.error('Failed to delete stage')
+                              } finally {
+                                setIsSubmitting(false)
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
-                
-                <p className="text-xs text-muted-foreground">
-                  Stage management coming soon. Currently stages are created with the pipeline.
-                </p>
               </div>
 
               <Separator />

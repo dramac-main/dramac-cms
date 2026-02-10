@@ -149,6 +149,15 @@ export function BrandingProvider({
       --color-primary-foreground: ${primaryFgHSL};
       --color-accent: ${accentHSL};
       --color-accent-foreground: ${accentFgHSL};
+      --color-ring: ${primaryHSL};
+      --color-secondary: ${accentHSL};
+      --color-secondary-foreground: ${accentFgHSL};
+      --sidebar-primary: hsl(${primaryHSL});
+      --sidebar-primary-foreground: hsl(${primaryFgHSL});
+      --sidebar-accent: hsl(${accentHSL});
+      --sidebar-accent-foreground: hsl(${accentFgHSL});
+      --sidebar-ring: hsl(${primaryHSL});
+      --sidebar-border: hsl(${primaryHSL} / 0.15);
       ${primaryScaleCSS}
       ${accentScaleCSS}
     }
@@ -157,6 +166,15 @@ export function BrandingProvider({
       --color-primary-foreground: ${primaryFgHSL};
       --color-accent: ${accentHSL};
       --color-accent-foreground: ${accentFgHSL};
+      --color-ring: ${primaryHSL};
+      --color-secondary: ${accentHSL};
+      --color-secondary-foreground: ${accentFgHSL};
+      --sidebar-primary: hsl(${primaryHSL});
+      --sidebar-primary-foreground: hsl(${primaryFgHSL});
+      --sidebar-accent: hsl(${accentHSL});
+      --sidebar-accent-foreground: hsl(${accentFgHSL});
+      --sidebar-ring: hsl(${primaryHSL});
+      --sidebar-border: hsl(${primaryHSL} / 0.15);
       ${primaryScaleCSS}
       ${accentScaleCSS}
     }`;

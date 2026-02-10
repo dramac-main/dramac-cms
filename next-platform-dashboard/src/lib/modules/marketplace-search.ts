@@ -2,6 +2,7 @@
 // Full-text search service for module marketplace
 
 import { createClient } from '@/lib/supabase/client';
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config';
 import type { ModuleCategory } from './module-categories';
 
 // ============================================================================
@@ -811,7 +812,7 @@ async function updateModuleRating(moduleId: string): Promise<void> {
  */
 export function formatModulePrice(cents: number | null): string {
   if (cents === null || cents === 0) return 'Free';
-  return `$${(cents / 100).toFixed(2)}`;
+  return `${DEFAULT_CURRENCY_SYMBOL}${(cents / 100).toFixed(2)}`;
 }
 
 /**

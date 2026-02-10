@@ -56,6 +56,7 @@ import {
   FolderOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { useSymbolStore, useFilteredSymbols } from '@/lib/studio/store/symbol-store';
 import { useEditorStore } from '@/lib/studio/store/editor-store';
 import { DEFAULT_SYMBOL_CATEGORIES, type StudioSymbol } from '@/types/studio-symbols';
@@ -229,9 +230,11 @@ export function SymbolsPanel({ className }: SymbolsPanelProps) {
 
   // Handlers
   const handleEdit = useCallback((symbolId: string) => {
-    // TODO: Open symbol editor
-    console.log('Edit symbol:', symbolId);
-  }, []);
+    toast.info('Symbol editing will be available in a future update', {
+      description: `Symbol "${symbols.find(s => s.id === symbolId)?.name || symbolId}" selected.`,
+      duration: 4000,
+    });
+  }, [symbols]);
 
   const handleDuplicate = useCallback(
     (symbolId: string) => {

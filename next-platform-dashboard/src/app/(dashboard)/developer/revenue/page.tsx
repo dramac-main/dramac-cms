@@ -51,6 +51,7 @@ import {
   useStripeConnectOnboarding,
   useExportRevenue,
 } from "@/hooks/use-revenue-data";
+import { downloadPayoutStatement } from "@/lib/payout-statement-generator";
 import { toast } from "sonner";
 
 export default function RevenueDashboardPage() {
@@ -510,13 +511,45 @@ export default function RevenueDashboardPage() {
                             : "-"}
                         </TableCell>
                         <TableCell>
-                          {payout.statement_url && (
-                            <Button variant="ghost" size="sm" asChild>
-                              <a href={payout.statement_url} download>
-                                <Download className="h-4 w-4" />
-                              </a>
-                            </Button>
-                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const success = downloadPayoutStatement({
+                              developerName: 'Developer',
+                                payoutId: payout.id,
+                                payoutAmount: payout.payout_amount,
+                                status: payout.status,
+                                periodStart: payout.period_start,
+                                periodEnd: payout.period_end,
+                              processedAt: payout.processed_at || undefined,
+                                lineItems: [
+                                  {
+                                    description: 'Gross Earnings',
+                                    grossAmount: payout.gross_earnings,
+                                    netAmount: payout.gross_earnings,
+                                  },
+                                  {
+                                    description: 'Platform Fees',
+                                    grossAmount: payout.platform_fees,
+                                    netAmount: -payout.platform_fees,
+                                  },
+                                  ...(payout.refunds > 0
+                                    ? [{
+                                        description: 'Refunds',
+                                        grossAmount: payout.refunds,
+                                        netAmount: -payout.refunds,
+                                      }]
+                                    : []),
+                                ],
+                              })
+                              if (!success) {
+                                toast.error('Could not open statement. Please allow popups.')
+                              }
+                            }}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}

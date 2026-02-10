@@ -40,6 +40,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config';
 
 // ============================================================================
 // Types
@@ -145,13 +146,13 @@ export function AdminBillingOverview() {
       <div className="grid md:grid-cols-4 gap-4">
         <MetricCard
           title="Monthly Recurring Revenue"
-          value={`$${(overview.mrr / 100).toLocaleString()}`}
+          value={`${DEFAULT_CURRENCY_SYMBOL}${(overview.mrr / 100).toLocaleString()}`}
           change={overview.mrrGrowth}
           icon={<DollarSign className="w-5 h-5" />}
         />
         <MetricCard
           title="Annual Recurring Revenue"
-          value={`$${(overview.arr / 100).toLocaleString()}`}
+          value={`${DEFAULT_CURRENCY_SYMBOL}${(overview.arr / 100).toLocaleString()}`}
           icon={<TrendingUp className="w-5 h-5" />}
         />
         <MetricCard

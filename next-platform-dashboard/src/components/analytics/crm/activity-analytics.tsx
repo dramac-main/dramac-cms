@@ -44,6 +44,7 @@ import type {
   TeamActivityMetrics,
   ActivityType,
 } from "@/types/crm-analytics";
+import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
 
 // ============================================================================
 // HELPERS
@@ -58,12 +59,12 @@ function formatNumber(value: number): string {
 
 function formatCurrency(value: number): string {
   if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(1)}M`;
+    return `${DEFAULT_CURRENCY_SYMBOL}${(value / 1000000).toFixed(1)}M`;
   }
   if (value >= 1000) {
-    return `$${(value / 1000).toFixed(0)}K`;
+    return `${DEFAULT_CURRENCY_SYMBOL}${(value / 1000).toFixed(0)}K`;
   }
-  return `$${value.toFixed(0)}`;
+  return `${DEFAULT_CURRENCY_SYMBOL}${value.toFixed(0)}`;
 }
 
 const ACTIVITY_CONFIG: Record<ActivityType, { icon: typeof Phone; color: string; bgColor: string }> = {

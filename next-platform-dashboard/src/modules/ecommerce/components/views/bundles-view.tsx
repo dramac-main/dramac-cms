@@ -49,6 +49,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/locale-config'
 
 interface BundlesViewProps {
   siteId: string
@@ -103,10 +104,6 @@ export function BundlesView({ siteId, searchQuery = '' }: BundlesViewProps) {
         toast.error('Failed to delete bundle')
       }
     }
-  }
-
-  const formatCurrency = (cents: number) => {
-    return `$${(cents / 100).toFixed(2)}`
   }
 
   const calculateSavings = (bundle: Bundle) => {
@@ -165,7 +162,7 @@ export function BundlesView({ siteId, searchQuery = '' }: BundlesViewProps) {
             <TrendingDown className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{formatCurrency(stats.totalSavings)}</div>
+            <div className="text-2xl font-bold text-blue-600">{formatCurrency(stats.totalSavings / 100)}</div>
           </CardContent>
         </Card>
       </div>
@@ -242,14 +239,14 @@ export function BundlesView({ siteId, searchQuery = '' }: BundlesViewProps) {
                     <TableCell>
                       {bundle.original_total ? (
                         <span className="text-muted-foreground line-through">
-                          {formatCurrency(bundle.original_total)}
+                          {formatCurrency(bundle.original_total / 100)}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {bundle.bundle_price ? formatCurrency(bundle.bundle_price) : '—'}
+                      {bundle.bundle_price ? formatCurrency(bundle.bundle_price / 100) : '—'}
                     </TableCell>
                     <TableCell>
                       {savings ? (

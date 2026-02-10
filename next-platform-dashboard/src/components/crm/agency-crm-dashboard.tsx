@@ -25,6 +25,8 @@ import {
   Plus
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/locale-config";
+import { getAgencyCRMStats } from "@/modules/crm/actions/agency-crm-stats";
 
 interface Site {
   id: string;
@@ -67,17 +69,11 @@ export function AgencyCRMDashboard({ agencyId, sites }: AgencyCRMDashboardProps)
   async function loadStats() {
     try {
       setLoading(true);
-      // TODO: Implement agency-level CRM stats API
-      // For now, show placeholder
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setStats({
-        totalContacts: 0,
-        totalCompanies: 0,
-        totalDeals: 0,
-        pipelineValue: 0,
-        dealsWonThisMonth: 0,
-        conversionRate: 0,
-      });
+      const siteIds = selectedSiteId === "all"
+        ? sites.map(s => s.id)
+        : [selectedSiteId];
+      const data = await getAgencyCRMStats(agencyId, siteIds);
+      setStats(data);
     } catch (error) {
       console.error("Failed to load CRM stats:", error);
       toast.error("Failed to load CRM statistics");
@@ -191,7 +187,7 @@ export function AgencyCRMDashboard({ agencyId, sites }: AgencyCRMDashboardProps)
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {loading ? "—" : `$${stats.pipelineValue.toLocaleString()}`}
+                  {loading ? "—" : formatCurrency(stats.pipelineValue)}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Total deal value

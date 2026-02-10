@@ -14,6 +14,7 @@ import { useNode } from '@craftjs/core';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config';
 import {
   Select,
   SelectContent,
@@ -73,7 +74,7 @@ const defaultProps: AddToCartButtonProps = {
 // ============================================================================
 
 function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
+  return `${DEFAULT_CURRENCY_SYMBOL}${(cents / 100).toFixed(2)}`;
 }
 
 function getButtonSizeStyles(size: string): React.CSSProperties {

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { InstallLevelBadge } from "@/components/modules/shared/install-level-badge";
+import { formatCurrency } from "@/lib/locale-config";
 
 export const metadata: Metadata = {
   title: "Module Details | Super Admin",
@@ -102,7 +103,7 @@ export default async function ModuleDetailPage({ params }: PageProps) {
 
   const formatPrice = (cents: number | null) => {
     if (!cents || cents === 0) return "Free";
-    return `$${(cents / 100).toFixed(2)}`;
+    return formatCurrency(cents / 100);
   };
 
   return (

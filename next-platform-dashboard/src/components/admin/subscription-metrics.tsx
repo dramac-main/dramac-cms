@@ -43,6 +43,7 @@ import {
 import { getSubscriptionMetrics, getPaymentMetrics, getCustomerMetrics } from "@/lib/actions/admin-analytics";
 import type { SubscriptionMetrics, PaymentMetrics, CustomerMetrics, AdminTimeRange } from "@/types/admin-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config';
 
 // ============================================================================
 // Types
@@ -70,7 +71,7 @@ const COLORS = {
 // ============================================================================
 
 function formatCurrency(cents: number): string {
-  return `$${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  return `${DEFAULT_CURRENCY_SYMBOL}${(cents / 100).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 // ============================================================================

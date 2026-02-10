@@ -43,6 +43,7 @@ import {
   isQuoteExpired,
   calculateDaysUntilExpiry
 } from '../../lib/quote-utils'
+import { downloadQuotePDF } from '../../lib/quote-pdf-generator'
 import type { QuoteDetailData } from '../../types/ecommerce-types'
 
 // ============================================================================
@@ -369,7 +370,17 @@ export function QuoteDetailDialog({
                     <Copy className="h-4 w-4 mr-1" />
                     Duplicate
                   </Button>
-                  <Button variant="outline" size="sm" disabled>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (!quote) return
+                      const success = downloadQuotePDF(quote)
+                      if (!success) {
+                        toast.error('Could not open print window. Please allow popups.')
+                      }
+                    }}
+                  >
                     <FileDown className="h-4 w-4 mr-1" />
                     Download PDF
                   </Button>

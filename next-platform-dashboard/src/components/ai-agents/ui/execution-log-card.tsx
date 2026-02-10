@@ -148,6 +148,7 @@ function formatDuration(ms?: number): string {
   return `${mins}m ${secs}s`
 }
 
+// Note: $ is intentional — AI API costs are billed in USD
 function formatCost(cost: number): string {
   if (cost < 0.01) return `$${(cost * 100).toFixed(2)}¢`
   return `$${cost.toFixed(4)}`

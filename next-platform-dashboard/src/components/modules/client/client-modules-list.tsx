@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/locale-config";
 
 interface ClientModule {
   id: string;
@@ -132,7 +133,7 @@ export function ClientModulesList({ modules, clientId }: ClientModulesListProps)
                 <span className="font-medium">
                   {item.price_paid === 0 
                     ? <span className="text-green-600">Free</span>
-                    : `$${(item.price_paid / 100).toFixed(2)}/mo`
+                    : `${formatCurrency(item.price_paid / 100)}/mo`
                   }
                 </span>
               </div>

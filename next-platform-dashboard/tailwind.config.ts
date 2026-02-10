@@ -121,15 +121,15 @@ const config: Config = {
         display: ["var(--font-display)", "var(--font-sans)"],
       },
       boxShadow: {
-        glow: "0 0 40px rgba(139, 92, 246, 0.3)",
-        "glow-light": "0 0 40px rgba(139, 92, 246, 0.15)",
+        glow: "0 0 40px hsl(var(--color-primary) / 0.3)",
+        "glow-light": "0 0 40px hsl(var(--color-primary) / 0.15)",
       },
       backgroundImage: {
-        "gradient-primary": "linear-gradient(135deg, #7c3aed 0%, #a78bfa 50%, #c4b5fd 100%)",
-        "gradient-premium": "linear-gradient(145deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%)",
-        "gradient-stat": "linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)",
-        "gradient-sidebar-active": "linear-gradient(90deg, rgba(139,92,246,0.2) 0%, transparent 100%)",
-        "gradient-chart-purple": "linear-gradient(180deg, rgba(139,92,246,0.4) 0%, rgba(139,92,246,0.05) 100%)",
+        "gradient-primary": "linear-gradient(135deg, hsl(var(--color-primary)) 0%, hsl(var(--color-primary-400)) 50%, hsl(var(--color-primary-300)) 100%)",
+        "gradient-premium": "linear-gradient(145deg, hsl(var(--color-primary-950)) 0%, hsl(var(--color-primary-900)) 50%, hsl(var(--color-primary-800)) 100%)",
+        "gradient-stat": "linear-gradient(135deg, hsl(var(--color-primary-700)) 0%, hsl(var(--color-primary)) 100%)",
+        "gradient-sidebar-active": "linear-gradient(90deg, hsl(var(--color-primary) / 0.2) 0%, transparent 100%)",
+        "gradient-chart-purple": "linear-gradient(180deg, hsl(var(--color-primary) / 0.4) 0%, hsl(var(--color-primary) / 0.05) 100%)",
         "gradient-chart-teal": "linear-gradient(180deg, rgba(20,184,166,0.3) 0%, rgba(20,184,166,0.02) 100%)",
       },
       keyframes: {
@@ -282,8 +282,8 @@ const config: Config = {
           "100%": { transform: "perspective(400px) rotateX(180deg)" },
         },
         glowPulse: {
-          "0%, 100%": { boxShadow: "0 0 5px rgba(139, 92, 246, 0.4)" },
-          "50%": { boxShadow: "0 0 20px rgba(139, 92, 246, 0.8)" },
+          "0%, 100%": { boxShadow: "0 0 5px hsl(var(--color-primary) / 0.4)" },
+          "50%": { boxShadow: "0 0 20px hsl(var(--color-primary) / 0.8)" },
         },
       },
       animation: {

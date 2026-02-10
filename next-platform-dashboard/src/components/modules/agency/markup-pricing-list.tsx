@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/locale-config";
 
 interface Subscription {
   id: string;
@@ -223,15 +224,15 @@ export function MarkupPricingList({ subscriptions }: MarkupPricingListProps) {
                     <div className="space-y-1 text-sm">
                       <div>
                         <span className="text-muted-foreground">Wholesale: </span>
-                        <span>${wholesale.toFixed(2)}/mo</span>
+                        <span>{formatCurrency(wholesale)}/mo</span>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Client pays: </span>
-                        <span className="font-medium">${retail.toFixed(2)}/mo</span>
+                        <span className="font-medium">{formatCurrency(retail)}/mo</span>
                       </div>
                       <div className="text-green-600">
                         <span>Your profit: </span>
-                        <span className="font-medium">${profit.toFixed(2)}/mo</span>
+                        <span className="font-medium">{formatCurrency(profit)}/mo</span>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -262,13 +263,13 @@ export function MarkupPricingList({ subscriptions }: MarkupPricingListProps) {
                 <div className="grid grid-cols-4 gap-4 text-center">
                   <div>
                     <p className="text-xs text-muted-foreground">Your Cost</p>
-                    <p className="font-medium">${wholesale.toFixed(2)}/mo</p>
+                    <p className="font-medium">{formatCurrency(wholesale)}/mo</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Markup</p>
                     <p className="font-medium">
                       {sub.markup_type === "percentage" && `${sub.markup_percentage || 100}%`}
-                      {sub.markup_type === "fixed" && `+$${((sub.markup_fixed_amount || 0) / 100).toFixed(2)}`}
+                      {sub.markup_type === "fixed" && `+${formatCurrency((sub.markup_fixed_amount || 0) / 100)}`}
                       {sub.markup_type === "custom" && "Custom"}
                       {sub.markup_type === "passthrough" && "None"}
                       {!sub.markup_type && "100%"}
@@ -276,11 +277,11 @@ export function MarkupPricingList({ subscriptions }: MarkupPricingListProps) {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Client Pays</p>
-                    <p className="font-medium text-primary">${retail.toFixed(2)}/mo</p>
+                    <p className="font-medium text-primary">{formatCurrency(retail)}/mo</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Your Profit</p>
-                    <p className="font-medium text-green-600">${profit.toFixed(2)}/mo</p>
+                    <p className="font-medium text-green-600">{formatCurrency(profit)}/mo</p>
                   </div>
                 </div>
               )}

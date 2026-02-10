@@ -31,6 +31,8 @@ export interface StudioPageData {
     id: string;
     componentIds: string[];
   };
+  /** All components on the page (flat list, referenced by rootZone.componentIds) */
+  components?: StudioComponent[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -379,32 +381,50 @@ export function generatePageHTML(
 ): string {
   const {
     inlineCriticalCSS = true,
-    minify = false,
+    minify: shouldMinify = false,
     headContent = "",
     bodyScripts = "",
+    useInlineStyles = true,
+    includeDataAttributes = false,
   } = options;
-  
-  // Build components map from all zones
-  const allComponents: StudioComponent[] = [];
-  
-  // Collect components from root zone
-  if (page.rootZone?.componentIds) {
-    for (const _id of page.rootZone.componentIds) {
-      // Find component - this would need page data structure enhancement
-    }
-  }
-  
-  // Build body content
+
+  // Build body content from component tree
   let bodyContent = "";
-  
-  // For now, render a placeholder structure
-  // In production, this would traverse the page's component tree
-  bodyContent = `
-    <div id="page-root" data-page-id="${page.id}">
-      <!-- Page content rendered here -->
-    </div>
+
+  try {
+    const components = page.components || [];
+    const rootIds = page.rootZone?.componentIds || [];
+
+    if (components.length > 0 && rootIds.length > 0) {
+      // Use the existing renderToStaticHTML engine for real serialization
+      bodyContent = renderToStaticHTML(components, rootIds, {
+        ...options,
+        useInlineStyles,
+        includeDataAttributes,
+        minify: false, // We minify the whole doc at the end
+      });
+    } else if (rootIds.length > 0 && components.length === 0) {
+      // Component IDs referenced but no component data provided
+      bodyContent = `<!-- ${rootIds.length} component(s) referenced but component data not provided -->`;
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    bodyContent = `<!-- Error rendering page components: ${escapeHTML(message)} -->`;
+  }
+
+  // Basic layout CSS for a self-contained document
+  const layoutCSS = `
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #1a1a1a; background: #fff; }
+    img { max-width: 100%; height: auto; display: block; }
+    section { padding: 2rem 1rem; }
+    h1, h2, h3, h4, h5, h6 { line-height: 1.25; margin-bottom: 0.5em; }
+    p { margin-bottom: 1em; }
+    a { color: inherit; }
+    button { font: inherit; cursor: pointer; }
+    #page-root { max-width: 1200px; margin: 0 auto; }
   `;
-  
+
   // Build full HTML document
   let html = `<!DOCTYPE html>
 <html lang="en">
@@ -413,19 +433,21 @@ export function generatePageHTML(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHTML(page.title || "Untitled Page")}</title>
   ${page.description ? `<meta name="description" content="${escapeHTML(page.description)}">` : ""}
-  ${inlineCriticalCSS ? `<style>/* Critical CSS */</style>` : ""}
+  ${inlineCriticalCSS ? `<style>${layoutCSS}</style>` : ""}
   ${headContent}
 </head>
 <body>
-  ${bodyContent}
+  <div id="page-root" data-page-id="${page.id}">
+    ${bodyContent}
+  </div>
   ${bodyScripts}
 </body>
 </html>`;
-  
-  if (minify) {
+
+  if (shouldMinify) {
     html = minifyHTML(html);
   }
-  
+
   return html;
 }
 

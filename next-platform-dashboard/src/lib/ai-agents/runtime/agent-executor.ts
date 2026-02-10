@@ -253,8 +253,21 @@ async function runReActLoop(
       // Check if action needs approval
       const tool = availableTools.find(t => t.name === thought.result.tool)
       if (tool?.isDangerous && !skipApproval) {
-        // TODO: Implement approval flow
-        console.log('[Agent] Dangerous action skipped (no approval flow yet)')
+        console.warn(`[Agent] Dangerous tool "${thought.result.tool}" requires approval — skipping. Configure skipApproval=true or implement approval flow.`)
+        steps.push({
+          id: crypto.randomUUID(),
+          executionId: context.executionId,
+          stepNumber: stepNum,
+          stepType: 'act',
+          toolName: thought.result.tool,
+          toolInput: thought.result.input,
+          toolOutput: { error: 'Action requires approval and was skipped.' },
+          startedAt: new Date(actStart).toISOString(),
+          completedAt: new Date().toISOString(),
+          durationMs: Date.now() - actStart,
+          tokensUsed: 0
+        })
+        continue
       }
       
       // Execute tool

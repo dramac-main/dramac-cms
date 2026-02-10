@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
+import { createClient } from "@/lib/supabase/client"
 import { 
   Settings, 
   Trash2, 
@@ -704,10 +705,27 @@ export function ConnectionSetup({ siteId, onConnectionChange }: ConnectionSetupP
     const fetchConnections = async () => {
       setLoading(true)
       try {
-        // TODO: Replace with actual API call
-        // const result = await getServiceConnections(siteId)
-        // setConnections(result.data || [])
-        setConnections([])
+        const supabase = createClient()
+        const { data, error } = await (supabase as any)
+          .from('automation_connections')
+          .select('*')
+          .eq('site_id', siteId)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        const mapped: ServiceConnection[] = (data || []).map((row: any) => ({
+          id: row.id,
+          service: row.provider,
+          name: row.name || row.provider,
+          status: (row.status === 'active' ? 'connected' : row.status === 'error' ? 'error' : 'disconnected') as ServiceConnection['status'],
+          credentials: row.config || {},
+          metadata: {},
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+          lastUsed: row.last_tested_at || undefined,
+        }))
+        setConnections(mapped)
       } catch (error) {
         console.error("Failed to fetch connections:", error)
       } finally {
@@ -735,12 +753,19 @@ export function ConnectionSetup({ siteId, onConnectionChange }: ConnectionSetupP
     if (!disconnectTarget) return
 
     try {
-      // TODO: Replace with actual API call
-      // await deleteServiceConnection(disconnectTarget.id)
+      const supabase = createClient()
+      const { error } = await (supabase as any)
+        .from('automation_connections')
+        .delete()
+        .eq('id', disconnectTarget.id)
+
+      if (error) throw error
+
       setConnections(prev => prev.filter(c => c.id !== disconnectTarget.id))
       toast.success("Connection removed")
       onConnectionChange?.()
     } catch (_error) {
+      console.error("Failed to remove connection:", _error)
       toast.error("Failed to remove connection")
     } finally {
       setDisconnectTarget(null)
@@ -754,29 +779,60 @@ export function ConnectionSetup({ siteId, onConnectionChange }: ConnectionSetupP
     delete credentials._name
 
     try {
-      // TODO: Replace with actual API call
-      // const result = await saveServiceConnection(siteId, {
-      //   service: selectedService.id,
-      //   name: connectionName,
-      //   credentials
-      // })
-
-      // Mock: Add to local state
-      const newConnection: ServiceConnection = {
-        id: `conn-${Date.now()}`,
-        service: selectedService.id,
-        name: connectionName,
-        status: "connected",
-        credentials,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
+      const supabase = createClient()
+      const now = new Date().toISOString()
 
       if (editingConnection) {
-        setConnections(prev => 
-          prev.map(c => c.id === editingConnection.id ? newConnection : c)
+        // Update existing connection
+        const { error } = await (supabase as any)
+          .from('automation_connections')
+          .update({
+            name: connectionName,
+            config: credentials,
+            status: 'active',
+            updated_at: now,
+          })
+          .eq('id', editingConnection.id)
+
+        if (error) throw error
+
+        const updated: ServiceConnection = {
+          ...editingConnection,
+          name: connectionName,
+          status: 'connected',
+          credentials,
+          updatedAt: now,
+        }
+        setConnections(prev =>
+          prev.map(c => c.id === editingConnection.id ? updated : c)
         )
       } else {
+        // Insert new connection
+        const { data, error } = await (supabase as any)
+          .from('automation_connections')
+          .insert({
+            site_id: siteId,
+            provider: selectedService.id,
+            name: connectionName,
+            config: credentials,
+            status: 'active',
+            created_at: now,
+            updated_at: now,
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+
+        const newConnection: ServiceConnection = {
+          id: data.id,
+          service: selectedService.id,
+          name: connectionName,
+          status: 'connected',
+          credentials,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+        }
         setConnections(prev => [...prev, newConnection])
       }
 
@@ -788,13 +844,57 @@ export function ConnectionSetup({ siteId, onConnectionChange }: ConnectionSetupP
   }
 
   const handleTest = async (_credentials: Record<string, string>): Promise<boolean> => {
-    // TODO: Replace with actual API call
-    // const result = await testServiceConnection(selectedService.id, _credentials)
-    // return result.success
+    if (!selectedService) return false
 
-    // Mock: Simulate success after delay
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    return true
+    try {
+      // For webhook-based services, try to reach the URL
+      const webhookField = selectedService.requiredFields.find(
+        f => f.type === 'url' || f.key.includes('webhook') || f.key.includes('url')
+      )
+      if (webhookField && _credentials[webhookField.key]) {
+        const url = _credentials[webhookField.key]
+        try {
+          const response = await fetch(url, {
+            method: 'HEAD',
+            mode: 'no-cors',
+          })
+          // no-cors returns opaque response (type 'opaque', status 0) which is OK
+          // A network error would throw
+          void response
+        } catch {
+          return false
+        }
+        // Record last tested time
+        if (editingConnection) {
+          const supabase = createClient()
+          await (supabase as any)
+            .from('automation_connections')
+            .update({ last_tested_at: new Date().toISOString() })
+            .eq('id', editingConnection.id)
+        }
+        return true
+      }
+
+      // For API key / basic auth services, validate all required fields are filled
+      const missingRequired = selectedService.requiredFields
+        .filter(f => f.required)
+        .some(f => !_credentials[f.key] || _credentials[f.key] === '••••••••')
+
+      if (missingRequired) return false
+
+      // Record last tested time if editing
+      if (editingConnection) {
+        const supabase = createClient()
+        await (supabase as any)
+          .from('automation_connections')
+          .update({ last_tested_at: new Date().toISOString() })
+          .eq('id', editingConnection.id)
+      }
+
+      return true
+    } catch {
+      return false
+    }
   }
 
   const filteredServices = activeCategory === 'all'

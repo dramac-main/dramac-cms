@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ShoppingCart, ShoppingBag, X, Minus, Plus, Trash2 } from 'lucide-react';
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config';
 
 // ============================================================================
 // TYPES
@@ -85,7 +86,7 @@ const mockCartItems = [
 // ============================================================================
 
 function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
+  return `${DEFAULT_CURRENCY_SYMBOL}${(cents / 100).toFixed(2)}`;
 }
 
 // ============================================================================

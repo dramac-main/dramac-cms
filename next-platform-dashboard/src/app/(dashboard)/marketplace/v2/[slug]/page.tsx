@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { SubscribeButton } from "@/components/modules/marketplace/subscribe-button";
 import { ProfitCalculator } from "@/components/modules/marketplace/profit-calculator";
+import { formatCurrency } from "@/lib/locale-config";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -79,7 +80,7 @@ export default async function ModuleDetailV2Page({ params }: PageProps) {
 
   const formatPrice = (cents: number | null) => {
     if (!cents || cents === 0) return "Free";
-    return `$${(cents / 100).toFixed(2)}`;
+    return formatCurrency(cents / 100);
   };
 
   const getInstallLevelInfo = (level: string) => {

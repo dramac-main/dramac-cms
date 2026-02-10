@@ -253,11 +253,46 @@ function validateInput(
 
 async function checkPermissions(
   context: ToolContext,
-  _requiredPermissions: string[]
+  requiredPermissions: string[]
 ): Promise<boolean> {
-  // TODO: Implement proper permission checking
-  // For now, allow all authenticated requests
-  return context.siteId !== undefined
+  // Basic permission check: require valid site context
+  if (!context.siteId) {
+    return false
+  }
+
+  // If no specific permissions required, allow any authenticated context
+  if (!requiredPermissions || requiredPermissions.length === 0) {
+    return true
+  }
+
+  // Check agent exists and is active for this site
+  if (context.agentId) {
+    try {
+      const supabase = await createClient() as AgentDB
+      const { data: agent } = await supabase
+        .from('ai_agents')
+        .select('id, is_active, capabilities')
+        .eq('id', context.agentId)
+        .eq('site_id', context.siteId)
+        .single()
+
+      if (!agent?.is_active) {
+        return false
+      }
+
+      // If agent has capabilities defined, check against required permissions
+      if (agent.capabilities && Array.isArray(agent.capabilities)) {
+        return requiredPermissions.every((perm: string) =>
+          agent.capabilities.includes(perm) || agent.capabilities.includes('*')
+        )
+      }
+    } catch {
+      // DB error — fail open for agent tools (they're already scoped to site)
+      return true
+    }
+  }
+
+  return true
 }
 
 // ============================================================================

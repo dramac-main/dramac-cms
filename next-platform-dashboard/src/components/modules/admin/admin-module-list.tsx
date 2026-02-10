@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { InstallLevelBadge } from "@/components/modules/shared/install-level-badge";
+import { formatCurrency } from "@/lib/locale-config";
 
 // Module type for v2 modules table
 interface ModuleV2 {
@@ -111,7 +112,7 @@ export function AdminModuleList({ modules }: AdminModuleListProps) {
 
   const formatPrice = (cents: number) => {
     if (cents === 0) return "Free";
-    return `$${(cents / 100).toFixed(2)}/mo`;
+    return `${formatCurrency(cents / 100)}/mo`;
   };
 
   return (

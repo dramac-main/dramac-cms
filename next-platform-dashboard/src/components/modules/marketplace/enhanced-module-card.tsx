@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, Download, ArrowRight, Check, Sparkles, FlaskConical, Building2, Users, Globe, Package } from 'lucide-react';
 import { MODULE_CATEGORIES } from '@/lib/modules/module-categories';
+import { formatCurrency } from '@/lib/locale-config';
 import type { ModuleListItem } from '@/lib/modules/marketplace-search';
 
 interface EnhancedModuleCardProps {
@@ -20,7 +21,7 @@ interface EnhancedModuleCardProps {
  */
 function formatPrice(cents: number | null): string {
   if (cents === null || cents === 0) return 'Free';
-  return `$${(cents / 100).toFixed(2)}`;
+  return formatCurrency(cents / 100);
 }
 
 /**

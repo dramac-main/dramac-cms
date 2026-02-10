@@ -16,6 +16,7 @@ import {
   Loader2 
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
 
 // Default empty image value
 const DEFAULT_IMAGE: ImageValue = {
@@ -173,9 +174,10 @@ export function ImageFieldEditor({
   
   // Open media library dialog
   const handleMediaLibraryClick = React.useCallback(() => {
-    // TODO: Open media library modal
-    // This would integrate with the existing media library component
-    alert('Media Library integration coming in future phase');
+    toast.info('Use the Media Library page to upload images, then paste the URL here', {
+      description: 'Navigate to Dashboard → Media to manage your files.',
+      duration: 5000,
+    });
   }, []);
 
   return (

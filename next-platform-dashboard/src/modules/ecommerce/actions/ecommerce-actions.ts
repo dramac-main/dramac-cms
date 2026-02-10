@@ -11,6 +11,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { formatCurrency } from '@/lib/locale-config'
 import { notifyNewOrder, notifyOrderShipped } from '@/lib/services/business-notifications'
 import type {
   Product, ProductInput, ProductUpdate, ProductFilters,
@@ -1565,7 +1566,7 @@ export async function validateDiscountCode(
     return { valid: false, error: 'Discount code usage limit reached' }
   }
   if (discount.minimum_order_amount && subtotal < discount.minimum_order_amount) {
-    return { valid: false, error: `Minimum order of $${discount.minimum_order_amount.toFixed(2)} required` }
+    return { valid: false, error: `Minimum order of ${formatCurrency(discount.minimum_order_amount)} required` }
   }
   
   // Check once per customer

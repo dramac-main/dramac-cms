@@ -5,6 +5,7 @@ import { Package, Settings, ExternalLink, Check, Clock, AlertCircle } from "luci
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatCurrency } from "@/lib/locale-config";
 
 interface Subscription {
   id: string;
@@ -38,7 +39,7 @@ interface SubscriptionListProps {
 export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
   const formatPrice = (cents: number | null) => {
     if (!cents || cents === 0) return "Free";
-    return `$${(cents / 100).toFixed(2)}`;
+    return formatCurrency(cents / 100);
   };
 
   const getStatusBadge = (status: string) => {
@@ -152,11 +153,11 @@ export function SubscriptionList({ subscriptions }: SubscriptionListProps) {
               </div>
               <div>
                 <p className="text-muted-foreground text-xs">Client Price</p>
-                <p className="font-medium text-primary">${retail.toFixed(2)}/mo</p>
+                <p className="font-medium text-primary">{formatCurrency(retail)}/mo</p>
               </div>
               <div>
                 <p className="text-muted-foreground text-xs">Profit</p>
-                <p className="font-medium text-green-600">${profit.toFixed(2)}/mo</p>
+                <p className="font-medium text-green-600">{formatCurrency(profit)}/mo</p>
               </div>
             </div>
           )}

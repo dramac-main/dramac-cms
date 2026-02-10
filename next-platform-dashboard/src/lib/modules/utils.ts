@@ -1,4 +1,4 @@
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 /**
  * Module Utility Functions
  * 
@@ -11,7 +11,7 @@ import { DEFAULT_LOCALE } from '@/lib/locale-config'
 export function formatPrice(priceInCents: number, includeCurrency = true): string {
   const dollars = priceInCents / 100;
   const formatted = dollars.toFixed(2);
-  return includeCurrency ? `$${formatted}` : formatted;
+  return includeCurrency ? `${DEFAULT_CURRENCY_SYMBOL}${formatted}` : formatted;
 }
 
 /**

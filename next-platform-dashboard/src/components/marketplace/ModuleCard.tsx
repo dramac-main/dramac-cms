@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Star, Download, Shield, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/locale-config";
 
 interface ModuleCardProps {
   module: {
@@ -107,7 +108,7 @@ export function ModuleCard({ module, featured }: ModuleCardProps) {
             </div>
             <div className="font-semibold text-sm">
               {module.price && module.price > 0
-                ? `$${module.price}/mo`
+                ? `${formatCurrency(module.price)}/mo`
                 : "Free"}
             </div>
           </div>

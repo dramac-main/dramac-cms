@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { InstallLevelBadge } from "@/components/modules/shared/install-level-badge";
+import { formatCurrency } from "@/lib/locale-config";
 import { toast } from "sonner";
 
 interface Module {
@@ -100,7 +101,7 @@ export function WholesalePricingTable({ modules }: WholesalePricingTableProps) {
 
   const formatPrice = (cents: number | null) => {
     if (!cents || cents === 0) return "Free";
-    return `$${(cents / 100).toFixed(2)}`;
+    return formatCurrency(cents / 100);
   };
 
   if (modules.length === 0) {

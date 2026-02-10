@@ -43,7 +43,8 @@ import {
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Appointment, AppointmentStatus } from '../../types/booking-types'
+import type { Appointment, AppointmentStatus, PaymentStatus } from '../../types/booking-types'
+import { PAYMENT_STATUS_CONFIG } from '../../types/booking-types'
 import { toast } from 'sonner'
 
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
@@ -102,6 +103,7 @@ export function AppointmentDetailSheet({
   const [editedStatus, setEditedStatus] = useState<AppointmentStatus | null>(null)
   const [editedNotes, setEditedNotes] = useState<string>('')
   const [isSaving, setIsSaving] = useState(false)
+  const [isUpdatingPayment, setIsUpdatingPayment] = useState(false)
   
   if (!appointment) return null
   
@@ -168,6 +170,18 @@ export function AppointmentDetailSheet({
       toast.success(`Appointment ${newStatus}`)
     } catch {
       toast.error('Failed to update status')
+    }
+  }
+
+  const handlePaymentStatusChange = async (newStatus: PaymentStatus) => {
+    setIsUpdatingPayment(true)
+    try {
+      await editAppointment(appointment.id, { payment_status: newStatus })
+      toast.success(`Payment marked as ${PAYMENT_STATUS_CONFIG[newStatus]?.label || newStatus}`)
+    } catch {
+      toast.error('Failed to update payment status')
+    } finally {
+      setIsUpdatingPayment(false)
     }
   }
   
@@ -302,19 +316,41 @@ export function AppointmentDetailSheet({
           
           {/* Payment */}
           <div className="space-y-3">
-            <h4 className="font-medium text-sm text-muted-foreground">Payment</h4>
-            <div className="p-3 rounded-lg border">
+            <h4 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Payment
+            </h4>
+            <div className="p-3 rounded-lg border space-y-3">
               <div className="flex items-center justify-between">
                 <span>Amount</span>
                 <span className="font-medium">
                   {formatCurrency(appointment.payment_amount ?? (service?.price ?? 0))}
                 </span>
               </div>
-              <div className="flex items-center justify-between mt-2">
+              <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Status</span>
-                <Badge variant={appointment.payment_status === 'paid' ? 'default' : 'secondary'}>
-                  {appointment.payment_status || 'Pending'}
-                </Badge>
+                <Select
+                  value={appointment.payment_status || 'pending'}
+                  onValueChange={(v) => handlePaymentStatusChange(v as PaymentStatus)}
+                  disabled={isUpdatingPayment}
+                >
+                  <SelectTrigger className="w-[160px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(PAYMENT_STATUS_CONFIG).map(([value, config]) => (
+                      <SelectItem key={value} value={value}>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="h-2 w-2 rounded-full"
+                            style={{ backgroundColor: config.color }}
+                          />
+                          {config.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

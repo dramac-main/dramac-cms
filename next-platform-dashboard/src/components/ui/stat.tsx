@@ -131,7 +131,7 @@ export interface StatProps
  * <Stat
  *   label="Total Revenue"
  *   value={12450}
- *   formatValue={(v) => `$${v.toLocaleString()}`}
+ *   formatValue={(v) => `K${v.toLocaleString()}`}
  *   trend={{ direction: "up", value: 12.5, label: "vs last month" }}
  * />
  * ```

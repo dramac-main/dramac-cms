@@ -257,7 +257,7 @@ export function AIAgentsDashboardEnhanced({
         <AgentMetricCard
           title="Total Cost"
           value={stats.totalCost.toFixed(2)}
-          valuePrefix="$"
+          valuePrefix="$" // USD — AI API costs
           icon={DollarSign}
           variant="warning"
           sparklineData={sparklineData.cost}

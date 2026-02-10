@@ -32,12 +32,10 @@ export function createProvider(
       return new AnthropicProvider(config)
     
     case 'google':
-      // TODO: Implement Google provider
-      throw new Error('Google provider not yet implemented')
+      throw new Error('Google AI provider is not yet available. Please use Anthropic (Claude) or OpenAI as your AI provider.')
     
     case 'local':
-      // TODO: Implement local provider (Ollama)
-      throw new Error('Local provider not yet implemented')
+      throw new Error('Local/Ollama provider is not yet available. Please use Anthropic (Claude) or OpenAI as your AI provider.')
     
     default:
       throw new Error(`Unknown provider: ${providerName}`)

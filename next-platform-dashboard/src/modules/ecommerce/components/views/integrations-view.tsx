@@ -19,7 +19,9 @@ import {
   RefreshCw,
   ExternalLink,
   Clock,
-  Activity
+  Activity,
+  CalendarClock,
+  Rocket
 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -331,9 +333,13 @@ export function IntegrationsView({ siteId }: IntegrationsViewProps) {
                       </div>
                       
                       {provider.comingSoon ? (
-                        <Button variant="outline" disabled>
-                          Coming Soon
-                        </Button>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <Badge variant="secondary" className="text-xs gap-1">
+                            <CalendarClock className="h-3 w-3" />
+                            Coming Soon
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">Planned for future release</span>
+                        </div>
                       ) : connected ? (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -377,6 +383,48 @@ export function IntegrationsView({ siteId }: IntegrationsViewProps) {
           </Card>
         ))}
         
+        {/* Integration Roadmap */}
+        {(() => {
+          const comingSoonProviders = AVAILABLE_PROVIDERS.filter(p => p.comingSoon)
+          if (comingSoonProviders.length === 0) return null
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Rocket className="h-5 w-5" />
+                  Integration Roadmap
+                </CardTitle>
+                <CardDescription>
+                  Planned integrations for future releases
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {comingSoonProviders.map((provider) => (
+                    <div
+                      key={provider.provider}
+                      className="flex items-center gap-3 p-3 border rounded-lg bg-muted/30"
+                    >
+                      <div className="text-2xl shrink-0">{provider.icon}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-sm">{provider.name}</span>
+                          <Badge variant="secondary" className="text-[10px] gap-1 shrink-0">
+                            <CalendarClock className="h-2.5 w-2.5" />
+                            Coming Soon
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground truncate">{provider.description}</p>
+                        <p className="text-[10px] text-muted-foreground/70 mt-0.5">Planned for future release</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })()}
+
         {/* Connected Integrations Summary */}
         {integrations.length > 0 && (
           <Card>

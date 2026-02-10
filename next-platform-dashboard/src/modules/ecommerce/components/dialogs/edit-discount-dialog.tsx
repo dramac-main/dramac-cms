@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
 import type { Discount, DiscountType } from '../../types/ecommerce-types'
 import { Loader2, Percent, DollarSign, Calendar } from 'lucide-react'
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -181,7 +182,7 @@ export function EditDiscountDialog({ discount, open, onOpenChange }: EditDiscoun
 
               <div className="space-y-2">
                 <Label htmlFor="value">
-                  {type === 'percentage' ? 'Percentage (%)' : 'Amount ($)'} *
+                  {type === 'percentage' ? 'Percentage (%)' : `Amount (${DEFAULT_CURRENCY_SYMBOL})`} *
                 </Label>
                 <Input
                   id="value"
@@ -214,7 +215,7 @@ export function EditDiscountDialog({ discount, open, onOpenChange }: EditDiscoun
             <h3 className="text-sm font-medium">Usage Limits</h3>
             
             <div className="space-y-2">
-              <Label htmlFor="minPurchase">Minimum Purchase Amount ($)</Label>
+              <Label htmlFor="minPurchase">{`Minimum Purchase Amount (${DEFAULT_CURRENCY_SYMBOL})`}</Label>
               <Input
                 id="minPurchase"
                 type="number"

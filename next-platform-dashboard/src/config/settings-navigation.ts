@@ -14,6 +14,9 @@ import {
   Shield,
   Palette,
   Globe,
+  Globe2,
+  Activity,
+  Puzzle,
   type LucideIcon,
 } from "lucide-react";
 
@@ -43,7 +46,10 @@ export const settingsNavigation: SettingsNavSection[] = [
       { name: "General", href: "/settings/agency", icon: Building2 },
       { name: "Team", href: "/settings/team", icon: Users },
       { name: "Branding", href: "/settings/branding", icon: Palette },
+      { name: "Regional", href: "/settings/regional", icon: Globe2 },
       { name: "Domains", href: "/settings/domains", icon: Globe },
+      { name: "Activity Log", href: "/settings/activity", icon: Activity },
+      { name: "Modules", href: "/settings/modules", icon: Puzzle },
     ],
   },
   {

@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/locale-config'
 
 interface MarketingViewProps {
   siteId: string
@@ -47,10 +48,6 @@ interface MarketingViewProps {
 export function MarketingView({ siteId, searchQuery = '' }: MarketingViewProps) {
   const [activeTab, setActiveTab] = useState('flash-sales')
   const { stats, isLoading: loadingStats } = useMarketingStats(siteId)
-
-  const formatCurrency = (cents: number) => {
-    return `$${(cents / 100).toFixed(2)}`
-  }
 
   return (
     <div className="space-y-6">
@@ -102,7 +99,7 @@ export function MarketingView({ siteId, searchQuery = '' }: MarketingViewProps) 
               <Gift className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(stats.gift_cards.outstanding_balance)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(stats.gift_cards.outstanding_balance / 100)}</div>
               <p className="text-xs text-muted-foreground">
                 {stats.gift_cards.active_cards} active cards
               </p>

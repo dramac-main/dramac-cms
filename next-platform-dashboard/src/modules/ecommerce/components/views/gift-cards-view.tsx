@@ -63,7 +63,7 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, formatCurrency } from '@/lib/locale-config'
 interface GiftCardsViewProps {
   siteId: string
   searchQuery?: string
@@ -146,10 +146,6 @@ export function GiftCardsView({ siteId, searchQuery = '' }: GiftCardsViewProps) 
     setTransactions(card.transactions || [])
   }
 
-  const formatCurrency = (cents: number) => {
-    return `$${(cents / 100).toFixed(2)}`
-  }
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(DEFAULT_LOCALE, {
       month: 'short',
@@ -203,7 +199,7 @@ export function GiftCardsView({ siteId, searchQuery = '' }: GiftCardsViewProps) 
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.totalIssued)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(stats.totalIssued / 100)}</div>
             <p className="text-xs text-muted-foreground">{stats.total} cards</p>
           </CardContent>
         </Card>
@@ -213,7 +209,7 @@ export function GiftCardsView({ siteId, searchQuery = '' }: GiftCardsViewProps) 
             <CreditCard className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{formatCurrency(stats.totalBalance)}</div>
+            <div className="text-2xl font-bold text-blue-600">{formatCurrency(stats.totalBalance / 100)}</div>
             <p className="text-xs text-muted-foreground">{stats.active} active cards</p>
           </CardContent>
         </Card>
@@ -223,7 +219,7 @@ export function GiftCardsView({ siteId, searchQuery = '' }: GiftCardsViewProps) 
             <ArrowDownRight className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.redeemed)}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.redeemed / 100)}</div>
             <p className="text-xs text-muted-foreground">
               {stats.totalIssued > 0 
                 ? `${Math.round((stats.redeemed / stats.totalIssued) * 100)}% redemption rate`
@@ -324,13 +320,13 @@ export function GiftCardsView({ siteId, searchQuery = '' }: GiftCardsViewProps) 
                       <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
-                  <TableCell>{formatCurrency(card.initial_balance)}</TableCell>
+                  <TableCell>{formatCurrency(card.initial_balance / 100)}</TableCell>
                   <TableCell>
                     <span className={cn(
                       'font-medium',
                       card.current_balance === 0 && 'text-muted-foreground'
                     )}>
-                      {formatCurrency(card.current_balance)}
+                      {formatCurrency(card.current_balance / 100)}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -416,7 +412,7 @@ export function GiftCardsView({ siteId, searchQuery = '' }: GiftCardsViewProps) 
               <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
                 <div>
                   <div className="text-sm text-muted-foreground">Current Balance</div>
-                  <div className="text-3xl font-bold">{formatCurrency(lookupResult.current_balance)}</div>
+                  <div className="text-3xl font-bold">{formatCurrency(lookupResult.current_balance / 100)}</div>
                 </div>
                 <Badge className={cn(
                   lookupResult.is_active && lookupResult.current_balance > 0
@@ -429,7 +425,7 @@ export function GiftCardsView({ siteId, searchQuery = '' }: GiftCardsViewProps) 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <div className="text-muted-foreground">Initial Balance</div>
-                  <div className="font-medium">{formatCurrency(lookupResult.initial_balance)}</div>
+                  <div className="font-medium">{formatCurrency(lookupResult.initial_balance / 100)}</div>
                 </div>
                 <div>
                   <div className="text-muted-foreground">Expires</div>
@@ -513,9 +509,9 @@ export function GiftCardsView({ siteId, searchQuery = '' }: GiftCardsViewProps) 
                         'font-medium',
                         tx.type === 'purchase' || tx.type === 'refund' ? 'text-green-600' : 'text-red-600'
                       )}>
-                        {tx.type === 'purchase' || tx.type === 'refund' ? '+' : '-'}{formatCurrency(tx.amount)}
+                        {tx.type === 'purchase' || tx.type === 'refund' ? '+' : '-'}{formatCurrency(tx.amount / 100)}
                       </TableCell>
-                      <TableCell>{formatCurrency(tx.balance_after)}</TableCell>
+                      <TableCell>{formatCurrency(tx.balance_after / 100)}</TableCell>
                       <TableCell className="text-muted-foreground text-xs">
                         {tx.notes || '—'}
                       </TableCell>

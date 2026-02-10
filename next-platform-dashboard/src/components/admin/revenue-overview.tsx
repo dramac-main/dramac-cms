@@ -36,7 +36,7 @@ import { getRevenueMetrics, getRevenueTrends, getRevenueByPlan } from "@/lib/act
 import type { RevenueMetrics, RevenueTrendData, RevenueByPlan, AdminTimeRange } from "@/types/admin-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 // ============================================================================
 // Types
 // ============================================================================
@@ -50,15 +50,15 @@ interface RevenueOverviewProps {
 // Helper Components
 // ============================================================================
 
-function formatCurrency(cents: number, compact = false): string {
+function formatRevenue(cents: number, compact = false): string {
   const dollars = cents / 100;
   if (compact && dollars >= 1000000) {
-    return `$${(dollars / 1000000).toFixed(1)}M`;
+    return `${DEFAULT_CURRENCY_SYMBOL}${(dollars / 1000000).toFixed(1)}M`;
   }
   if (compact && dollars >= 1000) {
-    return `$${(dollars / 1000).toFixed(1)}K`;
+    return `${DEFAULT_CURRENCY_SYMBOL}${(dollars / 1000).toFixed(1)}K`;
   }
-  return `$${dollars.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  return `${DEFAULT_CURRENCY_SYMBOL}${dollars.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 function RevenueMetricCard({
@@ -148,7 +148,7 @@ function RevenueByPlanCard({ data }: { data: RevenueByPlan[] }) {
                 />
                 <span className="capitalize">{item.plan}</span>
               </div>
-              <span className="font-medium">{formatCurrency(item.revenue, true)}</span>
+              <span className="font-medium">{formatRevenue(item.revenue, true)}</span>
             </div>
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
@@ -202,7 +202,7 @@ function RevenueTrendChart({ data }: { data: RevenueTrendData[] }) {
                 tick={{ fontSize: 12 }}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => formatCurrency(value, true)}
+                tickFormatter={(value) => formatRevenue(value, true)}
               />
               <Tooltip
                 content={({ active, payload, label }) => {
@@ -214,10 +214,10 @@ function RevenueTrendChart({ data }: { data: RevenueTrendData[] }) {
                         {date.toLocaleDateString(DEFAULT_LOCALE, { month: "long", year: "numeric" })}
                       </p>
                       <p className="text-sm">
-                        MRR: <span className="font-medium">{formatCurrency(payload[0].payload.mrr)}</span>
+                        MRR: <span className="font-medium">{formatRevenue(payload[0].payload.mrr)}</span>
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Total: {formatCurrency(payload[0].payload.revenue)}
+                        Total: {formatRevenue(payload[0].payload.revenue)}
                       </p>
                     </div>
                   );
@@ -303,25 +303,25 @@ export function RevenueOverviewComponent({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <RevenueMetricCard
           title="Monthly Recurring Revenue"
-          value={formatCurrency(metrics.mrr)}
+          value={formatRevenue(metrics.mrr)}
           growth={metrics.mrrGrowth}
           icon={DollarSign}
         />
         <RevenueMetricCard
           title="Annual Run Rate"
-          value={formatCurrency(metrics.arr)}
+          value={formatRevenue(metrics.arr)}
           icon={TrendingUp}
           description="Projected based on current MRR"
         />
         <RevenueMetricCard
           title="Total Revenue"
-          value={formatCurrency(metrics.totalRevenue)}
+          value={formatRevenue(metrics.totalRevenue)}
           growth={metrics.revenueGrowth}
           icon={CreditCard}
         />
         <RevenueMetricCard
           title="Avg Revenue Per Account"
-          value={formatCurrency(metrics.avgRevenuePerAccount)}
+          value={formatRevenue(metrics.avgRevenuePerAccount)}
           growth={metrics.arpaGrowth}
           icon={Users}
         />
@@ -380,10 +380,10 @@ export function RevenueOverviewCompact({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{formatCurrency(metrics.mrr)}</div>
+        <div className="text-2xl font-bold">{formatRevenue(metrics.mrr)}</div>
         <p className="text-xs text-muted-foreground">MRR</p>
         <div className="mt-2 text-sm text-muted-foreground">
-          ARR: {formatCurrency(metrics.arr)}
+          ARR: {formatRevenue(metrics.arr)}
         </div>
       </CardContent>
     </Card>

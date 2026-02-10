@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/locale-config";
 
 interface InstallModuleDialogProps {
   isOpen: boolean;
@@ -45,7 +46,7 @@ export function InstallModuleDialog({
 
   const formatPrice = (cents: number) => {
     if (cents === 0) return "Free";
-    return `$${(cents / 100).toFixed(2)}/mo`;
+    return `${formatCurrency(cents / 100)}/mo`;
   };
 
   const handleInstall = async () => {

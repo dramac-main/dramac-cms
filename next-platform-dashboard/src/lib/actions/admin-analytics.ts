@@ -1,3 +1,5 @@
+// Admin analytics — Real DB queries where possible, empty states elsewhere
+
 /**
  * Admin Analytics Server Actions
  * 
@@ -6,11 +8,12 @@
  * PHASE-DS-05: Billing & Revenue Dashboards
  * 
  * Server actions for fetching platform-wide analytics, agency metrics, and billing data.
+ * Uses createAdminClient() for service-role access. All queries wrapped in try/catch.
  */
 
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireSuperAdmin } from "@/lib/auth/permissions";
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 import type {
@@ -73,17 +76,6 @@ function getDateRangeFromTimeRange(timeRange: AdminTimeRange): { start: Date; en
   return { start, end };
 }
 
-function generateSeededRandom(seed: string, index: number = 0): number {
-  let hash = 0;
-  const str = seed + index.toString();
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash % 1000) / 1000;
-}
-
 function formatCurrency(cents: number): string {
   return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: "currency",
@@ -101,193 +93,232 @@ export async function getPlatformOverview(
   timeRange: AdminTimeRange = "30d"
 ): Promise<PlatformOverviewMetrics> {
   await requireSuperAdmin();
-  const supabase = await createClient();
-  const { start } = getDateRangeFromTimeRange(timeRange);
-  const prevStart = new Date(start);
-  prevStart.setTime(prevStart.getTime() - (Date.now() - start.getTime()));
 
-  // Fetch all counts in parallel
-  const [
-    usersTotal,
-    usersNew,
-    usersPrevPeriod,
-    agenciesTotal,
-    agenciesNew,
-    agenciesPrevPeriod,
-    sitesTotal,
-    sitesPublished,
-    sitesNew,
-    pagesTotal,
-    moduleInstalls,
-    superAdmins,
-  ] = await Promise.all([
-    supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("profiles").select("*", { count: "exact", head: true })
-      .gte("created_at", start.toISOString()),
-    supabase.from("profiles").select("*", { count: "exact", head: true })
-      .gte("created_at", prevStart.toISOString())
-      .lt("created_at", start.toISOString()),
-    supabase.from("agencies").select("*", { count: "exact", head: true }),
-    supabase.from("agencies").select("*", { count: "exact", head: true })
-      .gte("created_at", start.toISOString()),
-    supabase.from("agencies").select("*", { count: "exact", head: true })
-      .gte("created_at", prevStart.toISOString())
-      .lt("created_at", start.toISOString()),
-    supabase.from("sites").select("*", { count: "exact", head: true }),
-    supabase.from("sites").select("*", { count: "exact", head: true })
-      .eq("published", true),
-    supabase.from("sites").select("*", { count: "exact", head: true })
-      .gte("created_at", start.toISOString()),
-    supabase.from("pages").select("*", { count: "exact", head: true }),
-    supabase.from("site_module_installations").select("*", { count: "exact", head: true }),
-    supabase.from("profiles").select("*", { count: "exact", head: true })
-      .eq("role", "super_admin"),
-  ]);
+  try {
+    const supabase = createAdminClient();
+    const { start } = getDateRangeFromTimeRange(timeRange);
+    const prevStart = new Date(start);
+    prevStart.setTime(prevStart.getTime() - (Date.now() - start.getTime()));
 
-  // Get module installation stats
-  const { data: moduleData } = await supabase
-    .from("site_module_installations")
-    .select("module_id");
+    // Fetch all counts in parallel
+    const [
+      usersTotal,
+      usersNew,
+      usersPrevPeriod,
+      agenciesTotal,
+      agenciesNew,
+      agenciesPrevPeriod,
+      sitesTotal,
+      sitesPublished,
+      sitesNew,
+      pagesTotal,
+      moduleInstalls,
+      superAdmins,
+    ] = await Promise.all([
+      supabase.from("profiles").select("*", { count: "exact", head: true }),
+      supabase.from("profiles").select("*", { count: "exact", head: true })
+        .gte("created_at", start.toISOString()),
+      supabase.from("profiles").select("*", { count: "exact", head: true })
+        .gte("created_at", prevStart.toISOString())
+        .lt("created_at", start.toISOString()),
+      supabase.from("agencies").select("*", { count: "exact", head: true }),
+      supabase.from("agencies").select("*", { count: "exact", head: true })
+        .gte("created_at", start.toISOString()),
+      supabase.from("agencies").select("*", { count: "exact", head: true })
+        .gte("created_at", prevStart.toISOString())
+        .lt("created_at", start.toISOString()),
+      supabase.from("sites").select("*", { count: "exact", head: true }),
+      supabase.from("sites").select("*", { count: "exact", head: true })
+        .eq("published", true),
+      supabase.from("sites").select("*", { count: "exact", head: true })
+        .gte("created_at", start.toISOString()),
+      supabase.from("pages").select("*", { count: "exact", head: true }),
+      supabase.from("site_module_installations").select("*", { count: "exact", head: true }),
+      supabase.from("profiles").select("*", { count: "exact", head: true })
+        .eq("role", "super_admin"),
+    ]);
 
-  const moduleCountMap = new Map<string, number>();
-  moduleData?.forEach((m) => {
-    if (m.module_id) {
-      moduleCountMap.set(m.module_id, (moduleCountMap.get(m.module_id) || 0) + 1);
-    }
-  });
+    // Get module installation stats
+    const { data: moduleData } = await supabase
+      .from("site_module_installations")
+      .select("module_id");
 
-  // Get module names
-  const { data: modulesInfo } = await supabase
-    .from("modules_v2")
-    .select("id, name, slug");
+    const moduleCountMap = new Map<string, number>();
+    moduleData?.forEach((m) => {
+      if (m.module_id) {
+        moduleCountMap.set(m.module_id, (moduleCountMap.get(m.module_id) || 0) + 1);
+      }
+    });
 
-  const moduleNameMap = new Map<string, { name: string; slug: string }>();
-  modulesInfo?.forEach((m) => {
-    moduleNameMap.set(m.id, { name: m.name, slug: m.slug });
-  });
+    // Get module names
+    const { data: modulesInfo } = await supabase
+      .from("modules_v2")
+      .select("id, name, slug");
 
-  const topModules: ModuleStats[] = Array.from(moduleCountMap.entries())
-    .map(([id, installations]) => ({
-      id,
-      name: moduleNameMap.get(id)?.name || id,
-      slug: moduleNameMap.get(id)?.slug || id,
-      installations,
-      activeUsage: Math.floor(installations * 0.8),
-    }))
-    .sort((a, b) => b.installations - a.installations)
-    .slice(0, 10);
+    const moduleNameMap = new Map<string, { name: string; slug: string }>();
+    modulesInfo?.forEach((m) => {
+      moduleNameMap.set(m.id, { name: m.name, slug: m.slug });
+    });
 
-  // Calculate growth percentages
-  const totalUsers = usersTotal.count || 0;
-  const newUsers = usersNew.count || 0;
-  const prevUsers = usersPrevPeriod.count || 0;
-  const userGrowth = prevUsers > 0 
-    ? Math.round(((newUsers - prevUsers) / prevUsers) * 100 * 10) / 10
-    : newUsers > 0 ? 100 : 0;
+    const topModules: ModuleStats[] = Array.from(moduleCountMap.entries())
+      .map(([id, installations]) => ({
+        id,
+        name: moduleNameMap.get(id)?.name || id,
+        slug: moduleNameMap.get(id)?.slug || id,
+        installations,
+        activeUsage: installations, // No way to distinguish active vs total without tracking
+      }))
+      .sort((a, b) => b.installations - a.installations)
+      .slice(0, 10);
 
-  const totalAgencies = agenciesTotal.count || 0;
-  const newAgencies = agenciesNew.count || 0;
-  const prevAgencies = agenciesPrevPeriod.count || 0;
-  const agencyGrowth = prevAgencies > 0
-    ? Math.round(((newAgencies - prevAgencies) / prevAgencies) * 100 * 10) / 10
-    : newAgencies > 0 ? 100 : 0;
+    // Calculate growth percentages
+    const totalUsers = usersTotal.count || 0;
+    const newUsers = usersNew.count || 0;
+    const prevUsers = usersPrevPeriod.count || 0;
+    const userGrowth = prevUsers > 0 
+      ? Math.round(((newUsers - prevUsers) / prevUsers) * 100 * 10) / 10
+      : newUsers > 0 ? 100 : 0;
 
-  const totalSites = sitesTotal.count || 0;
-  const publishedSites = sitesPublished.count || 0;
-  const totalPages = pagesTotal.count || 0;
+    const totalAgencies = agenciesTotal.count || 0;
+    const newAgencies = agenciesNew.count || 0;
+    const prevAgencies = agenciesPrevPeriod.count || 0;
+    const agencyGrowth = prevAgencies > 0
+      ? Math.round(((newAgencies - prevAgencies) / prevAgencies) * 100 * 10) / 10
+      : newAgencies > 0 ? 100 : 0;
 
-  // Estimate distribution (mock for demo - in production, query actual data)
-  const seed = new Date().toDateString();
-  const freePercent = generateSeededRandom(seed, 1) * 0.3 + 0.2; // 20-50%
-  const starterPercent = generateSeededRandom(seed, 2) * 0.3 + 0.25; // 25-55%
-  const proPercent = generateSeededRandom(seed, 3) * 0.2 + 0.1; // 10-30%
-  const entPercent = 1 - freePercent - starterPercent - proPercent;
+    const totalSites = sitesTotal.count || 0;
+    const publishedSites = sitesPublished.count || 0;
+    const totalPages = pagesTotal.count || 0;
 
-  return {
-    users: {
-      total: totalUsers,
-      active: Math.floor(totalUsers * 0.7),
-      newToday: Math.floor(newUsers / 30),
-      newThisWeek: Math.floor(newUsers / 4),
-      newThisMonth: newUsers,
-      growthPercent: userGrowth,
-      byRole: {
-        superAdmin: superAdmins.count || 0,
-        admin: Math.floor(totalUsers * 0.3),
-        member: Math.floor(totalUsers * 0.7) - (superAdmins.count || 0),
+    // Query actual plan distribution from agencies table
+    const { data: planData } = await supabase
+      .from("agencies")
+      .select("plan");
+
+    const planCounts = { free: 0, starter: 0, professional: 0, enterprise: 0 };
+    planData?.forEach((a) => {
+      const plan = a.plan || "starter";
+      if (plan in planCounts) {
+        planCounts[plan as keyof typeof planCounts]++;
+      } else {
+        planCounts.starter++; // fallback
+      }
+    });
+
+    // Query actual role distribution from profiles table
+    const { data: roleData } = await supabase
+      .from("profiles")
+      .select("role");
+
+    let adminCount = 0;
+    let memberCount = 0;
+    const superAdminCount = superAdmins.count || 0;
+    roleData?.forEach((p) => {
+      const role = p.role || "member";
+      if (role === "admin" || role === "agency_admin") adminCount++;
+      else if (role !== "super_admin") memberCount++;
+    });
+
+    // Query agencies by subscription_status for active/trial/churned
+    const { data: statusData } = await supabase
+      .from("agencies")
+      .select("subscription_status");
+
+    let activeAgencies = 0;
+    let trialAgencies = 0;
+    let churnedAgencies = 0;
+    statusData?.forEach((a) => {
+      const s = a.subscription_status || "active";
+      if (s === "active") activeAgencies++;
+      else if (s === "trialing" || s === "trial") trialAgencies++;
+      else if (s === "canceled" || s === "cancelled" || s === "churned") churnedAgencies++;
+      else activeAgencies++; // default
+    });
+
+    return {
+      users: {
+        total: totalUsers,
+        active: totalUsers, // No session tracking — report total as active
+        newToday: Math.floor(newUsers / 30),
+        newThisWeek: Math.floor(newUsers / 4),
+        newThisMonth: newUsers,
+        growthPercent: userGrowth,
+        byRole: {
+          superAdmin: superAdminCount,
+          admin: adminCount,
+          member: memberCount,
+        },
       },
-    },
-    agencies: {
-      total: totalAgencies,
-      active: Math.floor(totalAgencies * 0.85),
-      trial: Math.floor(totalAgencies * 0.1),
-      churned: Math.floor(totalAgencies * 0.05),
-      newThisMonth: newAgencies,
-      growthPercent: agencyGrowth,
-      byPlan: {
-        free: Math.floor(totalAgencies * freePercent),
-        starter: Math.floor(totalAgencies * starterPercent),
-        professional: Math.floor(totalAgencies * proPercent),
-        enterprise: Math.floor(totalAgencies * entPercent),
+      agencies: {
+        total: totalAgencies,
+        active: activeAgencies || totalAgencies,
+        trial: trialAgencies,
+        churned: churnedAgencies,
+        newThisMonth: newAgencies,
+        growthPercent: agencyGrowth,
+        byPlan: planCounts,
       },
-    },
-    sites: {
-      total: totalSites,
-      published: publishedSites,
-      draft: totalSites - publishedSites,
-      publishedPercent: totalSites > 0 ? Math.round((publishedSites / totalSites) * 100) : 0,
-      totalPages,
-      avgPagesPerSite: totalSites > 0 ? Math.round(totalPages / totalSites) : 0,
-      newThisMonth: sitesNew.count || 0,
-    },
-    modules: {
-      totalAvailable: modulesInfo?.length || 0,
-      totalInstallations: moduleInstalls.count || 0,
-      avgPerAgency: totalAgencies > 0 
-        ? Math.round((moduleInstalls.count || 0) / totalAgencies * 10) / 10 
-        : 0,
-      topModules,
-    },
-  };
+      sites: {
+        total: totalSites,
+        published: publishedSites,
+        draft: totalSites - publishedSites,
+        publishedPercent: totalSites > 0 ? Math.round((publishedSites / totalSites) * 100) : 0,
+        totalPages,
+        avgPagesPerSite: totalSites > 0 ? Math.round(totalPages / totalSites) : 0,
+        newThisMonth: sitesNew.count || 0,
+      },
+      modules: {
+        totalAvailable: modulesInfo?.length || 0,
+        totalInstallations: moduleInstalls.count || 0,
+        avgPerAgency: totalAgencies > 0 
+          ? Math.round((moduleInstalls.count || 0) / totalAgencies * 10) / 10 
+          : 0,
+        topModules,
+      },
+    };
+  } catch (error) {
+    console.error("[admin-analytics] getPlatformOverview error:", error);
+    return {
+      users: { total: 0, active: 0, newToday: 0, newThisWeek: 0, newThisMonth: 0, growthPercent: 0, byRole: { superAdmin: 0, admin: 0, member: 0 } },
+      agencies: { total: 0, active: 0, trial: 0, churned: 0, newThisMonth: 0, growthPercent: 0, byPlan: { free: 0, starter: 0, professional: 0, enterprise: 0 } },
+      sites: { total: 0, published: 0, draft: 0, publishedPercent: 0, totalPages: 0, avgPagesPerSite: 0, newThisMonth: 0 },
+      modules: { totalAvailable: 0, totalInstallations: 0, avgPerAgency: 0, topModules: [] },
+    };
+  }
 }
 
 export async function getSystemHealth(): Promise<SystemHealthMetrics> {
   await requireSuperAdmin();
   
-  // In production, these would come from actual monitoring services
-  const seed = new Date().toISOString();
-  const baseLatency = 50 + Math.floor(generateSeededRandom(seed, 1) * 100);
-  
+  // System health metrics require external monitoring (e.g. Uptime Robot, Supabase dashboard).
+  // No real data source available — return placeholder state with zeroed metrics.
   const services: ServiceStatus[] = [
-    { name: "Database (Supabase)", status: "operational", latency: baseLatency, lastChecked: new Date().toISOString() },
-    { name: "Authentication", status: "operational", latency: baseLatency + 10, lastChecked: new Date().toISOString() },
-    { name: "Storage", status: "operational", latency: baseLatency + 20, lastChecked: new Date().toISOString() },
-    { name: "Edge Functions", status: "operational", latency: baseLatency + 5, lastChecked: new Date().toISOString() },
-    { name: "Email (Resend)", status: "operational", latency: 120, lastChecked: new Date().toISOString() },
-    { name: "Billing (Paddle)", status: "operational", latency: 150, lastChecked: new Date().toISOString() },
+    { name: "Database (Supabase)", status: "degraded", latency: 0, lastChecked: new Date().toISOString() },
+    { name: "Authentication", status: "degraded", latency: 0, lastChecked: new Date().toISOString() },
+    { name: "Storage", status: "degraded", latency: 0, lastChecked: new Date().toISOString() },
+    { name: "Edge Functions", status: "degraded", latency: 0, lastChecked: new Date().toISOString() },
+    { name: "Email (Resend)", status: "degraded", latency: 0, lastChecked: new Date().toISOString() },
+    { name: "Billing (Paddle)", status: "degraded", latency: 0, lastChecked: new Date().toISOString() },
   ];
 
-  const allOperational = services.every(s => s.status === "operational");
-  const hasDegraded = services.some(s => s.status === "degraded");
-
   return {
-    status: allOperational ? "healthy" : hasDegraded ? "degraded" : "critical",
-    uptime: 99.95 + generateSeededRandom(seed, 2) * 0.05,
+    status: "degraded",
+    uptime: 0,
     responseTime: {
-      avg: baseLatency,
-      p95: baseLatency * 2,
-      p99: baseLatency * 3,
+      avg: 0,
+      p95: 0,
+      p99: 0,
     },
-    errorRate: generateSeededRandom(seed, 3) * 0.5,
-    activeSessions: Math.floor(50 + generateSeededRandom(seed, 4) * 150),
-    requestsPerMinute: Math.floor(500 + generateSeededRandom(seed, 5) * 1500),
-    databaseStatus: "connected",
-    storageUsed: Math.floor(5 * 1024 * 1024 * 1024 + generateSeededRandom(seed, 6) * 10 * 1024 * 1024 * 1024), // 5-15 GB
-    storageLimit: 100 * 1024 * 1024 * 1024, // 100 GB
+    errorRate: 0,
+    activeSessions: 0,
+    requestsPerMinute: 0,
+    databaseStatus: "slow",
+    storageUsed: 0,
+    storageLimit: 0,
     apiCalls: {
-      today: Math.floor(10000 + generateSeededRandom(seed, 7) * 50000),
-      thisMonth: Math.floor(300000 + generateSeededRandom(seed, 8) * 700000),
-      limit: 10000000,
+      today: 0,
+      thisMonth: 0,
+      limit: 0,
     },
     services,
   };
@@ -297,180 +328,188 @@ export async function getPlatformTrends(
   timeRange: AdminTimeRange = "30d"
 ): Promise<PlatformTrendData[]> {
   await requireSuperAdmin();
-  const supabase = await createClient();
-  const { start, end } = getDateRangeFromTimeRange(timeRange);
 
-  // Determine granularity based on time range
-  const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  const granularity = daysDiff <= 7 ? "day" : daysDiff <= 90 ? "day" : "month";
+  try {
+    const supabase = createAdminClient();
+    const { start, end } = getDateRangeFromTimeRange(timeRange);
 
-  // Get actual counts from database
-  const { data: profiles } = await supabase
-    .from("profiles")
-    .select("created_at")
-    .gte("created_at", start.toISOString())
-    .order("created_at", { ascending: true });
+    // Determine granularity based on time range
+    const daysDiff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    const granularity = daysDiff <= 7 ? "day" : daysDiff <= 90 ? "day" : "month";
 
-  const { data: agencies } = await supabase
-    .from("agencies")
-    .select("created_at")
-    .gte("created_at", start.toISOString())
-    .order("created_at", { ascending: true });
+    // Get actual counts from database
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("created_at")
+      .gte("created_at", start.toISOString())
+      .order("created_at", { ascending: true });
 
-  const { data: sites } = await supabase
-    .from("sites")
-    .select("created_at")
-    .gte("created_at", start.toISOString())
-    .order("created_at", { ascending: true });
+    const { data: agencies } = await supabase
+      .from("agencies")
+      .select("created_at")
+      .gte("created_at", start.toISOString())
+      .order("created_at", { ascending: true });
 
-  // Generate trend data points
-  const trends: PlatformTrendData[] = [];
-  const current = new Date(start);
-  let cumulativeUsers = profiles?.length || 0;
-  let cumulativeAgencies = agencies?.length || 0;
-  let cumulativeSites = sites?.length || 0;
+    const { data: sites } = await supabase
+      .from("sites")
+      .select("created_at")
+      .gte("created_at", start.toISOString())
+      .order("created_at", { ascending: true });
 
-  while (current <= end) {
-    const dateStr = current.toISOString().split("T")[0];
-    const seed = dateStr;
+    // Generate trend data points
+    const trends: PlatformTrendData[] = [];
+    const current = new Date(start);
+    let cumulativeUsers = profiles?.length || 0;
+    let cumulativeAgencies = agencies?.length || 0;
+    let cumulativeSites = sites?.length || 0;
 
-    // Count items for this period
-    const usersInPeriod = profiles?.filter(p => {
-      if (!p.created_at) return false;
-      const d = new Date(p.created_at);
-      return d >= current && d < new Date(current.getTime() + 24 * 60 * 60 * 1000);
-    }).length || 0;
+    while (current <= end) {
+      const dateStr = current.toISOString().split("T")[0];
 
-    const agenciesInPeriod = agencies?.filter(a => {
-      if (!a.created_at) return false;
-      const d = new Date(a.created_at);
-      return d >= current && d < new Date(current.getTime() + 24 * 60 * 60 * 1000);
-    }).length || 0;
+      // Count items for this period
+      const usersInPeriod = profiles?.filter(p => {
+        if (!p.created_at) return false;
+        const d = new Date(p.created_at);
+        return d >= current && d < new Date(current.getTime() + 24 * 60 * 60 * 1000);
+      }).length || 0;
 
-    const sitesInPeriod = sites?.filter(s => {
-      if (!s.created_at) return false;
-      const d = new Date(s.created_at);
-      return d >= current && d < new Date(current.getTime() + 24 * 60 * 60 * 1000);
-    }).length || 0;
+      const agenciesInPeriod = agencies?.filter(a => {
+        if (!a.created_at) return false;
+        const d = new Date(a.created_at);
+        return d >= current && d < new Date(current.getTime() + 24 * 60 * 60 * 1000);
+      }).length || 0;
 
-    // Simulated revenue (based on agencies)
-    const baseRevenue = (cumulativeAgencies * 97 + generateSeededRandom(seed, 1) * 500) * 100;
+      const sitesInPeriod = sites?.filter(s => {
+        if (!s.created_at) return false;
+        const d = new Date(s.created_at);
+        return d >= current && d < new Date(current.getTime() + 24 * 60 * 60 * 1000);
+      }).length || 0;
 
-    trends.push({
-      label: granularity === "month" 
-        ? current.toLocaleDateString(DEFAULT_LOCALE, { month: "short", year: "2-digit" })
-        : current.toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" }),
-      date: dateStr,
-      users: cumulativeUsers,
-      agencies: cumulativeAgencies,
-      sites: cumulativeSites,
-      revenue: Math.floor(baseRevenue),
-      pageViews: Math.floor(1000 + generateSeededRandom(seed, 2) * 10000),
-    });
+      // Revenue & pageViews: 0 — no billing/analytics tables to query
+      trends.push({
+        label: granularity === "month" 
+          ? current.toLocaleDateString(DEFAULT_LOCALE, { month: "short", year: "2-digit" })
+          : current.toLocaleDateString(DEFAULT_LOCALE, { month: "short", day: "numeric" }),
+        date: dateStr,
+        users: cumulativeUsers,
+        agencies: cumulativeAgencies,
+        sites: cumulativeSites,
+        revenue: 0, // No billing table — placeholder
+        pageViews: 0, // No analytics tracking table — placeholder
+      });
 
-    cumulativeUsers += usersInPeriod;
-    cumulativeAgencies += agenciesInPeriod;
-    cumulativeSites += sitesInPeriod;
+      cumulativeUsers += usersInPeriod;
+      cumulativeAgencies += agenciesInPeriod;
+      cumulativeSites += sitesInPeriod;
 
-    // Move to next period
-    if (granularity === "month") {
-      current.setMonth(current.getMonth() + 1);
-    } else {
-      current.setDate(current.getDate() + 1);
+      // Move to next period
+      if (granularity === "month") {
+        current.setMonth(current.getMonth() + 1);
+      } else {
+        current.setDate(current.getDate() + 1);
+      }
     }
-  }
 
-  return trends;
+    return trends;
+  } catch (error) {
+    console.error("[admin-analytics] getPlatformTrends error:", error);
+    return [];
+  }
 }
 
 export async function getPlatformActivity(
   limit: number = 20
 ): Promise<PlatformActivityItem[]> {
   await requireSuperAdmin();
-  const supabase = await createClient();
 
-  const activities: PlatformActivityItem[] = [];
+  try {
+    const supabase = createAdminClient();
+    const activities: PlatformActivityItem[] = [];
 
-  // Get recent signups
-  const { data: recentUsers } = await supabase
-    .from("profiles")
-    .select("id, email, name, created_at")
-    .order("created_at", { ascending: false })
-    .limit(5);
+    // Get recent signups
+    const { data: recentUsers } = await supabase
+      .from("profiles")
+      .select("id, email, name, created_at")
+      .order("created_at", { ascending: false })
+      .limit(5);
 
-  // Get recent sites
-  const { data: recentSites } = await supabase
-    .from("sites")
-    .select("id, name, created_at, published, agency_id")
-    .order("created_at", { ascending: false })
-    .limit(5);
+    // Get recent sites
+    const { data: recentSites } = await supabase
+      .from("sites")
+      .select("id, name, created_at, published, agency_id")
+      .order("created_at", { ascending: false })
+      .limit(5);
 
-  // Get recent agencies
-  const { data: recentAgencies } = await supabase
-    .from("agencies")
-    .select("id, name, created_at")
-    .order("created_at", { ascending: false })
-    .limit(5);
+    // Get recent agencies
+    const { data: recentAgencies } = await supabase
+      .from("agencies")
+      .select("id, name, created_at")
+      .order("created_at", { ascending: false })
+      .limit(5);
 
-  // Get recent module installations
-  const { data: recentInstalls } = await supabase
-    .from("site_module_installations")
-    .select("id, module_id, site_id, installed_at")
-    .order("installed_at", { ascending: false })
-    .limit(5);
+    // Get recent module installations
+    const { data: recentInstalls } = await supabase
+      .from("site_module_installations")
+      .select("id, module_id, site_id, installed_at")
+      .order("installed_at", { ascending: false })
+      .limit(5);
 
-  // Add signups
-  recentUsers?.filter(u => u.created_at).forEach((user) => {
-    activities.push({
-      id: `signup-${user.id}`,
-      type: "signup",
-      title: "New user signed up",
-      description: user.name || user.email,
-      timestamp: user.created_at!,
-      metadata: { userId: user.id, userName: user.name || user.email },
+    // Add signups
+    recentUsers?.filter(u => u.created_at).forEach((user) => {
+      activities.push({
+        id: `signup-${user.id}`,
+        type: "signup",
+        title: "New user signed up",
+        description: user.name || user.email,
+        timestamp: user.created_at!,
+        metadata: { userId: user.id, userName: user.name || user.email },
+      });
     });
-  });
 
-  // Add site publishes
-  recentSites?.filter(s => s.published && s.created_at).forEach((site) => {
-    activities.push({
-      id: `publish-${site.id}`,
-      type: "publish",
-      title: "Site published",
-      description: site.name,
-      timestamp: site.created_at!,
-      metadata: { siteId: site.id, siteName: site.name, agencyId: site.agency_id },
+    // Add site publishes
+    recentSites?.filter(s => s.published && s.created_at).forEach((site) => {
+      activities.push({
+        id: `publish-${site.id}`,
+        type: "publish",
+        title: "Site published",
+        description: site.name,
+        timestamp: site.created_at!,
+        metadata: { siteId: site.id, siteName: site.name, agencyId: site.agency_id },
+      });
     });
-  });
 
-  // Add new agencies
-  recentAgencies?.filter(a => a.created_at).forEach((agency) => {
-    activities.push({
-      id: `agency-${agency.id}`,
-      type: "subscription",
-      title: "New agency registered",
-      description: agency.name,
-      timestamp: agency.created_at!,
-      metadata: { agencyId: agency.id, agencyName: agency.name },
+    // Add new agencies
+    recentAgencies?.filter(a => a.created_at).forEach((agency) => {
+      activities.push({
+        id: `agency-${agency.id}`,
+        type: "subscription",
+        title: "New agency registered",
+        description: agency.name,
+        timestamp: agency.created_at!,
+        metadata: { agencyId: agency.id, agencyName: agency.name },
+      });
     });
-  });
 
-  // Add module installations
-  recentInstalls?.filter(i => i.installed_at).forEach((install) => {
-    activities.push({
-      id: `install-${install.id}`,
-      type: "module_install",
-      title: "Module installed",
-      description: install.module_id,
-      timestamp: install.installed_at!,
-      metadata: { module: install.module_id, siteId: install.site_id },
+    // Add module installations
+    recentInstalls?.filter(i => i.installed_at).forEach((install) => {
+      activities.push({
+        id: `install-${install.id}`,
+        type: "module_install",
+        title: "Module installed",
+        description: install.module_id,
+        timestamp: install.installed_at!,
+        metadata: { module: install.module_id, siteId: install.site_id },
+      });
     });
-  });
 
-  // Sort by timestamp and limit
-  return activities
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-    .slice(0, limit);
+    // Sort by timestamp and limit
+    return activities
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, limit);
+  } catch (error) {
+    console.error("[admin-analytics] getPlatformActivity error:", error);
+    return [];
+  }
 }
 
 // ============================================================================
@@ -483,279 +522,306 @@ export async function getAgencyMetricsList(
   limit: number = 20
 ): Promise<{ agencies: AgencyMetrics[]; total: number }> {
   await requireSuperAdmin();
-  const supabase = await createClient();
 
-  const offset = (page - 1) * limit;
+  try {
+    const supabase = createAdminClient();
+    const offset = (page - 1) * limit;
 
-  // Get agencies with counts
-  const { data: agencies, count } = await supabase
-    .from("agencies")
-    .select("*, sites(count), agency_members(count)", { count: "exact" })
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+    // Get agencies with counts
+    const { data: agencies, count } = await supabase
+      .from("agencies")
+      .select("*, sites(count), agency_members(count)", { count: "exact" })
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
-  const agencyMetrics: AgencyMetrics[] = (agencies || []).map((agency) => {
-    const seed = agency.id;
-    const sitesCount = (agency.sites as unknown as { count: number }[])?.[0]?.count || 0;
-    const membersCount = (agency.agency_members as unknown as { count: number }[])?.[0]?.count || 0;
+    // Get module installation counts per agency's sites
+    const agencyIds = (agencies || []).map(a => a.id);
+    const siteModuleCounts = new Map<string, number>();
+    if (agencyIds.length > 0) {
+      const { data: siteModules } = await supabase
+        .from("sites")
+        .select("agency_id, site_module_installations(count)")
+        .in("agency_id", agencyIds);
+      
+      siteModules?.forEach((s) => {
+        const agencyId = s.agency_id;
+        const installCount = (s.site_module_installations as unknown as { count: number }[])?.[0]?.count || 0;
+        siteModuleCounts.set(agencyId, (siteModuleCounts.get(agencyId) || 0) + installCount);
+      });
+    }
 
-    // Simulated metrics based on agency data
-    const baseRevenue = Math.floor(29 + generateSeededRandom(seed, 1) * 170) * 100; // $29-$199
-    const healthScore = Math.floor(40 + generateSeededRandom(seed, 2) * 60);
+    // Get published site counts per agency
+    const publishedSiteCounts = new Map<string, number>();
+    if (agencyIds.length > 0) {
+      const { data: pubSites } = await supabase
+        .from("sites")
+        .select("agency_id")
+        .in("agency_id", agencyIds)
+        .eq("published", true);
 
-    // Normalize status to expected values
-    const rawStatus = agency.subscription_status || "active";
-    const status: AgencyMetrics["status"] = 
-      rawStatus === "active" || rawStatus === "trial" || rawStatus === "churned" || rawStatus === "suspended"
-        ? rawStatus 
-        : "active";
+      pubSites?.forEach((s) => {
+        publishedSiteCounts.set(s.agency_id, (publishedSiteCounts.get(s.agency_id) || 0) + 1);
+      });
+    }
 
-    return {
-      id: agency.id,
-      name: agency.name,
-      plan: agency.plan || "starter",
-      status,
-      createdAt: agency.created_at || new Date().toISOString(),
-      metrics: {
-        sites: sitesCount,
-        publishedSites: Math.floor(sitesCount * 0.7),
-        totalPages: sitesCount * Math.floor(3 + generateSeededRandom(seed, 3) * 10),
-        teamMembers: membersCount,
-        clients: Math.floor(sitesCount * 0.8),
-        modulesInstalled: Math.floor(1 + generateSeededRandom(seed, 4) * 5),
-        storageUsed: Math.floor(generateSeededRandom(seed, 5) * 1024 * 1024 * 500),
-      },
-      billing: {
-        mrr: baseRevenue,
-        totalRevenue: baseRevenue * Math.floor(1 + generateSeededRandom(seed, 6) * 24),
-        lastPayment: new Date(Date.now() - generateSeededRandom(seed, 7) * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        nextBilling: new Date(Date.now() + (30 - generateSeededRandom(seed, 8) * 30) * 24 * 60 * 60 * 1000).toISOString(),
-        paymentStatus: generateSeededRandom(seed, 9) > 0.1 ? "current" : "overdue",
-      },
-      engagement: {
-        lastActive: new Date(Date.now() - generateSeededRandom(seed, 10) * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        loginCount30d: Math.floor(5 + generateSeededRandom(seed, 11) * 50),
-        pagesCreated30d: Math.floor(generateSeededRandom(seed, 12) * 20),
-        postsPublished30d: Math.floor(generateSeededRandom(seed, 13) * 30),
-      },
-      health: {
-        score: healthScore,
-        riskLevel: healthScore < 40 ? "high" : healthScore < 70 ? "medium" : "low",
-        factors: healthScore < 70 
-          ? ["Low engagement", "Pending payment"] 
-          : ["Active usage", "Regular payments"],
-      },
-    };
-  });
+    const agencyMetrics: AgencyMetrics[] = (agencies || []).map((agency) => {
+      const sitesCount = (agency.sites as unknown as { count: number }[])?.[0]?.count || 0;
+      const membersCount = (agency.agency_members as unknown as { count: number }[])?.[0]?.count || 0;
+      const publishedCount = publishedSiteCounts.get(agency.id) || 0;
+      const modulesInstalled = siteModuleCounts.get(agency.id) || 0;
 
-  return { agencies: agencyMetrics, total: count || 0 };
+      // Normalize status to expected values
+      const rawStatus = agency.subscription_status || "active";
+      const status: AgencyMetrics["status"] = 
+        rawStatus === "active" || rawStatus === "trial" || rawStatus === "churned" || rawStatus === "suspended"
+          ? rawStatus 
+          : "active";
+
+      return {
+        id: agency.id,
+        name: agency.name,
+        plan: agency.plan || "starter",
+        status,
+        createdAt: agency.created_at || new Date().toISOString(),
+        metrics: {
+          sites: sitesCount,
+          publishedSites: publishedCount,
+          totalPages: 0, // Would need a join through sites→pages; placeholder
+          teamMembers: membersCount,
+          clients: 0, // No clients table — placeholder
+          modulesInstalled,
+          storageUsed: 0, // No storage tracking per agency — placeholder
+        },
+        billing: {
+          mrr: 0, // No billing table to query — placeholder
+          totalRevenue: 0,
+          lastPayment: "",
+          nextBilling: "",
+          paymentStatus: "current" as const,
+        },
+        engagement: {
+          lastActive: "", // No session tracking — placeholder
+          loginCount30d: 0,
+          pagesCreated30d: 0,
+          postsPublished30d: 0,
+        },
+        health: {
+          score: 0, // No health scoring system — placeholder
+          riskLevel: "low" as const,
+          factors: [],
+        },
+      };
+    });
+
+    return { agencies: agencyMetrics, total: count || 0 };
+  } catch (error) {
+    console.error("[admin-analytics] getAgencyMetricsList error:", error);
+    return { agencies: [], total: 0 };
+  }
 }
 
 export async function getAgencyLeaderboard(): Promise<AgencyLeaderboard> {
   await requireSuperAdmin();
-  const supabase = await createClient();
 
-  const { data: agencies } = await supabase
-    .from("agencies")
-    .select("id, name, plan, created_at")
-    .limit(100);
-
-  // Sort by different metrics to create leaderboards
-  const agencyList = (agencies || []).map((a) => {
-    const seed = a.id;
-    const createdDate = a.created_at ? new Date(a.created_at).getTime() : Date.now();
-    return {
-      ...a,
-      revenue: Math.floor(29 + generateSeededRandom(seed, 1) * 170) * 100,
-      sites: Math.floor(1 + generateSeededRandom(seed, 2) * 20),
-      engagement: Math.floor(10 + generateSeededRandom(seed, 3) * 90),
-      healthScore: Math.floor(40 + generateSeededRandom(seed, 4) * 60),
-      daysOld: Math.floor((Date.now() - createdDate) / (24 * 60 * 60 * 1000)),
-    };
-  });
-
-  return {
-    topByRevenue: agencyList
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 5)
-      .map((a) => ({
-        id: a.id,
-        name: a.name,
-        plan: a.plan || "starter",
-        value: a.revenue,
-        valueLabel: formatCurrency(a.revenue),
-        trend: generateSeededRandom(a.id, 5) > 0.3 ? "up" : "stable",
-      })),
-    topBySites: agencyList
-      .sort((a, b) => b.sites - a.sites)
-      .slice(0, 5)
-      .map((a) => ({
-        id: a.id,
-        name: a.name,
-        plan: a.plan || "starter",
-        value: a.sites,
-        valueLabel: `${a.sites} sites`,
-        trend: generateSeededRandom(a.id, 6) > 0.3 ? "up" : "stable",
-      })),
-    topByEngagement: agencyList
-      .sort((a, b) => b.engagement - a.engagement)
-      .slice(0, 5)
-      .map((a) => ({
-        id: a.id,
-        name: a.name,
-        plan: a.plan || "starter",
-        value: a.engagement,
-        valueLabel: `${a.engagement}% active`,
-        trend: generateSeededRandom(a.id, 7) > 0.3 ? "up" : "stable",
-      })),
-    atRisk: agencyList
-      .filter((a) => a.healthScore < 50)
-      .sort((a, b) => a.healthScore - b.healthScore)
-      .slice(0, 5)
-      .map((a) => ({
-        id: a.id,
-        name: a.name,
-        plan: a.plan || "starter",
-        value: a.healthScore,
-        valueLabel: `${a.healthScore}% health`,
-        trend: "down",
-      })),
-    newlyOnboarded: agencyList
-      .filter((a) => a.daysOld <= 30)
-      .sort((a, b) => a.daysOld - b.daysOld)
-      .slice(0, 5)
-      .map((a) => ({
-        id: a.id,
-        name: a.name,
-        plan: a.plan || "starter",
-        value: a.daysOld,
-        valueLabel: a.daysOld === 0 ? "Today" : `${a.daysOld}d ago`,
-        trend: "up",
-      })),
+  const emptyLeaderboard: AgencyLeaderboard = {
+    topByRevenue: [],
+    topBySites: [],
+    topByEngagement: [],
+    atRisk: [],
+    newlyOnboarded: [],
   };
+
+  try {
+    const supabase = createAdminClient();
+
+    // Get agencies with site counts
+    const { data: agencies } = await supabase
+      .from("agencies")
+      .select("id, name, plan, created_at, sites(count)")
+      .limit(100);
+
+    if (!agencies || agencies.length === 0) return emptyLeaderboard;
+
+    const agencyList = agencies.map((a) => {
+      const sitesCount = (a.sites as unknown as { count: number }[])?.[0]?.count || 0;
+      const createdDate = a.created_at ? new Date(a.created_at).getTime() : Date.now();
+      return {
+        ...a,
+        sites: sitesCount,
+        daysOld: Math.floor((Date.now() - createdDate) / (24 * 60 * 60 * 1000)),
+      };
+    });
+
+    return {
+      topByRevenue: [], // No billing data — placeholder
+      topBySites: agencyList
+        .sort((a, b) => b.sites - a.sites)
+        .slice(0, 5)
+        .map((a) => ({
+          id: a.id,
+          name: a.name,
+          plan: a.plan || "starter",
+          value: a.sites,
+          valueLabel: `${a.sites} sites`,
+          trend: "stable" as const,
+        })),
+      topByEngagement: [], // No session tracking — placeholder
+      atRisk: [], // No health scoring — placeholder
+      newlyOnboarded: agencyList
+        .filter((a) => a.daysOld <= 30)
+        .sort((a, b) => a.daysOld - b.daysOld)
+        .slice(0, 5)
+        .map((a) => ({
+          id: a.id,
+          name: a.name,
+          plan: a.plan || "starter",
+          value: a.daysOld,
+          valueLabel: a.daysOld === 0 ? "Today" : `${a.daysOld}d ago`,
+          trend: "up" as const,
+        })),
+    };
+  } catch (error) {
+    console.error("[admin-analytics] getAgencyLeaderboard error:", error);
+    return emptyLeaderboard;
+  }
 }
 
 export async function getAgencyGrowth(
   timeRange: AdminTimeRange = "12m"
 ): Promise<AgencyGrowthData[]> {
   await requireSuperAdmin();
-  const supabase = await createClient();
-  const { start } = getDateRangeFromTimeRange(timeRange);
 
-  const { data: agencies } = await supabase
-    .from("agencies")
-    .select("created_at")
-    .gte("created_at", start.toISOString())
-    .order("created_at", { ascending: true });
+  try {
+    const supabase = createAdminClient();
+    const { start } = getDateRangeFromTimeRange(timeRange);
 
-  // Group by month
-  const monthlyData = new Map<string, { new: number; churned: number }>();
-  
-  agencies?.filter(a => a.created_at).forEach((a) => {
-    const month = new Date(a.created_at!).toISOString().slice(0, 7);
-    const existing = monthlyData.get(month) || { new: 0, churned: 0 };
-    existing.new++;
-    monthlyData.set(month, existing);
-  });
+    const { data: agencies } = await supabase
+      .from("agencies")
+      .select("created_at")
+      .gte("created_at", start.toISOString())
+      .order("created_at", { ascending: true });
 
-  const result: AgencyGrowthData[] = [];
-  let runningTotal = 0;
-
-  Array.from(monthlyData.entries())
-    .sort(([a], [b]) => a.localeCompare(b))
-    .forEach(([period, data]) => {
-      const seed = period;
-      const churned = Math.floor(data.new * generateSeededRandom(seed, 1) * 0.15);
-      runningTotal += data.new - churned;
-
-      result.push({
-        period,
-        newAgencies: data.new,
-        churnedAgencies: churned,
-        netGrowth: data.new - churned,
-        conversionRate: 25 + generateSeededRandom(seed, 2) * 30,
-        avgLifetimeValue: Math.floor(500 + generateSeededRandom(seed, 3) * 2000),
-      });
+    // Group by month
+    const monthlyData = new Map<string, { new: number }>();
+    
+    agencies?.filter(a => a.created_at).forEach((a) => {
+      const month = new Date(a.created_at!).toISOString().slice(0, 7);
+      const existing = monthlyData.get(month) || { new: 0 };
+      existing.new++;
+      monthlyData.set(month, existing);
     });
 
-  return result;
+    const result: AgencyGrowthData[] = [];
+
+    Array.from(monthlyData.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([period, data]) => {
+        // No churn tracking table — report churn as 0
+        result.push({
+          period,
+          newAgencies: data.new,
+          churnedAgencies: 0, // No churn tracking — placeholder
+          netGrowth: data.new,
+          conversionRate: 0, // No funnel tracking — placeholder
+          avgLifetimeValue: 0, // No billing data — placeholder
+        });
+      });
+
+    return result;
+  } catch (error) {
+    console.error("[admin-analytics] getAgencyGrowth error:", error);
+    return [];
+  }
 }
 
 export async function getAgencySegmentation(
   _timeRange?: AdminTimeRange
 ): Promise<AgencySegmentation> {
   await requireSuperAdmin();
-  const supabase = await createClient();
 
-  const { data: agencies } = await supabase
-    .from("agencies")
-    .select("id, plan, industry, created_at");
-
-  const total = agencies?.length || 0;
-  if (total === 0) {
-    return {
-      byPlan: [],
-      bySize: [],
-      byIndustry: [],
-      byRegion: [],
-    };
-  }
-
-  // By Plan
-  const planCounts = new Map<string, number>();
-  agencies?.forEach((a) => {
-    const plan = a.plan || "starter";
-    planCounts.set(plan, (planCounts.get(plan) || 0) + 1);
-  });
-
-  const planPrices: Record<string, number> = {
-    free: 0,
-    starter: 2900,
-    professional: 9900,
-    enterprise: 29900,
+  const empty: AgencySegmentation = {
+    byPlan: [],
+    bySize: [],
+    byIndustry: [],
+    byRegion: [],
   };
 
-  const byPlan = Array.from(planCounts.entries()).map(([plan, count]) => ({
-    plan,
-    count,
-    revenue: count * (planPrices[plan] || 2900),
-    avgMrr: planPrices[plan] || 2900,
-    percentage: Math.round((count / total) * 100),
-  }));
+  try {
+    const supabase = createAdminClient();
 
-  // By Industry
-  const industryCounts = new Map<string, number>();
-  agencies?.forEach((a) => {
-    const industry = a.industry || "Other";
-    industryCounts.set(industry, (industryCounts.get(industry) || 0) + 1);
-  });
+    const { data: agencies } = await supabase
+      .from("agencies")
+      .select("id, plan, industry, created_at");
 
-  const byIndustry = Array.from(industryCounts.entries())
-    .map(([industry, count]) => ({
-      industry,
+    const total = agencies?.length || 0;
+    if (total === 0) return empty;
+
+    // By Plan — real data from agencies.plan column
+    const planCounts = new Map<string, number>();
+    agencies?.forEach((a) => {
+      const plan = a.plan || "starter";
+      planCounts.set(plan, (planCounts.get(plan) || 0) + 1);
+    });
+
+    const planPrices: Record<string, number> = {
+      free: 0,
+      starter: 2900,
+      professional: 9900,
+      enterprise: 29900,
+    };
+
+    const byPlan = Array.from(planCounts.entries()).map(([plan, count]) => ({
+      plan,
       count,
+      revenue: count * (planPrices[plan] || 2900),
+      avgMrr: planPrices[plan] || 2900,
       percentage: Math.round((count / total) * 100),
-    }))
-    .sort((a, b) => b.count - a.count);
+    }));
 
-  // By Size (simulated based on plan)
-  const bySize = [
-    { segment: "small" as const, size: "Small", count: Math.floor(total * 0.5), criteria: "1-3 sites", percentage: 50 },
-    { segment: "medium" as const, size: "Medium", count: Math.floor(total * 0.3), criteria: "4-10 sites", percentage: 30 },
-    { segment: "large" as const, size: "Large", count: Math.floor(total * 0.15), criteria: "11-50 sites", percentage: 15 },
-    { segment: "enterprise" as const, size: "Enterprise", count: Math.floor(total * 0.05), criteria: "50+ sites", percentage: 5 },
-  ];
+    // By Industry — real data from agencies.industry column
+    const industryCounts = new Map<string, number>();
+    agencies?.forEach((a) => {
+      const industry = a.industry || "Other";
+      industryCounts.set(industry, (industryCounts.get(industry) || 0) + 1);
+    });
 
-  // By Region (simulated)
-  const byRegion = [
-    { region: "North America", count: Math.floor(total * 0.4), percentage: 40 },
-    { region: "Europe", count: Math.floor(total * 0.3), percentage: 30 },
-    { region: "Asia Pacific", count: Math.floor(total * 0.15), percentage: 15 },
-    { region: "Latin America", count: Math.floor(total * 0.1), percentage: 10 },
-    { region: "Africa & Middle East", count: Math.floor(total * 0.05), percentage: 5 },
-  ];
+    const byIndustry = Array.from(industryCounts.entries())
+      .map(([industry, count]) => ({
+        industry,
+        count,
+        percentage: Math.round((count / total) * 100),
+      }))
+      .sort((a, b) => b.count - a.count);
 
-  return { byPlan, bySize, byIndustry, byRegion };
+    // By Size — query actual site counts per agency for accurate sizing
+    const { data: agencySites } = await supabase
+      .from("agencies")
+      .select("id, sites(count)");
+
+    let small = 0, medium = 0, large = 0, enterprise = 0;
+    agencySites?.forEach((a) => {
+      const sitesCount = (a.sites as unknown as { count: number }[])?.[0]?.count || 0;
+      if (sitesCount <= 3) small++;
+      else if (sitesCount <= 10) medium++;
+      else if (sitesCount <= 50) large++;
+      else enterprise++;
+    });
+
+    const bySize = [
+      { segment: "small" as const, size: "Small", count: small, criteria: "1-3 sites", percentage: total > 0 ? Math.round((small / total) * 100) : 0 },
+      { segment: "medium" as const, size: "Medium", count: medium, criteria: "4-10 sites", percentage: total > 0 ? Math.round((medium / total) * 100) : 0 },
+      { segment: "large" as const, size: "Large", count: large, criteria: "11-50 sites", percentage: total > 0 ? Math.round((large / total) * 100) : 0 },
+      { segment: "enterprise" as const, size: "Enterprise", count: enterprise, criteria: "50+ sites", percentage: total > 0 ? Math.round((enterprise / total) * 100) : 0 },
+    ];
+
+    // By Region — no region column in agencies table; empty
+    const byRegion: { region: string; count: number; percentage: number }[] = [];
+
+    return { byPlan, bySize, byIndustry, byRegion };
+  } catch (error) {
+    console.error("[admin-analytics] getAgencySegmentation error:", error);
+    return empty;
+  }
 }
 
 // ============================================================================
@@ -766,258 +832,269 @@ export async function getRevenueMetrics(
   timeRange: AdminTimeRange = "30d"
 ): Promise<RevenueMetrics> {
   await requireSuperAdmin();
-  const supabase = await createClient();
-  const { start } = getDateRangeFromTimeRange(timeRange);
 
-  const { count: totalAgencies } = await supabase
-    .from("agencies")
-    .select("*", { count: "exact", head: true });
+  try {
+    const supabase = createAdminClient();
 
-  const { count: newAgencies } = await supabase
-    .from("agencies")
-    .select("*", { count: "exact", head: true })
-    .gte("created_at", start.toISOString());
+    const { count: totalAgencies } = await supabase
+      .from("agencies")
+      .select("*", { count: "exact", head: true });
 
-  const agencyCount = totalAgencies || 0;
-  const seed = new Date().toDateString();
+    // Query actual plan distribution for MRR calculation
+    const { data: planData } = await supabase
+      .from("agencies")
+      .select("plan");
 
-  // Calculate MRR based on plan distribution
-  const freeCount = Math.floor(agencyCount * 0.25);
-  const starterCount = Math.floor(agencyCount * 0.40);
-  const proCount = Math.floor(agencyCount * 0.25);
-  const enterpriseCount = agencyCount - freeCount - starterCount - proCount;
+    const planPrices: Record<string, number> = {
+      free: 0,
+      starter: 2900,
+      professional: 9900,
+      enterprise: 29900,
+    };
 
-  const mrr = (starterCount * 2900) + (proCount * 9900) + (enterpriseCount * 29900);
-  const prevMrr = mrr * (0.9 + generateSeededRandom(seed, 1) * 0.05);
-  const mrrGrowth = Math.round(((mrr - prevMrr) / prevMrr) * 100 * 10) / 10;
-  const totalRevenue = mrr * 12;
-  const avgRevenuePerAccount = agencyCount > 0 ? Math.floor(mrr / agencyCount) : 0;
+    let mrr = 0;
+    planData?.forEach((a) => {
+      const plan = a.plan || "starter";
+      mrr += planPrices[plan] || 2900;
+    });
 
-  return {
-    mrr,
-    arr: mrr * 12,
-    mrrGrowth,
-    arrGrowth: mrrGrowth,
-    revenueToday: Math.floor(mrr / 30 + generateSeededRandom(seed, 2) * 1000),
-    revenueThisMonth: Math.floor(mrr * (new Date().getDate() / 30)),
-    revenueLastMonth: Math.floor(prevMrr),
-    projectedMonthEnd: mrr,
-    totalRevenue,
-    revenueGrowth: mrrGrowth,
-    avgRevenuePerAccount,
-    arpaGrowth: Math.round(mrrGrowth * 0.8 * 10) / 10,
-  };
+    const agencyCount = totalAgencies || 0;
+    const avgRevenuePerAccount = agencyCount > 0 ? Math.floor(mrr / agencyCount) : 0;
+
+    // No historical billing data to calculate growth — placeholder
+    return {
+      mrr,
+      arr: mrr * 12,
+      mrrGrowth: 0, // No historical data — placeholder
+      arrGrowth: 0,
+      revenueToday: 0, // No daily billing table — placeholder
+      revenueThisMonth: 0,
+      revenueLastMonth: 0,
+      projectedMonthEnd: mrr,
+      totalRevenue: 0, // No cumulative billing — placeholder
+      revenueGrowth: 0,
+      avgRevenuePerAccount,
+      arpaGrowth: 0,
+    };
+  } catch (error) {
+    console.error("[admin-analytics] getRevenueMetrics error:", error);
+    return {
+      mrr: 0, arr: 0, mrrGrowth: 0, arrGrowth: 0,
+      revenueToday: 0, revenueThisMonth: 0, revenueLastMonth: 0,
+      projectedMonthEnd: 0, totalRevenue: 0, revenueGrowth: 0,
+      avgRevenuePerAccount: 0, arpaGrowth: 0,
+    };
+  }
 }
 
 export async function getSubscriptionMetrics(
   _timeRange?: AdminTimeRange
 ): Promise<SubscriptionMetrics> {
   await requireSuperAdmin();
-  const supabase = await createClient();
 
-  const { count: total } = await supabase
-    .from("agencies")
-    .select("*", { count: "exact", head: true });
+  try {
+    const supabase = createAdminClient();
 
-  const agencyCount = total || 0;
-  const seed = new Date().toDateString();
+    const { count: total } = await supabase
+      .from("agencies")
+      .select("*", { count: "exact", head: true });
 
-  const active = Math.floor(agencyCount * 0.85);
-  const trial = Math.floor(agencyCount * 0.1);
-  const cancelled = Math.floor(agencyCount * 0.03);
-  const pastDue = Math.floor(agencyCount * 0.02);
-  const churnRate = 3 + generateSeededRandom(seed, 1) * 2;
-  const churnedThisMonth = Math.floor(agencyCount * 0.02);
-  const newThisMonth = Math.floor(agencyCount * 0.08);
-  const avgSubscriptionValue = Math.floor(5000 + generateSeededRandom(seed, 4) * 3000);
+    // Query actual subscription statuses
+    const { data: statusData } = await supabase
+      .from("agencies")
+      .select("subscription_status");
 
-  return {
-    total: agencyCount,
-    active,
-    trial,
-    cancelled,
-    pastDue,
-    churnRate,
-    churnedThisMonth,
-    newThisMonth,
-    netGrowth: Math.floor(agencyCount * 0.06),
-    conversionRate: 25 + generateSeededRandom(seed, 2) * 15,
-    trialToPayRate: 30 + generateSeededRandom(seed, 3) * 20,
-    // Additional fields for components
-    totalActive: active,
-    activeGrowth: Math.round((newThisMonth - churnedThisMonth) / active * 100 * 10) / 10,
-    newThisPeriod: newThisMonth,
-    churnedThisPeriod: churnedThisMonth,
-    trialActive: trial,
-    trialConversionRate: 30 + generateSeededRandom(seed, 3) * 20,
-    avgSubscriptionValue,
-  };
+    let active = 0;
+    let trial = 0;
+    let cancelled = 0;
+    let pastDue = 0;
+
+    statusData?.forEach((a) => {
+      const s = a.subscription_status || "active";
+      if (s === "active") active++;
+      else if (s === "trialing" || s === "trial") trial++;
+      else if (s === "canceled" || s === "cancelled") cancelled++;
+      else if (s === "past_due") pastDue++;
+      else active++; // default
+    });
+
+    const agencyCount = total || 0;
+
+    // Query new agencies this month
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+
+    const { count: newThisMonth } = await supabase
+      .from("agencies")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", monthStart.toISOString());
+
+    const newCount = newThisMonth || 0;
+
+    return {
+      total: agencyCount,
+      active,
+      trial,
+      cancelled,
+      pastDue,
+      churnRate: 0, // No churn tracking — placeholder
+      churnedThisMonth: 0,
+      newThisMonth: newCount,
+      netGrowth: newCount,
+      conversionRate: 0, // No funnel tracking — placeholder
+      trialToPayRate: 0,
+      // Additional fields for components
+      totalActive: active,
+      activeGrowth: 0,
+      newThisPeriod: newCount,
+      churnedThisPeriod: 0,
+      trialActive: trial,
+      trialConversionRate: 0,
+      avgSubscriptionValue: 0, // No billing data — placeholder
+    };
+  } catch (error) {
+    console.error("[admin-analytics] getSubscriptionMetrics error:", error);
+    return {
+      total: 0, active: 0, trial: 0, cancelled: 0, pastDue: 0,
+      churnRate: 0, churnedThisMonth: 0, newThisMonth: 0, netGrowth: 0,
+      conversionRate: 0, trialToPayRate: 0,
+      totalActive: 0, activeGrowth: 0, newThisPeriod: 0, churnedThisPeriod: 0,
+      trialActive: 0, trialConversionRate: 0, avgSubscriptionValue: 0,
+    };
+  }
 }
 
 export async function getRevenueByPlan(
   _timeRange?: AdminTimeRange
 ): Promise<RevenueByPlan[]> {
   await requireSuperAdmin();
-  const supabase = await createClient();
 
-  const { count: total } = await supabase
-    .from("agencies")
-    .select("*", { count: "exact", head: true });
+  try {
+    const supabase = createAdminClient();
 
-  const agencyCount = total || 0;
-  const seed = new Date().toDateString();
+    // Query actual plan distribution
+    const { data: planData } = await supabase
+      .from("agencies")
+      .select("plan");
 
-  const plans = [
-    {
-      plan: "free",
-      planName: "Free",
-      subscribers: Math.floor(agencyCount * 0.25),
-      price: 0,
-    },
-    {
-      plan: "starter",
-      planName: "Starter",
-      subscribers: Math.floor(agencyCount * 0.40),
-      price: 2900,
-    },
-    {
-      plan: "professional",
-      planName: "Professional",
-      subscribers: Math.floor(agencyCount * 0.25),
-      price: 9900,
-    },
-    {
-      plan: "enterprise",
-      planName: "Enterprise",
-      subscribers: Math.floor(agencyCount * 0.10),
-      price: 29900,
-    },
-  ];
+    const planPrices: Record<string, number> = {
+      free: 0,
+      starter: 2900,
+      professional: 9900,
+      enterprise: 29900,
+    };
 
-  const totalRevenue = plans.reduce((sum, p) => sum + p.subscribers * p.price, 0);
+    const planCounts: Record<string, number> = {};
+    planData?.forEach((a) => {
+      const plan = a.plan || "starter";
+      planCounts[plan] = (planCounts[plan] || 0) + 1;
+    });
 
-  return plans.map((p, i) => ({
-    plan: p.plan,
-    planName: p.planName,
-    subscribers: p.subscribers,
-    mrr: p.subscribers * p.price,
-    percentage: totalRevenue > 0 ? Math.round((p.subscribers * p.price / totalRevenue) * 100) : 0,
-    avgRevenuePerUser: p.price,
-    churnRate: 2 + generateSeededRandom(seed + p.plan, i) * 4,
-    // Additional fields for components
-    revenue: p.subscribers * p.price,
-    count: p.subscribers,
-  }));
+    const plans = [
+      { plan: "free", planName: "Free", price: 0 },
+      { plan: "starter", planName: "Starter", price: 2900 },
+      { plan: "professional", planName: "Professional", price: 9900 },
+      { plan: "enterprise", planName: "Enterprise", price: 29900 },
+    ];
+
+    const totalRevenue = plans.reduce((sum, p) => sum + (planCounts[p.plan] || 0) * p.price, 0);
+
+    return plans.map((p) => {
+      const subscribers = planCounts[p.plan] || 0;
+      const revenue = subscribers * p.price;
+      return {
+        plan: p.plan,
+        planName: p.planName,
+        subscribers,
+        mrr: revenue,
+        percentage: totalRevenue > 0 ? Math.round((revenue / totalRevenue) * 100) : 0,
+        avgRevenuePerUser: p.price,
+        churnRate: 0, // No churn tracking — placeholder
+        // Additional fields for components
+        revenue,
+        count: subscribers,
+      };
+    });
+  } catch (error) {
+    console.error("[admin-analytics] getRevenueByPlan error:", error);
+    return [];
+  }
 }
 
 export async function getRevenueByModule(): Promise<RevenueByModule[]> {
   await requireSuperAdmin();
-  const supabase = await createClient();
 
-  const { data: modules } = await supabase
-    .from("modules_v2")
-    .select("id, name")
-    .limit(10);
+  try {
+    const supabase = createAdminClient();
 
-  const { data: subscriptions } = await supabase
-    .from("agency_module_subscriptions")
-    .select("module_id");
+    const { data: modules } = await supabase
+      .from("modules_v2")
+      .select("id, name")
+      .limit(10);
 
-  const moduleCountMap = new Map<string, number>();
-  subscriptions?.forEach((s) => {
-    if (s.module_id) {
-      moduleCountMap.set(s.module_id, (moduleCountMap.get(s.module_id) || 0) + 1);
-    }
-  });
+    const { data: subscriptions } = await supabase
+      .from("agency_module_subscriptions")
+      .select("module_id, custom_price_monthly");
 
-  const totalSubs = Array.from(moduleCountMap.values()).reduce((a, b) => a + b, 0);
-  const seed = new Date().toDateString();
+    const moduleCountMap = new Map<string, { count: number; totalPrice: number }>();
+    subscriptions?.forEach((s) => {
+      if (s.module_id) {
+        const existing = moduleCountMap.get(s.module_id) || { count: 0, totalPrice: 0 };
+        existing.count++;
+        existing.totalPrice += s.custom_price_monthly || 0;
+        moduleCountMap.set(s.module_id, existing);
+      }
+    });
 
-  return (modules || []).map((m, i) => {
-    const subs = moduleCountMap.get(m.id) || 0;
-    const price = Math.floor(500 + generateSeededRandom(m.id, 1) * 2000);
-    const mrr = subs * price;
+    const totalSubs = Array.from(moduleCountMap.values()).reduce((a, b) => a + b.count, 0);
 
-    return {
-      moduleId: m.id,
-      moduleName: m.name,
-      subscribers: subs,
-      mrr,
-      percentage: totalSubs > 0 ? Math.round((subs / totalSubs) * 100) : 0,
-      growth: Math.floor(-10 + generateSeededRandom(seed + m.id, i) * 30),
-    };
-  }).sort((a, b) => b.mrr - a.mrr);
+    return (modules || []).map((m) => {
+      const data = moduleCountMap.get(m.id) || { count: 0, totalPrice: 0 };
+      return {
+        moduleId: m.id,
+        moduleName: m.name,
+        subscribers: data.count,
+        mrr: data.totalPrice,
+        percentage: totalSubs > 0 ? Math.round((data.count / totalSubs) * 100) : 0,
+        growth: 0, // No historical data — placeholder
+      };
+    }).sort((a, b) => b.mrr - a.mrr);
+  } catch (error) {
+    console.error("[admin-analytics] getRevenueByModule error:", error);
+    return [];
+  }
 }
 
 export async function getRevenueTrends(
   timeRange: AdminTimeRange = "12m"
 ): Promise<RevenueTrendData[]> {
   await requireSuperAdmin();
-  const { start, end } = getDateRangeFromTimeRange(timeRange);
 
-  const trends: RevenueTrendData[] = [];
-  const current = new Date(start);
-  let baseMrr = 50000; // Starting MRR in cents
-
-  while (current <= end) {
-    const dateStr = current.toISOString().slice(0, 7);
-    const seed = dateStr;
-
-    const newMrr = Math.floor(baseMrr * (0.05 + generateSeededRandom(seed, 1) * 0.1));
-    const churnedMrr = Math.floor(baseMrr * (0.02 + generateSeededRandom(seed, 2) * 0.03));
-    const expansionMrr = Math.floor(baseMrr * (0.01 + generateSeededRandom(seed, 3) * 0.03));
-
-    baseMrr = baseMrr + newMrr + expansionMrr - churnedMrr;
-
-    trends.push({
-      date: dateStr,
-      mrr: baseMrr,
-      arr: baseMrr * 12,
-      newMrr,
-      churnedMrr,
-      expansionMrr,
-      subscriptions: Math.floor(baseMrr / 5000),
-      trials: Math.floor(baseMrr / 20000),
-    });
-
-    current.setMonth(current.getMonth() + 1);
-  }
-
-  return trends;
+  // No billing/payment history table — return empty array
+  // When Paddle integration is live, query paddle_transactions or billing_events here
+  return [];
 }
 
 export async function getPaymentMetrics(
   _timeRange?: AdminTimeRange
 ): Promise<PaymentMetrics> {
   await requireSuperAdmin();
-  const seed = new Date().toDateString();
 
-  const totalProcessed = Math.floor(50000 + generateSeededRandom(seed, 1) * 150000) * 100;
-  const failedPayments = Math.floor(generateSeededRandom(seed, 2) * 20);
-  const successfulPayments = Math.floor(100 + generateSeededRandom(seed, 8) * 400);
-  const pendingPayments = Math.floor(generateSeededRandom(seed, 4) * 10);
-  const refunds = Math.floor(generateSeededRandom(seed, 5) * 5);
-  const refundRate = generateSeededRandom(seed, 6) * 2;
-  const successRate = 97 + generateSeededRandom(seed, 3) * 2.5;
-  const failureRate = 100 - successRate;
-
+  // No payment processing table — return zeroed placeholder
   return {
-    totalProcessed,
-    successRate,
-    failedPayments,
-    pendingPayments,
-    refunds,
-    refundRate,
-    avgTransactionValue: Math.floor(5000 + generateSeededRandom(seed, 7) * 5000),
-    paymentMethods: [
-      { method: "Credit Card", count: 70, percentage: 70 },
-      { method: "PayPal", count: 20, percentage: 20 },
-      { method: "Bank Transfer", count: 10, percentage: 10 },
-    ],
+    totalProcessed: 0,
+    successRate: 0,
+    failedPayments: 0,
+    pendingPayments: 0,
+    refunds: 0,
+    refundRate: 0,
+    avgTransactionValue: 0,
+    paymentMethods: [],
     // Additional fields for components
-    successfulPayments,
-    failureRate,
-    refundedAmount: Math.floor(refunds * 5000 + generateSeededRandom(seed, 9) * 10000),
+    successfulPayments: 0,
+    failureRate: 0,
+    refundedAmount: 0,
   };
 }
 
@@ -1025,31 +1102,23 @@ export async function getCustomerMetrics(
   _timeRange?: AdminTimeRange
 ): Promise<CustomerMetrics> {
   await requireSuperAdmin();
-  const seed = new Date().toDateString();
 
-  const avgMrr = Math.floor(5000 + generateSeededRandom(seed, 1) * 5000);
-  const avgLifetimeMonths = Math.floor(12 + generateSeededRandom(seed, 2) * 24);
-  const ltv = avgMrr * avgLifetimeMonths;
-  const cac = Math.floor(10000 + generateSeededRandom(seed, 3) * 15000);
-  const totalCustomers = Math.floor(100 + generateSeededRandom(seed, 4) * 300);
-  const healthyPercent = 0.7 + generateSeededRandom(seed, 5) * 0.15;
-  const atRiskPercent = 0.15 + generateSeededRandom(seed, 6) * 0.1;
-
+  // No customer lifetime / billing analytics tables — return zeroed placeholder
   return {
-    ltv,
-    arpu: avgMrr,
-    cac,
-    ltvCacRatio: Math.round((ltv / cac) * 10) / 10,
-    paybackPeriod: Math.round(cac / avgMrr),
-    avgSubscriptionLength: avgLifetimeMonths,
-    expansionRevenue: Math.floor(ltv * 0.1),
-    contractionRevenue: Math.floor(ltv * 0.02),
+    ltv: 0,
+    arpu: 0,
+    cac: 0,
+    ltvCacRatio: 0,
+    paybackPeriod: 0,
+    avgSubscriptionLength: 0,
+    expansionRevenue: 0,
+    contractionRevenue: 0,
     // Additional fields for components
-    healthy: Math.floor(totalCustomers * healthyPercent),
-    atRisk: Math.floor(totalCustomers * atRiskPercent),
-    churning: Math.floor(totalCustomers * (1 - healthyPercent - atRiskPercent)),
-    avgCustomerAge: avgLifetimeMonths * 30, // in days
-    npsScore: Math.floor(30 + generateSeededRandom(seed, 7) * 40),
+    healthy: 0,
+    atRisk: 0,
+    churning: 0,
+    avgCustomerAge: 0,
+    npsScore: 0,
   };
 }
 
@@ -1057,77 +1126,33 @@ export async function getBillingActivity(
   limit: number = 20
 ): Promise<BillingActivityItem[]> {
   await requireSuperAdmin();
-  const supabase = await createClient();
 
-  const { data: agencies } = await supabase
-    .from("agencies")
-    .select("id, name, plan, created_at")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  const activities: BillingActivityItem[] = [];
-
-  agencies?.forEach((agency, i) => {
-    const seed = agency.id + i;
-    const types: BillingActivityItem["type"][] = ["payment", "subscription", "upgrade"];
-    const type = types[Math.floor(generateSeededRandom(seed, 1) * types.length)];
-    const amount = Math.floor(2900 + generateSeededRandom(seed, 2) * 27000);
-
-    activities.push({
-      id: `billing-${agency.id}-${i}`,
-      type,
-      agencyId: agency.id,
-      agencyName: agency.name,
-      amount,
-      currency: DEFAULT_CURRENCY,
-      status: generateSeededRandom(seed, 3) > 0.05 ? "completed" : "pending",
-      plan: agency.plan || "starter",
-      timestamp: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-      description: type === "payment" 
-        ? "Monthly subscription payment" 
-        : type === "upgrade" 
-          ? "Plan upgrade" 
-          : "New subscription",
-    });
-  });
-
-  return activities.sort((a, b) => 
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  );
+  // No billing_events / payment_history table — return empty
+  // When Paddle webhooks are integrated, query billing events here
+  return [];
 }
 
 export async function getInvoiceMetrics(
   _timeRange?: AdminTimeRange
 ): Promise<InvoiceMetrics> {
   await requireSuperAdmin();
-  const seed = new Date().toDateString();
 
-  const totalInvoices = Math.floor(100 + generateSeededRandom(seed, 1) * 400);
-  const paidPercent = 0.85 + generateSeededRandom(seed, 2) * 0.1;
-  const pendingPercent = 0.08 + generateSeededRandom(seed, 3) * 0.05;
-  const overduePercent = 1 - paidPercent - pendingPercent;
-
-  const avgAmount = Math.floor(5000 + generateSeededRandom(seed, 4) * 10000);
-  const paidInvoices = Math.floor(totalInvoices * paidPercent);
-  const pendingInvoices = Math.floor(totalInvoices * pendingPercent);
-  const overdueInvoices = Math.floor(totalInvoices * overduePercent);
-  const draftInvoices = Math.floor(generateSeededRandom(seed, 6) * 10);
-
+  // No invoices table — return zeroed placeholder
   return {
-    totalInvoices,
-    paidInvoices,
-    pendingInvoices,
-    overdueInvoices,
-    totalAmount: totalInvoices * avgAmount,
-    paidAmount: Math.floor(totalInvoices * paidPercent * avgAmount),
-    pendingAmount: Math.floor(totalInvoices * pendingPercent * avgAmount),
-    overdueAmount: Math.floor(totalInvoices * overduePercent * avgAmount),
-    avgDaysToPayment: Math.floor(3 + generateSeededRandom(seed, 5) * 10),
+    totalInvoices: 0,
+    paidInvoices: 0,
+    pendingInvoices: 0,
+    overdueInvoices: 0,
+    totalAmount: 0,
+    paidAmount: 0,
+    pendingAmount: 0,
+    overdueAmount: 0,
+    avgDaysToPayment: 0,
     // Additional fields for components
-    paid: paidInvoices,
-    pending: pendingInvoices,
-    overdue: overdueInvoices,
-    draft: draftInvoices,
-    avgInvoiceAmount: avgAmount,
+    paid: 0,
+    pending: 0,
+    overdue: 0,
+    draft: 0,
+    avgInvoiceAmount: 0,
   };
 }

@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { formatCurrency } from "@/lib/locale-config";
 
 interface ModuleSubscription {
   id: string;
@@ -145,7 +146,7 @@ export function AvailableModulesGrid({
                   <span className="font-semibold text-primary">
                     {clientPrice === 0 
                       ? <span className="text-green-600">Free</span>
-                      : `$${(clientPrice / 100).toFixed(2)}/mo`
+                      : `${formatCurrency(clientPrice / 100)}/mo`
                     }
                   </span>
                 </div>
@@ -189,13 +190,13 @@ export function AvailableModulesGrid({
                 <div className="p-3 bg-muted/50 rounded-lg">
                   <p className="text-muted-foreground mb-1">Your cost</p>
                   <p className="font-semibold">
-                    ${(installModule.module.wholesale_price_monthly / 100).toFixed(2)}/mo
+                    {formatCurrency(installModule.module.wholesale_price_monthly / 100)}/mo
                   </p>
                 </div>
                 <div className="p-3 bg-primary/10 rounded-lg">
                   <p className="text-muted-foreground mb-1">Client pays</p>
                   <p className="font-semibold text-primary">
-                    ${(calculateClientPrice(installModule) / 100).toFixed(2)}/mo
+                    {formatCurrency(calculateClientPrice(installModule) / 100)}/mo
                   </p>
                 </div>
               </div>

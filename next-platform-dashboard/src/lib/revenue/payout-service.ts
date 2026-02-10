@@ -2,6 +2,7 @@
 // Phase EM-43: Revenue Sharing Dashboard - Payout Service
 
 import { createClient } from "@supabase/supabase-js";
+import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
 
 // Use service role client for backend operations
 const supabase = createClient(
@@ -283,7 +284,7 @@ export class PayoutService {
 
     if (payoutAmount < account.payout_threshold) {
       throw new Error(
-        `Amount below threshold of $${account.payout_threshold}`
+        `Amount below threshold of ${DEFAULT_CURRENCY_SYMBOL}${account.payout_threshold}`
       );
     }
 

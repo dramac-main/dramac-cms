@@ -416,16 +416,18 @@ export default function PortalSettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <p className="font-medium">Two-Factor Authentication</p>
-              <p className="text-sm text-muted-foreground">
-                Add an extra layer of security to your account
-              </p>
+          <div className="p-4 border rounded-lg space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-muted">
+                <Shield className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="font-medium">Two-Factor Authentication</p>
+                <p className="text-sm text-muted-foreground">
+                  Two-factor authentication is a planned feature. Your account is protected by your password and session management.
+                </p>
+              </div>
             </div>
-            <Button variant="outline" disabled>
-              Coming Soon
-            </Button>
           </div>
 
           <div className="flex items-center justify-between p-4 border rounded-lg">
@@ -435,7 +437,7 @@ export default function PortalSettingsPage() {
                 Manage your active login sessions
               </p>
             </div>
-            <Button variant="outline" disabled>
+            <Button variant="outline" disabled title="Session management coming soon">
               View Sessions
             </Button>
           </div>

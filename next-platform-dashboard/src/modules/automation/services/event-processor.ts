@@ -510,6 +510,28 @@ function calculateNextRun(cronExpression: string): string {
 // ============================================================================
 
 /**
+ * Verify a webhook signature using HMAC-SHA256
+ */
+function verifyWebhookSignature(
+  payload: string,
+  signature: string,
+  secret: string
+): boolean {
+  try {
+    const crypto = require('crypto') as typeof import('crypto')
+    const hmac = crypto.createHmac('sha256', secret)
+    hmac.update(payload)
+    const expected = hmac.digest('hex')
+    return crypto.timingSafeEqual(
+      Buffer.from(signature, 'hex'),
+      Buffer.from(expected, 'hex')
+    )
+  } catch {
+    return false
+  }
+}
+
+/**
  * Process incoming webhook and trigger workflow
  */
 export async function processIncomingWebhook(
@@ -538,10 +560,18 @@ export async function processIncomingWebhook(
   
   // Verify signature if secret is set
   const signature = headers['x-webhook-signature'] || headers['x-signature']
-  if (endpoint.secret_key && signature) {
-    // TODO: Implement signature verification
-    // const isValid = verifyWebhookSignature(payload, signature, endpoint.secret_key)
-    // if (!isValid) return { success: false, error: 'Invalid signature' }
+  if (endpoint.secret_key) {
+    if (!signature) {
+      return { success: false, error: 'Missing webhook signature' }
+    }
+    const isValid = verifyWebhookSignature(
+      JSON.stringify(payload),
+      signature,
+      endpoint.secret_key
+    )
+    if (!isValid) {
+      return { success: false, error: 'Invalid webhook signature' }
+    }
   }
   
   const workflow = endpoint.workflow as { id: string; is_active: boolean } | null

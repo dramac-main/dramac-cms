@@ -608,9 +608,13 @@ export function SettingsView({ className }: SettingsViewProps) {
                 </div>
                 
                 {formData.require_payment && (
-                  <div className="p-4 bg-muted/50 rounded-lg">
+                  <div className="p-4 bg-muted/50 rounded-lg space-y-2">
+                    <p className="text-sm font-medium">Manual Payment Tracking</p>
                     <p className="text-sm text-muted-foreground">
-                      Payment integration coming soon. For now, bookings will be created with &quot;Payment Pending&quot; status.
+                      When enabled, new bookings will be created with &quot;Payment Pending&quot; status. Staff can update payment status (Paid, Pending, Not Required) from the appointment detail panel.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Online payment gateway integration is planned for a future update.
                     </p>
                   </div>
                 )}

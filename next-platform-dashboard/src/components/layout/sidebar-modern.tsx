@@ -116,7 +116,10 @@ function SidebarLogo({
       onClick={closeMobile}
     >
       <motion.div
-        className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center shrink-0 overflow-hidden"
+        className={cn(
+          "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 overflow-hidden",
+          logoUrl ? "bg-transparent" : "bg-primary"
+        )}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >

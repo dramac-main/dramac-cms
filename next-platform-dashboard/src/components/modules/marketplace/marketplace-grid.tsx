@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Package, Users, Building2, Globe, Check, Sparkles, FlaskConical } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/locale-config";
 
 interface Module {
   id: string;
@@ -39,7 +40,7 @@ export function MarketplaceGrid({ modules, subscribedModuleIds }: MarketplaceGri
 
   const formatPrice = (cents: number | null) => {
     if (!cents || cents === 0) return "Free";
-    return `$${(cents / 100).toFixed(2)}/mo`;
+    return `${formatCurrency(cents / 100)}/mo`;
   };
 
   const getInstallLevelIcon = (level: string) => {

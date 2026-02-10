@@ -21,6 +21,18 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from 'recharts'
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 
 export function AnalyticsView() {
   const { orders, products, isLoading } = useEcommerce()
@@ -83,6 +95,35 @@ export function AnalyticsView() {
     const topProducts = Array.from(productSales.values())
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5)
+      .map(p => ({ ...p, revenue: p.revenue / 100 })) // convert cents to display units
+
+    // Daily revenue for last 30 days (for charts)
+    const thirtyDaysAgo = new Date(today)
+    thirtyDaysAgo.setDate(today.getDate() - 29)
+
+    const dailyMap = new Map<string, { revenue: number; orders: number }>()
+    for (let d = new Date(thirtyDaysAgo); d <= today; d.setDate(d.getDate() + 1)) {
+      const key = `${d.getMonth() + 1}/${d.getDate()}`
+      dailyMap.set(key, { revenue: 0, orders: 0 })
+    }
+
+    orders.forEach(order => {
+      const date = new Date(order.created_at)
+      if (date >= thirtyDaysAgo) {
+        const key = `${date.getMonth() + 1}/${date.getDate()}`
+        const current = dailyMap.get(key)
+        if (current) {
+          current.revenue += order.total / 100 // cents → display
+          current.orders += 1
+        }
+      }
+    })
+
+    const dailyRevenue = Array.from(dailyMap.entries()).map(([label, data]) => ({
+      label,
+      revenue: Math.round(data.revenue * 100) / 100,
+      orders: data.orders,
+    }))
 
     return {
       todayRevenue,
@@ -97,6 +138,7 @@ export function AnalyticsView() {
       lowStockProducts,
       totalOrders: orders.length,
       topProducts,
+      dailyRevenue,
     }
   }, [orders, products])
 
@@ -254,22 +296,118 @@ export function AnalyticsView() {
         </Card>
       </div>
 
-      {/* Placeholder for Charts */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Sales Over Time</CardTitle>
-          <CardDescription>Revenue trends for the past 30 days</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-64 flex items-center justify-center bg-muted/50 rounded-lg">
-            <div className="text-center">
-              <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-              <p className="text-muted-foreground">Charts coming soon</p>
-              <p className="text-sm text-muted-foreground">Install a charting library like Recharts for visualizations</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Revenue & Orders Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue (Last 30 Days)</CardTitle>
+            <CardDescription>Daily revenue trends</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {analytics.dailyRevenue.length === 0 ? (
+              <div className="h-64 flex items-center justify-center text-muted-foreground">
+                No analytics data available yet
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={260}>
+                <AreaChart data={analytics.dailyRevenue}>
+                  <defs>
+                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="label" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} />
+                  <YAxis className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => `${DEFAULT_CURRENCY_SYMBOL}${v}`} />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null
+                      const d = payload[0].payload as { label: string; revenue: number; orders: number }
+                      return (
+                        <div className="bg-popover border rounded-lg shadow-lg p-3">
+                          <p className="font-medium">{d.label}</p>
+                          <p className="text-sm text-muted-foreground">Revenue: {DEFAULT_CURRENCY_SYMBOL}{d.revenue.toFixed(2)}</p>
+                          <p className="text-sm text-muted-foreground">Orders: {d.orders}</p>
+                        </div>
+                      )
+                    }}
+                  />
+                  <Area type="monotone" dataKey="revenue" stroke="#3B82F6" fill="url(#revenueGrad)" strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Orders (Last 30 Days)</CardTitle>
+            <CardDescription>Daily order volume</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {analytics.dailyRevenue.length === 0 ? (
+              <div className="h-64 flex items-center justify-center text-muted-foreground">
+                No analytics data available yet
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={analytics.dailyRevenue}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="label" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} />
+                  <YAxis className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null
+                      const d = payload[0].payload as { label: string; orders: number }
+                      return (
+                        <div className="bg-popover border rounded-lg shadow-lg p-3">
+                          <p className="font-medium">{d.label}</p>
+                          <p className="text-sm text-muted-foreground">Orders: {d.orders}</p>
+                        </div>
+                      )
+                    }}
+                  />
+                  <Bar dataKey="orders" fill="#10B981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top Products Bar Chart */}
+      {analytics.topProducts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Products by Revenue</CardTitle>
+            <CardDescription>Best performing products</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={Math.max(200, analytics.topProducts.length * 50)}>
+              <BarChart data={analytics.topProducts} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis type="number" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => `${DEFAULT_CURRENCY_SYMBOL}${v}`} />
+                <YAxis type="category" dataKey="name" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} width={120} />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null
+                    const d = payload[0].payload as { name: string; revenue: number; count: number }
+                    return (
+                      <div className="bg-popover border rounded-lg shadow-lg p-3">
+                        <p className="font-medium">{d.name}</p>
+                        <p className="text-sm text-muted-foreground">Revenue: {DEFAULT_CURRENCY_SYMBOL}{d.revenue.toFixed(2)}</p>
+                        <p className="text-sm text-muted-foreground">Units: {d.count}</p>
+                      </div>
+                    )
+                  }}
+                />
+                <Bar dataKey="revenue" fill="#8B5CF6" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

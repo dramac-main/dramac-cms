@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
 
 interface Module {
   id: string;
@@ -41,7 +42,7 @@ export function RequestAppDialog({
 
   const formatPrice = (cents: number) => {
     if (!cents || cents === 0) return "Free";
-    return `$${(cents / 100).toFixed(2)}/mo`;
+    return `${DEFAULT_CURRENCY_SYMBOL}${(cents / 100).toFixed(2)}/mo`;
   };
 
   const handleSubmit = async () => {

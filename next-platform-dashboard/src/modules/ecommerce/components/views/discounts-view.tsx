@@ -42,7 +42,7 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, formatCurrency } from '@/lib/locale-config'
 interface DiscountsViewProps {
   searchQuery?: string
   onCreateDiscount?: () => void
@@ -90,7 +90,7 @@ export function DiscountsView({ searchQuery = '', onCreateDiscount }: DiscountsV
       case 'percentage':
         return `${discount.value}%`
       case 'fixed_amount':
-        return `$${(discount.value / 100).toFixed(2)}`
+        return formatCurrency(discount.value / 100)
       case 'free_shipping':
         return 'Free Shipping'
     }

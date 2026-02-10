@@ -41,7 +41,7 @@ import { getAgencyGrowth } from "@/lib/actions/admin-analytics";
 import type { AgencyGrowthData, AdminTimeRange } from "@/types/admin-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 // ============================================================================
 // Types
 // ============================================================================
@@ -268,7 +268,7 @@ function LTVChart({ data }: { data: AgencyGrowthData[] }) {
             tick={{ fontSize: 12 }}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => `$${(value / 100).toLocaleString()}`}
+            tickFormatter={(value) => `${DEFAULT_CURRENCY_SYMBOL}${(value / 100).toLocaleString()}`}
           />
           <Tooltip
             content={({ active, payload, label }) => {
@@ -280,7 +280,7 @@ function LTVChart({ data }: { data: AgencyGrowthData[] }) {
                     {date.toLocaleDateString(DEFAULT_LOCALE, { month: "long", year: "numeric" })}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Avg LTV: <span className="font-medium">${((payload[0].value as number) / 100).toLocaleString()}</span>
+                    Avg LTV: <span className="font-medium">{DEFAULT_CURRENCY_SYMBOL}{((payload[0].value as number) / 100).toLocaleString()}</span>
                   </p>
                 </div>
               );
@@ -383,7 +383,7 @@ export function AgencyGrowthComponent({
         />
         <GrowthSummaryCard
           title="Avg LTV"
-          value={`$${Math.floor(avgLTV / 100).toLocaleString()}`}
+          value={`${DEFAULT_CURRENCY_SYMBOL}${Math.floor(avgLTV / 100).toLocaleString()}`}
           icon={BarChart3}
         />
       </div>

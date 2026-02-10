@@ -51,6 +51,7 @@ import type {
 } from "@/types/admin-analytics";
 import { getPlatformOverview, getPlatformTrends } from "@/lib/actions/admin-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config';
 
 // ============================================================================
 // Types
@@ -238,7 +239,7 @@ function PlatformTrendsChart({
 }) {
   const formatValue = (value: number) => {
     if (metric === "revenue") {
-      return `$${(value / 100).toLocaleString()}`;
+      return `${DEFAULT_CURRENCY_SYMBOL}${(value / 100).toLocaleString()}`;
     }
     return value.toLocaleString();
   };

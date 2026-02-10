@@ -47,6 +47,7 @@ import { ActionPalette } from "./action-palette"
 import { WorkflowCanvas } from "./workflow-canvas"
 import { StepConfigPanel } from "./step-config-panel"
 import { useWorkflowBuilder } from "../../hooks/use-workflow-builder"
+import { triggerWorkflow } from "../../actions/automation-actions"
 import type { TriggerConfig, TriggerType, WorkflowStep } from "../../types/automation-types"
 
 // ============================================================================
@@ -168,13 +169,29 @@ export function WorkflowBuilder({
   }
 
   // Handle test run
-  const handleTestRun = () => {
+  const [isTestRunning, setIsTestRunning] = useState(false)
+  const handleTestRun = async () => {
     if (!workflow?.id) {
       toast.error("Please save the workflow first")
       return
     }
-    toast.info("Test run feature coming soon!")
-    // TODO: Implement test run functionality
+    if (isDirty) {
+      toast.error("Please save your changes before running a test")
+      return
+    }
+    setIsTestRunning(true)
+    try {
+      const result = await triggerWorkflow(workflow.id, { test: true, source: 'builder_test_run' })
+      if (!result.success) {
+        throw new Error(result.error || 'Test run failed')
+      }
+      toast.success(`Test run started (Execution: ${result.executionId?.slice(0, 8)}...)`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Test run failed'
+      toast.error(message)
+    } finally {
+      setIsTestRunning(false)
+    }
   }
 
   // Handle duplicate step
@@ -271,10 +288,14 @@ export function WorkflowBuilder({
               variant="outline" 
               size="sm"
               onClick={handleTestRun}
-              disabled={!workflow?.id}
+              disabled={!workflow?.id || isTestRunning}
             >
-              <Play className="h-4 w-4 mr-2" />
-              Test Run
+              {isTestRunning ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4 mr-2" />
+              )}
+              {isTestRunning ? "Running..." : "Test Run"}
             </Button>
             <Button 
               size="sm" 

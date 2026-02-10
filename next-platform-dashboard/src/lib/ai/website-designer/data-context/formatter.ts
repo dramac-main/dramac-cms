@@ -23,7 +23,7 @@ import type {
   FAQItem,
   EnabledModule,
 } from "./types";
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 
 // =============================================================================
 // MAIN FORMATTER
@@ -401,8 +401,8 @@ function formatServicesSection(services: Service[]): string {
     }
     if (service.price) {
       const priceStr = service.price_unit
-        ? `$${service.price}/${service.price_unit}`
-        : `$${service.price}`;
+        ? `${DEFAULT_CURRENCY_SYMBOL}${service.price}/${service.price_unit}`
+        : `${DEFAULT_CURRENCY_SYMBOL}${service.price}`;
       lines.push(`- **Price:** ${priceStr}`);
     }
     if (service.duration) {

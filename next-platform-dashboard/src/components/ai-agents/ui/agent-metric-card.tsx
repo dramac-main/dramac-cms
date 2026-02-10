@@ -373,12 +373,13 @@ export function TokensUsedMetricCard(props: Omit<AgentMetricCardProps, 'title' |
   )
 }
 
+/** Note: $ prefix is intentional — AI API costs are billed in USD */
 export function CostMetricCard(props: Omit<AgentMetricCardProps, 'title' | 'variant' | 'valuePrefix'> & { title?: string }) {
   return (
     <AgentMetricCard
       title="Total Cost"
       variant="warning"
-      valuePrefix="$"
+      valuePrefix="$" // USD — AI API costs
       {...props}
     />
   )

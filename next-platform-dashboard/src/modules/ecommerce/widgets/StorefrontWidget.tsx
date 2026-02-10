@@ -12,7 +12,7 @@
 'use client'
 
 import React, { useState, useEffect, createContext, useContext, useCallback, ReactNode } from 'react'
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY, formatCurrency } from '@/lib/locale-config'
 import {
   getProducts,
   getCategories,
@@ -180,7 +180,7 @@ export function CartProvider({
       const result = await applyDiscountToCart(cart.id, code, subtotal)
       await refresh()
       return result.success 
-        ? { success: true, message: `Discount applied: -$${result.discountAmount.toFixed(2)}` }
+        ? { success: true, message: `Discount applied: -${formatCurrency(result.discountAmount)}` }
         : { success: false, message: result.error || 'Invalid code' }
     } catch (err) {
       return { success: false, message: err instanceof Error ? err.message : 'Failed to apply discount' }
@@ -234,8 +234,10 @@ function calculateTotals(cart: Cart, taxRate: number): CartTotals {
   const discount = cart.discount_amount || 0
   const taxableAmount = Math.max(0, subtotal - discount)
   const tax = (taxableAmount * taxRate) / 100
-  const shipping = 0 // Calculated at checkout
-  const total = taxableAmount + tax
+  // Shipping is calculated at checkout with full address/settings context.
+  // Widget shows pre-shipping total; final shipping added during checkout.
+  const shipping = 0
+  const total = taxableAmount + tax + shipping
 
   return {
     subtotal,

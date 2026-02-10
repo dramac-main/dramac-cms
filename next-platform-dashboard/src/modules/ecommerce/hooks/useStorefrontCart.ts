@@ -8,6 +8,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { formatCurrency } from '@/lib/locale-config'
 import {
   getPublicOrCreateCart,
   getPublicCart,
@@ -21,8 +22,10 @@ import {
 import type { 
   Cart, 
   CartTotals,
-  StorefrontCartResult 
+  StorefrontCartResult,
+  EcommerceSettings,
 } from '../types/ecommerce-types'
+import { calculateShipping } from '../lib/shipping-calculator'
 
 // Session ID for guest carts
 function getOrCreateSessionId(): string {
@@ -37,12 +40,29 @@ function getOrCreateSessionId(): string {
 }
 
 // Local totals calculation (synchronous)
-function calculateLocalTotals(cart: Cart, taxRate: number): CartTotals {
+function calculateLocalTotals(cart: Cart, taxRate: number, settings?: EcommerceSettings | null): CartTotals {
   const subtotal = cart.items.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
   const discount = cart.discount_amount || 0
   const taxableAmount = subtotal - discount
   const tax = (taxableAmount * taxRate) / 100
-  const shipping = 0 // Shipping calculated separately
+
+  // Calculate shipping from settings if available
+  let shipping = 0
+  if (settings) {
+    try {
+      const result = calculateShipping({
+        items: cart.items,
+        shippingAddress: { first_name: '', last_name: '', address_line_1: '', city: '', state: '', postal_code: '', country: '' },
+        settings,
+        subtotal: taxableAmount,
+      })
+      shipping = result.cost
+    } catch {
+      // Fallback to free shipping on error
+      shipping = 0
+    }
+  }
+
   const total = taxableAmount + tax + shipping
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0)
   
@@ -244,7 +264,7 @@ export function useStorefrontCart(
       return { 
         success: result.success, 
         message: result.success 
-          ? `Discount applied: -$${result.discountAmount.toFixed(2)}`
+          ? `Discount applied: -${formatCurrency(result.discountAmount)}`
           : result.error || 'Invalid discount code'
       }
     } catch (err) {

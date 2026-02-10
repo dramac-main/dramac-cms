@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RequestAppDialog } from "./request-app-dialog";
+import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
 
 interface Module {
   id: string;
@@ -28,7 +29,7 @@ export function AvailableAppsGrid({ modules, clientId }: AvailableAppsGridProps)
 
   const formatPrice = (cents: number) => {
     if (!cents || cents === 0) return "Free";
-    return `$${(cents / 100).toFixed(2)}/mo`;
+    return `${DEFAULT_CURRENCY_SYMBOL}${(cents / 100).toFixed(2)}/mo`;
   };
 
   // Sort: featured first, then alphabetically

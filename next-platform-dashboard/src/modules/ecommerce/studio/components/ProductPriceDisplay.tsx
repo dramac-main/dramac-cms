@@ -9,6 +9,7 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils'
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 import { useStorefront } from '@/modules/ecommerce/context/storefront-context'
 import { Badge } from '@/components/ui/badge'
 
@@ -59,7 +60,7 @@ export function ProductPriceDisplay({
     if (storefront?.formatPrice) {
       return storefront.formatPrice(amount)
     }
-    return `$${amount.toFixed(2)}`
+    return `${DEFAULT_CURRENCY_SYMBOL}${amount.toFixed(2)}`
   }
 
   const hasDiscount = compareAtPrice && compareAtPrice > price

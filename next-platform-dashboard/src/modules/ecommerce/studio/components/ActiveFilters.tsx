@@ -9,6 +9,7 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils'
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -50,7 +51,7 @@ export function ActiveFilters({
   onRemoveTag,
   onClearAll,
   categoryLabels = {},
-  formatPrice = (p) => `$${p}`,
+  formatPrice = (p) => `${DEFAULT_CURRENCY_SYMBOL}${p}`,
   className
 }: ActiveFiltersProps) {
   const hasFilters = 

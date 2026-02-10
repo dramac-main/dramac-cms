@@ -27,6 +27,7 @@ import { cn } from '@/lib/utils'
 import { QuoteAcceptForm } from './quote-accept-form'
 import { QuoteRejectDialog } from './quote-reject-dialog'
 import { formatQuoteCurrency, isQuoteExpired, calculateDaysUntilExpiry } from '../../lib/quote-utils'
+import { downloadQuotePDF } from '../../lib/quote-pdf-generator'
 import type { Quote } from '../../types/ecommerce-types'
 
 // ============================================================================
@@ -327,11 +328,18 @@ export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
       
       {/* Download PDF Button */}
       <div className="text-center">
-        <Button variant="outline" disabled>
+        <Button
+          variant="outline"
+          onClick={() => {
+            const success = downloadQuotePDF(quote)
+            if (!success) {
+              alert('Could not open print window. Please allow popups for this site.')
+            }
+          }}
+        >
           <Download className="h-4 w-4 mr-2" />
           Download PDF
         </Button>
-        <p className="text-xs text-muted-foreground mt-2">PDF download coming soon</p>
       </div>
       
       {/* Reject Dialog */}

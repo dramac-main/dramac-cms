@@ -4,6 +4,7 @@ import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
 import { OnboardingRedirect } from "@/components/onboarding/onboarding-redirect";
 import { DashboardLayoutClient } from "@/components/layout/dashboard-layout-client";
 import { BrandingProvider } from "@/components/providers/branding-provider";
+import { CurrencyProvider } from "@/components/providers/currency-provider";
 import { getProfile } from "@/lib/actions/profile";
 import { createClient } from "@/lib/supabase/server";
 
@@ -50,6 +51,33 @@ export default async function DashboardLayout({
     }
   }
 
+  // Fetch agency regional preferences for CurrencyProvider
+  // Uses type assertion because these columns may not exist yet (migration pending)
+  let regionalPreferences = null;
+  if (agencyId) {
+    try {
+      const { data: agency } = await (supabase as any)
+        .from("agencies")
+        .select("default_currency, default_locale, default_timezone, date_format, tax_rate, tax_inclusive, weight_unit, dimension_unit")
+        .eq("id", agencyId)
+        .single();
+      if (agency) {
+        regionalPreferences = {
+          currency: agency.default_currency ?? undefined,
+          locale: agency.default_locale ?? undefined,
+          timezone: agency.default_timezone ?? undefined,
+          dateFormat: agency.date_format ?? undefined,
+          taxRate: agency.tax_rate != null ? Number(agency.tax_rate) : undefined,
+          taxInclusive: agency.tax_inclusive ?? undefined,
+          weightUnit: agency.weight_unit ?? undefined,
+          dimensionUnit: agency.dimension_unit ?? undefined,
+        };
+      }
+    } catch {
+      // Columns may not exist yet — use defaults
+    }
+  }
+
   const dashboardContent = (
     <DashboardLayoutClient
       isSuperAdmin={isSuperAdmin}
@@ -72,10 +100,14 @@ export default async function DashboardLayout({
       <OnboardingRedirect>
         {agencyId ? (
           <BrandingProvider agencyId={agencyId}>
-            {dashboardContent}
+            <CurrencyProvider initialPreferences={regionalPreferences}>
+              {dashboardContent}
+            </CurrencyProvider>
           </BrandingProvider>
         ) : (
-          dashboardContent
+          <CurrencyProvider>
+            {dashboardContent}
+          </CurrencyProvider>
         )}
       </OnboardingRedirect>
     </TooltipProvider>

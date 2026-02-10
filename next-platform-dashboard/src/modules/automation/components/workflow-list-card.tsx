@@ -46,7 +46,7 @@ import {
   Copy,
   Loader2
 } from "lucide-react"
-import { activateWorkflow, pauseWorkflow, deleteWorkflow } from "../actions/automation-actions"
+import { activateWorkflow, pauseWorkflow, deleteWorkflow, duplicateWorkflow } from "../actions/automation-actions"
 
 // ============================================================================
 // TYPES
@@ -114,9 +114,22 @@ export function WorkflowListCard({ workflow, siteId }: WorkflowListCardProps) {
   }
 
   // Handle duplicate
+  const [isDuplicating, setIsDuplicating] = useState(false)
   const handleDuplicate = async () => {
-    toast.info('Duplicate feature coming soon!')
-    // TODO: Implement duplicate workflow
+    setIsDuplicating(true)
+    try {
+      const result = await duplicateWorkflow(workflow.id)
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to duplicate workflow')
+      }
+      toast.success(`Workflow duplicated as "${workflow.name} (Copy)"`)
+      router.refresh()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to duplicate workflow'
+      toast.error(message)
+    } finally {
+      setIsDuplicating(false)
+    }
   }
 
   // Handle delete
@@ -190,9 +203,9 @@ export function WorkflowListCard({ workflow, siteId }: WorkflowListCardProps) {
                     Edit
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDuplicate}>
-                  <Copy className="h-4 w-4 mr-2" />
-                  Duplicate
+                <DropdownMenuItem onClick={handleDuplicate} disabled={isDuplicating}>
+                  {isDuplicating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Copy className="h-4 w-4 mr-2" />}
+                  {isDuplicating ? 'Duplicating...' : 'Duplicate'}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleToggleActive} disabled={isActivating}>
                   {workflow.is_active ? (

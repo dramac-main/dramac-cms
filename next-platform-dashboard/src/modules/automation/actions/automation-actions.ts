@@ -267,6 +267,92 @@ export async function updateWorkflow(
 }
 
 /**
+ * Duplicate a workflow
+ */
+export async function duplicateWorkflow(
+  workflowId: string
+): Promise<{ success: boolean; data?: Workflow; error?: string }> {
+  try {
+    const supabase = await createClient()
+
+    // Fetch original workflow
+    const { data: original, error: fetchError } = await supabase
+      .from('automation_workflows')
+      .select('*')
+      .eq('id', workflowId)
+      .single()
+
+    if (fetchError || !original) {
+      return { success: false, error: fetchError?.message || 'Workflow not found' }
+    }
+
+    const copyName = `${original.name} (Copy)`
+    const slug = copyName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+
+    const { data: newWorkflow, error: insertError } = await supabase
+      .from('automation_workflows')
+      .insert({
+        site_id: original.site_id,
+        name: copyName,
+        description: original.description,
+        slug: `${slug}-${Date.now().toString(36)}`,
+        trigger_type: original.trigger_type,
+        trigger_config: original.trigger_config,
+        is_active: false,
+        icon: original.icon,
+        color: original.color,
+        category: original.category,
+        tags: original.tags,
+      })
+      .select('*')
+      .single()
+
+    if (insertError) {
+      return { success: false, error: insertError.message }
+    }
+
+    // Duplicate workflow steps
+    const { data: steps } = await supabase
+      .from('workflow_steps')
+      .select('*')
+      .eq('workflow_id', workflowId)
+      .order('position', { ascending: true })
+
+    if (steps && steps.length > 0) {
+      const newSteps = steps.map((step: Record<string, unknown>) => ({
+        workflow_id: newWorkflow.id,
+        step_type: step.step_type,
+        action_type: step.action_type,
+        action_config: step.action_config,
+        condition_config: step.condition_config,
+        delay_config: step.delay_config,
+        name: step.name,
+        description: step.description,
+        position: step.position,
+        is_active: step.is_active,
+      }))
+
+      await (supabase as any).from('workflow_steps').insert(newSteps)
+    }
+
+    await emitEvent(
+      'automation',
+      original.site_id,
+      'automation.workflow_created',
+      { workflow_id: newWorkflow.id, name: copyName, duplicated_from: workflowId }
+    )
+
+    revalidatePath('/automation')
+    return { success: true, data: newWorkflow as unknown as Workflow }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to duplicate workflow'
+    }
+  }
+}
+
+/**
  * Delete a workflow
  */
 export async function deleteWorkflow(

@@ -20,6 +20,7 @@ import type {
   PesapalConfig,
   DpoConfig
 } from '@/modules/ecommerce/types/ecommerce-types'
+import { calculateShipping } from '@/modules/ecommerce/lib/shipping-calculator'
 
 export const dynamic = 'force-dynamic'
 
@@ -92,7 +93,16 @@ export async function POST(request: NextRequest) {
     const discount = cart.discount_amount || 0
     const taxableAmount = Math.max(0, subtotal - discount)
     const tax = (taxableAmount * (settings.tax_rate || 0)) / 100
-    const shipping = 0 // TODO: Calculate based on shipping method
+
+    // Calculate shipping from site's shipping zones/settings
+    const shippingResult = calculateShipping({
+      items: cart.items,
+      shippingAddress: shippingAddress as Address,
+      settings,
+      subtotal: taxableAmount,
+      shippingMethodId: _shippingMethod || undefined,
+    })
+    const shipping = shippingResult.cost
     const total = taxableAmount + tax + shipping
 
     // Validate payment provider

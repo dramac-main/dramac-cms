@@ -48,6 +48,7 @@ import { toast } from 'sonner'
 import type { ShippingSettings, ShippingZone, ShippingMethod } from '../../types/ecommerce-types'
 import { getSettingsTab, updateShippingSettings } from '../../actions/settings-actions'
 import { getCountryList } from '../../lib/settings-utils'
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 
 // ============================================================================
 // TYPES
@@ -416,7 +417,7 @@ function ShippingZoneDialog({ open, onOpenChange, zone, onSave }: ShippingZoneDi
                         <TableCell className="font-medium">{method.name}</TableCell>
                         <TableCell className="capitalize">{method.type.replace('_', ' ')}</TableCell>
                         <TableCell>
-                          {method.type === 'free_shipping' ? 'Free' : `$${method.cost.toFixed(2)}`}
+                          {method.type === 'free_shipping' ? 'Free' : `${DEFAULT_CURRENCY_SYMBOL}${method.cost.toFixed(2)}`}
                         </TableCell>
                         <TableCell>
                           <Badge variant={method.enabled ? 'default' : 'secondary'}>

@@ -53,6 +53,8 @@ import { ContactDetailSheet } from '../sheets/contact-detail-sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 
 import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { exportToCSV, flattenContact } from '../../utils/export-csv'
+import { toast } from 'sonner'
 // ============================================================================
 // HELPERS
 // ============================================================================
@@ -128,8 +130,14 @@ export function ContactsView() {
   }
 
   const handleExport = () => {
-    // TODO: Implement CSV export
-    console.log('Export contacts')
+    try {
+      const data = filteredContacts.map(c => flattenContact(c as unknown as Record<string, unknown>))
+      exportToCSV(data, `contacts-${new Date().toISOString().slice(0, 10)}`)
+      toast.success(`Exported ${data.length} contacts`)
+    } catch (error) {
+      console.error('Export failed:', error)
+      toast.error('Failed to export contacts')
+    }
   }
 
   // Loading state

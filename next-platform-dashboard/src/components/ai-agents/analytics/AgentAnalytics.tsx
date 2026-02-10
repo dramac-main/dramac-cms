@@ -232,6 +232,7 @@ export function AgentAnalytics({ siteId: _siteId, onAgentClick }: AgentAnalytics
     return `${Math.round(seconds / 60)}m ${Math.round(seconds % 60)}s`;
   };
 
+  // Note: $ is intentional — AI API costs are billed in USD
   const formatCost = (cost: number) => {
     if (cost < 0.01) return `$${(cost * 100).toFixed(2)}¢`;
     return `$${cost.toFixed(4)}`;

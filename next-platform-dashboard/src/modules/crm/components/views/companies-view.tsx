@@ -48,6 +48,8 @@ import {
   Building2,
   DollarSign
 } from 'lucide-react'
+import { exportToCSV, flattenCompany } from '../../utils/export-csv'
+import { toast } from 'sonner'
 import { CreateCompanyDialog } from '../dialogs/create-company-dialog'
 import { CompanyDetailSheet } from '../sheets/company-detail-sheet'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -212,7 +214,16 @@ export function CompaniesView() {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => {
+            try {
+              const data = filteredCompanies.map(c => flattenCompany(c as unknown as Record<string, unknown>))
+              exportToCSV(data, `companies-${new Date().toISOString().slice(0, 10)}`)
+              toast.success(`Exported ${data.length} companies`)
+            } catch (error) {
+              console.error('Export failed:', error)
+              toast.error('Failed to export companies')
+            }
+          }}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>

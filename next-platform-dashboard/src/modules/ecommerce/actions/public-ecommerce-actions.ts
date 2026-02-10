@@ -13,6 +13,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { formatCurrency } from '@/lib/locale-config'
 import { notifyNewOrder } from '@/lib/services/business-notifications'
 import type {
   Product, ProductFilters,
@@ -533,7 +534,7 @@ export async function applyPublicDiscountToCart(
 
     // Check minimum order amount
     if (discount.minimum_order_amount && subtotal < discount.minimum_order_amount) {
-      return { success: false, discountAmount: 0, error: `Minimum order of $${discount.minimum_order_amount} required` }
+      return { success: false, discountAmount: 0, error: `Minimum order of ${formatCurrency(discount.minimum_order_amount)} required` }
     }
 
     // Calculate discount amount

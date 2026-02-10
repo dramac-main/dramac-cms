@@ -9,6 +9,7 @@
 
 import { useMemo, useState } from 'react'
 import { useCRM } from '../../context/crm-context'
+import { exportToCSV, flattenDeal } from '../../utils/export-csv'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -442,7 +443,14 @@ export function ReportsView() {
             </SelectContent>
           </Select>
           
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => {
+            try {
+              const data = filteredDeals.map((d) => flattenDeal(d as unknown as Record<string, unknown>))
+              exportToCSV(data, `crm-report-${dateRange}-${new Date().toISOString().slice(0, 10)}`)
+            } catch (error) {
+              console.error('Export failed:', error)
+            }
+          }}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>

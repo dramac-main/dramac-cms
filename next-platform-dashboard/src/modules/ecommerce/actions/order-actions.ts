@@ -8,6 +8,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { formatCurrency } from '@/lib/locale-config'
 import type { 
   Order,
   OrderStatus,
@@ -397,7 +398,7 @@ export async function createRefund(
   await addTimelineEvent(orderId, {
     event_type: 'refund_requested',
     title: 'Refund requested',
-    description: `Amount: $${(refund.amount / 100).toFixed(2)} - ${refund.reason}`,
+    description: `Amount: ${formatCurrency(refund.amount / 100)} - ${refund.reason}`,
     user_id: userId,
     user_name: userName,
     metadata: { refund_id: data.id }

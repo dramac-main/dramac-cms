@@ -58,6 +58,7 @@ import {
 } from "lucide-react"
 
 import { useWorkflowBuilder } from "../hooks/use-workflow-builder"
+import { triggerWorkflow } from "../actions/automation-actions"
 import { TriggerPanel } from "./workflow-builder/trigger-panel"
 import { ActionPalette } from "./workflow-builder/action-palette"
 import { StepConfigPanel } from "./workflow-builder/step-config-panel"
@@ -381,8 +382,24 @@ export function WorkflowBuilderEnhanced({
         onNameChange={(name) => updateWorkflowData({ name })}
         onActiveChange={(active) => updateWorkflowData({ is_active: active })}
         onSave={handleSave}
-        onTest={() => toast.info("Test mode coming soon!")}
-        onRun={() => toast.info("Manual run coming soon!")}
+        onTest={async () => {
+          if (!workflow?.id) { toast.error("Save the workflow first"); return }
+          if (isDirty) { toast.error("Save your changes before testing"); return }
+          try {
+            const result = await triggerWorkflow(workflow.id, { test: true, source: 'enhanced_builder_test' })
+            if (!result.success) throw new Error(result.error || 'Test failed')
+            toast.success(`Test run started (${result.executionId?.slice(0, 8)}...)`)
+          } catch (e) { toast.error(e instanceof Error ? e.message : 'Test failed') }
+        }}
+        onRun={async () => {
+          if (!workflow?.id) { toast.error("Save the workflow first"); return }
+          if (isDirty) { toast.error("Save your changes before running"); return }
+          try {
+            const result = await triggerWorkflow(workflow.id, { source: 'manual_run' })
+            if (!result.success) throw new Error(result.error || 'Run failed')
+            toast.success(`Workflow triggered (${result.executionId?.slice(0, 8)}...)`)
+          } catch (e) { toast.error(e instanceof Error ? e.message : 'Run failed') }
+        }}
       />
 
       {/* Main Content */}

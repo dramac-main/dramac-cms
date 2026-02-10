@@ -55,7 +55,7 @@ import { Progress } from '@/components/ui/progress'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, formatCurrency, DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 interface LoyaltyViewProps {
   siteId: string
   searchQuery?: string
@@ -105,10 +105,6 @@ export function LoyaltyView({ siteId, searchQuery = '' }: LoyaltyViewProps) {
   const handleAdjustPoints = (member: LoyaltyPoints) => {
     setSelectedMember(member)
     setShowAdjustDialog(true)
-  }
-
-  const formatCurrency = (cents: number) => {
-    return `$${(cents / 100).toFixed(2)}`
   }
 
   const formatDate = (dateString: string) => {
@@ -217,12 +213,12 @@ export function LoyaltyView({ siteId, searchQuery = '' }: LoyaltyViewProps) {
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <Coins className="h-6 w-6 mx-auto mb-2 text-amber-500" />
               <div className="text-2xl font-bold">{config.points_per_dollar}</div>
-              <div className="text-xs text-muted-foreground">points per $1 spent</div>
+              <div className="text-xs text-muted-foreground">points per {DEFAULT_CURRENCY_SYMBOL}1 spent</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <Gift className="h-6 w-6 mx-auto mb-2 text-green-500" />
               <div className="text-2xl font-bold">{config.points_value_cents}</div>
-              <div className="text-xs text-muted-foreground">points = $1 discount</div>
+              <div className="text-xs text-muted-foreground">points = {DEFAULT_CURRENCY_SYMBOL}1 discount</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <TrendingUp className="h-6 w-6 mx-auto mb-2 text-blue-500" />
@@ -259,7 +255,7 @@ export function LoyaltyView({ siteId, searchQuery = '' }: LoyaltyViewProps) {
               {stats.totalPoints.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              Worth {formatCurrency((stats.totalPoints / (config.points_value_cents || 100)) * 100)}
+              Worth {formatCurrency(stats.totalPoints / (config.points_value_cents || 100))}
             </p>
           </CardContent>
         </Card>

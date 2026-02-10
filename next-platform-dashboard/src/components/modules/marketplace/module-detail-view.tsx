@@ -22,6 +22,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { MODULE_CATEGORIES } from '@/lib/modules/module-categories';
+import { formatCurrency } from '@/lib/locale-config';
 import { 
   getModuleDetails, 
   getRelatedModules,
@@ -45,7 +46,7 @@ interface ModuleDetailViewProps {
  */
 function formatPrice(cents: number | null): string {
   if (cents === null || cents === 0) return 'Free';
-  return `$${(cents / 100).toFixed(2)}`;
+  return formatCurrency(cents / 100);
 }
 
 export function ModuleDetailView({ 

@@ -11,6 +11,7 @@ import { useState, useEffect } from 'react'
 import { createFlashSale, updateFlashSale } from '../../actions/marketing-actions'
 import type { FlashSale, FlashSaleInput } from '../../types/marketing-types'
 import { Loader2, Zap, Calendar, Percent, DollarSign } from 'lucide-react'
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -234,7 +235,7 @@ export function FlashSaleDialog({
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="discountValue">
-                  {discountType === 'percentage' ? 'Percentage' : 'Amount ($)'}
+                  {discountType === 'percentage' ? 'Percentage' : `Amount (${DEFAULT_CURRENCY_SYMBOL})`}
                 </Label>
                 <div className="relative">
                   <Input

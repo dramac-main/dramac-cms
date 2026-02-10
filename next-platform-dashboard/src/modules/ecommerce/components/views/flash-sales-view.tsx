@@ -53,7 +53,7 @@ import {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, formatCurrency } from '@/lib/locale-config'
 interface FlashSalesViewProps {
   siteId: string
   searchQuery?: string
@@ -304,7 +304,7 @@ export function FlashSalesView({ siteId, searchQuery = '' }: FlashSalesViewProps
                           <TrendingUp className="h-3 w-3" />
                           {sale.discount_type === 'percentage' 
                             ? `${sale.discount_value}% off`
-                            : `$${(sale.discount_value / 100).toFixed(2)} off`
+                            : `${formatCurrency(sale.discount_value / 100)} off`
                           }
                         </Badge>
                       </div>

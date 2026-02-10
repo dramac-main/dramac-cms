@@ -8,6 +8,7 @@
 'use client'
 
 import * as React from 'react'
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -236,10 +237,10 @@ export function QuoteDetailBlock({
                   <td className="py-3">{item.name}</td>
                   <td className="py-3 text-right">{item.quantity}</td>
                   <td className="py-3 text-right">
-                    {formatPrice?.(item.unit_price) || `$${item.unit_price.toFixed(2)}`}
+                    {formatPrice?.(item.unit_price) || `${DEFAULT_CURRENCY_SYMBOL}${item.unit_price.toFixed(2)}`}
                   </td>
                   <td className="py-3 text-right">
-                    {formatPrice?.(item.line_total) || `$${item.line_total.toFixed(2)}`}
+                    {formatPrice?.(item.line_total) || `${DEFAULT_CURRENCY_SYMBOL}${item.line_total.toFixed(2)}`}
                   </td>
                 </tr>
               ))}

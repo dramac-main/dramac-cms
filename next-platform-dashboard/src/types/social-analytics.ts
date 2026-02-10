@@ -42,6 +42,7 @@ export interface PlatformOverview {
   avgEngagementRate: number;
   avgEngagementRateChange: number;
   activePlatforms: number;
+  connected: boolean;
 }
 
 // ============================================================================
