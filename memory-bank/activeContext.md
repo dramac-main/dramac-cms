@@ -1,13 +1,57 @@
 # Active Context
 
-## Latest Session Update (Phase FIX-03 & FIX-04 Complete — February 2026)
+## Latest Session Update (Phase FIX-05 Complete — February 2026)
 
-### PHASE FIX-03: Navigation, Routing & Platform Polish ✅
-### PHASE FIX-04: Platform Integrity — Deep Cleanup & Hardening ✅
+### PHASE FIX-05: Post-Review Bug Fixes — Branding, Navigation, Execution ✅
 
-**251 files changed**, 967 insertions, 35,400 deletions  
+**18 files changed**, 539 insertions, 158 deletions  
 **TypeScript:** Zero errors (verified with `tsc --noEmit --skipLibCheck`)  
-**Commit:** `fdb5b17` — pushed to `main`
+**Commit:** `aaacbf0` — pushed to `main`
+
+---
+
+### FIX-05 Changes
+
+#### 1. Branding Purple Flash Eliminated (SSR)
+- Created `src/components/providers/server-branding-style.tsx` — Server component that injects brand CSS vars into SSR HTML
+- Modified dashboard `layout.tsx` — server-fetches branding + passes `initialBranding` to BrandingProvider + renders `<ServerBrandingStyle>` before provider
+- Changed `brand-variables.css` — ALL purple hue 258 defaults changed to neutral slate hue 215 (both light and dark modes)
+
+#### 2. Branding Save Persistence Fixed
+- API `branding/[agencyId]/route.ts` — Changed Cache-Control from `public, max-age=300` to `private, no-cache, no-store, must-revalidate`
+- `branding-provider.tsx` — Added `refetch` method to context, added `branding-updated` custom event listener
+- `branding-settings-form.tsx` — Dispatches `branding-updated` event after successful save
+
+#### 3. CRM Sidebar Navigation Fixed
+- `agency-crm-dashboard.tsx` — Fixed site list links: `/crm` → `/crm-module`; Fixed site selector: `/dashboard/${value}/crm` → `/dashboard/sites/${value}/crm-module`
+
+#### 4. Social Analytics Connect Buttons Fixed
+- `SocialDashboardEnhanced.tsx` + `SocialDashboard.tsx` — Replaced `alert()` with `toast.info()`
+- `social/accounts/page.tsx` (server component) — Replaced Button+onClick with static Badge "Soon", replaced header Connect Account with Badge
+
+#### 5. Admin DB/Domain Sections Fixed
+- `settings-client.tsx` — Replaced grayed-out disabled controls with informational cards linking to Supabase/Vercel dashboards
+
+#### 6. Workflow Test Run Fixed
+- `automation-actions.ts` — `triggerWorkflow()` now actually calls `executeWorkflow()` via dynamic import after creating execution record
+
+#### 7. Shipping Calculation Fixed
+- `useStorefrontCart.ts` — Only calculates shipping when `shipping_address` exists with non-empty `country` (was passing empty address → always $0)
+
+#### 8. TypeScript Fixes
+- `admin/settings/actions.ts` — Fixed Json↔Record<string, unknown> type casting for admin_settings table
+- `useStorefrontCart.ts` — Proper double-cast through `unknown` for accessing `shipping_address` on Cart type
+- Removed unused `Plus` import from social accounts page
+
+### Key Patterns Discovered
+- `Cart` type in `ecommerce-types.ts` does NOT include `shipping_address` — it's a DB column not in the TypeScript interface; must cast through `unknown`
+- `admin_settings` migration file exists at `migrations/20260210_admin_settings.sql` but has NOT been run against Supabase — user must run it manually
+- BrandingProvider client-side + ServerBrandingStyle SSR = no flash strategy
+- Portal branding is READ-ONLY by design — clients see agency's white-label, cannot change it
+
+---
+
+## Previous Session (Phase FIX-03 & FIX-04 Complete — February 2026)
 
 ---
 
