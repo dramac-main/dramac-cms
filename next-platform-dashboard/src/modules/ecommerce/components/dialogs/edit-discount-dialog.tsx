@@ -10,6 +10,7 @@ import { useEcommerce } from '../../context/ecommerce-context'
 import type { Discount, DiscountType } from '../../types/ecommerce-types'
 import { Loader2, Percent, DollarSign, Calendar } from 'lucide-react'
 import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -88,18 +89,18 @@ export function EditDiscountDialog({ discount, open, onOpenChange }: EditDiscoun
     if (!discount) return
 
     if (!code.trim()) {
-      alert('Please enter a discount code')
+      toast.error('Please enter a discount code')
       return
     }
 
     const numValue = parseFloat(value)
     if (isNaN(numValue) || numValue <= 0) {
-      alert('Please enter a valid discount value')
+      toast.error('Please enter a valid discount value')
       return
     }
 
     if (type === 'percentage' && numValue > 100) {
-      alert('Percentage discount cannot exceed 100%')
+      toast.error('Percentage discount cannot exceed 100%')
       return
     }
 
@@ -123,7 +124,7 @@ export function EditDiscountDialog({ discount, open, onOpenChange }: EditDiscoun
       resetForm()
     } catch (error) {
       console.error('Error updating discount:', error)
-      alert('Failed to update discount. Please try again.')
+      toast.error('Failed to update discount. Please try again.')
     } finally {
       setIsSubmitting(false)
     }

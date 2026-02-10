@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
 import type { Category } from '../../types/ecommerce-types'
 import { Loader2, X } from 'lucide-react'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -91,7 +92,7 @@ export function EditCategoryDialog({ category, open, onOpenChange }: EditCategor
     if (!category) return
 
     if (!name.trim()) {
-      alert('Please enter a category name')
+      toast.error('Please enter a category name')
       return
     }
 
@@ -109,7 +110,7 @@ export function EditCategoryDialog({ category, open, onOpenChange }: EditCategor
       resetForm()
     } catch (error) {
       console.error('Error updating category:', error)
-      alert('Failed to update category. Please try again.')
+      toast.error('Failed to update category. Please try again.')
     } finally {
       setIsSubmitting(false)
     }

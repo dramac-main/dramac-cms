@@ -332,13 +332,16 @@ export function StudioRenderer({
   // Render page content
   return (
     <div 
-      className={`studio-renderer ${className}`}
+      className={`studio-renderer light ${className}`}
       style={{
         ...themeStyles,
-        // Prevent OS dark-mode from overriding our inline styles
-        // The AI-generated components set all colors explicitly via inline styles,
-        // so we just need to prevent the browser from inverting anything.
-        colorScheme: "normal",
+        // Force light mode rendering for website content
+        // Studio-built websites are always light-themed — their colors come from
+        // inline styles and theme CSS vars, NOT from Tailwind dark: variants.
+        // The "light" class prevents any dark: variant from activating inside.
+        colorScheme: "light",
+        backgroundColor: "#ffffff",
+        color: "#111827",
       }}
       data-site-id={siteId}
       data-page-id={pageId}

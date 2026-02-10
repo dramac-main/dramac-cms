@@ -67,8 +67,16 @@ export function EcommerceSettingsDialog({ open, onOpenChange }: EcommerceSetting
     setIsSubmitting(true)
 
     try {
-      // In a real implementation, this would call an updateSettings action
-      // For now, we'll just show a success message
+      await updateSettings({
+        store_name: storeName.trim() || null,
+        currency,
+        tax_rate: parseFloat(taxRate) || 0,
+        tax_included_in_price: taxEnabled,
+        continue_selling_when_out_of_stock: allowBackorders,
+        free_shipping_threshold: freeShippingThreshold ? parseFloat(freeShippingThreshold) : null,
+        send_order_confirmation: orderNotifications,
+        order_notification_email: notificationEmail.trim() || null,
+      })
       toast.success('Settings saved successfully')
       await refreshSettings()
       onOpenChange(false)

@@ -14,7 +14,7 @@
 
 "use client";
 
-import { use, useState, useCallback, useEffect, useRef } from "react";
+import { use, useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { Sparkles, ArrowLeft, Loader2, RefreshCw, Check, X, Monitor, Tablet, Smartphone, Clock, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -96,6 +96,171 @@ const _STAGE_TIME_ESTIMATES: Record<string, number> = {
   "generating-shared-elements": 15,
   "finalizing": 5,
 };
+
+// =============================================================================
+// PREVIEW CANVAS — Industry-standard scaled preview
+// =============================================================================
+
+/**
+ * PreviewCanvas — Renders content at full device width, then scales it down
+ * to fit the available container space using CSS transform: scale().
+ * 
+ * This matches how Wix, Squarespace, Webflow, and Framer render their previews:
+ * - Content is rendered at ACTUAL device dimensions (e.g. 1280px for desktop)
+ * - CSS transform: scale() shrinks it to fit the panel
+ * - All layouts, media queries, and responsive breakpoints work correctly
+ * - No content clipping or squishing
+ */
+function PreviewCanvas({ 
+  device, 
+  deviceConfig, 
+  studioData, 
+  siteId, 
+  pageSlug 
+}: { 
+  device: DeviceType;
+  deviceConfig: DeviceConfig; 
+  studioData: StudioPageData | null; 
+  siteId: string; 
+  pageSlug?: string;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  // Calculate scale factor based on container size
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateScale = () => {
+      const rect = container.getBoundingClientRect();
+      // Leave padding around the preview (32px each side)
+      const availableWidth = rect.width - 64;
+      const availableHeight = rect.height - 64;
+      
+      const scaleX = availableWidth / deviceConfig.width;
+      const scaleY = availableHeight / deviceConfig.height;
+      
+      // Use the smaller scale to fit both dimensions, cap at 1 (never upscale)
+      setScale(Math.min(scaleX, scaleY, 1));
+    };
+
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [deviceConfig.width, deviceConfig.height]);
+
+  // Device frame visual styling
+  const frameStyles = useMemo(() => {
+    if (device === "mobile") {
+      return {
+        borderRadius: "40px",
+        padding: "12px",
+        border: "4px solid #1f2937",
+        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25), inset 0 0 0 2px #374151",
+      };
+    }
+    if (device === "tablet") {
+      return {
+        borderRadius: "24px",
+        padding: "16px",
+        border: "4px solid #1f2937",
+        boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25), inset 0 0 0 2px #374151",
+      };
+    }
+    // Desktop — monitor-style frame
+    return {
+      borderRadius: "12px",
+      padding: "0",
+      border: "none",
+      boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+    };
+  }, [device]);
+
+  return (
+    <div 
+      ref={containerRef}
+      className="flex-1 flex items-center justify-center overflow-hidden"
+    >
+      {/* Scaled container — transform origin at top center */}
+      <div
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: "top center",
+          width: deviceConfig.width + (device !== "desktop" ? 32 : 0),
+          height: deviceConfig.height + (device !== "desktop" ? 28 : 0),
+          transition: "transform 0.3s ease, width 0.3s ease, height 0.3s ease",
+          ...frameStyles,
+          backgroundColor: "#1f2937",
+        }}
+      >
+        {/* Desktop title bar */}
+        {device === "desktop" && (
+          <div 
+            className="flex items-center gap-2 px-4 h-8"
+            style={{ backgroundColor: "#1f2937", borderRadius: "12px 12px 0 0" }}
+          >
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-red-500" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500" />
+              <div className="w-3 h-3 rounded-full bg-green-500" />
+            </div>
+            <div className="flex-1 mx-8">
+              <div className="bg-gray-700 rounded-md h-5 flex items-center justify-center">
+                <span className="text-[10px] text-gray-400 font-mono truncate px-2">
+                  https://yoursite.com/{pageSlug || ""}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile notch */}
+        {device === "mobile" && (
+          <div className="flex justify-center mb-2">
+            <div className="w-20 h-5 bg-gray-800 rounded-full" />
+          </div>
+        )}
+
+        {/* Content viewport — forced light mode, actual device width */}
+        <div
+          className="light overflow-y-auto overflow-x-hidden"
+          style={{
+            width: deviceConfig.width,
+            height: device === "desktop" 
+              ? deviceConfig.height - 32  // subtract title bar
+              : device === "mobile"
+              ? deviceConfig.height - 48  // subtract notch + home bar
+              : deviceConfig.height - 4,
+            backgroundColor: "#ffffff",
+            colorScheme: "light",
+            borderRadius: device === "desktop" ? "0 0 12px 12px" : device === "mobile" ? "28px" : "12px",
+          }}
+        >
+          {studioData ? (
+            <StudioRenderer
+              data={studioData}
+              siteId={siteId}
+              pageId={pageSlug}
+            />
+          ) : (
+            <div className="h-full flex items-center justify-center text-gray-400">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          )}
+        </div>
+
+        {/* Mobile home indicator */}
+        {device === "mobile" && (
+          <div className="flex justify-center mt-2">
+            <div className="w-32 h-1 bg-gray-600 rounded-full" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function AIDesignerPage({ params }: AIDesignerPageProps) {
   const { siteId } = use(params);
@@ -764,70 +929,14 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
 
       {/* Main Content */}
       <div className="flex-1 flex min-h-0 p-6">
-        {/* Preview Area */}
-        <div className="flex-1 flex items-center justify-center overflow-auto">
-          <div
-            className="bg-white rounded-lg shadow-2xl overflow-hidden transition-all duration-300"
-            style={{
-              width: deviceConfig.width,
-              height: deviceConfig.height,
-              maxWidth: "100%",
-              maxHeight: "100%",
-            }}
-          >
-            {/* 
-              CRITICAL: Force light mode for preview canvas
-              This creates an isolated context that prevents dark mode inheritance 
-            */}
-            <div 
-              className="h-full overflow-auto light" 
-              style={{ 
-                colorScheme: "light",
-                backgroundColor: "#ffffff",
-                color: "#000000",
-              }} 
-              data-theme="light"
-              data-mode="light"
-            >
-              {/* Additional wrapper to ensure CSS isolation */}
-              <div className="studio-preview-wrapper" style={{
-                // Reset all colors to ensure no dark mode leakage
-                "--background": "0 0% 100%",
-                "--foreground": "222.2 84% 4.9%",
-                "--card": "0 0% 100%",
-                "--card-foreground": "222.2 84% 4.9%",
-                "--popover": "0 0% 100%",
-                "--popover-foreground": "222.2 84% 4.9%",
-                "--primary": "221.2 83.2% 53.3%",
-                "--primary-foreground": "210 40% 98%",
-                "--secondary": "210 40% 96.1%",
-                "--secondary-foreground": "222.2 47.4% 11.2%",
-                "--muted": "210 40% 96.1%",
-                "--muted-foreground": "215.4 16.3% 46.9%",
-                "--accent": "210 40% 96.1%",
-                "--accent-foreground": "222.2 47.4% 11.2%",
-                "--destructive": "0 84.2% 60.2%",
-                "--destructive-foreground": "210 40% 98%",
-                "--border": "214.3 31.8% 91.4%",
-                "--input": "214.3 31.8% 91.4%",
-                "--ring": "221.2 83.2% 53.3%",
-              } as React.CSSProperties}>
-                {currentStudioData ? (
-                  <StudioRenderer
-                    data={currentStudioData}
-                    siteId={siteId}
-                    pageId={currentPage?.slug}
-                    className="bg-white"
-                  />
-                ) : (
-                  <div className="h-full flex items-center justify-center text-gray-500 bg-white">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Preview Area — Industry-standard scaled preview */}
+        <PreviewCanvas
+          device={device}
+          deviceConfig={deviceConfig}
+          studioData={currentStudioData ?? null}
+          siteId={siteId}
+          pageSlug={currentPage?.slug}
+        />
 
         {/* Sidebar - Page Info */}
         <div className="w-80 ml-6 shrink-0">
