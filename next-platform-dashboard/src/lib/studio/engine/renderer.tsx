@@ -271,13 +271,19 @@ export function StudioRenderer({
   // Load module components if modules are provided
   useEffect(() => {
     if (modules && modules.length > 0) {
-      console.log("[StudioRenderer] Loading module components for", modules.length, "modules...");
       let isCancelled = false;
+      
+      // Timeout: never let module loading block rendering for more than 3 seconds
+      const timeout = setTimeout(() => {
+        if (!isCancelled) {
+          console.warn("[StudioRenderer] Module loading timed out after 3s — rendering without modules");
+          setModulesLoaded(true);
+        }
+      }, 3000);
       
       loadModuleComponents(modules)
         .then(() => {
           if (!isCancelled) {
-            console.log("[StudioRenderer] Module components loaded");
             setModulesLoaded(true);
           }
         })
@@ -286,10 +292,12 @@ export function StudioRenderer({
             console.error("[StudioRenderer] Error loading module components:", err);
             setModulesLoaded(true); // Continue even if modules fail to load
           }
-        });
+        })
+        .finally(() => clearTimeout(timeout));
       
       return () => {
         isCancelled = true;
+        clearTimeout(timeout);
       };
     }
   }, [modules]);
@@ -305,13 +313,17 @@ export function StudioRenderer({
   }, [themeSettings]);
   
   // Wait for registry and modules to be ready
+  // Show nothing during load — content appears seamlessly once ready
+  // Industry standard: published sites never show loading spinners or text.
+  // Wix/Squarespace/Webflow render server-side so there's no client loading state.
+  // We keep this brief (max 3s timeout) and invisible to match that experience.
   if (!registryReady || !modulesLoaded) {
     return (
-      <div className={`studio-renderer studio-loading ${className}`}>
-        <div className="flex items-center justify-center min-h-50">
-          <div className="animate-pulse text-muted-foreground">Loading components...</div>
-        </div>
-      </div>
+      <div 
+        className={`studio-renderer ${className}`}
+        style={{ minHeight: "100vh", backgroundColor: "#ffffff" }}
+        aria-hidden="true"
+      />
     );
   }
   

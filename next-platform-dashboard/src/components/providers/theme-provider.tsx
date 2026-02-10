@@ -40,7 +40,21 @@ export function ThemeProvider({
   React.useEffect(() => {
     const root = window.document.documentElement;
 
+    // Published sites, previews, embeds, and quotes must ALWAYS be light mode.
+    // These routes render website content that has no dark: variants.
+    // If we apply "dark" to <html>, Tailwind dark: variants break everything.
+    const path = window.location.pathname;
+    const isPublicSite = path.startsWith("/site/") || 
+                         path.startsWith("/preview/") || 
+                         path.startsWith("/embed/") ||
+                         path.startsWith("/quote/");
+
     root.classList.remove("light", "dark");
+
+    if (isPublicSite) {
+      root.classList.add("light");
+      return;
+    }
 
     if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")

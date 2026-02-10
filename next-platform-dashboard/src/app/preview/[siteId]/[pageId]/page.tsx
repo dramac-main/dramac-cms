@@ -10,7 +10,7 @@
 import { useEffect, useState } from "react";
 import { use } from "react";
 import { StudioRenderer } from "@/lib/studio/engine/renderer";
-import { Loader2, AlertTriangle, FileText } from "lucide-react";
+import { AlertTriangle, FileText } from "lucide-react";
 
 interface PreviewPageProps {
   params: Promise<{ siteId: string; pageId: string }>;
@@ -81,15 +81,13 @@ export default function PreviewPage({ params }: PreviewPageProps) {
     fetchPreview();
   }, [resolvedParams.siteId, resolvedParams.pageId]);
 
-  // Loading state
+  // Loading state — clean white screen, no text. Industry standard.
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-muted-foreground mx-auto mb-4" />
-          <p className="text-gray-500">Loading preview...</p>
-        </div>
-      </div>
+      <div 
+        className="min-h-screen bg-white"
+        style={{ colorScheme: "light" }}
+      />
     );
   }
 
