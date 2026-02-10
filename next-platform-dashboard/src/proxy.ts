@@ -50,6 +50,20 @@ export async function proxy(request: NextRequest) {
   }
 
   // ========================================
+  // STATIC ASSET GUARD
+  // Middleware matcher should exclude these, but as a safety net
+  // never rewrite _next/static, _next/image, or common asset paths
+  // ========================================
+  if (
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/favicon") ||
+    /\.(js|css|woff2?|ttf|otf|eot|svg|png|jpg|jpeg|gif|webp|ico|map)$/i.test(pathname)
+  ) {
+    if (DEBUG) console.log("[proxy] → Static asset, passing through:", pathname);
+    return NextResponse.next();
+  }
+
+  // ========================================
   // SUBDOMAIN/CUSTOM DOMAIN ROUTING (FIRST!)
   // Must be checked BEFORE any other routes
   // ========================================

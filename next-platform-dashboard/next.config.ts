@@ -4,6 +4,14 @@ const nextConfig: NextConfig = {
   // Enable strict mode for catching potential issues
   reactStrictMode: true,
 
+  // Serve _next/static assets from the main app domain
+  // Critical for multi-tenant subdomain apps (*.sites.dramacagency.com)
+  // Without this, subdomain sites try to load assets from the subdomain origin
+  // which fails with 404s because Vercel CDN only maps assets to the primary domain
+  assetPrefix: process.env.NODE_ENV === "production" 
+    ? process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"
+    : undefined,
+
   // Turbopack configuration
   turbopack: {
     root: process.cwd(), // Use current working directory as root
