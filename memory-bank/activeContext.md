@@ -1,6 +1,37 @@
 # Active Context
 
-## Latest Session Update (Phase FIX-08 Complete — February 2026)
+## Latest Session Update (Phase FIX-09 Complete — February 2026)
+
+### PHASE FIX-09: Site Rendering Fix + Professional Loading States ✅
+
+**4 files changed**, 49 insertions, 25 deletions  
+**Commit:** `dcfc498` — pushed to `main`  
+**TypeScript:** Zero errors (verified with `tsc --noEmit --skipLibCheck`)
+
+---
+
+#### 1. ROOT CAUSE: Dark Mode Leaking Into Published Sites
+- **Problem:** FIX-07 added `<div className="light">` to the published site layout, but Tailwind config uses `darkMode: ["class", "html"]` — meaning it ONLY checks the `<html>` element for the `dark` class. A `<div className="light">` does absolutely nothing for Tailwind.
+- **The ThemeProvider** (in root `<Providers>`) applies `dark` class to `<html>` for ALL routes — including `/site/` published sites. Block renderers have ZERO `dark:` variants, so dark mode on `<html>` broke all semantic color tokens.
+- **Fix:** ThemeProvider now checks `window.location.pathname` — routes starting with `/site/`, `/preview/`, `/embed/`, `/quote/` always get `light` class on `<html>`. Dashboard routes continue using user's theme preference.
+
+#### 2. Professional Loading Experience
+- **Problem:** StudioRenderer showed "Loading components..." text while modules loaded. Every site had the same generic spinner. This is not how industry leaders do it — Wix/Squarespace/Webflow render server-side, so published sites NEVER show loading states.
+- **Fix:** Replaced "Loading components..." with an invisible white div. Added 3-second timeout to module loading to prevent infinite hang. Preview route also cleaned up — no more spinner + "Loading preview..." text.
+
+#### 3. Published Site Layout Simplified
+- Removed useless `className="light"` (Tailwind ignores it — see above)
+- Removed hardcoded `backgroundColor`/`color` (StudioRenderer handles it)
+- Kept `colorScheme: "light"` for browser-level light mode hints
+
+### Key Patterns Discovered (FIX-09)
+- **`darkMode: ["class", "html"]` in tailwind.config.ts** — Tailwind ONLY checks `<html>` for the `dark` class. Putting `className="light"` on any other element does NOTHING for Tailwind dark: variants. This is critical knowledge for all future dark mode work.
+- **ThemeProvider runs on ALL routes** — it's in root layout's `<Providers>`. Must use pathname detection for route-specific behavior since we can't easily exclude routes from the root layout.
+- **Industry standard for published sites** — no loading spinners, no loading text. Content should appear seamlessly. Server components handle data fetching, client components should have minimal/invisible loading states.
+
+---
+
+## Previous Session (Phase FIX-08 Complete — February 2026)
 
 ### PHASE FIX-08: Portal Branding Flash Elimination + Platform-Wide Neutral Loaders ✅
 

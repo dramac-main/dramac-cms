@@ -1,7 +1,30 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅ + PHASE FIX-03 COMPLETE ✅ + PHASE FIX-04 COMPLETE ✅ + PHASE FIX-05 COMPLETE ✅ + PHASE FIX-06 COMPLETE ✅ + PHASE FIX-06b LIGHT MODE CONTRAST ✅ + PHASE FIX-07 STUDIO/PREVIEW/FORMS ✅ + PHASE FIX-08 PORTAL BRANDING/LOADERS ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅ + PHASE FIX-03 COMPLETE ✅ + PHASE FIX-04 COMPLETE ✅ + PHASE FIX-05 COMPLETE ✅ + PHASE FIX-06 COMPLETE ✅ + PHASE FIX-06b LIGHT MODE CONTRAST ✅ + PHASE FIX-07 STUDIO/PREVIEW/FORMS ✅ + PHASE FIX-08 PORTAL BRANDING/LOADERS ✅ + PHASE FIX-09 SITE RENDERING/LOADING ✅**
+
+---
+
+## 🔧 PHASE FIX-09: Site Rendering Fix + Professional Loading (February 2026) ✅
+
+### Commit: `dcfc498` — 4 files, +49/-25
+
+| # | Task | Description | Status |
+|---|------|-------------|--------|
+| 1 | ThemeProvider route detection | Force light on /site/, /preview/, /embed/, /quote/ routes | ✅ |
+| 2 | StudioRenderer loading | Remove "Loading components..." text, invisible loading div | ✅ |
+| 3 | Module loading timeout | 3-second timeout prevents infinite hang | ✅ |
+| 4 | Preview page loading | Remove spinner + "Loading preview..." text | ✅ |
+| 5 | Published site layout | Remove useless className="light", simplify | ✅ |
+
+### Files Modified
+- `src/components/providers/theme-provider.tsx` — Route-based light mode forcing
+- `src/lib/studio/engine/renderer.tsx` — Invisible loading + timeout
+- `src/app/site/[domain]/layout.tsx` — Simplified layout
+- `src/app/preview/[siteId]/[pageId]/page.tsx` — Clean loading + removed unused Loader2
+
+### Root Cause Analysis
+**Tailwind `darkMode: ["class", "html"]`** only checks `<html>` for `dark` class. FIX-07's `<div className="light">` was completely ignored by Tailwind. ThemeProvider in root `<Providers>` applied `dark` to `<html>` on ALL routes including published sites, breaking all color tokens since block renderers have zero `dark:` variants.
 
 ---
 
