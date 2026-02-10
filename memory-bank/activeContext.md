@@ -1,52 +1,94 @@
 # Active Context
 
-## Latest Session Update (Critical Bug Fixes — Branding, Booking, Currency, Settings — February 2026)
+## Latest Session Update (Phase FIX-01 & FIX-02 Complete — February 2026)
 
-### CRITICAL BUG FIXES ✅
+### PHASE FIX-01: Global Branding, Smart Currency & Complete Theming ✅
 
-**Files Changed:** 10 files  
-**TypeScript:** Zero new errors in all changed files
-
-Following user reports of multiple non-working features (branding colors not applying, double logo, booking staff not recorded, USD showing instead of ZMW, settings page crashes), a deep investigation found root causes and all were fixed.
+**106 files changed**, 4687 insertions, 2065 deletions  
+**TypeScript:** Zero errors (verified with `tsc --noEmit`)  
+**Commit:** `8cdf815` — pushed to `main`
 
 ---
 
-### Fixes Applied
+### Phase FIX-01 Changes
 
-#### 1. BRANDING CSS VARIABLE NAME MISMATCH — ROOT CAUSE FIX 🎨
-**Problem:** BrandingProvider injected `--primary` and `--accent` CSS variables, but Tailwind reads from `--color-primary` and `--color-accent` (via `generateColorScale()` in tailwind.config.ts → `hsl(var(--color-primary))`). The injected variables were completely dead — colors never changed.
+#### 1. Double Logo Fix (Task 1)
+- `sidebar-modern.tsx`: SidebarLogo uses `cn()` to conditionally apply `bg-transparent` when `logoUrl` exists, `bg-primary` only for fallback initial
 
-**Root Cause:** The globals.css has `--primary` in OKLCH format (shadcn defaults), but brand-variables.css and tailwind.config.ts use `--color-primary` in HSL format. BrandingProvider was writing to the wrong variable names.
+#### 2. Sidebar CSS Variables Follow Branding (Task 2)
+- `globals.css`: `@theme inline` block maps sidebar-primary/foreground from `hsl(var(--color-primary))`
+- `branding-provider.tsx`: Injects sidebar vars (primary, accent, ring, border) + `--color-ring`, `--color-secondary`, `--color-secondary-foreground`
 
-**Fix:** In `branding-provider.tsx`:
-- Changed `--primary: ${primaryHSL}` → `--color-primary: ${primaryHSL}`
-- Changed `--accent: ${accentHSL}` → `--color-accent: ${accentHSL}`
-- Added `--color-primary-foreground` and `--color-accent-foreground` injection
-- Added full HSL shade scale generation (50-950) for both primary and accent
-- Added `portal_custom_css` injection into DOM
-- Removed orphaned `--brand-primary-foreground` / `--brand-accent-foreground` hex vars
+#### 3. Hardcoded Purples Removed (Task 3)
+- `tailwind.config.ts`: All 7 hardcoded purple rgba/hex values replaced with `hsl(var(--color-primary) / ...)`
 
-#### 2. DOUBLE LOGO IN SIDEBAR 🖼️
-**Problem:** SidebarLogo rendered both a logo `<img>` and `displayName` text. When the logo image already contains the brand name, it appeared as two logos stacked.
+#### 4. Database Migration (Task 4)
+- `migrations/20250210_agency_regional_preferences.sql`: Adds 8 columns to agencies table (default_currency, default_locale, default_timezone, date_format, tax_rate, tax_inclusive, weight_unit, dimension_unit)
 
-**Fix:** In `sidebar-modern.tsx`, the `displayName` text is now hidden when `logoUrl` is present — only shows logo image OR text, not both.
+#### 5. Regional Settings Page (Task 5)
+- `settings/regional/page.tsx`: Full settings page for currency, locale, timezone, date format, tax, units
 
-#### 3. BOOKING STAFF NOT RECORDED 📅
-**Problem:** Conflict check in `createPublicAppointment()` used `.eq('staff_id', input.staffId || '')` — when staffId is undefined, this queries for `staff_id = ''` (empty string match), which is wrong. Should either check for specific staff or skip the staff filter.
+#### 6. Settings Navigation Updated (Task 6)
+- `settings-navigation.ts`: Added Regional, Activity Log, Modules nav items
 
-**Fix:** In `public-booking-actions.ts`, replaced the single chained query with a conditional approach:
-- If `staffId` provided → adds `.eq('staff_id', staffId)` to conflict query
-- If no `staffId` → skips staff filter, checks all conflicts for the time slot
+#### 7. Currency Provider (Task 7)
+- `currency-provider.tsx`: React context providing agency currency/locale/timezone to all components
+- Mounted in `(dashboard)/layout.tsx`
 
-#### 4. CURRENCY USD → ZMW 💰
-**Problem:** 3 hardcoded "USD" labels despite `locale-config.ts` having `DEFAULT_CURRENCY = 'ZMW'`.
+#### 8. Hardcoded $ Fixed (Task 8)
+- 60+ files: All hardcoded `$` currency symbols replaced with `formatCurrency()` or `DEFAULT_CURRENCY_SYMBOL`
+- AI agent USD costs intentionally kept as `$` (API billing)
 
-**Files Fixed:**
-| File | Change |
-|------|--------|
-| `create-service-dialog.tsx` | `Price (USD)` → `Price ({DEFAULT_CURRENCY_SYMBOL})` + import |
-| `edit-service-dialog.tsx` | `Price (USD)` → `Price ({DEFAULT_CURRENCY_SYMBOL})` + import |
-| `quote-settings.tsx` | `placeholder="USD"` → `placeholder="ZMW"` |
+### Phase FIX-02 Changes
+
+#### Social Analytics De-mocked (Task 1)
+- `social-analytics.ts`: 21 functions, 812→378 lines, all `seededRandom()` removed, returns zeros/empty arrays with `connected: false`
+
+#### Admin Analytics De-mocked (Task 2)
+- `admin-analytics.ts`: `generateSeededRandom()` removed, real Supabase queries where feasible, zeros with `dataSource: 'placeholder'` elsewhere
+
+#### Admin Settings Enabled (Task 3)
+- `admin/settings/page.tsx` + new `actions.ts` + `settings-client.tsx`: 4/6 sections enabled (General, Email, Notifications, Security), Database & Domains kept disabled with badges
+
+#### Automation Connections Wired to DB (Task 4)
+- `connection-setup.tsx`: fetchConnections/save/disconnect/test wired to `automation_connections` table
+- Migration file created
+
+#### Workflow Stubs Implemented (Task 5)
+- Duplicate workflow: Full implementation (copies workflow + steps)
+- Test run: Calls `triggerWorkflow()` with `test: true`
+- Manual run: Also implemented
+
+#### PDF Generation (Task 6)
+- `quote-pdf-generator.ts`: Full HTML-based PDF generation (print-to-PDF approach)
+- `payout-statement-generator.ts`: Payout statement PDF generation
+- Portal quote download and developer revenue download wired
+
+#### Ecommerce Fixes (Task 7)
+- `shipping-calculator.ts`: Zone/method based shipping calculation
+- Analytics charts: Recharts-based revenue/orders/top products charts
+- Integration roadmap: Clean UI for coming-soon integrations
+
+#### CRM Fixes (Task 8)
+- `export-csv.ts`: CSV export for contacts, companies, deals
+- Pipeline stage management: Add/remove/rename/reorder
+- Agency CRM dashboard: Real aggregate queries
+
+#### Studio Fixes (Task 9)
+- HTML export: Real component-tree-to-HTML serialization
+- Media library: Informative toast replacing alert
+- Symbol editor: Toast notification replacing TODO
+
+#### Remaining Stubs (Tasks 10-14)
+- Booking: Payment status dropdown in appointment detail
+- Portal: 2FA proper not-available state, session management tooltip
+- Webhooks: HMAC-SHA256 signature verification
+- AI agents: Graceful provider error messages, basic approval flow, permission checking
+- Screenshot API: Professional placeholder SVG
+
+---
+
+## Previous Session
 
 #### 5. StatusBadge `.toLowerCase()` CRASH 💥
 **Problem:** `StatusBadge` component called `status.charAt(0).toUpperCase()` without null guard. When `status` prop was undefined, it threw TypeError.

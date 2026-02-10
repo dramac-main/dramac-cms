@@ -1,7 +1,65 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅**
+
+---
+
+## 🎨 PHASE FIX-01: Global Branding, Smart Currency & Complete Theming (February 2026) ✅
+
+### Commit: `8cdf815` — 106 files, +4687/-2065
+
+| Task | Description | Status |
+|------|-------------|--------|
+| 1 | Fix double logo (bg-primary behind transparent logos) | ✅ |
+| 2 | Sidebar CSS vars follow BrandingProvider | ✅ |
+| 3 | Remove hardcoded purple values from tailwind.config | ✅ |
+| 4 | Database migration for agency regional preferences | ✅ |
+| 5 | Regional Settings page (currency/locale/timezone/tax/units) | ✅ |
+| 6 | Settings navigation (Regional, Activity Log, Modules) | ✅ |
+| 7 | CurrencyProvider context + mounted in layout | ✅ |
+| 8 | Fix 60+ hardcoded $ symbols | ✅ |
+
+### Files Created
+- `migrations/20250210_agency_regional_preferences.sql`
+- `settings/regional/page.tsx`
+- `providers/currency-provider.tsx`
+
+---
+
+## 🔧 PHASE FIX-02: Stubs, Mocks & Non-Functional Features (February 2026) ✅
+
+### Same commit: `8cdf815`
+
+| Task | Description | Status |
+|------|-------------|--------|
+| 1 | Social analytics de-mocked (21 functions) | ✅ |
+| 2 | Admin analytics de-mocked (real DB queries) | ✅ |
+| 3 | Admin settings enabled (4/6 sections) | ✅ |
+| 4 | Automation connections wired to DB | ✅ |
+| 5 | Workflow test/duplicate implemented | ✅ |
+| 6 | PDF generation (quotes, invoices, payouts) | ✅ |
+| 7 | Ecommerce: shipping calc, analytics charts, integration roadmap | ✅ |
+| 8 | CRM: CSV export, pipeline stages, agency dashboard | ✅ |
+| 9 | Studio: HTML export, media library, symbol editor | ✅ |
+| 10 | Booking payment status tracking | ✅ |
+| 11 | Portal 2FA/session states | ✅ |
+| 12 | Webhook signature verification | ✅ |
+| 13 | AI agent provider graceful errors | ✅ |
+| 14 | Screenshot API professional placeholder | ✅ |
+
+### Files Created
+- `migrations/20250210_automation_connections.sql`
+- `admin/settings/actions.ts` + `settings-client.tsx`
+- `payout-statement-generator.ts`
+- `crm/actions/agency-crm-stats.ts`
+- `crm/utils/export-csv.ts`
+- `ecommerce/lib/shipping-calculator.ts`
+
+### Migration Required
+Two SQL migrations need to be run on the Supabase database:
+1. `20250210_agency_regional_preferences.sql` — agency regional preference columns
+2. `20250210_automation_connections.sql` — automation connections table
 
 ---
 
