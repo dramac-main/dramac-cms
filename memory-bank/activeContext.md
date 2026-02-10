@@ -1,61 +1,86 @@
 # Active Context
 
-## Latest Session Update (Phase FIX-11 Complete — February 2026)
+## Latest Session Update (Phase FIX-12 Complete — February 2026)
 
-### PHASE FIX-11: Module Card UI Redesign — Unified Icons, Themed Animations, Color Cleanup ✅
+### PHASE FIX-12: Line Icons & Platform-Wide Emoji Replacement ✅
 
-**11 files changed**, 185 insertions, 110 deletions  
-**Commit:** `ec2cb6c` — pushed to `main`  
+**22 files changed**, 646 insertions, 199 deletions  
+**Commit:** `c7c1d10` — pushed to `main`  
 **TypeScript:** Zero errors
 
 ---
 
-#### Problem: Module Card Visual Inconsistency
-- **5 different icon rendering patterns** across the platform: plain emoji, bg-muted container, primary gradient container, shared ModuleIcon component (never used), and Lucide icons with colored backgrounds
-- **Hardcoded colors duplicated across 8+ files**: purple/blue/green for install levels, yellow for beta badges, green for status badges, yellow-400/500 for star ratings, green-600 for "Free" text, blue-500 for verified badges
-- **MODULE_CATEGORIES with 40+ hex colors** used inconsistently — some components applied hex as full background, others as border color, others ignored entirely
-- **No hover animations** on module cards/icons — flat, lifeless interaction
+#### Problem: Emoji "Cheap Icons" Throughout Platform
+- **200+ emoji locations** across the platform rendered as raw text characters (📊🔥🎯💳🛒 etc.)
+- Module cards, notifications, activity feeds, welcome card, marketplace, admin panels all used emoji strings
+- No visual cohesion — emoji render differently per OS/browser
+- No hover interactivity or animation on icons
+- Module catalog and DB `icon` fields stored emoji strings
 
-#### Solution Implemented
-1. **Created `ModuleIconContainer`** (`src/components/modules/shared/module-icon-container.tsx`) — Unified shared component for ALL module cards. Uses category hex color as 8% opacity background tint with subtle 1px border. Supports `sm/md/lg/xl` sizes. Falls back to `bg-muted` when no category color.
-2. **Added `iconBreathe` animation** to `tailwind.config.ts` — Gentle `scale(1) → scale(1.08) → scale(1)` keyframe, 2s ease-in-out infinite. Activates via `group-hover:animate-iconBreathe` on card hover.
-3. **Systematic color cleanup** across 10 components — Replaced ALL hardcoded status/badge/price colors with semantic tokens (`variant="outline"`, `variant="secondary"`, `variant="destructive"`, `text-muted-foreground`).
+#### Solution: Lucide Line Icons + Stroke-Draw Animation
+1. **Created `icon-map.ts`** (`src/lib/utils/icon-map.ts`) — Central emoji→Lucide mapping utility:
+   - `EMOJI_TO_LUCIDE` map: 100+ emoji→Lucide PascalCase name mappings
+   - `KNOWN_LUCIDE_NAMES` set: ~100 validated icon names for lucide-react v0.562.0
+   - `resolveIconName(icon)` function: converts any input (emoji, Lucide name, kebab-case, null) to valid Lucide icon name
+   - Kebab-case lookup table for programmatic icon references
 
-#### Files Modified
+2. **Rewrote `ModuleIconContainer`** — Now renders actual Lucide SVG icons:
+   - Uses `icons[resolveIconName(icon)]` from lucide-react for dynamic SVG rendering
+   - Category color applied as icon tint color
+   - `icon-stroke-draw` CSS class applied on `group-hover` for stroke animation
+   - Falls back to `icons.Package` for unresolved names
+
+3. **Added stroke-draw CSS animation** to `globals.css`:
+   - `@keyframes strokeDraw`: `stroke-dasharray: 60`, `stroke-dashoffset: 60→0`, 0.6s ease-out with opacity 0.5→1
+   - `.icon-stroke-draw` class applies animation to all SVG path/circle/line/polyline/rect elements
+   - `.group:not(:hover)` reset ensures animation doesn't persist
+
+4. **Created `NotificationIcon`** (`src/components/notifications/notification-icon.tsx`):
+   - Shared component mapping 22 notification types to Lucide icon components
+   - Supports `sm/md/lg` sizes with rounded `bg-muted` container
+   - Replaced emoji maps in notification-bell, notifications-list, notification-center
+
+5. **Updated all high-visibility emoji renders** across 18+ files
+
+#### Files Modified/Created
 | File | Changes |
 |------|---------|
-| `tailwind.config.ts` | Added `iconBreathe` keyframe + animation |
-| `modules/shared/module-icon-container.tsx` | **NEW** — unified themed icon container |
-| `modules/marketplace/enhanced-module-card.tsx` | Full rewrite: ModuleIconContainer, semantic badges, no hardcoded colors |
-| `marketplace/ModuleCard.tsx` | Full rewrite: ModuleIconContainer, semantic badges |
-| `modules/marketplace/marketplace-grid.tsx` | Removed `getInstallLevelColor()`, ModuleIconContainer, neutral badges |
-| `modules/agency/subscription-list.tsx` | Removed install level colors + status colors + section header colors |
-| `modules/client/client-modules-list.tsx` | ModuleIconContainer, outline category badge |
-| `modules/client/available-modules-grid.tsx` | ModuleIconContainer, removed text-primary/green-600 |
-| `portal/apps/available-apps-grid.tsx` | Removed gradient icon, yellow star → amber, removed text-primary |
-| `portal/apps/app-card.tsx` | Removed gradient, added hover animation |
-| `modules/marketplace/module-detail-view.tsx` | Removed hex category badge, blue/green/yellow colors |
+| `src/lib/utils/icon-map.ts` | **NEW** — emoji→Lucide mapping utility |
+| `src/components/notifications/notification-icon.tsx` | **NEW** — shared notification Lucide icons |
+| `src/app/globals.css` | Added strokeDraw keyframes + icon-stroke-draw class |
+| `src/components/modules/shared/module-icon-container.tsx` | Rewritten: renders Lucide SVG via icons[] |
+| `src/components/notifications/notification-bell.tsx` | Removed 22-entry emoji map → NotificationIcon |
+| `src/components/notifications/notifications-list.tsx` | Removed emoji typeIcons → NotificationIcon |
+| `src/components/notifications/notification-center.tsx` | Removed emoji NOTIFICATION_TYPE_ICONS → NotificationIcon |
+| `src/components/activity/activity-feed.tsx` | Emoji Record → Record<string, LucideIcon> components |
+| `src/lib/services/activity.ts` | Emoji strings → Lucide icon name strings |
+| `src/components/dashboard/welcome-card.tsx` | 🌅☀️🌆🌙 → Sunrise/Sun/Sunset/Moon Lucide icons |
+| `src/lib/modules/module-catalog.ts` | 19 module icons + 12 category icons → Lucide names |
+| `src/components/admin/modules/module-config-form.tsx` | Lucide icon picker grid, semantic pricing tier colors |
+| `src/components/portal/apps/app-launcher.tsx` | 3 text-6xl emoji → Lucide icons |
+| `src/components/portal/apps/app-card.tsx` | Emoji displayIcon → Lucide icon render |
+| `src/components/portal/apps/available-apps-grid.tsx` | text-3xl emoji → Lucide icon |
+| `src/components/modules/marketplace/module-detail-view.tsx` | text-6xl emoji → Lucide icon in rounded container |
+| `src/components/portal/apps/request-app-dialog.tsx` | text-3xl emoji → Lucide icon |
+| `src/app/portal/apps/[slug]/page.tsx` | text-2xl emoji → Lucide icon (server component) |
+| `src/components/modules/admin/admin-module-list.tsx` | text-2xl emoji → Lucide icon |
+| `src/components/portal/apps/module-widgets-grid.tsx` | Inline emoji → Lucide icon |
 
-#### Color Standardization Rules Applied
-- **Star ratings**: `fill-current text-amber-500` (was yellow-400, yellow-500 across files)
-- **"Free" text**: `text-muted-foreground` or `text-foreground` (was green-600)
-- **Verified badges**: `text-muted-foreground/70` (was blue-500)
-- **Category badges**: `variant="outline"` (was hex backgroundColor with white text)
-- **Install level badges**: `text-muted-foreground` (was purple-600/blue-600/green-600)
-- **Status active**: `variant="secondary"` (was bg-green-500)
-- **Status past due**: `variant="destructive"` (was bg-red-500)
-- **Beta badges**: `variant="outline"` (was yellow-100/800)
-- **Subscribed badges**: `variant="secondary"` (was bg-green-500)
-- **Module icon containers**: Category-tinted bg at 8% opacity (was gradient/plain/hardcoded)
+#### Key Technical Decisions
+- **lucide-react v0.562.0 icon name renames**: `BarChart3→ChartBar`, `AlertCircle→CircleAlert`, `CheckCircle→CircleCheck`, `XCircle→CircleX`, `Loader2→LoaderCircle`, `Wand2→WandSparkles`, `PieChart→ChartPie`, `LineChart→ChartLine`. Named imports still work (backward compatible re-exports), but `icons[]` dynamic object only has new names.
+- **`resolveIconName()` is the single source of truth** — All components that render dynamic icons should use this function. It handles emoji strings from DB, Lucide name strings from catalog, kebab-case from config, and null/undefined.
+- **Pattern for dynamic Lucide rendering**: `const I = icons[resolveIconName(icon) as keyof typeof icons] || icons.Package; return <I className="..." strokeWidth={1.5} />;`
+- **strokeWidth={1.5}** is the standard for all dynamically rendered Lucide icons (thinner than default 2, more refined "line icon" feel).
 
-### Key Patterns Discovered (FIX-11)
-- **`ModuleIconContainer` is now the standard** — All module/app cards should use this component. It provides consistent sizing, category-aware tinting, and hover animation.
-- **`group` class on Card + `group-hover:` on icon** — Standard pattern for hover-driven child animations across all cards.
-- **Semantic badge variants over hardcoded colors** — `variant="outline"` for categories/labels, `variant="secondary"` for active status, `variant="destructive"` for errors. No raw color classes on badges.
-- **`text-amber-500` is the standard star color** — Not yellow-400 or yellow-500. Amber is more refined and consistent across light/dark modes.
+#### Remaining Emoji Locations (Lower Priority)
+- AI agents system (~10 locations with 🤖 emoji)
+- Automation action-types.ts (~30+ emoji for workflow icons)
+- Template system (~50+ emoji in template data/categories)
+- Module service layer "📦" fallbacks (module-registry-server.ts, module-sync-service.ts)
+- Notification service definitions (notifications.ts)
+- Various admin detail pages
 
-### PHASE FIX-10 Build Fix ✅
-- **Commit `782e110`**: Restored `runtime: 'nodejs'` in middleware.ts — removing it caused Vercel build failure (`ENOENT: middleware.js.nft.json`). The `runtime: 'nodejs'` is REQUIRED for Vercel's build system to generate trace files.
+### PHASE FIX-11: Module Card UI Redesign ✅ (Previous Session)
 
 ---
 
