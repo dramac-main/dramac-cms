@@ -1,6 +1,25 @@
 # Active Context
 
-## Latest Session Update (Phase FIX-06 Complete — February 2026)
+## Latest Session Update (Phase FIX-06 + FIX-06b Complete — February 2026)
+
+### PHASE FIX-06b: Light Mode Contrast Fix ✅
+
+**2 files changed**, 35 insertions, 5 deletions  
+**Commit:** `d0bcdf3` — pushed to `main`
+
+**Problem:** In light mode, page background AND cards were both pure white (`oklch(1 0 0)` / `0 0% 100%`), causing zero contrast — cards blended into the page background. This was the "white issue" the user reported on the Social Media page and elsewhere.
+
+**Fix:** Changed light mode page background from pure white to a subtle cool gray:
+- `--background`: `oklch(1 0 0)` → `oklch(0.965 0.005 250)` (subtle blue-gray tint, ~#F2F4F8)
+- `--card`: remains `oklch(1 0 0)` (pure white) — cards now **stand out** against the gray bg
+- `--sidebar`: `oklch(0.985 0 0)` → `oklch(0.975 0.008 250)` (slightly darker tint for depth)
+- `--muted`/`--secondary`/`--accent`: `oklch(0.97 0 0)` → `oklch(0.945-0.955 0.005 250)` (subtle tint)
+- `--border`/`--input`: `oklch(0.922 0 0)` → `oklch(0.905 0.005 250)` (slightly more visible)
+- Applied to both `brand-variables.css` (HSL) and `globals.css` (oklch)
+
+**Key Insight:** The 3-source CSS system means light mode was also split across files — `brand-variables.css` sets HSL `--color-*` defaults for `:root`, while `globals.css` has oklch vars in the same `:root` block. Both must match.
+
+---
 
 ### PHASE FIX-06: Dark Mode Theme, React #310 Mitigation, Global UI Audit ✅
 
