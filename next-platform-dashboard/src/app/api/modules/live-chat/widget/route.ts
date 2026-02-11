@@ -41,15 +41,26 @@ export async function GET(request: NextRequest) {
     const supabase = createAdminClient()
 
     // Check if live-chat module is enabled for this site
-    const { data: moduleData } = await (supabase as any)
-      .from('site_modules')
-      .select('id')
+    // Use site_module_installations + modules_v2 (the correct modern tables)
+    const { data: installations } = await supabase
+      .from('site_module_installations')
+      .select('module_id')
       .eq('site_id', siteId)
-      .eq('module_id', 'live-chat')
-      .eq('is_active', true)
-      .maybeSingle()
+      .eq('is_enabled', true)
 
-    if (!moduleData) {
+    let isLiveChatEnabled = false
+    if (installations && installations.length > 0) {
+      const moduleIds = installations.map((i: any) => i.module_id)
+      const { data: modulesData } = await (supabase as any)
+        .from('modules_v2')
+        .select('id, slug')
+        .in('id', moduleIds)
+        .eq('slug', 'live-chat')
+        .maybeSingle()
+      isLiveChatEnabled = !!modulesData
+    }
+
+    if (!isLiveChatEnabled) {
       return NextResponse.json(
         { error: 'Live chat is not enabled for this site' },
         { status: 404, headers: corsHeaders }

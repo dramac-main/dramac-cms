@@ -4,9 +4,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { CraftRenderer } from "./craft-renderer";
 import { ModuleInjector } from "@/components/renderer/module-injector";
 import type { InstalledModuleInfo } from "@/types/studio-module";
+import { LiveChatWidgetInjector } from "@/components/renderer/live-chat-widget-injector";
 
 // Known module slugs that have Studio components
-const KNOWN_MODULE_SLUGS = ["ecommerce", "booking", "crm", "automation", "social-media"];
+const KNOWN_MODULE_SLUGS = ["ecommerce", "booking", "crm", "automation", "social-media", "live-chat"];
 
 interface SitePageProps {
   params: Promise<{
@@ -271,6 +272,9 @@ export default async function SitePage({ params }: SitePageProps) {
     );
   }
 
+  // Check if live-chat module is enabled
+  const hasLiveChat = data.modules.some(m => m.slug === 'live-chat' && m.status === 'active');
+
   // Pass data to client component for rendering with modules
   return (
     <>
@@ -282,6 +286,8 @@ export default async function SitePage({ params }: SitePageProps) {
       />
       {/* Inject studio modules for this site */}
       <ModuleInjector siteId={data.site.id} />
+      {/* Inject live chat widget if module is enabled */}
+      {hasLiveChat && <LiveChatWidgetInjector siteId={data.site.id} />}
     </>
   );
 }

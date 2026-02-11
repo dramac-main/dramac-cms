@@ -68,10 +68,10 @@ export async function proxy(request: NextRequest) {
   // Must be checked BEFORE any other routes
   // ========================================
   
-  // For client sites and custom domains, DON'T rewrite API routes
-  // The API routes exist at the app level and should work directly
-  if ((isClientSite || isCustomDomain) && pathname.startsWith("/api")) {
-    if (DEBUG) console.log("[proxy] → API route on subdomain, passing through");
+  // For client sites and custom domains, DON'T rewrite API or embed routes
+  // The API routes and embed pages exist at the app level and should work directly
+  if ((isClientSite || isCustomDomain) && (pathname.startsWith("/api") || pathname.startsWith("/embed"))) {
+    if (DEBUG) console.log("[proxy] → API/embed route on subdomain, passing through");
     return NextResponse.next();
   }
   
