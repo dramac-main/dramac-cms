@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { DollarSign, Percent, Calculator, Save, Loader2 } from "lucide-react";
+import { Coins, Percent, Calculator, Save, Loader2 } from "lucide-react";
+import { formatCurrency } from "@/lib/locale-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -134,17 +135,17 @@ export function MarkupPricingForm({ subscription }: MarkupPricingFormProps) {
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-4 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground mb-1">Wholesale (Your Cost)</p>
-                <p className="text-2xl font-bold">${wholesaleMonthly.toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(wholesaleMonthly)}</p>
                 <p className="text-xs text-muted-foreground">/month</p>
               </div>
               <div className="text-center p-4 bg-muted rounded-lg">
                 <p className="text-sm text-muted-foreground mb-1">Client Pays</p>
-                <p className="text-2xl font-bold text-primary">${clientPrice.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-primary">{formatCurrency(clientPrice)}</p>
                 <p className="text-xs text-muted-foreground">/month</p>
               </div>
               <div className="text-center p-4 bg-green-50 dark:bg-green-950 rounded-lg">
                 <p className="text-sm text-muted-foreground mb-1">Your Profit</p>
-                <p className="text-2xl font-bold text-green-600">${profit.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-green-600">{formatCurrency(profit)}</p>
                 <p className="text-xs text-muted-foreground">/month per client</p>
               </div>
             </div>
@@ -173,7 +174,7 @@ export function MarkupPricingForm({ subscription }: MarkupPricingFormProps) {
                   </SelectItem>
                   <SelectItem value="fixed">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4" />
+                      <Coins className="h-4 w-4" />
                       Fixed Amount Markup
                     </div>
                   </SelectItem>
@@ -233,7 +234,7 @@ export function MarkupPricingForm({ subscription }: MarkupPricingFormProps) {
                 <FormLabel>Fixed Markup Amount</FormLabel>
                 <FormControl>
                   <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">$</span>
+                    <span className="text-muted-foreground">K</span>
                     <Input
                       type="number"
                       min={0}
@@ -264,7 +265,7 @@ export function MarkupPricingForm({ subscription }: MarkupPricingFormProps) {
                   <FormLabel>Custom Monthly Price</FormLabel>
                   <FormControl>
                     <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">$</span>
+                      <span className="text-muted-foreground">K</span>
                       <Input
                         type="number"
                         min={0}
@@ -288,7 +289,7 @@ export function MarkupPricingForm({ subscription }: MarkupPricingFormProps) {
                   <FormLabel>Custom Yearly Price (Optional)</FormLabel>
                   <FormControl>
                     <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">$</span>
+                      <span className="text-muted-foreground">K</span>
                       <Input
                         type="number"
                         min={0}
@@ -321,19 +322,19 @@ export function MarkupPricingForm({ subscription }: MarkupPricingFormProps) {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Monthly Revenue</p>
-                <p className="font-semibold">${(clientPrice * 10).toFixed(2)}</p>
+                <p className="font-semibold">{formatCurrency(clientPrice * 10)}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Monthly Profit</p>
-                <p className="font-semibold text-green-600">${(profit * 10).toFixed(2)}</p>
+                <p className="font-semibold text-green-600">{formatCurrency(profit * 10)}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Yearly Revenue</p>
-                <p className="font-semibold">${(clientPrice * 10 * 12).toFixed(2)}</p>
+                <p className="font-semibold">{formatCurrency(clientPrice * 10 * 12)}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Yearly Profit</p>
-                <p className="font-semibold text-green-600">${(profit * 10 * 12).toFixed(2)}</p>
+                <p className="font-semibold text-green-600">{formatCurrency(profit * 10 * 12)}</p>
               </div>
             </div>
           </CardContent>

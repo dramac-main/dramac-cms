@@ -25,8 +25,8 @@ export interface ModulePricing {
   type: ModulePricingType;
   amount: number; // In cents, 0 for free
   currency: string;
-  lemonSqueezyProductId?: string;
-  lemonSqueezyVariantId?: string;
+  paddleProductId?: string;
+  paddlePriceId?: string;
 }
 
 export interface ModuleAuthor {

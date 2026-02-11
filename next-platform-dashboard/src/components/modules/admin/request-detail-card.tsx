@@ -7,7 +7,7 @@ import {
   User, 
   Clock, 
   ThumbsUp,
-  DollarSign,
+  Coins,
   CheckCircle,
   XCircle,
   Play,
@@ -159,7 +159,7 @@ export function RequestDetailCard({ request }: RequestDetailCardProps) {
             </Badge>
             {request.willing_to_fund && (
               <Badge variant="outline" className="text-green-600 border-green-200">
-                <DollarSign className="h-3 w-3 mr-1" />
+                <Coins className="h-3 w-3 mr-1" />
                 Willing to Fund
               </Badge>
             )}

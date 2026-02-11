@@ -6,7 +6,7 @@ import {
   BarChart2, 
   Mail, 
   Calendar, 
-  DollarSign,
+  Coins,
   Users,
   Globe,
   Search,
@@ -22,6 +22,8 @@ import {
   Palette,
   type LucideIcon
 } from "lucide-react";
+import { icons } from "lucide-react";
+import { resolveIconName } from "@/lib/utils/icon-map";
 
 // Map of icon names to components
 const iconMap: Record<string, LucideIcon> = {
@@ -30,7 +32,7 @@ const iconMap: Record<string, LucideIcon> = {
   'bar-chart': BarChart2,
   'mail': Mail,
   'calendar': Calendar,
-  'dollar-sign': DollarSign,
+  'dollar-sign': Coins,
   'users': Users,
   'globe': Globe,
   'search': Search,
@@ -60,26 +62,21 @@ const sizeMap = {
 };
 
 export function ModuleIcon({ icon, className = '', size = 'md' }: ModuleIconProps) {
-  // Check if it's an emoji (starts with non-ASCII character)
-  const isEmoji = icon && /[\u{1F300}-\u{1F9FF}]/u.test(icon);
-  
-  if (isEmoji) {
-    const emojiSizeMap = {
-      sm: 'text-base',
-      md: 'text-xl',
-      lg: 'text-2xl',
-      xl: 'text-4xl',
-    };
-    return <span className={`${emojiSizeMap[size]} ${className}`}>{icon}</span>;
-  }
-
-  // Check if it's a Lucide icon name
+  // First check the static map
   const IconComponent = iconMap[icon?.toLowerCase()];
   
   if (IconComponent) {
-    return <IconComponent className={`${sizeMap[size]} ${className}`} />;
+    return <IconComponent className={`${sizeMap[size]} ${className}`} strokeWidth={1.5} />;
+  }
+
+  // Use resolveIconName for emoji/Lucide name resolution
+  const resolved = resolveIconName(icon);
+  const DynamicIcon = icons[resolved as keyof typeof icons];
+  
+  if (DynamicIcon) {
+    return <DynamicIcon className={`${sizeMap[size]} ${className}`} strokeWidth={1.5} />;
   }
 
   // Default to Package icon
-  return <Package className={`${sizeMap[size]} ${className}`} />;
+  return <Package className={`${sizeMap[size]} ${className}`} strokeWidth={1.5} />;
 }

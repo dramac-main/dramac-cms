@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getModuleById } from "@/lib/modules/module-registry-server";
 import { MODULE_CATEGORIES } from "@/lib/modules/module-catalog";
 import { ModuleInstallButton } from "@/components/modules/marketplace/module-install-button";
+import { ModuleIconContainer } from "@/components/modules/shared/module-icon-container";
 import type { Metadata } from "next";
 
 interface ModuleDetailPageProps {
@@ -30,7 +31,7 @@ function formatPrice(pricing: { type: string; amount: number; currency: string }
     return "Free";
   }
   
-  const amount = pricing.amount / 100; // Convert cents to dollars
+  const amount = pricing.amount / 100; // Convert cents to currency amount
   const formatted = new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: "currency",
     currency: pricing.currency || DEFAULT_CURRENCY,
@@ -87,7 +88,7 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
       <div className="flex flex-col md:flex-row gap-6 mb-8">
         <div className="flex-1">
           <div className="flex items-center gap-4 mb-4">
-            <span className="text-5xl">{module.icon}</span>
+            <ModuleIconContainer icon={module.icon} category={module.category} size="lg" />
             <div>
               <h1 className="text-3xl font-bold">{module.name}</h1>
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
@@ -124,7 +125,7 @@ export default async function ModuleDetailPage({ params }: ModuleDetailPageProps
             )}
             {category && (
               <Badge variant="outline">
-                {category.icon} {category.label}
+                {category.label}
               </Badge>
             )}
             {module.status === "beta" && (

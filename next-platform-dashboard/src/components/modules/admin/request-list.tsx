@@ -9,7 +9,7 @@ import {
   Clock, 
   ChevronRight,
   ThumbsUp,
-  DollarSign
+  Coins
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -120,7 +120,7 @@ export function RequestList({ requests }: RequestListProps) {
               )}
               {request.willing_to_fund && (
                 <Badge variant="outline" className="text-green-600 border-green-200">
-                  <DollarSign className="h-3 w-3 mr-1" />
+                  <Coins className="h-3 w-3 mr-1" />
                   Willing to Fund
                 </Badge>
               )}

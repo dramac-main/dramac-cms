@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronRight, Sparkles, TrendingUp, Clock, Star, Gift, Building2, Package, Layers } from 'lucide-react';
 import { getFeaturedCollections, type ModuleCollection } from '@/lib/modules/marketplace-search';
 import { EnhancedModuleCard } from './enhanced-module-card';
+import { ModuleIconContainer } from '@/components/modules/shared/module-icon-container';
 
 interface FeaturedCollectionsProps {
   subscribedModuleIds?: string[];
@@ -131,7 +132,7 @@ export function FeaturedCollections({
             {/* Collection Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">{collection.icon}</span>
+                <ModuleIconContainer icon={collection.icon} size="sm" />
                 <div>
                   <h2 className="text-xl font-semibold flex items-center gap-2">
                     {Icon}
@@ -198,7 +199,7 @@ export function CollectionSection({
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <span className="text-2xl">{collection.icon}</span>
+            <ModuleIconContainer icon={collection.icon} size="sm" />
             {Icon}
             {collection.name}
           </CardTitle>

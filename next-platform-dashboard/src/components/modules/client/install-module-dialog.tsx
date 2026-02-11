@@ -14,6 +14,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/locale-config";
+import { ModuleIconContainer } from "@/components/modules/shared/module-icon-container";
 
 interface InstallModuleDialogProps {
   isOpen: boolean;
@@ -88,7 +89,7 @@ export function InstallModuleDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
-            <span className="text-2xl">{module.icon || "📦"}</span>
+            <ModuleIconContainer icon={module.icon} size="sm" />
             Install {module.name}
           </DialogTitle>
           <DialogDescription>

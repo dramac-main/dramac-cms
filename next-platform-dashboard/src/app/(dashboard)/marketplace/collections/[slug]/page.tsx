@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { EnhancedModuleCard } from "@/components/modules/marketplace/enhanced-module-card";
+import { ModuleIconContainer } from "@/components/modules/shared/module-icon-container";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -105,7 +106,7 @@ export default async function CollectionPage({ params }: PageProps) {
       {/* Collection Header */}
       <div className="space-y-2">
         <div className="flex items-center gap-3">
-          <span className="text-4xl">{collection.icon}</span>
+          <ModuleIconContainer icon={collection.icon} size="lg" />
           <div>
             <h1 className="text-3xl font-bold">{collection.name}</h1>
             {collection.description && (

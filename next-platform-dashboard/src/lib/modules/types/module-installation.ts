@@ -40,11 +40,11 @@ export interface Module {
   suggestedRetailMonthly: number | null;
   suggestedRetailYearly: number | null;
   
-  // LemonSqueezy
-  lemonProductId: string | null;
-  lemonVariantMonthlyId: string | null;
-  lemonVariantYearlyId: string | null;
-  lemonVariantOneTimeId: string | null;
+  // Paddle
+  paddleProductId: string | null;
+  paddlePriceMonthlyId: string | null;
+  paddlePriceYearlyId: string | null;
+  paddlePriceOneTimeId: string | null;
   
   // Package
   packageUrl: string | null;
@@ -125,17 +125,17 @@ export interface AgencyModuleSubscription {
   status: "active" | "canceled" | "past_due" | "paused";
   billingCycle: "monthly" | "yearly" | "one_time";
   
-  // LemonSqueezy
-  lemonSubscriptionId: string | null;
-  lemonOrderId: string | null;
-  lemonCustomerId: string | null;
+  // Paddle
+  paddleSubscriptionId: string | null;
+  paddleTransactionId: string | null;
+  paddleCustomerId: string | null;
   currentPeriodStart: Date | null;
   currentPeriodEnd: Date | null;
   cancelAtPeriodEnd: boolean;
   
-  // Stripe (legacy)
-  stripeSubscriptionId: string | null;
-  stripeSubscriptionItemId: string | null;
+  // Legacy (deprecated)
+  legacySubscriptionId: string | null;
+  legacySubscriptionItemId: string | null;
   
   // Markup configuration
   markupType: "percentage" | "fixed" | "custom" | "passthrough";
@@ -177,8 +177,7 @@ export interface ClientModuleInstallation {
   
   // Billing
   billingStatus: "active" | "canceled" | "past_due" | "trial";
-  stripeSubscriptionId: string | null;
-  lemonSubscriptionId: string | null;
+  paddleSubscriptionId: string | null;
   pricePaid: number | null;
   billingCycle: "monthly" | "yearly" | "one_time";
   currentPeriodStart: Date | null;
@@ -374,10 +373,11 @@ export function moduleRowToModule(row: ModuleRow): Module {
     wholesalePriceOneTime: row.wholesale_price_one_time || 0,
     suggestedRetailMonthly: row.suggested_retail_monthly,
     suggestedRetailYearly: row.suggested_retail_yearly,
-    lemonProductId: row.lemon_product_id,
-    lemonVariantMonthlyId: row.lemon_variant_monthly_id,
-    lemonVariantYearlyId: row.lemon_variant_yearly_id,
-    lemonVariantOneTimeId: row.lemon_variant_one_time_id,
+    // Paddle
+    paddleProductId: row.lemon_product_id,
+    paddlePriceMonthlyId: row.lemon_variant_monthly_id,
+    paddlePriceYearlyId: row.lemon_variant_yearly_id,
+    paddlePriceOneTimeId: row.lemon_variant_one_time_id,
     packageUrl: row.package_url,
     packageHash: row.package_hash,
     manifest: row.manifest as unknown as ModuleManifest,
@@ -413,9 +413,9 @@ export function subscriptionRowToSubscription(
     moduleId: row.module_id,
     status: row.status as AgencyModuleSubscription["status"],
     billingCycle: row.billing_cycle as AgencyModuleSubscription["billingCycle"],
-    lemonSubscriptionId: row.lemon_subscription_id,
-    lemonOrderId: row.lemon_order_id,
-    lemonCustomerId: row.lemon_customer_id,
+    paddleSubscriptionId: row.lemon_subscription_id,
+    paddleTransactionId: row.lemon_order_id,
+    paddleCustomerId: row.lemon_customer_id,
     currentPeriodStart: row.current_period_start
       ? new Date(row.current_period_start)
       : null,
@@ -423,8 +423,8 @@ export function subscriptionRowToSubscription(
       ? new Date(row.current_period_end)
       : null,
     cancelAtPeriodEnd: row.cancel_at_period_end,
-    stripeSubscriptionId: row.stripe_subscription_id,
-    stripeSubscriptionItemId: row.stripe_subscription_item_id,
+    legacySubscriptionId: row.stripe_subscription_id,
+    legacySubscriptionItemId: row.stripe_subscription_item_id,
     markupType: row.markup_type as AgencyModuleSubscription["markupType"],
     markupPercentage: row.markup_percentage,
     markupFixedAmount: row.markup_fixed_amount,

@@ -25,9 +25,9 @@
  * 
  * // Create a contact
  * const contact = await db.createOne('contacts', {
- *   first_name: 'John',
- *   last_name: 'Doe',
- *   email: 'john@example.com'
+ *   first_name: 'Chanda',
+ *   last_name: 'Mwale',
+ *   email: 'chanda@example.co.zm'
  * });
  * 
  * // Find with filters
@@ -196,9 +196,9 @@ export class ModuleDatabaseSDK {
    * @example
    * ```typescript
    * const contact = await db.createOne('contacts', {
-   *   first_name: 'John',
-   *   last_name: 'Doe',
-   *   email: 'john@example.com'
+   *   first_name: 'Chanda',
+   *   last_name: 'Mwale',
+   *   email: 'chanda@example.co.zm'
    * });
    * ```
    */

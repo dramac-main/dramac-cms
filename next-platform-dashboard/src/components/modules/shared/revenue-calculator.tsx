@@ -2,7 +2,8 @@
 
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingUp, Users } from "lucide-react";
+import { Coins, TrendingUp, Users } from "lucide-react";
+import { formatCurrency } from "@/lib/locale-config";
 
 interface RevenueCalculatorProps {
   wholesalePriceCents: number;
@@ -48,13 +49,13 @@ export function RevenueCalculator({
             <div>
               <p className="text-xs text-muted-foreground">Monthly Revenue</p>
               <p className="text-lg font-semibold">
-                ${calculations.monthlyRevenue.toFixed(2)}
+                {formatCurrency(calculations.monthlyRevenue)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Yearly Revenue</p>
               <p className="text-lg font-semibold">
-                ${calculations.yearlyRevenue.toFixed(2)}
+                {formatCurrency(calculations.yearlyRevenue)}
               </p>
             </div>
           </div>
@@ -62,13 +63,13 @@ export function RevenueCalculator({
             <div>
               <p className="text-xs text-muted-foreground">Monthly Profit</p>
               <p className="text-lg font-semibold text-green-600">
-                ${calculations.monthlyProfit.toFixed(2)}
+                {formatCurrency(calculations.monthlyProfit)}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Yearly Profit</p>
               <p className="text-lg font-semibold text-green-600">
-                ${calculations.yearlyProfit.toFixed(2)}
+                {formatCurrency(calculations.yearlyProfit)}
               </p>
             </div>
           </div>
@@ -84,7 +85,7 @@ export function RevenueCalculator({
           <div className="flex items-center justify-between text-sm mt-1">
             <span className="text-muted-foreground">Profit per Client</span>
             <span className="font-semibold">
-              ${calculations.profitPerClient.toFixed(2)}/mo
+              {formatCurrency(calculations.profitPerClient)}/mo
             </span>
           </div>
         </div>
