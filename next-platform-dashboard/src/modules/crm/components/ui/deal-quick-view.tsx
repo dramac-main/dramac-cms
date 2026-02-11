@@ -37,7 +37,7 @@ import {
   Edit2,
   Trash2,
   CheckCircle2,
-  XCircle,
+  CircleX,
   Phone,
   Mail,
   Building2,
@@ -197,7 +197,7 @@ function DealHeader({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button size="icon" variant="ghost" className="text-red-600 hover:bg-red-100" onClick={onLose}>
-                        <XCircle className="h-5 w-5" />
+                        <CircleX className="h-5 w-5" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Mark as lost</TooltipContent>

@@ -287,7 +287,7 @@ export function CreateCompanyDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="annual_revenue">Annual Revenue ($)</Label>
+              <Label htmlFor="annual_revenue">Annual Revenue</Label>
               <Input
                 id="annual_revenue"
                 type="number"

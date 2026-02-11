@@ -40,7 +40,7 @@ import {
   Globe,
   Phone,
   Users,
-  DollarSign,
+  Coins,
   MapPin,
   Building2,
   ExternalLink,
@@ -373,7 +373,7 @@ export function CompanyDetailSheet({
                 </div>
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" />
+                    <Coins className="h-4 w-4" />
                     Annual Revenue
                   </Label>
                   {isEditing ? (

@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   Building2, 
   Users, 
-  DollarSign, 
+  Coins, 
   TrendingUp, 
   Globe,
   ArrowRight,
@@ -183,7 +183,7 @@ export function AgencyCRMDashboard({ agencyId, sites }: AgencyCRMDashboardProps)
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Pipeline Value</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <Coins className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -332,7 +332,7 @@ export function AgencyCRMDashboard({ agencyId, sites }: AgencyCRMDashboardProps)
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <DollarSign className="h-5 w-5 text-primary" />
+                    <Coins className="h-5 w-5 text-primary" />
                   </div>
                   <CardTitle className="text-base">Sales Pipeline</CardTitle>
                 </div>

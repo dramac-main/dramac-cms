@@ -21,7 +21,7 @@ import {
 import {
   TrendingUp,
   TrendingDown,
-  DollarSign,
+  Coins,
   Target,
   Clock,
   Users,
@@ -254,7 +254,7 @@ export function PipelineMetricsGrid({ data, className }: PipelineMetricsGridProp
     {
       label: "Pipeline Value",
       value: formatCurrency(data.totalValue),
-      icon: DollarSign,
+      icon: Coins,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
     },
@@ -318,7 +318,7 @@ export function PipelineSummaryCompact({ data, className }: PipelineSummaryCompa
         <span className="text-muted-foreground">deals</span>
       </div>
       <div className="flex items-center gap-2">
-        <DollarSign className="h-4 w-4 text-muted-foreground" />
+        <Coins className="h-4 w-4 text-muted-foreground" />
         <span className="font-medium">{formatCurrency(data.totalValue)}</span>
       </div>
       <div className="flex items-center gap-2">

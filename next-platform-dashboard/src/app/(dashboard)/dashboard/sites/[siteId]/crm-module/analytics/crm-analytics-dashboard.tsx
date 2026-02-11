@@ -27,7 +27,7 @@ import {
   TrendingUp,
   Users,
   Activity,
-  DollarSign,
+  Coins,
   Download,
 } from "lucide-react";
 
@@ -289,7 +289,7 @@ export function CRMAnalyticsDashboard({ siteId }: CRMAnalyticsDashboardProps) {
             Activities
           </TabsTrigger>
           <TabsTrigger value="revenue" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
+            <Coins className="h-4 w-4" />
             Revenue
           </TabsTrigger>
         </TabsList>

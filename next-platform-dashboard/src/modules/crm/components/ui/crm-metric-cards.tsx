@@ -19,7 +19,7 @@ import {
   Building2,
   TrendingUp,
   TrendingDown,
-  DollarSign,
+  Coins,
   Activity,
   Target,
   type LucideIcon,
@@ -316,7 +316,7 @@ export function useCRMMetrics(data: CRMMetricsData): CRMMetric[] {
       value: data.pipelineValue,
       previousValue: data.previousPipelineValue,
       format: 'currency',
-      icon: DollarSign,
+      icon: Coins,
       color: 'success',
     },
     {

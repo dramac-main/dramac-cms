@@ -111,7 +111,6 @@ function CRMDashboardContent() {
               id: 'contacts',
               label: 'Total Contacts',
               value: contacts.length,
-              previousValue: Math.max(0, contacts.length - 5),
               icon: Users,
               onClick: () => setActiveTab('contacts'),
             },
@@ -119,7 +118,6 @@ function CRMDashboardContent() {
               id: 'companies',
               label: 'Companies',
               value: companies.length,
-              previousValue: Math.max(0, companies.length - 2),
               icon: Building2,
               onClick: () => setActiveTab('companies'),
             },
@@ -127,7 +125,6 @@ function CRMDashboardContent() {
               id: 'openDeals',
               label: 'Open Deals',
               value: openDeals.length,
-              previousValue: Math.max(0, openDeals.length - 3),
               icon: TrendingUp,
               onClick: () => setActiveTab('deals'),
             },
@@ -135,7 +132,6 @@ function CRMDashboardContent() {
               id: 'pipelineValue',
               label: 'Pipeline Value',
               value: totalPipelineValue,
-              previousValue: Math.max(0, totalPipelineValue - 10000),
               format: 'currency',
               icon: BarChart3,
               onClick: () => setActiveTab('reports'),
@@ -144,7 +140,6 @@ function CRMDashboardContent() {
               id: 'wonValue',
               label: 'Won This Month',
               value: totalWonValue,
-              previousValue: Math.max(0, totalWonValue - 5000),
               format: 'currency',
               icon: Activity,
               color: 'success',
@@ -219,9 +214,6 @@ function CRMDashboardContent() {
                 Open Analytics Dashboard
               </Button>
             </Link>
-            <p className="text-sm text-muted-foreground">
-              <strong>Note:</strong> Analytics currently use demo data for testing purposes.
-            </p>
           </div>
         </TabsContent>
       </Tabs>

@@ -108,7 +108,7 @@ function calculateMetrics(pipeline: Pipeline, deals: Deal[]): FunnelMetrics {
     const totalValue = stageDeals.reduce((sum, d) => sum + (d.amount || 0), 0)
     const weightedValue = stageDeals.reduce((sum, d) => sum + (d.weighted_value || 0), 0)
     
-    // Calculate average days in stage (mock calculation)
+    // Calculate average days in stage
     const avgDaysInStage = stageDeals.length > 0 
       ? stageDeals.reduce((sum, d) => {
           const created = new Date(d.created_at)

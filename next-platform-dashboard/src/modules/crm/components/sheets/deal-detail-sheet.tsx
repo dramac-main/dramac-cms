@@ -37,14 +37,14 @@ import {
   Pencil, 
   Save, 
   X,
-  DollarSign,
+  Coins,
   Calendar,
   User,
   Building2,
   Target,
   TrendingUp,
   CheckCircle2,
-  XCircle,
+  CircleX,
   Phone,
   Mail,
   FileText
@@ -280,7 +280,7 @@ export function DealDetailSheet({
                   className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
                   onClick={() => handleStatusChange('lost')}
                 >
-                  <XCircle className="h-4 w-4 mr-1" />
+                  <CircleX className="h-4 w-4 mr-1" />
                   Mark Lost
                 </Button>
               </div>
@@ -340,7 +340,7 @@ export function DealDetailSheet({
                 <div className="p-4 rounded-lg bg-muted/50 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      <Coins className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">Deal Value</span>
                     </div>
                     {isEditing ? (

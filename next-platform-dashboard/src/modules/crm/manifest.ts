@@ -185,7 +185,7 @@ export const CRMModuleManifest: ModuleManifest = {
       { label: 'Dashboard', href: '/dashboard/crm', icon: 'layout-dashboard' },
       { label: 'Contacts', href: '/dashboard/crm/contacts', icon: 'user' },
       { label: 'Companies', href: '/dashboard/crm/companies', icon: 'building-2' },
-      { label: 'Deals', href: '/dashboard/crm/deals', icon: 'dollar-sign' },
+      { label: 'Deals', href: '/dashboard/crm/deals', icon: 'coins' },
       { label: 'Activities', href: '/dashboard/crm/activities', icon: 'activity' },
       { label: 'Reports', href: '/dashboard/crm/reports', icon: 'bar-chart-3' },
       { label: 'Settings', href: '/dashboard/crm/settings', icon: 'settings' }

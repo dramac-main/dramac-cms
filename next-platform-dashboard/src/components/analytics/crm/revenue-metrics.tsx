@@ -29,7 +29,7 @@ import {
   Cell,
 } from "recharts";
 import {
-  DollarSign,
+  Coins,
   TrendingUp,
   TrendingDown,
   Target,
@@ -86,7 +86,7 @@ export function RevenueMetricsCards({ data, className }: RevenueMetricsCardsProp
       label: "Total Revenue",
       value: formatCurrency(data.totalRevenue),
       trend: data.revenueTrend,
-      icon: DollarSign,
+      icon: Coins,
       color: "text-green-500",
       bgColor: "bg-green-500/10",
     },
@@ -435,7 +435,7 @@ export function RevenueSummaryCard({ metrics, className }: RevenueSummaryCardPro
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="p-4 bg-green-500/10 rounded-xl">
-            <DollarSign className="h-8 w-8 text-green-500" />
+            <Coins className="h-8 w-8 text-green-500" />
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Total Revenue</p>

@@ -37,7 +37,7 @@ import {
   Activity,
   Clock,
   CheckCircle2,
-  XCircle,
+  CircleX,
   Download,
   LucideIcon,
 } from 'lucide-react'
@@ -464,7 +464,6 @@ export function ReportsView() {
           value={formatCurrency(metrics.wonValue)}
           description={`${metrics.wonDeals} deals won`}
           icon={Coins}
-          trend={{ value: 12.5, positive: true }}
         />
         <StatCard
           title="Pipeline Value"
@@ -477,7 +476,6 @@ export function ReportsView() {
           value={formatPercent(metrics.winRate)}
           description="Closed deals"
           icon={Target}
-          trend={{ value: 2.3, positive: true }}
         />
         <StatCard
           title="Avg Deal Value"
@@ -566,7 +564,7 @@ export function ReportsView() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-red-100 dark:bg-red-900 rounded-full">
-                    <XCircle className="h-5 w-5 text-red-600" />
+                    <CircleX className="h-5 w-5 text-red-600" />
                   </div>
                   <div>
                     <div className="font-medium">Lost Deals</div>

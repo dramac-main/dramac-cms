@@ -36,7 +36,7 @@ import {
   Edit,
   Trash2,
   CheckCircle2,
-  XCircle,
+  CircleX,
   Clock,
   AlertTriangle,
   type LucideIcon,
@@ -127,7 +127,7 @@ function getStatusConfig(status: DealStatus): { icon: LucideIcon; color: string;
     case 'won':
       return { icon: CheckCircle2, color: 'text-green-500', label: 'Won' }
     case 'lost':
-      return { icon: XCircle, color: 'text-red-500', label: 'Lost' }
+      return { icon: CircleX, color: 'text-red-500', label: 'Lost' }
     default:
       return { icon: Clock, color: 'text-blue-500', label: 'Open' }
   }
@@ -370,7 +370,7 @@ export function DealCard({
                           className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-100"
                           onClick={(e) => { e.stopPropagation(); onLose(); }}
                         >
-                          <XCircle className="h-4 w-4" />
+                          <CircleX className="h-4 w-4" />
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>Mark as Lost</TooltipContent>

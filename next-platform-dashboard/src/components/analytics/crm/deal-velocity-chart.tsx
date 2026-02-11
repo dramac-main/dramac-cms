@@ -30,7 +30,7 @@ import {
   TrendingUp,
   TrendingDown,
   Trophy,
-  XCircle,
+  CircleX,
   Clock,
 } from "lucide-react";
 import type {
@@ -297,7 +297,7 @@ export function DealStatusCards({ data, className }: DealStatusCardsProps) {
   const statusConfig = {
     open: { icon: Clock, color: "text-blue-500", bgColor: "bg-blue-500/10" },
     won: { icon: Trophy, color: "text-green-500", bgColor: "bg-green-500/10" },
-    lost: { icon: XCircle, color: "text-red-500", bgColor: "bg-red-500/10" },
+    lost: { icon: CircleX, color: "text-red-500", bgColor: "bg-red-500/10" },
   };
 
   return (
@@ -473,7 +473,7 @@ export function VelocitySummary({ data, className }: VelocitySummaryProps) {
         <p className="text-xs text-muted-foreground">Lost Deals</p>
         <p className="text-2xl font-bold text-red-600">{totals.lostDeals}</p>
         <div className="flex items-center gap-1 mt-1 text-red-500">
-          <XCircle className="h-3 w-3" />
+          <CircleX className="h-3 w-3" />
           <span className="text-xs">{totals.lostDeals} deals</span>
         </div>
       </Card>
