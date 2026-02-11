@@ -1,56 +1,43 @@
 # Active Context
 
-## Latest Session Update — Comprehensive Platform Navigation/UX/Module Audit & Fixes (Commit `8aee006`)
+## Latest Session Update — Live Chat Widget Auto-Injection on Published Sites (Commit `99c61a7`)
 
-### Deep Platform Audit — 12 Critical Issues Found & Fixed ✅
+### CRITICAL FIX: Widget Was Never Injected Into Published Sites ✅
 
-**Audit Scope:** Full navigation, UX, module system, site detail page, manifest hrefs, catalog, registry
+The entire Live Chat module (LC-01 through LC-08) was 100% built — widget, embed script, API routes, agent dashboard, AI responder, WhatsApp integration — but the widget was **never actually injected** into published sites. Users could enable the module in the dashboard, but nothing would appear on their website.
 
-**Issues Found & Fixed (11 files, +450/-58 lines):**
+### Root Cause Analysis
+The public site renderer at `/site/[domain]/[[...slug]]/page.tsx` fetches modules and passes them to `<CraftRenderer>` and `<ModuleInjector>`, but:
+1. `<ModuleInjector>` only handles "studio" modules with `render_code` — live-chat is a platform module
+2. No code existed to inject the embed `<script>` tag for live-chat
+3. The widget settings API checked the wrong table (`site_modules` instead of `site_module_installations`)
+4. The proxy would rewrite `/embed/chat-widget` paths on subdomains to `/site/subdomain/embed/chat-widget` → 404
 
-| # | Issue | Severity | Fix Applied |
-|---|-------|----------|-------------|
-| 1 | `live-chat` missing from module "Open" button mapping | CRITICAL | Added to slug list in `site-modules-tab.tsx` |
-| 2 | Analytics tab linked to `/sites/${id}/analytics` → 404 | CRITICAL | Changed to `/dashboard/sites/${site.id}/seo` |
-| 3 | Only CRM & Social had conditional tabs on site detail page | HIGH | Added 5 new conditional tabs (Booking, E-Commerce, Live Chat, Automation, AI Agents) |
-| 4 | AI Designer buried in overflow menu only | HIGH | Added prominent button with Wand2 icon to site header |
-| 5 | Clone Site overflow menu linked to settings instead of dialog | MEDIUM | Now triggers `CloneSiteDialog` component properly |
-| 6 | Booking manifest hrefs missing `/sites/` prefix | HIGH | Fixed all navigation hrefs |
-| 7 | E-Commerce manifest hrefs wrong (just `/ecommerce`) | HIGH | Fixed to `/dashboard/sites/[siteId]/ecommerce` |
-| 8 | Social Media manifest hrefs missing `/sites/` prefix | HIGH | Fixed all navigation hrefs |
-| 9 | Automation manifest hrefs wrong (just `/automation`) | HIGH | Fixed to `/dashboard/sites/[siteId]/automation` |
-| 10 | Module catalog missing CRM, Social Media, Automation, AI Agents | HIGH | Added 4 new catalog entries with pricing |
-| 11 | Catalog categories wrong (booking="content", live-chat="communication") | MEDIUM | Fixed to proper categories |
-| 12 | Module registry (`_registry.ts`) was empty stub | HIGH | Populated with 4 manifests + 3 helper functions |
+### Fixes Applied (4 files, +69/-12 lines)
+| File | Fix |
+|------|-----|
+| `src/components/renderer/live-chat-widget-injector.tsx` | **NEW** — Server component using Next.js `<Script>` with `afterInteractive` strategy to load embed JS |
+| `src/app/site/[domain]/[[...slug]]/page.tsx` | Added `LiveChatWidgetInjector` when `live-chat` module is active + added `live-chat` to `KNOWN_MODULE_SLUGS` |
+| `src/app/api/modules/live-chat/widget/route.ts` | Fixed module check to use `site_module_installations` + `modules_v2` (was using legacy `site_modules`) |
+| `src/proxy.ts` | Added `/embed` to passthrough paths for subdomains/custom domains |
 
-**Additional Cleanup:**
-- Removed unused `Bot`, `BarChart3` imports from `navigation.ts`
-- Fixed `ModuleCategory` type error in category filter with cast
-
-### Files Modified
-| File | Change |
-|------|--------|
-| `src/components/sites/site-modules-tab.tsx` | Added `live-chat` to Open button slug list |
-| `src/app/(dashboard)/dashboard/sites/[siteId]/page.tsx` | Fixed analytics link, added 5 module tabs, added AI Designer button |
-| `src/config/navigation.ts` | Removed unused imports |
-| `src/modules/booking/manifest.ts` | Fixed navigation hrefs |
-| `src/modules/ecommerce/manifest.ts` | Fixed navigation hrefs |
-| `src/modules/social-media/manifest.ts` | Fixed navigation hrefs |
-| `src/modules/automation/manifest.ts` | Fixed navigation hrefs |
-| `src/lib/modules/module-catalog.ts` | Added 4 modules, fixed categories, updated type |
-| `src/components/modules/module-marketplace-category-filter.tsx` | Cast category.id as ModuleCategory |
-| `src/modules/_registry.ts` | Populated with manifests + helpers |
-| `src/components/sites/site-detail-overflow-menu.tsx` | Clone Site now triggers CloneSiteDialog |
-
-### Key Findings from Audit
-- **"ProStudio" component does NOT exist** — not needed. The 53 core components + 6 premium blocks with `ResponsiveValue<T>`, gradients, animations, per-breakpoint visibility are already production-grade (rivals Wix/Webflow)
-- **Sidebar is static** (no dynamic module injection) — architectural decision, not a bug
-- **Module system has TWO parallel type systems**: catalog `ModuleDefinition` vs manifest `ModuleManifest` — both now in sync
-- **Mobile bottom nav is hardcoded separately** from sidebar config — low priority, not fixed
+### How It Works Now (Complete Flow)
+```
+1. Agency enables live-chat module for a site (marketplace → install)
+2. Visitor opens the published site (subdomain or custom domain)
+3. Public site renderer fetches modules → finds live-chat is active
+4. LiveChatWidgetInjector renders <Script src="/api/modules/live-chat/embed?siteId=xxx">
+5. Embed script fetches widget settings (colors, position, branding)
+6. Embed script creates floating launcher button (bottom-right/left)
+7. Visitor clicks launcher → iframe opens with full chat widget
+8. Pre-chat form → collect name/email → conversation created
+9. Real-time messaging with 3s polling
+10. Agent dashboard receives conversation in real-time
+```
 
 ### Git State
 - **Branch**: `main`
-- **Latest commit**: `8aee006`
+- **Latest commit**: `99c61a7`
 - **Working tree**: Clean
 - **TSC**: 0 errors ✅
 
