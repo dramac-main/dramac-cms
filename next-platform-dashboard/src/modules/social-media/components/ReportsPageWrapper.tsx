@@ -32,17 +32,14 @@ export function ReportsPageWrapper({ siteId, tenantId, userId, reports }: Report
         metrics?: string[]
         dateRangeType?: string
       }) => {
-        'use server'
         const result = await createReport(siteId, tenantId, userId, data)
         return { report: result.report, error: result.error }
       }}
       onDelete={async (reportId: string) => {
-        'use server'
         const result = await deleteReport(reportId, siteId)
         return { success: !result.error, error: result.error }
       }}
       onDuplicate={async (reportId: string) => {
-        'use server'
         const result = await duplicateReport(reportId, siteId)
         return { report: result.report, error: result.error }
       }}

@@ -1,6 +1,58 @@
 # Active Context
 
-## Latest Session Update (Social Media SM-04/05/06 — Commit `ebc04f0`)
+## Latest Session Update (Social Media SM-07/08/09 — Commit `35e4371`)
+
+### Social Media Phases SM-07, SM-08, SM-09 Implemented ✅
+
+**Commit:** `35e4371` — 51 files changed, +4,517 insertions, -5 deletions
+
+#### SM-07: Missing Pages & Full Navigation ✅
+| File | Change | Status |
+|------|--------|--------|
+| `migrations/sm-07-missing-tables.sql` | 5 tables: competitors, competitor_analytics, brand_mentions, listening_keywords, reports | ✅ |
+| `actions/listening-actions.ts` | 7 functions: keywords CRUD, mentions CRUD, mention stats | ✅ |
+| `actions/competitor-actions.ts` | 6 functions: competitor CRUD, sync, analytics, comparison | ✅ |
+| `actions/report-actions.ts` | 6 functions: report CRUD, duplicate | ✅ |
+| `actions/pillar-actions.ts` | 5 functions: content pillar CRUD, distribution | ✅ |
+| `actions/index.ts` | Added all new action exports | ✅ |
+| `components/PostsList.tsx` | Full posts list with table/grid view, filters, bulk actions | ✅ |
+| `components/PostsListWrapper.tsx` | Client wrapper for posts | ✅ |
+| `social/posts/page.tsx` | Server component for posts route | ✅ |
+| `components/SocialListening.tsx` | Keywords + mentions feed + sentiment stats | ✅ |
+| `components/SocialListeningWrapper.tsx` | Client wrapper for listening | ✅ |
+| `social/listening/page.tsx` | Server component for listening route | ✅ |
+| `components/CompetitorsPage.tsx` | Competitor cards + comparison table + add dialog | ✅ |
+| `components/CompetitorsPageWrapper.tsx` | Client wrapper for competitors | ✅ |
+| `social/competitors/page.tsx` | Server component for competitors route | ✅ |
+| `components/ReportsPage.tsx` | Reports grid + create dialog + delete/duplicate | ✅ |
+| `components/ReportsPageWrapper.tsx` | Client wrapper for reports | ✅ |
+| `social/reports/page.tsx` | Server component for reports route | ✅ |
+| `social/layout.tsx` | Navigation expanded to 14 items with horizontal scroll | ✅ |
+| `components/index.ts` | Barrel exports updated for all new components | ✅ |
+
+#### SM-08: Campaigns, Reporting & Calendar Enhancement ✅
+| File | Change | Status |
+|------|--------|--------|
+| `migrations/sm-08-content-pillars.sql` | social_content_pillars table with RLS | ✅ |
+| `PostComposerEnhanced.tsx` | Added Campaign + Content Pillar selectors to composer | ✅ |
+
+#### SM-09: Production Hardening & Final Cleanup ✅
+| File | Change | Status |
+|------|--------|--------|
+| `social/**/error.tsx` (×14) | Error boundaries for all 14 routes with contextual messages | ✅ |
+| `social/**/loading.tsx` (×14) | Loading skeletons for all 14 routes with tailored layouts | ✅ |
+| `components/SocialEmptyState.tsx` | Reusable empty state component | ✅ |
+
+### Navigation Items (14 total)
+Dashboard → Calendar → Compose → Posts → Inbox → Media → Accounts → Analytics → Campaigns → Listening → Competitors → Reports → Approvals → Settings
+
+### Migrations to Run
+- `sm-07-missing-tables.sql` — 5 tables for competitors, listening, reports
+- `sm-08-content-pillars.sql` — Content pillars table
+
+---
+
+## Previous Session (Social Media SM-04/05/06 — Commit `ebc04f0`)
 
 ### Social Media Phases SM-04, SM-05, SM-06 Implemented ✅
 

@@ -29,21 +29,24 @@ CREATE INDEX IF NOT EXISTS idx_social_content_pillars_active ON public.social_co
 -- RLS
 ALTER TABLE public.social_content_pillars ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view their site content pillars"
-  ON public.social_content_pillars FOR SELECT
-  USING (site_id IN (
-    SELECT id FROM public.sites WHERE tenant_id IN (
-      SELECT tenant_id FROM public.tenant_users WHERE user_id = auth.uid()
+CREATE POLICY social_content_pillars_policy ON public.social_content_pillars
+  FOR ALL USING (
+    site_id IN (
+      SELECT s.id FROM sites s
+      JOIN clients c ON s.client_id = c.id
+      JOIN agency_members am ON c.agency_id = am.agency_id
+      WHERE am.user_id = auth.uid()
     )
-  ));
+  );
 
-CREATE POLICY "Users can manage their site content pillars"
-  ON public.social_content_pillars FOR ALL
-  USING (site_id IN (
-    SELECT id FROM public.sites WHERE tenant_id IN (
-      SELECT tenant_id FROM public.tenant_users WHERE user_id = auth.uid()
-    )
-  ));
+-- Ensure trigger function exists
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Updated at trigger
 CREATE TRIGGER set_social_content_pillars_updated_at
