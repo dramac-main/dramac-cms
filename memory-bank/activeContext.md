@@ -1,56 +1,72 @@
 # Active Context
 
-## Latest Session Update — Live Chat LC-04 Complete + Marketplace Seed (Commits up to `dfb4544`)
+## Latest Session Update — ResellerClub Safety Guards + Domain Integration Audit (Commit `e3ca92d`)
 
-### Current Focus: Live Chat Module (LC-05 WhatsApp Next)
+### ⚠️ CRITICAL: ResellerClub Sandbox Does NOT Protect Against Charges
 
-**Completed this session:**
-- ✅ LC-04: Embeddable Widget, Settings Page, API Routes, Notifications (commit `ac45cbf`, 21 files, 4,306 insertions)
-- ✅ LC-04b: Marketplace seed migration — module registered as FREE (commit `dfb4544`)
-- ✅ Fixed 10 TypeScript errors in LC-04 (NotificationType, ChatMessage→WidgetMessage mapping, prop interfaces)
+**Discovery:** ResellerClub's `test.httpapi.com` (sandbox URL) with LIVE credentials still performs REAL operations and charges REAL money. The test URL is only meant for browser-based GET testing with a separate Demo Reseller Account.
 
-**Next session: LC-05 WhatsApp Integration** (spec fully read, 7 tasks):
-1. `whatsapp-service.ts` — WhatsApp Cloud API service (send text/image/doc/template, markAsRead, getMediaUrl, verifyWebhookSignature)
-2. `webhooks/whatsapp/route.ts` — GET verification + POST incoming messages/statuses
-3. `whatsapp-actions.ts` — Server actions (24h window check, templates, settings)
-4. `WhatsAppSetup.tsx` — Connection wizard, credential inputs, test connection
-5. `WhatsAppWindowIndicator.tsx`, `TemplateMessageDialog.tsx`, `WhatsAppStatusIndicator.tsx` — UI
-6. `crm-integration.ts` — Find/create CRM contact from WhatsApp visitor
-7. `whatsapp-media.ts` — Download WhatsApp media → upload to Supabase Storage
+**Solution implemented:** `RESELLERCLUB_ALLOW_PURCHASES` safety flag
+- When `false`/missing: Only read-only operations work (search, availability, pricing, details)
+- When `true`: Money-spending operations are enabled (register, renew, transfer, privacy, email orders)
+- Set to `false` in `.env.local` to protect the USD $24.02 balance
 
-**Env vars needed for LC-05:**
-- `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_ACCESS_TOKEN`
-- `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET`
+### ResellerClub Credentials (Confirmed Working)
+| Setting | Value | Status |
+|---------|-------|--------|
+| Reseller ID | `1315461` | ✅ Saved |
+| API Key | `5tlLyAAcuU...` | ✅ Saved |
+| Sandbox mode | `true` | ✅ (but does NOT prevent charges — use allow_purchases instead) |
+| Allow Purchases | `false` | ✅ **SAFE — no money can be spent** |
 
-### Module System (Important for Future Reference)
-- **3-table pattern**: `modules_v2` (catalog) → `agency_module_subscriptions` (purchase) → `site_module_installations` (enable)
-- **Module gating**: `isModuleEnabledForSite(siteId, 'live-chat')` in layout.tsx
-- **Pricing model**: `pricing_type` column: `'free'`, `'one_time'`, `'monthly'`, `'yearly'`; prices in **cents** (INTEGER)
-- **Marketplace approach**: Users discover → subscribe → install (NOT auto-installed)
-- **Seed migration**: `lc-01b-seed-module-free.sql` — registers module only, user installs via marketplace UI
+### Files Modified This Session
+| File | Change | Status |
+|------|--------|--------|
+| `src/lib/resellerclub/config.ts` | Added `allowPurchases` flag + `arePurchasesAllowed()` guard | ✅ |
+| `src/lib/resellerclub/errors.ts` | Added `PurchasesDisabledError` class | ✅ |
+| `src/lib/resellerclub/domains.ts` | Guards on `register()`, `renew()`, `transfer()`, `enablePrivacy()` | ✅ |
+| `src/lib/resellerclub/email/client.ts` | Guards on `createOrder()`, `renewOrder()` | ✅ |
+| `src/lib/resellerclub/transfers.ts` | Guards on `initiateTransferIn()`, `renewDomain()` | ✅ |
+| `src/lib/actions/domains.ts` | `getResellerClubStatus()` reports `purchasesEnabled` | ✅ |
+| `.env.local` | Added `RESELLERCLUB_ALLOW_PURCHASES=false` | ✅ |
+| `.env.example` | Updated RC docs with safety warning | ✅ |
 
-### Live Chat Architecture Reference
-- **Route group**: `src/app/(dashboard)/dashboard/sites/[siteId]/live-chat/`
-- **Widget route**: `src/app/embed/chat-widget/` — standalone, NO dashboard layout, CORS
-- **Types**: `ChatMessage.content` vs `WidgetMessage.text` — mapping required in ChatWidget
-- **Supabase access**: `(supabase as any).from('mod_chat_...')` — tables not in generated types
-- **Notifications**: `chat_message`, `chat_assigned`, `chat_missed`, `chat_rating` added to `NotificationType`
-- **Email templates**: Chat types NOT yet in `EmailType` — deferred to LC-08 Production Hardening
+### Money-Spending Operations (All Guarded)
+| Operation | Service Method | Guard |
+|-----------|---------------|-------|
+| Domain Registration | `domainService.register()` | ✅ `arePurchasesAllowed()` |
+| Domain Renewal | `domainService.renew()` | ✅ `arePurchasesAllowed()` |
+| Domain Transfer | `domainService.transfer()` | ✅ `arePurchasesAllowed()` |
+| Privacy Purchase | `domainService.enablePrivacy()` | ✅ `arePurchasesAllowed()` |
+| Email Order Create | `businessEmailApi.createOrder()` | ✅ `arePurchasesAllowed()` |
+| Email Order Renew | `businessEmailApi.renewOrder()` | ✅ `arePurchasesAllowed()` |
+| Domain Transfer (alt) | `transferService.initiateTransferIn()` | ✅ `arePurchasesAllowed()` |
+| Domain Renewal (alt) | `renewalService.renewDomain()` | ✅ `arePurchasesAllowed()` |
 
-### Remaining Live Chat Phases
-- **LC-05**: WhatsApp Integration — NOT STARTED
-- **LC-06**: AI Smart Routing — NOT STARTED
-- **LC-07**: Analytics & Reporting — NOT STARTED
-- **LC-08**: Production Hardening — NOT STARTED
+### What Works RIGHT NOW (Without Spending Money)
+- ✅ Domain search & availability checking (calls real RC API)
+- ✅ Domain pricing (real wholesale prices from RC)
+- ✅ Domain stats from database
+- ✅ Domain listing, filtering, sorting
+- ✅ DNS management (Cloudflare — fully working)
+- ✅ ResellerClub connectivity check (`getResellerClubStatus()`)
+- ✅ Balance check
+
+### What's Blocked (Until `RESELLERCLUB_ALLOW_PURCHASES=true`)
+- ❌ Domain registration (returns clear error message)
+- ❌ Domain renewal
+- ❌ Domain transfers
+- ❌ Privacy protection purchase
+- ❌ Email hosting orders (create/renew)
 
 ### Git State
 - **Branch**: `main`
-- **Latest commit**: `dfb4544` (marketplace seed)
+- **Latest commit**: `e3ca92d`
 - **Working tree**: Clean
 
 ---
 
-## Previous Session (Critical Bug Fixes — Commits `d68a645` + `6b67bba`)
+## Previous Session — Live Chat LC-04 Complete + Marketplace Seed (Commits up to `dfb4544`)
 
 ### Critical Bug Fixes Applied ✅
 
