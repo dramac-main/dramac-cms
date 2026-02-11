@@ -127,7 +127,7 @@ export function SocialDashboard({
 
   // Helper functions
   const getPlatformIcon = (platform: SocialPlatform) => {
-    return PLATFORM_CONFIGS[platform]?.icon || '📱'
+    return PLATFORM_CONFIGS[platform]?.icon || 'App'
   }
 
   const getPlatformColor = (platform: SocialPlatform) => {

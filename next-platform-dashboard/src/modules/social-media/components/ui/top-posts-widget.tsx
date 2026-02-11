@@ -66,16 +66,16 @@ interface PostMetrics {
 // =============================================================================
 
 const PLATFORM_CONFIG: Record<SocialPlatform, { color: string; icon: string }> = {
-  facebook: { color: '#1877F2', icon: '📘' },
-  instagram: { color: '#E4405F', icon: '📷' },
-  twitter: { color: '#1DA1F2', icon: '🐦' },
-  linkedin: { color: '#0A66C2', icon: '💼' },
-  tiktok: { color: '#000000', icon: '🎵' },
-  youtube: { color: '#FF0000', icon: '📺' },
-  pinterest: { color: '#E60023', icon: '📌' },
-  threads: { color: '#000000', icon: '🧵' },
-  bluesky: { color: '#0085FF', icon: '🦋' },
-  mastodon: { color: '#6364FF', icon: '🐘' },
+  facebook: { color: '#1877F2', icon: 'Fb' },
+  instagram: { color: '#E4405F', icon: 'Ig' },
+  twitter: { color: '#1DA1F2', icon: 'Tw' },
+  linkedin: { color: '#0A66C2', icon: 'Li' },
+  tiktok: { color: '#000000', icon: 'Tt' },
+  youtube: { color: '#FF0000', icon: 'Yt' },
+  pinterest: { color: '#E60023', icon: 'Pi' },
+  threads: { color: '#000000', icon: 'Th' },
+  bluesky: { color: '#0085FF', icon: 'Bs' },
+  mastodon: { color: '#6364FF', icon: 'Ms' },
 }
 
 // =============================================================================

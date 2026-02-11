@@ -234,7 +234,7 @@ export function QuickActions({ componentId, className }: QuickActionsProps) {
     <div className={cn("space-y-2", className)}>
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">
-          ✨ Quick Actions
+          Quick Actions
         </span>
         {lastChange && (
           <Button

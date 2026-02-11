@@ -203,7 +203,7 @@ export function AIComponentChat() {
     
     addMessage({
       role: "system",
-      content: "✅ Changes applied successfully!",
+      content: "Changes applied successfully!",
     });
     
     setPendingChanges(null);
@@ -213,7 +213,7 @@ export function AIComponentChat() {
   const handleRejectChanges = () => {
     addMessage({
       role: "system",
-      content: "❌ Changes rejected",
+      content: "Changes rejected",
     });
     
     setPendingChanges(null);

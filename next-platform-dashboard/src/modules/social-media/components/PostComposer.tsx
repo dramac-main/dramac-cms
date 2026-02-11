@@ -98,7 +98,7 @@ export function PostComposer({
 
   // Get platform icon
   const getPlatformIcon = (platform: SocialPlatform) => {
-    return PLATFORM_CONFIGS[platform]?.icon || '📱'
+    return PLATFORM_CONFIGS[platform]?.icon || 'App'
   }
 
   // Get platform color
@@ -321,7 +321,7 @@ export function PostComposer({
             {uniquePlatforms.includes('instagram') && (
               <div className="space-y-2">
                 <Label className="text-sm font-medium flex items-center gap-2">
-                  <span>📷</span>
+                  <span>Ig</span>
                   First Comment (Instagram)
                 </Label>
                 <Input

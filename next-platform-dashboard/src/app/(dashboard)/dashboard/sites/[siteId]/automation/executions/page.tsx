@@ -23,6 +23,7 @@ import {
   RefreshCw,
   Zap,
   Filter,
+  Inbox,
   LucideIcon
 } from "lucide-react"
 import {
@@ -321,7 +322,7 @@ async function ExecutionsContent({
         <CardContent>
           {executions.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-4xl mb-4">📭</div>
+              <Inbox className="h-10 w-10 mb-4 text-muted-foreground" />
               <h3 className="text-lg font-medium mb-2">No Executions Yet</h3>
               <p className="text-muted-foreground mb-4">
                 Workflow executions will appear here when workflows are triggered.

@@ -565,7 +565,7 @@ function ComponentPlaceholder({ type, props }: ComponentPlaceholderProps) {
               >
                 <h3 className="text-xl font-bold mb-2">{plan}</h3>
                 <div className="text-3xl font-bold mb-6">
-                  ${plan === "Basic" ? 9 : plan === "Pro" ? 29 : 99}
+                  K{plan === "Basic" ? 99 : plan === "Pro" ? 299 : 999}
                   <span className="text-sm font-normal">/mo</span>
                 </div>
                 <ul className="space-y-3 mb-6">

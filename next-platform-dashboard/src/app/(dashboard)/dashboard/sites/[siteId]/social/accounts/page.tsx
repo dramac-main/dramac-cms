@@ -28,7 +28,7 @@ interface PageProps {
 }
 
 function getPlatformIcon(platform: SocialPlatform) {
-  return PLATFORM_CONFIGS[platform]?.icon || '📱'
+  return PLATFORM_CONFIGS[platform]?.icon || 'App'
 }
 
 function getPlatformColor(platform: SocialPlatform) {
@@ -88,16 +88,16 @@ async function AccountsContent({ siteId }: { siteId: string }) {
   const accounts = result.accounts || []
 
   const platforms = [
-    { id: 'facebook', name: 'Facebook', icon: '📘', color: '#1877F2', desc: 'Pages & Groups' },
-    { id: 'instagram', name: 'Instagram', icon: '📷', color: '#E4405F', desc: 'Business & Creator' },
-    { id: 'twitter', name: 'X (Twitter)', icon: '𝕏', color: '#000000', desc: 'Posts & Threads' },
-    { id: 'linkedin', name: 'LinkedIn', icon: '💼', color: '#0A66C2', desc: 'Profile & Company' },
-    { id: 'tiktok', name: 'TikTok', icon: '🎵', color: '#000000', desc: 'Videos & Analytics' },
-    { id: 'youtube', name: 'YouTube', icon: '▶️', color: '#FF0000', desc: 'Channel & Videos' },
-    { id: 'pinterest', name: 'Pinterest', icon: '📌', color: '#E60023', desc: 'Pins & Boards' },
-    { id: 'threads', name: 'Threads', icon: '🧵', color: '#000000', desc: 'Posts & Replies' },
-    { id: 'bluesky', name: 'Bluesky', icon: '🦋', color: '#0085FF', desc: 'Posts' },
-    { id: 'mastodon', name: 'Mastodon', icon: '🐘', color: '#6364FF', desc: 'Posts' },
+    { id: 'facebook', name: 'Facebook', icon: 'Fb', color: '#1877F2', desc: 'Pages & Groups' },
+    { id: 'instagram', name: 'Instagram', icon: 'Ig', color: '#E4405F', desc: 'Business & Creator' },
+    { id: 'twitter', name: 'X (Twitter)', icon: 'Tw', color: '#000000', desc: 'Posts & Threads' },
+    { id: 'linkedin', name: 'LinkedIn', icon: 'Li', color: '#0A66C2', desc: 'Profile & Company' },
+    { id: 'tiktok', name: 'TikTok', icon: 'Tt', color: '#000000', desc: 'Videos & Analytics' },
+    { id: 'youtube', name: 'YouTube', icon: 'Yt', color: '#FF0000', desc: 'Channel & Videos' },
+    { id: 'pinterest', name: 'Pinterest', icon: 'Pi', color: '#E60023', desc: 'Pins & Boards' },
+    { id: 'threads', name: 'Threads', icon: 'Th', color: '#000000', desc: 'Posts & Replies' },
+    { id: 'bluesky', name: 'Bluesky', icon: 'Bs', color: '#0085FF', desc: 'Posts' },
+    { id: 'mastodon', name: 'Mastodon', icon: 'Ms', color: '#6364FF', desc: 'Posts' },
   ]
 
   return (

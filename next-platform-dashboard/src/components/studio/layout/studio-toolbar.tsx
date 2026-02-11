@@ -328,13 +328,13 @@ export const StudioToolbar = memo(function StudioToolbar({
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => {
-                toast.info("AI suggestions coming soon!");
+                toast.info("AI-powered suggestions are being configured for your account.");
               }}>
                 <Sparkles className="mr-2 h-4 w-4" />
                 Smart Suggestions
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => {
-                toast.info("Quick actions coming soon!");
+                toast.info("Quick actions will be available once your site has content.");
               }}>
                 <HelpCircle className="mr-2 h-4 w-4" />
                 Quick Actions

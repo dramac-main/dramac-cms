@@ -43,7 +43,7 @@ export function AISuggestions({ componentId, className }: AISuggestionsProps) {
     ...(definition.ai?.suggestions?.map(s => ({
       text: s,
       prompt: s,
-      icon: "💡",
+      icon: "Lightbulb",
     })) || []),
   ];
   
@@ -74,7 +74,7 @@ export function AISuggestions({ componentId, className }: AISuggestionsProps) {
               "flex items-start gap-2 group"
             )}
           >
-            <span className="shrink-0">{suggestion.icon || "💡"}</span>
+            <span className="shrink-0">{suggestion.icon || "Lightbulb"}</span>
             <span className="flex-1 text-muted-foreground group-hover:text-foreground transition-colors">
               {suggestion.text}
             </span>

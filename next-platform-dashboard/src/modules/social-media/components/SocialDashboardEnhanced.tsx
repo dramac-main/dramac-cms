@@ -264,7 +264,7 @@ interface ConnectedAccountsWidgetProps {
 }
 
 function ConnectedAccountsWidget({ accounts, onViewAll }: ConnectedAccountsWidgetProps) {
-  const getPlatformIcon = (platform: SocialPlatform) => PLATFORM_CONFIGS[platform]?.icon || '📱'
+  const getPlatformIcon = (platform: SocialPlatform) => PLATFORM_CONFIGS[platform]?.icon || 'App'
   const getPlatformColor = (platform: SocialPlatform) => PLATFORM_CONFIGS[platform]?.color || '#6B7280'
   
   const getStatusColor = (status: SocialAccount['status']) => {
@@ -349,7 +349,7 @@ interface UpcomingPostsWidgetProps {
 }
 
 function UpcomingPostsWidget({ posts, accounts, onViewCalendar, onCreatePost }: UpcomingPostsWidgetProps) {
-  const getPlatformIcon = (platform: SocialPlatform) => PLATFORM_CONFIGS[platform]?.icon || '📱'
+  const getPlatformIcon = (platform: SocialPlatform) => PLATFORM_CONFIGS[platform]?.icon || 'App'
   const getPlatformColor = (platform: SocialPlatform) => PLATFORM_CONFIGS[platform]?.color || '#6B7280'
 
   return (

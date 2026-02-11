@@ -106,7 +106,7 @@ export function SocialInbox({
 
   // Platform helpers
   const getPlatformIcon = (platform: SocialPlatform) => {
-    return PLATFORM_CONFIGS[platform]?.icon || '📱'
+    return PLATFORM_CONFIGS[platform]?.icon || 'App'
   }
 
   const getPlatformColor = (platform: SocialPlatform) => {

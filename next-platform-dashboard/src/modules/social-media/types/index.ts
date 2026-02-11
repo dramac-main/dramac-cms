@@ -773,7 +773,7 @@ export interface PlatformConfig {
 export const PLATFORM_CONFIGS: Record<SocialPlatform, PlatformConfig> = {
   facebook: {
     name: 'Facebook',
-    icon: '📘',
+    icon: 'Fb',
     color: '#1877F2',
     characterLimit: 63206,
     mediaTypes: ['image', 'video', 'gif', 'carousel'],
@@ -783,7 +783,7 @@ export const PLATFORM_CONFIGS: Record<SocialPlatform, PlatformConfig> = {
   },
   instagram: {
     name: 'Instagram',
-    icon: '📷',
+    icon: 'Ig',
     color: '#E4405F',
     characterLimit: 2200,
     mediaTypes: ['image', 'video', 'carousel'],
@@ -794,7 +794,7 @@ export const PLATFORM_CONFIGS: Record<SocialPlatform, PlatformConfig> = {
   },
   twitter: {
     name: 'X (Twitter)',
-    icon: '𝕏',
+    icon: 'Tw',
     color: '#000000',
     characterLimit: 280,
     mediaTypes: ['image', 'video', 'gif'],
@@ -804,7 +804,7 @@ export const PLATFORM_CONFIGS: Record<SocialPlatform, PlatformConfig> = {
   },
   linkedin: {
     name: 'LinkedIn',
-    icon: '💼',
+    icon: 'Li',
     color: '#0A66C2',
     characterLimit: 3000,
     mediaTypes: ['image', 'video', 'carousel'],
@@ -814,7 +814,7 @@ export const PLATFORM_CONFIGS: Record<SocialPlatform, PlatformConfig> = {
   },
   tiktok: {
     name: 'TikTok',
-    icon: '🎵',
+    icon: 'Tt',
     color: '#000000',
     characterLimit: 2200,
     mediaTypes: ['video'],
@@ -825,7 +825,7 @@ export const PLATFORM_CONFIGS: Record<SocialPlatform, PlatformConfig> = {
   },
   youtube: {
     name: 'YouTube',
-    icon: '▶️',
+    icon: 'Yt',
     color: '#FF0000',
     characterLimit: 5000,
     mediaTypes: ['video'],
@@ -835,7 +835,7 @@ export const PLATFORM_CONFIGS: Record<SocialPlatform, PlatformConfig> = {
   },
   pinterest: {
     name: 'Pinterest',
-    icon: '📌',
+    icon: 'Pi',
     color: '#E60023',
     characterLimit: 500,
     mediaTypes: ['image', 'video'],
@@ -845,7 +845,7 @@ export const PLATFORM_CONFIGS: Record<SocialPlatform, PlatformConfig> = {
   },
   threads: {
     name: 'Threads',
-    icon: '🧵',
+    icon: 'Th',
     color: '#000000',
     characterLimit: 500,
     mediaTypes: ['image', 'video'],
@@ -855,7 +855,7 @@ export const PLATFORM_CONFIGS: Record<SocialPlatform, PlatformConfig> = {
   },
   bluesky: {
     name: 'Bluesky',
-    icon: '🦋',
+    icon: 'Bs',
     color: '#0085FF',
     characterLimit: 300,
     mediaTypes: ['image'],
@@ -865,7 +865,7 @@ export const PLATFORM_CONFIGS: Record<SocialPlatform, PlatformConfig> = {
   },
   mastodon: {
     name: 'Mastodon',
-    icon: '🐘',
+    icon: 'Ms',
     color: '#6364FF',
     characterLimit: 500,
     mediaTypes: ['image', 'video', 'audio'],

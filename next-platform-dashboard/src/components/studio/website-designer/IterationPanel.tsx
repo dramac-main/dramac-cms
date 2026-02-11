@@ -134,7 +134,7 @@ export function IterationPanel({
                 {/* Tips */}
                 <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <p className="text-xs text-blue-700 dark:text-blue-300 font-medium mb-1">
-                    💡 Tips for better results:
+                    Tips for better results:
                   </p>
                   <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
                     <li>• Be specific about which section to change</li>

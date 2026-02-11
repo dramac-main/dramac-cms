@@ -53,16 +53,16 @@ export interface PlatformBreakdownProps {
 // =============================================================================
 
 const PLATFORM_CONFIG: Record<SocialPlatform, { color: string; icon: string; name: string }> = {
-  facebook: { color: '#1877F2', icon: '📘', name: 'Facebook' },
-  instagram: { color: '#E4405F', icon: '📷', name: 'Instagram' },
-  twitter: { color: '#1DA1F2', icon: '🐦', name: 'Twitter/X' },
-  linkedin: { color: '#0A66C2', icon: '💼', name: 'LinkedIn' },
-  tiktok: { color: '#000000', icon: '🎵', name: 'TikTok' },
-  youtube: { color: '#FF0000', icon: '📺', name: 'YouTube' },
-  pinterest: { color: '#E60023', icon: '📌', name: 'Pinterest' },
-  threads: { color: '#000000', icon: '🧵', name: 'Threads' },
-  bluesky: { color: '#0085FF', icon: '🦋', name: 'Bluesky' },
-  mastodon: { color: '#6364FF', icon: '🐘', name: 'Mastodon' },
+  facebook: { color: '#1877F2', icon: 'Fb', name: 'Facebook' },
+  instagram: { color: '#E4405F', icon: 'Ig', name: 'Instagram' },
+  twitter: { color: '#1DA1F2', icon: 'Tw', name: 'Twitter/X' },
+  linkedin: { color: '#0A66C2', icon: 'Li', name: 'LinkedIn' },
+  tiktok: { color: '#000000', icon: 'Tt', name: 'TikTok' },
+  youtube: { color: '#FF0000', icon: 'Yt', name: 'YouTube' },
+  pinterest: { color: '#E60023', icon: 'Pi', name: 'Pinterest' },
+  threads: { color: '#000000', icon: 'Th', name: 'Threads' },
+  bluesky: { color: '#0085FF', icon: 'Bs', name: 'Bluesky' },
+  mastodon: { color: '#6364FF', icon: 'Ms', name: 'Mastodon' },
 }
 
 // =============================================================================

@@ -451,7 +451,7 @@ export function AIPageGenerator({ isOpen, onClose }: AIPageGeneratorProps) {
             />
             
             <div className="p-3 rounded-lg bg-muted text-sm">
-              <p className="font-medium mb-1">✨ {result.explanation}</p>
+              <p className="font-medium mb-1">{result.explanation}</p>
               <p className="text-muted-foreground">
                 Review the structure above. Click &quot;Apply&quot; to add this to your canvas,
                 or &quot;Regenerate&quot; to try again.

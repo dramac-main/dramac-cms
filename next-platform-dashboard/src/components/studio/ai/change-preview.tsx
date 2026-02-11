@@ -110,7 +110,7 @@ export function ChangePreview({
       {explanation && (
         <div className="px-4 py-3 border-t bg-background/50">
           <p className="text-xs text-muted-foreground italic">
-            💡 {explanation}
+            {explanation}
           </p>
         </div>
       )}

@@ -110,7 +110,7 @@ export const SUPPORTED_PLATFORMS = [
   {
     id: 'facebook',
     name: 'Facebook',
-    icon: '📘',
+    icon: 'Fb',
     color: '#1877F2',
     authType: 'oauth2',
     features: ['posts', 'stories', 'reels', 'events', 'groups', 'ads'],
@@ -118,7 +118,7 @@ export const SUPPORTED_PLATFORMS = [
   {
     id: 'instagram',
     name: 'Instagram',
-    icon: '📷',
+    icon: 'Ig',
     color: '#E4405F',
     authType: 'oauth2',
     features: ['posts', 'stories', 'reels', 'first_comment'],
@@ -127,7 +127,7 @@ export const SUPPORTED_PLATFORMS = [
   {
     id: 'twitter',
     name: 'X (Twitter)',
-    icon: '𝕏',
+    icon: 'Tw',
     color: '#000000',
     authType: 'oauth2',
     features: ['posts', 'threads', 'polls', 'spaces'],
@@ -135,7 +135,7 @@ export const SUPPORTED_PLATFORMS = [
   {
     id: 'linkedin',
     name: 'LinkedIn',
-    icon: '💼',
+    icon: 'Li',
     color: '#0A66C2',
     authType: 'oauth2',
     features: ['posts', 'articles', 'documents', 'company_pages'],
@@ -143,7 +143,7 @@ export const SUPPORTED_PLATFORMS = [
   {
     id: 'tiktok',
     name: 'TikTok',
-    icon: '🎵',
+    icon: 'Tt',
     color: '#000000',
     authType: 'oauth2',
     features: ['videos'],
@@ -152,7 +152,7 @@ export const SUPPORTED_PLATFORMS = [
   {
     id: 'youtube',
     name: 'YouTube',
-    icon: '▶️',
+    icon: 'Yt',
     color: '#FF0000',
     authType: 'oauth2',
     features: ['videos', 'shorts', 'community', 'live'],
@@ -160,7 +160,7 @@ export const SUPPORTED_PLATFORMS = [
   {
     id: 'pinterest',
     name: 'Pinterest',
-    icon: '📌',
+    icon: 'Pi',
     color: '#E60023',
     authType: 'oauth2',
     features: ['pins', 'idea_pins', 'boards'],
@@ -168,7 +168,7 @@ export const SUPPORTED_PLATFORMS = [
   {
     id: 'threads',
     name: 'Threads',
-    icon: '🧵',
+    icon: 'Th',
     color: '#000000',
     authType: 'oauth2',
     features: ['posts'],
@@ -176,7 +176,7 @@ export const SUPPORTED_PLATFORMS = [
   {
     id: 'bluesky',
     name: 'Bluesky',
-    icon: '🦋',
+    icon: 'Bs',
     color: '#0085FF',
     authType: 'app_password',
     features: ['posts'],
@@ -184,7 +184,7 @@ export const SUPPORTED_PLATFORMS = [
   {
     id: 'mastodon',
     name: 'Mastodon',
-    icon: '🐘',
+    icon: 'Ms',
     color: '#6364FF',
     authType: 'oauth2',
     features: ['posts'],
