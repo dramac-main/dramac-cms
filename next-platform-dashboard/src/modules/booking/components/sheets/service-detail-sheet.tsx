@@ -20,7 +20,7 @@ import { Switch } from '@/components/ui/switch'
 import { useBooking } from '../../context/booking-context'
 import {
   Clock,
-  DollarSign,
+  Coins,
   Tag,
   Edit,
   Trash2,
@@ -141,7 +141,7 @@ export function ServiceDetailSheet({
           <div className="grid grid-cols-2 gap-4">
             <div className="p-3 rounded-lg border">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <DollarSign className="h-4 w-4" />
+                <Coins className="h-4 w-4" />
                 <span className="text-sm">Price</span>
               </div>
               <p className="text-xl font-bold">{formatCurrency(service.price ?? 0, service.currency)}</p>

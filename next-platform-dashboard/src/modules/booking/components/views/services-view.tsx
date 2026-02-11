@@ -41,7 +41,7 @@ import {
   MoreHorizontal,
   Plus,
   Clock,
-  DollarSign,
+  Coins,
   Eye,
   Edit,
   Trash2,

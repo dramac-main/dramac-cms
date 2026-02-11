@@ -209,7 +209,7 @@ const booking_confirmation_customer: BrandedTemplate = {
   html: (data, b) =>
     baseEmailTemplate(
       b,
-      `<h1 style="${EMAIL_STYLES.heading}">Your Booking is ${data.status === "confirmed" ? "Confirmed! ✅" : "Received! 📅"}</h1>
+      `<h1 style="${EMAIL_STYLES.heading}">Your Booking is ${data.status === "confirmed" ? "Booking Confirmed" : "Booking Received"}</h1>
       <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
       <p style="${EMAIL_STYLES.text}">${
         data.status === "confirmed"
@@ -238,7 +238,7 @@ const booking_confirmation_owner: BrandedTemplate = {
   html: (data, b) =>
     baseEmailTemplate(
       b,
-      `<h1 style="${EMAIL_STYLES.heading}">📅 New Booking Received!</h1>
+      `<h1 style="${EMAIL_STYLES.heading}">New Booking Received</h1>
       <p style="${EMAIL_STYLES.text}">You have a new booking from <strong>${data.customerName}</strong>.</p>
       ${emailInfoBox(
         [

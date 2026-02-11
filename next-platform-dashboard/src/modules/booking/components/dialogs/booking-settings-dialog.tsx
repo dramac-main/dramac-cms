@@ -343,7 +343,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
                 <Input
                   id="notificationEmail"
                   type="email"
-                  placeholder="notifications@example.com"
+                  placeholder="bookings@yourbusiness.com"
                   value={notificationEmail}
                   onChange={(e) => setNotificationEmail(e.target.value)}
                 />

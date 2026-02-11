@@ -11,7 +11,7 @@ import * as React from "react"
 import { motion, useSpring, useTransform } from "framer-motion"
 import { 
   Calendar, 
-  DollarSign, 
+  Coins, 
   Users, 
   Clock, 
   TrendingUp,
@@ -91,7 +91,7 @@ const variantConfig: Record<BookingMetricVariant, {
     gradient: 'from-blue-500 to-blue-600',
   },
   revenue: {
-    icon: DollarSign,
+    icon: Coins,
     color: 'text-green-600 dark:text-green-400',
     bgColor: 'bg-green-100 dark:bg-green-950',
     gradient: 'from-green-500 to-green-600',
@@ -364,7 +364,7 @@ export function AppointmentsMetricCard(props: Omit<BookingMetricCardProps, 'vari
 }
 
 export function BookingRevenueMetricCard(props: Omit<BookingMetricCardProps, 'variant' | 'icon' | 'isCurrency'>) {
-  return <BookingMetricCard {...props} variant="revenue" icon={DollarSign} isCurrency />
+  return <BookingMetricCard {...props} variant="revenue" icon={Coins} isCurrency />
 }
 
 export function UtilizationMetricCard(props: Omit<BookingMetricCardProps, 'variant' | 'icon'>) {

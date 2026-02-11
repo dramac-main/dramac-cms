@@ -32,7 +32,7 @@ import {
   User,
   Mail,
   Phone,
-  DollarSign,
+  Coins,
   MessageSquare,
   CheckCircle,
   XCircle,
@@ -317,7 +317,7 @@ export function AppointmentDetailSheet({
           {/* Payment */}
           <div className="space-y-3">
             <h4 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
+              <Coins className="h-4 w-4" />
               Payment
             </h4>
             <div className="p-3 rounded-lg border space-y-3">

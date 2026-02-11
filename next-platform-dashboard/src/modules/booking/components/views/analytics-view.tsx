@@ -19,7 +19,7 @@ import {
 import { useBooking } from '../../context/booking-context'
 import {
   Calendar,
-  DollarSign,
+  Coins,
   Users,
   Clock,
   TrendingUp,
@@ -301,7 +301,7 @@ export function AnalyticsView() {
           title="Revenue"
           value={formatCurrency(stats.revenue)}
           description="From completed appointments"
-          icon={DollarSign}
+          icon={Coins}
         />
         <StatCard
           title="Completion Rate"

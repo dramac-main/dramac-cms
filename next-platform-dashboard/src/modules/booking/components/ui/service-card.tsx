@@ -11,7 +11,7 @@ import * as React from "react"
 import { motion } from "framer-motion"
 import { 
   Clock,
-  DollarSign,
+  Coins,
   Users,
   Calendar,
   MoreHorizontal,
@@ -186,7 +186,7 @@ export function ServiceCard({
                   <span>{formatDuration(service.duration_minutes)}</span>
                 </div>
                 <div className="flex items-center gap-1.5 font-medium">
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <Coins className="h-4 w-4 text-muted-foreground" />
                   <span>{formatPrice(service.price, currency)}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-muted-foreground">

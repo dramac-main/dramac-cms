@@ -10,7 +10,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { cn } from '@/lib/utils'
-import { Clock, DollarSign, Star, Search, Filter, ChevronRight, Tag, Grid, List, Loader2 } from 'lucide-react'
+import { Clock, Coins, Star, Search, Filter, ChevronRight, Tag, Grid, List, Loader2 } from 'lucide-react'
 import type { ComponentDefinition } from '@/types/studio'
 import { useBookingServices } from '../../hooks/useBookingServices'
 import type { Service } from '../../types/booking-types'
@@ -173,7 +173,7 @@ export function ServiceSelectorBlock({
   emptyMessage = 'No services available at this time.',
   searchPlaceholder = 'Search services...',
   selectButtonText = 'Select',
-  selectedButtonText = 'Selected ✓',
+  selectedButtonText = 'Selected',
   durationLabel = 'min',
   showDescription = true,
   showDuration = true,

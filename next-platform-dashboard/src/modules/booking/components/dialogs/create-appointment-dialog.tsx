@@ -347,7 +347,7 @@ export function CreateAppointmentDialog({
                     type="tel"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="+1 234 567 8900"
+                    placeholder="+260 97X XXX XXX"
                   />
                 </div>
               </div>

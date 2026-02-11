@@ -823,7 +823,7 @@ export function BookingWidgetBlock({
                   <Mail style={{ width: 14, height: 14, opacity: 0.6 }} /> Email {emailRequired && <span style={{ color: errorColor }}>*</span>}
                 </label>
                 <input type="email" value={formData.email || ''} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
-                  placeholder="you@example.com" style={{
+                  placeholder="name@business.com" style={{
                     width: '100%', padding: '10px 12px', borderRadius: inputBorderRadius,
                     border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '14px', outline: 'none',
                   }}
@@ -838,7 +838,7 @@ export function BookingWidgetBlock({
                   <Phone style={{ width: 14, height: 14, opacity: 0.6 }} /> Phone
                 </label>
                 <input type="tel" value={formData.phone || ''} onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))}
-                  placeholder="+1 (555) 000-0000" style={{
+                  placeholder="+260 97X XXX XXX" style={{
                     width: '100%', padding: '10px 12px', borderRadius: inputBorderRadius,
                     border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '14px', outline: 'none',
                   }}

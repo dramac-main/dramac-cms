@@ -102,10 +102,6 @@ export interface BookingDashboardEnhancedProps {
 // HELPER FUNCTIONS
 // =============================================================================
 
-function generateMockSparkline(): number[] {
-  return Array.from({ length: 14 }, () => Math.floor(Math.random() * 100) + 20)
-}
-
 function isSameDay(d1: Date, d2: Date): boolean {
   return d1.getFullYear() === d2.getFullYear() &&
     d1.getMonth() === d2.getMonth() &&
@@ -361,7 +357,6 @@ export function BookingDashboardEnhanced({
               title="Today"
               value={todayAppointments.length}
               change={{ value: 10, trend: 'up', period: 'vs yesterday' }}
-              sparklineData={generateMockSparkline()}
               animationDelay={0}
             />
             <BookingRevenueMetricCard
@@ -369,7 +364,6 @@ export function BookingDashboardEnhanced({
               value={totalRevenue}
               currency={currency}
               change={{ value: 12.5, trend: 'up', period: 'vs last month' }}
-              sparklineData={generateMockSparkline()}
               animationDelay={0.05}
             />
             <UtilizationMetricCard

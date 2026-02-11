@@ -360,7 +360,7 @@ Have questions? Reply to this email and we'll help you find the right plan.
   booking_confirmation_customer: {
     subject: (data) => `Booking ${data.status === 'confirmed' ? 'Confirmed' : 'Received'} - ${data.serviceName}`,
     html: (data) => wrapHtml(`
-      <h1 style="${STYLES.heading}">Your Booking is ${data.status === 'confirmed' ? 'Confirmed! ✅' : 'Received! 📅'}</h1>
+      <h1 style="${STYLES.heading}">Your Booking is ${data.status === 'confirmed' ? 'Booking Confirmed' : 'Booking Received'}</h1>
       <p style="${STYLES.text}">Hi ${data.customerName || 'there'},</p>
       <p style="${STYLES.text}">
         ${data.status === 'confirmed' 
@@ -403,7 +403,7 @@ If you need to make changes, please contact ${data.businessName}.
   booking_confirmation_owner: {
     subject: (data) => `🔔 New Booking: ${data.serviceName} - ${data.customerName}`,
     html: (data) => wrapHtml(`
-      <h1 style="${STYLES.heading}">📅 New Booking Received!</h1>
+      <h1 style="${STYLES.heading}">New Booking Received</h1>
       <p style="${STYLES.text}">You have a new booking from <strong>${data.customerName}</strong>.</p>
       <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 20px 0;">
         <table style="width: 100%; border-collapse: collapse;">
