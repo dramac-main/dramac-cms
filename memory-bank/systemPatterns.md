@@ -39,6 +39,69 @@ git push
 
 ---
 
+## 🗄️ Supabase Snake_case → CamelCase Pattern (CRITICAL)
+
+### Problem
+Supabase PostgreSQL returns **snake_case** column names (`account_name`, `created_at`, `site_id`), but all TypeScript interfaces use **camelCase** (`accountName`, `createdAt`, `siteId`). Without explicit mapping, accessing `record.accountName` on raw Supabase data returns `undefined`.
+
+### Solution: `map-db-record.ts`
+```typescript
+import { mapRecord, mapRecords } from '../lib/map-db-record'
+
+// For arrays:
+return { items: mapRecords<MyType>(data || []), error: null }
+
+// For singles:
+return { item: data ? mapRecord<MyType>(data) : null, error: null }
+```
+
+### Rules
+1. **EVERY server action** that returns raw Supabase `data` MUST use `mapRecord()`/`mapRecords()`
+2. Actions that only return `{ success: boolean }` or construct their own objects do NOT need mapping
+3. The `(supabase as any)` cast means TypeScript CANNOT catch these mismatches — manual discipline required
+4. When adding new action files, always import and apply mapping
+
+---
+
+## 🔑 Getting tenantId Pattern (CRITICAL)
+
+### Correct Pattern
+```typescript
+const { data: site } = await supabase
+  .from('sites')
+  .select('agency_id')
+  .eq('id', siteId)
+  .single()
+const tenantId = site?.agency_id || ''
+```
+
+### NEVER DO THIS
+```typescript
+// WRONG: Social accounts may not exist, and Supabase returns snake_case
+const tenantId = accountsResult.accounts?.[0]?.tenantId || ''  // Always ''!
+```
+
+---
+
+## 🔐 Server Page Auth Guard Pattern (CRITICAL)
+
+### Every server page MUST have:
+```typescript
+import { redirect } from 'next/navigation'
+
+const supabase = await createClient()
+const { data: { user } } = await supabase.auth.getUser()
+if (!user) redirect('/login')  // Always '/login', never '/auth/login'
+
+// After guard, user is guaranteed non-null:
+const userId = user.id  // NOT user?.id || ''
+```
+
+### Turbopack Rule
+`'use client'` components MUST NOT contain inline `'use server'` annotations. Import server actions as functions instead.
+
+---
+
 ## 🇿🇲 Locale & Currency Pattern (CRITICAL)
 
 ### Centralized Locale Config

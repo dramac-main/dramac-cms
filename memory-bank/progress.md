@@ -5,7 +5,35 @@
 
 ---
 
-## 📱 SOCIAL MEDIA SM-07/08/09 IMPLEMENTATION (Commit `35e4371`) ✅
+## � SOCIAL MEDIA CRITICAL BUG FIXES (Commits `d68a645` + `6b67bba`) ✅
+
+### Commit `d68a645`: Migration + Turbopack Fixes
+| Fix | Description | Status |
+|-----|-------------|--------|
+| SM-07 migration trigger | `social_update_updated_at()` → `update_updated_at_column()` | ✅ |
+| SM-08 migration RLS | `tenant_users` → `agency_members` pattern | ✅ |
+| ReportsPageWrapper | Removed inline `'use server'` from `'use client'` component | ✅ |
+
+### Commit `6b67bba`: UUID + Snake_case + Auth Fixes (20 files, +156/-76)
+| Fix | Scope | Status |
+|-----|-------|--------|
+| UUID empty string bug | 3 pages (listening, competitors, posts) — tenantId from sites.agency_id | ✅ |
+| accounts page wrong column | `.select('tenant_id')` → `.select('agency_id')` | ✅ |
+| Snake→camel DB mapping | Created `map-db-record.ts`, applied to 10 action files (41 functions) | ✅ |
+| Auth guards | Added to calendar, compose, inbox, media, accounts pages | ✅ |
+| Settings redirect | `/auth/login` → `/login` | ✅ |
+| Media tenantId pattern | Simplified to direct `sites.agency_id` | ✅ |
+| Compose tenantId pattern | Removed unnecessary `clients` join | ✅ |
+| pillar-actions created_by | Added `userId` parameter + `created_by` insert | ✅ |
+
+### Known Remaining Items (Not Blocking)
+- Social dashboard page (`social/page.tsx`) does not pass `tenantId` to wrapper (reads data only)
+- `(supabase as any)` casts throughout — social tables not in Database types
+- SM-01 OAuth integration not yet implemented (external API dependency)
+
+---
+
+## �📱 SOCIAL MEDIA SM-07/08/09 IMPLEMENTATION (Commit `35e4371`) ✅
 
 Three social media phases fully implemented with zero tsc errors. 51 files changed, +4,517 lines.
 

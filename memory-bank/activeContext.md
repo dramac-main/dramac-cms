@@ -1,53 +1,65 @@
 # Active Context
 
-## Latest Session Update (Social Media SM-07/08/09 — Commit `35e4371`)
+## Latest Session Update (Critical Bug Fixes — Commits `d68a645` + `6b67bba`)
 
-### Social Media Phases SM-07, SM-08, SM-09 Implemented ✅
+### Critical Bug Fixes Applied ✅
 
-**Commit:** `35e4371` — 51 files changed, +4,517 insertions, -5 deletions
+**Commit `d68a645`:** Migration trigger + Turbopack build fixes
+- SM-07 migration: `social_update_updated_at()` → `update_updated_at_column()`
+- SM-08 migration: `tenant_users` → `agency_members` RLS pattern, fixed trigger
+- ReportsPageWrapper: Removed inline `'use server'` from `'use client'` component
 
-#### SM-07: Missing Pages & Full Navigation ✅
-| File | Change | Status |
-|------|--------|--------|
-| `migrations/sm-07-missing-tables.sql` | 5 tables: competitors, competitor_analytics, brand_mentions, listening_keywords, reports | ✅ |
-| `actions/listening-actions.ts` | 7 functions: keywords CRUD, mentions CRUD, mention stats | ✅ |
-| `actions/competitor-actions.ts` | 6 functions: competitor CRUD, sync, analytics, comparison | ✅ |
-| `actions/report-actions.ts` | 6 functions: report CRUD, duplicate | ✅ |
-| `actions/pillar-actions.ts` | 5 functions: content pillar CRUD, distribution | ✅ |
-| `actions/index.ts` | Added all new action exports | ✅ |
-| `components/PostsList.tsx` | Full posts list with table/grid view, filters, bulk actions | ✅ |
-| `components/PostsListWrapper.tsx` | Client wrapper for posts | ✅ |
-| `social/posts/page.tsx` | Server component for posts route | ✅ |
-| `components/SocialListening.tsx` | Keywords + mentions feed + sentiment stats | ✅ |
-| `components/SocialListeningWrapper.tsx` | Client wrapper for listening | ✅ |
-| `social/listening/page.tsx` | Server component for listening route | ✅ |
-| `components/CompetitorsPage.tsx` | Competitor cards + comparison table + add dialog | ✅ |
-| `components/CompetitorsPageWrapper.tsx` | Client wrapper for competitors | ✅ |
-| `social/competitors/page.tsx` | Server component for competitors route | ✅ |
-| `components/ReportsPage.tsx` | Reports grid + create dialog + delete/duplicate | ✅ |
-| `components/ReportsPageWrapper.tsx` | Client wrapper for reports | ✅ |
-| `social/reports/page.tsx` | Server component for reports route | ✅ |
-| `social/layout.tsx` | Navigation expanded to 14 items with horizontal scroll | ✅ |
-| `components/index.ts` | Barrel exports updated for all new components | ✅ |
+**Commit `6b67bba`:** UUID + snake_case mapping + auth guard fixes (20 files, +156/-76)
 
-#### SM-08: Campaigns, Reporting & Calendar Enhancement ✅
-| File | Change | Status |
-|------|--------|--------|
-| `migrations/sm-08-content-pillars.sql` | social_content_pillars table with RLS | ✅ |
-| `PostComposerEnhanced.tsx` | Added Campaign + Content Pillar selectors to composer | ✅ |
+#### Root Cause: Empty String UUID Bug
+- 3 pages (listening, competitors, posts) sourced `tenantId` from `accountsResult.accounts?.[0]?.tenantId || ''`
+- Supabase returns `snake_case` so `.tenantId` was always `undefined`, fallback `''` hit `UUID NOT NULL` columns
+- Fix: All pages now use `sites.agency_id` directly (the standard pattern)
 
-#### SM-09: Production Hardening & Final Cleanup ✅
-| File | Change | Status |
-|------|--------|--------|
-| `social/**/error.tsx` (×14) | Error boundaries for all 14 routes with contextual messages | ✅ |
-| `social/**/loading.tsx` (×14) | Loading skeletons for all 14 routes with tailored layouts | ✅ |
-| `components/SocialEmptyState.tsx` | Reusable empty state component | ✅ |
+#### Snake_case → CamelCase Mapping (Systemic Fix)
+- Created `src/modules/social-media/lib/map-db-record.ts` with `mapRecord<T>()` and `mapRecords<T>()`
+- Applied to ALL 10 action files (41 functions):
+  - account-actions, post-actions, listening-actions, competitor-actions
+  - campaign-actions, report-actions, inbox-actions, team-actions
+  - pillar-actions, analytics-actions
+- Without this, every component rendered blank/undefined data
 
-### Navigation Items (14 total)
-Dashboard → Calendar → Compose → Posts → Inbox → Media → Accounts → Analytics → Campaigns → Listening → Competitors → Reports → Approvals → Settings
+#### Auth Guards Added
+- calendar, compose, inbox, media pages: Added `if (!user) redirect('/login')`
+- Changed `user?.id || ''` → `user.id` (guaranteed non-null after guard)
 
-### Migrations to Run
-- `sm-07-missing-tables.sql` — 5 tables for competitors, listening, reports
+#### Other Fixes
+- accounts/page.tsx: `.select('tenant_id')` → `.select('agency_id')` (wrong column name)
+- settings/page.tsx: `redirect('/auth/login')` → `redirect('/login')` (inconsistent route)
+- media/page.tsx: Simplified from `clients(agency_id)` join to direct `sites.agency_id`
+- compose/page.tsx: Removed unnecessary `clients` join
+- pillar-actions.ts: Added `userId` parameter + `created_by` insert
+
+### Key Pattern: Getting tenantId
+```typescript
+// CORRECT (all pages must use this):
+const { data: site } = await supabase
+  .from('sites')
+  .select('agency_id')
+  .eq('id', siteId)
+  .single()
+const tenantId = site?.agency_id || ''
+
+// WRONG (never use this):
+const tenantId = accountsResult.accounts?.[0]?.tenantId || ''
+```
+
+### Key Pattern: DB Record Mapping
+```typescript
+// All server actions that return Supabase data must use:
+import { mapRecord, mapRecords } from '../lib/map-db-record'
+return { items: mapRecords<MyType>(data || []), error: null }
+return { item: data ? mapRecord<MyType>(data) : null, error: null }
+```
+
+---
+
+## Previous Session (Social Media SM-07/08/09 — Commit `35e4371`)
 - `sm-08-content-pillars.sql` — Content pillars table
 
 ---
