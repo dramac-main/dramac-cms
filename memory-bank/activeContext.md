@@ -1,17 +1,60 @@
 # Active Context
 
-## Latest Session Update — Live Chat LC-05 to LC-08 COMPLETE + TSC Clean (Commit `e3ca92d`)
+## Latest Session Update — Comprehensive Platform Navigation/UX/Module Audit & Fixes (Commit `8aee006`)
 
-### Live Chat Module — ALL 8 PHASES COMPLETE ✅
+### Deep Platform Audit — 12 Critical Issues Found & Fixed ✅
 
-**Completed this session (continuation from previous):**
-- ✅ LC-05: WhatsApp Integration — WhatsApp Cloud API service, media handler, CRM integration, webhook route, server actions, 3 UI components, settings page
-- ✅ LC-06: AI Auto-Responder & Smart Routing — Claude-powered auto-responses, AI suggested replies, conversation summaries, intent detection, sentiment analysis, smart agent routing engine, auto-response handler, cron job
-- ✅ LC-07: Analytics Dashboard — Full analytics with 7 recharts, KPI cards, agent performance table, date range selection, CSV export, transcript service
-- ✅ LC-08: Production Hardening — Barrel exports updated, email types added (chat_transcript, chat_missed_notification), module catalog updated (12 features), vercel cron config, branded templates updated
-- ✅ 24 TypeScript errors fixed → 0 errors (tsc --noEmit passes clean)
-- ✅ Committed and pushed: `e3ca92d`
-- ✅ Testing guide: `PHASE-LC-05-08-TESTING-GUIDE.md`
+**Audit Scope:** Full navigation, UX, module system, site detail page, manifest hrefs, catalog, registry
+
+**Issues Found & Fixed (11 files, +450/-58 lines):**
+
+| # | Issue | Severity | Fix Applied |
+|---|-------|----------|-------------|
+| 1 | `live-chat` missing from module "Open" button mapping | CRITICAL | Added to slug list in `site-modules-tab.tsx` |
+| 2 | Analytics tab linked to `/sites/${id}/analytics` → 404 | CRITICAL | Changed to `/dashboard/sites/${site.id}/seo` |
+| 3 | Only CRM & Social had conditional tabs on site detail page | HIGH | Added 5 new conditional tabs (Booking, E-Commerce, Live Chat, Automation, AI Agents) |
+| 4 | AI Designer buried in overflow menu only | HIGH | Added prominent button with Wand2 icon to site header |
+| 5 | Clone Site overflow menu linked to settings instead of dialog | MEDIUM | Now triggers `CloneSiteDialog` component properly |
+| 6 | Booking manifest hrefs missing `/sites/` prefix | HIGH | Fixed all navigation hrefs |
+| 7 | E-Commerce manifest hrefs wrong (just `/ecommerce`) | HIGH | Fixed to `/dashboard/sites/[siteId]/ecommerce` |
+| 8 | Social Media manifest hrefs missing `/sites/` prefix | HIGH | Fixed all navigation hrefs |
+| 9 | Automation manifest hrefs wrong (just `/automation`) | HIGH | Fixed to `/dashboard/sites/[siteId]/automation` |
+| 10 | Module catalog missing CRM, Social Media, Automation, AI Agents | HIGH | Added 4 new catalog entries with pricing |
+| 11 | Catalog categories wrong (booking="content", live-chat="communication") | MEDIUM | Fixed to proper categories |
+| 12 | Module registry (`_registry.ts`) was empty stub | HIGH | Populated with 4 manifests + 3 helper functions |
+
+**Additional Cleanup:**
+- Removed unused `Bot`, `BarChart3` imports from `navigation.ts`
+- Fixed `ModuleCategory` type error in category filter with cast
+
+### Files Modified
+| File | Change |
+|------|--------|
+| `src/components/sites/site-modules-tab.tsx` | Added `live-chat` to Open button slug list |
+| `src/app/(dashboard)/dashboard/sites/[siteId]/page.tsx` | Fixed analytics link, added 5 module tabs, added AI Designer button |
+| `src/config/navigation.ts` | Removed unused imports |
+| `src/modules/booking/manifest.ts` | Fixed navigation hrefs |
+| `src/modules/ecommerce/manifest.ts` | Fixed navigation hrefs |
+| `src/modules/social-media/manifest.ts` | Fixed navigation hrefs |
+| `src/modules/automation/manifest.ts` | Fixed navigation hrefs |
+| `src/lib/modules/module-catalog.ts` | Added 4 modules, fixed categories, updated type |
+| `src/components/modules/module-marketplace-category-filter.tsx` | Cast category.id as ModuleCategory |
+| `src/modules/_registry.ts` | Populated with manifests + helpers |
+| `src/components/sites/site-detail-overflow-menu.tsx` | Clone Site now triggers CloneSiteDialog |
+
+### Key Findings from Audit
+- **"ProStudio" component does NOT exist** — not needed. The 53 core components + 6 premium blocks with `ResponsiveValue<T>`, gradients, animations, per-breakpoint visibility are already production-grade (rivals Wix/Webflow)
+- **Sidebar is static** (no dynamic module injection) — architectural decision, not a bug
+- **Module system has TWO parallel type systems**: catalog `ModuleDefinition` vs manifest `ModuleManifest` — both now in sync
+- **Mobile bottom nav is hardcoded separately** from sidebar config — low priority, not fixed
+
+### Git State
+- **Branch**: `main`
+- **Latest commit**: `8aee006`
+- **Working tree**: Clean
+- **TSC**: 0 errors ✅
+
+---
 
 ### Complete File Inventory (LC-05 to LC-08 new files)
 | File | Phase | Purpose |
