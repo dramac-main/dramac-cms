@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Building2, DollarSign, ArrowRight } from "lucide-react";
+import { Users, Building2, Coins, ArrowRight } from "lucide-react";
 
 interface SiteCRMTabProps {
   siteId: string;
@@ -68,7 +68,7 @@ export function SiteCRMTab({ siteId }: SiteCRMTabProps) {
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <DollarSign className="h-5 w-5 text-primary" />
+                <Coins className="h-5 w-5 text-primary" />
               </div>
               <CardTitle className="text-base">Deals</CardTitle>
             </div>

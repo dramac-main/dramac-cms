@@ -49,7 +49,7 @@ export const fashionBoutique: PuckTemplate = {
         type: "AnnouncementBar",
         props: {
           id: generateId(),
-          text: "Free shipping on orders over $100 • New arrivals weekly",
+          text: "Free shipping on orders over K1,000 • New arrivals weekly",
           backgroundColor: "#0f0f0f",
           textColor: "#ffffff",
           dismissible: true,
@@ -519,7 +519,7 @@ export const groceryStore: PuckTemplate = {
         type: "AnnouncementBar",
         props: {
           id: generateId(),
-          text: "🥬 Free delivery on orders over $50 • Same-day delivery available",
+          text: "🥬 Free delivery on orders over K500 • Same-day delivery available",
           backgroundColor: "#16a34a",
           textColor: "#ffffff",
         },
@@ -734,7 +734,7 @@ export const furnitureStore: PuckTemplate = {
         type: "AnnouncementBar",
         props: {
           id: generateId(),
-          text: "Winter Sale: Up to 40% off select furniture. Free delivery on orders over $999",
+          text: "Winter Sale: Up to 40% off select furniture. Free delivery on orders over K9,999",
           backgroundColor: "#78716c",
           textColor: "#ffffff",
         },
@@ -835,7 +835,7 @@ export const furnitureStore: PuckTemplate = {
           id: generateId(),
           title: "The HABITAT Difference",
           features: [
-            { icon: "🚚", title: "Free White Glove Delivery", description: "On orders over $999" },
+            { icon: "🚚", title: "Free White Glove Delivery", description: "On orders over K9,999" },
             { icon: "🛠️", title: "Expert Assembly", description: "Professional setup included" },
             { icon: "🔄", title: "30-Day Returns", description: "Hassle-free return policy" },
             { icon: "💎", title: "Quality Craftsmanship", description: "Built to last a lifetime" },

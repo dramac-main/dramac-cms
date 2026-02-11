@@ -27,8 +27,8 @@ import {
 } from '@/components/ui/table';
 import {
   Play,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Clock,
   AlertTriangle,
   RefreshCw,
@@ -103,8 +103,8 @@ export function AgentTestRunner({ agent, onTestComplete }: AgentTestRunnerProps)
 
   const getStatusIcon = (passed: boolean) => {
     return passed 
-      ? <CheckCircle className="h-4 w-4 text-green-500" />
-      : <XCircle className="h-4 w-4 text-red-500" />;
+      ? <CircleCheck className="h-4 w-4 text-green-500" />
+      : <CircleX className="h-4 w-4 text-red-500" />;
   };
 
   return (

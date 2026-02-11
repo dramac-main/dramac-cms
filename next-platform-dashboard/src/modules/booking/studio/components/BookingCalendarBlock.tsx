@@ -283,7 +283,7 @@ export function BookingCalendarBlock({
         slots.push({
           time: `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`,
           display: formatTimeHelper(hour, min, timeFormat),
-          available: Math.random() > 0.3,
+          available: true,
         })
       }
     }

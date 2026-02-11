@@ -10,7 +10,7 @@
 
 import React, { useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-import { User, Mail, Phone, FileText, Send, CheckCircle, AlertCircle, Loader2, Clock } from 'lucide-react'
+import { User, Mail, Phone, FileText, Send, CircleCheck, AlertCircle, Loader2, Clock } from 'lucide-react'
 import type { ComponentDefinition } from '@/types/studio'
 import { useCreateBooking } from '../../hooks/useCreateBooking'
 
@@ -432,7 +432,7 @@ export function BookingFormBlock({
       ? 'Your appointment request has been submitted and is awaiting confirmation. You will receive an email once confirmed.'
       : successMessage
     const displayColor = isPending ? '#f59e0b' : successColor
-    const DisplayIcon = isPending ? Clock : CheckCircle
+    const DisplayIcon = isPending ? Clock : CircleCheck
     return (
       <div
         className={cn('booking-form-block', className)}

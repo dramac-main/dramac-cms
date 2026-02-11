@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, DollarSign } from "lucide-react";
+import { ArrowLeft, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getAgencyPricingConfig } from "@/lib/actions/domain-billing";
@@ -43,7 +43,7 @@ export function PricingPageClient({ initialConfig }: PricingPageClientProps) {
         </Button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <DollarSign className="h-6 w-6" />
+            <Coins className="h-6 w-6" />
             Pricing Configuration
           </h1>
           <p className="text-muted-foreground">

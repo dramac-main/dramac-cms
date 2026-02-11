@@ -1,6 +1,6 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { AlertCircle, CheckCircle2, AlertTriangle, Info, XCircle, LucideIcon } from "lucide-react"
+import { AlertCircle, CheckCircle2, AlertTriangle, Info, CircleX, LucideIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -31,7 +31,7 @@ const alertVariants = cva(
 /** Icon mapping for alert variants */
 const alertIconMap: Record<string, LucideIcon> = {
   default: AlertCircle,
-  destructive: XCircle,
+  destructive: CircleX,
   success: CheckCircle2,
   warning: AlertTriangle,
   info: Info,

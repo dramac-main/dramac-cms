@@ -1322,7 +1322,7 @@ export const STARTER_TEMPLATES: SectionTemplate[] = [
       {
         id: 'phone-value',
         type: 'Text',
-        props: { text: '+1 (555) 123-4567', fontSize: '16px', color: '#64748B' },
+        props: { text: '+260 977 123 456', fontSize: '16px', color: '#64748B' },
         parentId: 'info-phone',
       },
       {

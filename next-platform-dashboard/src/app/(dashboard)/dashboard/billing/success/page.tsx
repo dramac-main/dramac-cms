@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle, ArrowRight, Sparkles } from "lucide-react";
+import { CircleCheck, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PLATFORM } from "@/lib/constants/platform";
@@ -16,7 +16,7 @@ export default function BillingSuccessPage() {
       <Card className="max-w-md w-full">
         <CardContent className="pt-8 pb-6 text-center">
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-green-600" />
+            <CircleCheck className="w-10 h-10 text-green-600" />
           </div>
 
           <h1 className="text-2xl font-bold mb-2">Welcome to DRAMAC Pro!</h1>

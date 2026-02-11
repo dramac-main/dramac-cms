@@ -363,7 +363,7 @@ export const businessStarterTemplate: PuckTemplate = {
               title: "Contact",
               links: [
                 { label: "info@example.com", href: "mailto:info@example.com" },
-                { label: "+1 (555) 123-4567", href: "tel:+15551234567" },
+                { label: "+260 977 123 456", href: "tel:+260977123456" },
                 { label: "123 Business Ave", href: "#" },
               ],
             },
@@ -938,7 +938,7 @@ export const restaurantStarterTemplate: PuckTemplate = {
               title: "Contact",
               links: [
                 { label: "reservations@lacuisine.com", href: "mailto:reservations@lacuisine.com" },
-                { label: "(555) 123-4567", href: "tel:5551234567" },
+                { label: "+260 966 123 456", href: "tel:+260966123456" },
               ],
             },
           ],

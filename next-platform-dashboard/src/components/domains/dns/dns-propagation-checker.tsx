@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, CheckCircle2, XCircle, Loader2, Globe } from "lucide-react";
+import { Search, CheckCircle2, CircleX, Loader2, Globe } from "lucide-react";
 import { checkDnsPropagation } from "@/lib/actions/dns";
 
 interface DnsPropagationCheckerProps {

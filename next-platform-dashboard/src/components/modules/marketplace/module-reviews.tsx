@@ -10,7 +10,7 @@ import {
   Star, 
   ThumbsUp, 
   MessageSquare, 
-  CheckCircle,
+  CircleCheck,
   Send
 } from 'lucide-react';
 import { 
@@ -262,7 +262,7 @@ function ReviewCard({ review, onVote, isVoting }: ReviewCardProps) {
             </div>
             {review.verified_purchase && (
               <Badge variant="secondary" className="gap-1 text-xs">
-                <CheckCircle className="h-3 w-3" />
+                <CircleCheck className="h-3 w-3" />
                 Verified
               </Badge>
             )}

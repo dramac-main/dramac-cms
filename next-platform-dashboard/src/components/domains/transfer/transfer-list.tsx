@@ -37,7 +37,7 @@ import {
   ArrowDownToLine,
   ArrowUpFromLine,
   MoreHorizontal,
-  XCircle,
+  CircleX,
   Eye,
   Loader2,
   Globe,
@@ -177,7 +177,7 @@ export function TransferList({ transfers }: TransferListProps) {
                             setCancelDialogOpen(true);
                           }}
                         >
-                          <XCircle className="h-4 w-4 mr-2" />
+                          <CircleX className="h-4 w-4 mr-2" />
                           Cancel Transfer
                         </DropdownMenuItem>
                       )}
@@ -245,7 +245,7 @@ export function TransferList({ transfers }: TransferListProps) {
               {isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
-                <XCircle className="h-4 w-4 mr-2" />
+                <CircleX className="h-4 w-4 mr-2" />
               )}
               Cancel Transfer
             </AlertDialogAction>

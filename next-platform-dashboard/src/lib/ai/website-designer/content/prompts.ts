@@ -191,7 +191,7 @@ ${TONE_DESCRIPTIONS[tone] || ""}
 Generate ${featureCount} features that:
 1. Highlight key benefits, not just features
 2. Use specific outcomes where possible
-3. Include appropriate Lucide icon names (e.g., Zap, Shield, Clock, Users, Award, Heart, Star, CheckCircle)
+3. Include appropriate Lucide icon names (e.g., Zap, Shield, Clock, Users, Award, Heart, Star, CircleCheck)
 4. Maintain consistent ${tone} tone
 5. Create clear value differentiation`;
 }

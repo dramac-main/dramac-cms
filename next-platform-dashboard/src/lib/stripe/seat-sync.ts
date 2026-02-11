@@ -1,6 +1,13 @@
+/**
+ * @deprecated Billing has migrated to Paddle. This module is retained for reference only.
+ * Active billing logic is in src/lib/paddle/
+ * TODO: Remove this file after migration verification period
+ */
+
 import { createAdminClient } from "@/lib/supabase/admin";
 import { updateSeatCount } from "./subscriptions";
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function syncSeatsForAgency(agencyId: string) {
   const supabase = createAdminClient();
 
@@ -34,6 +41,7 @@ export async function syncSeatsForAgency(agencyId: string) {
   return { synced: true, seatCount: clientCount };
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 // Sync all agencies (cron job)
 export async function syncAllAgencySeats() {
   const supabase = createAdminClient();

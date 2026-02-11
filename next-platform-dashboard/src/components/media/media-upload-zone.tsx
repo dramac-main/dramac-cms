@@ -5,8 +5,8 @@ import { useDropzone, type FileRejection } from "react-dropzone";
 import {
   Upload,
   Loader2,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Image as ImageIcon,
   FileText,
   Video,
@@ -289,10 +289,10 @@ export function MediaUploadZone({
                   <Loader2 className="h-3 w-3 animate-spin" />
                 )}
                 {file.status === "complete" && (
-                  <CheckCircle className="h-3 w-3 text-green-500" />
+                  <CircleCheck className="h-3 w-3 text-green-500" />
                 )}
                 {file.status === "error" && (
-                  <XCircle className="h-3 w-3 text-destructive" />
+                  <CircleX className="h-3 w-3 text-destructive" />
                 )}
                 <span className="truncate">{file.name}</span>
               </div>
@@ -416,9 +416,9 @@ export function MediaUploadZone({
                 {file.status === "uploading" ? (
                   <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                 ) : file.status === "complete" ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <CircleCheck className="h-5 w-5 text-green-500" />
                 ) : (
-                  <XCircle className="h-5 w-5 text-destructive" />
+                  <CircleX className="h-5 w-5 text-destructive" />
                 )}
               </div>
 

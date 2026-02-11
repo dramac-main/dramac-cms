@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { getSiteUrl, getSiteDomain, getBaseDomain } from "@/lib/utils/site-url";
-import { Loader2, Sparkles, PenTool, CheckCircle2, XCircle, AlertCircle, Upload } from "lucide-react";
+import { Loader2, Sparkles, PenTool, CheckCircle2, CircleX, AlertCircle, Upload } from "lucide-react";
 import { createSiteAction, checkSubdomain } from "@/lib/actions/sites";
 import { toast } from "sonner";
 import {
@@ -151,7 +151,7 @@ export function CreateSiteForm({ clients, defaultClientId }: CreateSiteFormProps
       case "available":
         return <CheckCircle2 className="h-4 w-4 text-success" />;
       case "taken":
-        return <XCircle className="h-4 w-4 text-danger" />;
+        return <CircleX className="h-4 w-4 text-danger" />;
       default:
         return null;
     }

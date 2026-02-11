@@ -43,8 +43,8 @@ export function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <StatCard title="Total Contacts" value="0" icon="👥" />
         <StatCard title="Open Deals" value="0" icon="💼" />
-        <StatCard title="Pipeline Value" value="$0" icon="💰" />
-        <StatCard title="Won This Month" value="$0" icon="🎉" />
+        <StatCard title="Pipeline Value" value="K0" icon="💰" />
+        <StatCard title="Won This Month" value="K0" icon="🎉" />
       </div>
 
       {/* Tabs */}

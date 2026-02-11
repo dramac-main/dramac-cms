@@ -18,7 +18,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
   FileText, 
   Loader2, 
-  CheckCircle,
+  CircleCheck,
   ShoppingBag,
   AlertCircle
 } from 'lucide-react'
@@ -154,7 +154,7 @@ export function QuoteRequestBlock({
       <Card className={cn('text-center', className)}>
         <CardContent className="pt-6">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-8 w-8 text-green-600" />
+            <CircleCheck className="h-8 w-8 text-green-600" />
           </div>
           <h3 className="text-xl font-semibold text-gray-900">Quote Request Submitted!</h3>
           <p className="mt-2 text-gray-600">

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getSystemAlerts } from "@/lib/actions/admin";
-import { AlertTriangle, AlertCircle, Info, CheckCircle } from "lucide-react";
+import { AlertTriangle, AlertCircle, Info, CircleCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const alertIcons = {
@@ -36,7 +36,7 @@ export async function SystemAlerts() {
       <CardContent>
         {alerts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <CheckCircle className="w-12 h-12 text-green-500 mb-2" />
+            <CircleCheck className="w-12 h-12 text-green-500 mb-2" />
             <p className="text-sm font-medium">All systems operational</p>
             <p className="text-xs text-muted-foreground">
               No alerts at this time

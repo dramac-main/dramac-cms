@@ -17,7 +17,7 @@ import {
   Loader2,
   Terminal,
   CheckCircle2,
-  XCircle,
+  CircleX,
   AlertCircle,
   Copy,
   Trash2,
@@ -114,7 +114,7 @@ const statusConfig: Record<TestStatus, {
     color: "text-green-500",
   },
   error: {
-    icon: XCircle,
+    icon: CircleX,
     label: "Error",
     color: "text-red-500",
   },
@@ -506,7 +506,7 @@ export function BuilderTestConsole({
                 {currentOutput.error && (
                   <div className="p-4 rounded-lg bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
                     <div className="flex items-start gap-2 text-red-600 dark:text-red-400">
-                      <XCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                      <CircleX className="h-4 w-4 mt-0.5 shrink-0" />
                       <pre className="text-sm whitespace-pre-wrap">
                         {currentOutput.error}
                       </pre>

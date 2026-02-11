@@ -17,7 +17,7 @@ import {
   TrendingUp,
   TrendingDown,
   Zap,
-  DollarSign,
+  Coins,
   Share2,
 } from "lucide-react";
 import {
@@ -99,7 +99,7 @@ export function ReachMetricsCards({ data }: { data: ReachMetrics }) {
 export function ReachSourceBreakdown({ data }: { data: ReachMetrics }) {
   const sources = [
     { name: "Organic", value: data.organicReach, change: data.organicReachChange, color: "#10B981", icon: Globe },
-    { name: "Paid", value: data.paidReach, change: data.paidReachChange, color: "#3B82F6", icon: DollarSign },
+    { name: "Paid", value: data.paidReach, change: data.paidReachChange, color: "#3B82F6", icon: Coins },
     { name: "Viral", value: data.viralReach, change: data.viralReachChange, color: "#F59E0B", icon: Zap },
   ];
 

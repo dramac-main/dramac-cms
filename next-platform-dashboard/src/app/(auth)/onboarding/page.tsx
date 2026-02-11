@@ -12,7 +12,7 @@ import {
   User,
   ChevronRight,
   ChevronLeft,
-  CheckCircle,
+  CircleCheck,
   Briefcase,
   Target,
   Users,
@@ -53,7 +53,7 @@ const STEPS = [
   { id: "goals", title: "Goals", icon: Target },
   { id: "industry", title: "Industry", icon: Briefcase },
   { id: "client", title: "First Client", icon: Users },
-  { id: "complete", title: "All Set!", icon: CheckCircle },
+  { id: "complete", title: "All Set!", icon: CircleCheck },
 ];
 
 const profileSchema = z.object({
@@ -622,7 +622,7 @@ export default function OnboardingPage() {
           <Card className="text-center">
             <CardHeader>
               <div className="mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mb-4">
-                <CheckCircle className="h-8 w-8 text-green-600" />
+                <CircleCheck className="h-8 w-8 text-green-600" />
               </div>
               <CardTitle className="text-2xl">You&apos;re All Set!</CardTitle>
               <CardDescription className="text-base">

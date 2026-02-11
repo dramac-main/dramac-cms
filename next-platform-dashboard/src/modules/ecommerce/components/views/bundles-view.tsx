@@ -17,8 +17,8 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Boxes,
   Coins,
   TrendingDown
@@ -124,7 +124,7 @@ export function BundlesView({ siteId, searchQuery = '' }: BundlesViewProps) {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
-        <XCircle className="h-12 w-12 text-destructive mb-4" />
+        <CircleX className="h-12 w-12 text-destructive mb-4" />
         <h3 className="text-lg font-semibold">Error loading bundles</h3>
         <p className="text-sm text-muted-foreground mb-4">{error}</p>
         <Button variant="outline" onClick={() => refreshBundles()}>
@@ -150,7 +150,7 @@ export function BundlesView({ siteId, searchQuery = '' }: BundlesViewProps) {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Bundles</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
+            <CircleCheck className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{stats.active}</div>
@@ -261,12 +261,12 @@ export function BundlesView({ siteId, searchQuery = '' }: BundlesViewProps) {
                     <TableCell>
                       {bundle.is_active ? (
                         <Badge className="gap-1 bg-green-500/10 text-green-500">
-                          <CheckCircle className="h-3 w-3" />
+                          <CircleCheck className="h-3 w-3" />
                           Active
                         </Badge>
                       ) : (
                         <Badge variant="secondary" className="gap-1">
-                          <XCircle className="h-3 w-3" />
+                          <CircleX className="h-3 w-3" />
                           Inactive
                         </Badge>
                       )}

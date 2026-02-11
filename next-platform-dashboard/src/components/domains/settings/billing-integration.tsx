@@ -4,7 +4,7 @@
 // Paddle Billing Integration for Domain Services
 
 import { useState } from "react";
-import { Save, CreditCard, CheckCircle, AlertCircle, Loader2, ExternalLink } from "lucide-react";
+import { Save, CreditCard, CircleCheck, AlertCircle, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -64,7 +64,7 @@ export function BillingIntegration({ config }: BillingIntegrationProps) {
           <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
             {isConfigured ? (
               <>
-                <CheckCircle className="h-8 w-8 text-green-500" />
+                <CircleCheck className="h-8 w-8 text-green-500" />
                 <div>
                   <p className="font-medium text-green-700 dark:text-green-400">
                     Billing Configured

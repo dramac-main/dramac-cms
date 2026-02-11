@@ -54,7 +54,7 @@ export async function searchDomains(
     // Simulate availability check results
     const availability = popularTlds.map(tld => ({
       domain: cleanKeyword + tld,
-      status: Math.random() > 0.3 ? 'available' : 'unavailable' as const,
+      status: 'available' as const,
     }));
     
     // Simulate pricing
@@ -121,7 +121,7 @@ export async function checkDomainAvailability(domainName: string) {
   try {
     // Simulate availability check
     // In production: const result = await domainService.checkAvailability(domainName);
-    const isAvailable = Math.random() > 0.4;
+    const isAvailable = true;
     
     return { 
       success: true, 

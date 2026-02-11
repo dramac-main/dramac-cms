@@ -91,7 +91,7 @@ export const corporateEnterprise: PuckTemplate = {
             { value: "25+", label: "Years of Excellence" },
             { value: "500+", label: "Enterprise Clients" },
             { value: "30", label: "Countries" },
-            { value: "$2B+", label: "Revenue Generated" },
+            { value: "K2B+", label: "Revenue Generated" },
           ],
           columns: 4,
           backgroundColor: "#1e40af",
@@ -402,7 +402,7 @@ export const lawFirmLegal: PuckTemplate = {
           id: generateId(),
           title: "Our Track Record",
           stats: [
-            { value: "$500M+", label: "Recovered for Clients" },
+            { value: "K500M+", label: "Recovered for Clients" },
             { value: "5,000+", label: "Cases Won" },
             { value: "50+", label: "Years Experience" },
             { value: "98%", label: "Success Rate" },
@@ -488,7 +488,7 @@ export const lawFirmLegal: PuckTemplate = {
             {
               title: "Contact",
               links: [
-                { label: "(555) 123-4567", href: "tel:5551234567" },
+                { label: "+260 977 123 456", href: "tel:+260977123456" },
                 { label: "info@morrisonlaw.com", href: "mailto:info@morrisonlaw.com" },
                 { label: "123 Legal Ave, Suite 500", href: "#" },
               ],

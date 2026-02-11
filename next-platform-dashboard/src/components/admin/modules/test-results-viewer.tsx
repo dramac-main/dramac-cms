@@ -18,8 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   AlertTriangle,
   Clock,
   MinusCircle,
@@ -37,9 +37,9 @@ function getStatusIcon(status: ResultStatus, size: "sm" | "md" = "sm") {
 
   switch (status) {
     case "passed":
-      return <CheckCircle className={`${sizeClass} text-green-500`} />;
+      return <CircleCheck className={`${sizeClass} text-green-500`} />;
     case "failed":
-      return <XCircle className={`${sizeClass} text-red-500`} />;
+      return <CircleX className={`${sizeClass} text-red-500`} />;
     case "warning":
       return <AlertTriangle className={`${sizeClass} text-yellow-500`} />;
     case "skipped":

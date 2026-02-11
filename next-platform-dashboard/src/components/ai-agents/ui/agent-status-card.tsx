@@ -21,8 +21,8 @@ import {
   TrendingUp,
   TrendingDown,
   Zap,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Clock,
   AlertTriangle
 } from "lucide-react"
@@ -328,7 +328,7 @@ export function AgentStatusCard({
                   value={formatNumber(agent.totalRuns)} 
                 />
                 <StatItem 
-                  icon={CheckCircle} 
+                  icon={CircleCheck} 
                   label="Success Rate" 
                   value={`${agent.successRate.toFixed(1)}%`}
                   color={successRateColor}

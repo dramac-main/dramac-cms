@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Loader2, XCircle } from 'lucide-react'
+import { Loader2, CircleX } from 'lucide-react'
 import { toast } from 'sonner'
 import { rejectQuote } from '../../actions/quote-workflow-actions'
 
@@ -84,7 +84,7 @@ export function QuoteRejectDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
-            <XCircle className="h-5 w-5" />
+            <CircleX className="h-5 w-5" />
             Decline Quote
           </DialogTitle>
           <DialogDescription>

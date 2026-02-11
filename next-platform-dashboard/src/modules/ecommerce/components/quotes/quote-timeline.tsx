@@ -13,8 +13,8 @@ import {
   FileEdit, 
   Send, 
   Eye, 
-  CheckCircle, 
-  XCircle, 
+  CircleCheck, 
+  CircleX, 
   AlertTriangle,
   ArrowRightCircle,
   Ban,
@@ -69,12 +69,12 @@ const activityConfig: Record<QuoteActivityType, ActivityConfig> = {
     bgColor: 'bg-purple-100 dark:bg-purple-900/30'
   },
   accepted: {
-    icon: CheckCircle,
+    icon: CircleCheck,
     color: 'text-green-600 dark:text-green-400',
     bgColor: 'bg-green-100 dark:bg-green-900/30'
   },
   rejected: {
-    icon: XCircle,
+    icon: CircleX,
     color: 'text-red-600 dark:text-red-400',
     bgColor: 'bg-red-100 dark:bg-red-900/30'
   },

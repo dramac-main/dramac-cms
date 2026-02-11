@@ -25,8 +25,8 @@ import {
   Globe,
   Users,
   Play,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   AlertTriangle,
   Plus,
   Clock,
@@ -74,9 +74,9 @@ interface Props {
 function getStatusIcon(status: TestStatus) {
   switch (status) {
     case "passed":
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
+      return <CircleCheck className="h-4 w-4 text-green-500" />;
     case "failed":
-      return <XCircle className="h-4 w-4 text-red-500" />;
+      return <CircleX className="h-4 w-4 text-red-500" />;
     case "error":
       return <AlertTriangle className="h-4 w-4 text-red-500" />;
     case "running":
@@ -221,7 +221,7 @@ export function TestingDashboard({
                   {testStats.passedRuns} passed, {testStats.failedRuns} failed
                 </p>
               </div>
-              <CheckCircle className="h-8 w-8 text-muted-foreground" />
+              <CircleCheck className="h-8 w-8 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>

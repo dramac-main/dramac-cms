@@ -14,8 +14,8 @@ import {
   Package, 
   CreditCard, 
   Truck, 
-  CheckCircle, 
-  XCircle,
+  CircleCheck, 
+  CircleX,
   MessageSquare,
   RefreshCw,
   Mail,
@@ -50,7 +50,7 @@ const eventConfig: Record<OrderEventType, EventConfig> = {
     bgColor: 'bg-blue-100 dark:bg-blue-900/30'
   },
   confirmed: {
-    icon: CheckCircle,
+    icon: CircleCheck,
     color: 'text-green-600',
     bgColor: 'bg-green-100 dark:bg-green-900/30'
   },
@@ -75,12 +75,12 @@ const eventConfig: Record<OrderEventType, EventConfig> = {
     bgColor: 'bg-blue-100 dark:bg-blue-900/30'
   },
   delivered: {
-    icon: CheckCircle,
+    icon: CircleCheck,
     color: 'text-green-600',
     bgColor: 'bg-green-100 dark:bg-green-900/30'
   },
   cancelled: {
-    icon: XCircle,
+    icon: CircleX,
     color: 'text-red-600',
     bgColor: 'bg-red-100 dark:bg-red-900/30'
   },

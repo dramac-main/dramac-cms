@@ -5,9 +5,9 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import Link from "next/link";
 import {
-  CheckCircle,
+  CircleCheck,
   AlertCircle,
-  XCircle,
+  CircleX,
   Crown,
   Pause,
   Play,
@@ -48,13 +48,13 @@ interface CurrentPlanCardProps {
   };
 }
 
-const statusConfig: Record<SubscriptionStatus, { icon: typeof CheckCircle; color: string; bg: string; label: string }> = {
-  active: { icon: CheckCircle, color: "text-green-500", bg: "bg-green-100", label: "Active" },
+const statusConfig: Record<SubscriptionStatus, { icon: typeof CircleCheck; color: string; bg: string; label: string }> = {
+  active: { icon: CircleCheck, color: "text-green-500", bg: "bg-green-100", label: "Active" },
   on_trial: { icon: Crown, color: "text-blue-500", bg: "bg-blue-100", label: "Trial" },
   paused: { icon: Pause, color: "text-yellow-500", bg: "bg-yellow-100", label: "Paused" },
   past_due: { icon: AlertCircle, color: "text-orange-500", bg: "bg-orange-100", label: "Past Due" },
-  cancelled: { icon: XCircle, color: "text-red-500", bg: "bg-red-100", label: "Cancelled" },
-  expired: { icon: XCircle, color: "text-gray-500", bg: "bg-gray-100", label: "Expired" },
+  cancelled: { icon: CircleX, color: "text-red-500", bg: "bg-red-100", label: "Cancelled" },
+  expired: { icon: CircleX, color: "text-gray-500", bg: "bg-gray-100", label: "Expired" },
   unpaid: { icon: AlertCircle, color: "text-red-500", bg: "bg-red-100", label: "Unpaid" },
 };
 

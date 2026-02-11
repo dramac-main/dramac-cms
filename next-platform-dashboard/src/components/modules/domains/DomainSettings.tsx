@@ -36,7 +36,7 @@ import {
   Shield, 
   Palette, 
   Plus, 
-  CheckCircle, 
+  CircleCheck, 
   AlertTriangle,
   Loader2,
   Copy,
@@ -226,12 +226,12 @@ export function DomainSettings({ siteModuleId }: DomainSettingsProps) {
   }
 
   function getStatusBadge(status: string) {
-    const configs: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: typeof CheckCircle; spin?: boolean }> = {
+    const configs: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: typeof CircleCheck; spin?: boolean }> = {
       pending: { variant: 'secondary', icon: AlertTriangle },
       verifying: { variant: 'secondary', icon: Loader2, spin: true },
-      verified: { variant: 'outline', icon: CheckCircle },
+      verified: { variant: 'outline', icon: CircleCheck },
       provisioning: { variant: 'secondary', icon: Loader2, spin: true },
-      active: { variant: 'default', icon: CheckCircle },
+      active: { variant: 'default', icon: CircleCheck },
       failed: { variant: 'destructive', icon: AlertTriangle },
       expired: { variant: 'destructive', icon: Clock },
       disabled: { variant: 'secondary', icon: AlertTriangle }

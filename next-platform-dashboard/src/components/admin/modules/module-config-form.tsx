@@ -80,7 +80,7 @@ const PRICING_TIERS = [
 const ICON_SUGGESTIONS = [
   "BarChart3", "TrendingUp", "Search", "MessageCircle", "Mail", "ShoppingCart", "CreditCard", "Lock", "Zap",
   "Palette", "Smartphone", "Globe", "FileText", "Link", "Target", "Megaphone", "Lightbulb", "Rocket",
-  "Star", "Bell", "Calendar", "FolderOpen", "HardDrive", "RefreshCw", "CheckCircle", "Tag", "Pin",
+  "Star", "Bell", "Calendar", "FolderOpen", "HardDrive", "RefreshCw", "CircleCheck", "Tag", "Pin",
 ];
 
 export function ModuleConfigForm({

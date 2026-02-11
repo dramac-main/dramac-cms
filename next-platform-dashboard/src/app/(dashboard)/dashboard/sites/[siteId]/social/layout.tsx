@@ -22,7 +22,7 @@ import {
   Plus,
   BarChart3,
   Megaphone,
-  CheckCircle,
+  CircleCheck,
   Settings
 } from 'lucide-react'
 import { headers } from 'next/headers'
@@ -56,7 +56,7 @@ async function SocialNav({ siteId }: { siteId: string }) {
     { href: `/dashboard/sites/${siteId}/social/accounts`, label: 'Accounts', icon: Users },
     { href: `/dashboard/sites/${siteId}/social/analytics`, label: 'Analytics', icon: BarChart3 },
     { href: `/dashboard/sites/${siteId}/social/campaigns`, label: 'Campaigns', icon: Megaphone },
-    { href: `/dashboard/sites/${siteId}/social/approvals`, label: 'Approvals', icon: CheckCircle },
+    { href: `/dashboard/sites/${siteId}/social/approvals`, label: 'Approvals', icon: CircleCheck },
     { href: `/dashboard/sites/${siteId}/social/settings`, label: 'Settings', icon: Settings },
   ]
 

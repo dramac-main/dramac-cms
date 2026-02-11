@@ -41,8 +41,8 @@ import {
   Calendar,
   Clock,
   User,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   AlertCircle,
   Eye,
   Trash2,
@@ -428,7 +428,7 @@ export function AppointmentsView({ onAppointmentClick }: AppointmentsViewProps) 
                               e.stopPropagation()
                               handleStatusChange(apt, 'confirmed')
                             }}>
-                              <CheckCircle className="h-4 w-4 mr-2 text-blue-500" />
+                              <CircleCheck className="h-4 w-4 mr-2 text-blue-500" />
                               Confirm
                             </DropdownMenuItem>
                           )}
@@ -437,7 +437,7 @@ export function AppointmentsView({ onAppointmentClick }: AppointmentsViewProps) 
                               e.stopPropagation()
                               handleStatusChange(apt, 'completed')
                             }}>
-                              <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                              <CircleCheck className="h-4 w-4 mr-2 text-green-500" />
                               Complete
                             </DropdownMenuItem>
                           )}
@@ -446,7 +446,7 @@ export function AppointmentsView({ onAppointmentClick }: AppointmentsViewProps) 
                               e.stopPropagation()
                               handleStatusChange(apt, 'cancelled')
                             }}>
-                              <XCircle className="h-4 w-4 mr-2 text-red-500" />
+                              <CircleX className="h-4 w-4 mr-2 text-red-500" />
                               Cancel
                             </DropdownMenuItem>
                           )}

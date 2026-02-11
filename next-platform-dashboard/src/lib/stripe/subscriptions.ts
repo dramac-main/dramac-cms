@@ -1,3 +1,9 @@
+/**
+ * @deprecated Billing has migrated to Paddle. This module is retained for reference only.
+ * Active billing logic is in src/lib/paddle/
+ * TODO: Remove this file after migration verification period
+ */
+
 import { stripe, PRICE_IDS, BILLING_CONFIG } from "./config";
 import { createClient } from "@/lib/supabase/server";
 import { createOrGetCustomer } from "./customers";
@@ -11,6 +17,7 @@ export interface CreateSubscriptionParams {
   initialSeats?: number;
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function createSubscription(params: CreateSubscriptionParams) {
   const { agencyId, email, name, billingCycle, initialSeats = 1 } = params;
   const supabase = await createClient();
@@ -76,6 +83,7 @@ export async function createSubscription(params: CreateSubscriptionParams) {
   return subscription;
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function updateSeatCount(agencyId: string, newQuantity: number) {
   const supabase = await createClient();
 
@@ -109,6 +117,7 @@ export async function updateSeatCount(agencyId: string, newQuantity: number) {
   return updated;
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function cancelSubscription(agencyId: string, immediately = false) {
   const supabase = await createClient();
 
@@ -150,6 +159,7 @@ export async function cancelSubscription(agencyId: string, immediately = false) 
   return updated;
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function getSubscription(agencyId: string) {
   const supabase = await createClient();
 

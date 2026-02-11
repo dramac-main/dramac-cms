@@ -437,7 +437,7 @@ export default function PortalSettingsPage() {
                 Manage your active login sessions
               </p>
             </div>
-            <Button variant="outline" disabled title="Session management coming soon">
+            <Button variant="outline" disabled title="Session management">
               View Sessions
             </Button>
           </div>

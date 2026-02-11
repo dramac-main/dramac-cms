@@ -463,7 +463,7 @@ function generateCategoryPrompts(
           category: "identity",
           priority: "critical",
           question: "What is your business name?",
-          placeholder: "e.g., Acme Corporation",
+          placeholder: "e.g., Your Company Name",
           helpText: "This is the primary name that will appear throughout your website.",
         });
       }
@@ -528,7 +528,7 @@ function generateCategoryPrompts(
           category: "contact",
           priority: "high",
           question: "What is your business phone number?",
-          placeholder: "e.g., (555) 123-4567",
+          placeholder: "e.g., +260 97X XXX XXX",
           helpText: "Primary phone number for customer inquiries.",
         });
       }

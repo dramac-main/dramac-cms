@@ -12,8 +12,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { 
-  CheckCircle, 
-  XCircle, 
+  CircleCheck, 
+  CircleX, 
   Clock,
   AlertTriangle,
   Building,
@@ -72,7 +72,7 @@ export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
       {/* Status Banner */}
       {isAccepted && (
         <div className="mb-6 p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 rounded-lg flex items-center gap-3">
-          <CheckCircle className="h-6 w-6 text-green-600" />
+          <CircleCheck className="h-6 w-6 text-green-600" />
           <div>
             <p className="font-semibold text-green-700 dark:text-green-300">Quote Accepted</p>
             <p className="text-sm text-green-600 dark:text-green-400">
@@ -84,7 +84,7 @@ export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
       
       {isRejected && (
         <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-lg flex items-center gap-3">
-          <XCircle className="h-6 w-6 text-red-600" />
+          <CircleX className="h-6 w-6 text-red-600" />
           <div>
             <p className="font-semibold text-red-700 dark:text-red-300">Quote Declined</p>
             <p className="text-sm text-red-600 dark:text-red-400">
@@ -300,7 +300,7 @@ export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
                 size="lg"
                 onClick={() => setShowAcceptForm(true)}
               >
-                <CheckCircle className="h-5 w-5 mr-2" />
+                <CircleCheck className="h-5 w-5 mr-2" />
                 Accept Quote
               </Button>
               <Button 
@@ -308,7 +308,7 @@ export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
                 size="lg"
                 onClick={() => setShowRejectDialog(true)}
               >
-                <XCircle className="h-5 w-5 mr-2" />
+                <CircleX className="h-5 w-5 mr-2" />
                 Decline
               </Button>
             </div>

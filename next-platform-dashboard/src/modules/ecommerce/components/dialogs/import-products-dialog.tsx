@@ -31,8 +31,8 @@ import {
 import { 
   Upload, 
   FileSpreadsheet, 
-  CheckCircle, 
-  XCircle,
+  CircleCheck, 
+  CircleX,
   AlertTriangle,
   Download
 } from 'lucide-react'
@@ -251,7 +251,7 @@ export function ImportProductsDialog({
             {parseErrors.length > 0 && (
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-destructive font-medium mb-2">
-                  <XCircle className="h-4 w-4" />
+                  <CircleX className="h-4 w-4" />
                   Errors in file
                 </div>
                 <ul className="text-sm text-destructive space-y-1">
@@ -342,7 +342,7 @@ export function ImportProductsDialog({
             <div className="text-center">
               {importResult.success ? (
                 <>
-                  <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+                  <CircleCheck className="h-16 w-16 text-green-500 mx-auto mb-4" />
                   <p className="text-xl font-medium text-green-600">Import Complete!</p>
                 </>
               ) : (

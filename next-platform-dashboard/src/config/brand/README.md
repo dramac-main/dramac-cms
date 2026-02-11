@@ -25,7 +25,7 @@ import {
 const statusType = mapToStatusType('pending'); // 'warning'
 
 // Get consistent avatar colors
-<Avatar className={getAvatarColor('John Doe')}>JD</Avatar>
+<Avatar className={getAvatarColor('Your Name')}>YN</Avatar>
 ```
 
 ## File Structure

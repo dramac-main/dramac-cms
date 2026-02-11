@@ -11,7 +11,7 @@ import {
   ArrowDownRight,
   Activity,
   Users,
-  DollarSign,
+  Coins,
   ShoppingCart,
   Eye,
   MousePointerClick,
@@ -26,7 +26,7 @@ import { StatWidgetData, ChartDataPoint } from "@/types/dashboard-widgets";
 
 // Icon mapping for common metric types
 const METRIC_ICONS: Record<string, LucideIcon> = {
-  revenue: DollarSign,
+  revenue: Coins,
   sales: ShoppingCart,
   users: Users,
   visitors: Eye,

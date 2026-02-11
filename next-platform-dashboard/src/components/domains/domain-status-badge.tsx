@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Clock, AlertTriangle, XCircle, RefreshCw, Ban, LucideIcon } from "lucide-react";
+import { CircleCheck, Clock, AlertTriangle, CircleX, RefreshCw, Ban, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type DomainStatus = 'active' | 'pending' | 'expired' | 'suspended' | 'transferring' | 'redemption' | 'cancelled';
@@ -18,9 +18,9 @@ interface DomainStatusBadgeProps {
 }
 
 const statusConfig: Record<DomainStatus, StatusConfig> = {
-  active: { label: 'Active', icon: CheckCircle, variant: 'bg-green-500/10 text-green-600 border-green-200' },
+  active: { label: 'Active', icon: CircleCheck, variant: 'bg-green-500/10 text-green-600 border-green-200' },
   pending: { label: 'Pending', icon: Clock, variant: 'bg-yellow-500/10 text-yellow-600 border-yellow-200' },
-  expired: { label: 'Expired', icon: XCircle, variant: 'bg-red-500/10 text-red-600 border-red-200' },
+  expired: { label: 'Expired', icon: CircleX, variant: 'bg-red-500/10 text-red-600 border-red-200' },
   suspended: { label: 'Suspended', icon: AlertTriangle, variant: 'bg-orange-500/10 text-orange-600 border-orange-200' },
   transferring: { label: 'Transferring', icon: RefreshCw, variant: 'bg-blue-500/10 text-blue-600 border-blue-200' },
   redemption: { label: 'Redemption', icon: AlertTriangle, variant: 'bg-red-500/10 text-red-600 border-red-200' },

@@ -107,7 +107,7 @@ export async function PATCH(
     // Client module settings update - coming soon
     return NextResponse.json({ 
       success: true, 
-      message: "Client module management coming soon" 
+      message: "Client module management is not yet configured" 
     });
   } catch (error) {
     console.error("Update module error:", error);

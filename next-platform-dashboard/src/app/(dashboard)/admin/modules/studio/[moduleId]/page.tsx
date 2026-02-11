@@ -14,7 +14,7 @@ import {
   Copy,
   ExternalLink,
   Clock,
-  CheckCircle,
+  CircleCheck,
   AlertCircle,
   Code,
   FlaskConical,
@@ -104,7 +104,7 @@ const statusConfig = {
 const deploymentStatusIcons = {
   pending: Clock,
   deploying: Loader2,
-  success: CheckCircle,
+  success: CircleCheck,
   failed: AlertCircle,
   rolled_back: RotateCcw,
 };

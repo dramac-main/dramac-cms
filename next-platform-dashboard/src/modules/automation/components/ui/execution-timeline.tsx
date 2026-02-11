@@ -4,7 +4,7 @@ import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { 
   CheckCircle2, 
-  XCircle, 
+  CircleX, 
   Loader2, 
   Clock, 
   ChevronDown,
@@ -46,7 +46,7 @@ const statusConfig: Record<StepStatus, {
   animate?: boolean
 }> = {
   completed: { icon: CheckCircle2, color: "text-green-600", bg: "bg-green-500" },
-  failed: { icon: XCircle, color: "text-red-600", bg: "bg-red-500" },
+  failed: { icon: CircleX, color: "text-red-600", bg: "bg-red-500" },
   running: { icon: Loader2, color: "text-muted-foreground", bg: "bg-blue-500", animate: true },
   pending: { icon: Clock, color: "text-yellow-600", bg: "bg-yellow-500" },
   skipped: { icon: ChevronRight, color: "text-muted-foreground", bg: "bg-muted" },

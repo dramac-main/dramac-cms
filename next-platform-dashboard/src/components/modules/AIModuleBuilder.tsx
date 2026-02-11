@@ -30,7 +30,7 @@ import {
   FileCode, 
   Database, 
   Layout,
-  CheckCircle,
+  CircleCheck,
   AlertTriangle,
   Loader2,
   Copy,
@@ -555,7 +555,7 @@ ${f.content}`).join('\n\n');
                     <Card>
                       <CardHeader className="py-3">
                         <CardTitle className="text-base flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <CircleCheck className="h-4 w-4 text-green-500" />
                           Features
                         </CardTitle>
                       </CardHeader>
@@ -616,10 +616,10 @@ ${f.content}`).join('\n\n');
                                         <Badge variant="outline" className="text-xs">{field.type}</Badge>
                                       </td>
                                       <td className="py-2 px-2">
-                                        {field.required && <CheckCircle className="h-4 w-4 text-green-500" />}
+                                        {field.required && <CircleCheck className="h-4 w-4 text-green-500" />}
                                       </td>
                                       <td className="py-2 px-2">
-                                        {field.indexed && <CheckCircle className="h-4 w-4 text-blue-500" />}
+                                        {field.indexed && <CircleCheck className="h-4 w-4 text-blue-500" />}
                                       </td>
                                       <td className="py-2 px-2 text-xs text-muted-foreground">
                                         {field.references ? `→ ${field.references.entity}.${field.references.field}` : '-'}
@@ -796,7 +796,7 @@ ${f.content}`).join('\n\n');
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CircleCheck className="h-4 w-4 mr-2" />
                 )}
                 Create Module
               </Button>

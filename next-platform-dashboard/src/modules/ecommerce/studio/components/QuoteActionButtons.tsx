@@ -22,8 +22,8 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { 
-  CheckCircle, 
-  XCircle, 
+  CircleCheck, 
+  CircleX, 
   Printer, 
   Share2, 
   Download,
@@ -168,7 +168,7 @@ export function QuoteActionButtons({
             onClick={() => setIsAcceptOpen(true)}
             className={cn('bg-green-600 hover:bg-green-700', buttonClass)}
           >
-            <CheckCircle className="mr-2 h-4 w-4" />
+            <CircleCheck className="mr-2 h-4 w-4" />
             Accept Quote
           </Button>
         )}
@@ -179,7 +179,7 @@ export function QuoteActionButtons({
             onClick={() => setIsRejectOpen(true)}
             className={cn('text-red-600 border-red-300 hover:bg-red-50', buttonClass)}
           >
-            <XCircle className="mr-2 h-4 w-4" />
+            <CircleX className="mr-2 h-4 w-4" />
             Decline
           </Button>
         )}

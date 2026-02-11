@@ -114,7 +114,7 @@ export function SignupForm() {
               <FormLabel>Agency name</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="Acme Agency"
+                  placeholder="Your Agency"
                   disabled={isPending}
                   {...field}
                 />

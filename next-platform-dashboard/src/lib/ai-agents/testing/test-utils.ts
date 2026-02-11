@@ -107,7 +107,7 @@ export function generateStandardScenarios(agentType: string): TestScenario[] {
             contact: {
               name: 'John Smith',
               email: 'john@example.com',
-              company: 'Acme Corp',
+              company: 'Sample Corp',
               title: 'CTO',
             },
           },

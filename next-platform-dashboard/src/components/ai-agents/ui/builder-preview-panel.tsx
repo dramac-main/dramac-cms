@@ -22,7 +22,7 @@ import {
   Sparkles,
   AlertTriangle,
   CheckCircle2,
-  XCircle
+  CircleX
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -184,7 +184,7 @@ function ValidationStatus({ validation }: ValidationStatusProps) {
     <div className="space-y-2">
       {validation.errors.map((error, i) => (
         <div key={i} className="flex items-start gap-2 text-red-600 dark:text-red-400">
-          <XCircle className="h-4 w-4 mt-0.5 shrink-0" />
+          <CircleX className="h-4 w-4 mt-0.5 shrink-0" />
           <div className="text-sm">
             <span className="font-medium">{error.field}:</span> {error.message}
           </div>

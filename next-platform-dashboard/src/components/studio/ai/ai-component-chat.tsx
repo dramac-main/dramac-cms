@@ -17,8 +17,8 @@ import {
   Send, 
   Sparkles, 
   Loader2, 
-  CheckCircle, 
-  XCircle,
+  CircleCheck, 
+  CircleX,
   Trash2,
 } from "lucide-react";
 import { useAIStore } from "@/lib/studio/store/ai-store";
@@ -316,7 +316,7 @@ export function AIComponentChat() {
               className="flex-1"
               onClick={handleApplyChanges}
             >
-              <CheckCircle className="w-4 h-4 mr-2" />
+              <CircleCheck className="w-4 h-4 mr-2" />
               Apply Changes
             </Button>
             <Button
@@ -324,7 +324,7 @@ export function AIComponentChat() {
               className="flex-1"
               onClick={handleRejectChanges}
             >
-              <XCircle className="w-4 h-4 mr-2" />
+              <CircleX className="w-4 h-4 mr-2" />
               Reject
             </Button>
           </div>

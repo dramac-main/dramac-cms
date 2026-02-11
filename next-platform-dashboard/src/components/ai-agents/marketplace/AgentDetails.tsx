@@ -21,7 +21,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { 
   Star, 
   Download, 
-  CheckCircle, 
+  CircleCheck, 
   Zap, 
   Wrench, 
   Shield,
@@ -238,7 +238,7 @@ export function AgentDetails({
                     <span className="font-medium">{agent.authorName}</span>
                     {agent.authorVerified && (
                       <Badge variant="secondary" className="text-xs">
-                        <CheckCircle className="h-3 w-3 mr-1" />
+                        <CircleCheck className="h-3 w-3 mr-1" />
                         Verified
                       </Badge>
                     )}

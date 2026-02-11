@@ -288,9 +288,9 @@ function mapPricingTier(
   // Otherwise map from tier
   const tierMap: Record<string, { wholesale: number; retail: number }> = {
     free: { wholesale: 0, retail: 0 },
-    starter: { wholesale: 999, retail: 1499 }, // $9.99 wholesale, $14.99 retail
-    pro: { wholesale: 2499, retail: 3999 }, // $24.99 wholesale, $39.99 retail
-    enterprise: { wholesale: 9999, retail: 14999 }, // $99.99 wholesale, $149.99 retail
+    starter: { wholesale: 999, retail: 1499 }, // K9.99 wholesale, K14.99 retail
+    pro: { wholesale: 2499, retail: 3999 }, // K24.99 wholesale, K39.99 retail
+    enterprise: { wholesale: 9999, retail: 14999 }, // K99.99 wholesale, K149.99 retail
   };
 
   const prices = tierMap[tier || "free"] || tierMap["free"];

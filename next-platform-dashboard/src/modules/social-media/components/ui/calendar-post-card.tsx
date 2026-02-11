@@ -16,7 +16,7 @@ import {
   Copy, 
   Send, 
   Clock,
-  CheckCircle,
+  CircleCheck,
   AlertCircle,
   GripVertical,
   ExternalLink,
@@ -62,7 +62,7 @@ function getStatusConfig(status: string) {
     case 'pending_approval':
       return { label: 'Pending', color: 'bg-yellow-500', icon: AlertCircle }
     case 'published':
-      return { label: 'Published', color: 'bg-green-500', icon: CheckCircle }
+      return { label: 'Published', color: 'bg-green-500', icon: CircleCheck }
     case 'failed':
       return { label: 'Failed', color: 'bg-red-500', icon: AlertCircle }
     default:

@@ -113,7 +113,7 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
     priceId: PADDLE_IDS.prices.starter_monthly,
     productId: PADDLE_IDS.products.starter,
     name: 'Starter Monthly',
-    amount: 2900, // $29.00
+    amount: 2900, // K29.00
     interval: 'month',
     includedUsage: {
       automationRuns: 1000,
@@ -138,7 +138,7 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
     priceId: PADDLE_IDS.prices.starter_yearly,
     productId: PADDLE_IDS.products.starter,
     name: 'Starter Yearly',
-    amount: 29000, // $290.00
+    amount: 29000, // K290.00
     interval: 'year',
     includedUsage: {
       automationRuns: 12000,
@@ -164,7 +164,7 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
     priceId: PADDLE_IDS.prices.pro_monthly,
     productId: PADDLE_IDS.products.pro,
     name: 'Pro Monthly',
-    amount: 9900, // $99.00
+    amount: 9900, // K99.00
     interval: 'month',
     includedUsage: {
       automationRuns: 10000,
@@ -192,7 +192,7 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
     priceId: PADDLE_IDS.prices.pro_yearly,
     productId: PADDLE_IDS.products.pro,
     name: 'Pro Yearly',
-    amount: 99000, // $990.00
+    amount: 99000, // K990.00
     interval: 'year',
     includedUsage: {
       automationRuns: 120000,
@@ -224,14 +224,14 @@ export const PLAN_CONFIGS: Record<string, PlanConfig> = {
  */
 export const OVERAGE_RATES = {
   starter: {
-    automationRuns: 0.001,  // $0.001 per run
-    aiActions: 0.005,       // $0.005 per action
-    apiCalls: 0.0001,       // $0.0001 per call
+    automationRuns: 0.001,  // K0.001 per run
+    aiActions: 0.005,       // K0.005 per action
+    apiCalls: 0.0001,       // K0.0001 per call
   },
   pro: {
-    automationRuns: 0.0005, // $0.0005 per run (50% discount)
-    aiActions: 0.0025,      // $0.0025 per action (50% discount)
-    apiCalls: 0.00005,      // $0.00005 per call (50% discount)
+    automationRuns: 0.0005, // K0.0005 per run (50% discount)
+    aiActions: 0.0025,      // K0.0025 per action (50% discount)
+    apiCalls: 0.00005,      // K0.00005 per call (50% discount)
   },
   enterprise: {
     automationRuns: 0,      // Unlimited

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, CircleCheck, CircleX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -93,7 +93,7 @@ function VerifyContent() {
           {status === "success" && (
             <>
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="h-10 w-10 text-green-600" />
+                <CircleCheck className="h-10 w-10 text-green-600" />
               </div>
               <h2 className="text-xl font-bold">Welcome back!</h2>
               <p className="text-muted-foreground mt-2">
@@ -105,7 +105,7 @@ function VerifyContent() {
           {status === "error" && (
             <>
               <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <XCircle className="h-10 w-10 text-destructive" />
+                <CircleX className="h-10 w-10 text-destructive" />
               </div>
               <h2 className="text-xl font-bold">Verification Failed</h2>
               <p className="text-muted-foreground mt-2">{error}</p>

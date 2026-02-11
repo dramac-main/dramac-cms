@@ -44,7 +44,7 @@ import {
 import { 
   Trash2, 
   MoreHorizontal, 
-  CheckCircle, 
+  CircleCheck, 
   FileEdit, 
   Archive,
   X,
@@ -135,7 +135,7 @@ export function BulkActionsToolbar({
             onClick={() => onExecute('set_active')}
             disabled={isExecuting}
           >
-            <CheckCircle className="h-4 w-4 mr-1" />
+            <CircleCheck className="h-4 w-4 mr-1" />
             Set Active
           </Button>
 

@@ -4,7 +4,7 @@
 // Domain Pricing Configuration Form
 
 import { useState } from "react";
-import { Save, Percent, DollarSign, Tag, Loader2 } from "lucide-react";
+import { Save, Percent, Coins, Tag, Loader2 } from "lucide-react";
 import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -106,11 +106,11 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
                 <RadioGroupItem value="fixed" id="fixed" />
                 <div className="flex-1">
                   <Label htmlFor="fixed" className="flex items-center gap-2 cursor-pointer">
-                    <DollarSign className="h-4 w-4 text-green-500" />
+                    <Coins className="h-4 w-4 text-green-500" />
                     Fixed Markup
                   </Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Add a fixed dollar amount on top of wholesale prices (e.g., +$5)
+                    Add a fixed currency amount on top of wholesale prices (e.g., +K50)
                   </p>
                 </div>
               </div>

@@ -22,8 +22,8 @@ import {
   Play,
   Pause,
   Clock,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Package,
   Calendar,
   TrendingUp
@@ -63,8 +63,8 @@ const statusConfig: Record<string, { label: string; icon: React.ElementType; col
   scheduled: { label: 'Scheduled', icon: Calendar, color: 'bg-blue-500/10 text-blue-500' },
   active: { label: 'Active', icon: Play, color: 'bg-green-500/10 text-green-500' },
   paused: { label: 'Paused', icon: Pause, color: 'bg-yellow-500/10 text-yellow-500' },
-  ended: { label: 'Ended', icon: CheckCircle, color: 'bg-gray-500/10 text-gray-500' },
-  cancelled: { label: 'Cancelled', icon: XCircle, color: 'bg-red-500/10 text-red-500' },
+  ended: { label: 'Ended', icon: CircleCheck, color: 'bg-gray-500/10 text-gray-500' },
+  cancelled: { label: 'Cancelled', icon: CircleX, color: 'bg-red-500/10 text-red-500' },
 }
 
 export function FlashSalesView({ siteId, searchQuery = '' }: FlashSalesViewProps) {
@@ -162,7 +162,7 @@ export function FlashSalesView({ siteId, searchQuery = '' }: FlashSalesViewProps
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
-        <XCircle className="h-12 w-12 text-destructive mb-4" />
+        <CircleX className="h-12 w-12 text-destructive mb-4" />
         <h3 className="text-lg font-semibold">Error loading flash sales</h3>
         <p className="text-sm text-muted-foreground mb-4">{error}</p>
         <Button variant="outline" onClick={() => refreshFlashSales()}>
@@ -206,7 +206,7 @@ export function FlashSalesView({ siteId, searchQuery = '' }: FlashSalesViewProps
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ended</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CircleCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.ended}</div>

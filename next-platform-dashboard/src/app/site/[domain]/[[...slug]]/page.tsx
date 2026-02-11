@@ -261,7 +261,7 @@ export default async function SitePage({ params }: SitePageProps) {
             </svg>
           </div>
           <h1 className="text-xl font-semibold mb-2 text-gray-900">
-            Page Coming Soon
+            Page Not Found
           </h1>
           <p className="text-gray-500">
             This page is being built and will be available shortly.

@@ -80,7 +80,7 @@ export const notificationTypeInfo: Record<
   payment_success: { icon: "CreditCard", color: "text-green-500", label: "Payment Success" },
   payment_failed: { icon: "AlertTriangle", color: "text-red-500", label: "Payment Failed" },
   subscription_renewed: { icon: "RefreshCw", color: "text-green-500", label: "Subscription Renewed" },
-  subscription_cancelled: { icon: "XCircle", color: "text-red-500", label: "Subscription Cancelled" },
+  subscription_cancelled: { icon: "CircleX", color: "text-red-500", label: "Subscription Cancelled" },
   comment_added: { icon: "MessageSquare", color: "text-blue-500", label: "Comment Added" },
   mention: { icon: "AtSign", color: "text-purple-500", label: "Mention" },
   security_alert: { icon: "Shield", color: "text-red-500", label: "Security Alert" },

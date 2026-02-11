@@ -20,7 +20,7 @@ import {
   Zap, 
   Activity, 
   CheckCircle2, 
-  XCircle, 
+  CircleX, 
   FileCode,
   Plug,
   BarChart3,
@@ -344,7 +344,7 @@ async function AutomationDashboardContent({ siteId }: { siteId: string }) {
         <StatCard
           title="Success Rate"
           value={`${stats.successRate.toFixed(1)}%`}
-          icon={stats.successRate >= 90 ? CheckCircle2 : XCircle}
+          icon={stats.successRate >= 90 ? CheckCircle2 : CircleX}
           color={stats.successRate >= 90 ? "green" : "red"}
         />
       </div>

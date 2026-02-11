@@ -132,7 +132,7 @@ export const EMOJI_TO_LUCIDE: Record<string, string> = {
  */
 export const KNOWN_LUCIDE_NAMES = new Set([
   "Package", "FileCode", "ChartBar", "ChartLine", "ChartPie", "Mail", "Calendar",
-  "CalendarCheck", "CalendarDays", "DollarSign", "CircleDollarSign",
+  "CalendarCheck", "CalendarDays", "Coins", "CircleDollarSign",
   "Users", "User", "UserCog", "Globe", "Search", "SearchCheck",
   "Settings", "ShoppingCart", "FileText", "File", "Megaphone",
   "Layers", "MessageSquare", "MessageCircle", "Database", "Zap",
@@ -175,7 +175,7 @@ export function resolveIconName(icon: string | null | undefined): string {
     "bar-chart-3": "ChartBar",
     "mail": "Mail",
     "calendar": "Calendar",
-    "dollar-sign": "DollarSign",
+    "dollar-sign": "Coins",
     "users": "Users",
     "user": "User",
     "globe": "Globe",

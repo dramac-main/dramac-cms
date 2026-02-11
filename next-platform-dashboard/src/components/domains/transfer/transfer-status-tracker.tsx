@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   CheckCircle2,
   Clock,
-  XCircle,
+  CircleX,
   AlertTriangle,
   ArrowRight,
   Loader2,
@@ -57,8 +57,8 @@ const STATUS_CONFIG: Record<TransferStatus, {
   'auth-submitted': { label: 'Auth Submitted', variant: 'secondary', icon: Clock },
   'in-progress': { label: 'In Progress', variant: 'info', icon: Loader2 },
   'completed': { label: 'Completed', variant: 'success', icon: CheckCircle2 },
-  'failed': { label: 'Failed', variant: 'destructive', icon: XCircle },
-  'cancelled': { label: 'Cancelled', variant: 'outline', icon: XCircle },
+  'failed': { label: 'Failed', variant: 'destructive', icon: CircleX },
+  'cancelled': { label: 'Cancelled', variant: 'outline', icon: CircleX },
 };
 
 export function TransferStatusTracker({
@@ -139,7 +139,7 @@ export function TransferStatusTracker({
                   ) : isCurrent && !isFailed ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : isFailed ? (
-                    <XCircle className="h-4 w-4" />
+                    <CircleX className="h-4 w-4" />
                   ) : (
                     <span className="text-sm font-medium">{index + 1}</span>
                   )}

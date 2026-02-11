@@ -6,9 +6,9 @@ import {
   ArrowLeft,
   Search,
   Loader2,
-  CheckCircle,
+  CircleCheck,
   AlertTriangle,
-  XCircle,
+  CircleX,
   Info,
   TrendingUp,
 } from "lucide-react";
@@ -174,7 +174,7 @@ export default function PortalSiteSeoPage({
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
               <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
-                <XCircle className="h-6 w-6 text-red-600" />
+                <CircleX className="h-6 w-6 text-red-600" />
                 <div>
                   <p className="text-2xl font-bold text-red-600">{errorCount}</p>
                   <p className="text-sm text-muted-foreground">Errors</p>
@@ -220,11 +220,11 @@ export default function PortalSiteSeoPage({
               >
                 <div className="flex items-center gap-4">
                   {analysis.score >= 80 ? (
-                    <CheckCircle className="h-6 w-6 text-green-600" />
+                    <CircleCheck className="h-6 w-6 text-green-600" />
                   ) : analysis.score >= 50 ? (
                     <AlertTriangle className="h-6 w-6 text-yellow-600" />
                   ) : (
-                    <XCircle className="h-6 w-6 text-red-600" />
+                    <CircleX className="h-6 w-6 text-red-600" />
                   )}
                   <div>
                     <p className="font-medium">{page.pageName}</p>
@@ -270,7 +270,7 @@ export default function PortalSiteSeoPage({
               {getCommonIssues(pageAnalyses).map((issue, i) => (
                 <div key={i} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
                   {issue.type === "error" ? (
-                    <XCircle className="h-5 w-5 text-red-600 shrink-0" />
+                    <CircleX className="h-5 w-5 text-red-600 shrink-0" />
                   ) : issue.type === "warning" ? (
                     <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0" />
                   ) : (
@@ -305,19 +305,19 @@ export default function PortalSiteSeoPage({
           </p>
           <ul className="mt-4 space-y-2 text-sm">
             <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CircleCheck className="h-4 w-4 text-green-600" />
               Custom page titles and descriptions
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CircleCheck className="h-4 w-4 text-green-600" />
               Social sharing images
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CircleCheck className="h-4 w-4 text-green-600" />
               Search engine verification
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CircleCheck className="h-4 w-4 text-green-600" />
               Analytics integration
             </li>
           </ul>

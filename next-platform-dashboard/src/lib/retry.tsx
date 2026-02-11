@@ -10,7 +10,7 @@ import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw, AlertCircle, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { RefreshCcw, AlertCircle, CircleCheck, CircleX, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { showToast } from "@/lib/toast";
 
@@ -625,7 +625,7 @@ export function RetryableOperation<T>({
 
     return (
       <div className={cn("flex flex-col items-center gap-3 p-4", className)} {...props}>
-        <XCircle className="h-8 w-8 text-destructive" />
+        <CircleX className="h-8 w-8 text-destructive" />
         <p className="text-sm text-muted-foreground">{state.lastError.message}</p>
         {state.isExhausted ? (
           <Button variant="outline" size="sm" onClick={retryFn}>
@@ -678,7 +678,7 @@ export function RetryStatusIndicator({ className, state, compact = false }: Retr
     if (!isRetrying && !isExhausted) return null;
 
     const icon = isExhausted ? (
-      <XCircle className={cn("text-destructive", compact ? "h-3 w-3" : "h-4 w-4")} />
+      <CircleX className={cn("text-destructive", compact ? "h-3 w-3" : "h-4 w-4")} />
     ) : (
       <RefreshCcw className={cn("animate-spin text-amber-500", compact ? "h-3 w-3" : "h-4 w-4")} />
     );

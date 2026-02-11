@@ -34,15 +34,15 @@ interface DomainAssignmentProps {
 
 // Mock data - in production, these would come from server actions
 const MOCK_CLIENTS: Client[] = [
-  { id: 'c1', name: 'John Doe', company: 'Acme Corp' },
-  { id: 'c2', name: 'Jane Smith', company: 'Tech Solutions' },
-  { id: 'c3', name: 'Bob Wilson', company: null },
+  { id: 'c1', name: 'Customer A', company: 'Company One' },
+  { id: 'c2', name: 'Customer B', company: 'Tech Solutions' },
+  { id: 'c3', name: 'Customer C', company: null },
 ];
 
 const MOCK_SITES: Site[] = [
-  { id: 's1', name: 'Main Website', subdomain: 'acme' },
-  { id: 's2', name: 'Blog', subdomain: 'blog-acme' },
-  { id: 's3', name: 'Store', subdomain: 'shop-acme' },
+  { id: 's1', name: 'Main Website', subdomain: 'company' },
+  { id: 's2', name: 'Blog', subdomain: 'blog' },
+  { id: 's3', name: 'Store', subdomain: 'shop' },
 ];
 
 export function DomainAssignment({ 

@@ -19,8 +19,8 @@ import {
   Eye,
   Ban,
   Copy,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Clock,
   CreditCard,
   Coins,
@@ -179,7 +179,7 @@ export function GiftCardsView({ siteId, searchQuery = '' }: GiftCardsViewProps) 
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
-        <XCircle className="h-12 w-12 text-destructive mb-4" />
+        <CircleX className="h-12 w-12 text-destructive mb-4" />
         <h3 className="text-lg font-semibold">Error loading gift cards</h3>
         <p className="text-sm text-muted-foreground mb-4">{error}</p>
         <Button variant="outline" onClick={() => refreshGiftCards()}>
@@ -351,12 +351,12 @@ export function GiftCardsView({ siteId, searchQuery = '' }: GiftCardsViewProps) 
                       </Badge>
                     ) : card.current_balance === 0 ? (
                       <Badge variant="secondary" className="gap-1">
-                        <CheckCircle className="h-3 w-3" />
+                        <CircleCheck className="h-3 w-3" />
                         Redeemed
                       </Badge>
                     ) : (
                       <Badge className="gap-1 bg-green-500/10 text-green-500">
-                        <CheckCircle className="h-3 w-3" />
+                        <CircleCheck className="h-3 w-3" />
                         Active
                       </Badge>
                     )}

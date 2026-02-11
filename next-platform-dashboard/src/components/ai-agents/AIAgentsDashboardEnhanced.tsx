@@ -12,10 +12,10 @@ import { motion } from "framer-motion"
 import { 
   Bot, 
   Zap, 
-  CheckCircle, 
-  XCircle,
+  CircleCheck, 
+  CircleX,
   Clock,
-  DollarSign,
+  Coins,
   TrendingUp,
   RefreshCw,
   Download
@@ -221,7 +221,7 @@ export function AIAgentsDashboardEnhanced({
           title="Success Rate"
           value={stats.successRate.toFixed(1)}
           valueSuffix="%"
-          icon={CheckCircle}
+          icon={CircleCheck}
           variant="success"
           sparklineData={sparklineData.success}
           change={{ value: 2.3, trend: 'up', period: 'vs last week' }}
@@ -239,7 +239,7 @@ export function AIAgentsDashboardEnhanced({
         <AgentMetricCard
           title="Failed"
           value={stats.failedExecutions}
-          icon={XCircle}
+          icon={CircleX}
           variant="error"
           change={stats.failedExecutions > 0 ? { value: 5, trend: 'down', period: 'vs last week' } : undefined}
           animationDelay={0.15}
@@ -258,7 +258,7 @@ export function AIAgentsDashboardEnhanced({
           title="Total Cost"
           value={stats.totalCost.toFixed(2)}
           valuePrefix="$" // USD — AI API costs
-          icon={DollarSign}
+          icon={Coins}
           variant="warning"
           sparklineData={sparklineData.cost}
           animationDelay={0.25}

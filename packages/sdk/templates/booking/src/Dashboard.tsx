@@ -56,7 +56,7 @@ export function Dashboard() {
         <StatCard title="Today's Bookings" value="0" />
         <StatCard title="Pending" value="0" />
         <StatCard title="This Week" value="0" />
-        <StatCard title="Revenue" value="$0" />
+        <StatCard title="Revenue" value="K0" />
       </div>
 
       {/* View Tabs */}

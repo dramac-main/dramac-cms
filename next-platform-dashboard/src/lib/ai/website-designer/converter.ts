@@ -1010,7 +1010,7 @@ function transformPropsForStudio(
       })(),
       contactPhone: (() => {
         const p = String(props.phone || props.contactPhone || "");
-        return p.includes("555") || p.includes("(555)") ? "" : p;
+        return p.includes("555") || p.includes("(555)") || p.includes("97X") ? "" : p;
       })(),
       contactAddress: (() => {
         const a = String(props.address || props.contactAddress || "");

@@ -1,3 +1,9 @@
+/**
+ * @deprecated Billing has migrated to Paddle. This module is retained for reference only.
+ * Active billing logic is in src/lib/paddle/
+ * TODO: Remove this file after migration verification period
+ */
+
 import { stripe } from "./config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createOrGetCustomer } from "./customers";
@@ -10,6 +16,7 @@ export interface SubscribeToModuleParams {
   email: string;
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function subscribeToModule(params: SubscribeToModuleParams) {
   const { agencyId, moduleId, billingCycle, email } = params;
   const supabase = createAdminClient();
@@ -73,6 +80,7 @@ export async function subscribeToModule(params: SubscribeToModuleParams) {
   return subscription;
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function cancelModuleSubscription(agencyId: string, moduleId: string) {
   const supabase = createAdminClient();
 
@@ -98,6 +106,7 @@ export async function cancelModuleSubscription(agencyId: string, moduleId: strin
     .eq("stripe_subscription_id", sub.stripe_subscription_id);
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function getAgencyModuleSubscriptions(agencyId: string) {
   const supabase = createAdminClient();
 

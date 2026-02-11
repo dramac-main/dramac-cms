@@ -25,8 +25,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { 
-  CheckCircle, 
-  XCircle, 
+  CircleCheck, 
+  CircleX, 
   Clock, 
   Calendar,
   User,
@@ -128,7 +128,7 @@ export function ApprovalsPageWrapper({
       {posts.length === 0 && (
         <Card>
           <CardContent className="py-12 text-center">
-            <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
+            <CircleCheck className="h-12 w-12 mx-auto text-green-500 mb-4" />
             <h3 className="text-lg font-semibold mb-2">All caught up!</h3>
             <p className="text-muted-foreground">
               There are no posts waiting for approval
@@ -290,14 +290,14 @@ function ApprovalCard({
               onClick={onReject}
               disabled={isProcessing}
             >
-              <XCircle className="h-4 w-4 mr-2" />
+              <CircleX className="h-4 w-4 mr-2" />
               Reject
             </Button>
             <Button
               onClick={onApprove}
               disabled={isProcessing}
             >
-              <CheckCircle className="h-4 w-4 mr-2" />
+              <CircleCheck className="h-4 w-4 mr-2" />
               Approve
             </Button>
           </div>

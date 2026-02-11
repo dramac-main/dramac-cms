@@ -150,7 +150,7 @@ export default function BrandingSettingsForm() {
                 id="displayName"
                 value={formData.agency_display_name}
                 onChange={(e) => updateField("agency_display_name", e.target.value)}
-                placeholder="Acme Agency"
+                placeholder="Your Agency"
               />
               <p className="text-xs text-muted-foreground">
                 Shown in sidebar, emails, and portal login
@@ -359,7 +359,7 @@ export default function BrandingSettingsForm() {
                 id="emailFromName"
                 value={formData.email_from_name ?? ""}
                 onChange={(e) => updateField("email_from_name", e.target.value || null)}
-                placeholder="Acme Agency"
+                placeholder="Your Agency"
               />
             </div>
             <div className="space-y-2">

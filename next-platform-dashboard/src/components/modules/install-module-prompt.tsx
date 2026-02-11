@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { AlertCircle, Loader2, CheckCircle } from "lucide-react";
+import { AlertCircle, Loader2, CircleCheck } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -64,7 +64,7 @@ export function InstallModulePrompt() {
   if (isSuccess) {
     return (
       <Alert className="mb-6 border-green-500 bg-green-50 dark:bg-green-950">
-        <CheckCircle className="h-4 w-4 text-green-600" />
+        <CircleCheck className="h-4 w-4 text-green-600" />
         <AlertTitle className="text-green-700 dark:text-green-300">Module Installed!</AlertTitle>
         <AlertDescription className="text-green-600 dark:text-green-400">
           The module has been added to your agency. Redirecting...

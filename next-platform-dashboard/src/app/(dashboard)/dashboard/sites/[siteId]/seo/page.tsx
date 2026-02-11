@@ -8,9 +8,9 @@ import {
   FileText,
   Bot,
   Loader2,
-  CheckCircle,
+  CircleCheck,
   AlertTriangle,
-  XCircle,
+  CircleX,
   ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -567,11 +567,11 @@ export default function SeoPage({
                     >
                       <div className="flex items-center gap-3">
                         {result.score >= 80 ? (
-                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          <CircleCheck className="h-5 w-5 text-green-600" />
                         ) : result.score >= 50 ? (
                           <AlertTriangle className="h-5 w-5 text-yellow-600" />
                         ) : (
-                          <XCircle className="h-5 w-5 text-red-600" />
+                          <CircleX className="h-5 w-5 text-red-600" />
                         )}
                         <div>
                           <p className="font-medium">{page.pageName}</p>

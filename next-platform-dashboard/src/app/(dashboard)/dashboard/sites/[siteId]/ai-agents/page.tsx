@@ -20,7 +20,7 @@ import {
   Bot,
   Activity, 
   CheckCircle2, 
-  XCircle, 
+  CircleX, 
   Store,
   BarChart3,
   TestTube,

@@ -15,8 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Play,
   Loader2,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   AlertTriangle,
   Code,
   Plug,
@@ -190,10 +190,10 @@ export function TestRunner({
                 <span className="text-sm font-medium">Overall Progress</span>
                 <div className="flex items-center gap-2">
                   {overallStatus === "passed" && (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CircleCheck className="h-4 w-4 text-green-500" />
                   )}
                   {overallStatus === "failed" && (
-                    <XCircle className="h-4 w-4 text-red-500" />
+                    <CircleX className="h-4 w-4 text-red-500" />
                   )}
                   {overallStatus === "warning" && (
                     <AlertTriangle className="h-4 w-4 text-yellow-500" />
@@ -235,9 +235,9 @@ export function TestRunner({
                   className="h-5 w-5 p-0 flex items-center justify-center ml-1"
                 >
                   {testResults.get(test.type)?.status === "passed" ? (
-                    <CheckCircle className="h-3 w-3" />
+                    <CircleCheck className="h-3 w-3" />
                   ) : testResults.get(test.type)?.status === "failed" ? (
-                    <XCircle className="h-3 w-3" />
+                    <CircleX className="h-3 w-3" />
                   ) : (
                     <AlertTriangle className="h-3 w-3" />
                   )}

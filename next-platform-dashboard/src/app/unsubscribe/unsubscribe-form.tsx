@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Mail, CheckCircle, Loader2 } from "lucide-react";
+import { Mail, CircleCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -131,7 +131,7 @@ export function UnsubscribeForm() {
     return (
       <Card className="w-full max-w-md text-center">
         <CardContent className="pt-8 pb-8">
-          <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+          <CircleCheck className="h-12 w-12 text-green-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">Preferences Updated</h2>
           <p className="text-muted-foreground">
             Your email preferences have been saved.

@@ -46,7 +46,7 @@ import {
 import { 
   Activity, 
   CheckCircle2, 
-  XCircle, 
+  CircleX, 
   Clock, 
   Zap, 
   TrendingUp, 
@@ -572,7 +572,7 @@ export function AnalyticsDashboard({ siteId }: AnalyticsDashboardProps) {
         <StatCard
           title="Failed Executions"
           value={formatNumber(analyticsData.overview.failedExecutions)}
-          icon={XCircle}
+          icon={CircleX}
           color="error"
         />
         <StatCard

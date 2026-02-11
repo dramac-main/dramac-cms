@@ -1,6 +1,13 @@
+/**
+ * @deprecated Billing has migrated to Paddle. This module is retained for reference only.
+ * Active billing logic is in src/lib/paddle/
+ * TODO: Remove this file after migration verification period
+ */
+
 import { createAdminClient } from "@/lib/supabase/admin";
 import Stripe from "stripe";
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function handleModuleSubscriptionUpdate(
   supabase: ReturnType<typeof createAdminClient>,
   subscription: Stripe.Subscription
@@ -47,6 +54,7 @@ export async function handleModuleSubscriptionUpdate(
   return true;
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function handleModuleSubscriptionCanceled(
   supabase: ReturnType<typeof createAdminClient>,
   subscription: Stripe.Subscription

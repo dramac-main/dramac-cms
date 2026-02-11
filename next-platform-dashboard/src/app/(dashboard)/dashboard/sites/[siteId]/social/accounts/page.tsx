@@ -16,7 +16,7 @@ import {
   RefreshCw, 
   Trash2, 
   AlertCircle,
-  CheckCircle,
+  CircleCheck,
   Clock,
   Settings
 } from 'lucide-react'
@@ -44,7 +44,7 @@ function getStatusBadge(status: SocialAccount['status']) {
     case 'active':
       return (
         <Badge variant="default" className="bg-green-600">
-          <CheckCircle className="h-3 w-3 mr-1" />
+          <CircleCheck className="h-3 w-3 mr-1" />
           Active
         </Badge>
       )
@@ -112,7 +112,7 @@ async function AccountsContent({ siteId }: { siteId: string }) {
         </div>
         <Badge variant="secondary" className="text-sm">
           <Clock className="h-4 w-4 mr-1" />
-          OAuth Integration Coming Soon
+          OAuth Integration Available
         </Badge>
       </div>
 
@@ -227,7 +227,7 @@ async function AccountsContent({ siteId }: { siteId: string }) {
                   </Badge>
                   {isConnected && (
                     <div className="absolute top-2 left-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <CircleCheck className="h-4 w-4 text-green-600" />
                     </div>
                   )}
                   <span className="text-2xl mb-1">{platform.icon}</span>

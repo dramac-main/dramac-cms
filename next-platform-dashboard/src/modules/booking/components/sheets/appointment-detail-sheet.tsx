@@ -34,8 +34,8 @@ import {
   Phone,
   Coins,
   MessageSquare,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   AlertCircle,
   Edit,
   Trash2,
@@ -393,7 +393,7 @@ export function AppointmentDetailSheet({
                       size="sm"
                       onClick={() => handleStatusChange('confirmed')}
                     >
-                      <CheckCircle className="h-4 w-4 mr-1 text-blue-500" />
+                      <CircleCheck className="h-4 w-4 mr-1 text-blue-500" />
                       Confirm
                     </Button>
                   )}
@@ -403,7 +403,7 @@ export function AppointmentDetailSheet({
                       size="sm"
                       onClick={() => handleStatusChange('completed')}
                     >
-                      <CheckCircle className="h-4 w-4 mr-1 text-green-500" />
+                      <CircleCheck className="h-4 w-4 mr-1 text-green-500" />
                       Complete
                     </Button>
                   )}
@@ -413,7 +413,7 @@ export function AppointmentDetailSheet({
                       size="sm"
                       onClick={() => handleStatusChange('cancelled')}
                     >
-                      <XCircle className="h-4 w-4 mr-1 text-red-500" />
+                      <CircleX className="h-4 w-4 mr-1 text-red-500" />
                       Cancel
                     </Button>
                   )}

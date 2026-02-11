@@ -6,7 +6,7 @@ import {
   Plus,
   Globe,
   CheckCircle2,
-  XCircle,
+  CircleX,
   Loader2,
   Trash2,
   RefreshCw,
@@ -621,7 +621,7 @@ export function DomainsManager({
                       </Badge>
                     ) : (
                       <Badge variant="destructive">
-                        <XCircle className="h-3 w-3 mr-1" />
+                        <CircleX className="h-3 w-3 mr-1" />
                         Failed
                       </Badge>
                     )}
@@ -642,7 +642,7 @@ export function DomainsManager({
                       </Badge>
                     ) : (
                       <Badge variant="destructive">
-                        <XCircle className="h-3 w-3 mr-1" />
+                        <CircleX className="h-3 w-3 mr-1" />
                         Unreachable
                       </Badge>
                     )}

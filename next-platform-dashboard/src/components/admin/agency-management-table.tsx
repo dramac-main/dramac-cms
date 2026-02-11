@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Building2, Ban, CheckCircle, Eye } from "lucide-react";
+import { MoreHorizontal, Building2, Ban, CircleCheck, Eye } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { AdminAgency } from "@/lib/admin/admin-service";
 
@@ -110,7 +110,7 @@ export function AgencyManagementTable({
                         onClick={() => onStatusChange(agency.id, "active")}
                         disabled={agency.status === "active"}
                       >
-                        <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                        <CircleCheck className="h-4 w-4 mr-2 text-green-600" />
                         Activate
                       </DropdownMenuItem>
                       <DropdownMenuItem

@@ -18,8 +18,8 @@ import {
   Edit,
   Trash,
   Copy,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Send,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -252,13 +252,13 @@ export function ContentCalendar({
               </DropdownMenuItem>
               {post.status === 'pending_approval' && onApprovePost && (
                 <DropdownMenuItem onClick={() => onApprovePost(post.id)}>
-                  <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
+                  <CircleCheck className="h-4 w-4 mr-2 text-green-600" />
                   Approve
                 </DropdownMenuItem>
               )}
               {post.status === 'pending_approval' && onRejectPost && (
                 <DropdownMenuItem onClick={() => onRejectPost(post.id)}>
-                  <XCircle className="h-4 w-4 mr-2 text-red-600" />
+                  <CircleX className="h-4 w-4 mr-2 text-red-600" />
                   Reject
                 </DropdownMenuItem>
               )}

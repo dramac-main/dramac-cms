@@ -23,7 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { 
   ArrowLeft,
   CheckCircle2,
-  XCircle,
+  CircleX,
   Clock,
   Loader2,
   Zap,
@@ -224,8 +224,8 @@ function StatusBadge({ status }: { status: ExecutionDetail['status'] }) {
     running: { label: 'Running', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300', icon: Loader2 },
     paused: { label: 'Paused', className: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300', icon: Clock },
     completed: { label: 'Completed', className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300', icon: CheckCircle2 },
-    failed: { label: 'Failed', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300', icon: XCircle },
-    cancelled: { label: 'Cancelled', className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300', icon: XCircle },
+    failed: { label: 'Failed', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300', icon: CircleX },
+    cancelled: { label: 'Cancelled', className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300', icon: CircleX },
     timed_out: { label: 'Timed Out', className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300', icon: AlertCircle },
   }
   
@@ -244,9 +244,9 @@ function StepStatusIcon({ status }: { status: StepLog['status'] }) {
     pending: { icon: Clock, className: 'text-yellow-500' },
     running: { icon: Loader2, className: 'text-muted-foreground animate-spin' },
     completed: { icon: CheckCircle2, className: 'text-green-500' },
-    failed: { icon: XCircle, className: 'text-red-500' },
+    failed: { icon: CircleX, className: 'text-red-500' },
     skipped: { icon: SkipForward, className: 'text-gray-500' },
-    cancelled: { icon: XCircle, className: 'text-gray-500' },
+    cancelled: { icon: CircleX, className: 'text-gray-500' },
   }
   
   const { icon: Icon, className } = config[status]

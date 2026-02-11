@@ -233,7 +233,7 @@ export function AgentSettings({ settings, onChange }: AgentSettingsProps) {
           Based on your settings, each run could cost approximately:
         </p>
         <p className="text-lg font-semibold text-amber-900 dark:text-amber-100 mt-1">
-          ~$0.002 - $0.05 per run
+          ~K0.05 - K1.50 per run
         </p>
         <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
           Actual cost depends on input/output size and number of steps.

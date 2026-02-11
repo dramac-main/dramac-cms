@@ -6,7 +6,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2, KeyRound, CheckCircle, Eye, EyeOff } from "lucide-react";
+import { Loader2, KeyRound, CircleCheck, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -148,7 +148,7 @@ export default function ResetPasswordPage() {
         <Card className="w-full max-w-md">
           <CardContent className="pt-8 pb-6 text-center">
             <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-500" />
+              <CircleCheck className="w-8 h-8 text-green-600 dark:text-green-500" />
             </div>
             <h1 className="text-xl font-bold mb-2">Password Reset Complete!</h1>
             <p className="text-muted-foreground">

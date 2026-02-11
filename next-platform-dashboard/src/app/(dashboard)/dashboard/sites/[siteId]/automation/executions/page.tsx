@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { 
   ArrowLeft,
   CheckCircle2,
-  XCircle,
+  CircleX,
   Clock,
   Loader2,
   RefreshCw,
@@ -216,8 +216,8 @@ function StatusBadge({ status }: { status: Execution['status'] }) {
     pending: { label: 'Pending', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300', icon: Clock },
     running: { label: 'Running', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300', icon: Loader2 },
     completed: { label: 'Completed', className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300', icon: CheckCircle2 },
-    failed: { label: 'Failed', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300', icon: XCircle },
-    cancelled: { label: 'Cancelled', className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300', icon: XCircle },
+    failed: { label: 'Failed', className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300', icon: CircleX },
+    cancelled: { label: 'Cancelled', className: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300', icon: CircleX },
   }
   
   const { label, className, icon: Icon } = config[status]
@@ -307,7 +307,7 @@ async function ExecutionsContent({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Total" value={stats.total} icon={Zap} color="blue" />
         <StatCard title="Completed" value={stats.completed} icon={CheckCircle2} color="green" />
-        <StatCard title="Failed" value={stats.failed} icon={XCircle} color="red" />
+        <StatCard title="Failed" value={stats.failed} icon={CircleX} color="red" />
         <StatCard title="Running" value={stats.running} icon={Loader2} color="yellow" />
       </div>
 

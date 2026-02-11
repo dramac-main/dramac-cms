@@ -275,7 +275,7 @@ export function LinkFieldEditor({
                 type="tel"
                 value={value?.type === 'phone' ? getPhone() : ''}
                 onChange={handlePhoneChange}
-                placeholder="+1 (555) 000-0000"
+                placeholder="+260 97X XXX XXX"
                 disabled={disabled}
                 className="text-sm"
               />

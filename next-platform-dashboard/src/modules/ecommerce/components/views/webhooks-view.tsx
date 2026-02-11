@@ -17,7 +17,7 @@ import {
   Eye,
   Send,
   CheckCircle2,
-  XCircle,
+  CircleX,
   Clock,
   AlertTriangle,
   Copy,
@@ -151,7 +151,7 @@ export function WebhooksView({ siteId }: WebhooksViewProps) {
       case 'delivered':
         return <Badge className="bg-green-500"><CheckCircle2 className="h-3 w-3 mr-1" />Delivered</Badge>
       case 'failed':
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Failed</Badge>
+        return <Badge variant="destructive"><CircleX className="h-3 w-3 mr-1" />Failed</Badge>
       case 'pending':
         return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Pending</Badge>
       case 'retrying':

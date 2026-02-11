@@ -14,7 +14,7 @@ import {
   Trash2,
   Settings,
   CheckCircle2,
-  XCircle,
+  CircleX,
   AlertTriangle,
   RefreshCw,
   ExternalLink,
@@ -81,11 +81,19 @@ const AVAILABLE_PROVIDERS: Array<{
   comingSoon?: boolean
 }> = [
   {
-    provider: 'stripe',
-    name: 'Stripe',
-    description: 'Accept payments and manage subscriptions',
+    provider: 'paddle',
+    name: 'Paddle',
+    description: 'Active payment provider — subscriptions, invoicing & tax compliance',
     category: 'payment',
     icon: 'CreditCard'
+  },
+  {
+    provider: 'stripe',
+    name: 'Stripe (Legacy)',
+    description: 'Deprecated — migrated to Paddle. Retained for historical reference only.',
+    category: 'payment',
+    icon: 'CreditCard',
+    comingSoon: true  // prevents new connections
   },
   {
     provider: 'paypal',
@@ -220,7 +228,7 @@ export function IntegrationsView({ siteId }: IntegrationsViewProps) {
       case 'connected':
         return <CheckCircle2 className="h-4 w-4 text-green-500" />
       case 'disconnected':
-        return <XCircle className="h-4 w-4 text-muted-foreground" />
+        return <CircleX className="h-4 w-4 text-muted-foreground" />
       case 'error':
         return <AlertTriangle className="h-4 w-4 text-destructive" />
       case 'pending':
@@ -313,7 +321,7 @@ export function IntegrationsView({ siteId }: IntegrationsViewProps) {
                             {connected && getStatusIcon(connected.status)}
                             {provider.comingSoon && (
                               <Badge variant="outline" className="text-xs">
-                                Coming Soon
+                                Available
                               </Badge>
                             )}
                           </div>
@@ -338,9 +346,9 @@ export function IntegrationsView({ siteId }: IntegrationsViewProps) {
                         <div className="flex flex-col items-end gap-1 shrink-0">
                           <Badge variant="secondary" className="text-xs gap-1">
                             <CalendarClock className="h-3 w-3" />
-                            Coming Soon
+                            Available
                           </Badge>
-                          <span className="text-[10px] text-muted-foreground">Planned for future release</span>
+                          <span className="text-[10px] text-muted-foreground">Integration available</span>
                         </div>
                       ) : connected ? (
                         <DropdownMenu>
@@ -413,11 +421,11 @@ export function IntegrationsView({ siteId }: IntegrationsViewProps) {
                           <span className="font-medium text-sm">{provider.name}</span>
                           <Badge variant="secondary" className="text-[10px] gap-1 shrink-0">
                             <CalendarClock className="h-2.5 w-2.5" />
-                            Coming Soon
+                            Available
                           </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground truncate">{provider.description}</p>
-                        <p className="text-[10px] text-muted-foreground/70 mt-0.5">Planned for future release</p>
+                        <p className="text-[10px] text-muted-foreground/70 mt-0.5">Integration available</p>
                       </div>
                     </div>
                   ))}

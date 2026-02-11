@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Copy } from "lucide-react";
+import { CheckCircle2, CircleX, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -35,7 +35,7 @@ export function DnsNameservers({ current, expected, configured }: DnsNameservers
               </Badge>
             ) : (
               <Badge variant="destructive">
-                <XCircle className="h-3 w-3 mr-1" />
+                <CircleX className="h-3 w-3 mr-1" />
                 Not Configured
               </Badge>
             )}
@@ -84,7 +84,7 @@ export function DnsNameservers({ current, expected, configured }: DnsNameservers
                     <span>{ns}</span>
                     {expected.includes(ns) 
                       ? <CheckCircle2 className="h-3 w-3 text-green-600" />
-                      : <XCircle className="h-3 w-3 text-red-600" />
+                      : <CircleX className="h-3 w-3 text-red-600" />
                     }
                   </div>
                 ))}

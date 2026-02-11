@@ -35,7 +35,7 @@ import {
   AlertTriangle,
   AlertCircle,
   CheckCircle2,
-  XCircle,
+  CircleX,
   TrendingUp,
   TrendingDown,
   Bug,
@@ -364,7 +364,7 @@ export function RecentErrorsList({
                 {error.isResolved ? (
                   <CheckCircle2 className="h-5 w-5 text-green-600" />
                 ) : (
-                  <XCircle className="h-5 w-5 text-red-600" />
+                  <CircleX className="h-5 w-5 text-red-600" />
                 )}
               </div>
               <div className="flex-1 min-w-0">

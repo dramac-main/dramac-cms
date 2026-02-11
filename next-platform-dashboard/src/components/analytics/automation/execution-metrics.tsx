@@ -34,7 +34,7 @@ import {
 import {
   PlayCircle,
   CheckCircle2,
-  XCircle,
+  CircleX,
   Clock,
   TrendingUp,
   TrendingDown,
@@ -86,7 +86,7 @@ export function ExecutionOverviewCards({ data }: ExecutionOverviewCardsProps) {
       title: "Failed",
       value: formatNumber(data.failedExecutions),
       change: data.failedExecutionsChange,
-      icon: XCircle,
+      icon: CircleX,
       color: "text-red-600",
       bgColor: "bg-red-100",
       invertChange: true,

@@ -37,7 +37,7 @@ import {
   Activity,
   Layers,
   CheckCircle2,
-  XCircle,
+  CircleX,
 } from "lucide-react";
 import type {
   WorkflowMetrics,

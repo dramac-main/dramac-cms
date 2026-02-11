@@ -1,8 +1,15 @@
+/**
+ * @deprecated Billing has migrated to Paddle. This module is retained for reference only.
+ * Active billing logic is in src/lib/paddle/
+ * TODO: Remove this file after migration verification period
+ */
+
 import Stripe from "stripe";
 
 // Lazy initialization of Stripe client
 let stripeClient: Stripe | null = null;
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export function getStripe(): Stripe {
   if (!stripeClient) {
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -16,6 +23,7 @@ export function getStripe(): Stripe {
   return stripeClient;
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 // For backward compatibility
 export const stripe = new Proxy({} as Stripe, {
   get(_, prop) {
@@ -23,6 +31,7 @@ export const stripe = new Proxy({} as Stripe, {
   },
 });
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 // Price IDs from Stripe Dashboard
 export const PRICE_IDS = {
   // Per-seat pricing
@@ -31,6 +40,7 @@ export const PRICE_IDS = {
   // Modules use dynamic pricing from database
 } as const;
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 // Client seats billing model
 export const BILLING_CONFIG = {
   freeSeats: 0, // No free seats - first client triggers billing

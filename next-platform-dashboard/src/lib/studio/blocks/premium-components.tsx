@@ -1903,7 +1903,7 @@ export function PremiumFooterRender({
   // Contact
   showContactInfo = false,
   email = "hello@company.com",
-  phone = "+1 (555) 000-0000",
+  phone = "+260 97X XXX XXX",
   address = "123 Main Street, City, Country",
   
   // Bottom

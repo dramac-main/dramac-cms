@@ -6,9 +6,9 @@ import { useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Loader2,
-  CheckCircle,
+  CircleCheck,
   AlertTriangle,
-  XCircle,
+  CircleX,
   Info,
   Search,
   Save,
@@ -225,11 +225,11 @@ export default function PagesSeoPage({
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       {result.score >= 80 ? (
-                        <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
+                        <CircleCheck className="h-4 w-4 text-green-600 shrink-0" />
                       ) : result.score >= 50 ? (
                         <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0" />
                       ) : (
-                        <XCircle className="h-4 w-4 text-red-600 shrink-0" />
+                        <CircleX className="h-4 w-4 text-red-600 shrink-0" />
                       )}
                       <div className="min-w-0">
                         <p className="font-medium truncate">{page.pageName}</p>
@@ -293,7 +293,7 @@ export default function PagesSeoPage({
                         {analysis.issues.map((issue, i) => (
                           <div key={i} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
                             {issue.type === "error" ? (
-                              <XCircle className={`h-5 w-5 shrink-0 ${getIssueColor(issue.type)}`} />
+                              <CircleX className={`h-5 w-5 shrink-0 ${getIssueColor(issue.type)}`} />
                             ) : issue.type === "warning" ? (
                               <AlertTriangle className={`h-5 w-5 shrink-0 ${getIssueColor(issue.type)}`} />
                             ) : (
@@ -314,7 +314,7 @@ export default function PagesSeoPage({
                         <div className="flex flex-wrap gap-2">
                           {analysis.passed.map((item, i) => (
                             <Badge key={i} variant="outline" className="text-green-600">
-                              <CheckCircle className="h-3 w-3 mr-1" />
+                              <CircleCheck className="h-3 w-3 mr-1" />
                               {item}
                             </Badge>
                           ))}

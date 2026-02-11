@@ -5,7 +5,7 @@ import {
   Rocket, 
   Loader2, 
   AlertTriangle, 
-  CheckCircle,
+  CircleCheck,
   Server,
   Globe,
   GitBranch,
@@ -430,7 +430,7 @@ Examples:
           {result && (
             <Alert variant={result.success ? "default" : "destructive"}>
               {result.success ? (
-                <CheckCircle className="h-4 w-4 text-green-600" />
+                <CircleCheck className="h-4 w-4 text-green-600" />
               ) : (
                 <AlertTriangle className="h-4 w-4" />
               )}

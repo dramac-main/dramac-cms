@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Loader2, CheckCircle, Eraser } from 'lucide-react'
+import { Loader2, CircleCheck, Eraser } from 'lucide-react'
 import { toast } from 'sonner'
 import { acceptQuote } from '../../actions/quote-workflow-actions'
 
@@ -177,7 +177,7 @@ export function QuoteAcceptForm({
     <Card className="border-green-200 dark:border-green-900">
       <CardHeader className="pb-4">
         <CardTitle className="text-lg flex items-center gap-2 text-green-700 dark:text-green-300">
-          <CheckCircle className="h-5 w-5" />
+          <CircleCheck className="h-5 w-5" />
           Accept Quote
         </CardTitle>
       </CardHeader>

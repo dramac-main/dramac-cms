@@ -7,7 +7,7 @@
 import { Suspense, useMemo } from "react"
 import { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft, Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Clock, CheckCircle2, CircleX, AlertTriangle } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -146,7 +146,7 @@ function ApprovalCard({ approval, siteId }: { approval: Approval; siteId: string
               .eq("id", approval.id)
           }}>
             <Button type="submit" variant="destructive">
-              <XCircle className="h-4 w-4 mr-2" /> Deny
+              <CircleX className="h-4 w-4 mr-2" /> Deny
             </Button>
           </form>
         </div>

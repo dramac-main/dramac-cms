@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Play, CheckCircle, XCircle, Clock, Zap, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, Play, CircleCheck, CircleX, Clock, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { AgentConfig } from '@/lib/ai-agents/types';
 import { TestResult } from './AgentBuilder';
 
@@ -105,9 +105,9 @@ export function AgentTestPanel({
             {/* Status */}
             <div className="flex items-center gap-2">
               {results.success ? (
-                <CheckCircle className="h-5 w-5 text-green-500" />
+                <CircleCheck className="h-5 w-5 text-green-500" />
               ) : (
-                <XCircle className="h-5 w-5 text-red-500" />
+                <CircleX className="h-5 w-5 text-red-500" />
               )}
               <span className="font-medium">
                 {results.success ? 'Test Passed' : 'Test Failed'}

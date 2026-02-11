@@ -35,7 +35,7 @@ import {
   Play, 
   Loader2, 
   AlertCircle, 
-  CheckCircle,
+  CircleCheck,
   Settings,
   Undo2,
   ArrowLeft
@@ -264,7 +264,7 @@ export function WorkflowBuilder({
             )}
             {workflow?.is_active && (
               <Badge variant="default" className="bg-green-500">
-                <CheckCircle className="h-3 w-3 mr-1" />
+                <CircleCheck className="h-3 w-3 mr-1" />
                 Active
               </Badge>
             )}

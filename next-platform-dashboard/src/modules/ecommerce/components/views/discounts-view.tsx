@@ -18,8 +18,8 @@ import {
   Edit,
   Trash2,
   Copy,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Calendar
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -244,12 +244,12 @@ export function DiscountsView({ searchQuery = '', onCreateDiscount }: DiscountsV
                           <DropdownMenuItem onClick={() => handleToggleActive(discount)}>
                             {discount.is_active ? (
                               <>
-                                <XCircle className="h-4 w-4 mr-2" />
+                                <CircleX className="h-4 w-4 mr-2" />
                                 Deactivate
                               </>
                             ) : (
                               <>
-                                <CheckCircle className="h-4 w-4 mr-2" />
+                                <CircleCheck className="h-4 w-4 mr-2" />
                                 Activate
                               </>
                             )}

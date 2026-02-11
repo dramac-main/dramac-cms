@@ -27,7 +27,7 @@ import {
   Briefcase,
   Edit,
   Trash2,
-  CheckCircle,
+  CircleCheck,
   Clock,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'

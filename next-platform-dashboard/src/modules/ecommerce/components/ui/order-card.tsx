@@ -14,8 +14,8 @@ import {
   Eye,
   Truck,
   RefreshCw,
-  XCircle,
-  CheckCircle,
+  CircleX,
+  CircleCheck,
   Clock,
   Package,
   CreditCard,
@@ -81,7 +81,7 @@ const orderStatusConfig: Record<OrderStatus, { label: string; className: string;
   confirmed: { 
     label: 'Confirmed', 
     className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    icon: CheckCircle
+    icon: CircleCheck
   },
   processing: { 
     label: 'Processing', 
@@ -96,12 +96,12 @@ const orderStatusConfig: Record<OrderStatus, { label: string; className: string;
   delivered: { 
     label: 'Delivered', 
     className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-    icon: CheckCircle
+    icon: CircleCheck
   },
   cancelled: { 
     label: 'Cancelled', 
     className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
-    icon: XCircle
+    icon: CircleX
   },
   refunded: { 
     label: 'Refunded', 
@@ -241,7 +241,7 @@ function OrderTimeline({ order }: { order: Order }) {
                   ? "bg-blue-500 text-white"
                   : "bg-gray-200 dark:bg-gray-700 text-gray-500"
             )}>
-              {isCompleted ? <CheckCircle className="h-4 w-4" /> : index + 1}
+              {isCompleted ? <CircleCheck className="h-4 w-4" /> : index + 1}
             </div>
             {index < steps.length - 1 && (
               <div className={cn(
@@ -388,7 +388,7 @@ function OrderDefaultCard({
                 )}
                 {onMarkDelivered && order.status === 'shipped' && (
                   <DropdownMenuItem onClick={onMarkDelivered}>
-                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <CircleCheck className="h-4 w-4 mr-2" />
                     Mark Delivered
                   </DropdownMenuItem>
                 )}
@@ -401,7 +401,7 @@ function OrderDefaultCard({
                 )}
                 {onCancel && !['cancelled', 'delivered', 'refunded'].includes(order.status) && (
                   <DropdownMenuItem onClick={onCancel} className="text-red-600">
-                    <XCircle className="h-4 w-4 mr-2" />
+                    <CircleX className="h-4 w-4 mr-2" />
                     Cancel Order
                   </DropdownMenuItem>
                 )}

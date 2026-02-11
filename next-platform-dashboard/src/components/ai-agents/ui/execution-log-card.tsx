@@ -10,8 +10,8 @@
 import * as React from "react"
 import { motion } from "framer-motion"
 import { 
-  CheckCircle, 
-  XCircle, 
+  CircleCheck, 
+  CircleX, 
   Clock,
   AlertTriangle,
   Loader2,
@@ -92,13 +92,13 @@ const statusConfig: Record<ExecutionStatus, {
   bgColor: string
 }> = {
   success: {
-    icon: CheckCircle,
+    icon: CircleCheck,
     label: 'Success',
     color: 'text-green-600 dark:text-green-400',
     bgColor: 'bg-green-100 dark:bg-green-900/30',
   },
   failed: {
-    icon: XCircle,
+    icon: CircleX,
     label: 'Failed',
     color: 'text-red-600 dark:text-red-400',
     bgColor: 'bg-red-100 dark:bg-red-900/30',

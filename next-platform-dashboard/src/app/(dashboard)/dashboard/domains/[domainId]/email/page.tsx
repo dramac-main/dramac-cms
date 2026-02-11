@@ -10,7 +10,7 @@ import {
   Inbox,
   Send,
   Clock,
-  CheckCircle,
+  CircleCheck,
   ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -101,42 +101,42 @@ async function EmailContent({ domainId }: { domainId: string }) {
           <CardContent>
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <CircleCheck className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
                   <p className="font-medium">10GB Storage</p>
                   <p className="text-sm text-muted-foreground">Per mailbox</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <CircleCheck className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
                   <p className="font-medium">Custom Domain</p>
                   <p className="text-sm text-muted-foreground">user@{domain.domain_name}</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <CircleCheck className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
                   <p className="font-medium">Webmail Access</p>
                   <p className="text-sm text-muted-foreground">Access from anywhere</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <CircleCheck className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
                   <p className="font-medium">Mobile Apps</p>
                   <p className="text-sm text-muted-foreground">iOS & Android</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <CircleCheck className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
                   <p className="font-medium">Calendar & Contacts</p>
                   <p className="text-sm text-muted-foreground">Built-in productivity tools</p>
                 </div>
               </div>
               <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                <CircleCheck className="h-5 w-5 text-green-500 mt-0.5" />
                 <div>
                   <p className="font-medium">Spam Protection</p>
                   <p className="text-sm text-muted-foreground">Advanced filtering</p>
@@ -241,7 +241,7 @@ async function EmailContent({ domainId }: { domainId: string }) {
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-green-500" />
+                <CircleCheck className="h-5 w-5 text-green-500" />
               </div>
               <div>
                 <p className="text-2xl font-bold">

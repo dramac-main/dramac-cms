@@ -1,3 +1,9 @@
+/**
+ * @deprecated Billing has migrated to Paddle. This module is retained for reference only.
+ * Active billing logic is in src/lib/paddle/
+ * TODO: Remove this file after migration verification period
+ */
+
 import { stripe } from "./config";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -9,6 +15,7 @@ export interface ModulePricing {
   usageBased?: boolean;
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 // Sync module prices from database to include Stripe info
 export async function getModulePricing(moduleId: string): Promise<ModulePricing | null> {
   const supabase = createAdminClient();
@@ -29,6 +36,7 @@ export async function getModulePricing(moduleId: string): Promise<ModulePricing 
   };
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 // Create Stripe product and price for a module
 export async function createModuleProduct(module: {
   id: string;

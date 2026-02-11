@@ -358,7 +358,7 @@ export const industryContentTemplates: Record<string, IndustryContentTemplate> =
       "Award",
       "Shield",
       "Clock",
-      "CheckCircle",
+      "CircleCheck",
       "Home",
       "Wrench",
     ],
@@ -803,7 +803,7 @@ export function getIndustryIcons(industry: string): string[] {
     "Shield",
     "Users",
     "Clock",
-    "CheckCircle",
+    "CircleCheck",
   ];
 }
 

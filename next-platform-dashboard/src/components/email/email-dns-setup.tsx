@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Settings2, Loader2 } from "lucide-react";
+import { CheckCircle2, CircleX, Settings2, Loader2 } from "lucide-react";
 import { configureBusinessEmailDns } from "@/lib/actions/business-email";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -43,7 +43,7 @@ export function EmailDnsSetup({ orderId, domainId, dnsConfigured }: EmailDnsSetu
                 </Badge>
               ) : (
                 <Badge variant="destructive">
-                  <XCircle className="h-3 w-3 mr-1" />
+                  <CircleX className="h-3 w-3 mr-1" />
                   Not Configured
                 </Badge>
               )}

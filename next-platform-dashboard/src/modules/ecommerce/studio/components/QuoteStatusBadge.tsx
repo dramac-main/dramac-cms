@@ -15,8 +15,8 @@ import {
   Clock, 
   Send, 
   Eye, 
-  CheckCircle, 
-  XCircle, 
+  CircleCheck, 
+  CircleX, 
   RefreshCw,
   FileText,
   CreditCard,
@@ -81,21 +81,21 @@ const STATUS_CONFIG: Record<QuoteStatus, StatusConfig> = {
     color: 'text-green-700',
     bgColor: 'bg-green-100',
     borderColor: 'border-green-300',
-    icon: CheckCircle
+    icon: CircleCheck
   },
   rejected: {
     label: 'Rejected',
     color: 'text-red-700',
     bgColor: 'bg-red-100',
     borderColor: 'border-red-300',
-    icon: XCircle
+    icon: CircleX
   },
   cancelled: {
     label: 'Cancelled',
     color: 'text-gray-700',
     bgColor: 'bg-gray-100',
     borderColor: 'border-gray-300',
-    icon: XCircle
+    icon: CircleX
   },
   expired: {
     label: 'Expired',

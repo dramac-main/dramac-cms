@@ -153,10 +153,10 @@ export async function getPlatformStats(): Promise<PlatformStats> {
       topModules,
     },
     system: {
-      activeSessions: Math.floor(Math.random() * 50) + 10, // Would come from session tracking
-      requestsToday: Math.floor(Math.random() * 10000) + 5000,
-      avgResponseTime: Math.floor(Math.random() * 50) + 80, // ms
-      errorRate: Math.random() * 0.5, // percentage
+      activeSessions: 0, // Would come from session tracking
+      requestsToday: 0,
+      avgResponseTime: 0, // ms
+      errorRate: 0, // percentage
     },
   };
 }

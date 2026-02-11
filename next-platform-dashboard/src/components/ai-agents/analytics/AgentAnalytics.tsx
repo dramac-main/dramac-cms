@@ -32,10 +32,10 @@ import {
   TrendingUp,
   Clock,
   Zap,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   AlertTriangle,
-  DollarSign,
+  Coins,
   RefreshCw,
   Download
 } from 'lucide-react';
@@ -241,9 +241,9 @@ export function AgentAnalytics({ siteId: _siteId, onAgentClick }: AgentAnalytics
   const getStatusBadge = (status: ExecutionRecord['status']) => {
     switch (status) {
       case 'success':
-        return <Badge variant="default" className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Success</Badge>;
+        return <Badge variant="default" className="bg-green-500"><CircleCheck className="h-3 w-3 mr-1" />Success</Badge>;
       case 'failed':
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Failed</Badge>;
+        return <Badge variant="destructive"><CircleX className="h-3 w-3 mr-1" />Failed</Badge>;
       case 'timeout':
         return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Timeout</Badge>;
       case 'pending_approval':
@@ -306,7 +306,7 @@ export function AgentAnalytics({ siteId: _siteId, onAgentClick }: AgentAnalytics
 
         <Card>
           <CardContent className="pt-4">
-            <CheckCircle className="h-5 w-5 text-green-500" />
+            <CircleCheck className="h-5 w-5 text-green-500" />
             <div className="text-2xl font-bold mt-2">
               {stats.successRate}%
             </div>
@@ -346,7 +346,7 @@ export function AgentAnalytics({ siteId: _siteId, onAgentClick }: AgentAnalytics
 
         <Card>
           <CardContent className="pt-4">
-            <DollarSign className="h-5 w-5 text-green-500" />
+            <Coins className="h-5 w-5 text-green-500" />
             <div className="text-2xl font-bold mt-2">
               ${stats.totalCost.toFixed(2)}
             </div>

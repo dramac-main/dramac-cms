@@ -6,7 +6,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { 
   Globe, 
-  DollarSign, 
+  Coins, 
   Palette, 
   CreditCard, 
   ChevronRight,
@@ -49,7 +49,7 @@ async function DomainSettingsContent() {
     {
       title: "Pricing Configuration",
       description: "Set markup rates and TLD-specific pricing",
-      icon: DollarSign,
+      icon: Coins,
       href: "/dashboard/settings/domains/pricing",
       badge: config?.default_markup_type === 'percentage' 
         ? `${config.default_markup_value}% markup` 
@@ -124,7 +124,7 @@ async function DomainSettingsContent() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Profit</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Coins className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">

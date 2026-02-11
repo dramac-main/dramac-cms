@@ -14,8 +14,8 @@ import {
   Clock, 
   Send, 
   Eye, 
-  CheckCircle, 
-  XCircle, 
+  CircleCheck, 
+  CircleX, 
   AlertTriangle,
   ArrowRightCircle,
   Ban
@@ -43,8 +43,8 @@ const statusIcons: Record<QuoteStatus, React.ComponentType<{ className?: string 
   pending_approval: Clock,
   sent: Send,
   viewed: Eye,
-  accepted: CheckCircle,
-  rejected: XCircle,
+  accepted: CircleCheck,
+  rejected: CircleX,
   expired: AlertTriangle,
   converted: ArrowRightCircle,
   cancelled: Ban

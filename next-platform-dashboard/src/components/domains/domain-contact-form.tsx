@@ -140,7 +140,7 @@ export function DomainContactForm({
                 <FormItem>
                   <FormLabel>Company / Organization</FormLabel>
                   <FormControl>
-                    <Input placeholder="Acme Inc. (Optional)" {...field} />
+                    <Input placeholder="Company Name (Optional)" {...field} />
                   </FormControl>
                   <FormDescription>
                     Leave blank for personal registrations

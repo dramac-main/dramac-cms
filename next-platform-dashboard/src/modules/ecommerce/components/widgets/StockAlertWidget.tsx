@@ -8,7 +8,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { AlertTriangle, Package, AlertCircle, CheckCircle, RefreshCw, ArrowRight } from 'lucide-react'
+import { AlertTriangle, Package, AlertCircle, CircleCheck, RefreshCw, ArrowRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -52,7 +52,7 @@ const alertLevelConfig: Record<StockAlertLevel, {
   ok: {
     label: 'In Stock',
     color: 'text-green-600 dark:text-green-400',
-    icon: CheckCircle,
+    icon: CircleCheck,
     bgColor: 'bg-green-100 dark:bg-green-900/30'
   }
 }
@@ -157,7 +157,7 @@ export function StockAlertWidget({
           )}
           {alerts.length === 0 && (
             <Badge variant="outline" className="gap-1 text-green-600">
-              <CheckCircle className="h-3 w-3" />
+              <CircleCheck className="h-3 w-3" />
               All Good
             </Badge>
           )}
@@ -223,7 +223,7 @@ export function StockAlertWidget({
           </ScrollArea>
         ) : (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <CheckCircle className="h-12 w-12 text-green-500 mb-2" />
+            <CircleCheck className="h-12 w-12 text-green-500 mb-2" />
             <p className="text-sm font-medium">All stock levels healthy</p>
             <p className="text-xs text-muted-foreground">
               No products below threshold

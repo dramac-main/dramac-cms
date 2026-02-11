@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { RefreshCw, AlertTriangle, CheckCircle, Calendar } from "lucide-react";
+import { RefreshCw, AlertTriangle, CircleCheck, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -73,7 +73,7 @@ export function DomainAutoRenew({ domainId, enabled, expiryDate }: DomainAutoRen
       <div className="flex items-center gap-2">
         {isEnabled ? (
           <Badge variant="outline" className="gap-1 bg-green-500/10 text-green-600 border-green-200">
-            <CheckCircle className="h-3 w-3" />
+            <CircleCheck className="h-3 w-3" />
             Protected
           </Badge>
         ) : (

@@ -12,7 +12,7 @@
 import React, { useState, useMemo, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import {
-  Tag, User, Calendar, FileText, CheckCircle,
+  Tag, User, Calendar, FileText, CircleCheck,
   ChevronLeft, ChevronRight, Clock, Star, Mail, Phone,
   Send, Loader2, ArrowRight, Check
 } from 'lucide-react'
@@ -327,7 +327,7 @@ export function BookingWidgetBlock({
     if (showStaffStep) s.push({ id: 'staff', label: stepStaffLabel, icon: User })
     s.push({ id: 'datetime', label: stepDateLabel, icon: Calendar })
     s.push({ id: 'details', label: stepDetailsLabel, icon: FileText })
-    s.push({ id: 'confirm', label: stepConfirmLabel, icon: CheckCircle })
+    s.push({ id: 'confirm', label: stepConfirmLabel, icon: CircleCheck })
     return s
   }, [showServiceStep, showStaffStep, stepServiceLabel, stepStaffLabel, stepDateLabel, stepDetailsLabel, stepConfirmLabel])
 
@@ -430,7 +430,7 @@ export function BookingWidgetBlock({
     const slots: TimeSlot[] = []
     for (let h = slotStartHour; h < slotEndHour; h++) {
       for (let m = 0; m < 60; m += slotInterval) {
-        slots.push({ time: `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`, display: formatTime(h, m), available: Math.random() > 0.3 })
+        slots.push({ time: `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}`, display: formatTime(h, m), available: true })
       }
     }
     return slots
@@ -528,7 +528,7 @@ export function BookingWidgetBlock({
       ? 'Your appointment request has been submitted and is awaiting confirmation. You will receive an email once confirmed.'
       : successMessage
     const displayColor = isPending ? '#f59e0b' : successColor
-    const DisplayIcon = isPending ? Clock : CheckCircle
+    const DisplayIcon = isPending ? Clock : CircleCheck
     return (
       <div className={cn('booking-widget-block', className)} style={{
         backgroundColor: backgroundColor || undefined, borderRadius, width: width || '100%',
@@ -951,7 +951,7 @@ export function BookingWidgetBlock({
             {isSubmitting ? (
               <><Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} /> {confirmingText}</>
             ) : (
-              <><CheckCircle style={{ width: 16, height: 16 }} /> {confirmButtonText}</>
+              <><CircleCheck style={{ width: 16, height: 16 }} /> {confirmButtonText}</>
             )}
           </button>
         ) : (

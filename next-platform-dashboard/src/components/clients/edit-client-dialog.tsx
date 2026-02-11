@@ -137,7 +137,7 @@ export function EditClientDialog({ client, children }: EditClientDialogProps) {
                 <FormItem>
                   <FormLabel>Company</FormLabel>
                   <FormControl>
-                    <Input placeholder="Acme Inc." {...field} />
+                    <Input placeholder="Company Name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

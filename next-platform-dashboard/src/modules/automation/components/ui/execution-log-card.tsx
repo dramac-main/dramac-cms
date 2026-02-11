@@ -4,7 +4,7 @@ import * as React from "react"
 import { motion } from "framer-motion"
 import { 
   CheckCircle2, 
-  XCircle, 
+  CircleX, 
   Loader2, 
   Clock, 
   MoreVertical,
@@ -62,7 +62,7 @@ const statusConfig: Record<ExecutionStatus, {
     borderColor: "border-green-500/20"
   },
   failed: {
-    icon: XCircle,
+    icon: CircleX,
     label: "Failed",
     color: "text-red-600",
     bgColor: "bg-red-500/10",

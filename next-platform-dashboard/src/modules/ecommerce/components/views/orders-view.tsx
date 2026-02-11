@@ -19,8 +19,8 @@ import {
   MoreHorizontal,
   Eye,
   Truck,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Clock,
   Package,
   Coins
@@ -62,11 +62,11 @@ interface OrdersViewProps {
 
 const orderStatusConfig: Record<OrderStatus, { label: string; icon: typeof Clock; className: string }> = {
   pending: { label: 'Pending', icon: Clock, className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  confirmed: { label: 'Confirmed', icon: CheckCircle, className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  confirmed: { label: 'Confirmed', icon: CircleCheck, className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
   processing: { label: 'Processing', icon: Package, className: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400' },
   shipped: { label: 'Shipped', icon: Truck, className: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' },
-  delivered: { label: 'Delivered', icon: CheckCircle, className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
-  cancelled: { label: 'Cancelled', icon: XCircle, className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' },
+  delivered: { label: 'Delivered', icon: CircleCheck, className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+  cancelled: { label: 'Cancelled', icon: CircleX, className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' },
   refunded: { label: 'Refunded', icon: Coins, className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
 }
 
@@ -256,7 +256,7 @@ export function OrdersView({ searchQuery = '', userId = '', userName = 'Store Ma
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'confirmed')}>
-                            <CheckCircle className="h-4 w-4 mr-2" />
+                            <CircleCheck className="h-4 w-4 mr-2" />
                             Confirm
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'processing')}>
@@ -268,7 +268,7 @@ export function OrdersView({ searchQuery = '', userId = '', userName = 'Store Ma
                             Mark Shipped
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleStatusChange(order.id, 'delivered')}>
-                            <CheckCircle className="h-4 w-4 mr-2" />
+                            <CircleCheck className="h-4 w-4 mr-2" />
                             Mark Delivered
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
@@ -276,7 +276,7 @@ export function OrdersView({ searchQuery = '', userId = '', userName = 'Store Ma
                             className="text-destructive"
                             onClick={() => handleStatusChange(order.id, 'cancelled')}
                           >
-                            <XCircle className="h-4 w-4 mr-2" />
+                            <CircleX className="h-4 w-4 mr-2" />
                             Cancel Order
                           </DropdownMenuItem>
                         </DropdownMenuContent>

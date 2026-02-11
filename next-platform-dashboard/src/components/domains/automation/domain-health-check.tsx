@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle2,
-  XCircle,
+  CircleX,
   AlertTriangle,
   RefreshCw,
   Globe,
@@ -72,7 +72,7 @@ export function DomainHealthCheck({ domainId, healthData, healthStatus }: Domain
       case 'warning':
         return <Badge className="bg-yellow-500"><AlertTriangle className="h-3 w-3 mr-1" />Warning</Badge>;
       case 'unhealthy':
-        return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Unhealthy</Badge>;
+        return <Badge variant="destructive"><CircleX className="h-3 w-3 mr-1" />Unhealthy</Badge>;
       default:
         return <Badge variant="secondary"><Eye className="h-3 w-3 mr-1" />Unknown</Badge>;
     }
@@ -146,7 +146,7 @@ export function DomainHealthCheck({ domainId, healthData, healthStatus }: Domain
                     {check.healthy ? (
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                     ) : (
-                      <XCircle className="h-4 w-4 text-red-500" />
+                      <CircleX className="h-4 w-4 text-red-500" />
                     )}
                   </div>
                   {!check.healthy && check.issues.length > 0 && (

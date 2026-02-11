@@ -26,7 +26,7 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertCircle,
-  XCircle,
+  CircleX,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getSystemHealth } from "@/lib/actions/admin-analytics";
@@ -51,7 +51,7 @@ function StatusBadge({ status }: { status: SystemHealthMetrics["status"] }) {
   const config = {
     healthy: { label: "Healthy", icon: CheckCircle2, className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" },
     degraded: { label: "Degraded", icon: AlertCircle, className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" },
-    critical: { label: "Critical", icon: XCircle, className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+    critical: { label: "Critical", icon: CircleX, className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
   };
 
   const { label, icon: Icon, className } = config[status];
@@ -68,7 +68,7 @@ function ServiceStatusItem({ service }: { service: ServiceStatus }) {
   const statusConfig = {
     operational: { icon: CheckCircle2, color: "text-green-500" },
     degraded: { icon: AlertCircle, color: "text-yellow-500" },
-    outage: { icon: XCircle, color: "text-red-500" },
+    outage: { icon: CircleX, color: "text-red-500" },
   };
 
   const { icon: Icon, color } = statusConfig[service.status];

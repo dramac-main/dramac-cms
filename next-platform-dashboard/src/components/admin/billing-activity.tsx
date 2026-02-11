@@ -19,8 +19,8 @@ import {
   CreditCard,
   RefreshCcw,
   FileText,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Clock,
   AlertTriangle,
   ArrowRight,
@@ -52,9 +52,9 @@ const ACTIVITY_ICONS: Record<string, LucideIcon> = {
   refund: RefreshCcw,
   subscription: Receipt,
   invoice: FileText,
-  cancellation: XCircle,
-  upgrade: CheckCircle,
-  failed: XCircle,
+  cancellation: CircleX,
+  upgrade: CircleCheck,
+  failed: CircleX,
   downgrade: AlertTriangle,
 };
 
@@ -67,10 +67,10 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_ICONS: Record<string, LucideIcon> = {
-  success: CheckCircle,
+  success: CircleCheck,
   pending: Clock,
-  failed: XCircle,
-  completed: CheckCircle,
+  failed: CircleX,
+  completed: CircleCheck,
   refunded: RefreshCcw,
 };
 
@@ -219,7 +219,7 @@ function FailedPaymentsAlert({ items }: { items: BillingActivityItem[] }) {
       <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
         <CardContent className="pt-4">
           <div className="flex items-center gap-3">
-            <CheckCircle className="h-5 w-5 text-green-600" />
+            <CircleCheck className="h-5 w-5 text-green-600" />
             <div>
               <p className="text-sm font-medium text-green-800 dark:text-green-200">No Failed Payments</p>
               <p className="text-xs text-green-600">All recent payments processed successfully</p>

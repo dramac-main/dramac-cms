@@ -12,8 +12,8 @@ import { motion } from "framer-motion"
 import { 
   Download, 
   TrendingUp,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Clock,
   BarChart3,
   LineChart,
@@ -175,14 +175,14 @@ function SummaryStats({ data }: SummaryStatsProps) {
       </div>
       <div className="text-center">
         <div className="flex items-center justify-center gap-1 text-green-600 mb-1">
-          <CheckCircle className="h-3.5 w-3.5" />
+          <CircleCheck className="h-3.5 w-3.5" />
           <span className="text-xs">Success</span>
         </div>
         <p className="text-lg font-semibold">{avgSuccessRate.toFixed(1)}%</p>
       </div>
       <div className="text-center">
         <div className="flex items-center justify-center gap-1 text-red-600 mb-1">
-          <XCircle className="h-3.5 w-3.5" />
+          <CircleX className="h-3.5 w-3.5" />
           <span className="text-xs">Failed</span>
         </div>
         <p className="text-lg font-semibold">{totals.failure.toLocaleString()}</p>

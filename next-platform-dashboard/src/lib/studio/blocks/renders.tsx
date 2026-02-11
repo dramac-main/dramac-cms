@@ -9958,12 +9958,12 @@ export function ContactFormRender({
       {subtitle && <p className="mb-6" style={{ color: resolvedSubtitleColor }}>{subtitle}</p>}
       <form action={action} method="POST" className="space-y-4 md:space-y-6">
         <div className="grid md:grid-cols-2 gap-4">
-          <FormFieldRender label={nameLabel} name="name" placeholder="John Doe" required labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />
+          <FormFieldRender label={nameLabel} name="name" placeholder="Full Name" required labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />
           <FormFieldRender label={emailLabel} name="email" type="email" placeholder="john@example.com" required labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />
         </div>
         {(showPhone || showSubject) && (
           <div className="grid md:grid-cols-2 gap-4">
-            {showPhone && <FormFieldRender label={phoneLabel} name="phone" type="tel" placeholder="+1 (555) 000-0000" labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />}
+            {showPhone && <FormFieldRender label={phoneLabel} name="phone" type="tel" placeholder="+260 97X XXX XXX" labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />}
             {showSubject && <FormFieldRender label={subjectLabel} name="subject" placeholder="How can we help?" labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />}
           </div>
         )}

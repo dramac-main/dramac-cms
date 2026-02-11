@@ -6,8 +6,8 @@ import { Progress } from "@/components/ui/progress";
 import { createClient } from "@/lib/supabase/server";
 import { requireSuperAdmin } from "@/lib/auth/permissions";
 import {
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   AlertTriangle,
   Database,
   Server,
@@ -108,9 +108,9 @@ async function getSystemHealth(): Promise<{
 }
 
 const statusIcons = {
-  healthy: CheckCircle,
+  healthy: CircleCheck,
   warning: AlertTriangle,
-  error: XCircle,
+  error: CircleX,
 };
 
 const statusColors = {

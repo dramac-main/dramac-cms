@@ -176,7 +176,7 @@ export const restaurantTemplate: PuckTemplate = {
           title: "Visit Us",
           address: "123 Gourmet Avenue, Culinary District, NY 10001",
           hours: "Tue-Sat: 5:30 PM - 10:30 PM | Sun: 5:00 PM - 9:00 PM | Mon: Closed",
-          phone: "(212) 555-0123",
+          phone: "+260 211 123 456",
           email: "reservations@lamaison.com",
           showMap: true,
           backgroundColor: "#fffbeb",
@@ -457,7 +457,7 @@ export const fitnessTemplate: PuckTemplate = {
             {
               title: "Contact",
               links: [
-                { label: "(555) 123-4567", href: "tel:5551234567" },
+                { label: "+260 977 123 456", href: "tel:+260977123456" },
                 { label: "info@ironforge.com", href: "mailto:info@ironforge.com" },
               ],
             },
@@ -562,7 +562,7 @@ export const realEstateTemplate: PuckTemplate = {
           fields: [
             { name: "type", label: "Property Type", type: "select", options: ["All Types", "House", "Condo", "Townhouse", "Land"] },
             { name: "location", label: "Location", type: "text", placeholder: "City, ZIP, or Neighborhood" },
-            { name: "priceRange", label: "Price Range", type: "select", options: ["Any Price", "$0-250K", "$250K-500K", "$500K-750K", "$750K-1M", "$1M+"] },
+            { name: "priceRange", label: "Price Range", type: "select", options: ["Any Price", "K0-250K", "K250K-500K", "K500K-750K", "K750K-1M", "K1M+"] },
             { name: "beds", label: "Bedrooms", type: "select", options: ["Any", "1+", "2+", "3+", "4+", "5+"] },
           ],
           buttonText: "Search Properties",
@@ -640,7 +640,7 @@ export const realEstateTemplate: PuckTemplate = {
           title: "Our Agents",
           subtitle: "Experienced professionals dedicated to your success",
           members: [
-            { name: "Jennifer Adams", role: "Luxury Properties", image: "/agents/jennifer.jpg", bio: "$50M+ in sales" },
+            { name: "Jennifer Adams", role: "Luxury Properties", image: "/agents/jennifer.jpg", bio: "K500M+ in sales" },
             { name: "Robert Chen", role: "Residential", image: "/agents/robert.jpg", bio: "15 years experience" },
             { name: "Maria Santos", role: "Investment", image: "/agents/maria.jpg", bio: "Investment specialist" },
           ],
@@ -709,7 +709,7 @@ export const realEstateTemplate: PuckTemplate = {
             {
               title: "Contact",
               links: [
-                { label: "(555) 234-5678", href: "tel:5552345678" },
+                { label: "+260 966 234 567", href: "tel:+260966234567" },
                 { label: "info@prestigerealty.com", href: "mailto:info@prestigerealty.com" },
                 { label: "123 Main Street, Suite 100", href: "#" },
               ],
@@ -778,7 +778,7 @@ export const healthcareTemplate: PuckTemplate = {
         type: "AnnouncementBar",
         props: {
           id: generateId(),
-          text: "Now accepting new patients! Call (555) 123-4567 for appointments",
+          text: "Now accepting new patients! Call +260 955 123 456 for appointments",
           backgroundColor: "#0891b2",
           textColor: "#ffffff",
         },
@@ -924,7 +924,7 @@ export const healthcareTemplate: PuckTemplate = {
           title: "Visit Us",
           address: "100 Medical Center Drive, Suite 200",
           hours: "Mon-Fri: 8AM-6PM | Sat: 9AM-1PM | Sun: Closed",
-          phone: "(555) 123-4567",
+          phone: "+260 955 123 456",
           showMap: true,
           backgroundColor: "#ffffff",
           padding: "lg",

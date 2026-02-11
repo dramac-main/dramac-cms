@@ -8,8 +8,8 @@ import {
   Clock, 
   ThumbsUp,
   Coins,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Play,
   Eye,
   Loader2
@@ -253,7 +253,7 @@ export function RequestDetailCard({ request }: RequestDetailCardProps) {
                     onClick={() => updateStatus("approved")}
                     disabled={isUpdating}
                   >
-                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <CircleCheck className="h-4 w-4 mr-2" />
                     Approve
                   </Button>
                   <Button
@@ -261,7 +261,7 @@ export function RequestDetailCard({ request }: RequestDetailCardProps) {
                     onClick={() => updateStatus("rejected")}
                     disabled={isUpdating}
                   >
-                    <XCircle className="h-4 w-4 mr-2" />
+                    <CircleX className="h-4 w-4 mr-2" />
                     Reject
                   </Button>
                 </>
@@ -275,7 +275,7 @@ export function RequestDetailCard({ request }: RequestDetailCardProps) {
                     onClick={() => updateStatus("approved")}
                     disabled={isUpdating}
                   >
-                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <CircleCheck className="h-4 w-4 mr-2" />
                     Approve
                   </Button>
                   <Button
@@ -283,7 +283,7 @@ export function RequestDetailCard({ request }: RequestDetailCardProps) {
                     onClick={() => updateStatus("rejected")}
                     disabled={isUpdating}
                   >
-                    <XCircle className="h-4 w-4 mr-2" />
+                    <CircleX className="h-4 w-4 mr-2" />
                     Reject
                   </Button>
                 </>
@@ -308,7 +308,7 @@ export function RequestDetailCard({ request }: RequestDetailCardProps) {
                   onClick={() => updateStatus("completed")}
                   disabled={isUpdating}
                 >
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CircleCheck className="h-4 w-4 mr-2" />
                   Mark Complete
                 </Button>
               )}

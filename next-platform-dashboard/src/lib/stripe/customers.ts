@@ -1,3 +1,9 @@
+/**
+ * @deprecated Billing has migrated to Paddle. This module is retained for reference only.
+ * Active billing logic is in src/lib/paddle/
+ * TODO: Remove this file after migration verification period
+ */
+
 import { stripe } from "./config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -7,6 +13,7 @@ export interface CreateCustomerParams {
   name?: string;
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function createOrGetCustomer(params: CreateCustomerParams) {
   const { agencyId, email, name } = params;
   const supabase = await createClient();
@@ -42,6 +49,7 @@ export async function createOrGetCustomer(params: CreateCustomerParams) {
   return customer;
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function getCustomerByAgency(agencyId: string) {
   const supabase = await createClient();
 
@@ -56,6 +64,7 @@ export async function getCustomerByAgency(agencyId: string) {
   return stripe.customers.retrieve(agency.stripe_customer_id);
 }
 
+/** @deprecated Use Paddle billing instead. See src/lib/paddle/ */
 export async function updateCustomer(
   customerId: string,
   params: { email?: string; name?: string }

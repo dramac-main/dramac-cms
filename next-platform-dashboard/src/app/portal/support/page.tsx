@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { MessageCircle, Plus, Clock, CheckCircle, AlertCircle, XCircle } from "lucide-react";
+import { MessageCircle, Plus, Clock, CircleCheck, AlertCircle, CircleX } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,9 +21,9 @@ function getStatusIcon(status: string | null) {
     case "in_progress":
       return <Clock className="h-4 w-4 text-blue-600" />;
     case "resolved":
-      return <CheckCircle className="h-4 w-4 text-green-600" />;
+      return <CircleCheck className="h-4 w-4 text-green-600" />;
     case "closed":
-      return <XCircle className="h-4 w-4 text-gray-500" />;
+      return <CircleX className="h-4 w-4 text-gray-500" />;
     default:
       return <AlertCircle className="h-4 w-4" />;
   }

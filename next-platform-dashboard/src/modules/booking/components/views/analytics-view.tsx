@@ -27,8 +27,8 @@ import {
   BarChart3,
   PieChart,
   RefreshCw,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   AlertCircle,
   LucideIcon,
 } from 'lucide-react'
@@ -307,7 +307,7 @@ export function AnalyticsView() {
           title="Completion Rate"
           value={`${stats.completionRate.toFixed(1)}%`}
           description={`${stats.completed} completed`}
-          icon={CheckCircle}
+          icon={CircleCheck}
         />
         <StatCard
           title="Active Staff"

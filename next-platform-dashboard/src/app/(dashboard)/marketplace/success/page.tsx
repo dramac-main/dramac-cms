@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle, ArrowRight, Package } from "lucide-react";
+import { CircleCheck, ArrowRight, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PLATFORM } from "@/lib/constants/platform";
@@ -27,7 +27,7 @@ export default async function MarketplaceSuccessPage({ searchParams }: Marketpla
       <Card className="text-center">
         <CardHeader>
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
-            <CheckCircle className="h-10 w-10 text-success" />
+            <CircleCheck className="h-10 w-10 text-success" />
           </div>
           <CardTitle className="text-2xl">Purchase Successful!</CardTitle>
           <CardDescription>

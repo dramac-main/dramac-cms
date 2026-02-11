@@ -11,7 +11,7 @@ import {
   Share2,
   Mail,
   Link2,
-  DollarSign,
+  Coins,
   HelpCircle,
 } from "lucide-react";
 import { PieChartWidget } from "@/components/dashboard/widgets";
@@ -24,7 +24,7 @@ const sourceIcons: Record<TrafficSourceType, React.ReactNode> = {
   social: <Share2 className="h-4 w-4" />,
   email: <Mail className="h-4 w-4" />,
   referral: <Link2 className="h-4 w-4" />,
-  paid: <DollarSign className="h-4 w-4" />,
+  paid: <Coins className="h-4 w-4" />,
   other: <HelpCircle className="h-4 w-4" />,
 };
 

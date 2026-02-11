@@ -60,7 +60,7 @@ export const AI_ACTIONS: Record<AIActionType, AIAction> = {
   fix_grammar: {
     label: "Fix Grammar",
     description: "Correct grammar and spelling errors",
-    icon: "CheckCircle",
+    icon: "CircleCheck",
     systemPrompt: `You are a grammar expert. Fix all grammar, spelling, and punctuation errors in the given text. Return only the corrected text without explanations.`,
   },
   expand_content: {

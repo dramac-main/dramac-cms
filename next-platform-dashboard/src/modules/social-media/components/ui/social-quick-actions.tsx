@@ -17,7 +17,7 @@ import {
   Users,
   Settings,
   Megaphone,
-  CheckCircle,
+  CircleCheck,
   Clock,
   Sparkles,
   LucideIcon,
@@ -124,7 +124,7 @@ export function getDefaultSocialActions(callbacks: {
     },
     {
       id: 'approvals',
-      icon: CheckCircle,
+      icon: CircleCheck,
       label: 'Approvals',
       description: 'Pending review',
       onClick: callbacks.onViewApprovals,

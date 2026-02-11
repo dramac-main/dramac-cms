@@ -10,7 +10,7 @@ import {
   SortAsc,
   SortDesc,
   CheckCircle2,
-  XCircle,
+  CircleX,
   Loader2,
   Clock,
   StopCircle,
@@ -65,7 +65,7 @@ interface ExecutionFilterBarProps {
 
 const statusOptions: Array<{ value: ExecutionStatus; label: string; icon: typeof CheckCircle2; color: string }> = [
   { value: 'completed', label: 'Completed', icon: CheckCircle2, color: 'text-green-600' },
-  { value: 'failed', label: 'Failed', icon: XCircle, color: 'text-red-600' },
+  { value: 'failed', label: 'Failed', icon: CircleX, color: 'text-red-600' },
   { value: 'running', label: 'Running', icon: Loader2, color: 'text-muted-foreground' },
   { value: 'pending', label: 'Pending', icon: Clock, color: 'text-yellow-600' },
   { value: 'cancelled', label: 'Cancelled', icon: StopCircle, color: 'text-muted-foreground' },
