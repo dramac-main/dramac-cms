@@ -8,6 +8,11 @@
  * - Aggregate daily analytics
  *
  * Called via Vercel Cron: GET /api/cron/chat?key=<CRON_SECRET>
+ * Schedule: Daily at 2 AM (0 2 * * *)
+ * 
+ * NOTE: Vercel free plan only allows 1 cron invocation per day per endpoint.
+ * For more frequent checks (e.g., every 5 minutes), upgrade to Vercel Pro
+ * or implement client-side polling/webhooks.
  */
 
 import { NextRequest, NextResponse } from 'next/server'

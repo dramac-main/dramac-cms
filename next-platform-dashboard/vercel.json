@@ -28,7 +28,7 @@
     },
     {
       "path": "/api/cron/chat",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 2 * * *"
     }
   ]
 }

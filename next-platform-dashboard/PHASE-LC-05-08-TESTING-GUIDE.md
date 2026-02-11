@@ -153,6 +153,8 @@ curl "http://localhost:3000/api/modules/live-chat/webhooks/whatsapp?hub.mode=sub
 
 ## Step 7: Test Cron Job (LC-06/08)
 
+**Note**: The cron is configured to run **once per day at 2 AM** due to Vercel's free plan limitation (1 cron invocation per day per endpoint). For more frequent checks, upgrade to Vercel Pro or implement alternative solutions (polling, webhooks).
+
 ```bash
 # Run the chat cron job manually
 curl -H "Authorization: Bearer your-secret-here" \
