@@ -23,7 +23,8 @@ import {
   BarChart3,
   Megaphone,
   CircleCheck,
-  Settings
+  Settings,
+  Image as ImageIcon
 } from 'lucide-react'
 import { headers } from 'next/headers'
 import { cn } from '@/lib/utils'
@@ -53,6 +54,7 @@ async function SocialNav({ siteId }: { siteId: string }) {
     { href: `/dashboard/sites/${siteId}/social/calendar`, label: 'Calendar', icon: Calendar },
     { href: `/dashboard/sites/${siteId}/social/compose`, label: 'Compose', icon: Send },
     { href: `/dashboard/sites/${siteId}/social/inbox`, label: 'Inbox', icon: Inbox },
+    { href: `/dashboard/sites/${siteId}/social/media`, label: 'Media', icon: ImageIcon },
     { href: `/dashboard/sites/${siteId}/social/accounts`, label: 'Accounts', icon: Users },
     { href: `/dashboard/sites/${siteId}/social/analytics`, label: 'Analytics', icon: BarChart3 },
     { href: `/dashboard/sites/${siteId}/social/campaigns`, label: 'Campaigns', icon: Megaphone },

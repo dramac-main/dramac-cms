@@ -37,6 +37,7 @@ export async function GET(request: Request) {
   let failed = 0
   const errors: string[] = []
 
+  // ---------- Phase SM-03: Analytics Sync ----------
   for (const account of accounts) {
     try {
       // Dynamic import to keep the cron route lean
@@ -49,21 +50,44 @@ export async function GET(request: Request) {
         synced++
       } else {
         failed++
-        errors.push(`${account.platform}/${account.id}: ${result.error}`)
+        errors.push(`analytics/${account.platform}/${account.id}: ${result.error}`)
       }
     } catch (err: any) {
       failed++
-      errors.push(`${account.platform}/${account.id}: ${err.message?.slice(0, 100)}`)
+      errors.push(`analytics/${account.platform}/${account.id}: ${err.message?.slice(0, 100)}`)
     }
   }
 
-  console.log(`[Sync Cron] Completed: ${synced} synced, ${failed} failed`)
+  // ---------- Phase SM-04: Inbox Sync ----------
+  let inboxSynced = 0
+  let inboxFailed = 0
+
+  for (const account of accounts) {
+    try {
+      const { syncAccountInbox } = await import(
+        '@/modules/social-media/lib/inbox-sync-service'
+      )
+
+      const result = await syncAccountInbox(account.id)
+      if (result.newItems >= 0 && result.errors.length === 0) {
+        inboxSynced++
+      } else if (result.errors.length > 0) {
+        inboxFailed++
+        errors.push(`inbox/${account.platform}/${account.id}: ${result.errors[0]}`)
+      }
+    } catch (err: any) {
+      inboxFailed++
+      errors.push(`inbox/${account.platform}/${account.id}: ${err.message?.slice(0, 100)}`)
+    }
+  }
+
+  console.log(`[Sync Cron] Analytics: ${synced} synced, ${failed} failed | Inbox: ${inboxSynced} synced, ${inboxFailed} failed`)
 
   return NextResponse.json({
-    synced,
-    failed,
+    analytics: { synced, failed },
+    inbox: { synced: inboxSynced, failed: inboxFailed },
     total: accounts.length,
-    errors: errors.slice(0, 10), // cap logged errors
+    errors: errors.slice(0, 10),
     timestamp: new Date().toISOString(),
   })
 }

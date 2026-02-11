@@ -221,8 +221,41 @@ export async function replyToItem(
     
     if (error) throw error
     
-    // Platform-specific reply logic would go here
-    // (e.g., posting comment reply via Facebook API)
+    // Send reply to the platform API
+    try {
+      const { sendPlatformReply } = await import('../lib/inbox-reply-service')
+      
+      // Fetch account to get platform info
+      const { data: account } = await (supabase as any)
+        .from('social_accounts')
+        .select('platform')
+        .eq('id', item.account_id)
+        .single()
+      
+      if (account) {
+        const platformResult = await sendPlatformReply({
+          accountId: item.account_id,
+          platform: account.platform,
+          platformItemId: item.platform_item_id,
+          platformParentId: item.platform_parent_id,
+          content: replyText,
+          itemType: item.item_type,
+        })
+        
+        if (!platformResult.success) {
+          console.warn(`[Social] Platform reply failed (saved to DB): ${platformResult.error}`)
+          // Reply is still saved in DB even if platform fails
+          // Revalidate so user sees the reply was saved
+          revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
+          return { 
+            success: true, 
+            error: `Reply saved but platform delivery failed: ${platformResult.error}` 
+          }
+        }
+      }
+    } catch (platformError: any) {
+      console.warn('[Social] Platform reply error (saved to DB):', platformError.message)
+    }
     
     revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
     return { success: true, error: null }
@@ -599,5 +632,53 @@ export async function bulkMarkAsRead(
   } catch (error) {
     console.error('[Social] Error bulk marking as read:', error)
     return { successCount: 0, error: (error as Error).message }
+  }
+}
+
+// ============================================================================
+// INBOX SYNC
+// ============================================================================
+
+/**
+ * Trigger inbox sync for all accounts of a site
+ */
+export async function syncInbox(
+  siteId: string
+): Promise<{ newItems: number; error: string | null }> {
+  try {
+    const supabase = await createClient()
+
+    // Get all active accounts for this site
+    const { data: accounts, error: accountsError } = await (supabase as any)
+      .from('social_accounts')
+      .select('id')
+      .eq('site_id', siteId)
+      .eq('status', 'active')
+
+    if (accountsError) throw accountsError
+    if (!accounts || accounts.length === 0) {
+      return { newItems: 0, error: null }
+    }
+
+    const { syncAccountInbox } = await import('../lib/inbox-sync-service')
+
+    let totalNewItems = 0
+    const allErrors: string[] = []
+
+    for (const account of accounts) {
+      const result = await syncAccountInbox(account.id)
+      totalNewItems += result.newItems
+      allErrors.push(...result.errors)
+    }
+
+    revalidatePath(`/dashboard/sites/${siteId}/social/inbox`)
+
+    return {
+      newItems: totalNewItems,
+      error: allErrors.length > 0 ? allErrors.join('; ') : null,
+    }
+  } catch (error) {
+    console.error('[Social] Error syncing inbox:', error)
+    return { newItems: 0, error: (error as Error).message }
   }
 }

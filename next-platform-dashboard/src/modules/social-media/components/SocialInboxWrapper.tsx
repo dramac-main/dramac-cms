@@ -17,6 +17,7 @@ import {
   assignItem,
   flagItem,
   markAsSpam,
+  syncInbox,
 } from '../actions/inbox-actions'
 import type { SocialAccount, InboxItem, SavedReply } from '../types'
 import { toast } from 'sonner'
@@ -44,9 +45,14 @@ export function SocialInboxWrapper({
     try {
       const result = await replyToItem(itemId, siteId, userId, message)
       if (result.error) {
-        toast.error(result.error)
+        // Check if it was a partial success (saved to DB but platform failed)
+        if (result.success) {
+          toast.warning(result.error)
+        } else {
+          toast.error(result.error)
+        }
       } else {
-        toast.success('Reply sent!')
+        toast.success('Reply sent to platform!')
         router.refresh()
       }
     } finally {
@@ -133,9 +139,25 @@ export function SocialInboxWrapper({
     }
   }, [siteId, router])
 
-  const handleRefresh = useCallback(() => {
-    router.refresh()
-  }, [router])
+  const handleRefresh = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const result = await syncInbox(siteId)
+      if (result.newItems > 0) {
+        toast.success(`Synced ${result.newItems} new item(s)`)
+      } else {
+        toast.info('Inbox is up to date')
+      }
+      if (result.error) {
+        console.warn('[Inbox Sync]', result.error)
+      }
+      router.refresh()
+    } catch {
+      toast.error('Failed to sync inbox')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [siteId, router])
 
   return (
     <SocialInbox

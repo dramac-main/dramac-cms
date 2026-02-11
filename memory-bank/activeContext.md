@@ -1,52 +1,72 @@
 # Active Context
 
-## Latest Session Update (LAUNCH-01 through LAUNCH-13 COMPLETE — February 2026)
+## Latest Session Update (Domain/Email ResellerClub Integration — Commit `3ba184c`)
 
-### ALL 13 LAUNCH PHASES COMPLETE ✅ — Platform Launch-Ready
+### Domain Services Connected to Live ResellerClub API ✅
 
-**Total across all launch phases:** ~400+ files changed, 1000+ insertions, 1500+ deletions
+**Files changed:** 6 files, +723 insertions, -132 deletions
 
-| Phase | Description | Commit | Status |
-|-------|-------------|--------|--------|
-| LAUNCH-01 | Anonymous Visitor & Published Sites | `7058653` | ✅ |
-| LAUNCH-02 | Portal Client E2E | `dc211a8` | ✅ |
-| LAUNCH-03 | Agency Member & Content Management | `f7a962e` | ✅ |
-| LAUNCH-04 | Agency Admin & Site Management | `0c8a792` | ✅ |
-| LAUNCH-05 | Agency Owner & Full Platform | `f858295` | ✅ |
-| LAUNCH-06 | Module Developer Journey | `ec87270` | ✅ |
-| LAUNCH-07 | Super Admin & Platform Operations | `12443dd` | ✅ |
-| LAUNCH-08 | Booking Module Lifecycle | `90ca20f` | ✅ |
-| LAUNCH-09 | E-Commerce Order Lifecycle | `2a10d35` | ✅ |
-| LAUNCH-10 | Module Marketplace Lifecycle | `f30920c` | ✅ |
-| LAUNCH-11 | Website Creation Lifecycle | `fe4abe4` | ✅ |
-| LAUNCH-12 | CRM Lifecycle | `30b61d6` | ✅ |
-| LAUNCH-13 | Final Integration & Smoke Test | `427b040` | ✅ |
+| File | Change | Status |
+|------|--------|--------|
+| `src/lib/actions/domains.ts` | All server actions rewritten to call real RC API | ✅ |
+| `src/lib/email/email-types.ts` | Added `domain_expiring` email type | ✅ |
+| `src/lib/email/templates.ts` | Added `domain_expiring` plain template | ✅ |
+| `src/lib/email/templates/branded-templates.ts` | Added `domain_expiring` branded template | ✅ |
+| `src/app/api/cron/domains/route.ts` | NEW — Automated expiry notifications & health checks | ✅ |
+| `.env.example` | Added ResellerClub + Cloudflare env var documentation | ✅ |
 
-### Key Changes Across All Launch Phases
-1. **Icon Renames (lucide-react v0.500+):** `XCircle→CircleX` (74 files), `CheckCircle→CircleCheck` (82 files), `DollarSign→Coins` (30+ files) — platform-wide
-2. **Currency:** All `$` → `K` (ZMW), `formatCurrency()` used everywhere, pricing in Zambian Kwacha
-3. **Billing:** Stripe/LemonSqueezy fully deprecated (410 responses), Paddle is sole active provider
-4. **Placeholders:** "John Doe"→neutral, "Acme"→neutral, "+1(555)"→"+260", "example.com"→neutral
-5. **Mock Data:** All `Math.random()` mock analytics removed, "coming soon" toasts replaced, fabricated previousValue/trends removed
-6. **Emoji:** All raw emoji in JSX replaced with Lucide icons or text labels across social, automation, AI designer, studio components
-7. **Payout System:** Complete Stripe Connect removal → Supabase-only payout (bank_transfer/mobile_money/payoneer/wise)
+### Key Changes
+1. **searchDomains()** — Now calls `domainService.suggestDomains()` + `domainService.getPricing()` with graceful fallback
+2. **checkDomainAvailability()** — Now calls `domainService.checkAvailability()` with fallback
+3. **registerDomain()** — Auto-provisions RC customer via `ensureResellerClubCustomer()`, creates contact, registers domain via real API
+4. **getDomainStats()** — Queries real DB counts instead of returning zeros
+5. **renewDomain()** — Calls `domainService.renew()` with RC API
+6. **updateDomainAutoRenew() / updateDomainPrivacy()** — Sync with RC API
+7. **getResellerClubStatus()** — NEW action to check API connectivity
+8. **ensureResellerClubCustomer()** — NEW helper to auto-provision RC customer accounts
+9. **Cron route** — Daily domain expiry notifications (30/14/7/1 day windows), health checks, expired status updates
+10. **Email templates** — `domain_expiring` added to both plain and branded template systems
+
+### Architecture Pattern: Graceful Degradation
+All domain actions follow this pattern:
+```typescript
+if (isClientAvailable()) {
+  try { /* call ResellerClub API */ }
+  catch { /* log error, continue with DB-only */ }
+}
+// Always fall back to local DB operations
+```
+
+### ResellerClub Setup (for user)
+1. Log into https://www.resellerclub.com/
+2. Go to **Settings → API** in the dashboard
+3. Copy **Reseller ID** (shown at top of dashboard)
+4. Generate or copy **API Key**
+5. Whitelist server IP address
+6. Add to `.env.local`:
+   - `RESELLERCLUB_RESELLER_ID=<your-id>`
+   - `RESELLERCLUB_API_KEY=<your-key>`
+   - `RESELLERCLUB_SANDBOX=true` (use `false` for production)
 
 ### Current State
-- **TypeScript:** 0 errors (verified after every phase)
-- **Branch:** `main`, latest commit `427b040`
-- **Platform Status:** Launch-ready — all 13 lifecycle phases verified
+- **TypeScript:** 0 errors (verified `tsc --noEmit`)
+- **Branch:** `main`, latest commit `3ba184c`
+- **Domain services:** All connected to live API with graceful fallback
+- **Email services:** Business email actions were already properly integrated
+- **DNS services:** Already connected to real Cloudflare API
+- **Transfer services:** Already had graceful fallback pattern
 
-### What Remains (Post-Launch)
-- Monitor Paddle webhook reliability in production
-- Verify Supabase RLS policies under real traffic
-- Performance testing under load
-- Accessibility audit (WCAG 2.1)
-- SEO audit for published sites
-- Mobile responsiveness final pass
+### What Remains for Domains
+- User needs to fill in RC API credentials in `.env.local`
+- Test domain search with real API
+- Test domain registration end-to-end
+- Add `CRON_SECRET` env var for production cron security
+- Configure Vercel cron schedule in `vercel.json`
+- Monitor RC API rate limiting in production
 
 ---
 
-## Social Media Module — Full Buildout Phases (SM-00 through SM-09) — Commit `545793c`
+## Previous: ALL 13 LAUNCH PHASES COMPLETE ✅ (February 2026)
 
 ### Phase Documents Created
 All 10 phase documents for the social media module have been written and committed to `phases/social-media/`:

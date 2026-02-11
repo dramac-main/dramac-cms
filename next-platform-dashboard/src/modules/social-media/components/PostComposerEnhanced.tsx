@@ -16,6 +16,7 @@ import {
   ChevronRight,
   AlertCircle,
   CheckCircle2,
+  WandSparkles,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -40,6 +41,7 @@ import { PLATFORM_CONFIGS } from '../types'
 import { ComposerPlatformPreview } from './ui/composer-platform-preview'
 import { ComposerMediaUploader } from './ui/composer-media-uploader'
 import { ComposerSchedulingPanel } from './ui/composer-scheduling-panel'
+import { AIAssistantPanel } from './ui/ai-assistant-panel'
 
 // ============================================================================
 // TYPES
@@ -109,6 +111,7 @@ export function PostComposerEnhanced({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentStep, setCurrentStep] = useState<ComposerStep>('compose')
   const [previewPlatform, setPreviewPlatform] = useState<SocialPlatform | null>(null)
+  const [showAIPanel, setShowAIPanel] = useState(false)
 
   // Group accounts by platform
   const accountsByPlatform = useMemo(() => {
@@ -176,18 +179,53 @@ export function PostComposerEnhanced({
 
   // Media handlers
   const handleMediaUpload = useCallback(async (files: File[]) => {
-    // In a real app, upload to storage and get URLs
-    // For now, create object URLs
-    const newMedia: PostMedia[] = files.map(file => ({
-      id: `media-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      type: file.type.startsWith('video/') ? 'video' : 
-            file.type === 'image/gif' ? 'gif' : 'image',
-      url: URL.createObjectURL(file),
-      width: 0,
-      height: 0,
-    }))
+    // Convert files to base64 and upload to Supabase Storage
+    const newMedia: PostMedia[] = []
+
+    for (const file of files) {
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.readAsDataURL(file)
+      })
+
+      try {
+        const { uploadSocialMedia } = await import('../lib/media-upload-service')
+        const result = await uploadSocialMedia({
+          siteId: selectedAccountsData[0]?.siteId || '',
+          tenantId: selectedAccountsData[0]?.tenantId || '',
+          file: {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            base64,
+          },
+        })
+
+        if (result.media) {
+          newMedia.push(result.media)
+        } else {
+          // Fallback to local preview if upload fails
+          newMedia.push({
+            id: `media-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            type: file.type.startsWith('video/') ? 'video' :
+                  file.type === 'image/gif' ? 'gif' : 'image',
+            url: URL.createObjectURL(file),
+          })
+        }
+      } catch {
+        // Fallback to local preview on error
+        newMedia.push({
+          id: `media-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          type: file.type.startsWith('video/') ? 'video' :
+                file.type === 'image/gif' ? 'gif' : 'image',
+          url: URL.createObjectURL(file),
+        })
+      }
+    }
+
     setMedia(prev => [...prev, ...newMedia])
-  }, [])
+  }, [selectedAccountsData])
 
   const handleMediaRemove = useCallback((mediaId: string) => {
     setMedia(prev => prev.filter(m => (m.id || m.url) !== mediaId))
@@ -224,7 +262,8 @@ export function PostComposerEnhanced({
 
   return (
     <TooltipProvider>
-      <Card className={cn('overflow-hidden', className)}>
+      <div className="flex gap-0">
+      <Card className={cn('overflow-hidden flex-1', className)}>
         <CardHeader className="border-b bg-muted/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -328,7 +367,18 @@ export function PostComposerEnhanced({
                 {/* Content input */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="text-sm font-medium">Content</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-medium">Content</h4>
+                      <Button
+                        variant={showAIPanel ? 'secondary' : 'outline'}
+                        size="sm"
+                        className="gap-1 text-xs h-7"
+                        onClick={() => setShowAIPanel(!showAIPanel)}
+                      >
+                        <WandSparkles className="h-3 w-3" />
+                        AI
+                      </Button>
+                    </div>
                     <div className="flex items-center gap-2">
                       {characterWarnings.map(warning => (
                         <Tooltip key={warning.platform}>
@@ -514,6 +564,27 @@ export function PostComposerEnhanced({
           </AnimatePresence>
         </CardContent>
       </Card>
+      <AnimatePresence>
+        {showAIPanel && (
+          <AIAssistantPanel
+            isOpen={showAIPanel}
+            onClose={() => setShowAIPanel(false)}
+            currentContent={content}
+            currentPlatform={selectedPlatforms[0] || null}
+            siteId={selectedAccountsData[0]?.siteId || ''}
+            accountId={selectedAccountsData[0]?.id}
+            onUseCaption={(caption) => setContent(caption)}
+            onAddHashtags={(tags) => setContent(prev => prev + '\n\n' + tags.map(t => `#${t}`).join(' '))}
+            onUseThread={(thread) => setContent(thread.join('\n\n---\n\n'))}
+            onImproveContent={(improved) => setContent(improved)}
+            onSetScheduleTime={(time) => {
+              setScheduledAt(new Date(time))
+              setCurrentStep('schedule')
+            }}
+          />
+        )}
+      </AnimatePresence>
+      </div>
     </TooltipProvider>
   )
 }

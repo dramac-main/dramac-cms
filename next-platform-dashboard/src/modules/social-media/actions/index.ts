@@ -14,3 +14,5 @@ export * from './inbox-actions'
 // Extended actions
 export * from './campaign-actions'
 export * from './team-actions'
+export * from './media-actions'
+export * from './ai-actions'

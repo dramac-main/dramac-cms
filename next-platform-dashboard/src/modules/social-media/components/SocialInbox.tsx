@@ -78,6 +78,28 @@ interface SocialInboxProps {
   isLoading?: boolean
 }
 
+// Sentiment dot color helper
+function getSentimentDot(sentiment: string | null | undefined) {
+  switch (sentiment) {
+    case 'positive':
+      return <div className="h-2 w-2 rounded-full bg-green-500 flex-shrink-0" title="Positive sentiment" />
+    case 'negative':
+      return <div className="h-2 w-2 rounded-full bg-red-500 flex-shrink-0" title="Negative sentiment" />
+    case 'neutral':
+      return <div className="h-2 w-2 rounded-full bg-yellow-500 flex-shrink-0" title="Neutral sentiment" />
+    default:
+      return null
+  }
+}
+
+// Format follower count
+function formatFollowerCount(count: number | null | undefined): string | null {
+  if (!count || count < 1000) return null
+  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`
+  if (count >= 1_000) return `${(count / 1_000).toFixed(1)}K`
+  return count.toString()
+}
+
 // ============================================================================
 // COMPONENT
 // ============================================================================
@@ -103,6 +125,9 @@ export function SocialInbox({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
+
+  // Derive the account for the selected item
+  const selectedAccount = selectedItem ? accounts.find(a => a.id === selectedItem.accountId) : null
 
   // Platform helpers
   const getPlatformIcon = (platform: SocialPlatform) => {
@@ -200,8 +225,9 @@ export function SocialInbox({
           <div className="flex items-center justify-between">
             <h2 className="font-semibold">Inbox</h2>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={onRefresh} disabled={isLoading}>
-                <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+              <Button variant="ghost" size="sm" onClick={onRefresh} disabled={isLoading}>
+                <RefreshCw className={cn('h-4 w-4 mr-1', isLoading && 'animate-spin')} />
+                {isLoading ? 'Syncing...' : 'Sync'}
               </Button>
             </div>
           </div>
@@ -318,6 +344,15 @@ export function SocialInbox({
                             <span className="font-medium text-sm truncate">
                               {item.authorName || 'Unknown'}
                             </span>
+                            {(item as any).authorVerified && (
+                              <Badge variant="secondary" className="h-4 px-1 text-[10px] flex-shrink-0">✓</Badge>
+                            )}
+                            {formatFollowerCount((item as any).authorFollowers) && (
+                              <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                                {formatFollowerCount((item as any).authorFollowers)}
+                              </span>
+                            )}
+                            {getSentimentDot((item as any).sentiment)}
                             {item.isFlagged && (
                               <Flag className="h-3 w-3 text-yellow-600 flex-shrink-0" />
                             )}
@@ -337,6 +372,12 @@ export function SocialInbox({
                             <span className="text-xs text-muted-foreground">
                               {getTypeIcon(item.type)}
                             </span>
+                            {(item as any).priority === 'urgent' && (
+                              <Badge variant="destructive" className="h-4 px-1 text-[10px]">Urgent</Badge>
+                            )}
+                            {(item as any).priority === 'high' && (
+                              <Badge variant="secondary" className="h-4 px-1 text-[10px] bg-orange-100 text-orange-700">High</Badge>
+                            )}
                             <span className="text-xs text-muted-foreground">
                               {new Date(item.receivedAt).toLocaleString()}
                             </span>
@@ -364,7 +405,17 @@ export function SocialInbox({
                   <AvatarFallback>{(selectedItem.authorName || '?')[0]}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{selectedItem.authorName || 'Unknown'}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{selectedItem.authorName || 'Unknown'}</p>
+                    {(selectedItem as any).authorVerified && (
+                      <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">✓ Verified</Badge>
+                    )}
+                    {formatFollowerCount((selectedItem as any).authorFollowers) && (
+                      <Badge variant="outline" className="h-5 px-1.5 text-[10px]">
+                        {formatFollowerCount((selectedItem as any).authorFollowers)} followers
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     @{selectedItem.authorHandle || selectedItem.authorName || 'unknown'}
                   </p>
@@ -531,7 +582,7 @@ export function SocialInbox({
                 <div className="flex justify-end">
                   <Button onClick={handleReply} disabled={isReplying || !replyText.trim()}>
                     <Send className="h-4 w-4 mr-2" />
-                    {isReplying ? 'Sending...' : 'Send Reply'}
+                    {isReplying ? 'Sending...' : `Reply${selectedAccount ? ` on ${selectedAccount.platform.charAt(0).toUpperCase() + selectedAccount.platform.slice(1)}` : ''}`}
                   </Button>
                 </div>
               </div>

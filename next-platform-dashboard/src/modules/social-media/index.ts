@@ -171,7 +171,39 @@ export {
   deleteSavedReply,
   bulkArchive,
   bulkMarkAsRead,
+  syncInbox,
 } from './actions/inbox-actions'
+
+// ============================================================================
+// MEDIA ACTIONS
+// ============================================================================
+
+export {
+  createMediaFolder,
+  getMediaFolders,
+  renameMediaFolder,
+  deleteMediaFolder,
+  moveMediaToFolder,
+  updateMediaMetadata,
+  bulkDeleteMedia,
+  searchMedia,
+  getMediaUsage,
+} from './actions/media-actions'
+
+// ============================================================================
+// AI ACTIONS
+// ============================================================================
+
+export {
+  aiGenerateCaptions,
+  aiGenerateHashtags,
+  aiGenerateContentIdeas,
+  aiImproveContent,
+  aiGenerateAltText,
+  aiGenerateThread,
+  aiSuggestPostingTime,
+  aiTranslateContent,
+} from './actions/ai-actions'
 
 // ============================================================================
 // COMPONENTS
