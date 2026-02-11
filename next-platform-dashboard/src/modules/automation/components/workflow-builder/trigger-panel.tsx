@@ -113,7 +113,7 @@ export function TriggerPanel({ trigger, triggerType, onTriggerChange }: TriggerP
               <SelectContent className="max-h-[300px]">
                 {/* CRM Events */}
                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted">
-                  👤 CRM
+                  CRM
                 </div>
                 {Object.entries(EVENT_REGISTRY.crm.contact).map(([key, value]) => (
                   <SelectItem key={value} value={value}>
@@ -133,7 +133,7 @@ export function TriggerPanel({ trigger, triggerType, onTriggerChange }: TriggerP
 
                 {/* Booking Events */}
                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted mt-2">
-                  📅 Booking
+                  Booking
                 </div>
                 {Object.entries(EVENT_REGISTRY.booking.appointment).map(([key, value]) => (
                   <SelectItem key={value} value={value}>
@@ -143,7 +143,7 @@ export function TriggerPanel({ trigger, triggerType, onTriggerChange }: TriggerP
 
                 {/* Form Events */}
                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted mt-2">
-                  📝 Forms
+                  Forms
                 </div>
                 {Object.entries(EVENT_REGISTRY.form.submission).map(([key, value]) => (
                   <SelectItem key={value} value={value}>
@@ -153,7 +153,7 @@ export function TriggerPanel({ trigger, triggerType, onTriggerChange }: TriggerP
 
                 {/* E-commerce Events */}
                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted mt-2">
-                  🛒 E-Commerce
+                  E-Commerce
                 </div>
                 {Object.entries(EVENT_REGISTRY.ecommerce.order).map(([key, value]) => (
                   <SelectItem key={value} value={value}>
@@ -168,7 +168,7 @@ export function TriggerPanel({ trigger, triggerType, onTriggerChange }: TriggerP
 
                 {/* Accounting Events */}
                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted mt-2">
-                  💰 Accounting
+                  Accounting
                 </div>
                 {Object.entries(EVENT_REGISTRY.accounting.invoice).map(([key, value]) => (
                   <SelectItem key={value} value={value}>

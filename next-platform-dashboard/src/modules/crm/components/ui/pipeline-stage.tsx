@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/tooltip'
 import { 
   Plus, 
-  DollarSign,
+  Coins,
   TrendingUp,
   TrendingDown,
   ChevronDown,
@@ -225,7 +225,7 @@ export function PipelineStage({
           {!isCollapsed && (
             <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
-                <DollarSign className="h-3 w-3" />
+                <Coins className="h-3 w-3" />
                 {formatCurrency(metrics.totalValue)}
               </div>
               <TooltipProvider>
@@ -308,7 +308,7 @@ export function PipelineStage({
             ) : (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                  <DollarSign className="h-6 w-6 text-muted-foreground" />
+                  <Coins className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">No deals here</p>
                 {onAddDeal && (

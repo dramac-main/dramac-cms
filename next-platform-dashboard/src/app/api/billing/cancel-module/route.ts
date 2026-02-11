@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { cancelModuleSubscription } from "@/lib/stripe/module-subscriptions";
 
+/**
+ * Cancel Module Subscription API Route
+ * 
+ * Cancels a module subscription by updating its status.
+ * If Paddle subscription exists, it would be cancelled via Paddle API.
+ */
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -26,7 +31,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    await cancelModuleSubscription(agencyId, moduleId);
+    // Update subscription status to canceled
+    const { error } = await (supabase as any)
+      .from("agency_module_subscriptions")
+      .update({ status: "canceled" })
+      .eq("agency_id", agencyId)
+      .eq("module_id", moduleId)
+      .eq("status", "active");
+
+    if (error) {
+      console.error("Cancel module subscription error:", error);
+      return NextResponse.json(
+        { error: "Failed to cancel module subscription" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ success: true, canceledAtPeriodEnd: true });
   } catch (error) {

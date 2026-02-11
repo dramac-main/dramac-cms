@@ -34,6 +34,7 @@ import {
   Webhook,
   Bot,
   ChevronRight,
+  icons,
 } from "lucide-react"
 
 // ============================================================================
@@ -69,15 +70,15 @@ const ACTION_CATEGORIES = [
     icon: User,
     color: "text-emerald-500",
     actions: [
-      { id: "crm.create_contact", name: "Create Contact", description: "Add a new contact to CRM", icon: "➕" },
-      { id: "crm.update_contact", name: "Update Contact", description: "Modify contact fields", icon: "✏️" },
-      { id: "crm.add_tag", name: "Add Tag", description: "Add tag to contact", icon: "🏷️" },
-      { id: "crm.remove_tag", name: "Remove Tag", description: "Remove tag from contact", icon: "🏷️" },
-      { id: "crm.create_deal", name: "Create Deal", description: "Create new deal/opportunity", icon: "💰" },
-      { id: "crm.move_deal_stage", name: "Move Deal Stage", description: "Move deal to different stage", icon: "➡️" },
-      { id: "crm.create_task", name: "Create Task", description: "Create a follow-up task", icon: "✅" },
-      { id: "crm.log_activity", name: "Log Activity", description: "Log call, meeting, or note", icon: "📝" },
-      { id: "crm.find_contact", name: "Find Contact", description: "Find contact by field", icon: "🔍" },
+      { id: "crm.create_contact", name: "Create Contact", description: "Add a new contact to CRM", icon: "UserPlus" },
+      { id: "crm.update_contact", name: "Update Contact", description: "Modify contact fields", icon: "Pencil" },
+      { id: "crm.add_tag", name: "Add Tag", description: "Add tag to contact", icon: "Tag" },
+      { id: "crm.remove_tag", name: "Remove Tag", description: "Remove tag from contact", icon: "Tag" },
+      { id: "crm.create_deal", name: "Create Deal", description: "Create new deal/opportunity", icon: "CircleDollarSign" },
+      { id: "crm.move_deal_stage", name: "Move Deal Stage", description: "Move deal to different stage", icon: "ArrowRight" },
+      { id: "crm.create_task", name: "Create Task", description: "Create a follow-up task", icon: "CircleCheck" },
+      { id: "crm.log_activity", name: "Log Activity", description: "Log call, meeting, or note", icon: "FileText" },
+      { id: "crm.find_contact", name: "Find Contact", description: "Find contact by field", icon: "Search" },
     ],
   },
   {
@@ -86,12 +87,12 @@ const ACTION_CATEGORIES = [
     icon: Mail,
     color: "text-blue-500",
     actions: [
-      { id: "email.send", name: "Send Email", description: "Send a custom email", icon: "📧" },
-      { id: "email.send_template", name: "Send Template Email", description: "Send from template", icon: "📨" },
-      { id: "notification.send_sms", name: "Send SMS", description: "Send SMS message", icon: "📱" },
-      { id: "notification.send_slack", name: "Send to Slack", description: "Post to Slack channel", icon: "💬" },
-      { id: "notification.send_discord", name: "Send to Discord", description: "Post to Discord", icon: "🎮" },
-      { id: "notification.in_app", name: "In-App Notification", description: "Send in-app alert", icon: "🔔" },
+      { id: "email.send", name: "Send Email", description: "Send a custom email", icon: "Mail" },
+      { id: "email.send_template", name: "Send Template Email", description: "Send from template", icon: "MailOpen" },
+      { id: "notification.send_sms", name: "Send SMS", description: "Send SMS message", icon: "Smartphone" },
+      { id: "notification.send_slack", name: "Send to Slack", description: "Post to Slack channel", icon: "MessageSquare" },
+      { id: "notification.send_discord", name: "Send to Discord", description: "Post to Discord", icon: "Gamepad2" },
+      { id: "notification.in_app", name: "In-App Notification", description: "Send in-app alert", icon: "Bell" },
     ],
   },
   {
@@ -100,10 +101,10 @@ const ACTION_CATEGORIES = [
     icon: Database,
     color: "text-orange-500",
     actions: [
-      { id: "data.lookup", name: "Lookup Record", description: "Find a database record", icon: "🔍" },
-      { id: "data.create", name: "Create Record", description: "Insert new record", icon: "➕" },
-      { id: "data.update", name: "Update Record", description: "Update existing record", icon: "✏️" },
-      { id: "data.delete", name: "Delete Record", description: "Remove a record", icon: "🗑️" },
+      { id: "data.lookup", name: "Lookup Record", description: "Find a database record", icon: "Search" },
+      { id: "data.create", name: "Create Record", description: "Insert new record", icon: "Plus" },
+      { id: "data.update", name: "Update Record", description: "Update existing record", icon: "Pencil" },
+      { id: "data.delete", name: "Delete Record", description: "Remove a record", icon: "Trash2" },
     ],
   },
   {
@@ -112,10 +113,10 @@ const ACTION_CATEGORIES = [
     icon: GitBranch,
     color: "text-amber-500",
     actions: [
-      { id: "flow.delay", name: "Delay", description: "Wait before continuing", icon: "⏱️" },
-      { id: "flow.condition", name: "Condition (If/Else)", description: "Branch based on condition", icon: "🔀" },
-      { id: "flow.loop", name: "Loop", description: "Repeat for each item", icon: "🔁" },
-      { id: "flow.stop", name: "Stop Workflow", description: "End workflow execution", icon: "🛑" },
+      { id: "flow.delay", name: "Delay", description: "Wait before continuing", icon: "Timer" },
+      { id: "flow.condition", name: "Condition (If/Else)", description: "Branch based on condition", icon: "GitBranch" },
+      { id: "flow.loop", name: "Loop", description: "Repeat for each item", icon: "Repeat" },
+      { id: "flow.stop", name: "Stop Workflow", description: "End workflow execution", icon: "StopCircle" },
     ],
   },
   {
@@ -124,11 +125,11 @@ const ACTION_CATEGORIES = [
     icon: Repeat,
     color: "text-purple-500",
     actions: [
-      { id: "transform.map", name: "Map Data", description: "Transform data shape", icon: "🔄" },
-      { id: "transform.filter", name: "Filter Array", description: "Filter items in array", icon: "🔍" },
-      { id: "transform.aggregate", name: "Aggregate", description: "Sum, count, average", icon: "📊" },
-      { id: "transform.format_date", name: "Format Date", description: "Format date/time", icon: "📅" },
-      { id: "transform.template", name: "Render Template", description: "Generate text from template", icon: "📝" },
+      { id: "transform.map", name: "Map Data", description: "Transform data shape", icon: "RefreshCw" },
+      { id: "transform.filter", name: "Filter Array", description: "Filter items in array", icon: "Search" },
+      { id: "transform.aggregate", name: "Aggregate", description: "Sum, count, average", icon: "ChartBar" },
+      { id: "transform.format_date", name: "Format Date", description: "Format date/time", icon: "Calendar" },
+      { id: "transform.template", name: "Render Template", description: "Generate text from template", icon: "FileText" },
     ],
   },
   {
@@ -137,10 +138,10 @@ const ACTION_CATEGORIES = [
     icon: Webhook,
     color: "text-cyan-500",
     actions: [
-      { id: "webhook.send", name: "HTTP Request", description: "Call external API", icon: "🌐" },
-      { id: "integration.google_sheets", name: "Google Sheets", description: "Add row to sheet", icon: "📊" },
-      { id: "integration.airtable", name: "Airtable", description: "Create Airtable record", icon: "📋" },
-      { id: "integration.paddle", name: "Paddle", description: "Paddle billing operations", icon: "💳" },
+      { id: "webhook.send", name: "HTTP Request", description: "Call external API", icon: "Globe" },
+      { id: "integration.google_sheets", name: "Google Sheets", description: "Add row to sheet", icon: "ChartBar" },
+      { id: "integration.airtable", name: "Airtable", description: "Create Airtable record", icon: "ClipboardList" },
+      { id: "integration.paddle", name: "Paddle", description: "Paddle billing operations", icon: "CreditCard" },
     ],
   },
   {
@@ -149,11 +150,11 @@ const ACTION_CATEGORIES = [
     icon: Bot,
     color: "text-pink-500",
     actions: [
-      { id: "ai.generate_text", name: "Generate Text", description: "Generate with AI", icon: "✨" },
-      { id: "ai.summarize", name: "Summarize", description: "Summarize content", icon: "📝" },
-      { id: "ai.classify", name: "Classify", description: "Classify into categories", icon: "🏷️" },
-      { id: "ai.extract", name: "Extract Data", description: "Extract structured data", icon: "🔍" },
-      { id: "ai.sentiment", name: "Analyze Sentiment", description: "Analyze text sentiment", icon: "😊" },
+      { id: "ai.generate_text", name: "Generate Text", description: "Generate with AI", icon: "Sparkles" },
+      { id: "ai.summarize", name: "Summarize", description: "Summarize content", icon: "FileText" },
+      { id: "ai.classify", name: "Classify", description: "Classify into categories", icon: "Tag" },
+      { id: "ai.extract", name: "Extract Data", description: "Extract structured data", icon: "Search" },
+      { id: "ai.sentiment", name: "Analyze Sentiment", description: "Analyze text sentiment", icon: "Smile" },
     ],
   },
 ]
@@ -318,7 +319,7 @@ export function ActionSearchPalette({
                       className="cursor-pointer"
                     >
                       <History className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span className="mr-2">{action.icon}</span>
+                      {(() => { const I = icons[action.icon as keyof typeof icons]; return I ? <I className="h-4 w-4 mr-2" /> : null })()}
                       <div className="flex-1 min-w-0">
                         <span className="font-medium">{action.name}</span>
                         <span className="text-muted-foreground ml-2 text-sm">
@@ -345,7 +346,7 @@ export function ActionSearchPalette({
                     onSelect={() => handleSelect(action)}
                     className="cursor-pointer"
                   >
-                    <span className="mr-2 text-lg">{action.icon}</span>
+                    {(() => { const I = icons[action.icon as keyof typeof icons]; return I ? <I className="h-4 w-4 mr-2" /> : null })()}
                     <div className="flex-1 min-w-0">
                       <span className="font-medium">{action.name}</span>
                       <span className="text-muted-foreground ml-2 text-sm">
@@ -374,7 +375,7 @@ export function ActionSearchPalette({
                       }
                       className="cursor-pointer"
                     >
-                      <span className="mr-2 text-lg">{action.icon}</span>
+                      {(() => { const I = icons[action.icon as keyof typeof icons]; return I ? <I className="h-4 w-4 mr-2" /> : null })()}
                       <div className="flex-1 min-w-0">
                         <span className="font-medium">{action.name}</span>
                         <span className="text-muted-foreground ml-2 text-sm truncate">

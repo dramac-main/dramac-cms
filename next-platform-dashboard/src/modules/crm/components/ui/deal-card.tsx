@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { 
-  DollarSign, 
+  Coins, 
   Calendar, 
   Building2,
   GripVertical,
@@ -229,7 +229,7 @@ export function DealCard({
               deal.status === 'won' ? 'text-green-600 dark:text-green-400' : 'text-foreground',
               isCompact ? "text-sm" : "text-base"
             )}>
-              <DollarSign className="h-4 w-4" />
+              <Coins className="h-4 w-4" />
               {formatCurrency(deal.amount, deal.currency)}
               {deal.weighted_value && deal.weighted_value !== deal.amount && (
                 <span className="text-xs text-muted-foreground font-normal ml-1">

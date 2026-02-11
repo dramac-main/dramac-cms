@@ -385,10 +385,10 @@ export function WorkflowBuilder({
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Icon</label>
                   <Input
-                    value={workflow?.icon || '⚡'}
+                    value={workflow?.icon || 'Zap'}
                     onChange={(e) => updateWorkflowData({ icon: e.target.value })}
-                    placeholder="Emoji icon"
-                    maxLength={2}
+                    placeholder="Icon name"
+                    maxLength={20}
                   />
                 </div>
 

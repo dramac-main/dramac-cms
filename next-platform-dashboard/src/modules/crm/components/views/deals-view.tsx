@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { 
   Plus, 
-  DollarSign, 
+  Coins, 
   Calendar, 
   User, 
   Building2,
@@ -95,7 +95,7 @@ function DealCard({ deal, onClick, onDragStart }: DealCardProps) {
         
         {deal.amount != null && deal.amount > 0 && (
           <div className="flex items-center gap-1 text-sm font-semibold text-green-600 dark:text-green-400">
-            <DollarSign className="h-3 w-3" />
+            <Coins className="h-3 w-3" />
             {formatCurrency(deal.amount, deal.currency)}
           </div>
         )}

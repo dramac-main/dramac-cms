@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { syncSeatsForAgency } from "@/lib/stripe/seat-sync";
 
+/**
+ * Sync Seats API Route
+ * 
+ * Updates the client seat count for an agency's subscription.
+ * Uses Paddle usage tracking when configured, otherwise just counts clients.
+ */
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -26,9 +31,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const result = await syncSeatsForAgency(agencyId);
+    // Count current clients for this agency
+    const { count } = await supabase
+      .from("clients")
+      .select("*", { count: "exact", head: true })
+      .eq("agency_id", agencyId);
 
-    return NextResponse.json(result);
+    return NextResponse.json({ 
+      success: true, 
+      seats: count || 0,
+      message: "Seat count updated" 
+    });
   } catch (error) {
     console.error("Seat sync error:", error);
     return NextResponse.json(

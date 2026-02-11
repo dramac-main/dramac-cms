@@ -348,16 +348,16 @@ export type EventType =
 // ============================================================================
 
 export const EVENT_CATEGORIES = [
-  { id: 'crm', name: 'CRM', icon: '👤', description: 'Contact, company, deal, and activity events' },
-  { id: 'booking', name: 'Booking', icon: '📅', description: 'Appointment and scheduling events' },
-  { id: 'form', name: 'Forms', icon: '📝', description: 'Form submission and creation events' },
-  { id: 'accounting', name: 'Accounting', icon: '💰', description: 'Invoice, payment, and expense events' },
-  { id: 'ecommerce', name: 'E-Commerce', icon: '🛒', description: 'Order, cart, and product events' },
-  { id: 'domain', name: 'Domains', icon: '🌐', description: 'Domain registration, DNS, email, and transfer events' },
-  { id: 'billing', name: 'Billing', icon: '💳', description: 'Subscription, payment, and usage events' },
-  { id: 'system', name: 'System', icon: '⚙️', description: 'Webhook, schedule, and module events' },
-  { id: 'automation', name: 'Automation', icon: '⚡', description: 'Workflow execution events' },
-  { id: 'ai_agent', name: 'AI Agents', icon: '🤖', description: 'AI agent execution and approval events' },
+  { id: 'crm', name: 'CRM', icon: 'User', description: 'Contact, company, deal, and activity events' },
+  { id: 'booking', name: 'Booking', icon: 'Calendar', description: 'Appointment and scheduling events' },
+  { id: 'form', name: 'Forms', icon: 'FileText', description: 'Form submission and creation events' },
+  { id: 'accounting', name: 'Accounting', icon: 'CircleDollarSign', description: 'Invoice, payment, and expense events' },
+  { id: 'ecommerce', name: 'E-Commerce', icon: 'ShoppingCart', description: 'Order, cart, and product events' },
+  { id: 'domain', name: 'Domains', icon: 'Globe', description: 'Domain registration, DNS, email, and transfer events' },
+  { id: 'billing', name: 'Billing', icon: 'CreditCard', description: 'Subscription, payment, and usage events' },
+  { id: 'system', name: 'System', icon: 'Settings', description: 'Webhook, schedule, and module events' },
+  { id: 'automation', name: 'Automation', icon: 'Zap', description: 'Workflow execution events' },
+  { id: 'ai_agent', name: 'AI Agents', icon: 'Bot', description: 'AI agent execution and approval events' },
 ] as const
 
 // ============================================================================

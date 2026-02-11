@@ -38,7 +38,8 @@ import {
   ArrowRight, 
   CheckCircle2,
   AlertCircle,
-  Loader2
+  Loader2,
+  icons
 } from "lucide-react"
 import { 
   WORKFLOW_TEMPLATES, 
@@ -186,7 +187,12 @@ export function TemplateGallery({
           >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
-                <div className="text-3xl">{template.icon}</div>
+                <div className="text-3xl">
+                  {(() => {
+                    const LucideIcon = icons[template.icon as keyof typeof icons]
+                    return LucideIcon ? <LucideIcon className="h-8 w-8" /> : null
+                  })()}
+                </div>
                 <Badge className={getComplexityColor(template.complexity)}>
                   {template.complexity}
                 </Badge>
@@ -228,7 +234,9 @@ export function TemplateGallery({
 
       {filteredTemplates.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-4xl mb-2">🔍</div>
+          <div className="mb-2">
+            {(() => { const Icon = icons['Search']; return Icon ? <Icon className="h-10 w-10 mx-auto text-muted-foreground" /> : null })()}
+          </div>
           <p className="text-muted-foreground">
             No templates found matching your search.
           </p>
@@ -250,7 +258,12 @@ export function TemplateGallery({
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <div className="flex items-center gap-3">
-                <span className="text-4xl">{selectedTemplate.icon}</span>
+                <div>
+                  {(() => {
+                    const LucideIcon = icons[selectedTemplate.icon as keyof typeof icons]
+                    return LucideIcon ? <LucideIcon className="h-10 w-10" /> : null
+                  })()}
+                </div>
                 <div>
                   <DialogTitle>{selectedTemplate.name}</DialogTitle>
                   <DialogDescription>{selectedTemplate.description}</DialogDescription>

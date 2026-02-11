@@ -27,7 +27,7 @@ import {
   TrendingDown,
   Users,
   Building2,
-  DollarSign,
+  Coins,
   Target,
   Calendar,
   BarChart3,
@@ -463,7 +463,7 @@ export function ReportsView() {
           title="Total Revenue"
           value={formatCurrency(metrics.wonValue)}
           description={`${metrics.wonDeals} deals won`}
-          icon={DollarSign}
+          icon={Coins}
           trend={{ value: 12.5, positive: true }}
         />
         <StatCard
@@ -646,7 +646,7 @@ export function ReportsView() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
+              <Coins className="h-5 w-5" />
               Recent Deals
             </CardTitle>
             <CardDescription>Latest deal activity</CardDescription>

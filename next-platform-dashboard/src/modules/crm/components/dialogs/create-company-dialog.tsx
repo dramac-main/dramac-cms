@@ -164,7 +164,7 @@ export function CreateCompanyDialog({
               id="name"
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="Acme Inc."
+              placeholder="Company name"
               disabled={isSubmitting}
             />
           </div>
@@ -177,7 +177,7 @@ export function CreateCompanyDialog({
                 id="domain"
                 value={formData.domain}
                 onChange={(e) => handleChange('domain', e.target.value)}
-                placeholder="acme.com"
+                placeholder="company.co.zm"
                 disabled={isSubmitting}
               />
             </div>
@@ -187,7 +187,7 @@ export function CreateCompanyDialog({
                 id="website"
                 value={formData.website}
                 onChange={(e) => handleChange('website', e.target.value)}
-                placeholder="https://acme.com"
+                placeholder="https://company.co.zm"
                 disabled={isSubmitting}
               />
             </div>
@@ -226,7 +226,7 @@ export function CreateCompanyDialog({
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
-                placeholder="+1 (555) 000-0000"
+                placeholder="+260 21X XXX XXX"
                 disabled={isSubmitting}
               />
             </div>

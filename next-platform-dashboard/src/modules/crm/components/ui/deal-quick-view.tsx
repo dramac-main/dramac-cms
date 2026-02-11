@@ -43,7 +43,6 @@ import {
   Building2,
   User,
   Calendar,
-  DollarSign,
   TrendingUp,
   Clock,
   FileText,

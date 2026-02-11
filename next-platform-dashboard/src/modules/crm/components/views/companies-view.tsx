@@ -46,7 +46,7 @@ import {
   Eye,
   Download,
   Building2,
-  DollarSign
+  Coins
 } from 'lucide-react'
 import { exportToCSV, flattenCompany } from '../../utils/export-csv'
 import { toast } from 'sonner'
@@ -309,7 +309,7 @@ export function CompaniesView() {
                 <TableCell>
                   {company.annual_revenue ? (
                     <div className="flex items-center gap-1">
-                      <DollarSign className="h-3 w-3 text-muted-foreground" />
+                      <Coins className="h-3 w-3 text-muted-foreground" />
                       {formatCurrency(company.annual_revenue)}
                     </div>
                   ) : (

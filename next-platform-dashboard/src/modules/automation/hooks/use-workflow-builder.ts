@@ -81,7 +81,7 @@ const DEFAULT_WORKFLOW: Partial<Workflow> = {
   trigger_type: 'event',
   trigger_config: {},
   is_active: false,
-  icon: '⚡',
+  icon: 'Zap',
   color: '#6366f1',
   category: 'general',
   tags: [],

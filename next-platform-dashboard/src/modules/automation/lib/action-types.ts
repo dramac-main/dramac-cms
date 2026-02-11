@@ -55,7 +55,7 @@ export const ACTION_REGISTRY = {
       name: 'Create Contact',
       description: 'Create a new contact in CRM',
       category: 'crm',
-      icon: '👤',
+      icon: 'User',
       inputs: {
         email: { type: 'string' as const, required: true, description: 'Contact email address' },
         first_name: { type: 'string' as const, required: false, description: 'First name' },
@@ -75,7 +75,7 @@ export const ACTION_REGISTRY = {
       name: 'Update Contact',
       description: 'Update an existing contact',
       category: 'crm',
-      icon: '✏️',
+      icon: 'Pencil',
       inputs: {
         contact_id: { type: 'string' as const, required: true, description: 'Contact ID to update' },
         fields: { type: 'object' as const, required: true, description: 'Fields to update' },
@@ -89,7 +89,7 @@ export const ACTION_REGISTRY = {
       name: 'Add Tag to Contact',
       description: 'Add a tag to a contact',
       category: 'crm',
-      icon: '🏷️',
+      icon: 'Tag',
       inputs: {
         contact_id: { type: 'string' as const, required: true, description: 'Contact ID' },
         tag: { type: 'string' as const, required: true, description: 'Tag to add' },
@@ -103,7 +103,7 @@ export const ACTION_REGISTRY = {
       name: 'Remove Tag from Contact',
       description: 'Remove a tag from a contact',
       category: 'crm',
-      icon: '🏷️',
+      icon: 'Tag',
       inputs: {
         contact_id: { type: 'string' as const, required: true, description: 'Contact ID' },
         tag: { type: 'string' as const, required: true, description: 'Tag to remove' },
@@ -117,7 +117,7 @@ export const ACTION_REGISTRY = {
       name: 'Create Deal',
       description: 'Create a new deal/opportunity',
       category: 'crm',
-      icon: '💰',
+      icon: 'CircleDollarSign',
       inputs: {
         title: { type: 'string' as const, required: true, description: 'Deal title' },
         value: { type: 'number' as const, required: false, description: 'Deal value' },
@@ -136,7 +136,7 @@ export const ACTION_REGISTRY = {
       name: 'Move Deal Stage',
       description: 'Move a deal to a different pipeline stage',
       category: 'crm',
-      icon: '➡️',
+      icon: 'ArrowRight',
       inputs: {
         deal_id: { type: 'string' as const, required: true, description: 'Deal ID' },
         stage: { type: 'string' as const, required: true, description: 'Target stage' },
@@ -150,7 +150,7 @@ export const ACTION_REGISTRY = {
       name: 'Create Task',
       description: 'Create a follow-up task',
       category: 'crm',
-      icon: '✅',
+      icon: 'CircleCheck',
       inputs: {
         title: { type: 'string' as const, required: true, description: 'Task title' },
         description: { type: 'string' as const, required: false, description: 'Task description' },
@@ -168,7 +168,7 @@ export const ACTION_REGISTRY = {
       name: 'Log Activity',
       description: 'Log an activity (call, meeting, note)',
       category: 'crm',
-      icon: '📝',
+      icon: 'FileText',
       inputs: {
         contact_id: { type: 'string' as const, required: true, description: 'Contact ID' },
         type: { type: 'enum' as const, values: ['call', 'meeting', 'note', 'email'], required: true, description: 'Activity type' },
@@ -183,7 +183,7 @@ export const ACTION_REGISTRY = {
       name: 'Find Contact',
       description: 'Find a contact by email or other field',
       category: 'crm',
-      icon: '🔍',
+      icon: 'Search',
       inputs: {
         field: { type: 'enum' as const, values: ['email', 'phone', 'id'], required: true, description: 'Field to search' },
         value: { type: 'string' as const, required: true, description: 'Value to search for' },
@@ -204,7 +204,7 @@ export const ACTION_REGISTRY = {
       name: 'Send Email',
       description: 'Send an email using platform email service (Resend)',
       category: 'email',
-      icon: '📧',
+      icon: 'Mail',
       inputs: {
         to: { type: 'string' as const, required: true, description: 'Recipient email' },
         subject: { type: 'string' as const, required: true, description: 'Email subject' },
@@ -224,7 +224,7 @@ export const ACTION_REGISTRY = {
       name: 'Send Template Email',
       description: 'Send email using a predefined template',
       category: 'email',
-      icon: '📨',
+      icon: 'MailOpen',
       inputs: {
         to: { type: 'string' as const, required: true, description: 'Recipient email' },
         template_id: { type: 'string' as const, required: true, description: 'Template ID' },
@@ -246,7 +246,7 @@ export const ACTION_REGISTRY = {
       name: 'Send SMS',
       description: 'Send SMS via Twilio',
       category: 'notification',
-      icon: '📱',
+      icon: 'Smartphone',
       requires_connection: 'twilio',
       inputs: {
         to: { type: 'string' as const, required: true, description: 'Phone number' },
@@ -262,7 +262,7 @@ export const ACTION_REGISTRY = {
       name: 'Send Slack Message',
       description: 'Send message to Slack channel',
       category: 'notification',
-      icon: '💬',
+      icon: 'MessageSquare',
       requires_connection: 'slack',
       inputs: {
         channel: { type: 'string' as const, required: true, description: 'Channel ID or name' },
@@ -279,7 +279,7 @@ export const ACTION_REGISTRY = {
       name: 'Send Discord Message',
       description: 'Send message to Discord webhook',
       category: 'notification',
-      icon: '🎮',
+      icon: 'Gamepad2',
       requires_connection: 'discord',
       inputs: {
         content: { type: 'string' as const, required: true, description: 'Message content' },
@@ -294,7 +294,7 @@ export const ACTION_REGISTRY = {
       name: 'Create In-App Notification',
       description: 'Create notification in platform',
       category: 'notification',
-      icon: '🔔',
+      icon: 'Bell',
       inputs: {
         user_id: { type: 'string' as const, required: true, description: 'User ID to notify' },
         title: { type: 'string' as const, required: true, description: 'Notification title' },
@@ -317,7 +317,7 @@ export const ACTION_REGISTRY = {
       name: 'Send Webhook',
       description: 'Send HTTP request to external URL',
       category: 'webhook',
-      icon: '🌐',
+      icon: 'Globe',
       inputs: {
         url: { type: 'string' as const, required: true, description: 'Target URL' },
         method: { type: 'enum' as const, values: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], required: true, description: 'HTTP method' },
@@ -342,7 +342,7 @@ export const ACTION_REGISTRY = {
       name: 'Lookup Record',
       description: 'Find a record by field value',
       category: 'data',
-      icon: '🔍',
+      icon: 'Search',
       inputs: {
         module: { type: 'string' as const, required: true, description: 'Module ID (e.g., crm, booking)' },
         table: { type: 'string' as const, required: true, description: 'Table name' },
@@ -359,7 +359,7 @@ export const ACTION_REGISTRY = {
       name: 'Create Record',
       description: 'Create a new database record',
       category: 'data',
-      icon: '➕',
+      icon: 'Plus',
       inputs: {
         module: { type: 'string' as const, required: true, description: 'Module ID' },
         table: { type: 'string' as const, required: true, description: 'Table name' },
@@ -375,7 +375,7 @@ export const ACTION_REGISTRY = {
       name: 'Update Record',
       description: 'Update an existing record',
       category: 'data',
-      icon: '✏️',
+      icon: 'Pencil',
       inputs: {
         module: { type: 'string' as const, required: true, description: 'Module ID' },
         table: { type: 'string' as const, required: true, description: 'Table name' },
@@ -392,7 +392,7 @@ export const ACTION_REGISTRY = {
       name: 'Delete Record',
       description: 'Delete a database record',
       category: 'data',
-      icon: '🗑️',
+      icon: 'Trash2',
       inputs: {
         module: { type: 'string' as const, required: true, description: 'Module ID' },
         table: { type: 'string' as const, required: true, description: 'Table name' },
@@ -413,7 +413,7 @@ export const ACTION_REGISTRY = {
       name: 'Delay',
       description: 'Wait for specified duration',
       category: 'flow',
-      icon: '⏱️',
+      icon: 'Timer',
       inputs: {
         duration: { type: 'string' as const, required: true, description: 'Duration (e.g., 5m, 1h, 1d)' },
       },
@@ -426,7 +426,7 @@ export const ACTION_REGISTRY = {
       name: 'Condition',
       description: 'Branch based on condition',
       category: 'flow',
-      icon: '🔀',
+      icon: 'GitBranch',
       inputs: {
         conditions: { type: 'array' as const, required: true, description: 'Conditions to evaluate' },
       },
@@ -440,7 +440,7 @@ export const ACTION_REGISTRY = {
       name: 'Loop',
       description: 'Iterate over array',
       category: 'flow',
-      icon: '🔁',
+      icon: 'Repeat',
       inputs: {
         items: { type: 'array' as const, required: true, description: 'Items to loop over' },
         max_iterations: { type: 'number' as const, required: false, default: 100, description: 'Max iterations' },
@@ -456,7 +456,7 @@ export const ACTION_REGISTRY = {
       name: 'Stop Workflow',
       description: 'Stop workflow execution',
       category: 'flow',
-      icon: '🛑',
+      icon: 'StopCircle',
       inputs: {
         reason: { type: 'string' as const, required: false, description: 'Reason for stopping' },
       },
@@ -473,7 +473,7 @@ export const ACTION_REGISTRY = {
       name: 'Map Data',
       description: 'Transform data structure',
       category: 'transform',
-      icon: '🔄',
+      icon: 'RefreshCw',
       inputs: {
         source: { type: 'object' as const, required: true, description: 'Source data' },
         mapping: { type: 'object' as const, required: true, description: 'Field mapping' },
@@ -487,7 +487,7 @@ export const ACTION_REGISTRY = {
       name: 'Filter Array',
       description: 'Filter items from array',
       category: 'transform',
-      icon: '🔍',
+      icon: 'Search',
       inputs: {
         array: { type: 'array' as const, required: true, description: 'Array to filter' },
         conditions: { type: 'array' as const, required: true, description: 'Filter conditions' },
@@ -502,7 +502,7 @@ export const ACTION_REGISTRY = {
       name: 'Aggregate',
       description: 'Calculate sum, average, count, etc.',
       category: 'transform',
-      icon: '📊',
+      icon: 'ChartBar',
       inputs: {
         array: { type: 'array' as const, required: true, description: 'Array to aggregate' },
         operation: { type: 'enum' as const, values: ['sum', 'average', 'count', 'min', 'max'], required: true, description: 'Aggregation operation' },
@@ -517,7 +517,7 @@ export const ACTION_REGISTRY = {
       name: 'Format Date',
       description: 'Format a date string',
       category: 'transform',
-      icon: '📅',
+      icon: 'Calendar',
       inputs: {
         date: { type: 'string' as const, required: true, description: 'Date to format' },
         format: { type: 'string' as const, required: true, description: 'Output format (e.g., YYYY-MM-DD)' },
@@ -532,7 +532,7 @@ export const ACTION_REGISTRY = {
       name: 'Render Template',
       description: 'Render text template with variables',
       category: 'transform',
-      icon: '📝',
+      icon: 'FileText',
       inputs: {
         template: { type: 'string' as const, required: true, description: 'Template string with {{variables}}' },
         variables: { type: 'object' as const, required: false, description: 'Variable values' },
@@ -546,7 +546,7 @@ export const ACTION_REGISTRY = {
       name: 'Math Operation',
       description: 'Perform mathematical calculation',
       category: 'transform',
-      icon: '🔢',
+      icon: 'Calculator',
       inputs: {
         operation: { type: 'enum' as const, values: ['add', 'subtract', 'multiply', 'divide', 'round', 'floor', 'ceil', 'abs'], required: true, description: 'Math operation' },
         a: { type: 'number' as const, required: true, description: 'First operand' },
@@ -567,7 +567,7 @@ export const ACTION_REGISTRY = {
       name: 'Check Domain Availability',
       description: 'Check if a domain name is available for registration',
       category: 'domain',
-      icon: '🔍',
+      icon: 'Search',
       inputs: {
         domain_name: { type: 'string' as const, required: true, description: 'Domain name to check (e.g., example.com)' },
         tlds: { type: 'array' as const, required: false, description: 'TLDs to check (e.g., [".com", ".net", ".org"])' },
@@ -584,7 +584,7 @@ export const ACTION_REGISTRY = {
       name: 'Register Domain',
       description: 'Register a new domain name',
       category: 'domain',
-      icon: '🌐',
+      icon: 'Globe',
       inputs: {
         domain_name: { type: 'string' as const, required: true, description: 'Domain name to register' },
         years: { type: 'number' as const, required: false, default: 1, description: 'Registration period in years' },
@@ -605,7 +605,7 @@ export const ACTION_REGISTRY = {
       name: 'Renew Domain',
       description: 'Renew an existing domain registration',
       category: 'domain',
-      icon: '🔄',
+      icon: 'RefreshCw',
       inputs: {
         domain_id: { type: 'string' as const, required: true, description: 'Domain ID to renew' },
         years: { type: 'number' as const, required: false, default: 1, description: 'Renewal period in years' },
@@ -621,7 +621,7 @@ export const ACTION_REGISTRY = {
       name: 'Set Auto-Renew',
       description: 'Enable or disable auto-renewal for a domain',
       category: 'domain',
-      icon: '🔁',
+      icon: 'Repeat',
       inputs: {
         domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
         enabled: { type: 'boolean' as const, required: true, description: 'Enable or disable auto-renewal' },
@@ -635,7 +635,7 @@ export const ACTION_REGISTRY = {
       name: 'Add DNS Record',
       description: 'Add a DNS record to a domain',
       category: 'domain',
-      icon: '➕',
+      icon: 'Plus',
       inputs: {
         domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
         record_type: { type: 'enum' as const, values: ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'SRV', 'CAA'], required: true, description: 'DNS record type' },
@@ -654,7 +654,7 @@ export const ACTION_REGISTRY = {
       name: 'Update DNS Record',
       description: 'Update an existing DNS record',
       category: 'domain',
-      icon: '✏️',
+      icon: 'Pencil',
       inputs: {
         record_id: { type: 'string' as const, required: true, description: 'DNS record ID' },
         value: { type: 'string' as const, required: false, description: 'New record value' },
@@ -670,7 +670,7 @@ export const ACTION_REGISTRY = {
       name: 'Delete DNS Record',
       description: 'Delete a DNS record from a domain',
       category: 'domain',
-      icon: '🗑️',
+      icon: 'Trash2',
       inputs: {
         record_id: { type: 'string' as const, required: true, description: 'DNS record ID to delete' },
       },
@@ -683,7 +683,7 @@ export const ACTION_REGISTRY = {
       name: 'Create Email Account',
       description: 'Create a new email account for a domain',
       category: 'domain',
-      icon: '📧',
+      icon: 'Mail',
       inputs: {
         domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
         username: { type: 'string' as const, required: true, description: 'Email username (before @)' },
@@ -702,7 +702,7 @@ export const ACTION_REGISTRY = {
       name: 'Update Email Account',
       description: 'Update an existing email account',
       category: 'domain',
-      icon: '✏️',
+      icon: 'Pencil',
       inputs: {
         email_id: { type: 'string' as const, required: true, description: 'Email account ID' },
         password: { type: 'string' as const, required: false, description: 'New password' },
@@ -718,7 +718,7 @@ export const ACTION_REGISTRY = {
       name: 'Delete Email Account',
       description: 'Delete an email account',
       category: 'domain',
-      icon: '🗑️',
+      icon: 'Trash2',
       inputs: {
         email_id: { type: 'string' as const, required: true, description: 'Email account ID to delete' },
       },
@@ -731,7 +731,7 @@ export const ACTION_REGISTRY = {
       name: 'Initiate Domain Transfer',
       description: 'Start a domain transfer from another registrar',
       category: 'domain',
-      icon: '📥',
+      icon: 'Download',
       inputs: {
         domain_name: { type: 'string' as const, required: true, description: 'Domain name to transfer' },
         auth_code: { type: 'string' as const, required: true, description: 'EPP/Authorization code from current registrar' },
@@ -748,7 +748,7 @@ export const ACTION_REGISTRY = {
       name: 'Get Authorization Code',
       description: 'Get EPP authorization code for domain transfer out',
       category: 'domain',
-      icon: '🔑',
+      icon: 'Key',
       inputs: {
         domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
       },
@@ -762,7 +762,7 @@ export const ACTION_REGISTRY = {
       name: 'Domain Lookup',
       description: 'Lookup domain details and WHOIS information',
       category: 'domain',
-      icon: '🔍',
+      icon: 'Search',
       inputs: {
         domain_name: { type: 'string' as const, required: true, description: 'Domain name to lookup' },
         include_whois: { type: 'boolean' as const, required: false, default: false, description: 'Include WHOIS data' },
@@ -778,7 +778,7 @@ export const ACTION_REGISTRY = {
       name: 'Set Nameservers',
       description: 'Update nameservers for a domain',
       category: 'domain',
-      icon: '🖥️',
+      icon: 'Monitor',
       inputs: {
         domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
         nameservers: { type: 'array' as const, required: true, description: 'Array of nameserver hostnames' },
@@ -792,7 +792,7 @@ export const ACTION_REGISTRY = {
       name: 'Lock Domain',
       description: 'Enable transfer lock on domain',
       category: 'domain',
-      icon: '🔒',
+      icon: 'Lock',
       inputs: {
         domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
       },
@@ -805,7 +805,7 @@ export const ACTION_REGISTRY = {
       name: 'Unlock Domain',
       description: 'Disable transfer lock on domain',
       category: 'domain',
-      icon: '🔓',
+      icon: 'Unlock',
       inputs: {
         domain_id: { type: 'string' as const, required: true, description: 'Domain ID' },
       },
@@ -821,14 +821,14 @@ export const ACTION_REGISTRY = {
 // ============================================================================
 
 export const ACTION_CATEGORIES = [
-  { id: 'crm', name: 'CRM', icon: '👤', description: 'Contact, company, deal, and task actions' },
-  { id: 'email', name: 'Email', icon: '📧', description: 'Send emails and templates' },
-  { id: 'notification', name: 'Notifications', icon: '🔔', description: 'SMS, Slack, Discord, and in-app notifications' },
-  { id: 'webhook', name: 'Webhooks', icon: '🌐', description: 'Send HTTP requests to external services' },
-  { id: 'data', name: 'Data', icon: '📊', description: 'Database operations (CRUD)' },
-  { id: 'flow', name: 'Flow Control', icon: '🔀', description: 'Delays, conditions, loops, and stops' },
-  { id: 'transform', name: 'Transform', icon: '🔄', description: 'Data mapping, filtering, and formatting' },
-  { id: 'domain', name: 'Domains', icon: '🌐', description: 'Domain registration, DNS, email, and transfer actions' },
+  { id: 'crm', name: 'CRM', icon: 'User', description: 'Contact, company, deal, and task actions' },
+  { id: 'email', name: 'Email', icon: 'Mail', description: 'Send emails and templates' },
+  { id: 'notification', name: 'Notifications', icon: 'Bell', description: 'SMS, Slack, Discord, and in-app notifications' },
+  { id: 'webhook', name: 'Webhooks', icon: 'Globe', description: 'Send HTTP requests to external services' },
+  { id: 'data', name: 'Data', icon: 'ChartBar', description: 'Database operations (CRUD)' },
+  { id: 'flow', name: 'Flow Control', icon: 'GitBranch', description: 'Delays, conditions, loops, and stops' },
+  { id: 'transform', name: 'Transform', icon: 'RefreshCw', description: 'Data mapping, filtering, and formatting' },
+  { id: 'domain', name: 'Domains', icon: 'Globe', description: 'Domain registration, DNS, email, and transfer actions' },
 ] as const
 
 // ============================================================================

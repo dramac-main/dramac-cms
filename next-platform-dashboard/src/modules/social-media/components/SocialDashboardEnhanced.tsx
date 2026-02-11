@@ -94,41 +94,14 @@ function formatNumber(num: number): string {
   return num.toString()
 }
 
-function generateMockEngagementData(days: number): EngagementDataPoint[] {
-  const data: EngagementDataPoint[] = []
-  const now = new Date()
-  
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now)
-    date.setDate(date.getDate() - i)
-    data.push({
-      date: date.toLocaleDateString(DEFAULT_LOCALE, { month: 'short', day: 'numeric' }),
-      likes: Math.floor(Math.random() * 500) + 100,
-      comments: Math.floor(Math.random() * 100) + 20,
-      shares: Math.floor(Math.random() * 50) + 10,
-      impressions: Math.floor(Math.random() * 5000) + 1000,
-    })
-  }
-  
-  return data
+function generateMockEngagementData(_days: number): EngagementDataPoint[] {
+  // No mock data — charts will render empty until real data is available
+  return []
 }
 
-function generateMockAudienceData(days: number, baseFollowers: number): AudienceDataPoint[] {
-  const data: AudienceDataPoint[] = []
-  const now = new Date()
-  let total = baseFollowers - (days * 50)
-  
-  for (let i = days - 1; i >= 0; i--) {
-    const date = new Date(now)
-    date.setDate(date.getDate() - i)
-    total += Math.floor(Math.random() * 100) + 20
-    data.push({
-      date: date.toLocaleDateString(DEFAULT_LOCALE, { month: 'short', day: 'numeric' }),
-      total,
-    })
-  }
-  
-  return data
+function generateMockAudienceData(_days: number, _baseFollowers: number): AudienceDataPoint[] {
+  // No mock data — charts will render empty until real data is available
+  return []
 }
 
 // =============================================================================
@@ -137,11 +110,11 @@ function generateMockAudienceData(days: number, baseFollowers: number): Audience
 
 function SocialOnboarding({ onConnectAccount }: { onConnectAccount: (platform: string) => void }) {
   const platforms = [
-    { name: 'Facebook', icon: '📘', color: '#1877F2', desc: 'Pages & Groups' },
-    { name: 'Instagram', icon: '📷', color: '#E4405F', desc: 'Business & Creator' },
-    { name: 'Twitter/X', icon: '🐦', color: '#1DA1F2', desc: 'Posts & Threads' },
-    { name: 'LinkedIn', icon: '💼', color: '#0A66C2', desc: 'Profile & Company' },
-    { name: 'TikTok', icon: '🎵', color: '#000000', desc: 'Videos & Analytics' },
+    { name: 'Facebook', icon: 'F', color: '#1877F2', desc: 'Pages & Groups' },
+    { name: 'Instagram', icon: 'I', color: '#E4405F', desc: 'Business & Creator' },
+    { name: 'Twitter/X', icon: 'X', color: '#1DA1F2', desc: 'Posts & Threads' },
+    { name: 'LinkedIn', icon: 'L', color: '#0A66C2', desc: 'Profile & Company' },
+    { name: 'TikTok', icon: 'T', color: '#000000', desc: 'Videos & Analytics' },
   ]
 
   return (
@@ -222,7 +195,7 @@ function SocialOnboarding({ onConnectAccount }: { onConnectAccount: (platform: s
                     className="h-auto w-full flex-col py-4 hover:border-primary hover:bg-primary/5 transition-all"
                     onClick={() => onConnectAccount(platform.name.toLowerCase())}
                   >
-                    <span className="text-3xl mb-2">{platform.icon}</span>
+                    <span className="text-2xl mb-1 font-bold text-muted-foreground">{platform.icon}</span>
                     <span className="font-semibold">{platform.name}</span>
                     <span className="text-xs text-muted-foreground">{platform.desc}</span>
                   </Button>
@@ -516,8 +489,8 @@ export function SocialDashboard({
     accounts.map(account => ({
       platform: account.platform,
       followers: account.followersCount || 0,
-      engagement: Math.floor(Math.random() * 1000) + 100,
-      posts: Math.floor(Math.random() * 50) + 5,
+      engagement: 0,
+      posts: 0,
     })),
     [accounts]
   )
@@ -541,8 +514,8 @@ export function SocialDashboard({
   if (accounts.length === 0) {
     return (
       <SocialOnboarding 
-        onConnectAccount={(platform) => {
-          toast.info(`Social media connection for ${platform} is coming soon! We're working on OAuth integration for all major platforms.`, {
+        onConnectAccount={(_platform) => {
+          toast.info(`Social media connections require configuration in your account settings.`, {
             duration: 5000,
           })
         }} 

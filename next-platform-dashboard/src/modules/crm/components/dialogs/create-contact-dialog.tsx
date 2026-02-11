@@ -166,7 +166,7 @@ export function CreateContactDialog({
                 id="first_name"
                 value={formData.first_name}
                 onChange={(e) => handleChange('first_name', e.target.value)}
-                placeholder="John"
+                placeholder="First name"
                 disabled={isSubmitting}
               />
             </div>
@@ -176,7 +176,7 @@ export function CreateContactDialog({
                 id="last_name"
                 value={formData.last_name}
                 onChange={(e) => handleChange('last_name', e.target.value)}
-                placeholder="Doe"
+                placeholder="Last name"
                 disabled={isSubmitting}
               />
             </div>
@@ -190,7 +190,7 @@ export function CreateContactDialog({
               type="email"
               value={formData.email}
               onChange={(e) => handleChange('email', e.target.value)}
-              placeholder="john@example.com"
+              placeholder="email@example.com"
               disabled={isSubmitting}
             />
           </div>
@@ -203,7 +203,7 @@ export function CreateContactDialog({
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
-                placeholder="+1 (555) 000-0000"
+                placeholder="+260 21X XXX XXX"
                 disabled={isSubmitting}
               />
             </div>
@@ -213,7 +213,7 @@ export function CreateContactDialog({
                 id="mobile"
                 value={formData.mobile}
                 onChange={(e) => handleChange('mobile', e.target.value)}
-                placeholder="+1 (555) 000-0000"
+                placeholder="+260 97X XXX XXX"
                 disabled={isSubmitting}
               />
             </div>

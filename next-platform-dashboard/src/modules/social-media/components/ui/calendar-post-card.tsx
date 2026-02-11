@@ -300,9 +300,9 @@ export function CalendarPostCard({
       {/* Footer with engagement stats (if published) */}
       {post.status === 'published' && (post.totalEngagement > 0 || post.totalImpressions > 0) && (
         <div className="flex items-center gap-3 pt-2 border-t text-xs text-muted-foreground">
-          <span>👁️ {post.totalImpressions.toLocaleString()}</span>
-          <span>💬 {post.totalEngagement.toLocaleString()}</span>
-          <span>🔗 {post.totalClicks.toLocaleString()}</span>
+          <span>views {post.totalImpressions.toLocaleString()}</span>
+          <span>comments {post.totalEngagement.toLocaleString()}</span>
+          <span>clicks {post.totalClicks.toLocaleString()}</span>
         </div>
       )}
     </motion.div>

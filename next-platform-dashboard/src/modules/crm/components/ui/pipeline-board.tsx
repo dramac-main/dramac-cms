@@ -46,7 +46,7 @@ import {
   Settings2,
   Filter,
   Search,
-  DollarSign,
+  Coins,
   LayoutGrid,
   List,
   RefreshCcw,
@@ -166,7 +166,7 @@ function BoardStats({ deals, stages }: { deals: Deal[]; stages: StageType[] }) {
   return (
     <div className="flex items-center gap-4 text-sm text-muted-foreground">
       <div className="flex items-center gap-1.5">
-        <DollarSign className="h-4 w-4" />
+        <Coins className="h-4 w-4" />
         <span className="font-medium text-foreground">{formatCurrency(stats.totalValue)}</span>
         <span>pipeline value</span>
       </div>

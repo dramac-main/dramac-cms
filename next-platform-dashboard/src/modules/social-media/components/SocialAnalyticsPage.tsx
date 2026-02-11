@@ -426,7 +426,7 @@ export function SocialAnalyticsPage({
                     const matchingTime = displayBestTimes.find(
                       t => t.dayOfWeek === dayIndex && t.hour === hour
                     )
-                    const score = matchingTime?.score || Math.floor(Math.random() * 40) + 10
+                    const score = matchingTime?.score || 0
                     const opacity = score / 100
                     
                     return (

@@ -369,7 +369,7 @@ export default function BrandingSettingsForm() {
                 type="email"
                 value={formData.email_reply_to ?? ""}
                 onChange={(e) => updateField("email_reply_to", e.target.value || null)}
-                placeholder="hello@acmeagency.com"
+                placeholder="hello@youragency.com"
               />
             </div>
           </div>
@@ -379,7 +379,7 @@ export default function BrandingSettingsForm() {
               id="emailFooterText"
               value={formData.email_footer_text ?? ""}
               onChange={(e) => updateField("email_footer_text", e.target.value || null)}
-              placeholder="© 2025 Acme Agency. All rights reserved."
+              placeholder="© 2026 Your Agency. All rights reserved."
               rows={2}
             />
           </div>
@@ -414,7 +414,7 @@ export default function BrandingSettingsForm() {
                 id="portalTitle"
                 value={formData.portal_welcome_title ?? ""}
                 onChange={(e) => updateField("portal_welcome_title", e.target.value || null)}
-                placeholder="Welcome to Acme Agency"
+                placeholder="Welcome to Your Agency"
               />
             </div>
             <div className="space-y-2">
@@ -459,7 +459,7 @@ export default function BrandingSettingsForm() {
                 type="email"
                 value={formData.support_email ?? ""}
                 onChange={(e) => updateField("support_email", e.target.value || null)}
-                placeholder="support@acmeagency.com"
+                placeholder="support@youragency.com"
               />
             </div>
             <div className="space-y-2">
@@ -469,7 +469,7 @@ export default function BrandingSettingsForm() {
                 type="url"
                 value={formData.support_url ?? ""}
                 onChange={(e) => updateField("support_url", e.target.value || null)}
-                placeholder="https://support.acmeagency.com"
+                placeholder="https://support.youragency.com"
               />
             </div>
           </div>
@@ -481,7 +481,7 @@ export default function BrandingSettingsForm() {
                 type="url"
                 value={formData.privacy_policy_url ?? ""}
                 onChange={(e) => updateField("privacy_policy_url", e.target.value || null)}
-                placeholder="https://acmeagency.com/privacy"
+                placeholder="https://youragency.com/privacy"
               />
             </div>
             <div className="space-y-2">
@@ -491,7 +491,7 @@ export default function BrandingSettingsForm() {
                 type="url"
                 value={formData.terms_of_service_url ?? ""}
                 onChange={(e) => updateField("terms_of_service_url", e.target.value || null)}
-                placeholder="https://acmeagency.com/terms"
+                placeholder="https://youragency.com/terms"
               />
             </div>
           </div>

@@ -27,7 +27,8 @@ import {
   Play, 
   MoreVertical,
   Copy,
-  Settings
+  Settings,
+  icons
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -55,32 +56,32 @@ interface WorkflowCanvasProps {
 // ============================================================================
 
 function getStepIcon(step: WorkflowStep): string {
-  if (step.step_type === 'condition') return '🔀'
-  if (step.step_type === 'delay') return '⏱️'
-  if (step.step_type === 'loop') return '🔁'
-  if (step.step_type === 'stop') return '🛑'
-  if (step.step_type === 'transform') return '🔄'
-  if (step.step_type === 'filter') return '🔍'
+  if (step.step_type === 'condition') return 'GitBranch'
+  if (step.step_type === 'delay') return 'Timer'
+  if (step.step_type === 'loop') return 'Repeat'
+  if (step.step_type === 'stop') return 'StopCircle'
+  if (step.step_type === 'transform') return 'RefreshCw'
+  if (step.step_type === 'filter') return 'Search'
   
   if (step.action_type) {
-    if (step.action_type.startsWith('crm')) return '👤'
-    if (step.action_type.startsWith('email')) return '📧'
-    if (step.action_type.startsWith('notification.send_sms')) return '📱'
-    if (step.action_type.startsWith('notification.send_slack')) return '💬'
-    if (step.action_type.startsWith('notification.send_discord')) return '🎮'
-    if (step.action_type.startsWith('notification')) return '🔔'
-    if (step.action_type.startsWith('webhook')) return '🌐'
-    if (step.action_type.startsWith('data')) return '🗄️'
-    if (step.action_type.startsWith('transform')) return '🔄'
-    if (step.action_type.startsWith('ai')) return '🤖'
-    if (step.action_type.startsWith('integration')) return '🔗'
-    if (step.action_type.startsWith('flow.delay')) return '⏱️'
-    if (step.action_type.startsWith('flow.condition')) return '🔀'
-    if (step.action_type.startsWith('flow.loop')) return '🔁'
-    if (step.action_type.startsWith('flow.stop')) return '🛑'
+    if (step.action_type.startsWith('crm')) return 'User'
+    if (step.action_type.startsWith('email')) return 'Mail'
+    if (step.action_type.startsWith('notification.send_sms')) return 'Smartphone'
+    if (step.action_type.startsWith('notification.send_slack')) return 'MessageSquare'
+    if (step.action_type.startsWith('notification.send_discord')) return 'Gamepad2'
+    if (step.action_type.startsWith('notification')) return 'Bell'
+    if (step.action_type.startsWith('webhook')) return 'Globe'
+    if (step.action_type.startsWith('data')) return 'Database'
+    if (step.action_type.startsWith('transform')) return 'RefreshCw'
+    if (step.action_type.startsWith('ai')) return 'Bot'
+    if (step.action_type.startsWith('integration')) return 'Link'
+    if (step.action_type.startsWith('flow.delay')) return 'Timer'
+    if (step.action_type.startsWith('flow.condition')) return 'GitBranch'
+    if (step.action_type.startsWith('flow.loop')) return 'Repeat'
+    if (step.action_type.startsWith('flow.stop')) return 'StopCircle'
   }
   
-  return '⚡'
+  return 'Zap'
 }
 
 function getStepColor(step: WorkflowStep): string {
@@ -181,7 +182,13 @@ function SortableStep({
           </div>
 
           {/* Icon */}
-          <div className="text-xl flex-shrink-0">{getStepIcon(step)}</div>
+          <div className="flex-shrink-0">
+            {(() => {
+              const iconName = getStepIcon(step)
+              const LucideIcon = icons[iconName as keyof typeof icons]
+              return LucideIcon ? <LucideIcon className="h-5 w-5" /> : <span>{iconName}</span>
+            })()}
+          </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
@@ -233,7 +240,7 @@ function SortableStep({
         {/* Status indicators */}
         {step.on_error === 'retry' && (
           <div className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-            <span>🔄</span>
+            {(() => { const Icon = icons['RefreshCw']; return Icon ? <Icon className="h-3 w-3" /> : null })()}
             <span>Retry on error ({step.max_retries}x)</span>
           </div>
         )}
@@ -302,7 +309,9 @@ export function WorkflowCanvas({
             ${isOver ? "border-primary bg-primary/5" : "border-muted-foreground/25"}
           `}
         >
-          <div className="text-4xl mb-2">📥</div>
+          <div className="mb-2">
+            {(() => { const Icon = icons['Inbox']; return Icon ? <Icon className="h-10 w-10 mx-auto text-muted-foreground" /> : null })()}
+          </div>
           <p className="text-muted-foreground font-medium">
             Drag actions here to build your workflow
           </p>

@@ -205,23 +205,23 @@ export function SocialDashboard({
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
               {[
-                { name: 'Facebook', icon: '📘', color: '#1877F2', desc: 'Pages & Groups' },
-                { name: 'Instagram', icon: '📷', color: '#E4405F', desc: 'Business & Creator' },
-                { name: 'Twitter/X', icon: '🐦', color: '#1DA1F2', desc: 'Posts & Threads' },
-                { name: 'LinkedIn', icon: '💼', color: '#0A66C2', desc: 'Profile & Company' },
-                { name: 'TikTok', icon: '🎵', color: '#000000', desc: 'Videos & Analytics' },
+                { name: 'Facebook', icon: 'F', color: '#1877F2', desc: 'Pages & Groups' },
+                { name: 'Instagram', icon: 'I', color: '#E4405F', desc: 'Business & Creator' },
+                { name: 'Twitter/X', icon: 'X', color: '#1DA1F2', desc: 'Posts & Threads' },
+                { name: 'LinkedIn', icon: 'L', color: '#0A66C2', desc: 'Profile & Company' },
+                { name: 'TikTok', icon: 'T', color: '#000000', desc: 'Videos & Analytics' },
               ].map((platform) => (
                 <Button
                   key={platform.name}
                   variant="outline"
                   className="h-auto flex-col py-4 hover:border-primary/50"
                   onClick={() => {
-                    toast.info(`Social media connection for ${platform.name} is coming soon! We're working on OAuth integration for all major platforms.`, {
+                    toast.info(`Social media connections require configuration in your account settings.`, {
                       duration: 5000,
                     })
                   }}
                 >
-                  <span className="text-2xl mb-1">{platform.icon}</span>
+                  <span className="text-2xl mb-1 font-bold text-muted-foreground">{platform.icon}</span>
                   <span className="font-medium">{platform.name}</span>
                   <span className="text-xs text-muted-foreground">{platform.desc}</span>
                 </Button>

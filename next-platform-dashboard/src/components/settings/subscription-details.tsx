@@ -65,7 +65,9 @@ export function SubscriptionDetails({ userId }: SubscriptionDetailsProps) {
   const handleManageBilling = async () => {
     try {
       toast.info("Opening billing portal...");
-      const res = await fetch("/api/billing/portal").then(r => r.json()).catch(() => null);
+      const res = await fetch("/api/billing/paddle/subscription/update-payment", {
+        method: "POST",
+      }).then(r => r.json()).catch(() => null);
       if (res?.url) {
         window.location.href = res.url;
       } else {
