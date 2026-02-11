@@ -1,6 +1,53 @@
 # Active Context
 
-## Latest Session Update (Domain/Email ResellerClub Integration — Commit `3ba184c`)
+## Latest Session Update (Social Media SM-04/05/06 — Commit `ebc04f0`)
+
+### Social Media Phases SM-04, SM-05, SM-06 Implemented ✅
+
+**Commit:** `ebc04f0` — 23 files changed, +5,346 insertions, -73 deletions
+
+#### SM-04: Unified Inbox Engine ✅
+| File | Change | Status |
+|------|--------|--------|
+| `lib/sentiment-analysis.ts` | Keyword-based sentiment scoring + priority detection | ✅ |
+| `lib/inbox-sync-service.ts` | All 10 platform inbox sync with deduplication | ✅ |
+| `lib/inbox-reply-service.ts` | Platform-specific reply dispatch | ✅ |
+| `api/social/webhooks/[platform]/route.ts` | GET verification + POST event processing | ✅ |
+| `actions/inbox-actions.ts` | Real sendPlatformReply + syncInbox action | ✅ |
+| `api/social/sync/route.ts` | Added inbox sync to cron | ✅ |
+| `components/SocialInboxWrapper.tsx` | Sync + reply toast feedback | ✅ |
+| `components/SocialInbox.tsx` | Sentiment dots, priority badges, verified/follower badges | ✅ |
+
+#### SM-05: Media Library & Storage ✅
+| File | Change | Status |
+|------|--------|--------|
+| `migrations/sm-05-media-storage.sql` | Storage bucket + RLS + folders table | ✅ |
+| `lib/media-upload-service.ts` | Upload, validate, delete, getLibrary with platform constraints | ✅ |
+| `actions/media-actions.ts` | Folder CRUD, metadata, bulk ops, search, usage | ✅ |
+| `components/MediaLibrary.tsx` | Grid/list views, folders, search, bulk actions, detail sheet | ✅ |
+| `components/MediaLibraryWrapper.tsx` | Client wrapper with state management | ✅ |
+| `social/media/page.tsx` | Server component for media page | ✅ |
+| `social/layout.tsx` | Added Media nav item | ✅ |
+| `PostComposerEnhanced.tsx` | Real Supabase Storage uploads | ✅ |
+
+#### SM-06: AI Content Engine ✅
+| File | Change | Status |
+|------|--------|--------|
+| `lib/ai-content-service.ts` | 8 AI functions using Claude claude-sonnet-4-20250514 via AI SDK | ✅ |
+| `actions/ai-actions.ts` | 8 action wrappers with error handling | ✅ |
+| `components/ui/ai-assistant-panel.tsx` | Slide-over panel with 6 interactive sections | ✅ |
+| `PostComposerEnhanced.tsx` | AI toggle button + panel integration | ✅ |
+| `actions/index.ts` | Added media-actions + ai-actions exports | ✅ |
+| `index.ts` | Updated barrel with all new exports | ✅ |
+
+### Environment Requirements
+- `ANTHROPIC_API_KEY` — Required for AI Content Engine (SM-06)
+- Supabase Storage bucket `social-media` — Run `sm-05-media-storage.sql` migration
+- Webhook URLs configured per platform for real-time inbox (SM-04)
+
+---
+
+## Previous Session (Domain/Email ResellerClub Integration — Commit `3ba184c`)
 
 ### Domain Services Connected to Live ResellerClub API ✅
 

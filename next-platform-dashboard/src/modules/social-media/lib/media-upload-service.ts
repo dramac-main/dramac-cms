@@ -1,5 +1,3 @@
-'use server'
-
 /**
  * Media Upload Service
  * 
@@ -126,6 +124,7 @@ export async function uploadSocialMedia(params: {
   altText?: string
   tags?: string[]
 }): Promise<{ media: PostMedia | null; libraryItem: MediaLibraryItem | null; error?: string }> {
+  'use server'
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { media: null, libraryItem: null, error: 'Not authenticated' }
@@ -282,6 +281,7 @@ export async function uploadMultipleSocialMedia(params: {
   files: Array<{ name: string; type: string; size: number; base64: string }>
   folderId?: string
 }): Promise<{ media: PostMedia[]; errors: string[] }> {
+  'use server'
   const results: PostMedia[] = []
   const errors: string[] = []
 
@@ -370,6 +370,7 @@ export async function deleteSocialMedia(
   mediaId: string,
   siteId: string
 ): Promise<{ success: boolean; error?: string }> {
+  'use server'
   const supabase = await createClient()
 
   // Fetch media record
@@ -420,6 +421,7 @@ export async function getMediaLibrary(siteId: string, options?: {
   sort?: 'created_at' | 'file_name' | 'usage_count' | 'file_size'
   order?: 'asc' | 'desc'
 }): Promise<{ items: MediaLibraryItem[]; total: number; error?: string }> {
+  'use server'
   const supabase = await createClient()
   const page = options?.page || 1
   const limit = options?.limit || 30
