@@ -424,14 +424,14 @@ export async function connectBlueskyAccount(
   data: { handle: string; appPassword: string },
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    // Dynamic import – @atproto/api may not be installed yet
-    let BskyAgent: any
+    // Dynamic import – @atproto/api is optional (falls back to direct HTTP)
+    let BskyAgent: any = null
     try {
       const atproto = await import('@atproto/api')
       BskyAgent = atproto.BskyAgent ?? atproto.AtpAgent ?? (atproto as any).default?.BskyAgent
-    } catch {
-      // If the package is not installed, fall back to direct HTTP
-      BskyAgent = null
+    } catch (err) {
+      // Package not installed, use direct HTTP fallback
+      console.log('Using Bluesky HTTP fallback (atproto package not installed)')
     }
 
     let did: string

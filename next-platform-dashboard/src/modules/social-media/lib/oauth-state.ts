@@ -5,8 +5,6 @@
  * stored in the social_oauth_states table.
  */
 
-'use server'
-
 import { createClient } from '@/lib/supabase/server'
 import crypto from 'crypto'
 
@@ -35,6 +33,7 @@ export async function createOAuthState(params: {
   userId: string
   usePKCE?: boolean
 }): Promise<{ state: string; codeVerifier?: string }> {
+  'use server'
   const supabase = await createClient()
   const state = crypto.randomBytes(24).toString('hex')
   const codeVerifier = params.usePKCE ? generateCodeVerifier() : undefined
@@ -62,6 +61,7 @@ export async function consumeOAuthState(state: string): Promise<{
   userId: string
   codeVerifier: string | null
 } | null> {
+  'use server'
   const supabase = await createClient()
 
   const { data, error } = await (supabase as any)
