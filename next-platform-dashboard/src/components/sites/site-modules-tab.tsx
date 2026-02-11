@@ -146,7 +146,7 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
                     {isEnabled && (
                       <>
                         {/* Open button for modules with dashboards */}
-                        {(module.slug === 'booking' || module.slug === 'crm' || module.slug === 'ecommerce' || module.slug === 'automation' || module.slug === 'social-media' || module.slug === 'ai-agents') && (
+                        {(module.slug === 'booking' || module.slug === 'crm' || module.slug === 'ecommerce' || module.slug === 'automation' || module.slug === 'social-media' || module.slug === 'ai-agents' || module.slug === 'live-chat') && (
                           <Button 
                             variant="default" 
                             size="sm"
@@ -156,6 +156,7 @@ export function SiteModulesTab({ siteId }: SiteModulesTabProps) {
                               module.slug === 'crm' ? 'crm-module' : 
                               module.slug === 'social-media' ? 'social' :
                               module.slug === 'ai-agents' ? 'ai-agents' :
+                              module.slug === 'live-chat' ? 'live-chat' :
                               module.slug
                             }`}>
                               <ExternalLink className="w-4 h-4 mr-1" />

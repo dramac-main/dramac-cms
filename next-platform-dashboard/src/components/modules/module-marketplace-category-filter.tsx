@@ -31,7 +31,7 @@ export function ModuleCategoryFilter({
             key={category.id}
             variant={selected === category.id ? "default" : "outline"}
             size="sm"
-            onClick={() => onChange(category.id)}
+            onClick={() => onChange(category.id as ModuleCategory)}
             className={cn(
               selected === category.id && "bg-primary"
             )}

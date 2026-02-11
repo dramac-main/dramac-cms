@@ -302,33 +302,33 @@ export const BookingModuleManifest: ModuleManifest = {
     mainMenu: {
       label: 'Booking',
       icon: 'Calendar',
-      href: '/dashboard/[siteId]/booking',
+      href: '/dashboard/sites/[siteId]/booking',
       order: 35  // After CRM (30)
     },
     subMenu: [
       {
         label: 'Appointments',
-        href: '/dashboard/[siteId]/booking?view=appointments',
+        href: '/dashboard/sites/[siteId]/booking?view=appointments',
         icon: 'CalendarCheck'
       },
       {
         label: 'Calendar',
-        href: '/dashboard/[siteId]/booking?view=calendar',
+        href: '/dashboard/sites/[siteId]/booking?view=calendar',
         icon: 'CalendarDays'
       },
       {
         label: 'Services',
-        href: '/dashboard/[siteId]/booking?view=services',
+        href: '/dashboard/sites/[siteId]/booking?view=services',
         icon: 'Briefcase'
       },
       {
         label: 'Staff',
-        href: '/dashboard/[siteId]/booking?view=staff',
+        href: '/dashboard/sites/[siteId]/booking?view=staff',
         icon: 'Users'
       },
       {
         label: 'Analytics',
-        href: '/dashboard/[siteId]/booking?view=analytics',
+        href: '/dashboard/sites/[siteId]/booking?view=analytics',
         icon: 'BarChart3'
       }
     ]

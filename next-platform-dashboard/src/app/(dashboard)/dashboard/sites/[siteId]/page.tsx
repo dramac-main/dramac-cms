@@ -15,7 +15,7 @@ import { ExportSiteButton } from "@/components/sites/export-site-button";
 import { SiteDetailOverflowMenu } from "@/components/sites/site-detail-overflow-menu";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pencil, ExternalLink, BarChart3 } from "lucide-react";
+import { Pencil, ExternalLink, BarChart3, MessageCircle, Calendar, ShoppingCart, Zap, Bot, Wand2 } from "lucide-react";
 import { getSiteUrl, getSiteDomain } from "@/lib/utils/site-url";
 import { PLATFORM } from "@/lib/constants/platform";
 
@@ -49,11 +49,19 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
   const hasSocial = enabledModules.has("social-media");
   const hasAutomation = enabledModules.has("automation");
   const hasAIAgents = enabledModules.has("ai-agents");
+  const hasBooking = enabledModules.has("booking");
+  const hasEcommerce = enabledModules.has("ecommerce");
+  const hasLiveChat = enabledModules.has("live-chat");
   
   // Build valid tabs list based on enabled modules
   const validTabs = ["overview", "pages", "blog", "modules", "analytics"];
   if (hasCRM) validTabs.push("crm");
   if (hasSocial) validTabs.push("social");
+  if (hasBooking) validTabs.push("booking");
+  if (hasEcommerce) validTabs.push("ecommerce");
+  if (hasLiveChat) validTabs.push("live-chat");
+  if (hasAutomation) validTabs.push("automation");
+  if (hasAIAgents) validTabs.push("ai-agents");
   
   const defaultTab = tab && validTabs.includes(tab) ? tab : "overview";
 
@@ -67,6 +75,12 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
           <Button variant="outline">
             <Pencil className="mr-2 h-4 w-4" />
             Edit Pages
+          </Button>
+        </Link>
+        <Link href={`/dashboard/sites/${site.id}/ai-designer`}>
+          <Button variant="outline">
+            <Wand2 className="mr-2 h-4 w-4" />
+            AI Designer
           </Button>
         </Link>
         {site.published && (
@@ -97,8 +111,13 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
           <TabsTrigger value="blog">Blog</TabsTrigger>
           <TabsTrigger value="modules">Modules</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          {hasBooking && <TabsTrigger value="booking">Booking</TabsTrigger>}
+          {hasEcommerce && <TabsTrigger value="ecommerce">E-Commerce</TabsTrigger>}
+          {hasLiveChat && <TabsTrigger value="live-chat">Live Chat</TabsTrigger>}
           {hasCRM && <TabsTrigger value="crm">CRM</TabsTrigger>}
           {hasSocial && <TabsTrigger value="social">Social</TabsTrigger>}
+          {hasAutomation && <TabsTrigger value="automation">Automation</TabsTrigger>}
+          {hasAIAgents && <TabsTrigger value="ai-agents">AI Agents</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="overview">
@@ -127,10 +146,10 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
               <p className="text-muted-foreground">
                 View detailed analytics including traffic sources, visitor metrics, device breakdown, geo data, and performance insights.
               </p>
-              <Link href={`/sites/${site.id}/analytics`}>
+              <Link href={`/dashboard/sites/${site.id}/seo`}>
                 <Button size="lg" className="mt-4">
                   <BarChart3 className="mr-2 h-4 w-4" />
-                  Open Full Analytics Dashboard
+                  Open SEO & Analytics
                 </Button>
               </Link>
             </div>
@@ -146,6 +165,116 @@ export default async function SiteDetailPage({ params, searchParams }: SiteDetai
         {hasSocial && (
           <TabsContent value="social">
             <SiteSocialTab siteId={site.id} />
+          </TabsContent>
+        )}
+
+        {hasBooking && (
+          <TabsContent value="booking">
+            <div className="rounded-lg border bg-card p-8 text-center">
+              <div className="mx-auto max-w-md space-y-4">
+                <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Calendar className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold">Booking & Scheduling</h3>
+                <p className="text-muted-foreground">
+                  Manage appointments, services, staff schedules, and online booking for your clients.
+                </p>
+                <Link href={`/dashboard/sites/${site.id}/booking`}>
+                  <Button size="lg" className="mt-4">
+                    <Calendar className="mr-2 h-4 w-4" />
+                    Open Booking Dashboard
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </TabsContent>
+        )}
+
+        {hasEcommerce && (
+          <TabsContent value="ecommerce">
+            <div className="rounded-lg border bg-card p-8 text-center">
+              <div className="mx-auto max-w-md space-y-4">
+                <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <ShoppingCart className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold">E-Commerce Store</h3>
+                <p className="text-muted-foreground">
+                  Manage products, orders, inventory, discounts, and your online storefront.
+                </p>
+                <Link href={`/dashboard/sites/${site.id}/ecommerce`}>
+                  <Button size="lg" className="mt-4">
+                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    Open Store Dashboard
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </TabsContent>
+        )}
+
+        {hasLiveChat && (
+          <TabsContent value="live-chat">
+            <div className="rounded-lg border bg-card p-8 text-center">
+              <div className="mx-auto max-w-md space-y-4">
+                <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MessageCircle className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold">Live Chat & Messaging</h3>
+                <p className="text-muted-foreground">
+                  Real-time customer conversations, WhatsApp integration, AI auto-responder, and agent dashboard.
+                </p>
+                <Link href={`/dashboard/sites/${site.id}/live-chat`}>
+                  <Button size="lg" className="mt-4">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Open Live Chat Dashboard
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </TabsContent>
+        )}
+
+        {hasAutomation && (
+          <TabsContent value="automation">
+            <div className="rounded-lg border bg-card p-8 text-center">
+              <div className="mx-auto max-w-md space-y-4">
+                <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Zap className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold">Automation Workflows</h3>
+                <p className="text-muted-foreground">
+                  Create automated workflows with triggers, conditions, and actions to streamline operations.
+                </p>
+                <Link href={`/dashboard/sites/${site.id}/automation`}>
+                  <Button size="lg" className="mt-4">
+                    <Zap className="mr-2 h-4 w-4" />
+                    Open Automation Dashboard
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </TabsContent>
+        )}
+
+        {hasAIAgents && (
+          <TabsContent value="ai-agents">
+            <div className="rounded-lg border bg-card p-8 text-center">
+              <div className="mx-auto max-w-md space-y-4">
+                <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Bot className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold">AI Agents</h3>
+                <p className="text-muted-foreground">
+                  Deploy intelligent AI agents with memory, tools, and goals to automate complex tasks.
+                </p>
+                <Link href={`/dashboard/sites/${site.id}/ai-agents`}>
+                  <Button size="lg" className="mt-4">
+                    <Bot className="mr-2 h-4 w-4" />
+                    Open AI Agents Dashboard
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </TabsContent>
         )}
       </Tabs>

@@ -310,48 +310,48 @@ export const EcommerceModuleManifest: ModuleManifest = {
     mainMenu: {
       label: 'E-Commerce',
       icon: 'ShoppingBag',
-      href: '/ecommerce',
+      href: '/dashboard/sites/[siteId]/ecommerce',
       order: 40
     },
     subMenu: [
       {
         label: 'Dashboard',
-        href: '/ecommerce',
+        href: '/dashboard/sites/[siteId]/ecommerce',
         icon: 'LayoutDashboard'
       },
       {
         label: 'Products',
-        href: '/ecommerce/products',
+        href: '/dashboard/sites/[siteId]/ecommerce?view=products',
         icon: 'Package'
       },
       {
         label: 'Categories',
-        href: '/ecommerce/categories',
+        href: '/dashboard/sites/[siteId]/ecommerce?view=categories',
         icon: 'FolderTree'
       },
       {
         label: 'Orders',
-        href: '/ecommerce/orders',
+        href: '/dashboard/sites/[siteId]/ecommerce?view=orders',
         icon: 'ShoppingCart'
       },
       {
         label: 'Discounts',
-        href: '/ecommerce/discounts',
+        href: '/dashboard/sites/[siteId]/ecommerce?view=discounts',
         icon: 'Percent'
       },
       {
         label: 'Customers',
-        href: '/ecommerce/customers',
+        href: '/dashboard/sites/[siteId]/ecommerce?view=customers',
         icon: 'Users'
       },
       {
         label: 'Analytics',
-        href: '/ecommerce/analytics',
+        href: '/dashboard/sites/[siteId]/ecommerce?view=analytics',
         icon: 'BarChart3'
       },
       {
         label: 'Settings',
-        href: '/ecommerce/settings',
+        href: '/dashboard/sites/[siteId]/ecommerce?view=settings',
         icon: 'Settings'
       }
     ]

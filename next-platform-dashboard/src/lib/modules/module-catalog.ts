@@ -530,7 +530,7 @@ Customizable widget, chat history, and offline messages.
     version: "1.5.0",
     icon: "MessageCircle",
     screenshots: [],
-    category: "communication",
+    category: "chat",
     tags: ["chat", "support", "customer-service", "messaging"],
     author: {
       name: "DRAMAC",
@@ -576,7 +576,7 @@ Categories, tags, comments, and SEO optimization built-in.
     version: "2.0.0",
     icon: "Newspaper",
     screenshots: [],
-    category: "content",
+    category: "blog",
     tags: ["blog", "posts", "articles", "cms"],
     author: {
       name: "DRAMAC",
@@ -767,7 +767,219 @@ Trigger Zapier automations from form submissions, page views, and custom events.
     updatedAt: new Date("2024-06-01"),
   },
   
-  // BUSINESS & CRM - 21st module
+  // CRM
+  {
+    id: "crmmod01",
+    slug: "crm",
+    name: "CRM",
+    description: "Customer relationship management with contacts, companies, deals, and pipeline tracking.",
+    longDescription: `
+Complete CRM solution to manage your customer relationships.
+Track contacts, companies, deals through pipelines, log activities, and generate reports.
+
+## Features
+- Contact & company management
+- Deal pipelines with drag-and-drop
+- Activity logging (calls, emails, meetings, notes)
+- Pipeline analytics and reports
+- Custom fields and tags
+- Import/export contacts
+- Integration with booking and e-commerce modules
+    `,
+    version: "1.0.0",
+    icon: "Building2",
+    screenshots: [],
+    category: "crm",
+    tags: ["crm", "contacts", "deals", "pipeline", "sales", "customers"],
+    author: {
+      name: "DRAMAC",
+      website: "https://dramac.app",
+      verified: true,
+    },
+    pricing: {
+      type: "monthly",
+      amount: 1999, // K19.99
+      currency: DEFAULT_CURRENCY,
+    },
+    features: [
+      "Contact management",
+      "Company management",
+      "Deal pipelines",
+      "Activity logging",
+      "Pipeline analytics",
+      "Custom fields & tags",
+      "Import/export",
+      "Module integration",
+    ],
+    status: "active",
+    rating: 4.7,
+    reviewCount: 65,
+    installCount: 890,
+    createdAt: new Date("2026-01-20"),
+    updatedAt: new Date("2026-01-20"),
+  },
+
+  // SOCIAL MEDIA
+  {
+    id: "socialmod01",
+    slug: "social-media",
+    name: "Social Media Manager",
+    description: "Comprehensive social media management with scheduling, analytics, and AI content generation.",
+    longDescription: `
+All-in-one social media management platform for agencies.
+Schedule posts, manage inboxes, track analytics, and generate AI-powered content across all major platforms.
+
+## Features
+- Multi-platform scheduling (Facebook, Instagram, Twitter/X, LinkedIn, TikTok, YouTube, Pinterest, Threads, Bluesky, Mastodon)
+- Unified inbox with sentiment analysis
+- AI content generation (Claude-powered)
+- Media library with Supabase Storage
+- Campaign management
+- Social listening & competitor tracking
+- Performance analytics & reporting
+- Content calendar
+    `,
+    version: "1.0.0",
+    icon: "Share2",
+    screenshots: [],
+    category: "social-media",
+    tags: ["social", "media", "scheduling", "analytics", "content", "ai"],
+    author: {
+      name: "DRAMAC",
+      website: "https://dramac.app",
+      verified: true,
+    },
+    pricing: {
+      type: "monthly",
+      amount: 3499, // K34.99
+      currency: DEFAULT_CURRENCY,
+    },
+    features: [
+      "10-platform support",
+      "Post scheduling & calendar",
+      "Unified inbox",
+      "AI content generation",
+      "Media library",
+      "Campaign management",
+      "Social listening",
+      "Competitor tracking",
+      "Analytics & reporting",
+      "Content approval workflows",
+    ],
+    status: "active",
+    rating: 4.8,
+    reviewCount: 52,
+    installCount: 720,
+    createdAt: new Date("2026-01-28"),
+    updatedAt: new Date("2026-02-05"),
+  },
+
+  // AUTOMATION
+  {
+    id: "automod01",
+    slug: "automation",
+    name: "Automation Workflows",
+    description: "Visual workflow automation with triggers, conditions, and actions for business process automation.",
+    longDescription: `
+Build powerful automated workflows without code.
+Connect triggers to actions with conditional logic to streamline your operations.
+
+## Features
+- Visual workflow builder
+- Event-based triggers (form submissions, bookings, orders, chat events)
+- Conditional branching
+- Multi-step actions (email, notification, webhook, database)
+- Execution logs and monitoring
+- Pre-built templates
+- External service connections
+- Scheduled triggers
+    `,
+    version: "1.0.0",
+    icon: "Zap",
+    screenshots: [],
+    category: "integrations",
+    tags: ["automation", "workflows", "triggers", "actions", "no-code"],
+    author: {
+      name: "DRAMAC",
+      website: "https://dramac.app",
+      verified: true,
+    },
+    pricing: {
+      type: "monthly",
+      amount: 2499, // K24.99
+      currency: DEFAULT_CURRENCY,
+    },
+    features: [
+      "Visual workflow builder",
+      "Event-based triggers",
+      "Conditional branching",
+      "Email & notification actions",
+      "Webhook integration",
+      "Execution logs",
+      "Pre-built templates",
+      "Scheduled triggers",
+    ],
+    status: "active",
+    rating: 4.6,
+    reviewCount: 28,
+    installCount: 345,
+    createdAt: new Date("2026-01-22"),
+    updatedAt: new Date("2026-01-22"),
+  },
+
+  // AI AGENTS
+  {
+    id: "aimod01",
+    slug: "ai-agents",
+    name: "AI Agents",
+    description: "Deploy intelligent AI agents with memory, tools, and goals to automate complex tasks.",
+    longDescription: `
+Create and deploy AI agents that learn, adapt, and automate complex workflows.
+Each agent has persistent memory, configurable tools, and definable goals.
+
+## Features
+- Agent builder with goal configuration
+- Persistent memory across sessions
+- Tool integration (database, API, email, etc.)
+- Usage analytics and cost tracking
+- Agent marketplace with pre-built agents
+- Testing sandbox
+- Approval workflows for sensitive actions
+    `,
+    version: "1.0.0",
+    icon: "Bot",
+    screenshots: [],
+    category: "integrations",
+    tags: ["ai", "agents", "automation", "intelligence", "claude"],
+    author: {
+      name: "DRAMAC",
+      website: "https://dramac.app",
+      verified: true,
+    },
+    pricing: {
+      type: "monthly",
+      amount: 4999, // K49.99
+      currency: DEFAULT_CURRENCY,
+    },
+    features: [
+      "Agent builder",
+      "Persistent memory",
+      "Tool integration",
+      "Usage analytics",
+      "Agent marketplace",
+      "Testing sandbox",
+      "Approval workflows",
+      "Cost tracking",
+    ],
+    status: "beta",
+    rating: 4.5,
+    reviewCount: 12,
+    installCount: 89,
+    createdAt: new Date("2026-02-01"),
+    updatedAt: new Date("2026-02-01"),
+  },
+
+  // BOOKING & SCHEDULING
   {
     id: "bookmod01",
     slug: "booking",
@@ -798,7 +1010,7 @@ Perfect for salons, spas, consultants, medical offices, and any business that ta
     version: "1.0.0",
     icon: "Calendar",
     screenshots: ["/modules/booking/screenshot-calendar.png", "/modules/booking/screenshot-appointments.png"],
-    category: "content",
+    category: "booking",
     tags: ["booking", "appointments", "calendar", "scheduling", "reservations", "services"],
     author: {
       name: "DRAMAC",
@@ -903,20 +1115,21 @@ Supports both physical and digital products with variant management, inventory t
   },
 ];
 
-// Category metadata
-export const MODULE_CATEGORIES: { id: ModuleCategory; label: string; icon: string; description: string }[] = [
+// Category metadata for catalog display (array format for marketplace UI)
+export const MODULE_CATEGORIES: { id: string; label: string; icon: string; description: string }[] = [
   { id: "analytics", label: "Analytics", icon: "ChartBar", description: "Track and analyze visitor behavior" },
   { id: "seo", label: "SEO", icon: "Target", description: "Optimize for search engines" },
   { id: "ecommerce", label: "E-Commerce", icon: "ShoppingCart", description: "Sell products and services" },
   { id: "forms", label: "Forms", icon: "FileText", description: "Collect leads and data" },
-  { id: "social", label: "Social", icon: "Megaphone", description: "Social media integration" },
+  { id: "social-media", label: "Social Media", icon: "Share2", description: "Social media management" },
   { id: "marketing", label: "Marketing", icon: "Mail", description: "Email and campaigns" },
   { id: "security", label: "Security", icon: "Lock", description: "Protect your site" },
   { id: "performance", label: "Performance", icon: "Zap", description: "Speed optimization" },
-  { id: "communication", label: "Communication", icon: "MessageCircle", description: "Chat and messaging" },
-  { id: "content", label: "Content", icon: "Newspaper", description: "CMS and publishing" },
+  { id: "chat", label: "Communication", icon: "MessageCircle", description: "Chat and messaging" },
+  { id: "booking", label: "Booking", icon: "Calendar", description: "Scheduling and appointments" },
+  { id: "crm", label: "CRM", icon: "Building2", description: "Customer relationship management" },
+  { id: "blog", label: "Content", icon: "Newspaper", description: "CMS and publishing" },
   { id: "integrations", label: "Integrations", icon: "Link", description: "Connect third-party apps" },
-  { id: "utilities", label: "Utilities", icon: "Wrench", description: "Helpful tools" },
 ];
 
 // Helper functions

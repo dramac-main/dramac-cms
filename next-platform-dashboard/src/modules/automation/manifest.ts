@@ -171,15 +171,15 @@ export const automationManifest: AutomationManifest = {
   navigation: [
     {
       name: 'Automations',
-      href: '/automation',
+      href: '/dashboard/sites/[siteId]/automation',
       icon: 'Workflow',
       badge: null,
       children: [
-        { name: 'All Workflows', href: '/automation' },
-        { name: 'Create Workflow', href: '/automation/new' },
-        { name: 'Executions', href: '/automation/executions' },
-        { name: 'Connections', href: '/automation/connections' },
-        { name: 'Settings', href: '/automation/settings' },
+        { name: 'All Workflows', href: '/dashboard/sites/[siteId]/automation' },
+        { name: 'Create Workflow', href: '/dashboard/sites/[siteId]/automation/workflows' },
+        { name: 'Executions', href: '/dashboard/sites/[siteId]/automation/executions' },
+        { name: 'Connections', href: '/dashboard/sites/[siteId]/automation/connections' },
+        { name: 'Settings', href: '/dashboard/sites/[siteId]/automation/templates' },
       ],
     },
   ],

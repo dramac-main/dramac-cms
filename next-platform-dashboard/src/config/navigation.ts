@@ -10,8 +10,6 @@ import {
   Shield,
   ImageIcon,
   Building2,
-  Bot,
-  BarChart3,
   Mail,
   ArrowRightLeft,
   Server,

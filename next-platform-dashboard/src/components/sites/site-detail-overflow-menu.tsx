@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CloneSiteDialog } from "@/components/sites/clone-site-dialog";
 
 interface SiteDetailOverflowMenuProps {
   siteId: string;
@@ -20,6 +21,9 @@ interface SiteDetailOverflowMenuProps {
 
 export function SiteDetailOverflowMenu({
   siteId,
+  siteName,
+  clientId,
+  agencyId,
 }: SiteDetailOverflowMenuProps) {
   return (
     <DropdownMenu>
@@ -37,12 +41,17 @@ export function SiteDetailOverflowMenu({
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href={`/dashboard/sites/${siteId}/settings`}>
+        <CloneSiteDialog
+          siteId={siteId}
+          siteName={siteName}
+          clientId={clientId || ""}
+          agencyId={agencyId}
+        >
+          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
             <Copy className="mr-2 h-4 w-4" />
             Clone Site
-          </Link>
-        </DropdownMenuItem>
+          </DropdownMenuItem>
+        </CloneSiteDialog>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={`/dashboard/sites/${siteId}/settings`}>
