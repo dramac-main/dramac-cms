@@ -17,7 +17,7 @@ export async function findOrCreateCrmContact(
   visitor: ChatVisitor
 ): Promise<{ contactId: string | null; isNew: boolean; error: string | null }> {
   try {
-    const supabase = createAdminClient()
+    const supabase = createAdminClient() as any
 
     // Get agency_id for the site
     const { data: site } = await supabase
@@ -43,9 +43,7 @@ export async function findOrCreateCrmContact(
         .eq('email', visitor.email)
         .single()
 
-      if (existing) {
-        contactId = existing.id
-      }
+      if (existing) contactId = existing.id
     }
 
     if (!contactId && visitor.phone) {
@@ -56,9 +54,7 @@ export async function findOrCreateCrmContact(
         .eq('phone', visitor.phone)
         .single()
 
-      if (existing) {
-        contactId = existing.id
-      }
+      if (existing) contactId = existing.id
     }
 
     if (!contactId && visitor.whatsappPhone) {
@@ -69,14 +65,12 @@ export async function findOrCreateCrmContact(
         .eq('phone', visitor.whatsappPhone)
         .single()
 
-      if (existing) {
-        contactId = existing.id
-      }
+      if (existing) contactId = existing.id
     }
 
     // Found existing contact — link it
     if (contactId) {
-      await (supabase as any)
+      await supabase
         .from('mod_chat_visitors')
         .update({ crm_contact_id: contactId })
         .eq('id', visitor.id)
@@ -108,7 +102,7 @@ export async function findOrCreateCrmContact(
     }
 
     // Link visitor to CRM contact
-    await (supabase as any)
+    await supabase
       .from('mod_chat_visitors')
       .update({ crm_contact_id: newContact.id })
       .eq('id', visitor.id)
@@ -134,7 +128,7 @@ export async function logChatActivity(
   summary: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = createAdminClient()
+    const supabase = createAdminClient() as any
 
     const { data: site } = await supabase
       .from('sites')

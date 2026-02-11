@@ -8,6 +8,7 @@ import { isClientAvailable } from "@/lib/resellerclub/client";
 import { domainService } from "@/lib/resellerclub/domains";
 import { customerService } from "@/lib/resellerclub/customers";
 import { contactService } from "@/lib/resellerclub/contacts";
+import { arePurchasesAllowed } from "@/lib/resellerclub/config";
 import type { 
   DomainFilters, 
   DomainWithDetails, 
@@ -841,6 +842,7 @@ export async function getResellerClubStatus(): Promise<{
   data: {
     configured: boolean;
     connected: boolean;
+    purchasesEnabled: boolean;
     balance?: number;
     currency?: string;
   };
@@ -850,14 +852,14 @@ export async function getResellerClubStatus(): Promise<{
     if (!configured) {
       return { 
         success: true, 
-        data: { configured: false, connected: false } 
+        data: { configured: false, connected: false, purchasesEnabled: false } 
       };
     }
     
     if (!isClientAvailable()) {
       return { 
         success: true, 
-        data: { configured: true, connected: false } 
+        data: { configured: true, connected: false, purchasesEnabled: false } 
       };
     }
 
@@ -871,6 +873,7 @@ export async function getResellerClubStatus(): Promise<{
         data: {
           configured: true,
           connected: true,
+          purchasesEnabled: arePurchasesAllowed(),
           balance: balance.balance,
           currency: balance.currency,
         },
@@ -878,13 +881,13 @@ export async function getResellerClubStatus(): Promise<{
     } catch {
       return {
         success: true,
-        data: { configured: true, connected: false },
+        data: { configured: true, connected: false, purchasesEnabled: false },
       };
     }
   } catch {
     return {
       success: true,
-      data: { configured: false, connected: false },
+      data: { configured: false, connected: false, purchasesEnabled: false },
     };
   }
 }

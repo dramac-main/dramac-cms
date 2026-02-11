@@ -2,7 +2,8 @@
 // Business Email (Titan) API Client via ResellerClub
 
 import { getResellerClubClient } from '../client';
-import { ResellerClubError } from '../errors';
+import { ResellerClubError, PurchasesDisabledError } from '../errors';
+import { arePurchasesAllowed } from '../config';
 import type {
   CreateEmailOrderParams,
   AddEmailAccountParams,
@@ -37,6 +38,11 @@ export const businessEmailApi = {
    * POST /api/eelite/add.json
    */
   async createOrder(params: CreateEmailOrderParams): Promise<{ orderId: string; invoiceId: string }> {
+    // ⚠️ SAFETY: This operation spends real money
+    if (!arePurchasesAllowed()) {
+      throw new PurchasesDisabledError('email order creation');
+    }
+
     const client = getResellerClubClient();
     
     const response = await client.post<{ entityid: string; invoiceid?: string }>('eelite/add.json', {
@@ -63,6 +69,11 @@ export const businessEmailApi = {
    * POST /api/eelite/renew.json
    */
   async renewOrder(params: RenewEmailOrderParams): Promise<{ success: boolean; invoiceId: string }> {
+    // ⚠️ SAFETY: This operation spends real money
+    if (!arePurchasesAllowed()) {
+      throw new PurchasesDisabledError('email order renewal');
+    }
+
     const client = getResellerClubClient();
     
     const response = await client.post<{ invoiceid?: string }>('eelite/renew.json', {

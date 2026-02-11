@@ -193,6 +193,22 @@ export class ContactNotFoundError extends ResellerClubError {
 }
 
 /**
+ * Purchases are disabled — safety guard to prevent accidental money spending.
+ * Set RESELLERCLUB_ALLOW_PURCHASES=true in .env.local to enable paid operations.
+ */
+export class PurchasesDisabledError extends ResellerClubError {
+  constructor(operation: string) {
+    super(
+      `${operation} is blocked because RESELLERCLUB_ALLOW_PURCHASES is not set to "true". ` +
+      `This safety guard prevents accidental charges on your ResellerClub account. ` +
+      `Set RESELLERCLUB_ALLOW_PURCHASES=true in your .env.local when you are ready to make real purchases.`,
+      'PURCHASES_DISABLED'
+    );
+    this.name = 'PurchasesDisabledError';
+  }
+}
+
+/**
  * Domain not found
  */
 export class DomainNotFoundError extends ResellerClubError {

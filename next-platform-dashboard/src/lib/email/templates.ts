@@ -764,4 +764,43 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ''}
     `),
     text: (data) => `Domain Expiry Notice\n\nYour domain ${data.domainName} will expire on ${data.expiryDate} (in ${data.daysUntilExpiry} days).\n\n${data.autoRenew === true || data.autoRenew === 'true' ? 'Auto-renewal is enabled.' : `Auto-renewal is disabled. Renew at: ${data.renewUrl || 'your dashboard'}`}`,
   },
+
+  // ============================================
+  // LIVE CHAT EMAILS
+  // ============================================
+
+  chat_transcript: {
+    subject: (data) => `Chat Transcript — ${data.visitorName || 'Visitor'} (${data.channel || 'widget'})`,
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">💬 Chat Transcript</h1>
+      <p style="${STYLES.text}">Here is the transcript for your chat conversation.</p>
+      <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Visitor:</strong> ${data.visitorName || 'Unknown'} (${data.visitorEmail || 'N/A'})</p>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Agent:</strong> ${data.agentName || 'Unassigned'}</p>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Channel:</strong> ${data.channel || 'widget'}</p>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Messages:</strong> ${data.messageCount || 0}</p>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Started:</strong> ${data.startedAt || 'N/A'}</p>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Ended:</strong> ${data.endedAt || 'N/A'}</p>
+      </div>
+      <pre style="background: #1f2937; color: #e5e7eb; padding: 16px; border-radius: 8px; font-size: 12px; white-space: pre-wrap; overflow-x: auto;">${data.transcript || 'No transcript available.'}</pre>
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View in Dashboard</a></p>` : ''}
+    `),
+    text: (data) => `Chat Transcript\n\nVisitor: ${data.visitorName || 'Unknown'} (${data.visitorEmail || 'N/A'})\nAgent: ${data.agentName || 'Unassigned'}\nChannel: ${data.channel || 'widget'}\n\n${data.transcript || 'No transcript available.'}`,
+  },
+
+  chat_missed_notification: {
+    subject: (data) => `⚠️ Missed Chat from ${data.visitorName || 'a visitor'} — ${data.siteName || 'your site'}`,
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">⚠️ Missed Chat</h1>
+      <p style="${STYLES.text}">A visitor tried to chat but no agents were available.</p>
+      <div style="background: #fef2f2; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #ef4444;">
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Visitor:</strong> ${data.visitorName || 'Unknown'} (${data.visitorEmail || 'N/A'})</p>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Channel:</strong> ${data.channel || 'widget'}</p>
+        <p style="margin: 4px 0; font-size: 13px;"><strong>Time:</strong> ${data.missedAt || 'N/A'}</p>
+        <p style="margin: 8px 0 0 0; font-size: 13px;"><strong>Message:</strong> "${data.visitorMessage || 'No message'}"</p>
+      </div>
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">View Conversations</a></p>` : ''}
+    `),
+    text: (data) => `Missed Chat\n\nA visitor tried to chat on ${data.siteName || 'your site'} but no agents were available.\n\nVisitor: ${data.visitorName || 'Unknown'}\nMessage: ${data.visitorMessage || 'No message'}\nTime: ${data.missedAt || 'N/A'}\n\n${data.dashboardUrl ? `View: ${data.dashboardUrl}` : ''}`,
+  },
 };

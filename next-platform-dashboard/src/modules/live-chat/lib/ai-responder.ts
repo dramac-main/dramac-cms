@@ -134,7 +134,6 @@ Previous conversations: ${visitorInfo?.total_conversations || 0}`
       model: getModel(),
       system: systemPrompt,
       prompt: visitorMessage,
-      maxTokens: 300,
     })
 
     // Estimate confidence based on knowledge base match
@@ -264,7 +263,6 @@ Format: Return exactly 3 responses separated by "---".
 KNOWLEDGE BASE:
 ${kbText}`,
       prompt: `Visitor message: "${visitorMessage}"\n\nSuggest 3 different agent responses:`,
-      maxTokens: 500,
     })
 
     const parts = result.text
@@ -342,7 +340,6 @@ SUMMARY: [1-2 sentence summary]
 SENTIMENT: [positive|neutral|negative]
 TOPICS: [comma-separated list of 2-4 topics]`,
       prompt: transcript,
-      maxTokens: 200,
     })
 
     const text = result.text

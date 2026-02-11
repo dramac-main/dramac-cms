@@ -329,7 +329,7 @@ export async function getChannelBreakdown(
     const supabase = await createClient()
     const db = supabase as any
 
-    const channels: ConversationChannel[] = ['widget', 'whatsapp', 'api', 'facebook', 'instagram']
+    const channels: ConversationChannel[] = ['widget', 'whatsapp', 'api']
     const results: Array<{ channel: ConversationChannel; count: number; percentage: number }> = []
     let total = 0
 

@@ -399,7 +399,7 @@ export function ChatAnalyticsWrapper({ siteId }: ChatAnalyticsWrapperProps) {
                   />
                   <Tooltip
                     labelFormatter={(d) => new Date(d as string).toLocaleDateString()}
-                    formatter={(v: number) => [formatDuration(v)]}
+                    formatter={(v: unknown) => [formatDuration(Number(v))]}
                   />
                   <Legend />
                   <Area
@@ -447,7 +447,7 @@ export function ChatAnalyticsWrapper({ siteId }: ChatAnalyticsWrapperProps) {
                     cx="50%"
                     cy="50%"
                     outerRadius={70}
-                    label={({ channel, percentage }) => `${channel} ${percentage}%`}
+                    label
                   >
                     {channelBreakdown.map((_, i) => (
                       <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
@@ -480,7 +480,7 @@ export function ChatAnalyticsWrapper({ siteId }: ChatAnalyticsWrapperProps) {
                     tickFormatter={(r) => `${r}★`}
                   />
                   <YAxis fontSize={11} />
-                  <Tooltip formatter={(v: number) => [v, 'Ratings']} />
+                  <Tooltip formatter={(v: unknown) => [Number(v), 'Ratings']} />
                   <Bar dataKey="count" name="Ratings">
                     {satisfactionDist.map((_, i) => (
                       <Cell key={i} fill={SATISFACTION_COLORS[i]} />
@@ -514,8 +514,8 @@ export function ChatAnalyticsWrapper({ siteId }: ChatAnalyticsWrapperProps) {
                   />
                   <YAxis fontSize={11} />
                   <Tooltip
-                    labelFormatter={(h) => `${h}:00 - ${(h as number) + 1}:00`}
-                    formatter={(v: number) => [v, 'Conversations']}
+                    labelFormatter={(h) => `${h}:00 - ${(Number(h)) + 1}:00`}
+                    formatter={(v: unknown) => [Number(v), 'Conversations']}
                   />
                   <Bar dataKey="count" name="Conversations" fill="#3b82f6" radius={[2, 2, 0, 0]} />
                 </BarChart>

@@ -2,7 +2,8 @@
 // ResellerClub Domain Transfer & Renewal Operations
 
 import { getResellerClubClient } from './client';
-import { ResellerClubError } from './errors';
+import { ResellerClubError, PurchasesDisabledError } from './errors';
+import { arePurchasesAllowed } from './config';
 
 // ============================================================================
 // Transfer Types
@@ -55,6 +56,11 @@ export const transferService = {
    * POST /api/domains/transfer.json
    */
   async initiateTransferIn(params: DomainTransferIn): Promise<{ orderId: string }> {
+    // ⚠️ SAFETY: This operation spends real money
+    if (!arePurchasesAllowed()) {
+      throw new PurchasesDisabledError('domain transfer');
+    }
+
     const client = getResellerClubClient();
 
     const response = await client.post<{ entityid: string }>('/domains/transfer.json', {
@@ -179,6 +185,11 @@ export const renewalService = {
    * POST /api/domains/renew.json
    */
   async renewDomain(orderId: string, years: number): Promise<{ invoiceId: string }> {
+    // ⚠️ SAFETY: This operation spends real money
+    if (!arePurchasesAllowed()) {
+      throw new PurchasesDisabledError('domain renewal');
+    }
+
     const client = getResellerClubClient();
 
     const response = await client.post<{ invoiceid: string }>('/domains/renew.json', {

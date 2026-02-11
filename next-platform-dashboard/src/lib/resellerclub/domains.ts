@@ -6,8 +6,9 @@ import {
   DomainNotAvailableError, 
   DomainExpiredError,
   DomainNotFoundError,
+  PurchasesDisabledError,
 } from './errors';
-import { SUPPORTED_TLDS, TLD_CATEGORIES } from './config';
+import { SUPPORTED_TLDS, TLD_CATEGORIES, arePurchasesAllowed } from './config';
 import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import type {
   DomainAvailability,
@@ -187,6 +188,11 @@ export class DomainService {
    * Register a new domain
    */
   async register(params: DomainRegistrationParams): Promise<{ orderId: string; invoiceId?: string }> {
+    // ⚠️ SAFETY: This operation spends real money
+    if (!arePurchasesAllowed()) {
+      throw new PurchasesDisabledError('domain registration');
+    }
+
     // First check availability
     const availability = await this.checkAvailability(params.domainName);
     if (availability.status !== 'available') {
@@ -327,6 +333,11 @@ export class DomainService {
    * Renew a domain
    */
   async renew(params: DomainRenewalParams): Promise<{ orderId: string; invoiceId?: string }> {
+    // ⚠️ SAFETY: This operation spends real money
+    if (!arePurchasesAllowed()) {
+      throw new PurchasesDisabledError('domain renewal');
+    }
+
     // Get current details to check status
     const details = await this.getDetails(params.orderId);
     
@@ -410,6 +421,11 @@ export class DomainService {
    * Purchase/Enable privacy protection
    */
   async enablePrivacy(orderId: string): Promise<{ success: boolean }> {
+    // ⚠️ SAFETY: This operation spends real money
+    if (!arePurchasesAllowed()) {
+      throw new PurchasesDisabledError('privacy protection purchase');
+    }
+
     await this.client.post('domains/purchase-privacy.json', {
       'order-id': orderId,
       'invoice-option': 'NoInvoice',
@@ -433,6 +449,11 @@ export class DomainService {
    * Initiate domain transfer (transfer in)
    */
   async transfer(params: DomainTransferParams): Promise<{ orderId: string }> {
+    // ⚠️ SAFETY: This operation spends real money
+    if (!arePurchasesAllowed()) {
+      throw new PurchasesDisabledError('domain transfer');
+    }
+
     const apiParams: Record<string, string | number | boolean> = {
       'domain-name': params.domainName,
       'auth-code': params.authCode,

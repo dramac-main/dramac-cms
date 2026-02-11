@@ -285,3 +285,27 @@ export interface DomainExpiringData {
   agencyName: string;
   renewUrl: string;
 }
+
+// Live Chat email data
+export interface ChatTranscriptEmailData {
+  visitorName: string;
+  visitorEmail: string;
+  agentName: string;
+  conversationId: string;
+  channel: string;
+  messageCount: number;
+  startedAt: string;
+  endedAt: string;
+  transcript: string;
+  dashboardUrl: string;
+}
+
+export interface ChatMissedNotificationData {
+  visitorName: string;
+  visitorEmail: string;
+  visitorMessage: string;
+  channel: string;
+  siteName: string;
+  missedAt: string;
+  dashboardUrl: string;
+}

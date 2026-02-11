@@ -25,6 +25,10 @@
     {
       "path": "/api/social/sync",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/chat",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

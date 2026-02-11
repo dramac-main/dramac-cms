@@ -611,6 +611,17 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   quote_rejected_owner,
   form_submission_owner,
   domain_expiring,
+  // Live Chat (reuse simple text-based templates)
+  chat_transcript: {
+    subject: (data) => `Chat Transcript — ${data.visitorName || 'Visitor'}`,
+    html: (data) => `<p>Chat transcript for ${data.visitorName || 'a visitor'}.</p><pre>${data.transcript || ''}</pre>`,
+    text: (data) => `Chat Transcript\n\n${data.transcript || 'No transcript available.'}`,
+  },
+  chat_missed_notification: {
+    subject: (data) => `Missed Chat from ${data.visitorName || 'a visitor'}`,
+    html: (data) => `<p>A visitor tried to chat but no agents were available.</p><p>Message: ${data.visitorMessage || 'N/A'}</p>`,
+    text: (data) => `Missed Chat\n\nVisitor: ${data.visitorName || 'Unknown'}\nMessage: ${data.visitorMessage || 'N/A'}`,
+  },
 };
 
 /**
