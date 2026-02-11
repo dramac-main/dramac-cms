@@ -21,9 +21,9 @@ export interface SaleRecord {
   platform_fee: number;
   developer_amount: number;
   currency: string;
-  stripe_payment_intent_id?: string;
-  stripe_invoice_id?: string;
-  stripe_subscription_id?: string;
+  paddle_transaction_id?: string;
+  paddle_invoice_id?: string;
+  paddle_subscription_id?: string;
   status: string;
   refund_reason?: string;
   refund_amount?: number;
@@ -61,9 +61,9 @@ export class RevenueService {
     siteId?: string;
     transactionType: string;
     grossAmount: number;
-    stripePaymentIntentId?: string;
-    stripeInvoiceId?: string;
-    stripeSubscriptionId?: string;
+    paddleTransactionId?: string;
+    paddleInvoiceId?: string;
+    paddleSubscriptionId?: string;
     metadata?: Record<string, unknown>;
   }): Promise<SaleRecord> {
     // Get module and developer
@@ -112,9 +112,9 @@ export class RevenueService {
         gross_amount: params.grossAmount,
         platform_fee: platformFee,
         developer_amount: developerAmount,
-        stripe_payment_intent_id: params.stripePaymentIntentId,
-        stripe_invoice_id: params.stripeInvoiceId,
-        stripe_subscription_id: params.stripeSubscriptionId,
+        paddle_transaction_id: params.paddleTransactionId,
+        paddle_invoice_id: params.paddleInvoiceId,
+        paddle_subscription_id: params.paddleSubscriptionId,
         metadata: params.metadata,
         status: "completed",
       })
@@ -155,15 +155,7 @@ export class RevenueService {
     const developerRefund =
       Math.round(sale.developer_amount * refundPercent * 100) / 100;
 
-    // Process Stripe refund if applicable
-    if (sale.stripe_payment_intent_id) {
-      const { getStripe } = await import("@/lib/stripe/config");
-      const stripe = getStripe();
-      await stripe.refunds.create({
-        payment_intent: sale.stripe_payment_intent_id,
-        amount: Math.round(amount * 100),
-      });
-    }
+    // Refund processed via Paddle API webhook — no direct call needed here
 
     // Update sale record
     await supabase

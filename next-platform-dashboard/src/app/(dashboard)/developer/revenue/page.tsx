@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from "@/lib/locale-config";
 import {
-  DollarSign,
+  Coins,
   TrendingUp,
   TrendingDown,
   CreditCard,
@@ -16,6 +16,7 @@ import {
   AlertCircle,
   Loader2,
   ExternalLink,
+  icons,
 } from "lucide-react";
 import {
   Card,
@@ -48,11 +49,12 @@ import { RevenueChart } from "@/components/developer/RevenueChart";
 import {
   useRevenueData,
   useRequestPayout,
-  useStripeConnectOnboarding,
+  usePayoutSetup,
   useExportRevenue,
 } from "@/hooks/use-revenue-data";
 import { downloadPayoutStatement } from "@/lib/payout-statement-generator";
 import { toast } from "sonner";
+import { resolveIconName } from "@/lib/utils/icon-map";
 
 export default function RevenueDashboardPage() {
   const [dateRange, setDateRange] = useState("30d");
@@ -62,7 +64,7 @@ export default function RevenueDashboardPage() {
     useRevenueData({ dateRange, moduleId: selectedModule });
 
   const requestPayout = useRequestPayout();
-  const stripeConnect = useStripeConnectOnboarding();
+  const payoutSetup = usePayoutSetup();
   const exportRevenue = useExportRevenue();
 
   const formatCurrency = (amount: number) => {
@@ -74,7 +76,7 @@ export default function RevenueDashboardPage() {
 
   const handleSetupPayouts = async () => {
     try {
-      const { url } = await stripeConnect.mutateAsync();
+      const { url } = await payoutSetup.mutateAsync();
       window.location.href = url;
     } catch (error) {
       toast.error(
@@ -154,23 +156,23 @@ export default function RevenueDashboardPage() {
       </div>
 
       {/* Payout Account Alert */}
-      {payoutAccount?.stripe_account_status !== "active" && (
+      {payoutAccount?.payout_account_status !== "active" && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <span>
-              {payoutAccount?.stripe_account_status === "pending"
+              {payoutAccount?.payout_account_status === "pending"
                 ? "Complete your payout account setup to receive earnings."
-                : payoutAccount?.stripe_account_status === "restricted"
+                : payoutAccount?.payout_account_status === "restricted"
                   ? "Your payout account needs attention. Please complete the required steps."
                   : "Set up your payout account to start receiving earnings."}
             </span>
             <Button
               size="sm"
               onClick={handleSetupPayouts}
-              disabled={stripeConnect.isPending}
+              disabled={payoutSetup.isPending}
             >
-              {stripeConnect.isPending ? (
+              {payoutSetup.isPending ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <ExternalLink className="h-4 w-4 mr-2" />
@@ -193,7 +195,7 @@ export default function RevenueDashboardPage() {
                 </p>
               </div>
               <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-full">
-                <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <Coins className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </CardContent>
@@ -336,7 +338,7 @@ export default function RevenueDashboardPage() {
                         key={country.country}
                         className="flex items-center gap-4"
                       >
-                        <span className="text-2xl">
+                        <span className="text-sm font-medium bg-muted rounded px-1.5 py-0.5">
                           {getCountryFlag(country.country)}
                         </span>
                         <div className="flex-1">
@@ -391,7 +393,7 @@ export default function RevenueDashboardPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {sale.module?.icon && (
-                              <span>{sale.module.icon}</span>
+                              <span>{(() => { const iconName = resolveIconName(sale.module.icon); const Ic = (icons as Record<string, React.ComponentType<{className?: string}>>)[iconName]; return Ic ? <Ic className="h-4 w-4" /> : null; })()}</span>
                             )}
                             <span>{sale.module?.name || "Unknown"}</span>
                           </div>
@@ -448,7 +450,7 @@ export default function RevenueDashboardPage() {
                 onClick={handleRequestPayout}
                 disabled={
                   requestPayout.isPending ||
-                  payoutAccount?.stripe_account_status !== "active" ||
+                  payoutAccount?.payout_account_status !== "active" ||
                   (summary?.pendingBalance || 0) <
                     (payoutAccount?.payout_threshold || 50)
                 }
@@ -569,19 +571,20 @@ export default function RevenueDashboardPage() {
 }
 
 function getCountryFlag(country: string): string {
-  const flags: Record<string, string> = {
-    "United States": "🇺🇸",
-    "United Kingdom": "🇬🇧",
-    Germany: "🇩🇪",
-    France: "🇫🇷",
-    Canada: "🇨🇦",
-    Australia: "🇦🇺",
-    Japan: "🇯🇵",
-    Brazil: "🇧🇷",
-    India: "🇮🇳",
-    China: "🇨🇳",
+  const codes: Record<string, string> = {
+    "Zambia": "ZM",
+    "United States": "US",
+    "United Kingdom": "GB",
+    "Germany": "DE",
+    "France": "FR",
+    "Canada": "CA",
+    "Australia": "AU",
+    "Japan": "JP",
+    "Brazil": "BR",
+    "India": "IN",
+    "China": "CN",
   };
-  return flags[country] || "🌍";
+  return codes[country] || country.substring(0, 2).toUpperCase();
 }
 
 function RevenueDashboardSkeleton() {

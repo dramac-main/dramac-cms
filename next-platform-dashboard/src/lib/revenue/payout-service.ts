@@ -13,9 +13,9 @@ const supabase = createClient(
 export interface PayoutAccount {
   id: string;
   developer_id: string;
-  stripe_account_id: string | null;
-  stripe_account_status: string;
-  stripe_onboarding_complete: boolean;
+  payout_method: string | null;
+  payout_account_status: string;
+  payout_setup_complete: boolean;
   payout_frequency: string;
   payout_threshold: number;
   payout_currency: string;
@@ -44,8 +44,8 @@ export interface Payout {
   payout_amount: number;
   currency: string;
   status: string;
-  stripe_transfer_id: string | null;
-  stripe_payout_id: string | null;
+  transfer_reference: string | null;
+  payout_reference: string | null;
   scheduled_at: string | null;
   processed_at: string | null;
   failed_reason: string | null;
@@ -64,129 +64,57 @@ export interface PayoutLineItem {
 
 export class PayoutService {
   /**
-   * Create or get Stripe Connect account
+   * Create or get payout account
    */
-  async createConnectAccount(developerId: string): Promise<string> {
-    // Check if account exists
+  async createPayoutAccount(developerId: string, method: string): Promise<string> {
     const { data: existing } = await supabase
       .from("developer_payout_accounts")
-      .select("stripe_account_id")
+      .select("id")
       .eq("developer_id", developerId)
       .single();
 
-    if (existing?.stripe_account_id) {
-      return existing.stripe_account_id;
-    }
+    if (existing?.id) return existing.id;
 
-    // Get developer info
-    const { data: developer } = await supabase
-      .from("developer_profiles")
-      .select(
-        `
-        id,
-        user_id
-      `
-      )
-      .eq("id", developerId)
+    const { data, error } = await supabase
+      .from("developer_payout_accounts")
+      .insert({
+        developer_id: developerId,
+        payout_method: method,
+        payout_account_status: "pending",
+      })
+      .select("id")
       .single();
 
-    if (!developer) throw new Error("Developer not found");
-
-    // Get user email
-    const { data: user } = await supabase.auth.admin.getUserById(
-      developer.user_id
-    );
-
-    if (!user?.user?.email) throw new Error("User email not found");
-
-    // Create Stripe Connect account
-    const { getStripe } = await import("@/lib/stripe/config");
-    const stripe = getStripe();
-
-    const account = await stripe.accounts.create({
-      type: "express",
-      country: "US",
-      email: user.user.email,
-      capabilities: {
-        transfers: { requested: true },
-      },
-      settings: {
-        payouts: {
-          schedule: {
-            interval: "manual",
-          },
-        },
-      },
-    });
-
-    // Store account ID
-    await supabase.from("developer_payout_accounts").upsert({
-      developer_id: developerId,
-      stripe_account_id: account.id,
-      stripe_account_status: "pending",
-    });
-
-    return account.id;
+    if (error) throw error;
+    return data.id;
   }
 
   /**
-   * Get Stripe Connect onboarding link
+   * Set up payout method for developer
    */
-  async getOnboardingLink(
-    developerId: string,
-    returnUrl: string
-  ): Promise<string> {
-    const stripeAccountId = await this.createConnectAccount(developerId);
-
-    const { getStripe } = await import("@/lib/stripe/config");
-    const stripe = getStripe();
-
-    const accountLink = await stripe.accountLinks.create({
-      account: stripeAccountId,
-      refresh_url: `${returnUrl}?refresh=true`,
-      return_url: `${returnUrl}?success=true`,
-      type: "account_onboarding",
-    });
-
-    return accountLink.url;
+  async setupPayoutMethod(developerId: string, method: string, details: Record<string, string>): Promise<void> {
+    await supabase
+      .from("developer_payout_accounts")
+      .upsert({
+        developer_id: developerId,
+        payout_method: method,
+        payout_account_status: "active",
+        payout_setup_complete: true,
+        updated_at: new Date().toISOString(),
+      });
   }
 
   /**
-   * Check Stripe account status
+   * Check payout account status
    */
   async refreshAccountStatus(developerId: string): Promise<string> {
     const { data: account } = await supabase
       .from("developer_payout_accounts")
-      .select("stripe_account_id")
+      .select("payout_account_status")
       .eq("developer_id", developerId)
       .single();
 
-    if (!account?.stripe_account_id) return "not_connected";
-
-    const { getStripe } = await import("@/lib/stripe/config");
-    const stripe = getStripe();
-
-    const stripeAccount = await stripe.accounts.retrieve(
-      account.stripe_account_id
-    );
-
-    let status = "pending";
-    if (stripeAccount.charges_enabled && stripeAccount.payouts_enabled) {
-      status = "active";
-    } else if (stripeAccount.requirements?.currently_due?.length) {
-      status = "restricted";
-    }
-
-    // Update status
-    await supabase
-      .from("developer_payout_accounts")
-      .update({
-        stripe_account_status: status,
-        stripe_onboarding_complete: stripeAccount.details_submitted,
-      })
-      .eq("developer_id", developerId);
-
-    return status;
+    return account?.payout_account_status || "not_connected";
   }
 
   /**
@@ -257,8 +185,8 @@ export class PayoutService {
     const account = await this.getPayoutAccount(developerId);
 
     if (!account) throw new Error("Payout account not found");
-    if (account.stripe_account_status !== "active") {
-      throw new Error("Stripe account not active");
+    if (account.payout_account_status !== "active") {
+      throw new Error("Payout account not active");
     }
 
     // Calculate earnings for period
@@ -339,17 +267,12 @@ export class PayoutService {
   }
 
   /**
-   * Process a payout via Stripe
+   * Process a payout (marks for manual processing by finance team)
    */
   async processPayout(payoutId: string): Promise<void> {
     const { data: payout } = await supabase
       .from("developer_payouts")
-      .select(
-        `
-        *,
-        account:developer_payout_accounts(stripe_account_id)
-      `
-      )
+      .select("*, account:developer_payout_accounts(payout_method)")
       .eq("id", payoutId)
       .single();
 
@@ -357,27 +280,15 @@ export class PayoutService {
     if (payout.status !== "pending") throw new Error("Payout not pending");
 
     try {
-      const { getStripe } = await import("@/lib/stripe/config");
-      const stripe = getStripe();
-
-      // Create Stripe transfer
-      const transfer = await stripe.transfers.create({
-        amount: Math.round(payout.payout_amount * 100),
-        currency: payout.currency.toLowerCase(),
-        destination: payout.account.stripe_account_id,
-        transfer_group: `payout_${payout.id}`,
-      });
-
-      // Update payout
+      // Mark as processing - actual transfer handled by finance team
       await supabase
         .from("developer_payouts")
         .update({
           status: "processing",
-          stripe_transfer_id: transfer.id,
+          transfer_reference: `PAY-${Date.now()}`,
         })
         .eq("id", payoutId);
 
-      // Update developer balance using RPC functions
       await supabase.rpc("decrement_payout_balance", {
         p_account_id: payout.payout_account_id,
         p_amount: payout.payout_amount,
@@ -388,9 +299,7 @@ export class PayoutService {
         p_amount: payout.payout_amount,
       });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
       await supabase
         .from("developer_payouts")
         .update({
@@ -398,26 +307,22 @@ export class PayoutService {
           failed_reason: errorMessage,
         })
         .eq("id", payoutId);
-
       throw error;
     }
   }
 
   /**
-   * Mark payout as completed (called by webhook)
+   * Mark payout as completed
    */
-  async markPayoutCompleted(
-    stripeTransferId: string,
-    stripePayoutId?: string
-  ): Promise<void> {
+  async markPayoutCompleted(transferReference: string, payoutReference?: string): Promise<void> {
     await supabase
       .from("developer_payouts")
       .update({
         status: "completed",
-        stripe_payout_id: stripePayoutId,
+        payout_reference: payoutReference,
         processed_at: new Date().toISOString(),
       })
-      .eq("stripe_transfer_id", stripeTransferId);
+      .eq("transfer_reference", transferReference);
   }
 
   /**

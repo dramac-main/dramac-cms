@@ -13,7 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, RefreshCw, Package, Store } from "lucide-react";
+import { CircleCheck, CircleX, RefreshCw, Package, Store, icons } from "lucide-react";
+import { resolveIconName } from "@/lib/utils/icon-map";
 import { revalidatePath } from "next/cache";
 
 export const metadata: Metadata = {
@@ -104,25 +105,25 @@ export default async function IntegrationTestPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-3">
-            <CheckCircle className="h-5 w-5 text-green-500" />
+            <CircleCheck className="h-5 w-5 text-green-500" />
             <span className="font-medium">Create</span>
             <span className="text-muted-foreground">→ Module Studio works</span>
           </div>
           <div className="flex items-center gap-3">
-            <CheckCircle className="h-5 w-5 text-green-500" />
+            <CircleCheck className="h-5 w-5 text-green-500" />
             <span className="font-medium">Edit</span>
             <span className="text-muted-foreground">→ Code editor saves to module_source</span>
           </div>
           <div className="flex items-center gap-3">
-            <CheckCircle className="h-5 w-5 text-green-500" />
+            <CircleCheck className="h-5 w-5 text-green-500" />
             <span className="font-medium">Test</span>
             <span className="text-muted-foreground">→ Preview sandbox works</span>
           </div>
           <div className="flex items-center gap-3">
             {studioModules.length > 0 ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CircleCheck className="h-5 w-5 text-green-500" />
             ) : (
-              <XCircle className="h-5 w-5 text-yellow-500" />
+              <CircleX className="h-5 w-5 text-yellow-500" />
             )}
             <span className="font-medium">Deploy</span>
             <span className="text-muted-foreground">
@@ -133,18 +134,18 @@ export default async function IntegrationTestPage() {
           </div>
           <div className="flex items-center gap-3">
             {studioModules.length > 0 ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CircleCheck className="h-5 w-5 text-green-500" />
             ) : (
-              <XCircle className="h-5 w-5 text-muted-foreground" />
+              <CircleX className="h-5 w-5 text-muted-foreground" />
             )}
             <span className="font-medium">Install</span>
             <span className="text-muted-foreground">→ Modules visible in marketplace for installation</span>
           </div>
           <div className="flex items-center gap-3">
             {renderableModules.length > 0 ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
+              <CircleCheck className="h-5 w-5 text-green-500" />
             ) : (
-              <XCircle className="h-5 w-5 text-muted-foreground" />
+              <CircleX className="h-5 w-5 text-muted-foreground" />
             )}
             <span className="font-medium">Render</span>
             <span className="text-muted-foreground">
@@ -179,7 +180,7 @@ export default async function IntegrationTestPage() {
                   className="flex items-center justify-between p-3 border rounded-lg"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{m.icon}</span>
+                    <span className="text-2xl">{(() => { const iconName = resolveIconName(m.icon || "Package"); const Ic = (icons as Record<string, React.ComponentType<{className?: string}>>)[iconName]; return Ic ? <Ic className="h-5 w-5" /> : null; })()}</span>
                     <div>
                       <p className="font-medium">{m.name}</p>
                       <p className="text-sm text-muted-foreground">

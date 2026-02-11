@@ -765,16 +765,16 @@ export async function getAgencySegmentation(
 
     const planPrices: Record<string, number> = {
       free: 0,
-      starter: 2900,
-      professional: 9900,
-      enterprise: 29900,
+      starter: 299,
+      professional: 999,
+      enterprise: 2999,
     };
 
     const byPlan = Array.from(planCounts.entries()).map(([plan, count]) => ({
       plan,
       count,
-      revenue: count * (planPrices[plan] || 2900),
-      avgMrr: planPrices[plan] || 2900,
+      revenue: count * (planPrices[plan] || 299),
+      avgMrr: planPrices[plan] || 299,
       percentage: Math.round((count / total) * 100),
     }));
 
@@ -847,15 +847,15 @@ export async function getRevenueMetrics(
 
     const planPrices: Record<string, number> = {
       free: 0,
-      starter: 2900,
-      professional: 9900,
-      enterprise: 29900,
+      starter: 299,
+      professional: 999,
+      enterprise: 2999,
     };
 
     let mrr = 0;
     planData?.forEach((a) => {
       const plan = a.plan || "starter";
-      mrr += planPrices[plan] || 2900;
+      mrr += planPrices[plan] || 299;
     });
 
     const agencyCount = totalAgencies || 0;
@@ -980,9 +980,9 @@ export async function getRevenueByPlan(
 
     const planPrices: Record<string, number> = {
       free: 0,
-      starter: 2900,
-      professional: 9900,
-      enterprise: 29900,
+      starter: 299,
+      professional: 999,
+      enterprise: 2999,
     };
 
     const planCounts: Record<string, number> = {};
@@ -993,9 +993,9 @@ export async function getRevenueByPlan(
 
     const plans = [
       { plan: "free", planName: "Free", price: 0 },
-      { plan: "starter", planName: "Starter", price: 2900 },
-      { plan: "professional", planName: "Professional", price: 9900 },
-      { plan: "enterprise", planName: "Enterprise", price: 29900 },
+      { plan: "starter", planName: "Starter", price: 299 },
+      { plan: "professional", planName: "Professional", price: 999 },
+      { plan: "enterprise", planName: "Enterprise", price: 2999 },
     ];
 
     const totalRevenue = plans.reduce((sum, p) => sum + (planCounts[p.plan] || 0) * p.price, 0);

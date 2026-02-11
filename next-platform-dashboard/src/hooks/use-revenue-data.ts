@@ -177,18 +177,18 @@ export function useUpdatePayoutPreferences() {
   });
 }
 
-// Hook for getting Stripe Connect onboarding link
-export function useStripeConnectOnboarding() {
+// Hook for setting up payout account
+export function usePayoutSetup() {
   return useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/developer/stripe-connect", {
+      const response = await fetch("/api/developer/payout-account", {
         method: "POST",
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.error || "Failed to get Stripe Connect link"
+          errorData.error || "Failed to set up payout account"
         );
       }
 

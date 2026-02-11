@@ -40,7 +40,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // Get agency information
     const { data: site } = await supabase
       .from("sites")
-      .select("id, agency_id, agencies(stripe_customer_id)")
+      .select("id, agency_id, agencies(paddle_customer_id)")
       .eq("id", siteId)
       .single();
 
@@ -48,8 +48,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "Site not found" }, { status: 404 });
     }
 
-    // Create checkout URL (would integrate with LemonSqueezy or Stripe)
-    // For now, return a placeholder
+    // Create checkout URL via Paddle
     const checkoutUrl = `/checkout/module?module=${module.id}&site=${siteId}&return=${encodeURIComponent(returnUrl || "/marketplace")}`;
 
     return NextResponse.json({

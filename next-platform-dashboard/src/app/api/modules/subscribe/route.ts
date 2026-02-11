@@ -175,12 +175,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // For paid modules, create LemonSqueezy checkout
+    // For paid modules, create Paddle checkout
     return NextResponse.json({
       success: false,
       requiresPayment: true,
       message: "This module requires payment",
-      checkoutUrl: `/api/checkout/lemonsqueezy?module=${effectiveModuleId}&agency=${targetAgencyId}`,
+      checkoutUrl: `/api/checkout/paddle?module=${effectiveModuleId}&agency=${targetAgencyId}`,
     });
   } catch (error) {
     console.error("Subscribe error:", error);

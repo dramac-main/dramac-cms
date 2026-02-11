@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { DollarSign, Info, ArrowLeft } from "lucide-react";
+import { Coins, Info, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Link from "next/link";
@@ -100,7 +100,7 @@ export default async function ModulePricingPage() {
       {resellableModules.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
+            <Coins className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="font-medium mb-1">No resellable modules</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Subscribe to client-level or site-level modules to configure pricing

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Play, RefreshCw, Settings, AlertTriangle, CheckCircle, XCircle, Copy, Download, Code, Sliders, Eye } from "lucide-react";
+import { ArrowLeft, Play, RefreshCw, Settings, AlertTriangle, CircleCheck, CircleX, Copy, Download, Code, Sliders, Eye, icons } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { getModuleSource, type ModuleSource } from "@/lib/modules/module-builder";
+import { resolveIconName } from "@/lib/utils/icon-map";
 
 interface TestResult {
   type: "info" | "warn" | "error" | "success";
@@ -629,7 +630,7 @@ export default function ModuleTestPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <span className="text-3xl">{module.icon}</span>
+              <span className="text-3xl">{(() => { const iconName = resolveIconName(module.icon || "Package"); const Ic = (icons as Record<string, React.ComponentType<{className?: string}>>)[iconName]; return Ic ? <Ic className="h-6 w-6" /> : null; })()}</span>
               Test: {module.name}
             </h1>
             <p className="text-muted-foreground">
@@ -661,9 +662,9 @@ export default function ModuleTestPage() {
       {validation && (
         <Alert variant={validation.valid ? "default" : "destructive"}>
           {validation.valid ? (
-            <CheckCircle className="h-4 w-4" />
+            <CircleCheck className="h-4 w-4" />
           ) : (
-            <XCircle className="h-4 w-4" />
+            <CircleX className="h-4 w-4" />
           )}
           <AlertTitle>
             {validation.valid ? "Module Valid" : "Validation Errors"}
@@ -864,9 +865,9 @@ export default function ModuleTestPage() {
                         }`}
                       >
                         <div className="flex items-start gap-2">
-                          {result.type === "error" && <XCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />}
+                          {result.type === "error" && <CircleX className="h-4 w-4 mt-0.5 flex-shrink-0" />}
                           {result.type === "warn" && <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />}
-                          {result.type === "success" && <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />}
+                          {result.type === "success" && <CircleCheck className="h-4 w-4 mt-0.5 flex-shrink-0" />}
                           <div className="flex-1">
                             <p>{result.message}</p>
                             {result.details && (

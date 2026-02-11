@@ -180,7 +180,7 @@ export function AIModuleBuilder() {
 - "I need a simple inventory tracking system"
 - "Create a customer feedback widget"  
 - "Build a booking system for a salon"
-- "Make an integration with Stripe for payments"
+- "Make an integration with Paddle for payments"
 
 What would you like to build?`,
         timestamp: new Date()

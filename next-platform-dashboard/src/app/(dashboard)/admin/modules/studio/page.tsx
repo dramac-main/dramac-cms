@@ -12,6 +12,7 @@ import {
   RefreshCw,
   TestTube2,
   Sparkles,
+  icons,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/table";
 import { getModuleSources } from "@/lib/modules/module-builder";
 import { isSuperAdmin } from "@/lib/auth/permissions";
+import { resolveIconName } from "@/lib/utils/icon-map";
 
 import { DEFAULT_LOCALE } from '@/lib/locale-config'
 const statusConfig = {
@@ -232,7 +234,7 @@ export default async function ModuleStudioPage() {
                             href={`/admin/modules/studio/${module.moduleId}`}
                             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
                           >
-                            <span className="text-2xl">{module.icon}</span>
+                            <span className="text-2xl">{(() => { const iconName = resolveIconName(module.icon || "Package"); const Ic = (icons as Record<string, React.ComponentType<{className?: string}>>)[iconName]; return Ic ? <Ic className="h-5 w-5" /> : null; })()}</span>
                             <div>
                               <p className="font-medium">{module.name}</p>
                               <p className="text-sm text-muted-foreground">
