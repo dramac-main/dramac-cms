@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { ContentPillar } from '../types'
 
 /**
@@ -28,7 +29,7 @@ export async function getContentPillars(
 
     if (error) throw error
 
-    return { pillars: data || [], error: null }
+    return { pillars: mapRecords<ContentPillar>(data || []), error: null }
   } catch (error) {
     console.error('[Social] Error getting content pillars:', error)
     return { pillars: [], error: (error as Error).message }
@@ -41,6 +42,7 @@ export async function getContentPillars(
 export async function createContentPillar(
   siteId: string,
   tenantId: string,
+  userId: string,
   data: {
     name: string
     color: string
@@ -71,6 +73,7 @@ export async function createContentPillar(
         description: data.description || null,
         target_percentage: data.targetPercentage || 0,
         sort_order: nextOrder,
+        created_by: userId,
       })
       .select()
       .single()
@@ -79,7 +82,7 @@ export async function createContentPillar(
 
     revalidatePath(`/dashboard/sites/${siteId}/social/settings`)
     revalidatePath(`/dashboard/sites/${siteId}/social/calendar`)
-    return { pillar, error: null }
+    return { pillar: pillar ? mapRecord<ContentPillar>(pillar) : null, error: null }
   } catch (error) {
     console.error('[Social] Error creating content pillar:', error)
     return { pillar: null, error: (error as Error).message }
@@ -121,7 +124,7 @@ export async function updateContentPillar(
 
     revalidatePath(`/dashboard/sites/${siteId}/social/settings`)
     revalidatePath(`/dashboard/sites/${siteId}/social/calendar`)
-    return { pillar, error: null }
+    return { pillar: pillar ? mapRecord<ContentPillar>(pillar) : null, error: null }
   } catch (error) {
     console.error('[Social] Error updating content pillar:', error)
     return { pillar: null, error: (error as Error).message }

@@ -6,6 +6,7 @@
  */
 
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { SocialInboxWrapper } from '@/modules/social-media/components'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
@@ -72,14 +73,15 @@ function InboxSkeleton() {
 export default async function InboxPage({ params }: PageProps) {
   const { siteId } = await params
   
-  // Layout handles auth and module access check
+  // Auth guard
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
   return (
     <div className="container py-6">
       <Suspense fallback={<InboxSkeleton />}>
-        <InboxContent siteId={siteId} userId={user?.id || ''} />
+        <InboxContent siteId={siteId} userId={user.id} />
       </Suspense>
     </div>
   )

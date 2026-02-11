@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { Competitor } from '../types'
 
 // ============================================================================
@@ -33,7 +34,7 @@ export async function getCompetitors(
 
     if (error) throw error
 
-    return { competitors: data || [], error: null }
+    return { competitors: mapRecords<Competitor>(data || []), error: null }
   } catch (error) {
     console.error('[Social] Error getting competitors:', error)
     return { competitors: [], error: (error as Error).message }
@@ -84,7 +85,7 @@ export async function addCompetitor(
     if (error) throw error
 
     revalidatePath(`/dashboard/sites/${siteId}/social/competitors`)
-    return { competitor, error: null }
+    return { competitor: competitor ? mapRecord<Competitor>(competitor) : null, error: null }
   } catch (error) {
     console.error('[Social] Error adding competitor:', error)
     return { competitor: null, error: (error as Error).message }
@@ -181,7 +182,7 @@ export async function getCompetitorAnalytics(
 
     if (error) throw error
 
-    return { analytics: data || [], error: null }
+    return { analytics: mapRecords<any>(data || []), error: null }
   } catch (error) {
     console.error('[Social] Error getting competitor analytics:', error)
     return { analytics: [], error: (error as Error).message }

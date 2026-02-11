@@ -6,10 +6,10 @@
  */
 
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { SocialListeningWrapper } from '@/modules/social-media/components/SocialListeningWrapper'
 import { getListeningKeywords, getBrandMentions, getMentionStats } from '@/modules/social-media/actions/listening-actions'
-import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface PageProps {
@@ -42,21 +42,26 @@ function ListeningSkeleton() {
 async function ListeningContent({ siteId }: { siteId: string }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  const [keywordsResult, mentionsResult, statsResult, accountsResult] = await Promise.all([
+  // Get tenant_id from sites table (agency_id) — never from social accounts
+  const { data: site } = await supabase
+    .from('sites')
+    .select('agency_id')
+    .eq('id', siteId)
+    .single()
+
+  const [keywordsResult, mentionsResult, statsResult] = await Promise.all([
     getListeningKeywords(siteId),
     getBrandMentions(siteId, { limit: 50 }),
     getMentionStats(siteId),
-    getSocialAccounts(siteId),
   ])
-
-  const tenantId = accountsResult.accounts?.[0]?.tenantId || ''
 
   return (
     <SocialListeningWrapper
       siteId={siteId}
-      tenantId={tenantId}
-      userId={user?.id || ''}
+      tenantId={site?.agency_id || ''}
+      userId={user.id}
       keywords={keywordsResult.keywords}
       mentions={mentionsResult.mentions}
       stats={statsResult.stats}

@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { Report, ReportType } from '../types'
 
 // ============================================================================
@@ -32,7 +33,7 @@ export async function getReports(
 
     if (error) throw error
 
-    return { reports: data || [], error: null }
+    return { reports: mapRecords<Report>(data || []), error: null }
   } catch (error) {
     console.error('[Social] Error getting reports:', error)
     return { reports: [], error: (error as Error).message }
@@ -56,7 +57,7 @@ export async function getReport(
 
     if (error) throw error
 
-    return { report: data, error: null }
+    return { report: data ? mapRecord<Report>(data) : null, error: null }
   } catch (error) {
     console.error('[Social] Error getting report:', error)
     return { report: null, error: (error as Error).message }
@@ -104,7 +105,7 @@ export async function createReport(
     if (error) throw error
 
     revalidatePath(`/dashboard/sites/${siteId}/social/reports`)
-    return { report, error: null }
+    return { report: report ? mapRecord<Report>(report) : null, error: null }
   } catch (error) {
     console.error('[Social] Error creating report:', error)
     return { report: null, error: (error as Error).message }
@@ -162,7 +163,7 @@ export async function updateReport(
     if (error) throw error
 
     revalidatePath(`/dashboard/sites/${siteId}/social/reports`)
-    return { report, error: null }
+    return { report: report ? mapRecord<Report>(report) : null, error: null }
   } catch (error) {
     console.error('[Social] Error updating report:', error)
     return { report: null, error: (error as Error).message }
@@ -236,7 +237,7 @@ export async function duplicateReport(
     if (error) throw error
 
     revalidatePath(`/dashboard/sites/${siteId}/social/reports`)
-    return { report, error: null }
+    return { report: report ? mapRecord<Report>(report) : null, error: null }
   } catch (error) {
     console.error('[Social] Error duplicating report:', error)
     return { report: null, error: (error as Error).message }

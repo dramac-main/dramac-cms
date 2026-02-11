@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { 
   SocialAccount, 
   SocialPlatform, 
@@ -50,7 +51,7 @@ export async function getSocialAccounts(
     
     if (error) throw error
     
-    return { accounts: data || [], error: null }
+    return { accounts: mapRecords<SocialAccount>(data || []), error: null }
   } catch (error) {
     console.error('[Social] Error getting accounts:', error)
     return { accounts: [], error: (error as Error).message }
@@ -74,7 +75,7 @@ export async function getSocialAccount(
     
     if (error) throw error
     
-    return { account: data, error: null }
+    return { account: data ? mapRecord<SocialAccount>(data) : null, error: null }
   } catch (error) {
     console.error('[Social] Error getting account:', error)
     return { account: null, error: (error as Error).message }
@@ -130,7 +131,7 @@ export async function createSocialAccount(
     if (error) throw error
     
     revalidatePath(`/dashboard/sites/${siteId}/social/accounts`)
-    return { account, error: null }
+    return { account: account ? mapRecord<SocialAccount>(account) : null, error: null }
   } catch (error) {
     console.error('[Social] Error creating account:', error)
     return { account: null, error: (error as Error).message }

@@ -23,7 +23,7 @@ export default async function SettingsPage({ params }: PageProps) {
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
-    redirect('/auth/login')
+    redirect('/login')
   }
   
   // Get site agency_id (tenant)

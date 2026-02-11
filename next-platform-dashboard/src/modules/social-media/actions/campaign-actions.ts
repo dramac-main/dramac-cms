@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { Campaign, CampaignStatus, CampaignGoals } from '../types'
 
 // ============================================================================
@@ -55,7 +56,7 @@ export async function getCampaigns(
     
     if (error) throw error
     
-    return { campaigns: data || [], total: count || 0, error: null }
+    return { campaigns: mapRecords<Campaign>(data || []), total: count || 0, error: null }
   } catch (error) {
     console.error('[Social] Error getting campaigns:', error)
     return { campaigns: [], total: 0, error: (error as Error).message }
@@ -79,7 +80,7 @@ export async function getCampaign(
     
     if (error) throw error
     
-    return { campaign: data, error: null }
+    return { campaign: data ? mapRecord<Campaign>(data) : null, error: null }
   } catch (error) {
     console.error('[Social] Error getting campaign:', error)
     return { campaign: null, error: (error as Error).message }
@@ -155,7 +156,7 @@ export async function createCampaign(
     if (error) throw error
     
     revalidatePath(`/dashboard/sites/${siteId}/social/campaigns`)
-    return { campaign, error: null }
+    return { campaign: campaign ? mapRecord<Campaign>(campaign) : null, error: null }
   } catch (error) {
     console.error('[Social] Error creating campaign:', error)
     return { campaign: null, error: (error as Error).message }
@@ -215,7 +216,7 @@ export async function updateCampaign(
     revalidatePath(`/dashboard/sites/${siteId}/social/campaigns`)
     revalidatePath(`/dashboard/sites/${siteId}/social/campaigns/${campaignId}`)
     
-    return { campaign, error: null }
+    return { campaign: campaign ? mapRecord<Campaign>(campaign) : null, error: null }
   } catch (error) {
     console.error('[Social] Error updating campaign:', error)
     return { campaign: null, error: (error as Error).message }
@@ -377,7 +378,7 @@ export async function getCampaignPosts(
     
     if (error) throw error
     
-    return { posts: data || [], total: count || 0, error: null }
+    return { posts: mapRecords<any>(data || []), total: count || 0, error: null }
   } catch (error) {
     console.error('[Social] Error getting campaign posts:', error)
     return { posts: [], total: 0, error: (error as Error).message }

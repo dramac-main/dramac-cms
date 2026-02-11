@@ -95,16 +95,21 @@ async function AccountsContent({
   const result = await getSocialAccounts(siteId)
   const accounts = result.accounts || []
 
-  // Get tenantId from the first account or pass via a context
-  // For now we fetch from the site
+  // Get tenantId from site's agency_id
   const { createClient } = await import('@/lib/supabase/server')
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    const { redirect } = await import('next/navigation')
+    redirect('/login')
+  }
+
   const { data: site } = await (supabase as any)
     .from('sites')
-    .select('tenant_id')
+    .select('agency_id')
     .eq('id', siteId)
     .single()
-  const tenantId = site?.tenant_id || ''
+  const tenantId = site?.agency_id || ''
 
   return (
     <div className="space-y-8">

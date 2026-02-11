@@ -10,6 +10,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
+import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { 
   SocialPost, 
   PostStatus, 
@@ -82,7 +83,7 @@ export async function getPosts(
     
     if (error) throw error
     
-    return { posts: data || [], total: count || 0, error: null }
+    return { posts: mapRecords<SocialPost>(data || []), total: count || 0, error: null }
   } catch (error) {
     console.error('[Social] Error getting posts:', error)
     return { posts: [], total: 0, error: (error as Error).message }
@@ -106,7 +107,7 @@ export async function getPost(
     
     if (error) throw error
     
-    return { post: data, error: null }
+    return { post: data ? mapRecord<SocialPost>(data) : null, error: null }
   } catch (error) {
     console.error('[Social] Error getting post:', error)
     return { post: null, error: (error as Error).message }
@@ -176,7 +177,7 @@ export async function createPost(
     revalidatePath(`/dashboard/sites/${siteId}/social/posts`)
     revalidatePath(`/dashboard/sites/${siteId}/social/calendar`)
     
-    return { post, error: null }
+    return { post: post ? mapRecord<SocialPost>(post) : null, error: null }
   } catch (error) {
     console.error('[Social] Error creating post:', error)
     return { post: null, error: (error as Error).message }
@@ -241,7 +242,7 @@ export async function updatePost(
     revalidatePath(`/dashboard/sites/${siteId}/social/posts/${postId}`)
     revalidatePath(`/dashboard/sites/${siteId}/social/calendar`)
     
-    return { post, error: null }
+    return { post: post ? mapRecord<SocialPost>(post) : null, error: null }
   } catch (error) {
     console.error('[Social] Error updating post:', error)
     return { post: null, error: (error as Error).message }
@@ -690,7 +691,7 @@ export async function duplicatePost(
     
     revalidatePath(`/dashboard/sites/${siteId}/social/posts`)
     
-    return { post: newPost, error: null }
+    return { post: newPost ? mapRecord<SocialPost>(newPost) : null, error: null }
   } catch (error) {
     console.error('[Social] Error duplicating post:', error)
     return { post: null, error: (error as Error).message }

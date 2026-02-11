@@ -8,6 +8,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { 
   DailyAnalytics, 
   PostAnalytics,
@@ -187,7 +188,7 @@ export async function getDailyAnalytics(
     
     if (error) throw error
     
-    return { data: data || [], error: null }
+    return { data: mapRecords<DailyAnalytics>(data || []), error: null }
   } catch (error) {
     console.error('[Social] Error getting daily analytics:', error)
     return { data: [], error: (error as Error).message }
@@ -210,7 +211,7 @@ export async function getPostAnalytics(
     
     if (error) throw error
     
-    return { analytics: data || [], error: null }
+    return { analytics: mapRecords<PostAnalytics>(data || []), error: null }
   } catch (error) {
     console.error('[Social] Error getting post analytics:', error)
     return { analytics: [], error: (error as Error).message }
@@ -323,7 +324,7 @@ export async function getOptimalTimes(
     
     if (error) throw error
     
-    return { times: data || [], error: null }
+    return { times: mapRecords<OptimalTime>(data || []), error: null }
   } catch (error) {
     console.error('[Social] Error getting optimal times:', error)
     return { times: [], error: (error as Error).message }

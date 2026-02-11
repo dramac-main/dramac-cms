@@ -6,6 +6,7 @@
  */
 
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ContentCalendarWrapper } from '@/modules/social-media/components'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
@@ -53,14 +54,15 @@ function CalendarSkeleton() {
 export default async function CalendarPage({ params }: PageProps) {
   const { siteId } = await params
   
-  // Layout handles auth and module access check
+  // Auth guard
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
   return (
     <div className="container py-6">
       <Suspense fallback={<CalendarSkeleton />}>
-        <CalendarContent siteId={siteId} userId={user?.id || ''} />
+        <CalendarContent siteId={siteId} userId={user.id} />
       </Suspense>
     </div>
   )

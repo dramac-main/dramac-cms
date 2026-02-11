@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { ListeningKeyword, BrandMention, KeywordType, MentionStatus } from '../types'
 
 // ============================================================================
@@ -32,7 +33,7 @@ export async function getListeningKeywords(
 
     if (error) throw error
 
-    return { keywords: data || [], error: null }
+    return { keywords: mapRecords<ListeningKeyword>(data || []), error: null }
   } catch (error) {
     console.error('[Social] Error getting listening keywords:', error)
     return { keywords: [], error: (error as Error).message }
@@ -69,7 +70,7 @@ export async function addListeningKeyword(
     if (error) throw error
 
     revalidatePath(`/dashboard/sites/${siteId}/social/listening`)
-    return { keyword: data, error: null }
+    return { keyword: data ? mapRecord<ListeningKeyword>(data) : null, error: null }
   } catch (error) {
     console.error('[Social] Error adding listening keyword:', error)
     return { keyword: null, error: (error as Error).message }
@@ -177,7 +178,7 @@ export async function getBrandMentions(
 
     if (error) throw error
 
-    return { mentions: data || [], total: count || 0, error: null }
+    return { mentions: mapRecords<BrandMention>(data || []), total: count || 0, error: null }
   } catch (error) {
     console.error('[Social] Error getting brand mentions:', error)
     return { mentions: [], total: 0, error: (error as Error).message }

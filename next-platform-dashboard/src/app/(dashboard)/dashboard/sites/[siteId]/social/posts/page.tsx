@@ -6,6 +6,7 @@
  */
 
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { PostsListWrapper } from '@/modules/social-media/components/PostsListWrapper'
 import { getPosts } from '@/modules/social-media/actions/post-actions'
@@ -47,20 +48,25 @@ function PostsSkeleton() {
 async function PostsContent({ siteId }: { siteId: string }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  // Get tenant_id from sites table (agency_id) — never from social accounts
+  const { data: site } = await supabase
+    .from('sites')
+    .select('agency_id')
+    .eq('id', siteId)
+    .single()
   
   const [postsResult, accountsResult] = await Promise.all([
     getPosts(siteId, { limit: 100 }),
     getSocialAccounts(siteId),
   ])
 
-  // Get tenant_id from accounts or site
-  const tenantId = accountsResult.accounts?.[0]?.tenantId || ''
-
   return (
     <PostsListWrapper
       siteId={siteId}
-      tenantId={tenantId}
-      userId={user?.id || ''}
+      tenantId={site?.agency_id || ''}
+      userId={user.id}
       posts={postsResult.posts || []}
       accounts={accountsResult.accounts || []}
     />

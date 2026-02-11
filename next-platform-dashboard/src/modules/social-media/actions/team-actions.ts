@@ -10,6 +10,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { getRoleDefaults } from '../lib/team-utils'
+import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { 
   TeamPermission, 
   TeamRole, 
@@ -39,7 +40,7 @@ export async function getTeamPermissions(
     
     if (error) throw error
     
-    return { permissions: data || [], error: null }
+    return { permissions: mapRecords<TeamPermission>(data || []), error: null }
   } catch (error) {
     console.error('[Social] Error getting team permissions:', error)
     return { permissions: [], error: (error as Error).message }
@@ -65,7 +66,7 @@ export async function getUserPermission(
     
     if (error && error.code !== 'PGRST116') throw error
     
-    return { permission: data || null, error: null }
+    return { permission: data ? mapRecord<TeamPermission>(data) : null, error: null }
   } catch (error) {
     console.error('[Social] Error getting user permission:', error)
     return { permission: null, error: (error as Error).message }
@@ -136,7 +137,7 @@ export async function upsertTeamPermission(
     if (error) throw error
     
     revalidatePath(`/dashboard/sites/${siteId}/social/settings`)
-    return { permission, error: null }
+    return { permission: permission ? mapRecord<TeamPermission>(permission) : null, error: null }
   } catch (error) {
     console.error('[Social] Error upserting team permission:', error)
     return { permission: null, error: (error as Error).message }
@@ -214,7 +215,7 @@ export async function getApprovalWorkflows(
     
     if (error) throw error
     
-    return { workflows: data || [], error: null }
+    return { workflows: mapRecords<ApprovalWorkflow>(data || []), error: null }
   } catch (error) {
     console.error('[Social] Error getting approval workflows:', error)
     return { workflows: [], error: (error as Error).message }
@@ -276,7 +277,7 @@ export async function createApprovalWorkflow(
     if (error) throw error
     
     revalidatePath(`/dashboard/sites/${siteId}/social/settings`)
-    return { workflow, error: null }
+    return { workflow: workflow ? mapRecord<ApprovalWorkflow>(workflow) : null, error: null }
   } catch (error) {
     console.error('[Social] Error creating approval workflow:', error)
     return { workflow: null, error: (error as Error).message }
@@ -330,7 +331,7 @@ export async function updateApprovalWorkflow(
     if (error) throw error
     
     revalidatePath(`/dashboard/sites/${siteId}/social/settings`)
-    return { workflow, error: null }
+    return { workflow: workflow ? mapRecord<ApprovalWorkflow>(workflow) : null, error: null }
   } catch (error) {
     console.error('[Social] Error updating approval workflow:', error)
     return { workflow: null, error: (error as Error).message }
@@ -398,7 +399,7 @@ export async function getPendingApprovals(
     
     if (error) throw error
     
-    return { requests: data || [], total: count || 0, error: null }
+    return { requests: mapRecords<any>(data || []), total: count || 0, error: null }
   } catch (error) {
     console.error('[Social] Error getting pending approvals:', error)
     return { requests: [], total: 0, error: (error as Error).message }
@@ -441,7 +442,7 @@ export async function createApprovalRequest(
     
     if (error) throw error
     
-    return { request, error: null }
+    return { request: request ? mapRecord<ApprovalRequest>(request) : null, error: null }
   } catch (error) {
     console.error('[Social] Error creating approval request:', error)
     return { request: null, error: (error as Error).message }

@@ -5,6 +5,7 @@
  * and renders the MediaLibraryWrapper client component.
  */
 
+import { redirect } from 'next/navigation'
 import { getMediaLibrary, getMediaFolders } from '@/modules/social-media/actions/media-actions'
 import { MediaLibraryWrapper } from '@/modules/social-media/components/MediaLibraryWrapper'
 import { createClient } from '@/lib/supabase/server'
@@ -17,15 +18,16 @@ export default async function MediaLibraryPage({ params }: PageProps) {
   const { siteId } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  // Get tenant_id from site
+  // Get tenant_id from sites table (agency_id)
   const { data: site } = await supabase
     .from('sites')
-    .select('client_id, clients(agency_id)')
+    .select('agency_id')
     .eq('id', siteId)
     .single()
 
-  const tenantId = (site as any)?.clients?.agency_id || user?.id || ''
+  const tenantId = site?.agency_id || ''
 
   // Fetch initial data
   const [mediaResult, foldersResult] = await Promise.all([

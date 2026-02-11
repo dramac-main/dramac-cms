@@ -6,10 +6,10 @@
  */
 
 import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { CompetitorsPageWrapper } from '@/modules/social-media/components/CompetitorsPageWrapper'
 import { getCompetitors, getCompetitorComparison } from '@/modules/social-media/actions/competitor-actions'
-import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface PageProps {
@@ -38,20 +38,25 @@ function CompetitorsSkeleton() {
 async function CompetitorsContent({ siteId }: { siteId: string }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  const [competitorsResult, comparisonResult, accountsResult] = await Promise.all([
+  // Get tenant_id from sites table (agency_id) — never from social accounts
+  const { data: site } = await supabase
+    .from('sites')
+    .select('agency_id')
+    .eq('id', siteId)
+    .single()
+
+  const [competitorsResult, comparisonResult] = await Promise.all([
     getCompetitors(siteId),
     getCompetitorComparison(siteId),
-    getSocialAccounts(siteId),
   ])
-
-  const tenantId = accountsResult.accounts?.[0]?.tenantId || ''
 
   return (
     <CompetitorsPageWrapper
       siteId={siteId}
-      tenantId={tenantId}
-      userId={user?.id || ''}
+      tenantId={site?.agency_id || ''}
+      userId={user.id}
       competitors={competitorsResult.competitors}
       comparison={comparisonResult.comparison}
     />

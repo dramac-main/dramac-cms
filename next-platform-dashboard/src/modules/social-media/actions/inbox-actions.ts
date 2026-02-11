@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { 
   InboxItem, 
   InboxItemStatus, 
@@ -80,7 +81,7 @@ export async function getInboxItems(
     
     if (error) throw error
     
-    return { items: data || [], total: count || 0, error: null }
+    return { items: mapRecords<InboxItem>(data || []), total: count || 0, error: null }
   } catch (error) {
     console.error('[Social] Error getting inbox items:', error)
     return { items: [], total: 0, error: (error as Error).message }
@@ -469,7 +470,7 @@ export async function getSavedReplies(
     
     if (error) throw error
     
-    return { replies: data || [], error: null }
+    return { replies: mapRecords<SavedReply>(data || []), error: null }
   } catch (error) {
     console.error('[Social] Error getting saved replies:', error)
     return { replies: [], error: (error as Error).message }
@@ -511,7 +512,7 @@ export async function createSavedReply(
     
     if (error) throw error
     
-    return { reply, error: null }
+    return { reply: reply ? mapRecord<SavedReply>(reply) : null, error: null }
   } catch (error) {
     console.error('[Social] Error creating saved reply:', error)
     return { reply: null, error: (error as Error).message }
