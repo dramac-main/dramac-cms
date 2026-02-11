@@ -1,12 +1,12 @@
 -- ============================================================================
--- LIVE CHAT MODULE — Seed into modules_v2 + Enable for Testing
+-- LIVE CHAT MODULE — Register in Marketplace
 -- Run in Supabase SQL Editor AFTER lc-01-chat-schema.sql
 --
--- This registers the Live Chat module as FREE in the marketplace,
--- creates an agency subscription, and installs it on all agency sites.
+-- This registers the Live Chat module as FREE in the marketplace catalog.
+-- Users can then discover and install it themselves via the marketplace UI.
 -- ============================================================================
 
--- Step 1: Seed the module into modules_v2 (FREE pricing for development/testing)
+-- Register the module in modules_v2 (FREE pricing)
 INSERT INTO modules_v2 (
   slug,
   name,
@@ -88,89 +88,13 @@ INSERT INTO modules_v2 (
   provided_hooks = EXCLUDED.provided_hooks,
   updated_at = now();
 
--- Step 2: Auto-subscribe ALL agencies to the live-chat module (free)
--- This creates an active subscription for every agency
-INSERT INTO agency_module_subscriptions (
-  id,
-  agency_id,
-  module_id,
+-- Verify registration
+SELECT
+  slug,
+  name,
+  pricing_type,
   status,
-  billing_cycle,
-  current_period_start,
-  current_period_end
-)
-SELECT
-  gen_random_uuid(),
-  a.id,
-  m.id,
-  'active',
-  'monthly',
-  now(),
-  now() + INTERVAL '100 years'    -- Never expires (free module)
-FROM agencies a
-CROSS JOIN modules_v2 m
-WHERE m.slug = 'live-chat'
-ON CONFLICT (agency_id, module_id) DO UPDATE SET
-  status = 'active',
-  current_period_end = now() + INTERVAL '100 years',
-  updated_at = now();
-
--- Step 3: Auto-install on ALL sites for every agency
--- This enables the module on every existing site
-INSERT INTO site_module_installations (
-  id,
-  site_id,
-  module_id,
-  is_enabled,
-  installed_at,
-  enabled_at,
-  agency_subscription_id
-)
-SELECT
-  gen_random_uuid(),
-  s.id,
-  m.id,
-  TRUE,
-  now(),
-  now(),
-  ams.id
-FROM sites s
-JOIN clients c ON s.client_id = c.id
-JOIN agency_module_subscriptions ams ON ams.agency_id = c.agency_id
-JOIN modules_v2 m ON m.id = ams.module_id AND m.slug = 'live-chat'
-ON CONFLICT (site_id, module_id) DO UPDATE SET
-  is_enabled = TRUE,
-  enabled_at = now();
-
--- Verify
-SELECT
-  'Module registered' AS step,
-  m.slug,
-  m.name,
-  m.pricing_type,
-  m.status
-FROM modules_v2 m WHERE m.slug = 'live-chat'
-
-UNION ALL
-
-SELECT
-  'Agency subscriptions' AS step,
-  m.slug,
-  a.status,
-  CAST(COUNT(*) AS TEXT),
-  ''
-FROM agency_module_subscriptions a
-JOIN modules_v2 m ON m.id = a.module_id AND m.slug = 'live-chat'
-GROUP BY m.slug, a.status
-
-UNION ALL
-
-SELECT
-  'Site installations' AS step,
-  m.slug,
-  CAST(smi.is_enabled AS TEXT),
-  CAST(COUNT(*) AS TEXT),
-  ''
-FROM site_module_installations smi
-JOIN modules_v2 m ON m.id = smi.module_id AND m.slug = 'live-chat'
-GROUP BY m.slug, smi.is_enabled;
+  is_featured,
+  category
+FROM modules_v2
+WHERE slug = 'live-chat';
