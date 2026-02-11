@@ -149,11 +149,16 @@ export interface SocialPost {
 }
 
 export interface PublishResult {
-  platformPostId: string
-  url: string
-  status: 'pending' | 'success' | 'failed' | 'partial'
+  platformPostId?: string
+  url?: string
+  status?: 'pending' | 'success' | 'failed' | 'partial'
   error?: string
   publishedAt?: string
+  /** Populated by publish-service */
+  accountId?: string
+  platform?: string
+  success?: boolean
+  postUrl?: string
 }
 
 export interface PublishLog {

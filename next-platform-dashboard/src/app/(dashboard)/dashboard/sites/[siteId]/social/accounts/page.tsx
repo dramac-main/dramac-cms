@@ -1,30 +1,28 @@
 /**
  * Social Accounts Management Page
  * 
- * Phase EM-54: Social Media Management Module
- * Manage connected social media accounts
+ * PHASE-SM-01: OAuth & Account Integration
+ * Connect, manage, and monitor social media accounts.
  */
 
 import { Suspense } from 'react'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { 
-  RefreshCw, 
-  Trash2, 
   AlertCircle,
   CircleCheck,
   Clock,
-  Settings
 } from 'lucide-react'
 import { PLATFORM_CONFIGS } from '@/modules/social-media/types'
 import type { SocialAccount, SocialPlatform } from '@/modules/social-media/types'
+import { AccountsClientSection } from '@/modules/social-media/components/AccountsClientSection'
 
 interface PageProps {
   params: Promise<{ siteId: string }>
+  searchParams: Promise<{ connected?: string; error?: string; message?: string }>
 }
 
 function getPlatformIcon(platform: SocialPlatform) {
@@ -83,25 +81,66 @@ function formatNumber(num: number): string {
   return num.toString()
 }
 
-async function AccountsContent({ siteId }: { siteId: string }) {
+async function AccountsContent({
+  siteId,
+  connected,
+  errorType,
+  errorMessage,
+}: {
+  siteId: string
+  connected?: string
+  errorType?: string
+  errorMessage?: string
+}) {
   const result = await getSocialAccounts(siteId)
   const accounts = result.accounts || []
 
-  const platforms = [
-    { id: 'facebook', name: 'Facebook', icon: 'Fb', color: '#1877F2', desc: 'Pages & Groups' },
-    { id: 'instagram', name: 'Instagram', icon: 'Ig', color: '#E4405F', desc: 'Business & Creator' },
-    { id: 'twitter', name: 'X (Twitter)', icon: 'Tw', color: '#000000', desc: 'Posts & Threads' },
-    { id: 'linkedin', name: 'LinkedIn', icon: 'Li', color: '#0A66C2', desc: 'Profile & Company' },
-    { id: 'tiktok', name: 'TikTok', icon: 'Tt', color: '#000000', desc: 'Videos & Analytics' },
-    { id: 'youtube', name: 'YouTube', icon: 'Yt', color: '#FF0000', desc: 'Channel & Videos' },
-    { id: 'pinterest', name: 'Pinterest', icon: 'Pi', color: '#E60023', desc: 'Pins & Boards' },
-    { id: 'threads', name: 'Threads', icon: 'Th', color: '#000000', desc: 'Posts & Replies' },
-    { id: 'bluesky', name: 'Bluesky', icon: 'Bs', color: '#0085FF', desc: 'Posts' },
-    { id: 'mastodon', name: 'Mastodon', icon: 'Ms', color: '#6364FF', desc: 'Posts' },
-  ]
+  // Get tenantId from the first account or pass via a context
+  // For now we fetch from the site
+  const { createClient } = await import('@/lib/supabase/server')
+  const supabase = await createClient()
+  const { data: site } = await (supabase as any)
+    .from('sites')
+    .select('tenant_id')
+    .eq('id', siteId)
+    .single()
+  const tenantId = site?.tenant_id || ''
 
   return (
     <div className="space-y-8">
+      {/* Success banner */}
+      {connected && (
+        <Card className="border-green-200 bg-green-50/50 dark:bg-green-950/20 dark:border-green-900">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3">
+              <CircleCheck className="h-5 w-5 text-green-600" />
+              <p className="font-medium text-green-900 dark:text-green-100">
+                Successfully connected your {PLATFORM_CONFIGS[connected as SocialPlatform]?.name || connected} account!
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Error banner */}
+      {errorType && (
+        <Card className="border-red-200 bg-red-50/50 dark:bg-red-950/20 dark:border-red-900">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <div>
+                <p className="font-medium text-red-900 dark:text-red-100">
+                  Connection failed
+                </p>
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  {errorMessage || errorType}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -111,8 +150,8 @@ async function AccountsContent({ siteId }: { siteId: string }) {
           </p>
         </div>
         <Badge variant="secondary" className="text-sm">
-          <Clock className="h-4 w-4 mr-1" />
-          OAuth Integration Available
+          <CircleCheck className="h-4 w-4 mr-1" />
+          OAuth Ready
         </Badge>
       </div>
 
@@ -143,12 +182,6 @@ async function AccountsContent({ siteId }: { siteId: string }) {
                           {getPlatformIcon(account.platform)}
                         </AvatarFallback>
                       </Avatar>
-                      <div 
-                        className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-background flex items-center justify-center text-[10px]"
-                        style={{ backgroundColor: getPlatformColor(account.platform) }}
-                      >
-                        {getPlatformIcon(account.platform)}
-                      </div>
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
@@ -169,31 +202,18 @@ async function AccountsContent({ siteId }: { siteId: string }) {
                   </div>
                   
                   <div className="flex items-center gap-6">
-                    {/* Stats */}
                     <div className="text-right">
                       <p className="font-semibold">{formatNumber(account.followersCount || 0)}</p>
                       <p className="text-xs text-muted-foreground">followers</p>
                     </div>
                     
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      {account.status === 'expired' ? (
-                        <Button variant="outline" size="sm">
-                          <RefreshCw className="h-4 w-4 mr-2" />
-                          Reconnect
-                        </Button>
-                      ) : (
-                        <Button variant="ghost" size="sm">
-                          <RefreshCw className="h-4 w-4" />
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="sm">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {/* Client-side action buttons */}
+                    <AccountsClientSection
+                      mode="account-actions"
+                      siteId={siteId}
+                      tenantId={tenantId}
+                      account={account}
+                    />
                   </div>
                 </div>
               ))}
@@ -202,43 +222,13 @@ async function AccountsContent({ siteId }: { siteId: string }) {
         </Card>
       )}
 
-      {/* Add New Account */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Connect a New Account</CardTitle>
-          <CardDescription>
-            Choose a platform to connect. You&apos;ll be redirected to authorize access.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-            {platforms.map((platform) => {
-              const isConnected = accounts.some(
-                a => a.platform === platform.id && a.status === 'active'
-              )
-              
-              return (
-                <div
-                  key={platform.id}
-                  className="relative flex flex-col items-center py-4 px-3 rounded-md border border-input hover:bg-muted/50 transition-colors cursor-default"
-                >
-                  <Badge variant="secondary" className="absolute top-1.5 right-1.5 text-[10px] px-1.5 py-0">
-                    Soon
-                  </Badge>
-                  {isConnected && (
-                    <div className="absolute top-2 left-2">
-                      <CircleCheck className="h-4 w-4 text-green-600" />
-                    </div>
-                  )}
-                  <span className="text-2xl mb-1">{platform.icon}</span>
-                  <span className="font-medium text-sm">{platform.name}</span>
-                  <span className="text-xs text-muted-foreground">{platform.desc}</span>
-                </div>
-              )
-            })}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Connect New Account — client component with OAuth */}
+      <AccountsClientSection
+        mode="connect-panel"
+        siteId={siteId}
+        tenantId={tenantId}
+        accounts={accounts}
+      />
 
       {/* OAuth Information */}
       <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-900">
@@ -259,6 +249,8 @@ async function AccountsContent({ siteId }: { siteId: string }) {
                 <li>• <strong>TikTok:</strong> Requires a TikTok Business account</li>
                 <li>• <strong>LinkedIn:</strong> Can connect personal profile or company pages</li>
                 <li>• <strong>YouTube:</strong> Connects to your YouTube channel</li>
+                <li>• <strong>Bluesky:</strong> Uses handle + app password (create one in Settings → App Passwords)</li>
+                <li>• <strong>Mastodon:</strong> Enter your instance URL to connect via OAuth</li>
               </ul>
             </div>
           </div>
@@ -284,13 +276,19 @@ function AccountsSkeleton() {
   )
 }
 
-export default async function AccountsPage({ params }: PageProps) {
+export default async function AccountsPage({ params, searchParams }: PageProps) {
   const { siteId } = await params
+  const sp = await searchParams
 
   return (
     <div className="container py-6">
       <Suspense fallback={<AccountsSkeleton />}>
-        <AccountsContent siteId={siteId} />
+        <AccountsContent
+          siteId={siteId}
+          connected={sp.connected}
+          errorType={sp.error}
+          errorMessage={sp.message}
+        />
       </Suspense>
     </div>
   )

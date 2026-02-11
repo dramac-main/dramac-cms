@@ -46,6 +46,46 @@
 
 ---
 
+## Social Media Module — Full Buildout Phases (SM-00 through SM-09) — Commit `545793c`
+
+### Phase Documents Created
+All 10 phase documents for the social media module have been written and committed to `phases/social-media/`:
+
+| Phase | Name | Scope | Independence |
+|-------|------|-------|--------------|
+| SM-00 | Master Plan | Dependency graph, API keys, global rules | Reference doc |
+| SM-01 | OAuth & Account Integration | OAuth for 10 platforms, token refresh, Bluesky app-password, Mastodon instance | Run FIRST |
+| SM-02 | Publishing Engine | Real API posting, scheduled processor, queue, retry | Requires SM-01 |
+| SM-03 | Analytics Sync Engine | Real analytics sync, cron route, optimal times, mock purge | Requires SM-01 |
+| SM-04 | Unified Inbox Engine | Inbox sync, real replies, sentiment analysis, webhooks | Requires SM-01 |
+| SM-05 | Media Library & Storage | Supabase Storage bucket, upload service, media library page | Fully independent |
+| SM-06 | AI Content Engine | Claude-powered captions, hashtags, threads, alt-text, ideas | Fully independent |
+| SM-07 | Missing Pages & Navigation | Posts list, Listening, Competitors pages, full 13-item nav | Fully independent |
+| SM-08 | Campaigns, Reporting & Calendar | Enhanced campaigns, reports engine, calendar drag-and-drop | Fully independent |
+| SM-09 | Production Hardening | Error boundaries, skeletons, accessibility, mock purge, final QA | Run LAST |
+
+### Dependency Graph
+```
+SM-01 (OAuth) → SM-02 (Publishing), SM-03 (Analytics), SM-04 (Inbox)
+SM-05 (Media), SM-06 (AI), SM-07 (Pages), SM-08 (Campaigns) → Independent
+SM-09 (Hardening) → Run after all others
+```
+
+### Current Social Media Module State
+- **UI Shell**: ~25% complete (42 components, 9 routes, 13 DB tables)
+- **Backend Integration**: 0% — all server actions are stubs/mocks
+- **Key gaps**: Zero OAuth, zero real publishing, zero analytics sync, zero inbox sync, zero media storage, zero AI content
+- **Total estimated work**: ~120 new/modified files across all 9 implementation phases
+
+### Next Steps
+1. Execute SM-01 first (OAuth is the foundation)
+2. Then SM-02, SM-03, SM-04 in any order (all need accounts from SM-01)
+3. SM-05, SM-06, SM-07, SM-08 can run in parallel (independent)
+4. SM-09 runs last (final cleanup)
+5. Required API keys documented in SM-00 Master Plan
+
+---
+
 ## Previous Session (Phase FIX-12 Complete — February 2026)
 
 ### PHASE FIX-12: Line Icons & Platform-Wide Emoji Replacement ✅

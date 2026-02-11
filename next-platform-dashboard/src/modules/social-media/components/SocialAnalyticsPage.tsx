@@ -131,41 +131,21 @@ export function SocialAnalyticsPage({
   const hasData = overview && accounts.length > 0
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   
-  // Generate mock data if no real data exists (for demo purposes)
-  const mockOverview = overview || {
-    totalFollowers: 12543,
-    totalImpressions: 89234,
-    totalEngagements: 4521,
-    totalClicks: 1234,
-    avgEngagementRate: 5.07,
-    followerGrowth: 2.4,
-    impressionChange: 12.5,
-    engagementChange: 8.2,
+  const displayOverview = overview || {
+    totalFollowers: 0,
+    totalImpressions: 0,
+    totalEngagements: 0,
+    totalClicks: 0,
+    avgEngagementRate: 0,
+    followerGrowth: 0,
+    impressionChange: 0,
+    engagementChange: 0,
     topPosts: [],
-    platformBreakdown: {
-      facebook: { followers: 5234, impressions: 34521, engagements: 1823 },
-      instagram: { followers: 4321, impressions: 32145, engagements: 1654 },
-      twitter: { followers: 2988, impressions: 22568, engagements: 1044 },
-    }
+    platformBreakdown: {},
   }
   
-  const mockTopPosts = topPosts.length > 0 ? topPosts : [
-    { postId: '1', content: 'Exciting news! We\'re launching our new product line next week...', publishedAt: new Date().toISOString(), impressions: 8234, engagement: 423, engagementRate: 5.14 },
-    { postId: '2', content: 'Behind the scenes look at our team hard at work...', publishedAt: new Date().toISOString(), impressions: 6123, engagement: 312, engagementRate: 5.1 },
-    { postId: '3', content: 'Customer spotlight: See how @customer used our product...', publishedAt: new Date().toISOString(), impressions: 5892, engagement: 287, engagementRate: 4.87 },
-  ]
-  
-  const mockBestTimes = bestTimes.length > 0 ? bestTimes : [
-    { dayOfWeek: 1, dayName: 'Monday', hour: 10, timeLabel: '10:00', score: 92 },
-    { dayOfWeek: 3, dayName: 'Wednesday', hour: 14, timeLabel: '14:00', score: 89 },
-    { dayOfWeek: 5, dayName: 'Friday', hour: 9, timeLabel: '09:00', score: 85 },
-    { dayOfWeek: 2, dayName: 'Tuesday', hour: 13, timeLabel: '13:00', score: 82 },
-    { dayOfWeek: 4, dayName: 'Thursday', hour: 19, timeLabel: '19:00', score: 78 },
-  ]
-  
-  const displayOverview = hasData ? overview : mockOverview
-  const displayTopPosts = topPosts.length > 0 ? topPosts : mockTopPosts
-  const displayBestTimes = bestTimes.length > 0 ? bestTimes : mockBestTimes
+  const displayTopPosts = topPosts
+  const displayBestTimes = bestTimes
   
   return (
     <div className="space-y-6">
@@ -199,13 +179,12 @@ export function SocialAnalyticsPage({
         </div>
       </div>
       
-      {/* Demo Notice */}
+      {/* Connect accounts notice */}
       {!hasData && (
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="pt-6">
             <p className="text-sm text-blue-800">
-              <strong>Demo Mode:</strong> Connect social accounts to see real analytics. 
-              The data shown below is sample data for demonstration purposes.
+              <strong>No accounts connected.</strong> Connect your social accounts to see live analytics.
             </p>
           </CardContent>
         </Card>

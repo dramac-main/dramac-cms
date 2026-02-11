@@ -17,6 +17,14 @@
     {
       "path": "/api/cron/domain-health",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/social/publish",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/social/sync",
+      "schedule": "0 * * * *"
     }
   ]
 }

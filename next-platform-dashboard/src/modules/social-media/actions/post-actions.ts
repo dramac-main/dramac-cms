@@ -360,32 +360,40 @@ export async function publishPostNow(
       .select('*')
       .in('id', post.target_accounts)
     
-    // Publish to each account
+    // Publish to each account using the real publish service
+    const { publishToAccount } = await import('../lib/publish-service')
+
     for (const account of accounts || []) {
       try {
-        // Platform-specific publishing logic would go here
-        // For now, simulate successful publishing
-        const platformPostId = `simulated_${Date.now()}_${account.platform}`
-        const platformUrl = `https://${account.platform}.com/post/${platformPostId}`
-        
-        results[account.id] = {
-          platformPostId,
-          url: platformUrl,
-          status: 'success',
-          publishedAt: new Date().toISOString(),
-        }
-        
-        // Log the publish attempt
-        await (supabase as any)
-          .from('social_publish_log')
-          .insert({
-            post_id: postId,
-            account_id: account.id,
+        const result = await publishToAccount(account.id, {
+          content: post.content,
+          media: post.media || [],
+          platformContent: post.platform_content,
+          firstComment: post.first_comment,
+          threadContent: post.thread_content,
+        })
+
+        if (result.success) {
+          results[account.id] = {
+            platformPostId: result.platformPostId || '',
+            url: result.postUrl || '',
             status: 'success',
-            platform_post_id: platformPostId,
-            platform_url: platformUrl,
-            completed_at: new Date().toISOString(),
-          })
+            publishedAt: new Date().toISOString(),
+          }
+
+          await (supabase as any)
+            .from('social_publish_log')
+            .insert({
+              post_id: postId,
+              account_id: account.id,
+              status: 'success',
+              platform_post_id: result.platformPostId,
+              platform_url: result.postUrl,
+              completed_at: new Date().toISOString(),
+            })
+        } else {
+          throw new Error(result.error || 'Publishing failed')
+        }
       } catch (pubError) {
         results[account.id] = {
           platformPostId: '',

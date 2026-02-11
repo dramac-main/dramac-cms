@@ -173,37 +173,19 @@ export async function updateAccountStatus(
 }
 
 /**
- * Refresh account tokens
+ * Refresh account tokens (real implementation via ensureValidToken)
  */
 export async function refreshAccountToken(
   accountId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
-    
-    // Get account
-    const { data: account, error: fetchError } = await (supabase as any)
-      .from('social_accounts')
-      .select('*')
-      .eq('id', accountId)
-      .single()
-    
-    if (fetchError) throw fetchError
-    if (!account) throw new Error('Account not found')
-    if (!account.refresh_token) throw new Error('No refresh token available')
-    
-    // Platform-specific token refresh would go here
-    // For now, just mark as needing reconnection
-    
-    await (supabase as any)
-      .from('social_accounts')
-      .update({
-        status: 'expired',
-        last_error: 'Token refresh required - please reconnect',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', accountId)
-    
+    const { ensureValidToken } = await import('../lib/token-refresh')
+    const token = await ensureValidToken(accountId)
+
+    if (!token) {
+      return { success: false, error: 'Token refresh failed — please reconnect the account' }
+    }
+
     return { success: true, error: null }
   } catch (err) {
     console.error('[Social] Error refreshing token:', err)
@@ -237,35 +219,103 @@ export async function disconnectSocialAccount(
 }
 
 /**
- * Sync account stats from platform
+ * Sync account stats from platform (real API calls)
  */
 export async function syncAccountStats(
   accountId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     const supabase = await createClient()
-    
+
     // Get account
     const { data: account, error: fetchError } = await (supabase as any)
       .from('social_accounts')
       .select('*')
       .eq('id', accountId)
       .single()
-    
+
     if (fetchError) throw fetchError
     if (!account) throw new Error('Account not found')
-    
-    // Platform-specific API calls would go here to fetch stats
-    // For now, just update sync timestamp
-    
+
+    const { ensureValidToken } = await import('../lib/token-refresh')
+    const token = await ensureValidToken(accountId)
+    if (!token) {
+      return { success: false, error: 'Unable to obtain valid token' }
+    }
+
+    let followers = account.followers_count || 0
+    let following = account.following_count || 0
+
+    try {
+      switch (account.platform) {
+        case 'facebook': {
+          const res = await fetch(
+            `https://graph.facebook.com/v21.0/${account.platform_account_id}?fields=fan_count,followers_count&access_token=${token}`,
+          )
+          const fb = await res.json()
+          followers = fb.followers_count || fb.fan_count || followers
+          break
+        }
+        case 'instagram': {
+          const res = await fetch(
+            `https://graph.facebook.com/v21.0/${account.platform_account_id}?fields=followers_count,follows_count&access_token=${token}`,
+          )
+          const ig = await res.json()
+          followers = ig.followers_count || followers
+          following = ig.follows_count || following
+          break
+        }
+        case 'twitter': {
+          const res = await fetch(
+            `https://api.twitter.com/2/users/${account.platform_account_id}?user.fields=public_metrics`,
+            { headers: { Authorization: `Bearer ${token}` } },
+          )
+          const tw = await res.json()
+          followers = tw.data?.public_metrics?.followers_count || followers
+          following = tw.data?.public_metrics?.following_count || following
+          break
+        }
+        case 'linkedin': {
+          // LinkedIn follower stats require org endpoints
+          break
+        }
+        case 'tiktok': {
+          const res = await fetch(
+            'https://open.tiktokapis.com/v2/user/info/?fields=follower_count,following_count',
+            { headers: { Authorization: `Bearer ${token}` } },
+          )
+          const tt = await res.json()
+          followers = tt.data?.user?.follower_count || followers
+          following = tt.data?.user?.following_count || following
+          break
+        }
+        case 'youtube': {
+          const res = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${account.platform_account_id}`,
+            { headers: { Authorization: `Bearer ${token}` } },
+          )
+          const yt = await res.json()
+          const ch = yt.items?.[0]?.statistics
+          followers = Number(ch?.subscriberCount) || followers
+          break
+        }
+        default:
+          break
+      }
+    } catch (apiErr) {
+      console.warn(`[Social] API call failed for ${account.platform}, using cached stats:`, apiErr)
+    }
+
     await (supabase as any)
       .from('social_accounts')
       .update({
+        followers_count: followers,
+        following_count: following,
         last_synced_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', accountId)
-    
+
     return { success: true, error: null }
   } catch (err) {
     console.error('[Social] Error syncing account:', err)
@@ -359,3 +409,177 @@ export async function getAccountHealth(
     }
   }
 }
+
+// ============================================================================
+// BLUESKY (ATP) — credential-based auth
+// ============================================================================
+
+/**
+ * Connect a Bluesky account using handle + app password.
+ */
+export async function connectBlueskyAccount(
+  siteId: string,
+  tenantId: string,
+  userId: string,
+  data: { handle: string; appPassword: string },
+): Promise<{ success: boolean; error: string | null }> {
+  try {
+    // Dynamic import – @atproto/api may not be installed yet
+    let BskyAgent: any
+    try {
+      const atproto = await import('@atproto/api')
+      BskyAgent = atproto.BskyAgent ?? atproto.AtpAgent ?? (atproto as any).default?.BskyAgent
+    } catch {
+      // If the package is not installed, fall back to direct HTTP
+      BskyAgent = null
+    }
+
+    let did: string
+    let displayName: string
+    let avatar: string | undefined
+    let accessJwt: string
+    let refreshJwt: string
+
+    if (BskyAgent) {
+      const agent = new BskyAgent({ service: 'https://bsky.social' })
+      const loginResult = await agent.login({
+        identifier: data.handle,
+        password: data.appPassword,
+      })
+      did = loginResult.data.did
+      accessJwt = loginResult.data.accessJwt
+      refreshJwt = loginResult.data.refreshJwt
+
+      const profile = await agent.getProfile({ actor: did })
+      displayName = profile.data.displayName || data.handle
+      avatar = profile.data.avatar
+    } else {
+      // Fallback: direct XRPC call
+      const loginRes = await fetch('https://bsky.social/xrpc/com.atproto.server.createSession', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: data.handle, password: data.appPassword }),
+      })
+      if (!loginRes.ok) {
+        const errBody = await loginRes.text()
+        throw new Error(`Bluesky login failed: ${errBody.slice(0, 200)}`)
+      }
+      const session = await loginRes.json()
+      did = session.did
+      accessJwt = session.accessJwt
+      refreshJwt = session.refreshJwt
+
+      const profileRes = await fetch(
+        `https://bsky.social/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(did)}`,
+        { headers: { Authorization: `Bearer ${accessJwt}` } },
+      )
+      const prof = profileRes.ok ? await profileRes.json() : {}
+      displayName = prof.displayName || data.handle
+      avatar = prof.avatar
+    }
+
+    const supabase = await createClient()
+    const now = new Date().toISOString()
+
+    await (supabase as any).from('social_accounts').upsert(
+      {
+        site_id: siteId,
+        tenant_id: tenantId,
+        user_id: userId,
+        platform: 'bluesky',
+        platform_account_id: did,
+        account_name: displayName,
+        account_handle: data.handle,
+        account_avatar: avatar || null,
+        account_url: `https://bsky.app/profile/${data.handle}`,
+        access_token: accessJwt,
+        refresh_token: refreshJwt,
+        status: 'active',
+        connected_at: now,
+        last_synced_at: now,
+        updated_at: now,
+      },
+      { onConflict: 'site_id,platform,platform_account_id', ignoreDuplicates: false },
+    )
+
+    revalidatePath(`/dashboard/sites/${siteId}/social/accounts`)
+    return { success: true, error: null }
+  } catch (err) {
+    console.error('[Social] Bluesky connect error:', err)
+    return { success: false, error: (err as Error).message }
+  }
+}
+
+// ============================================================================
+// MASTODON — instance-aware OAuth
+// ============================================================================
+
+/**
+ * Register/get the DRAMAC app on a Mastodon instance and return the authorize URL.
+ */
+export async function registerMastodonApp(
+  instanceUrl: string,
+  siteId: string,
+  tenantId: string,
+  userId: string,
+): Promise<{ authorizeUrl: string | null; error: string | null }> {
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const redirectUri = `${appUrl}/api/social/oauth/callback`
+
+    // Register the application on the instance
+    const regRes = await fetch(`${instanceUrl}/api/v1/apps`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_name: 'DRAMAC CMS',
+        redirect_uris: redirectUri,
+        scopes: 'read write push',
+        website: appUrl,
+      }),
+    })
+
+    if (!regRes.ok) {
+      throw new Error(`Mastodon app registration failed: ${regRes.status}`)
+    }
+
+    const app = await regRes.json()
+
+    // Store the app credentials temporarily in oauth_states
+    const { createOAuthState: createState } = await import('../lib/oauth-state')
+    const { state } = await createState({
+      platform: 'mastodon',
+      siteId,
+      tenantId,
+      userId,
+    })
+
+    // Also store the instance info so callback can use it
+    const supabase = await createClient()
+    await (supabase as any).from('social_oauth_states').update({
+      code_verifier: JSON.stringify({
+        instanceUrl,
+        clientId: app.client_id,
+        clientSecret: app.client_secret,
+      }),
+    }).eq('state', state)
+
+    // Build authorize URL
+    const params = new URLSearchParams({
+      client_id: app.client_id,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'read write push',
+      state,
+    })
+
+    return {
+      authorizeUrl: `${instanceUrl}/oauth/authorize?${params.toString()}`,
+      error: null,
+    }
+  } catch (err) {
+    console.error('[Social] Mastodon registration error:', err)
+    return { authorizeUrl: null, error: (err as Error).message }
+  }
+}
+

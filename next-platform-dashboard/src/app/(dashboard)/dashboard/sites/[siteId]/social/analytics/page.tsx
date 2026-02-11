@@ -33,11 +33,6 @@ export default async function AnalyticsPage({ params }: PageProps) {
   
   return (
     <div className="container py-6">
-      <div className="mb-4">
-        <p className="text-sm text-muted-foreground">
-          <strong>Note:</strong> Analytics currently display demo data for testing purposes.
-        </p>
-      </div>
       <SocialAnalyticsDashboardEnhanced siteId={siteId} />
     </div>
   )
