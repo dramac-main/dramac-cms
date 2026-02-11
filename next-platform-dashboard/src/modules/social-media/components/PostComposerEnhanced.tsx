@@ -17,6 +17,8 @@ import {
   AlertCircle,
   CheckCircle2,
   WandSparkles,
+  Megaphone,
+  Palette,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -31,11 +33,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import type { 
   SocialAccount, 
   SocialPlatform, 
-  PostMedia 
+  PostMedia,
+  Campaign,
+  ContentPillar,
 } from '../types'
 import { PLATFORM_CONFIGS } from '../types'
 import { ComposerPlatformPreview } from './ui/composer-platform-preview'
@@ -49,6 +60,8 @@ import { AIAssistantPanel } from './ui/ai-assistant-panel'
 
 interface PostComposerEnhancedProps {
   accounts: SocialAccount[]
+  campaigns?: Campaign[]
+  contentPillars?: ContentPillar[]
   onSubmit: (post: {
     content: string
     media: PostMedia[]
@@ -57,6 +70,8 @@ interface PostComposerEnhancedProps {
     timezone?: string
     platformContent?: Partial<Record<SocialPlatform, { content: string }>>
     firstComment?: string
+    campaignId?: string
+    contentPillar?: string
   }) => Promise<void>
   onCancel?: () => void
   initialData?: {
@@ -93,6 +108,8 @@ function getCharacterLimit(platform: SocialPlatform): number {
 
 export function PostComposerEnhanced({
   accounts,
+  campaigns = [],
+  contentPillars = [],
   onSubmit,
   onCancel,
   initialData,
@@ -112,6 +129,8 @@ export function PostComposerEnhanced({
   const [currentStep, setCurrentStep] = useState<ComposerStep>('compose')
   const [previewPlatform, setPreviewPlatform] = useState<SocialPlatform | null>(null)
   const [showAIPanel, setShowAIPanel] = useState(false)
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>('')
+  const [selectedPillar, setSelectedPillar] = useState<string>('')
 
   // Group accounts by platform
   const accountsByPlatform = useMemo(() => {
@@ -247,6 +266,8 @@ export function PostComposerEnhanced({
         targetAccounts: selectedAccounts,
         scheduledAt: scheduledAt?.toISOString(),
         timezone,
+        campaignId: selectedCampaignId || undefined,
+        contentPillar: selectedPillar || undefined,
       })
     } catch (error) {
       console.error('Failed to submit post:', error)
@@ -419,6 +440,60 @@ export function PostComposerEnhanced({
                     maxFiles={10}
                   />
                 </div>
+
+                {/* Campaign & Content Pillar selectors */}
+                {(campaigns.length > 0 || contentPillars.length > 0) && (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {campaigns.length > 0 && (
+                      <div>
+                        <label htmlFor="composer-campaign" className="flex items-center gap-1.5 text-sm font-medium mb-2">
+                          <Megaphone className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          Campaign
+                        </label>
+                        <Select value={selectedCampaignId} onValueChange={setSelectedCampaignId}>
+                          <SelectTrigger id="composer-campaign">
+                            <SelectValue placeholder="None" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {campaigns
+                              .filter(c => c.status === 'active' || c.status === 'draft' || c.status === 'scheduled')
+                              .map(c => (
+                                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                    {contentPillars.length > 0 && (
+                      <div>
+                        <label htmlFor="composer-pillar" className="flex items-center gap-1.5 text-sm font-medium mb-2">
+                          <Palette className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          Content Pillar
+                        </label>
+                        <Select value={selectedPillar} onValueChange={setSelectedPillar}>
+                          <SelectTrigger id="composer-pillar">
+                            <SelectValue placeholder="None" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            {contentPillars.map(p => (
+                              <SelectItem key={p.id} value={p.id}>
+                                <div className="flex items-center gap-2">
+                                  <span
+                                    className="h-2.5 w-2.5 rounded-full"
+                                    style={{ backgroundColor: p.color }}
+                                  />
+                                  {p.name}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Continue button */}
                 <div className="flex justify-end pt-4">

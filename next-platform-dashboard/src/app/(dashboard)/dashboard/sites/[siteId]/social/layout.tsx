@@ -24,7 +24,11 @@ import {
   Megaphone,
   CircleCheck,
   Settings,
-  Image as ImageIcon
+  Image as ImageIcon,
+  FileText,
+  Ear,
+  UsersRound,
+  FileBarChart,
 } from 'lucide-react'
 import { headers } from 'next/headers'
 import { cn } from '@/lib/utils'
@@ -53,11 +57,15 @@ async function SocialNav({ siteId }: { siteId: string }) {
     { href: `/dashboard/sites/${siteId}/social`, label: 'Dashboard', icon: LayoutDashboard, exact: true },
     { href: `/dashboard/sites/${siteId}/social/calendar`, label: 'Calendar', icon: Calendar },
     { href: `/dashboard/sites/${siteId}/social/compose`, label: 'Compose', icon: Send },
+    { href: `/dashboard/sites/${siteId}/social/posts`, label: 'Posts', icon: FileText },
     { href: `/dashboard/sites/${siteId}/social/inbox`, label: 'Inbox', icon: Inbox },
     { href: `/dashboard/sites/${siteId}/social/media`, label: 'Media', icon: ImageIcon },
     { href: `/dashboard/sites/${siteId}/social/accounts`, label: 'Accounts', icon: Users },
     { href: `/dashboard/sites/${siteId}/social/analytics`, label: 'Analytics', icon: BarChart3 },
     { href: `/dashboard/sites/${siteId}/social/campaigns`, label: 'Campaigns', icon: Megaphone },
+    { href: `/dashboard/sites/${siteId}/social/listening`, label: 'Listening', icon: Ear },
+    { href: `/dashboard/sites/${siteId}/social/competitors`, label: 'Competitors', icon: UsersRound },
+    { href: `/dashboard/sites/${siteId}/social/reports`, label: 'Reports', icon: FileBarChart },
     { href: `/dashboard/sites/${siteId}/social/approvals`, label: 'Approvals', icon: CircleCheck },
     { href: `/dashboard/sites/${siteId}/social/settings`, label: 'Settings', icon: Settings },
   ]
@@ -133,8 +141,8 @@ export default async function SocialMediaLayout({ children, params }: LayoutProp
             </div>
           </div>
           
-          {/* Navigation tabs */}
-          <div className="flex items-center -mb-px">
+          {/* Navigation tabs - horizontally scrollable for many items */}
+          <div className="flex items-center -mb-px overflow-x-auto scrollbar-thin scrollbar-thumb-muted">
             <Suspense fallback={<NavSkeleton />}>
               <SocialNav siteId={siteId} />
             </Suspense>
