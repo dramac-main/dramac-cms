@@ -203,7 +203,7 @@ export function AddressForm({
             type="tel"
             value={address.phone || ''}
             onChange={(e) => handleChange('phone', e.target.value)}
-            placeholder="+1 (555) 000-0000"
+            placeholder="+260 97 1234567"
             disabled={disabled}
             autoComplete="tel"
           />
@@ -263,7 +263,7 @@ export function ShippingAddressForm({
                 type="email"
                 value={email || ''}
                 onChange={(e) => onEmailChange(e.target.value)}
-                placeholder="john@example.com"
+                placeholder="email@example.com"
                 disabled={props.disabled}
                 autoComplete="email"
               />
@@ -278,7 +278,7 @@ export function ShippingAddressForm({
                 type="tel"
                 value={phone || ''}
                 onChange={(e) => onPhoneChange(e.target.value)}
-                placeholder="+1 (555) 000-0000"
+                placeholder="+260 97 1234567"
                 disabled={props.disabled}
                 autoComplete="tel"
               />

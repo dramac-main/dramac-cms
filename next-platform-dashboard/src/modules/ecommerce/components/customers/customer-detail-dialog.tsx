@@ -28,7 +28,7 @@ import {
   Phone, 
   MapPin, 
   Package,
-  DollarSign,
+  Coins,
   Calendar,
   MessageSquare,
   Send
@@ -207,14 +207,14 @@ export function CustomerDetailDialog({
           </Card>
           <Card>
             <CardContent className="pt-4 text-center">
-              <DollarSign className="h-5 w-5 mx-auto text-muted-foreground mb-1" />
+              <Coins className="h-5 w-5 mx-auto text-muted-foreground mb-1" />
               <div className="text-2xl font-bold">{formatCurrency(customer.total_spent)}</div>
               <div className="text-xs text-muted-foreground">Total Spent</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-4 text-center">
-              <DollarSign className="h-5 w-5 mx-auto text-muted-foreground mb-1" />
+              <Coins className="h-5 w-5 mx-auto text-muted-foreground mb-1" />
               <div className="text-2xl font-bold">{formatCurrency(customer.average_order_value)}</div>
               <div className="text-xs text-muted-foreground">Avg Order</div>
             </CardContent>

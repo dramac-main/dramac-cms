@@ -14,6 +14,7 @@ import {
   Loader2, AlertCircle, Search, X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/locale-config";
 import { useStorefrontProducts } from "../../hooks/useStorefrontProducts";
 import { useStorefrontCategories } from "../../hooks/useStorefrontCategories";
 import { useStorefront } from "../../context/storefront-context";
@@ -246,9 +247,9 @@ export function ProductGridBlock({
             className="mb-4"
           />
           <div className="flex items-center gap-2 text-sm">
-            <span>${priceRange[0]}</span>
+            <span>{formatCurrency(priceRange[0])}</span>
             <span>-</span>
-            <span>${priceRange[1]}</span>
+            <span>{formatCurrency(priceRange[1])}</span>
           </div>
         </div>
       </div>

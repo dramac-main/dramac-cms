@@ -8,12 +8,13 @@
 'use client'
 
 import { useMemo } from 'react'
+import { formatCurrency } from '@/lib/locale-config'
 import { useEcommerce } from '../../context/ecommerce-context'
 import { 
   BarChart3, 
   TrendingUp, 
   TrendingDown,
-  DollarSign,
+  Coins,
   ShoppingCart,
   Package,
   Users
@@ -161,11 +162,11 @@ export function AnalyticsView() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">${(analytics.todayRevenue / 100).toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(analytics.todayRevenue / 100)}</p>
                 <p className="text-sm text-muted-foreground">{analytics.todayOrders} orders</p>
               </div>
               <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/30">
-                <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <Coins className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </CardContent>
@@ -178,7 +179,7 @@ export function AnalyticsView() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">${(analytics.weekRevenue / 100).toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(analytics.weekRevenue / 100)}</p>
                 <p className="text-sm text-muted-foreground">{analytics.weekOrders} orders</p>
               </div>
               <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
@@ -195,7 +196,7 @@ export function AnalyticsView() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">${(analytics.monthRevenue / 100).toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(analytics.monthRevenue / 100)}</p>
                 <div className="flex items-center gap-1">
                   {analytics.monthGrowth >= 0 ? (
                     <TrendingUp className="h-4 w-4 text-green-500" />
@@ -224,7 +225,7 @@ export function AnalyticsView() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">${(analytics.avgOrderValue / 100).toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(analytics.avgOrderValue / 100)}</p>
                 <p className="text-sm text-muted-foreground">{analytics.monthOrders} orders this month</p>
               </div>
               <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30">
@@ -287,7 +288,7 @@ export function AnalyticsView() {
                 {analytics.topProducts.slice(0, 3).map((product, index) => (
                   <div key={index} className="flex justify-between items-center text-sm">
                     <span className="truncate flex-1 mr-2">{product.name}</span>
-                    <Badge variant="outline">${(product.revenue / 100).toFixed(0)}</Badge>
+                    <Badge variant="outline">{formatCurrency(product.revenue / 100)}</Badge>
                   </div>
                 ))}
               </div>

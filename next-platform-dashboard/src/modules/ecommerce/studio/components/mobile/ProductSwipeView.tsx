@@ -12,7 +12,7 @@
 import React, { useState, useCallback, useMemo } from 'react'
 import { motion, useAnimation, PanInfo, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { Heart, X, ShoppingCart, ChevronDown, Star, Undo2, Info } from 'lucide-react'
+import { Heart, X, ShoppingCart, ChevronDown, Star, Undo2, Info, PartyPopper } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -435,7 +435,7 @@ export function ProductSwipeView({
     return (
       <div className={cn('flex flex-col items-center justify-center h-full', className)}>
         <div className="text-center p-8">
-          <div className="text-6xl mb-4">🎉</div>
+          <PartyPopper className="h-16 w-16 mb-4 text-green-500" />
           <h3 className="text-xl font-semibold mb-2">You've seen them all!</h3>
           <p className="text-muted-foreground mb-4">
             Check out your wishlist or cart

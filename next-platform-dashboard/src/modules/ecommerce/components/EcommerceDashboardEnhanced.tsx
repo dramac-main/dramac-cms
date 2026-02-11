@@ -12,7 +12,7 @@ import { motion } from "framer-motion"
 import { 
   Package, 
   ShoppingCart, 
-  DollarSign,
+  Coins,
   TrendingUp,
   Users,
   AlertTriangle,
@@ -97,26 +97,11 @@ export interface EcommerceDashboardEnhancedProps {
 // =============================================================================
 
 function generateMockRevenueData(): RevenueDataPoint[] {
-  const data: RevenueDataPoint[] = []
-  const now = new Date()
-  
-  for (let i = 29; i >= 0; i--) {
-    const date = new Date(now)
-    date.setDate(date.getDate() - i)
-    
-    data.push({
-      date: date.toISOString().split('T')[0],
-      revenue: Math.floor(Math.random() * 5000) + 1000,
-      orders: Math.floor(Math.random() * 30) + 5,
-      label: date.toLocaleDateString(DEFAULT_LOCALE, { month: 'short', day: 'numeric' }),
-    })
-  }
-  
-  return data
+  return []
 }
 
 function generateMockSparkline(): number[] {
-  return Array.from({ length: 14 }, () => Math.floor(Math.random() * 100) + 20)
+  return []
 }
 
 // =============================================================================

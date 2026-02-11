@@ -10,7 +10,7 @@
 import { useState, useEffect } from 'react'
 import { createBundle, updateBundle } from '../../actions/marketing-actions'
 import type { Bundle, BundleInput } from '../../types/marketing-types'
-import { Loader2, Package, DollarSign } from 'lucide-react'
+import { Loader2, Package, Coins } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -177,7 +177,7 @@ export function BundleDialog({
             <div className="grid gap-2">
               <Label htmlFor="bundlePrice">Bundle Price</Label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Coins className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="bundlePrice"
                   type="number"

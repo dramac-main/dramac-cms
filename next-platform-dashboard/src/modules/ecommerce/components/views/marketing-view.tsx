@@ -21,7 +21,7 @@ import {
   Star,
   TrendingUp,
   Users,
-  DollarSign
+  Coins
 } from 'lucide-react'
 import {
   Card,

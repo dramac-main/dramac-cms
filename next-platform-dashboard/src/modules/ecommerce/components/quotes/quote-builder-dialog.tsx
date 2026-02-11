@@ -31,7 +31,7 @@ import {
   Loader2, 
   User, 
   Package, 
-  DollarSign, 
+  Coins, 
   FileText,
   Save
 } from 'lucide-react'
@@ -461,7 +461,7 @@ export function QuoteBuilderDialog({
                   )}
                 </TabsTrigger>
                 <TabsTrigger value="pricing" className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />
+                  <Coins className="h-4 w-4" />
                   <span className="hidden sm:inline">Pricing</span>
                 </TabsTrigger>
                 <TabsTrigger value="content" className="flex items-center gap-2">
@@ -496,7 +496,7 @@ export function QuoteBuilderDialog({
                       <Input
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="John Doe"
+                        placeholder="Full name"
                         required
                       />
                     </div>
@@ -506,7 +506,7 @@ export function QuoteBuilderDialog({
                         type="email"
                         value={customerEmail}
                         onChange={(e) => setCustomerEmail(e.target.value)}
-                        placeholder="john@example.com"
+                        placeholder="email@example.com"
                         required
                       />
                     </div>
@@ -518,7 +518,7 @@ export function QuoteBuilderDialog({
                       <Input
                         value={customerCompany}
                         onChange={(e) => setCustomerCompany(e.target.value)}
-                        placeholder="Acme Inc."
+                        placeholder="Company name"
                       />
                     </div>
                     <div className="space-y-2">
@@ -526,7 +526,7 @@ export function QuoteBuilderDialog({
                       <Input
                         value={customerPhone}
                         onChange={(e) => setCustomerPhone(e.target.value)}
-                        placeholder="+1 (555) 123-4567"
+                        placeholder="+260 97 1234567"
                       />
                     </div>
                   </div>

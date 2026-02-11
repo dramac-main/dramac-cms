@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Check, ChevronsUpDown, Search, X, Package, Loader2 } from "lucide-react";
+import { formatCurrency } from "@/lib/locale-config";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -178,7 +179,7 @@ export function ProductSelectorField({
                     {selectedProduct.name}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    ${selectedProduct.price.toFixed(2)}
+                    {formatCurrency(selectedProduct.price)}
                   </p>
                 </div>
                 <Button
@@ -246,7 +247,7 @@ export function ProductSelectorField({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{product.name}</p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>${product.price.toFixed(2)}</span>
+                        <span>{formatCurrency(product.price)}</span>
                         {product.sku && <span>• {product.sku}</span>}
                         {product.categoryName && (
                           <Badge variant="secondary" className="text-[10px] h-4">

@@ -10,6 +10,7 @@
 
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { formatCurrency } from '@/lib/locale-config'
 import { useEcommerce } from '../../context/ecommerce-context'
 import { 
   ShoppingCart, 
@@ -22,7 +23,7 @@ import {
   XCircle,
   Clock,
   Package,
-  DollarSign
+  Coins
 } from 'lucide-react'
 import { OrderDetailDialog } from '../orders'
 import { Button } from '@/components/ui/button'
@@ -66,7 +67,7 @@ const orderStatusConfig: Record<OrderStatus, { label: string; icon: typeof Clock
   shipped: { label: 'Shipped', icon: Truck, className: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400' },
   delivered: { label: 'Delivered', icon: CheckCircle, className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
   cancelled: { label: 'Cancelled', icon: XCircle, className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' },
-  refunded: { label: 'Refunded', icon: DollarSign, className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+  refunded: { label: 'Refunded', icon: Coins, className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
 }
 
 const paymentStatusConfig: Record<PaymentStatus, { label: string; className: string }> = {
@@ -238,7 +239,7 @@ export function OrdersView({ searchQuery = '', userId = '', userName = 'Store Ma
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="font-medium">${(order.total / 100).toFixed(2)}</div>
+                      <div className="font-medium">{formatCurrency(order.total / 100)}</div>
                       <div className="text-sm text-muted-foreground">{order.currency}</div>
                     </TableCell>
                     <TableCell>

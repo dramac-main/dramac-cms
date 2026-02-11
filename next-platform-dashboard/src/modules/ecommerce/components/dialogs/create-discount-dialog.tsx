@@ -7,7 +7,7 @@
 
 import { useState } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
-import { Loader2, Plus, Percent, DollarSign, CalendarDays } from 'lucide-react'
+import { Loader2, Plus, Percent, Coins, CalendarDays } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -197,7 +197,7 @@ export function CreateDiscountDialog({ open, onOpenChange }: CreateDiscountDialo
                     </SelectItem>
                     <SelectItem value="fixed_amount">
                       <span className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
+                        <Coins className="h-4 w-4" />
                         Fixed Amount
                       </span>
                     </SelectItem>

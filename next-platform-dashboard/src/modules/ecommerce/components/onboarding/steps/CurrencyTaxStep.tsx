@@ -7,7 +7,7 @@
 'use client';
 
 import React from 'react';
-import { DollarSign, Percent } from 'lucide-react';
+import { Coins, Percent } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StepComponentProps } from '../../../types/onboarding-types';
 import { AVAILABLE_CURRENCIES } from '../../../types/onboarding-types';
@@ -55,7 +55,7 @@ export function CurrencyTaxStep({
     <div className="space-y-6">
       <div className="text-center mb-8">
         <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-          <DollarSign className="w-8 h-8 text-green-600 dark:text-green-400" />
+          <Coins className="w-8 h-8 text-green-600 dark:text-green-400" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           Currency & Tax Settings

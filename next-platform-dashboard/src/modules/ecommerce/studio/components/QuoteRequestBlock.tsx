@@ -364,7 +364,7 @@ export function QuoteRequestBlock({
                   type="email"
                   value={formData.customer_email}
                   onChange={(e) => updateField('customer_email', e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder="email@example.com"
                   className={validationErrors.customer_email ? 'border-red-500' : ''}
                 />
                 {validationErrors.customer_email && (
@@ -383,7 +383,7 @@ export function QuoteRequestBlock({
                   type="tel"
                   value={formData.customer_phone}
                   onChange={(e) => updateField('customer_phone', e.target.value)}
-                  placeholder="+1 (555) 000-0000"
+                  placeholder="+260 97 1234567"
                   className={validationErrors.customer_phone ? 'border-red-500' : ''}
                 />
                 {validationErrors.customer_phone && (

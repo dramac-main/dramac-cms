@@ -8,6 +8,8 @@
 
 import React from 'react';
 import { CreditCard, Check, ExternalLink } from 'lucide-react';
+import { icons } from 'lucide-react';
+import { resolveIconName } from '@/lib/utils/icon-map';
 import { cn } from '@/lib/utils';
 import type { StepComponentProps, PaymentProviderConfig } from '../../../types/onboarding-types';
 import { Switch } from '../ui/Switch';
@@ -27,7 +29,7 @@ const PAYMENT_PROVIDERS: {
     name: 'Flutterwave',
     description: 'Accept cards, mobile money, bank transfers across Africa',
     regions: 'Africa',
-    icon: '💳',
+    icon: 'CreditCard',
     setupUrl: 'https://flutterwave.com/us/',
   },
   {
@@ -35,7 +37,7 @@ const PAYMENT_PROVIDERS: {
     name: 'Pesapal',
     description: 'M-Pesa, cards, and mobile payments in East Africa',
     regions: 'Kenya, Tanzania, Uganda',
-    icon: '📱',
+    icon: 'Smartphone',
     setupUrl: 'https://www.pesapal.com/',
   },
   {
@@ -43,7 +45,7 @@ const PAYMENT_PROVIDERS: {
     name: 'Paddle',
     description: 'Global payments, tax compliance, subscription management',
     regions: 'Global',
-    icon: '🌍',
+    icon: 'Globe',
     setupUrl: 'https://www.paddle.com/',
   },
   {
@@ -51,7 +53,7 @@ const PAYMENT_PROVIDERS: {
     name: 'Manual / Bank Transfer',
     description: 'Accept payments outside the platform',
     regions: 'Anywhere',
-    icon: '🏦',
+    icon: 'Landmark',
   },
 ];
 
@@ -158,7 +160,7 @@ export function PaymentsStep({
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">{provider.icon}</span>
+                    <span className="text-2xl">{(() => { const Ic = (icons as Record<string, React.ComponentType<{className?: string}>>)[resolveIconName(provider.icon)]; return Ic ? <Ic className="h-5 w-5" /> : null; })()}</span>
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
                         {provider.name}

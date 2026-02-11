@@ -14,7 +14,7 @@ import {
   TrendingDown, 
   Minus,
   Info,
-  DollarSign,
+  Coins,
   ShoppingCart,
   Package,
   Percent,
@@ -310,7 +310,7 @@ export function EcommerceMetricCard({
   }
 
   const config = variantConfig[variant]
-  const Icon = icon || DollarSign
+  const Icon = icon || Coins
   const numericValue = typeof value === 'number' ? value : parseFloat(value.replace(/[^0-9.-]+/g, ''))
 
   return (
@@ -398,7 +398,7 @@ export function RevenueMetricCard(props: Omit<EcommerceMetricCardProps, 'variant
     <EcommerceMetricCard
       {...props}
       variant="revenue"
-      icon={DollarSign}
+      icon={Coins}
       isCurrency={true}
     />
   )

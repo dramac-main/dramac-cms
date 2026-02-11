@@ -17,7 +17,7 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  DollarSign,
+  Coins,
   ShoppingCart,
   Users,
   Package,
@@ -133,7 +133,7 @@ export function SalesOverviewCards({
         title="Total Revenue"
         value={data ? formatCurrency(data.revenue) : 'K0.00'}
         change={data?.revenue_change}
-        icon={<DollarSign className="h-4 w-4" />}
+        icon={<Coins className="h-4 w-4" />}
         isLoading={isLoading}
       />
       <KPICard

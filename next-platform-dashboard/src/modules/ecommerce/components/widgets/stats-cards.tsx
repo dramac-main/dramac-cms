@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { 
-  DollarSign, 
+  Coins, 
   ShoppingCart, 
   Package, 
   AlertTriangle,
@@ -126,7 +126,7 @@ export function StatsCards({
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2.5 rounded-lg bg-green-500/10">
-                <DollarSign className="h-5 w-5 text-green-600" />
+                <Coins className="h-5 w-5 text-green-600" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-muted-foreground">Revenue</p>

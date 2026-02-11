@@ -128,7 +128,7 @@ export function StoreBasicsStep({
             type="tel"
             value={storeBasics.contactPhone || ''}
             onChange={(e) => handleChange('contactPhone', e.target.value)}
-            placeholder="+1 (555) 000-0000"
+            placeholder="+260 97 1234567"
             className={cn(
               'w-full pl-11 pr-4 py-3 border rounded-lg transition-colors',
               'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',

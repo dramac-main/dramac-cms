@@ -7,7 +7,8 @@
 'use client'
 
 import { Product } from '../../types/ecommerce-types'
-import { X, Package, Tag, DollarSign, TrendingUp, Calendar } from 'lucide-react'
+import { formatCurrency } from '@/lib/locale-config'
+import { X, Package, Tag, Coins, TrendingUp, Calendar } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -100,19 +101,19 @@ export function ViewProductDialog({ product, open, onOpenChange, onEdit }: ViewP
           {/* Pricing */}
           <div className="space-y-3">
             <h3 className="font-semibold flex items-center gap-2">
-              <DollarSign className="h-4 w-4" />
+              <Coins className="h-4 w-4" />
               Pricing
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">Base Price</p>
-                <p className="text-2xl font-bold">${(product.base_price / 100).toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(product.base_price / 100)}</p>
               </div>
               {product.compare_at_price && (
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Compare At Price</p>
                   <p className="text-xl font-medium line-through text-muted-foreground">
-                    ${(product.compare_at_price / 100).toFixed(2)}
+                    {formatCurrency(product.compare_at_price / 100)}
                   </p>
                   <Badge variant="secondary" className="bg-green-100 text-green-700">
                     {Math.round((1 - product.base_price / product.compare_at_price) * 100)}% off

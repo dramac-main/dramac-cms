@@ -155,7 +155,7 @@ export function GeneralSettingsForm({ siteId, agencyId }: GeneralSettingsFormPro
               id="store_phone"
               value={settings.store_phone}
               onChange={(e) => updateField('store_phone', e.target.value)}
-              placeholder="+1 (555) 000-0000"
+              placeholder="+260 97 1234567"
             />
           </div>
         </CardContent>

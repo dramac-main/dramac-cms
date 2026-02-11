@@ -49,7 +49,7 @@ import {
   Archive,
   X,
   Tag,
-  DollarSign,
+  Coins,
   Package
 } from 'lucide-react'
 import type { BulkAction, Category } from '../../types/ecommerce-types'
@@ -192,7 +192,7 @@ export function BulkActionsToolbar({
             )}
 
             <DropdownMenuItem onClick={() => setShowPriceAdjust(true)}>
-              <DollarSign className="h-4 w-4 mr-2" />
+              <Coins className="h-4 w-4 mr-2" />
               Adjust Prices
             </DropdownMenuItem>
 

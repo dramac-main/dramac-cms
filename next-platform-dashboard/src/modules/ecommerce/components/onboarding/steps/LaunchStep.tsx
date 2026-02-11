@@ -12,7 +12,7 @@ import {
   CheckCircle2, 
   Circle, 
   Store, 
-  DollarSign, 
+  Coins, 
   Truck, 
   CreditCard, 
   Package,
@@ -44,7 +44,7 @@ export function LaunchStep({
     {
       id: 'currency',
       label: 'Currency & tax settings',
-      icon: <DollarSign className="w-4 h-4" />,
+      icon: <Coins className="w-4 h-4" />,
       isComplete: Boolean(data.currencyTax?.currency),
     },
     {
@@ -80,7 +80,7 @@ export function LaunchStep({
           <Rocket className="w-8 h-8 text-white" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Ready to Launch! 🎉
+          Ready to Launch!
         </h3>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           Review your setup and start selling

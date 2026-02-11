@@ -7,7 +7,7 @@
  */
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import {
   Plug,
   MoreVertical,
@@ -23,6 +23,8 @@ import {
   CalendarClock,
   Rocket
 } from 'lucide-react'
+import { icons } from 'lucide-react'
+import { resolveIconName } from '@/lib/utils/icon-map'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -83,14 +85,14 @@ const AVAILABLE_PROVIDERS: Array<{
     name: 'Stripe',
     description: 'Accept payments and manage subscriptions',
     category: 'payment',
-    icon: '💳'
+    icon: 'CreditCard'
   },
   {
     provider: 'paypal',
     name: 'PayPal',
     description: 'PayPal payment processing',
     category: 'payment',
-    icon: '🅿️',
+    icon: 'Wallet',
     comingSoon: true
   },
   {
@@ -98,14 +100,14 @@ const AVAILABLE_PROVIDERS: Array<{
     name: 'Shippo',
     description: 'Multi-carrier shipping and tracking',
     category: 'shipping',
-    icon: '📦'
+    icon: 'Package'
   },
   {
     provider: 'shipstation',
     name: 'ShipStation',
     description: 'Shipping automation platform',
     category: 'shipping',
-    icon: '🚚',
+    icon: 'Truck',
     comingSoon: true
   },
   {
@@ -113,14 +115,14 @@ const AVAILABLE_PROVIDERS: Array<{
     name: 'Mailchimp',
     description: 'Email marketing and automation',
     category: 'marketing',
-    icon: '📧'
+    icon: 'Mail'
   },
   {
     provider: 'klaviyo',
     name: 'Klaviyo',
     description: 'E-commerce marketing platform',
     category: 'marketing',
-    icon: '📊',
+    icon: 'ChartBar',
     comingSoon: true
   },
   {
@@ -128,14 +130,14 @@ const AVAILABLE_PROVIDERS: Array<{
     name: 'QuickBooks',
     description: 'Accounting and bookkeeping',
     category: 'accounting',
-    icon: '📒'
+    icon: 'BookOpen'
   },
   {
     provider: 'xero',
     name: 'Xero',
     description: 'Cloud accounting software',
     category: 'accounting',
-    icon: '📈',
+    icon: 'ChartLine',
     comingSoon: true
   },
   {
@@ -143,14 +145,14 @@ const AVAILABLE_PROVIDERS: Array<{
     name: 'Google Analytics',
     description: 'Web analytics and insights',
     category: 'analytics',
-    icon: '📉'
+    icon: 'ChartPie'
   },
   {
     provider: 'facebook_pixel',
     name: 'Facebook Pixel',
     description: 'Conversion tracking and audiences',
     category: 'analytics',
-    icon: '📱',
+    icon: 'Smartphone',
     comingSoon: true
   },
   {
@@ -158,7 +160,7 @@ const AVAILABLE_PROVIDERS: Array<{
     name: 'Zendesk',
     description: 'Customer support ticketing',
     category: 'crm',
-    icon: '🎧',
+    icon: 'Headphones',
     comingSoon: true
   },
   {
@@ -166,7 +168,7 @@ const AVAILABLE_PROVIDERS: Array<{
     name: 'HubSpot',
     description: 'CRM and marketing automation',
     category: 'crm',
-    icon: '🔶',
+    icon: 'Diamond',
     comingSoon: true
   }
 ]
@@ -304,7 +306,7 @@ export function IntegrationsView({ siteId }: IntegrationsViewProps) {
                       className="flex items-start justify-between p-4 border rounded-lg"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="text-2xl">{provider.icon}</div>
+                        <div className="text-2xl">{(() => { const Ic = (icons as Record<string, React.ComponentType<{className?: string}>>)[resolveIconName(provider.icon)]; return Ic ? <Ic className="h-5 w-5" /> : null; })()}</div>
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <h4 className="font-medium">{provider.name}</h4>

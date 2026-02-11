@@ -10,7 +10,7 @@
 import { useState, useEffect } from 'react'
 import { createFlashSale, updateFlashSale } from '../../actions/marketing-actions'
 import type { FlashSale, FlashSaleInput } from '../../types/marketing-types'
-import { Loader2, Zap, Calendar, Percent, DollarSign } from 'lucide-react'
+import { Loader2, Zap, Calendar, Percent, Coins } from 'lucide-react'
 import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 
 import { Button } from '@/components/ui/button'
@@ -226,7 +226,7 @@ export function FlashSaleDialog({
                     </SelectItem>
                     <SelectItem value="fixed_amount">
                       <span className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
+                        <Coins className="h-4 w-4" />
                         Fixed Amount
                       </span>
                     </SelectItem>

@@ -8,7 +8,7 @@
 import { useState, useEffect } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
 import type { Discount, DiscountType } from '../../types/ecommerce-types'
-import { Loader2, Percent, DollarSign, Calendar } from 'lucide-react'
+import { Loader2, Percent, Coins, Calendar } from 'lucide-react'
 import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 import { toast } from 'sonner'
 
@@ -173,7 +173,7 @@ export function EditDiscountDialog({ discount, open, onOpenChange }: EditDiscoun
                     </SelectItem>
                     <SelectItem value="fixed">
                       <div className="flex items-center">
-                        <DollarSign className="h-4 w-4 mr-2" />
+                        <Coins className="h-4 w-4 mr-2" />
                         Fixed Amount Off
                       </div>
                     </SelectItem>

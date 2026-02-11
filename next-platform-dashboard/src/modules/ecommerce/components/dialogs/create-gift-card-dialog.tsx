@@ -10,7 +10,7 @@
 import { useState, useEffect } from 'react'
 import { createGiftCard } from '../../actions/marketing-actions'
 import type { GiftCardInput } from '../../types/marketing-types'
-import { Loader2, Gift, Mail, User, DollarSign, Calendar } from 'lucide-react'
+import { Loader2, Gift, Mail, User, Coins, Calendar } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -140,7 +140,7 @@ export function CreateGiftCardDialog({
             <div className="grid gap-2">
               <Label htmlFor="amount">Amount</Label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Coins className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="amount"
                   type="number"
@@ -177,7 +177,7 @@ export function CreateGiftCardDialog({
                   id="recipientName"
                   value={recipientName}
                   onChange={(e) => setRecipientName(e.target.value)}
-                  placeholder="John Doe"
+                  placeholder="Full name"
                   className="pl-9"
                 />
               </div>
@@ -193,7 +193,7 @@ export function CreateGiftCardDialog({
                   type="email"
                   value={recipientEmail}
                   onChange={(e) => setRecipientEmail(e.target.value)}
-                  placeholder="john@example.com"
+                  placeholder="email@example.com"
                   className="pl-9"
                 />
               </div>

@@ -199,7 +199,7 @@ export function CreateCustomerDialog({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="john.doe@example.com"
+                placeholder="email@example.com"
                 required
               />
             </div>
@@ -211,7 +211,7 @@ export function CreateCustomerDialog({
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="+1 (555) 123-4567"
+                placeholder="+260 97 1234567"
               />
             </div>
 

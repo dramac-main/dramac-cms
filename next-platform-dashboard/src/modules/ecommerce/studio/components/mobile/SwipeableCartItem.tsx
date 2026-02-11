@@ -12,6 +12,7 @@ import React, { useCallback, useState } from 'react'
 import { motion, useAnimation, PanInfo } from 'framer-motion'
 import { Trash2, Heart, Minus, Plus, Package } from 'lucide-react'
 import Image from 'next/image'
+import { formatCurrency } from '@/lib/locale-config'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
@@ -291,7 +292,7 @@ export function SwipeableCartItem({
 
           {/* Price */}
           <p className="text-sm font-semibold mt-1">
-            ${item.unit_price.toFixed(2)}
+            {formatCurrency(item.unit_price)}
           </p>
         </div>
 
@@ -325,7 +326,7 @@ export function SwipeableCartItem({
 
           {/* Line total */}
           <p className="text-sm font-semibold">
-            ${lineTotal.toFixed(2)}
+            {formatCurrency(lineTotal)}
           </p>
         </div>
       </motion.div>

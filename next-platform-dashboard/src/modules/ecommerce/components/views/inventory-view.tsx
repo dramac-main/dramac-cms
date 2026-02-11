@@ -13,7 +13,7 @@ import {
   Package,
   AlertTriangle,
   TrendingDown,
-  DollarSign,
+  Coins,
   RefreshCw,
   Plus,
   Settings,
@@ -269,7 +269,7 @@ export function InventoryView({ siteId, agencyId }: InventoryViewProps) {
                 </p>
               </div>
               <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/30">
-                <DollarSign className="h-6 w-6 text-green-600 dark:text-green-400" />
+                <Coins className="h-6 w-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </CardContent>

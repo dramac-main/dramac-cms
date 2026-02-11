@@ -12,6 +12,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, X, ChevronRight, AlertCircle } from 'lucide-react'
+import { formatCurrency } from '@/lib/locale-config'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -469,7 +470,7 @@ export function MobileVariantSelector({
           {showPrice && selectedVariant.price !== null && (
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold">
-                ${selectedVariant.price.toFixed(2)}
+                {formatCurrency(selectedVariant.price)}
               </span>
             </div>
           )}

@@ -10,6 +10,7 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
+import { formatCurrency } from "@/lib/locale-config";
 import { ShoppingBag, Loader2 } from "lucide-react";
 import { useStorefrontProducts } from "../../hooks";
 
@@ -151,7 +152,7 @@ export function ProductGridBlock({
                 <h3 className="font-medium truncate">{product.name}</h3>
                 {showPrice && (
                   <p className="text-primary font-semibold mt-1">
-                    ${product.price.toFixed(2)}
+                    {formatCurrency(product.price)}
                   </p>
                 )}
               </div>

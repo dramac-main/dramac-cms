@@ -38,6 +38,7 @@ import {
 } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { cn } from '@/lib/utils'
+import { formatCurrency } from '@/lib/locale-config'
 import { importProducts } from '../../actions/product-import-export'
 import type { ProductImportRow, ProductImportResult } from '../../types/ecommerce-types'
 
@@ -305,7 +306,7 @@ export function ImportProductsDialog({
                       <TableCell className="text-muted-foreground">{i + 1}</TableCell>
                       <TableCell className="font-medium">{row.name}</TableCell>
                       <TableCell>{row.sku || '—'}</TableCell>
-                      <TableCell>${row.base_price.toFixed(2)}</TableCell>
+                      <TableCell>{formatCurrency(row.base_price)}</TableCell>
                       <TableCell>{row.quantity ?? '—'}</TableCell>
                       <TableCell>
                         <Badge variant="secondary">{row.status || 'draft'}</Badge>

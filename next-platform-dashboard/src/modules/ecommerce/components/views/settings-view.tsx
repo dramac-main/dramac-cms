@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { 
   Store, 
-  DollarSign, 
+  Coins, 
   Receipt, 
   Truck, 
   CreditCard, 
@@ -65,7 +65,7 @@ const tabs: TabConfig[] = [
   {
     id: 'currency',
     label: 'Currency',
-    icon: DollarSign,
+    icon: Coins,
     description: 'Currency format and multi-currency options'
   },
   {

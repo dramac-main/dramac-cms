@@ -11,6 +11,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { motion, AnimatePresence, PanInfo, useAnimation } from 'framer-motion'
 import { X, ShoppingBag, Trash2 } from 'lucide-react'
+import { formatCurrency } from '@/lib/locale-config'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -266,23 +267,23 @@ export function MobileCartBottomSheet({
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span>${totals.subtotal.toFixed(2)}</span>
+                    <span>{formatCurrency(totals.subtotal)}</span>
                   </div>
                   {totals.discount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount</span>
-                      <span>-${totals.discount.toFixed(2)}</span>
+                      <span>-{formatCurrency(totals.discount)}</span>
                     </div>
                   )}
                   {totals.tax > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Tax</span>
-                      <span>${totals.tax.toFixed(2)}</span>
+                      <span>{formatCurrency(totals.tax)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-semibold text-base pt-1 border-t">
                     <span>Total</span>
-                    <span>${totals.total.toFixed(2)}</span>
+                    <span>{formatCurrency(totals.total)}</span>
                   </div>
                 </div>
 
@@ -292,7 +293,7 @@ export function MobileCartBottomSheet({
                   className="w-full min-h-[52px] text-base font-semibold"
                   onClick={handleCheckout}
                 >
-                  Checkout • ${totals.total.toFixed(2)}
+                  Checkout • {formatCurrency(totals.total)}
                 </Button>
               </div>
             )}

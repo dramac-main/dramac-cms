@@ -279,7 +279,7 @@ Best regards`
                 id="cc"
                 value={ccEmails}
                 onChange={(e) => setCcEmails(e.target.value)}
-                placeholder="email1@example.com, email2@example.com"
+                placeholder="client@company.co.zm"
               />
               <p className="text-xs text-muted-foreground">
                 Separate multiple emails with commas

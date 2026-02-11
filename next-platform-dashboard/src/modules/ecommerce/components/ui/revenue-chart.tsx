@@ -12,7 +12,7 @@ import { motion } from "framer-motion"
 import { 
   TrendingUp,
   TrendingDown,
-  DollarSign,
+  Coins,
   Calendar
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -279,7 +279,7 @@ export function RevenueChart({
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <CardTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-primary" />
+            <Coins className="h-5 w-5 text-primary" />
             {title}
           </CardTitle>
           

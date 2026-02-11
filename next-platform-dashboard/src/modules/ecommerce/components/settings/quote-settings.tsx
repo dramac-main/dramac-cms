@@ -479,7 +479,7 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
                   <Input
                     id="company_phone"
                     {...register('company_phone')}
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="+260 97 1234567"
                   />
                 </div>
                 

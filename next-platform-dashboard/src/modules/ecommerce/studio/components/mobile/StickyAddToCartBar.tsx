@@ -12,6 +12,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingCart, Loader2, Check, Heart, Minus, Plus } from 'lucide-react'
+import { formatCurrency } from '@/lib/locale-config'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useHapticFeedback } from '../../../hooks/useHapticFeedback'
@@ -142,7 +143,7 @@ export function StickyAddToCartBar({
             <div className="flex items-center justify-between mb-3">
               <div>
                 <div className="text-lg font-semibold">
-                  ${totalPrice.toFixed(2)}
+                  {formatCurrency(totalPrice)}
                 </div>
                 <div className="text-xs text-muted-foreground line-clamp-1">
                   {product.name}

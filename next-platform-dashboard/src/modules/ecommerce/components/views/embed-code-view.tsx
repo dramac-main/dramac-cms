@@ -228,7 +228,7 @@ export function EmbedCodeGenerator({ siteId, agencyId: _agencyId, siteDomain }: 
     container: '#dramac-checkout-${siteId.substring(0, 8)}',
     theme: '${config.theme || 'auto'}',
     // Optional: Pre-fill customer data
-    // customer: { email: 'customer@example.com', name: 'John Doe' }
+    // customer: { email: 'customer@company.co.zm', name: 'Full name' }
   };
 </script>`
 
