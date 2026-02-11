@@ -35,7 +35,9 @@ export type EmailType =
   | "quote_accepted_owner"
   | "quote_rejected_owner"
   // Forms
-  | "form_submission_owner";
+  | "form_submission_owner"
+  // Domains
+  | "domain_expiring";
 
 export interface EmailRecipient {
   email: string;
@@ -79,6 +81,7 @@ export function isValidEmailType(type: string): type is EmailType {
     "quote_accepted_owner",
     "quote_rejected_owner",
     "form_submission_owner",
+    "domain_expiring",
   ];
   return validTypes.includes(type as EmailType);
 }
@@ -266,4 +269,14 @@ export interface QuoteRejectedOwnerData {
   rejectedByName?: string;
   rejectionReason?: string;
   dashboardUrl: string;
+}
+
+// Domain email data
+export interface DomainExpiringData {
+  domainName: string;
+  expiryDate: string;
+  daysUntilExpiry: number;
+  autoRenew: boolean;
+  agencyName: string;
+  renewUrl: string;
 }

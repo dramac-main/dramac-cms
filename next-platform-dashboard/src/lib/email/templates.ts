@@ -743,4 +743,25 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ''}
     `),
     text: (data) => `Quote Rejected\n\n${data.customerName} has rejected quote ${data.quoteNumber}.\nTotal: ${data.totalAmount}${data.rejectionReason ? `\nReason: ${data.rejectionReason}` : ''}\n\n${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ''}`,
   },
+
+  // ============================================
+  // DOMAIN EMAILS
+  // ============================================
+
+  domain_expiring: {
+    subject: (data) => `⚠️ Domain ${data.domainName} expires in ${data.daysUntilExpiry} day${Number(data.daysUntilExpiry) === 1 ? '' : 's'}`,
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">⚠️ Domain Expiry Notice</h1>
+      <p style="${STYLES.text}">Hi${data.agencyName ? ` ${data.agencyName}` : ''},</p>
+      <p style="${STYLES.text}">Your domain <strong>${data.domainName}</strong> will expire on <strong>${data.expiryDate}</strong> (in ${data.daysUntilExpiry} day${Number(data.daysUntilExpiry) === 1 ? '' : 's'}).</p>
+      ${data.autoRenew === true || data.autoRenew === 'true' ? `
+        <p style="${STYLES.text}; color: #16a34a;">Auto-renewal is <strong>enabled</strong> for this domain. It will be renewed automatically before expiry.</p>
+      ` : `
+        <p style="${STYLES.text}; color: #dc2626;">Auto-renewal is <strong>disabled</strong>. Please renew manually to keep this domain active.</p>
+        ${data.renewUrl ? `<p style="margin: 24px 0;"><a href="${data.renewUrl}" style="${STYLES.button}">Renew Now</a></p>` : ''}
+      `}
+      <p style="${STYLES.text}; color: #6b7280; font-size: 13px;">If you no longer need this domain, you can safely ignore this email.</p>
+    `),
+    text: (data) => `Domain Expiry Notice\n\nYour domain ${data.domainName} will expire on ${data.expiryDate} (in ${data.daysUntilExpiry} days).\n\n${data.autoRenew === true || data.autoRenew === 'true' ? 'Auto-renewal is enabled.' : `Auto-renewal is disabled. Renew at: ${data.renewUrl || 'your dashboard'}`}`,
+  },
 };

@@ -559,6 +559,34 @@ const quote_rejected_owner: BrandedTemplate = {
     `Quote Declined\n\nQuote: ${data.quoteNumber}\nCustomer: ${data.customerName} (${data.customerEmail})\nTotal: ${data.totalAmount}\n${data.rejectionReason ? `Reason: ${data.rejectionReason}\n` : ""}\nView in dashboard: ${data.dashboardUrl}`,
 };
 
+// ============================================================================
+// DOMAIN TEMPLATES
+// ============================================================================
+
+const domain_expiring: BrandedTemplate = {
+  subject: (data) =>
+    `⚠️ Domain ${data.domainName} expires in ${data.daysUntilExpiry} day${Number(data.daysUntilExpiry) === 1 ? "" : "s"}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">⚠️ Domain Expiry Notice</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.agencyName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">Your domain <strong>${data.domainName}</strong> will expire on <strong>${data.expiryDate}</strong> (in ${data.daysUntilExpiry} day${Number(data.daysUntilExpiry) === 1 ? "" : "s"}).</p>
+      ${data.autoRenew === true || data.autoRenew === "true" ? `
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:16px 0;">
+          <p style="${EMAIL_STYLES.text}; color: #16a34a; margin:0;">✅ Auto-renewal is <strong>enabled</strong> for this domain. It will be renewed automatically before expiry.</p>
+        </div>
+      ` : `
+        <p style="${EMAIL_STYLES.text}; color: #dc2626;">Auto-renewal is <strong>disabled</strong>. Please renew manually to keep this domain active.</p>
+        ${data.renewUrl ? emailButton(b, String(data.renewUrl), "Renew Now") : ""}
+      `}
+      <p style="${EMAIL_STYLES.text}; color: #6b7280; font-size: 13px;">If you no longer need this domain, you can safely ignore this email.</p>`,
+      `Domain Expiry Notice – ${data.domainName}`
+    ),
+  text: (data) =>
+    `Domain Expiry Notice\n\nYour domain ${data.domainName} will expire on ${data.expiryDate} (in ${data.daysUntilExpiry} days).\n\n${data.autoRenew === true || data.autoRenew === "true" ? "Auto-renewal is enabled." : `Auto-renewal is disabled. Renew at: ${data.renewUrl || "your dashboard"}`}`,
+};
+
 export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   welcome,
   password_reset,
@@ -582,6 +610,7 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   quote_accepted_owner,
   quote_rejected_owner,
   form_submission_owner,
+  domain_expiring,
 };
 
 /**

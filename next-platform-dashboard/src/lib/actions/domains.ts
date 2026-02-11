@@ -3,6 +3,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { isConfigured } from "@/lib/resellerclub/config";
+import { isClientAvailable } from "@/lib/resellerclub/client";
+import { domainService } from "@/lib/resellerclub/domains";
+import { customerService } from "@/lib/resellerclub/customers";
+import { contactService } from "@/lib/resellerclub/contacts";
 import type { 
   DomainFilters, 
   DomainWithDetails, 
@@ -10,6 +15,7 @@ import type {
   RegisterDomainParams,
   DomainStats 
 } from "@/types/domain";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Note: Domain tables (domains, domain_pricing, domain_orders, cloudflare_zones, domain_email_accounts)
 // are created by DM-02 migration but may not be in the generated Supabase types yet.
@@ -17,6 +23,66 @@ import type {
 
 // Type for raw RPC/query results
 type AnyRecord = Record<string, unknown>;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getTable(client: SupabaseClient<any>, table: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (client as any).from(table);
+}
+
+// ============================================================================
+// Helper: Ensure agency has a ResellerClub customer ID
+// ============================================================================
+
+async function ensureResellerClubCustomer(
+  agencyId: string,
+  userEmail: string
+): Promise<string | null> {
+  if (!isConfigured()) return null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const admin = createAdminClient() as any;
+
+  // Check if agency already has a customer ID
+  const { data: agency } = await admin
+    .from('agencies')
+    .select('id, name, resellerclub_customer_id')
+    .eq('id', agencyId)
+    .single();
+
+  if (agency?.resellerclub_customer_id) {
+    return agency.resellerclub_customer_id as string;
+  }
+
+  // Create a new ResellerClub customer for this agency
+  try {
+    const customer = await customerService.createOrGet({
+      username: userEmail,
+      password: customerService.generatePassword(),
+      name: (agency?.name as string) || 'Agency',
+      company: (agency?.name as string) || 'Agency',
+      email: userEmail,
+      addressLine1: 'Not Provided',
+      city: 'Lusaka',
+      state: 'Lusaka',
+      country: 'ZM',
+      zipcode: '10101',
+      phoneCountryCode: '260',
+      phone: '955000000',
+    });
+
+    // Save customer ID to agency
+    await admin
+      .from('agencies')
+      .update({ resellerclub_customer_id: String(customer.customerId) })
+      .eq('id', agencyId);
+
+    return String(customer.customerId);
+  } catch (error) {
+    console.error('[Domains] Failed to create ResellerClub customer:', error);
+    return null;
+  }
+}
 
 // ============================================================================
 // Search & Availability
@@ -47,41 +113,96 @@ export async function searchDomains(
       return { success: false, error: 'Keyword must be at least 2 characters' };
     }
     
-    // For now, simulate domain search results since ResellerClub may not be configured
-    // In production, this would call: domainService.suggestDomains(cleanKeyword, tlds);
     const popularTlds = tlds || ['.com', '.net', '.org', '.io', '.co', '.app', '.dev'];
+
+    // Get agency markup settings for retail pricing
+    const { data: pricing } = await getTable(supabase, 'agency_domain_pricing')
+      .select('default_markup_type, default_markup_value')
+      .eq('agency_id', profile.agency_id)
+      .maybeSingle() as { data: { default_markup_type?: string; default_markup_value?: number } | null };
+
+    const markupType = pricing?.default_markup_type || 'percentage';
+    const markupValue = pricing?.default_markup_value ?? 30;
+
+    const calculateRetail = (wholesale: number): number => {
+      if (markupType === 'fixed') return Math.round((wholesale + markupValue) * 100) / 100;
+      return Math.round(wholesale * (1 + markupValue / 100) * 100) / 100;
+    };
+
+    // Try ResellerClub API first (live data)
+    if (isClientAvailable()) {
+      try {
+        // Check availability via real API
+        const availability = await domainService.suggestDomains(cleanKeyword, popularTlds);
+        
+        // Get real pricing from ResellerClub
+        let apiPrices: Record<string, { register: Record<number, number>; renew: Record<number, number>; transfer: number }> = {};
+        try {
+          const rcPrices = await domainService.getPricing(popularTlds);
+          apiPrices = Object.fromEntries(
+            Object.entries(rcPrices).map(([tld, price]) => [tld, {
+              register: Object.fromEntries(Object.entries(price.register).filter(([, v]) => v != null)) as Record<number, number>,
+              renew: Object.fromEntries(Object.entries(price.renew).filter(([, v]) => v != null)) as Record<number, number>,
+              transfer: price.transfer,
+            }])
+          );
+        } catch {
+          console.warn('[Domains] Could not fetch RC pricing, using defaults');
+        }
+
+        const results: DomainSearchResult[] = availability.map(item => {
+          const tld = domainService.extractTld(item.domain);
+          const rcPrice = apiPrices[tld];
+          const basePrice = rcPrice?.register?.[1] || 12.99;
+          
+          return {
+            domain: item.domain,
+            tld,
+            available: item.status === 'available',
+            premium: item.status === 'premium',
+            prices: {
+              register: rcPrice?.register || { 1: basePrice, 2: basePrice * 1.9, 3: basePrice * 2.8 },
+              renew: rcPrice?.renew || { 1: basePrice * 1.1 },
+              transfer: rcPrice?.transfer || basePrice * 0.9,
+            },
+            retailPrices: {
+              register: Object.fromEntries(
+                Object.entries(rcPrice?.register || { 1: basePrice }).map(([y, p]) => [y, calculateRetail(p)])
+              ) as Record<number, number>,
+              renew: Object.fromEntries(
+                Object.entries(rcPrice?.renew || { 1: basePrice * 1.1 }).map(([y, p]) => [y, calculateRetail(p)])
+              ) as Record<number, number>,
+              transfer: calculateRetail(rcPrice?.transfer || basePrice * 0.9),
+            },
+          };
+        });
+        
+        results.sort((a, b) => {
+          if (a.available && !b.available) return -1;
+          if (!a.available && b.available) return 1;
+          return (a.retailPrices.register[1] || 0) - (b.retailPrices.register[1] || 0);
+        });
+        
+        return { success: true, data: results };
+      } catch (apiError) {
+        console.warn('[Domains] ResellerClub API search failed, using fallback:', apiError);
+        // Fall through to fallback below
+      }
+    }
     
-    // Simulate availability check results
-    const availability = popularTlds.map(tld => ({
-      domain: cleanKeyword + tld,
-      status: 'available' as const,
-    }));
-    
-    // Simulate pricing
-    const basePrices: Record<string, number> = {
-      '.com': 12.99,
-      '.net': 14.99,
-      '.org': 13.99,
-      '.io': 39.99,
-      '.co': 29.99,
-      '.app': 19.99,
-      '.dev': 15.99,
+    // Fallback: Return results with standard pricing when API is not configured
+    // This allows the UI to function for demo/testing while credentials are being set up
+    const fallbackPrices: Record<string, number> = {
+      '.com': 12.99, '.net': 14.99, '.org': 13.99, '.io': 39.99,
+      '.co': 29.99, '.app': 19.99, '.dev': 15.99,
     };
     
-    // Build results with retail pricing
-    const results: DomainSearchResult[] = availability.map(item => {
-      const tld = '.' + item.domain.split('.').pop();
-      const basePrice = basePrices[tld] || 15.99;
-      
-      // Default 30% markup for retail
-      const calculateRetail = (wholesale: number): number => {
-        return Math.round(wholesale * 1.3 * 100) / 100;
-      };
-      
+    const results: DomainSearchResult[] = popularTlds.map(tld => {
+      const basePrice = fallbackPrices[tld] || 15.99;
       return {
-        domain: item.domain,
+        domain: cleanKeyword + tld,
         tld,
-        available: item.status === 'available',
+        available: true, // Unknown without API — show as potentially available
         premium: false,
         prices: {
           register: { 1: basePrice, 2: basePrice * 1.9, 3: basePrice * 2.8 } as Record<number, number>,
@@ -100,7 +221,6 @@ export async function searchDomains(
       };
     });
     
-    // Sort: available first, then by price
     results.sort((a, b) => {
       if (a.available && !b.available) return -1;
       if (!a.available && b.available) return 1;
@@ -119,15 +239,29 @@ export async function searchDomains(
 
 export async function checkDomainAvailability(domainName: string) {
   try {
-    // Simulate availability check
-    // In production: const result = await domainService.checkAvailability(domainName);
-    const isAvailable = true;
+    // Use real API if configured
+    if (isClientAvailable()) {
+      try {
+        const result = await domainService.checkAvailability(domainName);
+        return { 
+          success: true, 
+          data: {
+            domain: domainName,
+            available: result.status === 'available',
+            premium: result.status === 'premium',
+          }
+        };
+      } catch (apiError) {
+        console.warn('[Domains] RC availability check failed:', apiError);
+      }
+    }
     
+    // Fallback when API not configured
     return { 
       success: true, 
       data: {
         domain: domainName,
-        available: isAvailable,
+        available: true,
         premium: false,
       }
     };
@@ -164,19 +298,80 @@ export async function registerDomain(params: RegisterDomainParams) {
     const tld = '.' + parts.pop();
     const sld = parts.join('.');
     
-    // Generate a simulated order ID for testing
-    // In production, this would use ResellerClub API
-    const orderId = `RC-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const customerId = `CUST-${profile.agency_id.slice(0, 8)}`;
-    const contactId = `CONT-${Date.now()}`;
+    let orderId: string;
+    let customerId: string;
+    let contactId: string;
+    let registrationViaApi = false;
+
+    // Try real ResellerClub registration
+    if (isClientAvailable()) {
+      try {
+        // Ensure agency has a ResellerClub customer
+        const rcCustomerId = await ensureResellerClubCustomer(
+          profile.agency_id, 
+          user.email || `agency-${profile.agency_id}@dramacagency.com`
+        );
+        
+        if (!rcCustomerId) {
+          return { success: false, error: 'Failed to provision domain services for your agency. Please check ResellerClub configuration.' };
+        }
+
+        customerId = rcCustomerId;
+
+        // Create or get a default contact for this customer
+        const contact = await contactService.createOrUpdate({
+          name: params.contactInfo?.name || user.user_metadata?.full_name || 'Domain Admin',
+          company: params.contactInfo?.company || 'Agency',
+          email: params.contactInfo?.email || user.email || '',
+          addressLine1: params.contactInfo?.address || 'Not Provided',
+          city: params.contactInfo?.city || 'Lusaka',
+          state: params.contactInfo?.state || 'Lusaka',
+          country: params.contactInfo?.country || 'ZM',
+          zipcode: params.contactInfo?.zipcode || '10101',
+          phoneCountryCode: '260',
+          phone: params.contactInfo?.phone || '955000000',
+          customerId: rcCustomerId,
+          type: 'Contact',
+        });
+
+        contactId = String(contact.contactId);
+
+        // Register domain via ResellerClub API
+        const result = await domainService.register({
+          domainName: params.domainName,
+          years: params.years,
+          customerId: rcCustomerId,
+          registrantContactId: contactId,
+          adminContactId: contactId,
+          techContactId: contactId,
+          billingContactId: contactId,
+          purchasePrivacy: params.privacy ?? true,
+          nameservers: ['ns1.cloudflare.com', 'ns2.cloudflare.com'],
+        });
+        
+        orderId = result.orderId;
+        registrationViaApi = true;
+      } catch (apiError) {
+        console.error('[Domains] ResellerClub registration failed:', apiError);
+        return { 
+          success: false, 
+          error: apiError instanceof Error ? apiError.message : 'Domain registration failed. Please try again.' 
+        };
+      }
+    } else {
+      // No API configured — cannot register domains
+      return { 
+        success: false, 
+        error: 'Domain registration service is not configured. Please set up ResellerClub API credentials in Settings → Domain Services.' 
+      };
+    }
     
     // Calculate expiry date
     const now = new Date();
     const expiryDate = new Date(now);
     expiryDate.setFullYear(expiryDate.getFullYear() + params.years);
     
-    // Create domain record using raw SQL via RPC to bypass type checking
-    // Note: The domains table was created by DM-02 migration
+    // Create domain record in our database
     const domainData = {
       agency_id: profile.agency_id,
       client_id: params.clientId || null,
@@ -195,26 +390,22 @@ export async function registerDomain(params: RegisterDomainParams) {
       tech_contact_id: contactId,
       billing_contact_id: contactId,
       nameservers: ['ns1.cloudflare.com', 'ns2.cloudflare.com'],
+      registered_via_api: registrationViaApi,
     };
     
-    // Insert domain - use type assertion to bypass Supabase type checking
-    const { data: domain, error: insertError } = await (admin as unknown as { from: (table: string) => {
-      insert: (data: AnyRecord) => { select: () => { single: () => Promise<{ data: AnyRecord | null; error: { message: string } | null }> } }
-    }})
-      .from('domains')
+    const { data: domain, error: insertError } = await getTable(admin, 'domains')
       .insert(domainData)
       .select()
-      .single();
+      .single() as { data: AnyRecord | null; error: { message: string } | null };
     
     if (insertError) {
-      console.error('[Domains] Insert error:', insertError);
-      // If domain table doesn't exist, return success anyway for testing UI
-      const mockDomainId = `mock-${Date.now()}`;
+      console.error('[Domains] DB insert error:', insertError);
+      // Domain was registered at RC but DB insert failed - still return success with order ID
       revalidatePath('/dashboard/domains');
       return { 
         success: true, 
         data: {
-          domainId: mockDomainId,
+          domainId: orderId,
           orderId,
           domain: params.domainName,
         }
@@ -238,9 +429,7 @@ export async function registerDomain(params: RegisterDomainParams) {
       completed_at: new Date().toISOString(),
     };
     
-    await (admin as unknown as { from: (table: string) => { insert: (data: AnyRecord) => Promise<unknown> }})
-      .from('domain_orders')
-      .insert(orderData);
+    await getTable(admin, 'domain_orders').insert(orderData);
     
     revalidatePath('/dashboard/domains');
     
@@ -287,41 +476,43 @@ export async function getDomains(filters?: DomainFilters): Promise<{
   if (!profile?.agency_id) return { success: false, error: 'No agency', data: [] };
   
   try {
-    // Use type assertion to access domains table
-    const query = (supabase as unknown as { from: (table: string) => {
-      select: (columns: string) => {
-        eq: (column: string, value: string) => {
-          neq: (column: string, value: string) => {
-            ilike?: (column: string, value: string) => unknown;
-            order: (column: string, options: { ascending: boolean }) => {
-              range: (from: number, to: number) => Promise<{ data: AnyRecord[] | null; error: { message: string } | null; count?: number }>
-            }
-          }
-        }
-      }
-    }})
-      .from('domains')
-      .select('*')
-      .eq('agency_id', profile.agency_id)
-      .neq('status', 'cancelled'); // Filter out deleted domains
-    
-    // Apply sorting
-    const sortBy = filters?.sortBy || 'created_at';
-    const sortOrder = filters?.sortOrder || 'desc';
-    
     // Pagination
     const page = filters?.page || 1;
     const limit = filters?.limit || 20;
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     
-    const { data, error } = await query
+    // Build query
+    let query = getTable(supabase, 'domains')
+      .select('*', { count: 'exact' })
+      .eq('agency_id', profile.agency_id)
+      .neq('status', 'cancelled');
+    
+    // Apply text search filter
+    if (filters?.search) {
+      query = query.ilike('domain_name', `%${filters.search}%`);
+    }
+    
+    // Apply status filter
+    if (filters?.status && filters.status !== 'all') {
+      query = query.eq('status', filters.status);
+    }
+    
+    // Apply TLD filter
+    if (filters?.tld) {
+      query = query.eq('tld', filters.tld);
+    }
+    
+    // Apply sorting
+    const sortBy = filters?.sortBy || 'created_at';
+    const sortOrder = filters?.sortOrder || 'desc';
+    
+    const { data, error, count } = await query
       .order(sortBy, { ascending: sortOrder === 'asc' })
       .range(from, to);
     
     if (error) {
       console.error('[Domains] List error:', error);
-      // Return mock data for UI testing if table doesn't exist
       return { 
         success: true, 
         data: [],
@@ -334,7 +525,7 @@ export async function getDomains(filters?: DomainFilters): Promise<{
     return { 
       success: true, 
       data: (data || []) as unknown as DomainWithDetails[],
-      total: data?.length || 0,
+      total: count || data?.length || 0,
       page,
       limit,
     };
@@ -355,14 +546,7 @@ export async function getDomain(domainId: string): Promise<{
   if (!user) return { success: false, error: 'Not authenticated' };
   
   try {
-    const { data, error } = await (supabase as unknown as { from: (table: string) => {
-      select: (columns: string) => {
-        eq: (column: string, value: string) => {
-          single: () => Promise<{ data: AnyRecord | null; error: { message: string } | null }>
-        }
-      }
-    }})
-      .from('domains')
+    const { data, error } = await getTable(supabase, 'domains')
       .select('*')
       .eq('id', domainId)
       .single();
@@ -397,22 +581,60 @@ export async function getDomainStats(): Promise<{ success: boolean; data?: Domai
   if (!profile?.agency_id) return { success: false, error: 'No agency' };
   
   try {
-    // Return mock stats for UI testing
-    // In production, this would query the domains table
+    // Query real domain counts from database
+    const { data: allDomains } = await getTable(supabase, 'domains')
+      .select('id, status, expiry_date, auto_renew')
+      .eq('agency_id', profile.agency_id)
+      .neq('status', 'cancelled');
+
+    const domains = (allDomains || []) as { id: string; status: string; expiry_date: string | null; auto_renew: boolean }[];
+    
+    const now = new Date();
+    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    
+    const total = domains.length;
+    const active = domains.filter(d => d.status === 'active').length;
+    const expiringSoon = domains.filter(d => {
+      if (!d.expiry_date) return false;
+      const expiry = new Date(d.expiry_date);
+      return expiry > now && expiry < thirtyDaysFromNow;
+    }).length;
+    const expired = domains.filter(d => {
+      if (!d.expiry_date) return false;
+      return new Date(d.expiry_date) < now;
+    }).length;
+
+    // Query email accounts count
+    const { data: emailOrders } = await getTable(supabase, 'email_orders')
+      .select('id, used_accounts')
+      .eq('agency_id', profile.agency_id)
+      .eq('status', 'Active');
+
+    const emailOrdersList = (emailOrders || []) as { id: string; used_accounts: number }[];
+    const totalEmails = emailOrdersList.reduce((sum, o) => sum + (o.used_accounts || 0), 0);
+    const domainsWithEmail = emailOrdersList.length;
+
     return {
       success: true,
       data: {
-        total: 0,
-        active: 0,
-        expiringSoon: 0,
-        expired: 0,
-        totalEmails: 0,
-        domainsWithEmail: 0,
+        total,
+        active,
+        expiringSoon,
+        expired,
+        totalEmails,
+        domainsWithEmail,
       },
     };
   } catch (error) {
     console.error('[Domains] Stats error:', error);
-    return { success: false, error: 'Failed to get stats' };
+    // Return zeros on error rather than failing completely
+    return { 
+      success: true, 
+      data: {
+        total: 0, active: 0, expiringSoon: 0, expired: 0,
+        totalEmails: 0, domainsWithEmail: 0,
+      } 
+    };
   }
 }
 
@@ -433,20 +655,29 @@ export async function renewDomain(domainId: string, years: number): Promise<{
   
   try {
     // Get domain
-    const { data: domain, error } = await (supabase as unknown as { from: (table: string) => {
-      select: (columns: string) => {
-        eq: (column: string, value: string) => {
-          single: () => Promise<{ data: AnyRecord | null; error: { message: string } | null }>
-        }
-      }
-    }})
-      .from('domains')
+    const { data: domain, error } = await getTable(supabase, 'domains')
       .select('*')
       .eq('id', domainId)
-      .single();
+      .single() as { data: AnyRecord | null; error: { message: string } | null };
     
     if (error || !domain) {
       return { success: false, error: 'Domain not found' };
+    }
+    
+    // Try real ResellerClub renewal
+    if (isClientAvailable() && domain.resellerclub_order_id) {
+      try {
+        await domainService.renew({
+          orderId: String(domain.resellerclub_order_id),
+          years,
+        });
+      } catch (apiError) {
+        console.error('[Domains] RC renewal failed:', apiError);
+        return { 
+          success: false, 
+          error: apiError instanceof Error ? apiError.message : 'Renewal failed at registrar' 
+        };
+      }
     }
     
     // Calculate new expiry
@@ -454,13 +685,8 @@ export async function renewDomain(domainId: string, years: number): Promise<{
     const newExpiry = new Date(currentExpiry);
     newExpiry.setFullYear(newExpiry.getFullYear() + years);
     
-    // Update domain
-    await (admin as unknown as { from: (table: string) => {
-      update: (data: AnyRecord) => {
-        eq: (column: string, value: string) => Promise<unknown>
-      }
-    }})
-      .from('domains')
+    // Update domain in database
+    await getTable(admin, 'domains')
       .update({
         expiry_date: newExpiry.toISOString(),
         last_renewed_at: new Date().toISOString(),
@@ -468,8 +694,7 @@ export async function renewDomain(domainId: string, years: number): Promise<{
       .eq('id', domainId);
     
     // Create order record
-    await (admin as unknown as { from: (table: string) => { insert: (data: AnyRecord) => Promise<unknown> }})
-      .from('domain_orders')
+    await getTable(admin, 'domain_orders')
       .insert({
         agency_id: domain.agency_id,
         domain_id: domainId,
@@ -478,7 +703,7 @@ export async function renewDomain(domainId: string, years: number): Promise<{
         years,
         wholesale_price: 0,
         retail_price: 0,
-        resellerclub_order_id: `RENEW-${Date.now()}`,
+        resellerclub_order_id: domain.resellerclub_order_id || `RENEW-${Date.now()}`,
         status: 'completed',
         payment_status: 'paid',
         completed_at: new Date().toISOString(),
@@ -508,12 +733,27 @@ export async function updateDomainAutoRenew(domainId: string, autoRenew: boolean
   const admin = createAdminClient();
   
   try {
-    await (admin as unknown as { from: (table: string) => {
-      update: (data: AnyRecord) => {
-        eq: (column: string, value: string) => Promise<unknown>
+    // Get domain to check for RC order
+    const supabase = await createClient();
+    const { data: domain } = await getTable(supabase, 'domains')
+      .select('resellerclub_order_id')
+      .eq('id', domainId)
+      .single() as { data: { resellerclub_order_id?: string } | null };
+    
+    // Sync auto-renew with ResellerClub
+    if (isClientAvailable() && domain?.resellerclub_order_id) {
+      try {
+        if (autoRenew) {
+          await domainService.enableAutoRenew(domain.resellerclub_order_id);
+        } else {
+          await domainService.disableAutoRenew(domain.resellerclub_order_id);
+        }
+      } catch (apiError) {
+        console.warn('[Domains] RC auto-renew update failed:', apiError);
       }
-    }})
-      .from('domains')
+    }
+    
+    await getTable(admin, 'domains')
       .update({ auto_renew: autoRenew })
       .eq('id', domainId);
     
@@ -536,12 +776,23 @@ export async function updateDomainPrivacy(domainId: string, privacy: boolean): P
   const admin = createAdminClient();
   
   try {
-    await (admin as unknown as { from: (table: string) => {
-      update: (data: AnyRecord) => {
-        eq: (column: string, value: string) => Promise<unknown>
+    // Get domain to check for RC order
+    const supabase = await createClient();
+    const { data: domain } = await getTable(supabase, 'domains')
+      .select('resellerclub_order_id')
+      .eq('id', domainId)
+      .single() as { data: { resellerclub_order_id?: string } | null };
+    
+    // Sync privacy with ResellerClub
+    if (isClientAvailable() && domain?.resellerclub_order_id && privacy) {
+      try {
+        await domainService.enablePrivacy(domain.resellerclub_order_id);
+      } catch (apiError) {
+        console.warn('[Domains] RC privacy update failed:', apiError);
       }
-    }})
-      .from('domains')
+    }
+    
+    await getTable(admin, 'domains')
       .update({ whois_privacy: privacy })
       .eq('id', domainId);
     
@@ -565,12 +816,7 @@ export async function deleteDomain(domainId: string): Promise<{
   
   try {
     // Soft delete - just mark as cancelled
-    await (admin as unknown as { from: (table: string) => {
-      update: (data: AnyRecord) => {
-        eq: (column: string, value: string) => Promise<unknown>
-      }
-    }})
-      .from('domains')
+    await getTable(admin, 'domains')
       .update({ status: 'cancelled' })
       .eq('id', domainId);
     
@@ -582,6 +828,63 @@ export async function deleteDomain(domainId: string): Promise<{
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Delete failed' 
+    };
+  }
+}
+
+// ============================================================================
+// ResellerClub Configuration Status
+// ============================================================================
+
+export async function getResellerClubStatus(): Promise<{
+  success: boolean;
+  data: {
+    configured: boolean;
+    connected: boolean;
+    balance?: number;
+    currency?: string;
+  };
+}> {
+  try {
+    const configured = isConfigured();
+    if (!configured) {
+      return { 
+        success: true, 
+        data: { configured: false, connected: false } 
+      };
+    }
+    
+    if (!isClientAvailable()) {
+      return { 
+        success: true, 
+        data: { configured: true, connected: false } 
+      };
+    }
+
+    // Try to get balance to verify connection
+    try {
+      const { getResellerClubClient } = await import('@/lib/resellerclub/client');
+      const client = getResellerClubClient();
+      const balance = await client.getBalance();
+      return {
+        success: true,
+        data: {
+          configured: true,
+          connected: true,
+          balance: balance.balance,
+          currency: balance.currency,
+        },
+      };
+    } catch {
+      return {
+        success: true,
+        data: { configured: true, connected: false },
+      };
+    }
+  } catch {
+    return {
+      success: true,
+      data: { configured: false, connected: false },
     };
   }
 }
