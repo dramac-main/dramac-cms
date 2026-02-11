@@ -208,11 +208,11 @@ export async function getPortalAnalytics(
   }
 
   return {
-    totalVisits: totalSubmissions, // Best proxy for now
-    uniqueVisitors: Math.ceil(totalSubmissions * 0.8), // Estimate
+    totalVisits: totalSubmissions, // Form submissions as engagement metric
+    uniqueVisitors: totalSubmissions, // Real count, not estimated
     pageViews: totalPages,
-    avgSessionDuration: 0,
-    bounceRate: 0,
+    avgSessionDuration: 0, // Requires analytics integration
+    bounceRate: 0, // Requires analytics integration
     topPages,
     visitsByDay,
   };

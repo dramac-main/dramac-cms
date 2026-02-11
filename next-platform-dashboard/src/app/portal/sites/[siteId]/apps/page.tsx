@@ -1,10 +1,9 @@
 import { Metadata } from "next";
-import { cookies } from "next/headers";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Globe, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { PortalHeader } from "@/components/portal/portal-header";
+import { requirePortalAuth } from "@/lib/portal/portal-auth";
 import { AppsGrid } from "@/components/portal/apps/apps-grid";
 import { EmptyAppsState } from "@/components/portal/apps/empty-apps-state";
 
@@ -30,27 +29,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function SiteAppsPage({ params }: PageProps) {
   const { siteId } = await params;
-  const cookieStore = await cookies();
-  const impersonatingClientId = cookieStore.get("impersonating_client_id")?.value;
-
-  if (!impersonatingClientId) {
-    redirect("/dashboard");
-  }
+  const portalUser = await requirePortalAuth();
 
   const supabase = await createClient();
-
-  // Get impersonating user info
-  const { data: { user } } = await supabase.auth.getUser();
 
   // Get client info
   const { data: client } = await supabase
     .from("clients")
     .select("id, name")
-    .eq("id", impersonatingClientId)
+    .eq("id", portalUser.clientId)
     .single();
 
   if (!client) {
-    redirect("/dashboard");
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        <p>Unable to load apps. Please try again later.</p>
+      </div>
+    );
   }
 
   // Verify site belongs to client
@@ -119,12 +114,6 @@ export default async function SiteAppsPage({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <PortalHeader 
-        clientName={client.name} 
-        isImpersonating={true}
-        impersonatorEmail={user?.email}
-      />
-      
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-6">
           {/* Header */}

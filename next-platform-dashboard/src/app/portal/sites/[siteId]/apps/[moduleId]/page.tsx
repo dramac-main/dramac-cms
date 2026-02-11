@@ -1,11 +1,12 @@
 import { Metadata } from "next";
-import { cookies } from "next/headers";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ArrowLeft, Settings, Maximize2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Settings, Maximize2, ExternalLink, icons } from "lucide-react";
+import { resolveIconName } from "@/lib/utils/icon-map";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AppLauncher } from "@/components/portal/apps/app-launcher";
+import { requirePortalAuth } from "@/lib/portal/portal-auth";
 
 interface PageProps {
   params: Promise<{ siteId: string; moduleId: string }>;
@@ -29,12 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function SiteModuleLauncherPage({ params }: PageProps) {
   const { siteId, moduleId } = await params;
-  const cookieStore = await cookies();
-  const impersonatingClientId = cookieStore.get("impersonating_client_id")?.value;
-
-  if (!impersonatingClientId) {
-    redirect("/dashboard");
-  }
+  const portalUser = await requirePortalAuth();
 
   const supabase = await createClient();
 
@@ -42,11 +38,15 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
   const { data: client } = await supabase
     .from("clients")
     .select("id, name, agency_id")
-    .eq("id", impersonatingClientId)
+    .eq("id", portalUser.clientId)
     .single();
 
   if (!client) {
-    redirect("/dashboard");
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        <p>Unable to load app. Please try again later.</p>
+      </div>
+    );
   }
 
   // Verify site belongs to client
@@ -113,7 +113,14 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
           </Button>
           
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{moduleData.icon || "📦"}</span>
+            <span className="text-2xl">{(() => {
+              const iconName = moduleData.icon ? resolveIconName(moduleData.icon) : null;
+              if (iconName) {
+                const LucideIcon = icons[iconName as keyof typeof icons];
+                return LucideIcon ? <LucideIcon className="h-6 w-6" /> : <span>{moduleData.icon || '📦'}</span>;
+              }
+              return <span>{moduleData.icon || '📦'}</span>;
+            })()}</span>
             <div>
               <h1 className="font-semibold">
                 {moduleData.name}

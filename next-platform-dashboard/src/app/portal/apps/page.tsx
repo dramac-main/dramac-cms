@@ -1,6 +1,4 @@
 import { Metadata } from "next";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Grid3x3, Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -8,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AppsGrid } from "@/components/portal/apps/apps-grid";
 import { EmptyAppsState } from "@/components/portal/apps/empty-apps-state";
-import { PortalHeader } from "@/components/portal/portal-header";
+import { requirePortalAuth } from "@/lib/portal/portal-auth";
 
 export const metadata: Metadata = {
   title: "My Apps | Client Portal",
@@ -16,12 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PortalAppsPage() {
-  const cookieStore = await cookies();
-  const impersonatingClientId = cookieStore.get("impersonating_client_id")?.value;
-  
-  if (!impersonatingClientId) {
-    redirect("/dashboard");
-  }
+  const user = await requirePortalAuth();
 
   const supabase = await createClient();
 
@@ -29,15 +22,16 @@ export default async function PortalAppsPage() {
   const { data: client, error } = await supabase
     .from("clients")
     .select("id, name, agency_id")
-    .eq("id", impersonatingClientId)
+    .eq("id", user.clientId)
     .single();
 
   if (error || !client) {
-    redirect("/dashboard");
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        <p>Unable to load apps. Please try again later.</p>
+      </div>
+    );
   }
-
-  // Get impersonating user info
-  const { data: { user } } = await supabase.auth.getUser();
 
   // Define the module type to match AppsGrid expectations
   interface InstalledModule {
@@ -130,12 +124,7 @@ export default async function PortalAppsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PortalHeader 
-        clientName={client.name} 
-        isImpersonating={true}
-        impersonatorEmail={user?.email}
-      />
+    <div className="space-y-6">
       
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-6">

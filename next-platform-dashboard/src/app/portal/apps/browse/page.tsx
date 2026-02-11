@@ -1,10 +1,8 @@
 import { Metadata } from "next";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Package, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { PortalHeader } from "@/components/portal/portal-header";
+import { requirePortalAuth } from "@/lib/portal/portal-auth";
 import { AvailableAppsGrid } from "@/components/portal/apps/available-apps-grid";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -49,12 +47,7 @@ function calculateRetailPrice(subscription: Subscription): number {
 }
 
 export default async function BrowseAppsPage() {
-  const cookieStore = await cookies();
-  const impersonatingClientId = cookieStore.get("impersonating_client_id")?.value;
-  
-  if (!impersonatingClientId) {
-    redirect("/dashboard");
-  }
+  const portalUser = await requirePortalAuth();
 
   const supabase = await createClient();
 
@@ -62,19 +55,24 @@ export default async function BrowseAppsPage() {
   const { data: client, error } = await supabase
     .from("clients")
     .select("id, name, agency_id")
-    .eq("id", impersonatingClientId)
+    .eq("id", portalUser.clientId)
     .single();
 
   if (error || !client) {
-    redirect("/dashboard");
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        <p>Unable to load apps. Please try again later.</p>
+      </div>
+    );
   }
 
   if (!client.agency_id) {
-    redirect("/portal/apps");
+    return (
+      <div className="p-6 text-center text-muted-foreground">
+        <p>No agency associated. Please contact support.</p>
+      </div>
+    );
   }
-
-  // Get impersonating user info
-  const { data: { user } } = await supabase.auth.getUser();
 
   // Get already installed modules (from client_module_installations) using type assertion
   const { data: clientInstallations } = await supabase
@@ -151,12 +149,7 @@ export default async function BrowseAppsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <PortalHeader 
-        clientName={client.name} 
-        isImpersonating={true}
-        impersonatorEmail={user?.email}
-      />
+    <div className="space-y-6">
       
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-6">

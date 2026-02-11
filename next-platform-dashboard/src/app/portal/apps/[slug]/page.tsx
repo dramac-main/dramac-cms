@@ -1,6 +1,5 @@
 import { Metadata } from "next";
-import { cookies } from "next/headers";
-import { redirect, notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ArrowLeft, Settings, Maximize2, ExternalLink } from "lucide-react";
 import { icons } from "lucide-react";
@@ -8,6 +7,7 @@ import { resolveIconName } from "@/lib/utils/icon-map";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AppLauncher } from "@/components/portal/apps/app-launcher";
+import { requirePortalAuth } from "@/lib/portal/portal-auth";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -37,12 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PortalAppPage({ params }: PageProps) {
   const { slug } = await params;
-  const cookieStore = await cookies();
-  const impersonatingClientId = cookieStore.get("impersonating_client_id")?.value;
-
-  if (!impersonatingClientId) {
-    redirect("/dashboard");
-  }
+  const portalUser = await requirePortalAuth();
 
   const supabase = await createClient();
 
@@ -69,11 +64,12 @@ export default async function PortalAppPage({ params }: PageProps) {
   const { data: clientData } = await supabase
     .from("clients")
     .select("id, name, agency_id")
-    .eq("id", impersonatingClientId)
+    .eq("id", portalUser.clientId)
     .single();
 
   if (!clientData) {
     redirect("/portal/apps");
+    return; // unreachable – hints to TS that clientData is non-null below
   }
 
   // Check if there's a client installation using type assertion

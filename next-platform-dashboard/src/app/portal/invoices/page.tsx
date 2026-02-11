@@ -12,7 +12,7 @@ import {
   Clock,
   AlertCircle,
   RefreshCcw,
-  DollarSign
+  Coins
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -171,7 +171,7 @@ export default function PortalInvoicesPage() {
             <CardHeader className="pb-2">
               <CardDescription>Total Paid (This Year)</CardDescription>
               <CardTitle className="text-2xl flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
+                <Coins className="h-5 w-5" />
                 {formatCurrency(overview.totalPaidThisYear, overview.currency)}
               </CardTitle>
             </CardHeader>
