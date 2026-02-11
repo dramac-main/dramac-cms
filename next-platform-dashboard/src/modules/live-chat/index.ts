@@ -79,3 +79,76 @@ export type {
 
 // ─── DB Mapping ──────────────────────────────────────────────────────────────
 export { mapRecord, mapRecords, toDbRecord } from './lib/map-db-record'
+
+// ─── Server Actions ──────────────────────────────────────────────────────────
+export {
+  // Conversations
+  getConversations,
+  getConversation,
+  createConversation,
+  assignConversation,
+  transferConversation,
+  resolveConversation,
+  closeConversation,
+  reopenConversation,
+  updateConversationPriority,
+  updateConversationTags,
+  updateInternalNotes,
+  markConversationRead,
+  getConversationStats,
+  // Messages
+  getMessages,
+  sendMessage,
+  sendFileMessage,
+  updateMessageStatus,
+  deleteMessage,
+  // Agents
+  getAgents,
+  getAgent,
+  getOnlineAgents,
+  getAvailableAgent,
+  createAgent,
+  updateAgent,
+  updateAgentStatus,
+  deleteAgent,
+  getAgentPerformance,
+  // Departments
+  getDepartments,
+  createDepartment,
+  updateDepartment,
+  deleteDepartment,
+  setDefaultDepartment,
+  // Canned Responses
+  getCannedResponses,
+  searchCannedResponses,
+  createCannedResponse,
+  updateCannedResponse,
+  deleteCannedResponse,
+  incrementCannedResponseUsage,
+  // Widget Settings
+  getWidgetSettings,
+  getPublicWidgetSettings,
+  updateWidgetSettings,
+  isWithinBusinessHours,
+  // Visitors
+  getVisitors,
+  getVisitor,
+  getVisitorConversations,
+  createOrUpdateVisitor,
+  updateVisitorInfo,
+  updateVisitorPageTracking,
+  linkVisitorToCrm,
+  // Knowledge Base
+  getKnowledgeBaseArticles,
+  searchKnowledgeBase,
+  createArticle,
+  updateArticle,
+  deleteArticle,
+} from './actions'
+
+// ─── Hooks ───────────────────────────────────────────────────────────────────
+export {
+  useChatRealtime,
+  useAgentPresence,
+  useConversationsRealtime,
+} from './hooks'
