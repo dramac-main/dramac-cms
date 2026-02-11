@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { 
   Package, 
   Plus, 
-  DollarSign, 
+  Coins, 
   MessageSquare, 
   BarChart3,
   TrendingUp,
@@ -175,7 +175,7 @@ export default async function AdminModulesPage() {
           <Card className="hover:border-primary transition-colors cursor-pointer h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
+                <Coins className="h-5 w-5" />
                 Wholesale Pricing
               </CardTitle>
               <CardDescription>

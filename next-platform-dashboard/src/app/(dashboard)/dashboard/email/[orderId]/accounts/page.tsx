@@ -107,7 +107,7 @@ export default async function EmailAccountsPage({ params }: EmailAccountsPagePro
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-1">📧 Webmail Access</h4>
+              <h4 className="font-medium mb-1">Webmail Access</h4>
               <p className="text-sm text-muted-foreground mb-2">
                 Access your email from any web browser
               </p>
@@ -118,7 +118,7 @@ export default async function EmailAccountsPage({ params }: EmailAccountsPagePro
               </Button>
             </div>
             <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-1">📱 Mobile Setup</h4>
+              <h4 className="font-medium mb-1">Mobile Setup</h4>
               <p className="text-sm text-muted-foreground mb-2">
                 Configure email on your phone or tablet
               </p>

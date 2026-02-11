@@ -154,7 +154,7 @@ export default function EditModulePage({
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [icon, setIcon] = useState("📦");
+  const [icon, setIcon] = useState("Package");
   const [category, setCategory] = useState("other");
   const [pricingTier, setPricingTier] = useState("free");
   const [dependencies, setDependencies] = useState<string[]>([]);

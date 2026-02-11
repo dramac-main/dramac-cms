@@ -121,7 +121,7 @@ export default function CreateModulePage() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
-  const [icon, setIcon] = useState("📦");
+  const [icon, setIcon] = useState("Package");
   const [category, setCategory] = useState("other");
   const [pricingTier, setPricingTier] = useState("free");
   const [dependencies, setDependencies] = useState<string[]>([]);

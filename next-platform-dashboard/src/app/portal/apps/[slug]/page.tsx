@@ -149,7 +149,7 @@ export default async function PortalAppPage({ params }: PageProps) {
             id: moduleData.id,
             name: moduleData.name,
             description: moduleData.description,
-            icon: moduleData.icon || "📦",
+            icon: moduleData.icon || "Package",
             slug: moduleData.slug,
             runtime_type: runtimeType as "iframe" | "embedded" | "external" | "native" | undefined,
             app_url: appUrl,

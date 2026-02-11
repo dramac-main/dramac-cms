@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DollarSign, Percent, Edit2, Check, X, Loader2 } from "lucide-react";
+import { Edit2, Check, X, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -138,7 +138,7 @@ export function MarkupPricingList({ subscriptions }: MarkupPricingListProps) {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">{sub.module?.icon || "📦"}</span>
+                  <span className="text-2xl">{sub.module?.icon || "Package"}</span>
                   <div>
                     <CardTitle className="text-lg">{sub.module?.name}</CardTitle>
                     <Badge variant="outline" className="mt-1">
@@ -190,7 +190,7 @@ export function MarkupPricingList({ subscriptions }: MarkupPricingListProps) {
 
                     {editValues.markupType === "fixed" && (
                       <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">$</span>
+                        <span className="text-muted-foreground">K</span>
                         <Input
                           type="number"
                           min="0"
@@ -205,7 +205,7 @@ export function MarkupPricingList({ subscriptions }: MarkupPricingListProps) {
 
                     {editValues.markupType === "custom" && (
                       <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">$</span>
+                        <span className="text-muted-foreground">K</span>
                         <Input
                           type="number"
                           min="0"

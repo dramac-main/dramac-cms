@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { BarChart3, Users, DollarSign, Package } from "lucide-react";
+import { BarChart3, Users, Coins, Package } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
@@ -149,10 +149,10 @@ export default async function ModuleAnalyticsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <Coins className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${(monthlyRevenue / 100).toFixed(0)}</div>
+            <div className="text-2xl font-bold">K{(monthlyRevenue / 100).toFixed(0)}</div>
             <p className="text-xs text-muted-foreground">
               From wholesale subscriptions
             </p>
@@ -260,7 +260,7 @@ export default async function ModuleAnalyticsPage() {
                 <div key={module.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-muted-foreground font-medium w-4">{index + 1}</span>
-                    <span className="text-xl">{module.icon || "📦"}</span>
+                    <span className="text-xl">{module.icon || "Package"}</span>
                     <div>
                       <Link 
                         href={`/admin/modules/${module.id}`}
@@ -292,7 +292,7 @@ export default async function ModuleAnalyticsPage() {
                 <div key={module.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-muted-foreground font-medium w-4">{index + 1}</span>
-                    <span className="text-xl">{module.icon || "📦"}</span>
+                    <span className="text-xl">{module.icon || "Package"}</span>
                     <div>
                       <Link 
                         href={`/admin/modules/${module.id}`}
@@ -301,12 +301,12 @@ export default async function ModuleAnalyticsPage() {
                         {module.name}
                       </Link>
                       <p className="text-xs text-muted-foreground">
-                        ${(module.wholesale_price_monthly / 100).toFixed(2)}/mo wholesale
+                        K{(module.wholesale_price_monthly / 100).toFixed(2)}/mo wholesale
                       </p>
                     </div>
                   </div>
                   <span className="font-medium text-green-600">
-                    ${((module.wholesale_price_monthly * (module.install_count || 0)) / 100).toFixed(0)}
+                    K{((module.wholesale_price_monthly * (module.install_count || 0)) / 100).toFixed(0)}
                   </span>
                 </div>
               ))}

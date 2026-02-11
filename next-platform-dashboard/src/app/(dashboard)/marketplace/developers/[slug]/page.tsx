@@ -187,7 +187,7 @@ export default async function DeveloperProfilePage({ params }: Props) {
                 <p className="text-sm text-muted-foreground">
                   This developer accepts custom requests
                   {developer.custom_request_rate && (
-                    <> starting at ${developer.custom_request_rate}/hr</>
+                    <> starting at K{developer.custom_request_rate}/hr</>
                   )}
                 </p>
               </div>

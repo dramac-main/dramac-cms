@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Package, DollarSign, Plus, ArrowRight } from "lucide-react";
+import { Package, Coins, Plus, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
@@ -85,7 +85,7 @@ export default async function AgencyModulesPage() {
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link href="/dashboard/modules/pricing">
-              <DollarSign className="h-4 w-4 mr-2" />
+              <Coins className="h-4 w-4 mr-2" />
               Pricing Settings
             </Link>
           </Button>
@@ -122,9 +122,9 @@ export default async function AgencyModulesPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-primary" />
+              <Coins className="h-5 w-5 text-primary" />
               <span className="text-2xl font-bold">
-                ${(totalMonthlyCost / 100).toFixed(2)}
+                K{(totalMonthlyCost / 100).toFixed(2)}
               </span>
             </div>
           </CardContent>

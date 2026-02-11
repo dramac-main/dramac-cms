@@ -102,7 +102,7 @@ export default async function SiteAppsPage({ params }: PageProps) {
           id: mod.id,
           name: mod.name,
           description: mod.description,
-          icon: mod.icon || "📦",
+          icon: mod.icon || "Package",
           slug: mod.slug,
           category: mod.category,
           installation_id: i.id,

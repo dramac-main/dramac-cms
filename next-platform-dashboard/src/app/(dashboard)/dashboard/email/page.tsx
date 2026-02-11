@@ -89,19 +89,19 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
         <CardContent>
           <div className="grid md:grid-cols-3 gap-4">
             <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-1">📧 Professional Email</h4>
+              <h4 className="font-medium mb-1">Professional Email</h4>
               <p className="text-sm text-muted-foreground">
                 Custom @yourdomain.com email addresses
               </p>
             </div>
             <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-1">💾 10GB Storage</h4>
+              <h4 className="font-medium mb-1">10GB Storage</h4>
               <p className="text-sm text-muted-foreground">
                 Generous storage per mailbox
               </p>
             </div>
             <div className="p-4 border rounded-lg">
-              <h4 className="font-medium mb-1">🌐 Webmail Access</h4>
+              <h4 className="font-medium mb-1">Webmail Access</h4>
               <p className="text-sm text-muted-foreground">
                 Access email from any browser
               </p>

@@ -136,7 +136,7 @@ export default async function ModuleDetailV2Page({ params }: PageProps) {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
-                <span className="text-5xl">{mod.icon || "📦"}</span>
+                <span className="text-5xl">{mod.icon || "Package"}</span>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h1 className="text-2xl font-bold">{mod.name}</h1>

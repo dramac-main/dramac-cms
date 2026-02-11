@@ -136,7 +136,7 @@ export default async function BrowseAppsPage() {
         id: moduleData.id,
         name: moduleData.name,
         description: moduleData.description,
-        icon: moduleData.icon || "📦",
+        icon: moduleData.icon || "Package",
         category: moduleData.category || "Other",
         agencyPrice: calculateRetailPrice(sub),
         is_featured: moduleData.is_featured || false,

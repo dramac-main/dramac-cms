@@ -131,7 +131,7 @@ export function WholesalePricingTable({ modules }: WholesalePricingTableProps) {
             <TableRow key={module.id}>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{module.icon || "📦"}</span>
+                  <span className="text-xl">{module.icon || "Package"}</span>
                   <div>
                     <p className="font-medium">{module.name}</p>
                     <p className="text-xs text-muted-foreground">{module.category}</p>
@@ -146,7 +146,7 @@ export function WholesalePricingTable({ modules }: WholesalePricingTableProps) {
               <TableCell>
                 {editingId === module.id ? (
                   <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground">$</span>
+                    <span className="text-muted-foreground">K</span>
                     <Input
                       type="number"
                       step="0.01"
@@ -170,7 +170,7 @@ export function WholesalePricingTable({ modules }: WholesalePricingTableProps) {
               <TableCell>
                 {editingId === module.id ? (
                   <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground">$</span>
+                    <span className="text-muted-foreground">K</span>
                     <Input
                       type="number"
                       step="0.01"
@@ -194,7 +194,7 @@ export function WholesalePricingTable({ modules }: WholesalePricingTableProps) {
               <TableCell>
                 {editingId === module.id ? (
                   <div className="flex items-center gap-1">
-                    <span className="text-muted-foreground">$</span>
+                    <span className="text-muted-foreground">K</span>
                     <Input
                       type="number"
                       step="0.01"

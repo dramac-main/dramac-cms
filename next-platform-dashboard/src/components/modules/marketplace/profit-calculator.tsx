@@ -72,15 +72,15 @@ export function ProfitCalculator({ wholesalePrice, suggestedRetail }: ProfitCalc
         <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
           <div className="flex justify-between">
             <span>Your Cost (wholesale)</span>
-            <span>${wholesale.toFixed(2)}/mo</span>
+            <span>K{wholesale.toFixed(2)}/mo</span>
           </div>
           <div className="flex justify-between">
             <span>Your Price to Clients</span>
-            <span className="font-medium">${retailPrice.toFixed(2)}/mo</span>
+            <span className="font-medium">K{retailPrice.toFixed(2)}/mo</span>
           </div>
           <div className="flex justify-between text-green-600">
             <span>Profit per Client</span>
-            <span className="font-medium">${profit.toFixed(2)}/mo</span>
+            <span className="font-medium">K{profit.toFixed(2)}/mo</span>
           </div>
         </div>
 
@@ -94,13 +94,13 @@ export function ProfitCalculator({ wholesalePrice, suggestedRetail }: ProfitCalc
             <div className="bg-green-50 dark:bg-green-950 rounded-lg p-3 text-center">
               <p className="text-xs text-muted-foreground">Monthly Profit</p>
               <p className="text-lg font-bold text-green-600">
-                ${monthlyProfit.toFixed(2)}
+                K{monthlyProfit.toFixed(2)}
               </p>
             </div>
             <div className="bg-green-50 dark:bg-green-950 rounded-lg p-3 text-center">
               <p className="text-xs text-muted-foreground">Yearly Profit</p>
               <p className="text-lg font-bold text-green-600">
-                ${yearlyProfit.toFixed(2)}
+                K{yearlyProfit.toFixed(2)}
               </p>
             </div>
           </div>

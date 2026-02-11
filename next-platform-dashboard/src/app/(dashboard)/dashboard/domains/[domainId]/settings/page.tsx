@@ -25,17 +25,17 @@ export async function generateMetadata({ params }: SettingsPageProps): Promise<M
   };
 }
 
-// Mock contact data for UI testing
-const MOCK_CONTACT = {
-  name: 'John Doe',
-  organization: 'Acme Corporation',
-  email: 'john@acme.com',
-  phone: '+1 555 123 4567',
-  address: '123 Main Street',
-  city: 'San Francisco',
-  state: 'CA',
-  country: 'US',
-  zipcode: '94102',
+// Default contact data — real data should come from agency profile
+const DEFAULT_CONTACT = {
+  name: '',
+  organization: '',
+  email: '',
+  phone: '',
+  address: '',
+  city: 'Lusaka',
+  state: 'Lusaka Province',
+  country: 'ZM',
+  zipcode: '10101',
 };
 
 async function SettingsContent({ domainId }: { domainId: string }) {
@@ -113,7 +113,7 @@ async function SettingsContent({ domainId }: { domainId: string }) {
         transferLock={domain.transfer_lock}
         whoisPrivacy={domain.whois_privacy}
         autoRenew={domain.auto_renew}
-        contact={MOCK_CONTACT}
+        contact={DEFAULT_CONTACT}
       />
     </div>
   );

@@ -126,7 +126,7 @@ export default async function ModuleDetailPage({ params }: PageProps) {
               <span>{module.name}</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-3xl">{module.icon || "📦"}</span>
+              <span className="text-3xl">{module.icon || "Package"}</span>
               <h1 className="text-3xl font-bold">{module.name}</h1>
               {getStatusBadge(module.status)}
               {module.is_featured && (
@@ -183,7 +183,7 @@ export default async function ModuleDetailPage({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             <span className="text-2xl font-bold text-green-600">
-              ${(monthlyRevenue / 100).toFixed(0)}
+              K{(monthlyRevenue / 100).toFixed(0)}
             </span>
           </CardContent>
         </Card>
@@ -196,7 +196,7 @@ export default async function ModuleDetailPage({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             <span className="text-2xl font-bold">
-              {module.rating_average ? `${module.rating_average.toFixed(1)} ⭐` : "N/A"}
+              {module.rating_average ? module.rating_average.toFixed(1) : "N/A"}
             </span>
           </CardContent>
         </Card>

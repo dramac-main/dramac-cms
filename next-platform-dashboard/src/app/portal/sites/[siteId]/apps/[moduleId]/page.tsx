@@ -117,9 +117,9 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
               const iconName = moduleData.icon ? resolveIconName(moduleData.icon) : null;
               if (iconName) {
                 const LucideIcon = icons[iconName as keyof typeof icons];
-                return LucideIcon ? <LucideIcon className="h-6 w-6" /> : <span>{moduleData.icon || '📦'}</span>;
+                return LucideIcon ? <LucideIcon className="h-6 w-6" /> : <span>{moduleData.icon || 'Package'}</span>;
               }
-              return <span>{moduleData.icon || '📦'}</span>;
+              return <span>{moduleData.icon || 'Package'}</span>;
             })()}</span>
             <div>
               <h1 className="font-semibold">
@@ -158,7 +158,7 @@ export default async function SiteModuleLauncherPage({ params }: PageProps) {
             id: moduleData.id,
             name: moduleData.name,
             description: moduleData.description,
-            icon: moduleData.icon || "📦",
+            icon: moduleData.icon || "Package",
             slug: moduleData.slug || "",
             runtime_type: runtimeType as "iframe" | "embedded" | "external" | "native" | undefined,
             app_url: appUrl,
