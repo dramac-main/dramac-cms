@@ -5,6 +5,78 @@
 
 ---
 
+## 💬 LIVE CHAT MODULE LC-00 to LC-04 COMPLETE (Commits `d4f3ab8` to `dfb4544`) ✅
+
+Four phases of Live Chat module fully implemented and committed. Marketplace-ready, zero tsc errors.
+
+| Phase | Name | Files | Commit | Status |
+|-------|------|-------|--------|--------|
+| LC-00 | Phase Documents & Architecture | 9 phase docs (~4,000 lines) | `d4f3ab8` | ✅ Complete |
+| LC-01 | Database Schema, Types, Manifest | 3 files (migration, types, manifest) | `e711459` | ✅ Complete |
+| LC-02 | Core Chat Engine (Actions + Hooks) | 9 files (6 actions, 3 hooks) | `61d6e11` | ✅ Complete |
+| LC-03 | Agent Dashboard | 47 files, 4,942 insertions | `904b1ed` | ✅ Complete |
+| LC-04 | Embeddable Widget + Settings + Notifications | 21 files, 4,306 insertions | `ac45cbf` | ✅ Complete |
+| LC-04b | Marketplace Seed Migration | 1 file (free module registration) | `dfb4544` | ✅ Complete |
+
+**LC-01 Key Features:**
+- 9 database tables: departments, agents, settings, visitors, conversations, messages, canned responses, knowledge base, analytics
+- Complete type system: 677 lines covering all entities + action return types
+- Module manifest: live-chat, communication category, enterprise-grade
+
+**LC-02 Key Features:**
+- 54 server actions: chat management, widget interactions, conversations, knowledge base, analytics
+- 3 realtime hooks: chat messages, conversation list, widget updates
+- Business hours validation, department routing, file uploads to Supabase Storage
+- Action patterns: ActionResult<T>, PaginatedResult<T>
+
+**LC-03 Key Features:**
+- Agent Dashboard: conversation list (real-time), chat interface with typing indicators, visitor sidebar
+- Knowledge Base: search, article management, usage tracking
+- Canned Responses: quick replies with keyboard shortcuts
+- Analytics: overview stats, detailed metrics, department breakdowns
+- Fixed 70+ TypeScript errors (7 page files, wrapper components)
+
+**LC-04 Key Features:**
+- ChatWidget: State machine (initial/pre-chat/chatting/rating/offline/closed), 3s polling, localStorage persistence
+- Widget Components: 7 sub-components (launcher, pre-chat form, chat UI, message bubbles, rating, offline form)
+- API Routes: 5 routes with CORS, admin client access, public widget settings
+- Settings Page: 8-tab comprehensive interface (appearance, branding, pre-chat, hours, behavior, embed, WhatsApp, advanced)
+- Notifications: Added chat_message, chat_assigned, chat_missed, chat_rating to NotificationType
+- Fixed 10 TypeScript errors: type unions, prop interfaces, ChatMessage→WidgetMessage mapping
+
+**Marketplace Enablement:**
+- Migration `lc-01b-seed-module-free.sql` registers module with `pricing_type='free'`
+- Users install through marketplace UI (proper discovery flow)
+- No auto-installation — respects agency choice
+
+**Technical Patterns:**
+- `(supabase as any).from('mod_chat_...')` — tables not in generated Database types
+- `ChatMessage.content` vs `WidgetMessage.text` — mapping in ChatWidget
+- Widget uses admin client for public access (bypasses RLS)
+- Notifications use `createNotification()` (in-app); email templates deferred to LC-08
+- `params: Promise<{ siteId: string }>` — must await in Next.js 16
+
+**Remaining Live Chat Phases (Not Yet Implemented):**
+- LC-05: WhatsApp Integration (Cloud API, webhooks, CRM integration) — NEXT SESSION
+- LC-06: AI Smart Routing (intent detection, sentiment, auto-responder)
+- LC-07: Analytics & Reporting (comprehensive dashboards, exports)
+- LC-08: Production Hardening (error boundaries, email templates, performance, security)
+
+**LC-05 Spec (7 Tasks, ~500 lines — Fully Read):**
+1. WhatsApp Cloud API service (send text/image/doc/template, markAsRead, webhook verification)
+2. Webhook route (GET verification + POST incoming messages/statuses)
+3. Server actions (sendWhatsAppMessage with 24h window, templates, settings)
+4. WhatsAppSetup component (connection wizard, credentials, test)
+5. UI enhancements (window indicator, template dialog, status indicator)
+6. CRM integration (find/create contact from WhatsApp visitor)
+7. Media handling (download WhatsApp media → Supabase Storage)
+
+**Env Vars Needed for LC-05:**
+- WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_BUSINESS_ACCOUNT_ID, WHATSAPP_ACCESS_TOKEN
+- WHATSAPP_VERIFY_TOKEN, WHATSAPP_APP_SECRET
+
+---
+
 ## � SOCIAL MEDIA CRITICAL BUG FIXES (Commits `d68a645` + `6b67bba`) ✅
 
 ### Commit `d68a645`: Migration + Turbopack Fixes

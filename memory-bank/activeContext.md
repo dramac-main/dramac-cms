@@ -1,6 +1,56 @@
 # Active Context
 
-## Latest Session Update (Critical Bug Fixes — Commits `d68a645` + `6b67bba`)
+## Latest Session Update — Live Chat LC-04 Complete + Marketplace Seed (Commits up to `dfb4544`)
+
+### Current Focus: Live Chat Module (LC-05 WhatsApp Next)
+
+**Completed this session:**
+- ✅ LC-04: Embeddable Widget, Settings Page, API Routes, Notifications (commit `ac45cbf`, 21 files, 4,306 insertions)
+- ✅ LC-04b: Marketplace seed migration — module registered as FREE (commit `dfb4544`)
+- ✅ Fixed 10 TypeScript errors in LC-04 (NotificationType, ChatMessage→WidgetMessage mapping, prop interfaces)
+
+**Next session: LC-05 WhatsApp Integration** (spec fully read, 7 tasks):
+1. `whatsapp-service.ts` — WhatsApp Cloud API service (send text/image/doc/template, markAsRead, getMediaUrl, verifyWebhookSignature)
+2. `webhooks/whatsapp/route.ts` — GET verification + POST incoming messages/statuses
+3. `whatsapp-actions.ts` — Server actions (24h window check, templates, settings)
+4. `WhatsAppSetup.tsx` — Connection wizard, credential inputs, test connection
+5. `WhatsAppWindowIndicator.tsx`, `TemplateMessageDialog.tsx`, `WhatsAppStatusIndicator.tsx` — UI
+6. `crm-integration.ts` — Find/create CRM contact from WhatsApp visitor
+7. `whatsapp-media.ts` — Download WhatsApp media → upload to Supabase Storage
+
+**Env vars needed for LC-05:**
+- `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_ACCESS_TOKEN`
+- `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET`
+
+### Module System (Important for Future Reference)
+- **3-table pattern**: `modules_v2` (catalog) → `agency_module_subscriptions` (purchase) → `site_module_installations` (enable)
+- **Module gating**: `isModuleEnabledForSite(siteId, 'live-chat')` in layout.tsx
+- **Pricing model**: `pricing_type` column: `'free'`, `'one_time'`, `'monthly'`, `'yearly'`; prices in **cents** (INTEGER)
+- **Marketplace approach**: Users discover → subscribe → install (NOT auto-installed)
+- **Seed migration**: `lc-01b-seed-module-free.sql` — registers module only, user installs via marketplace UI
+
+### Live Chat Architecture Reference
+- **Route group**: `src/app/(dashboard)/dashboard/sites/[siteId]/live-chat/`
+- **Widget route**: `src/app/embed/chat-widget/` — standalone, NO dashboard layout, CORS
+- **Types**: `ChatMessage.content` vs `WidgetMessage.text` — mapping required in ChatWidget
+- **Supabase access**: `(supabase as any).from('mod_chat_...')` — tables not in generated types
+- **Notifications**: `chat_message`, `chat_assigned`, `chat_missed`, `chat_rating` added to `NotificationType`
+- **Email templates**: Chat types NOT yet in `EmailType` — deferred to LC-08 Production Hardening
+
+### Remaining Live Chat Phases
+- **LC-05**: WhatsApp Integration — NOT STARTED
+- **LC-06**: AI Smart Routing — NOT STARTED
+- **LC-07**: Analytics & Reporting — NOT STARTED
+- **LC-08**: Production Hardening — NOT STARTED
+
+### Git State
+- **Branch**: `main`
+- **Latest commit**: `dfb4544` (marketplace seed)
+- **Working tree**: Clean
+
+---
+
+## Previous Session (Critical Bug Fixes — Commits `d68a645` + `6b67bba`)
 
 ### Critical Bug Fixes Applied ✅
 
@@ -11,30 +61,6 @@
 
 **Commit `6b67bba`:** UUID + snake_case mapping + auth guard fixes (20 files, +156/-76)
 
-#### Root Cause: Empty String UUID Bug
-- 3 pages (listening, competitors, posts) sourced `tenantId` from `accountsResult.accounts?.[0]?.tenantId || ''`
-- Supabase returns `snake_case` so `.tenantId` was always `undefined`, fallback `''` hit `UUID NOT NULL` columns
-- Fix: All pages now use `sites.agency_id` directly (the standard pattern)
-
-#### Snake_case → CamelCase Mapping (Systemic Fix)
-- Created `src/modules/social-media/lib/map-db-record.ts` with `mapRecord<T>()` and `mapRecords<T>()`
-- Applied to ALL 10 action files (41 functions):
-  - account-actions, post-actions, listening-actions, competitor-actions
-  - campaign-actions, report-actions, inbox-actions, team-actions
-  - pillar-actions, analytics-actions
-- Without this, every component rendered blank/undefined data
-
-#### Auth Guards Added
-- calendar, compose, inbox, media pages: Added `if (!user) redirect('/login')`
-- Changed `user?.id || ''` → `user.id` (guaranteed non-null after guard)
-
-#### Other Fixes
-- accounts/page.tsx: `.select('tenant_id')` → `.select('agency_id')` (wrong column name)
-- settings/page.tsx: `redirect('/auth/login')` → `redirect('/login')` (inconsistent route)
-- media/page.tsx: Simplified from `clients(agency_id)` join to direct `sites.agency_id`
-- compose/page.tsx: Removed unnecessary `clients` join
-- pillar-actions.ts: Added `userId` parameter + `created_by` insert
-
 ### Key Pattern: Getting tenantId
 ```typescript
 // CORRECT (all pages must use this):
@@ -44,9 +70,6 @@ const { data: site } = await supabase
   .eq('id', siteId)
   .single()
 const tenantId = site?.agency_id || ''
-
-// WRONG (never use this):
-const tenantId = accountsResult.accounts?.[0]?.tenantId || ''
 ```
 
 ### Key Pattern: DB Record Mapping

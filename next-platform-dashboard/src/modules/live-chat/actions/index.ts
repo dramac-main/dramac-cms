@@ -79,3 +79,37 @@ export {
   updateArticle,
   deleteArticle,
 } from './knowledge-base-actions'
+
+// LC-05: WhatsApp
+export {
+  sendWhatsAppMessage,
+  sendWhatsAppImage,
+  sendWhatsAppDocument,
+  sendWhatsAppTemplateMessage,
+  getWhatsAppStatus,
+  saveWhatsAppSettings,
+  getWhatsAppTemplates,
+} from './whatsapp-actions'
+
+// LC-06: AI & Routing
+export {
+  getAiSuggestions,
+  getConversationSummary,
+  detectMessageIntent,
+  getAiStatus,
+  routeToAgent,
+  getConversationQueuePosition,
+  analyzeMessageSentiment,
+} from './ai-actions'
+
+// LC-07: Analytics
+export {
+  getAnalyticsOverview,
+  getConversationsByDay,
+  getResponseTimeByDay,
+  getAgentPerformance as getAgentPerformanceAnalytics,
+  getChannelBreakdown,
+  getSatisfactionDistribution,
+  getBusiestHours,
+  exportAnalyticsCsv,
+} from './analytics-actions'

@@ -37,7 +37,10 @@ export type EmailType =
   // Forms
   | "form_submission_owner"
   // Domains
-  | "domain_expiring";
+  | "domain_expiring"
+  // Live Chat
+  | "chat_transcript"
+  | "chat_missed_notification";
 
 export interface EmailRecipient {
   email: string;
@@ -82,6 +85,8 @@ export function isValidEmailType(type: string): type is EmailType {
     "quote_rejected_owner",
     "form_submission_owner",
     "domain_expiring",
+    "chat_transcript",
+    "chat_missed_notification",
   ];
   return validTypes.includes(type as EmailType);
 }

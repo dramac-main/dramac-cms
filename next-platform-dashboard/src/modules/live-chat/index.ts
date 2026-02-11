@@ -144,6 +144,31 @@ export {
   createArticle,
   updateArticle,
   deleteArticle,
+  // WhatsApp (LC-05)
+  sendWhatsAppMessage,
+  sendWhatsAppImage,
+  sendWhatsAppDocument,
+  sendWhatsAppTemplateMessage,
+  getWhatsAppStatus,
+  saveWhatsAppSettings,
+  getWhatsAppTemplates,
+  // AI & Routing (LC-06)
+  getAiSuggestions,
+  getConversationSummary,
+  detectMessageIntent,
+  getAiStatus,
+  routeToAgent,
+  getConversationQueuePosition,
+  analyzeMessageSentiment,
+  // Analytics (LC-07)
+  getAnalyticsOverview,
+  getConversationsByDay,
+  getResponseTimeByDay,
+  getAgentPerformanceAnalytics,
+  getChannelBreakdown,
+  getSatisfactionDistribution,
+  getBusiestHours,
+  exportAnalyticsCsv,
 } from './actions'
 
 // ─── Hooks ───────────────────────────────────────────────────────────────────
