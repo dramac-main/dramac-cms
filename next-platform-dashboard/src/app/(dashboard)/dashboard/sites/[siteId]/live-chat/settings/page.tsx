@@ -1,11 +1,11 @@
 /**
- * Settings Page (Placeholder for LC-04)
+ * Settings Page — Widget Configuration
  *
- * PHASE LC-03: Placeholder page — full widget settings in LC-04
+ * PHASE LC-04: Full widget settings with 8-tab interface
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Settings } from 'lucide-react'
+import { getWidgetSettings, getDepartments } from '@/modules/live-chat/actions'
+import { SettingsPageWrapper } from '@/modules/live-chat/components/wrappers/SettingsPageWrapper'
 
 interface PageProps {
   params: Promise<{ siteId: string }>
@@ -14,31 +14,28 @@ interface PageProps {
 export default async function SettingsPage({ params }: PageProps) {
   const { siteId } = await params
 
-  return (
-    <div className="container py-6">
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
-          <p className="text-muted-foreground">
-            Configure your live chat widget and integrations
+  const [settingsResult, departmentsResult] = await Promise.all([
+    getWidgetSettings(siteId),
+    getDepartments(siteId),
+  ])
+
+  if (settingsResult.error || !settingsResult.settings) {
+    return (
+      <div className="container py-6">
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+          <p className="text-sm text-destructive">
+            Failed to load widget settings: {settingsResult.error || 'Settings not found'}
           </p>
         </div>
-        <Card className="max-w-2xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              Widget & Integration Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Full settings including widget customization, business hours,
-              WhatsApp configuration, and integration settings will be available
-              after the embeddable widget module is implemented (Phase LC-04).
-            </p>
-          </CardContent>
-        </Card>
       </div>
-    </div>
+    )
+  }
+
+  return (
+    <SettingsPageWrapper
+      siteId={siteId}
+      initialSettings={settingsResult.settings}
+      departments={departmentsResult.departments || []}
+    />
   )
 }

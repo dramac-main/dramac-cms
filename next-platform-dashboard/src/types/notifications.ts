@@ -23,7 +23,12 @@ export type NotificationType =
   | "order_shipped"
   | "order_delivered"
   // Form submissions
-  | "form_submission";
+  | "form_submission"
+  // Live Chat
+  | "chat_message"
+  | "chat_assigned"
+  | "chat_missed"
+  | "chat_rating";
 
 export interface Notification {
   id: string;

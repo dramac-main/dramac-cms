@@ -95,4 +95,9 @@ export const notificationTypeInfo: Record<
   order_delivered: { icon: "PackageCheck", color: "text-green-500", label: "Order Delivered" },
   // Form submissions
   form_submission: { icon: "FileText", color: "text-blue-500", label: "Form Submission" },
+  // Live Chat
+  chat_message: { icon: "MessageCircle", color: "text-blue-500", label: "Chat Message" },
+  chat_assigned: { icon: "UserCheck", color: "text-indigo-500", label: "Chat Assigned" },
+  chat_missed: { icon: "PhoneMissed", color: "text-orange-500", label: "Missed Chat" },
+  chat_rating: { icon: "Star", color: "text-yellow-500", label: "Chat Rating" },
 };
