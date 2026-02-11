@@ -232,7 +232,7 @@ export default async function BookingEmbedPage({ params, searchParams }: Booking
                           style: 'currency',
                           currency: service.currency || currency,
                           minimumFractionDigits: 0,
-                        }).format(service.price / 100)}
+                        }).format(service.price)}
                       </div>
                     </div>
                   ))}

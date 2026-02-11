@@ -224,7 +224,7 @@ export function CreateAppointmentDialog({
                       <div className="flex items-center justify-between w-full">
                         <span>{service.name}</span>
                         <span className="text-muted-foreground ml-2">
-                          {service.duration_minutes}min - ${service.price}
+                          {service.duration_minutes}min - K{service.price}
                         </span>
                       </div>
                     </SelectItem>

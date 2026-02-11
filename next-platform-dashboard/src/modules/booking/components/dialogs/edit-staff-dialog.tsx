@@ -284,7 +284,7 @@ export function EditStaffDialog({ staff, open, onOpenChange }: EditStaffDialogPr
                       >
                         <div className="font-medium">{service.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {service.duration_minutes}min • ${service.price || 0}
+                          {service.duration_minutes}min • K{service.price || 0}
                         </div>
                       </label>
                     </div>

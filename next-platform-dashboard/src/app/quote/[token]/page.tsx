@@ -63,7 +63,7 @@ export default async function QuotePortalPage({ params }: QuotePortalPageProps) 
   recordQuoteView(token)
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50" data-theme="light" style={{ colorScheme: 'light' }}>
       <QuotePortalView quote={quote} token={token} />
     </div>
   )

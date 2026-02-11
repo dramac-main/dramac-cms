@@ -1,26 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { headers } from "next/headers";
 import { sendBrandedEmail } from "@/lib/email/send-branded-email";
 
-// Type alias for the admin Supabase client
-type SupabaseAdmin = SupabaseClient;
+// Type for the admin Supabase client
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseAdmin = any;
 
-// Create Supabase client with service role for public form submissions
+// Create admin client for public form submissions (no auth cookies)
 const getSupabaseAdmin = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Missing Supabase environment variables");
-  }
-  
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  return createAdminClient();
 };
 
 // Rate limiting map (in production, use Redis)
@@ -74,7 +63,7 @@ export async function POST(request: NextRequest) {
     // Verify site exists
     const { data: site, error: siteError } = await supabase
       .from("sites")
-      .select("id, domain, agency_id")
+      .select("id, subdomain, agency_id")
       .eq("id", siteId)
       .single();
 
@@ -361,7 +350,8 @@ async function triggerWebhooks(
 
   // Filter webhooks that match this form (or all forms if form_id is null)
   const matchingWebhooks = webhooks.filter(
-    (w) => w.form_id === null || w.form_id === formId
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (w: any) => w.form_id === null || w.form_id === formId
   );
 
   for (const webhook of matchingWebhooks) {

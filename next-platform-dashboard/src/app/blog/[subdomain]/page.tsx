@@ -1,19 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Badge } from "@/components/ui/badge";
 
 import { DEFAULT_LOCALE } from '@/lib/locale-config'
-// Create a Supabase client with service role for public access
+// Create a Supabase admin client for public blog access (no auth cookies)
 function getSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
-  if (!url || !key) {
-    throw new Error("Missing Supabase environment variables");
-  }
-  
-  return createClient(url, key);
+  return createAdminClient();
 }
 
 async function getSiteBySubdomain(subdomain: string) {
@@ -133,7 +126,7 @@ export default async function PublicBlogPage({
                   <span>{author?.full_name || "Unknown Author"}</span>
                   <span>•</span>
                   <span>
-                    {new Date(post.published_at).toLocaleDateString(DEFAULT_LOCALE, {
+                    {new Date(String(post.published_at || post.created_at || new Date())).toLocaleDateString(DEFAULT_LOCALE, {
                       month: "long",
                       day: "numeric",
                       year: "numeric",

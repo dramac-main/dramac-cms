@@ -8,6 +8,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { sendBrandedEmail } from '@/lib/email/send-branded-email'
 import { revalidatePath } from 'next/cache'
 import type {
@@ -24,10 +25,18 @@ const TABLE_PREFIX = 'mod_ecommod01'
 // SUPABASE CLIENT
 // ============================================================================
 
+// Authenticated client for dashboard actions (requires logged-in user)
 async function getModuleClient() {
   const supabase = await createClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return supabase as any
+}
+
+// Admin client for public-facing actions (quote portal — no auth cookies)
+// Used by getQuoteByToken, recordQuoteView, acceptQuote, rejectQuote
+function getPublicModuleClient() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return createAdminClient() as any
 }
 
 // ============================================================================
@@ -321,7 +330,7 @@ export async function sendQuoteReminder(
  */
 export async function getQuoteByToken(token: string): Promise<Quote | null> {
   try {
-    const supabase = await getModuleClient()
+    const supabase = getPublicModuleClient()
     
     const { data, error } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
@@ -348,7 +357,7 @@ export async function getQuoteByToken(token: string): Promise<Quote | null> {
  */
 export async function recordQuoteView(token: string): Promise<void> {
   try {
-    const supabase = await getModuleClient()
+    const supabase = getPublicModuleClient()
     
     const { data: quote } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
@@ -394,7 +403,7 @@ export async function recordQuoteView(token: string): Promise<void> {
  */
 export async function acceptQuote(input: AcceptQuoteInput): Promise<WorkflowResult> {
   try {
-    const supabase = await getModuleClient()
+    const supabase = getPublicModuleClient()
     
     // Get quote by token
     const { data: quote, error: quoteError } = await supabase
@@ -457,8 +466,8 @@ export async function acceptQuote(input: AcceptQuoteInput): Promise<WorkflowResu
     const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/sites/${quote.site_id}/ecommerce`
 
-    // Look up site owner email
-    const ownerSupabase = await getModuleClient()
+    // Look up site owner email (use admin client since this is a public action)
+    const ownerSupabase = getPublicModuleClient()
     const { data: siteData } = await ownerSupabase
       .from('sites')
       .select('agency_id')
@@ -509,7 +518,7 @@ export async function acceptQuote(input: AcceptQuoteInput): Promise<WorkflowResu
  */
 export async function rejectQuote(input: RejectQuoteInput): Promise<WorkflowResult> {
   try {
-    const supabase = await getModuleClient()
+    const supabase = getPublicModuleClient()
     
     // Get quote by token
     const { data: quote, error: quoteError } = await supabase

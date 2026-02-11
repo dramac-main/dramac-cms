@@ -1,21 +1,14 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 import { DEFAULT_LOCALE } from '@/lib/locale-config'
-// Create a Supabase client with service role for public access
+// Create a Supabase admin client for public blog access (no auth cookies)
 function getSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
-  if (!url || !key) {
-    throw new Error("Missing Supabase environment variables");
-  }
-  
-  return createClient(url, key);
+  return createAdminClient();
 }
 
 async function getSiteBySubdomain(subdomain: string) {
@@ -144,7 +137,7 @@ export default async function PublicPostPage({
             <p className="font-medium text-gray-900">{author?.full_name || "Unknown Author"}</p>
             <div className="flex items-center gap-2 text-sm">
               <span>
-                {new Date(post.published_at).toLocaleDateString(DEFAULT_LOCALE, {
+                {new Date(String(post.published_at || post.created_at || new Date())).toLocaleDateString(DEFAULT_LOCALE, {
                   month: "long",
                   day: "numeric",
                   year: "numeric",
@@ -217,7 +210,7 @@ export default async function PublicPostPage({
                   {relatedPost.title}
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">
-                  {new Date(relatedPost.published_at).toLocaleDateString(DEFAULT_LOCALE, {
+                  {new Date(String(relatedPost.published_at || new Date())).toLocaleDateString(DEFAULT_LOCALE, {
                     month: "short",
                     day: "numeric",
                   })}

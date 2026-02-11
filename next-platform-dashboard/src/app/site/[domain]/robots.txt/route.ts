@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getDefaultRobotsTxt } from "@/lib/seo/sitemap-generator";
 
 export const dynamic = "force-dynamic";
@@ -11,11 +11,8 @@ export async function GET(
 ) {
   const { domain } = await params;
 
-  // Initialize Supabase with service role for public routes
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  // Use admin client for public routes (no auth cookies)
+  const supabase = createAdminClient();
 
   // Try to find site by custom domain first, then by subdomain
   let site = null;

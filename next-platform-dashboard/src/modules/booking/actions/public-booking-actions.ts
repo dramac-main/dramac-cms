@@ -407,7 +407,7 @@ export async function createPublicAppointment(
       appointmentId: appointment?.id || '',
       serviceName: service.name || 'Service',
       servicePrice: service.price || 0,
-      serviceDuration: service.duration || 30,
+      serviceDuration: service.duration_minutes || 30,
       staffName,
       customerName: input.customerName,
       customerEmail: input.customerEmail,
