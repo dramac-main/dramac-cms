@@ -75,7 +75,7 @@ export function SignupForm() {
               <FormLabel>Your name</FormLabel>
               <FormControl>
                 <Input
-                  placeholder="John Doe"
+                  placeholder="Your full name"
                   autoComplete="name"
                   disabled={isPending}
                   {...field}

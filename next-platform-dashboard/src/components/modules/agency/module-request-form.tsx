@@ -292,10 +292,10 @@ export function ModuleRequestForm() {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="$1-25">$1-25/month</SelectItem>
-                    <SelectItem value="$25-50">$25-50/month</SelectItem>
-                    <SelectItem value="$50-100">$50-100/month</SelectItem>
-                    <SelectItem value="$100+">$100+/month</SelectItem>
+                    <SelectItem value="K25-650">K25-650/month</SelectItem>
+                    <SelectItem value="K650-1300">K650-1,300/month</SelectItem>
+                    <SelectItem value="K1300-2600">K1,300-2,600/month</SelectItem>
+                    <SelectItem value="K2600+">K2,600+/month</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

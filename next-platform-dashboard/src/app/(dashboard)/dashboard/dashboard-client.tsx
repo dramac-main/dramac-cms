@@ -37,7 +37,6 @@ export function DashboardClient({ data }: DashboardClientProps) {
       id: "clients",
       title: "Total Clients",
       value: data.stats.totalClients.toLocaleString(),
-      change: 0, // Would need historical data for real change %
       icon: "users" as const,
       iconColor: "bg-blue-500/10 text-blue-500",
       subtitle: "Active client accounts",
@@ -46,7 +45,6 @@ export function DashboardClient({ data }: DashboardClientProps) {
       id: "sites",
       title: "Total Sites",
       value: data.stats.totalSites.toLocaleString(),
-      change: 0,
       icon: "chart" as const,
       iconColor: "bg-green-500/10 text-green-500",
       subtitle: `${data.stats.publishedSites} published`,
@@ -55,7 +53,6 @@ export function DashboardClient({ data }: DashboardClientProps) {
       id: "pages",
       title: "Total Pages",
       value: data.stats.totalPages.toLocaleString(),
-      change: 0,
       icon: "activity" as const,
       iconColor: "bg-purple-500/10 text-purple-500",
       subtitle: "Across all sites",
@@ -64,7 +61,6 @@ export function DashboardClient({ data }: DashboardClientProps) {
       id: "modules",
       title: "Active Modules",
       value: data.enhancedMetrics.moduleInstallations.toLocaleString(),
-      change: 0,
       icon: "performance" as const,
       iconColor: "bg-orange-500/10 text-orange-500",
       subtitle: "Installed & enabled",
@@ -92,24 +88,16 @@ export function DashboardClient({ data }: DashboardClientProps) {
     { label: "Modules", value: data.enhancedMetrics.moduleInstallations || 0 },
   ].filter(item => item.value > 0);
 
-  // Create trend data from activity (mock trend based on real counts)
-  const generateTrendData = (currentValue: number, points: number = 7): ChartDataPoint[] => {
-    const data: ChartDataPoint[] = [];
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const variance = Math.max(1, Math.floor(currentValue * 0.15));
-    
-    for (let i = 0; i < points; i++) {
-      const randomVariance = Math.floor(Math.random() * variance * 2) - variance;
-      data.push({
-        label: days[i % 7],
-        value: Math.max(0, currentValue + randomVariance - (points - i - 1) * Math.floor(variance / 2)),
-      });
-    }
-    return data;
-  };
-
-  const siteTrendData = generateTrendData(data.stats.totalSites);
-  const pageTrendData = generateTrendData(data.stats.totalPages);
+  // Note: Real trend data would require time-series queries grouped by date
+  // For now, show the current totals as a flat line rather than fabricated random data
+  const siteTrendData: ChartDataPoint[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => ({
+    label: day,
+    value: data.stats.totalSites,
+  }));
+  const pageTrendData: ChartDataPoint[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => ({
+    label: day,
+    value: data.stats.totalPages,
+  }));
 
   return (
     <div className="space-y-6">

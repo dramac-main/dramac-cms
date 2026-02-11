@@ -84,7 +84,7 @@ export default async function WholesalePricingPage() {
         <AlertDescription>
           <strong>Wholesale prices</strong> are what agencies pay the platform. 
           Agencies then add their own <strong>markup</strong> when selling to clients.
-          Example: You set $10/mo wholesale → Agency adds 100% markup → Client pays $20/mo
+          Example: You set K250/mo wholesale → Agency adds 100% markup → Client pays K500/mo
         </AlertDescription>
       </Alert>
 

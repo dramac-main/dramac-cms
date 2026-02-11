@@ -66,10 +66,16 @@ export async function getNotifications(options: {
 export async function markNotificationRead(notificationId: string) {
   const supabase = await createClient();
 
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Not authenticated" };
+  }
+
   const { error } = await supabase
     .from("notifications")
     .update({ read: true })
-    .eq("id", notificationId);
+    .eq("id", notificationId)
+    .eq("user_id", user.id);
 
   if (error) {
     console.error("Error marking notification read:", error);
@@ -109,10 +115,16 @@ export async function markAllNotificationsRead() {
 export async function deleteNotification(notificationId: string) {
   const supabase = await createClient();
 
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Not authenticated" };
+  }
+
   const { error } = await supabase
     .from("notifications")
     .delete()
-    .eq("id", notificationId);
+    .eq("id", notificationId)
+    .eq("user_id", user.id);
 
   if (error) {
     console.error("Error deleting notification:", error);

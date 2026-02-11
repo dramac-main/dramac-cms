@@ -17,6 +17,7 @@ import {
   Target,
   Users,
   Sparkles,
+  Rocket,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -378,7 +379,7 @@ export default function OnboardingPage() {
                       <FormItem>
                         <FormLabel>Full Name *</FormLabel>
                         <FormControl>
-                          <Input placeholder="John Doe" {...field} />
+                          <Input placeholder="Your full name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -574,7 +575,7 @@ export default function OnboardingPage() {
                       <FormItem>
                         <FormLabel>Client/Business Name *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Acme Corporation" {...field} />
+                          <Input placeholder="Business name" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -631,12 +632,12 @@ export default function OnboardingPage() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto text-left">
                 <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-2xl font-bold text-primary">🚀</p>
+                  <Rocket className="h-6 w-6 text-primary" />
                   <p className="text-sm font-medium">Visual Editor</p>
                   <p className="text-xs text-muted-foreground">Drag & drop builder</p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-2xl font-bold text-primary">✨</p>
+                  <Sparkles className="h-6 w-6 text-primary" />
                   <p className="text-sm font-medium">AI Builder</p>
                   <p className="text-xs text-muted-foreground">Generate sites instantly</p>
                 </div>

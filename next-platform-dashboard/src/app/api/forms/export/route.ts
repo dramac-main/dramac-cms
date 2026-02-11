@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 import { exportSubmissionsCSV, SubmissionFilters } from "@/lib/forms/submission-service";
 
 type SubmissionStatus = "new" | "read" | "archived" | "spam";
 
 export async function GET(request: NextRequest) {
   try {
+    // Auth check — only authenticated users can export
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const siteId = searchParams.get("siteId");
     const status = searchParams.get("status") || undefined;
