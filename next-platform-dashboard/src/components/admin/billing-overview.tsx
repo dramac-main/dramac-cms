@@ -31,7 +31,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { 
-  DollarSign, 
+  Coins, 
   TrendingUp, 
   Users, 
   Activity,
@@ -148,7 +148,7 @@ export function AdminBillingOverview() {
           title="Monthly Recurring Revenue"
           value={`${DEFAULT_CURRENCY_SYMBOL}${(overview.mrr / 100).toLocaleString()}`}
           change={overview.mrrGrowth}
-          icon={<DollarSign className="w-5 h-5" />}
+          icon={<Coins className="w-5 h-5" />}
         />
         <MetricCard
           title="Annual Recurring Revenue"
@@ -175,7 +175,7 @@ export function AdminBillingOverview() {
             <CardTitle className="text-sm font-medium">Average Revenue Per User</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${(overview.arpu / 100).toFixed(2)}</p>
+            <p className="text-2xl font-bold">{DEFAULT_CURRENCY_SYMBOL}{(overview.arpu / 100).toFixed(2)}</p>
             <p className="text-xs text-muted-foreground">per month</p>
           </CardContent>
         </Card>
@@ -184,7 +184,7 @@ export function AdminBillingOverview() {
             <CardTitle className="text-sm font-medium">Lifetime Value</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">${(overview.ltv / 100).toLocaleString()}</p>
+            <p className="text-2xl font-bold">{DEFAULT_CURRENCY_SYMBOL}{(overview.ltv / 100).toLocaleString()}</p>
             <p className="text-xs text-muted-foreground">average per customer</p>
           </CardContent>
         </Card>
@@ -234,7 +234,7 @@ export function AdminBillingOverview() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        ${(agency.mrr / 100).toFixed(2)}
+                        {DEFAULT_CURRENCY_SYMBOL}{(agency.mrr / 100).toFixed(2)}
                       </TableCell>
                       <TableCell className="text-right">
                         {agency.usage.toLocaleString()}

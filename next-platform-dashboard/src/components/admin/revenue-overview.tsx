@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import type { LucideIcon } from "lucide-react";
 import {
-  DollarSign,
+  Coins,
   TrendingUp,
   TrendingDown,
   ArrowUpRight,
@@ -305,7 +305,7 @@ export function RevenueOverviewComponent({
           title="Monthly Recurring Revenue"
           value={formatRevenue(metrics.mrr)}
           growth={metrics.mrrGrowth}
-          icon={DollarSign}
+          icon={Coins}
         />
         <RevenueMetricCard
           title="Annual Run Rate"

@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Users, Building2, Globe, DollarSign, Package, Activity } from "lucide-react";
+import { Users, Building2, Globe, Coins, Package, Activity } from "lucide-react";
 import { StatsCard } from "@/components/admin/stats-card";
 import { ActivityFeed } from "@/components/admin/activity-feed";
 import { QuickActions } from "@/components/admin/quick-actions";
@@ -81,7 +81,7 @@ export default async function AdminDashboardPage() {
           value={formatCurrency(stats.revenue.mrr)}
           description={`${formatCurrency(stats.revenue.arr)} ARR`}
           trend={{ value: stats.revenue.growthPercent, label: "from last month" }}
-          icon={<DollarSign className="h-4 w-4" />}
+          icon={<Coins className="h-4 w-4" />}
         />
       </div>
 

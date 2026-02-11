@@ -100,8 +100,8 @@ async function getSystemHealth(): Promise<{
         : "All required variables set",
   });
 
-  // Calculate uptime (mock - would come from actual monitoring)
-  const uptime = "99.9%";
+  // Calculate uptime (requires external uptime monitoring service)
+  const uptime = "—"; // Requires external uptime monitoring service
   const version = process.env.npm_package_version || "1.0.0";
 
   return { checks, uptime, version };

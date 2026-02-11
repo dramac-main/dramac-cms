@@ -24,7 +24,7 @@ import {
   Clock,
   AlertTriangle,
   ArrowRight,
-  DollarSign,
+  Coins,
   Receipt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,7 +32,7 @@ import { getBillingActivity, getInvoiceMetrics } from "@/lib/actions/admin-analy
 import type { BillingActivityItem, InvoiceMetrics, AdminTimeRange } from "@/types/admin-analytics";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import { DEFAULT_LOCALE } from '@/lib/locale-config'
+import { DEFAULT_LOCALE, DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 // ============================================================================
 // Types
 // ============================================================================
@@ -81,7 +81,7 @@ const STATUS_ICONS: Record<string, LucideIcon> = {
 function formatCurrency(cents: number): string {
   const isNegative = cents < 0;
   const absValue = Math.abs(cents);
-  return `${isNegative ? "-" : ""}$${(absValue / 100).toLocaleString(undefined, {
+  return `${isNegative ? "-" : ""}${DEFAULT_CURRENCY_SYMBOL}${(absValue / 100).toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Check, X, Loader2 } from "lucide-react";
+import React, { useState } from "react";
+import { Check, X, Loader2, icons } from "lucide-react";
+import { resolveIconName } from "@/lib/utils/icon-map";
 import {
   Table,
   TableBody,
@@ -122,7 +123,7 @@ export function WholesalePricingTable({ modules }: WholesalePricingTableProps) {
             <TableHead>Wholesale Monthly</TableHead>
             <TableHead>Wholesale Yearly</TableHead>
             <TableHead>Suggested Retail</TableHead>
-            <TableHead>LemonSqueezy</TableHead>
+            <TableHead>Paddle</TableHead>
             <TableHead className="w-[100px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -131,7 +132,7 @@ export function WholesalePricingTable({ modules }: WholesalePricingTableProps) {
             <TableRow key={module.id}>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">{module.icon || "Package"}</span>
+                  <span className="text-xl">{(() => { const iconName = resolveIconName(module.icon || "Package"); const Ic = (icons as Record<string, React.ComponentType<{className?: string}>>)[iconName]; return Ic ? <Ic className="h-5 w-5" /> : null; })()}</span>
                   <div>
                     <p className="font-medium">{module.name}</p>
                     <p className="text-xs text-muted-foreground">{module.category}</p>
@@ -212,7 +213,7 @@ export function WholesalePricingTable({ modules }: WholesalePricingTableProps) {
               </TableCell>
               
               <TableCell>
-                {module.lemon_product_id ? (
+                {(module as any).paddle_product_id ? (
                   <Badge variant="outline" className="text-green-600 border-green-200">
                     Connected
                   </Badge>

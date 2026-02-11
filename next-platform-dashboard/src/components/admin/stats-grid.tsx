@@ -1,6 +1,6 @@
 import { StatsCard } from "./stats-card";
 import type { PlatformStats } from "@/lib/admin/stats-service";
-import { Users, Building2, Globe, DollarSign, Package, Activity } from "lucide-react";
+import { Users, Building2, Globe, Coins, Package, Activity } from "lucide-react";
 
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 interface StatsGridProps {
@@ -45,7 +45,7 @@ export function StatsGrid({ stats }: StatsGridProps) {
           value={formatCurrency(stats.revenue.mrr)}
           description={`${formatCurrency(stats.revenue.arr)} ARR`}
           trend={{ value: stats.revenue.growthPercent, label: "from last month" }}
-          icon={<DollarSign className="h-4 w-4" />}
+          icon={<Coins className="h-4 w-4" />}
         />
       </div>
 

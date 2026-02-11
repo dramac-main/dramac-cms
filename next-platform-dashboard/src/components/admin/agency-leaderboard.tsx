@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { LucideIcon } from "lucide-react";
 import {
-  DollarSign,
+  Coins,
   Globe,
   Activity,
   AlertTriangle,
@@ -57,7 +57,7 @@ const CATEGORY_CONFIG: Record<
 > = {
   revenue: {
     label: "Top Revenue",
-    icon: DollarSign,
+    icon: Coins,
     description: "Highest MRR agencies",
   },
   sites: {

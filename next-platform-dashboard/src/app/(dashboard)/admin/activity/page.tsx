@@ -187,8 +187,8 @@ export default async function AdminActivityPage() {
             <div>
               <h3 className="font-medium">Activity Logging</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                This page displays a mock activity log. To enable full activity
-                logging, create an <code>activity_logs</code> table in your
+                This page shows recent platform activity derived from your database. For more detailed logging,
+                create an <code>activity_logs</code> table in your
                 database and update the server actions to log user activities.
               </p>
             </div>

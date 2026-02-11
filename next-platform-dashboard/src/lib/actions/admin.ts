@@ -83,8 +83,8 @@ export async function getPlatformStats(): Promise<PlatformStats> {
     revenueGrowth: 0, // Would come from payment provider
     conversionRate: totalAgencies > 0 ? Math.round((activeSites / totalAgencies) * 100 * 10) / 10 : 0,
     conversionChange: 0,
-    activeSessions: Math.floor(Math.random() * 50) + 10, // Would come from analytics
-    apiRequests: Math.floor(Math.random() * 100000) + 50000, // Would come from API logs
+    activeSessions: 0, // Requires analytics integration
+    apiRequests: 0, // Requires API logging integration
   };
 }
 

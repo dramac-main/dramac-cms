@@ -120,7 +120,7 @@ export default async function WholesalePricingPage() {
           </CardHeader>
           <CardContent>
             <span className="text-2xl font-bold">
-              ${avgWholesale.toFixed(2)}/mo
+              K{avgWholesale.toFixed(2)}/mo
             </span>
           </CardContent>
         </Card>
