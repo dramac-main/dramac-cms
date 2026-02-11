@@ -5,8 +5,7 @@
  * and renders the MediaLibraryWrapper client component.
  */
 
-import { getMediaLibrary } from '@/modules/social-media/lib/media-upload-service'
-import { getMediaFolders } from '@/modules/social-media/actions/media-actions'
+import { getMediaLibrary, getMediaFolders } from '@/modules/social-media/actions/media-actions'
 import { MediaLibraryWrapper } from '@/modules/social-media/components/MediaLibraryWrapper'
 import { createClient } from '@/lib/supabase/server'
 

@@ -179,6 +179,10 @@ export {
 // ============================================================================
 
 export {
+  uploadSocialMedia,
+  uploadMultipleSocialMedia,
+  deleteSocialMedia,
+  getMediaLibrary,
   createMediaFolder,
   getMediaFolders,
   renameMediaFolder,

@@ -11,8 +11,9 @@ import { useState, useCallback, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { MediaLibrary } from './MediaLibrary'
-import { uploadSocialMedia, getMediaLibrary } from '../lib/media-upload-service'
 import {
+  uploadSocialMedia,
+  getMediaLibrary,
   createMediaFolder,
   renameMediaFolder,
   deleteMediaFolder,

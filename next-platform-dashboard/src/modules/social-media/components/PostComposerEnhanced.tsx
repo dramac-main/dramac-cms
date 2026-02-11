@@ -190,7 +190,7 @@ export function PostComposerEnhanced({
       })
 
       try {
-        const { uploadSocialMedia } = await import('../lib/media-upload-service')
+        const { uploadSocialMedia } = await import('../actions/media-actions')
         const result = await uploadSocialMedia({
           siteId: selectedAccountsData[0]?.siteId || '',
           tenantId: selectedAccountsData[0]?.tenantId || '',
