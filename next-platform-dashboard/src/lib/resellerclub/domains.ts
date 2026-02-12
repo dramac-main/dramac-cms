@@ -89,11 +89,17 @@ export class DomainService {
     // Use the dedicated domaincheck.httpapi.com endpoint
     const domainCheckUrl = getDomainCheckUrl();
     
+    console.log('[DomainService] Availability check URL:', domainCheckUrl);
+    console.log('[DomainService] Params:', JSON.stringify(params));
+    
     const response = await this.client.get<Record<string, { status: string; classkey?: string }>>(
       'domains/available.json',
       params,
       domainCheckUrl
     );
+    
+    console.log('[DomainService] Raw API response keys:', Object.keys(response));
+    console.log('[DomainService] Raw API response:', JSON.stringify(response).slice(0, 500));
     
     // Map results
     // Response keys from ResellerClub are in format: "keyword.com", "keyword.net"

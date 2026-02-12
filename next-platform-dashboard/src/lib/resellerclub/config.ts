@@ -1,17 +1,22 @@
 // src/lib/resellerclub/config.ts
 // ResellerClub API Configuration
 
+const isSandbox = process.env.RESELLERCLUB_SANDBOX === 'true';
+
 export const RESELLERCLUB_CONFIG = {
   // API Configuration
   // Production: https://httpapi.com/api (general), https://domaincheck.httpapi.com/api (availability)
   // Sandbox:    https://test.httpapi.com/api (general), https://test.domaincheck.httpapi.com/api (availability)
-  apiUrl: process.env.RESELLERCLUB_API_URL || 'https://httpapi.com/api',
+  // ⚠️ The sandbox flag auto-selects the correct URL. Override with env vars if needed.
+  apiUrl: process.env.RESELLERCLUB_API_URL
+    || (isSandbox ? 'https://test.httpapi.com/api' : 'https://httpapi.com/api'),
   // The domain availability check endpoint uses a SEPARATE faster hostname
   // See: https://manage.resellerclub.com/kb/answer/764
-  domainCheckUrl: process.env.RESELLERCLUB_DOMAIN_CHECK_URL || 'https://domaincheck.httpapi.com/api',
+  domainCheckUrl: process.env.RESELLERCLUB_DOMAIN_CHECK_URL
+    || (isSandbox ? 'https://test.domaincheck.httpapi.com/api' : 'https://domaincheck.httpapi.com/api'),
   resellerId: process.env.RESELLERCLUB_RESELLER_ID || '',
   apiKey: process.env.RESELLERCLUB_API_KEY || '',
-  sandbox: process.env.RESELLERCLUB_SANDBOX === 'true',
+  sandbox: isSandbox,
 
   // ⚠️ SAFETY: Must be explicitly set to 'true' to allow operations that spend money
   // (domain registration, renewal, transfer, privacy purchase, email orders).

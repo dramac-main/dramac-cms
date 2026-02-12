@@ -156,10 +156,15 @@ export async function searchDomains(
           const rcPrice = apiPrices[tld];
           const basePrice = rcPrice?.register?.[1] || 12.99;
           
+          // If the API returned 'unknown' status (no matching key in response),
+          // mark as unverified so the UI shows a warning instead of "Already registered"
+          const isUnknown = item.status === 'unknown';
+          
           return {
             domain: item.domain,
             tld,
             available: item.status === 'available',
+            ...(isUnknown ? { unverified: true } : {}),
             premium: item.status === 'premium',
             prices: {
               register: rcPrice?.register || { 1: basePrice, 2: basePrice * 1.9, 3: basePrice * 2.8 },
