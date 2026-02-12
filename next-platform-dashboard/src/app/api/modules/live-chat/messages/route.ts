@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { mapRecord, mapRecords } from '@/modules/live-chat/lib/map-db-record'
+import { notifyNewChatMessage } from '@/modules/live-chat/lib/chat-notifications'
 import type { ChatMessage } from '@/modules/live-chat/types'
 
 export const dynamic = 'force-dynamic'
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Validate visitor owns this conversation
     const { data: convData } = await (supabase as any)
       .from('mod_chat_conversations')
-      .select('visitor_id, site_id')
+      .select('visitor_id, site_id, assigned_agent_id')
       .eq('id', conversationId)
       .single()
 
@@ -125,6 +126,17 @@ export async function POST(request: NextRequest) {
         .update({ message_count: countData })
         .eq('id', conversationId)
     }
+
+    // Send in-app notification to assigned agent (or site owner)
+    // This runs async — don't block the response
+    const convForNotify = convData as { visitor_id: string; site_id: string; assigned_agent_id?: string }
+    notifyNewChatMessage({
+      siteId: convForNotify.site_id,
+      conversationId,
+      visitorName: visitorData?.name || 'Visitor',
+      messageText: content,
+      agentUserId: convForNotify.assigned_agent_id || undefined,
+    }).catch((err) => console.error('[LiveChat] Notification error:', err))
 
     return NextResponse.json(
       { message },

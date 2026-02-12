@@ -40,11 +40,14 @@ export const RESELLERCLUB_CONFIG = {
 } as const;
 
 export const TLD_CATEGORIES = {
-  popular: ['.com', '.net', '.org', '.io', '.co', '.app'],
-  country: ['.uk', '.us', '.de', '.fr', '.au', '.ca', '.in'],
-  business: ['.biz', '.company', '.agency', '.studio', '.consulting'],
-  tech: ['.dev', '.tech', '.digital', '.cloud', '.online'],
-  creative: ['.design', '.art', '.media', '.photography'],
+  popular: ['.com', '.net', '.org', '.io', '.co', '.app', '.dev'],
+  business: ['.biz', '.company', '.agency', '.studio', '.consulting', '.shop', '.store', '.services'],
+  tech: ['.tech', '.digital', '.cloud', '.online', '.website', '.site', '.blog', '.email'],
+  creative: ['.design', '.art', '.media', '.photography', '.gallery', '.space'],
+  country: ['.uk', '.us', '.de', '.fr', '.au', '.ca', '.in', '.za'],
+  africa: ['.africa', '.co.za'],
+  lifestyle: ['.life', '.live', '.world', '.club', '.fun', '.xyz', '.top'],
+  professional: ['.pro', '.expert', '.solutions', '.academy', '.training', '.law'],
 } as const;
 
 export const SUPPORTED_TLDS = Object.values(TLD_CATEGORIES).flat();

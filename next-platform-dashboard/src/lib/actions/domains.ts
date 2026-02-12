@@ -8,7 +8,7 @@ import { isClientAvailable } from "@/lib/resellerclub/client";
 import { domainService } from "@/lib/resellerclub/domains";
 import { customerService } from "@/lib/resellerclub/customers";
 import { contactService } from "@/lib/resellerclub/contacts";
-import { arePurchasesAllowed } from "@/lib/resellerclub/config";
+import { arePurchasesAllowed, TLD_CATEGORIES } from "@/lib/resellerclub/config";
 import type { 
   DomainFilters, 
   DomainWithDetails, 
@@ -114,7 +114,9 @@ export async function searchDomains(
       return { success: false, error: 'Keyword must be at least 2 characters' };
     }
     
-    const popularTlds = tlds || ['.com', '.net', '.org', '.io', '.co', '.app', '.dev'];
+    // Use provided TLDs or fall back to popular TLDs from config
+    const allConfigTlds = Object.values(TLD_CATEGORIES).flat();
+    const popularTlds = tlds || allConfigTlds;
 
     // Get agency markup settings for retail pricing
     const { data: pricing } = await getTable(supabase, 'agency_domain_pricing')
@@ -201,8 +203,29 @@ export async function searchDomains(
     // Fallback: Use DNS/RDAP to check domain availability
     // This gives much better results than blindly marking everything as "unavailable"
     const fallbackPrices: Record<string, number> = {
+      // Popular
       '.com': 12.99, '.net': 14.99, '.org': 13.99, '.io': 39.99,
       '.co': 29.99, '.app': 19.99, '.dev': 15.99,
+      // Business
+      '.biz': 14.99, '.company': 12.99, '.shop': 29.99, '.store': 29.99,
+      '.agency': 24.99, '.consulting': 34.99, '.solutions': 24.99, '.enterprises': 34.99,
+      // Tech
+      '.tech': 34.99, '.digital': 29.99, '.cloud': 19.99, '.software': 29.99,
+      '.systems': 24.99, '.network': 24.99, '.website': 19.99, '.online': 29.99,
+      // Creative
+      '.design': 34.99, '.studio': 29.99, '.media': 34.99, '.art': 14.99,
+      '.photography': 24.99, '.graphics': 24.99,
+      // Country
+      '.co.za': 9.99, '.uk': 9.99, '.us': 12.99, '.de': 14.99,
+      '.fr': 14.99, '.au': 19.99, '.ca': 14.99, '.eu': 12.99,
+      // Africa
+      '.africa': 19.99, '.za': 29.99,
+      // Lifestyle
+      '.life': 29.99, '.live': 24.99, '.world': 29.99, '.space': 9.99,
+      '.site': 29.99, '.blog': 29.99, '.email': 24.99,
+      // Professional
+      '.pro': 19.99, '.expert': 49.99, '.academy': 34.99,
+      '.training': 34.99, '.services': 34.99, '.xyz': 9.99,
     };
     
     // Import and run the DNS/RDAP fallback checker

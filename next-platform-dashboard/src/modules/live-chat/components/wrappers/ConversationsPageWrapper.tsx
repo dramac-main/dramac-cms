@@ -4,7 +4,7 @@
  * ConversationsPageWrapper — Conversation list with filters, pagination, realtime
  */
 
-import { useState, useCallback, useTransition } from 'react'
+import { useState, useCallback, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Loader2, MessagesSquare, Search } from 'lucide-react'
+import { toast } from 'sonner'
 import { ConversationStatusBadge } from '../shared/ConversationStatusBadge'
 import { ChannelBadge } from '../shared/ChannelBadge'
 import { PriorityBadge } from '../shared/PriorityBadge'
@@ -74,11 +75,20 @@ export function ConversationsPageWrapper({
   const [totalCount, setTotalCount] = useState(total)
   const [page, setPage] = useState(1)
   const pageSize = 20
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [channelFilter, setChannelFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Set up notification sound
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbsGczJ0qFrNHgykg3MVN3msnq1mxEOUVniLjJ4ddySDlBZYa2x+DVfEQ+QmeJu8jf0oJINTxxl7/K4tGIRTY4dom2weXVi0Q3OXiKt8Pp0YlEN0B3lL/H5deHQzs+d5O+xeXXjEI1PXmWwsXm14lCNj96m8LH5taIQjU+e5fCxOfYiUI1PnyXwsfo14lCNT59l8LI6NeJQjU+e5fCxOfYiUI1PnyXwsfo14lCNT59l8LI6NeJQjU=')
+      audioRef.current.volume = 0.4
+    }
+  }, [])
 
   // Realtime updates
   useConversationsRealtime(siteId, {
@@ -103,6 +113,16 @@ export function ConversationsPageWrapper({
       }
       setConversations((prev) => [item, ...prev])
       setTotalCount((c) => c + 1)
+      // Toast + sound notification
+      audioRef.current?.play().catch(() => {})
+      toast.info('New chat conversation', {
+        description: `${conv.visitor?.name || 'A visitor'} started a new chat`,
+        duration: 8000,
+        action: {
+          label: 'View',
+          onClick: () => router.push(`/dashboard/sites/${siteId}/live-chat/conversations/${conv.id}`),
+        },
+      })
     },
     onConversationUpdate: (conv) => {
       setConversations((prev) =>

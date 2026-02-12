@@ -2,17 +2,30 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Loader2, Globe, Check, X, Star, ShoppingCart, RefreshCw, AlertCircle } from "lucide-react";
+import { Search, Loader2, Globe, Check, X, Star, ShoppingCart, RefreshCw, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { searchDomains } from "@/lib/actions/domains";
+import { TLD_CATEGORIES } from "@/lib/resellerclub/config";
 import type { DomainSearchResult } from "@/types/domain";
 
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
-const POPULAR_TLDS = ['.com', '.net', '.org', '.io', '.co', '.app', '.dev'];
+
+const POPULAR_TLDS = [...TLD_CATEGORIES.popular];
+const ALL_CATEGORY_ENTRIES = Object.entries(TLD_CATEGORIES).filter(([key]) => key !== 'popular') as [string, readonly string[]][];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  business: '💼 Business',
+  tech: '💻 Tech',
+  creative: '🎨 Creative',
+  country: '🌍 Country',
+  africa: '🌍 Africa',
+  lifestyle: '✨ Lifestyle',
+  professional: '👔 Professional',
+};
 
 interface DomainSearchProps {
   onSelect?: (domain: DomainSearchResult) => void;
@@ -27,6 +40,7 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
   const [error, setError] = useState<string | null>(null);
   const [selectedTlds, setSelectedTlds] = useState<string[]>(POPULAR_TLDS);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [showMoreTlds, setShowMoreTlds] = useState(false);
   const router = useRouter();
   
   const performSearch = useCallback(async (searchKeyword: string) => {
@@ -131,27 +145,78 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
       </div>
       
       {/* TLD Filter */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground mr-2">Extensions:</span>
-        {POPULAR_TLDS.map(tld => (
-          <Badge
-            key={tld}
-            variant={selectedTlds.includes(tld) ? "default" : "outline"}
-            className="cursor-pointer transition-colors"
-            onClick={() => toggleTld(tld)}
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-muted-foreground mr-2">Extensions:</span>
+          {POPULAR_TLDS.map(tld => (
+            <Badge
+              key={tld}
+              variant={selectedTlds.includes(tld) ? "default" : "outline"}
+              className="cursor-pointer transition-colors"
+              onClick={() => toggleTld(tld)}
+            >
+              {tld}
+            </Badge>
+          ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowMoreTlds(!showMoreTlds)}
+            className="ml-2"
           >
-            {tld}
-          </Badge>
-        ))}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setSelectedTlds(POPULAR_TLDS)}
-          className="ml-2"
-        >
-          <RefreshCw className="h-3 w-3 mr-1" />
-          Reset
-        </Button>
+            {showMoreTlds ? <ChevronUp className="h-3 w-3 mr-1" /> : <ChevronDown className="h-3 w-3 mr-1" />}
+            {showMoreTlds ? 'Less' : `More TLDs (${ALL_CATEGORY_ENTRIES.reduce((acc, [, tlds]) => acc + tlds.length, 0)}+)`}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedTlds(POPULAR_TLDS)}
+          >
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Reset
+          </Button>
+        </div>
+        
+        {showMoreTlds && (
+          <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+            {ALL_CATEGORY_ENTRIES.map(([category, tlds]) => (
+              <div key={category} className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-muted-foreground">
+                    {CATEGORY_LABELS[category] || category}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 text-xs px-1.5"
+                    onClick={() => {
+                      const allSelected = tlds.every(t => selectedTlds.includes(t));
+                      if (allSelected) {
+                        setSelectedTlds(prev => prev.filter(t => !tlds.includes(t)));
+                      } else {
+                        setSelectedTlds(prev => [...new Set([...prev, ...tlds])]);
+                      }
+                    }}
+                  >
+                    {tlds.every(t => selectedTlds.includes(t)) ? 'Deselect all' : 'Select all'}
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {tlds.map(tld => (
+                    <Badge
+                      key={tld}
+                      variant={selectedTlds.includes(tld) ? "default" : "outline"}
+                      className="cursor-pointer transition-colors text-xs"
+                      onClick={() => toggleTld(tld)}
+                    >
+                      {tld}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       
       {/* Error */}

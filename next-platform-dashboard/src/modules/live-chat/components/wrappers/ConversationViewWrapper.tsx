@@ -122,9 +122,18 @@ export function ConversationViewWrapper({
   const [hasMore, setHasMore] = useState(initialMessages.length < totalMessages)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Typing state managed locally
   const [typingUsers, setTypingUsers] = useState<string[]>([])
+
+  // Set up notification sound
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbsGczJ0qFrNHgykg3MVN3msnq1mxEOUVniLjJ4ddySDlBZYa2x+DVfEQ+QmeJu8jf0oJINTxxl7/K4tGIRTY4dom2weXVi0Q3OXiKt8Pp0YlEN0B3lL/H5deHQzs+d5O+xeXXjEI1PXmWwsXm14lCNj96m8LH5taIQjU+e5fCxOfYiUI1PnyXwsfo14lCNT59l8LI6NeJQjU+e5fCxOfYiUI1PnyXwsfo14lCNT59l8LI6NeJQjU=')
+      audioRef.current.volume = 0.4
+    }
+  }, [])
 
   // Realtime: new messages + typing
   const { sendTypingStart, sendTypingStop } = useChatRealtime(
@@ -135,6 +144,14 @@ export function ConversationViewWrapper({
           if (prev.some((m) => m.id === newMsg.id)) return prev
           return [...prev, newMsg]
         })
+        // Toast + sound notification for visitor messages
+        if (newMsg.senderType === 'visitor') {
+          audioRef.current?.play().catch(() => {})
+          toast.info(`${newMsg.senderName || 'Visitor'}`, {
+            description: (newMsg.content || '').substring(0, 80) + ((newMsg.content || '').length > 80 ? '...' : ''),
+            duration: 5000,
+          })
+        }
       },
       onTypingStart: (senderId: string, senderName: string) => {
         setTypingUsers((prev) =>

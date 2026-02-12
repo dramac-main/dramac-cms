@@ -93,8 +93,10 @@ async function checkRdap(domain: string): Promise<boolean | null> {
   const tld = domain.split('.').pop()?.toLowerCase();
   if (!tld) return null;
   
-  // Known RDAP endpoints for popular TLDs
+  // Known RDAP endpoints for TLDs
+  // Sources: IANA RDAP bootstrap (https://data.iana.org/rdap/dns.json)
   const rdapServers: Record<string, string> = {
+    // Popular gTLDs
     com: 'https://rdap.verisign.com/com/v1',
     net: 'https://rdap.verisign.com/net/v1',
     org: 'https://rdap.org/org/v1',
@@ -102,6 +104,44 @@ async function checkRdap(domain: string): Promise<boolean | null> {
     co: 'https://rdap.nic.co/v1',
     app: 'https://rdap.nic.google/v1',
     dev: 'https://rdap.nic.google/v1',
+    // Business
+    biz: 'https://rdap.nic.biz/v1',
+    shop: 'https://rdap.nic.google/v1',
+    store: 'https://rdap.nic.store/v1',
+    // Tech
+    tech: 'https://rdap.centralnic.com/tech/v1',
+    cloud: 'https://rdap.nic.google/v1',
+    online: 'https://rdap.centralnic.com/online/v1',
+    website: 'https://rdap.centralnic.com/website/v1',
+    site: 'https://rdap.centralnic.com/site/v1',
+    blog: 'https://rdap.nic.blog/v1',
+    email: 'https://rdap.centralnic.com/email/v1',
+    digital: 'https://rdap.donuts.co/rdap/v1',
+    // Creative
+    design: 'https://rdap.donuts.co/rdap/v1',
+    art: 'https://rdap.centralnic.com/art/v1',
+    media: 'https://rdap.donuts.co/rdap/v1',
+    space: 'https://rdap.centralnic.com/space/v1',
+    // Country
+    uk: 'https://rdap.nominet.uk/uk/v1',
+    us: 'https://rdap.nic.us/v1',
+    de: 'https://rdap.denic.de/v1',
+    fr: 'https://rdap.nic.fr/v1',
+    au: 'https://rdap.auda.org.au/v1',
+    // Africa
+    africa: 'https://rdap.nic.africa/v1',
+    za: 'https://rdap.nic.za/v1',
+    // Lifestyle
+    xyz: 'https://rdap.centralnic.com/xyz/v1',
+    club: 'https://rdap.nic.club/v1',
+    top: 'https://rdap.nic.top/v1',
+    live: 'https://rdap.donuts.co/rdap/v1',
+    life: 'https://rdap.donuts.co/rdap/v1',
+    world: 'https://rdap.donuts.co/rdap/v1',
+    // Professional
+    pro: 'https://rdap.nic.pro/v1',
+    solutions: 'https://rdap.donuts.co/rdap/v1',
+    academy: 'https://rdap.donuts.co/rdap/v1',
   };
   
   const server = rdapServers[tld];

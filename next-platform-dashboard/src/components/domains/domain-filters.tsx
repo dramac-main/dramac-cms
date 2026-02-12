@@ -17,7 +17,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { TLD_CATEGORIES } from "@/lib/resellerclub/config";
 import type { DomainFilters, DomainStatus } from "@/types/domain";
+
+// Derive default TLD options from config (single source of truth)
+const DEFAULT_TLD_OPTIONS = Object.values(TLD_CATEGORIES).flat();
 
 interface DomainFiltersProps {
   filters: DomainFilters;
@@ -46,7 +50,7 @@ const EXPIRY_OPTIONS = [
 export function DomainFiltersComponent({
   filters,
   onFiltersChange,
-  tldOptions = ['.com', '.net', '.org', '.io', '.co', '.app', '.dev'],
+  tldOptions = DEFAULT_TLD_OPTIONS,
   className,
 }: DomainFiltersProps) {
   const activeFilterCount = [

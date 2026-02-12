@@ -139,6 +139,25 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         const savedConversation = localStorage.getItem(`dramac_chat_conv_${siteId}`)
         const savedVisitor = localStorage.getItem(`dramac_chat_visitor_${siteId}`)
         if (savedConversation && savedVisitor) {
+          // Check if the saved conversation is still active before restoring
+          try {
+            const statusRes = await fetch(
+              `${API_BASE}/api/modules/live-chat/conversations?conversationId=${savedConversation}&visitorId=${savedVisitor}`
+            )
+            if (statusRes.ok) {
+              const statusData = await statusRes.json()
+              const convStatus = statusData.conversation?.status
+              if (convStatus === 'resolved' || convStatus === 'closed') {
+                // Conversation is finished — clear localStorage and start fresh
+                localStorage.removeItem(`dramac_chat_conv_${siteId}`)
+                localStorage.removeItem(`dramac_chat_visitor_${siteId}`)
+                setWidgetState('pre-chat')
+                return
+              }
+            }
+          } catch {
+            // If status check fails, still try to restore (better than blocking)
+          }
           setConversationId(savedConversation)
           setVisitorId(savedVisitor)
           setWidgetState('chat')
@@ -391,14 +410,21 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     setWidgetState('launcher')
   }, [])
 
-  // Handle end chat — show rating if enabled
+  // Handle end chat — show rating if enabled, then allow new conversation
   const handleEndChat = useCallback(() => {
     if (settings?.enableSatisfactionRating) {
       setWidgetState('rating')
     } else {
-      setWidgetState('launcher')
+      // Clear session so visitor can start a new conversation
+      localStorage.removeItem(`dramac_chat_conv_${siteId}`)
+      localStorage.removeItem(`dramac_chat_visitor_${siteId}`)
+      setConversationId(null)
+      setVisitorId(null)
+      setMessages([])
+      setUnreadCount(0)
+      setWidgetState('pre-chat')
     }
-  }, [settings?.enableSatisfactionRating])
+  }, [settings?.enableSatisfactionRating, siteId])
 
   // Handle offline form submission
   const handleOfflineSubmit = useCallback(
@@ -413,7 +439,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     [handleStartChat]
   )
 
-  // Check if conversation was resolved — show rating
+  // Check if conversation was resolved — show rating or allow new chat
   useEffect(() => {
     if (widgetState !== 'chat' || !conversationId || !visitorId) return
 
@@ -427,18 +453,27 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
 
         if (
           data.conversation &&
-          (data.conversation.status === 'resolved' || data.conversation.status === 'closed') &&
-          !data.conversation.rating &&
-          settings?.enableSatisfactionRating
+          (data.conversation.status === 'resolved' || data.conversation.status === 'closed')
         ) {
-          setWidgetState('rating')
+          if (!data.conversation.rating && settings?.enableSatisfactionRating) {
+            setWidgetState('rating')
+          } else {
+            // Clear session so visitor can start a new chat
+            localStorage.removeItem(`dramac_chat_conv_${siteId}`)
+            localStorage.removeItem(`dramac_chat_visitor_${siteId}`)
+            setConversationId(null)
+            setVisitorId(null)
+            setMessages([])
+            setUnreadCount(0)
+            setWidgetState('pre-chat')
+          }
         }
       } catch {}
     }
 
     const interval = setInterval(checkStatus, 10000) // Check every 10s
     return () => clearInterval(interval)
-  }, [widgetState, conversationId, visitorId, settings?.enableSatisfactionRating])
+  }, [widgetState, conversationId, visitorId, settings?.enableSatisfactionRating, siteId])
 
   if (loadError) {
     return (
@@ -544,7 +579,16 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         <WidgetRating
           settings={settings}
           onSubmit={handleRating}
-          onClose={handleClose}
+          onClose={() => {
+            // After rating (or skipping), clear session for new conversation
+            localStorage.removeItem(`dramac_chat_conv_${siteId}`)
+            localStorage.removeItem(`dramac_chat_visitor_${siteId}`)
+            setConversationId(null)
+            setVisitorId(null)
+            setMessages([])
+            setUnreadCount(0)
+            setWidgetState('pre-chat')
+          }}
         />
       )}
 
