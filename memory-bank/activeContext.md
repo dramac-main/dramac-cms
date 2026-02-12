@@ -1,45 +1,41 @@
 # Active Context
 
-## Latest Session Update — Live Chat Widget Auto-Injection on Published Sites (Commit `99c61a7`)
+## Latest Session Update — Live Chat Widget Blank Fix + Agent Creation Fix (Commit `9b0bfb6`)
 
-### CRITICAL FIX: Widget Was Never Injected Into Published Sites ✅
+### Two Critical Bugs Fixed
 
-The entire Live Chat module (LC-01 through LC-08) was 100% built — widget, embed script, API routes, agent dashboard, AI responder, WhatsApp integration — but the widget was **never actually injected** into published sites. Users could enable the module in the dashboard, but nothing would appear on their website.
+**Bug 1: Widget showed blank white rectangle on published sites**
+Despite widget auto-injection being implemented (commit `99c61a7`), visitors saw a blank white box instead of the chat interface.
 
-### Root Cause Analysis
-The public site renderer at `/site/[domain]/[[...slug]]/page.tsx` fetches modules and passes them to `<CraftRenderer>` and `<ModuleInjector>`, but:
-1. `<ModuleInjector>` only handles "studio" modules with `render_code` — live-chat is a platform module
-2. No code existed to inject the embed `<script>` tag for live-chat
-3. The widget settings API checked the wrong table (`site_modules` instead of `site_module_installations`)
-4. The proxy would rewrite `/embed/chat-widget` paths on subdomains to `/site/subdomain/embed/chat-widget` → 404
+Root causes (6 issues found):
+1. `globals.css` `@layer base { body { bg-background } }` overrode iframe `bg-transparent` → opaque white background
+2. ChatWidget stayed in `'launcher'` state (rendered fallback "Start Chat" button inside iframe) — no `postMessage` from parent to advance state
+3. Settings fetch failure → state stuck on `'loading'` → returned `null` → blank forever
+4. Dead `WidgetLauncher` import
 
-### Fixes Applied (4 files, +69/-12 lines)
+**Bug 2: Agent creation "incorrect format" error**
+Users couldn't add agents because the form had a raw text input for "User UUID" — users typed names/emails, PostgreSQL rejected non-UUID values.
+
+### Fixes Applied (6 files, +224/-30 lines)
+
 | File | Fix |
 |------|-----|
-| `src/components/renderer/live-chat-widget-injector.tsx` | **NEW** — Server component using Next.js `<Script>` with `afterInteractive` strategy to load embed JS |
-| `src/app/site/[domain]/[[...slug]]/page.tsx` | Added `LiveChatWidgetInjector` when `live-chat` module is active + added `live-chat` to `KNOWN_MODULE_SLUGS` |
-| `src/app/api/modules/live-chat/widget/route.ts` | Fixed module check to use `site_module_installations` + `modules_v2` (was using legacy `site_modules`) |
-| `src/proxy.ts` | Added `/embed` to passthrough paths for subdomains/custom domains |
-
-### How It Works Now (Complete Flow)
-```
-1. Agency enables live-chat module for a site (marketplace → install)
-2. Visitor opens the published site (subdomain or custom domain)
-3. Public site renderer fetches modules → finds live-chat is active
-4. LiveChatWidgetInjector renders <Script src="/api/modules/live-chat/embed?siteId=xxx">
-5. Embed script fetches widget settings (colors, position, branding)
-6. Embed script creates floating launcher button (bottom-right/left)
-7. Visitor clicks launcher → iframe opens with full chat widget
-8. Pre-chat form → collect name/email → conversation created
-9. Real-time messaging with 3s polling
-10. Agent dashboard receives conversation in real-time
-```
+| `ChatWidget.tsx` | Auto-advance to `pre-chat` state in iframe mode (skip launcher); add `postMessage` listener; add error state with retry; show loading spinner; remove dead WidgetLauncher import |
+| `embed/chat-widget/layout.tsx` | Force `background: transparent !important` via `<style>` tag to override `globals.css` `@layer base` |
+| `embed/route.ts` | Send `postMessage({ type: 'dramac-chat-open' })` to iframe when parent toggles open |
+| `AgentsPageWrapper.tsx` | Replace raw UUID text input with team member picker dropdown; auto-populate name/email from selected member; filter already-added agents |
+| `agent-actions.ts` | New `getAgencyMembersForSite()` — fetches `agency_members` + `profiles` for dropdown; add UUID format regex validation in `createAgent()` |
+| `widget/route.ts` | Add missing `autoOpenDelaySeconds: 0` and `logoUrl: null` to default settings |
 
 ### Git State
 - **Branch**: `main`
-- **Latest commit**: `99c61a7`
+- **Latest commit**: `9b0bfb6`
 - **Working tree**: Clean
 - **TSC**: 0 errors ✅
+
+---
+
+## Previous Session — Live Chat Widget Auto-Injection on Published Sites (Commit `99c61a7`)
 
 ---
 

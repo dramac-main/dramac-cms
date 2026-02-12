@@ -5,6 +5,22 @@
 
 ---
 
+## 💬 LIVE CHAT WIDGET BLANK FIX + AGENT CREATION FIX (Commit `9b0bfb6`) ✅
+
+Two critical bugs fixed: widget showing blank white rectangle on published sites, and agent creation failing with "incorrect format" error.
+
+| Fix | File | Impact |
+|-----|------|--------|
+| Auto-advance to pre-chat in iframe mode | `ChatWidget.tsx` | Widget no longer stuck on launcher state |
+| Force transparent iframe background | `embed/chat-widget/layout.tsx` | Override globals.css bg-background |
+| Send postMessage on open | `embed/route.ts` | Parent→iframe communication working |
+| Team member picker dropdown | `AgentsPageWrapper.tsx` | No more raw UUID input |
+| getAgencyMembersForSite() | `agent-actions.ts` | Fetch members + profiles for picker |
+| UUID validation | `agent-actions.ts` | Reject invalid UUID before DB insert |
+| Default settings complete | `widget/route.ts` | Added autoOpenDelaySeconds, logoUrl |
+
+---
+
 ## 💬 LIVE CHAT WIDGET AUTO-INJECTION ON PUBLISHED SITES (Commit `99c61a7`) ✅
 
 The live-chat module was fully built (LC-01 to LC-08) but the widget was never injected into published sites. This fix closes the loop.
