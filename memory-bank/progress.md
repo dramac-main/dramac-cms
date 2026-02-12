@@ -5,7 +5,27 @@
 
 ---
 
-## 💬 LIVE CHAT WIDGET BLANK FIX + AGENT CREATION FIX (Commit `9b0bfb6`) ✅
+## � PRODUCTION-GRADE DOMAINS, EMAIL & LIVE CHAT SYSTEMS (Commit `f3086e3`) ✅
+
+Deep scan of domains (67 files), email/Titan (32 files), and live chat (73 files). All mock data, dead buttons, wrong table references, hardcoded values, and missing realtime removed/fixed. Zero mock data remains.
+
+| Area | Fix | Impact |
+|------|-----|--------|
+| Domains | Search fallback → `available: false` | No misleading results when API offline |
+| Domains | Real pricing in register/renew orders | No more $0 wholesale/retail |
+| Domains | Dynamic ResellerClub API pricing | `calculateDomainPrice` tries real API first |
+| Domains | DNS actions use real Cloudflare API | Mock setTimeout eliminated |
+| Email | Dynamic pricing from `getBusinessEmailPricing()` | No hardcoded $2.50/month |
+| Email | `formatCurrency()` everywhere | Proper ZMW/en-ZM locale |
+| Email | Real domain name in account form | Not `@domain.com` |
+| Email | Renew/Cancel/Upgrade buttons functional | New `EmailSettingsActions` client component |
+| Email | Portal reads `email_accounts` | Was reading wrong `domain_email_accounts` table |
+| Chat | Supabase Realtime replaces 3s polling | Instant delivery, lower load |
+| Chat | Typing indicators with real agent name | Fully wired with auto-clear timeout |
+
+---
+
+## �💬 LIVE CHAT WIDGET BLANK FIX + AGENT CREATION FIX (Commit `9b0bfb6`) ✅
 
 Two critical bugs fixed: widget showing blank white rectangle on published sites, and agent creation failing with "incorrect format" error.
 

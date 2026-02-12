@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     var isRight = position === 'bottom-right';
     var primaryColor = settings.primaryColor || '#2563eb';
     var launcherSize = settings.launcherSize || 56;
-    var zIndex = settings.zIndex || 9999;
+    var zIndex = settings.zIndex || 2147483647;
     var borderRadius = settings.borderRadius || 16;
 
     // Create launcher button
@@ -82,6 +82,7 @@ export async function GET(request: NextRequest) {
       'z-index:' + zIndex,
       'box-shadow:0 4px 12px rgba(0,0,0,0.15)',
       'transition:transform 0.2s ease, box-shadow 0.2s ease',
+      'isolation:isolate',
     ].join(';');
 
     // Chat icon SVG
@@ -136,6 +137,8 @@ export async function GET(request: NextRequest) {
       'opacity:0',
       'transform:translateY(10px) scale(0.95)',
       'transition:opacity 0.2s ease, transform 0.2s ease',
+      'isolation:isolate',
+      'background:#ffffff',
     ].join(';');
 
     // Mobile responsiveness
@@ -153,7 +156,7 @@ export async function GET(request: NextRequest) {
     var iframe = document.createElement('iframe');
     iframe.id = 'dramac-chat-iframe';
     iframe.src = WIDGET_URL;
-    iframe.style.cssText = 'width:100%;height:100%;border:none;';
+    iframe.style.cssText = 'width:100%;height:100%;border:none;background:#ffffff;';
     iframe.setAttribute('allow', 'microphone');
     iframe.setAttribute('title', 'Chat Widget');
     container.appendChild(iframe);
@@ -199,9 +202,10 @@ export async function GET(request: NextRequest) {
 
     // Listen for messages from iframe
     window.addEventListener('message', function(event) {
-      if (event.origin !== BASE_URL) return;
       var msg = event.data;
-      if (!msg || !msg.type) return;
+      if (!msg || typeof msg !== 'object' || !msg.type) return;
+      // Only accept DRAMAC chat messages (prefixed with 'dramac-chat-')
+      if (typeof msg.type !== 'string' || msg.type.indexOf('dramac-chat-') !== 0) return;
 
       if (msg.type === 'dramac-chat-close') {
         if (isOpen) toggleChat();

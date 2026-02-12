@@ -1,41 +1,64 @@
 # Active Context
 
-## Latest Session Update — Live Chat Widget Blank Fix + Agent Creation Fix (Commit `9b0bfb6`)
+## Latest Session Update — Production-Grade Domains, Email & Live Chat Systems (Commit `f3086e3`)
 
-### Two Critical Bugs Fixed
+### Deep Scan & Fix of 3 Major Systems
 
-**Bug 1: Widget showed blank white rectangle on published sites**
-Despite widget auto-injection being implemented (commit `99c61a7`), visitors saw a blank white box instead of the chat interface.
+Performed a comprehensive deep scan of domains (67 files), email/Titan (32 files), and live chat (73 files) systems. Found and fixed all mock data, dead buttons, wrong table references, hardcoded values, and missing realtime integration.
 
-Root causes (6 issues found):
-1. `globals.css` `@layer base { body { bg-background } }` overrode iframe `bg-transparent` → opaque white background
-2. ChatWidget stayed in `'launcher'` state (rendered fallback "Start Chat" button inside iframe) — no `postMessage` from parent to advance state
-3. Settings fetch failure → state stuck on `'loading'` → returned `null` → blank forever
-4. Dead `WidgetLauncher` import
+### Domain System Fixes
+| Fix | File | Impact |
+|-----|------|--------|
+| Search fallback returns `available: false` (not `true`) | `domains.ts` | Users no longer misled when API is down |
+| `checkDomainAvailability` fallback returns `false` | `domains.ts` | Consistent with search behavior |
+| `registerDomain` uses real pricing from `calculateDomainPrice()` | `domains.ts` | Orders have real wholesale/retail prices (no more $0) |
+| `renewDomain` uses real pricing from `calculateDomainPrice()` | `domains.ts` | Renewal orders have real prices |
+| `calculateDomainPrice` tries ResellerClub API first | `domain-billing.ts` | Dynamic pricing with graceful fallback |
+| DNS actions use real Cloudflare API calls | `dns-actions-client.tsx` | No more mock setTimeout simulations |
+| DNS UI: TTL selector, priority for MX, proxy toggle | `dns-actions-client.tsx` | Full DNS record management |
 
-**Bug 2: Agent creation "incorrect format" error**
-Users couldn't add agents because the form had a raw text input for "User UUID" — users typed names/emails, PostgreSQL rejected non-UUID values.
+### Email System Fixes
+| Fix | File | Impact |
+|-----|------|--------|
+| Purchase wizard uses dynamic API pricing | `email-purchase-wizard.tsx` | No more hardcoded $2.50/month |
+| All currency uses `formatCurrency()` from locale-config | Multiple files | Proper ZMW/en-ZM formatting |
+| Account form shows real domain name | `email-account-form.tsx` | Not `@domain.com` placeholder |
+| Order page: dynamic storage, locale currency | `[orderId]/page.tsx` | No more hardcoded 10 GB or `$` |
+| Settings: Renew button wired to `renewBusinessEmailOrder()` | `email-settings-actions.tsx` (NEW) | Functional renewal with period selector |
+| Settings: Cancel → Support redirect | `email-settings-actions.tsx` | Safe cancellation flow |
+| Settings: Upgrade → Support ticket | `email-settings-actions.tsx` | Clear upgrade path |
+| Portal reads from `email_accounts` table | `portal/email/page.tsx` | Was reading `domain_email_accounts` (empty) |
 
-### Fixes Applied (6 files, +224/-30 lines)
+### Live Chat Fixes
+| Fix | File | Impact |
+|-----|------|--------|
+| Widget uses Supabase Realtime (not 3s polling) | `ChatWidget.tsx` | Instant message delivery, lower server load |
+| Typing indicators show real agent name | `ChatWidget.tsx` | `useChatRealtime` hook fully integrated |
+| Auto-clear typing after 5s timeout | `ChatWidget.tsx` | No stuck typing indicators |
+| Initial messages loaded once, then realtime | `ChatWidget.tsx` | Clean state management |
 
-| File | Fix |
-|------|-----|
-| `ChatWidget.tsx` | Auto-advance to `pre-chat` state in iframe mode (skip launcher); add `postMessage` listener; add error state with retry; show loading spinner; remove dead WidgetLauncher import |
-| `embed/chat-widget/layout.tsx` | Force `background: transparent !important` via `<style>` tag to override `globals.css` `@layer base` |
-| `embed/route.ts` | Send `postMessage({ type: 'dramac-chat-open' })` to iframe when parent toggles open |
-| `AgentsPageWrapper.tsx` | Replace raw UUID text input with team member picker dropdown; auto-populate name/email from selected member; filter already-added agents |
-| `agent-actions.ts` | New `getAgencyMembersForSite()` — fetches `agency_members` + `profiles` for dropdown; add UUID format regex validation in `createAgent()` |
-| `widget/route.ts` | Add missing `autoOpenDelaySeconds: 0` and `logoUrl: null` to default settings |
+### Files Changed (11 files, +622/-260 lines)
+1. `dns-actions-client.tsx` — Real Cloudflare API calls
+2. `domain-billing.ts` — Dynamic ResellerClub pricing
+3. `domains.ts` — Fixed fallbacks + real order prices
+4. `email-purchase-wizard.tsx` — Dynamic pricing + formatCurrency
+5. `email-account-form.tsx` — Real domain name prop
+6. `email-accounts-table.tsx` — Pass domainName through
+7. `[orderId]/page.tsx` — Dynamic storage + locale currency
+8. `[orderId]/settings/page.tsx` — Refactored to use client component
+9. `email-settings-actions.tsx` — NEW client component for interactive buttons
+10. `portal/email/page.tsx` — Fixed table reference
+11. `ChatWidget.tsx` — Supabase Realtime integration
 
 ### Git State
 - **Branch**: `main`
-- **Latest commit**: `9b0bfb6`
+- **Latest commit**: `f3086e3`
 - **Working tree**: Clean
 - **TSC**: 0 errors ✅
 
 ---
 
-## Previous Session — Live Chat Widget Auto-Injection on Published Sites (Commit `99c61a7`)
+## Previous Session — Live Chat Widget Blank Fix + Agent Creation Fix (Commit `9b0bfb6`)
 
 ---
 

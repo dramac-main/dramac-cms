@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
             launcherIcon: 'MessageCircle',
             launcherSize: 56,
             borderRadius: 16,
-            zIndex: 9999,
+            zIndex: 2147483647,
             companyName: null,
             welcomeMessage: 'Hi there! How can we help you today?',
             awayMessage: 'We\'re currently away. Leave a message and we\'ll get back to you.',
