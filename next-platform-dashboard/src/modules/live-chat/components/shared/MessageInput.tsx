@@ -5,7 +5,7 @@
  * internal note toggle, and send functionality
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -21,13 +21,21 @@ import {
   StickyNote,
   Zap,
   Loader2,
+  AtSign,
 } from 'lucide-react'
 import type { CannedResponse } from '@/modules/live-chat/types'
 
+interface AgentOption {
+  id: string
+  name: string
+  avatar?: string
+}
+
 interface MessageInputProps {
-  onSend: (content: string, isNote: boolean) => Promise<void>
+  onSend: (content: string, isNote: boolean, mentionedAgentIds?: string[]) => Promise<void>
   onFileUpload?: (file: File) => Promise<void>
   cannedResponses?: CannedResponse[]
+  agents?: AgentOption[]
   disabled?: boolean
   placeholder?: string
   className?: string
@@ -37,6 +45,7 @@ export function MessageInput({
   onSend,
   onFileUpload,
   cannedResponses = [],
+  agents = [],
   disabled = false,
   placeholder = 'Type a message...',
   className,
@@ -46,6 +55,9 @@ export function MessageInput({
   const [isSending, setIsSending] = useState(false)
   const [showCanned, setShowCanned] = useState(false)
   const [cannedSearch, setCannedSearch] = useState('')
+  const [showMentions, setShowMentions] = useState(false)
+  const [mentionSearch, setMentionSearch] = useState('')
+  const [mentionedAgents, setMentionedAgents] = useState<Set<string>>(new Set())
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -69,6 +81,32 @@ export function MessageInput({
     }
   }, [content])
 
+  // Detect "@" trigger for agent mentions (only in note mode)
+  useEffect(() => {
+    if (!isNote || agents.length === 0) {
+      setShowMentions(false)
+      return
+    }
+    const textarea = textareaRef.current
+    if (!textarea) return
+    const cursorPos = textarea.selectionStart
+    const textBeforeCursor = content.slice(0, cursorPos)
+    // Find @ that's either at start or preceded by whitespace
+    const mentionMatch = textBeforeCursor.match(/(^|\s)@(\w*)$/)
+    if (mentionMatch) {
+      setShowMentions(true)
+      setMentionSearch(mentionMatch[2].toLowerCase())
+    } else {
+      setShowMentions(false)
+      setMentionSearch('')
+    }
+  }, [content, isNote, agents.length])
+
+  const filteredAgents = useMemo(() => {
+    if (!mentionSearch) return agents
+    return agents.filter((a) => a.name.toLowerCase().includes(mentionSearch))
+  }, [agents, mentionSearch])
+
   const filteredCanned = cannedResponses.filter(
     (cr) =>
       cr.shortcut?.toLowerCase().includes(cannedSearch) ||
@@ -81,14 +119,17 @@ export function MessageInput({
     if (!trimmed || isSending) return
     setIsSending(true)
     try {
-      await onSend(trimmed, isNote)
+      // Parse @mentions from the content to find mentioned agent IDs
+      const mentionIds = isNote ? Array.from(mentionedAgents) : undefined
+      await onSend(trimmed, isNote, mentionIds)
       setContent('')
       setIsNote(false)
+      setMentionedAgents(new Set())
       textareaRef.current?.focus()
     } finally {
       setIsSending(false)
     }
-  }, [content, isNote, isSending, onSend])
+  }, [content, isNote, isSending, onSend, mentionedAgents])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -121,6 +162,20 @@ export function MessageInput({
     setShowCanned(false)
     textareaRef.current?.focus()
   }, [])
+
+  const selectMention = useCallback((agent: AgentOption) => {
+    const textarea = textareaRef.current
+    if (!textarea) return
+    const cursorPos = textarea.selectionStart
+    const textBeforeCursor = content.slice(0, cursorPos)
+    const textAfterCursor = content.slice(cursorPos)
+    // Replace the @partial with @AgentName
+    const newBefore = textBeforeCursor.replace(/(^|\s)@\w*$/, `$1@${agent.name} `)
+    setContent(newBefore + textAfterCursor)
+    setMentionedAgents((prev) => new Set(prev).add(agent.id))
+    setShowMentions(false)
+    setTimeout(() => textarea.focus(), 10)
+  }, [content])
 
   return (
     <div
@@ -161,7 +216,30 @@ export function MessageInput({
       {isNote && (
         <div className="flex items-center gap-1.5 mb-2 text-xs text-amber-700 dark:text-amber-400">
           <StickyNote className="h-3.5 w-3.5" />
-          <span>Writing an internal note (not visible to visitor)</span>
+          <span>Writing an internal note (not visible to visitor) — Type <kbd className="px-1 py-0.5 rounded bg-amber-200/50 dark:bg-amber-800/50 font-mono text-[10px]">@</kbd> to mention an agent</span>
+        </div>
+      )}
+
+      {/* @mention dropdown */}
+      {showMentions && filteredAgents.length > 0 && (
+        <div className="mb-2 rounded-lg border bg-popover shadow-md max-h-48 overflow-y-auto">
+          <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground border-b">
+            <AtSign className="h-3 w-3 inline mr-1" />
+            Mention an agent
+          </div>
+          {filteredAgents.map((agent) => (
+            <button
+              key={agent.id}
+              type="button"
+              className="w-full text-left px-3 py-2 hover:bg-muted transition-colors border-b last:border-b-0 flex items-center gap-2"
+              onClick={() => selectMention(agent)}
+            >
+              <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+                {agent.name.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-sm">{agent.name}</span>
+            </button>
+          ))}
         </div>
       )}
 

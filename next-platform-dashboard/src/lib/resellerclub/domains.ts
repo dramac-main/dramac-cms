@@ -63,7 +63,7 @@ export class DomainService {
    */
   async checkMultipleAvailability(domainNames: string[]): Promise<DomainAvailability[]> {
     // Normalize domain names
-    const normalizedDomains = domainNames.map(d => d.toLowerCase().trim());
+    const normalizedDomains = domainNames.filter(Boolean).map(d => d.toLowerCase().trim());
     
     // Group by TLD for efficient API calls
     const domainTlds = normalizedDomains.map(d => {
@@ -159,7 +159,8 @@ export class DomainService {
     const prices: Record<string, DomainPrice> = {};
     
     for (const tld of tldsToGet) {
-      const tldKey = tld.replace('.', '');
+      // Replace only the leading dot; compound TLDs like ".co.za" → "co.za"
+      const tldKey = tld.startsWith('.') ? tld.slice(1) : tld;
       const tldData = response[tldKey];
       
       if (tldData) {
@@ -633,7 +634,16 @@ export class DomainService {
    * Extract TLD from domain name
    */
   extractTld(domainName: string): string {
+    if (!domainName) return '.unknown';
     const parts = domainName.toLowerCase().split('.');
+    // Handle compound TLDs like .co.za
+    if (parts.length >= 3) {
+      const possibleCompound = '.' + parts.slice(-2).join('.');
+      const allTlds: readonly string[] = Object.values(TLD_CATEGORIES).flat();
+      if (allTlds.includes(possibleCompound)) {
+        return possibleCompound;
+      }
+    }
     return '.' + parts[parts.length - 1];
   }
   
@@ -641,6 +651,7 @@ export class DomainService {
    * Extract SLD (second-level domain) from domain name
    */
   extractSld(domainName: string): string {
+    if (!domainName) return '';
     const parts = domainName.toLowerCase().split('.');
     return parts.slice(0, -1).join('.');
   }

@@ -18,6 +18,8 @@ interface ChatRealtimeCallbacks {
   onMessageUpdate?: (message: ChatMessage) => void
   onTypingStart?: (senderId: string, senderName: string) => void
   onTypingStop?: (senderId: string) => void
+  /** If true, internal notes (isInternalNote) are filtered out before callbacks fire. Default: false */
+  filterInternalNotes?: boolean
 }
 
 export function useChatRealtime(
@@ -45,6 +47,10 @@ export function useChatRealtime(
         },
         (payload) => {
           const message = mapRecord<ChatMessage>(payload.new as Record<string, unknown>)
+          // Skip internal notes when filtering is enabled (e.g. customer widget)
+          if (callbacksRef.current.filterInternalNotes && (message.isInternalNote || message.contentType === 'note')) {
+            return
+          }
           callbacksRef.current.onNewMessage(message)
         }
       )
@@ -59,6 +65,10 @@ export function useChatRealtime(
         (payload) => {
           if (callbacksRef.current.onMessageUpdate) {
             const message = mapRecord<ChatMessage>(payload.new as Record<string, unknown>)
+            // Skip internal notes when filtering is enabled (e.g. customer widget)
+            if (callbacksRef.current.filterInternalNotes && (message.isInternalNote || message.contentType === 'note')) {
+              return
+            }
             callbacksRef.current.onMessageUpdate(message)
           }
         }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { Bell, Check, CheckCheck, Trash2, ExternalLink } from "lucide-react";
+import { Bell, BellRing, Check, CheckCheck, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,6 +19,8 @@ import {
   deleteNotification,
 } from "@/lib/actions/notifications";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import type { Notification } from "@/types/notifications";
 import { NotificationIcon } from "./notification-icon";
 
@@ -28,6 +30,14 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize notification sound
+  useEffect(() => {
+    audioRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1hZGVnaGhnaWlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8A=');
+    audioRef.current.volume = 0.3;
+  }, []);
 
   const fetchNotifications = useCallback(async () => {
     setIsLoading(true);
@@ -42,13 +52,100 @@ export function NotificationBell() {
     }
   }, []);
 
+  // Initial fetch
   useEffect(() => {
     fetchNotifications();
-
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
   }, [fetchNotifications]);
+
+  // Supabase Realtime subscription for instant notification updates
+  useEffect(() => {
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel('notification-bell')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+        },
+        (payload) => {
+          const newNotification = payload.new as Notification;
+          // Add to top of list
+          setNotifications((prev) => {
+            if (prev.some((n) => n.id === newNotification.id)) return prev;
+            return [newNotification, ...prev].slice(0, 10);
+          });
+          setUnreadCount((prev) => prev + 1);
+
+          // Animate the bell
+          setIsAnimating(true);
+          setTimeout(() => setIsAnimating(false), 1000);
+
+          // Play sound
+          if (audioRef.current) {
+            audioRef.current.play().catch(() => {});
+          }
+
+          // Show toast
+          toast.info(newNotification.title, {
+            description: newNotification.message,
+            action: newNotification.link
+              ? {
+                  label: 'View',
+                  onClick: () => router.push(newNotification.link!),
+                }
+              : undefined,
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+        },
+        (payload) => {
+          const updated = payload.new as Notification;
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === updated.id ? updated : n))
+          );
+          // Recalculate unread count
+          setNotifications((prev) => {
+            const newUnread = prev.filter((n) => !n.read).length;
+            setUnreadCount(newUnread);
+            return prev;
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'notifications',
+        },
+        (payload) => {
+          const deletedId = (payload.old as { id: string }).id;
+          setNotifications((prev) => {
+            const filtered = prev.filter((n) => n.id !== deletedId);
+            setUnreadCount(filtered.filter((n) => !n.read).length);
+            return filtered;
+          });
+        }
+      )
+      .subscribe();
+
+    // Fallback polling every 60 seconds (in case realtime misses something)
+    const interval = setInterval(fetchNotifications, 60000);
+
+    return () => {
+      channel.unsubscribe();
+      clearInterval(interval);
+    };
+  }, [fetchNotifications, router]);
 
   const handleMarkRead = async (id: string) => {
     await markNotificationRead(id);
@@ -87,7 +184,11 @@ export function NotificationBell() {
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
-          <Bell className="w-5 h-5" />
+          {isAnimating ? (
+            <BellRing className="w-5 h-5 animate-bounce text-primary" />
+          ) : (
+            <Bell className="w-5 h-5" />
+          )}
           {unreadCount > 0 && (
             <Badge
               variant="destructive"

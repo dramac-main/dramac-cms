@@ -272,7 +272,7 @@ export function calculateMarkup(
  * Get status badge color for domain status
  */
 export function getStatusBadgeColor(status: string): string {
-  const statusLower = status.toLowerCase();
+  const statusLower = (status ?? '').toLowerCase();
   
   switch (statusLower) {
     case 'active':

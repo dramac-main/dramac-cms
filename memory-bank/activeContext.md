@@ -1,6 +1,61 @@
 # Active Context
 
-## Latest Session Update — Domain Search Fallback + Platform-Wide Bug Fixes (Commit `5995f55`)
+## Latest Session Update — Live Chat Realtime + Notifications + TLD Expansion (Commit `ae7080f`)
+
+### Issues Fixed
+
+**Live Chat Realtime (Root Cause: tables NOT in `supabase_realtime` publication)**
+
+| # | Bug | File | Fix |
+|---|-----|------|-----|
+| 1 | Chat messages not realtime — requires page refresh | NEW `lc-09-enable-realtime.sql` | `REPLICA IDENTITY FULL` + `ALTER PUBLICATION supabase_realtime ADD TABLE` for `mod_chat_messages` and `mod_chat_conversations` |
+| 2 | Anonymous widget can't receive realtime events | `lc-09-enable-realtime.sql` | RLS SELECT policies for anon role on both chat tables |
+| 3 | Customer can't start new conversation after resolved | `ChatWidget.tsx` | On localStorage restore, checks conversation status — if resolved/closed, clears session and shows pre-chat form |
+| 4 | handleEndChat doesn't clear session | `ChatWidget.tsx` | Clears localStorage, resets conversationId/visitorId/messages, returns to pre-chat |
+| 5 | Rating close doesn't clear session | `ChatWidget.tsx` | WidgetRating onClose clears localStorage and resets to pre-chat |
+| 6 | Status check doesn't clear resolved sessions | `ChatWidget.tsx` | Interval now clears session when resolved (not just shows rating) |
+
+**Agent Notifications (Root Cause: notification functions existed but were NEVER CALLED)**
+
+| # | Bug | File | Fix |
+|---|-----|------|-----|
+| 7 | notifyNewChatMessage() never called | `messages/route.ts` | Imported and called after message insert with siteId, visitorName, agentUserId |
+| 8 | No toast notifications for incoming messages | `ConversationViewWrapper.tsx` | Added `toast.info()` with visitor name and message preview |
+| 9 | No sound notification for messages | `ConversationViewWrapper.tsx` | Added `audioRef` with base64 WAV, plays on visitor message |
+| 10 | No toast/sound for new conversations | `ConversationsPageWrapper.tsx` | Added toast.info with "View" action button + audio notification |
+
+**Domain TLD Expansion (7 → 50+)**
+
+| # | Bug | File | Fix |
+|---|-----|------|-----|
+| 11 | Only 7 TLDs despite ResellerClub supporting 500+ | `config.ts` | Expanded `TLD_CATEGORIES` to 8 categories: popular, business, tech, creative, country, africa, lifestyle, professional |
+| 12 | RDAP fallback only covered 7 TLDs | `domain-availability-fallback.ts` | Expanded from 7 to ~40 RDAP server endpoints |
+| 13 | Domain search UI limited to 7 | `domain-search.tsx` | Category-based expandable panel with "Select all"/"Deselect all" per category |
+| 14 | Server action fallback hardcoded 7 TLDs | `domains.ts` | Uses `TLD_CATEGORIES` from config as fallback |
+| 15 | Domain filters default to 7 TLDs | `domain-filters.tsx` | Derives defaults from `TLD_CATEGORIES` (single source of truth) |
+| 16 | Fallback pricing only for 7 TLDs | `domains.ts` | Added fallback prices for all 50+ TLDs across all categories |
+
+### Key Architecture Findings
+- Supabase Realtime requires THREE things to work: (1) `REPLICA IDENTITY FULL` on table, (2) Table added to `supabase_realtime` publication, (3) RLS SELECT policy for the subscribing role
+- `notifyNewChatMessage()`, `notifyChatAssigned()`, `notifyChatMissed()`, `notifyChatRating()` all existed in `chat-notifications.ts` but were never wired
+- 5 separate TLD lists existed across the codebase, all hardcoded to 7 — now unified via `TLD_CATEGORIES` import from config
+- Toast library is `sonner` (toast.info, toast.error, etc.)
+- Audio notifications use base64 WAV data URI for zero-dependency sound
+
+### Important: Migration Must Be Run
+⚠️ **`migrations/lc-09-enable-realtime.sql` must be executed on Supabase** for realtime to work. Run in Supabase Dashboard → SQL Editor, or via `supabase db push`.
+
+### Git State
+- **Branch**: `main`
+- **Latest commit**: `ae7080f`
+- **Pushed**: Yes ✅
+- **Working tree**: Clean
+- **TSC**: 0 errors ✅
+- **Files changed**: 10 (1 new migration, 9 modified)
+
+---
+
+## Previous Session — Domain Search Fallback + Platform-Wide Bug Fixes (Commit `5995f55`)
 
 ### Issues Fixed
 

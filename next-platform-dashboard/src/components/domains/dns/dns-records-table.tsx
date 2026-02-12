@@ -63,8 +63,8 @@ export function DnsRecordsTable({ records, domainId, domainName }: DnsRecordsTab
   // Filter records
   const filteredRecords = records.filter(record => {
     const matchesSearch = 
-      record.name.toLowerCase().includes(search.toLowerCase()) ||
-      record.content.toLowerCase().includes(search.toLowerCase());
+      (record.name ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (record.content ?? '').toLowerCase().includes(search.toLowerCase());
     const matchesType = typeFilter === "all" || record.type === typeFilter;
     return matchesSearch && matchesType;
   });

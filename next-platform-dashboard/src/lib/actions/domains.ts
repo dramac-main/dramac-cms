@@ -378,7 +378,7 @@ export async function registerDomain(params: RegisterDomainParams) {
         );
         
         if (!rcCustomerId) {
-          return { success: false, error: 'Failed to provision domain services for your agency. Please check ResellerClub configuration.' };
+          return { success: false, error: 'Failed to provision domain services. Please whitelist your server IP addresses in ResellerClub Dashboard → Settings → API → Whitelist IP Addresses. Vercel deployments use dynamic IPs — contact ResellerClub support to whitelist the IP range or use a proxy.' };
         }
 
         customerId = rcCustomerId;
@@ -418,9 +418,13 @@ export async function registerDomain(params: RegisterDomainParams) {
         registrationViaApi = true;
       } catch (apiError) {
         console.error('[Domains] ResellerClub registration failed:', apiError);
+        const errMsg = apiError instanceof Error ? apiError.message : '';
+        const isAuthError = errMsg.includes('403') || errMsg.includes('AUTH_ERROR') || errMsg.includes('Access Denied');
         return { 
           success: false, 
-          error: apiError instanceof Error ? apiError.message : 'Domain registration failed. Please try again.' 
+          error: isAuthError 
+            ? 'Domain registration blocked by ResellerClub (HTTP 403). Your server IP is not whitelisted. Go to ResellerClub Dashboard → Settings → API → Whitelist IP Addresses and add your server IPs.'
+            : errMsg || 'Domain registration failed. Please try again.' 
         };
       }
     } else {

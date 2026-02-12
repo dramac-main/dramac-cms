@@ -29,6 +29,10 @@
     {
       "path": "/api/cron/chat",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/auto-close-chats",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

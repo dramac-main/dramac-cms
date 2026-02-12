@@ -193,7 +193,7 @@ export function ConversationViewWrapper({
 
   // Send message
   const handleSendMessage = useCallback(
-    async (content: string, isNote: boolean) => {
+    async (content: string, isNote: boolean, mentionedAgentIds?: string[]) => {
       const result = await sendMessage({
         conversationId: conversation.id,
         siteId,
@@ -201,13 +201,14 @@ export function ConversationViewWrapper({
         content,
         contentType: isNote ? 'note' : 'text',
         isInternalNote: isNote,
+        mentionedAgentIds,
       })
       if (result.error) {
         toast.error(result.error)
       }
       // Realtime will add the message to the list
     },
-    [conversation.id]
+    [conversation.id, siteId]
   )
 
   // Assign agent
@@ -446,6 +447,7 @@ export function ConversationViewWrapper({
         <MessageInput
           onSend={handleSendMessage}
           cannedResponses={cannedResponses}
+          agents={agents.map((a) => ({ id: a.id, name: a.displayName || 'Agent' }))}
           disabled={
             conversation.status === 'closed' ||
             conversation.status === 'resolved'

@@ -61,6 +61,7 @@ export async function sendMessage(data: {
   content: string
   contentType?: MessageContentType
   isInternalNote?: boolean
+  mentionedAgentIds?: string[]
 }): Promise<{ message: ChatMessage | null; error: string | null }> {
   try {
     const supabase = await getModuleClient()
@@ -79,6 +80,9 @@ export async function sendMessage(data: {
     if (data.senderName) insertData.sender_name = data.senderName
     if (data.senderAvatar) insertData.sender_avatar = data.senderAvatar
     if (data.isInternalNote) insertData.content_type = 'note'
+    if (data.mentionedAgentIds && data.mentionedAgentIds.length > 0) {
+      insertData.mentioned_agent_ids = data.mentionedAgentIds
+    }
 
     const { data: msgData, error } = await supabase
       .from('mod_chat_messages')
@@ -119,6 +123,30 @@ export async function sendMessage(data: {
     }
 
     const message = mapRecord<ChatMessage>(msgData)
+
+    // Create notifications for @mentioned agents
+    if (data.mentionedAgentIds && data.mentionedAgentIds.length > 0 && data.isInternalNote) {
+      try {
+        const { createNotification } = await import('@/lib/services/notifications')
+        const senderLabel = data.senderName || 'An agent'
+        const preview = data.content.length > 80 ? data.content.slice(0, 80) + '…' : data.content
+
+        await Promise.allSettled(
+          data.mentionedAgentIds.map((agentId) =>
+            createNotification({
+              userId: agentId,
+              type: 'mention',
+              title: `${senderLabel} mentioned you in a chat note`,
+              message: preview,
+              link: `/dashboard/sites/${data.siteId}/live-chat/conversations/${data.conversationId}`,
+            })
+          )
+        )
+      } catch (notifError) {
+        console.error('[LiveChat] Failed to send mention notifications:', notifError)
+      }
+    }
+
     return { message, error: null }
   } catch (error) {
     console.error('[LiveChat] Error sending message:', error)

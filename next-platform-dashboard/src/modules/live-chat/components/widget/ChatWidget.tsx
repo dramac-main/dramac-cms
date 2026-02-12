@@ -184,9 +184,12 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
 
   // Subscribe to Supabase Realtime for live message updates (replaces polling)
   useChatRealtime(conversationId, {
+    filterInternalNotes: true, // CRITICAL: Never show agent internal notes to customers
     onNewMessage: (message: ChatMessage) => {
       setMessages((prev) => {
         if (prev.some((m) => m.id === message.id)) return prev
+        // Defense-in-depth: skip internal notes even if realtime filter missed them
+        if (message.isInternalNote || message.contentType === 'note') return prev
         // Play notification sound for agent messages
         if (message.senderType !== 'visitor') {
           if (settings?.enableSoundNotifications && audioRef.current) {

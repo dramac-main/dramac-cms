@@ -35,7 +35,7 @@ export function DomainListClient({ initialDomains }: DomainListClientProps) {
 
   // Filter domains client-side for immediate feedback
   const filteredDomains = domains.filter(domain => {
-    if (filters.search && !domain.domain_name.toLowerCase().includes(filters.search.toLowerCase())) {
+    if (filters.search && !(domain.domain_name ?? '').toLowerCase().includes(filters.search.toLowerCase())) {
       return false;
     }
     if (filters.status && filters.status !== 'all' && domain.status !== filters.status) {
