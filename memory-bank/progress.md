@@ -1,63 +1,46 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅ + PHASE FIX-03 COMPLETE ✅ + PHASE FIX-04 COMPLETE ✅ + PHASE FIX-05 COMPLETE ✅ + PHASE FIX-06 COMPLETE ✅ + PHASE FIX-06b LIGHT MODE CONTRAST ✅ + PHASE FIX-07 STUDIO/PREVIEW/FORMS ✅ + PHASE FIX-08 PORTAL BRANDING/LOADERS ✅ + PHASE FIX-09 SITE RENDERING/LOADING ✅ + PHASE FIX-10 STATIC ASSET 404s ✅ + PHASE FIX-11 MODULE CARD UI REDESIGN ✅ + PHASE FIX-12 LINE ICONS & EMOJI REPLACEMENT ✅ + ALL 13 LAUNCH PHASES COMPLETE ✅ + SOCIAL MEDIA MODULE PHASE DOCS COMPLETE (SM-00 to SM-09) ✅ + DOMAIN/EMAIL RESELLERCLUB LIVE API INTEGRATION ✅ + SOCIAL MEDIA SM-04/05/06 IMPLEMENTED ✅ + COMPREHENSIVE NAVIGATION/UX/MODULE AUDIT ✅ + LIVE CHAT WIDGET AUTO-INJECTION ✅ + LIVE CHAT REALTIME + NOTIFICATIONS ✅ + TLD EXPANSION 50+ ✅ + INTERNAL NOTES SECURITY + REALTIME BELL + AUTO-CLOSE + @MENTIONS ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅ + PHASE FIX-03 COMPLETE ✅ + PHASE FIX-04 COMPLETE ✅ + PHASE FIX-05 COMPLETE ✅ + PHASE FIX-06 COMPLETE ✅ + PHASE FIX-06b LIGHT MODE CONTRAST ✅ + PHASE FIX-07 STUDIO/PREVIEW/FORMS ✅ + PHASE FIX-08 PORTAL BRANDING/LOADERS ✅ + PHASE FIX-09 SITE RENDERING/LOADING ✅ + PHASE FIX-10 STATIC ASSET 404s ✅ + PHASE FIX-11 MODULE CARD UI REDESIGN ✅ + PHASE FIX-12 LINE ICONS & EMOJI REPLACEMENT ✅ + ALL 13 LAUNCH PHASES COMPLETE ✅ + SOCIAL MEDIA MODULE PHASE DOCS COMPLETE (SM-00 to SM-09) ✅ + DOMAIN/EMAIL RESELLERCLUB LIVE API INTEGRATION ✅ + SOCIAL MEDIA SM-04/05/06 IMPLEMENTED ✅ + COMPREHENSIVE NAVIGATION/UX/MODULE AUDIT ✅ + LIVE CHAT WIDGET AUTO-INJECTION ✅ + LIVE CHAT REALTIME + NOTIFICATIONS ✅ + TLD EXPANSION 50+ ✅ + INTERNAL NOTES SECURITY + REALTIME BELL + AUTO-CLOSE + @MENTIONS ✅ + COMPREHENSIVE BILLING/DOMAIN/EMAIL HARDENING ✅**
+
+---
+
+## COMPREHENSIVE PLATFORM HARDENING: BILLING, DOMAINS, EMAIL, CRON (Commit `7287fd0`)
+
+Full audit of domains (16 issues), email (20 issues), and Paddle billing (12 issues). Fixed 19 critical items across 16 files.
+
+| Area | Fix | Impact |
+|------|-----|--------|
+| Infrastructure | SQL migration GET DIAGNOSTICS syntax fix | Migration lc-10 can now execute successfully |
+| Infrastructure | 5 Vercel crons → 1 unified hourly dispatcher | Vercel Hobby plan deploys succeed |
+| Billing | subscription-details rewritten for Paddle | No more 404s on billing overview |
+| Billing | current-plan-card switched from LemonSqueezy to Paddle | Cancel/pause/resume work via Paddle |
+| Billing | plans.ts realigned to Paddle (plan IDs, env vars, limits) | Config matches live billing provider |
+| Billing | Invoice history response shape fixed | Invoices display correctly |
+| Billing | Enterprise Contact Sales link fixed (was 404) | Users can reach support |
+| Domains | Quick actions fully wired (Transfer, Lock, Delete) | All 3 buttons work with real server actions |
+| Domains | Default country ZM, expanded to 100+ countries | Correct Zambia-first UX |
+| Domains | Fallback pricing 7→70+ TLDs + generic fallback | Checkout never fails for unknown TLDs |
+| Email | Portal page query fixed (join through email_orders) | Email accounts display correctly |
+| Email | Purchase wizard reads ?domain= URL param | Pre-fill works from domain management |
+| Email | ResellerClub pricing parser fixed | Correct prices displayed |
+| Email | Cancel→support page, upgrade link fixed, renewal price shown | All email actions work |
+| Live Chat | Auto-close settings UI added to Behavior tab | Admins can configure auto-close |
+
+### Remaining Known Issues (Prioritized)
+1. **CRITICAL**: Domain registration/renewal has NO payment integration (registers at registrar without Paddle checkout)
+2. **HIGH**: `deleteDomain()` is soft-delete only (doesn't cancel at registrar)
+3. **HIGH**: Customer-side Web Push notifications not implemented
+4. **MEDIUM**: Simulated auth codes in `transfers.ts` when API unavailable
+5. **MEDIUM**: LemonSqueezy packages still in `package.json` (deprecated)
+6. **LOW**: Pricing page shows $ not K (Kwacha)
+7. **LOW**: Email: no sync button UI, no suspend/unsuspend UI
+
+⚠️ **ACTION REQUIRED**: Re-run `migrations/lc-10-notification-realtime-autoclose.sql` on Supabase if previous attempt failed (syntax was fixed).
 
 ---
 
 ## REALTIME NOTIFICATIONS + INTERNAL NOTES FIX + AUTO-CLOSE + @MENTIONS (Commit `3dff36a`)
-
-Critical security fix: internal notes were visible to customers via Supabase Realtime. Notification bell upgraded to realtime. Auto-close stale conversations implemented. Agent @mentions in internal notes with notifications.
-
-| Area | Fix | Impact |
-|------|-----|--------|
-| Security | Internal notes filtered out of widget Realtime channel | Agent-only messages no longer leak to customers |
-| Notifications | Bell uses Supabase Realtime (not 30s polling) | Instant badge update, sound, toast, bell animation |
-| Auto-Close | Vercel Cron + PG function every 5 min | Stale conversations auto-resolve after configurable timeout (default 30min) |
-| @Mentions | Type @ in note mode → agent dropdown | Mentioned agents get notification with link to conversation |
-| Domains | toLowerCase null guards + better 403 message | Crash fixed + clear IP whitelisting guidance |
-
-⚠️ **ACTION REQUIRED**: Run `migrations/lc-10-notification-realtime-autoclose.sql` on Supabase.
-
----
-
-## LIVE CHAT REALTIME + NOTIFICATIONS + TLD EXPANSION (Commit `ae7080f`)
-
-Live chat was NOT realtime because chat tables were never added to `supabase_realtime` publication. Notification functions existed but were never called. Domain search limited to 7 TLDs despite ResellerClub supporting 500+.
-
-| Area | Fix | Impact |
-|------|-----|--------|
-| Live Chat | Migration: REPLICA IDENTITY FULL + publication + RLS | Root cause fix for realtime delivery |
-| Live Chat | Widget clears session when conversation resolved | Customers can start new conversations |
-| Live Chat | handleEndChat + rating close clear localStorage | Clean session lifecycle |
-| Notifications | Wire notifyNewChatMessage() in messages API | In-app notifications now fire |
-| Notifications | Toast + sound in ConversationViewWrapper | Agents hear/see incoming messages |
-| Notifications | Toast + sound in ConversationsPageWrapper | Agents alerted to new conversations |
-| Domains | TLD_CATEGORIES expanded to 50+ across 8 categories | Full global TLD coverage |
-| Domains | RDAP servers expanded from 7 to ~40 | Fallback covers all new TLDs |
-| Domains | Category-based TLD selection UI | Professional expandable panel |
-| Domains | Single source of truth for TLD lists | Config → filters → search → fallback all synced |
-
-⚠️ **ACTION REQUIRED**: Run `migrations/lc-09-enable-realtime.sql` on Supabase for realtime to activate.
-
----
-
-## DOMAIN SEARCH FALLBACK + PLATFORM-WIDE BUG FIXES (Commit `5995f55`)
-
-Domain search was showing ALL 7 TLDs as "Already registered" because sandbox domainCheckUrl DNS doesn't exist. Created RDAP+DNS fallback, fixed 13 bugs across email and domain management.
-
-| Area | Fix | Impact |
-|------|-----|--------|
-| Domain Search | RDAP+DNS fallback for availability checking | Search works even when ResellerClub is unreachable |
-| Domain Search | Sandbox URL fix + HTTP error handling | Catches 403, HTML, non-JSON responses |
-| Email | formatCurrency(), Renew button, Add Account, Reset Password | 4 dead/broken UI elements fixed |
-| Domain Mgmt | Remove mock data, dynamic profile contact, real auth codes | 4 mock/hardcoded issues replaced with real data |
-
----
-
-## CSP, AGENT VALIDATION, DOMAIN SETTINGS & EMAIL FIXES (Commit `24f00cf`) 
-
-Fixed 6 critical issues: CSP blocking live chat embed, agent creation button, domain renewal hardcoded pricing, ALL 5 domain settings mock handlers, and email dead Renew Order button.
 
 | Area | Fix | Impact |
 |------|-----|--------|

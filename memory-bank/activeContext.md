@@ -1,77 +1,82 @@
 # Active Context
 
-## Latest Session Update — Realtime Notifications + Internal Notes Fix + Auto-Close + @Mentions + Domain Fixes (Commit `3dff36a`)
+## Latest Session Update — Comprehensive Platform Hardening: Billing, Domains, Email, Cron (Commit `7287fd0`)
 
 ### Issues Fixed
 
-**Live Chat — Internal Notes Security (CRITICAL)**
+**Critical Infrastructure**
 
 | # | Bug | File | Fix |
 |---|-----|------|-----|
-| 1 | Internal notes visible to customers in widget | `use-chat-realtime.ts` | Added `filterInternalNotes` option to hook — filters out `isInternalNote`/`note` messages |
-| 2 | Widget shows agent-only notes | `ChatWidget.tsx` | Passes `filterInternalNotes: true` + defense-in-depth check in `onNewMessage` callback |
+| 1 | SQL migration GET DIAGNOSTICS syntax error | `lc-10-*.sql` | Changed `GET DIAGNOSTICS closed_count = closed_count + ROW_COUNT` to proper `GET DIAGNOSTICS batch_count = ROW_COUNT; closed_count := closed_count + batch_count;` |
+| 2 | Vercel deploy fails — 5 crons on Hobby plan (limit: 1) | `vercel.json` + NEW `api/cron/route.ts` | Consolidated into 1 unified hourly cron dispatcher |
 
-**Notification Bell — Realtime**
+**Paddle Billing (LemonSqueezy → Paddle migration)**
 
 | # | Bug | File | Fix |
 |---|-----|------|-----|
-| 3 | Bell only updates every 30 seconds (polling) | `notification-bell.tsx` | Replaced with Supabase Realtime subscription on `notifications` table |
-| 4 | No visual/audio alert for new notifications | `notification-bell.tsx` | Bell animates (BellRing + bounce), plays sound, shows toast with action button |
-| 5 | Notifications table not in publication | `lc-10-notification-realtime-autoclose.sql` | `ALTER PUBLICATION supabase_realtime ADD TABLE notifications` |
-
-**Agent @Mentions in Internal Notes**
-
-| # | Feature | File | Implementation |
-|---|---------|------|----------------|
-| 6 | @mention dropdown | `MessageInput.tsx` | Type `@` in note mode → dropdown shows agents, select inserts `@Name` |
-| 7 | Mention tracking | `message-actions.ts` | Parses mentioned agent IDs, stores in `mentioned_agent_ids` column |
-| 8 | Mention notifications | `message-actions.ts` | Creates notification per mentioned agent with link to conversation |
-| 9 | DB support | `lc-10-*.sql` | Added `mentioned_agent_ids UUID[]` column with GIN index |
-
-**Auto-Close Stale Conversations**
-
-| # | Feature | File | Implementation |
-|---|---------|------|----------------|
-| 10 | Settings | `lc-10-*.sql` | `auto_close_enabled`, `auto_close_minutes`, `auto_close_message` columns |
-| 11 | PostgreSQL function | `lc-10-*.sql` | `auto_close_stale_conversations()` — loops sites, finds stale active convos, resolves + inserts system message |
-| 12 | Vercel Cron | `auto-close-chats/route.ts` | Every 5 minutes via Vercel Cron, verifies no recent messages before closing |
-| 13 | pg_cron fallback | `lc-10-*.sql` | Auto-creates schedule if pg_cron extension available |
+| 3 | subscription-details calls non-existent API endpoints | `subscription-details.tsx` | Rewrote to use `/api/billing/paddle/overview` and `/api/billing/paddle/usage` |
+| 4 | current-plan-card uses LemonSqueezy actions | `current-plan-card.tsx` | Replaced with `cancelSubscriptionPaddle`, `pauseSubscriptionPaddle`, `resumeSubscriptionPaddle` from `@/lib/paddle/billing-actions` |
+| 5 | plans.ts entirely LemonSqueezy (wrong IDs, wrong plan names) | `plans.ts` | Rewrote: plan IDs match Paddle (`pro` not `professional`), env vars use `NEXT_PUBLIC_PADDLE_PRICE_*`, limits updated |
+| 6 | Invoice history reads wrong response shape | `paddle-invoice-history.tsx` | Changed `data.invoices` to `data.data \|\| data.invoices` |
+| 7 | Enterprise "Contact Sales" → 404 | `pricing/page.tsx` | Changed from `/contact?subject=enterprise` to `/portal/support/new?subject=Enterprise plan inquiry` |
 
 **Domain Fixes**
 
 | # | Bug | File | Fix |
 |---|-----|------|-----|
-| 14 | `toLowerCase` crash on undefined | `dns-records-table.tsx` | `?? ''` guard on `record.name` and `record.content` |
-| 15 | `toLowerCase` crash in domain list | `domain-list-client.tsx` | `?? ''` guard on `domain.domain_name` |
-| 16 | Compound TLD misidentification | `domains.ts` | Proper `.co.za` handling in extractTld/extractSld |
-| 17 | Unhelpful 403 error message | `domains.ts` action | Clear guidance: "whitelist your server IP addresses in ResellerClub Dashboard" |
-| 18 | `filter(Boolean)` missing | `domains.ts` | Added before `.map(d => d.toLowerCase())` |
+| 8 | Quick actions (Transfer, Lock, Delete) all dead buttons | `domain-quick-actions.tsx` | Complete rewrite: Transfer→link, Lock/Unlock→server action, Delete→AlertDialog+server action |
+| 9 | Contact form default country US (should be ZM) | `domain-contact-form.tsx` | Default changed to `ZM` |
+| 10 | Only 20 countries in contact form | `domain-contact-form.tsx` | Expanded to 100+ countries across Africa, Americas, Europe, Asia & Pacific |
+| 11 | Fallback pricing only covers 7 TLDs | `domain-billing.ts` | Expanded to 70+ TLDs with generic fallback for unknown TLDs |
+
+**Email Fixes**
+
+| # | Bug | File | Fix |
+|---|-----|------|-----|
+| 12 | Portal email page queries non-existent `email_accounts.domain_id` | `portal/email/page.tsx` | Rewrote query to join through `email_orders` table |
+| 13 | Portal email renders wrong column names | `portal/email/page.tsx` | Fixed to `account.email`, `first_name/last_name`, `status`, `storage_limit` (bytes) |
+| 14 | Email purchase wizard ignores `?domain=` URL param | `email-purchase-wizard.tsx` | Added `useSearchParams`, reads `?domain=` for pre-fill |
+| 15 | ResellerClub pricing response parser broken | `email-purchase-wizard.tsx` | Fixed to navigate nested `{ productKey: { months: { addnewaccount: price } } }` |
+| 16 | Cancel email shows misleading toast | `email-settings-actions.tsx` | Now redirects to `/portal/support/new?subject=Cancel email order for ${domainName}` |
+| 17 | Upgrade button links to 404 | `email-settings-actions.tsx` | Changed from `/dashboard/support/new` to `/portal/support/new` |
+
+**Live Chat**
+
+| # | Feature | File | Implementation |
+|---|---------|------|----------------|
+| 18 | Auto-close settings UI | `SettingsPageWrapper.tsx` | Toggle, minutes input (5-1440), message input in Behavior tab |
+| 19 | Auto-close type fields | `types/index.ts` | `autoCloseEnabled`, `autoCloseMinutes`, `autoCloseMessage` in ChatWidgetSettings |
 
 ### Key Architecture Decisions
-- Notification bell uses Supabase Realtime with 60s fallback polling (was 30s polling only)
-- Auto-close uses dual approach: PostgreSQL function + Vercel Cron (for platforms without pg_cron)
-- @mention dropdown only appears in note mode (not regular messages)
-- `filterInternalNotes` defaults to `false` — only the widget sets it to `true`
-- ResellerClub 403 is an IP whitelisting issue — Vercel IPs need to be whitelisted in ResellerClub Dashboard
+- **Unified Cron Dispatcher**: Single `/api/cron` endpoint runs hourly. Dispatches auto-close every invocation; domain-health at midnight UTC; chat maintenance at 2AM; social sync at 6AM; social publish at noon. Uses internal fetch to existing individual cron routes.
+- **Paddle is the billing provider**: All LemonSqueezy imports removed from active UI components. `@/lib/paddle/billing-actions.ts` has full implementation. `@/lib/actions/billing.ts` still exists but is `@deprecated` and no longer imported.
+- **plans.ts realigned**: Plan IDs are `free`, `starter`, `pro`, `enterprise`. Env vars: `NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY`, etc.
+- **Domain billing generic fallback**: Unknown TLDs now get $14.99/yr pricing instead of error. Ensures checkout never fails for supported TLDs.
 
 ### Important: Migration Must Be Run
-⚠️ **`migrations/lc-10-notification-realtime-autoclose.sql`** must be executed on Supabase for:
-- Notification bell realtime
-- Auto-close settings columns
-- Agent mention columns
-- pg_cron schedule (if available)
+⚠️ **`migrations/lc-10-notification-realtime-autoclose.sql`** syntax error has been fixed — re-run if previous attempt failed.
 
 ### Git State
 - **Branch**: `main`
-- **Latest commit**: `3dff36a`
+- **Latest commit**: `7287fd0`
 - **Pushed**: Yes ✅
 - **Working tree**: Clean
 - **TSC**: 0 errors ✅
-- **Files changed**: 17 (3 new, 14 modified)
+- **Files changed**: 16 (1 new, 15 modified)
+
+### Known Remaining Items (Not Yet Addressed)
+1. Domain registration/renewal has NO payment integration (registers at registrar without charging customer via Paddle)
+2. `deleteDomain()` is soft-delete only (doesn't cancel at registrar)
+3. Simulated auth codes in `transfers.ts` when API unavailable
+4. LemonSqueezy packages still in `package.json` (deprecated but not removed)
+5. Pricing page shows $ not K (Kwacha)
+6. Customer-side Web Push notifications not yet implemented
+7. Email: no sync button UI, no suspend/unsuspend UI
 
 ---
 
-## Previous Session — Live Chat Realtime + Notifications + TLD Expansion (Commit `ae7080f`)
+## Previous Session — Realtime Notifications + Internal Notes Fix + Auto-Close + @Mentions + Domain Fixes (Commit `3dff36a`)
 
 ### Issues Fixed
 
