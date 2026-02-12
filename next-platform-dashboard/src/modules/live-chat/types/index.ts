@@ -108,6 +108,10 @@ export interface ChatWidgetSettings {
   enableEmoji: boolean
   enableSoundNotifications: boolean
   enableSatisfactionRating: boolean
+  // Auto-close
+  autoCloseEnabled: boolean
+  autoCloseMinutes: number
+  autoCloseMessage: string
   // Language
   language: string
   customTranslations: Record<string, string>

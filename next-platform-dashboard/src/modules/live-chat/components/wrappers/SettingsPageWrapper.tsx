@@ -829,6 +829,57 @@ export function SettingsPageWrapper({
                 ))}
               </div>
 
+              {/* ── Auto-Close Inactive Conversations ── */}
+              <div className="border-t pt-6 mt-6">
+                <h4 className="font-medium mb-4">Auto-Close Inactive Conversations</h4>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Enable Auto-Close</Label>
+                      <p className="text-xs text-muted-foreground">
+                        Automatically close conversations after inactivity
+                      </p>
+                    </div>
+                    <Switch
+                      checked={settings.autoCloseEnabled ?? true}
+                      onCheckedChange={(v) => update('autoCloseEnabled', v)}
+                    />
+                  </div>
+
+                  {(settings.autoCloseEnabled ?? true) && (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Inactivity Timeout (minutes)</Label>
+                        <Input
+                          type="number"
+                          value={settings.autoCloseMinutes ?? 30}
+                          onChange={(e) =>
+                            update('autoCloseMinutes', parseInt(e.target.value) || 30)
+                          }
+                          min={5}
+                          max={1440}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Close conversations after this many minutes of no messages (5–1440)
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Auto-Close Message</Label>
+                        <Input
+                          value={settings.autoCloseMessage ?? 'This conversation was automatically closed due to inactivity. Feel free to start a new chat anytime!'}
+                          onChange={(e) => update('autoCloseMessage', e.target.value)}
+                          placeholder="Message shown when conversation is auto-closed"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          System message sent when a conversation is automatically closed
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
               <Button
                 onClick={() =>
                   saveSettings('behavior', {
@@ -840,6 +891,9 @@ export function SettingsPageWrapper({
                     enableEmoji: settings.enableEmoji,
                     enableSoundNotifications: settings.enableSoundNotifications,
                     enableSatisfactionRating: settings.enableSatisfactionRating,
+                    autoCloseEnabled: settings.autoCloseEnabled ?? true,
+                    autoCloseMinutes: settings.autoCloseMinutes ?? 30,
+                    autoCloseMessage: settings.autoCloseMessage ?? 'This conversation was automatically closed due to inactivity. Feel free to start a new chat anytime!',
                   })
                 }
                 disabled={isPending}

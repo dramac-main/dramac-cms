@@ -29,17 +29,27 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { getPlanById } from "@/config/plans";
 import {
-  cancelSubscription,
-  pauseSubscription,
-  resumeSubscription,
-  getCustomerPortalUrl,
-} from "@/lib/actions/billing";
+  cancelSubscriptionPaddle,
+  pauseSubscriptionPaddle,
+  resumeSubscriptionPaddle,
+} from "@/lib/paddle/billing-actions";
 import type { Subscription, SubscriptionStatus } from "@/types/payments";
+
+// Paddle plan lookup (replaces LemonSqueezy plans.ts dependency)
+function getPaddlePlanName(planId: string): { name: string; description: string; limits: { sites: number; clients: number; storage_gb: number; ai_generations: number; team_members: number } } {
+  const plans: Record<string, { name: string; description: string; limits: { sites: number; clients: number; storage_gb: number; ai_generations: number; team_members: number } }> = {
+    starter: { name: "Starter", description: "Perfect for small teams getting started", limits: { sites: 1, clients: 10, storage_gb: 5, ai_generations: 500, team_members: 3 } },
+    pro: { name: "Pro", description: "For growing businesses that need more power", limits: { sites: 5, clients: 50, storage_gb: 25, ai_generations: 5000, team_members: 10 } },
+    enterprise: { name: "Enterprise", description: "For large organizations with custom requirements", limits: { sites: -1, clients: -1, storage_gb: 100, ai_generations: -1, team_members: -1 } },
+    free: { name: "Free", description: "Get started for free", limits: { sites: 1, clients: 3, storage_gb: 0.5, ai_generations: 5, team_members: 1 } },
+  };
+  return plans[planId] || plans.free;
+}
 
 interface CurrentPlanCardProps {
   subscription: Subscription | null;
+  agencyId?: string;
   usage?: {
     sites: number;
     clients: number;
@@ -58,19 +68,20 @@ const statusConfig: Record<SubscriptionStatus, { icon: typeof CircleCheck; color
   unpaid: { icon: AlertCircle, color: "text-red-500", bg: "bg-red-100", label: "Unpaid" },
 };
 
-export function CurrentPlanCard({ subscription, usage }: CurrentPlanCardProps) {
+export function CurrentPlanCard({ subscription, agencyId, usage }: CurrentPlanCardProps) {
   const [isLoading, setIsLoading] = useState<string | null>(null);
   
-  const plan = getPlanById(subscription?.plan_id || "free");
+  const planInfo = getPaddlePlanName(subscription?.plan_id || "free");
   const status: SubscriptionStatus = (subscription?.status as SubscriptionStatus) || "active";
   const statusInfo = statusConfig[status] || statusConfig.active;
   const StatusIcon = statusInfo.icon;
 
   const handleCancel = async () => {
+    if (!agencyId) { toast.error("No agency found"); return; }
     setIsLoading("cancel");
-    const result = await cancelSubscription();
-    if (result.error) {
-      toast.error(result.error);
+    const result = await cancelSubscriptionPaddle(agencyId);
+    if (!result.success) {
+      toast.error(result.error || "Failed to cancel");
     } else {
       toast.success("Subscription cancelled. You'll have access until the end of the billing period.");
     }
@@ -78,10 +89,11 @@ export function CurrentPlanCard({ subscription, usage }: CurrentPlanCardProps) {
   };
 
   const handlePause = async () => {
+    if (!agencyId) { toast.error("No agency found"); return; }
     setIsLoading("pause");
-    const result = await pauseSubscription();
-    if (result.error) {
-      toast.error(result.error);
+    const result = await pauseSubscriptionPaddle(agencyId);
+    if (!result.success) {
+      toast.error(result.error || "Failed to pause");
     } else {
       toast.success("Subscription paused");
     }
@@ -89,10 +101,11 @@ export function CurrentPlanCard({ subscription, usage }: CurrentPlanCardProps) {
   };
 
   const handleResume = async () => {
+    if (!agencyId) { toast.error("No agency found"); return; }
     setIsLoading("resume");
-    const result = await resumeSubscription();
-    if (result.error) {
-      toast.error(result.error);
+    const result = await resumeSubscriptionPaddle(agencyId);
+    if (!result.success) {
+      toast.error(result.error || "Failed to resume");
     } else {
       toast.success("Subscription resumed");
     }
@@ -101,11 +114,17 @@ export function CurrentPlanCard({ subscription, usage }: CurrentPlanCardProps) {
 
   const handleManageBilling = async () => {
     setIsLoading("portal");
-    const result = await getCustomerPortalUrl();
-    if (result.error) {
-      toast.error(result.error);
-    } else if (result.url) {
-      window.open(result.url, "_blank");
+    try {
+      const res = await fetch("/api/billing/paddle/subscription/update-payment", {
+        method: "POST",
+      }).then(r => r.json()).catch(() => null);
+      if (res?.url) {
+        window.open(res.url, "_blank");
+      } else {
+        toast.error("Billing portal not available. Visit the billing settings page.");
+      }
+    } catch {
+      toast.error("Failed to open billing portal");
     }
     setIsLoading(null);
   };
@@ -133,8 +152,8 @@ export function CurrentPlanCard({ subscription, usage }: CurrentPlanCardProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h3 className="text-2xl font-bold">{plan?.name || "Free"}</h3>
-            <p className="text-muted-foreground">{plan?.description}</p>
+            <h3 className="text-2xl font-bold">{planInfo?.name || "Free"}</h3>
+            <p className="text-muted-foreground">{planInfo?.description}</p>
           </div>
 
           {subscription && (
@@ -161,7 +180,7 @@ export function CurrentPlanCard({ subscription, usage }: CurrentPlanCardProps) {
           )}
 
           <div className="flex flex-wrap gap-2 pt-4">
-            {subscription && subscription.lemonsqueezy_subscription_id && status !== "cancelled" && status !== "expired" && (
+            {subscription && (subscription as any).paddle_subscription_id && status !== "cancelled" && status !== "expired" && (
               <>
                 <Button
                   variant="outline"
@@ -223,7 +242,7 @@ export function CurrentPlanCard({ subscription, usage }: CurrentPlanCardProps) {
               </>
             )}
 
-            {(!subscription || !subscription.lemonsqueezy_subscription_id || status === "cancelled" || status === "expired") && (
+            {(!subscription || !(subscription as any).paddle_subscription_id || status === "cancelled" || status === "expired") && (
               <Link href="#plans">
                 <Button>Upgrade Now</Button>
               </Link>
@@ -241,23 +260,23 @@ export function CurrentPlanCard({ subscription, usage }: CurrentPlanCardProps) {
           <UsageItem
             label="Websites"
             used={currentUsage.sites}
-            limit={plan?.limits.sites || 1}
+            limit={planInfo?.limits.sites || 1}
           />
           <UsageItem
             label="Clients"
             used={currentUsage.clients}
-            limit={plan?.limits.clients || 1}
+            limit={planInfo?.limits.clients || 1}
           />
           <UsageItem
             label="Storage"
             used={currentUsage.storage_gb}
-            limit={plan?.limits.storage_gb || 0.5}
+            limit={planInfo?.limits.storage_gb || 0.5}
             unit="GB"
           />
           <UsageItem
             label="AI Generations"
             used={currentUsage.ai_generations}
-            limit={plan?.limits.ai_generations || 5}
+            limit={planInfo?.limits.ai_generations || 5}
             unit="/month"
           />
         </CardContent>

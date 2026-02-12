@@ -17,7 +17,6 @@ async function getClientEmailAccounts(clientId: string) {
   const supabase = await createClient();
   
   // Get domains for this client
-  // Cast to any to bypass strict typing for tables not in generated types
   const { data: domains } = await (supabase as any)
     .from('domains')
     .select('id, domain_name')
@@ -30,12 +29,25 @@ async function getClientEmailAccounts(clientId: string) {
   const domainIds = domains.map((d: any) => d.id);
   const domainMap = new Map(domains.map((d: any) => [d.id, d]));
   
-  // Get email accounts — use 'email_accounts' table (same as dashboard writes to)
-  // Cast to any to bypass strict typing for tables not in generated types
+  // Get email orders for these domains
+  const { data: orders, error: ordersError } = await (supabase as any)
+    .from('email_orders')
+    .select('id, domain_name, domain_id')
+    .in('domain_id', domainIds)
+    .eq('status', 'active');
+  
+  if (ordersError || !orders || orders.length === 0) {
+    return [];
+  }
+  
+  const orderIds = orders.map((o: any) => o.id);
+  const orderDomainMap = new Map(orders.map((o: any) => [o.id, o.domain_name]));
+  
+  // Get email accounts linked to these orders
   const { data: accounts, error } = await (supabase as any)
     .from('email_accounts')
     .select('*')
-    .in('domain_id', domainIds)
+    .in('email_order_id', orderIds)
     .eq('status', 'active')
     .order('created_at', { ascending: false });
   
@@ -44,10 +56,10 @@ async function getClientEmailAccounts(clientId: string) {
     return [];
   }
   
-  // Attach domain info manually since table may not have FK relation set up
+  // Attach domain info from orders
   return (accounts || []).map((a: any) => ({
     ...a,
-    domain: domainMap.get(a.domain_id) || null,
+    domain_name: orderDomainMap.get(a.email_order_id) || null,
   }));
 }
 
@@ -114,58 +126,47 @@ export default async function PortalEmailPage() {
                       <div className="space-y-1">
                         <CardTitle className="flex items-center gap-2 text-base">
                           <Mail className="h-4 w-4" />
-                          {account.email_address}
+                          {account.email}
                         </CardTitle>
-                        {account.display_name && (
-                          <CardDescription>{account.display_name}</CardDescription>
+                        {(account.first_name || account.last_name) && (
+                          <CardDescription>{[account.first_name, account.last_name].filter(Boolean).join(' ')}</CardDescription>
                         )}
                       </div>
-                      <Badge>Active</Badge>
+                      <Badge variant={account.status === 'active' ? 'default' : 'secondary'}>
+                        {account.status === 'active' ? 'Active' : account.status}
+                      </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-muted-foreground mb-1">Domain</p>
-                        <p className="font-medium">{account.domain?.domain_name || 'N/A'}</p>
+                        <p className="font-medium">{account.domain_name || 'N/A'}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-1">Account Type</p>
-                        <p className="font-medium capitalize">{account.account_type}</p>
+                        <p className="text-muted-foreground mb-1">Status</p>
+                        <p className="font-medium capitalize">{account.status}</p>
                       </div>
-                      {account.mailbox_size_gb && (
+                      {account.storage_limit && (
                         <>
                           <div>
                             <p className="text-muted-foreground mb-1">Storage</p>
                             <div className="flex items-center gap-1">
                               <Database className="h-3 w-3 text-muted-foreground" />
                               <p className="font-medium">
-                                {account.mailbox_size_gb} GB
+                                {(account.storage_limit / (1024 * 1024 * 1024)).toFixed(1)} GB
                               </p>
                             </div>
                           </div>
                           <div>
                             <p className="text-muted-foreground mb-1">Used</p>
                             <p className="font-medium">
-                              {((account.storage_used_mb || 0) / 1024).toFixed(2)} GB
+                              {((account.storage_used || 0) / (1024 * 1024 * 1024)).toFixed(2)} GB
                             </p>
                           </div>
                         </>
                       )}
                     </div>
-
-                    {account.forward_to && account.forward_to.length > 0 && (
-                      <div className="border-t pt-3">
-                        <p className="text-sm font-medium mb-2">Forwarding To:</p>
-                        <div className="space-y-1">
-                          {account.forward_to.map((email: string, idx: number) => (
-                            <p key={idx} className="text-sm text-muted-foreground">
-                              → {email}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               ))}

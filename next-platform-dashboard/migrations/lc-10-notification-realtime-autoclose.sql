@@ -41,6 +41,7 @@ CREATE OR REPLACE FUNCTION auto_close_stale_conversations()
 RETURNS INTEGER AS $$
 DECLARE
   closed_count INTEGER := 0;
+  batch_count INTEGER := 0;
   site_record RECORD;
 BEGIN
   -- Loop through each site's settings
@@ -75,27 +76,30 @@ BEGIN
       updated_at = NOW()
     WHERE id IN (SELECT id FROM stale_conversations);
 
-    -- Count how many we closed
-    GET DIAGNOSTICS closed_count = closed_count + ROW_COUNT;
+    -- Count how many we closed this iteration
+    GET DIAGNOSTICS batch_count = ROW_COUNT;
+    closed_count := closed_count + batch_count;
 
     -- Insert system message for each closed conversation
-    INSERT INTO mod_chat_messages (
-      conversation_id,
-      sender_type,
-      content,
-      content_type,
-      is_internal_note
-    )
-    SELECT
-      c.id,
-      'system',
-      site_record.auto_close_message,
-      'text',
-      false
-    FROM mod_chat_conversations c
-    WHERE c.site_id = site_record.site_id
-      AND c.status = 'resolved'
-      AND c.resolved_at >= NOW() - INTERVAL '5 seconds';
+    IF batch_count > 0 THEN
+      INSERT INTO mod_chat_messages (
+        conversation_id,
+        sender_type,
+        content,
+        content_type,
+        is_internal_note
+      )
+      SELECT
+        c.id,
+        'system',
+        site_record.auto_close_message,
+        'text',
+        false
+      FROM mod_chat_conversations c
+      WHERE c.site_id = site_record.site_id
+        AND c.status = 'resolved'
+        AND c.resolved_at >= NOW() - INTERVAL '5 seconds';
+    END IF;
   END LOOP;
 
   RETURN closed_count;

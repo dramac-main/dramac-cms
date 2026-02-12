@@ -240,7 +240,7 @@ function PricingContent() {
                 className="w-full"
                 asChild
               >
-                <Link href="/contact?subject=enterprise">
+                <Link href="/portal/support/new?subject=Enterprise plan inquiry">
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Contact Sales
                 </Link>

@@ -63,7 +63,8 @@ export function PaddleInvoiceHistory({ className }: PaddleInvoiceHistoryProps) {
         const res = await fetch('/api/billing/paddle/invoices');
         if (res.ok) {
           const data = await res.json();
-          setInvoices(data.invoices || []);
+          // API returns { success: true, data: invoices } 
+          setInvoices(data.data || data.invoices || []);
           setError(null);
         } else {
           const errorData = await res.json();

@@ -1,6 +1,15 @@
 import type { SubscriptionPlan } from "@/types/payments";
 
-// These IDs come from your LemonSqueezy dashboard after creating products
+/**
+ * Subscription Plans Configuration
+ * 
+ * Aligned with Paddle billing integration (EM-59).
+ * Plan IDs: 'free', 'starter', 'pro', 'enterprise'
+ * 
+ * Paddle Price IDs come from env vars (NEXT_PUBLIC_PADDLE_PRICE_*).
+ * The variant_id fields are kept for backward compatibility but
+ * new code should use paddlePriceId fields.
+ */
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "free",
@@ -9,18 +18,18 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     price_monthly: 0,
     price_yearly: 0,
     currency: "USD",
-    variant_id_monthly: "", // No checkout needed for free
+    variant_id_monthly: "",
     variant_id_yearly: "",
     features: [
       "1 website",
-      "1 client",
+      "3 clients",
       "500MB storage",
       "Basic templates",
       "Community support",
     ],
     limits: {
       sites: 1,
-      clients: 1,
+      clients: 3,
       storage_gb: 0.5,
       team_members: 1,
       custom_domains: false,
@@ -31,69 +40,73 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: "starter",
     name: "Starter",
-    description: "For small agencies getting started",
+    description: "For small teams getting started",
     price_monthly: 29,
-    price_yearly: 290, // ~2 months free
+    price_yearly: 290,
     currency: "USD",
-    variant_id_monthly: process.env.NEXT_PUBLIC_LS_STARTER_MONTHLY_VARIANT_ID || "",
-    variant_id_yearly: process.env.NEXT_PUBLIC_LS_STARTER_YEARLY_VARIANT_ID || "",
+    variant_id_monthly: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY || "",
+    variant_id_yearly: process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY || "",
     features: [
-      "5 websites",
+      "1 website",
       "10 clients",
       "5GB storage",
-      "All templates",
+      "3 modules included",
+      "3 team members",
       "Custom domains",
       "Email support",
-      "50 AI generations/month",
+      "500 AI actions/month",
     ],
     limits: {
-      sites: 5,
+      sites: 1,
       clients: 10,
       storage_gb: 5,
       team_members: 3,
       custom_domains: true,
-      ai_generations: 50,
+      ai_generations: 500,
       white_label: false,
     },
   },
   {
-    id: "professional",
-    name: "Professional",
-    description: "For growing agencies",
-    price_monthly: 79,
-    price_yearly: 790,
+    id: "pro",
+    name: "Pro",
+    description: "For growing businesses that need more power",
+    price_monthly: 99,
+    price_yearly: 990,
     currency: "USD",
-    variant_id_monthly: process.env.NEXT_PUBLIC_LS_PRO_MONTHLY_VARIANT_ID || "",
-    variant_id_yearly: process.env.NEXT_PUBLIC_LS_PRO_YEARLY_VARIANT_ID || "",
+    variant_id_monthly: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_MONTHLY || "",
+    variant_id_yearly: process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_YEARLY || "",
     popular: true,
     features: [
-      "20 websites",
+      "5 websites",
       "50 clients",
       "25GB storage",
-      "All templates & modules",
+      "10 modules included",
+      "10 team members",
       "Priority support",
-      "200 AI generations/month",
-      "White-label option",
+      "5,000 AI actions/month",
+      "White-label options",
+      "Custom domains",
+      "50% overage discount",
     ],
     limits: {
-      sites: 20,
+      sites: 5,
       clients: 50,
       storage_gb: 25,
       team_members: 10,
       custom_domains: true,
-      ai_generations: 200,
+      ai_generations: 5000,
       white_label: true,
     },
   },
   {
     id: "enterprise",
     name: "Enterprise",
-    description: "For large agencies and teams",
-    price_monthly: 199,
-    price_yearly: 1990,
+    description: "For large organizations with custom requirements",
+    price_monthly: 0, // Custom pricing
+    price_yearly: 0,
     currency: "USD",
-    variant_id_monthly: process.env.NEXT_PUBLIC_LS_ENTERPRISE_MONTHLY_VARIANT_ID || "",
-    variant_id_yearly: process.env.NEXT_PUBLIC_LS_ENTERPRISE_YEARLY_VARIANT_ID || "",
+    variant_id_monthly: "",
+    variant_id_yearly: "",
     features: [
       "Unlimited websites",
       "Unlimited clients",

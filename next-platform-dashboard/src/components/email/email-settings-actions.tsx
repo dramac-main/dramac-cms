@@ -63,8 +63,14 @@ export function EmailSettingsActions({
   }
 
   function handleCancel() {
-    toast.info("Please contact support to cancel your email order");
-    setShowCancelDialog(false);
+    startTransition(async () => {
+      // Currently delegating to support for safety
+      toast.info(
+        "To cancel your email order, please contact support. This protects against accidental data loss."
+      );
+      router.push(`/portal/support/new?subject=Cancel email order for ${domainName}`);
+      setShowCancelDialog(false);
+    });
   }
 
   return (
@@ -100,7 +106,7 @@ export function EmailSettingsActions({
             <Button
               variant="outline"
               onClick={() =>
-                router.push(`/dashboard/support/new?subject=Upgrade email for ${domainName}`)
+                router.push(`/portal/support/new?subject=Upgrade email for ${domainName}`)
               }
             >
               Upgrade
@@ -169,21 +175,36 @@ export function EmailSettingsActions({
               Renew your email subscription for {domainName}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4">
-            <label className="text-sm font-medium mb-2 block">Renewal Period</label>
-            <Select value={renewMonths} onValueChange={setRenewMonths}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">1 Month</SelectItem>
-                <SelectItem value="3">3 Months</SelectItem>
-                <SelectItem value="6">6 Months</SelectItem>
-                <SelectItem value="12">12 Months</SelectItem>
-                <SelectItem value="24">24 Months</SelectItem>
-                <SelectItem value="36">36 Months</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="py-4 space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Renewal Period</label>
+              <Select value={renewMonths} onValueChange={setRenewMonths}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 Month</SelectItem>
+                  <SelectItem value="3">3 Months</SelectItem>
+                  <SelectItem value="6">6 Months</SelectItem>
+                  <SelectItem value="12">12 Months</SelectItem>
+                  <SelectItem value="24">24 Months</SelectItem>
+                  <SelectItem value="36">36 Months</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {retailPrice > 0 && (
+              <div className="bg-muted p-3 rounded-lg text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Estimated cost</span>
+                  <span className="font-medium">
+                    {formatCurrency((retailPrice / 12) * parseInt(renewMonths))}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Based on current rate of {formatCurrency(retailPrice)}/year
+                </p>
+              </div>
+            )}
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>

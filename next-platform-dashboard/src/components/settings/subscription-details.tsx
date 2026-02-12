@@ -5,15 +5,17 @@ import { toast } from "sonner";
 import { Check, CreditCard, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 interface SubscriptionDetailsProps {
   userId: string;
 }
 
-interface SubscriptionData {
+interface BillingOverview {
   plan: string;
   status: string;
   currentPeriodEnd: string | null;
+  billingCycle: string | null;
 }
 
 interface UsageData {
@@ -25,35 +27,39 @@ interface UsageData {
 
 export function SubscriptionDetails({ userId }: SubscriptionDetailsProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
+  const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [usage, setUsage] = useState<UsageData | null>(null);
 
   useEffect(() => {
     const fetchBillingData = async () => {
       try {
-        // Fetch real subscription and usage data
-        const [subRes, usageRes] = await Promise.all([
-          fetch(`/api/billing/subscription?userId=${userId}`).then(r => r.ok ? r.json() : null).catch(() => null),
-          fetch(`/api/billing/usage?userId=${userId}`).then(r => r.ok ? r.json() : null).catch(() => null),
+        // Fetch from Paddle billing API endpoints
+        const [overviewRes, usageRes] = await Promise.all([
+          fetch('/api/billing/paddle/overview').then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch('/api/billing/paddle/usage').then(r => r.ok ? r.json() : null).catch(() => null),
         ]);
 
-        if (subRes?.data) {
-          setSubscription({
-            plan: subRes.data.plan_id || subRes.data.subscription_plan || "starter",
-            status: subRes.data.status || "active",
-            currentPeriodEnd: subRes.data.current_period_end || null,
+        if (overviewRes?.success && overviewRes?.data) {
+          const d = overviewRes.data;
+          setOverview({
+            plan: d.subscription?.plan_type || d.plan || "starter",
+            status: d.subscription?.status || d.status || "active",
+            currentPeriodEnd: d.subscription?.current_period_end || d.currentPeriodEnd || null,
+            billingCycle: d.subscription?.billing_cycle || null,
           });
         } else {
           // Default to free/starter plan if no subscription found
-          setSubscription({ plan: "starter", status: "active", currentPeriodEnd: null });
+          setOverview({ plan: "starter", status: "active", currentPeriodEnd: null, billingCycle: null });
         }
 
-        if (usageRes) {
+        if (usageRes?.success && usageRes?.data) {
+          setUsage(usageRes.data);
+        } else if (usageRes) {
           setUsage(usageRes);
         }
       } catch {
         // Default to free plan on error
-        setSubscription({ plan: "starter", status: "active", currentPeriodEnd: null });
+        setOverview({ plan: "starter", status: "active", currentPeriodEnd: null, billingCycle: null });
       } finally {
         setIsLoading(false);
       }
@@ -71,7 +77,8 @@ export function SubscriptionDetails({ userId }: SubscriptionDetailsProps) {
       if (res?.url) {
         window.location.href = res.url;
       } else {
-        toast.error("Billing portal not available yet. Contact support.");
+        // Fallback: navigate to our billing settings page
+        window.location.href = "/settings/billing";
       }
     } catch {
       toast.error("Failed to open billing portal");
@@ -86,11 +93,11 @@ export function SubscriptionDetails({ userId }: SubscriptionDetailsProps) {
     );
   }
 
-  const planName = subscription?.plan === "enterprise" ? "Enterprise"
-    : subscription?.plan === "professional" ? "Professional"
+  const planName = overview?.plan === "enterprise" ? "Enterprise"
+    : overview?.plan === "pro" ? "Pro"
     : "Starter";
 
-  const isFreePlan = !subscription?.plan || subscription.plan === "starter";
+  const isFreePlan = !overview?.plan || overview.plan === "starter";
 
   return (
     <div className="space-y-6">
@@ -102,21 +109,28 @@ export function SubscriptionDetails({ userId }: SubscriptionDetailsProps) {
             <Badge>Current Plan</Badge>
           </div>
           <p className="text-sm text-muted-foreground">
-            {isFreePlan ? "Free forever" : "Active subscription"}
+            {isFreePlan ? "Free forever" : `Active subscription${overview?.billingCycle ? ` (${overview.billingCycle})` : ''}`}
           </p>
-          {subscription?.currentPeriodEnd && (
+          {overview?.currentPeriodEnd && (
             <p className="text-xs text-muted-foreground mt-1">
-              Next billing date: {new Date(subscription.currentPeriodEnd).toLocaleDateString("en-ZM")}
+              Next billing date: {new Date(overview.currentPeriodEnd).toLocaleDateString("en-ZM")}
             </p>
           )}
         </div>
-        {!isFreePlan && (
-          <Button variant="outline" size="sm" onClick={handleManageBilling}>
-            <CreditCard className="w-4 h-4 mr-2" />
-            Manage Billing
-            <ExternalLink className="w-3 h-3 ml-2" />
+        <div className="flex gap-2">
+          {!isFreePlan && (
+            <Button variant="outline" size="sm" onClick={handleManageBilling}>
+              <CreditCard className="w-4 h-4 mr-2" />
+              Manage Billing
+              <ExternalLink className="w-3 h-3 ml-2" />
+            </Button>
+          )}
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/settings/billing">
+              View Full Billing
+            </Link>
           </Button>
-        )}
+        </div>
       </div>
 
       {/* Plan Features */}
@@ -125,16 +139,21 @@ export function SubscriptionDetails({ userId }: SubscriptionDetailsProps) {
         <ul className="space-y-2">
           {isFreePlan ? (
             <>
-              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />Up to 3 clients</li>
-              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />Basic site builder</li>
-              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />Community support</li>
+              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />1 website</li>
+              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />3 team members</li>
+              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />Basic analytics</li>
+              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />Email support</li>
             </>
           ) : (
             <>
-              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />Unlimited clients</li>
-              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />Advanced site builder</li>
+              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />{overview?.plan === 'pro' ? '5 websites' : '1 website'}</li>
+              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />{overview?.plan === 'pro' ? '10 team members' : '3 team members'}</li>
+              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />Advanced analytics</li>
               <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />Priority support</li>
-              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />White-label options</li>
+              <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />Custom domains</li>
+              {overview?.plan === 'pro' && (
+                <li className="flex items-center gap-2 text-sm"><Check className="w-4 h-4 text-green-600 shrink-0" />White-label options</li>
+              )}
             </>
           )}
         </ul>
@@ -170,10 +189,10 @@ export function SubscriptionDetails({ userId }: SubscriptionDetailsProps) {
         <div className="p-4 rounded-lg border border-primary/20 bg-primary/5">
           <h4 className="font-semibold mb-1">Ready to grow?</h4>
           <p className="text-sm text-muted-foreground mb-3">
-            Upgrade to unlock more clients, advanced features, and priority support.
+            Upgrade to unlock more sites, advanced features, and priority support.
           </p>
-          <Button onClick={handleManageBilling}>
-            View Plans
+          <Button asChild>
+            <Link href="/pricing">View Plans</Link>
           </Button>
         </div>
       )}

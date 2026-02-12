@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -42,18 +42,29 @@ type FormValues = z.infer<typeof formSchema>;
 
 export function EmailPurchaseWizard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [pricePerAccount, setPricePerAccount] = useState<number | null>(null);
   const [pricingCurrency, setPricingCurrency] = useState("USD");
 
+  // Pre-fill domain from URL query params (?domain=example.com&domainId=xxx)
+  const domainFromUrl = searchParams.get('domain') || '';
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      domainName: "",
+      domainName: domainFromUrl,
       numberOfAccounts: "5",
       months: "12",
     },
   });
+
+  // Set domain from URL when it changes
+  useEffect(() => {
+    if (domainFromUrl && !form.getValues('domainName')) {
+      form.setValue('domainName', domainFromUrl);
+    }
+  }, [domainFromUrl, form]);
 
   // Fetch real pricing from ResellerClub on mount
   useEffect(() => {
@@ -61,15 +72,39 @@ export function EmailPurchaseWizard() {
       try {
         const result = await getBusinessEmailPricing();
         if (result.success && result.data) {
-          // Extract monthly price from the API response
           const pricing = result.data as Record<string, unknown>;
-          // ResellerClub returns pricing in various structures; extract the per-account monthly rate
-          const monthlyPrice =
-            (pricing as any)?.pricing?.monthly ||
-            (pricing as any)?.monthlyPrice ||
-            (pricing as any)?.price ||
-            null;
-          if (typeof monthlyPrice === 'number') {
+          // ResellerClub returns nested pricing: { productKey: { months: { addnewaccount: price } } }
+          // Try to extract a monthly price from the structure
+          let monthlyPrice: number | null = null;
+          
+          // Navigate nested response structure
+          for (const productKey of Object.keys(pricing)) {
+            const product = pricing[productKey];
+            if (typeof product === 'object' && product !== null) {
+              // Try to get 1-month price
+              const monthData = (product as any)['1'] || (product as any)['12'];
+              if (monthData && typeof monthData === 'object') {
+                const price = monthData.addnewaccount || monthData.renewaccount;
+                if (typeof price === 'number' || typeof price === 'string') {
+                  monthlyPrice = parseFloat(String(price));
+                  break;
+                }
+              }
+            }
+          }
+          
+          // Fallback: direct price properties
+          if (monthlyPrice === null) {
+            const directPrice = 
+              (pricing as any)?.pricing?.monthly ||
+              (pricing as any)?.monthlyPrice ||
+              (pricing as any)?.price;
+            if (typeof directPrice === 'number') {
+              monthlyPrice = directPrice;
+            }
+          }
+
+          if (monthlyPrice !== null && !isNaN(monthlyPrice)) {
             setPricePerAccount(monthlyPrice);
           }
           if ((pricing as any)?.currency) {
