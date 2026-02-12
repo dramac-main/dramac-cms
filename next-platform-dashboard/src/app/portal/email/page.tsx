@@ -20,7 +20,7 @@ async function getClientEmailAccounts(clientId: string) {
   // Cast to any to bypass strict typing for tables not in generated types
   const { data: domains } = await (supabase as any)
     .from('domains')
-    .select('id')
+    .select('id, domain_name')
     .eq('client_id', clientId);
   
   if (!domains || domains.length === 0) {
@@ -28,15 +28,13 @@ async function getClientEmailAccounts(clientId: string) {
   }
   
   const domainIds = domains.map((d: any) => d.id);
+  const domainMap = new Map(domains.map((d: any) => [d.id, d]));
   
-  // Get email accounts for those domains
+  // Get email accounts — use 'email_accounts' table (same as dashboard writes to)
   // Cast to any to bypass strict typing for tables not in generated types
   const { data: accounts, error } = await (supabase as any)
-    .from('domain_email_accounts')
-    .select(`
-      *,
-      domain:domains(domain_name)
-    `)
+    .from('email_accounts')
+    .select('*')
     .in('domain_id', domainIds)
     .eq('status', 'active')
     .order('created_at', { ascending: false });
@@ -46,7 +44,11 @@ async function getClientEmailAccounts(clientId: string) {
     return [];
   }
   
-  return accounts || [];
+  // Attach domain info manually since table may not have FK relation set up
+  return (accounts || []).map((a: any) => ({
+    ...a,
+    domain: domainMap.get(a.domain_id) || null,
+  }));
 }
 
 export default async function PortalEmailPage() {

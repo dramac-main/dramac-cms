@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Settings, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowLeft, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,8 @@ import { Separator } from "@/components/ui/separator";
 import { getBusinessEmailOrder } from "@/lib/actions/business-email";
 import { format } from "date-fns";
 import { PLATFORM } from "@/lib/constants/platform";
+import { formatCurrency } from "@/lib/locale-config";
+import { EmailSettingsActions } from "@/components/email/email-settings-actions";
 
 export const metadata: Metadata = {
   title: `Email Order Settings | ${PLATFORM.name}`,
@@ -90,91 +92,14 @@ export default async function EmailSettingsPage({ params }: EmailSettingsPagePro
         </CardContent>
       </Card>
 
-      {/* Renewal */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Subscription</CardTitle>
-          <CardDescription>
-            Manage your email subscription
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <p className="font-medium">Current Plan</p>
-              <p className="text-sm text-muted-foreground">
-                {order.number_of_accounts} accounts • Expires {format(new Date(order.expiry_date), "MMM d, yyyy")}
-              </p>
-            </div>
-            <Button>
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Renew
-            </Button>
-          </div>
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <p className="font-medium">Upgrade Plan</p>
-              <p className="text-sm text-muted-foreground">
-                Add more email accounts to your plan
-              </p>
-            </div>
-            <Button variant="outline">
-              Upgrade
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Pricing */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Billing</CardTitle>
-          <CardDescription>
-            Pricing information for this order
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Number of Accounts</span>
-              <span>{order.number_of_accounts}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Price per Year</span>
-              <span>${order.retail_price}</span>
-            </div>
-            <Separator />
-            <div className="flex justify-between font-medium">
-              <span>Total</span>
-              <span>${order.retail_price}/year</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Danger Zone */}
-      <Card className="border-destructive/50">
-        <CardHeader>
-          <CardTitle className="text-destructive">Danger Zone</CardTitle>
-          <CardDescription>
-            Irreversible actions for this email order
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between p-4 border border-destructive/50 rounded-lg">
-            <div>
-              <p className="font-medium">Cancel Email Order</p>
-              <p className="text-sm text-muted-foreground">
-                This will permanently delete all email accounts and data
-              </p>
-            </div>
-            <Button variant="destructive">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Cancel Order
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Subscription, Billing & Danger Zone — interactive client component */}
+      <EmailSettingsActions
+        orderId={orderId}
+        numberOfAccounts={order.number_of_accounts}
+        expiryDate={order.expiry_date}
+        retailPrice={order.retail_price}
+        domainName={order.domain_name}
+      />
     </div>
   );
 }

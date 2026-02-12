@@ -180,38 +180,73 @@ export async function calculateDomainPrice(params: {
   if (!profile?.agency_id) return { success: false, error: 'No agency' };
   
   try {
-    // Simulated wholesale pricing (in production, from ResellerClub API)
-    const basePrices: Record<string, Record<string, number | Record<number, number>>> = {
-      '.com': { register: { 1: 9.99, 2: 19.98, 3: 29.97 }, renew: { 1: 10.99 }, transfer: 9.99 },
-      '.net': { register: { 1: 11.99, 2: 23.98 }, renew: { 1: 12.99 }, transfer: 11.99 },
-      '.org': { register: { 1: 10.99, 2: 21.98 }, renew: { 1: 11.99 }, transfer: 10.99 },
-      '.io': { register: { 1: 35.99, 2: 71.98 }, renew: { 1: 39.99 }, transfer: 35.99 },
-      '.co': { register: { 1: 25.99, 2: 51.98 }, renew: { 1: 28.99 }, transfer: 25.99 },
-      '.app': { register: { 1: 15.99, 2: 31.98 }, renew: { 1: 17.99 }, transfer: 15.99 },
-      '.dev': { register: { 1: 13.99, 2: 27.98 }, renew: { 1: 15.99 }, transfer: 13.99 },
-    };
+    // Get real wholesale pricing from ResellerClub API when available
+    let wholesalePrice: number = 0;
+    let usedRealPricing = false;
     
-    const tldPrices = basePrices[params.tld];
-    if (!tldPrices) {
-      return { success: false, error: `TLD ${params.tld} pricing not available` };
+    try {
+      const { isClientAvailable } = await import('@/lib/resellerclub/client');
+      const { domainService } = await import('@/lib/resellerclub/domains');
+      
+      if (isClientAvailable()) {
+        const rcPrices = await domainService.getPricing([params.tld]);
+        const tldPricing = rcPrices[params.tld];
+        
+        if (tldPricing) {
+          switch (params.operation) {
+            case 'register': {
+              const prices = tldPricing.register as Record<number, number>;
+              wholesalePrice = prices[params.years] || (prices[1] || 0) * params.years;
+              break;
+            }
+            case 'renew': {
+              const prices = tldPricing.renew as Record<number, number>;
+              wholesalePrice = (prices[params.years] || (prices[1] || 0) * params.years);
+              break;
+            }
+            case 'transfer':
+              wholesalePrice = tldPricing.transfer;
+              break;
+          }
+          usedRealPricing = true;
+        }
+      }
+    } catch {
+      // Fall through to fallback pricing
     }
     
-    // Get wholesale price
-    let wholesalePrice: number;
-    switch (params.operation) {
-      case 'register': {
-        const prices = tldPrices.register as Record<number, number>;
-        wholesalePrice = prices[params.years] || prices[1] * params.years;
-        break;
+    // Fallback pricing if API is unavailable
+    if (!usedRealPricing) {
+      const basePrices: Record<string, Record<string, number | Record<number, number>>> = {
+        '.com': { register: { 1: 9.99, 2: 19.98, 3: 29.97 }, renew: { 1: 10.99 }, transfer: 9.99 },
+        '.net': { register: { 1: 11.99, 2: 23.98 }, renew: { 1: 12.99 }, transfer: 11.99 },
+        '.org': { register: { 1: 10.99, 2: 21.98 }, renew: { 1: 11.99 }, transfer: 10.99 },
+        '.io': { register: { 1: 35.99, 2: 71.98 }, renew: { 1: 39.99 }, transfer: 35.99 },
+        '.co': { register: { 1: 25.99, 2: 51.98 }, renew: { 1: 28.99 }, transfer: 25.99 },
+        '.app': { register: { 1: 15.99, 2: 31.98 }, renew: { 1: 17.99 }, transfer: 15.99 },
+        '.dev': { register: { 1: 13.99, 2: 27.98 }, renew: { 1: 15.99 }, transfer: 13.99 },
+      };
+      
+      const tldPrices = basePrices[params.tld];
+      if (!tldPrices) {
+        return { success: false, error: `TLD ${params.tld} pricing not available` };
       }
-      case 'renew': {
-        const prices = tldPrices.renew as Record<number, number>;
-        wholesalePrice = (prices[params.years] || prices[1] * params.years);
-        break;
+      
+      switch (params.operation) {
+        case 'register': {
+          const prices = tldPrices.register as Record<number, number>;
+          wholesalePrice = prices[params.years] || prices[1] * params.years;
+          break;
+        }
+        case 'renew': {
+          const prices = tldPrices.renew as Record<number, number>;
+          wholesalePrice = (prices[params.years] || prices[1] * params.years);
+          break;
+        }
+        case 'transfer':
+          wholesalePrice = tldPrices.transfer as number;
+          break;
       }
-      case 'transfer':
-        wholesalePrice = tldPrices.transfer as number;
-        break;
     }
     
     // Get agency pricing config

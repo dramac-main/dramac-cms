@@ -47,6 +47,7 @@ interface EmailAccountsTableProps {
   accounts: EmailAccount[];
   orderId: string;
   maxAccounts: number;
+  domainName?: string;
   compact?: boolean;
 }
 
@@ -54,6 +55,7 @@ export function EmailAccountsTable({
   accounts, 
   orderId, 
   maxAccounts,
+  domainName,
   compact = false,
 }: EmailAccountsTableProps) {
   const [isPending, startTransition] = useTransition();
@@ -92,6 +94,7 @@ export function EmailAccountsTable({
         
         <EmailAccountForm 
           orderId={orderId}
+          domainName={domainName}
           open={showAddForm}
           onOpenChange={setShowAddForm}
         />
@@ -194,6 +197,7 @@ export function EmailAccountsTable({
       {/* Add Account Dialog */}
       <EmailAccountForm 
         orderId={orderId}
+        domainName={domainName}
         open={showAddForm}
         onOpenChange={setShowAddForm}
       />

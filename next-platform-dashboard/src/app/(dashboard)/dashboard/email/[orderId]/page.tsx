@@ -13,6 +13,7 @@ import { EmailWebmailLink } from "@/components/email/email-webmail-link";
 import { getBusinessEmailOrder, getBusinessEmailAccounts } from "@/lib/actions/business-email";
 import { format } from "date-fns";
 import { PLATFORM } from "@/lib/constants/platform";
+import { formatCurrency } from "@/lib/locale-config";
 
 export const metadata: Metadata = {
   title: `Email Order Details | ${PLATFORM.name}`,
@@ -117,7 +118,7 @@ export default async function EmailOrderPage({ params }: EmailOrderPageProps) {
                 <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">10 GB</p>
+                <p className="text-2xl font-bold">{order.storage_per_account_gb ?? 10} GB</p>
                 <p className="text-sm text-muted-foreground">Storage/Account</p>
               </div>
             </div>
@@ -131,7 +132,7 @@ export default async function EmailOrderPage({ params }: EmailOrderPageProps) {
                 <RefreshCw className="h-5 w-5 text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <p className="text-2xl font-bold">${order.retail_price}</p>
+                <p className="text-2xl font-bold">{formatCurrency(order.retail_price || 0)}</p>
                 <p className="text-sm text-muted-foreground">Yearly Cost</p>
               </div>
             </div>
@@ -160,6 +161,7 @@ export default async function EmailOrderPage({ params }: EmailOrderPageProps) {
             accounts={accounts} 
             orderId={orderId}
             maxAccounts={order.number_of_accounts}
+            domainName={order.domain_name}
             compact
           />
         </CardContent>

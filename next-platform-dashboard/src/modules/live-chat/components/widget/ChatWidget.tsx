@@ -12,6 +12,7 @@ import { WidgetPreChatForm } from './WidgetPreChatForm'
 import { WidgetChat } from './WidgetChat'
 import { WidgetRating } from './WidgetRating'
 import { WidgetOfflineForm } from './WidgetOfflineForm'
+import { useChatRealtime } from '@/modules/live-chat/hooks/use-chat-realtime'
 import type { ChatMessage, BusinessHoursConfig } from '@/modules/live-chat/types'
 import type { WidgetMessage } from './WidgetMessageBubble'
 
@@ -109,10 +110,11 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAgentTyping, setIsAgentTyping] = useState(false)
+  const [typingAgentName, setTypingAgentName] = useState<string | null>(null)
   const [loadError, setLoadError] = useState(false)
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const retryCountRef = useRef(0)
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Load settings on mount
   useEffect(() => {
@@ -161,69 +163,75 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     }
   }, [])
 
-  // Poll for new messages when in chat state
-  useEffect(() => {
-    if (widgetState !== 'chat' || !conversationId || !visitorId) {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current)
-        pollIntervalRef.current = null
+  // Subscribe to Supabase Realtime for live message updates (replaces polling)
+  useChatRealtime(conversationId, {
+    onNewMessage: (message: ChatMessage) => {
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === message.id)) return prev
+        // Play notification sound for agent messages
+        if (message.senderType !== 'visitor') {
+          if (settings?.enableSoundNotifications && audioRef.current) {
+            audioRef.current.play().catch(() => {})
+          }
+          setUnreadCount((c) => {
+            const newCount = c + 1
+            try {
+              window.parent.postMessage(
+                { type: 'dramac-chat-unread', count: newCount },
+                '*'
+              )
+            } catch {}
+            return newCount
+          })
+        }
+        return [...prev, message]
+      })
+    },
+    onMessageUpdate: (message: ChatMessage) => {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === message.id ? message : m))
+      )
+    },
+    onTypingStart: (_senderId: string, senderName: string) => {
+      setIsAgentTyping(true)
+      setTypingAgentName(senderName || 'Agent')
+      // Auto-clear typing after 5s if no stop event received
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsAgentTyping(false)
+        setTypingAgentName(null)
+      }, 5000)
+    },
+    onTypingStop: () => {
+      setIsAgentTyping(false)
+      setTypingAgentName(null)
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+        typingTimeoutRef.current = null
       }
-      return
-    }
+    },
+  })
 
-    async function fetchMessages() {
+  // Load initial messages when conversation starts (one-time fetch)
+  useEffect(() => {
+    if (widgetState !== 'chat' || !conversationId || !visitorId) return
+
+    async function fetchInitialMessages() {
       try {
         const res = await fetch(
           `${API_BASE}/api/modules/live-chat/messages?conversationId=${conversationId}&visitorId=${visitorId}`
         )
         if (!res.ok) return
         const data = await res.json()
-        const newMessages: ChatMessage[] = data.messages || []
-
-        setMessages((prev) => {
-          if (newMessages.length === prev.length) return prev
-
-          // Check for new agent messages
-          const prevIds = new Set(prev.map((m) => m.id))
-          const newAgentMsgs = newMessages.filter(
-            (m) => !prevIds.has(m.id) && m.senderType !== 'visitor'
-          )
-
-          if (newAgentMsgs.length > 0) {
-            // Play notification sound
-            if (settings?.enableSoundNotifications && audioRef.current) {
-              audioRef.current.play().catch(() => {})
-            }
-            setUnreadCount((c) => c + newAgentMsgs.length)
-            // Notify parent window about unread messages
-            try {
-              window.parent.postMessage(
-                { type: 'dramac-chat-unread', count: unreadCount + newAgentMsgs.length },
-                '*'
-              )
-            } catch {}
-          }
-
-          return newMessages
-        })
+        const initialMessages: ChatMessage[] = data.messages || []
+        setMessages(initialMessages)
       } catch {
-        // Silently fail polling
+        // Silently fail — realtime will pick up new messages
       }
     }
 
-    // Initial fetch
-    fetchMessages()
-
-    // Poll every 3 seconds
-    pollIntervalRef.current = setInterval(fetchMessages, 3000)
-
-    return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current)
-        pollIntervalRef.current = null
-      }
-    }
-  }, [widgetState, conversationId, visitorId, settings?.enableSoundNotifications, unreadCount])
+    fetchInitialMessages()
+  }, [widgetState, conversationId, visitorId])
 
   // Handle launcher click
   const handleOpen = useCallback(() => {
@@ -525,7 +533,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
           settings={settings}
           messages={widgetMessages}
           isLoading={messages.length === 0 && widgetState === 'chat'}
-          typingAgent={isAgentTyping ? 'Agent' : null}
+          typingAgent={isAgentTyping ? (typingAgentName || 'Agent') : null}
           onSendMessage={handleSendMessage}
           onEndChat={handleEndChat}
           onClose={handleClose}

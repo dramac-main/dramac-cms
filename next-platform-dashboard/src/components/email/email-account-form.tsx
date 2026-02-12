@@ -49,11 +49,12 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface EmailAccountFormProps {
   orderId: string;
+  domainName?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function EmailAccountForm({ orderId, open, onOpenChange }: EmailAccountFormProps) {
+export function EmailAccountForm({ orderId, domainName, open, onOpenChange }: EmailAccountFormProps) {
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -145,7 +146,7 @@ export function EmailAccountForm({ orderId, open, onOpenChange }: EmailAccountFo
                         className="font-mono"
                       />
                     </FormControl>
-                    <span className="text-muted-foreground">@domain.com</span>
+                    <span className="text-muted-foreground whitespace-nowrap">@{domainName || 'your-domain.com'}</span>
                   </div>
                   <FormDescription>
                     Only letters, numbers, dots, underscores, and hyphens

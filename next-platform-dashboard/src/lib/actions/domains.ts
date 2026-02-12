@@ -203,7 +203,7 @@ export async function searchDomains(
       return {
         domain: cleanKeyword + tld,
         tld,
-        available: true, // Unknown without API — show as potentially available
+        available: false, // Cannot verify without API — mark as unavailable
         premium: false,
         prices: {
           register: { 1: basePrice, 2: basePrice * 1.9, 3: basePrice * 2.8 } as Record<number, number>,
@@ -262,7 +262,7 @@ export async function checkDomainAvailability(domainName: string) {
       success: true, 
       data: {
         domain: domainName,
-        available: true,
+        available: false, // Cannot verify without API
         premium: false,
       }
     };
@@ -415,15 +415,34 @@ export async function registerDomain(params: RegisterDomainParams) {
     
     const domainId = (domain as AnyRecord)?.id as string;
     
-    // Create order record
+    // Create order record with real pricing
+    let orderWholesale = 0;
+    let orderRetail = 0;
+    try {
+      const { calculateDomainPrice } = await import('@/lib/actions/domain-billing');
+      const pricing = await calculateDomainPrice({
+        tld,
+        years: params.years,
+        operation: 'register',
+        includePrivacy: params.privacy ?? true,
+        clientId: params.clientId,
+      });
+      if (pricing.success && pricing.data) {
+        orderWholesale = pricing.data.total_wholesale;
+        orderRetail = pricing.data.total_retail;
+      }
+    } catch {
+      // Use 0 if pricing calculation fails
+    }
+
     const orderData = {
       agency_id: profile.agency_id,
       domain_id: domainId,
       order_type: 'registration',
       domain_name: params.domainName,
       years: params.years,
-      wholesale_price: 0,
-      retail_price: 0,
+      wholesale_price: orderWholesale,
+      retail_price: orderRetail,
       resellerclub_order_id: orderId,
       status: 'completed',
       payment_status: 'paid',
@@ -694,7 +713,25 @@ export async function renewDomain(domainId: string, years: number): Promise<{
       })
       .eq('id', domainId);
     
-    // Create order record
+    // Create order record with real pricing
+    let renewWholesale = 0;
+    let renewRetail = 0;
+    try {
+      const { calculateDomainPrice } = await import('@/lib/actions/domain-billing');
+      const tld = '.' + (domain.domain_name as string).split('.').pop();
+      const pricing = await calculateDomainPrice({
+        tld,
+        years,
+        operation: 'renew',
+      });
+      if (pricing.success && pricing.data) {
+        renewWholesale = pricing.data.total_wholesale;
+        renewRetail = pricing.data.total_retail;
+      }
+    } catch {
+      // Use 0 if pricing calculation fails
+    }
+
     await getTable(admin, 'domain_orders')
       .insert({
         agency_id: domain.agency_id,
@@ -702,8 +739,8 @@ export async function renewDomain(domainId: string, years: number): Promise<{
         order_type: 'renewal',
         domain_name: domain.domain_name,
         years,
-        wholesale_price: 0,
-        retail_price: 0,
+        wholesale_price: renewWholesale,
+        retail_price: renewRetail,
         resellerclub_order_id: domain.resellerclub_order_id || `RENEW-${Date.now()}`,
         status: 'completed',
         payment_status: 'paid',

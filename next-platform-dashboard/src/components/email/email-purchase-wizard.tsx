@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,7 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { createBusinessEmailOrder } from "@/lib/actions/business-email";
+import { createBusinessEmailOrder, getBusinessEmailPricing } from "@/lib/actions/business-email";
+import { formatCurrency } from "@/lib/locale-config";
 import { toast } from "sonner";
 import { Loader2, Mail } from "lucide-react";
 
@@ -42,6 +43,8 @@ type FormValues = z.infer<typeof formSchema>;
 export function EmailPurchaseWizard() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [pricePerAccount, setPricePerAccount] = useState<number | null>(null);
+  const [pricingCurrency, setPricingCurrency] = useState("USD");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -52,13 +55,39 @@ export function EmailPurchaseWizard() {
     },
   });
 
+  // Fetch real pricing from ResellerClub on mount
+  useEffect(() => {
+    async function loadPricing() {
+      try {
+        const result = await getBusinessEmailPricing();
+        if (result.success && result.data) {
+          // Extract monthly price from the API response
+          const pricing = result.data as Record<string, unknown>;
+          // ResellerClub returns pricing in various structures; extract the per-account monthly rate
+          const monthlyPrice =
+            (pricing as any)?.pricing?.monthly ||
+            (pricing as any)?.monthlyPrice ||
+            (pricing as any)?.price ||
+            null;
+          if (typeof monthlyPrice === 'number') {
+            setPricePerAccount(monthlyPrice);
+          }
+          if ((pricing as any)?.currency) {
+            setPricingCurrency((pricing as any).currency);
+          }
+        }
+      } catch {
+        // If pricing fetch fails, we'll show "Contact for pricing"
+      }
+    }
+    loadPricing();
+  }, []);
+
   const numberOfAccounts = parseInt(form.watch("numberOfAccounts") || "5");
   const months = parseInt(form.watch("months") || "12");
   
-  // Estimated pricing (example rates)
-  const pricePerAccount = 2.50; // per month
-  const totalMonthly = numberOfAccounts * pricePerAccount;
-  const totalPrice = totalMonthly * months;
+  const totalMonthly = pricePerAccount !== null ? numberOfAccounts * pricePerAccount : null;
+  const totalPrice = totalMonthly !== null ? totalMonthly * months : null;
 
   function onSubmit(values: FormValues) {
     const formData = new FormData();
@@ -178,21 +207,27 @@ export function EmailPurchaseWizard() {
             {/* Pricing Summary */}
             <div className="bg-muted p-4 rounded-lg space-y-3">
               <h4 className="font-medium">Order Summary</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">{numberOfAccounts} email accounts × {months} months</span>
-                  <span>${totalPrice.toFixed(2)}</span>
+              {pricePerAccount !== null && totalPrice !== null ? (
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{numberOfAccounts} email accounts × {months} months</span>
+                    <span>{formatCurrency(totalPrice, pricingCurrency)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Per account/month</span>
+                    <span>{formatCurrency(pricePerAccount, pricingCurrency)}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between font-medium text-base">
+                    <span>Total</span>
+                    <span>{formatCurrency(totalPrice, pricingCurrency)}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Per account/month</span>
-                  <span>${pricePerAccount.toFixed(2)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between font-medium text-base">
-                  <span>Total</span>
-                  <span>${totalPrice.toFixed(2)}</span>
-                </div>
-              </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Final pricing will be calculated at checkout
+                </p>
+              )}
             </div>
 
             <div className="flex justify-end gap-4">
