@@ -4,13 +4,13 @@
   "framework": "nextjs",
   "functions": {
     "src/app/api/ai/website-designer/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 300
     },
     "src/app/api/ai/website-designer/stream/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 300
     },
     "src/app/api/ai/**/*.ts": {
-      "maxDuration": 60
+      "maxDuration": 120
     }
   },
   "crons": [
