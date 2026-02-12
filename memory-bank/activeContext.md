@@ -1,6 +1,77 @@
 # Active Context
 
-## Latest Session Update — Live Chat Realtime + Notifications + TLD Expansion (Commit `ae7080f`)
+## Latest Session Update — Realtime Notifications + Internal Notes Fix + Auto-Close + @Mentions + Domain Fixes (Commit `3dff36a`)
+
+### Issues Fixed
+
+**Live Chat — Internal Notes Security (CRITICAL)**
+
+| # | Bug | File | Fix |
+|---|-----|------|-----|
+| 1 | Internal notes visible to customers in widget | `use-chat-realtime.ts` | Added `filterInternalNotes` option to hook — filters out `isInternalNote`/`note` messages |
+| 2 | Widget shows agent-only notes | `ChatWidget.tsx` | Passes `filterInternalNotes: true` + defense-in-depth check in `onNewMessage` callback |
+
+**Notification Bell — Realtime**
+
+| # | Bug | File | Fix |
+|---|-----|------|-----|
+| 3 | Bell only updates every 30 seconds (polling) | `notification-bell.tsx` | Replaced with Supabase Realtime subscription on `notifications` table |
+| 4 | No visual/audio alert for new notifications | `notification-bell.tsx` | Bell animates (BellRing + bounce), plays sound, shows toast with action button |
+| 5 | Notifications table not in publication | `lc-10-notification-realtime-autoclose.sql` | `ALTER PUBLICATION supabase_realtime ADD TABLE notifications` |
+
+**Agent @Mentions in Internal Notes**
+
+| # | Feature | File | Implementation |
+|---|---------|------|----------------|
+| 6 | @mention dropdown | `MessageInput.tsx` | Type `@` in note mode → dropdown shows agents, select inserts `@Name` |
+| 7 | Mention tracking | `message-actions.ts` | Parses mentioned agent IDs, stores in `mentioned_agent_ids` column |
+| 8 | Mention notifications | `message-actions.ts` | Creates notification per mentioned agent with link to conversation |
+| 9 | DB support | `lc-10-*.sql` | Added `mentioned_agent_ids UUID[]` column with GIN index |
+
+**Auto-Close Stale Conversations**
+
+| # | Feature | File | Implementation |
+|---|---------|------|----------------|
+| 10 | Settings | `lc-10-*.sql` | `auto_close_enabled`, `auto_close_minutes`, `auto_close_message` columns |
+| 11 | PostgreSQL function | `lc-10-*.sql` | `auto_close_stale_conversations()` — loops sites, finds stale active convos, resolves + inserts system message |
+| 12 | Vercel Cron | `auto-close-chats/route.ts` | Every 5 minutes via Vercel Cron, verifies no recent messages before closing |
+| 13 | pg_cron fallback | `lc-10-*.sql` | Auto-creates schedule if pg_cron extension available |
+
+**Domain Fixes**
+
+| # | Bug | File | Fix |
+|---|-----|------|-----|
+| 14 | `toLowerCase` crash on undefined | `dns-records-table.tsx` | `?? ''` guard on `record.name` and `record.content` |
+| 15 | `toLowerCase` crash in domain list | `domain-list-client.tsx` | `?? ''` guard on `domain.domain_name` |
+| 16 | Compound TLD misidentification | `domains.ts` | Proper `.co.za` handling in extractTld/extractSld |
+| 17 | Unhelpful 403 error message | `domains.ts` action | Clear guidance: "whitelist your server IP addresses in ResellerClub Dashboard" |
+| 18 | `filter(Boolean)` missing | `domains.ts` | Added before `.map(d => d.toLowerCase())` |
+
+### Key Architecture Decisions
+- Notification bell uses Supabase Realtime with 60s fallback polling (was 30s polling only)
+- Auto-close uses dual approach: PostgreSQL function + Vercel Cron (for platforms without pg_cron)
+- @mention dropdown only appears in note mode (not regular messages)
+- `filterInternalNotes` defaults to `false` — only the widget sets it to `true`
+- ResellerClub 403 is an IP whitelisting issue — Vercel IPs need to be whitelisted in ResellerClub Dashboard
+
+### Important: Migration Must Be Run
+⚠️ **`migrations/lc-10-notification-realtime-autoclose.sql`** must be executed on Supabase for:
+- Notification bell realtime
+- Auto-close settings columns
+- Agent mention columns
+- pg_cron schedule (if available)
+
+### Git State
+- **Branch**: `main`
+- **Latest commit**: `3dff36a`
+- **Pushed**: Yes ✅
+- **Working tree**: Clean
+- **TSC**: 0 errors ✅
+- **Files changed**: 17 (3 new, 14 modified)
+
+---
+
+## Previous Session — Live Chat Realtime + Notifications + TLD Expansion (Commit `ae7080f`)
 
 ### Issues Fixed
 
