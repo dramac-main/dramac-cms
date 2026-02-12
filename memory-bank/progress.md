@@ -5,6 +5,20 @@
 
 ---
 
+## CSP, AGENT VALIDATION, DOMAIN SETTINGS & EMAIL FIXES (Commit `24f00cf`) 
+
+Fixed 6 critical issues: CSP blocking live chat embed, agent creation button, domain renewal hardcoded pricing, ALL 5 domain settings mock handlers, and email dead Renew Order button.
+
+| Area | Fix | Impact |
+|------|-----|--------|
+| Live Chat | CSP expanded to allow https: scripts + wss: connect | Widget script was entirely blocked |
+| Live Chat | Agent button disabled until team member selected | Prevents validation error |
+| Domains | Renew form uses calculateDomainPrice() + formatCurrency() | No more hardcoded $12.99 |
+| Domains | ALL 5 settings handlers to real server actions | Transfer lock, WHOIS, auto-renew, delete, contact |
+| Email | Renew Order button wired to settings page | Was dead button |
+
+---
+
 ## � PRODUCTION-GRADE DOMAINS, EMAIL & LIVE CHAT SYSTEMS (Commit `f3086e3`) ✅
 
 Deep scan of domains (67 files), email/Titan (32 files), and live chat (73 files). All mock data, dead buttons, wrong table references, hardcoded values, and missing realtime removed/fixed. Zero mock data remains.

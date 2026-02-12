@@ -1,12 +1,37 @@
 # Active Context
 
-## Latest Session Update — Production-Grade Domains, Email & Live Chat Systems (Commit `f3086e3`)
+## Latest Session Update — CSP, Agent Validation, Domain Settings & Email Fixes (Commit `24f00cf`)
 
-### Deep Scan & Fix of 3 Major Systems
+### Issues Fixed
 
-Performed a comprehensive deep scan of domains (67 files), email/Titan (32 files), and live chat (73 files) systems. Found and fixed all mock data, dead buttons, wrong table references, hardcoded values, and missing realtime integration.
+| Fix | File | Impact |
+|-----|------|--------|
+| CSP: Expand `/embed/:path*` script-src to `https:` + `blob:` + `wss:` | `next.config.ts` | Live chat embed script was completely blocked (only `https://unpkg.com` was allowed) |
+| Agent creation: Disable button until team member selected | `AgentsPageWrapper.tsx` | Prevents "User ID and display name are required" error |
+| Domain renew: Dynamic pricing from `calculateDomainPrice()` | `renew-form.tsx` | Was hardcoded `$12.99/year` with raw `$` symbol |
+| Domain renew: `formatCurrency()` for locale-aware display | `renew-form.tsx` | Proper ZMW/en-ZM currency formatting |
+| Domain settings: Transfer lock → `setTransferLock()` API | `settings-form-client.tsx` | Was `setTimeout(500)` mock |
+| Domain settings: WHOIS privacy → `updateDomainPrivacy()` API | `settings-form-client.tsx` | Was `setTimeout(500)` mock |
+| Domain settings: Auto-renew → `updateDomainAutoRenew()` API | `settings-form-client.tsx` | Was `setTimeout(500)` mock |
+| Domain settings: Delete → `deleteDomain()` API | `settings-form-client.tsx` | Was `setTimeout(1500)` mock |
+| Domain settings: Contact save → new PUT API endpoint | `settings-form-client.tsx` + new route | Was `setTimeout(1000)` mock |
+| Email: Wire dead "Renew Order" button | `email/[orderId]/page.tsx` | Button had no onClick or link — now links to settings page renewal |
+| New API: `PUT /api/domains/[domain]/contact` | `api/domains/[domain]/contact/route.ts` | Saves registrant contact info to DB |
 
-### Domain System Fixes
+### Key Architecture Decisions
+- CSP for embed routes now uses structured array.join("; ") format matching the Paddle CSP pattern
+- Domain settings form optimistically updates UI, reverts on API failure
+- Contact update is local-only (ResellerClub IRTP compliance needed for registrar-level updates)
+
+### Git State
+- **Branch**: `main`
+- **Latest commit**: `24f00cf`
+- **Working tree**: Clean
+- **TSC**: 0 errors in modified files ✅
+
+---
+
+## Previous Session — Production-Grade Domains, Email & Live Chat Systems (Commit `f3086e3`)
 | Fix | File | Impact |
 |-----|------|--------|
 | Search fallback returns `available: false` (not `true`) | `domains.ts` | Users no longer misled when API is down |
