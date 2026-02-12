@@ -4,6 +4,9 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { cn } from "@/lib/utils";
 import { LAYOUT } from "@/config/layout";
 
+// All admin pages use cookies() via isSuperAdmin — must be dynamic
+export const dynamic = 'force-dynamic';
+
 interface AdminLayoutProps {
   children: React.ReactNode;
 }

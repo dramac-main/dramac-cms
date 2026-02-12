@@ -426,11 +426,13 @@ export async function connectBlueskyAccount(
 ): Promise<{ success: boolean; error: string | null }> {
   try {
     // Dynamic import – @atproto/api is optional (falls back to direct HTTP)
+    // Use variable to prevent Turbopack from statically analyzing the import
     let BskyAgent: any = null
     try {
-      const atproto = await import('@atproto/api')
+      const moduleName = '@atproto/api'
+      const atproto = await import(/* webpackIgnore: true */ moduleName)
       BskyAgent = atproto.BskyAgent ?? atproto.AtpAgent ?? (atproto as any).default?.BskyAgent
-    } catch (err) {
+    } catch {
       // Package not installed, use direct HTTP fallback
       console.log('Using Bluesky HTTP fallback (atproto package not installed)')
     }
