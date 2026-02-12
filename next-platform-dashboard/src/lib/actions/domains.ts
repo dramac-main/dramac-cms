@@ -186,13 +186,15 @@ export async function searchDomains(
         
         return { success: true, data: results };
       } catch (apiError) {
-        console.warn('[Domains] ResellerClub API search failed, using fallback:', apiError);
+        console.error('[Domains] ResellerClub API search failed:', apiError);
         // Fall through to fallback below
       }
+    } else {
+      console.warn('[Domains] ResellerClub API not available — isClientAvailable() returned false');
     }
     
-    // Fallback: Return results with standard pricing when API is not configured
-    // This allows the UI to function for demo/testing while credentials are being set up
+    // Fallback: Return results marking availability as unverified
+    // This occurs when the API is not configured or an API call failed
     const fallbackPrices: Record<string, number> = {
       '.com': 12.99, '.net': 14.99, '.org': 13.99, '.io': 39.99,
       '.co': 29.99, '.app': 19.99, '.dev': 15.99,
@@ -203,7 +205,8 @@ export async function searchDomains(
       return {
         domain: cleanKeyword + tld,
         tld,
-        available: false, // Cannot verify without API — mark as unavailable
+        available: false,
+        unverified: true, // Signal to UI that this is NOT a real "already registered" — it's "unable to check"
         premium: false,
         prices: {
           register: { 1: basePrice, 2: basePrice * 1.9, 3: basePrice * 2.8 } as Record<number, number>,
@@ -257,12 +260,13 @@ export async function checkDomainAvailability(domainName: string) {
       }
     }
     
-    // Fallback when API not configured
+    // Fallback when API not configured or call failed
     return { 
       success: true, 
       data: {
         domain: domainName,
-        available: false, // Cannot verify without API
+        available: false,
+        unverified: true, // Signal that availability couldn't actually be verified
         premium: false,
       }
     };

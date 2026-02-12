@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Loader2, Globe, Check, X, Star, ShoppingCart, RefreshCw } from "lucide-react";
+import { Search, Loader2, Globe, Check, X, Star, ShoppingCart, RefreshCw, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -166,6 +166,11 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-muted-foreground">
             {results.filter(r => r.available).length} available of {results.length} checked
+            {results.some(r => r.unverified) && (
+              <span className="text-yellow-500 ml-2">
+                (API unavailable — results may be inaccurate)
+              </span>
+            )}
           </h3>
           
           <div className="grid gap-3">
@@ -176,7 +181,9 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
                   "transition-all cursor-pointer hover:shadow-md",
                   result.available 
                     ? "border-green-500/50 hover:border-green-500" 
-                    : "opacity-60"
+                    : result.unverified
+                      ? "opacity-70 border-yellow-500/30"
+                      : "opacity-60"
                 )}
                 onClick={() => result.available && handleSelect(result)}
               >
@@ -186,6 +193,10 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
                       {result.available ? (
                         <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center">
                           <Check className="h-5 w-5 text-green-500" />
+                        </div>
+                      ) : result.unverified ? (
+                        <div className="h-10 w-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                          <AlertCircle className="h-5 w-5 text-yellow-500" />
                         </div>
                       ) : (
                         <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
@@ -203,7 +214,11 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {result.available ? 'Available for registration' : 'Already registered'}
+                          {result.available 
+                            ? 'Available for registration' 
+                            : result.unverified
+                              ? 'Unable to verify — check API connection'
+                              : 'Already registered'}
                         </p>
                       </div>
                     </div>

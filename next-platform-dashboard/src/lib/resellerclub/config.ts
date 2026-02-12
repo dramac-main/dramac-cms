@@ -2,9 +2,13 @@
 // ResellerClub API Configuration
 
 export const RESELLERCLUB_CONFIG = {
-  // API Configuration — Always use the live API URL.
-  // The test URL (test.httpapi.com) with live credentials still charges real money.
+  // API Configuration
+  // Production: https://httpapi.com/api (general), https://domaincheck.httpapi.com/api (availability)
+  // Sandbox:    https://test.httpapi.com/api (general), https://test.domaincheck.httpapi.com/api (availability)
   apiUrl: process.env.RESELLERCLUB_API_URL || 'https://httpapi.com/api',
+  // The domain availability check endpoint uses a SEPARATE faster hostname
+  // See: https://manage.resellerclub.com/kb/answer/764
+  domainCheckUrl: process.env.RESELLERCLUB_DOMAIN_CHECK_URL || 'https://domaincheck.httpapi.com/api',
   resellerId: process.env.RESELLERCLUB_RESELLER_ID || '',
   apiKey: process.env.RESELLERCLUB_API_KEY || '',
   sandbox: process.env.RESELLERCLUB_SANDBOX === 'true',
@@ -49,15 +53,20 @@ export function isConfigured(): boolean {
 }
 
 /**
- * Get the API URL.
- * 
- * NOTE: ResellerClub's test.httpapi.com with live credentials still performs
- * REAL operations and charges REAL money. The test URL is only meant for
- * browser-based GET testing with a Demo Reseller Account.
- * We always use the production URL and rely on the allowPurchases flag instead.
+ * Get the main API URL (for registration, management, pricing, email, etc.)
  */
 export function getApiUrl(): string {
   return RESELLERCLUB_CONFIG.apiUrl;
+}
+
+/**
+ * Get the domain availability check URL.
+ * ResellerClub uses a separate, faster endpoint specifically for availability checks:
+ *   https://domaincheck.httpapi.com/api/domains/available.json
+ * This is documented at: https://manage.resellerclub.com/kb/answer/764
+ */
+export function getDomainCheckUrl(): string {
+  return RESELLERCLUB_CONFIG.domainCheckUrl;
 }
 
 /**

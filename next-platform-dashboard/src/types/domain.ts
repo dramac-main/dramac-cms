@@ -445,6 +445,8 @@ export interface DomainSearchResult {
   tld: string;
   available: boolean;
   premium: boolean;
+  /** True when the API was unavailable — availability could not be verified */
+  unverified?: boolean;
   prices: {
     register: Record<number, number>;
     renew: Record<number, number>;

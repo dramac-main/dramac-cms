@@ -14,7 +14,9 @@ type HttpMethod = 'GET' | 'POST';
 
 interface RequestOptions {
   method?: HttpMethod;
-  params?: Record<string, string | number | boolean | undefined>;
+  params?: Record<string, string | number | boolean | string[] | undefined>;
+  /** Override the base URL for this request (e.g., domaincheck.httpapi.com) */
+  baseUrlOverride?: string;
   timeout?: number;
 }
 
@@ -89,8 +91,12 @@ export class ResellerClubClient {
     const { 
       method = 'GET', 
       params = {}, 
+      baseUrlOverride,
       timeout = RESELLERCLUB_CONFIG.requestTimeout 
     } = options;
+    
+    // Use override URL if provided (e.g., domaincheck.httpapi.com for availability)
+    const effectiveBaseUrl = baseUrlOverride || this.baseUrl;
     
     // Build URL with auth params
     const authParams: Record<string, string | number | boolean> = {
@@ -99,17 +105,49 @@ export class ResellerClubClient {
     };
     
     // Merge auth params with request params
-    const allParams = { ...authParams, ...params };
+    const allParams: Record<string, string | number | boolean | string[] | undefined> = { ...authParams, ...params };
     
     // Build query string, filtering undefined values
+    // Supports array values for repeated keys (e.g., tlds=com&tlds=net)
+    // ResellerClub uses repeated key format, NOT indexed brackets
     const queryParams = new URLSearchParams();
     Object.entries(allParams).forEach(([key, value]) => {
-      if (value !== undefined) {
+      if (value === undefined) return;
+      if (Array.isArray(value)) {
+        // Repeated keys for array values (e.g., tlds=com&tlds=net&domain-name=test)
+        value.forEach(v => queryParams.append(key, String(v)));
+      } else {
         queryParams.append(key, String(value));
       }
     });
     
-    const url = `${this.baseUrl}/${endpoint}?${queryParams.toString()}`;
+    // For GET: all params in URL. For POST: auth in URL, rest in body
+    let url: string;
+    let body: string | undefined;
+    
+    if (method === 'POST') {
+      // POST: Auth params in URL, all other params as form-encoded body
+      const authQuery = new URLSearchParams();
+      Object.entries(authParams).forEach(([key, value]) => {
+        authQuery.append(key, String(value));
+      });
+      url = `${effectiveBaseUrl}/${endpoint}?${authQuery.toString()}`;
+      
+      // Build form body from non-auth params
+      const bodyParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value === undefined) return;
+        if (Array.isArray(value)) {
+          value.forEach(v => bodyParams.append(key, String(v)));
+        } else {
+          bodyParams.append(key, String(value));
+        }
+      });
+      body = bodyParams.toString();
+    } else {
+      // GET: All params in URL
+      url = `${effectiveBaseUrl}/${endpoint}?${queryParams.toString()}`;
+    }
     
     // Create abort controller for timeout
     const controller = new AbortController();
@@ -120,8 +158,9 @@ export class ResellerClubClient {
         method,
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/x-www-form-urlencoded',
+          ...(method === 'POST' ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}),
         },
+        ...(body ? { body } : {}),
         signal: controller.signal,
       });
       
@@ -226,9 +265,10 @@ export class ResellerClubClient {
    */
   async get<T>(
     endpoint: string, 
-    params?: Record<string, string | number | boolean | undefined>
+    params?: Record<string, string | number | boolean | string[] | undefined>,
+    baseUrlOverride?: string
   ): Promise<T> {
-    return this.rateLimitedRequest<T>(endpoint, { method: 'GET', params });
+    return this.rateLimitedRequest<T>(endpoint, { method: 'GET', params, baseUrlOverride });
   }
   
   /**
@@ -236,9 +276,10 @@ export class ResellerClubClient {
    */
   async post<T>(
     endpoint: string, 
-    params?: Record<string, string | number | boolean | undefined>
+    params?: Record<string, string | number | boolean | string[] | undefined>,
+    baseUrlOverride?: string
   ): Promise<T> {
-    return this.rateLimitedRequest<T>(endpoint, { method: 'POST', params });
+    return this.rateLimitedRequest<T>(endpoint, { method: 'POST', params, baseUrlOverride });
   }
   
   /**

@@ -8,7 +8,7 @@ import {
   DomainNotFoundError,
   PurchasesDisabledError,
 } from './errors';
-import { SUPPORTED_TLDS, TLD_CATEGORIES, arePurchasesAllowed } from './config';
+import { SUPPORTED_TLDS, TLD_CATEGORIES, arePurchasesAllowed, getDomainCheckUrl } from './config';
 import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import type {
   DomainAvailability,
@@ -52,6 +52,14 @@ export class DomainService {
   
   /**
    * Check availability for multiple domains
+   * 
+   * Uses the dedicated domaincheck.httpapi.com endpoint:
+   * https://domaincheck.httpapi.com/api/domains/available.json?auth-userid=X&api-key=X&domain-name=keyword&tlds=com&tlds=net
+   * See: https://manage.resellerclub.com/kb/answer/764
+   * 
+   * ResellerClub API uses REPEATED query param keys (not array brackets):
+   *   domain-name=test&tlds=com&tlds=net  (CORRECT)
+   *   tlds[0]=com&tlds[1]=net             (WRONG)
    */
   async checkMultipleAvailability(domainNames: string[]): Promise<DomainAvailability[]> {
     // Normalize domain names
@@ -67,30 +75,36 @@ export class DomainService {
       };
     });
     
-    // Build API parameters
-    const params: Record<string, string | number | boolean> = {};
+    // Build API parameters with array values for repeated keys
     const uniqueTlds = [...new Set(domainTlds.map(d => d.tld))];
-    uniqueTlds.forEach((tld, i) => {
-      params[`tlds[${i}]`] = tld.replace('.', '');
-    });
-    
-    // Group SLDs
     const slds = [...new Set(domainTlds.map(d => d.sld))];
-    slds.forEach((sld, i) => {
-      params[`domain-name[${i}]`] = sld;
-    });
+    
+    const params: Record<string, string | string[]> = {
+      // Use repeated keys: domain-name=test1&domain-name=test2
+      'domain-name': slds.length === 1 ? slds[0] : slds,
+      // Use repeated keys: tlds=com&tlds=net&tlds=org
+      'tlds': uniqueTlds.map(tld => tld.replace('.', '')),
+    };
+    
+    // Use the dedicated domaincheck.httpapi.com endpoint
+    const domainCheckUrl = getDomainCheckUrl();
     
     const response = await this.client.get<Record<string, { status: string; classkey?: string }>>(
       'domains/available.json',
-      params
+      params,
+      domainCheckUrl
     );
     
     // Map results
+    // Response keys from ResellerClub are in format: "keyword.com", "keyword.net"
+    // (i.e., the full domain name as the key)
     const results: DomainAvailability[] = [];
     
     for (const domain of domainTlds) {
-      const key = `${domain.sld}${domain.tld}`;
-      const result = response[key];
+      // Try multiple key formats that ResellerClub might use
+      const keyWithDot = `${domain.sld}${domain.tld}`; // "keyword.com"
+      const keyNoDot = `${domain.sld}${domain.tld.replace('.', '')}`; // "keywordcom"
+      const result = response[keyWithDot] || response[keyNoDot] || response[domain.full];
       
       let status: DomainAvailability['status'] = 'unknown';
       if (result?.status === 'available') {
