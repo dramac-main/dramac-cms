@@ -200,9 +200,11 @@ export default async function EmailOrderPage({ params }: EmailOrderPageProps) {
               Admin Panel
             </a>
           </Button>
-          <Button variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Renew Order
+          <Button variant="outline" asChild>
+            <Link href={`/dashboard/email/${orderId}/settings`}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Renew Order
+            </Link>
           </Button>
         </CardContent>
       </Card>

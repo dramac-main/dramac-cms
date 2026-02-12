@@ -376,7 +376,7 @@ export function AgentsPageWrapper({
               </div>
               <Button
                 onClick={handleAddAgent}
-                disabled={isPending}
+                disabled={isPending || !agentForm.userId || !agentForm.displayName}
                 className="w-full"
               >
                 {isPending && (

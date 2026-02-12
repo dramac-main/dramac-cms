@@ -37,6 +37,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { updateDomainAutoRenew, updateDomainPrivacy, deleteDomain } from "@/lib/actions/domains";
+import { setTransferLock } from "@/lib/actions/transfers";
 
 interface DomainSettingsFormProps {
   domainId: string;
@@ -78,8 +80,18 @@ export function DomainSettingsForm({
     const prevValue = isTransferLocked;
     setIsTransferLocked(checked);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const result = await setTransferLock(domainId, checked);
+      if (!result.success) {
+        setIsTransferLocked(prevValue);
+        toast.error(result.error || "Failed to update transfer lock");
+        return;
+      }
+    } catch {
+      setIsTransferLocked(prevValue);
+      toast.error("Failed to update transfer lock");
+      return;
+    }
     
     toast.success(checked ? "Transfer lock enabled" : "Transfer lock disabled", {
       description: checked 
@@ -89,10 +101,21 @@ export function DomainSettingsForm({
   };
 
   const handleWhoisPrivacyToggle = async (checked: boolean) => {
+    const prevValue = hasWhoisPrivacy;
     setHasWhoisPrivacy(checked);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const result = await updateDomainPrivacy(domainId, checked);
+      if (!result.success) {
+        setHasWhoisPrivacy(prevValue);
+        toast.error(result.error || "Failed to update WHOIS privacy");
+        return;
+      }
+    } catch {
+      setHasWhoisPrivacy(prevValue);
+      toast.error("Failed to update WHOIS privacy");
+      return;
+    }
     
     toast.success(checked ? "WHOIS privacy enabled" : "WHOIS privacy disabled", {
       description: checked 
@@ -102,10 +125,21 @@ export function DomainSettingsForm({
   };
 
   const handleAutoRenewToggle = async (checked: boolean) => {
+    const prevValue = hasAutoRenew;
     setHasAutoRenew(checked);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      const result = await updateDomainAutoRenew(domainId, checked);
+      if (!result.success) {
+        setHasAutoRenew(prevValue);
+        toast.error(result.error || "Failed to update auto-renewal");
+        return;
+      }
+    } catch {
+      setHasAutoRenew(prevValue);
+      toast.error("Failed to update auto-renewal");
+      return;
+    }
     
     toast.success(checked ? "Auto-renewal enabled" : "Auto-renewal disabled", {
       description: checked 
@@ -117,27 +151,52 @@ export function DomainSettingsForm({
   const handleSaveContact = async () => {
     setIsSaving(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setIsSaving(false);
-    toast.success("Contact information saved", {
-      description: "Your registrant contact details have been updated",
-    });
+    try {
+      // Contact update is local-only for now (ResellerClub contact update 
+      // requires IRTP compliance). Save to our DB via a simple fetch.
+      const res = await fetch(`/api/domains/${domainId}/contact`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contact),
+      });
+      
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || "Failed to save contact information");
+        return;
+      }
+      
+      toast.success("Contact information saved", {
+        description: "Your registrant contact details have been updated",
+      });
+    } catch {
+      toast.error("Failed to save contact information");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDelete = async () => {
     setIsDeleting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setIsDeleting(false);
-    toast.success("Domain deleted", {
-      description: `${domainName} has been removed from your account`,
-    });
-    
-    router.push("/dashboard/domains");
+    try {
+      const result = await deleteDomain(domainId);
+      
+      if (!result.success) {
+        toast.error(result.error || "Failed to delete domain");
+        setIsDeleting(false);
+        return;
+      }
+      
+      toast.success("Domain deleted", {
+        description: `${domainName} has been removed from your account`,
+      });
+      
+      router.push("/dashboard/domains");
+    } catch {
+      toast.error("Failed to delete domain");
+      setIsDeleting(false);
+    }
   };
 
   const handleStartTransfer = async () => {

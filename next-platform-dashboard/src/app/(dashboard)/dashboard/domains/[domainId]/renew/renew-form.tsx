@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { addYears, format } from "date-fns";
 import { CreditCard, Calendar, Loader2, Check } from "lucide-react";
@@ -10,6 +10,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { renewDomain } from "@/lib/actions/domains";
+import { calculateDomainPrice } from "@/lib/actions/domain-billing";
+import { formatCurrency } from "@/lib/locale-config";
 import type { DomainWithDetails } from "@/types/domain";
 
 interface DomainRenewFormProps {
@@ -24,17 +26,32 @@ const RENEWAL_OPTIONS = [
   { years: 5, label: "5 Years", popular: false },
 ];
 
-// Estimated price per year - would come from actual pricing in production
-const ESTIMATED_PRICE_PER_YEAR = 12.99;
+// Fallback price per year if API pricing is unavailable
+const FALLBACK_PRICE_PER_YEAR = 12.99;
 
 export function DomainRenewForm({ domain, expiryDate }: DomainRenewFormProps) {
   const router = useRouter();
   const [selectedYears, setSelectedYears] = useState<string>("1");
   const [isRenewing, setIsRenewing] = useState(false);
+  const [pricePerYear, setPricePerYear] = useState<number>(FALLBACK_PRICE_PER_YEAR);
+  const [priceLoaded, setPriceLoaded] = useState(false);
+  
+  // Fetch real pricing on mount
+  useEffect(() => {
+    const tld = domain.domain_name?.split('.').slice(1).join('.') || 'com';
+    calculateDomainPrice({ tld, years: 1, operation: 'renew' })
+      .then((result) => {
+        if (result.success && result.data?.retail_price) {
+          setPricePerYear(result.data.retail_price);
+        }
+        setPriceLoaded(true);
+      })
+      .catch(() => setPriceLoaded(true));
+  }, [domain.domain_name]);
   
   const years = parseInt(selectedYears);
   const newExpiryDate = expiryDate ? addYears(expiryDate, years) : null;
-  const totalPrice = years * ESTIMATED_PRICE_PER_YEAR;
+  const totalPrice = years * pricePerYear;
   
   const handleRenew = async () => {
     setIsRenewing(true);
@@ -90,7 +107,7 @@ export function DomainRenewForm({ domain, expiryDate }: DomainRenewFormProps) {
                 )}
                 <span className="font-semibold text-lg">{option.label}</span>
                 <span className="text-muted-foreground text-sm">
-                  ${(option.years * ESTIMATED_PRICE_PER_YEAR).toFixed(2)}
+                  {formatCurrency(option.years * pricePerYear)}
                 </span>
               </Label>
             </div>
@@ -117,7 +134,7 @@ export function DomainRenewForm({ domain, expiryDate }: DomainRenewFormProps) {
           )}
           <div className="pt-2 border-t flex justify-between">
             <span className="font-medium">Total</span>
-            <span className="text-xl font-bold">${totalPrice.toFixed(2)}</span>
+            <span className="text-xl font-bold">{formatCurrency(totalPrice)}</span>
           </div>
         </div>
       </CardContent>

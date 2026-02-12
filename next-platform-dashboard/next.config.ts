@@ -103,7 +103,15 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "frame-ancestors *; default-src 'self' 'unsafe-inline' 'unsafe-eval' https:; img-src * data: blob:; font-src * data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com;",
+            value: [
+              "frame-ancestors *",
+              "default-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:",
+              "img-src * data: blob:",
+              "font-src * data:",
+              "connect-src 'self' https: wss:",
+              "worker-src 'self' blob:",
+            ].join("; "),
           },
         ],
       },
