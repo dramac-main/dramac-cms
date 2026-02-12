@@ -1,39 +1,54 @@
 # Active Context
 
-## Latest Session Update — Domain Search "All TLDs Already Registered" Fix (Commit `e2f83a8`)
+## Latest Session Update — Domain Search Fallback + Platform-Wide Bug Fixes (Commit `5995f55`)
 
-### Issue
-Searching for any keyword (e.g., "dramac") returned ALL 7 TLDs (.com, .net, .org, .io, .co, .app, .dev) as "Already registered" — clearly wrong.
+### Issues Fixed
 
-### Root Cause
-`RESELLERCLUB_SANDBOX=true` was set in `.env.local`, but the config hardcoded **production** URLs (`httpapi.com` / `domaincheck.httpapi.com`). The `sandbox` boolean was stored but **never used** to derive URLs. API calls hit production with sandbox credentials → auth failure → fallback returned `available: false` for all.
-
-### Fixes Applied
+**Domain Search (Root Cause: sandbox `test.domaincheck.httpapi.com` does NOT exist in DNS)**
 
 | # | Bug | File | Fix |
 |---|-----|------|-----|
-| 1 | Config ignores sandbox flag for URLs | `config.ts` | Auto-derive `test.httpapi.com` / `test.domaincheck.httpapi.com` when `RESELLERCLUB_SANDBOX=true` |
-| 2 | API success path hides unverified status | `domains.ts` (action) | When API returns `status: 'unknown'`, set `unverified: true` so UI shows yellow warning instead of "Already registered" |
-| 3 | No debug logging for API responses | `domains.ts` (service) | Added `console.log` for URL, params, and response keys to diagnose future issues |
+| 1 | Sandbox domainCheckUrl resolves to nothing | `config.ts` | Changed to `test.httpapi.com/api` (no separate domaincheck subdomain for sandbox) |
+| 2 | Client crashes on HTML/403 responses | `client.ts` | Added HTTP status checking BEFORE body parsing; detects HTML, 403, non-JSON |
+| 3 | No fallback when ResellerClub unreachable | NEW `domain-availability-fallback.ts` | RDAP + DNS fallback (Verisign, nic.google, Cloudflare DoH) |
+| 4 | Fallback not integrated | `domains.ts` action | `searchDomains()` and `checkDomainAvailability()` now use fallback |
+| 5 | UI shows "Already registered" for fallback results | `domain-search.tsx` | Shows "Likely Available" badge + "Results via DNS lookup" header |
 
-### Key Architecture Finding
-The domain search pipeline spans 4 layers:
-1. UI: `DomainSearch` component → calls `searchDomains()` server action
-2. Action: `searchDomains()` → calls `domainService.suggestDomains()`
-3. Service: `suggestDomains()` → calls `checkMultipleAvailability()` → `client.get()`
-4. Client: `ResellerClubClient.get()` → `fetch()` with rate limiting and retry
+**Verified:** "dramac" search now correctly shows dramac.io/app/dev as AVAILABLE, dramac.com/net/org/co as REGISTERED (3/7 available vs 0/7 before).
 
-The fallback path (API failure) correctly returns `available: false, unverified: true`. The UI correctly shows yellow "Unable to verify" for unverified results. The bug was purely in the config layer sending requests to the wrong server.
+**Email Fixes**
+
+| # | Bug | File | Fix |
+|---|-----|------|-----|
+| 6 | Raw `$` in email pricing | `email-orders-list.tsx` | `formatCurrency()` with proper import |
+| 7 | Dead Renew button | `email-orders-list.tsx` | Link to `/dashboard/email/${id}/settings` |
+| 8 | Dead Add Account button (server component) | `email/[orderId]/accounts/page.tsx` | Anchor link to `#email-accounts` scroll target |
+| 9 | Dead Reset Password menu | `email-accounts-table.tsx` | `onClick` opens Titan admin panel (`control.titan.email`) |
+
+**Domain Management Fixes**
+
+| # | Bug | File | Fix |
+|---|-----|------|-----|
+| 10 | Mock MOCK_CLIENTS/MOCK_SITES arrays | `domain-assignment.tsx` | Accept `clients`/`sites` as props (defaults to `[]`) |
+| 11 | Hardcoded DEFAULT_CONTACT | `settings/page.tsx` | Dynamic profile lookup via `getContactFromProfile()` |
+| 12 | Mock "Get Authorization Code" toast | `settings-form-client.tsx` | Calls real `getAuthCode()` action, displays code in dialog |
+| 13 | Empty contacts array in transfer page | `transfer/new/page.tsx` | Queries `domain_contacts` table via Supabase |
+
+### Key Architecture Findings
+- ResellerClub sandbox has NO separate `domaincheck` subdomain (only `test.httpapi.com`)
+- All ResellerClub endpoints return 403 from local dev IPs (Cloudflare WAF blocks) — works from Vercel's IPs
+- RDAP is the most reliable fallback: Verisign for .com/.net, rdap.org for .org, nic.io/.co, nic.google for .app/.dev
+- DNS NS-record lookup via Cloudflare DoH as secondary fallback
 
 ### Git State
 - **Branch**: `main`
-- **Latest commit**: `e2f83a8`
+- **Latest commit**: `5995f55`
 - **Working tree**: Clean
 - **TSC**: 0 errors ✅
 
 ---
 
-## Previous Session — CSP, Agent Validation, Domain Settings & Email Fixes (Commit `24f00cf`)
+## Previous Session — Domain Search Sandbox URL Fix (Commit `e2f83a8`)
 
 ### Issues Fixed
 

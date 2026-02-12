@@ -5,6 +5,19 @@
 
 ---
 
+## DOMAIN SEARCH FALLBACK + PLATFORM-WIDE BUG FIXES (Commit `5995f55`)
+
+Domain search was showing ALL 7 TLDs as "Already registered" because sandbox domainCheckUrl DNS doesn't exist. Created RDAP+DNS fallback, fixed 13 bugs across email and domain management.
+
+| Area | Fix | Impact |
+|------|-----|--------|
+| Domain Search | RDAP+DNS fallback for availability checking | Search works even when ResellerClub is unreachable |
+| Domain Search | Sandbox URL fix + HTTP error handling | Catches 403, HTML, non-JSON responses |
+| Email | formatCurrency(), Renew button, Add Account, Reset Password | 4 dead/broken UI elements fixed |
+| Domain Mgmt | Remove mock data, dynamic profile contact, real auth codes | 4 mock/hardcoded issues replaced with real data |
+
+---
+
 ## CSP, AGENT VALIDATION, DOMAIN SETTINGS & EMAIL FIXES (Commit `24f00cf`) 
 
 Fixed 6 critical issues: CSP blocking live chat embed, agent creation button, domain renewal hardcoded pricing, ALL 5 domain settings mock handlers, and email dead Renew Order button.
