@@ -7,8 +7,7 @@
  * This component renders inside an iframe on customer sites.
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { WidgetLauncher } from './WidgetLauncher'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { WidgetPreChatForm } from './WidgetPreChatForm'
 import { WidgetChat } from './WidgetChat'
 import { WidgetRating } from './WidgetRating'
@@ -110,21 +109,29 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [isAgentTyping, setIsAgentTyping] = useState(false)
+  const [loadError, setLoadError] = useState(false)
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const retryCountRef = useRef(0)
 
   // Load settings on mount
   useEffect(() => {
     async function loadSettings() {
       try {
+        setLoadError(false)
         const res = await fetch(`${API_BASE}/api/modules/live-chat/widget?siteId=${siteId}`)
         if (!res.ok) {
-          setWidgetState('loading')
+          setLoadError(true)
           return
         }
         const data = await res.json()
+        if (!data.settings) {
+          setLoadError(true)
+          return
+        }
         setSettings(data.settings)
         setDepartments(data.departments || [])
+        retryCountRef.current = 0
 
         // Restore session from localStorage
         const savedConversation = localStorage.getItem(`dramac_chat_conv_${siteId}`)
@@ -134,11 +141,13 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
           setVisitorId(savedVisitor)
           setWidgetState('chat')
         } else {
-          setWidgetState('launcher')
+          // In iframe mode: skip launcher, go directly to ready state
+          // The parent page handles the launcher FAB
+          setWidgetState('pre-chat')
         }
       } catch (err) {
         console.error('[DRAMAC Chat] Failed to load settings:', err)
-        setWidgetState('loading')
+        setLoadError(true)
       }
     }
     loadSettings()
@@ -244,6 +253,23 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       handleStartChat({})
     }
   }, [settings, conversationId, visitorId])
+
+  // Listen for messages from the parent window (embed script)
+  useEffect(() => {
+    function handleMessage(event: MessageEvent) {
+      const msg = event.data
+      if (!msg || typeof msg !== 'object') return
+
+      if (msg.type === 'dramac-chat-open') {
+        // Parent opened the widget — advance to proper state
+        if (settings) {
+          handleOpen()
+        }
+      }
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [settings, handleOpen])
 
   // Handle pre-chat form submission
   const handleStartChat = useCallback(
@@ -406,8 +432,52 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     return () => clearInterval(interval)
   }, [widgetState, conversationId, visitorId, settings?.enableSatisfactionRating])
 
+  if (loadError) {
+    return (
+      <div className="h-full w-full flex flex-col items-center justify-center gap-3 p-6 text-center"
+        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+      >
+        <p className="text-sm text-gray-500">Unable to load chat</p>
+        <button
+          type="button"
+          onClick={() => {
+            setLoadError(false)
+            setWidgetState('loading')
+            retryCountRef.current += 1
+            // Re-trigger load
+            fetch(`${API_BASE}/api/modules/live-chat/widget?siteId=${siteId}`)
+              .then(res => res.ok ? res.json() : Promise.reject(new Error('Failed')))
+              .then(data => {
+                if (!data.settings) throw new Error('No settings')
+                setSettings(data.settings)
+                setDepartments(data.departments || [])
+                const savedConv = localStorage.getItem(`dramac_chat_conv_${siteId}`)
+                const savedVis = localStorage.getItem(`dramac_chat_visitor_${siteId}`)
+                if (savedConv && savedVis) {
+                  setConversationId(savedConv)
+                  setVisitorId(savedVis)
+                  setWidgetState('chat')
+                } else {
+                  setWidgetState('pre-chat')
+                }
+              })
+              .catch(() => setLoadError(true))
+          }}
+          className="px-4 py-2 rounded-lg text-white text-sm"
+          style={{ backgroundColor: '#2563eb' }}
+        >
+          Try Again
+        </button>
+      </div>
+    )
+  }
+
   if (!settings || widgetState === 'loading') {
-    return null // Loading — hide everything
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+      </div>
+    )
   }
 
   // Map ChatMessage[] → WidgetMessage[] for the chat component
@@ -433,18 +503,12 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       } as React.CSSProperties}
     >
       {widgetState === 'launcher' && (
-        <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
-          {/* In iframe mode, the launcher is outside the iframe */}
-          {/* This fallback is for when the widget is opened directly */}
-          <button
-            type="button"
-            onClick={handleOpen}
-            className="px-4 py-2 rounded-lg text-white"
-            style={{ backgroundColor: settings.primaryColor }}
-          >
-            Start Chat
-          </button>
-        </div>
+        <WidgetPreChatForm
+          settings={settings}
+          departments={departments}
+          onSubmit={handleStartChat}
+          onClose={handleClose}
+        />
       )}
 
       {widgetState === 'pre-chat' && (

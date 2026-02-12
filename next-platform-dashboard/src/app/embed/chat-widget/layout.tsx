@@ -22,10 +22,14 @@ export default function ChatWidgetLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        {/* Override globals.css @layer base body bg-background to keep iframe transparent */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          body { background: transparent !important; }
+        ` }} />
       </head>
       <body
-        className="min-h-screen bg-transparent antialiased"
-        style={{ margin: 0, padding: 0, overflow: 'hidden' }}
+        className="min-h-screen antialiased"
+        style={{ margin: 0, padding: 0, overflow: 'hidden', background: 'transparent' }}
       >
         {children}
       </body>

@@ -108,6 +108,8 @@ export async function GET(request: NextRequest) {
             businessHoursEnabled: false,
             businessHours: {},
             timezone: 'Africa/Lusaka',
+            autoOpenDelaySeconds: 0,
+            logoUrl: null,
             showAgentAvatar: true,
             showAgentName: true,
             showTypingIndicator: true,

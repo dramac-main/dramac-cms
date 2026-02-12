@@ -4,7 +4,7 @@
  * AgentsPageWrapper — Agent management with CRUD, status, and performance
  */
 
-import { useState, useCallback, useTransition } from 'react'
+import { useState, useCallback, useTransition, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -47,7 +47,9 @@ import {
   createAgent,
   updateAgent,
   deleteAgent,
+  getAgencyMembersForSite,
 } from '@/modules/live-chat/actions/agent-actions'
+import type { AgencyMember } from '@/modules/live-chat/actions/agent-actions'
 import {
   createDepartment,
   updateDepartment,
@@ -89,6 +91,20 @@ export function AgentsPageWrapper({
   const [departments, setDepartments] = useState(initialDepartments)
   const [showAddAgent, setShowAddAgent] = useState(false)
   const [showAddDept, setShowAddDept] = useState(false)
+  const [agencyMembers, setAgencyMembers] = useState<AgencyMember[]>([])
+  const [membersLoading, setMembersLoading] = useState(false)
+
+  // Fetch agency members when Add Agent dialog opens
+  const loadAgencyMembers = useCallback(() => {
+    setMembersLoading(true)
+    getAgencyMembersForSite(siteId)
+      .then(({ members }) => {
+        // Filter out users already added as agents
+        const existingUserIds = new Set(agents.map(a => a.userId))
+        setAgencyMembers(members.filter(m => !existingUserIds.has(m.userId)))
+      })
+      .finally(() => setMembersLoading(false))
+  }, [siteId, agents])
 
   // Add agent form state
   const [agentForm, setAgentForm] = useState({
@@ -220,7 +236,10 @@ export function AgentsPageWrapper({
             Manage chat agents and departments
           </p>
         </div>
-        <Dialog open={showAddAgent} onOpenChange={setShowAddAgent}>
+        <Dialog open={showAddAgent} onOpenChange={(open) => {
+          setShowAddAgent(open)
+          if (open) loadAgencyMembers()
+        }}>
           <DialogTrigger asChild>
             <Button size="sm">
               <Plus className="h-4 w-4 mr-2" />
@@ -233,14 +252,48 @@ export function AgentsPageWrapper({
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>User ID (from agency members)</Label>
-                <Input
-                  value={agentForm.userId}
-                  onChange={(e) =>
-                    setAgentForm({ ...agentForm, userId: e.target.value })
-                  }
-                  placeholder="User UUID"
-                />
+                <Label>Team Member</Label>
+                {membersLoading ? (
+                  <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading members...
+                  </div>
+                ) : agencyMembers.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-2">
+                    No available members. All team members are already agents.
+                  </p>
+                ) : (
+                  <Select
+                    value={agentForm.userId || 'none'}
+                    onValueChange={(val) => {
+                      if (val === 'none') {
+                        setAgentForm({ ...agentForm, userId: '', displayName: '', email: '' })
+                        return
+                      }
+                      const member = agencyMembers.find(m => m.userId === val)
+                      if (member) {
+                        setAgentForm({
+                          ...agentForm,
+                          userId: member.userId,
+                          displayName: member.name || member.email.split('@')[0],
+                          email: member.email,
+                        })
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a team member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Select a team member</SelectItem>
+                      {agencyMembers.map((member) => (
+                        <SelectItem key={member.userId} value={member.userId}>
+                          {member.name || member.email} ({member.role})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Display Name</Label>

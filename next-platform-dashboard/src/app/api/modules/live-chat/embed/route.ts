@@ -175,6 +175,10 @@ export async function GET(request: NextRequest) {
         // Reset badge
         badge.style.display = 'none';
         badge.textContent = '0';
+        // Notify iframe that widget is open
+        try {
+          iframe.contentWindow.postMessage({ type: 'dramac-chat-open' }, '*');
+        } catch(e) {}
       } else {
         container.style.opacity = '0';
         container.style.transform = 'translateY(10px) scale(0.95)';

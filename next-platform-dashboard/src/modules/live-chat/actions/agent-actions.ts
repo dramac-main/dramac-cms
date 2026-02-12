@@ -24,6 +24,67 @@ function liveChatPath(siteId: string) {
 
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
+export interface AgencyMember {
+  userId: string
+  name: string | null
+  email: string
+  avatarUrl: string | null
+  role: string
+}
+
+export async function getAgencyMembersForSite(
+  siteId: string
+): Promise<{ members: AgencyMember[]; error: string | null }> {
+  try {
+    const supabase = await getModuleClient()
+
+    // Get the agency_id for this site
+    const { data: siteData, error: siteError } = await supabase
+      .from('sites')
+      .select('agency_id')
+      .eq('id', siteId)
+      .single()
+
+    if (siteError || !siteData?.agency_id) {
+      return { members: [], error: 'Could not find agency for this site' }
+    }
+
+    // Get agency members
+    const { data: members, error: membersError } = await supabase
+      .from('agency_members')
+      .select('user_id, role')
+      .eq('agency_id', siteData.agency_id)
+
+    if (membersError || !members?.length) {
+      return { members: [], error: membersError?.message || null }
+    }
+
+    // Get profiles for those members
+    const userIds = members.map((m: { user_id: string }) => m.user_id)
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, name, email, avatar_url')
+      .in('id', userIds)
+
+    // Join members with profiles
+    const result: AgencyMember[] = members.map((m: { user_id: string; role: string }) => {
+      const profile = (profiles || []).find((p: { id: string }) => p.id === m.user_id)
+      return {
+        userId: m.user_id,
+        name: profile?.name || null,
+        email: profile?.email || m.user_id,
+        avatarUrl: profile?.avatar_url || null,
+        role: m.role,
+      }
+    })
+
+    return { members: result, error: null }
+  } catch (error) {
+    console.error('[LiveChat] Error fetching agency members:', error)
+    return { members: [], error: (error as Error).message }
+  }
+}
+
 export async function getAgents(
   siteId: string
 ): Promise<{ agents: ChatAgent[]; error: string | null }> {
@@ -145,6 +206,12 @@ export async function createAgent(data: {
   maxConcurrentChats?: number
 }): Promise<{ agent: ChatAgent | null; error: string | null }> {
   try {
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(data.userId)) {
+      return { agent: null, error: 'Invalid User ID format. Please select a valid team member.' }
+    }
+
     const supabase = await getModuleClient()
 
     const insertData: Record<string, unknown> = {
