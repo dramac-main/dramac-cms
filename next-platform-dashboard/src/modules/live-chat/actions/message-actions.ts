@@ -124,6 +124,25 @@ export async function sendMessage(data: {
 
     const message = mapRecord<ChatMessage>(msgData)
 
+    // Send web push notification to customer when agent sends a message (non-internal)
+    if ((data.senderType === 'agent' || data.senderType === 'ai') && !data.isInternalNote) {
+      try {
+        const { sendPushToConversation } = await import('@/lib/actions/web-push')
+        const senderLabel = data.senderName || 'Support Agent'
+        const preview = data.content.length > 100 ? data.content.slice(0, 100) + '…' : data.content
+        sendPushToConversation(data.conversationId, {
+          title: `Message from ${senderLabel}`,
+          body: preview,
+          tag: `chat-${data.conversationId}`,
+          type: 'chat',
+          conversationId: data.conversationId,
+          renotify: true,
+        }).catch(() => {})
+      } catch {
+        // web-push module not available — skip silently
+      }
+    }
+
     // Create notifications for @mentioned agents
     if (data.mentionedAgentIds && data.mentionedAgentIds.length > 0 && data.isInternalNote) {
       try {

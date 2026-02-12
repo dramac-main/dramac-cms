@@ -3,16 +3,6 @@
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_CURRENCY } from '@/lib/locale-config'
-import {
-  getSubscription,
-  lemonSqueezySetup,
-} from "@lemonsqueezy/lemonsqueezy.js";
-
-// Initialize LemonSqueezy
-lemonSqueezySetup({
-  apiKey: process.env.LEMONSQUEEZY_API_KEY!,
-  onError: (error) => console.error("LemonSqueezy Error:", error),
-});
 
 // ============================================
 // TYPES
@@ -52,7 +42,7 @@ export interface PortalBillingOverview {
 async function getPortalClientAgency(): Promise<{
   clientId: string;
   agencyId: string;
-  lemonCustomerId: string | null;
+  paddleCustomerId: string | null;
 } | null> {
   const cookieStore = await cookies();
   const clientId = cookieStore.get("impersonating_client_id")?.value;
@@ -74,19 +64,19 @@ async function getPortalClientAgency(): Promise<{
     return null;
   }
 
-  // Get agency's LemonSqueezy customer ID from subscriptions table
+  // Get agency's Paddle customer ID from subscriptions table
   const { data: subscription } = await supabase
     .from("subscriptions")
-    .select("lemonsqueezy_customer_id")
+    .select("paddle_customer_id")
     .eq("agency_id", client.agency_id)
-    .not("lemonsqueezy_customer_id", "is", null)
+    .not("paddle_customer_id", "is", null)
     .limit(1)
     .single();
 
   return {
     clientId: client.id,
     agencyId: client.agency_id,
-    lemonCustomerId: subscription?.lemonsqueezy_customer_id || null,
+    paddleCustomerId: (subscription as Record<string, unknown>)?.paddle_customer_id as string || null,
   };
 }
 
@@ -124,9 +114,8 @@ async function getInvoicesFromDatabase(agencyId: string): Promise<{
       id,
       plan_id,
       status,
-      lemonsqueezy_subscription_id,
-      lemonsqueezy_customer_id,
-      lemonsqueezy_variant_id,
+      paddle_subscription_id,
+      paddle_customer_id,
       created_at,
       current_period_start,
       current_period_end
@@ -139,24 +128,22 @@ async function getInvoicesFromDatabase(agencyId: string): Promise<{
   }
 
   // Convert subscriptions to invoice-like records
-  // In a full implementation, you'd store actual invoices in a separate table
   const invoices: PortalInvoice[] = subscriptions.map((sub) => {
     const planName = getPlanName(sub.plan_id);
+    const paddleSubId = (sub as Record<string, unknown>).paddle_subscription_id as string | null;
     return {
       id: sub.id,
-      invoiceNumber: sub.lemonsqueezy_subscription_id ? `SUB-${sub.lemonsqueezy_subscription_id}` : null,
+      invoiceNumber: paddleSubId ? `SUB-${paddleSubId}` : null,
       orderId: sub.id,
-      subscriptionId: sub.lemonsqueezy_subscription_id,
+      subscriptionId: paddleSubId,
       productName: planName,
       description: `${planName} Subscription`,
-      amount: getPlanPrice(sub.plan_id), // Helper to get price
+      amount: getPlanPrice(sub.plan_id),
       currency: DEFAULT_CURRENCY,
       status: sub.status === "active" ? "paid" : "pending",
       createdAt: sub.created_at || new Date().toISOString(),
       paidAt: sub.status === "active" ? sub.created_at : null,
-      invoiceUrl: sub.lemonsqueezy_subscription_id 
-        ? `https://app.lemonsqueezy.com/my-orders`
-        : null,
+      invoiceUrl: null,
       receiptUrl: null,
     };
   });
@@ -208,27 +195,11 @@ export async function getPortalBillingOverview(): Promise<PortalBillingOverview>
     totalPaidThisYear += getPlanPrice(sub.plan_id);
   });
 
-  // Get next payment info from LemonSqueezy if we have a subscription
+  // Get next payment info from subscription
   let nextPaymentDate: string | null = null;
   let nextPaymentAmount: number | null = null;
 
-  if (subscription?.lemonsqueezy_subscription_id && context.lemonCustomerId) {
-    try {
-      const lsSubscription = await getSubscription(subscription.lemonsqueezy_subscription_id);
-      const subData = lsSubscription.data?.data;
-      if (subData) {
-        nextPaymentDate = subData.attributes.renews_at || null;
-        // Use variant price or fallback to plan price
-        nextPaymentAmount = getPlanPrice(subscription.plan_id);
-      }
-    } catch (error) {
-      console.error("[PortalBillingService] Error fetching subscription:", error);
-      // Use database fallback
-      nextPaymentDate = subscription.current_period_end;
-      nextPaymentAmount = getPlanPrice(subscription.plan_id);
-    }
-  } else if (subscription) {
-    // Fallback to database values
+  if (subscription) {
     nextPaymentDate = subscription.current_period_end;
     nextPaymentAmount = getPlanPrice(subscription.plan_id);
   }
@@ -241,7 +212,7 @@ export async function getPortalBillingOverview(): Promise<PortalBillingOverview>
     currency: DEFAULT_CURRENCY,
     nextPaymentDate,
     nextPaymentAmount,
-    customerId: context.lemonCustomerId,
+    customerId: context.paddleCustomerId,
   };
 }
 
@@ -254,9 +225,7 @@ function getPlanName(planId: string | null): string {
   // Map common plan IDs to display names
   const planNames: Record<string, string> = {
     "starter": "Starter",
-    "professional": "Professional",
-    "pro": "Professional",
-    "agency": "Agency",
+    "pro": "Pro",
     "enterprise": "Enterprise",
     "free": "Free",
     "trial": "Trial",
@@ -276,7 +245,7 @@ function getPlanName(planId: string | null): string {
 
 /**
  * Helper: Get plan price in cents
- * This should match your actual LemonSqueezy product prices
+ * This should match your actual Paddle product prices
  */
 function getPlanPrice(planId: string | null): number {
   if (!planId) return 0;
@@ -285,23 +254,16 @@ function getPlanPrice(planId: string | null): number {
   
   // Monthly prices in cents
   if (lowerPlan.includes("starter")) return 2900; // $29/month
-  if (lowerPlan.includes("professional") || lowerPlan.includes("pro")) return 7900; // $79/month
-  if (lowerPlan.includes("agency") || lowerPlan.includes("enterprise")) return 19900; // $199/month
+  if (lowerPlan.includes("pro")) return 9900; // $99/month
+  if (lowerPlan.includes("enterprise")) return 0; // Custom pricing
   if (lowerPlan.includes("free") || lowerPlan.includes("trial")) return 0;
   
   return 0;
 }
 
 /**
- * Get subscription management portal URL from LemonSqueezy
+ * Get subscription management portal URL
  */
 export async function getCustomerPortalUrl(): Promise<string | null> {
-  const context = await getPortalClientAgency();
-  if (!context?.lemonCustomerId) {
-    return null;
-  }
-
-  // LemonSqueezy customer portal URL
-  // Customers can manage their subscriptions at this URL
-  return `https://app.lemonsqueezy.com/my-orders`;
+  return "/settings/billing";
 }

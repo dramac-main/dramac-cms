@@ -13,6 +13,7 @@ import { WidgetChat } from './WidgetChat'
 import { WidgetRating } from './WidgetRating'
 import { WidgetOfflineForm } from './WidgetOfflineForm'
 import { useChatRealtime } from '@/modules/live-chat/hooks/use-chat-realtime'
+import { isPushSupported, subscribeToPush, updatePushConversation } from '@/lib/push-client'
 import type { ChatMessage, BusinessHoursConfig } from '@/modules/live-chat/types'
 import type { WidgetMessage } from './WidgetMessageBubble'
 
@@ -341,6 +342,14 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         // Save session
         localStorage.setItem(`dramac_chat_conv_${siteId}`, data.conversationId)
         localStorage.setItem(`dramac_chat_visitor_${siteId}`, data.visitorId)
+
+        // Subscribe to push notifications (non-blocking)
+        if (isPushSupported() && Notification.permission !== 'denied') {
+          subscribeToPush('customer', {
+            siteId,
+            conversationId: data.conversationId,
+          }).catch(() => {})
+        }
       } catch (err) {
         console.error('[DRAMAC Chat] Failed to start chat:', err)
       }

@@ -21,7 +21,6 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@floating-ui/react": "^0.27.17",
     "@hookform/resolvers": "^5.2.2",
-    "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
     "@monaco-editor/react": "^4.7.0",
     "@paddle/paddle-js": "^1.6.1",
     "@paddle/paddle-node-sdk": "^3.5.0",

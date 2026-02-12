@@ -261,21 +261,21 @@ function PricingContent() {
           <div className="grid md:grid-cols-3 gap-4">
             <div className="p-4 border rounded-lg text-center">
               <p className="font-semibold">Automation Runs</p>
-              <p className="text-2xl font-bold">$0.001</p>
+              <p className="text-2xl font-bold">US$0.001</p>
               <p className="text-sm text-muted-foreground">per run over limit</p>
-              <p className="text-xs text-green-600 mt-1">Pro: $0.0005 (50% off)</p>
+              <p className="text-xs text-green-600 mt-1">Pro: US$0.0005 (50% off)</p>
             </div>
             <div className="p-4 border rounded-lg text-center">
               <p className="font-semibold">AI Actions</p>
-              <p className="text-2xl font-bold">$0.005</p>
+              <p className="text-2xl font-bold">US$0.005</p>
               <p className="text-sm text-muted-foreground">per action over limit</p>
-              <p className="text-xs text-green-600 mt-1">Pro: $0.0025 (50% off)</p>
+              <p className="text-xs text-green-600 mt-1">Pro: US$0.0025 (50% off)</p>
             </div>
             <div className="p-4 border rounded-lg text-center">
               <p className="font-semibold">API Calls</p>
-              <p className="text-2xl font-bold">$0.0001</p>
+              <p className="text-2xl font-bold">US$0.0001</p>
               <p className="text-sm text-muted-foreground">per call over limit</p>
-              <p className="text-xs text-green-600 mt-1">Pro: $0.00005 (50% off)</p>
+              <p className="text-xs text-green-600 mt-1">Pro: US$0.00005 (50% off)</p>
             </div>
           </div>
         </div>

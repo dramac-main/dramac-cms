@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { openPaddleCheckout } from '@/lib/paddle/paddle-client';
+import { formatCurrency } from '@/lib/locale-config';
 
 // ============================================================================
 // Types
@@ -146,7 +147,7 @@ export function PricingCard({
         {/* Pricing */}
         <div className="mb-6">
           <div className="flex items-baseline gap-1">
-            <span className="text-4xl font-bold">${price}</span>
+            <span className="text-4xl font-bold">{formatCurrency(price, 'USD')}</span>
             <span className="text-muted-foreground">
               /{billingCycle === 'yearly' ? 'year' : 'month'}
             </span>

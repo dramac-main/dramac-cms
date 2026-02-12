@@ -138,6 +138,24 @@ export async function POST(request: NextRequest) {
       agentUserId: convForNotify.assigned_agent_id || undefined,
     }).catch((err) => console.error('[LiveChat] Notification error:', err))
 
+    // Send web push to assigned agent (or all site agents)
+    import('@/lib/actions/web-push').then(({ sendPushToUser, sendPushToSiteAgents }) => {
+      const pushPayload = {
+        title: `Chat from ${visitorData?.name || 'Visitor'}`,
+        body: content.length > 100 ? content.slice(0, 100) + '…' : content,
+        tag: `chat-${conversationId}`,
+        type: 'chat' as const,
+        conversationId,
+        url: `/dashboard/sites/${convForNotify.site_id}/live-chat/conversations/${conversationId}`,
+        renotify: true,
+      }
+      if (convForNotify.assigned_agent_id) {
+        sendPushToUser(convForNotify.assigned_agent_id, pushPayload).catch(() => {})
+      } else {
+        sendPushToSiteAgents(convForNotify.site_id, pushPayload).catch(() => {})
+      }
+    }).catch(() => {})
+
     return NextResponse.json(
       { message },
       { status: 201, headers: corsHeaders }
