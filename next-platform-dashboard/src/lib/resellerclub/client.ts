@@ -166,9 +166,31 @@ export class ResellerClubClient {
       
       clearTimeout(timeoutId);
       
+      // Handle HTTP error status codes BEFORE parsing the body.
+      // ResellerClub returns 403 for invalid credentials, blocked IPs, or when
+      // sandbox credentials are used against production endpoints.
+      // Cloudflare WAF also returns 403 with HTML body.
+      if (!response.ok) {
+        const statusText = response.statusText || 'Unknown';
+        console.error(`[ResellerClub] HTTP ${response.status} ${statusText} from ${endpoint}`);
+        throw new ResellerClubError(
+          `API returned HTTP ${response.status} ${statusText}`,
+          response.status === 403 ? 'AUTH_ERROR' : 'NETWORK_ERROR'
+        );
+      }
+      
       // Parse response
       const contentType = response.headers.get('content-type');
       let data: unknown;
+      
+      // Reject HTML responses — these come from Cloudflare WAF blocks or error pages
+      if (contentType?.includes('text/html')) {
+        console.error(`[ResellerClub] Received HTML response from ${endpoint} (likely Cloudflare block)`);
+        throw new ResellerClubError(
+          'API returned HTML instead of JSON (possible WAF block)',
+          'NETWORK_ERROR'
+        );
+      }
       
       if (contentType?.includes('application/json')) {
         data = await response.json();
@@ -178,8 +200,12 @@ export class ResellerClubClient {
         try {
           data = JSON.parse(text);
         } catch {
-          // Not JSON, treat as raw response
-          data = text;
+          // Not JSON — could be an error page or unexpected response
+          console.error(`[ResellerClub] Non-JSON response from ${endpoint}:`, text.substring(0, 200));
+          throw new ResellerClubError(
+            'API returned non-JSON response',
+            'NETWORK_ERROR'
+          );
         }
       }
       

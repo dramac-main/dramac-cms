@@ -73,9 +73,11 @@ export default async function EmailAccountsPage({ params }: EmailAccountsPagePro
               </div>
             </div>
             {accounts.length < order.number_of_accounts && (
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Account
+              <Button asChild>
+                <a href="#email-accounts">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Account
+                </a>
               </Button>
             )}
           </div>

@@ -192,26 +192,41 @@ export async function searchDomains(
         return { success: true, data: results };
       } catch (apiError) {
         console.error('[Domains] ResellerClub API search failed:', apiError);
-        // Fall through to fallback below
+        // Fall through to DNS/RDAP fallback below
       }
     } else {
       console.warn('[Domains] ResellerClub API not available — isClientAvailable() returned false');
     }
     
-    // Fallback: Return results marking availability as unverified
-    // This occurs when the API is not configured or an API call failed
+    // Fallback: Use DNS/RDAP to check domain availability
+    // This gives much better results than blindly marking everything as "unavailable"
     const fallbackPrices: Record<string, number> = {
       '.com': 12.99, '.net': 14.99, '.org': 13.99, '.io': 39.99,
       '.co': 29.99, '.app': 19.99, '.dev': 15.99,
     };
     
+    // Import and run the DNS/RDAP fallback checker
+    let fallbackAvailability: Array<{ domain: string; available: boolean }> = [];
+    try {
+      const { checkAvailabilityFallback } = await import('@/lib/domain-availability-fallback');
+      const domainNames = popularTlds.map(tld => cleanKeyword + tld);
+      const fbResults = await checkAvailabilityFallback(domainNames);
+      fallbackAvailability = fbResults.map(r => ({ domain: r.domain, available: r.available }));
+      console.log('[Domains] Fallback availability results:', JSON.stringify(fallbackAvailability));
+    } catch (fbError) {
+      console.error('[Domains] DNS/RDAP fallback also failed:', fbError);
+    }
+    
     const results: DomainSearchResult[] = popularTlds.map(tld => {
+      const domainName = cleanKeyword + tld;
       const basePrice = fallbackPrices[tld] || 15.99;
+      const fbResult = fallbackAvailability.find(r => r.domain === domainName);
+      
       return {
-        domain: cleanKeyword + tld,
+        domain: domainName,
         tld,
-        available: false,
-        unverified: true, // Signal to UI that this is NOT a real "already registered" — it's "unable to check"
+        available: fbResult?.available ?? false,
+        unverified: true, // Always true for fallback — results are heuristic-based
         premium: false,
         prices: {
           register: { 1: basePrice, 2: basePrice * 1.9, 3: basePrice * 2.8 } as Record<number, number>,
@@ -265,13 +280,30 @@ export async function checkDomainAvailability(domainName: string) {
       }
     }
     
-    // Fallback when API not configured or call failed
+    // Fallback: Use DNS/RDAP to check single domain
+    try {
+      const { checkAvailabilityFallback } = await import('@/lib/domain-availability-fallback');
+      const fbResults = await checkAvailabilityFallback([domainName]);
+      const fbResult = fbResults[0];
+      return { 
+        success: true, 
+        data: {
+          domain: domainName,
+          available: fbResult?.available ?? false,
+          unverified: true,
+          premium: false,
+        }
+      };
+    } catch {
+      // Even fallback failed
+    }
+    
     return { 
       success: true, 
       data: {
         domain: domainName,
         available: false,
-        unverified: true, // Signal that availability couldn't actually be verified
+        unverified: true,
         premium: false,
       }
     };

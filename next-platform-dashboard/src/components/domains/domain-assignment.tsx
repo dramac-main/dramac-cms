@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Building, Globe, Link as LinkIcon, Plus, X } from "lucide-react";
+import { useState } from "react";
+import { Building, Link as LinkIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -29,33 +29,24 @@ interface DomainAssignmentProps {
   domainId: string;
   currentClientId: string | null;
   currentSiteId: string | null;
+  clients?: Client[];
+  sites?: Site[];
   onAssign?: (clientId: string | null, siteId: string | null) => Promise<void>;
 }
-
-// Mock data - in production, these would come from server actions
-const MOCK_CLIENTS: Client[] = [
-  { id: 'c1', name: 'Customer A', company: 'Company One' },
-  { id: 'c2', name: 'Customer B', company: 'Tech Solutions' },
-  { id: 'c3', name: 'Customer C', company: null },
-];
-
-const MOCK_SITES: Site[] = [
-  { id: 's1', name: 'Main Website', subdomain: 'company' },
-  { id: 's2', name: 'Blog', subdomain: 'blog' },
-  { id: 's3', name: 'Store', subdomain: 'shop' },
-];
 
 export function DomainAssignment({ 
   domainId, 
   currentClientId, 
   currentSiteId,
+  clients: propClients = [],
+  sites: propSites = [],
   onAssign 
 }: DomainAssignmentProps) {
   const [clientId, setClientId] = useState<string | null>(currentClientId);
   const [siteId, setSiteId] = useState<string | null>(currentSiteId);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [clients] = useState<Client[]>(MOCK_CLIENTS);
-  const [sites] = useState<Site[]>(MOCK_SITES);
+  const [clients] = useState<Client[]>(propClients);
+  const [sites] = useState<Site[]>(propSites);
   
   const selectedClient = clients.find(c => c.id === clientId);
   const selectedSite = sites.find(s => s.id === siteId);

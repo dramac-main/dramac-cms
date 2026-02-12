@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getDomain } from "@/lib/actions/domains";
 import { getHealthCheck, getExpiryNotifications } from "@/lib/actions/automation";
+import { createClient } from "@/lib/supabase/server";
 import { DomainSettingsForm } from "./settings-form-client";
 import { DomainHealthCheck, AutoRenewToggle, ExpiryNotifications } from "@/components/domains/automation";
 
@@ -25,17 +26,56 @@ export async function generateMetadata({ params }: SettingsPageProps): Promise<M
   };
 }
 
-// Default contact data — real data should come from agency profile
-const DEFAULT_CONTACT = {
+// Build contact data from the authenticated user's profile
+async function getContactFromProfile() {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, email, agency_id')
+      .eq('id', user.id)
+      .single();
+    
+    let agencyName = '';
+    if (profile?.agency_id) {
+      const { data: agency } = await supabase
+        .from('agencies')
+        .select('name')
+        .eq('id', profile.agency_id)
+        .single();
+      agencyName = agency?.name || '';
+    }
+    
+    return {
+      name: profile?.full_name || user.user_metadata?.full_name || '',
+      organization: agencyName,
+      email: profile?.email || user.email || '',
+      phone: '',
+      address: '',
+      city: '',
+      state: '',
+      country: 'ZM',
+      zipcode: '',
+    };
+  } catch {
+    return null;
+  }
+}
+
+// Fallback contact when profile lookup fails
+const EMPTY_CONTACT = {
   name: '',
   organization: '',
   email: '',
   phone: '',
   address: '',
-  city: 'Lusaka',
-  state: 'Lusaka Province',
+  city: '',
+  state: '',
   country: 'ZM',
-  zipcode: '10101',
+  zipcode: '',
 };
 
 async function SettingsContent({ domainId }: { domainId: string }) {
@@ -47,11 +87,14 @@ async function SettingsContent({ domainId }: { domainId: string }) {
   
   const domain = response.data;
   
-  // Fetch health check and notification data
-  const [healthResult, notificationsResult] = await Promise.all([
+  // Fetch health check, notification data, and contact in parallel
+  const [healthResult, notificationsResult, profileContact] = await Promise.all([
     getHealthCheck(domainId),
     getExpiryNotifications(domainId),
+    getContactFromProfile(),
   ]);
+
+  const contact = profileContact || EMPTY_CONTACT;
 
   // Cast health data to expected type
   const healthData = healthResult.data as {
@@ -113,7 +156,7 @@ async function SettingsContent({ domainId }: { domainId: string }) {
         transferLock={domain.transfer_lock}
         whoisPrivacy={domain.whois_privacy}
         autoRenew={domain.auto_renew}
-        contact={DEFAULT_CONTACT}
+        contact={contact}
       />
     </div>
   );

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { formatDistanceToNow, format } from "date-fns";
+import { formatCurrency } from "@/lib/locale-config";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -178,7 +179,7 @@ function EmailOrderCard({ order }: { order: EmailOrdersListProps['orders'][0] })
           <div>
             <p className="text-sm text-muted-foreground mb-1">Monthly Cost</p>
             <p className="font-medium">
-              ${(order.retail_price / 12).toFixed(2)}/mo
+              {formatCurrency(order.retail_price / 12)}/mo
             </p>
           </div>
 
@@ -191,9 +192,11 @@ function EmailOrderCard({ order }: { order: EmailOrdersListProps['orders'][0] })
               </Link>
             </Button>
             {isExpiringSoon && (
-              <Button size="sm">
-                <RefreshCw className="h-4 w-4 mr-1" />
-                Renew
+              <Button size="sm" asChild>
+                <Link href={`/dashboard/email/${order.id}/settings`}>
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Renew
+                </Link>
               </Button>
             )}
           </div>

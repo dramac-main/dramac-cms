@@ -6,14 +6,16 @@ const isSandbox = process.env.RESELLERCLUB_SANDBOX === 'true';
 export const RESELLERCLUB_CONFIG = {
   // API Configuration
   // Production: https://httpapi.com/api (general), https://domaincheck.httpapi.com/api (availability)
-  // Sandbox:    https://test.httpapi.com/api (general), https://test.domaincheck.httpapi.com/api (availability)
+  // Sandbox:    https://test.httpapi.com/api (for ALL endpoints, including availability)
+  // ⚠️ The sandbox does NOT have a separate domaincheck subdomain — test.domaincheck.httpapi.com does not exist.
   // ⚠️ The sandbox flag auto-selects the correct URL. Override with env vars if needed.
   apiUrl: process.env.RESELLERCLUB_API_URL
     || (isSandbox ? 'https://test.httpapi.com/api' : 'https://httpapi.com/api'),
-  // The domain availability check endpoint uses a SEPARATE faster hostname
+  // The domain availability check endpoint uses a SEPARATE faster hostname in production.
+  // In sandbox mode, there is NO separate domaincheck host — use the general sandbox URL.
   // See: https://manage.resellerclub.com/kb/answer/764
   domainCheckUrl: process.env.RESELLERCLUB_DOMAIN_CHECK_URL
-    || (isSandbox ? 'https://test.domaincheck.httpapi.com/api' : 'https://domaincheck.httpapi.com/api'),
+    || (isSandbox ? 'https://test.httpapi.com/api' : 'https://domaincheck.httpapi.com/api'),
   resellerId: process.env.RESELLERCLUB_RESELLER_ID || '',
   apiKey: process.env.RESELLERCLUB_API_KEY || '',
   sandbox: isSandbox,

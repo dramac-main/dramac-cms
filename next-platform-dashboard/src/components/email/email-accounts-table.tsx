@@ -167,7 +167,11 @@ export function EmailAccountsTable({
                           Open Webmail
                         </a>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          window.open('https://control.titan.email', '_blank');
+                        }}
+                      >
                         <Key className="h-4 w-4 mr-2" />
                         Reset Password
                       </DropdownMenuItem>

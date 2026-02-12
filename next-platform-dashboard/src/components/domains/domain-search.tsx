@@ -166,7 +166,12 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-muted-foreground">
             {results.filter(r => r.available).length} available of {results.length} checked
-            {results.some(r => r.unverified) && (
+            {results.some(r => r.unverified) && results.some(r => r.available) && (
+              <span className="text-yellow-500 ml-2">
+                (Results via DNS lookup — register to confirm)
+              </span>
+            )}
+            {results.some(r => r.unverified) && !results.some(r => r.available) && (
               <span className="text-yellow-500 ml-2">
                 (API unavailable — results may be inaccurate)
               </span>
@@ -178,9 +183,9 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
               <Card 
                 key={result.domain}
                 className={cn(
-                  "transition-all cursor-pointer hover:shadow-md",
+                  "transition-all hover:shadow-md",
                   result.available 
-                    ? "border-green-500/50 hover:border-green-500" 
+                    ? "border-green-500/50 hover:border-green-500 cursor-pointer" 
                     : result.unverified
                       ? "opacity-70 border-yellow-500/30"
                       : "opacity-60"
@@ -212,12 +217,18 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
                               Premium
                             </Badge>
                           )}
+                          {result.available && result.unverified && (
+                            <Badge variant="outline" className="gap-1 text-yellow-600 border-yellow-500/50">
+                              <AlertCircle className="h-3 w-3" />
+                              Likely Available
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {result.available 
-                            ? 'Available for registration' 
+                            ? (result.unverified ? 'Likely available — register to confirm' : 'Available for registration')
                             : result.unverified
-                              ? 'Unable to verify — check API connection'
+                              ? 'Likely registered — unable to verify via registrar'
                               : 'Already registered'}
                         </p>
                       </div>

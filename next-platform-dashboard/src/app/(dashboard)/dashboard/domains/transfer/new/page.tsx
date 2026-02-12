@@ -6,16 +6,43 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { TransferWizard } from "@/components/domains/transfer";
 import { PLATFORM } from "@/lib/constants/platform";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata = {
   title: `Transfer Domain | ${PLATFORM.name}`,
   description: "Transfer a domain to your account",
 };
 
+async function getContacts() {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('agency_id')
+      .eq('id', user.id)
+      .single();
+    
+    if (!profile?.agency_id) return [];
+    
+    // Try to fetch from domain_contacts table
+    const { data: contacts } = await (supabase as unknown as { from: (table: string) => { select: (cols: string) => { eq: (col: string, val: string) => { order: (col: string, opts: { ascending: boolean }) => Promise<{ data: Array<{ id: string; name: string; email: string }> | null }> } } } })
+      .from('domain_contacts')
+      .select('id, name, email')
+      .eq('agency_id', profile.agency_id)
+      .order('created_at', { ascending: false });
+    
+    return contacts || [];
+  } catch {
+    // Table may not exist yet — return empty gracefully
+    return [];
+  }
+}
+
 export default async function NewTransferPage() {
-  // Contacts feature will be added when domain_contacts table exists
-  // For now, pass empty array and the wizard handles it gracefully
-  const contacts: { id: string; name: string; email: string }[] = [];
+  const contacts = await getContacts();
 
   return (
     <div className="container py-6 space-y-6 max-w-3xl">

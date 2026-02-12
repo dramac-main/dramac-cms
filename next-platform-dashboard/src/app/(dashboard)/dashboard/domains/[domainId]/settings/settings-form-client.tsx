@@ -38,7 +38,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { updateDomainAutoRenew, updateDomainPrivacy, deleteDomain } from "@/lib/actions/domains";
-import { setTransferLock } from "@/lib/actions/transfers";
+import { setTransferLock, getAuthCode } from "@/lib/actions/transfers";
 
 interface DomainSettingsFormProps {
   domainId: string;
@@ -199,11 +199,26 @@ export function DomainSettingsForm({
     }
   };
 
+  const [isGettingAuthCode, setIsGettingAuthCode] = useState(false);
+  const [authCode, setAuthCode] = useState<string | null>(null);
+
   const handleStartTransfer = async () => {
-    setTransferDialogOpen(false);
-    toast.info("Transfer initiated", {
-      description: "You will receive an email with further instructions to complete the transfer",
-    });
+    setIsGettingAuthCode(true);
+    try {
+      const result = await getAuthCode(domainId);
+      if (!result.success || !result.data) {
+        toast.error(result.error || "Failed to get authorization code");
+        return;
+      }
+      setAuthCode(result.data.authCode);
+      toast.success("Authorization code generated", {
+        description: "Copy the code and provide it to the new registrar",
+      });
+    } catch {
+      toast.error("Failed to get authorization code");
+    } finally {
+      setIsGettingAuthCode(false);
+    }
   };
 
   return (
@@ -462,7 +477,10 @@ export function DomainSettingsForm({
       </Card>
 
       {/* Transfer Dialog */}
-      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+      <Dialog open={transferDialogOpen} onOpenChange={(open) => {
+        setTransferDialogOpen(open);
+        if (!open) setAuthCode(null);
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Transfer {domainName}</DialogTitle>
@@ -478,18 +496,30 @@ export function DomainSettingsForm({
                 <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
                   <li>Transfer lock must be disabled</li>
                   <li>Domain must not be within 60 days of registration or last transfer</li>
-                  <li>You will receive an authorization code via email</li>
+                  <li>You will receive an authorization code to provide to the new registrar</li>
                 </ul>
               </AlertDescription>
             </Alert>
+            
+            {authCode && (
+              <div className="p-3 rounded-md border bg-muted/50">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Authorization Code</p>
+                <code className="text-sm font-mono select-all break-all">{authCode}</code>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Copy this code and provide it to your new registrar to complete the transfer.
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>
-              Cancel
+            <Button variant="outline" onClick={() => { setTransferDialogOpen(false); setAuthCode(null); }}>
+              {authCode ? 'Close' : 'Cancel'}
             </Button>
-            <Button onClick={handleStartTransfer}>
-              Get Authorization Code
-            </Button>
+            {!authCode && (
+              <Button onClick={handleStartTransfer} disabled={isGettingAuthCode}>
+                {isGettingAuthCode ? 'Generating...' : 'Get Authorization Code'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

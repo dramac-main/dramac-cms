@@ -1,6 +1,39 @@
 # Active Context
 
-## Latest Session Update — CSP, Agent Validation, Domain Settings & Email Fixes (Commit `24f00cf`)
+## Latest Session Update — Domain Search "All TLDs Already Registered" Fix (Commit `e2f83a8`)
+
+### Issue
+Searching for any keyword (e.g., "dramac") returned ALL 7 TLDs (.com, .net, .org, .io, .co, .app, .dev) as "Already registered" — clearly wrong.
+
+### Root Cause
+`RESELLERCLUB_SANDBOX=true` was set in `.env.local`, but the config hardcoded **production** URLs (`httpapi.com` / `domaincheck.httpapi.com`). The `sandbox` boolean was stored but **never used** to derive URLs. API calls hit production with sandbox credentials → auth failure → fallback returned `available: false` for all.
+
+### Fixes Applied
+
+| # | Bug | File | Fix |
+|---|-----|------|-----|
+| 1 | Config ignores sandbox flag for URLs | `config.ts` | Auto-derive `test.httpapi.com` / `test.domaincheck.httpapi.com` when `RESELLERCLUB_SANDBOX=true` |
+| 2 | API success path hides unverified status | `domains.ts` (action) | When API returns `status: 'unknown'`, set `unverified: true` so UI shows yellow warning instead of "Already registered" |
+| 3 | No debug logging for API responses | `domains.ts` (service) | Added `console.log` for URL, params, and response keys to diagnose future issues |
+
+### Key Architecture Finding
+The domain search pipeline spans 4 layers:
+1. UI: `DomainSearch` component → calls `searchDomains()` server action
+2. Action: `searchDomains()` → calls `domainService.suggestDomains()`
+3. Service: `suggestDomains()` → calls `checkMultipleAvailability()` → `client.get()`
+4. Client: `ResellerClubClient.get()` → `fetch()` with rate limiting and retry
+
+The fallback path (API failure) correctly returns `available: false, unverified: true`. The UI correctly shows yellow "Unable to verify" for unverified results. The bug was purely in the config layer sending requests to the wrong server.
+
+### Git State
+- **Branch**: `main`
+- **Latest commit**: `e2f83a8`
+- **Working tree**: Clean
+- **TSC**: 0 errors ✅
+
+---
+
+## Previous Session — CSP, Agent Validation, Domain Settings & Email Fixes (Commit `24f00cf`)
 
 ### Issues Fixed
 
