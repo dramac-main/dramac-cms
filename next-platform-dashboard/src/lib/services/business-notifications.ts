@@ -116,7 +116,7 @@ export async function notifyNewBooking(data: BookingNotificationData): Promise<v
       .single()
 
     const businessName = site.name || 'Our Business'
-    const currency = data.currency || 'ZMW'
+    const currency = data.currency || 'USD'
     const dateStr = formatDate(data.startTime)
     const timeStr = formatTime(data.startTime)
     const priceStr = formatCurrency(data.servicePrice, currency)
@@ -234,7 +234,7 @@ export async function notifyBookingCancelled(data: BookingCancellationData): Pro
       .single()
 
     const businessName = site.name || 'Our Business'
-    const currency = data.currency || 'ZMW'
+    const currency = data.currency || 'USD'
     const dateStr = formatDate(data.startTime)
     const timeStr = formatTime(data.startTime)
     const priceStr = formatCurrency(data.servicePrice, currency)
@@ -351,7 +351,7 @@ export async function notifyNewOrder(data: OrderNotificationData): Promise<void>
       .single()
 
     const businessName = site.name || 'Our Store'
-    const currency = data.currency || 'ZMW'
+    const currency = data.currency || 'USD'
     const totalStr = formatCurrency(data.total, currency)
     const subtotalStr = formatCurrency(data.subtotal, currency)
     const shippingStr = formatCurrency(data.shipping, currency)

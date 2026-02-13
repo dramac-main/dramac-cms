@@ -58,7 +58,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
-import type { SocialPost, SocialAccount, PostStatus } from '@/modules/social-media/types'
+import type { SocialPost, SocialAccount } from '@/modules/social-media/types'
 
 const STATUS_TABS: { value: string; label: string }[] = [
   { value: 'all', label: 'All' },
@@ -125,8 +125,8 @@ export function PostsList({ siteId, posts, accounts, onDelete, onDuplicate, onBu
     // Platform filter
     if (platformFilter !== 'all') {
       result = result.filter(p =>
-        p.targetAccounts?.some((a: any) => {
-          const account = accounts.find(acc => acc.id === (typeof a === 'string' ? a : a.accountId))
+        p.targetAccounts?.some((a: string) => {
+          const account = accounts.find(acc => acc.id === a)
           return account?.platform === platformFilter
         })
       )
@@ -189,7 +189,7 @@ export function PostsList({ siteId, posts, accounts, onDelete, onDuplicate, onBu
 
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return '—'
-    return new Intl.DateTimeFormat('en-ZM', {
+    return new Intl.DateTimeFormat('en-US', {
       dateStyle: 'medium',
       timeStyle: 'short',
       timeZone: DEFAULT_TIMEZONE,

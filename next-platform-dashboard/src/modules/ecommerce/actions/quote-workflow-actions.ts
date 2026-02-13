@@ -138,7 +138,7 @@ export async function sendQuote(input: SendQuoteInput): Promise<WorkflowResult> 
     }
     
     // Log activity
-    await supabase.from(`${TABLE_PREFIX}_quote_activity`).insert({
+    await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
       quote_id: input.quote_id,
       activity_type: 'sent',
       description: `Quote sent to ${quote.customer_email}`,
@@ -155,8 +155,8 @@ export async function sendQuote(input: SendQuoteInput): Promise<WorkflowResult> 
           (sum: number, item: { quantity: number; unit_price: number }) => sum + item.quantity * item.unit_price,
           0
         )
-      : quote.total_amount || 0
-    const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
+      : quote.total || 0
+    const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
 
     await sendBrandedEmail(quote.agency_id || null, {
       to: { email: quote.customer_email, name: quote.customer_name || undefined },
@@ -167,7 +167,7 @@ export async function sendQuote(input: SendQuoteInput): Promise<WorkflowResult> 
         subject: input.subject,
         message: input.message,
         totalAmount: formatted,
-        expiryDate: quote.expiry_date ? new Date(quote.expiry_date).toLocaleDateString('en-ZM') : undefined,
+        expiryDate: quote.valid_until ? new Date(quote.valid_until).toLocaleDateString('en-US') : undefined,
         viewQuoteUrl: portalUrl,
         businessName: quote.business_name || '',
       },
@@ -222,7 +222,7 @@ export async function resendQuote(
     }
     
     // Log activity
-    await supabase.from(`${TABLE_PREFIX}_quote_activity`).insert({
+    await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
       quote_id: quoteId,
       activity_type: 'resent',
       description: `Quote resent to ${quote.customer_email}`,
@@ -231,8 +231,8 @@ export async function resendQuote(
     
     // Send resend email
     const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/quote/${quote.access_token}`
-    const totalAmount = quote.total_amount || 0
-    const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
+    const totalAmount = quote.total || 0
+    const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
 
     await sendBrandedEmail(quote.agency_id || null, {
       to: { email: quote.customer_email, name: quote.customer_name || undefined },
@@ -243,7 +243,7 @@ export async function resendQuote(
         subject,
         message,
         totalAmount: formatted,
-        expiryDate: quote.expiry_date ? new Date(quote.expiry_date).toLocaleDateString('en-ZM') : undefined,
+        expiryDate: quote.valid_until ? new Date(quote.valid_until).toLocaleDateString('en-US') : undefined,
         viewQuoteUrl: portalUrl,
         businessName: quote.business_name || '',
       },
@@ -286,7 +286,7 @@ export async function sendQuoteReminder(
     }
     
     // Log activity
-    await supabase.from(`${TABLE_PREFIX}_quote_activity`).insert({
+    await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
       quote_id: quoteId,
       activity_type: 'reminder_sent',
       description: `Reminder sent to ${quote.customer_email}`,
@@ -295,8 +295,8 @@ export async function sendQuoteReminder(
     
     // Send reminder email
     const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/quote/${quote.access_token}`
-    const totalAmount = quote.total_amount || 0
-    const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
+    const totalAmount = quote.total || 0
+    const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
 
     await sendBrandedEmail(quote.agency_id || null, {
       to: { email: quote.customer_email, name: quote.customer_name || undefined },
@@ -306,7 +306,7 @@ export async function sendQuoteReminder(
         quoteNumber: quote.quote_number,
         message,
         totalAmount: formatted,
-        expiryDate: quote.expiry_date ? new Date(quote.expiry_date).toLocaleDateString('en-ZM') : undefined,
+        expiryDate: quote.valid_until ? new Date(quote.valid_until).toLocaleDateString('en-US') : undefined,
         viewQuoteUrl: portalUrl,
         businessName: quote.business_name || '',
       },
@@ -387,7 +387,7 @@ export async function recordQuoteView(token: string): Promise<void> {
     
     // Log view activity
     if (quote.status === 'sent') {
-      await supabase.from(`${TABLE_PREFIX}_quote_activity`).insert({
+      await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
         quote_id: quote.id,
         activity_type: 'viewed',
         description: 'Quote viewed by customer'
@@ -451,7 +451,7 @@ export async function acceptQuote(input: AcceptQuoteInput): Promise<WorkflowResu
     }
     
     // Log activity
-    await supabase.from(`${TABLE_PREFIX}_quote_activity`).insert({
+    await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
       quote_id: quote.id,
       activity_type: 'accepted',
       description: `Quote accepted by ${input.accepted_by_name}`,
@@ -462,8 +462,8 @@ export async function acceptQuote(input: AcceptQuoteInput): Promise<WorkflowResu
     })
     
     // Send acceptance notification email to site owner
-    const totalAmount = quote.total_amount || 0
-    const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
+    const totalAmount = quote.total || 0
+    const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/sites/${quote.site_id}/ecommerce`
 
     // Look up site owner email (use admin client since this is a public action)
@@ -560,7 +560,7 @@ export async function rejectQuote(input: RejectQuoteInput): Promise<WorkflowResu
     }
     
     // Log activity
-    await supabase.from(`${TABLE_PREFIX}_quote_activity`).insert({
+    await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
       quote_id: quote.id,
       activity_type: 'rejected',
       description: input.rejection_reason 
@@ -573,11 +573,11 @@ export async function rejectQuote(input: RejectQuoteInput): Promise<WorkflowResu
     })
     
     // Send rejection notification to site owner
-    const totalAmount = quote.total_amount || 0
-    const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
+    const totalAmount = quote.total || 0
+    const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/sites/${quote.site_id}/ecommerce`
 
-    const ownerSupabase2 = await getModuleClient()
+    const ownerSupabase2 = getPublicModuleClient()
     const { data: siteData2 } = await ownerSupabase2
       .from('sites')
       .select('agency_id')
@@ -751,7 +751,7 @@ export async function convertQuoteToOrder(input: ConvertToOrderInput): Promise<W
       .eq('id', quote.id)
     
     // Log activity on quote
-    await supabase.from(`${TABLE_PREFIX}_quote_activity`).insert({
+    await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
       quote_id: quote.id,
       activity_type: 'converted',
       description: `Quote converted to Order ${orderNumber}`,
@@ -850,7 +850,7 @@ export async function updateQuoteStatus(
     }
     
     // Log activity
-    await supabase.from(`${TABLE_PREFIX}_quote_activity`).insert({
+    await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
       quote_id: quoteId,
       activity_type: 'status_changed',
       description: reason || `Status changed from ${quote.status} to ${newStatus}`,
@@ -916,7 +916,7 @@ export async function markExpiredQuotes(siteId: string): Promise<{ count: number
         })
         .eq('id', quote.id)
       
-      await supabase.from(`${TABLE_PREFIX}_quote_activity`).insert({
+      await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
         quote_id: quote.id,
         activity_type: 'expired',
         description: 'Quote expired automatically'

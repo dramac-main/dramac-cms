@@ -262,13 +262,13 @@ export const EcommerceModuleManifest: ModuleManifest = {
   settings: {
     currency: {
       type: 'string',
-      default: 'ZMW',  // ZAMBIAN KWACHA DEFAULT
-      description: 'Store currency code (default: Zambian Kwacha)'
+      default: 'USD',  // US DOLLAR DEFAULT
+      description: 'Store currency code (default: US Dollar)'
     },
     taxRate: {
       type: 'number',
       default: 16,  // ZAMBIA VAT RATE
-      description: 'Default tax rate percentage (Zambia VAT: 16%)'
+      description: 'Default tax rate percentage (Platform default: 16%)'
     },
     taxIncludedInPrice: {
       type: 'boolean',

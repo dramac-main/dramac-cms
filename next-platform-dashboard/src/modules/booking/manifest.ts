@@ -227,7 +227,7 @@ export const BookingModuleManifest: ModuleManifest = {
         title: 'Currency',
         description: 'Currency for service pricing',
         default: DEFAULT_CURRENCY,
-        enum: ['ZMW', 'USD', 'EUR', 'GBP', 'ZAR', 'CAD', 'AUD']
+        enum: ['USD', 'EUR', 'GBP', 'ZAR', 'CAD', 'AUD']
       },
       timezone: {
         type: 'string',

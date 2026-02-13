@@ -78,7 +78,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const validCurrencies = ["ZMW", "USD", "EUR", "GBP"];
+    const validCurrencies = ["USD", "EUR", "GBP"];
     if (payout_currency && !validCurrencies.includes(payout_currency)) {
       return NextResponse.json(
         { error: "Invalid payout currency" },

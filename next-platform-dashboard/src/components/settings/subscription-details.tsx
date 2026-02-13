@@ -113,7 +113,7 @@ export function SubscriptionDetails({ userId }: SubscriptionDetailsProps) {
           </p>
           {overview?.currentPeriodEnd && (
             <p className="text-xs text-muted-foreground mt-1">
-              Next billing date: {new Date(overview.currentPeriodEnd).toLocaleDateString("en-ZM")}
+              Next billing date: {new Date(overview.currentPeriodEnd).toLocaleDateString("en-US")}
             </p>
           )}
         </div>

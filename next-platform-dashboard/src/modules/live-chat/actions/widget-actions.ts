@@ -107,15 +107,24 @@ export async function updateWidgetSettings(
       snakeData[snakeKey] = value
     }
 
-    // Upsert
-    const { error } = await supabase
+    // Use upsert with onConflict to handle both insert and update atomically
+    const { error: upsertError } = await supabase
       .from('mod_chat_widget_settings')
       .upsert(
         { site_id: siteId, ...snakeData },
         { onConflict: 'site_id' }
       )
 
-    if (error) throw error
+    if (upsertError) {
+      // If upsert fails (e.g., column doesn't exist), fall back to update-only
+      console.warn('[LiveChat] Upsert failed, trying update-only:', upsertError.message)
+      const { error: updateError } = await supabase
+        .from('mod_chat_widget_settings')
+        .update(snakeData)
+        .eq('site_id', siteId)
+
+      if (updateError) throw updateError
+    }
 
     revalidatePath(liveChatPath(siteId))
     return { success: true, error: null }

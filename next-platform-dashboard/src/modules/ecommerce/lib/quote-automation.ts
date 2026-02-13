@@ -76,7 +76,7 @@ export async function processExpiredQuotes(siteId: string): Promise<{ expired: n
         .eq('id', quote.id)
       
       // Log activity
-      await supabase.from(`${TABLE_PREFIX}_quote_activity`).insert({
+      await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
         quote_id: quote.id,
         activity_type: 'expired',
         description: 'Quote expired automatically'
@@ -175,7 +175,7 @@ export async function processQuoteReminders(siteId: string): Promise<{ sent: num
         .eq('id', quote.id)
       
       // Log activity
-      await supabase.from(`${TABLE_PREFIX}_quote_activity`).insert({
+      await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
         quote_id: quote.id,
         activity_type: 'reminder_sent',
         description: `Automatic reminder #${reminder_number} sent`
@@ -184,7 +184,7 @@ export async function processQuoteReminders(siteId: string): Promise<{ sent: num
       // Send reminder email
       const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/quote/${quote.access_token}`
       const totalAmount = quote.total || 0
-      const formatted = new Intl.NumberFormat('en-ZM', { style: 'currency', currency: quote.currency || 'ZMW' }).format(totalAmount)
+      const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
 
       await sendBrandedEmail(quote.agency_id || null, {
         to: { email: quote.customer_email, name: quote.customer_name || undefined },
@@ -194,7 +194,7 @@ export async function processQuoteReminders(siteId: string): Promise<{ sent: num
           quoteNumber: quote.quote_number,
           message: `This is reminder #${reminder_number} for your pending quote.`,
           totalAmount: formatted,
-          expiryDate: quote.valid_until ? new Date(quote.valid_until).toLocaleDateString('en-ZM') : undefined,
+          expiryDate: quote.valid_until ? new Date(quote.valid_until).toLocaleDateString('en-US') : undefined,
           viewQuoteUrl: portalUrl,
           businessName: '',
         },

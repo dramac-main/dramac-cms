@@ -1858,7 +1858,7 @@ export async function initializeEcommerceForSite(siteId: string, agencyId: strin
       .insert({
         site_id: siteId,
         agency_id: agencyId,
-        currency: 'ZMW',              // ZAMBIAN KWACHA DEFAULT
+        currency: 'USD',              // US DOLLAR DEFAULT
         tax_rate: 16,                  // Zambia standard VAT rate
         tax_included_in_price: true,   // Prices shown inclusive
         enable_guest_checkout: true,

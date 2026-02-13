@@ -53,38 +53,38 @@ const defaultGeneralSettings: GeneralSettings = {
 }
 
 const defaultCurrencySettings: CurrencySettings = {
-  default_currency: 'ZMW',     // ZAMBIAN KWACHA DEFAULT
+  default_currency: 'USD',     // US Dollar default
   currency_position: 'before', 
-  currency_symbol: 'ZK',       // Zambian Kwacha symbol
+  currency_symbol: '$',        // US Dollar symbol
   decimal_separator: '.',
   thousand_separator: ',',
   decimal_places: 2,
-  supported_currencies: ['ZMW', 'USD', 'ZAR', 'GBP', 'EUR'],  // ZMW first
+  supported_currencies: ['USD', 'ZAR', 'GBP', 'EUR'],  // USD first
   auto_currency_conversion: false
 }
 
 const defaultTaxSettings: TaxSettings = {
-  tax_enabled: true,           // VAT is common in Zambia
-  prices_include_tax: true,    // Prices typically shown inclusive
+  tax_enabled: false,          // Tax disabled by default
+  prices_include_tax: false,   // Prices shown exclusive of tax
   tax_based_on: 'shipping',
   shipping_tax_class: 'standard',
-  display_prices: 'including', // Display prices including VAT
-  display_in_cart: 'including',
+  display_prices: 'excluding', // Display prices excluding tax
+  display_in_cart: 'excluding',
   tax_rounding_mode: 'round',
   tax_zones: [
     {
-      id: 'zm-vat',
-      name: 'Zambia VAT',
-      countries: ['ZM'],
+      id: 'default-tax',
+      name: 'Platform default',
+      countries: [],
       states: [],
       tax_rates: [
         {
-          id: 'zm-vat-standard',
-          name: 'Standard VAT',
-          rate: 16,  // Zambia standard VAT rate is 16%
+          id: 'default-standard',
+          name: 'Standard Tax',
+          rate: 0,   // No default tax rate - configure per region
           tax_class: 'standard',
           compound: false,
-          shipping_taxable: true
+          shipping_taxable: false
         }
       ]
     }

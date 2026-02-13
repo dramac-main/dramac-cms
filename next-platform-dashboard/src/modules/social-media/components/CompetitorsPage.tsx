@@ -49,7 +49,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
-import type { Competitor, SocialPlatform } from '@/modules/social-media/types'
+import type { Competitor } from '@/modules/social-media/types'
 
 const PLATFORMS: { value: string; label: string }[] = [
   { value: 'facebook', label: 'Facebook' },
@@ -151,7 +151,7 @@ export function CompetitorsPage({
 
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return 'Never'
-    return new Intl.DateTimeFormat('en-ZM', {
+    return new Intl.DateTimeFormat('en-US', {
       dateStyle: 'medium',
       timeStyle: 'short',
       timeZone: DEFAULT_TIMEZONE,

@@ -114,7 +114,7 @@ export async function GET(request: Request) {
                   type: 'domain_expiring',
                   data: {
                     domainName: domain.domain_name,
-                    expiryDate: new Date(domain.expiry_date).toLocaleDateString('en-ZM', {
+                    expiryDate: new Date(domain.expiry_date).toLocaleDateString('en-US', {
                       year: 'numeric', month: 'long', day: 'numeric',
                     }),
                     daysUntilExpiry: window.days,

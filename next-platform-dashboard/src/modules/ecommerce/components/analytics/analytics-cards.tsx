@@ -63,7 +63,7 @@ export function KPICard({
   const changeType = change === undefined ? 'neutral' : change > 0 ? 'increase' : change < 0 ? 'decrease' : 'neutral'
   
   return (
-    <Card className={cn('', className)}>
+    <Card className={cn(className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
@@ -131,7 +131,7 @@ export function SalesOverviewCards({
     <div className={cn('grid gap-4 md:grid-cols-2 lg:grid-cols-4', className)}>
       <KPICard
         title="Total Revenue"
-        value={data ? formatCurrency(data.revenue) : 'K0.00'}
+        value={data ? formatCurrency(data.revenue) : '$0.00'}
         change={data?.revenue_change}
         icon={<Coins className="h-4 w-4" />}
         isLoading={isLoading}
@@ -145,7 +145,7 @@ export function SalesOverviewCards({
       />
       <KPICard
         title="Average Order Value"
-        value={data ? formatCurrency(data.average_order_value) : 'K0.00'}
+        value={data ? formatCurrency(data.average_order_value) : '$0.00'}
         change={data?.aov_change}
         icon={<Package className="h-4 w-4" />}
         isLoading={isLoading}

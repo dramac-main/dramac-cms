@@ -44,7 +44,7 @@ function getInitials(name: string): string {
 
 function formatTime(dateStr: string): string {
   const date = new Date(dateStr)
-  return date.toLocaleTimeString('en-ZM', {
+  return date.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,

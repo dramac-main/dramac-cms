@@ -139,8 +139,8 @@ export default async function BookingEmbedPage({ params, searchParams }: Booking
   // Build settings for the booking widget
   const instSettings = (bookingInstallation?.settings || {}) as Record<string, unknown>
   const timezone = (instSettings.timezone as string) || 'Africa/Lusaka'
-  const currency = (instSettings.currency as string) || 'ZMW'
-  const dateFormat = (instSettings.date_format as string) || 'DD/MM/YYYY'
+  const currency = (instSettings.currency as string) || 'USD'
+  const dateFormat = (instSettings.date_format as string) || 'MM/DD/YYYY'
 
   const themeClass = theme === 'dark' ? 'dark' : ''
 
@@ -228,7 +228,7 @@ export default async function BookingEmbedPage({ params, searchParams }: Booking
                         </div>
                       </div>
                       <div className="service-price">
-                        {new Intl.NumberFormat('en-ZM', {
+                        {new Intl.NumberFormat('en-US', {
                           style: 'currency',
                           currency: service.currency || currency,
                           minimumFractionDigits: 0,
@@ -306,10 +306,4 @@ export default async function BookingEmbedPage({ params, searchParams }: Booking
 
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata() {
-  return {
-    other: {
-      'X-Frame-Options': 'ALLOWALL',
-    },
-  }
-}
+// Note: X-Frame-Options / frame-ancestors headers are configured in next.config.ts for /embed/* routes

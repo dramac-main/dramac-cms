@@ -95,7 +95,7 @@ function getInitials(name: string): string {
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-ZM', {
+  return new Date(dateStr).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -180,16 +180,19 @@ export function ConversationViewWrapper({
     startTransition(async () => {
       const result = await getMessages(conversation.id, nextPage, 50)
       if (result.messages.length > 0) {
-        setMessages((prev) => [...result.messages, ...prev])
+        setMessages((prev) => {
+          const newMessages = [...result.messages, ...prev]
+          if (newMessages.length >= totalMessages) {
+            setHasMore(false)
+          }
+          return newMessages
+        })
         setPage(nextPage)
-        if (messages.length + result.messages.length >= totalMessages) {
-          setHasMore(false)
-        }
       } else {
         setHasMore(false)
       }
     })
-  }, [page, conversation.id, messages.length, totalMessages])
+  }, [page, conversation.id, totalMessages])
 
   // Send message
   const handleSendMessage = useCallback(
@@ -219,7 +222,6 @@ export function ConversationViewWrapper({
         if (result.error) {
           toast.error(result.error)
         } else {
-          const agent = agents.find((a) => a.id === agentId)
           setConversation((c) => ({
             ...c,
             assignedAgentId: agentId,

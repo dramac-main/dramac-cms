@@ -471,9 +471,9 @@ function getPricingType(tier: string | null): string {
 function getPriceFromTier(tier: string | null): number {
   const tierPrices: Record<string, number> = {
     free: 0,
-    starter: 999,      // K9.99/month
-    pro: 2499,         // K24.99/month
-    enterprise: 9999,  // K99.99/month
+    starter: 999,      // $9.99/month
+    pro: 2499,         // $24.99/month
+    enterprise: 9999,  // $99.99/month
   };
   return tierPrices[tier || "free"] || 0;
 }

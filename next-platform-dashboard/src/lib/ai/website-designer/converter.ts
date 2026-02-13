@@ -1105,7 +1105,7 @@ function transformPropsForStudio(
           name: p.name || p.title || `Plan ${i + 1}`,
           description: p.description || "",
           monthlyPrice: p.price || p.monthlyPrice || "0",
-          currency: p.currency || "ZMW",
+          currency: p.currency || "USD",
           period: p.period || "month",
           features: Array.isArray(p.features) ? p.features.map((f: unknown) => {
             if (typeof f === "string") return { text: f, included: true };

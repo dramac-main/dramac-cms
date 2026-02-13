@@ -25,7 +25,7 @@ import {
   Lightbulb,
   Zap,
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -345,7 +345,7 @@ export function AIAssistantPanel({
                 onChange={(e) => setCaptionTopic(e.target.value)}
               />
 
-              <Select value={captionTone} onValueChange={(v) => setCaptionTone(v as any)}>
+              <Select value={captionTone} onValueChange={(v) => setCaptionTone(v as typeof captionTone)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Tone" />
                 </SelectTrigger>
@@ -359,7 +359,7 @@ export function AIAssistantPanel({
                 </SelectContent>
               </Select>
 
-              <Select value={captionEmoji} onValueChange={(v) => setCaptionEmoji(v as any)}>
+              <Select value={captionEmoji} onValueChange={(v) => setCaptionEmoji(v as typeof captionEmoji)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Emoji level" />
                 </SelectTrigger>
@@ -674,7 +674,7 @@ export function AIAssistantPanel({
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium">
-                        {new Date(suggestedTime).toLocaleString('en-ZM', {
+                        {new Date(suggestedTime).toLocaleString('en-US', {
                           dateStyle: 'medium',
                           timeStyle: 'short',
                           timeZone: 'Africa/Lusaka',

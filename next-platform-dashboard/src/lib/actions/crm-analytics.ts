@@ -141,7 +141,7 @@ export async function getDealVelocity(
 
   const grouped = new Map<string, { newDeals: number; wonDeals: number; lostDeals: number; dealValue: number; wonValue: number }>();
   for (const deal of deals || []) {
-    const key = new Date(deal.created_at).toLocaleDateString("en-ZM", { month: "short", year: "2-digit" });
+    const key = new Date(deal.created_at).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
     const e = grouped.get(key) || { newDeals: 0, wonDeals: 0, lostDeals: 0, dealValue: 0, wonValue: 0 };
     e.newDeals++;
     e.dealValue += Number(deal.amount) || 0;
@@ -380,7 +380,7 @@ export async function getContactGrowth(
 
   const grouped = new Map<string, { new: number; converted: number }>();
   for (const c of contacts || []) {
-    const date = new Date(c.created_at).toLocaleDateString("en-ZM", { month: "short", day: "numeric" });
+    const date = new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
     const e = grouped.get(date) || { new: 0, converted: 0 };
     e.new++;
     if (c.lead_status === "converted") e.converted++;
@@ -479,7 +479,7 @@ export async function getActivityTimeline(
 
   const grouped = new Map<string, { calls: number; emails: number; meetings: number; notes: number; tasks: number }>();
   for (const a of activities || []) {
-    const date = new Date(a.created_at).toLocaleDateString("en-ZM", { month: "short", day: "numeric" });
+    const date = new Date(a.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
     const e = grouped.get(date) || { calls: 0, emails: 0, meetings: 0, notes: 0, tasks: 0 };
     switch (a.activity_type) {
       case "call": e.calls++; break;
@@ -628,7 +628,7 @@ export async function getRevenueByMonth(
 
   const grouped = new Map<string, { won: number; lost: number }>();
   for (const d of deals || []) {
-    const month = new Date(d.created_at).toLocaleDateString("en-ZM", { month: "short" });
+    const month = new Date(d.created_at).toLocaleDateString("en-US", { month: "short" });
     const e = grouped.get(month) || { won: 0, lost: 0 };
     if (d.status === "won") e.won += Number(d.amount) || 0;
     if (d.status === "lost") e.lost += Number(d.amount) || 0;
@@ -711,7 +711,7 @@ export async function getRevenueForecast(
   const grouped = new Map<string, { committed: number; upside: number; pipeline: number }>();
   for (const d of openDeals || []) {
     if (!d.expected_close_date) continue;
-    const month = new Date(d.expected_close_date).toLocaleDateString("en-ZM", { month: "short" });
+    const month = new Date(d.expected_close_date).toLocaleDateString("en-US", { month: "short" });
     const e = grouped.get(month) || { committed: 0, upside: 0, pipeline: 0 };
     const amt = Number(d.amount) || 0;
     const prob = d.probability || 0;

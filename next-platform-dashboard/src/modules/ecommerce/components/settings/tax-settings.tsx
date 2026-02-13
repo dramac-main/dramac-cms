@@ -144,7 +144,7 @@ function TaxZoneDialog({ open, onOpenChange, zone, onSave }: TaxZoneDialogProps)
               id="zone_name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Zambia VAT, EU VAT"
+              placeholder="e.g., Platform default, EU VAT"
             />
           </div>
           

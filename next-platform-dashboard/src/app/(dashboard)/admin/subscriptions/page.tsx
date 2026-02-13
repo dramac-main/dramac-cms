@@ -98,7 +98,7 @@ export default async function AdminSubscriptionsPage() {
         />
         <StatCard
           title="Monthly Revenue"
-          value={data.hasRealData ? `K ${data.mrr.toLocaleString("en-ZM")}` : "—"}
+          value={data.hasRealData ? `$ ${data.mrr.toLocaleString("en-US")}` : "—"}
           icon={TrendingUp}
         />
       </div>
@@ -129,11 +129,11 @@ export default async function AdminSubscriptionsPage() {
                       {plan.price === 0 ? (
                         <Badge variant="secondary">Free</Badge>
                       ) : (
-                        `K ${plan.price}/mo`
+                        `$ ${plan.price}/mo`
                       )}
                     </TableCell>
                     <TableCell>{plan.count}</TableCell>
-                    <TableCell>K {(plan.count * plan.price).toLocaleString("en-ZM")}</TableCell>
+                    <TableCell>$ {(plan.count * plan.price).toLocaleString("en-US")}</TableCell>
                     <TableCell>
                       {data.activeSubscribers > 0
                         ? Math.round((plan.count / data.activeSubscribers) * 100)

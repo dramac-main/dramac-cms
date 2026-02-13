@@ -1,24 +1,25 @@
 /**
- * Centralized Locale Configuration — Zambia Defaults
+ * Centralized Locale Configuration — USD Platform Defaults
  * 
  * ALL modules and components should import from this file
  * for currency formatting, date formatting, timezone, and region defaults.
  * 
- * This ensures consistent Zambian localization across the entire platform.
+ * Platform billing (Paddle) and domain registrar (ResellerClub) both use USD.
+ * This ensures consistent USD localization across the entire platform.
  */
 
 // =============================================================================
 // REGION DEFAULTS
 // =============================================================================
 
-/** Default locale for formatting (Zambian English) */
-export const DEFAULT_LOCALE = 'en-ZM'
+/** Default locale for formatting (US English) */
+export const DEFAULT_LOCALE = 'en-US'
 
 /** Default currency code */
-export const DEFAULT_CURRENCY = 'ZMW'
+export const DEFAULT_CURRENCY = 'USD'
 
 /** Default currency symbol */
-export const DEFAULT_CURRENCY_SYMBOL = 'K'
+export const DEFAULT_CURRENCY_SYMBOL = '$'
 
 /** Default timezone */
 export const DEFAULT_TIMEZONE = 'Africa/Lusaka'
@@ -27,13 +28,13 @@ export const DEFAULT_TIMEZONE = 'Africa/Lusaka'
 export const DEFAULT_COUNTRY = 'ZM'
 
 /** Default date format */
-export const DEFAULT_DATE_FORMAT = 'DD/MM/YYYY'
+export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY'
 
-/** Default tax rate (Zambia VAT is 16%) */
-export const DEFAULT_TAX_RATE = 16
+/** Default tax rate (0% — tax handled by Paddle as Merchant of Record) */
+export const DEFAULT_TAX_RATE = 0
 
-/** Tax included in price by default */
-export const DEFAULT_TAX_INCLUDED = true
+/** Tax included in price by default (false — Paddle adds tax at checkout) */
+export const DEFAULT_TAX_INCLUDED = false
 
 /** Default weight unit */
 export const DEFAULT_WEIGHT_UNIT = 'kg'
@@ -80,7 +81,7 @@ export function getCurrencySymbol(currency: string): string {
 
 /**
  * Format a number as currency
- * Defaults to ZMW (Zambian Kwacha) with en-ZM locale
+ * Defaults to USD with en-US locale
  */
 export function formatCurrency(
   amount: number,
@@ -114,7 +115,7 @@ export function formatPrice(
 
 /**
  * Format a number with locale-appropriate grouping
- * Defaults to en-ZM locale
+ * Defaults to en-US locale
  */
 export function formatNumber(
   num: number,
@@ -132,7 +133,7 @@ export function formatNumber(
 
 /**
  * Format a date with locale-appropriate formatting
- * Defaults to en-ZM locale with short month, numeric day and year
+ * Defaults to en-US locale with short month, numeric day and year
  */
 export function formatDate(
   date: string | Date,
@@ -200,8 +201,8 @@ export function formatTime(
 // =============================================================================
 
 export const SUPPORTED_CURRENCIES = [
-  { code: 'ZMW', name: 'Zambian Kwacha', symbol: 'K' },
   { code: 'USD', name: 'US Dollar', symbol: '$' },
+  { code: 'ZMW', name: 'Zambian Kwacha', symbol: 'K' },
   { code: 'EUR', name: 'Euro', symbol: '€' },
   { code: 'GBP', name: 'British Pound', symbol: '£' },
   { code: 'ZAR', name: 'South African Rand', symbol: 'R' },

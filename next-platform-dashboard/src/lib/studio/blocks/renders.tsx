@@ -11452,9 +11452,9 @@ export interface ComparisonTableProps {
 
 export function ComparisonTableRender({
   columns = [
-    { name: "Basic", price: "K9/mo" },
-    { name: "Pro", price: "K29/mo", highlight: true },
-    { name: "Enterprise", price: "K99/mo" },
+    { name: "Basic", price: "$9/mo" },
+    { name: "Pro", price: "$29/mo", highlight: true },
+    { name: "Enterprise", price: "$99/mo" },
   ],
   rows = [
     { feature: "Users", values: ["1", "5", "Unlimited"] },

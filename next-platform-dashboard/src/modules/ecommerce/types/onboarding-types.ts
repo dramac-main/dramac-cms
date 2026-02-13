@@ -185,11 +185,11 @@ export interface GetOnboardingStatusResult {
 // ============================================================================
 
 /**
- * Available currencies - ZMW (Zambian Kwacha) is default for Zambia
+ * Available currencies - USD is default
  */
 export const AVAILABLE_CURRENCIES = [
-  // ZAMBIA IS DEFAULT
-  { code: 'ZMW', symbol: 'ZK', name: 'Zambian Kwacha' },
+  // USD IS DEFAULT
+  { code: 'USD', symbol: '$', name: 'US Dollar' },
   
   // Regional African Currencies
   { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
@@ -201,7 +201,6 @@ export const AVAILABLE_CURRENCIES = [
   { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
   
   // International Currencies
-  { code: 'USD', symbol: '$', name: 'US Dollar' },
   { code: 'EUR', symbol: '€', name: 'Euro' },
   { code: 'GBP', symbol: '£', name: 'British Pound' },
   { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
@@ -283,16 +282,16 @@ export const DEFAULT_ONBOARDING_DATA: OnboardingData = {
     },
   },
   currencyTax: {
-    // ZAMBIA DEFAULTS
-    currency: 'ZMW',
-    currencySymbol: 'ZK',
+    // USD DEFAULTS
+    currency: 'USD',
+    currencySymbol: '$',
     currencyPosition: 'before',
     thousandsSeparator: ',',
     decimalSeparator: '.',
-    taxEnabled: true,       // VAT is common in Zambia
-    taxRate: 16,            // Zambia standard VAT rate is 16%
-    taxIncludedInPrice: true, // Prices typically shown inclusive
-    taxDisplayText: 'VAT',
+    taxEnabled: false,      // Tax disabled by default
+    taxRate: 0,             // Configure per region
+    taxIncludedInPrice: false, // Prices shown exclusive of tax
+    taxDisplayText: 'Tax',
   },
   shipping: {
     shippingEnabled: true,

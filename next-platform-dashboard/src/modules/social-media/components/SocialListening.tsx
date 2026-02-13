@@ -146,7 +146,7 @@ export function SocialListening({
 
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return '—'
-    return new Intl.DateTimeFormat('en-ZM', {
+    return new Intl.DateTimeFormat('en-US', {
       dateStyle: 'medium',
       timeStyle: 'short',
       timeZone: DEFAULT_TIMEZONE,

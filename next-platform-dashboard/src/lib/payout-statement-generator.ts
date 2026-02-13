@@ -77,9 +77,9 @@ function formatDate(iso: string): string {
 export function generatePayoutStatementHTML(data: PayoutStatementData): string {
   const primaryColor = data.primaryColor || '#2563eb'
   const companyName = data.companyName || 'DRAMAC Platform'
-  const currency = data.currency || 'ZMW'
+  const currency = data.currency || 'USD'
 
-  const fmtAmount = (amount: number) => formatCurrency(amount)
+  const fmtAmount = (amount: number) => formatCurrency(amount, currency)
 
   const lineItemsHtml = data.lineItems?.length
     ? data.lineItems.map(item => `

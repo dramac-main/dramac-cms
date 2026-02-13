@@ -159,7 +159,7 @@ export async function generateContentIdeas(params: {
 ${params.industry ? `Industry: ${params.industry}` : ''}
 ${params.contentPillars?.length ? `Content pillars: ${params.contentPillars.join(', ')}` : ''}
 Target platforms: ${platformNames}
-Locale: en-ZM (Zambia)
+Locale: en-US (United States)
 
 For each idea provide:
 - A compelling title
@@ -170,7 +170,7 @@ For each idea provide:
 
 Consider:
 - Upcoming international holidays and awareness days
-- Zambian holidays and cultural events
+- local holidays and cultural events
 - Trending topics in the ${params.industry || 'general'} space
 - Mix of content types (educational, entertaining, promotional, engaging)
 - Platform-specific content formats (Reels for IG, Threads for Threads, etc.)
@@ -422,7 +422,7 @@ Today: ${new Date().toISOString().split('T')[0]}
 Consider:
 - ${config.name} engagement patterns
 - ${params.contentType} content type performance
-- Zambian audience online times
+- target audience online times
 - Avoid early morning (before 7am) and late night (after 10pm)
 
 Return a specific date and time within the next 7 days.`

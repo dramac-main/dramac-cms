@@ -311,8 +311,8 @@ export function calculateQuoteTotals(
  */
 export function formatQuoteCurrency(
   amount: number,
-  currency: string = 'ZMW',  // ZAMBIAN KWACHA DEFAULT
-  locale: string = 'en-ZM',   // Zambia locale
+  currency: string = 'USD',  // US DOLLAR DEFAULT
+  locale: string = 'en-US',   // US locale
   isAlreadyInDollars: boolean = true // Quote amounts are stored in main currency unit
 ): string {
   return new Intl.NumberFormat(locale, {

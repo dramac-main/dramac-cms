@@ -78,8 +78,8 @@ export function getCountryList(): Array<{ code: string; name: string }> {
  */
 export function getCurrencyList(): Array<{ code: string; name: string; symbol: string }> {
   return [
-    // ZAMBIA IS DEFAULT - Zambian Kwacha at top
-    { code: 'ZMW', name: 'Zambian Kwacha', symbol: 'ZK' },
+    // US Dollar at top
+    { code: 'USD', name: 'US Dollar', symbol: '$' },
     
     // African Currencies (Regional)
     { code: 'ZAR', name: 'South African Rand', symbol: 'R' },
@@ -98,7 +98,6 @@ export function getCurrencyList(): Array<{ code: string; name: string; symbol: s
     { code: 'MAD', name: 'Moroccan Dirham', symbol: 'د.م.' },
     
     // International Currencies
-    { code: 'USD', name: 'US Dollar', symbol: '$' },
     { code: 'EUR', name: 'Euro', symbol: '€' },
     { code: 'GBP', name: 'British Pound', symbol: '£' },
     { code: 'CNY', name: 'Chinese Yuan', symbol: '¥' },

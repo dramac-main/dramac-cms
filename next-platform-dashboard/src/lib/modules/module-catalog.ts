@@ -1,5 +1,5 @@
 import type { ModuleDefinition, ModuleCategory, ModulePricing } from "./module-types";
-import { DEFAULT_CURRENCY, DEFAULT_CURRENCY_SYMBOL, DEFAULT_LOCALE } from "@/lib/locale-config";
+import { DEFAULT_CURRENCY, DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
 
 // Core platform modules - built-in and ready to use
 export const MODULE_CATALOG: ModuleDefinition[] = [
@@ -69,7 +69,7 @@ Understand where users click, scroll, and what they ignore.
     },
     pricing: {
       type: "monthly",
-      amount: 999, // K9.99
+      amount: 999, // $9.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -108,7 +108,7 @@ Generate sitemaps, manage meta tags, add schema markup, and monitor SEO health.
     },
     pricing: {
       type: "monthly",
-      amount: 1499, // K14.99
+      amount: 1499, // $14.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -148,7 +148,7 @@ Support for one-time payments, subscriptions, and checkout pages.
     },
     pricing: {
       type: "monthly",
-      amount: 2499, // K24.99
+      amount: 2499, // $24.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -186,7 +186,7 @@ Manage products, handle cart operations, and process checkouts.
     },
     pricing: {
       type: "monthly",
-      amount: 3999, // K39.99
+      amount: 3999, // $39.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -226,7 +226,7 @@ Connect to email services, CRMs, and webhooks.
     },
     pricing: {
       type: "monthly",
-      amount: 1999, // K19.99
+      amount: 1999, // $19.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -304,7 +304,7 @@ Automatic updates, customizable layouts, and click-through to Instagram.
     },
     pricing: {
       type: "monthly",
-      amount: 799, // K7.99
+      amount: 799, // $7.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -343,7 +343,7 @@ Exit-intent detection, A/B testing, and conversion tracking.
     },
     pricing: {
       type: "monthly",
-      amount: 1499, // K14.99
+      amount: 1499, // $14.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -381,7 +381,7 @@ Build lists, create campaigns, and track performance.
     },
     pricing: {
       type: "monthly",
-      amount: 2999, // K29.99
+      amount: 2999, // $29.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -458,7 +458,7 @@ Store backups in the cloud and restore with one click.
     },
     pricing: {
       type: "monthly",
-      amount: 999, // K9.99
+      amount: 999, // $9.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -498,7 +498,7 @@ Automatic image compression and lazy loading.
     },
     pricing: {
       type: "monthly",
-      amount: 1999, // K19.99
+      amount: 1999, // $19.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -538,7 +538,7 @@ Customizable widget, chat history, and offline messages.
     },
     pricing: {
       type: "monthly",
-      amount: 2499, // K24.99
+      amount: 2499, // $24.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -798,7 +798,7 @@ Track contacts, companies, deals through pipelines, log activities, and generate
     },
     pricing: {
       type: "monthly",
-      amount: 1999, // K19.99
+      amount: 1999, // $19.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -851,7 +851,7 @@ Schedule posts, manage inboxes, track analytics, and generate AI-powered content
     },
     pricing: {
       type: "monthly",
-      amount: 3499, // K34.99
+      amount: 3499, // $34.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -906,7 +906,7 @@ Connect triggers to actions with conditional logic to streamline your operations
     },
     pricing: {
       type: "monthly",
-      amount: 2499, // K24.99
+      amount: 2499, // $24.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -958,7 +958,7 @@ Each agent has persistent memory, configurable tools, and definable goals.
     },
     pricing: {
       type: "monthly",
-      amount: 4999, // K49.99
+      amount: 4999, // $49.99
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -1019,7 +1019,7 @@ Perfect for salons, spas, consultants, medical offices, and any business that ta
     },
     pricing: {
       type: "monthly",
-      amount: 2999, // K29.99/month
+      amount: 2999, // $29.99/month
       currency: DEFAULT_CURRENCY,
     },
     features: [
@@ -1088,7 +1088,7 @@ Supports both physical and digital products with variant management, inventory t
     },
     pricing: {
       type: "monthly",
-      amount: 4999, // K49.99/month
+      amount: 4999, // $49.99/month
       currency: DEFAULT_CURRENCY,
     },
     features: [

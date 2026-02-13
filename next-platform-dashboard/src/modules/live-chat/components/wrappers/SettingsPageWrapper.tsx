@@ -71,6 +71,7 @@ const POSITION_OPTIONS = [
 ]
 
 const ICON_OPTIONS = [
+  { value: 'message-circle', label: '💬 Message Circle' },
   { value: 'chat', label: '💬 Chat Bubble' },
   { value: 'support', label: '🎧 Headset' },
   { value: 'wave', label: '👋 Wave' },
@@ -122,6 +123,45 @@ export function SettingsPageWrapper({
     },
     [siteId]
   )
+
+  const saveBehaviorSettings = useCallback(() => {
+    setError(null)
+    startTransition(async () => {
+      // Save core behavior fields first
+      const coreFields: FormData = {
+        autoOpenDelaySeconds: settings.autoOpenDelaySeconds,
+        showAgentAvatar: settings.showAgentAvatar,
+        showAgentName: settings.showAgentName,
+        showTypingIndicator: settings.showTypingIndicator,
+        enableFileUploads: settings.enableFileUploads,
+        enableEmoji: settings.enableEmoji,
+        enableSoundNotifications: settings.enableSoundNotifications,
+        enableSatisfactionRating: settings.enableSatisfactionRating,
+      }
+
+      const coreResult = await updateWidgetSettings(siteId, coreFields)
+      if (coreResult.error) {
+        setError(coreResult.error)
+        return
+      }
+
+      // Try auto-close fields separately (may fail if migration lc-10 not run)
+      const autoCloseFields: FormData = {
+        autoCloseEnabled: settings.autoCloseEnabled ?? true,
+        autoCloseMinutes: settings.autoCloseMinutes ?? 30,
+        autoCloseMessage: settings.autoCloseMessage ?? 'This conversation was automatically closed due to inactivity. Feel free to start a new chat anytime!',
+      }
+
+      const autoCloseResult = await updateWidgetSettings(siteId, autoCloseFields)
+      if (autoCloseResult.error) {
+        // Auto-close columns may not exist yet — warn but don't block
+        console.warn('[Settings] Auto-close save failed (migration may be pending):', autoCloseResult.error)
+      }
+
+      setSavedTab('behavior')
+      setTimeout(() => setSavedTab(null), 2000)
+    })
+  }, [siteId, settings])
 
   const getEmbedCode = () => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'
@@ -881,21 +921,7 @@ export function SettingsPageWrapper({
               </div>
 
               <Button
-                onClick={() =>
-                  saveSettings('behavior', {
-                    autoOpenDelaySeconds: settings.autoOpenDelaySeconds,
-                    showAgentAvatar: settings.showAgentAvatar,
-                    showAgentName: settings.showAgentName,
-                    showTypingIndicator: settings.showTypingIndicator,
-                    enableFileUploads: settings.enableFileUploads,
-                    enableEmoji: settings.enableEmoji,
-                    enableSoundNotifications: settings.enableSoundNotifications,
-                    enableSatisfactionRating: settings.enableSatisfactionRating,
-                    autoCloseEnabled: settings.autoCloseEnabled ?? true,
-                    autoCloseMinutes: settings.autoCloseMinutes ?? 30,
-                    autoCloseMessage: settings.autoCloseMessage ?? 'This conversation was automatically closed due to inactivity. Feel free to start a new chat anytime!',
-                  })
-                }
+                onClick={saveBehaviorSettings}
                 disabled={isPending}
               >
                 {savedTab === 'behavior' ? (

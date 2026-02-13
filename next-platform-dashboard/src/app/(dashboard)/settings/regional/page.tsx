@@ -61,8 +61,8 @@ interface RegionalSettings {
 
 export default function RegionalSettingsPage() {
   const [settings, setSettings] = useState<RegionalSettings>({
-    default_currency: "ZMW",
-    default_locale: "en-ZM",
+    default_currency: "USD",
+    default_locale: "en-US",
     default_timezone: "Africa/Lusaka",
     date_format: "DD/MM/YYYY",
     tax_rate: 16,
@@ -97,8 +97,8 @@ export default function RegionalSettingsPage() {
 
         if (agency) {
           setSettings({
-            default_currency: agency.default_currency || "ZMW",
-            default_locale: agency.default_locale || "en-ZM",
+            default_currency: agency.default_currency || "USD",
+            default_locale: agency.default_locale || "en-US",
             default_timezone: agency.default_timezone || "Africa/Lusaka",
             date_format: agency.date_format || "DD/MM/YYYY",
             tax_rate: agency.tax_rate != null ? Number(agency.tax_rate) : 16,

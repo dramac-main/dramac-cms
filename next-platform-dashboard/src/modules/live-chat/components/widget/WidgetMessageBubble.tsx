@@ -7,6 +7,8 @@
  * AI indicator, timestamps, attachment support
  */
 
+import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
+
 export interface WidgetMessage {
   id: string
   text: string
@@ -52,7 +54,7 @@ export function WidgetMessageBubble({
       className={`flex ${isVisitor ? 'justify-end' : 'justify-start'} mb-1`}
     >
       <div
-        className={`max-w-[80%] ${isVisitor ? 'order-1' : 'order-1'}`}
+        className="max-w-[80%]"
       >
         {/* Agent name */}
         {!isVisitor && message.senderName && (
@@ -165,21 +167,21 @@ function formatTime(iso: string): string {
       date.getFullYear() === now.getFullYear()
 
     if (isToday) {
-      return date.toLocaleTimeString('en-ZM', {
+      return date.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit',
         hour12: true,
-        timeZone: 'Africa/Lusaka',
+        timeZone: DEFAULT_TIMEZONE,
       })
     }
 
-    return date.toLocaleDateString('en-ZM', {
+    return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
-      timeZone: 'Africa/Lusaka',
+      timeZone: DEFAULT_TIMEZONE,
     })
   } catch {
     return ''

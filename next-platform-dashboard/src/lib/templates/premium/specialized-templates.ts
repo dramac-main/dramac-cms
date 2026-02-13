@@ -562,7 +562,7 @@ export const realEstateTemplate: PuckTemplate = {
           fields: [
             { name: "type", label: "Property Type", type: "select", options: ["All Types", "House", "Condo", "Townhouse", "Land"] },
             { name: "location", label: "Location", type: "text", placeholder: "City, ZIP, or Neighborhood" },
-            { name: "priceRange", label: "Price Range", type: "select", options: ["Any Price", "K0-250K", "K250K-500K", "K500K-750K", "K750K-1M", "K1M+"] },
+            { name: "priceRange", label: "Price Range", type: "select", options: ["Any Price", "$0-250K", "$250K-500K", "$500K-750K", "$750K-1M", "$1M+"] },
             { name: "beds", label: "Bedrooms", type: "select", options: ["Any", "1+", "2+", "3+", "4+", "5+"] },
           ],
           buttonText: "Search Properties",

@@ -274,7 +274,7 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
                   <Input
                     id="default_currency"
                     {...register('default_currency')}
-                    placeholder="ZMW"
+                    placeholder="USD"
                     maxLength={3}
                     className="uppercase"
                   />

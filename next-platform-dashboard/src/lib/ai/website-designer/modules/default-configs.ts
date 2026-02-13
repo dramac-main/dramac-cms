@@ -55,8 +55,8 @@ function getDefaultEcommerceConfig(features?: string[]): EcommerceConfig {
   return {
     enabled: true,
     settings: {
-      currency: "ZMW", // Zambia default
-      taxRate: 16, // Zambia VAT
+      currency: "USD", // US Dollar default
+      taxRate: 16, // Platform default
       shippingEnabled: true,
       shippingZones: [
         {
@@ -124,7 +124,7 @@ function getDefaultBookingConfig(features?: string[]): BookingConfig {
   return {
     enabled: true,
     settings: {
-      timezone: "Africa/Lusaka", // Zambia default
+      timezone: "Africa/Lusaka", // Platform timezone default
       bookingWindow: 30,
       cancellationPolicy: "24 hours notice required",
       requireDeposit: false,

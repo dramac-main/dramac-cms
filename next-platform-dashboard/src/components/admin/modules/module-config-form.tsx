@@ -60,19 +60,19 @@ const PRICING_TIERS = [
   { 
     value: "starter", 
     label: "Starter", 
-    description: "K125-K400/mo",
+    description: "$125-$400/mo",
     color: "bg-muted text-muted-foreground" 
   },
   { 
     value: "pro", 
     label: "Pro", 
-    description: "K500-K1,300/mo",
+    description: "$500-$1,300/mo",
     color: "bg-muted text-muted-foreground" 
   },
   { 
     value: "enterprise", 
     label: "Enterprise", 
-    description: "K2,600+/mo",
+    description: "$2,600+/mo",
     color: "bg-muted text-muted-foreground" 
   },
 ];
