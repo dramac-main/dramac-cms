@@ -1,0 +1,44 @@
+# DRAMAC CMS - Cursor AI Rules
+
+## Memory Bank System (CRITICAL)
+
+**MANDATORY RULE:** Update `/memory-bank/` files at the END of EVERY task.
+
+See detailed instructions in `.cursor/rules/memory-bank.md`
+
+### Quick Reference
+
+**Before final commit on EVERY task:**
+1. Update `/memory-bank/progress.md` - Add latest work section
+2. Update `/memory-bank/activeContext.md` - Add to "Recent Work"
+3. Commit memory bank: `git commit -m "docs: update memory bank with [date] [description]"`
+4. Push: `git push origin main`
+
+**NO TASK IS COMPLETE WITHOUT MEMORY BANK UPDATE.**
+
+## Project Context
+
+- **Project:** DRAMAC CMS - Enterprise modular CMS platform
+- **Stack:** Next.js 16, React 19, TypeScript, Supabase, PostgreSQL
+- **Location:** Dashboard in `/next-platform-dashboard/`
+- **Memory Bank:** `/memory-bank/` (read at start of every session)
+
+## Key Patterns
+
+- Always read memory bank files before starting work
+- Document all architectural decisions
+- Update memory bank after every task (mandatory)
+- Use TypeScript strict mode
+- Follow existing patterns in systemPatterns.md
+- Test changes before committing
+
+## Memory Bank Files (Read at Session Start)
+
+1. `/memory-bank/projectbrief.md` - Core requirements
+2. `/memory-bank/productContext.md` - Product goals
+3. `/memory-bank/systemPatterns.md` - Architecture patterns
+4. `/memory-bank/techContext.md` - Tech stack
+5. `/memory-bank/activeContext.md` - Current focus
+6. `/memory-bank/progress.md` - Status tracking
+
+**Full details:** See `.cursor/rules/memory-bank.md` and `.github/copilot-instructions.md`
