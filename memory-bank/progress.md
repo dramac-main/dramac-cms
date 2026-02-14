@@ -5,6 +5,35 @@
 
 ---
 
+## Latest Update: February 14, 2026 - Checkout + Billing Fix Sweep ✅
+
+**What was fixed/changed:**
+- Completed the Paddle checkout wiring for **domains (cart)**, **business email**, and **subscriptions**, ensuring payment happens before provisioning.
+- Unified the purchase status polling flow to use the DM-12 `pending_purchases` table and redirect users to the correct provisioned resource.
+- Hardened ResellerClub connectivity by using an availability-based health check and retrying transient failures (429/5xx).
+- Aligned Paddle server-side plan/price ID mapping with the client’s `NEXT_PUBLIC_PADDLE_PRICE_*` IDs to avoid webhook misclassification.
+
+**Files Modified (high-signal):**
+- `next-platform-dashboard/src/lib/resellerclub/client.ts` — retry 429/5xx, improved logging, availability-based health check
+- `next-platform-dashboard/src/lib/paddle/client.ts` — server price ID fallback to `NEXT_PUBLIC_PADDLE_PRICE_*`
+- `next-platform-dashboard/src/app/api/purchases/status/route.ts` — query `pending_purchases` and return richer status
+- `next-platform-dashboard/src/app/(dashboard)/dashboard/domains/success/page.tsx` — correct redirects via `provisioned_resource_id`
+- `next-platform-dashboard/src/app/(dashboard)/dashboard/domains/cart/cart-page-client.tsx` — cart → create transaction → Paddle overlay
+- `next-platform-dashboard/src/components/email/email-purchase-wizard.tsx` — wizard → create transaction → Paddle overlay
+- `next-platform-dashboard/src/components/billing/pricing-card.tsx` — prefer server-backed `/api/billing/paddle/checkout`
+- `next-platform-dashboard/src/lib/actions/domains.ts` — add `createDomainCartCheckout()` and return `transactionId`
+- `next-platform-dashboard/src/lib/actions/business-email.ts` — return `transactionId`
+- `next-platform-dashboard/src/lib/paddle/transactions.ts` — deterministic idempotency keys; safer `.maybeSingle()`
+- `next-platform-dashboard/src/lib/resellerclub/provisioning.ts` — multi-domain cart provisioning support
+- `docs/RESELLERCLUB-SETUP-GUIDE.md` — updated setup/testing guidance
+
+**Impact:**
+- ✅ Domain + Email purchase journeys now run through Paddle checkout first and then provision via webhook-driven backend logic
+- ✅ Success/status page reliably reflects the true purchase state and routes users to the right resource
+- ✅ Fewer transient ResellerClub failures and clearer diagnostics
+
+**Commit:** `b238de0` - "fix: unify Paddle checkout + purchase status flows"
+
 ## Latest Update: February 14, 2026 - ResellerClub Fixie Integration Complete ✅
 
 **What was fixed:**

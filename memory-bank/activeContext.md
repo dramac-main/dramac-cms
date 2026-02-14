@@ -2,6 +2,43 @@
 
 ## Recent Work
 
+### Checkout + Billing Fix Sweep — February 14, 2026 ✅
+
+**Category:** Billing / Checkout / Reliability / Bug fix
+
+**What was done:**
+- Wired **domains cart checkout** and **business email checkout** to Paddle overlay using `transactionId` + app `successUrl`, ensuring payment-first flows.
+- Unified purchase status polling to query DM-12 `pending_purchases` (not legacy tables) and updated the success page to redirect using `provisioned_resource_id`.
+- Hardened ResellerClub client behavior (retry transient 429/5xx, improved logging, health check based on domain availability).
+- Fixed Paddle server-side plan detection by falling back to `NEXT_PUBLIC_PADDLE_PRICE_*` IDs, aligning webhook detection with client checkout.
+- Updated subscription pricing cards to prefer the server-backed checkout endpoint for consistent validation.
+
+**Files Created/Modified:**
+- MOD `next-platform-dashboard/src/lib/resellerclub/client.ts` — retry & health check improvements
+- MOD `next-platform-dashboard/src/lib/paddle/client.ts` — price ID fallback mapping
+- MOD `next-platform-dashboard/src/app/api/purchases/status/route.ts` — `pending_purchases` status API
+- MOD `next-platform-dashboard/src/app/(dashboard)/dashboard/domains/success/page.tsx` — correct redirects via `provisioned_resource_id`
+- MOD `next-platform-dashboard/src/app/(dashboard)/dashboard/domains/cart/cart-page-client.tsx` — cart → Paddle overlay checkout
+- MOD `next-platform-dashboard/src/components/email/email-purchase-wizard.tsx` — email wizard → Paddle overlay checkout
+- MOD `next-platform-dashboard/src/components/billing/pricing-card.tsx` — use `/api/billing/paddle/checkout`
+- MOD `next-platform-dashboard/src/lib/actions/domains.ts` — add `createDomainCartCheckout()` returning `transactionId`
+- MOD `next-platform-dashboard/src/lib/actions/business-email.ts` — include `transactionId` in response
+- MOD `next-platform-dashboard/src/lib/paddle/transactions.ts` — deterministic idempotency; safer `.maybeSingle()`
+- MOD `next-platform-dashboard/src/lib/resellerclub/provisioning.ts` — multi-domain provisioning support
+
+**Key Fixes:**
+1. End-to-end Paddle checkout journeys for domain cart + email purchase wizard (payment-first).
+2. Correct purchase status polling + success redirects to the real provisioned resource.
+3. Reduced ResellerClub flakiness with retryable transient handling.
+4. Eliminated Paddle plan/price ID mismatch between server and client.
+
+**Technical Notes:**
+- Success redirects should always use `pending_purchases.provisioned_resource_id` (not domain name).
+- Status polling should query `pending_purchases` by `id` or `paddle_transaction_id`.
+- Deterministic idempotency keys are required to prevent duplicate pending purchases.
+
+---
+
 ### ResellerClub Fixie Integration Complete — February 14, 2026 ✅
 
 **Category:** Infrastructure / Integration / Bug fix
