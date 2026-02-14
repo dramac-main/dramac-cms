@@ -73,9 +73,9 @@ If you need to re-run them:
    - Click **Save**
 
 4. **Test it works:**
-   - Go to your admin panel: `/admin/pricing`
-   - Click **"Full Sync"** button
-   - You should see pricing data load successfully
+   - **Quick check:** Open `GET /api/domains/resellerclub-status` in your browser (e.g. `https://your-app.com/api/domains/resellerclub-status`). You should see `"reachable": true`.
+   - **Or** go to your admin panel: `/admin/pricing` and click **"Full Sync"** — you should see pricing data load successfully.
+   - **Domain search:** On `/dashboard/domains/search`, search for any keyword. If ResellerClub is reachable, results will show "(Live from ResellerClub)". If you see an amber notice about "ResellerClub API was not used", check the message and whitelist/credentials.
 
 #### Option B: For Production (Vercel)
 

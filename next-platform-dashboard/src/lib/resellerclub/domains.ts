@@ -86,45 +86,47 @@ export class DomainService {
       'tlds': uniqueTlds.map(tld => tld.replace('.', '')),
     };
     
-    // Use the dedicated domaincheck.httpapi.com endpoint
     const domainCheckUrl = getDomainCheckUrl();
     
-    console.log('[DomainService] Availability check URL:', domainCheckUrl);
-    console.log('[DomainService] Params:', JSON.stringify(params));
-    
-    const response = await this.client.get<Record<string, { status: string; classkey?: string }>>(
+    const response = await this.client.get<Record<string, { status?: string; classkey?: string; classKey?: string }>>(
       'domains/available.json',
       params,
       domainCheckUrl
     );
     
-    console.log('[DomainService] Raw API response keys:', Object.keys(response));
-    console.log('[DomainService] Raw API response:', JSON.stringify(response).slice(0, 500));
+    // Build case-insensitive lookup (ResellerClub may return keys in varying case)
+    const responseLower = Object.fromEntries(
+      Object.entries(response).map(([k, v]) => [k.toLowerCase(), v])
+    );
     
     // Map results
-    // Response keys from ResellerClub are in format: "keyword.com", "keyword.net"
-    // (i.e., the full domain name as the key)
+    // Response keys from ResellerClub are full domain names, e.g. "keyword.com", "keyword.net"
     const results: DomainAvailability[] = [];
     
     for (const domain of domainTlds) {
-      // Try multiple key formats that ResellerClub might use
       const keyWithDot = `${domain.sld}${domain.tld}`; // "keyword.com"
       const keyNoDot = `${domain.sld}${domain.tld.replace('.', '')}`; // "keywordcom"
-      const result = response[keyWithDot] || response[keyNoDot] || response[domain.full];
+      const result =
+        response[keyWithDot] ?? response[domain.full]
+        ?? responseLower[keyWithDot.toLowerCase()]
+        ?? response[keyNoDot] ?? responseLower[keyNoDot.toLowerCase()];
+      
+      const statusVal = result?.status?.toLowerCase();
+      const classKeyVal = result?.classkey ?? result?.classKey ?? '';
       
       let status: DomainAvailability['status'] = 'unknown';
-      if (result?.status === 'available') {
+      if (statusVal === 'available') {
         status = 'available';
-      } else if (result?.status === 'regthroughus' || result?.status === 'regthroughothers') {
+      } else if (statusVal === 'regthroughus' || statusVal === 'regthroughothers') {
         status = 'unavailable';
-      } else if (result?.classkey?.includes('premium')) {
+      } else if (typeof classKeyVal === 'string' && classKeyVal.toLowerCase().includes('premium')) {
         status = 'premium';
       }
       
       results.push({
         domain: domain.full,
         status,
-        classKey: result?.classkey,
+        classKey: result?.classkey ?? result?.classKey,
       });
     }
     

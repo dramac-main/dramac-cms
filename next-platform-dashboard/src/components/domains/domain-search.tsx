@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { searchDomains } from "@/lib/actions/domains";
+import { normalizeDomainKeyword } from "@/lib/domain-keyword";
 import { TLD_CATEGORIES } from "@/lib/resellerclub/config";
 import type { DomainSearchResult } from "@/types/domain";
 
@@ -41,21 +42,29 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
   const [selectedTlds, setSelectedTlds] = useState<string[]>(POPULAR_TLDS);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
   const [showMoreTlds, setShowMoreTlds] = useState(false);
+  const [searchSource, setSearchSource] = useState<'resellerclub' | 'fallback' | null>(null);
+  const [searchMessage, setSearchMessage] = useState<string | null>(null);
   const router = useRouter();
   
   const performSearch = useCallback(async (searchKeyword: string) => {
     if (!searchKeyword || searchKeyword.length < 2) {
       setResults([]);
+      setSearchSource(null);
+      setSearchMessage(null);
       return;
     }
     
     setIsSearching(true);
     setError(null);
+    setSearchSource(null);
+    setSearchMessage(null);
     
     try {
       const response = await searchDomains(searchKeyword, selectedTlds);
       if (response.success && response.data) {
         setResults(response.data);
+        setSearchSource(response.source ?? null);
+        setSearchMessage(response.message ?? null);
       } else {
         setError(response.error || 'Search failed');
       }
@@ -67,8 +76,7 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
   }, [selectedTlds]);
   
   const handleKeywordChange = useCallback((value: string) => {
-    // Remove spaces and special characters except hyphens
-    const cleaned = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    const cleaned = normalizeDomainKeyword(value);
     setKeyword(cleaned);
     
     // Debounce search
@@ -226,17 +234,28 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
         </div>
       )}
       
+      {/* Fallback notice: show when ResellerClub API was not used */}
+      {results.length > 0 && searchSource === 'fallback' && searchMessage && (
+        <div className="flex items-start gap-2 text-sm bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 dark:border-amber-400/30 p-3 rounded-md">
+          <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+          <p>{searchMessage}</p>
+        </div>
+      )}
+      
       {/* Results */}
       {results.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-sm font-medium text-muted-foreground">
             {results.filter(r => r.available).length} available of {results.length} checked
-            {results.some(r => r.unverified) && results.some(r => r.available) && (
+            {searchSource === 'resellerclub' && (
+              <span className="text-green-600 dark:text-green-400 ml-2">(Live from ResellerClub)</span>
+            )}
+            {results.some(r => r.unverified) && results.some(r => r.available) && searchSource !== 'resellerclub' && (
               <span className="text-yellow-500 ml-2">
                 (Results via DNS lookup — register to confirm)
               </span>
             )}
-            {results.some(r => r.unverified) && !results.some(r => r.available) && (
+            {results.some(r => r.unverified) && !results.some(r => r.available) && searchSource !== 'resellerclub' && (
               <span className="text-yellow-500 ml-2">
                 (API unavailable — results may be inaccurate)
               </span>

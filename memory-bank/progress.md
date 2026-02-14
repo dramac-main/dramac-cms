@@ -5,7 +5,32 @@
 
 ---
 
-## Latest Update: February 14, 2026 - ResellerClub Admin UI + Proxy Fix ✅
+## Latest Update: February 14, 2026 - Domain Search Actual Results + Memory Bank Rule ✅
+
+**What was fixed:**
+Domain search now surfaces whether results are from ResellerClub (live) or DNS fallback, with clear UI messaging. ResellerClub API response parsing was made robust (case-insensitive keys, classKey/classkey). When the API is unreachable (e.g. IP not whitelisted), users see an amber notice explaining why and that results are approximate.
+
+**Files Created:**
+- `next-platform-dashboard/src/app/api/domains/resellerclub-status/route.ts` - GET diagnostic endpoint: returns configured/reachable so you can verify whitelist and credentials
+- `next-platform-dashboard/src/lib/domain-keyword.ts` - Shared keyword normalization (trim, NFKC, lowercase) so paste vs type give same search results
+
+**Files Modified:**
+- `next-platform-dashboard/src/lib/resellerclub/domains.ts` - Robust availability response parsing (case-insensitive keys, classKey/classkey)
+- `next-platform-dashboard/src/lib/actions/domains.ts` - Returns `source: 'resellerclub' | 'fallback'` and `message`; tracks fallback reason (config/whitelist/API error)
+- `next-platform-dashboard/src/components/domains/domain-search.tsx` - Shows "(Live from ResellerClub)" when API used; shows amber banner with reason when fallback is used
+- `docs/RESELLERCLUB-SETUP-GUIDE.md` - Added test steps: `/api/domains/resellerclub-status` and domain search "(Live from ResellerClub)" check
+
+**Impact:**
+- ✅ Users see when results are live from ResellerClub vs approximate (DNS)
+- ✅ Clear reason when API not used (not configured, IP whitelist, or API error)
+- ✅ Diagnostic endpoint to verify ResellerClub connectivity
+- ✅ Memory bank update rule followed: progress.md and activeContext.md updated, then commit and push
+
+**Commit:** (this session) - "fix: domain search actual results, ResellerClub status API, memory bank updates"
+
+---
+
+## Previous: February 14, 2026 - ResellerClub Admin UI + Proxy Fix ✅
 
 **What was fixed:**
 Admin pricing page now properly integrated into admin panel with correct authentication, improved UX, and Vercel build proxy issues resolved.

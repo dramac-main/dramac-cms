@@ -1,6 +1,33 @@
 # Active Context
 
-## Latest Session Update — ResellerClub Production-Ready Payment Integration (February 14, 2026)
+## Recent Work
+
+### Domain Search Actual Results + ResellerClub Status — February 14, 2026 ✅
+
+**Category:** Bug fix / UX / Diagnostics
+
+**What was done:**
+- Domain search was not clearly indicating whether results came from ResellerClub (live) or DNS fallback. After whitelisting, users still saw "Likely available — register to confirm" because the UI did not distinguish. ResellerClub response parsing was also tightened (case-insensitive key lookup, classKey/classkey).
+- Search response now includes `source: 'resellerclub' | 'fallback'` and optional `message`. When fallback is used, the reason is shown (e.g. "ResellerClub is not configured" or "API returned 403").
+- UI shows "(Live from ResellerClub)" when results are from the API, and an amber banner with the exact reason when fallback is used.
+- New GET `/api/domains/resellerclub-status` endpoint returns `{ configured, reachable, message }` so you can verify IP whitelist and credentials without running a full search.
+- Memory bank rule from `.cursor/rules/memory-bank.md` applied: progress.md and activeContext.md updated at end of task; changes committed and pushed.
+
+**Files Created/Modified:**
+- NEW `src/app/api/domains/resellerclub-status/route.ts` — ResellerClub connectivity diagnostic
+- NEW `src/lib/domain-keyword.ts` — normalizeDomainKeyword() for consistent paste/type search
+- MOD `src/lib/resellerclub/domains.ts` — robust availability response parsing
+- MOD `src/lib/actions/domains.ts` — DomainSearchResponse with source/message, fallbackReason
+- MOD `src/components/domains/domain-search.tsx` — display source and fallback message
+- MOD `docs/RESELLERCLUB-SETUP-GUIDE.md` — how to test whitelist and domain search
+
+**Technical Notes:**
+- ResellerClub availability API returns a hash keyed by full domain name (e.g. "keyword.com"); keys may vary in case, so we build a lowercased lookup.
+- Fallback runs when `isClientAvailable()` is false (missing env) or when `suggestDomains()` throws (e.g. 403). Message is passed through so the user sees the actual error.
+
+---
+
+## Previous Session — ResellerClub Production-Ready Payment Integration (February 14, 2026)
 
 ### Summary
 Complete refactor of ResellerClub domains and Titan email integration implementing payment-before-provisioning, correct pricing calculation, database-backed pricing cache, webhook-driven provisioning, and automated reconciliation.

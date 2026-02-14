@@ -306,6 +306,13 @@ For domains/emails registered before this implementation:
 - Cause: Reconciliation cron not running
 - Fix: Manually trigger via cron endpoint, check logs
 
+### Why domain search results can differ (text vs type, or vs ResellerClub site)
+
+- **Same keyword, different results**
+  - **Extensions (TLDs)**: The dashboard and ResellerClub’s own site can show different default TLDs (e.g. .com, .net, .org vs .eu, .ai, .store). Different TLDs → different rows and availability.
+  - **Paste vs type**: Pasted text (e.g. from SMS or messenger) can include invisible or non-ASCII characters. The app now normalizes the search keyword (trim, NFKC, lowercase, strip non-alphanumeric) so pasted and typed input behave the same.
+  - **ResellerClub API vs fallback**: When the ResellerClub API is reachable, results are authoritative. When it’s not (e.g. IP not whitelisted), the app falls back to DNS/RDAP and shows “Likely available — register to confirm.” Fallback is heuristic only, so it can disagree with ResellerClub’s site until you complete registration.
+
 ---
 
 **Implementation completed successfully. All 6 todos marked as complete.**

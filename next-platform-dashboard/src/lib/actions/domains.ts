@@ -9,6 +9,7 @@ import { domainService } from "@/lib/resellerclub/domains";
 import { customerService } from "@/lib/resellerclub/customers";
 import { contactService } from "@/lib/resellerclub/contacts";
 import { arePurchasesAllowed, TLD_CATEGORIES } from "@/lib/resellerclub/config";
+import { normalizeDomainKeyword } from "@/lib/domain-keyword";
 import type { 
   DomainFilters, 
   DomainWithDetails, 
@@ -89,10 +90,20 @@ async function ensureResellerClubCustomer(
 // Search & Availability
 // ============================================================================
 
+export type DomainSearchResponse = {
+  success: boolean;
+  data?: DomainSearchResult[];
+  error?: string;
+  /** When present, results are from DNS/RDAP fallback, not ResellerClub */
+  source?: 'resellerclub' | 'fallback';
+  /** Shown when source is fallback (e.g. why API was not used) */
+  message?: string;
+};
+
 export async function searchDomains(
   keyword: string,
   tlds?: string[]
-): Promise<{ success: boolean; data?: DomainSearchResult[]; error?: string }> {
+): Promise<DomainSearchResponse> {
   const supabase = await createClient();
   
   // Get user's agency for pricing
@@ -108,8 +119,7 @@ export async function searchDomains(
   if (!profile?.agency_id) return { success: false, error: 'No agency found' };
   
   try {
-    // Clean keyword
-    const cleanKeyword = keyword.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    const cleanKeyword = normalizeDomainKeyword(keyword);
     if (!cleanKeyword || cleanKeyword.length < 2) {
       return { success: false, error: 'Keyword must be at least 2 characters' };
     }
@@ -132,10 +142,10 @@ export async function searchDomains(
       return Math.round(wholesale * (1 + markupValue / 100) * 100) / 100;
     };
 
+    let fallbackReason: string | undefined;
     // Try ResellerClub API first (live data)
     if (isClientAvailable()) {
       try {
-        // Check availability via real API
         const availability = await domainService.suggestDomains(cleanKeyword, popularTlds);
         
         // Get real pricing from ResellerClub
@@ -191,13 +201,13 @@ export async function searchDomains(
           return (a.retailPrices.register[1] || 0) - (b.retailPrices.register[1] || 0);
         });
         
-        return { success: true, data: results };
+        return { success: true, data: results, source: 'resellerclub' };
       } catch (apiError) {
+        fallbackReason = apiError instanceof Error ? apiError.message : String(apiError);
         console.error('[Domains] ResellerClub API search failed:', apiError);
-        // Fall through to DNS/RDAP fallback below
       }
     } else {
-      console.warn('[Domains] ResellerClub API not available — isClientAvailable() returned false');
+      fallbackReason = 'ResellerClub is not configured (set RESELLERCLUB_RESELLER_ID and RESELLERCLUB_API_KEY) or server IP is not whitelisted.';
     }
     
     // Fallback: Use DNS/RDAP to check domain availability
@@ -235,7 +245,6 @@ export async function searchDomains(
       const domainNames = popularTlds.map(tld => cleanKeyword + tld);
       const fbResults = await checkAvailabilityFallback(domainNames);
       fallbackAvailability = fbResults.map(r => ({ domain: r.domain, available: r.available }));
-      console.log('[Domains] Fallback availability results:', JSON.stringify(fallbackAvailability));
     } catch (fbError) {
       console.error('[Domains] DNS/RDAP fallback also failed:', fbError);
     }
@@ -274,7 +283,14 @@ export async function searchDomains(
       return (a.retailPrices.register[1] || 0) - (b.retailPrices.register[1] || 0);
     });
     
-    return { success: true, data: results };
+    return {
+      success: true,
+      data: results,
+      source: 'fallback',
+      message: fallbackReason
+        ? `ResellerClub API was not used: ${fallbackReason} Showing approximate availability (DNS lookup) — register to confirm.`
+        : 'Showing approximate availability (DNS lookup) — register to confirm.',
+    };
   } catch (error) {
     console.error('[Domains] Search error:', error);
     return { 
