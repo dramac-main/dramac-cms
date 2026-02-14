@@ -1,11 +1,38 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 14, 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅ + PHASE FIX-03 COMPLETE ✅ + PHASE FIX-04 COMPLETE ✅ + PHASE FIX-05 COMPLETE ✅ + PHASE FIX-06 COMPLETE ✅ + PHASE FIX-06b LIGHT MODE CONTRAST ✅ + PHASE FIX-07 STUDIO/PREVIEW/FORMS ✅ + PHASE FIX-08 PORTAL BRANDING/LOADERS ✅ + PHASE FIX-09 SITE RENDERING/LOADING ✅ + PHASE FIX-10 STATIC ASSET 404s ✅ + PHASE FIX-11 MODULE CARD UI REDESIGN ✅ + PHASE FIX-12 LINE ICONS & EMOJI REPLACEMENT ✅ + ALL 13 LAUNCH PHASES COMPLETE ✅ + SOCIAL MEDIA MODULE PHASE DOCS COMPLETE (SM-00 to SM-09) ✅ + DOMAIN/EMAIL RESELLERCLUB LIVE API INTEGRATION ✅ + SOCIAL MEDIA SM-04/05/06 IMPLEMENTED ✅ + COMPREHENSIVE NAVIGATION/UX/MODULE AUDIT ✅ + LIVE CHAT WIDGET AUTO-INJECTION ✅ + LIVE CHAT REALTIME + NOTIFICATIONS ✅ + TLD EXPANSION 50+ ✅ + INTERNAL NOTES SECURITY + REALTIME BELL + AUTO-CLOSE + @MENTIONS ✅ + COMPREHENSIVE BILLING/DOMAIN/EMAIL HARDENING ✅ + WEB PUSH NOTIFICATIONS ✅ + LEMONSQUEEZY FULLY REMOVED ✅ + VERCEL BUILD FIXES ✅ + RESELLERCLUB PRODUCTION-READY PAYMENT INTEGRATION ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + **DRAMAC Studio: ALL 31 PHASES COMPLETE + CRITICAL FIXES APPLIED ✅** + **AI Website Designer: AWD-01 to AWD-09 COMPLETE + MAJOR UX FIXES ✅ + LINK & PUBLISHING FIXES ✅ + INDUSTRY BLUEPRINTS ✅ + COMPLETE SYSTEM OVERHAUL ✅ + DESIGN TOKEN THEMING OVERHAUL ✅ + HARDCODED COLOR & MODULE FIX ✅ + BOOKING MODULE RENDERING + PRO COLOR SYSTEM ✅ + BOOKING STUDIO COMPONENTS REBUILT ✅ + REAL DATA INTEGRATION ✅ + QUALITY OVERHAUL: CONTAINMENT + VISIBILITY + VARIETY + AUDITOR ✅ + BOOKING PUBLIC DATA FIX ✅ + BOOKING & ECOMMERCE MODULE BUGS FIXED ✅ + ZAMBIA LOCALIZATION ✅ + BOOKING/ORDER/FORM NOTIFICATION SYSTEM ✅ + EMAIL DOMAIN FIX ✅ + DEEP CURRENCY SWEEP ✅ + NOTIFICATION SYSTEM OVERHAUL ✅ + SUBDOMAIN ECOMMERCE FIX ✅ + DEEP PLATFORM AUDIT & CRITICAL FIXES ✅ + BRANDING/BOOKING/CURRENCY/SETTINGS BUG FIXES ✅ + PHASE FIX-01 COMPLETE ✅ + PHASE FIX-02 COMPLETE ✅ + PHASE FIX-03 COMPLETE ✅ + PHASE FIX-04 COMPLETE ✅ + PHASE FIX-05 COMPLETE ✅ + PHASE FIX-06 COMPLETE ✅ + PHASE FIX-06b LIGHT MODE CONTRAST ✅ + PHASE FIX-07 STUDIO/PREVIEW/FORMS ✅ + PHASE FIX-08 PORTAL BRANDING/LOADERS ✅ + PHASE FIX-09 SITE RENDERING/LOADING ✅ + PHASE FIX-10 STATIC ASSET 404s ✅ + PHASE FIX-11 MODULE CARD UI REDESIGN ✅ + PHASE FIX-12 LINE ICONS & EMOJI REPLACEMENT ✅ + ALL 13 LAUNCH PHASES COMPLETE ✅ + SOCIAL MEDIA MODULE PHASE DOCS COMPLETE (SM-00 to SM-09) ✅ + DOMAIN/EMAIL RESELLERCLUB LIVE API INTEGRATION ✅ + SOCIAL MEDIA SM-04/05/06 IMPLEMENTED ✅ + COMPREHENSIVE NAVIGATION/UX/MODULE AUDIT ✅ + LIVE CHAT WIDGET AUTO-INJECTION ✅ + LIVE CHAT REALTIME + NOTIFICATIONS ✅ + TLD EXPANSION 50+ ✅ + INTERNAL NOTES SECURITY + REALTIME BELL + AUTO-CLOSE + @MENTIONS ✅ + COMPREHENSIVE BILLING/DOMAIN/EMAIL HARDENING ✅ + WEB PUSH NOTIFICATIONS ✅ + LEMONSQUEEZY FULLY REMOVED ✅ + VERCEL BUILD FIXES ✅ + RESELLERCLUB PRODUCTION-READY PAYMENT INTEGRATION ✅ + PRICING ADMIN UI + PROXY FIX ✅**
 
 ---
 
-## Latest Update: February 14, 2026 - ResellerClub Production-Ready Payment Integration ✅
+## Latest Update: February 14, 2026 - ResellerClub Admin UI + Proxy Fix ✅
+
+**What was fixed:**
+Admin pricing page now properly integrated into admin panel with correct authentication, improved UX, and Vercel build proxy issues resolved.
+
+**Files Created:**
+- `src/app/(dashboard)/admin/pricing/pricing-client.tsx` - Client component with improved UI/UX, better layout, status indicators
+- Updated `src/app/(dashboard)/admin/pricing/page.tsx` - Added proper server component with requireSuperAdmin auth and PageHeader
+
+**Files Modified:**
+- `src/config/admin-navigation.ts` - Added "Domain Pricing" to Management section with DollarSign icon
+- `src/app/api/admin/pricing/refresh/route.ts` - Fixed auth to require super_admin role (was checking owner/admin), removed agency-specific customer ID requirement
+- `src/lib/resellerclub/client.ts` - Uses RESELLERCLUB_PROXY_URL/FIXIE_URL instead of HTTPS_PROXY/HTTP_PROXY to avoid Vercel build crashes
+- `package.json` - Added undici dependency for proxy support
+- Documentation updated in RESELLERCLUB-SETUP-GUIDE.md and RESELLERCLUB-IP-WHITELIST.md
+
+**Impact:**
+- ✅ Pricing management now visible in admin sidebar under Management
+- ✅ Proper super_admin authentication (403 error fixed)
+- ✅ Improved UI with better card layout, icons, and status feedback
+- ✅ Vercel build no longer crashes with ProxyAgent error
+- ✅ Uses custom env vars (RESELLERCLUB_PROXY_URL or FIXIE_URL) for runtime proxy only
+
+**Commits:** `956e903`, `[pending]` - "fix: add pricing admin to sidebar, fix auth, improve UI/UX"
+
+---
+
+## Previous: February 14, 2026 - ResellerClub Production-Ready Payment Integration ✅
 
 **What was built:**
 Complete production-ready payment-before-provisioning system for ResellerClub domains and Titan email with correct pricing, Paddle Transactions API integration, webhook-driven provisioning, pricing cache, and automated reconciliation.

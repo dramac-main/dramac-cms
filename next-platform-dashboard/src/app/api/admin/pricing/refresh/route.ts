@@ -20,15 +20,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    // Check admin role
+    // Check super_admin role
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, agency_id')
+      .select('role')
       .eq('id', user.id)
       .single();
     
-    if (!profile || !['owner', 'admin'].includes(profile.role || '')) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    if (!profile || profile.role !== 'super_admin') {
+      return NextResponse.json({ error: 'Forbidden - Super admin access required' }, { status: 403 });
     }
     
     // Check if ResellerClub is configured
@@ -39,22 +39,9 @@ export async function POST(request: Request) {
       );
     }
     
-    // Get agency's ResellerClub customer ID
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: agency } = await (supabase as any)
-      .from('agencies')
-      .select('resellerclub_customer_id')
-      .eq('id', profile.agency_id)
-      .single();
-    
-    if (!agency?.resellerclub_customer_id) {
-      return NextResponse.json(
-        { error: 'Agency not configured for ResellerClub' },
-        { status: 400 }
-      );
-    }
-    
-    const customerId = agency.resellerclub_customer_id as string;
+    // Use a system-wide customer ID (or first agency's) - super admin can refresh for all
+    // For now, just refresh the global cache without customer ID requirement
+    const customerId = ''; // Super admin refreshes global pricing
     
     // Parse request body for sync options
     const body = await request.json().catch(() => ({}));
