@@ -16,7 +16,7 @@ I've implemented **EVERYTHING** you asked for. Here's the complete breakdown:
 
 ### Proxy Support - IMPLEMENTED ✅
 - ✅ Added HTTP/HTTPS proxy support to ResellerClub client
-- ✅ Automatically uses `HTTPS_PROXY` or `HTTP_PROXY` environment variables
+- ✅ Uses `RESELLERCLUB_PROXY_URL` or `FIXIE_URL` at runtime (do not set `HTTPS_PROXY` in Vercel – it breaks the build)
 - ✅ Ready for QuotaGuard or any proxy service
 - ✅ No code changes needed when you add proxy - just set env var
 
@@ -83,7 +83,7 @@ I've done all the coding. You just need to complete **3 configuration steps** th
 - **SOLUTION:** Use QuotaGuard (https://www.quotaguard.com/)
   1. Sign up (~$10/month)
   2. Get your proxy URL
-  3. Add to Vercel: `HTTPS_PROXY` environment variable
+  3. Add to Vercel: `RESELLERCLUB_PROXY_URL` (or `FIXIE_URL` from integration) – not `HTTPS_PROXY`
   4. Whitelist QuotaGuard's static IP in ResellerClub
 
 ### Step 2: Initial Pricing Sync (2 minutes)

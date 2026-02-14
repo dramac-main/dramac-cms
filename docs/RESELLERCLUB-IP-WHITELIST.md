@@ -32,19 +32,21 @@ curl icanhazip.com
 
 **Solutions:**
 
-#### Option 1: Use a Proxy Service (Recommended)
-Use a service that provides static IP for your API requests:
-- **QuotaGuard** (https://www.quotaguard.com/) - Static IP proxy for Vercel
-- **Axiom** (https://axiom.co/) - API gateway with static IPs
-- **Cloudflare Argo Tunnel** - Tunnel with static IPs
+#### Option 1: Free / low-cost (try first)
+- **Fixie** (https://usefixie.com/) - **Free tier “Tricycle”**: 500 requests/month, 100 MB. Real outbound static IP; Vercel integration. Good for light ResellerClub use. $5/mo “Commuter” if you need more.
+- **Noble IP** (https://noble-ip.com/) - Free tier may **not** include outbound proxy creation (only paid Starter $29/mo lists “1 Outbound Proxy”). Use if you’re on a paid plan.
 
-#### Option 2: Deploy to Infrastructure with Static IP
+#### Option 2: Paid proxy services
+- **QuotaGuard** (https://www.quotaguard.com/) - Static IP for Vercel (~$10/month)
+- **Axiom** (https://axiom.co/) - API gateway with static IPs
+
+#### Option 3: Deploy to Infrastructure with Static IP
 - **AWS EC2** with Elastic IP
 - **DigitalOcean Droplet** with reserved IP
 - **Azure VM** with static public IP
 - **Google Cloud Compute** with static external IP
 
-#### Option 3: Contact ResellerClub Support
+#### Option 4: Contact ResellerClub Support
 Ask if they can whitelist Vercel's entire IP range:
 - Vercel publishes their IP ranges
 - Some registrars allow CIDR range whitelisting
@@ -115,26 +117,16 @@ Some ResellerClub control panels show "Your current IP is: X.X.X.X" at the top o
 
 1. Sign up at https://www.quotaguard.com/
 2. Get your static proxy URL
-3. Add environment variable to Vercel:
+3. Add environment variable to Vercel (use this name so the build doesn’t break):
    ```
-   HTTP_PROXY=http://your-proxy-url
-   HTTPS_PROXY=http://your-proxy-url
+   RESELLERCLUB_PROXY_URL=http://your-proxy-url
    ```
+   Or if using Fixie integration: `FIXIE_URL` (same value). Do **not** set `HTTPS_PROXY`/`HTTP_PROXY` in Vercel – they break the build.
 4. Whitelist QuotaGuard's static IP in ResellerClub
 5. Update your ResellerClub API client to use proxy
 
-### Code Example with Proxy
-```typescript
-// In your ResellerClub client
-const httpsAgent = process.env.HTTPS_PROXY 
-  ? new HttpsProxyAgent(process.env.HTTPS_PROXY)
-  : undefined;
-
-const response = await fetch('https://httpapi.com/api/...', {
-  agent: httpsAgent,
-  // ... other options
-});
-```
+### How the app uses the proxy
+The ResellerClub client reads **`RESELLERCLUB_PROXY_URL`** or **`FIXIE_URL`** at runtime and routes API requests through that proxy (via undici). You only need to set one of these in Vercel; do not set `HTTPS_PROXY`/`HTTP_PROXY` or the Vercel build will fail.
 
 ## Security Best Practices
 

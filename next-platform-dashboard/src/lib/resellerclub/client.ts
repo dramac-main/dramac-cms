@@ -153,9 +153,9 @@ export class ResellerClubClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     
-    // Support HTTP/HTTPS proxy for static IP routing (Vercel/production)
-    // Set HTTPS_PROXY or HTTP_PROXY environment variable to use a proxy service
-    const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+    // Use a custom env var so Vercel build does NOT see it (HTTPS_PROXY/HTTP_PROXY break the build).
+    // Set RESELLERCLUB_PROXY_URL or FIXIE_URL (Fixie integration) for static IP at runtime only.
+    const proxyUrl = process.env.RESELLERCLUB_PROXY_URL || process.env.FIXIE_URL;
     const fetchOptions: RequestInit = {
       method,
       headers: {
@@ -166,15 +166,16 @@ export class ResellerClubClient {
       signal: controller.signal,
     };
     
-    // Note: Proxy support in Edge Runtime (Vercel) requires using a fetch wrapper
-    // or deploying to Node.js runtime. For production, use QuotaGuard or similar.
-    if (proxyUrl && typeof globalThis !== 'undefined' && 'ProxyAgent' in globalThis) {
-      // @ts-ignore - ProxyAgent not in default types
-      fetchOptions.agent = new globalThis.ProxyAgent(proxyUrl);
-    }
-    
     try {
-      const response = await fetch(url, fetchOptions);
+      let response: Response;
+      if (proxyUrl && typeof process !== 'undefined' && process.versions?.node) {
+        // Node runtime: use undici fetch with ProxyAgent (only at runtime, not build)
+        const { fetch: undiciFetch, ProxyAgent } = await import('undici');
+        const dispatcher = new ProxyAgent(proxyUrl);
+        response = await undiciFetch(url, { ...fetchOptions, dispatcher }) as Response;
+      } else {
+        response = await fetch(url, fetchOptions);
+      }
       
       clearTimeout(timeoutId);
       

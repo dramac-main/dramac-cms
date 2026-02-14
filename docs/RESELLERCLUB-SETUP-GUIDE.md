@@ -18,6 +18,22 @@ This guide will help you complete the ResellerClub integration setup. Most of th
 
 ---
 
+## ⚠️ If Vercel build fails with "ProxyAgent is not a constructor"
+
+This happens when Vercel sees **`HTTPS_PROXY`** or **`HTTP_PROXY`** in the build environment.
+
+**Fix:** In Vercel → Project → Settings → Environment Variables:
+
+1. **Remove** any `HTTPS_PROXY` and `HTTP_PROXY` variables.
+2. **Add** (for static IP proxy):
+   - Name: **`RESELLERCLUB_PROXY_URL`**  
+   - Value: your Fixie (or other) proxy URL  
+   - Or, if you use the Fixie integration: the integration sets **`FIXIE_URL`** – keep that and remove only `HTTPS_PROXY`/`HTTP_PROXY`.
+
+Redeploy. The app uses `RESELLERCLUB_PROXY_URL` or `FIXIE_URL` only at **runtime**, so the build no longer tries to use a proxy and will succeed.
+
+---
+
 ## 🔧 Setup Steps (Manual Actions Required)
 
 ### Step 1: Run Database Migrations (If Not Already Done)
@@ -63,35 +79,60 @@ If you need to re-run them:
 
 #### Option B: For Production (Vercel)
 
-⚠️ **PROBLEM**: Vercel uses dynamic IPs that change frequently. You have 3 options:
+⚠️ **PROBLEM**: Vercel uses dynamic IPs that change frequently. You have several options:
 
-**RECOMMENDED - Use QuotaGuard Proxy:**
+---
 
-1. **Sign up for QuotaGuard:**
-   - Go to: https://www.quotaguard.com/
-   - Sign up for their Static IP plan (starts ~$10/month)
-   - Get your proxy URL (format: `http://user:pass@proxy.quotaguard.com:port`)
+**FREE / LOW-COST OPTIONS:**
 
-2. **Add to Vercel Environment Variables:**
-   - Go to Vercel Dashboard → Your Project → Settings → Environment Variables
-   - Add: `HTTPS_PROXY` = `your-quotaguard-url`
-   - Add: `HTTP_PROXY` = `your-quotaguard-url`
-   - Redeploy your site
+**1. Fixie (real free tier – recommended)**
 
-3. **Whitelist QuotaGuard's IP in ResellerClub:**
-   - QuotaGuard will give you a static IP
-   - Add that IP to ResellerClub (Settings → API → Whitelist)
+- **Sign up:** https://usefixie.com/ or Vercel integration: https://vercel.com/integrations/fixie
+- **Free “Tricycle” plan:** 500 requests/month, 100 MB – enough for light use (pricing sync + a few domain/email ops)
+- **Steps:**
+  1. Create account at Fixie, create an HTTP/HTTPS proxy
+  2. They give you a proxy URL and a static IP to whitelist
+  3. In Vercel: add **one** of these (do **not** set `HTTPS_PROXY`/`HTTP_PROXY` – they break the build):
+     - **`RESELLERCLUB_PROXY_URL`** = your Fixie proxy URL, or
+     - **`FIXIE_URL`** = same URL (if you used the Fixie–Vercel integration)
+  4. In ResellerClub: Settings → API → Whitelist → add Fixie’s static IP
+- **If you need more:** Commuter plan is $5/month (2,500 requests, 500 MB)
+- **Docs:** https://usefixie.com/documentation/vercel
 
-**Alternative Option - Deploy API to a Server with Static IP:**
-- Use AWS EC2, DigitalOcean, or Azure VM
-- Get a static IP
-- Deploy only the API routes there
-- Whitelist that IP
+**2. Free cloud VM with static IP (no proxy service)**
 
-**Last Resort - Contact ResellerClub:**
+- **Oracle Cloud Free Tier** (or similar) often includes a VM + static public IP for $0
+- Create a small Linux VM, assign a reserved/public IP, install a simple HTTP proxy (e.g. Squid or a small Node/Go proxy)
+- In Vercel set **`RESELLERCLUB_PROXY_URL`** to your VM proxy (e.g. `http://ip:port`). Do not set `HTTPS_PROXY` – it breaks the build.
+- In ResellerClub whitelist that VM’s IP
+- More setup, but $0 and no request limits; good if you’re okay with basic server admin
+
+**3. Noble IP**
+
+- Free tier (75 MB) exists but **outbound proxy creation may not be available on the free plan** – only paid plans (Starter $29/mo) explicitly include “1 Outbound Proxy”. If you have a paid plan, use it the same way (proxy URL → Vercel env → whitelist IP)
+
+---
+
+**PAID OPTIONS (if free tier isn’t enough):**
+
+**QuotaGuard Static IP (~$10/month):**
+
+1. Sign up: https://www.quotaguard.com/
+2. Get proxy URL (e.g. `http://user:pass@proxy.quotaguard.com:port`)
+3. In Vercel: add **`RESELLERCLUB_PROXY_URL`** with that URL (do not set `HTTPS_PROXY`/`HTTP_PROXY` – they break the build)
+4. In ResellerClub: whitelist QuotaGuard’s static IP
+
+**Vercel Pro/Enterprise (native static IPs):**
+
+- Vercel’s own Static IPs (Pro/Enterprise) – no third‑party proxy needed
+- See: https://vercel.com/docs/connectivity/static-ips
+
+---
+
+**Last resort – Contact ResellerClub:**
+
 - Email: support@resellerclub.com
-- Ask if they can whitelist Vercel's IP range
-- (They may say no - worth trying)
+- Ask if they can whitelist Vercel’s IP range (they may say no)
 
 ---
 
@@ -271,8 +312,9 @@ NEXT_PUBLIC_PADDLE_TOKEN=your_paddle_token
 PADDLE_WEBHOOK_SECRET=your_webhook_secret
 
 # Optional: For static IP proxy (production)
-HTTPS_PROXY=http://user:pass@proxy-service.com:port
-HTTP_PROXY=http://user:pass@proxy-service.com:port
+# Use RESELLERCLUB_PROXY_URL (or FIXIE_URL if using Fixie integration).
+# Do NOT set HTTPS_PROXY/HTTP_PROXY in Vercel - they break the build.
+RESELLERCLUB_PROXY_URL=http://user:pass@proxy-service.com:port
 ```
 
 ### Key Database Tables
