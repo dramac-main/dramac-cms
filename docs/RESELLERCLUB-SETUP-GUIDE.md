@@ -77,7 +77,90 @@ If you need to re-run them:
    - **Or** go to your admin panel: `/admin/pricing` and click **"Full Sync"** — you should see pricing data load successfully.
    - **Domain search:** On `/dashboard/domains/search`, search for any keyword. If ResellerClub is reachable, results will show "(Live from ResellerClub)". If you see an amber notice about "ResellerClub API was not used", check the message and whitelist/credentials.
 
-#### Option B: For Production (Vercel)
+#### Option B: For Production (Vercel) — Using Fixie Static IP Proxy ✅ **RECOMMENDED**
+
+Vercel uses **dynamic IPs** that change on every request, so you can't whitelist them directly. Use Fixie for a static IP.
+
+**Complete Steps:**
+
+1. **Install Fixie Integration:**
+   - Go to: https://vercel.com/integrations/fixie
+   - Click **"Add Integration"**
+   - Select your Vercel project (e.g., `dramac-cms`)
+   - Click **Continue** and authorize
+   - Fixie will automatically add `FIXIE_URL` to your Vercel environment variables
+
+2. **Get Your Fixie Static IPs:**
+   - After installation, go to: https://usefixie.com/dashboard
+   - Find **"Outbound IPs"** section (usually shows 2 IPs, e.g., `54.217.142.99` and `54.195.3.54`)
+   - **Copy both IPs**
+
+3. **Whitelist Both IPs in ResellerClub:**
+   - Go to: https://manage.resellerclub.com/
+   - Click **Settings** → **API**
+   - Find **"Whitelist your IP Addresses"**
+   - **Add both Fixie IPs** (one per line or comma-separated):
+     ```
+     54.217.142.99
+     54.195.3.54
+     ```
+   - Click **Save**
+
+4. **⚠️ CRITICAL: Trigger Vercel Redeploy**
+   
+   The Fixie integration adds `FIXIE_URL` as an environment variable, but **Vercel must redeploy** for your app to use it.
+   
+   **Option 1 (Automatic):** Push any commit to your repo:
+   ```bash
+   git commit --allow-empty -m "trigger: redeploy for Fixie integration"
+   git push origin main
+   ```
+   
+   **Option 2 (Manual):**
+   - Go to: https://vercel.com/dashboard
+   - Select your project
+   - Go to **Deployments** tab
+   - Click the ⋯ menu on the latest deployment
+   - Click **Redeploy**
+
+5. **Verify It Works (wait 2-3 minutes after redeploy):**
+   
+   **a) Check ResellerClub Status:**
+   ```
+   https://your-app.com/api/domains/resellerclub-status
+   ```
+   Should return:
+   ```json
+   {
+     "configured": true,
+     "reachable": true,
+     "message": "ResellerClub API is reachable. Domain search will use live availability."
+   }
+   ```
+   
+   **b) Check Outbound IP (optional):**
+   ```
+   https://your-app.com/api/debug/outbound-ip
+   ```
+   Should show one of your Fixie IPs (54.217.142.99 or 54.195.3.54)
+   
+   **c) Domain Search:**
+   - Go to: `/dashboard/domains/search`
+   - Search for any domain (e.g., "example")
+   - You should see: **(Live from ResellerClub)** next to the result count
+   - No amber warning about "API was not used"
+
+**If Still Showing 403:**
+- Verify both IPs are saved in ResellerClub (check Settings → API again)
+- Verify Fixie integration is active (check Vercel → Integrations)
+- Check Vercel env vars: `FIXIE_URL` should be present
+- Wait a few minutes and try again (DNS/proxy propagation)
+
+**Cost:** Fixie free tier = 500 requests/month (plenty for domain search). Upgrade to $5/mo "Commuter" if needed.
+
+---
+
+#### Option C: For Production (Other Static IP Solutions)
 
 ⚠️ **PROBLEM**: Vercel uses dynamic IPs that change frequently. You have several options:
 

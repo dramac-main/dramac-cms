@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { createBusinessEmailOrder, getBusinessEmailPricing } from "@/lib/actions/business-email";
+import { openPaddleCheckout } from "@/lib/paddle/paddle-client";
 import { formatCurrency } from "@/lib/locale-config";
 import { toast } from "sonner";
 import { Loader2, Mail } from "lucide-react";
@@ -133,11 +134,18 @@ export function EmailPurchaseWizard() {
     startTransition(async () => {
       const result = await createBusinessEmailOrder(formData);
       
-      if (result.success) {
-        toast.success("Email order created successfully!");
-        router.push(`/dashboard/email/${result.data?.id}`);
+      if (result.success && result.data?.transactionId && result.data?.pendingPurchaseId) {
+        toast.success("Opening checkout...");
+        
+        // Open Paddle checkout overlay with transaction ID and success URL
+        const successUrl = `${window.location.origin}/dashboard/domains/success?purchase_id=${result.data.pendingPurchaseId}`;
+        
+        openPaddleCheckout({
+          transactionId: result.data.transactionId,
+          successUrl,
+        });
       } else {
-        toast.error(result.error || "Failed to create email order");
+        toast.error(result.error || "Failed to create checkout");
       }
     });
   }

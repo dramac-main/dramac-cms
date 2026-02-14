@@ -61,6 +61,9 @@ export const isPaddleSandbox = paddleEnvironment === 'sandbox';
 /**
  * Paddle Product and Price IDs
  * These are configured in the Paddle dashboard and should match .env values
+ * 
+ * Falls back to NEXT_PUBLIC_* variants when server-side PADDLE_PRICE_* are not set
+ * to ensure webhook plan detection uses the same price IDs as client-side checkout
  */
 export const PADDLE_IDS = {
   products: {
@@ -68,10 +71,10 @@ export const PADDLE_IDS = {
     pro: process.env.PADDLE_PRODUCT_PRO || '',
   },
   prices: {
-    starter_monthly: process.env.PADDLE_PRICE_STARTER_MONTHLY || '',
-    starter_yearly: process.env.PADDLE_PRICE_STARTER_YEARLY || '',
-    pro_monthly: process.env.PADDLE_PRICE_PRO_MONTHLY || '',
-    pro_yearly: process.env.PADDLE_PRICE_PRO_YEARLY || '',
+    starter_monthly: process.env.PADDLE_PRICE_STARTER_MONTHLY || process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_MONTHLY || '',
+    starter_yearly: process.env.PADDLE_PRICE_STARTER_YEARLY || process.env.NEXT_PUBLIC_PADDLE_PRICE_STARTER_YEARLY || '',
+    pro_monthly: process.env.PADDLE_PRICE_PRO_MONTHLY || process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_MONTHLY || '',
+    pro_yearly: process.env.PADDLE_PRICE_PRO_YEARLY || process.env.NEXT_PUBLIC_PADDLE_PRICE_PRO_YEARLY || '',
     // Overage prices for metered billing
     automation_overage: process.env.PADDLE_PRICE_AUTOMATION_OVERAGE || '',
     ai_overage: process.env.PADDLE_PRICE_AI_OVERAGE || '',

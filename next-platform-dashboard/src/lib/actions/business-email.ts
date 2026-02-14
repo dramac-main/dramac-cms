@@ -31,7 +31,13 @@ import type {
  */
 export async function createBusinessEmailOrder(formData: FormData): Promise<{
   success: boolean;
-  data?: { pendingPurchaseId?: string; checkoutUrl?: string; status?: string; order?: EmailOrder };
+  data?: { 
+    pendingPurchaseId?: string; 
+    transactionId?: string;
+    checkoutUrl?: string; 
+    status?: string; 
+    order?: EmailOrder;
+  };
   error?: string;
 }> {
   const supabase = await createClient();
@@ -134,6 +140,7 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
       success: true,
       data: {
         pendingPurchaseId: purchase.id,
+        transactionId: purchase.paddleTransactionId,
         checkoutUrl: purchase.checkoutUrl,
         status: 'pending_payment',
       },

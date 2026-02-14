@@ -10,12 +10,19 @@ type PurchaseStatus = 'pending_payment' | 'paid' | 'provisioning' | 'completed' 
 
 interface PurchaseDetails {
   id: string;
-  type: 'domain_register' | 'domain_renew' | 'domain_transfer' | 'email_order';
+  purchase_type: 'domain_register' | 'domain_renew' | 'domain_transfer' | 'email_order';
   status: PurchaseStatus;
-  domainName?: string;
-  years?: number;
-  amount?: number;
-  error?: string;
+  provisioned_resource_id?: string;
+  resellerclub_order_id?: string;
+  retail_amount: number;
+  currency: string;
+  error_message?: string;
+  purchase_data: {
+    domainName?: string;
+    years?: number;
+    mailboxes?: number;
+    [key: string]: unknown;
+  };
 }
 
 export default function PurchaseSuccessPage() {
@@ -120,7 +127,7 @@ export default function PurchaseSuccessPage() {
         return {
           icon: <AlertCircle className="h-12 w-12 text-red-500" />,
           title: 'Setup Failed',
-          description: purchase.error || 'There was an issue setting up your service. Please contact support.',
+          description: purchase.error_message || 'There was an issue setting up your service. Please contact support.',
           color: 'border-red-500',
         };
     }
@@ -142,10 +149,21 @@ export default function PurchaseSuccessPage() {
   };
 
   const handleContinue = () => {
-    if (purchase?.type.startsWith('domain')) {
+    if (!purchase) return;
+
+    // Use provisioned_resource_id for correct navigation
+    if (purchase.purchase_type.startsWith('domain') && purchase.provisioned_resource_id) {
+      // Navigate to specific domain details page
+      router.push(`/dashboard/domains/${purchase.provisioned_resource_id}`);
+    } else if (purchase.purchase_type === 'email_order' && purchase.provisioned_resource_id) {
+      // Navigate to specific email order page
+      router.push(`/dashboard/email/${purchase.provisioned_resource_id}`);
+    } else if (purchase.purchase_type.startsWith('domain')) {
+      // Fallback to domains list
       router.push('/dashboard/domains');
-    } else if (purchase?.type === 'email_order') {
-      router.push(`/dashboard/domains/${purchase.domainName}/email`);
+    } else if (purchase.purchase_type === 'email_order') {
+      // Fallback to email list
+      router.push('/dashboard/email');
     } else {
       router.push('/dashboard');
     }
@@ -201,26 +219,32 @@ export default function PurchaseSuccessPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm text-muted-foreground">Type</div>
-                  <div className="font-semibold">{getPurchaseTypeLabel(purchase.type)}</div>
+                  <div className="font-semibold">{getPurchaseTypeLabel(purchase.purchase_type)}</div>
                 </div>
-                {purchase.domainName && (
+                {purchase.purchase_data?.domainName && (
                   <div>
                     <div className="text-sm text-muted-foreground">Domain</div>
-                    <div className="font-semibold">{purchase.domainName}</div>
+                    <div className="font-semibold">{purchase.purchase_data.domainName}</div>
                   </div>
                 )}
-                {purchase.years && (
+                {purchase.purchase_data?.years && (
                   <div>
                     <div className="text-sm text-muted-foreground">Period</div>
-                    <div className="font-semibold">{purchase.years} {purchase.years === 1 ? 'year' : 'years'}</div>
+                    <div className="font-semibold">{purchase.purchase_data.years} {purchase.purchase_data.years === 1 ? 'year' : 'years'}</div>
                   </div>
                 )}
-                {purchase.amount && (
+                {purchase.purchase_data?.mailboxes && (
                   <div>
-                    <div className="text-sm text-muted-foreground">Amount</div>
-                    <div className="font-semibold">${purchase.amount.toFixed(2)}</div>
+                    <div className="text-sm text-muted-foreground">Mailboxes</div>
+                    <div className="font-semibold">{purchase.purchase_data.mailboxes}</div>
                   </div>
                 )}
+                <div>
+                  <div className="text-sm text-muted-foreground">Amount</div>
+                  <div className="font-semibold">
+                    {purchase.currency} ${(purchase.retail_amount / 100).toFixed(2)}
+                  </div>
+                </div>
               </div>
               
               <div className="pt-3 border-t border-border">

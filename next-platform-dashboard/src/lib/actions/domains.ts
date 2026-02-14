@@ -10,6 +10,7 @@ import { customerService } from "@/lib/resellerclub/customers";
 import { contactService } from "@/lib/resellerclub/contacts";
 import { arePurchasesAllowed, TLD_CATEGORIES } from "@/lib/resellerclub/config";
 import { normalizeDomainKeyword } from "@/lib/domain-keyword";
+import { createDomainPurchase } from "@/lib/paddle/transactions";
 import type { 
   DomainFilters, 
   DomainWithDetails, 
@@ -415,6 +416,7 @@ export async function registerDomain(params: RegisterDomainParams) {
       success: true,
       data: {
         pendingPurchaseId: purchase.id,
+        transactionId: purchase.paddleTransactionId,
         checkoutUrl: purchase.checkoutUrl,
         status: 'pending_payment',
       },
@@ -424,6 +426,125 @@ export async function registerDomain(params: RegisterDomainParams) {
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Registration failed' 
+    };
+  }
+}
+
+/**
+ * Create a domain cart checkout for multiple domains
+ * Returns pendingPurchaseId and transactionId for Paddle checkout
+ */
+export async function createDomainCartCheckout(params: {
+  domains: Array<{
+    domainName: string;
+    years: number;
+    privacy?: boolean;
+    autoRenew?: boolean;
+  }>;
+  clientId?: string;
+  contactInfo?: Record<string, unknown>;
+}) {
+  try {
+    const supabase = await createClient();
+    
+    // Auth check
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('agency_id')
+      .eq('id', user.id)
+      .single();
+    
+    if (!profile?.agency_id) return { success: false, error: 'No agency found' };
+    
+    // Validate domains
+    if (!params.domains || params.domains.length === 0) {
+      return { success: false, error: 'No domains selected' };
+    }
+    
+    // Calculate total pricing for all domains
+    let totalWholesale = 0;
+    let totalRetail = 0;
+    const domainDetails = [];
+    
+    for (const domain of params.domains) {
+      const pricing = await calculateDomainPricing({
+        domainName: domain.domainName,
+        years: domain.years,
+        privacy: domain.privacy,
+        agencyId: profile.agency_id,
+      });
+      
+      if (!pricing.success || !pricing.data) {
+        return { 
+          success: false, 
+          error: `Failed to get pricing for ${domain.domainName}` 
+        };
+      }
+      
+      totalWholesale += pricing.data.total_wholesale;
+      totalRetail += pricing.data.total_retail;
+      domainDetails.push({
+        ...domain,
+        tld: domain.domainName.split('.').pop(),
+        wholesale: pricing.data.total_wholesale,
+        retail: pricing.data.total_retail,
+      });
+    }
+    
+    // Create a single pending purchase for the cart
+    // Use a deterministic identifier based on sorted domain names
+    const sortedDomains = params.domains
+      .map(d => d.domainName)
+      .sort()
+      .join(',');
+    
+    const purchase = await createDomainPurchase({
+      agencyId: profile.agency_id,
+      userId: user.id,
+      clientId: params.clientId,
+      purchaseType: 'domain_register',
+      domainName: sortedDomains, // For idempotency key
+      years: params.domains[0].years, // Representative value
+      tld: 'multi', // Indicates multiple domains
+      wholesaleAmount: totalWholesale,
+      retailAmount: totalRetail,
+      currency: 'USD',
+      contactInfo: params.contactInfo,
+      privacy: params.domains.some(d => d.privacy),
+      autoRenew: params.domains.some(d => d.autoRenew),
+    });
+    
+    // Update the purchase_data to include all domains
+    const admin = createAdminClient();
+    await admin
+      .from('pending_purchases')
+      .update({
+        purchase_data: {
+          domains: domainDetails,
+          contact_info: params.contactInfo,
+        },
+      })
+      .eq('id', purchase.id);
+    
+    return {
+      success: true,
+      data: {
+        pendingPurchaseId: purchase.id,
+        transactionId: purchase.paddleTransactionId,
+        checkoutUrl: purchase.checkoutUrl,
+        totalAmount: totalRetail,
+        currency: 'USD',
+        domains: domainDetails,
+      },
+    };
+  } catch (error) {
+    console.error('[Domains] Cart checkout error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to create checkout' 
     };
   }
 }

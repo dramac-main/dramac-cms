@@ -48,15 +48,16 @@ export interface PendingPurchase {
 
 /**
  * Generate idempotency key for purchase
+ * IMPORTANT: Must be deterministic (no timestamp) for true idempotency
  */
 function generateIdempotencyKey(
   agencyId: string,
   purchaseType: string,
   identifier: string
 ): string {
-  const timestamp = Date.now();
-  // Format: {agencyId}:{purchaseType}:{identifier}:{timestamp}
-  return `${agencyId}:${purchaseType}:${identifier}:${timestamp}`;
+  // Format: {agencyId}:{purchaseType}:{identifier}
+  // For multi-domain purchases, identifier should be a sorted, joined list
+  return `${agencyId}:${purchaseType}:${identifier}`;
 }
 
 /**
@@ -193,12 +194,16 @@ export async function createEmailPurchase(
     `${params.domainName}-${params.months}mo`
   );
   
-  // Check if purchase already exists
-  const { data: existing } = await admin
+  // Check if purchase already exists (use maybeSingle to avoid errors if not found)
+  const { data: existing, error: existingError } = await admin
     .from('pending_purchases')
     .select('*')
     .eq('idempotency_key', idempotencyKey)
-    .single();
+    .maybeSingle();
+  
+  if (existingError) {
+    console.error('[Paddle] Error checking existing purchase:', existingError);
+  }
   
   if (existing) {
     // Return existing purchase if still valid

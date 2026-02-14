@@ -185,10 +185,30 @@ export class ResellerClubClient {
       // Cloudflare WAF also returns 403 with HTML body.
       if (!response.ok) {
         const statusText = response.statusText || 'Unknown';
-        console.error(`[ResellerClub] HTTP ${response.status} ${statusText} from ${endpoint}`);
+        
+        // Try to get response body for better error messages
+        let bodySnippet = '';
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType?.includes('application/json') || contentType?.includes('text/plain')) {
+            const text = await response.text();
+            bodySnippet = text.substring(0, 200);
+          }
+        } catch {
+          // Ignore body read errors
+        }
+        
+        console.error(`[ResellerClub] HTTP ${response.status} ${statusText} from ${endpoint}`, 
+          bodySnippet ? `Body: ${bodySnippet}` : '');
+        
+        // HTTP 429 (rate limit) and 5xx (server errors) are retryable
+        const isRetryableStatus = response.status === 429 || response.status >= 500;
+        
         throw new ResellerClubError(
-          `API returned HTTP ${response.status} ${statusText}`,
-          response.status === 403 ? 'AUTH_ERROR' : 'NETWORK_ERROR'
+          `API returned HTTP ${response.status} ${statusText}${bodySnippet ? ': ' + bodySnippet : ''}`,
+          response.status === 403 ? 'AUTH_ERROR' : isRetryableStatus ? 'RETRYABLE_ERROR' : 'NETWORK_ERROR',
+          response.status,
+          bodySnippet ? { body: bodySnippet } : undefined
         );
       }
       
@@ -250,14 +270,23 @@ export class ResellerClubClient {
         throw new RequestTimeoutError(endpoint);
       }
       
-      // Don't retry ResellerClub business logic errors
+      // Retry logic: retry on network errors and retryable status codes (429, 5xx)
       if (error instanceof ResellerClubError) {
+        // Only retry if it's explicitly marked as retryable
+        if (error.code === 'RETRYABLE_ERROR' && retryCount < RESELLERCLUB_CONFIG.maxRetries) {
+          const backoffDelay = RESELLERCLUB_CONFIG.retryDelay * Math.pow(2, retryCount);
+          console.log(`[ResellerClub] Retrying ${endpoint} after ${backoffDelay}ms (attempt ${retryCount + 1}/${RESELLERCLUB_CONFIG.maxRetries})`);
+          await this.delay(backoffDelay);
+          return this.executeRequest<T>(endpoint, options, retryCount + 1);
+        }
+        // Don't retry business logic errors (AUTH_ERROR, etc.)
         throw error;
       }
       
-      // Retry on network errors
+      // Retry on network errors (fetch failures, etc.)
       if (retryCount < RESELLERCLUB_CONFIG.maxRetries && this.isRetryable(error)) {
         const backoffDelay = RESELLERCLUB_CONFIG.retryDelay * Math.pow(2, retryCount);
+        console.log(`[ResellerClub] Retrying ${endpoint} after ${backoffDelay}ms due to network error (attempt ${retryCount + 1}/${RESELLERCLUB_CONFIG.maxRetries})`);
         await this.delay(backoffDelay);
         return this.executeRequest<T>(endpoint, options, retryCount + 1);
       }
@@ -333,13 +362,25 @@ export class ResellerClubClient {
   }
   
   /**
-   * Check API connectivity
+   * Check API connectivity using a lightweight availability check
+   * (more reliable than billing/reseller-balance.json)
    */
   async healthCheck(): Promise<boolean> {
     try {
-      await this.getBalance();
+      // Use domain availability check - it's lightweight, directly tied to search,
+      // and uses the optimized domaincheck endpoint
+      const { getDomainCheckUrl } = await import('./config');
+      await this.get<Record<string, unknown>>(
+        'domains/available.json',
+        { 
+          'domain-name': ['test'],
+          'tlds': ['com']
+        },
+        getDomainCheckUrl()
+      );
       return true;
-    } catch {
+    } catch (error) {
+      console.error('[ResellerClub] Health check failed:', error);
       return false;
     }
   }

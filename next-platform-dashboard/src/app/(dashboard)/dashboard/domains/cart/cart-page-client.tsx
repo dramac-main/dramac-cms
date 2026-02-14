@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { DomainCheckout, type ContactFormData } from "@/components/domains";
 import type { DomainCartItem } from "@/types/domain";
-import { registerDomain } from "@/lib/actions/domains";
+import { createDomainCartCheckout } from "@/lib/actions/domains";
+import { openPaddleCheckout } from "@/lib/paddle/paddle-client";
 import { toast } from "sonner";
 
 export function CartPageClient() {
@@ -44,54 +45,49 @@ export function CartPageClient() {
   };
 
   const handleComplete = async (contactInfo: ContactFormData) => {
-    // Register each domain
-    const results = await Promise.all(
-      cart.map(async (item) => {
-        try {
-          const result = await registerDomain({
-            domainName: item.domainName,
-            years: item.years,
-            contactInfo: {
-              name: contactInfo.name,
-              email: contactInfo.email,
-              company: contactInfo.company,
-              address: contactInfo.address,
-              city: contactInfo.city,
-              state: contactInfo.state,
-              country: contactInfo.country,
-              zipcode: contactInfo.zipcode,
-              phone: contactInfo.phone,
-            },
-            privacy: item.privacy,
-            autoRenew: true,
-          });
-          return { domain: item.domainName, success: result.success, error: result.error };
-        } catch (error) {
-          return { domain: item.domainName, success: false, error: 'Registration failed' };
-        }
-      })
-    );
-
-    const successful = results.filter(r => r.success);
-    const failed = results.filter(r => !r.success);
-
-    if (successful.length > 0) {
-      toast.success(`Successfully registered ${successful.length} domain(s)`);
-    }
-    
-    if (failed.length > 0) {
-      failed.forEach(f => {
-        toast.error(`Failed to register ${f.domain}: ${f.error}`);
+    try {
+      // Create checkout for all domains in cart
+      const result = await createDomainCartCheckout({
+        domains: cart.map(item => ({
+          domainName: item.domainName,
+          years: item.years,
+          privacy: item.privacy,
+          autoRenew: true,
+        })),
+        contactInfo: {
+          name: contactInfo.name,
+          email: contactInfo.email,
+          company: contactInfo.company,
+          address: contactInfo.address,
+          city: contactInfo.city,
+          state: contactInfo.state,
+          country: contactInfo.country,
+          zipcode: contactInfo.zipcode,
+          phone: contactInfo.phone,
+        },
       });
+
+      if (!result.success || !result.data) {
+        toast.error(result.error || 'Failed to create checkout');
+        return;
+      }
+
+      // Clear cart before opening checkout
+      sessionStorage.removeItem('domainCart');
+      
+      // Open Paddle checkout overlay with transaction ID and success URL
+      const successUrl = `${window.location.origin}/dashboard/domains/success?purchase_id=${result.data.pendingPurchaseId}`;
+      
+      openPaddleCheckout({
+        transactionId: result.data.transactionId,
+        successUrl,
+      });
+      
+      toast.success('Opening checkout...');
+    } catch (error) {
+      console.error('[Cart] Checkout error:', error);
+      toast.error('Failed to create checkout. Please try again.');
     }
-
-    // Clear cart
-    sessionStorage.removeItem('domainCart');
-
-    // Redirect to domains list
-    setTimeout(() => {
-      router.push('/dashboard/domains');
-    }, 2000);
   };
 
   if (isLoading) {

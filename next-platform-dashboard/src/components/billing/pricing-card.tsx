@@ -95,7 +95,7 @@ export function PricingCard({
       return;
     }
     
-    console.log('[PricingCard] Opening checkout:', { 
+    console.log('[PricingCard] Creating server-backed checkout:', { 
       plan: plan.id, 
       priceId, 
       billingCycle, 
@@ -105,15 +105,43 @@ export function PricingCard({
     
     setLoading(true);
     try {
-      await openPaddleCheckout({
-        priceId,
-        agencyId,
-        email,
+      // Call server-backed checkout API for validation and customer checks
+      const response = await fetch('/api/billing/paddle/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planType: plan.id,
+          billingCycle,
+          agencyId,
+        }),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout');
+      }
+      
+      const checkoutData = await response.json();
+      
+      if (!checkoutData.success || !checkoutData.data?.priceId) {
+        throw new Error('Invalid checkout data received');
+      }
+      
+      console.log('[PricingCard] Server checkout validated, opening Paddle overlay');
+      
+      // Open Paddle checkout with validated data
+      await openPaddleCheckout({
+        priceId: checkoutData.data.priceId,
+        agencyId: checkoutData.data.agencyId,
+        email: checkoutData.data.customerEmail || email,
+      });
+      
       onSelect?.(plan.id);
     } catch (error) {
       console.error('[PricingCard] Checkout error:', error);
-      alert('Failed to open checkout. Please try again.');
+      alert(error instanceof Error ? error.message : 'Failed to open checkout. Please try again.');
     } finally {
       setLoading(false);
     }
