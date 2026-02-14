@@ -273,12 +273,12 @@ export async function getAgentPerformance(
         avgResponseTime = Math.round(total / responseTimes.length / 1000)
       }
 
-      // Avg rating
+      // Avg rating (column is "rating" not "satisfaction_rating")
       const { data: ratings } = await db
         .from('mod_chat_conversations')
-        .select('satisfaction_rating')
+        .select('rating')
         .eq('assigned_agent_id', agent.id)
-        .not('satisfaction_rating', 'is', null)
+        .not('rating', 'is', null)
         .gte('updated_at', `${dateFrom}T00:00:00`)
 
       let avgRating = 0
@@ -286,7 +286,7 @@ export async function getAgentPerformance(
       if (ratings && ratings.length > 0) {
         totalRatings = ratings.length
         avgRating =
-          ratings.reduce((s: number, r: Record<string, unknown>) => s + (r.satisfaction_rating as number), 0) /
+          ratings.reduce((s: number, r: Record<string, unknown>) => s + (r.rating as number), 0) /
           ratings.length
       }
 
@@ -374,18 +374,19 @@ export async function getSatisfactionDistribution(
     const supabase = await createClient()
     const db = supabase as any
 
+    // Column is "rating" not "satisfaction_rating" per schema
     const { data } = await db
       .from('mod_chat_conversations')
-      .select('satisfaction_rating')
+      .select('rating')
       .eq('site_id', siteId)
-      .not('satisfaction_rating', 'is', null)
+      .not('rating', 'is', null)
       .gte('updated_at', `${dateFrom}T00:00:00`)
       .lte('updated_at', `${dateTo}T23:59:59`)
 
     const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
 
     for (const row of data || []) {
-      const rating = Math.round(row.satisfaction_rating as number)
+      const rating = Math.round(row.rating as number)
       if (rating >= 1 && rating <= 5) {
         distribution[rating]++
       }

@@ -83,8 +83,12 @@ export function PaddleSubscriptionCard({ agencyId, className }: PaddleSubscripti
         const subscriptionData = response.data || response.subscription || null;
         setSubscription(subscriptionData);
         setError(null);
+      } else if (res.status === 503) {
+        // Paddle not configured — show a friendly message instead of an error
+        setSubscription(null);
+        setError(null);
       } else {
-        const errorData = await res.json();
+        const errorData = await res.json().catch(() => ({ error: 'Failed to load subscription' }));
         setError(errorData.error || 'Failed to load subscription');
       }
     } catch (err) {

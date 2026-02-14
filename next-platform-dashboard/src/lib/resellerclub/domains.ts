@@ -149,16 +149,17 @@ export class DomainService {
   /**
    * Get customer pricing for TLDs (what end-customers pay)
    * This reflects ResellerClub markups and should be used as retail price
+   *
+   * API docs: GET /api/products/customer-price.json
+   * Params: auth-userid, api-key, customer-id (optional)
+   * NOTE: Does NOT accept product-key — returns ALL products at once.
    */
   async getCustomerPricing(customerId: string, tlds?: string[]): Promise<Record<string, DomainPrice>> {
     const tldsToGet = tlds || SUPPORTED_TLDS;
     
     const response = await this.client.get<Record<string, Record<string, unknown>>>(
       'products/customer-price.json',
-      { 
-        'product-key': 'domorder',
-        'customer-id': customerId
-      }
+      { 'customer-id': customerId }
     );
     
     return this.parsePricingResponse(response, tldsToGet);
@@ -166,13 +167,17 @@ export class DomainService {
   
   /**
    * Get reseller cost pricing (wholesale/what you pay ResellerClub)
+   *
+   * API docs: GET /api/products/reseller-cost-price.json
+   * Params: auth-userid, api-key, reseller-id (optional)
+   * NOTE: Does NOT accept product-key — returns ALL products at once.
    */
   async getResellerCostPricing(tlds?: string[]): Promise<Record<string, DomainPrice>> {
     const tldsToGet = tlds || SUPPORTED_TLDS;
     
     const response = await this.client.get<Record<string, Record<string, unknown>>>(
       'products/reseller-cost-price.json',
-      { 'product-key': 'domorder' }
+      {}
     );
     
     return this.parsePricingResponse(response, tldsToGet);
@@ -181,28 +186,39 @@ export class DomainService {
   /**
    * Get reseller pricing for TLDs (slab-based pricing you configure)
    * @deprecated Use getCustomerPricing for retail or getResellerCostPricing for wholesale
+   *
+   * API docs: GET /api/products/reseller-price.json
+   * Params: auth-userid, api-key, reseller-id (optional)
+   * NOTE: Does NOT accept product-key — returns ALL products at once.
    */
   async getResellerPricing(tlds?: string[]): Promise<Record<string, DomainPrice>> {
     const tldsToGet = tlds || SUPPORTED_TLDS;
     
     const response = await this.client.get<Record<string, Record<string, unknown>>>(
       'products/reseller-price.json',
-      { 'product-key': 'domorder' }
+      {}
     );
     
     return this.parsePricingResponse(response, tldsToGet);
   }
   
   /**
-   * Get pricing for TLDs
-   * @deprecated Use getCustomerPricing, getResellerCostPricing, or getResellerPricing explicitly
+   * Get pricing for TLDs — uses reseller cost pricing (no customer-id needed)
    */
   async getPricing(tlds?: string[]): Promise<Record<string, DomainPrice>> {
-    return this.getResellerPricing(tlds);
+    return this.getResellerCostPricing(tlds);
   }
   
   /**
-   * Parse ResellerClub pricing API response into our format
+   * Parse ResellerClub pricing API response into our format.
+   *
+   * ResellerClub returns domain TLD keys in different formats depending on
+   * the endpoint and the TLD:
+   *   - customer-price / cost-price: flat keys like "dotcom", "dotnet", "dotcoza"
+   *   - reseller-price (slab): "domcno" with nested slab structure
+   *   - Some responses use bare TLD keys: "com", "net", "co.za"
+   *
+   * We try multiple key variants to find the data for each TLD.
    */
   private parsePricingResponse(
     response: Record<string, Record<string, unknown>>, 
@@ -210,31 +226,72 @@ export class DomainService {
   ): Record<string, DomainPrice> {
     const prices: Record<string, DomainPrice> = {};
     
+    // Build a case-insensitive lookup of response keys
+    const responseLower: Record<string, Record<string, unknown>> = {};
+    for (const [key, val] of Object.entries(response)) {
+      if (val && typeof val === 'object' && !Array.isArray(val)) {
+        responseLower[key.toLowerCase()] = val as Record<string, unknown>;
+      }
+    }
+    
     for (const tld of tlds) {
-      // Replace only the leading dot; compound TLDs like ".co.za" → "co.za"
-      const tldKey = tld.startsWith('.') ? tld.slice(1) : tld;
-      const tldData = response[tldKey];
+      // ".com" → "com", ".co.za" → "co.za"
+      const bare = tld.startsWith('.') ? tld.slice(1) : tld;
+      // "dotcom", "dotcoza" (dots replaced)
+      const dotPrefixed = 'dot' + bare.replace(/\./g, '');
+      // "domcno" variant (used in some slab responses for .com → "domcno")
+      const domcno = 'domc' + bare.replace(/\./g, '');
+      
+      // Try multiple key variants
+      const tldData =
+        responseLower[bare] ??
+        responseLower[dotPrefixed] ??
+        responseLower[bare.replace(/\./g, '')] ??
+        responseLower[domcno] ??
+        undefined;
       
       if (tldData) {
+        // For slab-based responses, the pricing may be nested under a slab index
+        // e.g. { "0": { "pricing": { "addnewdomain": { "1": "9.99" } } } }
+        const pricingData = this.unwrapSlabPricing(tldData);
+        
         prices[tld] = {
           register: {
-            1: this.extractPrice(tldData, 'addnewdomain', 1),
-            2: this.extractPrice(tldData, 'addnewdomain', 2),
-            5: this.extractPrice(tldData, 'addnewdomain', 5),
+            1: this.extractPrice(pricingData, 'addnewdomain', 1),
+            2: this.extractPrice(pricingData, 'addnewdomain', 2),
+            5: this.extractPrice(pricingData, 'addnewdomain', 5),
           },
           renew: {
-            1: this.extractPrice(tldData, 'renewdomain', 1),
-            2: this.extractPrice(tldData, 'renewdomain', 2),
-            5: this.extractPrice(tldData, 'renewdomain', 5),
+            1: this.extractPrice(pricingData, 'renewdomain', 1),
+            2: this.extractPrice(pricingData, 'renewdomain', 2),
+            5: this.extractPrice(pricingData, 'renewdomain', 5),
           },
-          transfer: this.extractPrice(tldData, 'transferdomain', 1),
-          restore: this.extractPrice(tldData, 'restoredomain', 1),
+          transfer: this.extractPrice(pricingData, 'transferdomain', 1),
+          restore: this.extractPrice(pricingData, 'restoredomain', 1),
           currency: DEFAULT_CURRENCY,
         };
       }
     }
     
     return prices;
+  }
+  
+  /**
+   * Unwrap slab-based pricing structure.
+   * Reseller-price returns: { "0": { "pricing": { "addnewdomain": { "1": "9.99" } }, "category": {...} } }
+   * Customer/cost-price returns flat: { "addnewdomain1": "9.99" } or { "addnewdomain": { "1": "9.99" } }
+   * This method detects the slab wrapper and returns the inner pricing object.
+   */
+  private unwrapSlabPricing(data: Record<string, unknown>): Record<string, unknown> {
+    // Check if this looks like a slab response (key "0" with nested "pricing")
+    const firstSlab = data['0'];
+    if (firstSlab && typeof firstSlab === 'object' && !Array.isArray(firstSlab)) {
+      const slabObj = firstSlab as Record<string, unknown>;
+      if (slabObj['pricing'] && typeof slabObj['pricing'] === 'object') {
+        return slabObj['pricing'] as Record<string, unknown>;
+      }
+    }
+    return data;
   }
   
   /**
@@ -262,11 +319,29 @@ export class DomainService {
     return prices[tld] || null;
   }
   
+  /**
+   * Extract a price from a pricing data object.
+   * Handles multiple ResellerClub response formats:
+   *   - Flat: { "addnewdomain1": "9.99" }
+   *   - Nested: { "addnewdomain": { "1": "9.99" } }
+   */
   private extractPrice(data: Record<string, unknown>, action: string, years: number): number {
-    const key = `${action}${years}`;
-    const value = data[key];
-    if (typeof value === 'number') return value;
-    if (typeof value === 'string') return parseFloat(value) || 0;
+    // Try flat key first: "addnewdomain1"
+    const flatKey = `${action}${years}`;
+    const flatValue = data[flatKey];
+    if (flatValue !== undefined && flatValue !== null) {
+      if (typeof flatValue === 'number') return flatValue;
+      if (typeof flatValue === 'string') return parseFloat(flatValue) || 0;
+    }
+    
+    // Try nested key: data["addnewdomain"]["1"]
+    const nestedObj = data[action];
+    if (nestedObj && typeof nestedObj === 'object' && !Array.isArray(nestedObj)) {
+      const nested = (nestedObj as Record<string, unknown>)[String(years)];
+      if (typeof nested === 'number') return nested;
+      if (typeof nested === 'string') return parseFloat(nested) || 0;
+    }
+    
     return 0;
   }
   

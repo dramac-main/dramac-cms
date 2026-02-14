@@ -135,35 +135,78 @@ export async function GET(request: NextRequest) {
         avgResponseTime = Math.round(totalMs / responseTimes.length / 1000) // seconds
       }
 
-      // Avg satisfaction
+      // Avg satisfaction — column is "rating" not "satisfaction_rating"
       const { data: ratings } = await supabase
         .from('mod_chat_conversations')
-        .select('satisfaction_rating')
+        .select('rating')
         .eq('site_id', siteId)
-        .not('satisfaction_rating', 'is', null)
+        .not('rating', 'is', null)
         .gte('updated_at', `${today}T00:00:00`)
 
-      let avgSatisfaction = 0
+      let avgRating = 0
+      const totalRatings = ratings?.length || 0
       if (ratings && ratings.length > 0) {
-        avgSatisfaction =
+        avgRating =
           ratings.reduce(
             (sum: number, r: Record<string, unknown>) =>
-              sum + (r.satisfaction_rating as number),
+              sum + (r.rating as number),
             0
           ) / ratings.length
       }
 
-      // Upsert analytics
+      // Count actual messages instead of estimating
+      const { count: totalMessages } = await supabase
+        .from('mod_chat_messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('site_id', siteId)
+        .gte('created_at', `${today}T00:00:00`)
+        .lt('created_at', `${today}T23:59:59`)
+
+      // Count missed conversations
+      const { count: missed } = await supabase
+        .from('mod_chat_conversations')
+        .select('id', { count: 'exact', head: true })
+        .eq('site_id', siteId)
+        .eq('status', 'missed')
+        .gte('created_at', `${today}T00:00:00`)
+        .lt('created_at', `${today}T23:59:59`)
+
+      // Avg resolution time
+      const { data: resolvedConvs } = await supabase
+        .from('mod_chat_conversations')
+        .select('created_at, ended_at')
+        .eq('site_id', siteId)
+        .eq('status', 'resolved')
+        .not('ended_at', 'is', null)
+        .gte('updated_at', `${today}T00:00:00`)
+        .lt('updated_at', `${today}T23:59:59`)
+
+      let avgResolutionSeconds = 0
+      if (resolvedConvs && resolvedConvs.length > 0) {
+        const totalMs = resolvedConvs.reduce(
+          (sum: number, c: Record<string, unknown>) => {
+            const created = new Date(c.created_at as string).getTime()
+            const ended = new Date(c.ended_at as string).getTime()
+            return sum + (ended - created)
+          },
+          0
+        )
+        avgResolutionSeconds = Math.round(totalMs / resolvedConvs.length / 1000)
+      }
+
+      // Upsert analytics — use correct column names per schema
       await supabase.from('mod_chat_analytics').upsert(
         {
           site_id: siteId,
           date: today,
           total_conversations: totalConvs || 0,
+          total_messages: totalMessages || 0,
           resolved_conversations: resolved || 0,
-          avg_response_time: avgResponseTime,
-          avg_satisfaction: Math.round(avgSatisfaction * 100) / 100,
-          total_messages:
-            (totalConvs || 0) * 5, // rough estimate, can be refined
+          missed_conversations: missed || 0,
+          avg_first_response_seconds: avgResponseTime,
+          avg_resolution_seconds: avgResolutionSeconds,
+          avg_rating: Math.round(avgRating * 100) / 100,
+          total_ratings: totalRatings,
         },
         { onConflict: 'site_id,date' }
       )

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { 
   DashboardStats,
   QuickActions,
@@ -24,46 +25,77 @@ import { Globe, Users, Package, Activity, BarChart3, TrendingUp, PieChart, FileT
 import type { DashboardData } from "@/lib/actions/dashboard";
 import type { TimeRange, ChartDataPoint } from "@/types/dashboard-widgets";
 
+/** Format a date string for chart labels based on the time range */
+function formatDateLabel(dateStr: string, range: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  if (range === '24h') {
+    return d.toLocaleDateString('en-US', { hour: 'numeric' });
+  }
+  if (range === '7d') {
+    return d.toLocaleDateString('en-US', { weekday: 'short' });
+  }
+  if (range === '90d') {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+  // 30d default
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 interface DashboardClientProps {
   data: DashboardData;
 }
 
 export function DashboardClient({ data }: DashboardClientProps) {
-  const [timeRange, setTimeRange] = React.useState<TimeRange>("30d");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [timeRange, setTimeRange] = React.useState<TimeRange>(
+    (data.timeRange as TimeRange) || (searchParams.get("range") as TimeRange) || "30d"
+  );
 
-  // Transform real data into metrics for the grid
+  // When user changes the time range, update the URL to trigger server-side re-fetch
+  const handleTimeRangeChange = React.useCallback((newRange: TimeRange) => {
+    setTimeRange(newRange);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("range", newRange);
+    router.push(`/dashboard?${params.toString()}`);
+  }, [router, searchParams]);
+
+  // Range label for display
+  const rangeLabel = timeRange === '24h' ? 'today' : `last ${timeRange.replace('d', ' days')}`;
+
+  // Transform real data into metrics for the grid — show range-filtered counts
   const realMetrics = [
     {
       id: "clients",
-      title: "Total Clients",
-      value: data.stats.totalClients.toLocaleString(),
+      title: "New Clients",
+      value: data.rangeMetrics.newClients.toLocaleString(),
       icon: "users" as const,
       iconColor: "bg-blue-500/10 text-blue-500",
-      subtitle: "Active client accounts",
+      subtitle: `${data.stats.totalClients} total`,
     },
     {
       id: "sites",
-      title: "Total Sites",
-      value: data.stats.totalSites.toLocaleString(),
+      title: "New Sites",
+      value: data.rangeMetrics.newSites.toLocaleString(),
       icon: "chart" as const,
       iconColor: "bg-green-500/10 text-green-500",
-      subtitle: `${data.stats.publishedSites} published`,
+      subtitle: `${data.stats.totalSites} total (${data.stats.publishedSites} published)`,
     },
     {
       id: "pages",
-      title: "Total Pages",
-      value: data.stats.totalPages.toLocaleString(),
+      title: "New Pages",
+      value: data.rangeMetrics.newPages.toLocaleString(),
       icon: "activity" as const,
       iconColor: "bg-purple-500/10 text-purple-500",
-      subtitle: "Across all sites",
+      subtitle: `${data.stats.totalPages} total`,
     },
     {
-      id: "modules",
-      title: "Active Modules",
-      value: data.enhancedMetrics.moduleInstallations.toLocaleString(),
+      id: "forms",
+      title: "Form Submissions",
+      value: data.rangeMetrics.formSubmissions.toLocaleString(),
       icon: "performance" as const,
       iconColor: "bg-orange-500/10 text-orange-500",
-      subtitle: "Installed & enabled",
+      subtitle: `In ${rangeLabel}`,
     },
   ];
 
@@ -88,15 +120,14 @@ export function DashboardClient({ data }: DashboardClientProps) {
     { label: "Modules", value: data.enhancedMetrics.moduleInstallations || 0 },
   ].filter(item => item.value > 0);
 
-  // Note: Real trend data would require time-series queries grouped by date
-  // For now, show the current totals as a flat line rather than fabricated random data
-  const siteTrendData: ChartDataPoint[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => ({
-    label: day,
-    value: data.stats.totalSites,
+  // Real time-series data from server, bucketed by date
+  const siteTrendData: ChartDataPoint[] = (data.timeSeries || []).map(pt => ({
+    label: formatDateLabel(pt.date, timeRange),
+    value: pt.sites,
   }));
-  const pageTrendData: ChartDataPoint[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => ({
-    label: day,
-    value: data.stats.totalPages,
+  const pageTrendData: ChartDataPoint[] = (data.timeSeries || []).map(pt => ({
+    label: formatDateLabel(pt.date, timeRange),
+    value: pt.pages,
   }));
 
   return (
@@ -116,7 +147,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
         collapsible
         defaultCollapsed={false}
         actions={
-          <TimeRangeButtons value={timeRange} onChange={setTimeRange} />
+          <TimeRangeButtons value={timeRange} onChange={handleTimeRangeChange} />
         }
       >
         <MetricsGrid metrics={realMetrics} columns={4} gap="md" />
@@ -186,8 +217,8 @@ export function DashboardClient({ data }: DashboardClientProps) {
                 <TrendingUp className="h-4 w-4 text-violet-600 dark:text-violet-400" />
               </div>
               <div>
-                <CardTitle className="text-base">Sites Growth</CardTitle>
-                <p className="text-xs text-muted-foreground">Weekly trend</p>
+                <CardTitle className="text-base">Sites Created</CardTitle>
+                <p className="text-xs text-muted-foreground">New sites {rangeLabel}</p>
               </div>
             </div>
           </CardHeader>
@@ -214,7 +245,7 @@ export function DashboardClient({ data }: DashboardClientProps) {
               </div>
               <div>
                 <CardTitle className="text-base">Pages Created</CardTitle>
-                <p className="text-xs text-muted-foreground">Weekly trend</p>
+                <p className="text-xs text-muted-foreground">New pages {rangeLabel}</p>
               </div>
             </div>
           </CardHeader>

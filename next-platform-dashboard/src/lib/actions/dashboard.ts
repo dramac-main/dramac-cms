@@ -55,10 +55,29 @@ export interface ActivityItem {
   timestamp: string;
 }
 
+// Time-range filtered metrics
+export interface RangeMetrics {
+  newClients: number;
+  newSites: number;
+  newPages: number;
+  formSubmissions: number;
+}
+
+// Time-series data for charts
+export interface TimeSeriesPoint {
+  date: string;
+  sites: number;
+  pages: number;
+  clients: number;
+}
+
 export interface DashboardData {
   user: { email: string; name?: string } | null;
   stats: DashboardStats;
   enhancedMetrics: EnhancedMetrics;
+  rangeMetrics: RangeMetrics;
+  timeSeries: TimeSeriesPoint[];
+  timeRange: string;
   recentSites: RecentSite[];
   recentClients: RecentClient[];
   recentActivity: ActivityItem[];
@@ -67,7 +86,62 @@ export interface DashboardData {
   subscriptionPlan: string | null;
 }
 
-export async function getDashboardData(): Promise<DashboardData> {
+/**
+ * Convert a time range string to a date cutoff
+ */
+function getDateCutoff(range: string): Date {
+  const now = new Date();
+  switch (range) {
+    case '24h': return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    case '7d': return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    case '30d': return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    case '90d': return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    default: return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  }
+}
+
+/**
+ * Generate date labels for time series based on range
+ */
+function generateDateLabels(range: string): string[] {
+  const now = new Date();
+  const labels: string[] = [];
+  
+  let days: number;
+  switch (range) {
+    case '24h': days = 1; break;
+    case '7d': days = 7; break;
+    case '30d': days = 30; break;
+    case '90d': days = 90; break;
+    default: days = 30;
+  }
+  
+  // For 90d, group by week; for 30d, daily; for 7d, daily; for 24h, hourly
+  if (days <= 7) {
+    for (let i = days; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      labels.push(d.toISOString().split('T')[0]);
+    }
+  } else if (days <= 30) {
+    for (let i = days; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      labels.push(d.toISOString().split('T')[0]);
+    }
+  } else {
+    // Weekly buckets for 90d
+    for (let i = Math.ceil(days / 7); i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i * 7);
+      labels.push(d.toISOString().split('T')[0]);
+    }
+  }
+  
+  return labels;
+}
+
+export async function getDashboardData(timeRange: string = '30d'): Promise<DashboardData> {
   const supabase = await createClient();
 
   const emptyResponse: DashboardData = {
@@ -81,6 +155,9 @@ export async function getDashboardData(): Promise<DashboardData> {
       teamMembers: 0, 
       activeWorkflows: 0 
     },
+    rangeMetrics: { newClients: 0, newSites: 0, newPages: 0, formSubmissions: 0 },
+    timeSeries: [],
+    timeRange,
     recentSites: [],
     recentClients: [],
     recentActivity: [],
@@ -320,6 +397,89 @@ export async function getDashboardData(): Promise<DashboardData> {
   // Sort activities by timestamp
   activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
+  // =========================================================================
+  // Time-range filtered metrics
+  // =========================================================================
+  const cutoff = getDateCutoff(timeRange).toISOString();
+  
+  const [rangeClientsResult, rangeSitesResult, rangePagesResult, rangeFormsResult] = await Promise.all([
+    supabase
+      .from("clients")
+      .select("id", { count: "exact", head: true })
+      .eq("agency_id", agencyId)
+      .gte("created_at", cutoff),
+    supabase
+      .from("sites")
+      .select("id", { count: "exact", head: true })
+      .eq("agency_id", agencyId)
+      .gte("created_at", cutoff),
+    supabase
+      .from("pages")
+      .select("id, site:sites!inner(agency_id)", { count: "exact", head: true })
+      .eq("site.agency_id", agencyId)
+      .gte("created_at", cutoff),
+    siteIdList.length > 0
+      ? supabase
+          .from("form_submissions")
+          .select("id", { count: "exact", head: true })
+          .in("site_id", siteIdList)
+          .gte("created_at", cutoff)
+      : Promise.resolve({ count: 0 }),
+  ]);
+
+  const rangeMetrics: RangeMetrics = {
+    newClients: rangeClientsResult.count || 0,
+    newSites: rangeSitesResult.count || 0,
+    newPages: rangePagesResult.count || 0,
+    formSubmissions: rangeFormsResult.count || 0,
+  };
+
+  // =========================================================================
+  // Time-series data for charts
+  // =========================================================================
+  const dateLabels = generateDateLabels(timeRange);
+  
+  // Fetch created_at dates for sites, pages, clients within range
+  const [tsSites, tsPages, tsClients] = await Promise.all([
+    supabase
+      .from("sites")
+      .select("created_at")
+      .eq("agency_id", agencyId)
+      .gte("created_at", cutoff),
+    supabase
+      .from("pages")
+      .select("created_at, site:sites!inner(agency_id)")
+      .eq("site.agency_id", agencyId)
+      .gte("created_at", cutoff),
+    supabase
+      .from("clients")
+      .select("created_at")
+      .eq("agency_id", agencyId)
+      .gte("created_at", cutoff),
+  ]);
+
+  // Build time-series by bucketing into date labels
+  const timeSeries: TimeSeriesPoint[] = dateLabels.map((date, idx) => {
+    const nextDate = idx < dateLabels.length - 1 ? dateLabels[idx + 1] : null;
+    const dateStart = `${date}T00:00:00`;
+    const dateEnd = nextDate ? `${nextDate}T00:00:00` : new Date().toISOString();
+    
+    const countInRange = (items: { created_at: string | null }[] | null) => {
+      if (!items) return 0;
+      return items.filter(item => {
+        if (!item.created_at) return false;
+        return item.created_at >= dateStart && item.created_at < dateEnd;
+      }).length;
+    };
+
+    return {
+      date,
+      sites: countInRange(tsSites.data),
+      pages: countInRange(tsPages.data),
+      clients: countInRange(tsClients.data),
+    };
+  });
+
   return {
     user: { email: user.email || "", name: profile?.full_name || undefined },
     stats: {
@@ -336,6 +496,9 @@ export async function getDashboardData(): Promise<DashboardData> {
       teamMembers: teamMembersResult.count || 0,
       activeWorkflows,
     },
+    rangeMetrics,
+    timeSeries,
+    timeRange,
     recentSites,
     recentClients,
     recentActivity: activities.slice(0, 10),

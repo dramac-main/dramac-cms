@@ -7,8 +7,14 @@ export const metadata: Metadata = {
   title: `Dashboard | ${PLATFORM.name}`,
 };
 
-export default async function DashboardPage() {
-  const data = await getDashboardData();
+interface DashboardPageProps {
+  searchParams: Promise<{ range?: string }>;
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const params = await searchParams;
+  const range = params.range || "30d";
+  const data = await getDashboardData(range);
 
   return <DashboardClient data={data} />;
 }

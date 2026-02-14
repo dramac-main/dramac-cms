@@ -149,10 +149,10 @@ export async function searchDomains(
       try {
         const availability = await domainService.suggestDomains(cleanKeyword, popularTlds);
         
-        // Get real pricing from ResellerClub
+        // Get real pricing from ResellerClub (reseller cost pricing — no customer-id needed)
         let apiPrices: Record<string, { register: Record<number, number>; renew: Record<number, number>; transfer: number }> = {};
         try {
-          const rcPrices = await domainService.getPricing(popularTlds);
+          const rcPrices = await domainService.getResellerCostPricing(popularTlds);
           apiPrices = Object.fromEntries(
             Object.entries(rcPrices).map(([tld, price]) => [tld, {
               register: Object.fromEntries(Object.entries(price.register).filter(([, v]) => v != null)) as Record<number, number>,
@@ -160,8 +160,13 @@ export async function searchDomains(
               transfer: price.transfer,
             }])
           );
-        } catch {
-          console.warn('[Domains] Could not fetch RC pricing, using defaults');
+          if (Object.keys(apiPrices).length > 0) {
+            console.log(`[Domains] Fetched live pricing for ${Object.keys(apiPrices).length} TLDs`);
+          } else {
+            console.warn('[Domains] RC pricing returned empty — API response may use unexpected TLD keys');
+          }
+        } catch (pricingError) {
+          console.warn('[Domains] Could not fetch RC pricing, using defaults:', pricingError instanceof Error ? pricingError.message : String(pricingError));
         }
 
         const results: DomainSearchResult[] = availability.map(item => {
