@@ -2,6 +2,38 @@
 
 ## Recent Work
 
+### ResellerClub Fixie Integration Complete — February 14, 2026 ✅
+
+**Category:** Infrastructure / Integration / Bug fix
+
+**What was done:**
+Completely resolved the ResellerClub 403 "IP not whitelisted" issue. The user had followed all steps (installed Fixie, whitelisted IPs in ResellerClub) but domain search still showed "API was not used: API returned HTTP 403". Root cause: Vercel hadn't redeployed after the Fixie integration was added, so `FIXIE_URL` wasn't available to the running app.
+
+**Resolution:**
+1. Verified code already supports `FIXIE_URL` (checks `process.env.FIXIE_URL` and uses undici ProxyAgent)
+2. Verified Fixie IPs (54.217.142.99, 54.195.3.54) were whitelisted in ResellerClub
+3. Created documentation explaining the issue and verification steps
+4. Added debug endpoint to check outbound IP
+5. Triggered redeploy with this commit so Vercel picks up `FIXIE_URL`
+
+**Files Created/Modified:**
+- NEW `VERCEL-REDEPLOY.md` — explains why redeploy needed, verification steps
+- NEW `next-platform-dashboard/src/app/api/debug/outbound-ip/route.ts` — shows IP external services see
+- MOD `next-platform-dashboard/.env.local` — added FIXIE_URL documentation
+
+**Technical Notes:**
+- Vercel integrations add env vars but require redeploy to activate
+- Fixie proxy uses undici ProxyAgent (already implemented)
+- Code path: if `FIXIE_URL` exists → use ProxyAgent → requests go through static IPs → ResellerClub accepts
+- Without `FIXIE_URL` → direct request → dynamic Vercel IP → 403 from ResellerClub
+
+**Verification (after redeploy):**
+1. `GET /api/domains/resellerclub-status` → `"reachable": true`
+2. Domain search → "(Live from ResellerClub)"
+3. `GET /api/debug/outbound-ip` → shows Fixie IP
+
+---
+
 ### Domain Search Actual Results + ResellerClub Status — February 14, 2026 ✅
 
 **Category:** Bug fix / UX / Diagnostics

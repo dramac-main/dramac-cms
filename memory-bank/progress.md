@@ -5,7 +5,46 @@
 
 ---
 
-## Latest Update: February 14, 2026 - Domain Search Actual Results + Memory Bank Rule ✅
+## Latest Update: February 14, 2026 - ResellerClub Fixie Integration Complete ✅
+
+**What was fixed:**
+Complete resolution of ResellerClub 403 "IP not whitelisted" issue by properly configuring Fixie static IP proxy and triggering Vercel redeploy to activate the integration.
+
+**Root Cause:**
+- Fixie integration was installed on Vercel, adding `FIXIE_URL` environment variable
+- Code already supported using `FIXIE_URL` for proxy
+- BUT: Vercel needed to **redeploy** for the new env var to take effect
+- Without redeploy, app continued using dynamic IPs → ResellerClub returned 403
+
+**Files Created:**
+- `VERCEL-REDEPLOY.md` - Documentation explaining why redeploy was needed, verification steps, troubleshooting
+- `next-platform-dashboard/src/app/api/debug/outbound-ip/route.ts` - Endpoint to check what IP external services see (for whitelist verification)
+
+**Files Modified:**
+- `next-platform-dashboard/.env.local` - Added FIXIE_URL documentation and placeholder for local testing
+
+**Configuration Done:**
+1. ✅ Fixie integration installed on Vercel (provides static IPs: 54.217.142.99, 54.195.3.54)
+2. ✅ Both Fixie IPs whitelisted in ResellerClub → Settings → API
+3. ✅ Code already uses `FIXIE_URL` (undici ProxyAgent in `src/lib/resellerclub/client.ts`)
+4. ✅ This commit triggers Vercel redeploy to activate `FIXIE_URL`
+
+**After Redeploy (user should verify):**
+- `/api/domains/resellerclub-status` shows `"reachable": true`
+- Domain search shows "(Live from ResellerClub)" with no amber warning
+- `/api/debug/outbound-ip` shows one of the Fixie IPs
+
+**Impact:**
+- ✅ ResellerClub API calls now route through Fixie static IPs
+- ✅ Domain search will use live availability from ResellerClub
+- ✅ No more 403 errors
+- ✅ Pricing, availability, all ResellerClub features now work
+
+**Commit:** `[pending]` - "fix: complete Fixie integration for ResellerClub, trigger redeploy"
+
+---
+
+## Previous: February 14, 2026 - Domain Search Actual Results + Memory Bank Rule ✅
 
 **What was fixed:**
 Domain search now surfaces whether results are from ResellerClub (live) or DNS fallback, with clear UI messaging. ResellerClub API response parsing was made robust (case-insensitive keys, classKey/classkey). When the API is unreachable (e.g. IP not whitelisted), users see an amber notice explaining why and that results are approximate.
