@@ -15,7 +15,7 @@ interface DomainCheckoutProps {
   items: DomainCartItem[];
   onUpdateItem: (index: number, updates: Partial<DomainCartItem>) => void;
   onRemoveItem: (index: number) => void;
-  onComplete: (contactInfo: ContactFormData) => Promise<void>;
+  onComplete: (contactInfo: ContactFormData) => Promise<void | { checkoutUrl: string }>;
   className?: string;
 }
 
@@ -39,11 +39,19 @@ export function DomainCheckout({
     setIsSubmitting(true);
     
     try {
-      await onComplete(data);
+      const result = await onComplete(data);
+      
+      // Check if result contains checkout URL (Paddle redirect)
+      if (result && typeof result === 'object' && 'checkoutUrl' in result) {
+        // Redirect to Paddle checkout
+        window.location.href = result.checkoutUrl as string;
+        return;
+      }
+      
+      // Old flow (direct completion)
       setStep('confirmation');
     } catch (error) {
       console.error('Checkout error:', error);
-    } finally {
       setIsSubmitting(false);
     }
   };

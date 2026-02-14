@@ -153,16 +153,28 @@ export class ResellerClubClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     
+    // Support HTTP/HTTPS proxy for static IP routing (Vercel/production)
+    // Set HTTPS_PROXY or HTTP_PROXY environment variable to use a proxy service
+    const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+    const fetchOptions: RequestInit = {
+      method,
+      headers: {
+        'Accept': 'application/json',
+        ...(method === 'POST' ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}),
+      },
+      ...(body ? { body } : {}),
+      signal: controller.signal,
+    };
+    
+    // Note: Proxy support in Edge Runtime (Vercel) requires using a fetch wrapper
+    // or deploying to Node.js runtime. For production, use QuotaGuard or similar.
+    if (proxyUrl && typeof globalThis !== 'undefined' && 'ProxyAgent' in globalThis) {
+      // @ts-ignore - ProxyAgent not in default types
+      fetchOptions.agent = new globalThis.ProxyAgent(proxyUrl);
+    }
+    
     try {
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Accept': 'application/json',
-          ...(method === 'POST' ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}),
-        },
-        ...(body ? { body } : {}),
-        signal: controller.signal,
-      });
+      const response = await fetch(url, fetchOptions);
       
       clearTimeout(timeoutId);
       

@@ -59,15 +59,23 @@ export function DomainRenewForm({ domain, expiryDate }: DomainRenewFormProps) {
       const result = await renewDomain(domain.id, years);
       
       if (result.success) {
+        // Check if we got a checkout URL (Paddle redirect)
+        if (result.data && 'checkoutUrl' in result.data) {
+          // Redirect to Paddle checkout
+          window.location.href = result.data.checkoutUrl;
+          return;
+        }
+        
+        // Old flow (direct renewal)
         toast.success(`Domain renewed for ${years} year${years > 1 ? 's' : ''}!`);
         router.push(`/dashboard/domains/${domain.id}`);
         router.refresh();
       } else {
         toast.error(result.error || 'Failed to renew domain');
+        setIsRenewing(false);
       }
     } catch (error) {
       toast.error('An error occurred while renewing the domain');
-    } finally {
       setIsRenewing(false);
     }
   };

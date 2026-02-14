@@ -29,6 +29,11 @@
     {
       "path": "/api/cron/chat",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/resellerclub-sync",
+      "schedule": "0 2 * * *",
+      "description": "Daily ResellerClub domain/email reconciliation sync"
     }
   ]
 }
