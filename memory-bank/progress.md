@@ -40,7 +40,7 @@ Complete resolution of ResellerClub 403 "IP not whitelisted" issue by properly c
 - ✅ No more 403 errors
 - ✅ Pricing, availability, all ResellerClub features now work
 
-**Commit:** `[pending]` - "fix: complete Fixie integration for ResellerClub, trigger redeploy"
+**Commit:** `36af8e5` - "fix: complete Fixie integration for ResellerClub, trigger redeploy"
 
 ---
 
