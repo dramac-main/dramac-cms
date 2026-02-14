@@ -26,7 +26,7 @@ Domain search now surfaces whether results are from ResellerClub (live) or DNS f
 - ✅ Diagnostic endpoint to verify ResellerClub connectivity
 - ✅ Memory bank update rule followed: progress.md and activeContext.md updated, then commit and push
 
-**Commit:** (this session) - "fix: domain search actual results, ResellerClub status API, memory bank updates"
+**Commit:** `95bb14d` - "fix: domain search actual results, ResellerClub status API, memory bank updates"
 
 ---
 
