@@ -31,7 +31,7 @@ import type {
  */
 export async function createBusinessEmailOrder(formData: FormData): Promise<{
   success: boolean;
-  data?: EmailOrder;
+  data?: { pendingPurchaseId?: string; checkoutUrl?: string; status?: string; order?: EmailOrder };
   error?: string;
 }> {
   const supabase = await createClient();
@@ -67,8 +67,7 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
       return { success: false, error: 'Invalid subscription period' };
     }
 
-    // Get customer ID from agency or create one
-    // Note: resellerclub_customer_id is added via dm-07 migration
+    // Get customer ID from agency
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: agency } = await (supabase as any)
       .from('agencies')
@@ -80,37 +79,65 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
       return { success: false, error: 'Agency not configured for domain services' };
     }
 
-    // Calculate retail price based on agency markup
+    // Calculate pricing using cached customer pricing from ResellerClub
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: pricing } = await (supabase as any)
+    const { data: agencyPricing } = await (supabase as any)
       .from('agency_domain_pricing')
-      .select('default_markup_type, default_markup_value')
+      .select('default_markup_type, default_markup_value, pricing_source, apply_platform_markup')
       .eq('agency_id', profile.agency_id)
       .single();
 
-    const wholesalePricing = await businessEmailApi.getResellerPricing();
-    const basePrice = calculateBasePrice(wholesalePricing, months, numberOfAccounts);
-    const retailPrice = applyMarkup(
-      basePrice, 
-      pricing?.default_markup_type || 'percentage', 
-      pricing?.default_markup_value || 30
-    );
+    // Get pricing from cache or live API
+    const { pricingCacheService } = await import('@/lib/resellerclub/pricing-cache');
+    
+    // Try to get customer pricing first (includes RC markups)
+    const customerPricing = await businessEmailApi.getCustomerPricing(agency.resellerclub_customer_id);
+    const productKey = 'eeliteus'; // Default to US datacenter
+    
+    // Calculate base price from customer pricing (what RC says customer should pay)
+    const basePrice = calculateBasePrice(customerPricing, months, numberOfAccounts);
+    
+    // Get wholesale cost for margin tracking
+    const wholesalePricing = await businessEmailApi.getResellerCostPricing();
+    const wholesalePrice = calculateBasePrice(wholesalePricing, months, numberOfAccounts);
+    
+    // Calculate retail price
+    let retailPrice = basePrice;
+    
+    // Apply additional platform markup only if configured
+    if (agencyPricing?.apply_platform_markup) {
+      retailPrice = applyMarkup(
+        basePrice, 
+        agencyPricing.default_markup_type || 'percentage', 
+        agencyPricing.default_markup_value || 0
+      );
+    }
 
-    const order = await emailOrderService.createOrder({
+    // Create Paddle transaction for payment
+    const { createEmailPurchase } = await import('@/lib/paddle/transactions');
+    
+    const purchase = await createEmailPurchase({
       agencyId: profile.agency_id,
+      userId: user.id,
       clientId: clientId || undefined,
       domainId: domainId || undefined,
       domainName,
-      customerId: agency.resellerclub_customer_id,
       numberOfAccounts,
       months,
-      retailPrice,
+      productKey,
+      wholesaleAmount: wholesalePrice,
+      retailAmount: retailPrice,
+      currency: 'USD',
     });
 
-    revalidatePath('/dashboard/domains');
-    revalidatePath('/dashboard/email');
-    
-    return { success: true, data: order };
+    return {
+      success: true,
+      data: {
+        pendingPurchaseId: purchase.id,
+        checkoutUrl: purchase.checkoutUrl,
+        status: 'pending_payment',
+      },
+    };
   } catch (error) {
     console.error('Create business email order error:', error);
     return { 

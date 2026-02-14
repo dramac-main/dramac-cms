@@ -428,6 +428,16 @@ async function handleTransactionCompleted(event: PaddleWebhookEvent): Promise<vo
   const supabase = createAdminClient();
   const data = event.data;
   
+  // Check if this is a domain/email purchase (custom_data contains purchase_type)
+  const purchaseType = data.customData?.purchase_type;
+  
+  if (purchaseType && ['domain_register', 'domain_renew', 'domain_transfer', 'email_order'].includes(purchaseType)) {
+    // This is a one-time domain/email purchase
+    await handleDomainEmailPurchaseCompleted(event);
+    return;
+  }
+  
+  // Otherwise, this is a subscription transaction
   // Get agency from subscription
   const { data: sub } = await supabase.from('paddle_subscriptions')
     .select('agency_id, id')
@@ -636,6 +646,72 @@ function getPlanLevel(planType: string): number {
     case 'pro': return 2;
     case 'starter': return 1;
     default: return 0;
+  }
+}
+
+/**
+ * Handle domain/email purchase transaction completion
+ * Triggered when a one-time Paddle transaction for domain/email is completed
+ */
+async function handleDomainEmailPurchaseCompleted(event: PaddleWebhookEvent): Promise<void> {
+  const data = event.data;
+  const transactionId = data.id;
+  
+  console.log(`[Paddle Webhook] Domain/Email purchase completed: ${transactionId}`);
+  
+  try {
+    // Import provisioning dynamically to avoid circular deps
+    const { getPendingPurchaseByTransaction, updatePendingPurchaseStatus } = await import('@/lib/paddle/transactions');
+    const { 
+      provisionDomainRegistration, 
+      provisionDomainRenewal, 
+      provisionEmailOrder 
+    } = await import('@/lib/resellerclub/provisioning');
+    
+    // Get pending purchase by transaction ID
+    const purchase = await getPendingPurchaseByTransaction(transactionId);
+    
+    if (!purchase) {
+      console.error('[Paddle Webhook] No pending purchase found for transaction:', transactionId);
+      return;
+    }
+    
+    // Check idempotency - if already processed, skip
+    if (purchase.status === 'completed') {
+      console.log('[Paddle Webhook] Purchase already completed (idempotent):', purchase.id);
+      return;
+    }
+    
+    if (purchase.status === 'provisioning') {
+      console.log('[Paddle Webhook] Purchase already provisioning:', purchase.id);
+      return;
+    }
+    
+    // Update status to paid
+    await updatePendingPurchaseStatus(purchase.id as string, 'paid');
+    
+    // Provision based on purchase type
+    let result;
+    const purchaseType = purchase.purchase_type as string;
+    
+    if (purchaseType === 'domain_register') {
+      result = await provisionDomainRegistration(purchase.id as string);
+    } else if (purchaseType === 'domain_renew') {
+      result = await provisionDomainRenewal(purchase.id as string);
+    } else if (purchaseType === 'email_order') {
+      result = await provisionEmailOrder(purchase.id as string);
+    } else {
+      console.error('[Paddle Webhook] Unknown purchase type:', purchaseType);
+      return;
+    }
+    
+    if (result.success) {
+      console.log(`[Paddle Webhook] Provisioning successful for ${purchaseType}:`, result.resourceId);
+    } else {
+      console.error(`[Paddle Webhook] Provisioning failed for ${purchaseType}:`, result.error);
+    }
+  } catch (error) {
+    console.error('[Paddle Webhook] Error handling domain/email purchase:', error);
   }
 }
 

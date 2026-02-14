@@ -226,7 +226,8 @@ export const businessEmailApi = {
   // --------------------------------------------------------------------------
 
   /**
-   * Get customer pricing for email plans
+   * Get customer pricing for email plans (what end-customers pay)
+   * This reflects ResellerClub markups and should be used as retail price
    * GET /api/eelite/customer-pricing.json
    */
   async getCustomerPricing(customerId: string): Promise<EmailPricingResponse> {
@@ -237,12 +238,22 @@ export const businessEmailApi = {
   },
 
   /**
-   * Get reseller pricing for email plans
+   * Get reseller pricing for email plans (slab-based pricing you configure)
+   * @deprecated Use getCustomerPricing for retail or getResellerCostPricing for wholesale
    * GET /api/eelite/reseller-pricing.json
    */
   async getResellerPricing(): Promise<EmailPricingResponse> {
     const client = getResellerClubClient();
     return client.get<EmailPricingResponse>('eelite/reseller-pricing.json');
+  },
+  
+  /**
+   * Get reseller cost pricing for email plans (wholesale/what you pay ResellerClub)
+   * GET /api/eelite/reseller-cost-pricing.json
+   */
+  async getResellerCostPricing(): Promise<EmailPricingResponse> {
+    const client = getResellerClubClient();
+    return client.get<EmailPricingResponse>('eelite/reseller-cost-pricing.json');
   },
 
   // --------------------------------------------------------------------------

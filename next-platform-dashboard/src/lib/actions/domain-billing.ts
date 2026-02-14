@@ -180,32 +180,61 @@ export async function calculateDomainPrice(params: {
   if (!profile?.agency_id) return { success: false, error: 'No agency' };
   
   try {
-    // Get real wholesale pricing from ResellerClub API when available
+    // Get agency's ResellerClub customer ID for customer pricing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: agency } = await (supabase as any)
+      .from('agencies')
+      .select('resellerclub_customer_id')
+      .eq('id', profile.agency_id)
+      .single();
+    
+    const customerId = agency?.resellerclub_customer_id;
+    
+    // Get pricing from cache (uses customer pricing with fallback)
     let wholesalePrice: number = 0;
+    let retailPrice: number = 0;
     let usedRealPricing = false;
     
     try {
       const { isClientAvailable } = await import('@/lib/resellerclub/client');
-      const { domainService } = await import('@/lib/resellerclub/domains');
+      const { pricingCacheService } = await import('@/lib/resellerclub/pricing-cache');
       
-      if (isClientAvailable()) {
-        const rcPrices = await domainService.getPricing([params.tld]);
-        const tldPricing = rcPrices[params.tld];
+      if (isClientAvailable() && customerId) {
+        // Get cached customer pricing (what RC says end-customer should pay)
+        const customerPriceData = await pricingCacheService.getCachedDomainPrice(
+          params.tld,
+          customerId,
+          'customer',
+          24 // 24-hour cache
+        );
         
-        if (tldPricing) {
+        // Get cached cost pricing (wholesale)
+        const costPriceData = await pricingCacheService.getCachedDomainPrice(
+          params.tld,
+          customerId,
+          'cost',
+          24
+        );
+        
+        if (customerPriceData && costPriceData) {
           switch (params.operation) {
             case 'register': {
-              const prices = tldPricing.register as Record<number, number>;
-              wholesalePrice = prices[params.years] || (prices[1] || 0) * params.years;
+              const customerPrices = customerPriceData.register as Record<number, number>;
+              const costPrices = costPriceData.register as Record<number, number>;
+              retailPrice = customerPrices[params.years] || (customerPrices[1] || 0) * params.years;
+              wholesalePrice = costPrices[params.years] || (costPrices[1] || 0) * params.years;
               break;
             }
             case 'renew': {
-              const prices = tldPricing.renew as Record<number, number>;
-              wholesalePrice = (prices[params.years] || (prices[1] || 0) * params.years);
+              const customerPrices = customerPriceData.renew as Record<number, number>;
+              const costPrices = costPriceData.renew as Record<number, number>;
+              retailPrice = customerPrices[params.years] || (customerPrices[1] || 0) * params.years;
+              wholesalePrice = costPrices[params.years] || (costPrices[1] || 0) * params.years;
               break;
             }
             case 'transfer':
-              wholesalePrice = tldPricing.transfer;
+              retailPrice = customerPriceData.transfer;
+              wholesalePrice = costPriceData.transfer;
               break;
           }
           usedRealPricing = true;
@@ -215,7 +244,7 @@ export async function calculateDomainPrice(params: {
       // Fall through to fallback pricing
     }
     
-    // Fallback pricing if API is unavailable
+    // Fallback pricing if API/cache is unavailable
     if (!usedRealPricing) {
       const basePrices: Record<string, Record<string, number | Record<number, number>>> = {
         // Popular gTLDs
@@ -298,7 +327,7 @@ export async function calculateDomainPrice(params: {
       
       const tldPrices = basePrices[params.tld];
       if (!tldPrices) {
-        // Generic fallback for unknown TLDs
+        // Generic fallback for unknown TLDs (used as both wholesale AND retail when no RC data)
         const genericPrices: Record<string, number | Record<number, number>> = {
           register: { 1: 14.99, 2: 29.98 },
           renew: { 1: 16.99 },
@@ -308,15 +337,18 @@ export async function calculateDomainPrice(params: {
           case 'register': {
             const prices = genericPrices.register as Record<number, number>;
             wholesalePrice = prices[params.years] || (prices[1] as number) * params.years;
+            retailPrice = wholesalePrice; // Use same for fallback
             break;
           }
           case 'renew': {
             const prices = genericPrices.renew as Record<number, number>;
             wholesalePrice = prices[params.years] || (prices[1] as number) * params.years;
+            retailPrice = wholesalePrice; // Use same for fallback
             break;
           }
           case 'transfer':
             wholesalePrice = genericPrices.transfer as number;
+            retailPrice = wholesalePrice; // Use same for fallback
             break;
         }
       } else {
@@ -324,15 +356,18 @@ export async function calculateDomainPrice(params: {
           case 'register': {
             const prices = tldPrices.register as Record<number, number>;
             wholesalePrice = prices[params.years] || prices[1] * params.years;
+            retailPrice = wholesalePrice; // Use same for fallback
             break;
           }
           case 'renew': {
             const prices = tldPrices.renew as Record<number, number>;
             wholesalePrice = (prices[params.years] || prices[1] * params.years);
+            retailPrice = wholesalePrice; // Use same for fallback
             break;
           }
           case 'transfer':
             wholesalePrice = tldPrices.transfer as number;
+            retailPrice = wholesalePrice; // Use same for fallback
             break;
         }
       }
@@ -346,38 +381,80 @@ export async function calculateDomainPrice(params: {
       .eq('agency_id', profile.agency_id)
       .single();
     
-    // Calculate retail price
-    let retailPrice: number = 0;
-    let markupType = (config?.default_markup_type as string) || 'percentage';
-    let markupValue = (config?.default_markup_value as number) || 30;
+    // Apply additional platform markup if configured
+    // (Only if pricing_source allows and apply_platform_markup is true)
+    const pricingSource = (config?.pricing_source as string) || 'resellerclub_customer';
+    const applyPlatformMarkup = (config?.apply_platform_markup as boolean) ?? false;
     
-    // Check for TLD-specific pricing
-    const tldConfig = (config?.tld_pricing as TldPricingConfig)?.[params.tld];
-    if (tldConfig?.enabled) {
-      markupType = tldConfig.markup_type;
-      markupValue = tldConfig.markup_value;
+    // If using customer pricing and platform markup is enabled, apply markup on top
+    if (usedRealPricing && pricingSource === 'resellerclub_customer' && applyPlatformMarkup) {
+      let markupType = (config?.default_markup_type as string) || 'percentage';
+      let markupValue = (config?.default_markup_value as number) || 0;
       
-      // Use custom price if set
-      if (markupType === 'custom') {
-        const customPrices: Record<number, number> | undefined = params.operation === 'transfer' 
-          ? { 1: tldConfig.custom_transfer ?? 0 }
-          : params.operation === 'register'
-            ? tldConfig.custom_register
-            : tldConfig.custom_renew;
+      // Check for TLD-specific pricing
+      const tldConfig = (config?.tld_pricing as TldPricingConfig)?.[params.tld];
+      if (tldConfig?.enabled) {
+        markupType = tldConfig.markup_type;
+        markupValue = tldConfig.markup_value;
         
-        if (customPrices && customPrices[params.years]) {
-          retailPrice = customPrices[params.years];
+        // Use custom price if set
+        if (markupType === 'custom') {
+          const customPrices: Record<number, number> | undefined = params.operation === 'transfer' 
+            ? { 1: tldConfig.custom_transfer ?? 0 }
+            : params.operation === 'register'
+              ? tldConfig.custom_register
+              : tldConfig.custom_renew;
+          
+          if (customPrices && customPrices[params.years]) {
+            retailPrice = customPrices[params.years];
+          }
         }
       }
-    }
-    
-    // Calculate markup if not custom price
-    if (retailPrice === 0) {
-      switch (markupType) {
-        case 'percentage':
-          retailPrice = wholesalePrice * (1 + markupValue / 100);
-          break;
-        case 'fixed':
+      
+      // Calculate markup if not custom price
+      if (markupType !== 'custom' || retailPrice === 0) {
+        const baseRetail = retailPrice; // RC customer price
+        switch (markupType) {
+          case 'percentage':
+            retailPrice = baseRetail * (1 + markupValue / 100);
+            break;
+          case 'fixed':
+            retailPrice = baseRetail + markupValue;
+            break;
+        }
+      }
+    } else if (!usedRealPricing) {
+      // Fallback pricing - apply markup on wholesale
+      let markupType = (config?.default_markup_type as string) || 'percentage';
+      let markupValue = (config?.default_markup_value as number) || 30;
+      
+      // Check for TLD-specific pricing
+      const tldConfig = (config?.tld_pricing as TldPricingConfig)?.[params.tld];
+      if (tldConfig?.enabled) {
+        markupType = tldConfig.markup_type;
+        markupValue = tldConfig.markup_value;
+        
+        // Use custom price if set
+        if (markupType === 'custom') {
+          const customPrices: Record<number, number> | undefined = params.operation === 'transfer' 
+            ? { 1: tldConfig.custom_transfer ?? 0 }
+            : params.operation === 'register'
+              ? tldConfig.custom_register
+              : tldConfig.custom_renew;
+          
+          if (customPrices && customPrices[params.years]) {
+            retailPrice = customPrices[params.years];
+          }
+        }
+      }
+      
+      // Calculate markup if not custom price
+      if (markupType !== 'custom' || retailPrice === 0) {
+        switch (markupType) {
+          case 'percentage':
+            retailPrice = wholesalePrice * (1 + markupValue / 100);
+            break;
+          case 'fixed':
           retailPrice = wholesalePrice + markupValue;
           break;
         default:

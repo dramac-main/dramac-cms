@@ -1,6 +1,110 @@
 # Active Context
 
-## Latest Session Update — Web Push, LemonSqueezy Removal, Currency Fixes (Commits `b2f40df`, `d5a6724`)
+## Latest Session Update — ResellerClub Production-Ready Payment Integration (February 14, 2026)
+
+### Summary
+Complete refactor of ResellerClub domains and Titan email integration implementing payment-before-provisioning, correct pricing calculation, database-backed pricing cache, webhook-driven provisioning, and automated reconciliation.
+
+### Changes in This Session (27 files total)
+
+**Phase 1: Pricing Architecture ✅**
+
+| # | File | What |
+|---|------|------|
+| 1 | MOD `src/lib/resellerclub/domains.ts` | Added `getCustomerPricing()` and `getCostPricing()` methods to fetch correct ResellerClub customer/cost pricing |
+| 2 | MOD `src/lib/resellerclub/email/client.ts` | Added `getCustomerPricing()` and `getCostPricing()` for Titan email packages |
+| 3 | MOD `src/lib/actions/domain-billing.ts` | Updated `getDomainPricing()` to use cached customer pricing with fallback |
+| 4 | NEW `src/lib/resellerclub/pricing-cache.ts` | Database-backed pricing cache with refresh methods, cache hit/miss tracking |
+| 5 | NEW `migrations/dm-11-pricing-cache-schema.sql` | Tables: domain_pricing_cache, email_pricing_cache, pricing_sync_log, pricing_config |
+
+**Phase 2: Paddle Transactions Integration ✅**
+
+| # | File | What |
+|---|------|------|
+| 6 | NEW `src/lib/paddle/transactions.ts` | Creates Paddle Transactions for domain/email purchases using custom items, non-catalog checkout |
+| 7 | NEW `migrations/dm-12-paddle-transactions-schema.sql` | Table: paddle_pending_purchases with transaction_id, item metadata, status tracking |
+| 8 | MOD `src/lib/actions/domains.ts` | Refactored `registerDomain()`, `renewDomain()` to create Paddle transaction first, return checkoutUrl |
+| 9 | MOD `src/lib/actions/business-email.ts` | Refactored email ordering to create Paddle transaction, removed direct provisioning |
+
+**Phase 3: Webhook Provisioning ✅**
+
+| # | File | What |
+|---|------|------|
+| 10 | NEW `src/lib/resellerclub/provisioning.ts` | Idempotent provisioning handler with error tracking, retry logic, status updates |
+| 11 | MOD `src/lib/paddle/webhook-handlers.ts` | Extended to detect domain/email purchases, trigger provisioning on `transaction.completed` |
+
+**Phase 4: Reconciliation & Sync ✅**
+
+| # | File | What |
+|---|------|------|
+| 12 | NEW `src/lib/resellerclub/reconciliation.ts` | Syncs domains/emails from ResellerClub, detects discrepancies, updates local DB |
+| 13 | NEW `src/app/api/cron/resellerclub-sync/route.ts` | Daily cron job (02:00 UTC) for automated reconciliation |
+| 14 | NEW `src/app/api/admin/pricing/refresh/route.ts` | Manual pricing refresh endpoint (domain/email/full sync types) |
+
+**Phase 5: Documentation ✅**
+
+| # | File | What |
+|---|------|------|
+| 15 | NEW `docs/RESELLERCLUB-IMPLEMENTATION-SUMMARY.md` | Complete guide: architecture, API reference, monitoring queries, troubleshooting |
+| 16 | NEW `docs/RESELLERCLUB-QUICK-REFERENCE.md` | Quick dev reference for common operations and debugging |
+| 17 | NEW `docs/RESELLERCLUB-UI-CHANGES.md` | Frontend integration guide for checkout redirect flow, success pages, error handling |
+
+### Key Technical Decisions
+
+**Pricing Model**
+- **Customer Pricing** (RC API `role=customer`) = retail price shown to end users
+- **Cost Pricing** (RC API `role=reseller`) = wholesale cost for margin calculation
+- Old approach incorrectly used reseller pricing as retail, causing double markup
+- Pricing cached in database with 24-hour TTL, daily refresh via cron
+
+**Payment Flow**
+```
+User initiates purchase → Create Paddle transaction → Redirect to Paddle checkout → 
+User completes payment → Paddle webhook fires → Provision at ResellerClub → Update DB status
+```
+
+**Status Progression**
+```
+pending_payment → paid → provisioning → completed (or failed)
+```
+
+**Idempotency**
+- Webhook handler checks `paddle_pending_purchases.idempotency_key`
+- Safe to replay webhooks without duplicate provisioning
+- All provisioning operations log attempts with timestamps
+
+### Environment Variables Required
+```bash
+# Existing ResellerClub credentials
+RESELLERCLUB_API_KEY=your_key
+RESELLERCLUB_RESELLER_ID=your_id
+
+# No new env vars needed for this implementation
+```
+
+### Deployment Checklist
+- [x] Code implemented and tested locally
+- [x] Zero linter errors
+- [ ] Run migration DM-11 in Supabase
+- [ ] Run migration DM-12 in Supabase
+- [ ] Configure Vercel cron for `/api/cron/resellerclub-sync` (daily 02:00 UTC)
+- [ ] Whitelist production IPs in ResellerClub control panel ⚠️ CRITICAL
+- [ ] Initial pricing refresh: `POST /api/admin/pricing/refresh`
+- [ ] Update frontend UI for checkout redirect flow
+- [ ] Test end-to-end with real payment
+
+### Critical Production Requirement
+⚠️ **Static Egress IP Required**: ResellerClub API requires IP whitelisting. Vercel's dynamic IPs will cause 403 errors in production. Solutions:
+1. Use proxy service with static IP (e.g., Axiom, QuotaGuard)
+2. Deploy to infrastructure with static IP
+3. Contact ResellerClub about IP range whitelisting
+
+### Migration Note
+User confirmed migrations DM-11 and DM-12 have already been run in Supabase.
+
+---
+
+## Previous Session — Web Push, LemonSqueezy Removal, Currency Fixes (Commits `b2f40df`, `d5a6724`)
 
 ### Summary
 Two commits this session:

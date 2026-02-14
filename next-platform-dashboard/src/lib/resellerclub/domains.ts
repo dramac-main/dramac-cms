@@ -145,20 +145,70 @@ export class DomainService {
   // ============================================================================
   
   /**
-   * Get pricing for TLDs
+   * Get customer pricing for TLDs (what end-customers pay)
+   * This reflects ResellerClub markups and should be used as retail price
    */
-  async getPricing(tlds?: string[]): Promise<Record<string, DomainPrice>> {
+  async getCustomerPricing(customerId: string, tlds?: string[]): Promise<Record<string, DomainPrice>> {
     const tldsToGet = tlds || SUPPORTED_TLDS;
     
-    // ResellerClub returns all prices at once
+    const response = await this.client.get<Record<string, Record<string, unknown>>>(
+      'products/customer-price.json',
+      { 
+        'product-key': 'domorder',
+        'customer-id': customerId
+      }
+    );
+    
+    return this.parsePricingResponse(response, tldsToGet);
+  }
+  
+  /**
+   * Get reseller cost pricing (wholesale/what you pay ResellerClub)
+   */
+  async getResellerCostPricing(tlds?: string[]): Promise<Record<string, DomainPrice>> {
+    const tldsToGet = tlds || SUPPORTED_TLDS;
+    
+    const response = await this.client.get<Record<string, Record<string, unknown>>>(
+      'products/reseller-cost-price.json',
+      { 'product-key': 'domorder' }
+    );
+    
+    return this.parsePricingResponse(response, tldsToGet);
+  }
+  
+  /**
+   * Get reseller pricing for TLDs (slab-based pricing you configure)
+   * @deprecated Use getCustomerPricing for retail or getResellerCostPricing for wholesale
+   */
+  async getResellerPricing(tlds?: string[]): Promise<Record<string, DomainPrice>> {
+    const tldsToGet = tlds || SUPPORTED_TLDS;
+    
     const response = await this.client.get<Record<string, Record<string, unknown>>>(
       'products/reseller-price.json',
       { 'product-key': 'domorder' }
     );
     
+    return this.parsePricingResponse(response, tldsToGet);
+  }
+  
+  /**
+   * Get pricing for TLDs
+   * @deprecated Use getCustomerPricing, getResellerCostPricing, or getResellerPricing explicitly
+   */
+  async getPricing(tlds?: string[]): Promise<Record<string, DomainPrice>> {
+    return this.getResellerPricing(tlds);
+  }
+  
+  /**
+   * Parse ResellerClub pricing API response into our format
+   */
+  private parsePricingResponse(
+    response: Record<string, Record<string, unknown>>, 
+    tlds: string[]
+  ): Record<string, DomainPrice> {
     const prices: Record<string, DomainPrice> = {};
     
-    for (const tld of tldsToGet) {
+    for (const tld of tlds) {
       // Replace only the leading dot; compound TLDs like ".co.za" → "co.za"
       const tldKey = tld.startsWith('.') ? tld.slice(1) : tld;
       const tldData = response[tldKey];
@@ -187,9 +237,26 @@ export class DomainService {
   
   /**
    * Get pricing for a specific TLD
+   * @deprecated Use getCustomerPricing, getResellerCostPricing, or getResellerPricing explicitly
    */
   async getTldPricing(tld: string): Promise<DomainPrice | null> {
     const prices = await this.getPricing([tld]);
+    return prices[tld] || null;
+  }
+  
+  /**
+   * Get customer pricing for a specific TLD
+   */
+  async getTldCustomerPricing(customerId: string, tld: string): Promise<DomainPrice | null> {
+    const prices = await this.getCustomerPricing(customerId, [tld]);
+    return prices[tld] || null;
+  }
+  
+  /**
+   * Get reseller cost for a specific TLD
+   */
+  async getTldResellerCost(tld: string): Promise<DomainPrice | null> {
+    const prices = await this.getResellerCostPricing([tld]);
     return prices[tld] || null;
   }
   

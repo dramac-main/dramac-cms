@@ -361,173 +361,47 @@ export async function registerDomain(params: RegisterDomainParams) {
     // Parse domain
     const parts = params.domainName.split('.');
     const tld = '.' + parts.pop();
-    const sld = parts.join('.');
     
-    let orderId: string;
-    let customerId: string;
-    let contactId: string;
-    let registrationViaApi = false;
-
-    // Try real ResellerClub registration
-    if (isClientAvailable()) {
-      try {
-        // Ensure agency has a ResellerClub customer
-        const rcCustomerId = await ensureResellerClubCustomer(
-          profile.agency_id, 
-          user.email || `agency-${profile.agency_id}@dramacagency.com`
-        );
-        
-        if (!rcCustomerId) {
-          return { success: false, error: 'Failed to provision domain services. Please whitelist your server IP addresses in ResellerClub Dashboard → Settings → API → Whitelist IP Addresses. Vercel deployments use dynamic IPs — contact ResellerClub support to whitelist the IP range or use a proxy.' };
-        }
-
-        customerId = rcCustomerId;
-
-        // Create or get a default contact for this customer
-        const contact = await contactService.createOrUpdate({
-          name: params.contactInfo?.name || user.user_metadata?.full_name || 'Domain Admin',
-          company: params.contactInfo?.company || 'Agency',
-          email: params.contactInfo?.email || user.email || '',
-          addressLine1: params.contactInfo?.address || 'Not Provided',
-          city: params.contactInfo?.city || 'Lusaka',
-          state: params.contactInfo?.state || 'Lusaka',
-          country: params.contactInfo?.country || 'ZM',
-          zipcode: params.contactInfo?.zipcode || '10101',
-          phoneCountryCode: '260',
-          phone: params.contactInfo?.phone || '955000000',
-          customerId: rcCustomerId,
-          type: 'Contact',
-        });
-
-        contactId = String(contact.contactId);
-
-        // Register domain via ResellerClub API
-        const result = await domainService.register({
-          domainName: params.domainName,
-          years: params.years,
-          customerId: rcCustomerId,
-          registrantContactId: contactId,
-          adminContactId: contactId,
-          techContactId: contactId,
-          billingContactId: contactId,
-          purchasePrivacy: params.privacy ?? true,
-          nameservers: ['ns1.cloudflare.com', 'ns2.cloudflare.com'],
-        });
-        
-        orderId = result.orderId;
-        registrationViaApi = true;
-      } catch (apiError) {
-        console.error('[Domains] ResellerClub registration failed:', apiError);
-        const errMsg = apiError instanceof Error ? apiError.message : '';
-        const isAuthError = errMsg.includes('403') || errMsg.includes('AUTH_ERROR') || errMsg.includes('Access Denied');
-        return { 
-          success: false, 
-          error: isAuthError 
-            ? 'Domain registration blocked by ResellerClub (HTTP 403). Your server IP is not whitelisted. Go to ResellerClub Dashboard → Settings → API → Whitelist IP Addresses and add your server IPs.'
-            : errMsg || 'Domain registration failed. Please try again.' 
-        };
-      }
-    } else {
-      // No API configured — cannot register domains
-      return { 
-        success: false, 
-        error: 'Domain registration service is not configured. Please set up ResellerClub API credentials in Settings → Domain Services.' 
-      };
-    }
-    
-    // Calculate expiry date
-    const now = new Date();
-    const expiryDate = new Date(now);
-    expiryDate.setFullYear(expiryDate.getFullYear() + params.years);
-    
-    // Create domain record in our database
-    const domainData = {
-      agency_id: profile.agency_id,
-      client_id: params.clientId || null,
-      domain_name: params.domainName.toLowerCase(),
+    // Calculate pricing using cached customer pricing
+    const { calculateDomainPrice } = await import('@/lib/actions/domain-billing');
+    const pricing = await calculateDomainPrice({
       tld,
-      sld,
-      resellerclub_order_id: orderId,
-      resellerclub_customer_id: customerId,
-      registration_date: now.toISOString(),
-      expiry_date: expiryDate.toISOString(),
-      status: 'active',
-      auto_renew: params.autoRenew ?? true,
-      whois_privacy: params.privacy ?? true,
-      registrant_contact_id: contactId,
-      admin_contact_id: contactId,
-      tech_contact_id: contactId,
-      billing_contact_id: contactId,
-      nameservers: ['ns1.cloudflare.com', 'ns2.cloudflare.com'],
-      registered_via_api: registrationViaApi,
-    };
-    
-    const { data: domain, error: insertError } = await getTable(admin, 'domains')
-      .insert(domainData)
-      .select()
-      .single() as { data: AnyRecord | null; error: { message: string } | null };
-    
-    if (insertError) {
-      console.error('[Domains] DB insert error:', insertError);
-      // Domain was registered at RC but DB insert failed - still return success with order ID
-      revalidatePath('/dashboard/domains');
-      return { 
-        success: true, 
-        data: {
-          domainId: orderId,
-          orderId,
-          domain: params.domainName,
-        }
-      };
-    }
-    
-    const domainId = (domain as AnyRecord)?.id as string;
-    
-    // Create order record with real pricing
-    let orderWholesale = 0;
-    let orderRetail = 0;
-    try {
-      const { calculateDomainPrice } = await import('@/lib/actions/domain-billing');
-      const pricing = await calculateDomainPrice({
-        tld,
-        years: params.years,
-        operation: 'register',
-        includePrivacy: params.privacy ?? true,
-        clientId: params.clientId,
-      });
-      if (pricing.success && pricing.data) {
-        orderWholesale = pricing.data.total_wholesale;
-        orderRetail = pricing.data.total_retail;
-      }
-    } catch {
-      // Use 0 if pricing calculation fails
-    }
-
-    const orderData = {
-      agency_id: profile.agency_id,
-      domain_id: domainId,
-      order_type: 'registration',
-      domain_name: params.domainName,
       years: params.years,
-      wholesale_price: orderWholesale,
-      retail_price: orderRetail,
-      resellerclub_order_id: orderId,
-      status: 'completed',
-      payment_status: 'paid',
-      completed_at: new Date().toISOString(),
-    };
+      operation: 'register',
+      includePrivacy: params.privacy ?? true,
+      clientId: params.clientId,
+    });
     
-    await getTable(admin, 'domain_orders').insert(orderData);
+    if (!pricing.success || !pricing.data) {
+      return { success: false, error: 'Failed to calculate pricing' };
+    }
     
-    revalidatePath('/dashboard/domains');
+    // Create Paddle transaction for payment
+    const { createDomainPurchase } = await import('@/lib/paddle/transactions');
     
-    return { 
-      success: true, 
+    const purchase = await createDomainPurchase({
+      agencyId: profile.agency_id,
+      userId: user.id,
+      clientId: params.clientId,
+      purchaseType: 'domain_register',
+      domainName: params.domainName,
+      years: params.years,
+      tld,
+      wholesaleAmount: pricing.data.total_wholesale,
+      retailAmount: pricing.data.total_retail,
+      currency: 'USD',
+      contactInfo: params.contactInfo,
+      privacy: params.privacy,
+      autoRenew: params.autoRenew,
+    });
+    
+    return {
+      success: true,
       data: {
-        domainId,
-        orderId,
-        domain: params.domainName,
-      }
+        pendingPurchaseId: purchase.id,
+        checkoutUrl: purchase.checkoutUrl,
+        status: 'pending_payment',
+      },
     };
   } catch (error) {
     console.error('[Domains] Registration error:', error);
@@ -732,7 +606,7 @@ export async function getDomainStats(): Promise<{ success: boolean; data?: Domai
 
 export async function renewDomain(domainId: string, years: number): Promise<{
   success: boolean;
-  data?: { newExpiryDate: string };
+  data?: { pendingPurchaseId?: string; checkoutUrl?: string; status?: string; newExpiryDate?: string };
   error?: string;
 }> {
   const supabase = await createClient();
@@ -740,6 +614,14 @@ export async function renewDomain(domainId: string, years: number): Promise<{
   
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, error: 'Not authenticated' };
+  
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('agency_id')
+    .eq('id', user.id)
+    .single();
+  
+  if (!profile?.agency_id) return { success: false, error: 'No agency found' };
   
   try {
     // Get domain
@@ -752,64 +634,55 @@ export async function renewDomain(domainId: string, years: number): Promise<{
       return { success: false, error: 'Domain not found' };
     }
     
-    // Try real ResellerClub renewal
-    if (isClientAvailable() && domain.resellerclub_order_id) {
-      try {
-        await domainService.renew({
-          orderId: String(domain.resellerclub_order_id),
-          years,
-        });
-      } catch (apiError) {
-        console.error('[Domains] RC renewal failed:', apiError);
-        return { 
-          success: false, 
-          error: apiError instanceof Error ? apiError.message : 'Renewal failed at registrar' 
-        };
-      }
+    // Parse domain for TLD
+    const parts = (domain.domain_name as string).split('.');
+    const tld = '.' + parts.pop();
+    
+    // Calculate pricing using cached customer pricing
+    const { calculateDomainPrice } = await import('@/lib/actions/domain-billing');
+    const pricing = await calculateDomainPrice({
+      tld,
+      years,
+      operation: 'renew',
+      includePrivacy: false,
+    });
+    
+    if (!pricing.success || !pricing.data) {
+      return { success: false, error: 'Failed to calculate pricing' };
     }
     
-    // Calculate new expiry
-    const currentExpiry = new Date(domain.expiry_date as string);
-    const newExpiry = new Date(currentExpiry);
-    newExpiry.setFullYear(newExpiry.getFullYear() + years);
+    // Create Paddle transaction for payment
+    const { createDomainPurchase } = await import('@/lib/paddle/transactions');
     
-    // Update domain in database
-    await getTable(admin, 'domains')
-      .update({
-        expiry_date: newExpiry.toISOString(),
-        last_renewed_at: new Date().toISOString(),
-      })
-      .eq('id', domainId);
+    const purchase = await createDomainPurchase({
+      agencyId: profile.agency_id,
+      userId: user.id,
+      clientId: domain.client_id as string | undefined,
+      purchaseType: 'domain_renew',
+      domainName: domain.domain_name as string,
+      years,
+      tld,
+      wholesaleAmount: pricing.data.total_wholesale,
+      retailAmount: pricing.data.total_retail,
+      currency: 'USD',
+    });
     
-    // Create order record with real pricing
-    let renewWholesale = 0;
-    let renewRetail = 0;
-    try {
-      const { calculateDomainPrice } = await import('@/lib/actions/domain-billing');
-      const tld = '.' + (domain.domain_name as string).split('.').pop();
-      const pricing = await calculateDomainPrice({
-        tld,
-        years,
-        operation: 'renew',
-      });
-      if (pricing.success && pricing.data) {
-        renewWholesale = pricing.data.total_wholesale;
-        renewRetail = pricing.data.total_retail;
-      }
-    } catch {
-      // Use 0 if pricing calculation fails
-    }
-
-    await getTable(admin, 'domain_orders')
-      .insert({
-        agency_id: domain.agency_id,
-        domain_id: domainId,
-        order_type: 'renewal',
-        domain_name: domain.domain_name,
-        years,
-        wholesale_price: renewWholesale,
-        retail_price: renewRetail,
-        resellerclub_order_id: domain.resellerclub_order_id || `RENEW-${Date.now()}`,
+    return {
+      success: true,
+      data: {
+        pendingPurchaseId: purchase.id,
+        checkoutUrl: purchase.checkoutUrl,
+        status: 'pending_payment',
+      },
+    };
+  } catch (error) {
+    console.error('[Domains] Renewal error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Renewal failed' 
+    };
+  }
+}
         status: 'completed',
         payment_status: 'paid',
         completed_at: new Date().toISOString(),
