@@ -237,16 +237,20 @@ export class DomainService {
     for (const tld of tlds) {
       // ".com" → "com", ".co.za" → "co.za"
       const bare = tld.startsWith('.') ? tld.slice(1) : tld;
+      const bareNoDots = bare.replace(/\./g, '');
       // "dotcom", "dotcoza" (dots replaced)
-      const dotPrefixed = 'dot' + bare.replace(/\./g, '');
-      // "domcno" variant (used in some slab responses for .com → "domcno")
-      const domcno = 'domc' + bare.replace(/\./g, '');
+      const dotPrefixed = 'dot' + bareNoDots;
+      // Some endpoints (and some accounts) return "dom*" keys (e.g. "domorg", "domnet")
+      const domPrefixed = 'dom' + bareNoDots;
+      // Reseller-price slab commonly uses "domcno" for .com in particular
+      const domcno = bareNoDots === 'com' ? 'domcno' : 'domc' + bareNoDots;
       
       // Try multiple key variants
       const tldData =
         responseLower[bare] ??
         responseLower[dotPrefixed] ??
-        responseLower[bare.replace(/\./g, '')] ??
+        responseLower[bareNoDots] ??
+        responseLower[domPrefixed] ??
         responseLower[domcno] ??
         undefined;
       

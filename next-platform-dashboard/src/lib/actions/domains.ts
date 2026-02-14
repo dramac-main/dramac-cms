@@ -106,6 +106,7 @@ export async function searchDomains(
   tlds?: string[]
 ): Promise<DomainSearchResponse> {
   const supabase = await createClient();
+  const admin = createAdminClient();
   
   // Get user's agency for pricing
   const { data: { user } } = await supabase.auth.getUser();
@@ -129,18 +130,20 @@ export async function searchDomains(
     const allConfigTlds = Object.values(TLD_CATEGORIES).flat();
     const popularTlds = tlds || allConfigTlds;
 
-    // Get agency markup settings for retail pricing
+    // Get agency pricing settings (markup + pricing mode)
     const { data: pricing } = await getTable(supabase, 'agency_domain_pricing')
-      .select('default_markup_type, default_markup_value')
+      .select('default_markup_type, default_markup_value, pricing_source, apply_platform_markup')
       .eq('agency_id', profile.agency_id)
-      .maybeSingle() as { data: { default_markup_type?: string; default_markup_value?: number } | null };
+      .maybeSingle() as { data: { default_markup_type?: string; default_markup_value?: number; pricing_source?: string; apply_platform_markup?: boolean } | null };
 
     const markupType = pricing?.default_markup_type || 'percentage';
     const markupValue = pricing?.default_markup_value ?? 30;
+    const pricingSource = pricing?.pricing_source || 'resellerclub_customer';
+    const applyPlatformMarkup = pricing?.apply_platform_markup ?? false;
 
-    const calculateRetail = (wholesale: number): number => {
-      if (markupType === 'fixed') return Math.round((wholesale + markupValue) * 100) / 100;
-      return Math.round(wholesale * (1 + markupValue / 100) * 100) / 100;
+    const applyMarkup = (base: number): number => {
+      if (markupType === 'fixed') return Math.round((base + markupValue) * 100) / 100;
+      return Math.round(base * (1 + markupValue / 100) * 100) / 100;
     };
 
     let fallbackReason: string | undefined;
@@ -149,35 +152,106 @@ export async function searchDomains(
       try {
         const availability = await domainService.suggestDomains(cleanKeyword, popularTlds);
         
-        // Get real pricing from ResellerClub (reseller cost pricing — no customer-id needed)
-        let apiPrices: Record<string, { register: Record<number, number>; renew: Record<number, number>; transfer: number }> = {};
+        // Get ResellerClub customer pricing (selling/retail) and reseller cost pricing (wholesale)
+        // Customer pricing needs a ResellerClub customer-id; ensure the agency has one.
+        let resellerClubCustomerId: string | null = null;
         try {
-          const rcPrices = await domainService.getResellerCostPricing(popularTlds);
-          apiPrices = Object.fromEntries(
-            Object.entries(rcPrices).map(([tld, price]) => [tld, {
-              register: Object.fromEntries(Object.entries(price.register).filter(([, v]) => v != null)) as Record<number, number>,
-              renew: Object.fromEntries(Object.entries(price.renew).filter(([, v]) => v != null)) as Record<number, number>,
-              transfer: price.transfer,
-            }])
-          );
-          if (Object.keys(apiPrices).length > 0) {
-            console.log(`[Domains] Fetched live pricing for ${Object.keys(apiPrices).length} TLDs`);
-          } else {
-            console.warn('[Domains] RC pricing returned empty — API response may use unexpected TLD keys');
-          }
-        } catch (pricingError) {
-          console.warn('[Domains] Could not fetch RC pricing, using defaults:', pricingError instanceof Error ? pricingError.message : String(pricingError));
+          const { data: agency } = await (admin as any)
+            .from('agencies')
+            .select('resellerclub_customer_id')
+            .eq('id', profile.agency_id)
+            .single();
+          resellerClubCustomerId = (agency?.resellerclub_customer_id as string) || null;
+        } catch {
+          // ignore; we may still be able to show cost pricing
+        }
+        if (!resellerClubCustomerId && user.email) {
+          resellerClubCustomerId = await ensureResellerClubCustomer(profile.agency_id, user.email);
+        }
+
+        type SimplePrice = { register: Record<number, number>; renew: Record<number, number>; transfer: number };
+        let retailByTld: Record<string, SimplePrice> = {};
+        let wholesaleByTld: Record<string, SimplePrice> = {};
+
+        const mapDomainPrice = (price: { register: Record<number, number>; renew: Record<number, number>; transfer: number }) => ({
+          register: Object.fromEntries(Object.entries(price.register).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
+          renew: Object.fromEntries(Object.entries(price.renew).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
+          transfer: Number(price.transfer) || 0,
+        });
+
+        const [retailResult, wholesaleResult] = await Promise.all([
+          (async () => {
+            if (!resellerClubCustomerId) return null;
+            const rcRetail = await domainService.getCustomerPricing(resellerClubCustomerId, popularTlds);
+            return Object.fromEntries(Object.entries(rcRetail).map(([tld, price]) => [tld, mapDomainPrice(price)]));
+          })().catch((err) => {
+            console.warn('[Domains] Could not fetch RC customer pricing, will fall back:', err instanceof Error ? err.message : String(err));
+            return null;
+          }),
+          (async () => {
+            const rcWholesale = await domainService.getResellerCostPricing(popularTlds);
+            return Object.fromEntries(Object.entries(rcWholesale).map(([tld, price]) => [tld, mapDomainPrice(price)]));
+          })().catch((err) => {
+            console.warn('[Domains] Could not fetch RC cost pricing, will fall back:', err instanceof Error ? err.message : String(err));
+            return null;
+          }),
+        ]);
+
+        if (retailResult) retailByTld = retailResult as Record<string, SimplePrice>;
+        if (wholesaleResult) wholesaleByTld = wholesaleResult as Record<string, SimplePrice>;
+
+        if (Object.keys(retailByTld).length > 0) {
+          console.log(`[Domains] Fetched live customer pricing for ${Object.keys(retailByTld).length} TLDs`);
+        } else if (resellerClubCustomerId) {
+          console.warn('[Domains] RC customer pricing returned empty — API response may use unexpected TLD keys');
+        } else {
+          console.warn('[Domains] No resellerclub_customer_id found for agency; cannot fetch customer pricing');
+        }
+        if (Object.keys(wholesaleByTld).length > 0) {
+          console.log(`[Domains] Fetched live cost pricing for ${Object.keys(wholesaleByTld).length} TLDs`);
+        } else {
+          console.warn('[Domains] RC cost pricing returned empty — API response may use unexpected TLD keys');
         }
 
         const results: DomainSearchResult[] = availability.map(item => {
           const tld = domainService.extractTld(item.domain);
-          const rcPrice = apiPrices[tld];
-          const basePrice = rcPrice?.register?.[1] || 12.99;
+          const retail = retailByTld[tld];
+          const wholesale = wholesaleByTld[tld];
+
+          const fallbackBase = 12.99;
+          const baseWholesale = wholesale?.register?.[1] || fallbackBase;
+          const baseRetailRaw =
+            retail?.register?.[1] ||
+            // If we only have wholesale, use that as base retail (and possibly markup below)
+            baseWholesale ||
+            fallbackBase;
+
+          const shouldApplyExtraMarkup =
+            // Only apply platform markup if explicitly enabled AND we're basing on RC customer pricing
+            applyPlatformMarkup && pricingSource === 'resellerclub_customer';
+          const baseRetail = shouldApplyExtraMarkup ? applyMarkup(baseRetailRaw) : baseRetailRaw;
           
           // If the API returned 'unknown' status (no matching key in response),
           // mark as unverified so the UI shows a warning instead of "Already registered"
           const isUnknown = item.status === 'unknown';
           
+          // Build wholesale and retail price maps with sensible fallbacks.
+          const wholesaleRegister = wholesale?.register?.[1] ? wholesale.register : { 1: baseWholesale };
+          const wholesaleRenew = wholesale?.renew?.[1] ? wholesale.renew : { 1: baseWholesale * 1.1 };
+          const wholesaleTransfer = wholesale?.transfer || baseWholesale * 0.9;
+
+          const retailRegisterRaw = retail?.register?.[1] ? retail.register : { 1: baseRetailRaw };
+          const retailRenewRaw = retail?.renew?.[1] ? retail.renew : { 1: baseRetailRaw * 1.1 };
+          const retailTransferRaw = retail?.transfer || baseRetailRaw * 0.9;
+
+          const retailRegister = shouldApplyExtraMarkup
+            ? (Object.fromEntries(Object.entries(retailRegisterRaw).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])) as Record<number, number>)
+            : retailRegisterRaw;
+          const retailRenew = shouldApplyExtraMarkup
+            ? (Object.fromEntries(Object.entries(retailRenewRaw).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])) as Record<number, number>)
+            : retailRenewRaw;
+          const retailTransfer = shouldApplyExtraMarkup ? applyMarkup(retailTransferRaw) : retailTransferRaw;
+
           return {
             domain: item.domain,
             tld,
@@ -185,18 +259,14 @@ export async function searchDomains(
             ...(isUnknown ? { unverified: true } : {}),
             premium: item.status === 'premium',
             prices: {
-              register: rcPrice?.register || { 1: basePrice, 2: basePrice * 1.9, 3: basePrice * 2.8 },
-              renew: rcPrice?.renew || { 1: basePrice * 1.1 },
-              transfer: rcPrice?.transfer || basePrice * 0.9,
+              register: wholesaleRegister,
+              renew: wholesaleRenew,
+              transfer: wholesaleTransfer,
             },
             retailPrices: {
-              register: Object.fromEntries(
-                Object.entries(rcPrice?.register || { 1: basePrice }).map(([y, p]) => [y, calculateRetail(p)])
-              ) as Record<number, number>,
-              renew: Object.fromEntries(
-                Object.entries(rcPrice?.renew || { 1: basePrice * 1.1 }).map(([y, p]) => [y, calculateRetail(p)])
-              ) as Record<number, number>,
-              transfer: calculateRetail(rcPrice?.transfer || basePrice * 0.9),
+              register: retailRegister,
+              renew: retailRenew,
+              transfer: retailTransfer,
             },
           };
         });
