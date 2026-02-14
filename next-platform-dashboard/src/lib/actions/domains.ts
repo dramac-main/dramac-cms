@@ -683,23 +683,6 @@ export async function renewDomain(domainId: string, years: number): Promise<{
     };
   }
 }
-        status: 'completed',
-        payment_status: 'paid',
-        completed_at: new Date().toISOString(),
-      });
-    
-    revalidatePath(`/dashboard/domains/${domainId}`);
-    revalidatePath('/dashboard/domains');
-    
-    return { success: true, data: { newExpiryDate: newExpiry.toISOString() } };
-  } catch (error) {
-    console.error('[Domains] Renewal error:', error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Renewal failed' 
-    };
-  }
-}
 
 // ============================================================================
 // Domain Settings

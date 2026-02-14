@@ -455,10 +455,11 @@ export async function calculateDomainPrice(params: {
             retailPrice = wholesalePrice * (1 + markupValue / 100);
             break;
           case 'fixed':
-          retailPrice = wholesalePrice + markupValue;
-          break;
-        default:
-          retailPrice = wholesalePrice * 1.3; // 30% default
+            retailPrice = wholesalePrice + markupValue;
+            break;
+          default:
+            retailPrice = wholesalePrice * 1.3; // 30% default
+        }
       }
     }
     
