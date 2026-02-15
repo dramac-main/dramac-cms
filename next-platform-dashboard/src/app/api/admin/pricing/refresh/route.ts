@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     // Parse request body for sync options
     const body = await request.json().catch(() => ({}));
     const syncType = body.syncType || 'full'; // 'domain', 'email', or 'full'
-    const pricingTypes = body.pricingTypes || ['customer', 'cost'];
+    const pricingTypes = body.pricingTypes || ['reseller', 'cost'];
     
     const results: {
       domain?: unknown;

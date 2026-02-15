@@ -163,25 +163,15 @@ export async function searchDomains(
       try {
         const availability = await domainService.suggestDomains(cleanKeyword, popularTlds);
         
-        // Get ResellerClub customer pricing (selling/retail) and reseller cost pricing (wholesale)
-        // Customer pricing needs a ResellerClub customer-id; ensure the agency has one.
-        let resellerClubCustomerId: string | null = null;
-        try {
-          const { data: agency } = await (admin as any)
-            .from('agencies')
-            .select('resellerclub_customer_id')
-            .eq('id', profile.agency_id)
-            .single();
-          resellerClubCustomerId = (agency?.resellerclub_customer_id as string) || null;
-        } catch {
-          // ignore; we may still be able to show cost pricing
-        }
-        if (!resellerClubCustomerId && user.email) {
-          resellerClubCustomerId = await ensureResellerClubCustomer(profile.agency_id, user.email);
-        }
+        // Fetch TWO price tiers from ResellerClub in parallel:
+        // 1. Reseller pricing (products/reseller-price.json) — the SELLING prices
+        //    configured in your RC panel. No customer-id needed. This is the source of
+        //    truth for what to charge end-customers.
+        // 2. Cost pricing (products/reseller-cost-price.json) — WHOLESALE prices
+        //    (what you pay RC). Used to show profit margin.
 
         type SimplePrice = { register: Record<number, number>; renew: Record<number, number>; transfer: number };
-        let retailByTld: Record<string, SimplePrice> = {};
+        let sellingByTld: Record<string, SimplePrice> = {};
         let wholesaleByTld: Record<string, SimplePrice> = {};
 
         const mapDomainPrice = (price: { register: Record<number, number>; renew: Record<number, number>; transfer: number }) => ({
@@ -190,43 +180,41 @@ export async function searchDomains(
           transfer: Number(price.transfer) || 0,
         });
 
-        const [retailResult, wholesaleResult] = await Promise.all([
+        const [sellingResult, wholesaleResult] = await Promise.all([
           (async () => {
-            if (!resellerClubCustomerId) return null;
-            const rcRetail = await domainService.getCustomerPricing(resellerClubCustomerId, popularTlds);
-            return Object.fromEntries(Object.entries(rcRetail).map(([tld, price]) => [tld, mapDomainPrice(price)]));
+            // reseller-price.json: your configured selling prices (no customer-id needed)
+            const rcSelling = await domainService.getResellerPricing(popularTlds);
+            return Object.fromEntries(Object.entries(rcSelling).map(([tld, price]) => [tld, mapDomainPrice(price)]));
           })().catch((err) => {
-            console.warn('[Domains] Could not fetch RC customer pricing, will fall back:', err instanceof Error ? err.message : String(err));
+            console.warn('[Domains] Could not fetch RC reseller/selling pricing:', err instanceof Error ? err.message : String(err));
             return null;
           }),
           (async () => {
             const rcWholesale = await domainService.getResellerCostPricing(popularTlds);
             return Object.fromEntries(Object.entries(rcWholesale).map(([tld, price]) => [tld, mapDomainPrice(price)]));
           })().catch((err) => {
-            console.warn('[Domains] Could not fetch RC cost pricing, will fall back:', err instanceof Error ? err.message : String(err));
+            console.warn('[Domains] Could not fetch RC cost pricing:', err instanceof Error ? err.message : String(err));
             return null;
           }),
         ]);
 
-        if (retailResult) retailByTld = retailResult as Record<string, SimplePrice>;
+        if (sellingResult) sellingByTld = sellingResult as Record<string, SimplePrice>;
         if (wholesaleResult) wholesaleByTld = wholesaleResult as Record<string, SimplePrice>;
 
-        if (Object.keys(retailByTld).length > 0) {
-          console.log(`[Domains] Fetched live customer pricing for ${Object.keys(retailByTld).length} TLDs`);
-        } else if (resellerClubCustomerId) {
-          console.warn('[Domains] RC customer pricing returned empty — API response may use unexpected TLD keys');
+        if (Object.keys(sellingByTld).length > 0) {
+          console.log(`[Domains] Fetched live selling pricing for ${Object.keys(sellingByTld).length} TLDs`);
         } else {
-          console.warn('[Domains] No resellerclub_customer_id found for agency; cannot fetch customer pricing');
+          console.warn('[Domains] RC selling pricing returned empty — will use cost × markup as fallback');
         }
         if (Object.keys(wholesaleByTld).length > 0) {
           console.log(`[Domains] Fetched live cost pricing for ${Object.keys(wholesaleByTld).length} TLDs`);
         } else {
-          console.warn('[Domains] RC cost pricing returned empty — API response may use unexpected TLD keys');
+          console.warn('[Domains] RC cost pricing returned empty');
         }
 
         const results: DomainSearchResult[] = availability.map(item => {
           const tld = domainService.extractTld(item.domain);
-          const rcCustomer = retailByTld[tld];   // RC selling prices (your configured retail)
+          const rcSelling = sellingByTld[tld];    // RC selling prices (your configured retail)
           const rcCost = wholesaleByTld[tld];      // RC cost prices (what you pay RC)
 
           const fallbackBase = 12.99;
@@ -242,25 +230,25 @@ export async function searchDomains(
           const wholesaleTransfer = rcCost?.transfer || baseWholesale * 0.9;
 
           // RETAIL (selling) prices — what the agency charges their clients.
-          // Base retail = RC customer/selling price (reflects the profit margin
-          // you configured in your ResellerClub panel).
+          // Base retail = RC reseller/selling price (reflects the profit margin
+          // you configured in your ResellerClub panel, e.g. 100% = 2× cost).
           // The DRAMAC agency markup (if any) is applied ON TOP of these prices.
           // With markup=0% (default), prices match exactly what's in your RC panel.
-          const hasRcCustomerPricing = !!rcCustomer?.register?.[1];
+          const hasRcSellingPrice = !!rcSelling?.register?.[1];
 
           let retailRegister: Record<number, number>;
           let retailRenew: Record<number, number>;
           let retailTransfer: number;
 
-          if (hasRcCustomerPricing) {
+          if (hasRcSellingPrice) {
             // Use RC selling prices as base, then apply any DRAMAC additional markup
             retailRegister = Object.fromEntries(
-              Object.entries(rcCustomer!.register).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])
+              Object.entries(rcSelling!.register).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])
             ) as Record<number, number>;
             retailRenew = Object.fromEntries(
-              Object.entries(rcCustomer!.renew).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])
+              Object.entries(rcSelling!.renew).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])
             ) as Record<number, number>;
-            retailTransfer = applyMarkup(rcCustomer!.transfer || 0);
+            retailTransfer = applyMarkup(rcSelling!.transfer || 0);
           } else {
             // No RC customer pricing available — derive retail from cost + markup
             // Use a minimum 30% markup on cost when we don't have selling prices

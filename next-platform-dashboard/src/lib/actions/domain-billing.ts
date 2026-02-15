@@ -200,41 +200,42 @@ export async function calculateDomainPrice(params: {
       const { isClientAvailable } = await import('@/lib/resellerclub/client');
       const { pricingCacheService } = await import('@/lib/resellerclub/pricing-cache');
       
-      if (isClientAvailable() && customerId) {
-        // Get cached customer pricing (what RC says end-customer should pay)
-        const customerPriceData = await pricingCacheService.getCachedDomainPrice(
+      if (isClientAvailable()) {
+        // Get cached reseller/selling pricing (your configured retail prices from RC panel)
+        // Uses 'reseller' type — does NOT require a customer ID
+        const sellingPriceData = await pricingCacheService.getCachedDomainPrice(
           params.tld,
-          customerId,
-          'customer',
+          '', // No customer ID needed for reseller pricing
+          'reseller',
           24 // 24-hour cache
         );
         
         // Get cached cost pricing (wholesale)
         const costPriceData = await pricingCacheService.getCachedDomainPrice(
           params.tld,
-          customerId,
+          '', // No customer ID needed for cost pricing
           'cost',
           24
         );
         
-        if (customerPriceData && costPriceData) {
+        if (sellingPriceData && costPriceData) {
           switch (params.operation) {
             case 'register': {
-              const customerPrices = customerPriceData.register as Record<number, number>;
+              const sellingPrices = sellingPriceData.register as Record<number, number>;
               const costPrices = costPriceData.register as Record<number, number>;
-              retailPrice = customerPrices[params.years] || (customerPrices[1] || 0) * params.years;
+              retailPrice = sellingPrices[params.years] || (sellingPrices[1] || 0) * params.years;
               wholesalePrice = costPrices[params.years] || (costPrices[1] || 0) * params.years;
               break;
             }
             case 'renew': {
-              const customerPrices = customerPriceData.renew as Record<number, number>;
+              const sellingPrices = sellingPriceData.renew as Record<number, number>;
               const costPrices = costPriceData.renew as Record<number, number>;
-              retailPrice = customerPrices[params.years] || (customerPrices[1] || 0) * params.years;
+              retailPrice = sellingPrices[params.years] || (sellingPrices[1] || 0) * params.years;
               wholesalePrice = costPrices[params.years] || (costPrices[1] || 0) * params.years;
               break;
             }
             case 'transfer':
-              retailPrice = customerPriceData.transfer;
+              retailPrice = sellingPriceData.transfer;
               wholesalePrice = costPriceData.transfer;
               break;
           }

@@ -5,8 +5,8 @@ import { PLATFORM } from "@/lib/constants/platform";
 import PricingManagementClient from "./pricing-client";
 
 export const metadata: Metadata = {
-  title: `Domain Pricing Management | ${PLATFORM.name}`,
-  description: "Manage ResellerClub domain and email pricing cache",
+  title: `Pricing Cache Management | ${PLATFORM.name}`,
+  description: "Manage and refresh ResellerClub domain and email pricing cache",
 };
 
 export default async function AdminPricingPage() {
@@ -15,8 +15,8 @@ export default async function AdminPricingPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="ResellerClub Pricing Management"
-        description="Manually refresh domain and email pricing from ResellerClub API. Pricing is also automatically synced daily at 02:00 UTC."
+        title="Pricing Cache"
+        description="Manage the ResellerClub pricing cache. Prices are synced daily at 02:00 UTC — use manual refresh if you've updated prices in your ResellerClub panel."
       />
 
       <PricingManagementClient />

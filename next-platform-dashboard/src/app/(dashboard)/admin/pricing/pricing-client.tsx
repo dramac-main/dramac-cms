@@ -1,10 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, CheckCircle, AlertCircle, Clock, Database, Mail, Globe } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import {
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  Database,
+  Mail,
+  Globe,
+  ArrowRight,
+  Info,
+  Loader2,
+  RefreshCw,
+} from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import Link from 'next/link';
 
 type SyncType = 'domain' | 'email' | 'full';
 
@@ -19,12 +33,56 @@ interface SyncResult {
   timestamp: string;
 }
 
+interface CacheStatus {
+  configured: boolean;
+  domain: {
+    stale: boolean;
+    lastSync?: {
+      started_at: string;
+      completed_at?: string;
+      status: string;
+      records_updated?: number;
+    };
+  };
+  email: {
+    stale: boolean;
+    lastSync?: {
+      started_at: string;
+      completed_at?: string;
+      status: string;
+      records_updated?: number;
+    };
+  };
+  timestamp: string;
+}
+
 export default function PricingManagementClient() {
-  const [syncing, setSyncing] = useState(false);
+  const [syncing, setSyncing] = useState<SyncType | null>(null);
   const [result, setResult] = useState<SyncResult | null>(null);
+  const [cacheStatus, setCacheStatus] = useState<CacheStatus | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState(true);
+
+  const fetchCacheStatus = useCallback(async () => {
+    try {
+      setLoadingStatus(true);
+      const response = await fetch('/api/admin/pricing/refresh');
+      if (response.ok) {
+        const data = await response.json();
+        setCacheStatus(data);
+      }
+    } catch {
+      // Status fetch failed — not critical
+    } finally {
+      setLoadingStatus(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCacheStatus();
+  }, [fetchCacheStatus]);
 
   const handleSync = async (syncType: SyncType) => {
-    setSyncing(true);
+    setSyncing(syncType);
     setResult(null);
 
     try {
@@ -35,7 +93,7 @@ export default function PricingManagementClient() {
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         setResult({
           success: false,
@@ -44,6 +102,8 @@ export default function PricingManagementClient() {
         });
       } else {
         setResult({ ...data, syncType, timestamp: new Date().toISOString() });
+        // Refresh cache status after successful sync
+        fetchCacheStatus();
       }
     } catch (error) {
       setResult({
@@ -52,173 +112,330 @@ export default function PricingManagementClient() {
         timestamp: new Date().toISOString(),
       });
     } finally {
-      setSyncing(false);
+      setSyncing(null);
+    }
+  };
+
+  const formatTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } catch {
+      return 'Unknown';
+    }
+  };
+
+  const timeAgo = (dateString: string) => {
+    try {
+      const ms = Date.now() - new Date(dateString).getTime();
+      const hours = Math.floor(ms / 3600000);
+      const mins = Math.floor((ms % 3600000) / 60000);
+      if (hours > 24) return `${Math.floor(hours / 24)}d ago`;
+      if (hours > 0) return `${hours}h ${mins}m ago`;
+      return `${mins}m ago`;
+    } catch {
+      return '';
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Sync Controls */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Manual Pricing Refresh</CardTitle>
-          <CardDescription>
-            Refresh pricing cache from ResellerClub. This fetches the latest customer 
-            pricing (retail) and cost pricing (wholesale) for all TLDs and email packages.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button
-              onClick={() => handleSync('domain')}
-              disabled={syncing}
-              className="h-32 flex-col gap-3"
-              variant="outline"
-            >
-              <Globe className={`h-8 w-8 ${syncing ? 'animate-spin' : ''}`} />
-              <div className="text-center">
-                <div className="font-semibold text-base">Domain Pricing</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Refresh all TLD prices
-                </div>
-              </div>
-            </Button>
-
-            <Button
-              onClick={() => handleSync('email')}
-              disabled={syncing}
-              className="h-32 flex-col gap-3"
-              variant="outline"
-            >
-              <Mail className={`h-8 w-8 ${syncing ? 'animate-spin' : ''}`} />
-              <div className="text-center">
-                <div className="font-semibold text-base">Email Pricing</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Refresh Titan email prices
-                </div>
-              </div>
-            </Button>
-
-            <Button
-              onClick={() => handleSync('full')}
-              disabled={syncing}
-              className="h-32 flex-col gap-3"
-            >
-              <Database className={`h-8 w-8 ${syncing ? 'animate-spin' : ''}`} />
-              <div className="text-center">
-                <div className="font-semibold text-base">Full Sync</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  Refresh all pricing data
-                </div>
-              </div>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Results */}
-      {result && (
-        <Alert variant={result.success ? 'default' : 'destructive'}>
-          <div className="flex items-start gap-4">
-            {result.success ? (
-              <CheckCircle className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
-            ) : (
-              <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-            )}
-            
-            <div className="flex-1 space-y-2">
-              <div>
-                <h4 className="font-semibold">
-                  {result.success ? 'Sync Completed' : 'Sync Failed'}
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(result.timestamp).toLocaleString()}
-                </p>
-              </div>
-
-              {result.success && result.results && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm mt-3">
-                  <div className="p-3 bg-background rounded-md border">
-                    <div className="text-muted-foreground">Sync Type</div>
-                    <div className="font-semibold capitalize">{result.syncType}</div>
-                  </div>
-                  {result.results.domain && (
-                    <div className="p-3 bg-background rounded-md border">
-                      <div className="text-muted-foreground">Domains Updated</div>
-                      <div className="font-semibold">{result.results.domain.domainsUpdated || 0}</div>
-                    </div>
-                  )}
-                  {result.results.email && (
-                    <div className="p-3 bg-background rounded-md border">
-                      <div className="text-muted-foreground">Email Packages</div>
-                      <div className="font-semibold">{result.results.email.emailPackagesUpdated || 0}</div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {result.error && (
-                <AlertDescription className="mt-2">
-                  <code className="text-sm">{result.error}</code>
-                </AlertDescription>
-              )}
-            </div>
-          </div>
-        </Alert>
-      )}
-
-      {/* Information Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Cache Status Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">How Pricing Works</CardTitle>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Domain Pricing Cache</CardTitle>
+              </div>
+              {loadingStatus ? (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              ) : cacheStatus?.domain.stale ? (
+                <Badge variant="destructive" className="text-xs">Stale</Badge>
+              ) : (
+                <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">Fresh</Badge>
+              )}
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm">
-            <div>
-              <h4 className="font-semibold mb-1">Customer Pricing (Retail)</h4>
-              <p className="text-muted-foreground">
-                The prices you've set in your ResellerClub control panel. This includes 
-                your markup and is what your customers see.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-1">Cost Pricing (Wholesale)</h4>
-              <p className="text-muted-foreground">
-                The actual cost you pay to ResellerClub. Used to calculate your profit margins.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-1">Agency Markups</h4>
-              <p className="text-muted-foreground">
-                Agency-specific markups configured in Settings → Domains are applied on top 
-                of the cached customer pricing.
-              </p>
+          <CardContent>
+            <div className="space-y-2 text-sm">
+              {cacheStatus?.domain.lastSync ? (
+                <>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Last sync</span>
+                    <span>{formatTime(cacheStatus.domain.lastSync.started_at)}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Status</span>
+                    <span className="capitalize">{cacheStatus.domain.lastSync.status}</span>
+                  </div>
+                  {cacheStatus.domain.lastSync.records_updated != null && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Records</span>
+                      <span>{cacheStatus.domain.lastSync.records_updated} TLDs</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Age</span>
+                    <span>{timeAgo(cacheStatus.domain.lastSync.started_at)}</span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-muted-foreground">No sync data available</p>
+              )}
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Cache & Sync</CardTitle>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">Email Pricing Cache</CardTitle>
+              </div>
+              {loadingStatus ? (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              ) : cacheStatus?.email.stale ? (
+                <Badge variant="destructive" className="text-xs">Stale</Badge>
+              ) : (
+                <Badge variant="secondary" className="text-xs bg-green-500/10 text-green-600 border-green-500/20">Fresh</Badge>
+              )}
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4 text-sm">
-            <div>
-              <h4 className="font-semibold mb-1">Cache Duration</h4>
-              <p className="text-muted-foreground">
-                Pricing is cached for 24 hours to reduce API calls. Use manual refresh 
-                if you've updated prices in ResellerClub.
-              </p>
+          <CardContent>
+            <div className="space-y-2 text-sm">
+              {cacheStatus?.email.lastSync ? (
+                <>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Last sync</span>
+                    <span>{formatTime(cacheStatus.email.lastSync.started_at)}</span>
+                  </div>
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Status</span>
+                    <span className="capitalize">{cacheStatus.email.lastSync.status}</span>
+                  </div>
+                  {cacheStatus.email.lastSync.records_updated != null && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Records</span>
+                      <span>{cacheStatus.email.lastSync.records_updated} packages</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Age</span>
+                    <span>{timeAgo(cacheStatus.email.lastSync.started_at)}</span>
+                  </div>
+                </>
+              ) : (
+                <p className="text-muted-foreground">No sync data available</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Sync Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Manual Refresh</CardTitle>
+          <CardDescription>
+            Fetch the latest prices from ResellerClub. Use this after updating prices in
+            your ResellerClub panel.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Button
+              onClick={() => handleSync('domain')}
+              disabled={syncing !== null}
+              variant="outline"
+              className="h-auto py-4 flex-col gap-2"
+            >
+              {syncing === 'domain' ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Globe className="h-5 w-5" />
+              )}
+              <span className="font-medium text-sm">Domains</span>
+              <span className="text-xs text-muted-foreground">All TLD prices</span>
+            </Button>
+
+            <Button
+              onClick={() => handleSync('email')}
+              disabled={syncing !== null}
+              variant="outline"
+              className="h-auto py-4 flex-col gap-2"
+            >
+              {syncing === 'email' ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Mail className="h-5 w-5" />
+              )}
+              <span className="font-medium text-sm">Email</span>
+              <span className="text-xs text-muted-foreground">Titan email packages</span>
+            </Button>
+
+            <Button
+              onClick={() => handleSync('full')}
+              disabled={syncing !== null}
+              className="h-auto py-4 flex-col gap-2"
+            >
+              {syncing === 'full' ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Database className="h-5 w-5" />
+              )}
+              <span className="font-medium text-sm">Full Sync</span>
+              <span className="text-xs text-muted-foreground">All pricing data</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sync Result */}
+      {result && (
+        <Alert variant={result.success ? 'default' : 'destructive'}>
+          {result.success ? (
+            <CheckCircle className="h-4 w-4" />
+          ) : (
+            <AlertCircle className="h-4 w-4" />
+          )}
+          <AlertDescription>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">
+                  {result.success ? 'Sync completed successfully' : 'Sync failed'}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {formatTime(result.timestamp)}
+                </span>
+              </div>
+
+              {result.success && result.results && (
+                <div className="flex gap-4 text-sm">
+                  {result.results.domain && (
+                    <span>{result.results.domain.domainsUpdated || 0} domain TLDs updated</span>
+                  )}
+                  {result.results.email && (
+                    <span>{result.results.email.emailPackagesUpdated || 0} email packages updated</span>
+                  )}
+                </div>
+              )}
+
+              {result.error && (
+                <p className="text-sm"><code>{result.error}</code></p>
+              )}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* How It Works + Quick Links */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Info className="h-4 w-4 text-muted-foreground" />
+              How Pricing Works
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              <strong className="text-foreground">ResellerClub Selling Prices</strong> — The retail
+              prices you&apos;ve configured in your ResellerClub panel, including your profit margin.
+              These are the base prices shown to end customers.
+            </p>
+            <p>
+              <strong className="text-foreground">Cost Prices</strong> — What you pay ResellerClub
+              (wholesale). Used to calculate your profit margins.
+            </p>
+            <p>
+              <strong className="text-foreground">Agency Markup</strong> — An optional additional markup
+              applied on top of RC selling prices. Configured per-agency in their pricing settings.
+            </p>
+
+            <Separator />
+
+            <div className="flex items-center justify-between py-1">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span>Auto-sync schedule</span>
+              </div>
+              <Badge variant="outline" className="text-xs">Daily 02:00 UTC</Badge>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-muted rounded-md">
+            <div className="flex items-center justify-between py-1">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">Automatic Sync</span>
+                <RefreshCw className="h-4 w-4" />
+                <span>Cache duration</span>
               </div>
-              <span className="text-xs text-green-600 font-medium">Daily 02:00 UTC</span>
+              <Badge variant="outline" className="text-xs">24 hours</Badge>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              Related Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Link
+              href="/dashboard/settings/domains/pricing"
+              className="flex items-center justify-between p-3 rounded-md border hover:bg-muted/50 transition-colors group"
+            >
+              <div>
+                <p className="text-sm font-medium group-hover:text-primary transition-colors">Agency Pricing Settings</p>
+                <p className="text-xs text-muted-foreground">
+                  Configure markup rates and TLD-specific pricing
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </Link>
+
+            <Link
+              href="/dashboard/domains"
+              className="flex items-center justify-between p-3 rounded-md border hover:bg-muted/50 transition-colors group"
+            >
+              <div>
+                <p className="text-sm font-medium group-hover:text-primary transition-colors">Domain Search</p>
+                <p className="text-xs text-muted-foreground">
+                  Search and register domains with live pricing
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </Link>
+
+            <Link
+              href="/dashboard/email"
+              className="flex items-center justify-between p-3 rounded-md border hover:bg-muted/50 transition-colors group"
+            >
+              <div>
+                <p className="text-sm font-medium group-hover:text-primary transition-colors">Business Email</p>
+                <p className="text-xs text-muted-foreground">
+                  Manage Titan business email accounts
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+            </Link>
+
+            {!cacheStatus?.configured && (
+              <Alert className="mt-3">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  ResellerClub is not configured. Set <code>RESELLERCLUB_RESELLER_ID</code> and{' '}
+                  <code>RESELLERCLUB_API_KEY</code> in your environment variables.
+                </AlertDescription>
+              </Alert>
+            )}
           </CardContent>
         </Card>
       </div>
