@@ -74,7 +74,7 @@ export function PricingPageClient({ initialConfig }: PricingPageClientProps) {
             <TldPricingTable 
               currentConfig={(config.tld_pricing as TldPricingConfig) || {}}
               defaultMarkupType={(config.default_markup_type as PricingMarkupType) || 'percentage'}
-              defaultMarkupValue={config.default_markup_value || 30}
+              defaultMarkupValue={config.default_markup_value ?? 0}
               onUpdate={handleUpdate}
             />
           </div>
@@ -92,7 +92,7 @@ export function PricingPageClient({ initialConfig }: PricingPageClientProps) {
             <MarkupCalculator 
               tldConfig={(config.tld_pricing as TldPricingConfig) || {}}
               defaultMarkupType={(config.default_markup_type as PricingMarkupType) || 'percentage'}
-              defaultMarkupValue={config.default_markup_value || 30}
+              defaultMarkupValue={config.default_markup_value ?? 0}
             />
           </div>
         </TabsContent>

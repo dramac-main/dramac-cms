@@ -69,7 +69,7 @@ export async function getAgencyPricingConfig(): Promise<{
       data: {
         agency_id: profile.agency_id,
         default_markup_type: 'percentage',
-        default_markup_value: 30,
+        default_markup_value: 0, // 0% = use RC selling prices as-is (they already include your profit margin)
         tld_pricing: {},
         client_tiers: [],
         billing_enabled: false,
@@ -277,7 +277,7 @@ export async function calculateDomainPrice(params: {
     
     // Determine markup settings (declared at this scope so privacy calc can use them)
     let markupType = (config?.default_markup_type as string) || 'percentage';
-    let markupValue = (config?.default_markup_value as number) ?? 30;
+    let markupValue = (config?.default_markup_value as number) ?? 0;
     
     // Check for TLD-specific pricing overrides
     const tldConfig = (config?.tld_pricing as TldPricingConfig)?.[params.tld];
@@ -299,27 +299,41 @@ export async function calculateDomainPrice(params: {
       }
     }
     
-    // ALWAYS derive retail from wholesale + agency markup.
-    // The agency pays wholesale (RC cost price) and charges clients retail.
-    // `apply_platform_markup` adds an EXTRA layer on top of RC customer prices;
-    // the standard markup on wholesale is always applied.
+    // Pricing logic:
+    // - If we have REAL pricing from RC, `retailPrice` is already the RC customer/selling
+    //   price (which reflects the profit margin set in RC panel). The DRAMAC markup is
+    //   applied ON TOP of that selling price as an additional layer.
+    // - If using FALLBACK pricing, `retailPrice === wholesalePrice`, so we need to add
+    //   at least a 30% margin to ensure profitability.
     if (markupType !== 'custom' || retailPrice === 0) {
-      switch (markupType) {
-        case 'percentage':
-          retailPrice = wholesalePrice * (1 + markupValue / 100);
-          break;
-        case 'fixed':
-          retailPrice = wholesalePrice + markupValue;
-          break;
-        default:
-          retailPrice = wholesalePrice * 1.3; // 30% default
+      if (usedRealPricing) {
+        // retailPrice already = RC selling price. Apply DRAMAC additional markup on top.
+        switch (markupType) {
+          case 'percentage':
+            retailPrice = retailPrice * (1 + markupValue / 100);
+            break;
+          case 'fixed':
+            retailPrice = retailPrice + markupValue;
+            break;
+        }
+      } else {
+        // Fallback: retailPrice === wholesalePrice, apply at least 30% or configured markup
+        const effectiveMarkup = (markupType === 'percentage' && markupValue === 0) ? 30 : markupValue;
+        switch (markupType) {
+          case 'percentage':
+            retailPrice = wholesalePrice * (1 + effectiveMarkup / 100);
+            break;
+          case 'fixed':
+            retailPrice = wholesalePrice + (markupValue || wholesalePrice * 0.3);
+            break;
+          default:
+            retailPrice = wholesalePrice * 1.3; // 30% default
+        }
       }
     }
     
-    // If platform markup is enabled AND we have real RC customer pricing,
-    // the agency explicitly wants extra margin. This is a future hook for
-    // advanced pricing modes (e.g. using RC customer price as a floor).
-    // Currently the standard wholesale+markup calculation above covers all cases.
+    // Round retail price
+    retailPrice = Math.round(retailPrice * 100) / 100;
     
     // Apply client tier discount if applicable
     if (params.clientId && config?.client_tiers) {

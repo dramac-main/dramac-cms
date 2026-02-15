@@ -26,7 +26,7 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
     config.default_markup_type || 'percentage'
   );
   const [markupValue, setMarkupValue] = useState(
-    String(config.default_markup_value || 30)
+    String(config.default_markup_value ?? 0)
   );
   const [showWholesale, setShowWholesale] = useState(
     config.show_wholesale_prices || false
@@ -80,7 +80,8 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
         <CardHeader>
           <CardTitle>Default Pricing Markup</CardTitle>
           <CardDescription>
-            Set your default markup for all domain operations. This will be applied unless a TLD-specific override is configured.
+            Your ResellerClub selling prices already include the profit margin you set in your RC panel.
+            This setting adds an <strong>additional</strong> markup on top. Set to 0% to use your RC selling prices exactly as configured.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -97,7 +98,7 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
                     Percentage Markup
                   </Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Add a percentage on top of wholesale prices (e.g., 30% markup)
+                    Add a percentage on top of ResellerClub selling prices (0% = use RC prices as-is)
                   </p>
                 </div>
               </div>
@@ -110,7 +111,7 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
                     Fixed Markup
                   </Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Add a fixed currency amount on top of wholesale prices (e.g., +K50)
+                    Add a fixed currency amount on top of ResellerClub selling prices
                   </p>
                 </div>
               </div>
@@ -123,7 +124,7 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
                     Custom Price
                   </Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Set your own retail price regardless of wholesale cost
+                    Set your own retail price regardless of ResellerClub pricing
                   </p>
                 </div>
               </div>
@@ -158,17 +159,17 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
             <h4 className="text-sm font-medium mb-3">Price Preview (example .com domain)</h4>
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">Wholesale</p>
+                <p className="text-muted-foreground">RC Selling Price</p>
                 <p className="font-semibold text-lg">${exampleWholesale.toFixed(2)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Your Price</p>
+                <p className="text-muted-foreground">Your Final Price</p>
                 <p className="font-semibold text-lg text-primary">
                   ${exampleRetail.toFixed(2)}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Your Profit</p>
+                <p className="text-muted-foreground">Additional Markup</p>
                 <p className="font-semibold text-lg text-green-600">
                   ${(exampleRetail - exampleWholesale).toFixed(2)}
                 </p>
@@ -176,7 +177,9 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
             </div>
             <div className="mt-2 pt-2 border-t">
               <p className="text-xs text-muted-foreground">
-                Profit Margin: {((exampleRetail - exampleWholesale) / exampleRetail * 100).toFixed(1)}%
+                {parseFloat(markupValue) === 0 
+                  ? 'Prices match your ResellerClub selling prices exactly'
+                  : `Additional markup: ${((exampleRetail - exampleWholesale) / exampleWholesale * 100).toFixed(1)}%`}
               </p>
             </div>
           </div>

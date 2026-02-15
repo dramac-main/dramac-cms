@@ -133,20 +133,26 @@ export async function searchDomains(
 
     // Get agency pricing settings (markup + pricing mode)
     const { data: pricing } = await getTable(supabase, 'agency_domain_pricing')
-      .select('default_markup_type, default_markup_value, pricing_source, apply_platform_markup')
+      .select('default_markup_type, default_markup_value')
       .eq('agency_id', profile.agency_id)
-      .maybeSingle() as { data: { default_markup_type?: string; default_markup_value?: number; pricing_source?: string; apply_platform_markup?: boolean } | null };
+      .maybeSingle() as { data: { default_markup_type?: string; default_markup_value?: number } | null };
 
     const markupType = pricing?.default_markup_type || 'percentage';
-    const markupValue = pricing?.default_markup_value ?? 30;
-    const pricingSource = pricing?.pricing_source || 'resellerclub_customer';
-    // NOTE: Markup is ALWAYS applied to derive retail prices for the agency.
-    // The agency pays wholesale (RC cost) and charges retail (cost + markup) to their clients.
-    // `apply_platform_markup` controls whether an ADDITIONAL platform-level markup is applied
-    // on top of the standard agency markup. It does NOT control basic markup.
-    const applyPlatformMarkup = pricing?.apply_platform_markup ?? false;
+    const markupValue = pricing?.default_markup_value ?? 0;
+
+    // How pricing works:
+    // 1. ResellerClub provides TWO price tiers:
+    //    - Cost/wholesale price: what you pay RC (your cost)
+    //    - Customer/selling price: the retail price you configured in RC panel
+    //      (reflects the profit margin you set in RC, e.g. 100% → selling = 2× cost)
+    // 2. The DRAMAC agency markup is an ADDITIONAL layer on top of RC selling price.
+    //    Default 0% means: use exactly what you set in RC panel.
+    //    Setting e.g. 10% means: add 10% on top of RC selling price.
+    // 3. When RC data is unavailable, fallback prices are used as wholesale
+    //    and markup is applied to derive retail.
 
     const applyMarkup = (base: number): number => {
+      if (markupValue === 0 && markupType === 'percentage') return Math.round(base * 100) / 100;
       if (markupType === 'fixed') return Math.round((base + markupValue) * 100) / 100;
       return Math.round(base * (1 + markupValue / 100) * 100) / 100;
     };
@@ -220,37 +226,57 @@ export async function searchDomains(
 
         const results: DomainSearchResult[] = availability.map(item => {
           const tld = domainService.extractTld(item.domain);
-          const retail = retailByTld[tld];
-          const wholesale = wholesaleByTld[tld];
+          const rcCustomer = retailByTld[tld];   // RC selling prices (your configured retail)
+          const rcCost = wholesaleByTld[tld];      // RC cost prices (what you pay RC)
 
           const fallbackBase = 12.99;
-          const baseWholesale = wholesale?.register?.[1] || fallbackBase;
           
           // If the API returned 'unknown' status (no matching key in response),
           // mark as unverified so the UI shows a warning instead of "Already registered"
           const isUnknown = item.status === 'unknown';
           
-          // Build wholesale price maps with sensible fallbacks.
-          const wholesaleRegister = wholesale?.register?.[1] ? wholesale.register : { 1: baseWholesale };
-          const wholesaleRenew = wholesale?.renew?.[1] ? wholesale.renew : { 1: baseWholesale * 1.1 };
-          const wholesaleTransfer = wholesale?.transfer || baseWholesale * 0.9;
+          // WHOLESALE (cost) prices — what the agency pays ResellerClub
+          const baseWholesale = rcCost?.register?.[1] || fallbackBase;
+          const wholesaleRegister = rcCost?.register?.[1] ? rcCost.register : { 1: baseWholesale };
+          const wholesaleRenew = rcCost?.renew?.[1] ? rcCost.renew : { 1: baseWholesale * 1.1 };
+          const wholesaleTransfer = rcCost?.transfer || baseWholesale * 0.9;
 
-          // RETAIL PRICING: Always derive from wholesale (cost) + agency markup.
-          // The agency's cost is the RC reseller/cost price. The agency adds their
-          // configured markup (default 30%) to create the retail price shown to clients.
-          // If `apply_platform_markup` is enabled AND we have RC customer pricing,
-          // use RC customer price as the base instead (with markup on top).
-          const useCustomerAsBase = applyPlatformMarkup && pricingSource === 'resellerclub_customer' && retail?.register?.[1];
-          
-          const retailRegister = useCustomerAsBase
-            ? (Object.fromEntries(Object.entries(retail!.register).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])) as Record<number, number>)
-            : (Object.fromEntries(Object.entries(wholesaleRegister).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])) as Record<number, number>);
-          const retailRenew = useCustomerAsBase
-            ? (Object.fromEntries(Object.entries(retail!.renew).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])) as Record<number, number>)
-            : (Object.fromEntries(Object.entries(wholesaleRenew).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])) as Record<number, number>);
-          const retailTransfer = useCustomerAsBase
-            ? applyMarkup(retail!.transfer || 0)
-            : applyMarkup(wholesaleTransfer);
+          // RETAIL (selling) prices — what the agency charges their clients.
+          // Base retail = RC customer/selling price (reflects the profit margin
+          // you configured in your ResellerClub panel).
+          // The DRAMAC agency markup (if any) is applied ON TOP of these prices.
+          // With markup=0% (default), prices match exactly what's in your RC panel.
+          const hasRcCustomerPricing = !!rcCustomer?.register?.[1];
+
+          let retailRegister: Record<number, number>;
+          let retailRenew: Record<number, number>;
+          let retailTransfer: number;
+
+          if (hasRcCustomerPricing) {
+            // Use RC selling prices as base, then apply any DRAMAC additional markup
+            retailRegister = Object.fromEntries(
+              Object.entries(rcCustomer!.register).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])
+            ) as Record<number, number>;
+            retailRenew = Object.fromEntries(
+              Object.entries(rcCustomer!.renew).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])
+            ) as Record<number, number>;
+            retailTransfer = applyMarkup(rcCustomer!.transfer || 0);
+          } else {
+            // No RC customer pricing available — derive retail from cost + markup
+            // Use a minimum 30% markup on cost when we don't have selling prices
+            const costMarkup = (base: number): number => {
+              if (markupValue > 0) return applyMarkup(base);
+              // Default: at least 30% on cost when no RC selling price
+              return Math.round(base * 1.3 * 100) / 100;
+            };
+            retailRegister = Object.fromEntries(
+              Object.entries(wholesaleRegister).map(([y, p]) => [y, costMarkup(Number(p) || 0)])
+            ) as Record<number, number>;
+            retailRenew = Object.fromEntries(
+              Object.entries(wholesaleRenew).map(([y, p]) => [y, costMarkup(Number(p) || 0)])
+            ) as Record<number, number>;
+            retailTransfer = costMarkup(wholesaleTransfer);
+          }
 
           return {
             domain: item.domain,
@@ -305,6 +331,12 @@ export async function searchDomains(
       const fb = getFallbackPrice(tld);
       const fbResult = fallbackAvailability.find(r => r.domain === domainName);
       
+      // Fallback prices are wholesale-level, so always apply at least 30% markup
+      const fallbackMarkup = (base: number): number => {
+        if (markupValue > 0) return applyMarkup(base);
+        return Math.round(base * 1.3 * 100) / 100; // minimum 30% when no markup configured
+      };
+      
       return {
         domain: domainName,
         tld,
@@ -318,12 +350,12 @@ export async function searchDomains(
         },
         retailPrices: {
           register: Object.fromEntries(
-            Object.entries(fb.register).map(([y, p]) => [y, applyMarkup(Number(p))])
+            Object.entries(fb.register).map(([y, p]) => [y, fallbackMarkup(Number(p))])
           ) as Record<number, number>,
           renew: Object.fromEntries(
-            Object.entries(fb.renew).map(([y, p]) => [y, applyMarkup(Number(p))])
+            Object.entries(fb.renew).map(([y, p]) => [y, fallbackMarkup(Number(p))])
           ) as Record<number, number>,
-          transfer: applyMarkup(fb.transfer),
+          transfer: fallbackMarkup(fb.transfer),
         },
       };
     });
