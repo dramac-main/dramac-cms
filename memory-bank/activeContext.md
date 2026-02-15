@@ -2,6 +2,48 @@
 
 ## Recent Work
 
+### Domain Pricing Final Fix — reseller-price.json + Admin Page Redesign — February 16, 2026 ✅
+
+**Category:** Domain Pricing / Admin UI / Critical Fix
+
+**Problem:**
+Domain search still showed wrong prices ($19.23/.org instead of $29.58) despite the previous fix. The RC panel shows cost=$14.79, selling=$29.58 (100% margin), but DRAMAC displayed $14.79 × 1.3 = $19.23.
+
+**Root Cause Found:**
+The code used `products/customer-price.json` API which **requires a ResellerClub customer ID**. When the customer ID was missing or the API call failed silently, it fell through to the fallback path which applied a hardcoded 1.3× on cost prices. The customer ID often wasn't available because:
+- The agency may not have a `resellerclub_customer_id` in the DB
+- The `ensureResellerClubCustomer()` call may fail
+- The customer-price.json API may return empty/unexpected TLD keys
+
+**Fix Applied:**
+Switched from `customer-price.json` (needs customer ID) to **`reseller-price.json`** (no customer ID needed). This endpoint returns the **reseller's configured selling prices** — exactly what the user sees in their RC panel. It's the correct and reliable source of truth.
+
+**Files Changed (6 files, commit `8d5fd88`):**
+
+| File | Changes |
+|------|---------|
+| `src/lib/actions/domains.ts` | Replaced `getCustomerPricing(customerId)` with `getResellerPricing()` — no customer ID needed, slab unwrapping already handled by `parsePricingResponse` |
+| `src/lib/actions/domain-billing.ts` | Changed cache read from `'customer'` type to `'reseller'` type — no customer ID dependency |
+| `src/app/api/admin/pricing/refresh/route.ts` | Default pricingTypes: `['customer','cost']` → `['reseller','cost']` |
+| `src/app/(dashboard)/admin/pricing/page.tsx` | Updated title to "Pricing Cache" |
+| `src/app/(dashboard)/admin/pricing/pricing-client.tsx` | Complete redesign: live cache status, fresh/stale badges, last sync times, cross-links to related settings |
+| `src/config/admin-navigation.ts` | Renamed nav item: "Domain Pricing" → "Pricing Cache" |
+
+**Admin Pricing Page Purpose:**
+The `/admin/pricing` page is a **cache refresh utility** for super admins, NOT a pricing configuration page. It:
+- Shows domain/email cache status (fresh/stale badges, last sync time, age)
+- Provides manual refresh buttons (Domains, Email, Full Sync)
+- Links to related pages (Agency Pricing Settings, Domain Search, Business Email)
+- Shows auto-sync schedule (daily 02:00 UTC)
+
+**Expected Prices After Deploy:**
+With 0% additional DRAMAC markup:
+- .org: ~$29.58 (matches RC selling price)
+- .net: ~$29.98
+- .com: ~$26.98
+
+---
+
 ### Domain Pricing Architecture — RC Selling Prices as Base Retail — February 15, 2026 ✅
 
 **Category:** Domain Pricing / Billing / Architecture Correction

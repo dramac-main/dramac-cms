@@ -1,30 +1,28 @@
 # Progress: What Works & What's Left
 
-**Last Updated**: February 15, 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING ARCHITECTURE FIX ✅**
+**Last Updated**: February 16, 2026  
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅**
 
 ---
 
-## Latest Update: February 15, 2026 - Domain Pricing Architecture Corrected ✅
+## Latest Update: February 16, 2026 - Domain Pricing Final Fix + Admin Page Redesign ✅
 
 **What was done:**
-Corrected the domain pricing architecture. The previous fix (commit `46c41cb`) incorrectly applied 30% markup on wholesale/cost prices. The correct approach: ResellerClub selling prices (which already include the reseller's profit margin, e.g., 100%) are the BASE retail. DRAMAC markup is an ADDITIONAL layer on top (default 0%).
+1. Fixed the root cause of wrong domain prices: switched from `customer-price.json` (requires customer ID, was silently failing) to `reseller-price.json` (no customer ID needed, returns exactly the reseller's configured selling prices).
+2. Redesigned the admin `/admin/pricing` page to show live cache status, renamed nav item from "Domain Pricing" to "Pricing Cache".
 
-**Fixes Applied (4 files, commit `09bf6de`):**
+**Fixes Applied (6 files, commit `8d5fd88`):**
 
 | Fix | Impact |
 |-----|--------|
-| RC selling prices used as base retail price | Prices match what user configured in RC panel |
-| DRAMAC markup default changed from 30% → 0% | No surprise additional markup on top of RC prices |
-| Settings UI updated with correct help text | User understands DRAMAC markup is additional |
-| Fallback path ensures min 30% margin on cost | Safety net when RC customer pricing unavailable |
+| Switch to `reseller-price.json` API | Reliable RC selling prices without customer ID dependency |
+| Billing path uses `'reseller'` cache type | Checkout prices match search prices |
+| Cache refresh defaults to `['reseller','cost']` | Correct pricing types cached |
+| Admin page redesign | Live cache status, cross-links, consistent styling |
+| Nav label: "Domain Pricing" → "Pricing Cache" | Accurately describes the page's purpose |
 
 **Expected Prices (0% additional DRAMAC markup):**
-- .org: ~$29.58 (= RC selling price with 100% profit margin on $14.79 cost)
-- .net: ~$29.98
-- .com: ~$26.98
-
-**⚠️ Post-Deploy Action:** Check `agency_domain_pricing` table — may still have `default_markup_value: 30` from Phase 2 fix. Set to 0 via Settings > Domains > Pricing if needed.
+- .org: ~$29.58, .net: ~$29.98, .com: ~$26.98 (matches RC panel)
 
 ---
 
