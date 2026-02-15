@@ -11,6 +11,7 @@ import { contactService } from "@/lib/resellerclub/contacts";
 import { arePurchasesAllowed, TLD_CATEGORIES } from "@/lib/resellerclub/config";
 import { normalizeDomainKeyword } from "@/lib/domain-keyword";
 import { createDomainPurchase } from "@/lib/paddle/transactions";
+import { getFallbackPrice } from "@/lib/domain-fallback-prices";
 import type { 
   DomainFilters, 
   DomainWithDetails, 
@@ -139,6 +140,10 @@ export async function searchDomains(
     const markupType = pricing?.default_markup_type || 'percentage';
     const markupValue = pricing?.default_markup_value ?? 30;
     const pricingSource = pricing?.pricing_source || 'resellerclub_customer';
+    // NOTE: Markup is ALWAYS applied to derive retail prices for the agency.
+    // The agency pays wholesale (RC cost) and charges retail (cost + markup) to their clients.
+    // `apply_platform_markup` controls whether an ADDITIONAL platform-level markup is applied
+    // on top of the standard agency markup. It does NOT control basic markup.
     const applyPlatformMarkup = pricing?.apply_platform_markup ?? false;
 
     const applyMarkup = (base: number): number => {
@@ -220,37 +225,32 @@ export async function searchDomains(
 
           const fallbackBase = 12.99;
           const baseWholesale = wholesale?.register?.[1] || fallbackBase;
-          const baseRetailRaw =
-            retail?.register?.[1] ||
-            // If we only have wholesale, use that as base retail (and possibly markup below)
-            baseWholesale ||
-            fallbackBase;
-
-          const shouldApplyExtraMarkup =
-            // Only apply platform markup if explicitly enabled AND we're basing on RC customer pricing
-            applyPlatformMarkup && pricingSource === 'resellerclub_customer';
-          const baseRetail = shouldApplyExtraMarkup ? applyMarkup(baseRetailRaw) : baseRetailRaw;
           
           // If the API returned 'unknown' status (no matching key in response),
           // mark as unverified so the UI shows a warning instead of "Already registered"
           const isUnknown = item.status === 'unknown';
           
-          // Build wholesale and retail price maps with sensible fallbacks.
+          // Build wholesale price maps with sensible fallbacks.
           const wholesaleRegister = wholesale?.register?.[1] ? wholesale.register : { 1: baseWholesale };
           const wholesaleRenew = wholesale?.renew?.[1] ? wholesale.renew : { 1: baseWholesale * 1.1 };
           const wholesaleTransfer = wholesale?.transfer || baseWholesale * 0.9;
 
-          const retailRegisterRaw = retail?.register?.[1] ? retail.register : { 1: baseRetailRaw };
-          const retailRenewRaw = retail?.renew?.[1] ? retail.renew : { 1: baseRetailRaw * 1.1 };
-          const retailTransferRaw = retail?.transfer || baseRetailRaw * 0.9;
-
-          const retailRegister = shouldApplyExtraMarkup
-            ? (Object.fromEntries(Object.entries(retailRegisterRaw).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])) as Record<number, number>)
-            : retailRegisterRaw;
-          const retailRenew = shouldApplyExtraMarkup
-            ? (Object.fromEntries(Object.entries(retailRenewRaw).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])) as Record<number, number>)
-            : retailRenewRaw;
-          const retailTransfer = shouldApplyExtraMarkup ? applyMarkup(retailTransferRaw) : retailTransferRaw;
+          // RETAIL PRICING: Always derive from wholesale (cost) + agency markup.
+          // The agency's cost is the RC reseller/cost price. The agency adds their
+          // configured markup (default 30%) to create the retail price shown to clients.
+          // If `apply_platform_markup` is enabled AND we have RC customer pricing,
+          // use RC customer price as the base instead (with markup on top).
+          const useCustomerAsBase = applyPlatformMarkup && pricingSource === 'resellerclub_customer' && retail?.register?.[1];
+          
+          const retailRegister = useCustomerAsBase
+            ? (Object.fromEntries(Object.entries(retail!.register).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])) as Record<number, number>)
+            : (Object.fromEntries(Object.entries(wholesaleRegister).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])) as Record<number, number>);
+          const retailRenew = useCustomerAsBase
+            ? (Object.fromEntries(Object.entries(retail!.renew).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])) as Record<number, number>)
+            : (Object.fromEntries(Object.entries(wholesaleRenew).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])) as Record<number, number>);
+          const retailTransfer = useCustomerAsBase
+            ? applyMarkup(retail!.transfer || 0)
+            : applyMarkup(wholesaleTransfer);
 
           return {
             domain: item.domain,
@@ -288,31 +288,6 @@ export async function searchDomains(
     
     // Fallback: Use DNS/RDAP to check domain availability
     // This gives much better results than blindly marking everything as "unavailable"
-    const fallbackPrices: Record<string, number> = {
-      // Popular
-      '.com': 12.99, '.net': 14.99, '.org': 13.99, '.io': 39.99,
-      '.co': 29.99, '.app': 19.99, '.dev': 15.99,
-      // Business
-      '.biz': 14.99, '.company': 12.99, '.shop': 29.99, '.store': 29.99,
-      '.agency': 24.99, '.consulting': 34.99, '.solutions': 24.99, '.enterprises': 34.99,
-      // Tech
-      '.tech': 34.99, '.digital': 29.99, '.cloud': 19.99, '.software': 29.99,
-      '.systems': 24.99, '.network': 24.99, '.website': 19.99, '.online': 29.99,
-      // Creative
-      '.design': 34.99, '.studio': 29.99, '.media': 34.99, '.art': 14.99,
-      '.photography': 24.99, '.graphics': 24.99,
-      // Country
-      '.co.za': 9.99, '.uk': 9.99, '.us': 12.99, '.de': 14.99,
-      '.fr': 14.99, '.au': 19.99, '.ca': 14.99, '.eu': 12.99,
-      // Africa
-      '.africa': 19.99, '.za': 29.99,
-      // Lifestyle
-      '.life': 29.99, '.live': 24.99, '.world': 29.99, '.space': 9.99,
-      '.site': 29.99, '.blog': 29.99, '.email': 24.99,
-      // Professional
-      '.pro': 19.99, '.expert': 49.99, '.academy': 34.99,
-      '.training': 34.99, '.services': 34.99, '.xyz': 9.99,
-    };
     
     // Import and run the DNS/RDAP fallback checker
     let fallbackAvailability: Array<{ domain: string; available: boolean }> = [];
@@ -327,7 +302,7 @@ export async function searchDomains(
     
     const results: DomainSearchResult[] = popularTlds.map(tld => {
       const domainName = cleanKeyword + tld;
-      const basePrice = fallbackPrices[tld] || 15.99;
+      const fb = getFallbackPrice(tld);
       const fbResult = fallbackAvailability.find(r => r.domain === domainName);
       
       return {
@@ -337,18 +312,18 @@ export async function searchDomains(
         unverified: true, // Always true for fallback — results are heuristic-based
         premium: false,
         prices: {
-          register: { 1: basePrice, 2: basePrice * 1.9, 3: basePrice * 2.8 } as Record<number, number>,
-          renew: { 1: basePrice * 1.1 } as Record<number, number>,
-          transfer: basePrice * 0.9,
+          register: fb.register,
+          renew: fb.renew,
+          transfer: fb.transfer,
         },
         retailPrices: {
-          register: { 
-            1: calculateRetail(basePrice), 
-            2: calculateRetail(basePrice * 1.9), 
-            3: calculateRetail(basePrice * 2.8) 
-          } as Record<number, number>,
-          renew: { 1: calculateRetail(basePrice * 1.1) } as Record<number, number>,
-          transfer: calculateRetail(basePrice * 0.9),
+          register: Object.fromEntries(
+            Object.entries(fb.register).map(([y, p]) => [y, applyMarkup(Number(p))])
+          ) as Record<number, number>,
+          renew: Object.fromEntries(
+            Object.entries(fb.renew).map(([y, p]) => [y, applyMarkup(Number(p))])
+          ) as Record<number, number>,
+          transfer: applyMarkup(fb.transfer),
         },
       };
     });
