@@ -204,7 +204,7 @@ export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
                 ? 'text-green-600 font-semibold' 
                 : 'text-orange-600 font-semibold'
             }>
-              {order.payment_status.toUpperCase()}
+              {(order.payment_status || 'pending').toUpperCase()}
             </span>
           </div>
         </div>

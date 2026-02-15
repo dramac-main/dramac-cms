@@ -38,7 +38,7 @@ function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
   return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: "currency",
     currency: currency,
-  }).format(amount / 100); // LemonSqueezy amounts are in cents
+  }).format(amount / 100); // Paddle amounts are in cents
 }
 
 function formatDate(dateString: string): string {

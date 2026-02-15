@@ -58,7 +58,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
+import { DEFAULT_TIMEZONE, DEFAULT_LOCALE } from '@/lib/locale-config'
 import type { Report, ReportType } from '@/modules/social-media/types'
 
 const REPORT_TYPES: { value: ReportType; label: string; description: string }[] = [
@@ -171,7 +171,7 @@ export function ReportsPage({
 
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return 'Never'
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(DEFAULT_LOCALE, {
       dateStyle: 'medium',
       timeStyle: 'short',
       timeZone: DEFAULT_TIMEZONE,

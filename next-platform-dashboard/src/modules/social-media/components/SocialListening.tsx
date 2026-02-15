@@ -50,7 +50,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
+import { DEFAULT_TIMEZONE, DEFAULT_LOCALE } from '@/lib/locale-config'
 import type { ListeningKeyword, BrandMention, KeywordType, MentionStatus } from '@/modules/social-media/types'
 
 const KEYWORD_TYPES: { value: KeywordType; label: string; color: string }[] = [
@@ -146,7 +146,7 @@ export function SocialListening({
 
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return '—'
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(DEFAULT_LOCALE, {
       dateStyle: 'medium',
       timeStyle: 'short',
       timeZone: DEFAULT_TIMEZONE,

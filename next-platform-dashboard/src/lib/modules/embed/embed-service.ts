@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { loadStudioModuleForRender } from '../studio-module-loader'
 import type { LoadedStudioModule } from '../studio-module-loader'
 
@@ -21,7 +21,7 @@ export async function getModuleForEmbed(
   moduleId: string,
   siteId: string
 ): Promise<EmbedModuleResponse> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   // Get installation
   const { data: installation, error: installError } = await supabase
@@ -124,7 +124,7 @@ export async function createEmbedToken(
   moduleId: string,
   expiresInDays: number = 365
 ): Promise<{ token: string; expiresAt: Date }> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
   
@@ -161,7 +161,7 @@ export async function getEmbedToken(
   siteId: string,
   moduleId: string
 ): Promise<{ token: string; expiresAt: Date } | null> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
   

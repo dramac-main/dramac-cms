@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // push_subscriptions table is not yet in generated Supabase types — will be after migration
@@ -18,16 +19,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid subscription" }, { status: 400 });
     }
 
-    const supabase = await createClient();
-
-    // For agent context, get the authenticated user
+    // Agent context: use auth client (requires login)
+    // Customer context: use admin client (public widget, no auth session)
     let userId: string | null = null;
+    let supabase;
+
     if (context === "agent") {
+      supabase = await createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
       userId = user.id;
+    } else {
+      // Customer context - no auth session, use admin client
+      supabase = createAdminClient();
     }
 
     // Upsert the subscription (keyed on endpoint)
@@ -73,7 +79,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Missing endpoint" }, { status: 400 });
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     await supabase
       .from(PUSH_TABLE)
       .delete()

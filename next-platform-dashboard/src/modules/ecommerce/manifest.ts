@@ -262,8 +262,8 @@ export const EcommerceModuleManifest: ModuleManifest = {
   settings: {
     currency: {
       type: 'string',
-      default: 'USD',  // US DOLLAR DEFAULT
-      description: 'Store currency code (default: US Dollar)'
+      default: 'USD',  // Platform default — matches locale-config DEFAULT_CURRENCY
+      description: 'Store currency code (default: USD)'
     },
     taxRate: {
       type: 'number',

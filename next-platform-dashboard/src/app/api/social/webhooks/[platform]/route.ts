@@ -8,7 +8,7 @@
  */
 
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { analyzeSentiment, determinePriority } from '@/modules/social-media/lib/sentiment-analysis'
 import type { InboxItemType } from '@/modules/social-media/types'
 
@@ -110,7 +110,7 @@ async function handleMetaWebhook(request: Request, platform: string) {
   }
 
   const payload = JSON.parse(body)
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   if (payload.entry) {
     for (const entry of payload.entry) {
@@ -225,7 +225,7 @@ async function processMetaMessage(supabase: any, pageId: string, value: any) {
 
 async function handleTwitterWebhook(request: Request) {
   const body = await request.json()
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   // Process tweet create events (mentions)
   if (body.tweet_create_events) {

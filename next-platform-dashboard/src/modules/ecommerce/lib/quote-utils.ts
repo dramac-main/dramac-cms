@@ -12,6 +12,7 @@ import type {
   QuoteStatusConfig,
   QuoteDiscountType 
 } from '../types/ecommerce-types'
+import { DEFAULT_CURRENCY, DEFAULT_LOCALE } from '@/lib/locale-config'
 
 // ============================================================================
 // STATUS CONFIGURATION
@@ -311,8 +312,8 @@ export function calculateQuoteTotals(
  */
 export function formatQuoteCurrency(
   amount: number,
-  currency: string = 'USD',  // US DOLLAR DEFAULT
-  locale: string = 'en-US',   // US locale
+  currency: string = DEFAULT_CURRENCY,  // Platform default from locale-config
+  locale: string = DEFAULT_LOCALE,   // Platform default from locale-config
   isAlreadyInDollars: boolean = true // Quote amounts are stored in main currency unit
 ): string {
   return new Intl.NumberFormat(locale, {

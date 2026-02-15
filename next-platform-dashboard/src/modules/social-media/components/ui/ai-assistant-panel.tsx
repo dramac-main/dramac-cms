@@ -51,6 +51,7 @@ import {
 } from '../../actions/ai-actions'
 import type { SocialPlatform, AICaption } from '../../types'
 import { PLATFORM_CONFIGS } from '../../types'
+import { DEFAULT_LOCALE, DEFAULT_TIMEZONE } from '@/lib/locale-config'
 
 // ============================================================================
 // TYPES
@@ -674,10 +675,10 @@ export function AIAssistantPanel({
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium">
-                        {new Date(suggestedTime).toLocaleString('en-US', {
+                        {new Date(suggestedTime).toLocaleString(DEFAULT_LOCALE, {
                           dateStyle: 'medium',
                           timeStyle: 'short',
-                          timeZone: 'Africa/Lusaka',
+                          timeZone: DEFAULT_TIMEZONE,
                         })}
                       </span>
                     </div>

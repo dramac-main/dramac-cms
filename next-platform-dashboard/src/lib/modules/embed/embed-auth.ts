@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * Validate an embed token
@@ -27,7 +27,7 @@ export async function validateEmbedToken(
     }
 
     // Optional: Check against stored tokens for revocation
-    const supabase = await createClient()
+    const supabase = createAdminClient()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
     const { data: storedToken } = await db
@@ -54,7 +54,7 @@ export async function revokeEmbedToken(
   siteId: string,
   moduleId: string
 ): Promise<boolean> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
   
@@ -75,7 +75,7 @@ export async function regenerateEmbedToken(
   moduleId: string,
   expiresInDays: number = 365
 ): Promise<{ token: string; expiresAt: Date }> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
   
@@ -120,7 +120,7 @@ export async function checkTokenStatus(
   isExpired: boolean
   expiresAt: Date | null
 }> {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
   

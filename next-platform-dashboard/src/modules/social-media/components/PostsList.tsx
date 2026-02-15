@@ -57,7 +57,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
+import { DEFAULT_TIMEZONE, DEFAULT_LOCALE } from '@/lib/locale-config'
 import type { SocialPost, SocialAccount } from '@/modules/social-media/types'
 
 const STATUS_TABS: { value: string; label: string }[] = [
@@ -189,7 +189,7 @@ export function PostsList({ siteId, posts, accounts, onDelete, onDuplicate, onBu
 
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return '—'
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(DEFAULT_LOCALE, {
       dateStyle: 'medium',
       timeStyle: 'short',
       timeZone: DEFAULT_TIMEZONE,

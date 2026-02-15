@@ -27,6 +27,7 @@ import {
   parseISO
 } from 'date-fns'
 import type { DateRange, DateRangePreset, GroupByPeriod } from '../types/analytics-types'
+import { DEFAULT_CURRENCY, DEFAULT_LOCALE } from '@/lib/locale-config'
 
 // ============================================================================
 // DATE RANGE HELPERS
@@ -274,10 +275,10 @@ export function calculateConversionRate(conversions: number, total: number): num
 // ============================================================================
 
 /**
- * Format currency value - ZAMBIAN DEFAULT
+ * Format currency value — uses platform defaults from locale-config
  */
-export function formatCurrency(cents: number, currency: string = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
+export function formatCurrency(cents: number, currency: string = DEFAULT_CURRENCY): string {
+  return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,

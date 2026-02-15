@@ -360,8 +360,8 @@ export default async function ModuleDetailPage({ params }: PageProps) {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm">LemonSqueezy</span>
-                {module.lemon_product_id ? (
+                <span className="text-sm">Paddle</span>
+                {module.paddle_product_id || module.lemon_product_id ? (
                   <Badge variant="outline" className="text-green-600 border-green-200">
                     Connected
                   </Badge>
@@ -372,7 +372,7 @@ export default async function ModuleDetailPage({ params }: PageProps) {
                 )}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Stripe (Legacy)</span>
+                <span className="text-sm">Stripe (E-commerce)</span>
                 {module.stripe_product_id ? (
                   <Badge variant="outline" className="text-green-600 border-green-200">
                     Connected

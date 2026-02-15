@@ -24,6 +24,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin';
 import { PLAN_CONFIGS } from './client';
+import { DunningService } from './dunning-service';
 
 // ============================================================================
 // Types for Paddle Webhook Events
@@ -567,6 +568,14 @@ async function handlePaymentFailed(event: PaddleWebhookEvent): Promise<void> {
       error_code: data.errorCode || 'unknown',
       retry_count: data.retryCount || 0,
     });
+  }
+  
+  // Delegate to DunningService for email notifications, retry tracking, and escalation
+  try {
+    const dunning = new DunningService();
+    await dunning.handlePaymentFailed(data.subscriptionId, data.id);
+  } catch (err) {
+    console.error('[Paddle Webhook] DunningService error (non-fatal):', err);
   }
   
   console.log(`[Paddle Webhook] Payment failed: ${data.id}`);
