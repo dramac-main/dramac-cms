@@ -2,39 +2,44 @@
 
 ## Recent Work
 
-### Domain Pricing Fix — Markup Always Applied to Wholesale — February 15, 2026 ✅
+### Domain Pricing Architecture — RC Selling Prices as Base Retail — February 15, 2026 ✅
 
-**Category:** Domain Pricing / Billing / Critical Bug Fix
+**Category:** Domain Pricing / Billing / Architecture Correction
 
 **What was done:**
-Deep investigation of why domain search prices were showing raw ResellerClub customer prices with zero agency margin. Found and fixed 4 critical bugs across the entire domain pricing pipeline.
+Corrected the entire domain pricing architecture after identifying that the previous fix (commit `46c41cb`) was applying a 30% markup on wholesale/cost prices instead of using ResellerClub selling prices as the base retail. The user's RC panel showed .org cost=$14.79 / selling=$29.58 (100% profit margin), but DRAMAC displayed $19.23 (= $14.79 × 1.30).
 
 **Root Cause:**
-The platform fetches two price tiers from ResellerClub — "customer pricing" (suggested retail) and "cost/reseller pricing" (wholesale). The code was supposed to derive retail = wholesale × (1 + markup%), but the markup logic was entirely gated behind `applyPlatformMarkup` which defaulted to `false`. Result: raw RC customer prices were shown as-is with no agency margin.
+ResellerClub has two pricing tiers:
+1. **Cost pricing** (`products/reseller-cost-price.json`) — what the reseller pays RC (e.g., $14.79/.org)
+2. **Customer/selling pricing** (`products/customer-price.json`) — the reseller's configured selling price (e.g., $29.58/.org with 100% profit margin)
 
-**Bugs Fixed:**
+The previous fix incorrectly treated DRAMAC's markup as the PRIMARY margin on cost. In reality, RC selling prices ALREADY include the reseller's configured profit margin. DRAMAC's markup should be an ADDITIONAL layer on top.
 
-| # | Bug | Severity | Fix |
-|---|-----|----------|-----|
-| 1 | `domains.ts`: Retail prices = raw RC customer prices (zero markup) | **CRITICAL** | Retail now ALWAYS derived from wholesale + agency markup (default 30%) |
-| 2 | `domains.ts`: Fallback path called undefined `calculateRetail()` | **HIGH** | Replaced with existing `applyMarkup()` function |
-| 3 | `domain-billing.ts`: `markupValue` declared in if/else-if blocks but referenced outside — ReferenceError at runtime | **HIGH** | Moved declaration to enclosing scope |
-| 4 | Search & billing had separate hardcoded fallback prices with different values for same TLDs | **MEDIUM** | Created unified `domain-fallback-prices.ts` as single source of truth |
+**Correct Architecture:**
+```
+RC Cost Price → (RC Profit Margin, configured in RC panel) → RC Selling Price → (DRAMAC Additional Markup) → Final Retail Price
+```
+- Default DRAMAC additional markup = 0% (prices match RC selling prices exactly)
+- User can add additional DRAMAC markup via Settings > Domains > Pricing
+- When RC customer pricing unavailable, fallback ensures min 30% margin on cost
 
-**Files Changed (3 files, commit `46c41cb`):**
-- `src/lib/actions/domains.ts` — markup always applied to wholesale to derive retail; fallback uses shared prices
-- `src/lib/actions/domain-billing.ts` — same markup fix, scoping fix, uses shared fallback prices
-- `src/lib/domain-fallback-prices.ts` — **NEW**: centralized fallback price dictionary (100+ TLDs)
+**Files Changed (4 files, commit `09bf6de`):**
 
-**Pricing Logic (Before vs After):**
-- **Before:** `retailPrice = rcCustomerPrice` (no markup, `applyPlatformMarkup` gated the entire path)
-- **After:** `retailPrice = wholesalePrice × (1 + markupValue / 100)` (always applied, default 30%)
-- **`apply_platform_markup`** is now correctly documented as an OPTIONAL extra layer on top of the standard agency markup, NOT the gate for basic markup.
+| File | Changes |
+|------|---------|
+| `src/lib/actions/domains.ts` | Rewrote pricing logic: RC selling = base retail, default markup 30→0, applyMarkup passthrough at 0%, fallback with 30% min margin on cost |
+| `src/lib/actions/domain-billing.ts` | Same architecture: RC selling as base, fixed scoping bug, default 30→0, fallback 30% min |
+| `src/components/domains/settings/domain-pricing-config.tsx` | Updated help text explaining RC selling prices include reseller profit, preview labels updated |
+| `src/app/(dashboard)/dashboard/settings/domains/pricing/pricing-client.tsx` | Default values changed from `\|\| 30` to `?? 0` |
 
-**Expected Price Change Example (.org domain):**
-- RC wholesale (cost): ~$10.18
-- Before: Displayed as $14.79 (raw RC customer price, zero margin)
-- After: Displayed as ~$13.23 (wholesale × 1.30 = 30% margin)
+**Expected Prices (with 0% additional DRAMAC markup):**
+- .org: ~$29.58 (matches RC selling price)
+- .net: ~$29.98
+- .com: ~$26.98
+- If user sets 10% in DRAMAC settings: .org = $29.58 × 1.10 = ~$32.54
+
+**Important Note:** The `agency_domain_pricing` table may still have `default_markup_value: 30` from the Phase 2 fix. After deploying, go to Settings > Domains > Pricing and verify/set the additional markup to 0% (or desired percentage)
 
 ---
 

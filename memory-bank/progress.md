@@ -1,23 +1,30 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 15, 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FIX ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING ARCHITECTURE FIX ✅**
 
 ---
 
-## Latest Update: February 15, 2026 - Domain Pricing Critical Fix ✅
+## Latest Update: February 15, 2026 - Domain Pricing Architecture Corrected ✅
 
 **What was done:**
-Fixed 4 critical bugs in the domain pricing pipeline. Retail prices were showing raw ResellerClub customer prices with zero agency margin because the markup logic was entirely gated behind a flag that defaulted to `false`.
+Corrected the domain pricing architecture. The previous fix (commit `46c41cb`) incorrectly applied 30% markup on wholesale/cost prices. The correct approach: ResellerClub selling prices (which already include the reseller's profit margin, e.g., 100%) are the BASE retail. DRAMAC markup is an ADDITIONAL layer on top (default 0%).
 
-**Fixes Applied (3 files, commit `46c41cb`):**
+**Fixes Applied (4 files, commit `09bf6de`):**
 
 | Fix | Impact |
 |-----|--------|
-| Retail = wholesale × (1 + markup%) ALWAYS | Agency gets 30% default margin on every domain |
-| Replace undefined `calculateRetail()` with `applyMarkup()` | Fallback path no longer crashes |
-| Fix `markupValue` scoping in domain-billing.ts | Privacy pricing no longer throws ReferenceError |
-| Centralize fallback prices in `domain-fallback-prices.ts` | Search & checkout show consistent prices |
+| RC selling prices used as base retail price | Prices match what user configured in RC panel |
+| DRAMAC markup default changed from 30% → 0% | No surprise additional markup on top of RC prices |
+| Settings UI updated with correct help text | User understands DRAMAC markup is additional |
+| Fallback path ensures min 30% margin on cost | Safety net when RC customer pricing unavailable |
+
+**Expected Prices (0% additional DRAMAC markup):**
+- .org: ~$29.58 (= RC selling price with 100% profit margin on $14.79 cost)
+- .net: ~$29.98
+- .com: ~$26.98
+
+**⚠️ Post-Deploy Action:** Check `agency_domain_pricing` table — may still have `default_markup_value: 30` from Phase 2 fix. Set to 0 via Settings > Domains > Pricing if needed.
 
 ---
 
