@@ -1,11 +1,27 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 15, 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FIX ✅**
 
 ---
 
-## Latest Update: February 15, 2026 - Full 12-Category Deep Platform Audit ✅
+## Latest Update: February 15, 2026 - Domain Pricing Critical Fix ✅
+
+**What was done:**
+Fixed 4 critical bugs in the domain pricing pipeline. Retail prices were showing raw ResellerClub customer prices with zero agency margin because the markup logic was entirely gated behind a flag that defaulted to `false`.
+
+**Fixes Applied (3 files, commit `46c41cb`):**
+
+| Fix | Impact |
+|-----|--------|
+| Retail = wholesale × (1 + markup%) ALWAYS | Agency gets 30% default margin on every domain |
+| Replace undefined `calculateRetail()` with `applyMarkup()` | Fallback path no longer crashes |
+| Fix `markupValue` scoping in domain-billing.ts | Privacy pricing no longer throws ReferenceError |
+| Centralize fallback prices in `domain-fallback-prices.ts` | Search & checkout show consistent prices |
+
+---
+
+## Previous Update: February 15, 2026 - Full 12-Category Deep Platform Audit ✅
 
 **What was done:**
 Deep scan of all 12 recurring error categories. Verified every issue against the actual codebase. ~80% already fixed, implemented fixes for remaining ~20%.

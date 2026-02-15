@@ -2,6 +2,42 @@
 
 ## Recent Work
 
+### Domain Pricing Fix — Markup Always Applied to Wholesale — February 15, 2026 ✅
+
+**Category:** Domain Pricing / Billing / Critical Bug Fix
+
+**What was done:**
+Deep investigation of why domain search prices were showing raw ResellerClub customer prices with zero agency margin. Found and fixed 4 critical bugs across the entire domain pricing pipeline.
+
+**Root Cause:**
+The platform fetches two price tiers from ResellerClub — "customer pricing" (suggested retail) and "cost/reseller pricing" (wholesale). The code was supposed to derive retail = wholesale × (1 + markup%), but the markup logic was entirely gated behind `applyPlatformMarkup` which defaulted to `false`. Result: raw RC customer prices were shown as-is with no agency margin.
+
+**Bugs Fixed:**
+
+| # | Bug | Severity | Fix |
+|---|-----|----------|-----|
+| 1 | `domains.ts`: Retail prices = raw RC customer prices (zero markup) | **CRITICAL** | Retail now ALWAYS derived from wholesale + agency markup (default 30%) |
+| 2 | `domains.ts`: Fallback path called undefined `calculateRetail()` | **HIGH** | Replaced with existing `applyMarkup()` function |
+| 3 | `domain-billing.ts`: `markupValue` declared in if/else-if blocks but referenced outside — ReferenceError at runtime | **HIGH** | Moved declaration to enclosing scope |
+| 4 | Search & billing had separate hardcoded fallback prices with different values for same TLDs | **MEDIUM** | Created unified `domain-fallback-prices.ts` as single source of truth |
+
+**Files Changed (3 files, commit `46c41cb`):**
+- `src/lib/actions/domains.ts` — markup always applied to wholesale to derive retail; fallback uses shared prices
+- `src/lib/actions/domain-billing.ts` — same markup fix, scoping fix, uses shared fallback prices
+- `src/lib/domain-fallback-prices.ts` — **NEW**: centralized fallback price dictionary (100+ TLDs)
+
+**Pricing Logic (Before vs After):**
+- **Before:** `retailPrice = rcCustomerPrice` (no markup, `applyPlatformMarkup` gated the entire path)
+- **After:** `retailPrice = wholesalePrice × (1 + markupValue / 100)` (always applied, default 30%)
+- **`apply_platform_markup`** is now correctly documented as an OPTIONAL extra layer on top of the standard agency markup, NOT the gate for basic markup.
+
+**Expected Price Change Example (.org domain):**
+- RC wholesale (cost): ~$10.18
+- Before: Displayed as $14.79 (raw RC customer price, zero margin)
+- After: Displayed as ~$13.23 (wholesale × 1.30 = 30% margin)
+
+---
+
 ### Deep Platform Audit & Comprehensive Fix Sweep — February 15, 2026 ✅
 
 **Category:** Auth / Billing / Notifications / Locale / UI / Bug fix
