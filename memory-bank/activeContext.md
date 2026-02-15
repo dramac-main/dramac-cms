@@ -2,6 +2,77 @@
 
 ## Recent Work
 
+### Deep Platform Audit & Comprehensive Fix Sweep — February 15, 2026 ✅
+
+**Category:** Auth / Billing / Notifications / Locale / UI / Bug fix
+
+**What was done:**
+Conducted a full deep scan of all 12 error categories from the recurring issues list. Verified every single issue against the actual codebase. Found that ~80% of issues were already fixed in previous sessions, and implemented fixes for the remaining ~20%.
+
+**Issues Already Fixed (verified in code):**
+- ✅ ResellerClub 403/Fixie/proxy — code supports FIXIE_URL, status endpoint exists
+- ✅ Domain search source indicator (resellerclub vs fallback)
+- ✅ ResellerClub case-insensitive key lookup & HTML/403 detection
+- ✅ Public booking/ecommerce actions use createAdminClient()
+- ✅ Payment webhooks (Paddle/Flutterwave/Pesapal/DPO) use createAdminClient()
+- ✅ Embed booking page uses createAdminClient() with correct table names
+- ✅ Billing pages use /api/billing/paddle/overview (no removed APIs)
+- ✅ Plans aligned to Paddle with NEXT_PUBLIC_PADDLE_PRICE_* env vars
+- ✅ Invoice history handles data.data || data.invoices shape
+- ✅ Enterprise "Contact Sales" links to /portal/support/new
+- ✅ Paddle webhook price ID matching with server-side fallback
+- ✅ createNotification() is DB-only (no dual email)
+- ✅ Form submission calls real sendEmail() with template
+- ✅ notifyOrderShipped() wired from updateOrderFulfillment()
+- ✅ notifyBookingCancelled() wired from cancelAppointment()
+- ✅ Booking source in metadata JSONB (not column)
+- ✅ Booking UI shows Submitted vs Confirmed correctly
+- ✅ Staff creation uses form (no raw UUID input)
+- ✅ Live chat widget auto-advance, transparent bg, correct module lookup
+- ✅ LC-10 GET DIAGNOSTICS syntax fixed
+- ✅ LC-09 realtime migration with REPLICA IDENTITY FULL
+- ✅ next.config.ts: ignoreBuildErrors, ignoreDuringBuilds
+- ✅ Admin/test-safety layouts: force-dynamic
+- ✅ Bluesky @atproto/api: safe dynamic import
+- ✅ AI uses Claude (Anthropic), not OpenAI
+- ✅ setGeneratedPageSlugs() + fixLink() for navigation
+- ✅ Design tokens, isDarkTheme(), theme-aware converter
+- ✅ Module component containment (booking/product)
+- ✅ TenantId uses sites.agency_id correctly
+- ✅ Portal email query uses correct tables/columns
+- ✅ assetPrefix set for production subdomain assets
+- ✅ Settings/branding renders inline
+- ✅ No React #310 (event handlers in Server Components)
+- ✅ Support/upgrade/cancel links correct
+- ✅ Domain quick actions wired to real server actions
+- ✅ locale-config.ts exists with USD defaults
+
+**Issues Fixed in This Session (16 files):**
+
+| # | Fix | File(s) |
+|---|-----|---------|
+| 1 | Social webhooks: createClient → createAdminClient | `api/social/webhooks/[platform]/route.ts` |
+| 2 | Embed service: createClient → createAdminClient | `lib/modules/embed/embed-service.ts` |
+| 3 | Embed auth: createClient → createAdminClient | `lib/modules/embed/embed-auth.ts` |
+| 4 | Push subscribe: split agent/customer contexts | `api/push/subscribe/route.ts` |
+| 5 | Paddle webhook: wire DunningService for payment failures | `lib/paddle/webhook-handlers.ts` |
+| 6 | Invoice template: null guard on payment_status | `ecommerce/orders/invoice-template.tsx` |
+| 7 | Admin modules: LemonSqueezy → Paddle in UI | `admin/modules/[moduleId]/page.tsx` |
+| 8 | Portal invoices: fix LemonSqueezy comment | `portal/invoices/page.tsx` |
+| 9 | Ecommerce analytics: USD/en-US → locale-config | `ecommerce/lib/analytics-utils.ts` |
+| 10 | Ecommerce quotes: USD/en-US → locale-config | `ecommerce/lib/quote-utils.ts` |
+| 11 | Ecommerce manifest: updated currency description | `ecommerce/manifest.ts` |
+| 12-16 | Social media (5 files): en-US → DEFAULT_LOCALE | SocialListening, ReportsPage, PostsList, CompetitorsPage, ai-assistant-panel |
+
+**Commit:** `57bfe0d` — "fix: deep platform audit - auth clients, dunning wiring, invoice null guard, locale hardcodes, LemonSqueezy remnants"
+
+**Remaining Known Items (low priority):**
+- `mapRecord()`/`mapRecords()` not used in domain/transfer/email server actions (only live-chat & social use it) — low risk since most of those actions construct their own response objects
+- LemonSqueezy references in type files (`payments.ts`, `database.ts`) — these mirror DB columns, can't remove until DB migration drops them
+- Trial ending email handler not implemented (Paddle doesn't have an explicit trial_ending event — uses subscription.updated)
+
+---
+
 ### Checkout + Billing Fix Sweep — February 14, 2026 ✅
 
 **Category:** Billing / Checkout / Reliability / Bug fix
