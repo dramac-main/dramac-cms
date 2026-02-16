@@ -78,6 +78,11 @@ export async function GET(request: NextRequest) {
       error_message: p.error_message,
       error_details: p.error_details,
       retry_count: p.retry_count,
+      // Refund details (auto-refund on provisioning failure)
+      refund_reason: p.refund_reason,
+      paddle_refund_id: p.paddle_refund_id,
+      refunded_at: p.refunded_at,
+      needs_manual_refund: p.needs_manual_refund,
       // Purchase-specific data
       purchase_data: p.purchase_data || {},
       // Timestamps

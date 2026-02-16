@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Loader2, AlertCircle, ArrowRight, RefreshCw } from 'lucide-react';
 
-type PurchaseStatus = 'pending_payment' | 'paid' | 'provisioning' | 'completed' | 'failed';
+type PurchaseStatus = 'pending_payment' | 'paid' | 'provisioning' | 'completed' | 'failed' | 'refunded' | 'refund_failed';
 
 interface PurchaseDetails {
   id: string;
@@ -17,6 +17,10 @@ interface PurchaseDetails {
   retail_amount: number;
   currency: string;
   error_message?: string;
+  refund_reason?: string;
+  paddle_refund_id?: string;
+  refunded_at?: string;
+  needs_manual_refund?: boolean;
   purchase_data: {
     domainName?: string;
     domain_name?: string;
@@ -64,8 +68,8 @@ export default function PurchaseSuccessPage() {
         setPurchase(data);
         setLoading(false);
 
-        // Stop polling if completed or failed (but not if we just retried)
-        if (data.status === 'completed' || data.status === 'failed') {
+        // Stop polling if terminal state reached
+        if (['completed', 'failed', 'refunded', 'refund_failed'].includes(data.status)) {
           if (pollInterval) clearInterval(pollInterval);
         }
       } catch (err) {
@@ -131,6 +135,20 @@ export default function PurchaseSuccessPage() {
           icon: <AlertCircle className="h-12 w-12 text-red-500" />,
           title: 'Setup Failed',
           description: 'There was an issue setting up your service. You can retry or contact support.',
+          color: 'border-red-500',
+        };
+      case 'refunded':
+        return {
+          icon: <CheckCircle className="h-12 w-12 text-blue-500" />,
+          title: 'Payment Refunded',
+          description: 'We couldn\'t complete your order, so a full refund has been issued automatically. The refund will appear on your payment method within 5-10 business days.',
+          color: 'border-blue-500',
+        };
+      case 'refund_failed':
+        return {
+          icon: <AlertCircle className="h-12 w-12 text-red-500" />,
+          title: 'Refund Pending',
+          description: 'We couldn\'t complete your order. A refund is being processed — please contact support if you don\'t receive it within 48 hours.',
           color: 'border-red-500',
         };
     }
@@ -278,7 +296,16 @@ export default function PurchaseSuccessPage() {
               
               <div className="pt-3 border-t border-border">
                 <div className="text-sm text-muted-foreground">Status</div>
-                <div className="font-semibold capitalize">{purchase.status.replace('_', ' ')}</div>
+                <div className={`font-semibold capitalize ${
+                  purchase.status === 'refunded' ? 'text-blue-500' : 
+                  purchase.status === 'refund_failed' ? 'text-orange-500' :
+                  purchase.status === 'failed' ? 'text-red-500' : 
+                  purchase.status === 'completed' ? 'text-green-500' : ''
+                }`}>
+                  {purchase.status === 'refunded' ? 'Refunded' :
+                   purchase.status === 'refund_failed' ? 'Refund Pending' :
+                   purchase.status.replace('_', ' ')}
+                </div>
               </div>
             </div>
           )}
@@ -289,6 +316,19 @@ export default function PurchaseSuccessPage() {
               Continue to Dashboard
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
+          )}
+
+          {(purchase?.status === 'refunded' || purchase?.status === 'refund_failed') && (
+            <div className="flex gap-3 mt-4">
+              {purchase.paddle_refund_id && (
+                <p className="text-sm text-muted-foreground w-full text-center">
+                  Refund ID: {purchase.paddle_refund_id}
+                </p>
+              )}
+              <Button onClick={handleContinue}>
+                Go to Domains
+              </Button>
+            </div>
           )}
 
           {purchase?.status === 'failed' && (

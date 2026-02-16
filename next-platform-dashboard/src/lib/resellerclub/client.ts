@@ -352,9 +352,16 @@ export class ResellerClubClient {
   
   /**
    * Get reseller account balance
+   * 
+   * Uses billing/reseller-balance.json with reseller-id param.
+   * The RC API requires reseller-id even when querying your own balance.
+   * We pass auth-userid (our own reseller ID) as the reseller-id.
    */
   async getBalance(): Promise<{ balance: number; currency: string }> {
-    const data = await this.get<Record<string, unknown>>('billing/reseller-balance.json');
+    const data = await this.get<Record<string, unknown>>(
+      'billing/reseller-balance.json',
+      { 'reseller-id': this.resellerId }
+    );
     return {
       balance: Number(data.sellingcurrencybalance || data.resellerbalance || 0),
       currency: String(data.sellingcurrency || DEFAULT_CURRENCY),
