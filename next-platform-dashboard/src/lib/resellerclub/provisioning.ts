@@ -5,6 +5,78 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { domainService } from './domains';
 import { customerService } from './customers';
+
+/**
+ * Helper: Ensure agency has a ResellerClub customer ID.
+ * This is a FALLBACK for provisioning — normally ensureResellerClubCustomer()
+ * in domains.ts runs during checkout. But if that failed or was skipped,
+ * we must be able to create the customer during provisioning too.
+ */
+async function ensureResellerClubCustomerForProvisioning(
+  admin: any,
+  agencyId: string,
+  userId: string
+): Promise<string | null> {
+  // Check if already set
+  const { data: agency } = await admin
+    .from('agencies')
+    .select('id, name, resellerclub_customer_id')
+    .eq('id', agencyId)
+    .maybeSingle();
+
+  if (agency?.resellerclub_customer_id) {
+    return agency.resellerclub_customer_id as string;
+  }
+
+  // Get user email for RC customer creation
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('email')
+    .eq('id', userId)
+    .maybeSingle();
+
+  // Also try auth.users if profiles doesn't have email
+  let userEmail = profile?.email;
+  if (!userEmail) {
+    const { data: authUser } = await admin.auth.admin.getUserById(userId);
+    userEmail = authUser?.user?.email;
+  }
+
+  if (!userEmail) {
+    console.error('[Provisioning] Cannot create RC customer: no email found for user', userId);
+    return null;
+  }
+
+  try {
+    const customer = await customerService.createOrGet({
+      username: userEmail,
+      password: customerService.generatePassword(),
+      name: (agency?.name as string) || 'Agency',
+      company: (agency?.name as string) || 'Agency',
+      email: userEmail,
+      addressLine1: 'Not Provided',
+      city: 'Lusaka',
+      state: 'Lusaka',
+      country: 'ZM',
+      zipcode: '10101',
+      phoneCountryCode: '260',
+      phone: '955000000',
+      languagePreference: 'en',
+    });
+
+    // Save to DB
+    await admin
+      .from('agencies')
+      .update({ resellerclub_customer_id: String(customer.customerId) })
+      .eq('id', agencyId);
+
+    console.log(`[Provisioning] Auto-created RC customer ${customer.customerId} for agency ${agencyId}`);
+    return String(customer.customerId);
+  } catch (error) {
+    console.error('[Provisioning] Failed to auto-create RC customer:', error);
+    return null;
+  }
+}
 import { contactService } from './contacts';
 import { emailOrderService } from './email';
 import { transferService } from './transfers';
@@ -127,24 +199,32 @@ export async function provisionDomainRegistration(
     const autoRenew = purchaseData.auto_renew as boolean | undefined;
     const contactInfo = purchaseData.contact_info as Record<string, unknown> | undefined;
     
-    // Get agency's ResellerClub customer ID
-    const { data: agency } = await admin
-      .from('agencies')
-      .select('resellerclub_customer_id')
-      .eq('id', purchase.agency_id)
-      .single();
+    // Get or auto-create ResellerClub customer ID
+    // This is a critical fallback — normally ensureResellerClubCustomer() runs at checkout time,
+    // but if it failed or was skipped, we MUST create the customer now to avoid permanent failure.
+    const customerId = await ensureResellerClubCustomerForProvisioning(
+      admin,
+      purchase.agency_id,
+      purchase.user_id
+    );
     
-    if (!agency?.resellerclub_customer_id) {
-      throw new Error('Agency not configured for ResellerClub');
+    if (!customerId) {
+      throw new Error('Failed to create ResellerClub customer for this agency. Please contact support.');
     }
     
-    const customerId = agency.resellerclub_customer_id as string;
+    // Get user email for contact creation
+    const { data: userProfile } = await admin
+      .from('profiles')
+      .select('email')
+      .eq('id', purchase.user_id)
+      .maybeSingle();
+    const userEmail = userProfile?.email || '';
     
     // Create or get contact
     const contact = await contactService.createOrUpdate({
       name: (contactInfo?.name as string) || 'Domain Admin',
       company: (contactInfo?.company as string) || 'Agency',
-      email: (contactInfo?.email as string) || purchase.user_id + '@agency.local',
+      email: (contactInfo?.email as string) || userEmail || purchase.user_id + '@agency.local',
       addressLine1: (contactInfo?.address as string) || 'Not Provided',
       city: (contactInfo?.city as string) || 'Lusaka',
       state: (contactInfo?.state as string) || 'Lusaka',
@@ -313,24 +393,30 @@ async function provisionMultipleDomains(
     const purchaseData = purchase.purchase_data as Record<string, unknown>;
     const contactInfo = purchaseData.contact_info as Record<string, unknown> | undefined;
     
-    // Get agency's ResellerClub customer ID
-    const { data: agency } = await admin
-      .from('agencies')
-      .select('resellerclub_customer_id')
-      .eq('id', purchase.agency_id)
-      .maybeSingle();
+    // Get or auto-create ResellerClub customer ID (CRITICAL FALLBACK)
+    const customerId = await ensureResellerClubCustomerForProvisioning(
+      admin,
+      purchase.agency_id,
+      purchase.user_id
+    );
     
-    if (!agency?.resellerclub_customer_id) {
-      throw new Error('Agency not configured for ResellerClub');
+    if (!customerId) {
+      throw new Error('Failed to create ResellerClub customer for this agency. Please contact support.');
     }
     
-    const customerId = agency.resellerclub_customer_id as string;
+    // Get user email for contact creation
+    const { data: userProfile } = await admin
+      .from('profiles')
+      .select('email')
+      .eq('id', purchase.user_id)
+      .maybeSingle();
+    const userEmail = userProfile?.email || '';
     
     // Create or get contact (reuse for all domains)
     const contact = await contactService.createOrUpdate({
       name: (contactInfo?.name as string) || 'Domain Admin',
       company: (contactInfo?.company as string) || 'Agency',
-      email: (contactInfo?.email as string) || purchase.user_id + '@agency.local',
+      email: (contactInfo?.email as string) || userEmail || purchase.user_id + '@agency.local',
       addressLine1: (contactInfo?.address as string) || 'Not Provided',
       city: (contactInfo?.city as string) || 'Lusaka',
       state: (contactInfo?.state as string) || 'Lusaka',
@@ -650,18 +736,16 @@ export async function provisionEmailOrder(
     const productKey = (purchaseData.product_key as string) || 'eeliteus';
     const domainId = purchaseData.domain_id as string | undefined;
     
-    // Get agency's ResellerClub customer ID
-    const { data: agency } = await admin
-      .from('agencies')
-      .select('resellerclub_customer_id')
-      .eq('id', purchase.agency_id)
-      .single();
+    // Get or auto-create ResellerClub customer ID (CRITICAL FALLBACK)
+    const customerId = await ensureResellerClubCustomerForProvisioning(
+      admin,
+      purchase.agency_id,
+      purchase.user_id
+    );
     
-    if (!agency?.resellerclub_customer_id) {
-      throw new Error('Agency not configured for ResellerClub');
+    if (!customerId) {
+      throw new Error('Failed to create ResellerClub customer for this agency. Please contact support.');
     }
-    
-    const customerId = agency.resellerclub_customer_id as string;
     
     // Create email order via ResellerClub
     const order = await emailOrderService.createOrder({
@@ -757,24 +841,30 @@ export async function provisionDomainTransfer(
     const autoRenew = purchaseData.auto_renew as boolean | undefined;
     const contactInfo = purchaseData.contact_info as Record<string, unknown> | undefined;
 
-    // Get agency's ResellerClub customer ID
-    const { data: agency } = await admin
-      .from('agencies')
-      .select('resellerclub_customer_id')
-      .eq('id', purchase.agency_id)
-      .maybeSingle();
+    // Get or auto-create ResellerClub customer ID (CRITICAL FALLBACK)
+    const customerId = await ensureResellerClubCustomerForProvisioning(
+      admin,
+      purchase.agency_id,
+      purchase.user_id
+    );
 
-    if (!agency?.resellerclub_customer_id) {
-      throw new Error('Agency not configured for ResellerClub');
+    if (!customerId) {
+      throw new Error('Failed to create ResellerClub customer for this agency. Please contact support.');
     }
 
-    const customerId = agency.resellerclub_customer_id as string;
+    // Get user email for contact creation
+    const { data: userProfileT } = await admin
+      .from('profiles')
+      .select('email')
+      .eq('id', purchase.user_id)
+      .maybeSingle();
+    const userEmailT = userProfileT?.email || '';
 
     // Create or get contact for the transfer
     const contact = await contactService.createOrUpdate({
       name: (contactInfo?.name as string) || 'Domain Admin',
       company: (contactInfo?.company as string) || 'Agency',
-      email: (contactInfo?.email as string) || purchase.user_id + '@agency.local',
+      email: (contactInfo?.email as string) || userEmailT || purchase.user_id + '@agency.local',
       addressLine1: (contactInfo?.address as string) || 'Not Provided',
       city: (contactInfo?.city as string) || 'Lusaka',
       state: (contactInfo?.state as string) || 'Lusaka',

@@ -63,9 +63,9 @@ export async function GET(request: NextRequest) {
       id: p.id,
       purchase_type: p.purchase_type,
       status: p.status,
-      // Amounts in cents
-      wholesale_amount: Math.round(parseFloat(p.wholesale_amount || '0') * 100),
-      retail_amount: Math.round(parseFloat(p.retail_amount || '0') * 100),
+      // Amounts — DB stores as dollars (not cents)
+      wholesale_amount: parseFloat(p.wholesale_amount || '0'),
+      retail_amount: parseFloat(p.retail_amount || '0'),
       currency: p.currency,
       // Transaction details
       paddle_transaction_id: p.paddle_transaction_id,

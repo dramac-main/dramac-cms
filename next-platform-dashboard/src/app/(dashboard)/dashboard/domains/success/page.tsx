@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2, AlertCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle, Loader2, AlertCircle, ArrowRight, RefreshCw } from 'lucide-react';
 
 type PurchaseStatus = 'pending_payment' | 'paid' | 'provisioning' | 'completed' | 'failed';
 
@@ -34,6 +34,7 @@ export default function PurchaseSuccessPage() {
   const [purchase, setPurchase] = useState<PurchaseDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
   
   const purchaseId = searchParams.get('purchase_id');
   const transactionId = searchParams.get('transaction_id');
@@ -63,7 +64,7 @@ export default function PurchaseSuccessPage() {
         setPurchase(data);
         setLoading(false);
 
-        // Stop polling if completed or failed
+        // Stop polling if completed or failed (but not if we just retried)
         if (data.status === 'completed' || data.status === 'failed') {
           if (pollInterval) clearInterval(pollInterval);
         }
@@ -77,7 +78,7 @@ export default function PurchaseSuccessPage() {
     // Initial check
     checkStatus();
 
-    // Poll every 5 seconds
+    // Poll every 5 seconds — also restarts when purchase status changes (e.g., after retry)
     pollInterval = setInterval(() => {
       pollCount++;
       if (pollCount >= MAX_POLLS) {
@@ -91,7 +92,7 @@ export default function PurchaseSuccessPage() {
     return () => {
       if (pollInterval) clearInterval(pollInterval);
     };
-  }, [purchaseId, transactionId]);
+  }, [purchaseId, transactionId, purchase?.status]);
 
   const getStatusInfo = () => {
     if (!purchase) return null;
@@ -129,7 +130,7 @@ export default function PurchaseSuccessPage() {
         return {
           icon: <AlertCircle className="h-12 w-12 text-red-500" />,
           title: 'Setup Failed',
-          description: purchase.error_message || 'There was an issue setting up your service. Please contact support.',
+          description: 'There was an issue setting up your service. You can retry or contact support.',
           color: 'border-red-500',
         };
     }
@@ -270,7 +271,7 @@ export default function PurchaseSuccessPage() {
                 <div>
                   <div className="text-sm text-muted-foreground">Amount</div>
                   <div className="font-semibold">
-                    {purchase.currency} ${(purchase.retail_amount / 100).toFixed(2)}
+                    {purchase.currency} ${purchase.retail_amount.toFixed(2)}
                   </div>
                 </div>
               </div>
@@ -292,8 +293,36 @@ export default function PurchaseSuccessPage() {
 
           {purchase?.status === 'failed' && (
             <div className="flex gap-3 mt-4">
-              <Button variant="outline" onClick={() => router.push('/portal/support/new')}>
-                Contact Support
+              <Button 
+                variant="outline" 
+                onClick={async () => {
+                  setRetrying(true);
+                  try {
+                    const response = await fetch('/api/purchases/retry', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ purchase_id: purchase.id }),
+                    });
+                    if (response.ok) {
+                      // Reset to polling state
+                      setPurchase(prev => prev ? { ...prev, status: 'provisioning' as PurchaseStatus, error_message: undefined } : null);
+                    } else {
+                      const data = await response.json();
+                      setPurchase(prev => prev ? { ...prev, error_message: data.error } : null);
+                    }
+                  } catch {
+                    // Ignore — user can try again
+                  } finally {
+                    setRetrying(false);
+                  }
+                }}
+                disabled={retrying}
+              >
+                {retrying ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Retrying...</>
+                ) : (
+                  <><RefreshCw className="mr-2 h-4 w-4" /> Retry Setup</>
+                )}
               </Button>
               <Button onClick={handleContinue}>
                 Go to Domains
