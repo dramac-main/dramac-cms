@@ -1,7 +1,7 @@
 # DRAMAC CMS — Complete User Journeys
 
-**Version**: 1.0  
-**Last Updated**: February 9, 2026  
+**Version**: 2.0  
+**Last Updated**: February 16, 2026  
 **Platform**: DRAMAC Enterprise Module Marketplace  
 **URL**: `app.dramacagency.com`
 
@@ -9,1551 +9,536 @@
 
 ## Table of Contents
 
-1. [User Type Hierarchy](#1-user-type-hierarchy)
-2. [User Type 1: Anonymous Visitor / End Customer](#2-anonymous-visitor--end-customer)
-3. [User Type 2: Portal Client](#3-portal-client)
-4. [User Type 3: Agency Member](#4-agency-member)
-5. [User Type 4: Agency Admin](#5-agency-admin)
-6. [User Type 5: Agency Owner](#6-agency-owner)
-7. [User Type 6: Module Developer](#7-module-developer)
-8. [User Type 7: Super Admin (Platform Admin)](#8-super-admin-platform-admin)
-9. [Cross-User Journey Maps](#9-cross-user-journey-maps)
-10. [Module-Specific User Journeys](#10-module-specific-user-journeys)
-11. [Permission Matrix](#11-permission-matrix)
+1. [Roles & Permissions](#roles--permissions)
+2. [Super Admin Journeys](#1-super-admin-journeys)
+3. [Agency Owner Journeys](#2-agency-owner-journeys)
+4. [Business Owner / Client Journeys](#3-business-owner--client-journeys)
+5. [Site User / Visitor Journeys](#4-site-user--visitor-journeys)
+6. [Domain & Email Journeys](#5-domain--email-journeys)
+7. [Live Chat Journeys](#6-live-chat-journeys)
+8. [Billing & Subscription Journeys](#7-billing--subscription-journeys)
+9. [CRM Journeys](#8-crm-journeys)
+10. [Module Marketplace Journeys](#9-module-marketplace-journeys)
+11. [Verification Checklist](#verification-checklist)
+12. [Environment Requirements](#environment-requirements)
 
 ---
 
-## 1. User Type Hierarchy
+## Roles & Permissions
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    DRAMAC PLATFORM                       │
-│                                                         │
-│  ┌─────────────────────────────────────────────────┐    │
-│  │            Super Admin (Platform)                │    │
-│  │  Manages all agencies, billing, modules, health  │    │
-│  └────────────────────┬────────────────────────────┘    │
-│                       │                                  │
-│  ┌────────────────────▼────────────────────────────┐    │
-│  │              Agency (Tenant)                     │    │
-│  │                                                  │    │
-│  │  ┌──────────┐ ┌──────────┐ ┌──────────────┐    │    │
-│  │  │  Owner   │ │  Admin   │ │   Member     │    │    │
-│  │  │ (full)   │ │ (manage) │ │ (edit only)  │    │    │
-│  │  └────┬─────┘ └────┬─────┘ └──────┬───────┘    │    │
-│  │       │             │              │             │    │
-│  │  ┌────▼─────────────▼──────────────▼──────┐     │    │
-│  │  │             Clients                     │     │    │
-│  │  │  ┌──────────┐  ┌──────────────────┐    │     │    │
-│  │  │  │  Record  │  │  Portal Client   │    │     │    │
-│  │  │  │ (no login│  │  (self-service   │    │     │    │
-│  │  │  │  managed │  │   login, limited │    │     │    │
-│  │  │  │  by team)│  │   access)        │    │     │    │
-│  │  │  └──────────┘  └──────────────────┘    │     │    │
-│  │  └────────────────────────────────────────┘     │    │
-│  │                                                  │    │
-│  │  ┌────────────────────────────────────────┐     │    │
-│  │  │              Sites                      │     │    │
-│  │  │  ┌───────┐ ┌──────┐ ┌──────────────┐  │     │    │
-│  │  │  │ Pages │ │ Blog │ │   Modules    │  │     │    │
-│  │  │  └───────┘ └──────┘ │ (Booking,    │  │     │    │
-│  │  │                      │  E-Commerce, │  │     │    │
-│  │  │                      │  CRM, Social,│  │     │    │
-│  │  │                      │  Automation) │  │     │    │
-│  │  │                      └──────────────┘  │     │    │
-│  │  └────────────────────────────────────────┘     │    │
-│  └──────────────────────────────────────────────────┘    │
-│                                                         │
-│  ┌──────────────────────┐  ┌─────────────────────────┐  │
-│  │   Module Developer   │  │   Anonymous Visitor      │  │
-│  │  (builds & publishes │  │  (browses published      │  │
-│  │   modules to market) │  │   sites, books, shops)   │  │
-│  └──────────────────────┘  └─────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Role Derivation
-
-| `profiles.role` | `agency_members.role` | → Effective Role |
-|---|---|---|
-| `super_admin` | *(any)* | **Super Admin** |
-| `admin`/`member` | `owner` | **Agency Owner** |
-| `admin`/`member` | `admin` | **Agency Admin** |
-| `admin`/`member` | `member` | **Agency Member** |
-| *(N/A — portal auth)* | *(N/A)* | **Portal Client** |
-| *(has `developer_profiles`)* | *(any agency role)* | **Module Developer** |
-| *(no auth)* | *(N/A)* | **Anonymous Visitor** |
+| Role | Description | Dashboard Access |
+|------|-------------|-----------------|
+| **Super Admin** | Platform owner. Full access to all agencies, billing, analytics, modules | `/admin/*` |
+| **Agency Owner** | Runs an agency. Manages sites, team, billing, domains, modules for their agency | `/dashboard/*` |
+| **Agency Member** | Team member within an agency. Access based on role (admin/editor/viewer) | `/dashboard/*` (limited) |
+| **Business Owner / Client** | Uses the client portal. Manages their site, support tickets | `/portal/*` |
+| **Site Visitor / End User** | Interacts with published sites. Uses chat widgets, forms, ecommerce | Public site pages |
 
 ---
 
-## 2. Anonymous Visitor / End Customer
+## 1. Super Admin Journeys
 
-**Who**: Anyone visiting a published client site (e.g., `sisto.sites.dramacagency.com`, `www.barbershop.com`).  
-**Auth**: None required. All data fetched via `createAdminClient()` (service-role, bypasses RLS).  
-**Entry Points**: Subdomain URLs, custom domains, embed widgets, shared links.
+### J-SA-01: Platform Overview
+1. Login → `/login`
+2. Redirect → `/admin` (admin dashboard)
+3. View: Total agencies, active sites, revenue, module installs
+4. Click "Agencies" → `/admin/agencies` — list of all agencies
+5. Click agency → `/admin/agencies/[id]` — agency detail
+6. Actions: Suspend, delete, impersonate, manage billing
 
-### Journey 2.1 — Browse a Published Website
+### J-SA-02: Module Management
+1. `/admin/modules` → List all published modules
+2. Click module → review, approve/reject
+3. `/admin/modules/create` → Create new platform module
+4. Set: Name, description, category, pricing tier, permissions
+5. Submit → Module available in marketplace
 
-```
-Visitor enters URL (subdomain or custom domain)
-    │
-    ▼
-Middleware detects subdomain/custom domain
-    │ Rewrites to /site/[domain]/[[...slug]]
-    ▼
-Homepage renders (Studio-built pages)
-    │
-    ├── Browse pages (About, Contact, Services, etc.)
-    ├── Read blog posts (/blog/[subdomain]/[slug])
-    ├── View media & galleries
-    └── Navigate via header/footer links
-```
+### J-SA-03: Pricing & Cache Management
+1. `/admin/pricing` → View live pricing cache status
+2. See: Cache age, TLD count, last refresh time
+3. Click "Refresh Cache" → Re-fetches from ResellerClub
+4. Verify: .com, .net, .org prices match RC panel
 
-**Touchpoints**: Homepage, inner pages, blog listing, blog post, footer links, navbar.
-
-### Journey 2.2 — Make a Booking (Booking Module)
-
-```
-Visitor lands on site
-    │
-    ▼
-Clicks "Book Now" (CTA button / booking page)
-    │
-    ▼
-Booking Widget loads (ServiceSelectorBlock)
-    │ Fetches services via getPublicServices()
-    ▼
-Selects a service
-    │
-    ▼
-Staff selection (StaffGridBlock) — optional if multiple staff
-    │ Fetches staff via getPublicStaff()
-    ▼
-Calendar view (BookingCalendarBlock)
-    │ Fetches slots via getPublicAvailableSlots()
-    ▼
-Selects date & time slot
-    │
-    ▼
-Booking form (BookingFormBlock)
-    │ Enters: name, email, phone, notes
-    ▼
-Submits booking → createPublicAppointment()
-    │
-    ├── If require_confirmation OFF → "Booking Confirmed!" (green ✓)
-    └── If require_confirmation ON  → "Booking Submitted!" (amber ⏳)
-    │
-    ▼
-Notifications triggered:
-    ├── Owner: in-app notification + email (booking_confirmation_owner)
-    └── Customer: email (booking_confirmation_customer)
-```
-
-**Alternative Entry**: Embeddable widget (`/embed/booking/[siteId]`) on external sites.
-
-### Journey 2.3 — Shop & Checkout (E-Commerce Module)
-
-```
-Visitor lands on storefront
-    │
-    ▼
-Browse products (product-grid-block)
-    │ Fetches via getPublicProducts()
-    ├── Filter by category
-    ├── Search products (useStorefrontSearch)
-    └── Sort by price/popularity
-    │
-    ▼
-View product detail (product-card-block)
-    │ Fetches via getPublicProductBySlug()
-    ├── View variants, images, description
-    ├── Check stock availability
-    └── Add to wishlist (useStorefrontWishlist)
-    │
-    ▼
-Add to cart → addToPublicCart()
-    │ Cart persists in cookies/localStorage
-    ▼
-View cart → getPublicCart()
-    │ Update quantities, remove items
-    ├── Apply discount code → validatePublicDiscount()
-    └── View subtotal, tax, shipping estimate
-    │
-    ▼
-Proceed to checkout (/checkout/module)
-    │ Enters: shipping info, billing info
-    ▼
-Select payment method
-    │ ┌──────────────────────────────┐
-    │ │  Paddle  │ Flutterwave      │
-    │ │  Pesapal │ DPO Pay │ Manual │
-    │ └──────────────────────────────┘
-    ▼
-Payment processing → createPublicOrderFromCart()
-    │
-    ▼
-Order created → Notifications:
-    ├── Owner: in-app notification + email (order_confirmation_owner)
-    └── Customer: email (order_confirmation_customer)
-    │
-    ▼
-Order confirmation page with order number
-    │
-    ▼
-[Later] Fulfillment → Owner ships → updateOrderFulfillment()
-    │
-    └── Customer: email (order_shipped_customer)
-```
-
-### Journey 2.4 — Submit a Form
-
-```
-Visitor navigates to a page with a form
-    │
-    ▼
-Fills in form fields (name, email, message, etc.)
-    │
-    ▼
-Submits → POST /api/forms/submit (uses createAdminClient)
-    │
-    ▼
-Submission saved to database
-    │
-    ▼
-Owner: email notification (form_submission_owner)
-```
-
-### Journey 2.5 — View a Public Quote
-
-```
-Client/prospect receives a quote link (email or message)
-    │
-    ▼
-Opens /quote/[token]
-    │
-    ▼
-Views quote details:
-    ├── Line items with pricing
-    ├── Total with tax
-    ├── Terms & conditions
-    └── Accept/Decline options
-```
-
-### Journey 2.6 — Read a Blog
-
-```
-Visitor lands on blog (/blog/[subdomain])
-    │
-    ▼
-Browse blog listing
-    │ ├── Filter by category
-    │ └── Paginate through posts
-    │
-    ▼
-Click on a post → /blog/[subdomain]/[slug]
-    │
-    ▼
-Read full post (TipTap-rendered content)
-    ├── View featured image, author, reading time
-    ├── See related posts
-    └── Share post (social sharing)
-```
+### J-SA-04: Platform Settings
+1. `/admin/settings` → General platform configuration
+2. Tabs: General, Billing, Email, Security, Advanced
+3. Configure: Platform name, support email, default locale
+4. Save → Settings applied globally
 
 ---
 
-## 3. Portal Client
+## 2. Agency Owner Journeys
 
-**Who**: A client (customer) of an agency who has been granted portal access (`has_portal_access = true`).  
-**Auth**: Separate login at `/portal/login` (password or magic link). Linked via `clients.portal_user_id` → `auth.users`.  
-**Entry Point**: `app.dramacagency.com/portal/login`
+### J-AO-01: Agency Onboarding
+1. Sign up → `/signup`
+2. Enter: Name, email, password
+3. Email verification → click link
+4. Create agency → Agency name, logo
+5. Redirect → `/dashboard` (main dashboard)
+6. See: Welcome wizard / empty state with "Create First Site"
 
-### Journey 3.1 — Portal Login & Dashboard
+### J-AO-02: Site Creation
+1. `/dashboard` → Click "New Site" or "Create Site"
+2. Enter: Site name, subdomain
+3. Submit → Site created
+4. Redirect → `/dashboard/sites/[siteId]` — site overview
+5. Actions: Edit, preview, publish, manage modules
 
-```
-Client receives portal invite email from agency
-    │
-    ▼
-Visits /portal/login
-    │ Enters email + password (or magic link)
-    ▼
-Authenticated → redirected to /portal
-    │
-    ▼
-Portal Dashboard:
-    ├── Site overview cards (sites assigned to this client)
-    ├── Recent notifications
-    ├── Quick stats (if can_view_analytics)
-    └── Action shortcuts
-```
+### J-AO-03: Team Management
+1. `/dashboard/settings/team` → Team members list
+2. Click "Invite Member" → Enter email, select role (admin/editor/viewer)
+3. Submit → Invitation sent via email
+4. Invitee clicks link → Creates account → Joins agency
+5. Owner can: Change role, remove member
 
-### Journey 3.2 — View & Manage Sites
+### J-AO-04: Module Installation
+1. `/dashboard/marketplace` → Browse available modules
+2. Search/filter by category
+3. Click module → View details, screenshots, pricing
+4. Click "Install" → Select target site
+5. Module appears in site's modules list
+6. Configure module settings → Module active on site
 
-```
-Portal Client → /portal/sites
-    │
-    ▼
-List of sites assigned to this client
-    │ (filtered by client_site_permissions)
-    ▼
-Click site → /portal/sites/[siteId]
-    │
-    ├── View site details & status
-    ├── [If can_edit_content] Edit page content
-    ├── [If can_view_analytics] View site analytics
-    └── [If can_publish] Publish changes
-```
+### J-AO-05: Custom Domain Setup
+1. `/dashboard/sites/[siteId]/settings` → Domains section
+2. Click "Add Custom Domain"
+3. Enter domain name (e.g., `mybusiness.com`)
+4. Get: DNS records to configure (CNAME/A records)
+5. Verify → Domain connected → SSL auto-provisioned
 
-**Permission-Gated Features:**
-
-| Permission | Portal Sections Unlocked |
-|---|---|
-| `can_view_analytics` | `/portal/analytics`, `/portal/sites/[siteId]` analytics tab |
-| `can_edit_content` | Blog editing, content changes |
-| `can_view_invoices` | `/portal/invoices` |
-| `has_portal_access` | Entire portal (must be `true`) |
-
-### Journey 3.3 — View Analytics (if permitted)
-
-```
-Portal Client → /portal/analytics
-    │
-    ▼
-View analytics for assigned sites:
-    ├── Page views & unique visitors
-    ├── Traffic sources
-    ├── Popular pages
-    └── Date range filtering
-```
-
-### Journey 3.4 — Manage Blog Content (if permitted)
-
-```
-Portal Client → /portal/blog
-    │
-    ▼
-Select site → /portal/blog/[siteId]
-    │
-    ├── View existing blog posts
-    ├── [If can_edit_content] Create new post
-    ├── [If can_edit_content] Edit existing post
-    └── View categories
-```
-
-### Journey 3.5 — Browse & Request Apps
-
-```
-Portal Client → /portal/apps
-    │
-    ▼
-View installed apps for their sites
-    │
-    ├── /portal/apps/browse → Browse available apps/modules
-    ├── /portal/apps/[slug] → App detail page
-    └── Request new app → /api/portal/modules/request
-```
-
-### Journey 3.6 — View Invoices (if permitted)
-
-```
-Portal Client → /portal/invoices
-    │
-    ▼
-List of invoices from the agency
-    ├── Invoice amount, date, status
-    ├── Download invoice PDF
-    └── Payment status
-```
-
-### Journey 3.7 — Submit Support Ticket
-
-```
-Portal Client → /portal/support
-    │
-    ▼
-View existing tickets
-    │
-    ├── /portal/support/new → Create new support ticket
-    │   ├── Subject, description, priority
-    │   └── Attach files
-    │
-    └── /portal/support/[ticketId] → View ticket thread
-        ├── Read agency replies
-        └── Add follow-up messages
-```
-
-### Journey 3.8 — Manage Media
-
-```
-Portal Client → /portal/media
-    │
-    ▼
-View & manage media library for assigned sites
-    ├── Upload images/documents
-    ├── Organize in folders
-    ├── Search & filter
-    └── View asset usage
-```
-
-### Journey 3.9 — SEO Management (if permitted)
-
-```
-Portal Client → /portal/seo
-    │
-    ▼
-Select site → /portal/seo/[siteId]
-    │
-    ├── View SEO scores
-    ├── Edit meta tags (title, description)
-    ├── Open Graph settings
-    └── View recommendations
-```
-
-### Journey 3.10 — View Notifications & Settings
-
-```
-/portal/notifications → In-app notification feed
-/portal/settings → Portal preferences (name, email, password)
-/portal/domains → View domain information
-/portal/email → Email settings
-/portal/submissions → View form submissions for assigned sites
-```
+### J-AO-06: Dashboard Navigation
+1. `/dashboard` → Overview (stats, recent activity)
+2. Sidebar navigation:
+   - **Sites** → `/dashboard/sites` (all sites)
+   - **Domains & Email** → `/dashboard/domains` (domain reselling)
+   - **Domain Settings** → `/dashboard/domains/settings` (pricing, billing)
+   - **Email** → `/dashboard/email` (business email orders)
+   - **CRM** → `/dashboard/crm` (contacts, deals, pipeline)
+   - **Marketplace** → `/dashboard/marketplace` (modules)
+   - **Settings** → `/dashboard/settings` (team, billing, custom domains)
+   - **Admin** → `/admin` (super admins only)
 
 ---
 
-## 4. Agency Member
+## 3. Business Owner / Client Journeys
 
-**Who**: A team member invited to an agency with `role = "member"` in `agency_members`.  
-**Auth**: Standard Supabase login → `app.dramacagency.com/login`.  
-**Permissions**: View clients, edit assigned sites/content, view analytics. Cannot manage billing, team, or delete anything.
+### J-BO-01: Client Portal Access
+1. Login → `/login`
+2. Redirect → `/portal` (client portal)
+3. View: Their site(s), modules, support
 
-### Journey 4.1 — Signup & Onboarding
+### J-BO-02: Support Tickets
+1. `/portal/support` → List existing tickets
+2. Click "New Ticket" → `/portal/support/new`
+3. Enter: Subject, description, priority
+4. Submit → Ticket created
+5. Agency receives notification
+6. View replies, add comments, upload attachments
 
-```
-Receives team invite email from agency owner/admin
-    │
-    ▼
-Clicks invite link → /signup (or /login if existing account)
-    │
-    ▼
-Creates account (if new)
-    │
-    ▼
-Redirected to /onboarding
-    │ ├── Profile setup (name, avatar)
-    │ ├── Goal selection (build websites, manage clients, etc.)
-    │ └── Industry selection
-    ▼
-Onboarding complete → /dashboard
-```
-
-### Journey 4.2 — Daily Dashboard
-
-```
-Agency Member → /dashboard
-    │
-    ▼
-Dashboard overview:
-    ├── Assigned sites & their status
-    ├── Recent activity feed
-    ├── Notifications
-    └── Quick actions (edit site, view client)
-```
-
-### Journey 4.3 — Edit a Client's Site
-
-```
-/dashboard/sites → Site list (filtered by assigned sites)
-    │
-    ▼
-Click site → /dashboard/sites/[siteId]
-    │
-    ├── View site overview & stats
-    │
-    ▼
-Edit pages:
-    ├── /dashboard/sites/[siteId]/pages → Page list
-    ├── /dashboard/sites/[siteId]/pages/[pageId] → Page settings
-    └── /studio/[siteId]/[pageId] → Visual page editor (DRAMAC Studio)
-        │
-        ├── Drag & drop components
-        ├── Edit text, images, links
-        ├── Use AI assistant for content
-        ├── Preview on mobile/tablet/desktop
-        └── Save changes
-```
-
-### Journey 4.4 — Manage Blog Posts
-
-```
-/dashboard/sites/[siteId]/blog → Blog post list
-    │
-    ├── /dashboard/sites/[siteId]/blog/new → Create new post
-    │   ├── TipTap rich text editor
-    │   ├── Featured image, excerpt
-    │   ├── Category assignment
-    │   ├── SEO meta (title, description, OG)
-    │   ├── Schedule for future publish
-    │   └── Save as draft or publish
-    │
-    ├── /dashboard/sites/[siteId]/blog/[postId] → Edit post
-    │
-    └── /dashboard/sites/[siteId]/blog/categories → Manage categories
-```
-
-### Journey 4.5 — View Clients (Read-Only)
-
-```
-/dashboard/clients → Client list (view only)
-    │
-    ▼
-/dashboard/clients/[clientId] → Client detail
-    ├── View client info, notes, tags
-    ├── View assigned sites
-    └── View activity history
-```
-
-### Journey 4.6 — Handle Form Submissions
-
-```
-/dashboard/sites/[siteId]/submissions → Form submission list
-    │
-    ├── View individual submissions
-    ├── Export submissions (/api/forms/export)
-    └── Mark as read/unread
-```
-
-### Journey 4.7 — View Notifications
-
-```
-/dashboard/notifications → Notification feed
-    ├── New bookings, orders, form submissions
-    ├── System alerts
-    └── Mark as read/dismiss
-```
-
-### Journey 4.8 — Personal Settings
-
-```
-/settings/profile → Edit name, avatar, email
-/settings/security → Password change, sessions
-/settings/notifications → Notification preferences
-```
+### J-BO-03: Site Management (Limited)
+1. `/portal/sites/[siteId]` → Site overview
+2. Actions available depend on agency permissions:
+   - Edit content (if granted)
+   - View analytics
+   - Manage module settings
 
 ---
 
-## 5. Agency Admin
+## 4. Site User / Visitor Journeys
 
-**Who**: A team member with `role = "admin"` in `agency_members`.  
-**Auth**: Standard Supabase login.  
-**Permissions**: Everything Agency Member can do, PLUS: manage clients, create/delete sites, invite team, view billing, manage modules.
+### J-SU-01: Live Chat Widget Interaction
+1. Visit published site
+2. Chat widget appears (bottom-right, configurable)
+3. Click launcher → Widget opens
+4. If pre-chat form enabled:
+   - Enter: Name, email (phone optional)
+   - Click "Start Chat"
+5. Conversation created → Status: `pending`
+6. Type message → Send
+7. Wait for agent response (see typing indicator)
+8. Agent responds → Message appears in real-time
+9. If no agent available → AI auto-response (if configured)
+10. Conversation ends → Rating widget appears (1-5 stars + comment)
+11. Submit rating → Agent notified
 
-### Journey 5.1 — All Agency Member Journeys (Inherited)
+### J-SU-02: Offline Form
+1. Visit site outside business hours (if configured)
+2. Widget shows offline state with custom message
+3. Click launcher → Offline form appears
+4. Enter: Name, email, message
+5. Submit → Message stored for agent review
+6. Agent responds when online → Visitor notified
 
-Agency Admin has all capabilities of [Agency Member (Section 4)](#4-agency-member), plus the following:
-
-### Journey 5.2 — Manage Clients
-
-```
-/dashboard/clients → Full client management
-    │
-    ├── /dashboard/clients/new → Create new client
-    │   ├── Name, email, company, phone
-    │   ├── Tags & notes
-    │   └── Portal access toggle
-    │
-    ├── /dashboard/clients/[clientId] → Full client detail
-    │   ├── Edit client info
-    │   ├── Enable/disable portal access
-    │   ├── Set portal permissions (can_edit_content, can_view_analytics, can_view_invoices)
-    │   ├── Assign sites
-    │   ├── Set per-site permissions (can_view, can_edit_content, can_publish, can_view_analytics)
-    │   └── View activity history
-    │
-    └── /clients/[clientId]/modules → Manage modules for client
-        ├── Install modules on client's sites
-        ├── Configure module settings
-        └── Set module pricing/markup
-```
-
-### Journey 5.3 — Create & Manage Sites
-
-```
-/dashboard/sites → Full site management
-    │
-    ├── /dashboard/sites/new → Create new site
-    │   ├── Site name, subdomain
-    │   ├── Assign to client
-    │   ├── Choose template (optional)
-    │   └── Configure initial settings
-    │
-    ├── /dashboard/sites/[siteId]/settings → Site settings
-    │   ├── Subdomain & custom domain configuration
-    │   ├── Tracking (Google Analytics, Facebook Pixel)
-    │   ├── Favicon & branding
-    │   └── Danger zone (delete site)
-    │
-    └── Publish site → /api/sites/[siteId]/publish
-```
-
-### Journey 5.4 — Invite Team Members
-
-```
-/settings/team → Team management
-    │
-    ├── View current team members & roles
-    ├── Invite new member (email invite)
-    │   ├── Set role: admin or member
-    │   └── Send invitation email
-    └── Deactivate/remove members (admin only)
-```
-
-### Journey 5.5 — Manage Modules (Install & Configure)
-
-```
-/marketplace → Browse module marketplace
-    │
-    ├── Search & filter modules
-    ├── View module detail → /marketplace/[moduleId]
-    │   ├── Screenshots, description, reviews
-    │   ├── Pricing (free/monthly/yearly/one-time)
-    │   └── Install button
-    │
-    ▼
-Subscribe to module → /checkout/module
-    │ Payment via Paddle/LemonSqueezy
-    ▼
-Module installed at agency level
-    │
-    ▼
-Enable for sites → /dashboard/sites/[siteId]
-    │ ├── Configure module settings per site
-    │ ├── Set client pricing markup
-    │ └── Module appears on published site
-    │
-    ▼
-/dashboard/modules/subscriptions → Manage active subscriptions
-/dashboard/modules/pricing → View module pricing
-```
-
-### Journey 5.6 — View Billing (Read-Only)
-
-```
-/settings/billing → View payment methods & invoices
-/settings/subscription → View current plan details
-/dashboard/billing → Billing overview
-```
-
-### Journey 5.7 — Manage SEO
-
-```
-/dashboard/sites/[siteId]/seo → SEO dashboard
-    ├── /seo/pages → Per-page meta tags
-    ├── /seo/robots → robots.txt editor
-    └── /seo/sitemap → Sitemap configuration
-```
-
-### Journey 5.8 — Domain Management
-
-```
-/dashboard/domains → Domain management
-    │
-    ├── /dashboard/domains/search → Search & register domains
-    ├── /dashboard/domains/cart → Domain purchase cart
-    ├── /dashboard/domains/transfer → Domain transfer
-    │   ├── /transfer/new → Initiate transfer
-    │   └── /transfer/[transferId] → Track transfer
-    │
-    └── /dashboard/domains/[domainId] → Domain detail
-        ├── /dns → DNS record management
-        ├── /email → Email hosting setup
-        ├── /renew → Domain renewal
-        └── /settings → Nameservers, auto-renew, WHOIS
-```
-
-### Journey 5.9 — Email Management
-
-```
-/dashboard/email → Email service dashboard
-    │
-    ├── /dashboard/email/purchase → Purchase email hosting
-    └── /dashboard/email/[orderId]
-        ├── /accounts → Manage email accounts
-        └── /settings → Email configuration
-```
+### J-SU-03: WhatsApp Chat
+1. Click WhatsApp button on site
+2. Opens WhatsApp with pre-filled message
+3. Message arrives via webhook → Conversation created in dashboard
+4. Agent responds from dashboard → Message sent via WhatsApp API
 
 ---
 
-## 6. Agency Owner
+## 5. Domain & Email Journeys
 
-**Who**: The creator/owner of an agency (`agencies.owner_id` or `agency_members.role = "owner"`).  
-**Auth**: Standard Supabase login.  
-**Permissions**: Everything Agency Admin can do, PLUS: full billing management, delete agency, manage team roles, white-label, branding, module requests.
+### J-DE-01: Domain Search & Registration
+1. `/dashboard/domains` → Domain list (existing domains)
+2. Click "Register Domain" → `/dashboard/domains/search`
+3. Enter domain name → Click "Search"
+4. Results appear with availability + pricing (from ResellerClub)
+5. Click "Add to Cart" for desired domains
+6. Floating cart appears → Click "Checkout"
+7. → `/dashboard/domains/cart` (3-step checkout wizard)
+8. **Step 1 — Review Cart**: domains, years selector, privacy toggle, price totals
+9. **Step 2 — Contact Info**: registrant name, email, phone, address
+10. **Step 3 — Confirm & Pay**: review summary → Click "Complete"
+11. Server: `createDomainCartCheckout()` → `createDomainPurchase()` → Paddle transaction
+12. Client: `openPaddleTransactionCheckout({transactionId, successUrl})`
+13. Paddle overlay opens → Enter payment details → Complete payment
+14. → `/dashboard/domains/success?purchase_id=...`
+15. Page polls `/api/purchases/status` every 5 seconds
+16. Paddle webhook fires → `handleTransactionCompleted()` → `provisionDomainRegistration()`
+17. ResellerClub API registers domain → Status: `completed`
+18. Domain appears in `/dashboard/domains` list
 
-### Journey 6.1 — All Agency Admin Journeys (Inherited)
+### J-DE-02: Domain Management
+1. `/dashboard/domains` → Click "Manage" on a domain
+2. → `/dashboard/domains/[domainId]` — Domain detail page
+3. **Overview**: Status, expiry date, nameservers, WHOIS privacy, auto-renew toggles
+4. **Connected Site**: If linked to a DRAMAC site, shows link
+5. **Quick Actions**:
+   - **DNS** button → `/dashboard/domains/[domainId]/dns`
+   - **Email** button → `/dashboard/domains/[domainId]/email`
+   - **Settings** button → `/dashboard/domains/[domainId]/settings`
+   - **Renew** button → `/dashboard/domains/[domainId]/renew`
 
-Agency Owner has all capabilities of [Agency Admin (Section 5)](#5-agency-admin), plus the following:
+### J-DE-03: DNS Management
+1. `/dashboard/domains/[domainId]/dns`
+2. View existing DNS records in table (type, host, value, TTL, proxy status)
+3. **Add Record**: Click "Add Record" → Fill: Type (A/CNAME/MX/TXT/etc), Host, Value, TTL → Save
+4. **Edit Record**: Click edit icon → Modify → Save
+5. **Delete Record**: Click delete → Confirm → Deleted
+6. **Sync**: Click "Sync" → Syncs with DNS provider
+7. **Quick Setup**: Click dropdown → Select template (e.g., "Cloudflare", "Email MX") → Auto-adds records
+8. **Propagation Checker**: Enter hostname → Check DNS propagation globally
 
-### Journey 6.2 — Full Onboarding (First-Time)
+### J-DE-04: Domain Renewal
+1. **From detail page**: `/dashboard/domains/[domainId]/renew`
+   - Select years (1/2/3/5)
+   - View pricing per year
+   - Click "Renew Domain" → Paddle checkout overlay → Payment → Renewed
+2. **From domain list dialog**: `/dashboard/domains` → Click "Renew"
+   - Select years → Click "Renew Domain" → Paddle checkout → Payment → Renewed
 
-```
-Visit app.dramacagency.com/signup
-    │
-    ▼
-Create account (email + password)
-    │
-    ▼
-/onboarding (multi-step wizard):
-    │
-    ├── Step 1: Agency name & details
-    ├── Step 2: Industry selection
-    ├── Step 3: Goals (build sites, manage clients, sell modules)
-    ├── Step 4: First site creation (optional)
-    └── Step 5: Product tour
-    │
-    ▼
-/dashboard → Full dashboard access
-```
+### J-DE-05: Domain Transfer
+1. `/dashboard/domains/transfer` → Transfer overview page
+2. **Transfer In**: Click "Transfer In" → `/dashboard/domains/transfer/new`
+   - Enter: Domain name, auth/EPP code
+   - Submit → Transfer initiated with ResellerClub
+3. Track status: `/dashboard/domains/transfer/[transferId]`
+4. Transfer completes → Domain appears in domain list
+5. **Transfer Out**: From domain settings, get auth code → Provide to new registrar
 
-### Journey 6.3 — Manage Billing & Subscription
+### J-DE-06: Business Email Purchase
+1. `/dashboard/email` → Email orders list
+2. Click "Purchase Email" → `/dashboard/email/purchase`
+3. **Email Purchase Wizard**:
+   - Step 1: Select/enter domain
+   - Step 2: Choose plan (number of accounts, storage tier)
+   - Step 3: Review & Pay → Paddle transaction checkout
+4. Webhook → Provisions email with Titan Email
+5. `/dashboard/email/[orderId]` — Order detail page
+6. `/dashboard/email/[orderId]/accounts` — Manage email accounts
+   - Create new accounts, delete accounts
+   - Open Webmail → `https://app.titan.email`
+7. `/dashboard/email/[orderId]/settings` — Order settings
 
-```
-/settings/billing → Full billing management
-    │
-    ├── View & update payment method
-    ├── View invoices & payment history
-    ├── Download invoices
-    └── Manage auto-pay settings
-    │
-    ▼
-/settings/subscription → Plan management
-    │
-    ├── View current plan & usage
-    ├── Upgrade/downgrade plan
-    ├── View plan features
-    └── Cancel subscription
-    │
-    ▼
-/dashboard/billing → Billing dashboard
-    ├── Revenue overview
-    ├── Module subscription costs
-    └── /dashboard/billing/success → Payment confirmation
-```
-
-### Journey 6.4 — White-Label & Branding
-
-```
-/settings/branding → Custom branding setup
-    │
-    ├── Upload logo (light/dark variants)
-    ├── Brand colors (primary, secondary, accent)
-    ├── Custom favicon
-    ├── Email branding
-    └── White-label toggle (remove DRAMAC branding)
-        │
-        ├── Custom login page branding
-        ├── Client portal branded
-        └── Email headers/footers branded
-```
-
-### Journey 6.5 — Manage Team Roles
-
-```
-/settings/team → Full team management
-    │
-    ├── View all team members
-    ├── Change member roles (member ↔ admin)
-    ├── Transfer ownership
-    ├── Remove members
-    └── View team activity log
-```
-
-### Journey 6.6 — Request Custom Modules
-
-```
-/dashboard/modules/requests → Module request system
-    │
-    ├── /dashboard/modules/requests/new → Submit new request
-    │   ├── Module description & requirements
-    │   ├── Priority level
-    │   ├── Budget range
-    │   └── Timeline
-    │
-    └── Track request status
-```
-
-### Journey 6.7 — AI Website Designer
-
-```
-/dashboard/sites/[siteId]/ai-designer → AI Website Designer
-    │
-    ▼
-Enter business details:
-    ├── Business name, industry, description
-    ├── Services offered
-    ├── Brand preferences (colors, style)
-    └── Target audience
-    │
-    ▼
-AI generates full website (streaming):
-    ├── Homepage with hero, services, testimonials, CTA
-    ├── About page
-    ├── Services/Products page
-    ├── Contact page
-    ├── Blog page
-    └── Industry-specific pages (booking, menu, etc.)
-    │
-    ▼
-Preview generated website
-    │
-    ├── Edit individual sections
-    ├── Regenerate sections with AI
-    ├── Adjust colors & fonts
-    └── Swap components
-    │
-    ▼
-Save & Apply → Pages created in Studio
-    │
-    ├── Auto-installs required modules (booking, ecommerce)
-    └── Site ready to publish
-```
-
-### Journey 6.8 — Studio: Visual Page Builder
-
-```
-/studio/[siteId]/[pageId] → Full-screen editor
-    │
-    ▼
-Left Panel — Component Library:
-    ├── Layout: Section, Container, Columns, Spacer
-    ├── Typography: Heading, Text, RichText
-    ├── Media: Image, Video, Icon
-    ├── Interactive: Button, Link, Accordion, Tabs
-    ├── Marketing: Hero, CTA, Testimonial, Pricing, FAQ
-    ├── Module: Booking Widget, Product Grid, Cart, etc.
-    └── Templates: Pre-built section templates
-    │
-    ▼
-Canvas — Drag & drop components:
-    ├── Mobile/Tablet/Desktop preview modes
-    ├── Grid guides & snap-to
-    ├── Component selection & nesting
-    └── Undo/Redo (Ctrl+Z/Y)
-    │
-    ▼
-Right Panel — Component Properties:
-    ├── Content fields (text, images, links)
-    ├── Styling (colors, spacing, typography)
-    ├── Responsive overrides per breakpoint
-    ├── Animation presets
-    └── AI Assistant (per-component suggestions)
-    │
-    ▼
-Top Bar:
-    ├── Device preview toggle (mobile/tablet/desktop)
-    ├── Zoom controls
-    ├── Preview mode
-    ├── Save / Publish
-    └── Page settings (title, slug, SEO)
-```
-
-### Journey 6.9 — Manage AI Agents
-
-```
-/dashboard/sites/[siteId]/ai-agents → AI Agent management
-    │
-    ├── View agent list & status
-    ├── /ai-agents/new → Create new AI agent
-    │   ├── Agent name, description, personality
-    │   ├── Assign tools & capabilities
-    │   ├── Set goals & constraints
-    │   └── Configure triggers
-    │
-    ├── /ai-agents/[agentId] → Agent detail
-    │   ├── Edit configuration
-    │   ├── Test agent
-    │   └── View execution logs
-    │
-    ├── /ai-agents/marketplace → Browse pre-built agents
-    ├── /ai-agents/approvals → Review agent actions
-    ├── /ai-agents/analytics → Agent performance metrics
-    ├── /ai-agents/testing → Agent testing sandbox
-    └── /ai-agents/usage → Usage & cost tracking
-```
-
-### Journey 6.10 — Manage Automation Workflows
-
-```
-/dashboard/sites/[siteId]/automation → Automation hub
-    │
-    ├── /automation/workflows → Active workflows
-    │   ├── /workflows/new → Create workflow (visual builder)
-    │   │   ├── Select trigger (form submit, order placed, etc.)
-    │   │   ├── Add conditions (if/else)
-    │   │   ├── Add actions (send email, update record, etc.)
-    │   │   ├── AI-powered action suggestions
-    │   │   └── Test & activate
-    │   │
-    │   └── /workflows/[workflowId] → Edit workflow
-    │
-    ├── /automation/templates → Pre-built templates
-    ├── /automation/connections → Connected services
-    ├── /automation/executions → Execution log
-    │   └── /executions/[executionId] → Execution detail
-    └── /automation/analytics → Workflow performance
-```
-
-### Journey 6.11 — Manage Social Media
-
-```
-/dashboard/sites/[siteId]/social → Social media hub
-    │
-    ├── /social/compose → Create & schedule posts
-    ├── /social/calendar → Content calendar view
-    ├── /social/inbox → Unified social inbox
-    ├── /social/campaigns → Campaign management
-    ├── /social/approvals → Content approval queue
-    ├── /social/accounts → Connected social accounts
-    ├── /social/analytics → Engagement & performance
-    └── /social/settings → Social preferences
-```
-
-### Journey 6.12 — CRM Management
-
-```
-/dashboard/sites/[siteId]/crm-module → CRM dashboard
-    │
-    ├── Contact management (create/edit/search)
-    ├── Company management
-    ├── Deal pipeline (drag & drop stages)
-    ├── Activity tracking
-    ├── /crm-module/analytics → Revenue, pipeline, velocity
-    └── Reports & exports
-    │
-    ▼
-/dashboard/crm → Agency-wide CRM (multi-site)
-```
-
-### Journey 6.13 — Impersonate Client Portal
-
-```
-/dashboard/clients/[clientId] → Client detail
-    │
-    ▼
-Click "View as Client" → Sets impersonating_client_id cookie
-    │
-    ▼
-Redirected to /portal → See exactly what the client sees
-    │
-    ▼
-Click "Exit Impersonation" → Return to agency dashboard
-```
+### J-DE-07: Domain Settings (Agency-Level Config)
+1. `/dashboard/domains/settings` → Settings overview with 3 cards
+2. **Pricing Configuration** → `/dashboard/domains/settings/pricing`
+   - View TLD pricing table (register, renew, transfer prices)
+   - Configure markup percentages
+   - Pricing calculator
+3. **White-Label Branding** → `/dashboard/domains/settings/branding`
+   - Configure domain service branding
+4. **Billing Integration** → `/dashboard/domains/settings/billing`
+   - Paddle billing integration settings
 
 ---
 
-## 7. Module Developer
+## 6. Live Chat Journeys
 
-**Who**: A user with a `developer_profiles` record. Can be an agency owner who also develops modules, or a standalone developer.  
-**Auth**: Standard Supabase login.  
-**Entry Points**: Module Studio, Developer Revenue Dashboard, VS Code SDK, CLI tools.
+### J-LC-01: Module Setup (First Time)
+1. `/dashboard/sites/[siteId]` → Modules tab
+2. Find "Live Chat" → Click "Install"
+3. → `/dashboard/sites/[siteId]/live-chat` — Overview page (empty state)
+4. Click "Add Agents" → Navigates to Agents page
+5. Click "Add Agent" → Dialog opens
+6. Select team member from dropdown (includes agency owner + team members)
+7. Fill: Display name, email, role, max concurrent chats, department
+8. Click "Add Agent" → Agent created
+9. Navigate to Settings → Embed tab
+10. Copy embed script → Add to website `<head>` tag
+11. Widget appears on the live site → Ready for conversations
 
-### Journey 7.1 — Set Up Developer Profile
+### J-LC-02: Agent Daily Workflow
+1. Login → Navigate to site's live chat
+2. `/dashboard/sites/[siteId]/live-chat` — **Overview Dashboard**
+   - Stats cards: Active conversations, pending, online agents, avg response time, today's count, resolved today, missed today, satisfaction score
+   - Recent conversations list (clickable)
+   - Agent status panel
+3. Click conversation → `/dashboard/sites/[siteId]/live-chat/conversations/[id]`
+4. **Chat Interface (Two-Panel)**:
+   - **Center panel — Chat**:
+     - Message history with visitor
+     - Header: Visitor name, back button, priority dropdown, assign dropdown, resolve button, more menu
+     - Transfer bar (when transferring): Select target agent
+     - Load older messages (pagination)
+     - Typing indicator when visitor is typing
+     - Message input: Text area with send button
+   - **Right panel — Info**:
+     - Visitor Details: Name, email, phone, location, browser, OS, current URL
+     - Conversation Info: Status, priority, channel, message count, created date, assigned agent
+     - Tags: View, add (type + Enter), remove (click X)
+     - CRM Contact link (if matched)
+     - Keyboard Shortcuts reference card
 
-```
-Existing agency user → /settings/profile or developer page
-    │
-    ▼
-Create developer profile:
-    ├── Developer name & slug
-    ├── Avatar & bio
-    ├── Website & social links
-    ├── Payout account setup → /api/developer/payout-account
-    │   └── Stripe Connect onboarding → /api/developer/stripe-connect
-    └── Verification request (optional)
-```
+### J-LC-03: Message Sending
+1. Type message in input area
+2. **Send**: Press `Enter` or `Ctrl+Enter` or click Send button
+3. **New line**: Press `Shift+Enter`
+4. **Canned Response**: Type `/` → dropdown appears → select response → content inserted
+5. **Internal Note**: Press `Ctrl+/` → switches to note mode (yellow indicator) → notes visible only to agents
+6. **@Mention**: In note mode, type `@` → select agent → creates notification for that agent
+7. **File Upload**: Click 📎 → select file → uploaded and sent
 
-### Journey 7.2 — Build a Module (In-Browser Studio)
+### J-LC-04: Conversation Management
+1. **Assign**: Use assign dropdown in header → Select agent → Agent receives notification
+2. **Transfer**: Click ⋮ menu → "Transfer Conversation" → Select target agent → Transferred
+3. **Resolve**: Click "Resolve" button or press `Ctrl+R` → Visitor gets rating prompt
+4. **Close**: Click ⋮ → "Close Conversation" or press `Ctrl+Shift+C`
+5. **Reopen**: Click ⋮ → "Reopen Conversation" or press `Ctrl+Shift+O`
+6. **Priority**: Use priority dropdown → Set low/normal/high/urgent
+7. **Tags**: In right panel, type tag name → press Enter → tag added. Click X to remove.
 
-```
-/admin/modules/studio → Module Studio (or developer studio)
-    │
-    ├── /studio/new → Create new module
-    │   ├── Module name, description, icon
-    │   ├── Category & tags
-    │   ├── Module type (widget/app/integration/system/custom)
-    │   ├── Install level (agency/client/site)
-    │   └── Pricing model (free/one-time/monthly/yearly)
-    │
-    ▼
-/admin/modules/studio/[moduleId] → Module Editor
-    │
-    ├── Monaco code editor (in-browser VS Code)
-    │   ├── render_code (React component)
-    │   ├── styles (CSS/Tailwind)
-    │   ├── settings_schema (configuration options)
-    │   ├── api_routes (custom endpoints)
-    │   └── default_settings
-    │
-    ├── Module manifest editor
-    │   ├── render_mode, permissions
-    │   ├── Dependencies
-    │   └── Version info
-    │
-    └── Test module → /admin/modules/studio/[moduleId]/test
-        ├── Preview rendering
-        ├── Test API endpoints
-        └── View test results
-```
+### J-LC-05: Agent Management
+1. `/dashboard/sites/[siteId]/live-chat/agents`
+2. **View**: Agent cards showing name, email, role, status (online/away/offline), department, current chats
+3. **Add Agent**: Click "Add Agent" → Select team member → Fill details → Submit
+4. **Edit Agent**: Click "Edit" on card → Edit dialog → Modify details → Save
+5. **Remove Agent**: Click "Remove" → Agent deactivated (soft delete)
+6. **Departments**: Bottom section — Add department, set default, delete
 
-### Journey 7.3 — Build a Module (AI Builder)
+### J-LC-06: Canned Responses
+1. `/dashboard/sites/[siteId]/live-chat/canned-responses`
+2. View: Grid of response cards (title, shortcut, category, usage count)
+3. **Create**: Click "New Response" → Title, content, shortcut (e.g., `/greeting`), category → Create
+4. **Edit**: Hover card → Click ✏️ → Edit dialog → Save
+5. **Delete**: Hover card → Click 🗑️ → Confirm → Deleted
+6. **Use**: In chat, type `/` → Select from popup → Content inserted, usage count incremented
 
-```
-/admin/modules/studio/ai-builder → AI Module Builder
-    │
-    ▼
-Chat with AI to describe module:
-    ├── /api/modules/ai-builder/chat → Conversational design
-    ├── /api/modules/ai-builder/generate-spec → Generate specification
-    ├── /api/modules/ai-builder/generate-code → Generate code
-    ├── /api/modules/ai-builder/refine → Refine code iteratively
-    └── /api/modules/ai-builder/finalize → Finalize for publishing
-    │
-    ▼
-Review generated code in Studio editor
-    │
-    ▼
-Test → Publish to marketplace
-```
+### J-LC-07: Knowledge Base
+1. `/dashboard/sites/[siteId]/live-chat/knowledge-base`
+2. View: Grid of article cards (title, category, content preview)
+3. **Create**: Click "New Article" → Title, content, category → Create
+4. **Edit**: Hover → ✏️ → Edit → Save
+5. **Delete**: Hover → 🗑️ → Confirm → Deleted
+6. **Purpose**: AI auto-response uses articles as context for intelligent responses
 
-### Journey 7.4 — Build a Module (VS Code + CLI)
+### J-LC-08: Analytics
+1. `/dashboard/sites/[siteId]/live-chat/analytics`
+2. Select date range: 7d / 14d / 30d / 90d
+3. **Charts**:
+   - Conversations Over Time (area chart)
+   - Response Time Trend (area chart)
+   - Channel Breakdown (pie: widget/WhatsApp/API)
+   - Satisfaction Distribution (bar: 1-5 stars)
+   - Busiest Hours (bar chart)
+   - Agent Leaderboard (table: conversations, response time, satisfaction)
+4. Click "Export CSV" → Download analytics data
 
-```
-Terminal: dramac-cli init my-module
-    │
-    ├── Scaffolds module project locally
-    ├── TypeScript types from SDK
-    └── Dev server for local testing
-    │
-    ▼
-Develop in VS Code:
-    ├── DRAMAC VS Code extension for IntelliSense
-    ├── Module SDK for API integration
-    ├── Local preview & testing
-    └── Upload to platform
-    │
-    ▼
-Terminal: dramac-cli publish
-    │
-    └── Module deployed to marketplace
-```
+### J-LC-09: Settings
+1. `/dashboard/sites/[siteId]/live-chat/settings` — 8 tabs
+2. **Appearance**: Primary color, text color, position (left/right), icon, size, border radius, z-index, preview
+3. **Branding**: Company name, logo URL, welcome message, away message, offline message, language
+4. **Pre-Chat Form**: Enable, required fields (name, email, phone, message), department selector
+5. **Business Hours**: Enable, timezone, per-day toggle + start/end times
+6. **Behavior**: Auto-open delay, show avatar, show agent name, typing indicator, file uploads, emoji, sound, satisfaction rating, auto-close (enable, timeout, message)
+7. **Embed**: Script tag embed code (copy button), iframe alternative, platform guides
+8. **WhatsApp**: Enable, phone number, phone number ID, business account ID, welcome template
+9. **Advanced**: Allowed domains, blocked IPs, max file size, allowed file types
 
-### Journey 7.5 — Publish & Manage Versions
+### J-LC-10: Notification Flow (Complete)
+1. **Visitor sends message** →
+2. **Layer 1 — Realtime (instant)**: `useChatRealtime` hook → Audio plays + Toast popup with "View" action
+3. **Layer 2 — In-app notification (DB)**: `notifyNewChatMessage()` → Creates `notifications` record → NotificationBell animates + shows count
+4. **Layer 3 — Web push**: `sendPushToUser()` → Browser push notification (works even in background)
+5. **On assignment**: `notifyChatAssigned()` → "Chat assigned to you" in-app notification
+6. **On low rating**: `notifyChatRating()` → Notification to agent + site owner
+7. **On missed chat**: `notifyChatMissed()` → Notification to site owner
 
-```
-Module → Module Studio → Publish
-    │
-    ├── Set version number
-    ├── Write changelog
-    ├── Submit for review (if required)
-    │
-    ▼
-Version management:
-    ├── /api/modules/[moduleId]/versions → Version list
-    ├── /api/modules/[moduleId]/versions/[versionId] → Version detail
-    ├── /api/modules/[moduleId]/versions/rollback → Rollback to previous
-    ├── /api/modules/[moduleId]/versions/backup → Create backup
-    ├── /api/modules/[moduleId]/versions/migrate → Data migration
-    └── /api/modules/[moduleId]/versions/verify → Verify integrity
-```
-
-### Journey 7.6 — Track Revenue & Payouts
-
-```
-/developer/revenue → Revenue dashboard
-    │
-    ├── Total earnings, monthly trend
-    ├── Revenue per module
-    ├── Install counts & conversion rates
-    ├── Geographic breakdown
-    │
-    ├── /api/developer/payouts → Payout history
-    ├── /api/developer/statements → Financial statements
-    └── /api/developer/revenue/export → Export revenue data
-```
-
-### Journey 7.7 — Monitor Module Performance
-
-```
-/api/modules/analytics/[moduleId] → Module analytics
-    │
-    ├── Install count, active installs
-    ├── Load times, error rates
-    ├── Usage events (loads, actions, errors)
-    ├── User engagement metrics
-    └── Revenue per install
-    │
-    ▼
-/api/modules/[moduleId]/reviews → Module reviews
-    ├── Average rating
-    ├── Review list
-    └── Respond to reviews
-```
+### J-LC-11: Keyboard Shortcuts Reference
+| Shortcut | Action | Context |
+|----------|--------|---------|
+| `Enter` | Send message | Message input |
+| `Shift+Enter` | New line | Message input |
+| `Ctrl+Enter` | Send message | Message input |
+| `/` | Open canned responses | Message input |
+| `@` | Mention agent (in notes) | Message input (note mode) |
+| `Ctrl+/` | Toggle note mode | Message input |
+| `Escape` | Clear input / close panels | Message input |
+| `Ctrl+R` | Resolve conversation | Global (not in input) |
+| `Ctrl+Shift+C` | Close conversation | Global (not in input) |
+| `Ctrl+Shift+O` | Reopen conversation | Global (not in input) |
+| `Escape` | Back to conversations list | Global (not in input) |
 
 ---
 
-## 8. Super Admin (Platform Admin)
+## 7. Billing & Subscription Journeys
 
-**Who**: User with `profiles.role = "super_admin"`. Has unrestricted access to the entire platform.  
-**Auth**: Standard Supabase login (same as agency users).  
-**Entry Point**: `app.dramacagency.com/admin`
+### J-BI-01: Agency Subscription (Paddle)
+1. `/dashboard/settings/billing` → Current plan, usage
+2. Click "Upgrade" → Pricing page
+3. Select plan: Starter / Pro → Monthly / Annual
+4. Click "Subscribe" → `openPaddleCheckout({priceId, agencyId, email})`
+5. Paddle overlay → Enter payment details → Complete
+6. Webhook: `handleSubscriptionCreated()` → Update agency plan
+7. Features unlocked based on plan tier
 
-### Journey 8.1 — Platform Overview
+### J-BI-02: Domain/Email Purchase (Paddle Transaction)
+1. User adds domain/email to cart → Proceeds to checkout
+2. Server: `createDomainPurchase()` or `createEmailPurchase()` → Creates Paddle transaction (non-catalog, inline items)
+3. Client: `openPaddleTransactionCheckout({transactionId, successUrl})`
+4. Paddle overlay → Payment
+5. Webhook: `handleTransactionCompleted()` → Provisions resource
+6. Success page polls until status: `completed`
 
-```
-/admin → Admin dashboard
-    │
-    ├── Platform statistics (agencies, users, modules, revenue)
-    ├── System health indicators
-    ├── Recent activity
-    └── Alerts & issues
-```
+**CRITICAL — Two Paddle Checkout Patterns:**
+| Pattern | Function | Use Case | Params |
+|---------|----------|----------|--------|
+| **Subscription** | `openPaddleCheckout()` | Monthly/annual plans | `{priceId, agencyId, email}` |
+| **Transaction** | `openPaddleTransactionCheckout()` | One-time purchases (domains, email) | `{transactionId, successUrl}` |
 
-### Journey 8.2 — Manage Agencies
-
-```
-/admin/agencies → Agency list
-    │
-    ├── Search, filter, sort agencies
-    ├── View agency details → /admin/agencies/[agencyId]
-    │   ├── Agency info, owner, plan
-    │   ├── Sites & clients count
-    │   ├── Module installations
-    │   ├── Billing status
-    │   └── Impersonate agency owner
-    │
-    └── /admin/agencies/analytics → Agency growth metrics
-```
-
-### Journey 8.3 — Manage Users
-
-```
-/admin/users → User list
-    │
-    ├── Search by email, name, role
-    ├── View user detail → /admin/users/[userId]
-    │   ├── Profile info
-    │   ├── Role & agency membership
-    │   ├── Login history
-    │   ├── Edit role (promote to admin, etc.)
-    │   └── Disable/enable account
-    │
-    └── /api/make-admin → Promote user to super_admin
-```
-
-### Journey 8.4 — Manage Modules (Platform-Wide)
-
-```
-/admin/modules → Module management
-    │
-    ├── All published modules
-    ├── /admin/modules/analytics → Module performance metrics
-    ├── /admin/modules/pricing → Platform-wide pricing management
-    │   └── Set wholesale/retail prices, revenue share
-    │
-    ├── /admin/modules/requests → Module requests from agencies
-    │   └── /admin/modules/requests/[requestId] → Review & respond
-    │
-    ├── /admin/modules/studio → Module Studio (build/edit modules)
-    │   ├── /studio/new → Create module
-    │   ├── /studio/ai-builder → AI module builder
-    │   ├── /studio/sync → Sync modules
-    │   ├── /studio/integration-test → Integration testing
-    │   └── /studio/[moduleId] → Edit module
-    │       └── /studio/[moduleId]/test → Test module
-    │
-    ├── /admin/modules/testing → Test management
-    │   ├── /testing/beta → Beta program management
-    │   └── /testing/sites → Test sites
-    │
-    └── /admin/modules/[moduleId] → Module detail
-        ├── Install stats, revenue
-        ├── Version history
-        ├── Error logs
-        └── Approve/reject/feature module
-```
-
-### Journey 8.5 — Monitor Platform Health
-
-```
-/admin/health → System health dashboard
-    │
-    ├── Supabase connection status
-    ├── API response times
-    ├── Error rates & trends
-    ├── Database size & performance
-    └── External service status (Paddle, Resend, etc.)
-```
-
-### Journey 8.6 — Revenue & Billing
-
-```
-/admin/billing → Platform billing overview
-    │
-    ├── /admin/billing/revenue → Revenue dashboard
-    │   ├── MRR, ARR, churn rate
-    │   ├── Revenue by plan tier
-    │   ├── Revenue by module
-    │   └── Payment provider breakdown
-    │
-    └── /admin/subscriptions → Subscription management
-        ├── Active subscriptions list
-        ├── Trial users
-        ├── Churned users
-        └── Revenue forecasts
-```
-
-### Journey 8.7 — Platform Analytics
-
-```
-/admin/analytics → Platform-wide analytics
-    │
-    ├── User growth (signups, DAU, MAU)
-    ├── Agency growth
-    ├── Module adoption rates
-    ├── Site creation trends
-    ├── Geographic distribution
-    └── Feature usage heatmap
-```
-
-### Journey 8.8 — Audit & Security
-
-```
-/admin/audit → Audit log
-    │
-    ├── All platform actions logged
-    ├── Filter by user, action, date
-    ├── Suspicious activity detection
-    └── Export audit data
-    │
-    ▼
-/admin/activity → Activity feed
-    ├── Real-time platform activity
-    └── Filter by type
-```
-
-### Journey 8.9 — Platform Settings
-
-```
-/admin/settings → Platform configuration
-    │
-    ├── Default settings
-    ├── Feature flags
-    ├── Email templates
-    ├── Module submission rules
-    └── Pricing tier configuration
-```
+**CRITICAL — No pre-configured Paddle products needed for domains/emails.** Domain and email purchases use non-catalog inline items — prices are created dynamically at transaction time.
 
 ---
 
-## 9. Cross-User Journey Maps
+## 8. CRM Journeys
 
-### Journey 9.1 — Booking Lifecycle (All Users)
+### J-CR-01: Contact Management
+1. `/dashboard/crm` → Contacts list
+2. Click "Add Contact" → Fill details → Save
+3. Click contact → Contact detail page
+4. View: History, deals, communications, notes
+5. Link to live chat conversations (if visitor matched)
 
-```
-AGENCY OWNER:
-  Enable booking module on site → Configure services/staff/hours
-
-ANONYMOUS VISITOR:
-  Browse site → Book appointment → Receive confirmation email
-
-AGENCY OWNER/ADMIN:
-  Receive in-app notification + email → View in /dashboard/sites/[siteId]/booking
-  → Confirm/reschedule/cancel appointment
-
-PORTAL CLIENT (if permitted):
-  View bookings in portal → See analytics
-
-VISITOR (if cancelled):
-  Receive cancellation email (booking_cancelled_customer)
-```
-
-### Journey 9.2 — E-Commerce Order Lifecycle (All Users)
-
-```
-AGENCY OWNER:
-  Set up store → Add products/categories → Configure payment providers
-  → Set shipping zones & tax rates
-
-ANONYMOUS VISITOR:
-  Browse products → Add to cart → Checkout → Pay → Receive order confirmation
-
-AGENCY OWNER/ADMIN:
-  Receive in-app notification + email → View order in /dashboard/sites/[siteId]/ecommerce
-  → Process order → Ship → Mark as fulfilled
-
-VISITOR:
-  Receive shipping notification email (order_shipped_customer)
-
-PORTAL CLIENT (if permitted):
-  View orders → Track shipment → View invoices
-```
-
-### Journey 9.3 — Module Lifecycle (Developer → Agency → Client)
-
-```
-DEVELOPER:
-  Build module → Test → Publish to marketplace → Set pricing
-
-AGENCY OWNER:
-  Browse marketplace → Subscribe to module → Install on site
-  → Configure → Enable for client
-
-PORTAL CLIENT:
-  Browse apps in portal → Request new module from agency
-
-ANONYMOUS VISITOR:
-  Interacts with module on published site (e.g., booking widget, product grid)
-
-SUPER ADMIN:
-  Monitor module performance → Feature/delist modules → Manage pricing
-```
-
-### Journey 9.4 — Website Creation Lifecycle
-
-```
-AGENCY OWNER:
-  Create new site → Choose template OR use AI Designer
-  │
-  ├── AI DESIGNER PATH:
-  │   Enter business details → AI generates full site → Review → Save & Apply
-  │
-  └── MANUAL PATH:
-      Open Studio → Drag & drop components → Edit content → Style & brand
-  │
-  ▼
-Configure modules (booking, ecommerce, etc.)
-  │
-  ▼
-SEO setup (meta tags, sitemap, robots.txt)
-  │
-  ▼
-Set domain (subdomain or custom domain)
-  │
-  ▼
-Publish site → Live on web
-
-AGENCY MEMBER:
-  Edit pages → Update content → Add blog posts
-
-PORTAL CLIENT:
-  Edit content (if permitted) → View analytics → Submit support tickets
-
-ANONYMOUS VISITOR:
-  Browse the final published site
-```
-
-### Journey 9.5 — Support Ticket Lifecycle
-
-```
-PORTAL CLIENT:
-  /portal/support/new → Create ticket (subject, description, priority)
-  │
-  ▼
-AGENCY ADMIN/OWNER:
-  View ticket in dashboard → Reply → Resolve
-  │
-  ▼
-PORTAL CLIENT:
-  /portal/support/[ticketId] → View response → Reply → Close
-```
-
-### Journey 9.6 — Payment Failure & Recovery
-
-```
-SYSTEM (Paddle/Stripe Webhook):
-  Payment fails → Webhook fires → /api/webhooks/paddle or /api/webhooks/stripe
-  │
-  ▼
-AGENCY OWNER:
-  In-app notification (payment_failed) + email
-  │
-  ▼
-AGENCY OWNER:
-  /settings/billing → Update payment method → Retry
-  │
-  ▼
-SYSTEM:
-  Payment recovered → In-app notification (payment_success) + email
-```
+### J-CR-02: Deal Pipeline
+1. `/dashboard/crm/deals` → Kanban board
+2. Drag deals between stages
+3. Click deal → Deal detail, linked contacts, activities
+4. Add/edit deals, close won/lost
 
 ---
 
-## 10. Module-Specific User Journeys
+## 9. Module Marketplace Journeys
 
-### 10.1 — Booking Module Roles (Per-Site)
+### J-MM-01: Browse & Install
+1. `/dashboard/marketplace` → Grid of available modules
+2. Filter by category, search by name
+3. Click module → Detail page with description, screenshots, pricing
+4. Click "Install" → Select target site → Confirm
+5. Module installed → Configure in site's modules section
 
-| Role | Hierarchy | Key Permissions |
-|---|---|---|
-| **Admin** | 100 | Full access: services, staff, bookings, settings |
-| **Manager** | 75 | Manage bookings, reschedule, view all calendars |
-| **Staff** | 50 | View own bookings, mark complete, view schedule |
-| **Viewer** | 10 | Read-only access to booking calendar |
-
-### 10.2 — CRM Module Roles (Per-Site)
-
-| Role | Hierarchy | Key Permissions |
-|---|---|---|
-| **Admin** | 100 | Full access: contacts, deals, pipelines, reports |
-| **Sales Manager** | 75 | Manage team deals, reassign, view pipeline |
-| **Sales Rep** | 50 | Own contacts/deals only, create new |
-| **Viewer** | 10 | Read-only access to CRM data |
-
-### 10.3 — E-Commerce Module Roles (Per-Site)
-
-| Role | Hierarchy | Key Permissions |
-|---|---|---|
-| **Admin** | 100 | Full access: products, orders, settings, analytics |
-| **Store Manager** | 75 | Products, orders, inventory, discounts |
-| **Order Manager** | 50 | Order processing, fulfillment, refunds |
-| **Inventory Manager** | 50 | Stock management, product updates |
-| **Viewer** | 10 | Read-only access to store data |
+### J-MM-02: Module Configuration
+1. `/dashboard/sites/[siteId]` → Modules tab
+2. Click installed module → Module settings page
+3. Configure module-specific settings
+4. Enable/disable module → Changes reflected on live site
 
 ---
 
-## 11. Permission Matrix
+## Verification Checklist
 
-### Platform-Level Permissions
+### Domain Checkout Flow
+- [x] Domain search returns results with correct pricing
+- [x] "Add to Cart" adds to client-side cart
+- [x] Checkout navigates to cart page
+- [x] Cart shows correct items and totals
+- [x] Contact form collects registrant details
+- [x] `createDomainCartCheckout()` creates Paddle transaction — TS errors fixed
+- [x] `openPaddleTransactionCheckout()` opens Paddle overlay
+- [x] Success page polls for status updates — API types fixed
+- [x] Webhook provisions domain via ResellerClub
+- [x] Renew from detail page → Paddle checkout redirect
+- [x] Renew from list dialog → Paddle checkout redirect (was silently broken, now fixed)
+- [ ] **REQUIRES**: `PADDLE_API_KEY` and related env vars in Vercel production
 
-| Permission | Super Admin | Agency Owner | Agency Admin | Agency Member | Portal Client |
-|---|:---:|:---:|:---:|:---:|:---:|
-| **Platform** | | | | | |
-| Manage platform settings | ✅ | — | — | — | — |
-| View all agencies | ✅ | — | — | — | — |
-| Impersonate users | ✅ | — | — | — | — |
-| Manage subscriptions | ✅ | — | — | — | — |
-| View platform analytics | ✅ | — | — | — | — |
-| **Agency** | | | | | |
-| Manage agency settings | ✅ | ✅ | — | — | — |
-| Delete agency | ✅ | ✅ | — | — | — |
-| Manage team roles | ✅ | ✅ | — | — | — |
-| Invite team members | ✅ | ✅ | ✅ | — | — |
-| View billing | ✅ | ✅ | ✅ | — | — |
-| Manage billing/payments | ✅ | ✅ | — | — | — |
-| White-label/branding | ✅ | ✅ | — | — | — |
-| **Clients** | | | | | |
-| Create/edit clients | ✅ | ✅ | ✅ | — | — |
-| View clients | ✅ | ✅ | ✅ | ✅ | — |
-| Delete clients | ✅ | ✅ | — | — | — |
-| **Sites** | | | | | |
-| Create sites | ✅ | ✅ | ✅ | — | — |
-| Edit sites | ✅ | ✅ | ✅ | ✅ | — |
-| Delete sites | ✅ | ✅ | ✅ | — | — |
-| Publish sites | ✅ | ✅ | ✅ | — | — |
-| **Content** | | | | | |
-| Edit content | ✅ | ✅ | ✅ | ✅ | ⚙️* |
-| View analytics | ✅ | ✅ | ✅ | ✅ | ⚙️* |
-| View invoices | — | — | — | — | ⚙️* |
-| **Modules** | | | | | |
-| Install modules | ✅ | ✅ | ✅ | — | — |
-| Configure modules | ✅ | ✅ | ✅ | — | — |
-| Use module features | ✅ | ✅ | ✅ | ✅ | ⚙️* |
-| **Developer** | | | | | |
-| Publish modules | ✅ | ✅** | ✅** | — | — |
-| View developer revenue | ✅ | ✅** | ✅** | — | — |
+### Live Chat Agent Flow
+- [x] Agency owner appears in team member dropdown
+- [x] Add Agent button enables when member selected + name filled
+- [x] Soft-deleted agents filtered from agent list (fixed: `is_active` filter)
+- [x] Soft-deleted agents filtered from assignment dropdowns
+- [x] Edit agent dialog works
+- [x] Remove agent soft-deletes correctly
+- [x] Can re-add a previously deleted agent
 
-> ⚙️* = Configurable per-client by agency (`can_edit_content`, `can_view_analytics`, `can_view_invoices`)  
-> ✅** = Only if user has a `developer_profiles` record
+### Live Chat Conversation Flow
+- [x] Widget creates conversation correctly
+- [x] Auto-assign to online agent with capacity (column comparison fixed)
+- [x] Away agents excluded from auto-assignment
+- [x] Messages sent/received in real-time
+- [x] Typing indicators work
+- [x] Canned responses work + usage tracking
+- [x] Internal notes work
+- [x] Agent assignment notifications sent (notifyChatAssigned wired)
+- [x] Transfer conversation works (UI added)
+- [x] Tags can be added/removed (UI added)
+- [x] Keyboard shortcuts work
+- [x] Rating submitted and notified
+- [x] AI auto-response triggered for unassigned conversations
+- [x] Unread count incremented correctly
 
-### Portal Client Per-Site Permissions
-
-| Permission | Controls |
-|---|---|
-| `can_view` | Can see the site in portal |
-| `can_edit_content` | Can edit pages & blog posts |
-| `can_publish` | Can publish changes live |
-| `can_view_analytics` | Can see site analytics |
+### Notification Flow
+- [x] Realtime toast + sound on new message
+- [x] In-app notification created in DB
+- [x] NotificationBell shows count + animates
+- [x] Web push sent to agent
+- [x] Assignment notification sent on manual assign
+- [x] x-pathname header set for nav active state
 
 ---
 
-## Appendix A: Auth Flow Diagram
+## Environment Requirements
 
+### Paddle (CRITICAL — Must be set in Vercel)
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                     REQUEST ARRIVES                           │
-│  (app.dramacagency.com, *.sites.dramacagency.com, custom)    │
-└────────────────────────────┬─────────────────────────────────┘
-                             │
-                    ┌────────▼────────┐
-                    │  Is subdomain?  │
-                    │  (*.sites.*)    │
-                    └──┬──────────┬───┘
-                   YES │          │ NO
-                       │          │
-              ┌────────▼──┐  ┌───▼──────────┐
-              │ Rewrite to│  │ Custom domain?│
-              │ /site/    │  └──┬────────┬──┘
-              │ [subdomain│  YES│        │NO
-              └───────────┘     │        │
-                          ┌─────▼──┐  ┌──▼──────────────────┐
-                          │Rewrite │  │ Is public route?    │
-                          │/site/  │  │ (/login, /signup,   │
-                          │[domain]│  │  /site/*, /blog/*,  │
-                          └────────┘  │  /preview/*, /api/*,│
-                                      │  /embed/*, /pricing)│
-                                      └──┬──────────┬───────┘
-                                      YES│          │NO
-                                         │          │
-                                    ┌────▼──┐  ┌───▼───────────────┐
-                                    │ Allow │  │ Check Supabase    │
-                                    │ pass  │  │ session cookie    │
-                                    └───────┘  └──┬────────────┬───┘
-                                              AUTH│            │NO AUTH
-                                                  │            │
-                                          ┌───────▼──┐   ┌────▼──────────┐
-                                          │Onboarding│   │ Redirect to   │
-                                          │complete? │   │ /login?redirect│
-                                          └──┬────┬──┘   └───────────────┘
-                                          YES│    │NO
-                                             │    │
-                                      ┌──────▼┐ ┌▼──────────┐
-                                      │Proceed│ │ Redirect to│
-                                      │to page│ │ /onboarding│
-                                      └───────┘ └────────────┘
+PADDLE_API_KEY=pdl_...                          # Server-side API key
+PADDLE_WEBHOOK_SECRET=pdl_ntf...                # Webhook verification
+NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=test_... or live_... # Client-side token
+NEXT_PUBLIC_PADDLE_ENVIRONMENT=sandbox           # or "production"
 ```
 
-## Appendix B: Notification Touchpoints Per User
+**Paddle Dashboard Setup Required:**
+1. Create webhook notification → `https://app.dramacagency.com/api/webhooks/paddle`
+2. Subscribe to events: `transaction.completed`, `subscription.created`, `subscription.updated`, `subscription.canceled`
 
-| User Type | In-App Notifications | Email Notifications |
-|---|---|---|
-| **Agency Owner** | New booking, new order, payment failed, payment recovered, trial ending, form submission | All of the above |
-| **Agency Admin** | New booking, new order | — |
-| **Agency Member** | — | — |
-| **Portal Client** | — | — |
-| **Anonymous Visitor** | — | Booking confirmation, booking cancelled, order confirmation, order shipped |
-| **Super Admin** | System alerts | System alerts |
+### ResellerClub
+```
+RESELLERCLUB_RESELLER_ID=...
+RESELLERCLUB_API_KEY=...
+```
 
-## Appendix C: Entry Points Summary
+### Supabase
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...
+```
 
-| User Type | Primary URL | Login Page |
-|---|---|---|
-| **Anonymous Visitor** | `{subdomain}.sites.dramacagency.com` or custom domain | N/A (no login) |
-| **Portal Client** | `app.dramacagency.com/portal` | `/portal/login` |
-| **Agency Member** | `app.dramacagency.com/dashboard` | `/login` |
-| **Agency Admin** | `app.dramacagency.com/dashboard` | `/login` |
-| **Agency Owner** | `app.dramacagency.com/dashboard` | `/login` or `/signup` |
-| **Module Developer** | `app.dramacagency.com/developer` | `/login` |
-| **Super Admin** | `app.dramacagency.com/admin` | `/login` |
+### Resend (Email)
+```
+RESEND_API_KEY=...
+```
 
-## Appendix D: E-Commerce Payment Providers
-
-| Provider | Region | Checkout | Webhooks | Status |
-|---|---|---|---|---|
-| **Paddle** | Global | ✅ | ✅ (subdomain-safe) | Primary |
-| **Flutterwave** | Africa | ✅ | ✅ (subdomain-safe) | Active |
-| **Pesapal** | East Africa | ✅ | ✅ (subdomain-safe) | Active |
-| **DPO Pay** | Africa | ✅ | ✅ (subdomain-safe) | Active |
-| **Stripe** | Global | ⚠️ Legacy | ⚠️ Legacy | Optional |
-| **Manual** | — | ✅ (offline) | N/A | Active |
-
----
-
-*This document maps every user type and their complete journey through the DRAMAC CMS platform. It should be updated whenever new features, roles, or user flows are added.*
+### AI (Claude — Primary Provider)
+```
+ANTHROPIC_API_KEY=...
+```

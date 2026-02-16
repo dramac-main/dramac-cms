@@ -78,7 +78,12 @@ export function DomainListClient({ initialDomains }: DomainListClientProps) {
     try {
       const result = await renewDomain(renewDialog.id, parseInt(renewYears));
       if (result.success) {
-        toast.success(`Domain renewed successfully! New expiry: ${result.data?.newExpiryDate}`);
+        // Check if we got a checkout URL (Paddle redirect)
+        if (result.data && 'checkoutUrl' in result.data && result.data.checkoutUrl) {
+          window.location.href = result.data.checkoutUrl as string;
+          return;
+        }
+        toast.success(`Domain renewed successfully!`);
         setRenewDialog(null);
         router.refresh();
       } else {

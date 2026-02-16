@@ -117,6 +117,7 @@ export async function getAgents(
       .from('mod_chat_agents')
       .select('*')
       .eq('site_id', siteId)
+      .eq('is_active', true)
       .order('display_name', { ascending: true })
 
     if (error) throw error

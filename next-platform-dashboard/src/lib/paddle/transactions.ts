@@ -110,20 +110,20 @@ export async function createDomainPurchase(
           price: {
             description,
             name: `${params.domainName} - ${params.years}yr`,
-            unit_price: {
+            unitPrice: {
               amount: String(Math.round(params.retailAmount * 100)), // Convert to cents
-              currency_code: params.currency || 'USD',
+              currencyCode: (params.currency || 'USD') as any,
             },
             product: {
               name: `Domain ${params.purchaseType.split('_')[1]}`,
-              tax_category: 'standard',
+              taxCategory: 'standard',
               description: `${params.purchaseType.replace('_', ' ')} for ${params.domainName}`,
             },
           },
         },
       ],
-      currency_code: params.currency || 'USD',
-      custom_data: {
+      currencyCode: (params.currency || 'USD') as any,
+      customData: {
         purchase_type: params.purchaseType,
         agency_id: params.agencyId,
         user_id: params.userId,
@@ -229,20 +229,20 @@ export async function createEmailPurchase(
           price: {
             description,
             name: `${params.domainName} Email - ${params.months}mo`,
-            unit_price: {
+            unitPrice: {
               amount: String(Math.round(params.retailAmount * 100)), // Convert to cents
-              currency_code: params.currency || 'USD',
+              currencyCode: (params.currency || 'USD') as any,
             },
             product: {
               name: 'Business Email',
-              tax_category: 'standard',
+              taxCategory: 'standard',
               description: `Business Email for ${params.domainName}`,
             },
           },
         },
       ],
-      currency_code: params.currency || 'USD',
-      custom_data: {
+      currencyCode: (params.currency || 'USD') as any,
+      customData: {
         purchase_type: 'email_order',
         agency_id: params.agencyId,
         user_id: params.userId,

@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createClient();
 
     // Query pending_purchases table (DM-12 schema)
-    let query = supabase
+    let query = (supabase as any)
       .from('pending_purchases')
       .select('*');
 
@@ -56,34 +56,34 @@ export async function GET(request: NextRequest) {
     }
 
     // Parse purchase_data for additional details
-    const purchaseData = (purchase.purchase_data || {}) as Record<string, unknown>;
+    const p = purchase as Record<string, any>;
 
     // Build response with rich status information
     const response = {
-      id: purchase.id,
-      purchase_type: purchase.purchase_type,
-      status: purchase.status,
+      id: p.id,
+      purchase_type: p.purchase_type,
+      status: p.status,
       // Amounts in cents
-      wholesale_amount: Math.round(parseFloat(purchase.wholesale_amount) * 100),
-      retail_amount: Math.round(parseFloat(purchase.retail_amount) * 100),
-      currency: purchase.currency,
+      wholesale_amount: Math.round(parseFloat(p.wholesale_amount || '0') * 100),
+      retail_amount: Math.round(parseFloat(p.retail_amount || '0') * 100),
+      currency: p.currency,
       // Transaction details
-      paddle_transaction_id: purchase.paddle_transaction_id,
-      paddle_checkout_url: purchase.paddle_checkout_url,
+      paddle_transaction_id: p.paddle_transaction_id,
+      paddle_checkout_url: p.paddle_checkout_url,
       // Provisioning details
-      provisioned_resource_id: purchase.provisioned_resource_id,
-      provisioned_at: purchase.provisioned_at,
-      resellerclub_order_id: purchase.resellerclub_order_id,
+      provisioned_resource_id: p.provisioned_resource_id,
+      provisioned_at: p.provisioned_at,
+      resellerclub_order_id: p.resellerclub_order_id,
       // Error details
-      error_message: purchase.error_message,
-      error_details: purchase.error_details,
-      retry_count: purchase.retry_count,
+      error_message: p.error_message,
+      error_details: p.error_details,
+      retry_count: p.retry_count,
       // Purchase-specific data
-      purchase_data: purchaseData,
+      purchase_data: p.purchase_data || {},
       // Timestamps
-      created_at: purchase.created_at,
-      updated_at: purchase.updated_at,
-      expires_at: purchase.expires_at,
+      created_at: p.created_at,
+      updated_at: p.updated_at,
+      expires_at: p.expires_at,
     };
 
     return NextResponse.json(response);

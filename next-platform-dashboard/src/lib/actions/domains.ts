@@ -177,9 +177,9 @@ export async function searchDomains(
         let sellingByTld: Record<string, SimplePrice> = {};
         let wholesaleByTld: Record<string, SimplePrice> = {};
 
-        const mapDomainPrice = (price: { register: Record<number, number>; renew: Record<number, number>; transfer: number }) => ({
-          register: Object.fromEntries(Object.entries(price.register).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
-          renew: Object.fromEntries(Object.entries(price.renew).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
+        const mapDomainPrice = (price: any): SimplePrice => ({
+          register: Object.fromEntries(Object.entries(price.register || {}).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
+          renew: Object.fromEntries(Object.entries(price.renew || {}).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
           transfer: Number(price.transfer) || 0,
         });
 
@@ -600,7 +600,7 @@ export async function createDomainCartCheckout(params: {
     
     // Update the purchase_data to include all domains
     const admin = createAdminClient();
-    await admin
+    await (admin as any)
       .from('pending_purchases')
       .update({
         purchase_data: {
@@ -727,7 +727,7 @@ export async function getDomain(domainId: string): Promise<{
   
   try {
     const { data, error } = await getTable(supabase, 'domains')
-      .select('*')
+      .select('*, site:sites(id, name)')
       .eq('id', domainId)
       .single();
     

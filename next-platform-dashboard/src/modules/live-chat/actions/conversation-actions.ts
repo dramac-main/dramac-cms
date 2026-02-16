@@ -328,6 +328,27 @@ export async function assignConversation(
         .eq('id', agentId)
     }
 
+    // Send notification to the assigned agent
+    try {
+      const { notifyChatAssigned } = await import('../lib/chat-notifications')
+      // Look up the agent's user_id for the notification
+      const { data: agent } = await supabase
+        .from('mod_chat_agents')
+        .select('user_id, display_name')
+        .eq('id', agentId)
+        .single()
+      if (agent?.user_id) {
+        await notifyChatAssigned({
+          siteId: conv.site_id,
+          conversationId,
+          agentUserId: agent.user_id,
+          agentName: agent.display_name,
+        })
+      }
+    } catch {
+      // Non-fatal — don't fail the assignment if notification fails
+    }
+
     revalidatePath(liveChatPath(conv.site_id))
     return { success: true, error: null }
   } catch (error) {

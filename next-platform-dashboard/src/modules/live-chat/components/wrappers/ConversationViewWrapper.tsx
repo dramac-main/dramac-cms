@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
+import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -31,6 +32,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import {
   ArrowLeft,
+  ArrowRightLeft,
   CheckCircle,
   XCircle,
   RotateCcw,
@@ -43,6 +45,8 @@ import {
   Tag,
   Link as LinkIcon,
   Loader2,
+  Plus,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { MessageBubble } from '../shared/MessageBubble'
@@ -59,6 +63,8 @@ import {
   reopenConversation,
   updateConversationPriority,
   markConversationRead,
+  transferConversation,
+  updateConversationTags,
 } from '@/modules/live-chat/actions/conversation-actions'
 import {
   sendMessage,
@@ -123,6 +129,8 @@ export function ConversationViewWrapper({
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [showTransfer, setShowTransfer] = useState(false)
+  const [tagInput, setTagInput] = useState('')
 
   // Typing state managed locally
   const [typingUsers, setTypingUsers] = useState<string[]>([])
@@ -293,6 +301,60 @@ export function ConversationViewWrapper({
     [conversation.id]
   )
 
+  // Transfer conversation to another agent
+  const handleTransfer = useCallback(
+    (targetAgentId: string) => {
+      startTransition(async () => {
+        const result = await transferConversation(conversation.id, targetAgentId)
+        if (result.error) {
+          toast.error(result.error)
+        } else {
+          setConversation((c) => ({
+            ...c,
+            assignedAgentId: targetAgentId,
+          }))
+          setShowTransfer(false)
+          toast.success('Conversation transferred')
+        }
+      })
+    },
+    [conversation.id]
+  )
+
+  // Add tag
+  const handleAddTag = useCallback(() => {
+    const tag = tagInput.trim()
+    if (!tag) return
+    const currentTags = conversation.tags || []
+    if (currentTags.includes(tag)) {
+      setTagInput('')
+      return
+    }
+    const newTags = [...currentTags, tag]
+    startTransition(async () => {
+      const result = await updateConversationTags(conversation.id, newTags)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        setConversation((c) => ({ ...c, tags: newTags }))
+        setTagInput('')
+      }
+    })
+  }, [conversation.id, conversation.tags, tagInput])
+
+  // Remove tag
+  const handleRemoveTag = useCallback((tagToRemove: string) => {
+    const newTags = (conversation.tags || []).filter((t) => t !== tagToRemove)
+    startTransition(async () => {
+      const result = await updateConversationTags(conversation.id, newTags)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        setConversation((c) => ({ ...c, tags: newTags }))
+      }
+    })
+  }, [conversation.id, conversation.tags])
+
   // Global keyboard shortcuts for conversation actions
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -438,6 +500,12 @@ export function ConversationViewWrapper({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {conversation.assignedAgentId && conversation.status !== 'closed' && (
+                  <DropdownMenuItem onClick={() => setShowTransfer(!showTransfer)}>
+                    <ArrowRightLeft className="h-4 w-4 mr-2" />
+                    Transfer Conversation
+                  </DropdownMenuItem>
+                )}
                 {conversation.status !== 'closed' && (
                   <DropdownMenuItem onClick={handleClose}>
                     <XCircle className="h-4 w-4 mr-2" />
@@ -454,6 +522,31 @@ export function ConversationViewWrapper({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+
+          {/* Transfer agent selector */}
+          {showTransfer && (
+            <div className="border-b px-4 py-2 bg-muted/50 flex items-center gap-2">
+              <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Transfer to:</span>
+              <Select onValueChange={(val) => handleTransfer(val)}>
+                <SelectTrigger className="w-[180px] h-7 text-xs">
+                  <SelectValue placeholder="Select agent..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {agents
+                    .filter((a) => a.id !== conversation.assignedAgentId)
+                    .map((agent) => (
+                      <SelectItem key={agent.id} value={agent.id}>
+                        {agent.displayName}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowTransfer(false)}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Messages area */}
@@ -615,25 +708,53 @@ export function ConversationViewWrapper({
           </Card>
 
           {/* Tags */}
-          {conversation.tags && conversation.tags.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-1.5">
-                  <Tag className="h-3.5 w-3.5" />
-                  Tags
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-1">
-                  {conversation.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-1.5">
+                <Tag className="h-3.5 w-3.5" />
+                Tags
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex flex-wrap gap-1">
+                {(conversation.tags || []).map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-xs gap-1 pr-1">
+                    {tag}
+                    <button
+                      onClick={() => handleRemoveTag(tag)}
+                      className="hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-1">
+                <Input
+                  placeholder="Add tag..."
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      handleAddTag()
+                    }
+                  }}
+                  className="h-7 text-xs"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0"
+                  onClick={handleAddTag}
+                  disabled={!tagInput.trim()}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* CRM link */}
           {visitor?.crmContactId && (

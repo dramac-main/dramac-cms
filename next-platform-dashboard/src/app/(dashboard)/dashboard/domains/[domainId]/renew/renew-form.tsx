@@ -38,7 +38,8 @@ export function DomainRenewForm({ domain, expiryDate }: DomainRenewFormProps) {
   
   // Fetch real pricing on mount
   useEffect(() => {
-    const tld = domain.domain_name?.split('.').slice(1).join('.') || 'com';
+    const domainName = String(domain.domain_name || '');
+    const tld = domainName.split('.').slice(1).join('.') || 'com';
     calculateDomainPrice({ tld, years: 1, operation: 'renew' })
       .then((result) => {
         if (result.success && result.data?.retail_price) {
@@ -62,7 +63,7 @@ export function DomainRenewForm({ domain, expiryDate }: DomainRenewFormProps) {
         // Check if we got a checkout URL (Paddle redirect)
         if (result.data && 'checkoutUrl' in result.data) {
           // Redirect to Paddle checkout
-          window.location.href = result.data.checkoutUrl;
+          window.location.href = String(result.data.checkoutUrl);
           return;
         }
         
