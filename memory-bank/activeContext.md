@@ -2,45 +2,82 @@
 
 ## Recent Work
 
-### Domain Pricing Final Fix — reseller-price.json + Admin Page Redesign — February 16, 2026 ✅
+### Domain Pricing FINAL Fix + Live Chat Rating + Security Fixes — February 16, 2026 ✅
 
-**Category:** Domain Pricing / Admin UI / Critical Fix
+**Category:** Domain Pricing / Live Chat / Security / Critical Fix
+
+**Commit:** `c325545` — 12 files changed, 133 insertions, 67 deletions
+
+#### 1. Domain Pricing — customer-price.json WITHOUT customer-id (Attempt #4 — CORRECT)
 
 **Problem:**
-Domain search still showed wrong prices ($19.23/.org instead of $29.58) despite the previous fix. The RC panel shows cost=$14.79, selling=$29.58 (100% margin), but DRAMAC displayed $14.79 × 1.3 = $19.23.
+Domain search STILL showed wrong prices. Previous fix (commit `8d5fd88`) switched to `reseller-price.json` which returns SLAB-BASED intermediate pricing (~cost + 10%), NOT the selling prices from the RC panel.
 
-**Root Cause Found:**
-The code used `products/customer-price.json` API which **requires a ResellerClub customer ID**. When the customer ID was missing or the API call failed silently, it fell through to the fallback path which applied a hardcoded 1.3× on cost prices. The customer ID often wasn't available because:
-- The agency may not have a `resellerclub_customer_id` in the DB
-- The `ensureResellerClubCustomer()` call may fail
-- The customer-price.json API may return empty/unexpected TLD keys
+- RC Panel: .com=$26.98, .net=$29.98, .org=$29.58 (cost × 2, i.e., 100% profit margin)
+- DRAMAC showed: .org=$16.27, .net=$16.49 — these are the slab prices from reseller-price.json
+
+**Root Cause:**
+`reseller-price.json` returns slab-based reseller pricing (intermediate tier, ~cost + 10%). Only `customer-price.json` returns the actual selling prices. The key insight: **customer-id is OPTIONAL** in customer-price.json — when omitted, it returns the reseller's DEFAULT customer pricing (= the configured selling prices from the RC panel).
+
+**CORRECT ResellerClub API Understanding:**
+| API Endpoint | What It Returns | customer-id Required? |
+|---|---|---|
+| `products/customer-price.json` | **Selling prices** (cost + profit margin configured in RC panel) | **OPTIONAL** — omit for default pricing |
+| `products/reseller-cost-price.json` | **Wholesale/cost prices** (what reseller pays RC) | No |
+| `products/reseller-price.json` | **Slab-based intermediate pricing** (~cost + small margin) — ❌ NOT selling prices | No |
 
 **Fix Applied:**
-Switched from `customer-price.json` (needs customer ID) to **`reseller-price.json`** (no customer ID needed). This endpoint returns the **reseller's configured selling prices** — exactly what the user sees in their RC panel. It's the correct and reliable source of truth.
+- Made `customer-id` param conditional in `getCustomerPricing()` — only sent when non-empty
+- Switched domain search from `getResellerPricing()` back to `getCustomerPricing(undefined, tlds)`
+- Reverted cache types from `'reseller'` to `'customer'` across billing and refresh routes
+- Restored admin nav label from "Pricing Cache" to "Domain Pricing"
 
-**Files Changed (6 files, commit `8d5fd88`):**
+**Files Changed:**
+| File | Change |
+|---|---|
+| `src/lib/resellerclub/domains.ts` | `getCustomerPricing(customerId?: string)` — conditional `customer-id` param |
+| `src/lib/actions/domains.ts` | `getCustomerPricing(undefined, popularTlds)` — no customer-id |
+| `src/lib/actions/domain-billing.ts` | Cache type `'reseller'` → `'customer'` |
+| `src/app/api/admin/pricing/refresh/route.ts` | pricingTypes `['reseller','cost']` → `['customer','cost']` |
+| `src/lib/resellerclub/pricing-cache.ts` | Handle empty `customerId` via `customerId || undefined` |
+| `src/config/admin-navigation.ts` | Nav label "Pricing Cache" → "Domain Pricing" |
+| `src/app/(dashboard)/admin/pricing/page.tsx` | Title update |
+| `src/app/(dashboard)/admin/pricing/pricing-client.tsx` | Description updates |
 
-| File | Changes |
-|------|---------|
-| `src/lib/actions/domains.ts` | Replaced `getCustomerPricing(customerId)` with `getResellerPricing()` — no customer ID needed, slab unwrapping already handled by `parsePricingResponse` |
-| `src/lib/actions/domain-billing.ts` | Changed cache read from `'customer'` type to `'reseller'` type — no customer ID dependency |
-| `src/app/api/admin/pricing/refresh/route.ts` | Default pricingTypes: `['customer','cost']` → `['reseller','cost']` |
-| `src/app/(dashboard)/admin/pricing/page.tsx` | Updated title to "Pricing Cache" |
-| `src/app/(dashboard)/admin/pricing/pricing-client.tsx` | Complete redesign: live cache status, fresh/stale badges, last sync times, cross-links to related settings |
-| `src/config/admin-navigation.ts` | Renamed nav item: "Domain Pricing" → "Pricing Cache" |
+**Expected Prices (0% DRAMAC markup):** .org=~$29.58, .net=~$29.98, .com=~$26.98
 
-**Admin Pricing Page Purpose:**
-The `/admin/pricing` page is a **cache refresh utility** for super admins, NOT a pricing configuration page. It:
-- Shows domain/email cache status (fresh/stale badges, last sync time, age)
-- Provides manual refresh buttons (Domains, Email, Full Sync)
-- Links to related pages (Agency Pricing Settings, Domain Search, Business Email)
-- Shows auto-sync schedule (daily 02:00 UTC)
+#### 2. Live Chat Rating — Agent Notification Fix
 
-**Expected Prices After Deploy:**
-With 0% additional DRAMAC markup:
-- .org: ~$29.58 (matches RC selling price)
-- .net: ~$29.98
-- .com: ~$26.98
+**Problem:** When a website visitor rated a chat conversation (e.g., 5 stars), the rating was saved to the DB but the agent never saw a notification in the dashboard.
+
+**Root Cause:** The rating API route (`/api/modules/live-chat/rating`) successfully wrote the rating to `mod_chat_conversations` but never called `notifyChatRating()` from `chat-notifications.ts`.
+
+**Fix Applied:**
+- Added `notifyChatRating()` call after successful DB update
+- Fetches conversation details (site_id, assigned_agent_id), visitor name, and agent profile
+- `notifyChatRating()` creates in-app notification for the agent + alerts site owner for low ratings (1-2 stars)
+- Added response status checking in `ChatWidget.tsx` `handleRating` callback
+
+#### 3. Security Fixes
+
+**XSS in Embed Script** (`/api/modules/live-chat/embed/route.ts`):
+- Added UUID regex validation for `siteId` parameter
+- Sanitized host header (strip non-hostname characters)
+- Used `JSON.stringify()` for safe JavaScript interpolation instead of raw string templates
+
+**WhatsApp Webhook Signature Bypass** (`/api/modules/live-chat/webhooks/whatsapp/route.ts`):
+- Previously, if `x-hub-signature-256` header was absent, signature verification was entirely skipped
+- Now: when app secret is configured, signature header is REQUIRED (returns 403 if missing)
+- Only skips verification when no app secret is configured (dev/local environments)
+
+---
+
+### Domain Pricing Architecture — PREVIOUS ATTEMPTS (for reference)
+
+**Attempt 1** (commit `46c41cb`): Applied 30% on wholesale → WRONG
+**Attempt 2** (commit `09bf6de`): customer-price.json WITH customer-id → silently failed → fell to cost×1.3 fallback → WRONG
+**Attempt 3** (commit `8d5fd88`): reseller-price.json → returned slab pricing (~cost+10%) → WRONG
+**Attempt 4** (commit `c325545`): customer-price.json WITHOUT customer-id → returns configured selling prices → CORRECT ✅
 
 ---
 

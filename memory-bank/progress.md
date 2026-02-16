@@ -1,11 +1,30 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 16, 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅**
 
 ---
 
-## Latest Update: February 16, 2026 - Domain Pricing Final Fix + Admin Page Redesign ✅
+## Latest Update: February 16, 2026 - Domain Pricing Fix #4 + Live Chat + Security ✅
+
+**Commit:** `c325545` — 12 files changed
+
+**What was done:**
+1. **Domain Pricing (CORRECT fix)**: Switched from `reseller-price.json` (slab-based, WRONG) back to `customer-price.json` but with `customer-id` parameter made **OPTIONAL** (omitted when empty). This returns the reseller's configured selling prices from the RC panel.
+2. **Live Chat Rating**: Wired `notifyChatRating()` into the rating API route so agents actually see ratings in their dashboard.
+3. **XSS Fix**: Embed script now validates siteId as UUID, sanitizes host header, uses JSON.stringify for interpolation.
+4. **WhatsApp Webhook**: Signature verification no longer bypassable by omitting the header.
+
+**Key API Insight (CRITICAL for future work):**
+- `customer-price.json` (customer-id OPTIONAL) → Selling prices ✅
+- `reseller-cost-price.json` → Cost prices ✅  
+- `reseller-price.json` → Slab/intermediate pricing ❌ NOT selling prices
+
+**Expected Prices:** .org=~$29.58, .net=~$29.98, .com=~$26.98 (matching RC panel)
+
+---
+
+## Previous Update: February 16, 2026 - Domain Pricing Final Fix + Admin Page Redesign ✅
 
 **What was done:**
 1. Fixed the root cause of wrong domain prices: switched from `customer-price.json` (requires customer ID, was silently failing) to `reseller-price.json` (no customer ID needed, returns exactly the reseller's configured selling prices).
