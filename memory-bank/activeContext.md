@@ -2,6 +2,62 @@
 
 ## Recent Work
 
+### Comprehensive E-Commerce Module Overhaul — February 2026 ✅
+
+**Category:** E-Commerce Module Deep Scan & Fix
+**Commit:** `790e588`
+**Files Changed:** 19 (15 source files + 1 migration + 3 log exports)
+
+#### Overview
+Deep scan of entire e-commerce module (~235 files) identified and fixed all critical issues across Studio APIs, checkout flows, payment webhooks, dashboard navigation, cart widgets, and checkout hooks. Zero TypeScript errors in all e-commerce files after fixes.
+
+#### Critical Fixes Applied:
+
+**1. Studio API Routes — Wrong Table Names (2 files)**
+- `src/app/api/studio/modules/ecommerce/products/route.ts` — Changed `ecommerce_products` → `mod_ecommod01_products`, fixed column names (`price`→`base_price`, `inventory_quantity`→`quantity`), replaced invalid `ecommerce_categories` join with `mod_ecommod01_product_categories` join table
+- `src/app/api/studio/modules/ecommerce/categories/route.ts` — Changed `ecommerce_categories` → `mod_ecommod01_categories`, product count now uses join table
+
+**2. Products API — Price Unit Confusion (1 file)**
+- `src/app/api/modules/ecommerce/products/route.ts` — Removed incorrect `base_price / 100` conversion. Prices stored as DECIMAL(10,2) dollar amounts, not cents.
+
+**3. Checkout API — Pesapal + DPO Real Integration (1 file)**
+- `src/app/api/modules/ecommerce/checkout/route.ts` — Pesapal: full 3-step API flow (auth token → register IPN → submit order). DPO: createToken XML API returning real payment URL. Fixed `pesapalConfig.sandbox` → `pesapalConfig.environment === 'demo'` to match PesapalConfig type.
+
+**4. Payment Webhooks — Server-Side Verification (1 file)**
+- `src/app/api/modules/ecommerce/webhooks/payment/route.ts` — Added real verification: Flutterwave calls verify endpoint, Pesapal marks as pending (awaiting IPN), DPO calls verifyToken XML endpoint. All have fallback to "pending for manual review".
+
+**5. Auto-Setup Actions — Duplicate Code + Locale (1 file)**
+- `src/modules/ecommerce/actions/auto-setup-actions.ts` — Removed ~270 lines of duplicate code (second copy of DEFAULT_STORE_SETTINGS and 4 functions). Updated defaults from USD → ZMW (Zambian Kwacha, 16% VAT, taxIncluded: true).
+
+**6. Dashboard + Orders — handleViewOrder (2 files)**
+- `src/modules/ecommerce/components/ecommerce-dashboard.tsx` — `handleViewOrder` now passes orderId via `focusOrderId` state
+- `src/modules/ecommerce/components/views/orders-view.tsx` — Added `useEffect` to auto-open OrderDetailDialog when `focusOrderId` is set
+
+**7. Checkout Hook — Dynamic Methods (1 file)**
+- `src/modules/ecommerce/hooks/useCheckout.ts` — Replaced hardcoded USD shipping ($9.99/$19.99/$29.99) and payment (card/PayPal) with dynamic loading from store settings. Checks paddle_config, flutterwave_config, pesapal_config, dpo_config, manual_payment_enabled. Removed duplicate state declarations.
+
+**8. Cart Components — Discount Code Display (2 files)**
+- `src/modules/ecommerce/studio/components/CartDrawerBlock.tsx` — Shows actual `cart.discount_code` instead of hardcoded 'APPLIED'
+- `src/modules/ecommerce/studio/components/CartPageBlock.tsx` — Same fix + replaced `window.confirm()` with state-based confirmation
+
+**9. Cart Widgets — Table Names + Session Keys (2 files)**
+- `src/modules/ecommerce/components/widgets/CartIconWidget.tsx` — Fixed `ecommerce_carts` → `mod_ecommod01_carts`, `ecommerce_cart_items` → `mod_ecommod01_cart_items`. Fixed guest cart to use `ecom_session_id` from localStorage instead of non-existent `cart_${siteId}` key.
+- `src/modules/ecommerce/components/widgets/FloatingCartButton.tsx` — Same fixes
+
+**10. Header Widgets — Implemented (1 file)**
+- `src/modules/ecommerce/components/widgets/EcommerceHeaderWidgets.tsx` — Replaced hidden stub divs with real search toggle (expandable input) and wishlist badge with count from useStorefrontWishlist hook
+
+**11. Database Migration — Customers Table (1 file)**
+- `migrations/ecom-phase-fixes-customers-v2.sql` — Adds missing columns: user_id, avatar_url, is_guest, email_verified. Renames last_order_at → last_order_date to match code expectations.
+
+#### Known Remaining Items (Non-Critical):
+- `EcommerceDashboardEnhanced.tsx` — Dead code, not imported anywhere. Mock data functions return empty arrays. Not blocking.
+- Wishlist — localStorage-only persistence (no server-side). Works for single browser.
+- Product Reviews — Referenced in types/events but no DB table, no API, no UI for reviews. `ProductRatingDisplay` component exists but has no data source.
+- Pre-existing TS errors in non-ecommerce files (next.config.ts, portal-billing-service.ts, resellerclub/client.ts, ChatAnalyticsWrapper.tsx)
+
+---
+
 ### Payment Safety Mechanisms — Pre-Flight Balance Check + Auto-Refund — February 2026 ✅
 
 **Category:** Critical Safety / Industry Standard Compliance

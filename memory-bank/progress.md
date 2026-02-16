@@ -1,11 +1,39 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅**
 
 ---
 
-## Latest Update: February 2026 - Payment Safety Mechanisms — Pre-Flight Balance Check + Auto-Refund ✅
+## Latest Update: February 2026 - Comprehensive E-Commerce Module Overhaul ✅
+
+**Commit:** `790e588`
+**Files Changed:** 19
+
+**What was done:**
+Deep scan of entire e-commerce module (~235 files). Identified and fixed all critical issues. Zero TypeScript errors in e-commerce files.
+
+### Fixes Applied:
+1. **Studio API routes** — Wrong table names (ecommerce_* → mod_ecommod01_*), wrong column names
+2. **Products API** — Removed incorrect price÷100 conversion (prices are DECIMAL, not cents)
+3. **Checkout API** — Real Pesapal 3-step flow + DPO XML API integration + fixed sandbox→environment type mismatch
+4. **Payment webhooks** — Server-side verification for Flutterwave, Pesapal, DPO GET callbacks
+5. **Auto-setup actions** — Removed 270 lines of duplicate code, updated defaults to ZMW locale
+6. **Dashboard + orders** — handleViewOrder passes orderId via focusOrderId state pattern
+7. **Checkout hook** — Dynamic shipping/payment methods from store settings (no more hardcoded USD)
+8. **Cart components** — Show actual discount codes instead of hardcoded 'APPLIED'
+9. **Cart widgets** — Fixed table names + guest session key mismatch (ecom_session_id)
+10. **Header widgets** — Implemented search toggle + wishlist badge (were hidden stubs)
+11. **DB migration** — Customers table missing columns (user_id, avatar_url, is_guest, email_verified)
+
+### Known Non-Critical Items:
+- `EcommerceDashboardEnhanced.tsx` — Dead code (not imported), mock data returns empty arrays
+- Wishlist — localStorage-only, no server persistence
+- Product Reviews — No DB table, no API, no UI. Types reference it as future work.
+
+---
+
+## Previous Update: February 2026 - Payment Safety Mechanisms — Pre-Flight Balance Check + Auto-Refund ✅
 
 **Commit:** `3f71d21`
 **Files Changed:** 3
