@@ -1,11 +1,33 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅**
 
 ---
 
-## Latest Update: February 2026 - Platform-Wide Deep Audit (16 Bugs) ✅
+## Latest Update: February 2026 - Provisioning Auto-Create Fallback + Retry ✅
+
+**Commit:** `f5762d0`
+**Files Changed:** 4 — provisioning.ts, success/page.tsx, retry/route.ts, status/route.ts
+
+**What was done:**
+1. **CRITICAL — Provisioning auto-create fallback**: All 4 provisioning paths now auto-create the RC customer if `resellerclub_customer_id` is null. Uses `ensureResellerClubCustomerForProvisioning()` which gets user email from profiles/auth and creates via `customerService.createOrGet()`.
+2. **NEW — Retry API**: `POST /api/purchases/retry` — re-triggers provisioning for failed purchases with auth check and max 5 retries.
+3. **Success page retry button**: "Retry Setup" button with spinner, user-friendly errors.
+4. **Amount display fix**: DB stores dollars, API was multiplying by 100 (showing $11098 instead of $110.98).
+5. **Polling restart**: Watches `purchase.status` changes after retry.
+
+**CRITICAL ARCHITECTURE PATTERN:**
+- `ensureResellerClubCustomer()` in domains.ts = PRIMARY (runs at checkout, before payment)
+- `ensureResellerClubCustomerForProvisioning()` in provisioning.ts = FALLBACK (runs during webhook, self-heals)
+- Both paths must exist because checkout-time creation can silently fail (returns null)
+
+**Live Chat Rating System — CONFIRMED FULLY IMPLEMENTED:**
+- No bugs found. End-to-end flow works: resolve → rating UI → API → DB → analytics.
+
+---
+
+## Previous Update: February 2026 - Platform-Wide Deep Audit (16 Bugs) ✅
 
 **Commits:** `acc92b3` → `8c3b2cb`
 **Files Changed:** 6 — customers.ts, domains.ts (RC + actions), transfers.ts, provisioning.ts, transactions.ts

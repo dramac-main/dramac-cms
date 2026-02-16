@@ -2,6 +2,48 @@
 
 ## Recent Work
 
+### Provisioning Auto-Create Fallback + Retry Mechanism + UX — February 2026 ✅
+
+**Category:** Critical Bug Fix / Provisioning Reliability / UX
+**Commit:** `f5762d0`
+**Files Changed:** 4 — provisioning.ts, success/page.tsx, retry/route.ts, status/route.ts
+
+#### Overview
+After Paddle payment succeeded, provisioning still failed with `"Invalid customer-id: undefined"` because `resellerclub_customer_id` was null in the agencies table. The checkout-time `ensureResellerClubCustomer()` was in code but the deployed build was stale. Even with correct deployment, there was no fallback — provisioning permanently failed.
+
+#### CRITICAL FIX — Auto-Create RC Customer in Provisioning:
+All 4 provisioning paths (single domain, multi-domain, email, transfer) now have `ensureResellerClubCustomerForProvisioning()` — a fallback that:
+1. Checks `agencies.resellerclub_customer_id`
+2. If null → gets user email from `profiles` table (falls back to `auth.users`)
+3. Creates RC customer via `customerService.createOrGet()` with all required params
+4. Saves customer ID to `agencies` table
+5. Only then proceeds with contact creation and registration
+
+**WHY:** The checkout-time call (`ensureResellerClubCustomer()`) is the primary path. But if it silently fails (returns null but doesn't block checkout), or there's a race condition, or the deployed build doesn't include it yet — provisioning now self-heals instead of permanently failing.
+
+#### NEW — Retry Provisioning Endpoint:
+- `POST /api/purchases/retry` — re-triggers provisioning for failed purchases
+- Auth check: only purchase owner can retry, max 5 attempts
+- Resets status to `'paid'` then re-provisions
+
+#### Purchase Status Page Improvements:
+- **Retry Setup button** — was only "Contact Support", now has a retry button with spinner
+- **User-friendly error message** — no longer shows raw API errors like "Invalid customer-id: undefined"
+- **Amount display fixed** — DB stores dollars, was incorrectly multiplied by 100 (showed $11098 instead of $110.98)
+- **Polling restarts after retry** — watches `purchase.status` changes
+
+#### Confirmed: Live Chat Rating System is FULLY IMPLEMENTED ✅
+Complete audit found the rating system works end-to-end:
+- ✅ `ChatRating.tsx` — 5-star UI with comment textarea
+- ✅ `ChatWidget.tsx` — transitions to rating state on resolve/end-chat
+- ✅ `POST /api/modules/live-chat/rating` — writes to DB + notifications
+- ✅ `notifyChatRating()` — low-rating alerts to agent + owner
+- ✅ Analytics dashboard reads `mod_chat_conversations.rating`
+- ✅ `enableSatisfactionRating` toggle in widget settings
+- No bugs found.
+
+---
+
 ### Platform-Wide Deep Audit: 16 Bugs Fixed — February 2026 ✅
 
 **Category:** Critical Bug Fixes / RC API / Provisioning / Paddle / Security
