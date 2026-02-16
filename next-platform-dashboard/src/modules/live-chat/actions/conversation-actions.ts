@@ -106,6 +106,8 @@ export async function getConversations(
       assignedAgentName: row.mod_chat_agents?.display_name ?? null,
       departmentName: row.mod_chat_departments?.name ?? null,
       tags: row.tags ?? [],
+      rating: row.rating ?? null,
+      ratingComment: row.rating_comment ?? null,
       createdAt: row.created_at,
     }))
 

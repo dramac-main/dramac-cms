@@ -39,6 +39,8 @@ import {
   Bar,
   PieChart,
   Pie,
+  LineChart,
+  Line,
   Cell,
   XAxis,
   YAxis,
@@ -54,6 +56,7 @@ import {
   getAgentPerformance,
   getChannelBreakdown,
   getSatisfactionDistribution,
+  getSatisfactionTrend,
   getBusiestHours,
   exportAnalyticsCsv,
 } from '../../actions/analytics-actions'
@@ -128,6 +131,9 @@ export function ChatAnalyticsWrapper({ siteId }: ChatAnalyticsWrapperProps) {
   const [satisfactionDist, setSatisfactionDist] = useState<
     Array<{ rating: number; count: number }>
   >([])
+  const [satisfactionTrend, setSatisfactionTrend] = useState<
+    Array<{ date: string; avgRating: number; count: number }>
+  >([])
   const [busiestHours, setBusiestHours] = useState<
     Array<{ hour: number; count: number }>
   >([])
@@ -136,7 +142,7 @@ export function ChatAnalyticsWrapper({ siteId }: ChatAnalyticsWrapperProps) {
     setLoading(true)
     const { from, to } = getDateRange(range)
 
-    const [overviewRes, convRes, respRes, agentRes, channelRes, satRes, hoursRes] =
+    const [overviewRes, convRes, respRes, agentRes, channelRes, satRes, satTrendRes, hoursRes] =
       await Promise.all([
         getAnalyticsOverview(siteId, from, to),
         getConversationsByDay(siteId, from, to),
@@ -144,6 +150,7 @@ export function ChatAnalyticsWrapper({ siteId }: ChatAnalyticsWrapperProps) {
         getAgentPerformance(siteId, from, to),
         getChannelBreakdown(siteId, from, to),
         getSatisfactionDistribution(siteId, from, to),
+        getSatisfactionTrend(siteId, from, to),
         getBusiestHours(siteId, from, to),
       ])
 
@@ -153,6 +160,7 @@ export function ChatAnalyticsWrapper({ siteId }: ChatAnalyticsWrapperProps) {
     setAgentPerformance(agentRes.data)
     setChannelBreakdown(channelRes.data)
     setSatisfactionDist(satRes.data)
+    setSatisfactionTrend(satTrendRes.data)
     setBusiestHours(hoursRes.data)
     setLoading(false)
   }, [siteId, range])
@@ -491,6 +499,63 @@ export function ChatAnalyticsWrapper({ siteId }: ChatAnalyticsWrapperProps) {
             ) : (
               <p className="text-sm text-muted-foreground text-center py-10">
                 No ratings yet
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Satisfaction Trend Over Time */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm">Satisfaction Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {satisfactionTrend.some((d) => d.count > 0) ? (
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={satisfactionTrend}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis
+                    dataKey="date"
+                    fontSize={10}
+                    tickFormatter={(d) => {
+                      const date = new Date(d)
+                      return `${date.getMonth() + 1}/${date.getDate()}`
+                    }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis fontSize={11} domain={[0, 5]} ticks={[1, 2, 3, 4, 5]} />
+                  <Tooltip
+                    labelFormatter={(d) => new Date(d as string).toLocaleDateString()}
+                    formatter={(v: unknown, name: string) => {
+                      if (name === 'avgRating') return [Number(v), 'Avg Rating']
+                      return [Number(v), 'Ratings Count']
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="avgRating"
+                    name="Avg Rating"
+                    stroke="#eab308"
+                    strokeWidth={2}
+                    dot={{ r: 3, fill: '#eab308' }}
+                    connectNulls
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    name="Ratings Count"
+                    stroke="#3b82f6"
+                    strokeWidth={1}
+                    strokeDasharray="4 4"
+                    dot={false}
+                    connectNulls
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-10">
+                No rating trend data yet
               </p>
             )}
           </CardContent>

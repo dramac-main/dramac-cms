@@ -47,6 +47,8 @@ import {
   Loader2,
   Plus,
   X,
+  Star,
+  MessageSquare,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { MessageBubble } from '../shared/MessageBubble'
@@ -702,6 +704,92 @@ export function ConversationViewWrapper({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Agent</span>
                   <span>{conversation.assignedAgent.displayName}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Satisfaction Rating */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-1.5">
+                <Star className="h-3.5 w-3.5" />
+                Satisfaction Rating
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {conversation.rating ? (
+                <div className="space-y-3">
+                  {/* Star display */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-4 w-4 ${
+                            star <= (conversation.rating || 0)
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'fill-transparent text-muted-foreground/30'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm font-medium">
+                      {conversation.rating}/5
+                    </span>
+                  </div>
+                  {/* Rating label */}
+                  <Badge
+                    variant={
+                      (conversation.rating || 0) >= 4
+                        ? 'default'
+                        : (conversation.rating || 0) >= 3
+                        ? 'secondary'
+                        : 'destructive'
+                    }
+                    className="text-xs"
+                  >
+                    {conversation.rating === 5
+                      ? '🤩 Excellent'
+                      : conversation.rating === 4
+                      ? '😃 Very Good'
+                      : conversation.rating === 3
+                      ? '😐 Good'
+                      : conversation.rating === 2
+                      ? '🙁 Fair'
+                      : '😠 Poor'}
+                  </Badge>
+                  {/* Comment */}
+                  {conversation.ratingComment && (
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <MessageSquare className="h-3 w-3" />
+                        <span>Feedback</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground bg-muted/50 rounded-md px-3 py-2 italic">
+                        &ldquo;{conversation.ratingComment}&rdquo;
+                      </p>
+                    </div>
+                  )}
+                  {/* Rated timestamp */}
+                  {conversation.ratedAt && (
+                    <p className="text-xs text-muted-foreground">
+                      Rated {formatDate(conversation.ratedAt)}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-2">
+                  <p className="text-sm text-muted-foreground">
+                    {conversation.status === 'resolved' || conversation.status === 'closed'
+                      ? 'No rating received'
+                      : 'Awaiting rating'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {conversation.status === 'resolved' || conversation.status === 'closed'
+                      ? 'Visitor did not leave feedback'
+                      : 'Rating will be requested when chat ends'}
+                  </p>
                 </div>
               )}
             </CardContent>

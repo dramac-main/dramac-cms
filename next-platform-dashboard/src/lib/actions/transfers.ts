@@ -99,6 +99,12 @@ export async function initiateTransferIn(formData: FormData) {
 
     let resellerclubOrderId: string | undefined;
     let customerIdToUse = agency?.resellerclub_customer_id;
+    
+    // Guard against stringified falsy values ("undefined", "null", "") stored in DB
+    if (customerIdToUse === 'undefined' || customerIdToUse === 'null' || customerIdToUse?.trim() === '') {
+      console.warn(`[Transfers] Clearing invalid RC customer ID "${customerIdToUse}"`);
+      customerIdToUse = undefined;
+    }
 
     // Auto-create ResellerClub customer if not configured
     if (!customerIdToUse) {

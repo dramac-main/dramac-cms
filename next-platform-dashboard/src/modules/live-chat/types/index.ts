@@ -397,6 +397,8 @@ export interface ConversationListItem {
   assignedAgentName: string | null
   departmentName: string | null
   tags: string[]
+  rating: number | null
+  ratingComment: string | null
   createdAt: string
 }
 

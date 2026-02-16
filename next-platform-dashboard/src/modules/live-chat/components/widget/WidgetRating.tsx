@@ -183,14 +183,14 @@ export function WidgetRating({
             ))}
           </div>
 
-          {/* Rating label */}
+          {/* Rating label with emoji — industry standard (Intercom, Tidio) */}
           {displayRating > 0 && (
             <p className="text-xs text-gray-500 mb-3">
-              {displayRating === 1 && 'Poor'}
-              {displayRating === 2 && 'Fair'}
-              {displayRating === 3 && 'Good'}
-              {displayRating === 4 && 'Very Good'}
-              {displayRating === 5 && 'Excellent'}
+              {displayRating === 1 && '😠 Poor'}
+              {displayRating === 2 && '🙁 Fair'}
+              {displayRating === 3 && '😐 Good'}
+              {displayRating === 4 && '😃 Very Good'}
+              {displayRating === 5 && '🤩 Excellent'}
             </p>
           )}
 

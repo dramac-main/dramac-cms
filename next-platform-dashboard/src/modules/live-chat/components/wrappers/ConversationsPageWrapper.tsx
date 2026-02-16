@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Loader2, MessagesSquare, Search } from 'lucide-react'
+import { Loader2, MessagesSquare, Search, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import { ConversationStatusBadge } from '../shared/ConversationStatusBadge'
 import { ChannelBadge } from '../shared/ChannelBadge'
@@ -109,6 +109,8 @@ export function ConversationsPageWrapper({
         assignedAgentName: conv.assignedAgent?.displayName || null,
         departmentName: conv.department?.name || null,
         tags: conv.tags,
+        rating: conv.rating ?? null,
+        ratingComment: conv.ratingComment ?? null,
         createdAt: conv.createdAt,
       }
       setConversations((prev) => [item, ...prev])
@@ -301,6 +303,12 @@ export function ConversationsPageWrapper({
                       <ChannelBadge channel={conv.channel} />
                       <ConversationStatusBadge status={conv.status} />
                       <PriorityBadge priority={conv.priority} />
+                      {conv.rating && (
+                        <span className="inline-flex items-center gap-0.5 text-xs text-yellow-600 dark:text-yellow-400">
+                          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                          {conv.rating}/5
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground truncate mt-1">
                       {conv.lastMessageText || 'No messages yet'}

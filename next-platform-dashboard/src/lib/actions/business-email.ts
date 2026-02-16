@@ -83,6 +83,12 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
 
     let customerId = agency?.resellerclub_customer_id;
     
+    // Guard against stringified falsy values ("undefined", "null", "") stored in DB
+    if (customerId === 'undefined' || customerId === 'null' || customerId?.trim() === '') {
+      console.warn(`[BusinessEmail] Clearing invalid RC customer ID "${customerId}"`);
+      customerId = undefined;
+    }
+
     if (!customerId) {
       // Auto-create ResellerClub customer for this agency
       try {

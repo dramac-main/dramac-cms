@@ -405,6 +405,63 @@ export async function getSatisfactionDistribution(
 }
 
 // =============================================================================
+// SATISFACTION TREND OVER TIME
+// =============================================================================
+
+export async function getSatisfactionTrend(
+  siteId: string,
+  dateFrom: string,
+  dateTo: string
+): Promise<{
+  success: boolean
+  data: Array<{ date: string; avgRating: number; count: number }>
+}> {
+  try {
+    const supabase = await createClient()
+    const db = supabase as any
+
+    const { data } = await db
+      .from('mod_chat_conversations')
+      .select('rating, rated_at')
+      .eq('site_id', siteId)
+      .not('rating', 'is', null)
+      .not('rated_at', 'is', null)
+      .gte('rated_at', `${dateFrom}T00:00:00`)
+      .lte('rated_at', `${dateTo}T23:59:59`)
+      .order('rated_at', { ascending: true })
+
+    // Group by day
+    const dayMap = new Map<string, { total: number; count: number }>()
+
+    for (const row of data || []) {
+      const day = new Date(row.rated_at as string).toISOString().split('T')[0]
+      const existing = dayMap.get(day) || { total: 0, count: 0 }
+      existing.total += row.rating as number
+      existing.count += 1
+      dayMap.set(day, existing)
+    }
+
+    // Fill missing days with null
+    const result: Array<{ date: string; avgRating: number; count: number }> = []
+    const start = new Date(dateFrom)
+    const end = new Date(dateTo)
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0]
+      const dayData = dayMap.get(dateStr)
+      result.push({
+        date: dateStr,
+        avgRating: dayData ? Math.round((dayData.total / dayData.count) * 10) / 10 : 0,
+        count: dayData?.count ?? 0,
+      })
+    }
+
+    return { success: true, data: result }
+  } catch {
+    return { success: true, data: [] }
+  }
+}
+
+// =============================================================================
 // BUSIEST HOURS
 // =============================================================================
 

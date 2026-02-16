@@ -26,9 +26,19 @@ async function ensureResellerClubCustomerForProvisioning(
     .eq('id', agencyId)
     .maybeSingle();
 
-  if (agency?.resellerclub_customer_id) {
-    console.log(`[Provisioning] Agency already has RC customer: ${agency.resellerclub_customer_id}`);
-    return agency.resellerclub_customer_id as string;
+  const existingRcId = agency?.resellerclub_customer_id;
+  // Guard against stringified falsy values ("undefined", "null", "") that got stored in DB
+  const isValidRcId = existingRcId && existingRcId !== 'undefined' && existingRcId !== 'null' && existingRcId.trim() !== '';
+  
+  if (isValidRcId) {
+    console.log(`[Provisioning] Agency already has RC customer: ${existingRcId}`);
+    return existingRcId as string;
+  }
+  
+  // If we had a bogus value, clear it from the DB
+  if (existingRcId && !isValidRcId) {
+    console.warn(`[Provisioning] Clearing invalid RC customer ID "${existingRcId}" for agency ${agencyId}`);
+    await admin.from('agencies').update({ resellerclub_customer_id: null }).eq('id', agencyId);
   }
 
   console.log(`[Provisioning] Agency has NO RC customer ID, creating one...`);
