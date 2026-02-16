@@ -2,6 +2,51 @@
 
 ## Recent Work
 
+### RC Customer "undefined" String Bug Fix + Industry-Standard Live Chat Rating System — February 2026 ✅
+
+**Category:** Critical Bug Fix + Feature Enhancement
+**Commit:** `6a964bc`
+**Files Changed:** 11
+
+#### Overview
+Production logs confirmed the TRUE root cause of persistent `"Invalid customer-id: undefined"` error: the string `"undefined"` (not null) was stored in `agencies.resellerclub_customer_id` column. JavaScript's truthy check `if (agency?.resellerclub_customer_id)` passes for the string `"undefined"`, so `ensureResellerClubCustomerForProvisioning()` returned `"undefined"` as the customer ID instead of creating a new one. The contact validation guard in contacts.ts correctly caught this downstream.
+
+Additionally, comprehensive industry research (Intercom, Zendesk, LiveChat, Crisp, Tidio, HubSpot) was conducted to bring the live chat rating system up to industry standards. The visitor-facing widget was 100% complete, but the agent/admin side had critical gaps — agents couldn't see individual conversation ratings.
+
+#### Fix 1 — RC Customer ID Validation (4 files):
+- **provisioning.ts**: Changed truthy check to reject `'undefined'`, `'null'`, and empty strings. Auto-clears invalid values from DB.
+- **domains.ts**: Same guard in `ensureResellerClubCustomer()`.
+- **transfers.ts**: Same guard before `customerIdToUse` is used.
+- **business-email.ts**: Same guard before email order creation.
+
+#### Fix 2 — Live Chat Rating Enhancements (7 files):
+- **ConversationViewWrapper.tsx**: Added **Satisfaction Rating card** to right panel — shows stars, emoji label (😠 Poor → 🤩 Excellent), comment quote, rated timestamp. Shows "Awaiting rating" or "No rating received" contextually.
+- **ConversationsPageWrapper.tsx**: Added **rating indicator** (⭐ X/5) to conversation list rows.
+- **ChatAnalyticsWrapper.tsx**: Added **Satisfaction Trend** line chart (avg rating + count over time).
+- **analytics-actions.ts**: New `getSatisfactionTrend()` server action — groups ratings by day with filled date gaps.
+- **conversation-actions.ts**: Added `rating`/`ratingComment` to `getConversations` query mapping.
+- **types/index.ts**: Added `rating`/`ratingComment` to `ConversationListItem` interface.
+- **WidgetRating.tsx**: Enhanced labels with emoji indicators (Intercom-style).
+
+#### Key Architecture Decision:
+Used the already-built-but-unused `SatisfactionRating` shared component pattern as inspiration, but implemented inline star rendering in ConversationViewWrapper for more control over layout and emoji labeling.
+
+#### Industry Research Summary:
+| Platform | Scale | Timing | Email Follow-up |
+|----------|-------|--------|-----------------|
+| Intercom | 5-emoji | On close | Yes |
+| Zendesk | Binary → customizable | On solved | Yes |
+| LiveChat | Binary thumbs | On end | Webhooks |
+| Crisp | 1-5 stars | Widget + 1hr email | Yes |
+| Tidio | 5-emoji | On close + 24hr email | Yes |
+| HubSpot | CSAT/NPS/CES | On end | Yes |
+
+DRAMAC CMS now matches: ✅ 5-star + emoji labels, ✅ auto-trigger on close, ✅ comment field, ✅ in-app notification, ✅ per-agent analytics, ✅ distribution chart, ✅ trend chart, ✅ individual conversation rating display.
+
+Still remaining for future: email follow-up backup, customizable prompt text, Slack/webhook notification for low ratings.
+
+---
+
 ### RC Contact Validation Guards + Live Chat Rating Error Handling — February 2026 ✅
 
 **Category:** Critical Bug Fix / Defense-in-Depth / UX
