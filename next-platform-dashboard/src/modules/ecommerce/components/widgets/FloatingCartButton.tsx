@@ -82,33 +82,34 @@ export function FloatingCartButton({
         const db = supabase as any;
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (!session?.user) {
-          // Check local storage for guest cart
-          if (typeof window !== 'undefined') {
-            const guestCart = localStorage.getItem(`cart_${siteId}`);
-            if (guestCart) {
-              try {
-                const parsed = JSON.parse(guestCart);
-                if (mounted) {
-                  setCartCount(parsed.items?.length ?? 0);
-                }
-              } catch {
-                // Invalid cart data
-              }
-            }
+        let cartQuery;
+
+        if (session?.user) {
+          cartQuery = await db
+            .from('mod_ecommod01_carts')
+            .select('id')
+            .eq('site_id', siteId)
+            .eq('user_id', session.user.id)
+            .eq('status', 'active')
+            .maybeSingle();
+        } else {
+          const sessionId = typeof window !== 'undefined'
+            ? localStorage.getItem('ecom_session_id')
+            : null;
+          if (!sessionId) {
+            if (mounted) setIsLoading(false);
+            return;
           }
-          if (mounted) setIsLoading(false);
-          return;
+          cartQuery = await db
+            .from('mod_ecommod01_carts')
+            .select('id')
+            .eq('site_id', siteId)
+            .eq('session_id', sessionId)
+            .eq('status', 'active')
+            .maybeSingle();
         }
 
-        const { data: cart } = await db
-          .from('ecommerce_carts')
-          .select('id')
-          .eq('site_id', siteId)
-          .eq('user_id', session.user.id)
-          .eq('status', 'active')
-          .maybeSingle();
-
+        const cart = cartQuery?.data;
         if (!cart) {
           if (mounted) {
             setCartCount(0);
@@ -118,7 +119,7 @@ export function FloatingCartButton({
         }
 
         const { count } = await db
-          .from('ecommerce_cart_items')
+          .from('mod_ecommod01_cart_items')
           .select('id', { count: 'exact', head: true })
           .eq('cart_id', cart.id);
 
@@ -142,7 +143,7 @@ export function FloatingCartButton({
         {
           event: '*',
           schema: 'public',
-          table: 'ecommerce_cart_items',
+          table: 'mod_ecommod01_cart_items',
         },
         () => {
           fetchCartCount();

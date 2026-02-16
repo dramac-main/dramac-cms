@@ -209,8 +209,96 @@ export async function POST(request: NextRequest) {
       }
 
       case 'pesapal': {
-        const _pesapalConfig = settings.pesapal_config as PesapalConfig
-        // Pesapal requires server-side order registration
+        const pesapalConfig = settings.pesapal_config as PesapalConfig
+        const callbackUrl = `${settings.store_url || ''}/api/modules/ecommerce/webhooks/payment?provider=pesapal&orderId=${order.id}`
+        
+        // Build Pesapal payment data for client-side redirect
+        // In production with Pesapal 3.0, register IPN URL and submit order
+        try {
+          if (pesapalConfig.consumer_key && pesapalConfig.consumer_secret) {
+            const isSandbox = pesapalConfig.environment === 'demo'
+            // Step 1: Get auth token
+            const authUrl = isSandbox 
+              ? 'https://cybqa.pesapal.com/pesapalv3/api/Auth/RequestToken'
+              : 'https://pay.pesapal.com/v3/api/Auth/RequestToken'
+            
+            const authRes = await fetch(authUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+              body: JSON.stringify({
+                consumer_key: pesapalConfig.consumer_key,
+                consumer_secret: pesapalConfig.consumer_secret,
+              }),
+            })
+            const authData = await authRes.json()
+            const token = authData.token
+
+            if (token) {
+              // Step 2: Register IPN URL
+              const ipnUrl = isSandbox
+                ? 'https://cybqa.pesapal.com/pesapalv3/api/URLSetup/RegisterIPN'
+                : 'https://pay.pesapal.com/v3/api/URLSetup/RegisterIPN'
+              
+              const ipnRes = await fetch(ipnUrl, {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json', 
+                  'Accept': 'application/json',
+                  'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({
+                  url: callbackUrl,
+                  ipn_notification_type: 'POST',
+                }),
+              })
+              const ipnData = await ipnRes.json()
+
+              // Step 3: Submit order
+              const submitUrl = isSandbox
+                ? 'https://cybqa.pesapal.com/pesapalv3/api/Transactions/SubmitOrderRequest'
+                : 'https://pay.pesapal.com/v3/api/Transactions/SubmitOrderRequest'
+
+              const submitRes = await fetch(submitUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json', 
+                  'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                  id: order.id,
+                  currency: settings.currency,
+                  amount: total,
+                  description: `Payment for order ${order.order_number}`,
+                  callback_url: callbackUrl,
+                  notification_id: ipnData.ipn_id,
+                  billing_address: {
+                    email_address: customerEmail,
+                    phone_number: customerPhone || '',
+                    first_name: customerName?.split(' ')[0] || '',
+                    last_name: customerName?.split(' ').slice(1).join(' ') || '',
+                  },
+                }),
+              })
+              const submitData = await submitRes.json()
+
+              if (submitData.redirect_url) {
+                paymentData = {
+                  provider: 'pesapal',
+                  orderId: order.id,
+                  orderNumber: order.order_number,
+                  redirectUrl: submitData.redirect_url,
+                  orderTrackingId: submitData.order_tracking_id,
+                }
+                break
+              }
+            }
+          }
+        } catch (pesapalError) {
+          console.error('[Checkout] Pesapal API error:', pesapalError)
+        }
+
+        // Fallback: return data for client-side handling
         paymentData = {
           provider: 'pesapal',
           orderId: order.id,
@@ -218,7 +306,7 @@ export async function POST(request: NextRequest) {
           amount: total,
           currency: settings.currency,
           description: `Payment for order ${order.order_number}`,
-          callback_url: `${settings.store_url || ''}/api/modules/ecommerce/webhooks/payment?provider=pesapal`,
+          callback_url: callbackUrl,
           notification_id: order.id,
           billing_address: {
             email: customerEmail,
@@ -227,28 +315,78 @@ export async function POST(request: NextRequest) {
             last_name: customerName?.split(' ').slice(1).join(' ') || ''
           }
         }
-        // Note: In production, you would call Pesapal API here to get redirect URL
         break
       }
 
       case 'dpo': {
         const dpoConfig = settings.dpo_config as DpoConfig
-        // DPO Pay requires XML token creation
+        const successUrl = `${settings.store_url || ''}/api/modules/ecommerce/webhooks/payment?provider=dpo&orderId=${order.id}`
+        const cancelUrl = `${settings.store_url || ''}/checkout/cancel?orderId=${order.id}`
+
+        // Create DPO transaction token via API
+        try {
+          if (dpoConfig.company_token) {
+            const createTokenXml = `<?xml version="1.0" encoding="utf-8"?>
+<API3G>
+  <CompanyToken>${dpoConfig.company_token}</CompanyToken>
+  <Request>createToken</Request>
+  <Transaction>
+    <PaymentAmount>${total.toFixed(2)}</PaymentAmount>
+    <PaymentCurrency>${settings.currency}</PaymentCurrency>
+    <CompanyRef>${order.id}</CompanyRef>
+    <RedirectURL>${successUrl}</RedirectURL>
+    <BackURL>${cancelUrl}</BackURL>
+    <CompanyRefUnique>1</CompanyRefUnique>
+    <PTL>24</PTL>
+  </Transaction>
+  <Services>
+    <Service>
+      <ServiceType>${dpoConfig.service_type || '5525'}</ServiceType>
+      <ServiceDescription>Order ${order.order_number}</ServiceDescription>
+      <ServiceDate>${new Date().toISOString().split('T')[0]} 00:00</ServiceDate>
+    </Service>
+  </Services>
+</API3G>`
+
+            const tokenRes = await fetch('https://secure.3gdirectpay.com/API/v6/', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/xml' },
+              body: createTokenXml,
+            })
+            const tokenBody = await tokenRes.text()
+
+            // Extract result and token from XML response
+            const resultCode = tokenBody.match(/<Result>(\d+)<\/Result>/)?.[1]
+            const transToken = tokenBody.match(/<TransToken>([^<]+)<\/TransToken>/)?.[1]
+
+            if (resultCode === '000' && transToken) {
+              // Successfully created payment token
+              const dpoPaymentUrl = `https://secure.3gdirectpay.com/payv3.php?ID=${transToken}`
+              paymentData = {
+                provider: 'dpo',
+                orderId: order.id,
+                orderNumber: order.order_number,
+                transactionToken: transToken,
+                paymentUrl: dpoPaymentUrl,
+              }
+              break
+            } else {
+              console.error('[Checkout] DPO createToken failed, result:', resultCode)
+            }
+          }
+        } catch (dpoError) {
+          console.error('[Checkout] DPO API error:', dpoError)
+        }
+
+        // Fallback: return data for manual handling
         paymentData = {
           provider: 'dpo',
-          companyToken: dpoConfig.company_token,
           orderId: order.id,
           orderNumber: order.order_number,
           amount: total,
           currency: settings.currency,
-          serviceType: dpoConfig.service_type,
-          redirectUrl: `${settings.store_url || ''}/checkout/success?orderId=${order.id}`,
-          backUrl: `${settings.store_url || ''}/checkout/cancel?orderId=${order.id}`,
-          customerEmail,
-          customerFirstName: customerName?.split(' ')[0] || '',
-          customerLastName: customerName?.split(' ').slice(1).join(' ') || ''
+          error: 'Failed to create DPO payment token. Please try again or contact support.',
         }
-        // Note: In production, you would call DPO API here to create transaction token
         break
       }
 

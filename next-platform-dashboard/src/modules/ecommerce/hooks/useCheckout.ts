@@ -113,41 +113,135 @@ export interface UseCheckoutResult {
 
 const STEPS: CheckoutStep[] = ['information', 'shipping', 'payment', 'review']
 
-const DEFAULT_SHIPPING_METHODS: ShippingMethod[] = [
+/**
+ * Fallback shipping methods — only used when no methods are configured in store settings.
+ */
+const FALLBACK_SHIPPING_METHODS: ShippingMethod[] = [
   {
     id: 'standard',
     name: 'Standard Shipping',
     description: 'Delivered in 5-7 business days',
-    price: 9.99,
+    price: 0,
     estimated_days: '5-7 days'
   },
-  {
-    id: 'express',
-    name: 'Express Shipping',
-    description: 'Delivered in 2-3 business days',
-    price: 19.99,
-    estimated_days: '2-3 days'
-  },
-  {
-    id: 'overnight',
-    name: 'Overnight Shipping',
-    description: 'Next business day delivery',
-    price: 29.99,
-    estimated_days: '1 day'
-  }
 ]
 
-const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = [
-  {
-    id: 'card',
-    name: 'Credit / Debit Card',
-    description: 'Pay securely with your card'
-  },
-  {
-    id: 'paypal',
-    name: 'PayPal',
-    description: 'Pay with your PayPal account'
+/**
+ * Build payment methods dynamically from the store's payment configuration.
+ */
+function buildPaymentMethods(settings: Record<string, unknown> | null | undefined): PaymentMethod[] {
+  if (!settings) return FALLBACK_PAYMENT_METHODS
+  
+  const methods: PaymentMethod[] = []
+  
+  const paddleConfig = settings.paddle_config as { enabled?: boolean } | undefined
+  if (paddleConfig?.enabled) {
+    methods.push({
+      id: 'paddle',
+      name: 'Credit / Debit Card',
+      icon: 'CreditCard',
+      description: 'Pay securely with your card'
+    })
   }
+  
+  const fwConfig = settings.flutterwave_config as { enabled?: boolean } | undefined
+  if (fwConfig?.enabled) {
+    methods.push({
+      id: 'flutterwave',
+      name: 'Flutterwave',
+      icon: 'Wallet',
+      description: 'Pay with card, mobile money, or bank transfer'
+    })
+  }
+  
+  const pesapalConfig = settings.pesapal_config as { enabled?: boolean } | undefined
+  if (pesapalConfig?.enabled) {
+    methods.push({
+      id: 'pesapal',
+      name: 'Pesapal',
+      icon: 'Smartphone',
+      description: 'Pay with mobile money or card'
+    })
+  }
+  
+  const dpoConfig = settings.dpo_config as { enabled?: boolean } | undefined
+  if (dpoConfig?.enabled) {
+    methods.push({
+      id: 'dpo',
+      name: 'DPO Pay',
+      icon: 'CreditCard',
+      description: 'Pay securely via DPO Payment Gateway'
+    })
+  }
+  
+  if (settings.manual_payment_enabled) {
+    methods.push({
+      id: 'manual',
+      name: 'Manual Payment',
+      icon: 'Banknote',
+      description: (settings.manual_payment_instructions as string) || 'Pay via bank transfer or cash on delivery'
+    })
+  }
+  
+  return methods.length > 0 ? methods : FALLBACK_PAYMENT_METHODS
+}
+
+/**
+ * Build shipping methods from store settings.
+ */
+function buildShippingMethods(settings: Record<string, unknown> | null | undefined): ShippingMethod[] {
+  if (!settings) return FALLBACK_SHIPPING_METHODS
+  
+  const shippingZones = settings.shipping_zones as Array<{
+    id: string; name: string; description?: string; rate: number; estimated_days?: string
+  }> | undefined
+  
+  if (shippingZones && shippingZones.length > 0) {
+    return shippingZones.map(zone => ({
+      id: zone.id,
+      name: zone.name,
+      description: zone.description || '',
+      price: zone.rate || 0,
+      estimated_days: zone.estimated_days || '3-7 days'
+    }))
+  }
+  
+  const freeShippingThreshold = settings.freeShippingThreshold as number | null
+  const flatRate = settings.flat_shipping_rate as number | undefined
+  
+  const methods: ShippingMethod[] = []
+  
+  if (flatRate !== undefined && flatRate > 0) {
+    methods.push({
+      id: 'flat-rate',
+      name: 'Standard Shipping',
+      description: freeShippingThreshold 
+        ? `Free on orders over ${freeShippingThreshold}`
+        : 'Flat rate shipping',
+      price: flatRate,
+      estimated_days: '3-7 days'
+    })
+  }
+  
+  if (freeShippingThreshold !== undefined && freeShippingThreshold !== null) {
+    methods.push({
+      id: 'free',
+      name: 'Free Shipping',
+      description: `Available on orders over ${freeShippingThreshold}`,
+      price: 0,
+      estimated_days: '5-10 days'
+    })
+  }
+  
+  return methods.length > 0 ? methods : FALLBACK_SHIPPING_METHODS
+}
+
+const FALLBACK_PAYMENT_METHODS: PaymentMethod[] = [
+  {
+    id: 'manual',
+    name: 'Manual Payment',
+    description: 'Contact store for payment instructions'
+  },
 ]
 
 const EMPTY_ADDRESS: Address = {
@@ -215,12 +309,22 @@ const DEFAULT_TOTALS: CartTotals = {
 // ============================================================================
 
 export function useCheckout(): UseCheckoutResult {
-  const { siteId, taxRate } = useStorefront()
+  const { siteId, taxRate, settings: storefrontSettings } = useStorefront()
   const { items, totals: cartTotals, clearCart } = useStorefrontCart(siteId, undefined, taxRate)
   
   const [state, setState] = useState<CheckoutState>(INITIAL_STATE)
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // Build dynamic shipping and payment methods from store settings
+  const availableShippingMethods = useMemo(
+    () => buildShippingMethods(storefrontSettings as Record<string, unknown> | null),
+    [storefrontSettings]
+  )
+  const availablePaymentMethods = useMemo(
+    () => buildPaymentMethods(storefrontSettings as Record<string, unknown> | null),
+    [storefrontSettings]
+  )
   
   // Calculate step index
   const stepIndex = STEPS.indexOf(state.step)
@@ -437,9 +541,9 @@ export function useCheckout(): UseCheckoutResult {
     setPaymentMethod,
     setCustomerNotes,
     
-    // Available options
-    availableShippingMethods: DEFAULT_SHIPPING_METHODS,
-    availablePaymentMethods: DEFAULT_PAYMENT_METHODS,
+    // Available options (loaded from store settings)
+    availableShippingMethods,
+    availablePaymentMethods,
     
     // Actions
     placeOrder,

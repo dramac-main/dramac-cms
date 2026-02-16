@@ -88,69 +88,72 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Try to query ecommerce_products table
+    // Try to query mod_ecommod01_products table
     // Using type assertion since the table may not exist in generated types
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error, count } = await (supabase as any)
-        .from("ecommerce_products")
+      let query = (supabase as any)
+        .from("mod_ecommod01_products")
         .select(`
           id,
           name,
           slug,
-          price,
+          base_price,
           compare_at_price,
           images,
           status,
-          inventory_quantity,
-          sku,
-          category_id,
-          ecommerce_categories (
-            id,
-            name
-          )
+          quantity,
+          sku
         `, { count: "exact" })
         .eq("site_id", siteId)
         .eq("status", "active")
-        .order("name", { ascending: true })
+        .order("name", { ascending: true });
+      
+      // Apply search filter at DB level
+      if (search) {
+        query = query.or(`name.ilike.%${search}%,sku.ilike.%${search}%`);
+      }
+      
+      const { data, error, count } = await query
         .range(offset, offset + limit - 1);
 
       if (error) {
         throw error;
       }
 
+      // If categoryId filter is requested, get product IDs from product_categories join table
+      let categoryProductIds: Set<string> | null = null;
+      if (categoryId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: catLinks } = await (supabase as any)
+          .from("mod_ecommod01_product_categories")
+          .select("product_id")
+          .eq("category_id", categoryId);
+        categoryProductIds = new Set((catLinks || []).map((l: { product_id: string }) => l.product_id));
+      }
+
       // Transform data
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const products: ProductOption[] = (data || []).map((product: any) => ({
+      let products: ProductOption[] = (data || []).map((product: any) => ({
         id: product.id,
         name: product.name,
         slug: product.slug,
-        price: product.price,
+        price: product.base_price,
         compareAtPrice: product.compare_at_price,
         image: product.images?.[0] || undefined,
         status: product.status,
-        inventory: product.inventory_quantity,
+        inventory: product.quantity,
         sku: product.sku,
-        categoryId: product.category_id,
-        categoryName: product.ecommerce_categories?.name,
       }));
 
-      // Apply search filter client-side
-      const filteredProducts = search
-        ? products.filter(p => 
-            p.name.toLowerCase().includes(search.toLowerCase()) ||
-            (p.sku && p.sku.toLowerCase().includes(search.toLowerCase()))
-          )
-        : products;
-
-      // Apply category filter
-      const categoryFilteredProducts = categoryId
-        ? filteredProducts.filter(p => p.categoryId === categoryId)
-        : filteredProducts;
+      // Apply category filter if needed
+      if (categoryProductIds) {
+        products = products.filter(p => categoryProductIds!.has(p.id));
+      }
 
       const response: ProductsResponse = {
-        products: categoryFilteredProducts,
-        total: count || categoryFilteredProducts.length,
+        products,
+        total: count || products.length,
         hasMore: offset + limit < (count || 0),
       };
 

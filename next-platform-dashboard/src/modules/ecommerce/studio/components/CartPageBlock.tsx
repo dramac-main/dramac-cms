@@ -63,6 +63,7 @@ export function CartPageBlock({
 }: CartPageBlockProps) {
   const { siteId, formatPrice, taxRate } = useStorefront()
   const {
+    cart,
     items,
     totals: cartTotals,
     itemCount,
@@ -76,13 +77,14 @@ export function CartPageBlock({
   } = useStorefrontCart(siteId, undefined, taxRate)
 
   const [isClearing, setIsClearing] = React.useState(false)
+  const [showClearConfirm, setShowClearConfirm] = React.useState(false)
   
   // Use default totals if null
   const totals = cartTotals ?? DEFAULT_TOTALS
 
-  // Current discount from totals
+  // Current discount from cart data (use actual discount code, not hardcoded 'APPLIED')
   const currentDiscount = totals.discount > 0
-    ? { code: 'APPLIED', amount: totals.discount, type: 'fixed' as const }
+    ? { code: cart?.discount_code || 'DISCOUNT', amount: totals.discount, type: 'fixed' as const }
     : null
 
   const handleApplyDiscount = async (code: string): Promise<boolean> => {
@@ -95,13 +97,18 @@ export function CartPageBlock({
   }
 
   const handleClearCart = async () => {
-    if (window.confirm('Are you sure you want to clear your cart?')) {
-      setIsClearing(true)
-      try {
-        await clearCart()
-      } finally {
-        setIsClearing(false)
-      }
+    if (!showClearConfirm) {
+      setShowClearConfirm(true)
+      // Auto-dismiss confirmation after 5 seconds
+      setTimeout(() => setShowClearConfirm(false), 5000)
+      return
+    }
+    setShowClearConfirm(false)
+    setIsClearing(true)
+    try {
+      await clearCart()
+    } finally {
+      setIsClearing(false)
     }
   }
 

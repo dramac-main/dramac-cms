@@ -66,6 +66,7 @@ export function CartDrawerBlock({
 }: CartDrawerBlockProps) {
   const { siteId, formatPrice, taxRate } = useStorefront()
   const {
+    cart,
     items,
     totals: cartTotals,
     itemCount,
@@ -82,9 +83,9 @@ export function CartDrawerBlock({
   // Use default totals if null
   const totals = cartTotals ?? DEFAULT_TOTALS
 
-  // Current discount from totals
+  // Current discount from cart data
   const currentDiscount = totals.discount > 0
-    ? { code: 'APPLIED', amount: totals.discount, type: 'fixed' as const }
+    ? { code: cart?.discount_code || 'DISCOUNT', amount: totals.discount, type: 'fixed' as const }
     : null
 
   const handleApplyDiscount = async (code: string): Promise<boolean> => {

@@ -8,7 +8,7 @@
  */
 'use client'
 
-import { useState, useMemo } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatCurrency } from '@/lib/locale-config'
 import { useEcommerce } from '../../context/ecommerce-context'
@@ -58,6 +58,10 @@ interface OrdersViewProps {
   searchQuery?: string
   userId?: string
   userName?: string
+  /** Order ID to auto-open in detail dialog (e.g. when clicking from home view) */
+  focusOrderId?: string | null
+  /** Called after the focused order has been handled to reset the state */
+  onFocusOrderHandled?: () => void
 }
 
 const orderStatusConfig: Record<OrderStatus, { label: string; icon: typeof Clock; className: string }> = {
@@ -78,13 +82,22 @@ const paymentStatusConfig: Record<PaymentStatus, { label: string; className: str
   failed: { label: 'Failed', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
 }
 
-export function OrdersView({ searchQuery = '', userId = '', userName = 'Store Manager' }: OrdersViewProps) {
+export function OrdersView({ searchQuery = '', userId = '', userName = 'Store Manager', focusOrderId, onFocusOrderHandled }: OrdersViewProps) {
   const router = useRouter()
   const { orders, isLoading, changeOrderStatus, siteId, settings } = useEcommerce()
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all')
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | 'all'>('all')
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
+
+  // Auto-open order detail when navigated from another view with a specific order
+  React.useEffect(() => {
+    if (focusOrderId && orders.length > 0) {
+      setSelectedOrderId(focusOrderId)
+      setDetailDialogOpen(true)
+      onFocusOrderHandled?.()
+    }
+  }, [focusOrderId, orders.length, onFocusOrderHandled])
   
   // Get store info from settings
   const storeName = settings?.store_name || 'My Store'

@@ -115,6 +115,7 @@ function EcommerceDashboardContent({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [focusOrderId, setFocusOrderId] = useState<string | null>(null)
   
   // Dialog states
   const [showCreateProduct, setShowCreateProduct] = useState(false)
@@ -144,10 +145,10 @@ function EcommerceDashboardContent({
     }
   }, [products])
 
-  const handleViewOrder = useCallback((_orderId: string) => {
-    // Navigate to orders view and potentially open order detail
+  const handleViewOrder = useCallback((orderId: string) => {
+    // Set the order to focus on, then navigate to orders view
+    setFocusOrderId(orderId)
     setActiveView('orders')
-    // TODO: Pass orderId to OrdersView to open detail dialog
   }, [])
 
   // Error state
@@ -238,6 +239,8 @@ function EcommerceDashboardContent({
             <OrdersView
               userId={userId || ''}
               userName={userName}
+              focusOrderId={focusOrderId}
+              onFocusOrderHandled={() => setFocusOrderId(null)}
             />
           )}
 

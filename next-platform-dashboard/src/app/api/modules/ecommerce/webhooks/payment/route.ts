@@ -108,10 +108,48 @@ export async function GET(request: NextRequest) {
         const transactionId = searchParams.get('transaction_id')
         
         if (status === 'successful' && transactionId) {
-          // Verify transaction with Flutterwave API
-          // In production, call Flutterwave verify endpoint
-          await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
-          return NextResponse.redirect(new URL(`/checkout/success?orderId=${orderId}`, request.url))
+          // Verify transaction with Flutterwave API (server-side verification)
+          const settings = await getPublicEcommerceSettings(siteId)
+          const fwConfig = settings?.flutterwave_config as FlutterwaveConfig | null
+          
+          if (fwConfig?.secret_key) {
+            try {
+              const verifyResponse = await fetch(
+                `https://api.flutterwave.com/v3/transactions/${transactionId}/verify`,
+                {
+                  headers: {
+                    'Authorization': `Bearer ${fwConfig.secret_key}`,
+                    'Content-Type': 'application/json',
+                  },
+                }
+              )
+              const verifyData = await verifyResponse.json()
+              
+              if (verifyData.status === 'success' && verifyData.data?.status === 'successful') {
+                await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
+                return NextResponse.redirect(new URL(`/checkout/success?orderId=${orderId}`, request.url))
+              } else {
+                console.error('[Flutterwave] Verification failed:', verifyData)
+                await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
+                return NextResponse.redirect(new URL(`/checkout/error?orderId=${orderId}`, request.url))
+              }
+            } catch (verifyError) {
+              console.error('[Flutterwave] Verification error:', verifyError)
+              // Fallback: mark as pending for manual review
+              await updatePublicOrder(siteId, orderId, {
+                payment_transaction_id: transactionId,
+                metadata: { flutterwave_needs_manual_review: true }
+              })
+              return NextResponse.redirect(new URL(`/checkout/pending?orderId=${orderId}`, request.url))
+            }
+          } else {
+            // No secret key configured — mark as pending for manual review
+            await updatePublicOrder(siteId, orderId, {
+              payment_transaction_id: transactionId,
+              metadata: { flutterwave_unverified: true, note: 'Secret key not configured for verification' }
+            })
+            return NextResponse.redirect(new URL(`/checkout/pending?orderId=${orderId}`, request.url))
+          }
         } else {
           await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
           return NextResponse.redirect(new URL(`/checkout/error?orderId=${orderId}`, request.url))
@@ -123,11 +161,15 @@ export async function GET(request: NextRequest) {
         const _merchantReference = searchParams.get('pesapal_merchant_reference')
         
         if (pesapalTransactionId) {
-          // Query Pesapal for payment status
-          // In production, call Pesapal QueryPaymentStatus endpoint
+          // Pesapal: The GET callback is a redirect, NOT a confirmation.
+          // Actual payment status is confirmed via IPN (POST handler above).
+          // Mark as pending and store tracking ID — IPN will update to paid.
           await updatePublicOrder(siteId, orderId, {
             payment_transaction_id: pesapalTransactionId,
-            metadata: { pesapal_tracking_id: pesapalTransactionId }
+            metadata: { 
+              pesapal_tracking_id: pesapalTransactionId,
+              awaiting_ipn_confirmation: true 
+            }
           })
           return NextResponse.redirect(new URL(`/checkout/pending?orderId=${orderId}`, request.url))
         }
@@ -139,9 +181,54 @@ export async function GET(request: NextRequest) {
         const ccdApproval = searchParams.get('CCDapproval')
         
         if (transToken && ccdApproval) {
-          // Verify with DPO API
-          await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transToken)
-          return NextResponse.redirect(new URL(`/checkout/success?orderId=${orderId}`, request.url))
+          // DPO: Verify the transaction token with DPO's verifyToken API
+          const settings = await getPublicEcommerceSettings(siteId)
+          const dpoConfig = settings?.dpo_config as { company_token?: string } | null
+          
+          if (dpoConfig?.company_token) {
+            try {
+              // Call DPO verifyToken endpoint
+              const verifyXml = `<?xml version="1.0" encoding="utf-8"?>
+<API3G>
+  <CompanyToken>${dpoConfig.company_token}</CompanyToken>
+  <Request>verifyToken</Request>
+  <TransactionToken>${transToken}</TransactionToken>
+</API3G>`
+              
+              const verifyResponse = await fetch('https://secure.3gdirectpay.com/API/v6/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/xml' },
+                body: verifyXml,
+              })
+              const verifyBody = await verifyResponse.text()
+              const resultCode = extractFromXml(verifyBody, 'Result')
+              
+              if (resultCode === '000') {
+                // Transaction verified as paid
+                await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transToken)
+                return NextResponse.redirect(new URL(`/checkout/success?orderId=${orderId}`, request.url))
+              } else {
+                console.error('[DPO] Verification failed, result code:', resultCode)
+                await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
+                return NextResponse.redirect(new URL(`/checkout/error?orderId=${orderId}`, request.url))
+              }
+            } catch (verifyError) {
+              console.error('[DPO] Verification error:', verifyError)
+              // Fallback: mark for manual review
+              await updatePublicOrder(siteId, orderId, {
+                payment_transaction_id: transToken,
+                metadata: { dpo_needs_manual_review: true }
+              })
+              return NextResponse.redirect(new URL(`/checkout/pending?orderId=${orderId}`, request.url))
+            }
+          } else {
+            // No company token configured for verification
+            await updatePublicOrder(siteId, orderId, {
+              payment_transaction_id: transToken,
+              metadata: { dpo_unverified: true, note: 'Company token not configured' }
+            })
+            return NextResponse.redirect(new URL(`/checkout/pending?orderId=${orderId}`, request.url))
+          }
         }
         return NextResponse.redirect(new URL(`/checkout/error?orderId=${orderId}`, request.url))
       }

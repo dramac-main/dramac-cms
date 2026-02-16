@@ -85,12 +85,12 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Try to query ecommerce_categories table
+    // Try to query mod_ecommod01_categories table
     // Using type assertion since the table may not exist in generated types
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
-        .from("ecommerce_categories")
+        .from("mod_ecommod01_categories")
         .select(`
           id,
           name,
@@ -107,21 +107,21 @@ export async function GET(request: NextRequest) {
         throw error;
       }
 
-      // Try to get product counts per category
+      // Try to get product counts per category via join table
       let productCounts: Record<string, number> = {};
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: countData } = await (supabase as any)
-          .from("ecommerce_products")
-          .select("category_id")
-          .eq("site_id", siteId)
-          .eq("status", "active");
+          .from("mod_ecommod01_product_categories")
+          .select("category_id, product:mod_ecommod01_products!inner(status)")
+          .eq("product.site_id", siteId)
+          .eq("product.status", "active");
 
         if (countData) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          productCounts = countData.reduce((acc: Record<string, number>, product: any) => {
-            if (product.category_id) {
-              acc[product.category_id] = (acc[product.category_id] || 0) + 1;
+          productCounts = countData.reduce((acc: Record<string, number>, row: any) => {
+            if (row.category_id) {
+              acc[row.category_id] = (acc[row.category_id] || 0) + 1;
             }
             return acc;
           }, {} as Record<string, number>);
