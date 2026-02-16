@@ -68,10 +68,14 @@ export class CustomerService {
   
   /**
    * Get customer by username (email)
+   * 
+   * NOTE: The correct ResellerClub endpoint for lookup by username/email is
+   * `customers/details.json` (with `username` param), NOT `details-by-id.json`
+   * (which requires `customer-id`).
    */
   async getByUsername(username: string): Promise<Customer> {
     const response = await this.client.get<Record<string, unknown>>(
-      'customers/details-by-id.json',
+      'customers/details.json',
       { 'username': username }
     );
     
@@ -93,7 +97,14 @@ export class CustomerService {
       if (error instanceof CustomerNotFoundError) {
         return false;
       }
-      // Re-throw other errors
+      // ResellerClub may return various error formats when customer doesn't exist
+      // (e.g., "No Entity found", HTTP 404, empty response). Treat any API error
+      // as "not found" rather than crashing the create-or-get flow.
+      if (error instanceof ResellerClubError) {
+        console.log(`[ResellerClub] Customer lookup for ${username} returned error (treating as not found):`, error.message);
+        return false;
+      }
+      // Re-throw non-RC errors (network, etc.)
       throw error;
     }
   }
