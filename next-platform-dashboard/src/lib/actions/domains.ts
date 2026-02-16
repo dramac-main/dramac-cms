@@ -88,6 +88,17 @@ async function ensureResellerClubCustomer(
   }
 }
 
+/**
+ * Public wrapper for ensureResellerClubCustomer — usable from other modules
+ * (e.g., business-email.ts) that need to guarantee the agency has an RC customer.
+ */
+export async function ensureResellerClubCustomerForAgency(
+  agencyId: string,
+  userEmail: string
+): Promise<string | null> {
+  return ensureResellerClubCustomer(agencyId, userEmail);
+}
+
 // ============================================================================
 // Search & Availability
 // ============================================================================
@@ -442,13 +453,27 @@ export async function registerDomain(params: RegisterDomainParams) {
   
   const { data: profile } = await supabase
     .from('profiles')
-    .select('agency_id')
+    .select('agency_id, email')
     .eq('id', user.id)
     .single();
   
   if (!profile?.agency_id) return { success: false, error: 'No agency found' };
   
   try {
+    // CRITICAL: Ensure the agency has a ResellerClub customer ID BEFORE payment.
+    // Without this, provisioning fails after payment with "Agency not configured for ResellerClub".
+    const rcCustomerId = await ensureResellerClubCustomer(
+      profile.agency_id,
+      (profile as any).email || user.email || ''
+    );
+    
+    if (!rcCustomerId && isConfigured()) {
+      return { 
+        success: false, 
+        error: 'Failed to set up domain services. Please try again or contact support.' 
+      };
+    }
+    
     // Parse domain
     const parts = params.domainName.split('.');
     const tld = '.' + parts.pop();
@@ -507,6 +532,10 @@ export async function registerDomain(params: RegisterDomainParams) {
 /**
  * Create a domain cart checkout for multiple domains
  * Returns pendingPurchaseId and transactionId for Paddle checkout
+ *
+ * IMPORTANT: Prices are calculated using the SAME live RC pricing path as searchDomains().
+ * Previously this used calculateDomainPrice() from domain-billing which relied on
+ * 24-hour cached data, causing price mismatches between search results and checkout.
  */
 export async function createDomainCartCheckout(params: {
   domains: Array<{
@@ -527,7 +556,7 @@ export async function createDomainCartCheckout(params: {
     
     const { data: profile } = await supabase
       .from('profiles')
-      .select('agency_id')
+      .select('agency_id, email')
       .eq('id', user.id)
       .single();
     
@@ -538,40 +567,127 @@ export async function createDomainCartCheckout(params: {
       return { success: false, error: 'No domains selected' };
     }
     
-    // Calculate total pricing for all domains
+    // CRITICAL: Ensure the agency has a ResellerClub customer ID BEFORE creating
+    // the Paddle transaction. Without this, provisioning will fail after payment
+    // with "Agency not configured for ResellerClub".
+    const rcCustomerId = await ensureResellerClubCustomer(
+      profile.agency_id,
+      (profile as any).email || user.email || ''
+    );
+    
+    if (!rcCustomerId && isConfigured()) {
+      return { 
+        success: false, 
+        error: 'Failed to set up domain services. Please try again or contact support.' 
+      };
+    }
+    
+    // Get agency pricing settings (same as searchDomains uses)
+    const { data: pricing } = await getTable(supabase, 'agency_domain_pricing')
+      .select('default_markup_type, default_markup_value')
+      .eq('agency_id', profile.agency_id)
+      .maybeSingle() as { data: { default_markup_type?: string; default_markup_value?: number } | null };
+
+    const markupType = pricing?.default_markup_type || 'percentage';
+    const markupValue = pricing?.default_markup_value ?? 0;
+
+    const applyMarkup = (base: number): number => {
+      if (markupValue === 0 && markupType === 'percentage') return Math.round(base * 100) / 100;
+      if (markupType === 'fixed') return Math.round((base + markupValue) * 100) / 100;
+      return Math.round(base * (1 + markupValue / 100) * 100) / 100;
+    };
+
+    // Use the SAME live pricing path as searchDomains() to avoid price mismatches.
+    // Fetch LIVE RC pricing (not cached) for all TLDs in the cart.
+    const uniqueTlds = [...new Set(params.domains.map(d => {
+      const parts = d.domainName.split('.');
+      return '.' + parts.slice(1).join('.');
+    }))];
+
+    type SimplePrice = { register: Record<number, number>; renew: Record<number, number>; transfer: number };
+    let sellingByTld: Record<string, SimplePrice> = {};
+    let wholesaleByTld: Record<string, SimplePrice> = {};
+
+    const mapDomainPrice = (price: any): SimplePrice => ({
+      register: Object.fromEntries(Object.entries(price.register || {}).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
+      renew: Object.fromEntries(Object.entries(price.renew || {}).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
+      transfer: Number(price.transfer) || 0,
+    });
+
+    if (isClientAvailable()) {
+      const [sellingResult, wholesaleResult] = await Promise.all([
+        domainService.getCustomerPricing(undefined, uniqueTlds)
+          .then(data => Object.fromEntries(Object.entries(data).map(([tld, price]) => [tld, mapDomainPrice(price)])))
+          .catch(() => null),
+        domainService.getResellerCostPricing(uniqueTlds)
+          .then(data => Object.fromEntries(Object.entries(data).map(([tld, price]) => [tld, mapDomainPrice(price)])))
+          .catch(() => null),
+      ]);
+
+      if (sellingResult) sellingByTld = sellingResult as Record<string, SimplePrice>;
+      if (wholesaleResult) wholesaleByTld = wholesaleResult as Record<string, SimplePrice>;
+    }
+
+    // Calculate pricing for each domain using LIVE data (same logic as searchDomains)
     let totalWholesale = 0;
     let totalRetail = 0;
     const domainDetails = [];
     
-    // Import the real pricing calculator from domain-billing
-    const { calculateDomainPrice } = await import('@/lib/actions/domain-billing');
-    
     for (const domain of params.domains) {
       const parts = domain.domainName.split('.');
       const tld = '.' + parts.slice(1).join('.');
-      
-      const pricing = await calculateDomainPrice({
-        tld,
-        years: domain.years,
-        operation: 'register',
-        includePrivacy: domain.privacy ?? false,
-        clientId: params.clientId,
-      });
-      
-      if (!pricing.success || !pricing.data) {
-        return { 
-          success: false, 
-          error: `Failed to get pricing for ${domain.domainName}` 
-        };
+      const years = domain.years;
+
+      const rcSelling = sellingByTld[tld];
+      const rcCost = wholesaleByTld[tld];
+      const fallbackBase = 12.99;
+
+      // Wholesale (cost) price
+      const baseWholesale = rcCost?.register?.[years] || (rcCost?.register?.[1] || fallbackBase) * years;
+
+      // Retail (selling) price — same logic as searchDomains
+      let retailForDomain: number;
+      const hasRcSellingPrice = !!rcSelling?.register?.[1];
+
+      if (hasRcSellingPrice) {
+        const rcSellingYears = rcSelling!.register[years] || (rcSelling!.register[1] || 0) * years;
+        retailForDomain = applyMarkup(rcSellingYears);
+      } else {
+        // Fallback: cost + at least 30% markup
+        if (markupValue > 0) {
+          retailForDomain = applyMarkup(baseWholesale);
+        } else {
+          retailForDomain = Math.round(baseWholesale * 1.3 * 100) / 100;
+        }
       }
-      
-      totalWholesale += pricing.data.total_wholesale;
-      totalRetail += pricing.data.total_retail;
+
+      // WHOIS privacy add-on — matches client-side calculation in domain-search-client.tsx
+      // RC charges ~$3/year wholesale for privacy. Retail is derived using the same
+      // markup ratio as the domain itself to stay consistent with the search page UI.
+      let privacyWholesale = 0;
+      let privacyRetail = 0;
+      if (domain.privacy) {
+        privacyWholesale = 3 * years; // RC charges $3/year for WHOIS privacy
+        // Use the domain's wholesale-to-retail ratio so privacy price matches what
+        // the search page showed (domain-search-client.tsx uses markupRatio approach)
+        const domainWholesale1yr = rcCost?.register?.[1] || fallbackBase;
+        const domainRetail1yr = hasRcSellingPrice
+          ? applyMarkup(rcSelling!.register[1] || 0)
+          : (markupValue > 0 ? applyMarkup(domainWholesale1yr) : Math.round(domainWholesale1yr * 1.3 * 100) / 100);
+        const markupRatio = domainWholesale1yr > 0 ? domainRetail1yr / domainWholesale1yr : 1;
+        privacyRetail = Math.round(3 * markupRatio * years * 100) / 100;
+      }
+
+      const domainWholesale = Math.round((baseWholesale + privacyWholesale) * 100) / 100;
+      const domainRetail = Math.round((retailForDomain + privacyRetail) * 100) / 100;
+
+      totalWholesale += domainWholesale;
+      totalRetail += domainRetail;
       domainDetails.push({
         ...domain,
         tld: tld,
-        wholesale: pricing.data.total_wholesale,
-        retail: pricing.data.total_retail,
+        wholesale: domainWholesale,
+        retail: domainRetail,
       });
     }
     

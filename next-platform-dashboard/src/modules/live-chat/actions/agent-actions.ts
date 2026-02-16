@@ -237,6 +237,51 @@ export async function createAgent(data: {
 
     const supabase = await getModuleClient()
 
+    // Check if agent already exists (including soft-deleted)
+    const { data: existingAgent, error: checkError } = await supabase
+      .from('mod_chat_agents')
+      .select('*')
+      .eq('site_id', data.siteId)
+      .eq('user_id', data.userId)
+      .maybeSingle()
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      throw checkError
+    }
+
+    // If soft-deleted agent exists, reactivate instead of inserting
+    if (existingAgent) {
+      if (existingAgent.is_active) {
+        return { agent: null, error: 'This user is already registered as a chat agent for this site.' }
+      }
+
+      // Reactivate the soft-deleted agent with updated details
+      const updates: Record<string, unknown> = {
+        is_active: true,
+        status: 'offline',
+        display_name: data.displayName,
+        role: data.role || 'agent',
+        max_concurrent_chats: data.maxConcurrentChats || 5,
+        current_chat_count: 0,
+      }
+      if (data.email) updates.email = data.email
+      if (data.avatarUrl) updates.avatar_url = data.avatarUrl
+      if (data.departmentId) updates.department_id = data.departmentId
+
+      const { data: updatedAgent, error: updateError } = await supabase
+        .from('mod_chat_agents')
+        .update(updates)
+        .eq('id', existingAgent.id)
+        .select()
+        .single()
+
+      if (updateError) throw updateError
+
+      revalidatePath(liveChatPath(data.siteId))
+      return { agent: mapRecord<ChatAgent>(updatedAgent), error: null }
+    }
+
+    // No existing agent — insert new one
     const insertData: Record<string, unknown> = {
       site_id: data.siteId,
       user_id: data.userId,

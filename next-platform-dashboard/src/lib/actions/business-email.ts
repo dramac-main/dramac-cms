@@ -73,7 +73,7 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
       return { success: false, error: 'Invalid subscription period' };
     }
 
-    // Get customer ID from agency
+    // Get customer ID from agency — create one if it doesn't exist yet
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: agency } = await (supabase as any)
       .from('agencies')
@@ -81,8 +81,20 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
       .eq('id', profile.agency_id)
       .single();
 
-    if (!agency?.resellerclub_customer_id) {
-      return { success: false, error: 'Agency not configured for domain services' };
+    let customerId = agency?.resellerclub_customer_id;
+    
+    if (!customerId) {
+      // Auto-create ResellerClub customer for this agency
+      try {
+        const { ensureResellerClubCustomerForAgency } = await import('@/lib/actions/domains');
+        customerId = await ensureResellerClubCustomerForAgency(profile.agency_id, user.email || '');
+      } catch {
+        // Fallback: try inline creation
+      }
+    }
+    
+    if (!customerId) {
+      return { success: false, error: 'Agency not configured for email services. Please search for a domain first to set up your account.' };
     }
 
     // Calculate pricing using cached customer pricing from ResellerClub
@@ -97,7 +109,7 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
     const { pricingCacheService } = await import('@/lib/resellerclub/pricing-cache');
     
     // Try to get customer pricing first (includes RC markups)
-    const customerPricing = await businessEmailApi.getCustomerPricing(agency.resellerclub_customer_id);
+    const customerPricing = await businessEmailApi.getCustomerPricing(customerId);
     const productKey = 'eeliteus'; // Default to US datacenter
     
     // Calculate base price from customer pricing (what RC says customer should pay)

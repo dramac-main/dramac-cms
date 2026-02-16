@@ -94,6 +94,15 @@ export function AgentsPageWrapper({
   const [agencyMembers, setAgencyMembers] = useState<AgencyMember[]>([])
   const [membersLoading, setMembersLoading] = useState(false)
 
+  // Sync state with server data when props change (e.g., after revalidation)
+  useEffect(() => {
+    setAgents(initialAgents)
+  }, [initialAgents])
+
+  useEffect(() => {
+    setDepartments(initialDepartments)
+  }, [initialDepartments])
+
   // Fetch agency members when Add Agent dialog opens
   const loadAgencyMembers = useCallback(() => {
     setMembersLoading(true)

@@ -2,6 +2,87 @@
 
 ## Recent Work
 
+### Critical Domain/Email Provisioning, Pricing Mismatch, Agent, Webhook Fixes — February 2026 ✅
+
+**Category:** Critical Bug Fixes / Provisioning / Pricing / Agent CRUD / Webhook Handlers
+
+**Files Changed:** 7 files — domains.ts, provisioning.ts, webhook-handlers.ts, agent-actions.ts, AgentsPageWrapper.tsx, business-email.ts, transfers.ts
+
+#### Overview
+Deep audit of production Vercel logs revealed CRITICAL provisioning failures, pricing mismatches, and missing webhook handlers. Root causes identified and fixed across domain registration, email ordering, transfers, live chat agents, and Paddle webhooks.
+
+#### 1. CRITICAL: `ensureResellerClubCustomer()` Never Called — Provisioning Always Failed
+
+**Problem:** `ensureResellerClubCustomer()` was DEFINED in `domains.ts` but NEVER CALLED anywhere. The `resellerclub_customer_id` column on agencies was never populated. After Paddle payment succeeded, provisioning ALWAYS failed with: `"Agency not configured for ResellerClub"`.
+
+**Production Evidence:** Vercel log showed:
+- `[Paddle Webhook] Domain/Email purchase completed: txn_01khkgyx4gb6yc1g68mwnkjbv8`
+- `[Provisioning] Multi-domain provisioning failed: Error: Agency not configured for ResellerClub`
+
+**Fix:** Added `ensureResellerClubCustomer()` calls to:
+- `createDomainCartCheckout()` — before creating Paddle transaction
+- `registerDomain()` — before single-domain registration
+- `createBusinessEmailOrder()` — via exported `ensureResellerClubCustomerForAgency()` wrapper
+- `initiateTransferIn()` — via dynamic import
+
+**CRITICAL KNOWLEDGE:** `ensureResellerClubCustomer()` MUST be called before ANY domain/email purchase flow. It creates a ResellerClub customer for the agency and saves the customer_id. Without it, all provisioning fails post-payment.
+
+#### 2. CRITICAL: Pricing Mismatch (107 vs 110) — Two Different Price Paths
+
+**Problem:** `searchDomains()` fetched LIVE RC prices and applied markup inline. `createDomainCartCheckout()` used `calculateDomainPrice()` from `domain-billing.ts` which fetched from 24-hour CACHED data. Cache staleness caused different prices at search vs checkout.
+
+**Fix:** Rewrote `createDomainCartCheckout()` to use the EXACT SAME live pricing path as `searchDomains()`:
+- Fetches live RC customer/selling and cost pricing
+- Uses same `applyMarkup()` function with same agency config
+- Same fallback logic (cost × 1.3 when no RC selling price)
+- Cart client sends domain names only (not prices), server recalculates — but now using identical live data
+
+**CRITICAL KNOWLEDGE:** There must be ONE pricing path, not two. `calculateDomainPrice()` in `domain-billing.ts` is for renewal/single operations. Cart checkout must use live RC data matching what `searchDomains()` showed.
+
+#### 3. Missing `domain_transfer` Webhook Handler
+
+**Problem:** `domain_transfer` was in the allowed purchase types list, but `handleDomainEmailPurchaseCompleted()` had no case for it — fell through to "Unknown purchase type" error.
+
+**Fix:** Created `provisionDomainTransfer()` function in `provisioning.ts` and wired it into the webhook handler switch.
+
+#### 4. Unhandled `transaction.updated` and `transaction.paid` Webhook Events
+
+**Problem:** Logs showed `[Paddle Webhook] Unhandled event type: transaction.updated` (×2) and `transaction.paid`. These are normal Paddle lifecycle events that fire before `transaction.completed`.
+
+**Fix:** Added explicit case handlers that log and acknowledge without provisioning (provisioning happens on `transaction.completed`).
+
+#### 5. Agent Add — Soft-Delete Reactivation
+
+**Problem:** Soft-deleted agents (is_active: false) still had DB records. Re-adding the same user triggered unique constraint violation (23505). Error: "This user is already registered as a chat agent."
+
+**Fix:** Completely rewrote `createAgent()` to:
+1. First check if agent exists (including soft-deleted) with `.maybeSingle()`
+2. If exists and active → return "already registered" error
+3. If exists and inactive → REACTIVATE with updated details (display name, email, role, etc.)
+4. If doesn't exist → insert new record as before
+
+Also added `useEffect` sync in `AgentsPageWrapper.tsx` to update `agents`/`departments` state when server-side props change after `revalidatePath`.
+
+#### 6. WHOIS Privacy Pricing Alignment
+
+**Problem:** Client-side privacy price used `$3 × markupRatio` (ratio approach). Server-side used `$3 × (1 + markupPct/100)` (percentage approach). These produced different numbers.
+
+**Fix:** Server-side `createDomainCartCheckout()` now uses the same ratio approach as the client: `privacyRetail = 3 × (domainRetail1yr / domainWholesale1yr) × years`.
+
+#### 7. Multi-Domain Provisioning Schema Fixes
+
+**Problem:** Multi-domain provisioning used `expiration_date` (wrong) instead of `expiry_date` (correct per migration). Also missing `sld`, `client_id`, and used wrong TLD format.
+
+**Fix:** Changed to `expiry_date` with 365.25 days/year, added `sld`, `client_id`, `.toLowerCase()` on domain name, fixed TLD extraction to include dot prefix.
+
+#### 8. Email + Transfer Flow Improvements
+
+**Problem:** `createBusinessEmailOrder()` returned error "Agency not configured for domain services" (wrong message) when RC customer ID was missing, instead of auto-creating it.
+
+**Fix:** Now auto-creates RC customer via `ensureResellerClubCustomerForAgency()` import. Fixed error message to say "email services". `initiateTransferIn()` also auto-creates RC customer.
+
+---
+
 ### Platform-Wide Audit: Domain TS Fixes, Live Chat Agent Filter, Transfer/Tags UI — February 16, 2026 ✅
 
 **Category:** Critical Bug Fixes / TypeScript Errors / UI Feature Completion / Documentation

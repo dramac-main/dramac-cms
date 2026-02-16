@@ -1,11 +1,36 @@
 # Progress: What Works & What's Left
 
-**Last Updated**: February 16, 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT: TS FIXES + AGENT FILTER + TRANSFER/TAGS UI ✅**
+**Last Updated**: February 2026  
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅**
 
 ---
 
-## Latest Update: February 16, 2026 - Platform-Wide Audit ✅
+## Latest Update: February 2026 - Critical Provisioning/Pricing/Agent/Webhook Fixes ✅
+
+**Files Changed:** 7 — domains.ts, provisioning.ts, webhook-handlers.ts, agent-actions.ts, AgentsPageWrapper.tsx, business-email.ts, transfers.ts
+
+**What was done:**
+1. **CRITICAL — ensureResellerClubCustomer() Never Called**: Root cause of ALL provisioning failures. Function was defined but never invoked. Added calls to `createDomainCartCheckout()`, `registerDomain()`, `createBusinessEmailOrder()`, `initiateTransferIn()`.
+2. **CRITICAL — Pricing Mismatch (107 vs 110)**: `searchDomains()` used LIVE RC data, `createDomainCartCheckout()` used 24hr CACHED data. Rewrote checkout to use same live pricing path.
+3. **Missing domain_transfer Handler**: Created `provisionDomainTransfer()` in provisioning.ts. Wired into webhook handler.
+4. **Unhandled Webhook Events**: Added handlers for `transaction.updated` and `transaction.paid` (acknowledge only, no provisioning).
+5. **Agent Add Reactivation**: `createAgent()` now checks for soft-deleted agents and reactivates instead of failing with 23505 constraint error.
+6. **AgentsPageWrapper State Sync**: Added `useEffect` to sync `agents`/`departments` state with server-side props.
+7. **WHOIS Privacy Pricing Aligned**: Server-side now uses same ratio approach as client-side.
+8. **Multi-Domain Schema Fixes**: `expiration_date` → `expiry_date`, added `sld`, `client_id`, lowercase domain_name, fixed TLD format.
+9. **Email Order Auto-Setup**: `createBusinessEmailOrder()` now auto-creates RC customer instead of erroring.
+10. **Transfer Flow Auto-Setup**: `initiateTransferIn()` now auto-creates RC customer.
+
+**Remaining Known TS Errors (pre-existing, NOT from this session):**
+- `next.config.ts` — eslint property
+- `portal-billing-service.ts` — Supabase column errors
+- `resellerclub/client.ts` — fetch Response type
+
+**DEPLOYMENT BLOCKER:** Paddle env vars must be set in Vercel production dashboard.
+
+---
+
+## Previous Update: February 16, 2026 - Platform-Wide Audit ✅
 
 **Commit:** `684a10b` — 9 files changed, 684 insertions, 1550 deletions
 

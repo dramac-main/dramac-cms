@@ -98,14 +98,25 @@ export async function initiateTransferIn(formData: FormData) {
     const agency = agencyRaw as AgencyRecord | null;
 
     let resellerclubOrderId: string | undefined;
+    let customerIdToUse = agency?.resellerclub_customer_id;
+
+    // Auto-create ResellerClub customer if not configured
+    if (!customerIdToUse) {
+      try {
+        const { ensureResellerClubCustomerForAgency } = await import('@/lib/actions/domains');
+        customerIdToUse = await ensureResellerClubCustomerForAgency(profile.agency_id, user.email || '');
+      } catch {
+        // Continue without — will create local record only
+      }
+    }
 
     // If ResellerClub is configured, initiate real transfer
-    if (agency?.resellerclub_customer_id) {
+    if (customerIdToUse) {
       try {
         const result = await transferService.initiateTransferIn({
           domainName,
           authCode,
-          customerId: agency.resellerclub_customer_id,
+          customerId: customerIdToUse,
           registrantContactId: registrantContactId || 'default',
           adminContactId: registrantContactId || 'default',
           techContactId: registrantContactId || 'default',

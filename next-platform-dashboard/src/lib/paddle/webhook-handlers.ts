@@ -79,6 +79,17 @@ export async function handlePaddleEvent(event: PaddleWebhookEvent): Promise<void
     case 'transaction.billed':
       await handleTransactionBilled(event);
       break;
+    case 'transaction.updated':
+      // transaction.updated fires when transaction status changes (e.g., draft → ready → paid)
+      // For domain/email purchases, the important event is transaction.completed
+      // Log and acknowledge but don't provision — wait for .completed
+      console.log(`[Paddle Webhook] Transaction updated: ${event.data.id} (status: ${event.data.status})`);
+      break;
+    case 'transaction.paid':
+      // transaction.paid fires when payment is captured but before completion
+      // Provisioning happens on transaction.completed — just acknowledge here
+      console.log(`[Paddle Webhook] Transaction paid: ${event.data.id}`);
+      break;
     case 'transaction.payment_failed':
       await handlePaymentFailed(event);
       break;
@@ -674,7 +685,8 @@ async function handleDomainEmailPurchaseCompleted(event: PaddleWebhookEvent): Pr
     const { 
       provisionDomainRegistration, 
       provisionDomainRenewal, 
-      provisionEmailOrder 
+      provisionEmailOrder,
+      provisionDomainTransfer,
     } = await import('@/lib/resellerclub/provisioning');
     
     // Get pending purchase by transaction ID
@@ -707,6 +719,8 @@ async function handleDomainEmailPurchaseCompleted(event: PaddleWebhookEvent): Pr
       result = await provisionDomainRegistration(purchase.id as string);
     } else if (purchaseType === 'domain_renew') {
       result = await provisionDomainRenewal(purchase.id as string);
+    } else if (purchaseType === 'domain_transfer') {
+      result = await provisionDomainTransfer(purchase.id as string);
     } else if (purchaseType === 'email_order') {
       result = await provisionEmailOrder(purchase.id as string);
     } else {
