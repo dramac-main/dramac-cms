@@ -732,6 +732,44 @@ async function handleDomainEmailPurchaseCompleted(event: PaddleWebhookEvent): Pr
       console.log(`[Paddle Webhook] Provisioning successful for ${purchaseType}:`, result.resourceId);
     } else {
       console.error(`[Paddle Webhook] Provisioning failed for ${purchaseType}:`, result.error);
+      
+      // =====================================================================
+      // AUTO-REFUND — Industry standard: refund customer when we can't deliver
+      // The customer has paid via Paddle but we failed to provision their
+      // domain/email via ResellerClub. We MUST refund them automatically.
+      // =====================================================================
+      try {
+        const { autoRefundTransaction } = await import('@/lib/paddle/transactions');
+        const refundResult = await autoRefundTransaction(
+          transactionId,
+          `Provisioning failed for ${purchaseType}: ${result.error || 'Unknown error'}`,
+          purchase.id as string
+        );
+        
+        if (refundResult.success) {
+          console.log(
+            `[Paddle Webhook] AUTO-REFUND SUCCESS: Adjustment ${refundResult.adjustmentId} ` +
+            `issued for transaction ${transactionId} (${purchaseType}: ${(purchase.purchase_data as any)?.domain_name || 'unknown'})`
+          );
+        } else {
+          // CRITICAL: Refund failed — needs manual intervention
+          console.error(
+            `[Paddle Webhook] ⚠️ AUTO-REFUND FAILED for transaction ${transactionId}: ${refundResult.error}. ` +
+            `MANUAL REFUND REQUIRED for purchase ${purchase.id}`
+          );
+          
+          // Update purchase status to flag for manual review
+          await updatePendingPurchaseStatus(purchase.id as string, 'refund_failed', {
+            refund_error: refundResult.error,
+            needs_manual_refund: true,
+          });
+        }
+      } catch (refundError) {
+        console.error(
+          `[Paddle Webhook] ⚠️ AUTO-REFUND EXCEPTION for transaction ${transactionId}:`,
+          refundError
+        );
+      }
     }
   } catch (error) {
     console.error('[Paddle Webhook] Error handling domain/email purchase:', error);

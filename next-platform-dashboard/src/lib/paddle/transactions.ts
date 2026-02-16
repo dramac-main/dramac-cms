@@ -8,6 +8,111 @@ import type { Transaction } from '@paddle/paddle-node-sdk';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseClient = any;
 
+// =============================================================================
+// Pre-Flight Balance Check — prevents overselling when RC balance is too low
+// =============================================================================
+
+/**
+ * Check if the reseller has enough ResellerClub balance to fulfill a domain order.
+ * This MUST be called BEFORE creating a Paddle transaction to prevent charging
+ * customers for domains we can't afford to register.
+ *
+ * Industry standard: WHMCS, cPanel reseller panels all do this check.
+ */
+export async function checkResellerBalance(wholesaleAmount: number): Promise<{
+  sufficient: boolean;
+  balance: number;
+  required: number;
+  currency: string;
+  shortfall: number;
+}> {
+  try {
+    const { getResellerClubClient } = await import('@/lib/resellerclub');
+    const client = getResellerClubClient();
+    const { balance, currency } = await client.getBalance();
+    
+    const sufficient = balance >= wholesaleAmount;
+    return {
+      sufficient,
+      balance,
+      required: wholesaleAmount,
+      currency,
+      shortfall: sufficient ? 0 : wholesaleAmount - balance,
+    };
+  } catch (error) {
+    console.error('[Paddle] Failed to check RC balance:', error);
+    // If we can't check balance, allow the transaction but log a warning.
+    // The provisioning step will catch insufficient funds and the auto-refund
+    // mechanism will handle it.
+    return {
+      sufficient: true, // fail-open: don't block checkout if RC is unreachable
+      balance: -1,
+      required: wholesaleAmount,
+      currency: 'USD',
+      shortfall: 0,
+    };
+  }
+}
+
+// =============================================================================
+// Auto-Refund — issues Paddle refund when provisioning fails
+// =============================================================================
+
+/**
+ * Issue a full refund via Paddle Adjustments API when provisioning fails.
+ * This is the safety net: if a customer paid but we couldn't register their
+ * domain (e.g., insufficient RC funds), we refund automatically.
+ *
+ * Industry standard: All major platforms auto-refund on provisioning failure.
+ */
+export async function autoRefundTransaction(
+  paddleTransactionId: string,
+  reason: string,
+  pendingPurchaseId?: string
+): Promise<{ success: boolean; adjustmentId?: string; error?: string }> {
+  if (!paddle) {
+    return { success: false, error: 'Paddle not configured' };
+  }
+
+  try {
+    console.log(`[Paddle] Issuing auto-refund for transaction ${paddleTransactionId}: ${reason}`);
+
+    // Paddle Billing uses "Adjustments" for refunds
+    // type: 'full' = refund the entire transaction amount (no items array needed)
+    // action: 'refund' = returns money to customer's payment method
+    const adjustment = await paddle.adjustments.create({
+      action: 'refund',
+      transactionId: paddleTransactionId,
+      reason: reason.substring(0, 255), // Paddle limits reason length
+      type: 'full', // Full refund — no items array needed
+    });
+
+    const adjustmentId = adjustment.id;
+    console.log(`[Paddle] Auto-refund created: ${adjustmentId} for transaction ${paddleTransactionId}`);
+
+    // Update the pending purchase status to 'refunded'
+    if (pendingPurchaseId) {
+      const admin = createAdminClient() as SupabaseClient;
+      await admin
+        .from('pending_purchases')
+        .update({
+          status: 'refunded',
+          refund_reason: reason,
+          paddle_refund_id: adjustmentId,
+          refunded_at: new Date().toISOString(),
+        })
+        .eq('id', pendingPurchaseId);
+    }
+
+    return { success: true, adjustmentId };
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error(`[Paddle] Auto-refund FAILED for ${paddleTransactionId}:`, errorMsg);
+    // Don't throw — log for manual intervention
+    return { success: false, error: errorMsg };
+  }
+}
+
 export interface CreateDomainPurchaseParams {
   agencyId: string;
   userId: string;
@@ -107,6 +212,32 @@ export async function createDomainPurchase(
   }
   
   try {
+    // =========================================================================
+    // PRE-FLIGHT BALANCE CHECK — Industry standard safety mechanism
+    // Prevents charging customers for domains we can't afford to register.
+    // This check runs BEFORE creating a Paddle transaction, so the customer
+    // is never charged if we know we can't fulfill the order.
+    // =========================================================================
+    const balanceCheck = await checkResellerBalance(params.wholesaleAmount);
+    if (!balanceCheck.sufficient) {
+      console.error(
+        `[Paddle] PRE-FLIGHT BLOCK: RC balance ($${balanceCheck.balance.toFixed(2)}) ` +
+        `insufficient for ${params.domainName} (needs $${balanceCheck.required.toFixed(2)}, ` +
+        `shortfall: $${balanceCheck.shortfall.toFixed(2)})`
+      );
+      throw new Error(
+        `Unable to process this domain order at the moment. ` +
+        `Please try again later or contact support. (Code: INSUFFICIENT_RESELLER_BALANCE)`
+      );
+    }
+
+    if (balanceCheck.balance > 0) {
+      console.log(
+        `[Paddle] Pre-flight OK: RC balance $${balanceCheck.balance.toFixed(2)} >= ` +
+        `wholesale cost $${balanceCheck.required.toFixed(2)} for ${params.domainName}`
+      );
+    }
+
     // Create Paddle transaction with custom non-catalog item
     const description = `${params.purchaseType.replace('domain_', 'Domain ')} - ${params.domainName} (${params.years} year${params.years > 1 ? 's' : ''})`;
     
@@ -233,6 +364,29 @@ export async function createEmailPurchase(
   }
   
   try {
+    // =========================================================================
+    // PRE-FLIGHT BALANCE CHECK — Same safety mechanism as domain purchases
+    // =========================================================================
+    const balanceCheck = await checkResellerBalance(params.wholesaleAmount);
+    if (!balanceCheck.sufficient) {
+      console.error(
+        `[Paddle] PRE-FLIGHT BLOCK: RC balance ($${balanceCheck.balance.toFixed(2)}) ` +
+        `insufficient for ${params.domainName} email (needs $${balanceCheck.required.toFixed(2)}, ` +
+        `shortfall: $${balanceCheck.shortfall.toFixed(2)})`
+      );
+      throw new Error(
+        `Unable to process this email order at the moment. ` +
+        `Please try again later or contact support. (Code: INSUFFICIENT_RESELLER_BALANCE)`
+      );
+    }
+
+    if (balanceCheck.balance > 0) {
+      console.log(
+        `[Paddle] Pre-flight OK: RC balance $${balanceCheck.balance.toFixed(2)} >= ` +
+        `wholesale cost $${balanceCheck.required.toFixed(2)} for ${params.domainName} email`
+      );
+    }
+
     // Create Paddle transaction with custom non-catalog item
     const description = `Business Email - ${params.domainName} (${params.numberOfAccounts} account${params.numberOfAccounts > 1 ? 's' : ''}, ${params.months} month${params.months > 1 ? 's' : ''})`;
     
