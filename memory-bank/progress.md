@@ -1,11 +1,42 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅**
 
 ---
 
-## Latest Update: February 2026 - Provisioning Auto-Create Fallback + Retry ✅
+## Latest Update: February 2026 - RC Contact Validation Guards + Live Chat Rating Error Handling ✅
+
+**Commit:** `1696351`
+**Files Changed:** 4 — contacts.ts, provisioning.ts, ChatWidget.tsx, WidgetRating.tsx
+
+**What was done:**
+1. **contacts.ts — Validation guards**: Added guards in `create()`, `listByCustomer()`, `createOrUpdate()` to catch `undefined`/`null` customerId before hitting RC API. Throws descriptive error instead of RC HTTP 500.
+2. **provisioning.ts — Diagnostic logging**: Added `console.log` to `ensureResellerClubCustomerForProvisioning()` at entry, existing customer, and new customer creation paths.
+3. **ChatWidget.tsx — handleRating returns boolean**: Changed from `void` to `Promise<boolean>`, returns `true`/`false` for success/failure, `console.error` with body logging.
+4. **WidgetRating.tsx — Error handling with retry**: Checks `handleRating` return value, shows "Thank You" only on success, shows red error message + "Retry" button on failure.
+
+**ROOT CAUSE DISCOVERED — Vercel Deployment Stale:**
+- Production deployment `dpl_2wQtiTdKLQSSRmg9DB1sRoW15u7w` is STALE
+- Commits `8c3b2cb`, `f5762d0`, `1f620d3` all pushed to `origin/main` but NEVER deployed
+- Evidence: Searched all 414 log lines for `ensureResellerClub` — ZERO matches (function not executing)
+- Evidence: Error is at `contacts/search.json` level — old code before null check even existed
+- Local build succeeds (`npx next build` exit 0) — not a build failure
+
+**CRITICAL ACTION REQUIRED:**
+- Manual Vercel redeploy needed — auto-deploy may be disabled or broken
+- Check Vercel Dashboard → Deployments → verify latest deployment timestamp
+- After redeploy, verify provisioning diagnostic logs appear in Vercel logs
+
+**Live Chat Rating — Root Cause Found:**
+- `handleRating` returned `void`, `console.warn`'d on failure
+- `WidgetRating.handleSubmit` ALWAYS set `isSubmitted = true` regardless of API result
+- User saw "Thank You" even when rating API call failed silently
+- Fix: proper `Promise<boolean>` return, error state, retry capability
+
+---
+
+## Previous Update: February 2026 - Provisioning Auto-Create Fallback + Retry ✅
 
 **Commit:** `f5762d0`
 **Files Changed:** 4 — provisioning.ts, success/page.tsx, retry/route.ts, status/route.ts

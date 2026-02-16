@@ -2,6 +2,43 @@
 
 ## Recent Work
 
+### RC Contact Validation Guards + Live Chat Rating Error Handling — February 2026 ✅
+
+**Category:** Critical Bug Fix / Defense-in-Depth / UX
+**Commit:** `1696351`
+**Files Changed:** 4 — contacts.ts, provisioning.ts, ChatWidget.tsx, WidgetRating.tsx
+
+#### Overview
+After pushing commit `f5762d0` (provisioning auto-create fallback), production logs STILL showed `"Invalid customer-id: undefined"` error. Root cause: **Vercel deployment is stale** — deployment `dpl_2wQtiTdKLQSSRmg9DB1sRoW15u7w` never picked up commits `8c3b2cb`, `f5762d0`, or `1f620d3`. All fix code exists in `origin/main` but is NOT running in production.
+
+Additionally, live chat star ratings appeared to submit but silently failed — the "Thank You" message showed regardless of API success/failure.
+
+#### Fix 1 — RC Contact Validation Guards (contacts.ts):
+Added validation guards in 3 methods (`create()`, `listByCustomer()`, `createOrUpdate()`) to catch `undefined`/`null`/`'undefined'`/`'null'` customerId BEFORE hitting the RC API. Throws descriptive error instead of letting RC return cryptic HTTP 500.
+
+#### Fix 2 — Provisioning Diagnostic Logging (provisioning.ts):
+Added `console.log` statements to `ensureResellerClubCustomerForProvisioning()` at:
+- Entry (agency ID + user ID)
+- When agency already has RC customer
+- When creating new RC customer
+This enables tracing in Vercel logs to confirm the function actually executes after deployment.
+
+#### Fix 3 — Live Chat Rating Error Handling (ChatWidget.tsx + WidgetRating.tsx):
+- `handleRating` now returns `Promise<boolean>` (was `void`)
+- Returns `true` on success, `false` on failure
+- `WidgetRating` checks return value: shows "Thank You" only on success
+- Shows red error message + "Retry" button on failure
+- Changed `console.warn` to `console.error` with response body logging
+
+#### CRITICAL DEPLOYMENT ISSUE:
+Vercel auto-deploy appears to NOT be picking up pushes to `origin/main`. All commits since at least `8c3b2cb` are NOT deployed. Manual Vercel redeploy is required. Check:
+1. Vercel Dashboard → Deployments → verify latest deployment timestamp
+2. If stale, trigger manual redeploy from Vercel Dashboard
+3. Verify auto-deploy is enabled for `main` branch
+4. Check for build errors in Vercel deployment logs
+
+---
+
 ### Provisioning Auto-Create Fallback + Retry Mechanism + UX — February 2026 ✅
 
 **Category:** Critical Bug Fix / Provisioning Reliability / UX
@@ -32,7 +69,7 @@ All 4 provisioning paths (single domain, multi-domain, email, transfer) now have
 - **Amount display fixed** — DB stores dollars, was incorrectly multiplied by 100 (showed $11098 instead of $110.98)
 - **Polling restarts after retry** — watches `purchase.status` changes
 
-#### Confirmed: Live Chat Rating System is FULLY IMPLEMENTED ✅
+#### Confirmed: Live Chat Rating System is FULLY IMPLEMENTED ✅ (UI Bug Fixed in `1696351`)
 Complete audit found the rating system works end-to-end:
 - ✅ `ChatRating.tsx` — 5-star UI with comment textarea
 - ✅ `ChatWidget.tsx` — transitions to rating state on resolve/end-chat
@@ -40,7 +77,7 @@ Complete audit found the rating system works end-to-end:
 - ✅ `notifyChatRating()` — low-rating alerts to agent + owner
 - ✅ Analytics dashboard reads `mod_chat_conversations.rating`
 - ✅ `enableSatisfactionRating` toggle in widget settings
-- No bugs found.
+- **BUG FOUND LATER:** `handleRating` returned `void`, `WidgetRating` always showed "Thank You" even on API failure. Fixed in commit `1696351` — now returns `Promise<boolean>` with proper error/retry UI.
 
 ---
 
