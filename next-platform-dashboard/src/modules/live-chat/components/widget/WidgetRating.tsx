@@ -11,7 +11,7 @@ import type { WidgetPublicSettings } from './ChatWidget'
 
 interface WidgetRatingProps {
   settings: WidgetPublicSettings
-  onSubmit: (rating: number, comment?: string) => void
+  onSubmit: (rating: number, comment?: string) => Promise<boolean>
   onClose: () => void
 }
 
@@ -25,15 +25,22 @@ export function WidgetRating({
   const [comment, setComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState(false)
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     if (rating === 0) return
 
     setIsSubmitting(true)
-    await onSubmit(rating, comment.trim() || undefined)
+    setSubmitError(false)
+    const success = await onSubmit(rating, comment.trim() || undefined)
     setIsSubmitting(false)
-    setIsSubmitted(true)
+    
+    if (success) {
+      setIsSubmitted(true)
+    } else {
+      setSubmitError(true)
+    }
   }
 
   const displayRating = hoveredRating || rating
@@ -209,8 +216,14 @@ export function WidgetRating({
               color: settings.textColor,
             }}
           >
-            {isSubmitting ? 'Submitting...' : 'Submit Rating'}
+            {isSubmitting ? 'Submitting...' : submitError ? 'Retry' : 'Submit Rating'}
           </button>
+
+          {submitError && (
+            <p className="mt-1 text-xs text-red-500 text-center">
+              Failed to submit rating. Please try again.
+            </p>
+          )}
 
           <button
             type="button"

@@ -24,6 +24,11 @@ export class ContactService {
    * Create a new contact
    */
   async create(params: ContactCreateParams): Promise<{ contactId: string }> {
+    // GUARD: Validate customerId
+    if (!params.customerId || params.customerId === 'undefined' || params.customerId === 'null') {
+      throw new Error(`[ContactService] Cannot create contact: invalid customerId="${params.customerId}"`);
+    }
+
     const apiParams: Record<string, string | number> = {
       'name': params.name,
       'email': params.email,
@@ -114,6 +119,11 @@ export class ContactService {
     customerId: string, 
     options?: { type?: string; page?: number; limit?: number }
   ): Promise<{ contacts: Contact[]; total: number }> {
+    // GUARD: Validate customerId before hitting RC API
+    if (!customerId || customerId === 'undefined' || customerId === 'null') {
+      throw new Error(`[ContactService] Invalid customer-id: "${customerId}" — cannot search contacts without a valid RC customer ID`);
+    }
+
     const params: Record<string, string | number> = {
       'customer-id': customerId,
       'no-of-records': options?.limit || 500,
@@ -173,6 +183,11 @@ export class ContactService {
    * Returns existing contact if matches by email, otherwise creates new
    */
   async createOrUpdate(params: ContactCreateParams): Promise<{ contactId: string; created: boolean }> {
+    // GUARD: Validate customerId before any RC API calls
+    if (!params.customerId || params.customerId === 'undefined' || params.customerId === 'null') {
+      throw new Error(`[ContactService] Cannot create/update contact: invalid customerId="${params.customerId}". Ensure ResellerClub customer is created first.`);
+    }
+
     // Try to find existing contact by email
     const { contacts } = await this.listByCustomer(params.customerId);
     const existing = contacts.find(c => c.email.toLowerCase() === params.email.toLowerCase());

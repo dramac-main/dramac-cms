@@ -393,8 +393,11 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
 
   // Handle rating submission
   const handleRating = useCallback(
-    async (rating: number, comment?: string) => {
-      if (!conversationId || !visitorId) return
+    async (rating: number, comment?: string): Promise<boolean> => {
+      if (!conversationId || !visitorId) {
+        console.warn('[DRAMAC Chat] Cannot submit rating: missing conversationId or visitorId')
+        return false
+      }
 
       try {
         const res = await fetch(`${API_BASE}/api/modules/live-chat/rating`, {
@@ -403,10 +406,14 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
           body: JSON.stringify({ conversationId, visitorId, rating, comment: comment || '' }),
         })
         if (!res.ok) {
-          console.warn('[DRAMAC Chat] Rating submission failed:', res.status)
+          const errorBody = await res.text().catch(() => 'unknown')
+          console.error('[DRAMAC Chat] Rating submission failed:', res.status, errorBody)
+          return false
         }
+        return true
       } catch (err) {
-        console.warn('[DRAMAC Chat] Rating submission error:', err)
+        console.error('[DRAMAC Chat] Rating submission error:', err)
+        return false
       }
     },
     [conversationId, visitorId]

@@ -17,6 +17,8 @@ async function ensureResellerClubCustomerForProvisioning(
   agencyId: string,
   userId: string
 ): Promise<string | null> {
+  console.log(`[Provisioning] ensureResellerClubCustomerForProvisioning called for agency=${agencyId}, user=${userId}`);
+  
   // Check if already set
   const { data: agency } = await admin
     .from('agencies')
@@ -25,8 +27,11 @@ async function ensureResellerClubCustomerForProvisioning(
     .maybeSingle();
 
   if (agency?.resellerclub_customer_id) {
+    console.log(`[Provisioning] Agency already has RC customer: ${agency.resellerclub_customer_id}`);
     return agency.resellerclub_customer_id as string;
   }
+
+  console.log(`[Provisioning] Agency has NO RC customer ID, creating one...`);
 
   // Get user email for RC customer creation
   const { data: profile } = await admin
