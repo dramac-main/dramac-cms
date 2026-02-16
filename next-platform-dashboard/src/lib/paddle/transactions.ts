@@ -213,25 +213,31 @@ export async function createDomainPurchase(
   
   try {
     // =========================================================================
-    // PRE-FLIGHT BALANCE CHECK — Industry standard safety mechanism
-    // Prevents charging customers for domains we can't afford to register.
-    // This check runs BEFORE creating a Paddle transaction, so the customer
-    // is never charged if we know we can't fulfill the order.
+    // PRE-FLIGHT BALANCE CHECK — Fail-open design with auto-refund safety
+    // 
+    // Strategy: WARN but DO NOT BLOCK. Let the checkout proceed even if RC 
+    // balance is insufficient. This prevents false positives from blocking 
+    // legitimate orders.
+    //
+    // Safety net: Auto-refund mechanism (Strategy 2 in payment safety) will 
+    // issue full refund if provisioning fails after payment. Customer is 
+    // protected and we avoid incorrectly blocking orders.
+    //
+    // Why fail-open?
+    // - getBalance() API call can fail (network, API timeout, auth issues)
+    // - Balance can change between check and provisioning (race condition)
+    // - False positives damage user experience more than auto-refunds
+    // - Auto-refund provides stronger safety than pre-flight blocking
     // =========================================================================
     const balanceCheck = await checkResellerBalance(params.wholesaleAmount);
     if (!balanceCheck.sufficient) {
-      console.error(
-        `[Paddle] PRE-FLIGHT BLOCK: RC balance ($${balanceCheck.balance.toFixed(2)}) ` +
+      console.warn(
+        `[Paddle] PRE-FLIGHT WARNING: RC balance ($${balanceCheck.balance.toFixed(2)}) ` +
         `insufficient for ${params.domainName} (needs $${balanceCheck.required.toFixed(2)}, ` +
-        `shortfall: $${balanceCheck.shortfall.toFixed(2)})`
+        `shortfall: $${balanceCheck.shortfall.toFixed(2)}). ` +
+        `Allowing checkout to proceed - auto-refund will handle provisioning failure.`
       );
-      throw new Error(
-        `Unable to process this domain order at the moment. ` +
-        `Please try again later or contact support. (Code: INSUFFICIENT_RESELLER_BALANCE)`
-      );
-    }
-
-    if (balanceCheck.balance > 0) {
+    } else if (balanceCheck.balance > 0) {
       console.log(
         `[Paddle] Pre-flight OK: RC balance $${balanceCheck.balance.toFixed(2)} >= ` +
         `wholesale cost $${balanceCheck.required.toFixed(2)} for ${params.domainName}`
