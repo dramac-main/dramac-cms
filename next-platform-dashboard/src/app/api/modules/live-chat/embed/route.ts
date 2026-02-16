@@ -23,10 +23,26 @@ export async function GET(request: NextRequest) {
     })
   }
 
+  // Validate siteId is a valid UUID to prevent XSS injection
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!uuidRegex.test(siteId)) {
+    return new NextResponse('// Error: invalid siteId format', {
+      status: 400,
+      headers: { 'Content-Type': 'application/javascript' },
+    })
+  }
+
   // Determine the base URL for the widget
+  // Validate host to prevent XSS injection via Host header
   const protocol = request.headers.get('x-forwarded-proto') || 'https'
-  const host = request.headers.get('host') || 'app.dramacagency.com'
+  const rawHost = request.headers.get('host') || 'app.dramacagency.com'
+  // Strip anything that's not a valid hostname character
+  const host = rawHost.replace(/[^a-zA-Z0-9.\-:]/g, '')
   const baseUrl = `${protocol}://${host}`
+
+  // Use JSON.stringify for safe interpolation into JavaScript
+  const safeSiteId = JSON.stringify(siteId)
+  const safeBaseUrl = JSON.stringify(baseUrl)
 
   const script = `
 (function() {
@@ -36,8 +52,8 @@ export async function GET(request: NextRequest) {
   if (window.__dramacChatLoaded) return;
   window.__dramacChatLoaded = true;
 
-  var SITE_ID = '${siteId}';
-  var BASE_URL = '${baseUrl}';
+  var SITE_ID = ${safeSiteId};
+  var BASE_URL = ${safeBaseUrl};
   var WIDGET_URL = BASE_URL + '/embed/chat-widget?siteId=' + SITE_ID;
   var SETTINGS_URL = BASE_URL + '/api/modules/live-chat/widget?siteId=' + SITE_ID;
 

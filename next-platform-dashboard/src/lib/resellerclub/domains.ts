@@ -148,18 +148,28 @@ export class DomainService {
   
   /**
    * Get customer pricing for TLDs (what end-customers pay)
-   * This reflects ResellerClub markups and should be used as retail price
+   * This reflects the selling prices configured in your ResellerClub panel
+   * (cost + your configured profit margin, e.g. 100% profit → 2× cost).
    *
    * API docs: GET /api/products/customer-price.json
-   * Params: auth-userid, api-key, customer-id (optional)
+   * Params: auth-userid, api-key, customer-id (OPTIONAL)
+   * When customer-id is omitted, returns the DEFAULT customer pricing
+   * configured by the reseller — i.e. the selling prices from your RC panel.
    * NOTE: Does NOT accept product-key — returns ALL products at once.
    */
-  async getCustomerPricing(customerId: string, tlds?: string[]): Promise<Record<string, DomainPrice>> {
+  async getCustomerPricing(customerId?: string, tlds?: string[]): Promise<Record<string, DomainPrice>> {
     const tldsToGet = tlds || SUPPORTED_TLDS;
+    
+    // Only include customer-id if provided and non-empty.
+    // When omitted, the API returns the reseller's default selling prices.
+    const params: Record<string, string> = {};
+    if (customerId && customerId.trim()) {
+      params['customer-id'] = customerId;
+    }
     
     const response = await this.client.get<Record<string, Record<string, unknown>>>(
       'products/customer-price.json',
-      { 'customer-id': customerId }
+      params
     );
     
     return this.parsePricingResponse(response, tldsToGet);
@@ -184,7 +194,10 @@ export class DomainService {
   }
   
   /**
-   * Get reseller pricing for TLDs (slab-based pricing you configure)
+   * Get reseller pricing for TLDs (slab-based intermediate pricing)
+   * WARNING: This returns slab-based RESELLER pricing (≈ cost + small margin),
+   * NOT the selling prices shown in the RC panel. For selling prices,
+   * use getCustomerPricing() instead.
    * @deprecated Use getCustomerPricing for retail or getResellerCostPricing for wholesale
    *
    * API docs: GET /api/products/reseller-price.json

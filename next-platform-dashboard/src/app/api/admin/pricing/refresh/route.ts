@@ -40,13 +40,13 @@ export async function POST(request: Request) {
     }
     
     // Use a system-wide customer ID (or first agency's) - super admin can refresh for all
-    // For now, just refresh the global cache without customer ID requirement
-    const customerId = ''; // Super admin refreshes global pricing
+    // customer-price.json works WITHOUT customer-id — returns default selling prices
+    const customerId = ''; // No customer ID needed for default selling prices
     
     // Parse request body for sync options
     const body = await request.json().catch(() => ({}));
     const syncType = body.syncType || 'full'; // 'domain', 'email', or 'full'
-    const pricingTypes = body.pricingTypes || ['reseller', 'cost'];
+    const pricingTypes = body.pricingTypes || ['customer', 'cost'];
     
     const results: {
       domain?: unknown;

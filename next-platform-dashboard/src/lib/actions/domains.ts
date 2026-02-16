@@ -141,10 +141,13 @@ export async function searchDomains(
     const markupValue = pricing?.default_markup_value ?? 0;
 
     // How pricing works:
-    // 1. ResellerClub provides TWO price tiers:
+    // 1. ResellerClub provides TWO relevant price tiers:
     //    - Cost/wholesale price: what you pay RC (your cost)
-    //    - Customer/selling price: the retail price you configured in RC panel
-    //      (reflects the profit margin you set in RC, e.g. 100% → selling = 2× cost)
+    //      → API: products/reseller-cost-price.json (no customer-id needed)
+    //    - Customer/selling price: the retail price from your RC panel
+    //      → API: products/customer-price.json (customer-id OPTIONAL)
+    //      When called WITHOUT customer-id, returns your default selling prices
+    //      (= cost × (1 + your configured profit %), e.g. 100% → 2× cost).
     // 2. The DRAMAC agency markup is an ADDITIONAL layer on top of RC selling price.
     //    Default 0% means: use exactly what you set in RC panel.
     //    Setting e.g. 10% means: add 10% on top of RC selling price.
@@ -164,9 +167,9 @@ export async function searchDomains(
         const availability = await domainService.suggestDomains(cleanKeyword, popularTlds);
         
         // Fetch TWO price tiers from ResellerClub in parallel:
-        // 1. Reseller pricing (products/reseller-price.json) — the SELLING prices
-        //    configured in your RC panel. No customer-id needed. This is the source of
-        //    truth for what to charge end-customers.
+        // 1. Customer/selling pricing (products/customer-price.json) — the SELLING
+        //    prices from your RC panel (cost × (1 + profit %)). No customer-id needed;
+        //    when omitted the API returns your default selling prices.
         // 2. Cost pricing (products/reseller-cost-price.json) — WHOLESALE prices
         //    (what you pay RC). Used to show profit margin.
 
@@ -182,11 +185,12 @@ export async function searchDomains(
 
         const [sellingResult, wholesaleResult] = await Promise.all([
           (async () => {
-            // reseller-price.json: your configured selling prices (no customer-id needed)
-            const rcSelling = await domainService.getResellerPricing(popularTlds);
+            // customer-price.json WITHOUT customer-id: returns your configured
+            // selling prices (= cost × (1 + profit margin from RC panel)).
+            const rcSelling = await domainService.getCustomerPricing(undefined, popularTlds);
             return Object.fromEntries(Object.entries(rcSelling).map(([tld, price]) => [tld, mapDomainPrice(price)]));
           })().catch((err) => {
-            console.warn('[Domains] Could not fetch RC reseller/selling pricing:', err instanceof Error ? err.message : String(err));
+            console.warn('[Domains] Could not fetch RC customer/selling pricing:', err instanceof Error ? err.message : String(err));
             return null;
           }),
           (async () => {
@@ -202,9 +206,9 @@ export async function searchDomains(
         if (wholesaleResult) wholesaleByTld = wholesaleResult as Record<string, SimplePrice>;
 
         if (Object.keys(sellingByTld).length > 0) {
-          console.log(`[Domains] Fetched live selling pricing for ${Object.keys(sellingByTld).length} TLDs`);
+          console.log(`[Domains] Fetched live customer/selling pricing for ${Object.keys(sellingByTld).length} TLDs`);
         } else {
-          console.warn('[Domains] RC selling pricing returned empty — will use cost × markup as fallback');
+          console.warn('[Domains] RC customer pricing returned empty — will use cost × markup as fallback');
         }
         if (Object.keys(wholesaleByTld).length > 0) {
           console.log(`[Domains] Fetched live cost pricing for ${Object.keys(wholesaleByTld).length} TLDs`);
@@ -214,7 +218,7 @@ export async function searchDomains(
 
         const results: DomainSearchResult[] = availability.map(item => {
           const tld = domainService.extractTld(item.domain);
-          const rcSelling = sellingByTld[tld];    // RC selling prices (your configured retail)
+          const rcSelling = sellingByTld[tld];    // RC customer/selling prices (your configured retail)
           const rcCost = wholesaleByTld[tld];      // RC cost prices (what you pay RC)
 
           const fallbackBase = 12.99;
@@ -230,7 +234,7 @@ export async function searchDomains(
           const wholesaleTransfer = rcCost?.transfer || baseWholesale * 0.9;
 
           // RETAIL (selling) prices — what the agency charges their clients.
-          // Base retail = RC reseller/selling price (reflects the profit margin
+          // Base retail = RC customer price (reflects the profit margin
           // you configured in your ResellerClub panel, e.g. 100% = 2× cost).
           // The DRAMAC agency markup (if any) is applied ON TOP of these prices.
           // With markup=0% (default), prices match exactly what's in your RC panel.

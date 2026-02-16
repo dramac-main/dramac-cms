@@ -347,9 +347,10 @@ export default function PricingManagementClient() {
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>
-              <strong className="text-foreground">ResellerClub Selling Prices</strong> — The retail
-              prices you&apos;ve configured in your ResellerClub panel, including your profit margin.
-              These are the base prices shown to end customers.
+              <strong className="text-foreground">Customer Selling Prices</strong> — The retail
+              prices from your ResellerClub panel (cost × (1 + your profit margin)).
+              Fetched via <code>customer-price.json</code> — this is the source of truth for what
+              end-customers pay.
             </p>
             <p>
               <strong className="text-foreground">Cost Prices</strong> — What you pay ResellerClub
@@ -357,7 +358,7 @@ export default function PricingManagementClient() {
             </p>
             <p>
               <strong className="text-foreground">Agency Markup</strong> — An optional additional markup
-              applied on top of RC selling prices. Configured per-agency in their pricing settings.
+              applied on top of RC selling prices. Configured per-agency in their domain settings.
             </p>
 
             <Separator />
@@ -393,9 +394,9 @@ export default function PricingManagementClient() {
               className="flex items-center justify-between p-3 rounded-md border hover:bg-muted/50 transition-colors group"
             >
               <div>
-                <p className="text-sm font-medium group-hover:text-primary transition-colors">Agency Pricing Settings</p>
+                <p className="text-sm font-medium group-hover:text-primary transition-colors">Agency Domain Settings</p>
                 <p className="text-xs text-muted-foreground">
-                  Configure markup rates and TLD-specific pricing
+                  Configure agency-level markup rates and TLD-specific pricing
                 </p>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />

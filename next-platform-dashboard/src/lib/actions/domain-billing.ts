@@ -201,12 +201,12 @@ export async function calculateDomainPrice(params: {
       const { pricingCacheService } = await import('@/lib/resellerclub/pricing-cache');
       
       if (isClientAvailable()) {
-        // Get cached reseller/selling pricing (your configured retail prices from RC panel)
-        // Uses 'reseller' type — does NOT require a customer ID
+        // Get cached customer/selling pricing (your configured retail prices from RC panel)
+        // Uses 'customer' type WITHOUT customer-id — returns default selling prices
         const sellingPriceData = await pricingCacheService.getCachedDomainPrice(
           params.tld,
-          '', // No customer ID needed for reseller pricing
-          'reseller',
+          '', // No customer ID needed — API returns default selling prices
+          'customer',
           24 // 24-hour cache
         );
         

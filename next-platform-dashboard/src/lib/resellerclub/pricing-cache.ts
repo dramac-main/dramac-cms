@@ -70,7 +70,8 @@ export const pricingCacheService = {
         // Fetch pricing from appropriate API
         try {
           if (pricingType === 'customer') {
-            prices = await domainService.getCustomerPricing(customerId, tlds);
+            // customer-price.json works without customer-id (returns default selling prices)
+            prices = await domainService.getCustomerPricing(customerId || undefined, tlds);
             endpoint = 'products/customer-price.json';
           } else if (pricingType === 'cost') {
             prices = await domainService.getResellerCostPricing(tlds);
@@ -370,7 +371,8 @@ export const pricingCacheService = {
       
       // Return live data immediately
       if (pricingType === 'customer') {
-        const prices = await domainService.getCustomerPricing(customerId, [tld]);
+        // customer-price.json works without customer-id
+        const prices = await domainService.getCustomerPricing(customerId || undefined, [tld]);
         return prices[tld] || null;
       } else if (pricingType === 'cost') {
         const prices = await domainService.getResellerCostPricing([tld]);

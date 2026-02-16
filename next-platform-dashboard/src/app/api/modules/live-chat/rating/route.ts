@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { notifyChatRating } from '@/modules/live-chat/lib/chat-notifications'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,10 +46,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient()
 
-    // Validate visitor owns this conversation
+    // Fetch full conversation details for validation + notification
     const { data: convData } = await (supabase as any)
       .from('mod_chat_conversations')
-      .select('visitor_id')
+      .select('visitor_id, site_id, assigned_agent_id')
       .eq('id', conversationId)
       .single()
 
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update conversation with rating
-    const { data: updatedConv, error } = await (supabase as any)
+    const { error } = await (supabase as any)
       .from('mod_chat_conversations')
       .update({
         rating,
@@ -68,29 +69,47 @@ export async function POST(request: NextRequest) {
         rated_at: new Date().toISOString(),
       })
       .eq('id', conversationId)
-      .select('assigned_agent_id, site_id')
-      .single()
 
     if (error) throw error
 
-    // Notify the assigned agent about the new rating via Supabase Realtime.
-    // Inserting a system message triggers postgres_changes subscriptions
-    // that agents are already listening to for this conversation.
-    if (updatedConv?.assigned_agent_id) {
-      try {
-        await (supabase as any)
-          .from('mod_chat_messages')
-          .insert({
-            conversation_id: conversationId,
-            site_id: updatedConv.site_id,
-            sender_type: 'system',
-            content_type: 'system',
-            content: `Customer rated this conversation ${rating}/5${comment ? `: "${comment}"` : ''}`,
-          })
-      } catch (notifyError) {
-        // Don't fail the rating submission if notification fails
-        console.warn('[LiveChat Rating] Failed to create rating notification:', notifyError)
+    // Send notification to the assigned agent (and site owner for low ratings)
+    try {
+      // Fetch visitor name for the notification
+      let visitorName: string | undefined
+      const { data: visitor } = await (supabase as any)
+        .from('mod_chat_visitors')
+        .select('name')
+        .eq('id', visitorId)
+        .single()
+      visitorName = visitor?.name || undefined
+
+      // Fetch agent profile if assigned
+      let agentName: string | undefined
+      let agentUserId: string | undefined
+      if (convData.assigned_agent_id) {
+        const { data: agent } = await (supabase as any)
+          .from('mod_chat_agents')
+          .select('user_id, display_name')
+          .eq('id', convData.assigned_agent_id)
+          .single()
+        if (agent) {
+          agentUserId = agent.user_id
+          agentName = agent.display_name || undefined
+        }
       }
+
+      await notifyChatRating({
+        siteId: convData.site_id,
+        conversationId,
+        visitorName,
+        agentName,
+        agentUserId,
+        rating,
+        comment: comment || undefined,
+      })
+    } catch (notifyError) {
+      // Notification failure should not fail the rating submission
+      console.error('[LiveChat Rating API] Notification error:', notifyError)
     }
 
     return NextResponse.json(

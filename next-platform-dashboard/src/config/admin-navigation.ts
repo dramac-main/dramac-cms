@@ -47,7 +47,7 @@ export const adminNavigationItems: AdminNavItem[] = [
   { name: "Module Requests", href: "/admin/modules/requests", icon: Inbox, group: "Management" },
   { name: "Module Analytics", href: "/admin/modules/analytics", icon: BarChart3, group: "Management" },
   { name: "Module Studio", href: "/admin/modules/studio", icon: Blocks, group: "Management" },
-  { name: "Pricing Cache", href: "/admin/pricing", icon: DollarSign, group: "Management" },
+  { name: "Domain Pricing", href: "/admin/pricing", icon: DollarSign, group: "Management" },
   
   // Revenue & Analytics
   { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard, group: "Revenue" },

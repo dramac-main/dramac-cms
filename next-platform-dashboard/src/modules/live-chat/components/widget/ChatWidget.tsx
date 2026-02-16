@@ -397,13 +397,16 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
       if (!conversationId || !visitorId) return
 
       try {
-        await fetch(`${API_BASE}/api/modules/live-chat/rating`, {
+        const res = await fetch(`${API_BASE}/api/modules/live-chat/rating`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ conversationId, visitorId, rating, comment: comment || '' }),
         })
-      } catch {
-        // Silent fail — rating is optional
+        if (!res.ok) {
+          console.warn('[DRAMAC Chat] Rating submission failed:', res.status)
+        }
+      } catch (err) {
+        console.warn('[DRAMAC Chat] Rating submission error:', err)
       }
     },
     [conversationId, visitorId]

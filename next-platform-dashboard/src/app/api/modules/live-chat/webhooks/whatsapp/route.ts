@@ -48,14 +48,22 @@ export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text()
 
-    // Verify signature
+    // Verify signature — ALWAYS require it when app secret is configured.
+    // Without this check, an attacker could omit the header to bypass verification.
     const signature = request.headers.get('x-hub-signature-256') || ''
-    if (signature) {
+    const appSecret = process.env.WHATSAPP_APP_SECRET || process.env.META_APP_SECRET
+    if (appSecret) {
+      if (!signature) {
+        console.error('[WhatsApp Webhook] Missing signature header')
+        return NextResponse.json({ error: 'Missing signature' }, { status: 403 })
+      }
       const valid = await verifyWebhookSignature(rawBody, signature)
       if (!valid) {
         console.error('[WhatsApp Webhook] Invalid signature')
         return NextResponse.json({ error: 'Invalid signature' }, { status: 403 })
       }
+    } else {
+      console.warn('[WhatsApp Webhook] No app secret configured — signature verification skipped')
     }
 
     const payload: WhatsAppWebhookPayload = JSON.parse(rawBody)
