@@ -157,16 +157,20 @@ export async function POST(request: NextRequest) {
 
     if (departmentId) convInsert.department_id = departmentId
 
-    // Auto-assign to available agent
-    const { data: availableAgent } = await (supabase as any)
+    // Auto-assign to available online agent (not 'away' — away agents shouldn't get new chats)
+    const { data: availableAgents } = await (supabase as any)
       .from('mod_chat_agents')
-      .select('id')
+      .select('id, current_chat_count, max_concurrent_chats')
       .eq('site_id', siteId)
       .eq('is_active', true)
-      .in('status', ['online', 'away'])
+      .eq('status', 'online')
       .order('current_chat_count', { ascending: true })
-      .limit(1)
-      .maybeSingle()
+
+    // Filter to agents with capacity (can't do column-to-column comparison in Supabase client)
+    const availableAgent = (availableAgents || []).find(
+      (a: { current_chat_count: number; max_concurrent_chats: number }) =>
+        (a.current_chat_count || 0) < (a.max_concurrent_chats || 5)
+    )
 
     if (availableAgent) {
       convInsert.assigned_agent_id = availableAgent.id

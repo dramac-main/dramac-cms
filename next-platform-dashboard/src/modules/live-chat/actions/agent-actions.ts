@@ -49,32 +49,54 @@ export async function getAgencyMembersForSite(
       return { members: [], error: 'Could not find agency for this site' }
     }
 
+    // Get the agency owner
+    const { data: agency } = await supabase
+      .from('agencies')
+      .select('owner_id')
+      .eq('id', siteData.agency_id)
+      .single()
+
     // Get agency members
-    const { data: members, error: membersError } = await supabase
+    const { data: members } = await supabase
       .from('agency_members')
       .select('user_id, role')
       .eq('agency_id', siteData.agency_id)
 
-    if (membersError || !members?.length) {
-      return { members: [], error: membersError?.message || null }
+    // Build a combined list of user IDs (owner + members)
+    const memberMap = new Map<string, string>()
+
+    // Owner is always included with 'owner' role
+    if (agency?.owner_id) {
+      memberMap.set(agency.owner_id, 'owner')
     }
 
-    // Get profiles for those members
-    const userIds = members.map((m: { user_id: string }) => m.user_id)
+    // Add team members (skip if same as owner — owner takes precedence)
+    for (const m of (members || [])) {
+      if (!memberMap.has(m.user_id)) {
+        memberMap.set(m.user_id, m.role)
+      }
+    }
+
+    if (memberMap.size === 0) {
+      return { members: [], error: null }
+    }
+
+    // Get profiles for all users
+    const userIds = Array.from(memberMap.keys())
     const { data: profiles } = await supabase
       .from('profiles')
       .select('id, name, email, avatar_url')
       .in('id', userIds)
 
     // Join members with profiles
-    const result: AgencyMember[] = members.map((m: { user_id: string; role: string }) => {
-      const profile = (profiles || []).find((p: { id: string }) => p.id === m.user_id)
+    const result: AgencyMember[] = userIds.map((userId) => {
+      const profile = (profiles || []).find((p: { id: string }) => p.id === userId)
       return {
-        userId: m.user_id,
+        userId,
         name: profile?.name || null,
-        email: profile?.email || m.user_id,
+        email: profile?.email || userId,
         avatarUrl: profile?.avatar_url || null,
-        role: m.role,
+        role: memberMap.get(userId) || 'member',
       }
     })
 

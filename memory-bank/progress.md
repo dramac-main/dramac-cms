@@ -1,11 +1,36 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 16, 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅**
 
 ---
 
-## Latest Update: February 16, 2026 - Domain Pricing Fix #4 + Live Chat + Security ✅
+## Latest Update: February 16, 2026 - Domain/Email System Restructure + Critical Fixes ✅
+
+**Commit:** `632d2ad` — 20 files changed, 1008 insertions, 500 deletions
+
+**What was done:**
+1. **CRITICAL — Paddle Checkout Fix**: Domain/email purchases were 100% broken. `openPaddleCheckout()` only supports subscription (priceId-based) checkout, but cart and email wizard called it with `{transactionId}`. Created new `openPaddleTransactionCheckout()` for one-time purchases.
+2. **CRITICAL — Undefined Function Fix**: `calculateDomainPricing()` called in cart checkout didn't exist anywhere. Replaced with proper `calculateDomainPrice()` from domain-billing.
+3. **Navigation Restructure**: Moved domain reselling settings from `/dashboard/settings/domains/` to `/dashboard/domains/settings/` (logically grouped). Added sidebar link. Renamed settings "Domains" → "Custom Domains".
+4. **Revenue Tracking**: Added billing record insert to `provisionDomainRegistration()` — revenue dashboard was showing $0 because records were never created.
+5. **Minor**: Fixed `DomainRegistrationParams` property names, updated revalidatePath calls, converted old routes to redirects.
+
+**Two Paddle Checkout Patterns (CRITICAL knowledge):**
+- `openPaddleCheckout({priceId, agencyId, email})` → Subscription checkout
+- `openPaddleTransactionCheckout({transactionId, successUrl})` → One-time purchase checkout
+
+**Known Pre-existing TS Errors (not from this commit):**
+- `next.config.ts` — eslint property
+- `purchases/status/route.ts` — type instantiation / property access
+- `domains.ts` lines 191/198/604/606 — DomainPrice type mismatch
+- `transactions.ts` — tax_category vs taxCategory
+- `portal-billing-service.ts` — Supabase column errors
+- `resellerclub/client.ts` — fetch Response type
+
+---
+
+## Previous Update: February 16, 2026 - Domain Pricing Fix #4 + Live Chat + Security ✅
 
 **Commit:** `c325545` — 12 files changed
 

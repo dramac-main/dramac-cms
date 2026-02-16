@@ -222,17 +222,21 @@ export async function createConversation(data: {
 
       if (dept?.auto_assign) {
         // Find available agent in department
-        const { data: agent } = await supabase
+        // Note: Supabase .lt() compares against literal values, not column refs.
+        // Fetch agents and filter capacity in code.
+        const { data: agents } = await supabase
           .from('mod_chat_agents')
-          .select('id')
+          .select('id, current_chat_count, max_concurrent_chats')
           .eq('site_id', data.siteId)
           .eq('department_id', data.departmentId)
           .eq('status', 'online')
           .eq('is_active', true)
-          .lt('current_chat_count', 'max_concurrent_chats')
           .order('current_chat_count', { ascending: true })
-          .limit(1)
-          .single()
+
+        const agent = (agents || []).find(
+          (a: { current_chat_count: number; max_concurrent_chats: number }) =>
+            (a.current_chat_count || 0) < (a.max_concurrent_chats || 5)
+        )
 
         if (agent) {
           await assignConversation(conversation.id, agent.id)

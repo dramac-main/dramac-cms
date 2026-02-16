@@ -92,40 +92,27 @@ export async function POST(request: NextRequest) {
 
     const message = mapRecord<ChatMessage>(msgData)
 
-    // Update conversation
+    // Update conversation with last message info
+    // First fetch current unread count, then increment
+    const { data: currentConv } = await (supabase as any)
+      .from('mod_chat_conversations')
+      .select('unread_agent_count, message_count')
+      .eq('id', conversationId)
+      .single()
+
+    const currentUnread = (currentConv?.unread_agent_count || 0) + 1
+    const currentMsgCount = (currentConv?.message_count || 0) + 1
+
     await (supabase as any)
       .from('mod_chat_conversations')
       .update({
         last_message_text: content.substring(0, 255),
         last_message_at: new Date().toISOString(),
         last_message_by: 'visitor',
-        unread_agent_count: (supabase as any).rpc
-          ? undefined
-          : 1,
+        unread_agent_count: currentUnread,
+        message_count: currentMsgCount,
       })
       .eq('id', conversationId)
-
-    // Increment unread count via raw increment
-    await (supabase as any).rpc('increment_field', {
-      table_name: 'mod_chat_conversations',
-      field_name: 'unread_agent_count',
-      row_id: conversationId,
-    }).catch(() => {
-      // If RPC doesn't exist, use direct update (already handled above)
-    })
-
-    // Update message count
-    const { data: countData } = await (supabase as any)
-      .from('mod_chat_messages')
-      .select('id', { count: 'exact', head: true })
-      .eq('conversation_id', conversationId)
-
-    if (countData !== null) {
-      await (supabase as any)
-        .from('mod_chat_conversations')
-        .update({ message_count: countData })
-        .eq('id', conversationId)
-    }
 
     // Send in-app notification to assigned agent (or site owner)
     // This runs async — don't block the response
@@ -155,6 +142,18 @@ export async function POST(request: NextRequest) {
         sendPushToSiteAgents(convForNotify.site_id, pushPayload).catch(() => {})
       }
     }).catch(() => {})
+
+    // Trigger AI auto-response if no agent is assigned
+    if (!convForNotify.assigned_agent_id) {
+      import('@/modules/live-chat/lib/auto-response-handler').then(({ handleNewVisitorMessage }) => {
+        handleNewVisitorMessage(
+          convForNotify.site_id,
+          conversationId,
+          content,
+          visitorId
+        ).catch((err) => console.error('[LiveChat] Auto-response error:', err))
+      }).catch(() => {})
+    }
 
     return NextResponse.json(
       { message },

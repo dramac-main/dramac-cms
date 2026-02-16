@@ -116,6 +116,17 @@ export function AgentsPageWrapper({
     maxConcurrentChats: 5,
   })
 
+  // Edit agent state
+  const [editingAgent, setEditingAgent] = useState<ChatAgent | null>(null)
+  const [showEditAgent, setShowEditAgent] = useState(false)
+  const [editForm, setEditForm] = useState({
+    displayName: '',
+    email: '',
+    role: 'agent' as AgentRole,
+    departmentId: '',
+    maxConcurrentChats: 5,
+  })
+
   // Add department form state
   const [deptForm, setDeptForm] = useState({
     name: '',
@@ -170,6 +181,58 @@ export function AgentsPageWrapper({
     },
     []
   )
+
+  const handleEditAgent = useCallback(
+    (agent: ChatAgent) => {
+      setEditingAgent(agent)
+      setEditForm({
+        displayName: agent.displayName,
+        email: agent.email || '',
+        role: (agent.role as AgentRole) || 'agent',
+        departmentId: agent.departmentId || '',
+        maxConcurrentChats: agent.maxConcurrentChats || 5,
+      })
+      setShowEditAgent(true)
+    },
+    []
+  )
+
+  const handleSaveEdit = useCallback(() => {
+    if (!editingAgent || !editForm.displayName) {
+      toast.error('Display name is required')
+      return
+    }
+    startTransition(async () => {
+      const result = await updateAgent(editingAgent.id, {
+        displayName: editForm.displayName,
+        email: editForm.email || undefined,
+        role: editForm.role,
+        departmentId: editForm.departmentId || null,
+        maxConcurrentChats: editForm.maxConcurrentChats,
+      })
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        setAgents((prev) =>
+          prev.map((a) =>
+            a.id === editingAgent.id
+              ? ({
+                  ...a,
+                  displayName: editForm.displayName,
+                  email: editForm.email || a.email,
+                  role: editForm.role,
+                  departmentId: editForm.departmentId || undefined,
+                  maxConcurrentChats: editForm.maxConcurrentChats,
+                } as ChatAgent)
+              : a
+          )
+        )
+        setShowEditAgent(false)
+        setEditingAgent(null)
+        toast.success('Agent updated')
+      }
+    })
+  }, [editingAgent, editForm])
 
   const handleAddDepartment = useCallback(() => {
     if (!deptForm.name) {
@@ -477,6 +540,16 @@ export function AgentsPageWrapper({
 
                     <div className="flex gap-2 mt-4">
                       <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleEditAgent(agent)}
+                        disabled={isPending}
+                      >
+                        <Pencil className="h-3.5 w-3.5 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
                         variant="destructive"
                         size="sm"
                         className="flex-1"
@@ -493,6 +566,106 @@ export function AgentsPageWrapper({
             })}
         </div>
       )}
+
+      {/* Edit Agent Dialog */}
+      <Dialog open={showEditAgent} onOpenChange={setShowEditAgent}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Agent</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Display Name</Label>
+              <Input
+                value={editForm.displayName}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, displayName: e.target.value })
+                }
+                placeholder="Agent name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input
+                value={editForm.email}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, email: e.target.value })
+                }
+                placeholder="agent@example.com"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select
+                  value={editForm.role}
+                  onValueChange={(val) =>
+                    setEditForm({ ...editForm, role: val as AgentRole })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="agent">Agent</SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Max Concurrent Chats</Label>
+                <Input
+                  type="number"
+                  value={editForm.maxConcurrentChats}
+                  onChange={(e) =>
+                    setEditForm({
+                      ...editForm,
+                      maxConcurrentChats: parseInt(e.target.value) || 5,
+                    })
+                  }
+                  min={1}
+                  max={20}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Department</Label>
+              <Select
+                value={editForm.departmentId || 'none'}
+                onValueChange={(val) =>
+                  setEditForm({
+                    ...editForm,
+                    departmentId: val === 'none' ? '' : val,
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No Department</SelectItem>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={isPending || !editForm.displayName}
+              className="w-full"
+            >
+              {isPending && (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              )}
+              Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Departments section */}
       <div className="space-y-4">

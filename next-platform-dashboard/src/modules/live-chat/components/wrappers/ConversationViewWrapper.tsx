@@ -293,6 +293,48 @@ export function ConversationViewWrapper({
     [conversation.id]
   )
 
+  // Global keyboard shortcuts for conversation actions
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      // Don't trigger shortcuts when typing in inputs
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+
+      // Ctrl+R / Cmd+R → Resolve conversation
+      if ((e.ctrlKey || e.metaKey) && e.key === 'r' && !e.shiftKey) {
+        e.preventDefault()
+        if (conversation.status === 'active' || conversation.status === 'pending' || conversation.status === 'waiting') {
+          handleResolve()
+        }
+        return
+      }
+      // Ctrl+Shift+C → Close conversation
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+        e.preventDefault()
+        if (conversation.status !== 'closed') {
+          handleClose()
+        }
+        return
+      }
+      // Ctrl+Shift+O → Reopen conversation
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'O') {
+        e.preventDefault()
+        if (conversation.status === 'resolved' || conversation.status === 'closed') {
+          handleReopen()
+        }
+        return
+      }
+      // Escape → Go back to conversations list
+      if (e.key === 'Escape') {
+        router.push(`/dashboard/sites/${siteId}/live-chat/conversations`)
+        return
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [conversation.status, handleResolve, handleClose, handleReopen, router, siteId])
+
   const hasVisitorTyping = typingUsers.length > 0
 
   return (
@@ -618,6 +660,25 @@ export function ConversationViewWrapper({
               </CardContent>
             </Card>
           )}
+
+          {/* Keyboard Shortcuts */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-muted-foreground">Keyboard Shortcuts</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1.5 text-xs text-muted-foreground">
+              <div className="flex justify-between"><span>Send message</span><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">Enter</kbd></div>
+              <div className="flex justify-between"><span>New line</span><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">Shift+Enter</kbd></div>
+              <div className="flex justify-between"><span>Canned responses</span><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">/</kbd></div>
+              <div className="flex justify-between"><span>Internal note</span><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">Ctrl+/</kbd></div>
+              <div className="flex justify-between"><span>Mention agent</span><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">@</kbd></div>
+              <div className="flex justify-between"><span>Resolve chat</span><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">Ctrl+R</kbd></div>
+              <div className="flex justify-between"><span>Close chat</span><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">Ctrl+Shift+C</kbd></div>
+              <div className="flex justify-between"><span>Reopen chat</span><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">Ctrl+Shift+O</kbd></div>
+              <div className="flex justify-between"><span>Back to list</span><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">Esc</kbd></div>
+              <div className="flex justify-between"><span>Clear input</span><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">Esc</kbd></div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

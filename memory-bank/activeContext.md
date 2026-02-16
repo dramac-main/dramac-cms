@@ -2,6 +2,100 @@
 
 ## Recent Work
 
+### Domain/Email System Restructure + Paddle Checkout Fix + Revenue Tracking — February 16, 2026 ✅
+
+**Category:** Critical Bug Fix / Navigation Restructure / Revenue Tracking
+
+**Commit:** `632d2ad` — 20 files changed, 1008 insertions, 500 deletions
+
+#### 1. CRITICAL: Paddle Transaction Checkout (Domain/Email Purchases Were 100% Broken)
+
+**Problem:**
+`openPaddleCheckout()` in `paddle-client.ts` only supports subscription checkout (requires `priceId`). But cart-page-client and email-purchase-wizard called it with `{transactionId, successUrl}` — a completely different Paddle.js API. Every domain/email purchase would throw "Invalid priceId: Price ID is required" at runtime.
+
+**Fix:**
+- Created new `openPaddleTransactionCheckout({transactionId, successUrl})` function in `paddle-client.ts`
+- Uses `paddle.Checkout.open({transactionId, settings: {successUrl, displayMode: 'overlay'}})` — the Paddle.js transaction-based checkout API
+- Updated `cart-page-client.tsx` and `email-purchase-wizard.tsx` to import and use this new function
+
+**Two Paddle Checkout Patterns (CRITICAL knowledge):**
+| Pattern | Function | Use Case | Params |
+|---|---|---|---|
+| Subscription | `openPaddleCheckout()` | Monthly/annual plan signup | `{priceId, agencyId, email}` |
+| Transaction | `openPaddleTransactionCheckout()` | One-time domain/email purchase | `{transactionId, successUrl}` |
+
+#### 2. CRITICAL: Undefined `calculateDomainPricing` in Cart Checkout
+
+**Problem:**
+`createDomainCartCheckout()` in `domains.ts` called `calculateDomainPricing()` at line 547 — but this function was NEVER DEFINED anywhere. Would throw ReferenceError, making cart checkout completely non-functional.
+
+**Fix:**
+- Replaced with proper `calculateDomainPrice()` import from `domain-billing.ts`
+- Fixed parameter mapping: extracts TLD from domain name, passes `{tld, years, operation: 'register', includePrivacy, clientId}`
+
+#### 3. Navigation Restructure: Domain Settings
+
+**Problems:**
+- `/dashboard/settings/domains/*` pages existed but had NO sidebar link — orphaned, only accessible via in-page links
+- "Domains" in settings sidebar referred to agency custom domains, confusing with domain reselling
+- Domain reselling settings were under `/dashboard/settings/` instead of logically grouped with `/dashboard/domains/`
+
+**Fix:**
+- Moved domain reselling settings to `/dashboard/domains/settings/` with sub-pages: overview, pricing, branding, billing
+- Added "Domain Settings" link to main sidebar under "Domains & Email" group
+- Renamed settings sidebar "Domains" to "Custom Domains" for clarity
+- Converted old `/dashboard/settings/domains/*` routes to redirects (no broken links)
+- Updated all `revalidatePath` calls (4 instances in `domain-billing.ts`)
+- Updated admin pricing page link to new path
+
+**New Route Structure:**
+```
+/dashboard/domains/settings/         → Overview (stats, settings cards, quick actions)
+/dashboard/domains/settings/pricing/ → TLD pricing, markup config, tiers, calculator
+/dashboard/domains/settings/branding/→ White-label domain branding config
+/dashboard/domains/settings/billing/ → Paddle billing integration
+/settings/domains                    → Custom Domains (agency custom domains - renamed)
+```
+
+#### 4. Revenue Tracking: Missing Billing Records
+
+**Problem:**
+`provisionDomainRegistration()` in `provisioning.ts` never created entries in `domain_billing_records` — revenue dashboard showed $0 for all domain purchases.
+
+**Fix:**
+- Added billing record insert after successful domain registration
+- Records: billing_type, wholesale_amount, retail_amount, profit, payment_status, billing_period
+- Wrapped in try/catch (non-fatal — don't fail provisioning if billing record fails)
+
+#### 5. Minor Fixes
+- Fixed `DomainRegistrationParams`: `nameServers` → `nameservers` (lowercase), `protectPrivacy` → `purchasePrivacy`, removed invalid `idnLanguageCode`
+- Updated custom domains page title from "Domains" to "Custom Domains"
+
+**Files Changed:**
+| File | Change |
+|---|---|
+| `paddle-client.ts` | Added `openPaddleTransactionCheckout()` function |
+| `cart-page-client.tsx` | Use `openPaddleTransactionCheckout` |
+| `email-purchase-wizard.tsx` | Use `openPaddleTransactionCheckout` |
+| `domains.ts` | Fix undefined `calculateDomainPricing` → `calculateDomainPrice` |
+| `navigation.ts` | Added "Domain Settings" sidebar link |
+| `settings-navigation.ts` | Renamed "Domains" → "Custom Domains" |
+| `domain-billing.ts` | Updated 4 `revalidatePath` calls |
+| `provisioning.ts` | Added billing record creation + fixed param names |
+| `admin/pricing/pricing-client.tsx` | Updated link to new domain settings path |
+| `settings/domains/page.tsx` | Title "Domains" → "Custom Domains" |
+| `dashboard/settings/domains/page.tsx` | Converted to redirect |
+| `dashboard/settings/domains/pricing/page.tsx` | Converted to redirect |
+| `dashboard/settings/domains/branding/page.tsx` | Converted to redirect |
+| `dashboard/settings/domains/billing/page.tsx` | Converted to redirect |
+| **NEW** `dashboard/domains/settings/page.tsx` | Domain settings overview |
+| **NEW** `dashboard/domains/settings/pricing/page.tsx` | Pricing config (server) |
+| **NEW** `dashboard/domains/settings/pricing/pricing-client.tsx` | Pricing config (client) |
+| **NEW** `dashboard/domains/settings/branding/page.tsx` | Branding config |
+| **NEW** `dashboard/domains/settings/billing/page.tsx` | Billing config |
+
+---
+
 ### Domain Pricing FINAL Fix + Live Chat Rating + Security Fixes — February 16, 2026 ✅
 
 **Category:** Domain Pricing / Live Chat / Security / Critical Fix

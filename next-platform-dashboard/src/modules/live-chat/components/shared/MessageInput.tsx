@@ -24,6 +24,7 @@ import {
   AtSign,
 } from 'lucide-react'
 import type { CannedResponse } from '@/modules/live-chat/types'
+import { incrementCannedResponseUsage } from '@/modules/live-chat/actions/canned-response-actions'
 
 interface AgentOption {
   id: string
@@ -133,12 +134,40 @@ export function MessageInput({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      // Enter to send (without Shift)
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
         handleSend()
+        return
+      }
+      // Ctrl+Enter or Cmd+Enter also sends
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        handleSend()
+        return
+      }
+      // Escape to clear input or close canned responses
+      if (e.key === 'Escape') {
+        if (showCanned) {
+          setShowCanned(false)
+          setContent('')
+        } else if (showMentions) {
+          setShowMentions(false)
+        } else if (isNote) {
+          setIsNote(false)
+        } else if (content) {
+          setContent('')
+        }
+        return
+      }
+      // Ctrl+/ to toggle internal note mode
+      if (e.key === '/' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault()
+        setIsNote(!isNote)
+        return
       }
     },
-    [handleSend]
+    [handleSend, showCanned, showMentions, isNote, content]
   )
 
   const handleFileClick = useCallback(() => {
@@ -161,6 +190,8 @@ export function MessageInput({
     setContent(cr.content)
     setShowCanned(false)
     textareaRef.current?.focus()
+    // Track usage (fire-and-forget)
+    incrementCannedResponseUsage(cr.id).catch(() => {})
   }, [])
 
   const selectMention = useCallback((agent: AgentOption) => {
@@ -216,7 +247,7 @@ export function MessageInput({
       {isNote && (
         <div className="flex items-center gap-1.5 mb-2 text-xs text-amber-700 dark:text-amber-400">
           <StickyNote className="h-3.5 w-3.5" />
-          <span>Writing an internal note (not visible to visitor) — Type <kbd className="px-1 py-0.5 rounded bg-amber-200/50 dark:bg-amber-800/50 font-mono text-[10px]">@</kbd> to mention an agent</span>
+          <span>Writing an internal note (not visible to visitor) — Type <kbd className="px-1 py-0.5 rounded bg-amber-200/50 dark:bg-amber-800/50 font-mono text-[10px]">@</kbd> to mention an agent · <kbd className="px-1 py-0.5 rounded bg-amber-200/50 dark:bg-amber-800/50 font-mono text-[10px]">Ctrl+/</kbd> to switch back · <kbd className="px-1 py-0.5 rounded bg-amber-200/50 dark:bg-amber-800/50 font-mono text-[10px]">Esc</kbd> to cancel</span>
         </div>
       )}
 

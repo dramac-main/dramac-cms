@@ -174,7 +174,10 @@ export async function proxy(request: NextRequest) {
   
   // Only check session for app domain routes
   if (isAppDomain) {
-    return await updateSession(request);
+    const response = await updateSession(request);
+    // Set x-pathname header for server components that need the current path
+    response.headers.set('x-pathname', pathname);
+    return response;
   }
 
   // Fallback - should never reach here
