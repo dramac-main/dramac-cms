@@ -543,12 +543,19 @@ export async function createDomainCartCheckout(params: {
     let totalRetail = 0;
     const domainDetails = [];
     
+    // Import the real pricing calculator from domain-billing
+    const { calculateDomainPrice } = await import('@/lib/actions/domain-billing');
+    
     for (const domain of params.domains) {
-      const pricing = await calculateDomainPricing({
-        domainName: domain.domainName,
+      const parts = domain.domainName.split('.');
+      const tld = '.' + parts.slice(1).join('.');
+      
+      const pricing = await calculateDomainPrice({
+        tld,
         years: domain.years,
-        privacy: domain.privacy,
-        agencyId: profile.agency_id,
+        operation: 'register',
+        includePrivacy: domain.privacy ?? false,
+        clientId: params.clientId,
       });
       
       if (!pricing.success || !pricing.data) {
@@ -562,7 +569,7 @@ export async function createDomainCartCheckout(params: {
       totalRetail += pricing.data.total_retail;
       domainDetails.push({
         ...domain,
-        tld: domain.domainName.split('.').pop(),
+        tld: tld,
         wholesale: pricing.data.total_wholesale,
         retail: pricing.data.total_retail,
       });

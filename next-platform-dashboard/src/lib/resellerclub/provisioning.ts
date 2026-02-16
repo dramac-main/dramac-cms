@@ -194,6 +194,26 @@ export async function provisionDomainRegistration(
       provisioned_at: new Date().toISOString(),
     });
     
+    // Create billing record for revenue tracking
+    try {
+      await admin.from('domain_billing_records').insert({
+        agency_id: purchase.agency_id,
+        domain_id: domainId,
+        billing_type: 'registration',
+        description: `Domain registration: ${domainName} (${years} year${years > 1 ? 's' : ''})`,
+        wholesale_amount: purchase.wholesale_amount,
+        retail_amount: purchase.retail_amount,
+        profit_amount: (purchase.retail_amount || 0) - (purchase.wholesale_amount || 0),
+        currency: purchase.currency || 'USD',
+        payment_status: 'paid',
+        paddle_transaction_id: purchase.paddle_transaction_id,
+        billing_period_start: now.toISOString(),
+        billing_period_end: expiryDate.toISOString(),
+      });
+    } catch (billingErr) {
+      console.warn('[Provisioning] Failed to create billing record (non-fatal):', billingErr);
+    }
+    
     return {
       success: true,
       resourceId: domainId,
@@ -291,9 +311,8 @@ async function provisionMultipleDomains(
           adminContactId: contactId,
           techContactId: contactId,
           billingContactId: contactId,
-          nameServers: ['ns1.cloudflare.com', 'ns2.cloudflare.com'],
-          idnLanguageCode: null,
-          protectPrivacy: domainConfig.privacy ?? true,
+          nameservers: ['ns1.cloudflare.com', 'ns2.cloudflare.com'],
+          purchasePrivacy: domainConfig.privacy ?? true,
           invoiceOption: 'NoInvoice',
         });
         

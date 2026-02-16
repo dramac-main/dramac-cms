@@ -7,7 +7,7 @@ import { PLATFORM } from "@/lib/constants/platform";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: `Domain Settings | ${PLATFORM.name}`,
+  title: `Custom Domains | ${PLATFORM.name}`,
 };
 
 export default async function DomainsSettingsPage() {
@@ -22,9 +22,9 @@ export default async function DomainsSettingsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Domains</h1>
+          <h1 className="text-2xl font-bold">Custom Domains</h1>
           <p className="text-muted-foreground">
-            Create an agency first to manage domains.
+            Create an agency first to manage custom domains.
           </p>
         </div>
       </div>
@@ -42,7 +42,7 @@ export default async function DomainsSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Domains</h1>
+        <h1 className="text-2xl font-bold">Custom Domains</h1>
         <p className="text-muted-foreground">
           Manage custom domains for your agency and client sites
         </p>

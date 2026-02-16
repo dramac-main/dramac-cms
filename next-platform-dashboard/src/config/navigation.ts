@@ -13,6 +13,7 @@ import {
   Mail,
   ArrowRightLeft,
   Server,
+  Sliders,
   type LucideIcon,
 } from "lucide-react";
 
@@ -84,6 +85,12 @@ export const mainNavigation: NavGroup[] = [
         href: "/dashboard/domains/transfer",
         icon: ArrowRightLeft,
         dataTour: "transfers",
+      },
+      {
+        title: "Domain Settings",
+        href: "/dashboard/domains/settings",
+        icon: Sliders,
+        dataTour: "domain-settings",
       },
     ],
   },

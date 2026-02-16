@@ -140,8 +140,8 @@ export async function updateAgencyPricingConfig(
       return { success: false, error: error.message || 'Update failed' };
     }
     
-    revalidatePath('/dashboard/settings/domains');
-    revalidatePath('/dashboard/settings/domains/pricing');
+    revalidatePath('/dashboard/domains/settings');
+    revalidatePath('/dashboard/domains/settings/pricing');
     
     return { success: true, data: data as AgencyDomainPricing };
   } catch (error) {
@@ -436,7 +436,7 @@ export async function createBillingRecord(params: {
     return { success: false, error: error.message || 'Failed to create record' };
   }
   
-  revalidatePath('/dashboard/settings/domains');
+  revalidatePath('/dashboard/domains/settings');
   
   return { success: true, data: data as DomainBillingRecord };
 }
@@ -536,7 +536,7 @@ export async function updateBillingRecordStatus(
     return { success: false, error: error.message || 'Update failed' };
   }
   
-  revalidatePath('/dashboard/settings/domains');
+  revalidatePath('/dashboard/domains/settings');
   
   return { success: true };
 }

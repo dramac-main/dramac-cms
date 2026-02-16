@@ -390,7 +390,7 @@ export default function PricingManagementClient() {
           </CardHeader>
           <CardContent className="space-y-2">
             <Link
-              href="/dashboard/settings/domains/pricing"
+              href="/dashboard/domains/settings/pricing"
               className="flex items-center justify-between p-3 rounded-md border hover:bg-muted/50 transition-colors group"
             >
               <div>

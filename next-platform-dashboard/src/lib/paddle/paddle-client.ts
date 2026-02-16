@@ -274,6 +274,58 @@ export async function openCheckoutForPlan(
   });
 }
 
+// ============================================================================
+// Transaction-Based Checkout (Domain & Email Purchases)
+// ============================================================================
+
+export interface OpenTransactionCheckoutParams {
+  /** Paddle transaction ID from server-side createDomainPurchase/createEmailPurchase */
+  transactionId: string;
+  /** URL to redirect to after successful payment */
+  successUrl?: string;
+}
+
+/**
+ * Open Paddle checkout for a pre-created transaction (one-time purchases).
+ * Used for domain registrations, renewals, transfers, and email orders.
+ * Unlike openPaddleCheckout (subscription-based), this opens a checkout
+ * for an existing transaction created server-side.
+ */
+export async function openPaddleTransactionCheckout(
+  params: OpenTransactionCheckoutParams
+): Promise<void> {
+  console.log('[Paddle.js] Opening transaction checkout:', {
+    transactionId: params.transactionId,
+    successUrl: params.successUrl,
+  });
+
+  if (!params.transactionId) {
+    throw new Error('Transaction ID is required');
+  }
+
+  const paddle = await getPaddle();
+
+  try {
+    await paddle.Checkout.open({
+      transactionId: params.transactionId,
+      settings: {
+        displayMode: 'overlay',
+        theme: 'light',
+        locale: 'en',
+        successUrl: params.successUrl,
+        allowLogout: false,
+      },
+    });
+  } catch (checkoutError: any) {
+    console.error('[Paddle.js] Transaction checkout error:', {
+      message: checkoutError?.message,
+      code: checkoutError?.code,
+      fullError: checkoutError,
+    });
+    throw checkoutError;
+  }
+}
+
 /**
  * Open payment method update
  */

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { DomainCheckout, type ContactFormData } from "@/components/domains";
 import type { DomainCartItem } from "@/types/domain";
 import { createDomainCartCheckout } from "@/lib/actions/domains";
-import { openPaddleCheckout } from "@/lib/paddle/paddle-client";
+import { openPaddleTransactionCheckout } from "@/lib/paddle/paddle-client";
 import { toast } from "sonner";
 
 export function CartPageClient() {
@@ -75,10 +75,10 @@ export function CartPageClient() {
       // Clear cart before opening checkout
       sessionStorage.removeItem('domainCart');
       
-      // Open Paddle checkout overlay with transaction ID and success URL
+      // Open Paddle transaction checkout for one-time domain purchase
       const successUrl = `${window.location.origin}/dashboard/domains/success?purchase_id=${result.data.pendingPurchaseId}`;
       
-      openPaddleCheckout({
+      await openPaddleTransactionCheckout({
         transactionId: result.data.transactionId,
         successUrl,
       });

@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { createBusinessEmailOrder, getBusinessEmailPricing } from "@/lib/actions/business-email";
-import { openPaddleCheckout } from "@/lib/paddle/paddle-client";
+import { openPaddleTransactionCheckout } from "@/lib/paddle/paddle-client";
 import { formatCurrency } from "@/lib/locale-config";
 import { toast } from "sonner";
 import { Loader2, Mail } from "lucide-react";
@@ -140,7 +140,7 @@ export function EmailPurchaseWizard() {
         // Open Paddle checkout overlay with transaction ID and success URL
         const successUrl = `${window.location.origin}/dashboard/domains/success?purchase_id=${result.data.pendingPurchaseId}`;
         
-        openPaddleCheckout({
+        await openPaddleTransactionCheckout({
           transactionId: result.data.transactionId,
           successUrl,
         });
