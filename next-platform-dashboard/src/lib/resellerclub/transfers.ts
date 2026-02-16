@@ -63,7 +63,7 @@ export const transferService = {
 
     const client = getResellerClubClient();
 
-    const response = await client.post<{ entityid: string }>('/domains/transfer.json', {
+    const response = await client.post<{ entityid: string }>('domains/transfer.json', {
       'domain-name': params.domainName,
       'auth-code': params.authCode,
       'customer-id': params.customerId,
@@ -90,7 +90,7 @@ export const transferService = {
   async submitAuthCode(orderId: string, authCode: string): Promise<void> {
     const client = getResellerClubClient();
 
-    await client.post('/domains/transfer/submit-auth-code.json', {
+    await client.post('domains/transfer/submit-auth-code.json', {
       'order-id': orderId,
       'auth-code': authCode,
     });
@@ -103,7 +103,7 @@ export const transferService = {
   async cancelTransfer(orderId: string): Promise<void> {
     const client = getResellerClubClient();
 
-    await client.post('/domains/transfer/cancel.json', {
+    await client.post('domains/transfer/cancel.json', {
       'order-id': orderId,
     });
   },
@@ -115,7 +115,7 @@ export const transferService = {
   async getTransferDetails(orderId: string): Promise<TransferDetails> {
     const client = getResellerClubClient();
 
-    const response = await client.get<Record<string, unknown>>('/domains/details.json', {
+    const response = await client.get<Record<string, unknown>>('domains/details.json', {
       'order-id': orderId,
       'options': 'TransferStatus',
     });
@@ -131,12 +131,12 @@ export const transferService = {
     const client = getResellerClubClient();
 
     // First, disable transfer lock
-    await client.post('/domains/disable-theft-protection.json', {
+    await client.post('domains/disable-theft-protection.json', {
       'order-id': orderId,
     });
 
     // Get the auth code
-    const response = await client.get<{ domsecret: string }>('/domains/details.json', {
+    const response = await client.get<{ domsecret: string }>('domains/details.json', {
       'order-id': orderId,
       'options': 'DomainSecret',
     });
@@ -155,8 +155,8 @@ export const transferService = {
     const client = getResellerClubClient();
 
     const endpoint = locked
-      ? '/domains/enable-theft-protection.json'
-      : '/domains/disable-theft-protection.json';
+      ? 'domains/enable-theft-protection.json'
+      : 'domains/disable-theft-protection.json';
 
     await client.post(endpoint, {
       'order-id': orderId,
@@ -169,7 +169,7 @@ export const transferService = {
   async resendApprovalEmail(orderId: string): Promise<void> {
     const client = getResellerClubClient();
 
-    await client.post('/domains/transfer/resend-approval-email.json', {
+    await client.post('domains/transfer/resend-approval-email.json', {
       'order-id': orderId,
     });
   },
@@ -192,9 +192,17 @@ export const renewalService = {
 
     const client = getResellerClubClient();
 
-    const response = await client.post<{ invoiceid: string }>('/domains/renew.json', {
+    // First get current domain details to obtain the expiry date (required by RC)
+    const details = await client.get<Record<string, unknown>>('domains/details.json', {
+      'order-id': orderId,
+      'options': 'All',
+    });
+    const expDate = String(details.endtime || details.expirydate || '');
+
+    const response = await client.post<{ invoiceid: string }>('domains/renew.json', {
       'order-id': orderId,
       'years': years,
+      'exp-date': expDate,
       'invoice-option': 'NoInvoice',
     });
 
@@ -208,8 +216,8 @@ export const renewalService = {
     const client = getResellerClubClient();
 
     const endpoint = enabled
-      ? '/domains/enable-auto-renewal.json'
-      : '/domains/disable-auto-renewal.json';
+      ? 'domains/enable-recurring.json'
+      : 'domains/disable-recurring.json';
 
     await client.post(endpoint, {
       'order-id': orderId,
@@ -226,7 +234,7 @@ export const renewalService = {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + days);
 
-    const response = await client.get<Record<string, Record<string, string>>>('/domains/search.json', {
+    const response = await client.get<Record<string, Record<string, string>>>('domains/search.json', {
       'expiry-date-start': Math.floor(Date.now() / 1000).toString(),
       'expiry-date-end': Math.floor(expiryDate.getTime() / 1000).toString(),
       'no-of-records': '100',

@@ -1,11 +1,26 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅**
 
 ---
 
-## Latest Update: February 2026 - Critical Provisioning/Pricing/Agent/Webhook Fixes ✅
+## Latest Update: February 2026 - RC Customer Lookup Endpoint Fix ✅
+
+**Commit:** `acc92b3`
+**Files Changed:** 1 — customers.ts
+
+**What was done:**
+1. **CRITICAL — Wrong RC API Endpoint**: `getByUsername()` called `customers/details-by-id.json` (requires `customer-id`) instead of `customers/details.json` (accepts `username`). ResellerClub returned HTTP 500: "Required parameter missing: customer-id". Fixed to correct endpoint.
+2. **Resilient exists() Error Handling**: `exists()` now catches any `ResellerClubError` (not just `CustomerNotFoundError`) since RC returns various error formats for non-existent customers.
+
+**CRITICAL KNOWLEDGE:** RC customer lookup endpoints:
+- `customers/details.json` — by username (email)
+- `customers/details-by-id.json` — by customer-id (numeric)
+
+---
+
+## Previous Update: February 2026 - Critical Provisioning/Pricing/Agent/Webhook Fixes ✅
 
 **Files Changed:** 7 — domains.ts, provisioning.ts, webhook-handlers.ts, agent-actions.ts, AgentsPageWrapper.tsx, business-email.ts, transfers.ts
 

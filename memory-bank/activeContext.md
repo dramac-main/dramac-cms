@@ -2,6 +2,28 @@
 
 ## Recent Work
 
+### Fix: Wrong ResellerClub Customer Lookup Endpoint — February 2026 ✅
+
+**Category:** Critical Bug Fix / ResellerClub API
+**Commit:** `acc92b3`
+**Files Changed:** 1 — customers.ts
+
+#### Overview
+After deploying commit `9f0f2f0` (which correctly wired up `ensureResellerClubCustomer()`), production testing revealed a latent bug: `getByUsername()` was calling the WRONG ResellerClub API endpoint.
+
+#### Problem
+`getByUsername()` in `customers.ts` called `customers/details-by-id.json` — which requires a `customer-id` parameter. But we were passing `username` (email). ResellerClub returned HTTP 500: `"Required parameter missing: customer-id"`.
+
+#### Fix
+1. Changed endpoint from `customers/details-by-id.json` → `customers/details.json` (accepts `username` param)
+2. Made `exists()` catch any `ResellerClubError` (not just `CustomerNotFoundError`) since RC returns various error formats for non-existent customers
+
+**CRITICAL KNOWLEDGE:** RC has TWO customer lookup endpoints:
+- `customers/details.json` — lookup by username (email)
+- `customers/details-by-id.json` — lookup by customer-id (numeric)
+
+---
+
 ### Critical Domain/Email Provisioning, Pricing Mismatch, Agent, Webhook Fixes — February 2026 ✅
 
 **Category:** Critical Bug Fixes / Provisioning / Pricing / Agent CRUD / Webhook Handlers

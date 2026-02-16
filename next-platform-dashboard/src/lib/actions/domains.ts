@@ -73,6 +73,7 @@ async function ensureResellerClubCustomer(
       zipcode: '10101',
       phoneCountryCode: '260',
       phone: '955000000',
+      languagePreference: 'en',
     });
 
     // Save customer ID to agency

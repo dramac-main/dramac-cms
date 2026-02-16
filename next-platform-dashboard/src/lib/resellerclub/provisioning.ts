@@ -144,7 +144,7 @@ export async function provisionDomainRegistration(
     const contact = await contactService.createOrUpdate({
       name: (contactInfo?.name as string) || 'Domain Admin',
       company: (contactInfo?.company as string) || 'Agency',
-      email: (contactInfo?.email as string) || '',
+      email: (contactInfo?.email as string) || purchase.user_id + '@agency.local',
       addressLine1: (contactInfo?.address as string) || 'Not Provided',
       city: (contactInfo?.city as string) || 'Lusaka',
       state: (contactInfo?.state as string) || 'Lusaka',
@@ -271,7 +271,7 @@ export async function provisionDomainRegistration(
     await updatePendingPurchaseStatus(pendingPurchaseId, 'failed', {
       error_message: error instanceof Error ? error.message : 'Unknown error',
       error_details: error instanceof Error ? { name: error.name, stack: error.stack } : error,
-      retry_count: (await admin.from('pending_purchases').select('retry_count').eq('id', pendingPurchaseId).single()).data?.retry_count || 0 + 1,
+      retry_count: ((await admin.from('pending_purchases').select('retry_count').eq('id', pendingPurchaseId).single()).data?.retry_count || 0) + 1,
       last_retry_at: new Date().toISOString(),
     });
     
@@ -330,7 +330,7 @@ async function provisionMultipleDomains(
     const contact = await contactService.createOrUpdate({
       name: (contactInfo?.name as string) || 'Domain Admin',
       company: (contactInfo?.company as string) || 'Agency',
-      email: (contactInfo?.email as string) || '',
+      email: (contactInfo?.email as string) || purchase.user_id + '@agency.local',
       addressLine1: (contactInfo?.address as string) || 'Not Provided',
       city: (contactInfo?.city as string) || 'Lusaka',
       state: (contactInfo?.state as string) || 'Lusaka',
@@ -774,7 +774,7 @@ export async function provisionDomainTransfer(
     const contact = await contactService.createOrUpdate({
       name: (contactInfo?.name as string) || 'Domain Admin',
       company: (contactInfo?.company as string) || 'Agency',
-      email: (contactInfo?.email as string) || '',
+      email: (contactInfo?.email as string) || purchase.user_id + '@agency.local',
       addressLine1: (contactInfo?.address as string) || 'Not Provided',
       city: (contactInfo?.city as string) || 'Lusaka',
       state: (contactInfo?.state as string) || 'Lusaka',

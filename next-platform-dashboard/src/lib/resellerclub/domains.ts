@@ -395,11 +395,11 @@ export class DomainService {
       'invoice-option': params.invoiceOption || 'NoInvoice',
     };
     
-    // Add nameservers if provided
+    // Add nameservers as repeated 'ns' keys
+    // RC register API expects: ns=ns1.example.com&ns=ns2.example.com
     if (params.nameservers && params.nameservers.length > 0) {
-      params.nameservers.forEach((ns, i) => {
-        apiParams[`ns${i + 1}`] = ns;
-      });
+      // Store as array — client.ts handles repeated keys for arrays
+      (apiParams as Record<string, unknown>)['ns'] = params.nameservers;
     }
     
     const response = await this.client.post<{ entityid: string; invoiceid?: string }>(
@@ -551,13 +551,10 @@ export class DomainService {
    * Update nameservers for a domain
    */
   async updateNameservers(orderId: string, nameservers: string[]): Promise<{ success: boolean }> {
-    const params: Record<string, string | number> = {
+    const params: Record<string, string | number | string[]> = {
       'order-id': orderId,
+      'ns': nameservers,
     };
-    
-    nameservers.forEach((ns, i) => {
-      params[`ns${i + 1}`] = ns;
-    });
     
     await this.client.post('domains/modify-ns.json', params);
     return { success: true };

@@ -24,7 +24,6 @@ export class CustomerService {
       'username': params.username,
       'passwd': params.password,
       'name': params.name,
-      'email': params.email,
       'address-line-1': params.addressLine1,
       'city': params.city,
       'state': params.state,
@@ -32,10 +31,11 @@ export class CustomerService {
       'zipcode': params.zipcode,
       'phone-cc': params.phoneCountryCode,
       'phone': params.phone,
+      // lang-pref is REQUIRED by RC customers/signup.json — always send it
+      'lang-pref': params.languagePreference || 'en',
     };
     
     if (params.company) apiParams['company'] = params.company;
-    if (params.languagePreference) apiParams['lang-pref'] = params.languagePreference;
     
     const response = await this.client.post<string | { entityid: string }>(
       'customers/signup.json', 
@@ -297,22 +297,37 @@ export class CustomerService {
    * Generate password that meets ResellerClub requirements
    */
   generatePassword(): string {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
+    const lower = 'abcdefghijklmnopqrstuvwxyz';
+    const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const digits = '0123456789';
+    const special = '!@#$%';
+    const all = lower + upper + digits + special;
+    
+    // Use crypto for secure random values
+    const randomBytes = new Uint8Array(16);
+    crypto.getRandomValues(randomBytes);
+    
     let password = '';
-    
     // Ensure at least one of each required character type
-    password += 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)]; // lowercase
-    password += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)]; // uppercase
-    password += '0123456789'[Math.floor(Math.random() * 10)]; // number
-    password += '!@#$%'[Math.floor(Math.random() * 5)]; // special
+    password += lower[randomBytes[0] % lower.length];
+    password += upper[randomBytes[1] % upper.length];
+    password += digits[randomBytes[2] % digits.length];
+    password += special[randomBytes[3] % special.length];
     
-    // Fill the rest
+    // Fill the rest (8 more chars = 12 total)
     for (let i = 0; i < 8; i++) {
-      password += chars[Math.floor(Math.random() * chars.length)];
+      password += all[randomBytes[4 + i] % all.length];
     }
     
-    // Shuffle the password
-    return password.split('').sort(() => Math.random() - 0.5).join('');
+    // Shuffle using Fisher-Yates with crypto random
+    const arr = password.split('');
+    const shuffleBytes = new Uint8Array(arr.length);
+    crypto.getRandomValues(shuffleBytes);
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = shuffleBytes[i] % (i + 1);
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.join('');
   }
   
   /**

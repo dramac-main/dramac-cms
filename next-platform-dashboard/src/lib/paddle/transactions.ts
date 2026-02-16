@@ -79,12 +79,12 @@ export async function createDomainPurchase(
     params.domainName
   );
   
-  // Check if purchase already exists
+  // Check if purchase already exists (maybeSingle avoids error if not found)
   const { data: existing } = await admin
     .from('pending_purchases')
     .select('*')
     .eq('idempotency_key', idempotencyKey)
-    .single();
+    .maybeSingle();
   
   if (existing) {
     // Return existing purchase if still valid (pending and not expired)
