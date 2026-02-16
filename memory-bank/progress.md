@@ -1,11 +1,39 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 16, 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅**
 
 ---
 
-## Latest Update: February 16, 2026 - Domain/Email System Restructure + Critical Fixes ✅
+## Latest Update: February 16, 2026 - Live Chat Comprehensive Rework ✅
+
+**Commit:** `9c28e40` — 10 files changed, 468 insertions, 52 deletions
+
+**What was done:**
+1. **CRITICAL — Agent Adding Fix**: Agency owner wasn't in `agency_members` table → single-user agencies couldn't add agents. Now queries BOTH `agencies.owner_id` AND `agency_members`, deduplicates.
+2. **Agent Edit Functionality**: Added full edit dialog (display name, email, role, department, max concurrent chats). Pencil icon was imported but never used.
+3. **Keyboard Shortcuts**: Industry-standard shortcuts for conversation management (Ctrl+R resolve, Ctrl+Shift+C close, Ctrl+Shift+O reopen, Esc back) and message input (Ctrl+Enter send, Ctrl+/ toggle note, Esc clear).
+4. **CRITICAL — Auto-Assign Bug**: `.lt('current_chat_count', 'max_concurrent_chats')` does string comparison in Supabase, not column-to-column. Replaced with fetch-and-filter in app code.
+5. **Away Agents Excluded**: Auto-assign now only targets `online` agents (was `['online', 'away']`).
+6. **Unread Count Fix**: Replaced non-existent `supabase.rpc('increment_field')` with read-then-increment.
+7. **Canned Response Usage**: `incrementCannedResponseUsage()` now called from `selectCannedResponse`.
+8. **AI Auto-Response Wired**: `handleNewVisitorMessage()` now triggered for unassigned visitor messages.
+9. **Nav Active State**: Added `x-pathname` header in `proxy.ts` for live chat nav.
+
+**Key Insight (CRITICAL):** Supabase `.lt()`, `.gt()` compare against LITERAL values, NOT column references. For column-to-column comparison, must fetch and filter in application code.
+
+**Known Pre-existing TS Errors (unchanged):**
+- `next.config.ts` — eslint property
+- `purchases/status/route.ts` — type instantiation / property access
+- `domains.ts` lines 191/198/604/606 — DomainPrice type mismatch
+- `transactions.ts` — tax_category vs taxCategory
+- `portal-billing-service.ts` — Supabase column errors
+- `resellerclub/client.ts` — fetch Response type
+- `renew-form.tsx` — string | undefined assignability
+
+---
+
+## Previous Update: February 16, 2026 - Domain/Email System Restructure + Critical Fixes ✅
 
 **Commit:** `632d2ad` — 20 files changed, 1008 insertions, 500 deletions
 

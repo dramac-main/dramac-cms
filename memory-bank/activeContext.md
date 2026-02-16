@@ -2,6 +2,93 @@
 
 ## Recent Work
 
+### Live Chat System Comprehensive Rework — February 16, 2026 ✅
+
+**Category:** Feature Enhancement / Critical Bug Fixes / Industry-Standard UX
+
+**Commit:** `9c28e40` — 10 files changed, 468 insertions, 52 deletions
+
+#### Overview
+Full audit and rework of the live chat module. Found and fixed 9 bugs/missing features across agent management, auto-assignment, notifications, AI auto-response, keyboard shortcuts, and navigation.
+
+#### 1. CRITICAL: Agent Adding Fixed (Owner Inclusion)
+
+**Problem:** `getAgencyMembersForSite()` only queried `agency_members` table. Agency owners are NOT in that table — single-user agencies saw "No available members. All team members are already agents."
+
+**Fix:** Modified `agent-actions.ts` to query BOTH `agencies.owner_id` AND `agency_members`. Builds combined deduplicated list with owner having 'owner' role.
+
+#### 2. Agent Edit Functionality Added
+
+**Problem:** Edit button was completely missing from agent management. Pencil icon imported but never used.
+
+**Fix:** Added full edit dialog in `AgentsPageWrapper.tsx` with fields: display name, email, role, department, max concurrent chats. Uses existing `updateAgent()` action.
+
+#### 3. Keyboard Shortcuts (Industry Standard)
+
+**MessageInput.tsx:**
+- `Ctrl+Enter` → Send message
+- `Escape` → Clear input / close panels / toggle
+- `Ctrl+/` → Toggle note mode
+
+**ConversationViewWrapper.tsx (global):**
+- `Ctrl+R` → Resolve conversation
+- `Ctrl+Shift+C` → Close conversation
+- `Ctrl+Shift+O` → Reopen conversation
+- `Escape` → Back to conversations list
+- Added keyboard shortcuts reference card in right panel
+
+#### 4. CRITICAL: Auto-Assign Column Comparison Bug
+
+**Problem:** `conversation-actions.ts` used `.lt('current_chat_count', 'max_concurrent_chats')` — Supabase `.lt()` compares against LITERAL STRING values, not column references. Auto-assign silently failed.
+
+**Fix:** Replaced with fetch-and-filter: fetch agents with `select('id, current_chat_count, max_concurrent_chats')`, then filter in application code `(a.current_chat_count || 0) < (a.max_concurrent_chats || 5)`.
+
+**CRITICAL KNOWLEDGE:** Supabase `.lt()`, `.gt()`, `.lte()`, `.gte()` compare against literal values only. For column-to-column comparison, must fetch and filter in application code.
+
+#### 5. Away Agents Excluded from Auto-Assignment
+
+**Problem:** `conversations/route.ts` auto-assigned to both `['online', 'away']` agents. Away agents shouldn't receive new chats.
+
+**Fix:** Changed to `.eq('status', 'online')` only. Added capacity check with same fetch-and-filter pattern.
+
+#### 6. Unread Count Increment Fixed
+
+**Problem:** `messages/route.ts` used non-existent `supabase.rpc('increment_field')`. Fallback set count to 1 instead of incrementing.
+
+**Fix:** Replaced with proper read-then-increment: fetch current `unread_agent_count` and `message_count`, increment both, update in single call.
+
+#### 7. Canned Response Usage Tracking Wired
+
+**Problem:** `incrementCannedResponseUsage()` existed but was never called from UI.
+
+**Fix:** Added import and call in `MessageInput.tsx` `selectCannedResponse` callback.
+
+#### 8. AI Auto-Response Handler Wired
+
+**Problem:** `handleNewVisitorMessage()` was fully coded in `auto-response-handler.ts` but NEVER called from the messages API route.
+
+**Fix:** Added dynamic import and fire-and-forget call in `messages/route.ts` when visitor sends message AND no agent is assigned.
+
+#### 9. Navigation Active State Fixed
+
+**Problem:** Live chat layout's `LiveChatNav` reads `x-pathname` header to determine active tab, but no middleware set this header.
+
+**Fix:** Added `response.headers.set('x-pathname', pathname)` in `proxy.ts` after `updateSession()`.
+
+#### Files Changed
+| File | Changes |
+|---|---|
+| `agent-actions.ts` | Owner inclusion in available members |
+| `AgentsPageWrapper.tsx` | Edit dialog, edit button, type-safe state update |
+| `ConversationViewWrapper.tsx` | Global keyboard shortcuts, shortcuts reference card |
+| `MessageInput.tsx` | Keyboard shortcuts, canned response usage tracking |
+| `conversation-actions.ts` | Auto-assign fetch-and-filter fix |
+| `conversations/route.ts` | Online-only auto-assign, capacity check |
+| `messages/route.ts` | Unread count fix, AI auto-response wiring |
+| `proxy.ts` | x-pathname header for nav active state |
+
+---
+
 ### Domain/Email System Restructure + Paddle Checkout Fix + Revenue Tracking — February 16, 2026 ✅
 
 **Category:** Critical Bug Fix / Navigation Restructure / Revenue Tracking
