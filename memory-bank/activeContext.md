@@ -2,25 +2,46 @@
 
 ## Recent Work
 
-### Fix: Wrong ResellerClub Customer Lookup Endpoint — February 2026 ✅
+### Platform-Wide Deep Audit: 16 Bugs Fixed — February 2026 ✅
 
-**Category:** Critical Bug Fix / ResellerClub API
-**Commit:** `acc92b3`
-**Files Changed:** 1 — customers.ts
+**Category:** Critical Bug Fixes / RC API / Provisioning / Paddle / Security
+**Commits:** `acc92b3` (RC endpoint fix) → `8c3b2cb` (16-bug audit)
+**Files Changed:** 6 — customers.ts, domains.ts (RC), domains.ts (actions), transfers.ts, provisioning.ts, transactions.ts
 
 #### Overview
-After deploying commit `9f0f2f0` (which correctly wired up `ensureResellerClubCustomer()`), production testing revealed a latent bug: `getByUsername()` was calling the WRONG ResellerClub API endpoint.
+After deploying `ensureResellerClubCustomer()` wiring, production testing revealed a chain of latent bugs. Endpoint fix (`acc92b3`) then full audit (`8c3b2cb`) resolved all 16 issues.
 
-#### Problem
-`getByUsername()` in `customers.ts` called `customers/details-by-id.json` — which requires a `customer-id` parameter. But we were passing `username` (email). ResellerClub returned HTTP 500: `"Required parameter missing: customer-id"`.
+#### CRITICAL FIXES (were blocking domain registration):
+1. **`lang-pref` REQUIRED by RC signup** — was conditionally sent, caller never passed it. Now always sends `'en'` default.
+2. **`ensureResellerClubCustomer()` passes `languagePreference: 'en'`** — root caller fix.
+3. **Removed spurious `email` param from RC signup** — `username` IS the email, `email` is not a valid RC param.
 
-#### Fix
-1. Changed endpoint from `customers/details-by-id.json` → `customers/details.json` (accepts `username` param)
-2. Made `exists()` catch any `ResellerClubError` (not just `CustomerNotFoundError`) since RC returns various error formats for non-existent customers
+#### Security Fix:
+4. **`generatePassword()` now uses `crypto.getRandomValues()`** — was insecure `Math.random()`.
 
-**CRITICAL KNOWLEDGE:** RC has TWO customer lookup endpoints:
-- `customers/details.json` — lookup by username (email)
-- `customers/details-by-id.json` — lookup by customer-id (numeric)
+#### RC API Endpoint Fixes (transfers.ts — ALL 10 endpoints):
+5. **Leading `/` removed from all endpoints** — caused double-slash URLs (`baseUrl//domains/...`).
+6. **`auto-renewal` → `recurring`** — wrong endpoint name for auto-renew toggle.
+7. **`renewDomain()` now sends `exp-date`** — was completely missing this REQUIRED parameter.
+
+#### Provisioning Fixes:
+8. **Retry count `|| 0 + 1` → `(|| 0) + 1`** — operator precedence bug, counter never incremented.
+9. **Empty email fallback fixed** — contact creation in 3 locations used `''` as email (RC rejects).
+
+#### Domain Registration Fix:
+10. **Nameserver params now use repeated `ns` keys** — was `ns1`/`ns2`/`ns3` (wrong RC format).
+
+#### Paddle Fix:
+11. **`single()` → `maybeSingle()` for idempotency check** — `single()` throws if no match.
+
+**CRITICAL KNOWLEDGE:**
+- RC `customers/signup.json` REQUIRES `lang-pref` — always send `'en'`
+- RC customer lookup: `details.json` (by username/email), `details-by-id.json` (by numeric customer-id)
+- RC endpoints must NOT have leading `/` — client.ts builds `${baseUrl}/${endpoint}`
+- RC auto-renew endpoints: `enable-recurring.json` / `disable-recurring.json` (NOT `auto-renewal`)
+- RC domain renewal: `exp-date` parameter is REQUIRED
+- RC nameservers: repeated `ns` keys, NOT indexed `ns1`/`ns2`
+- Paddle: use `maybeSingle()` for optional lookups, `single()` only when row must exist
 
 ---
 

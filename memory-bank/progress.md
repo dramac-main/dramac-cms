@@ -5,18 +5,33 @@
 
 ---
 
-## Latest Update: February 2026 - RC Customer Lookup Endpoint Fix ✅
+## Latest Update: February 2026 - Platform-Wide Deep Audit (16 Bugs) ✅
 
-**Commit:** `acc92b3`
-**Files Changed:** 1 — customers.ts
+**Commits:** `acc92b3` → `8c3b2cb`
+**Files Changed:** 6 — customers.ts, domains.ts (RC + actions), transfers.ts, provisioning.ts, transactions.ts
 
 **What was done:**
-1. **CRITICAL — Wrong RC API Endpoint**: `getByUsername()` called `customers/details-by-id.json` (requires `customer-id`) instead of `customers/details.json` (accepts `username`). ResellerClub returned HTTP 500: "Required parameter missing: customer-id". Fixed to correct endpoint.
-2. **Resilient exists() Error Handling**: `exists()` now catches any `ResellerClubError` (not just `CustomerNotFoundError`) since RC returns various error formats for non-existent customers.
+1. **CRITICAL — RC signup missing `lang-pref`**: Always send `'en'` default. Was conditionally sent, caller never passed it.
+2. **CRITICAL — ensureResellerClubCustomer()**: Now passes `languagePreference: 'en'`.
+3. **RC endpoint fix**: `getByUsername()` used `details-by-id.json` → `details.json` (by username).
+4. **RC exists() resilience**: Catches all `ResellerClubError`, not just `CustomerNotFoundError`.
+5. **Security**: `generatePassword()` uses `crypto.getRandomValues()` instead of `Math.random()`.
+6. **transfers.ts 10 endpoints**: All had leading `/` causing double-slash URLs — removed.
+7. **Auto-renew endpoint**: `auto-renewal` → `recurring` (correct RC name).
+8. **Renewal missing `exp-date`**: Added required parameter with API detail lookup.
+9. **Provisioning retry_count**: Fixed `|| 0 + 1` operator precedence bug.
+10. **Empty email contacts**: 3 locations in provisioning had empty `''` email fallback.
+11. **Nameserver format**: `ns1`/`ns2` → repeated `ns` keys (correct RC format).
+12. **Paddle transactions**: `single()` → `maybeSingle()` for idempotency lookup.
+13. **Removed spurious `email` param**: Not valid for RC `customers/signup.json`.
 
-**CRITICAL KNOWLEDGE:** RC customer lookup endpoints:
-- `customers/details.json` — by username (email)
-- `customers/details-by-id.json` — by customer-id (numeric)
+**CRITICAL RC API KNOWLEDGE GAINED:**
+- `lang-pref` is REQUIRED (not optional) for customer signup
+- Endpoints must NOT have leading `/` (client builds `baseUrl/endpoint`)
+- Auto-renew: `enable-recurring.json` / `disable-recurring.json`
+- Renewal: `exp-date` is REQUIRED
+- Nameservers: repeated `ns` param keys
+- Customer lookup: `details.json` (by email), `details-by-id.json` (by ID)
 
 ---
 
