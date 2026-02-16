@@ -554,6 +554,12 @@ export async function createDomainCartCheckout(params: {
     years: number;
     privacy?: boolean;
     autoRenew?: boolean;
+    /** The exact retail price displayed to the user (includes privacy if enabled) */
+    displayedRetailPrice?: number;
+    /** The exact wholesale price for this domain (includes privacy if enabled) */
+    displayedWholesalePrice?: number;
+    /** Per-year privacy price from the cart */
+    privacyPrice?: number;
   }>;
   clientId?: string;
   contactInfo?: Record<string, unknown>;
@@ -593,113 +599,140 @@ export async function createDomainCartCheckout(params: {
       };
     }
     
-    // Get agency pricing settings (same as searchDomains uses)
-    const { data: pricing } = await getTable(supabase, 'agency_domain_pricing')
-      .select('default_markup_type, default_markup_value')
-      .eq('agency_id', profile.agency_id)
-      .maybeSingle() as { data: { default_markup_type?: string; default_markup_value?: number } | null };
+    // =========================================================================
+    // PRICING — Use the prices the client displayed to the user.
+    // The search page already fetched live RC prices and applied markup.
+    // Those prices are stored in the DomainCartItem's retailPrices map.
+    // Using the same prices ensures Paddle charges exactly what the user saw.
+    //
+    // If the client did NOT pass prices (old client / fallback), we still
+    // re-fetch from RC as before so the system stays backward-compatible.
+    // =========================================================================
+    const hasClientPrices = params.domains.every(d => d.displayedRetailPrice != null && d.displayedRetailPrice > 0);
 
-    const markupType = pricing?.default_markup_type || 'percentage';
-    const markupValue = pricing?.default_markup_value ?? 0;
-
-    const applyMarkup = (base: number): number => {
-      if (markupValue === 0 && markupType === 'percentage') return Math.round(base * 100) / 100;
-      if (markupType === 'fixed') return Math.round((base + markupValue) * 100) / 100;
-      return Math.round(base * (1 + markupValue / 100) * 100) / 100;
-    };
-
-    // Use the SAME live pricing path as searchDomains() to avoid price mismatches.
-    // Fetch LIVE RC pricing (not cached) for all TLDs in the cart.
-    const uniqueTlds = [...new Set(params.domains.map(d => {
-      const parts = d.domainName.split('.');
-      return '.' + parts.slice(1).join('.');
-    }))];
-
-    type SimplePrice = { register: Record<number, number>; renew: Record<number, number>; transfer: number };
-    let sellingByTld: Record<string, SimplePrice> = {};
-    let wholesaleByTld: Record<string, SimplePrice> = {};
-
-    const mapDomainPrice = (price: any): SimplePrice => ({
-      register: Object.fromEntries(Object.entries(price.register || {}).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
-      renew: Object.fromEntries(Object.entries(price.renew || {}).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
-      transfer: Number(price.transfer) || 0,
-    });
-
-    if (isClientAvailable()) {
-      const [sellingResult, wholesaleResult] = await Promise.all([
-        domainService.getCustomerPricing(undefined, uniqueTlds)
-          .then(data => Object.fromEntries(Object.entries(data).map(([tld, price]) => [tld, mapDomainPrice(price)])))
-          .catch(() => null),
-        domainService.getResellerCostPricing(uniqueTlds)
-          .then(data => Object.fromEntries(Object.entries(data).map(([tld, price]) => [tld, mapDomainPrice(price)])))
-          .catch(() => null),
-      ]);
-
-      if (sellingResult) sellingByTld = sellingResult as Record<string, SimplePrice>;
-      if (wholesaleResult) wholesaleByTld = wholesaleResult as Record<string, SimplePrice>;
-    }
-
-    // Calculate pricing for each domain using LIVE data (same logic as searchDomains)
     let totalWholesale = 0;
     let totalRetail = 0;
     const domainDetails = [];
-    
-    for (const domain of params.domains) {
-      const parts = domain.domainName.split('.');
-      const tld = '.' + parts.slice(1).join('.');
-      const years = domain.years;
 
-      const rcSelling = sellingByTld[tld];
-      const rcCost = wholesaleByTld[tld];
-      const fallbackBase = 12.99;
+    if (hasClientPrices) {
+      // FAST PATH: Use the exact prices the user saw
+      for (const domain of params.domains) {
+        const tld = '.' + domain.domainName.split('.').slice(1).join('.');
+        const retail = Math.round((domain.displayedRetailPrice || 0) * 100) / 100;
+        const wholesale = Math.round((domain.displayedWholesalePrice || retail * 0.5) * 100) / 100;
 
-      // Wholesale (cost) price
-      const baseWholesale = rcCost?.register?.[years] || (rcCost?.register?.[1] || fallbackBase) * years;
-
-      // Retail (selling) price — same logic as searchDomains
-      let retailForDomain: number;
-      const hasRcSellingPrice = !!rcSelling?.register?.[1];
-
-      if (hasRcSellingPrice) {
-        const rcSellingYears = rcSelling!.register[years] || (rcSelling!.register[1] || 0) * years;
-        retailForDomain = applyMarkup(rcSellingYears);
-      } else {
-        // Fallback: cost + at least 30% markup
-        if (markupValue > 0) {
-          retailForDomain = applyMarkup(baseWholesale);
-        } else {
-          retailForDomain = Math.round(baseWholesale * 1.3 * 100) / 100;
-        }
+        totalRetail += retail;
+        totalWholesale += wholesale;
+        domainDetails.push({
+          ...domain,
+          tld,
+          wholesale,
+          retail,
+        });
       }
 
-      // WHOIS privacy add-on — matches client-side calculation in domain-search-client.tsx
-      // RC charges ~$3/year wholesale for privacy. Retail is derived using the same
-      // markup ratio as the domain itself to stay consistent with the search page UI.
-      let privacyWholesale = 0;
-      let privacyRetail = 0;
-      if (domain.privacy) {
-        privacyWholesale = 3 * years; // RC charges $3/year for WHOIS privacy
-        // Use the domain's wholesale-to-retail ratio so privacy price matches what
-        // the search page showed (domain-search-client.tsx uses markupRatio approach)
-        const domainWholesale1yr = rcCost?.register?.[1] || fallbackBase;
-        const domainRetail1yr = hasRcSellingPrice
-          ? applyMarkup(rcSelling!.register[1] || 0)
-          : (markupValue > 0 ? applyMarkup(domainWholesale1yr) : Math.round(domainWholesale1yr * 1.3 * 100) / 100);
-        const markupRatio = domainWholesale1yr > 0 ? domainRetail1yr / domainWholesale1yr : 1;
-        privacyRetail = Math.round(3 * markupRatio * years * 100) / 100;
-      }
+      console.log(
+        `[Domains] Checkout using client-displayed prices: ` +
+        `retail=$${totalRetail.toFixed(2)}, wholesale=$${totalWholesale.toFixed(2)}, ` +
+        `domains=${params.domains.map(d => `${d.domainName}(${d.years}yr)`).join(', ')}`
+      );
+    } else {
+      // FALLBACK: Re-fetch live RC pricing (backward compatibility)
+      console.warn('[Domains] Client did not pass displayed prices — re-fetching from RC (may diverge from displayed prices)');
 
-      const domainWholesale = Math.round((baseWholesale + privacyWholesale) * 100) / 100;
-      const domainRetail = Math.round((retailForDomain + privacyRetail) * 100) / 100;
+      // Get agency pricing settings (same as searchDomains uses)
+      const { data: pricing } = await getTable(supabase, 'agency_domain_pricing')
+        .select('default_markup_type, default_markup_value')
+        .eq('agency_id', profile.agency_id)
+        .maybeSingle() as { data: { default_markup_type?: string; default_markup_value?: number } | null };
 
-      totalWholesale += domainWholesale;
-      totalRetail += domainRetail;
-      domainDetails.push({
-        ...domain,
-        tld: tld,
-        wholesale: domainWholesale,
-        retail: domainRetail,
+      const markupType = pricing?.default_markup_type || 'percentage';
+      const markupValue = pricing?.default_markup_value ?? 0;
+
+      const applyMarkup = (base: number): number => {
+        if (markupValue === 0 && markupType === 'percentage') return Math.round(base * 100) / 100;
+        if (markupType === 'fixed') return Math.round((base + markupValue) * 100) / 100;
+        return Math.round(base * (1 + markupValue / 100) * 100) / 100;
+      };
+
+      const uniqueTlds = [...new Set(params.domains.map(d => {
+        const parts = d.domainName.split('.');
+        return '.' + parts.slice(1).join('.');
+      }))];
+
+      type SimplePrice = { register: Record<number, number>; renew: Record<number, number>; transfer: number };
+      let sellingByTld: Record<string, SimplePrice> = {};
+      let wholesaleByTld: Record<string, SimplePrice> = {};
+
+      const mapDomainPrice = (price: any): SimplePrice => ({
+        register: Object.fromEntries(Object.entries(price.register || {}).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
+        renew: Object.fromEntries(Object.entries(price.renew || {}).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
+        transfer: Number(price.transfer) || 0,
       });
+
+      if (isClientAvailable()) {
+        const [sellingResult, wholesaleResult] = await Promise.all([
+          domainService.getCustomerPricing(undefined, uniqueTlds)
+            .then(data => Object.fromEntries(Object.entries(data).map(([tld, price]) => [tld, mapDomainPrice(price)])))
+            .catch(() => null),
+          domainService.getResellerCostPricing(uniqueTlds)
+            .then(data => Object.fromEntries(Object.entries(data).map(([tld, price]) => [tld, mapDomainPrice(price)])))
+            .catch(() => null),
+        ]);
+
+        if (sellingResult) sellingByTld = sellingResult as Record<string, SimplePrice>;
+        if (wholesaleResult) wholesaleByTld = wholesaleResult as Record<string, SimplePrice>;
+      }
+
+      for (const domain of params.domains) {
+        const parts = domain.domainName.split('.');
+        const tld = '.' + parts.slice(1).join('.');
+        const years = domain.years;
+
+        const rcSelling = sellingByTld[tld];
+        const rcCost = wholesaleByTld[tld];
+        const fallbackBase = 12.99;
+
+        const baseWholesale = rcCost?.register?.[years] || (rcCost?.register?.[1] || fallbackBase) * years;
+
+        let retailForDomain: number;
+        const hasRcSellingPrice = !!rcSelling?.register?.[1];
+
+        if (hasRcSellingPrice) {
+          const rcSellingYears = rcSelling!.register[years] || (rcSelling!.register[1] || 0) * years;
+          retailForDomain = applyMarkup(rcSellingYears);
+        } else {
+          if (markupValue > 0) {
+            retailForDomain = applyMarkup(baseWholesale);
+          } else {
+            retailForDomain = Math.round(baseWholesale * 1.3 * 100) / 100;
+          }
+        }
+
+        let privacyWholesale = 0;
+        let privacyRetail = 0;
+        if (domain.privacy) {
+          privacyWholesale = 3 * years;
+          const domainWholesale1yr = rcCost?.register?.[1] || fallbackBase;
+          const domainRetail1yr = hasRcSellingPrice
+            ? applyMarkup(rcSelling!.register[1] || 0)
+            : (markupValue > 0 ? applyMarkup(domainWholesale1yr) : Math.round(domainWholesale1yr * 1.3 * 100) / 100);
+          const markupRatio = domainWholesale1yr > 0 ? domainRetail1yr / domainWholesale1yr : 1;
+          privacyRetail = Math.round(3 * markupRatio * years * 100) / 100;
+        }
+
+        const domainWholesale = Math.round((baseWholesale + privacyWholesale) * 100) / 100;
+        const domainRetail = Math.round((retailForDomain + privacyRetail) * 100) / 100;
+
+        totalWholesale += domainWholesale;
+        totalRetail += domainRetail;
+        domainDetails.push({
+          ...domain,
+          tld,
+          wholesale: domainWholesale,
+          retail: domainRetail,
+        });
+      }
     }
     
     // Create a single pending purchase for the cart

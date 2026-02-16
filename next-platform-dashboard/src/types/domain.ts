@@ -542,8 +542,14 @@ export interface DomainCartItem {
   type: 'registration' | 'renewal' | 'transfer';
   domainName: string;
   years: number;
+  /** @deprecated Use wholesalePrices map instead */
   wholesalePrice: number;
+  /** @deprecated Use retailPrices map instead */
   retailPrice: number;
+  /** Full wholesale prices keyed by year count from RC API */
+  wholesalePrices: Record<number, number>;
+  /** Full retail prices keyed by year count (with markup applied) */
+  retailPrices: Record<number, number>;
   privacy: boolean;
   privacyPrice: number;
 }

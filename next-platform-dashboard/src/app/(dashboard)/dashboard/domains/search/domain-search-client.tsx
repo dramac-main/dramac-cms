@@ -34,6 +34,8 @@ export function DomainSearchClient() {
       years: 1,
       wholesalePrice: domain.prices.register[1] || 0,
       retailPrice: domain.retailPrices.register[1] || 0,
+      wholesalePrices: { ...domain.prices.register },
+      retailPrices: { ...domain.retailPrices.register },
       privacy: true,
       privacyPrice: privacyCostPerYear,
     };
@@ -48,8 +50,13 @@ export function DomainSearchClient() {
     router.push('/dashboard/domains/cart');
   };
 
+  const getRetailForYears = (item: DomainCartItem): number => {
+    if (item.retailPrices?.[item.years]) return item.retailPrices[item.years];
+    return Math.round((item.retailPrices?.[1] || item.retailPrice || 0) * item.years * 100) / 100;
+  };
+
   const totalPrice = cart.reduce((sum, item) => 
-    sum + (item.retailPrice + (item.privacy ? item.privacyPrice : 0)) * item.years, 
+    sum + getRetailForYears(item) + (item.privacy ? item.privacyPrice * item.years : 0), 
     0
   );
 

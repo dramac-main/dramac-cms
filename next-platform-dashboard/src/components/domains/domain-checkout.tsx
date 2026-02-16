@@ -71,8 +71,13 @@ export function DomainCheckout({
     }).format(price);
   };
 
+  const getRetailForYears = (item: DomainCartItem): number => {
+    if (item.retailPrices?.[item.years]) return item.retailPrices[item.years];
+    return Math.round((item.retailPrices?.[1] || item.retailPrice || 0) * item.years * 100) / 100;
+  };
+
   const totalPrice = items.reduce((total, item) => {
-    return total + (item.retailPrice + (item.privacy ? item.privacyPrice : 0)) * item.years;
+    return total + getRetailForYears(item) + (item.privacy ? item.privacyPrice * item.years : 0);
   }, 0);
 
   return (
@@ -142,9 +147,9 @@ export function DomainCheckout({
                 <div className="space-y-2">
                   {items.map(item => (
                     <div key={item.domainName} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{item.domainName}</span>
+                      <span className="text-muted-foreground">{item.domainName} ({item.years}yr)</span>
                       <span>
-                        {formatPrice((item.retailPrice + (item.privacy ? item.privacyPrice : 0)) * item.years)}
+                        {formatPrice(getRetailForYears(item) + (item.privacy ? item.privacyPrice * item.years : 0))}
                       </span>
                     </div>
                   ))}

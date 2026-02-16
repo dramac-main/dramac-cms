@@ -46,12 +46,26 @@ export function CartPageClient() {
 
   const handleComplete = async (contactInfo: ContactFormData): Promise<void | { checkoutUrl: string }> => {
     // Create checkout for all domains in cart
+    // Helper to get the correct retail price for the selected year count
+    const getRetailForYears = (item: DomainCartItem): number => {
+      if (item.retailPrices?.[item.years]) return item.retailPrices[item.years];
+      return Math.round((item.retailPrices?.[1] || item.retailPrice || 0) * item.years * 100) / 100;
+    };
+    const getWholesaleForYears = (item: DomainCartItem): number => {
+      if (item.wholesalePrices?.[item.years]) return item.wholesalePrices[item.years];
+      return Math.round((item.wholesalePrices?.[1] || item.wholesalePrice || 0) * item.years * 100) / 100;
+    };
+
     const result = await createDomainCartCheckout({
       domains: cart.map(item => ({
         domainName: item.domainName,
         years: item.years,
         privacy: item.privacy,
         autoRenew: true,
+        // Pass the exact prices the user saw on screen
+        displayedRetailPrice: getRetailForYears(item) + (item.privacy ? item.privacyPrice * item.years : 0),
+        displayedWholesalePrice: getWholesaleForYears(item) + (item.privacy ? 3 * item.years : 0),
+        privacyPrice: item.privacyPrice,
       })),
       contactInfo: {
         name: contactInfo.name,

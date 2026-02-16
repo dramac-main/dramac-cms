@@ -37,11 +37,23 @@ export function DomainCartComponent({
     }).format(price);
   };
   
+  /** Get the correct retail price for the given year count.
+   *  Looks up retailPrices[years] first (exact multi-year price from RC API),
+   *  then falls back to retailPrices[1] * years if not available. */
+  const getRetailForYears = (item: DomainCartItem): number => {
+    if (item.retailPrices?.[item.years]) {
+      return item.retailPrices[item.years];
+    }
+    // Fallback: multiply 1-year price by years
+    const perYear = item.retailPrices?.[1] || item.retailPrice || 0;
+    return Math.round(perYear * item.years * 100) / 100;
+  };
+
   const calculateTotals = (): DomainCart => {
     let subtotal = 0;
     
     items.forEach(item => {
-      subtotal += item.retailPrice * item.years;
+      subtotal += getRetailForYears(item);
       if (item.privacy) {
         subtotal += item.privacyPrice * item.years;
       }
@@ -124,11 +136,21 @@ export function DomainCartComponent({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">1 Year</SelectItem>
-                      <SelectItem value="2">2 Years (Save 5%)</SelectItem>
-                      <SelectItem value="3">3 Years (Save 10%)</SelectItem>
-                      <SelectItem value="5">5 Years (Save 15%)</SelectItem>
-                      <SelectItem value="10">10 Years (Save 20%)</SelectItem>
+                      {[1, 2, 3, 5, 10].map(yr => {
+                        // Only show year options that have pricing data
+                        const hasPrice = item.retailPrices?.[yr] || yr === 1;
+                        if (!hasPrice && yr > 1) return null;
+                        // Calculate real savings vs 1yr * N
+                        const perYear1 = item.retailPrices?.[1] || item.retailPrice || 0;
+                        const linearPrice = perYear1 * yr;
+                        const actualPrice = item.retailPrices?.[yr] || linearPrice;
+                        const savings = linearPrice > 0 ? Math.round((1 - actualPrice / linearPrice) * 100) : 0;
+                        return (
+                          <SelectItem key={yr} value={String(yr)}>
+                            {yr} Year{yr > 1 ? 's' : ''}{savings > 0 ? ` (Save ${savings}%)` : ''}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -161,7 +183,7 @@ export function DomainCartComponent({
                 <span className="text-muted-foreground">Subtotal for {item.years} year{item.years > 1 ? 's' : ''}</span>
                 <span className="font-semibold text-lg">
                   {formatPrice(
-                    (item.retailPrice + (item.privacy ? item.privacyPrice : 0)) * item.years
+                    getRetailForYears(item) + (item.privacy ? item.privacyPrice * item.years : 0)
                   )}
                 </span>
               </div>
