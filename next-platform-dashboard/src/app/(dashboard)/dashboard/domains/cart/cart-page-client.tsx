@@ -44,49 +44,52 @@ export function CartPageClient() {
     toast.info('Domain removed from cart');
   };
 
-  const handleComplete = async (contactInfo: ContactFormData) => {
+  const handleComplete = async (contactInfo: ContactFormData): Promise<void | { checkoutUrl: string }> => {
+    // Create checkout for all domains in cart
+    const result = await createDomainCartCheckout({
+      domains: cart.map(item => ({
+        domainName: item.domainName,
+        years: item.years,
+        privacy: item.privacy,
+        autoRenew: true,
+      })),
+      contactInfo: {
+        name: contactInfo.name,
+        email: contactInfo.email,
+        company: contactInfo.company,
+        address: contactInfo.address,
+        city: contactInfo.city,
+        state: contactInfo.state,
+        country: contactInfo.country,
+        zipcode: contactInfo.zipcode,
+        phone: contactInfo.phone,
+      },
+    });
+
+    if (!result.success || !result.data) {
+      // Throw so checkout component catches and stays on contact step
+      throw new Error(result.error || 'Failed to create checkout');
+    }
+
+    // Clear cart before opening checkout
+    sessionStorage.removeItem('domainCart');
+    
+    // Open Paddle transaction checkout for one-time domain purchase
+    const successUrl = `${window.location.origin}/dashboard/domains/success?purchase_id=${result.data.pendingPurchaseId}`;
+    
     try {
-      // Create checkout for all domains in cart
-      const result = await createDomainCartCheckout({
-        domains: cart.map(item => ({
-          domainName: item.domainName,
-          years: item.years,
-          privacy: item.privacy,
-          autoRenew: true,
-        })),
-        contactInfo: {
-          name: contactInfo.name,
-          email: contactInfo.email,
-          company: contactInfo.company,
-          address: contactInfo.address,
-          city: contactInfo.city,
-          state: contactInfo.state,
-          country: contactInfo.country,
-          zipcode: contactInfo.zipcode,
-          phone: contactInfo.phone,
-        },
-      });
-
-      if (!result.success || !result.data) {
-        toast.error(result.error || 'Failed to create checkout');
-        return;
-      }
-
-      // Clear cart before opening checkout
-      sessionStorage.removeItem('domainCart');
-      
-      // Open Paddle transaction checkout for one-time domain purchase
-      const successUrl = `${window.location.origin}/dashboard/domains/success?purchase_id=${result.data.pendingPurchaseId}`;
-      
       await openPaddleTransactionCheckout({
         transactionId: result.data.transactionId,
         successUrl,
       });
-      
-      toast.success('Opening checkout...');
-    } catch (error) {
-      console.error('[Cart] Checkout error:', error);
-      toast.error('Failed to create checkout. Please try again.');
+    } catch (paddleError) {
+      console.error('[Cart] Paddle checkout error:', paddleError);
+      // If Paddle overlay fails, redirect to checkout URL directly
+      if (result.data.checkoutUrl) {
+        window.location.href = result.data.checkoutUrl;
+        return { checkoutUrl: result.data.checkoutUrl };
+      }
+      throw new Error('Failed to open payment checkout. Please try again.');
     }
   };
 

@@ -19,8 +19,10 @@ interface PurchaseDetails {
   error_message?: string;
   purchase_data: {
     domainName?: string;
+    domain_name?: string;
     years?: number;
     mailboxes?: number;
+    domains?: Array<{ domainName?: string; domain_name?: string; years?: number }>;
     [key: string]: unknown;
   };
 }
@@ -221,16 +223,42 @@ export default function PurchaseSuccessPage() {
                   <div className="text-sm text-muted-foreground">Type</div>
                   <div className="font-semibold">{getPurchaseTypeLabel(purchase.purchase_type)}</div>
                 </div>
-                {purchase.purchase_data?.domainName && (
-                  <div>
-                    <div className="text-sm text-muted-foreground">Domain</div>
-                    <div className="font-semibold">{purchase.purchase_data.domainName}</div>
-                  </div>
-                )}
+                {/* Handle both single and multi-domain purchase data formats */}
+                {(() => {
+                  const pd = purchase.purchase_data;
+                  const domainName = pd?.domainName || pd?.domain_name;
+                  const domains = pd?.domains;
+                  
+                  if (domainName) {
+                    return (
+                      <div>
+                        <div className="text-sm text-muted-foreground">Domain</div>
+                        <div className="font-semibold">{domainName}</div>
+                      </div>
+                    );
+                  }
+                  if (domains && domains.length > 0) {
+                    return (
+                      <div className="col-span-2">
+                        <div className="text-sm text-muted-foreground">Domains</div>
+                        <div className="font-semibold">
+                          {domains.map(d => d.domainName || d.domain_name).filter(Boolean).join(', ')}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
                 {purchase.purchase_data?.years && (
                   <div>
                     <div className="text-sm text-muted-foreground">Period</div>
                     <div className="font-semibold">{purchase.purchase_data.years} {purchase.purchase_data.years === 1 ? 'year' : 'years'}</div>
+                  </div>
+                )}
+                {!purchase.purchase_data?.years && purchase.purchase_data?.domains?.[0]?.years && (
+                  <div>
+                    <div className="text-sm text-muted-foreground">Period</div>
+                    <div className="font-semibold">{purchase.purchase_data.domains[0].years} {purchase.purchase_data.domains[0].years === 1 ? 'year' : 'years'}</div>
                   </div>
                 )}
                 {purchase.purchase_data?.mailboxes && (

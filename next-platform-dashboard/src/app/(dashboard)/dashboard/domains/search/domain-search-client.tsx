@@ -21,6 +21,13 @@ export function DomainSearchClient() {
       return;
     }
 
+    // Calculate privacy price using same markup ratio as the domain itself
+    // ResellerClub charges ~$3/year wholesale for WHOIS privacy
+    const wholesaleBase = domain.prices.register[1] || 1;
+    const retailBase = domain.retailPrices.register[1] || wholesaleBase;
+    const markupRatio = wholesaleBase > 0 ? retailBase / wholesaleBase : 1;
+    const privacyCostPerYear = Math.round(3 * markupRatio * 100) / 100;
+
     const item: DomainCartItem = {
       type: 'registration',
       domainName: domain.domain,
@@ -28,7 +35,7 @@ export function DomainSearchClient() {
       wholesalePrice: domain.prices.register[1] || 0,
       retailPrice: domain.retailPrices.register[1] || 0,
       privacy: true,
-      privacyPrice: 0, // Free privacy
+      privacyPrice: privacyCostPerYear,
     };
 
     setCart(prev => [...prev, item]);

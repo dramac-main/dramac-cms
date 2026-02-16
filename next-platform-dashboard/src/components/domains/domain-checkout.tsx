@@ -48,11 +48,19 @@ export function DomainCheckout({
         return;
       }
       
-      // Old flow (direct completion)
-      setStep('confirmation');
+      // Paddle overlay opened successfully — don't advance to confirmation
+      // The success page handles post-payment flow
+      setIsSubmitting(false);
     } catch (error) {
       console.error('Checkout error:', error);
       setIsSubmitting(false);
+      // Show error toast — user stays on contact step to retry
+      const { toast } = await import('sonner');
+      toast.error(
+        error instanceof Error 
+          ? error.message 
+          : 'Failed to process checkout. Please try again.'
+      );
     }
   };
 

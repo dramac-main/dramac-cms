@@ -87,7 +87,7 @@ export async function createDomainPurchase(
     .single();
   
   if (existing) {
-    // Return existing purchase if still valid
+    // Return existing purchase if still valid (pending and not expired)
     if (existing.status === 'pending_payment' && new Date(existing.expires_at) > new Date()) {
       return {
         id: existing.id,
@@ -96,6 +96,13 @@ export async function createDomainPurchase(
         checkoutUrl: existing.paddle_checkout_url,
         status: existing.status,
       };
+    }
+    // If existing purchase is failed, cancelled, or expired — delete it so we can retry
+    if (['failed', 'cancelled'].includes(existing.status) || new Date(existing.expires_at) <= new Date()) {
+      await admin
+        .from('pending_purchases')
+        .delete()
+        .eq('id', existing.id);
     }
   }
   
@@ -206,7 +213,7 @@ export async function createEmailPurchase(
   }
   
   if (existing) {
-    // Return existing purchase if still valid
+    // Return existing purchase if still valid (pending and not expired)
     if (existing.status === 'pending_payment' && new Date(existing.expires_at) > new Date()) {
       return {
         id: existing.id,
@@ -215,6 +222,13 @@ export async function createEmailPurchase(
         checkoutUrl: existing.paddle_checkout_url,
         status: existing.status,
       };
+    }
+    // If existing purchase is failed, cancelled, or expired — delete it so we can retry
+    if (['failed', 'cancelled'].includes(existing.status) || new Date(existing.expires_at) <= new Date()) {
+      await admin
+        .from('pending_purchases')
+        .delete()
+        .eq('id', existing.id);
     }
   }
   

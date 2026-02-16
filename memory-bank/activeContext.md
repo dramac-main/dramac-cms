@@ -2,6 +2,109 @@
 
 ## Recent Work
 
+### Platform-Wide Audit: Domain TS Fixes, Live Chat Agent Filter, Transfer/Tags UI — February 16, 2026 ✅
+
+**Category:** Critical Bug Fixes / TypeScript Errors / UI Feature Completion / Documentation
+
+**Commit:** `684a10b` — 9 files changed, 684 insertions, 1550 deletions
+
+#### Overview
+Full platform audit across Domain/Email and Live Chat modules. Fixed all TypeScript compilation errors in domain checkout flow, fixed the cascading live chat agent bug, added missing UI for conversation transfer and tag management, and created comprehensive user journeys documentation.
+
+#### 1. CRITICAL: Paddle SDK Property Names (Build-Breaking TS Errors)
+
+**Problem:** `transactions.ts` used snake_case (`tax_category`, `unit_price`, `currency_code`, `custom_data`) but the Paddle Node.js SDK uses **camelCase**.
+
+**Fix:** Renamed ALL properties to camelCase: `taxCategory`, `unitPrice`, `currencyCode`, `customData`. Added `as any` casts for `CurrencyCode` enum type.
+
+**CRITICAL KNOWLEDGE:** Paddle Node.js SDK uses camelCase throughout. The `CurrencyCode` type is an enum, not a plain string — needs `as any` cast when passing string values.
+
+#### 2. CRITICAL: Live Chat Agent Filter (Soft-Delete Cascading Bug)
+
+**Problem:** `getAgents()` did NOT filter by `is_active: true`. `deleteAgent()` does soft-delete (`is_active: false`). So `loadAgencyMembers()` filtered out ALL users who exist in `mod_chat_agents` (including soft-deleted ones), making the dropdown empty and the "Add Agent" button permanently disabled.
+
+**Fix:** Added `.eq('is_active', true)` to `getAgents()` query in `agent-actions.ts`.
+
+#### 3. Purchases/Status Route Type Fixes
+
+**Problem:** `pending_purchases` table not in generated Supabase types. Property access on `purchase` object failed.
+
+**Fix:** Cast `(supabase as any).from('pending_purchases')` and `purchase as Record<string, any>`.
+
+#### 4. Domain getDomain Site JOIN
+
+**Problem:** `getDomain()` used `select('*')` — never JOINed the `sites` table. domain.site was always undefined, so the "Connected Site" section never rendered.
+
+**Fix:** Changed to `select('*, site:sites(id, name)')`.
+
+#### 5. Renew Dialog Paddle Checkout Redirect
+
+**Problem:** Domain list renew dialog created a Paddle transaction but never redirected to checkout. Silently created unpaid transactions.
+
+**Fix:** Added `checkoutUrl` handling — if result contains `checkoutUrl`, redirect via `window.location.href`.
+
+#### 6. DomainPrice Type Mismatch + purchase_data
+
+**Problem:** `mapDomainPrice` parameter type didn't match the actual data structure. `admin.from('pending_purchases')` had same typing issue.
+
+**Fix:** Changed `mapDomainPrice` parameter to `any` with explicit return type `: SimplePrice`. Added `as any` cast for pending_purchases.
+
+#### 7. Renew Form Type Safety
+
+**Problem:** `domain.domain_name?.split(...)` and `result.data.checkoutUrl` had `string | undefined` assignability issues.
+
+**Fix:** Used `String(domain.domain_name || '')` and `String(result.data.checkoutUrl)`.
+
+#### 8. notifyChatAssigned on Manual Assignment
+
+**Problem:** `notifyChatAssigned()` existed but was never called when an agent manually assigns a conversation.
+
+**Fix:** Added to `assignConversation()` in `conversation-actions.ts`. Looks up agent's `user_id` and `display_name`, then calls notification.
+
+#### 9. Conversation Transfer UI
+
+**Problem:** `transferConversation()` action existed but had no UI trigger.
+
+**Fix:** Added "Transfer Conversation" menu item in ⋮ dropdown. Shows inline agent selector bar when activated.
+
+#### 10. Tag Management UI
+
+**Problem:** `updateConversationTags()` action existed but tags were read-only.
+
+**Fix:** Replaced read-only Tags card with interactive one: tags with X remove buttons, plus input with + button to add tags.
+
+#### 11. User Journeys Documentation (v2.0)
+
+**Created:** `docs/USER-JOURNEYS.md` — Comprehensive v2.0 covering:
+- 5 roles: Super Admin, Agency Owner, Agency Member, Business Owner, Site Visitor
+- 10+ journey categories across all modules
+- Verification checklist for domain checkout, live chat, notifications
+- Environment requirements (Paddle, ResellerClub, Supabase, Resend)
+
+#### Files Changed
+| File | Changes |
+|---|---|
+| `transactions.ts` | snake_case → camelCase for Paddle SDK |
+| `purchases/status/route.ts` | `as any` casts for pending_purchases |
+| `domains.ts` | getDomain site JOIN, mapDomainPrice type, purchase_data cast |
+| `renew-form.tsx` | Type safety for domain_name and checkoutUrl |
+| `domain-list-client.tsx` | Paddle checkoutUrl redirect on renew |
+| `agent-actions.ts` | `is_active: true` filter on getAgents |
+| `conversation-actions.ts` | notifyChatAssigned on manual assignment |
+| `ConversationViewWrapper.tsx` | Transfer UI + Tag management UI |
+| `docs/USER-JOURNEYS.md` | Comprehensive v2.0 user journeys |
+
+#### DEPLOYMENT NOTE — Paddle "Not Configured" Error
+The "Paddle is not configured" error is a **deployment configuration issue**, not a code bug. The following env vars must be set in Vercel production:
+- `PADDLE_API_KEY` (server-side API key)
+- `PADDLE_WEBHOOK_SECRET` (webhook verification)
+- `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` (client-side token)
+- `NEXT_PUBLIC_PADDLE_ENVIRONMENT` (sandbox or production)
+
+Also must configure webhook URL `https://app.dramacagency.com/api/webhooks/paddle` in Paddle Dashboard.
+
+---
+
 ### Live Chat System Comprehensive Rework — February 16, 2026 ✅
 
 **Category:** Feature Enhancement / Critical Bug Fixes / Industry-Standard UX

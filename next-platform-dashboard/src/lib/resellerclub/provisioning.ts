@@ -12,6 +12,50 @@ import { updatePendingPurchaseStatus } from '@/lib/paddle/transactions';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseClient = any;
 
+/**
+ * Map of country codes to phone country codes (ITU-T E.164)
+ * ResellerClub requires phone-cc as a separate field (without the + prefix)
+ */
+const COUNTRY_PHONE_CODES: Record<string, string> = {
+  ZM: '260', ZA: '27', KE: '254', NG: '234', GH: '233', TZ: '255', UG: '256',
+  ZW: '263', BW: '267', MW: '265', MZ: '258', NA: '264', RW: '250', CD: '243',
+  US: '1', CA: '1', MX: '52', BR: '55', AR: '54', GB: '44', DE: '49', FR: '33',
+  IT: '39', ES: '34', NL: '31', AU: '61', NZ: '64', IN: '91', CN: '86', JP: '81',
+  SG: '65', AE: '971', SA: '966', IL: '972', TR: '90', EG: '20', MA: '212',
+  TH: '66', MY: '60', PH: '63', ID: '62', VN: '84', PK: '92', BD: '880',
+  HK: '852', TW: '886', KR: '82', SE: '46', NO: '47', DK: '45', FI: '358',
+  PL: '48', IE: '353', PT: '351', CH: '41', AT: '43', BE: '32', CZ: '420',
+  RO: '40', GR: '30', HU: '36', CO: '57', PE: '51', CL: '56', EC: '593',
+  QA: '974', KW: '965', BH: '973', OM: '968', JO: '962',
+};
+
+/**
+ * Extract phone country code from a 2-letter country code
+ */
+function extractPhoneCountryCode(countryCode: string): string {
+  return COUNTRY_PHONE_CODES[countryCode?.toUpperCase()] || '260';
+}
+
+/**
+ * Strip leading + and country code prefix from a phone number
+ * ResellerClub expects phone WITHOUT the country code prefix
+ */
+function stripPhoneCountryCode(phone: string, countryCode: string): string {
+  if (!phone) return '955000000';
+  // Remove leading +, spaces, dashes
+  let cleaned = phone.replace(/[\s\-\(\)]/g, '');
+  const cc = COUNTRY_PHONE_CODES[countryCode?.toUpperCase()] || '';
+  // Strip leading + followed by country code
+  if (cleaned.startsWith('+' + cc)) {
+    cleaned = cleaned.substring(cc.length + 1);
+  } else if (cleaned.startsWith(cc) && cleaned.length > cc.length + 5) {
+    cleaned = cleaned.substring(cc.length);
+  }
+  // Strip leading + if still present
+  if (cleaned.startsWith('+')) cleaned = cleaned.substring(1);
+  return cleaned || '955000000';
+}
+
 export interface ProvisioningResult {
   success: boolean;
   resourceId?: string; // domain_id or email_order_id (first domain for multi-domain purchases)
@@ -105,8 +149,8 @@ export async function provisionDomainRegistration(
       state: (contactInfo?.state as string) || 'Lusaka',
       country: (contactInfo?.country as string) || 'ZM',
       zipcode: (contactInfo?.zipcode as string) || '10101',
-      phoneCountryCode: '260',
-      phone: (contactInfo?.phone as string) || '955000000',
+      phoneCountryCode: extractPhoneCountryCode((contactInfo?.country as string) || 'ZM'),
+      phone: stripPhoneCountryCode((contactInfo?.phone as string) || '955000000', (contactInfo?.country as string) || 'ZM'),
       customerId: customerId,
       type: 'Contact',
     });
@@ -291,8 +335,8 @@ async function provisionMultipleDomains(
       state: (contactInfo?.state as string) || 'Lusaka',
       country: (contactInfo?.country as string) || 'ZM',
       zipcode: (contactInfo?.zipcode as string) || '10101',
-      phoneCountryCode: '260',
-      phone: (contactInfo?.phone as string) || '955000000',
+      phoneCountryCode: extractPhoneCountryCode((contactInfo?.country as string) || 'ZM'),
+      phone: stripPhoneCountryCode((contactInfo?.phone as string) || '955000000', (contactInfo?.country as string) || 'ZM'),
       customerId: customerId,
       type: 'Contact',
     });

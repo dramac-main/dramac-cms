@@ -353,7 +353,8 @@ export async function calculateDomainPrice(params: {
     let privacyRetail = 0;
     
     if (params.includePrivacy) {
-      privacyWholesale = 5 * params.years;
+      // ResellerClub charges $3/year for WHOIS privacy protection
+      privacyWholesale = 3 * params.years;
       // Use the same markup percentage for privacy add-on
       const privacyMarkupPct = markupType === 'percentage' ? markupValue : 30;
       privacyRetail = privacyWholesale * (1 + privacyMarkupPct / 100);
