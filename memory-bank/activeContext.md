@@ -2,6 +2,58 @@
 
 ## Recent Work
 
+### Payment Safety Mechanisms — Pre-Flight Balance Check + Auto-Refund — February 2026 ✅
+
+**Category:** Critical Safety / Industry Standard Compliance
+**Commit:** `3f71d21`
+**Files Changed:** 3
+
+#### Overview
+CRITICAL GAP IDENTIFIED: When a customer pays via Paddle for a domain/email, the webhook triggers ResellerClub provisioning. If RC provisioning fails (e.g., insufficient RC funds), the customer has already been charged but receives nothing — and there was NO automatic refund mechanism. This is the single most dangerous financial bug in any reseller platform.
+
+Industry research (WHMCS, cPanel Store, Blesta, HostBill) confirmed the standard approach: **Strategy 1 (Prevention) + Strategy 2 (Safety Net)** combined.
+
+#### Fix 1 — Pre-Flight RC Balance Check (Prevention):
+- **`checkResellerBalance(wholesaleAmount)`** — new exported function in `transactions.ts`
+  - Calls `client.getBalance()` from ResellerClub API
+  - Compares balance against wholesale cost BEFORE creating Paddle transaction
+  - Returns `{ sufficient, balance, required, currency, shortfall }`
+  - Fail-open design: if RC API unreachable, allows transaction (auto-refund catches it)
+- Added to **`createDomainPurchase()`** — blocks checkout if balance insufficient
+- Added to **`createEmailPurchase()`** — same protection
+- User sees: "Unable to process this domain order at the moment. Please try again later or contact support."
+
+#### Fix 2 — Auto-Refund on Provisioning Failure (Safety Net):
+- **`autoRefundTransaction(paddleTransactionId, reason, pendingPurchaseId)`** — new exported function
+  - Uses Paddle Adjustments API: `paddle.adjustments.create({ action: 'refund', type: 'full', transactionId, reason })`
+  - Full refund — returns money to customer's payment method
+  - Updates `pending_purchases` status to `'refunded'` with adjustment ID + timestamp
+- **Webhook handler** (`webhook-handlers.ts`) now triggers auto-refund when provisioning fails
+  - If refund succeeds: logs adjustment ID, updates status to 'refunded'
+  - If refund fails: logs error, updates status to 'refund_failed', flags `needs_manual_refund: true`
+  - CRITICAL: if refund API itself fails, it's logged for manual intervention — never silently lost
+
+#### Fix 3 — Balance Check API Endpoint:
+- **`POST /api/purchases/balance-check`** — new API route
+  - Frontend can pre-check availability before showing checkout
+  - Request: `{ wholesaleAmount, purchaseType, domainName }`
+  - Response: `{ available: boolean, message: string }`
+  - Never exposes actual RC balance to end users (security)
+  - Requires authentication
+
+#### Key Architecture Decisions:
+- **Fail-open on pre-flight**: If RC API is down, we don't block checkout — the auto-refund catches failures downstream
+- **Full refund only**: No partial refunds on provisioning failure — customer gets all money back
+- **Paddle Adjustments API**: Used `type: 'full'` (no items array needed) for simplicity
+- **Manual intervention path**: If auto-refund fails, purchase is flagged for admin review — nothing is silently lost
+
+#### Files Changed:
+- `src/lib/paddle/transactions.ts` — `checkResellerBalance()`, `autoRefundTransaction()`, pre-flight checks in both purchase functions
+- `src/lib/paddle/webhook-handlers.ts` — auto-refund dispatch on provisioning failure
+- `src/app/api/purchases/balance-check/route.ts` — new API endpoint
+
+---
+
 ### RC Customer "undefined" String Bug Fix + Industry-Standard Live Chat Rating System — February 2026 ✅
 
 **Category:** Critical Bug Fix + Feature Enhancement

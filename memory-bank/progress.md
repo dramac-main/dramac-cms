@@ -1,11 +1,32 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅**
 
 ---
 
-## Latest Update: February 2026 - RC Customer "undefined" String Bug + Industry-Standard Rating System ✅
+## Latest Update: February 2026 - Payment Safety Mechanisms — Pre-Flight Balance Check + Auto-Refund ✅
+
+**Commit:** `3f71d21`
+**Files Changed:** 3
+
+**What was done:**
+
+### Critical Gap Fixed: Customer charged but no domain delivered
+1. **`checkResellerBalance()`** — Pre-flight RC balance check before Paddle transaction creation. Blocks checkout if RC balance is insufficient to fulfill the order.
+2. **`autoRefundTransaction()`** — Issues full refund via Paddle Adjustments API when provisioning fails. Updates purchase status to 'refunded' with adjustment ID.
+3. **Pre-flight checks in `createDomainPurchase()` and `createEmailPurchase()`** — Both now check RC balance before creating Paddle transaction.
+4. **Webhook handler auto-refund** — When provisioning fails, automatically refunds via Paddle. If refund fails, flags for manual review ('refund_failed' + 'needs_manual_refund').
+5. **`POST /api/purchases/balance-check`** — New API endpoint for frontend to pre-check availability before showing checkout.
+
+### Design Decisions
+- Fail-open on pre-flight (if RC unreachable, allow checkout — auto-refund catches it)
+- Full refund only (no partial refunds on provisioning failure)
+- Manual intervention path for failed refunds (nothing silently lost)
+
+---
+
+## Previous Update: February 2026 - RC Customer "undefined" String Bug + Industry-Standard Rating System ✅
 
 **Commit:** `6a964bc`
 **Files Changed:** 11
