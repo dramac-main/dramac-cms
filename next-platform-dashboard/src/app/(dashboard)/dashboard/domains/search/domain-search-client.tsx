@@ -36,7 +36,7 @@ export function DomainSearchClient() {
       retailPrice: Number(domain.retailPrices.register[1] ?? domain.retailPrices.register['1' as any]) || 0,
       wholesalePrices: { ...domain.prices.register },
       retailPrices: { ...domain.retailPrices.register },
-      privacy: true,
+      privacy: false,  // Default OFF — let the customer opt-in on the cart page
       privacyPrice: privacyCostPerYear,
     };
 
