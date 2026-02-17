@@ -552,7 +552,7 @@ export async function syncBusinessEmailAccounts(emailOrderId: string): Promise<{
 // ============================================================================
 
 /**
- * Get email pricing from ResellerClub
+ * Get email pricing from ResellerClub (customer pricing for consistency with server action)
  */
 export async function getBusinessEmailPricing(): Promise<{
   success: boolean;
@@ -560,8 +560,39 @@ export async function getBusinessEmailPricing(): Promise<{
   error?: string;
 }> {
   try {
-    const pricing = await businessEmailApi.getResellerPricing();
-    return { success: true, data: pricing };
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Not authenticated' };
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('agency_id')
+      .eq('id', user.id)
+      .single();
+    if (!profile?.agency_id) return { success: false, error: 'No agency found' };
+
+    // Get customer ID from agency
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: agency } = await (supabase as any)
+      .from('agencies')
+      .select('resellerclub_customer_id')
+      .eq('id', profile.agency_id)
+      .single();
+
+    let customerId = agency?.resellerclub_customer_id;
+    if (customerId === 'undefined' || customerId === 'null' || customerId?.trim() === '') {
+      customerId = undefined;
+    }
+
+    if (customerId) {
+      // Use customer pricing (same as what the server action charges)
+      const pricing = await businessEmailApi.getCustomerPricing(customerId);
+      return { success: true, data: pricing };
+    } else {
+      // Fallback to reseller pricing if no customer ID yet
+      const pricing = await businessEmailApi.getResellerPricing();
+      return { success: true, data: pricing };
+    }
   } catch (error) {
     console.error('Get business email pricing error:', error);
     return { 
@@ -770,19 +801,81 @@ export async function getBusinessEmailOrderByDomainId(domainId: string): Promise
 // Helper Functions
 // ============================================================================
 
+/**
+ * Calculate base price from RC email pricing response.
+ * 
+ * RC response structure (confirmed from API docs):
+ * { "eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": 0.86, "12": 10.20 }, "renew": {...} } } } }
+ * 
+ * Prices are TOTAL for the tenure per-account.
+ * E.g. add["12"] = 10.20 → $10.20 total for 12 months for 1 account.
+ * Total = price * numberOfAccounts
+ */
 function calculateBasePrice(
   pricing: EmailPricingResponse,
   months: number,
   accounts: number
 ): number {
-  // Default to US pricing
+  // Navigate the real RC structure: productKey → email_account_ranges → slab → add → months
   const productPricing = pricing['eeliteus'];
-  if (!productPricing) return 0;
+  if (!productPricing) {
+    console.warn('[EmailPricing] No eeliteus product key found in pricing response');
+    return 0;
+  }
   
-  const monthPricing = productPricing[String(months)];
-  if (!monthPricing) return 0;
+  const ranges = productPricing.email_account_ranges;
+  if (!ranges || typeof ranges !== 'object') {
+    console.warn('[EmailPricing] No email_account_ranges in pricing response. Keys:', Object.keys(productPricing));
+    return 0;
+  }
   
-  return parseFloat(monthPricing.addnewaccount) * accounts;
+  // Find the correct slab for the number of accounts (e.g. "1-5", "6-25", "26-49", "50-200000")
+  const slab = findAccountSlab(ranges, accounts);
+  if (!slab) {
+    console.warn(`[EmailPricing] No slab found for ${accounts} accounts. Available slabs:`, Object.keys(ranges));
+    return 0;
+  }
+  
+  const slabPricing = ranges[slab];
+  const addPricing = slabPricing?.add;
+  if (!addPricing) {
+    console.warn(`[EmailPricing] No 'add' pricing in slab ${slab}`);
+    return 0;
+  }
+  
+  // Get price for the requested tenure (months)
+  const price = addPricing[String(months)];
+  if (price == null || isNaN(Number(price))) {
+    console.warn(`[EmailPricing] No price for ${months} months in slab ${slab}. Available:`, Object.keys(addPricing));
+    return 0;
+  }
+  
+  // Price is total-for-tenure per account. Multiply by number of accounts.
+  return Number(price) * accounts;
+}
+
+/**
+ * Find the correct account slab for a given number of accounts.
+ * Slabs are like: "1-5", "6-25", "26-49", "50-200000"
+ */
+function findAccountSlab(
+  ranges: Record<string, unknown>,
+  accounts: number
+): string | null {
+  for (const slab of Object.keys(ranges)) {
+    const parts = slab.split('-');
+    if (parts.length === 2) {
+      const min = parseInt(parts[0]);
+      const max = parseInt(parts[1]);
+      if (!isNaN(min) && !isNaN(max) && accounts >= min && accounts <= max) {
+        return slab;
+      }
+    }
+  }
+  // Fallback: return first slab if no match
+  const firstSlab = Object.keys(ranges)[0];
+  console.warn(`[EmailPricing] No exact slab match for ${accounts} accounts, falling back to: ${firstSlab}`);
+  return firstSlab || null;
 }
 
 function applyMarkup(

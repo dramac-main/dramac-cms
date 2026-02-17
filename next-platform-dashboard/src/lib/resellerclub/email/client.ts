@@ -45,22 +45,41 @@ export const businessEmailApi = {
 
     const client = getResellerClubClient();
     
-    const response = await client.post<{ entityid: string; invoiceid?: string }>('eelite/add.json', {
+    const response = await client.post<Record<string, unknown>>('eelite/add.json', {
       'domain-name': params.domainName,
       'customer-id': params.customerId,
       'no-of-accounts': params.numberOfAccounts,
       'months': params.months,
       'product-key': params.productKey || EMAIL_PRODUCT_KEYS.eeliteus,
       'invoice-option': params.invoiceOption || 'NoInvoice',
+      'auto-renew': false, // Required parameter per RC API docs
     });
 
-    if (!response.entityid) {
-      throw new ResellerClubError('Failed to create email order', 'CREATE_FAILED', 500);
+    // Defensive response handling — RC may return number, string, or object
+    // (same pattern as domain contacts fix)
+    let orderId: string;
+    if (typeof response === 'number') {
+      orderId = String(response);
+    } else if (typeof response === 'string') {
+      orderId = response;
+    } else if (response && typeof response === 'object') {
+      // Check actionstatus for errors
+      if (response.status === 'ERROR' || response.actionstatus === 'Failed') {
+        const errorMsg = response.message || response.actionstatusdesc || 'Order creation failed';
+        throw new ResellerClubError(String(errorMsg), 'CREATE_FAILED', 500);
+      }
+      orderId = String(response.entityid || '');
+    } else {
+      throw new ResellerClubError('Failed to create email order — unexpected response', 'CREATE_FAILED', 500);
+    }
+
+    if (!orderId || orderId === 'undefined' || orderId === 'null') {
+      throw new ResellerClubError('Failed to create email order — no order ID returned', 'CREATE_FAILED', 500);
     }
 
     return {
-      orderId: String(response.entityid),
-      invoiceId: response.invoiceid ? String(response.invoiceid) : '',
+      orderId,
+      invoiceId: (response as Record<string, unknown>)?.invoiceid ? String((response as Record<string, unknown>).invoiceid) : '',
     };
   },
 

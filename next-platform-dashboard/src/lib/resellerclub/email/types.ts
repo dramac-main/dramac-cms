@@ -107,12 +107,25 @@ export interface EmailAccountInfo {
   storageLimit?: number;
 }
 
+/**
+ * RC Business Email pricing response structure (confirmed from RC API docs).
+ * Structure: productKey → email_account_ranges → slab (e.g. "1-5") → action → tenure-in-months → price
+ *
+ * Example: { "eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": 0.86, "12": 10.20 }, "renew": { ... } }, "6-25": { ... } } } }
+ *
+ * Prices are TOTAL for the tenure per-account (NOT per-month).
+ * E.g. add["12"] = 10.20 means $10.20 total for 12 months for 1 account.
+ */
 export interface EmailPricingResponse {
   [productKey: string]: {
-    [months: string]: {
-      addnewaccount: string;
-      renewaccount: string;
+    email_account_ranges?: {
+      [slab: string]: {
+        add?: Record<string, number>;
+        renew?: Record<string, number>;
+      };
     };
+    // Legacy fallback shape (should not appear, but be defensive)
+    [key: string]: unknown;
   };
 }
 

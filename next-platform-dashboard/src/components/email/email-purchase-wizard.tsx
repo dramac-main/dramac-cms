@@ -31,10 +31,51 @@ import { formatCurrency } from "@/lib/locale-config";
 import { toast } from "sonner";
 import { Loader2, Mail } from "lucide-react";
 
+/**
+ * Extract add pricing from RC email_account_ranges structure.
+ * Returns: { "1-5": { "1": price, "3": price, "12": price }, "6-25": { ... } }
+ */
+function extractAddPricing(
+  ranges: Record<string, Record<string, Record<string, number>>>
+): Record<string, Record<string, number>> {
+  const result: Record<string, Record<string, number>> = {};
+  for (const [slab, actions] of Object.entries(ranges)) {
+    if (actions?.add && typeof actions.add === 'object') {
+      result[slab] = actions.add;
+    }
+  }
+  return result;
+}
+
+/**
+ * Find the correct slab for a given number of accounts and get the tenure price.
+ * Returns total price for the tenure PER ACCOUNT, or null if not found.
+ */
+function getSlabPrice(
+  pricingData: Record<string, Record<string, number>>,
+  accounts: number,
+  months: number
+): number | null {
+  for (const [slab, monthPrices] of Object.entries(pricingData)) {
+    const parts = slab.split('-');
+    if (parts.length === 2) {
+      const min = parseInt(parts[0]);
+      const max = parseInt(parts[1]);
+      if (!isNaN(min) && !isNaN(max) && accounts >= min && accounts <= max) {
+        const price = monthPrices[String(months)];
+        if (price != null && !isNaN(Number(price))) {
+          return Number(price);
+        }
+      }
+    }
+  }
+  return null;
+}
+
 const formSchema = z.object({
   domainName: z.string()
     .min(3, "Domain name is required")
-    .regex(/^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/, "Invalid domain format"),
+    .regex(/^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/, "Invalid domain format (e.g. example.com)"),
   numberOfAccounts: z.string().min(1, "Number of accounts is required"),
   months: z.string().min(1, "Subscription period is required"),
 });
@@ -67,6 +108,9 @@ export function EmailPurchaseWizard() {
     }
   }, [domainFromUrl, form]);
 
+  // Full pricing data from RC (keyed by slab → action → months → price)
+  const [pricingData, setPricingData] = useState<Record<string, Record<string, number>> | null>(null);
+
   // Fetch real pricing from ResellerClub on mount
   useEffect(() => {
     async function loadPricing() {
@@ -74,46 +118,30 @@ export function EmailPurchaseWizard() {
         const result = await getBusinessEmailPricing();
         if (result.success && result.data) {
           const pricing = result.data as Record<string, unknown>;
-          // ResellerClub returns nested pricing: { productKey: { months: { addnewaccount: price } } }
-          // Try to extract a monthly price from the structure
-          let monthlyPrice: number | null = null;
           
-          // Navigate nested response structure
-          for (const productKey of Object.keys(pricing)) {
-            const product = pricing[productKey];
-            if (typeof product === 'object' && product !== null) {
-              // Try to get 1-month price
-              const monthData = (product as any)['1'] || (product as any)['12'];
-              if (monthData && typeof monthData === 'object') {
-                const price = monthData.addnewaccount || monthData.renewaccount;
-                if (typeof price === 'number' || typeof price === 'string') {
-                  monthlyPrice = parseFloat(String(price));
-                  break;
-                }
+          // RC response structure (confirmed from API docs):
+          // { "eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": price, "12": price }, "renew": {...} } } } }
+          const productPricing = pricing['eeliteus'] as Record<string, unknown> | undefined;
+          const ranges = productPricing?.email_account_ranges as Record<string, Record<string, Record<string, number>>> | undefined;
+          
+          if (ranges && typeof ranges === 'object') {
+            // Store full pricing data for dynamic calculation
+            setPricingData(extractAddPricing(ranges));
+            
+            // Extract 1-month price from the first slab as per-account display
+            const firstSlab = Object.values(ranges)[0];
+            const addPricing = firstSlab?.add;
+            if (addPricing) {
+              // Use 1-month price as the "per account/month" display rate
+              const monthlyPrice = Number(addPricing['1']);
+              if (!isNaN(monthlyPrice) && monthlyPrice > 0) {
+                setPricePerAccount(monthlyPrice);
               }
             }
           }
-          
-          // Fallback: direct price properties
-          if (monthlyPrice === null) {
-            const directPrice = 
-              (pricing as any)?.pricing?.monthly ||
-              (pricing as any)?.monthlyPrice ||
-              (pricing as any)?.price;
-            if (typeof directPrice === 'number') {
-              monthlyPrice = directPrice;
-            }
-          }
-
-          if (monthlyPrice !== null && !isNaN(monthlyPrice)) {
-            setPricePerAccount(monthlyPrice);
-          }
-          if ((pricing as any)?.currency) {
-            setPricingCurrency((pricing as any).currency);
-          }
         }
       } catch {
-        // If pricing fetch fails, we'll show "Contact for pricing"
+        // If pricing fetch fails, we'll show "Final pricing will be calculated at checkout"
       }
     }
     loadPricing();
@@ -122,14 +150,30 @@ export function EmailPurchaseWizard() {
   const numberOfAccounts = parseInt(form.watch("numberOfAccounts") || "5");
   const months = parseInt(form.watch("months") || "12");
   
-  const totalMonthly = pricePerAccount !== null ? numberOfAccounts * pricePerAccount : null;
-  const totalPrice = totalMonthly !== null ? totalMonthly * months : null;
+  // Calculate total price using slab-based pricing (correct structure)
+  // Price from RC is TOTAL for the tenure PER ACCOUNT, not per-month
+  const totalPrice = pricingData 
+    ? (() => {
+        const perAccountTotal = getSlabPrice(pricingData, numberOfAccounts, months);
+        return perAccountTotal !== null ? perAccountTotal * numberOfAccounts : null;
+      })()
+    : null;
+  
+  // Per-account per-month display (for the "Per account/month" line)
+  const effectivePerMonthPerAccount = totalPrice !== null 
+    ? totalPrice / (numberOfAccounts * months) 
+    : pricePerAccount;
 
   function onSubmit(values: FormValues) {
     const formData = new FormData();
     formData.append('domainName', values.domainName);
     formData.append('numberOfAccounts', values.numberOfAccounts);
     formData.append('months', values.months);
+    // Pass domainId from URL params so provisioning can link email to domain
+    const domainIdFromUrl = searchParams.get('domainId');
+    if (domainIdFromUrl) {
+      formData.append('domainId', domainIdFromUrl);
+    }
 
     startTransition(async () => {
       const result = await createBusinessEmailOrder(formData);
@@ -250,16 +294,18 @@ export function EmailPurchaseWizard() {
             {/* Pricing Summary */}
             <div className="bg-muted p-4 rounded-lg space-y-3">
               <h4 className="font-medium">Order Summary</h4>
-              {pricePerAccount !== null && totalPrice !== null ? (
+              {totalPrice !== null ? (
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">{numberOfAccounts} email accounts × {months} months</span>
+                    <span className="text-muted-foreground">{numberOfAccounts} email account{numberOfAccounts > 1 ? 's' : ''} × {months} month{months > 1 ? 's' : ''}</span>
                     <span>{formatCurrency(totalPrice, pricingCurrency)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Per account/month</span>
-                    <span>{formatCurrency(pricePerAccount, pricingCurrency)}</span>
-                  </div>
+                  {effectivePerMonthPerAccount !== null && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Per account/month</span>
+                      <span>{formatCurrency(effectivePerMonthPerAccount, pricingCurrency)}</span>
+                    </div>
+                  )}
                   <Separator />
                   <div className="flex justify-between font-medium text-base">
                     <span>Total</span>

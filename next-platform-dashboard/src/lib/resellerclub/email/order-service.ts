@@ -282,6 +282,10 @@ export const emailOrderService = {
 // Helper Functions
 // ============================================================================
 
+/**
+ * Calculate wholesale price from RC email pricing response.
+ * Same structure as calculateBasePrice — navigates email_account_ranges.
+ */
 function calculateWholesalePrice(
   pricing: EmailPricingResponse,
   productKey: string,
@@ -291,8 +295,32 @@ function calculateWholesalePrice(
   const productPricing = pricing[productKey];
   if (!productPricing) return 0;
   
-  const monthPricing = productPricing[String(months)];
-  if (!monthPricing) return 0;
+  const ranges = productPricing.email_account_ranges;
+  if (!ranges || typeof ranges !== 'object') return 0;
   
-  return parseFloat(monthPricing.addnewaccount) * accounts;
+  // Find the correct slab for the number of accounts
+  let matchedSlab: string | null = null;
+  for (const slab of Object.keys(ranges)) {
+    const parts = slab.split('-');
+    if (parts.length === 2) {
+      const min = parseInt(parts[0]);
+      const max = parseInt(parts[1]);
+      if (!isNaN(min) && !isNaN(max) && accounts >= min && accounts <= max) {
+        matchedSlab = slab;
+        break;
+      }
+    }
+  }
+  if (!matchedSlab) matchedSlab = Object.keys(ranges)[0] || null;
+  if (!matchedSlab) return 0;
+  
+  const slabPricing = ranges[matchedSlab] as { add?: Record<string, number>; renew?: Record<string, number> };
+  const addPricing = slabPricing?.add;
+  if (!addPricing) return 0;
+  
+  const price = addPricing[String(months)];
+  if (price == null || isNaN(Number(price))) return 0;
+  
+  // Price is total-for-tenure per account
+  return Number(price) * accounts;
 }

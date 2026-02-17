@@ -423,6 +423,21 @@ export async function createEmailPurchase(
     }
   }
   
+  // Clean up stale pending purchases for the same domain email
+  // (e.g. user changed months or number of accounts)
+  try {
+    await admin
+      .from('pending_purchases')
+      .delete()
+      .eq('agency_id', params.agencyId)
+      .eq('purchase_type', 'email_order')
+      .eq('status', 'pending_payment')
+      .neq('idempotency_key', idempotencyKey)
+      .like('idempotency_key', `%:${params.domainName}%`);
+  } catch {
+    // Non-critical — just cleanup, don't block checkout
+  }
+  
   try {
     // =========================================================================
     // PRE-FLIGHT BALANCE CHECK — Same safety mechanism as domain purchases

@@ -79,10 +79,11 @@ export async function POST(request: NextRequest) {
       provisionDomainTransfer,
     } = await import('@/lib/resellerclub/provisioning');
 
-    // Reset status to 'paid' to allow re-provisioning
+    // Reset status to 'paid' to allow re-provisioning + increment retry count
     await updatePendingPurchaseStatus(purchaseId, 'paid', {
       error_message: null,
       error_details: null,
+      retry_count: retryCount + 1,
     });
 
     // Provision based on purchase type

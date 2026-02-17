@@ -280,6 +280,12 @@ export default function PurchaseSuccessPage() {
                     <div className="font-semibold">{purchase.purchase_data.domains[0].years} {purchase.purchase_data.domains[0].years === 1 ? 'year' : 'years'}</div>
                   </div>
                 )}
+                {purchase.purchase_data?.months && (
+                  <div>
+                    <div className="text-sm text-muted-foreground">Period</div>
+                    <div className="font-semibold">{purchase.purchase_data.months} {purchase.purchase_data.months === 1 ? 'month' : 'months'}</div>
+                  </div>
+                )}
                 {(purchase.purchase_data?.mailboxes || purchase.purchase_data?.number_of_accounts) && (
                   <div>
                     <div className="text-sm text-muted-foreground">Mailboxes</div>
