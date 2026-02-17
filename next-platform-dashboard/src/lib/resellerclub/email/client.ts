@@ -246,33 +246,36 @@ export const businessEmailApi = {
 
   /**
    * Get customer pricing for email plans (what end-customers pay)
-   * This reflects ResellerClub markups and should be used as retail price
-   * GET /api/eelite/customer-pricing.json
+   * This reflects ResellerClub markups and should be used as retail price.
+   * Uses the generic Products API: GET /api/products/customer-price.json
+   * The response contains ALL products; callers extract the 'eeliteus' key.
    */
-  async getCustomerPricing(customerId: string): Promise<EmailPricingResponse> {
+  async getCustomerPricing(customerId?: string): Promise<EmailPricingResponse> {
     const client = getResellerClubClient();
-    return client.get<EmailPricingResponse>('eelite/customer-pricing.json', {
-      'customer-id': customerId,
-    });
+    const params: Record<string, string> = {};
+    if (customerId && customerId.trim()) {
+      params['customer-id'] = customerId;
+    }
+    return client.get<EmailPricingResponse>('products/customer-price.json', params);
   },
 
   /**
    * Get reseller pricing for email plans (slab-based pricing you configure)
    * @deprecated Use getCustomerPricing for retail or getResellerCostPricing for wholesale
-   * GET /api/eelite/reseller-pricing.json
+   * Uses the generic Products API: GET /api/products/reseller-price.json
    */
   async getResellerPricing(): Promise<EmailPricingResponse> {
     const client = getResellerClubClient();
-    return client.get<EmailPricingResponse>('eelite/reseller-pricing.json');
+    return client.get<EmailPricingResponse>('products/reseller-price.json');
   },
   
   /**
    * Get reseller cost pricing for email plans (wholesale/what you pay ResellerClub)
-   * GET /api/eelite/reseller-cost-pricing.json
+   * Uses the generic Products API: GET /api/products/reseller-cost-price.json
    */
   async getResellerCostPricing(): Promise<EmailPricingResponse> {
     const client = getResellerClubClient();
-    return client.get<EmailPricingResponse>('eelite/reseller-cost-pricing.json');
+    return client.get<EmailPricingResponse>('products/reseller-cost-price.json');
   },
 
   // --------------------------------------------------------------------------
