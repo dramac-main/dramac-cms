@@ -2,6 +2,63 @@
 
 ## Recent Work
 
+### Domain reg-contact-id Fix + Refund Tracking + Email Flow Fixes — February 2026 ✅
+
+**Category:** Critical Production Bug Fix (Multiple)
+**Commit:** `16e901e`
+**Files Changed:** 7
+
+#### Problem 1: "Setup Failed" — Invalid reg-contact-id: undefined
+After Paddle payment succeeded, the webhook called ResellerClub `domains/register.json` with `reg-contact-id: undefined`, causing all domain registrations to fail with 4 retries and auto-refund.
+
+**Root Cause:** Two bugs in `contacts.ts`:
+1. RC `contacts/add.json` returns a **plain number** (e.g. `12345`), but code checked `typeof response === 'string'` only — falling through to `String(response.entityid)` → `"undefined"`
+2. RC `contacts/search.json` returns numbered keys `{"1": {...}, "2": {...}}` — code expected `response.result` array → always returned empty → `createOrUpdate()` always created new contacts
+
+**Fix:** Handle all RC response types (number, string, object) with guards. Parse numbered keys with `Object.entries()` filtering.
+
+#### Problem 2: needs_manual_refund column missing
+When auto-refund failed, webhook tried to set `status='refund_failed'` and `needs_manual_refund=true` on `pending_purchases` — both violate the DB schema (CHECK constraint + missing column).
+
+**Fix:**
+- Created migration `dm-12b` to add `refund_reason`, `paddle_refund_id`, `refunded_at`, `needs_manual_refund` columns and expand CHECK constraint with `refunded`/`refund_failed` statuses
+- Added defensive fallback in code: if migration not applied, use `status='failed'` + store refund info in `error_details` JSONB
+
+#### Problem 3: Email Flow Issues (6 bugs)
+End-to-end review of email module found:
+1. **Pre-flight blocks checkout** (Bug 3): Email used hard-block on insufficient balance vs domains' fail-open → Changed to fail-open
+2. **$0 price guard** (Bug 9): `calculateBasePrice()` returns 0 if RC lacks pricing for selected month → Added guard to prevent free Paddle transactions
+3. **Button text** (Bug 4): Success page showed "Go to Domains" for email purchases → Now context-aware
+4. **Mailbox count** (Bug 5): Success page looked for `purchase_data.mailboxes` but data stored as `number_of_accounts` → Fixed to check both keys
+5. **No stale cleanup** (Bug 2): Email purchases don't clean up old pending_purchases (domain does) → Noted for future fix
+6. **Pricing source mismatch** (Bug 1): UI uses `getResellerPricing()` but server uses `getCustomerPricing()` → Noted for future fix
+
+---
+
+### Paddle Quantity Stepper Lock — February 2026 ✅
+
+**Category:** UX Bug Fix
+**Commit:** `3a9fd42`
+**Files Changed:** 2
+
+#### Problem
+The Paddle checkout overlay showed a quantity selector set to "1" that users could modify. This was confusing because:
+- Users interpreted quantity "1" as "1 year" when it actually means "1 line item (domain)"
+- The total price already included multi-year pricing (e.g., $221.96 = $116.98/yr × 2 years)
+- Changing quantity to "2" doubled the already-correct amount to $443.92
+
+#### Research
+- Paddle Billing v2 has NO `allowQuantity: false` setting (that was Paddle Classic only, confirmed via GitHub issue #55)
+- Paddle docs: "Set quantity limits against a price... Customers aren't able to change the quantity of this item on the checkout"
+- Solution: Add `quantity: { minimum: 1, maximum: 1 }` to the non-catalog price object
+
+#### Fix
+1. **`transactions.ts` — `createDomainPurchase()`**: Added `quantity: { minimum: 1, maximum: 1 }` to the non-catalog price object, locking the Paddle quantity stepper
+2. **`transactions.ts` — `createEmailPurchase()`**: Same fix for email purchases
+3. **`paddle-client.ts` — `openPaddleTransactionCheckout()`**: Set `showAddDiscounts: false` since catalog discounts don't apply to custom non-catalog items
+
+---
+
 ### Paddle Stale Transaction Fix — Idempotency Key Reuse — February 2026 ✅
 
 **Category:** Critical Production Bug Fix
