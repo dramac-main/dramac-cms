@@ -2,6 +2,33 @@
 
 ## Recent Work
 
+### Email Purchase Flow Deep Fix — February 2026 ✅
+
+**Category:** UX + Bug Fixes (7 issues across 5 files)
+**Commit:** `7b1f362`
+**Files Changed:** 5
+
+#### Issues Found & Fixed:
+
+1. **24/36 month options that RC doesn't support** — RC Business Email only offers 1, 3, 6, 12 month tenures. UI offered 24/36 months which would cause pricing to fail (null price → "Unable to calculate price" error). Removed from both UI and server-side validation.
+
+2. **No loading state while pricing fetches** — Page showed "Final pricing will be calculated at checkout" during the async pricing fetch, making it look broken. Added spinner with "Loading pricing..." text. Added error state with AlertCircle icon. Disabled Purchase button until pricing loads.
+
+3. **Unused pricingCacheService import** — Dead code in business-email.ts cleaned up.
+
+4. **Missing domainName prop on accounts page** — `EmailAccountsTable` in the accounts page didn't receive `domainName`, breaking email address construction. Fixed.
+
+5. **Broken #email-accounts anchor** — "Add Account" button linked to `#email-accounts` but no element had that ID. Changed to `#accounts-table` and added the ID to the Card.
+
+6. **Division-by-zero in orders list** — Monthly cost calculation divided `retail_price / 12` assuming all orders are 12 months. Changed to show total price with zero guard.
+
+7. **order-service.ts using wrong pricing endpoint** — Used `getResellerPricing()` (slab-based intermediate pricing) instead of `getResellerCostPricing()` (actual wholesale cost). Fixed with try/catch fallback.
+
+#### Pricing Note:
+The $0.42/year prices are **correct** — they represent the actual RC reseller cost for Business Email. This is the wholesale price RC charges. To charge customers more, the agency needs to configure markup via `apply_platform_markup` in `agency_domain_pricing`. The platform correctly applies markup when configured.
+
+---
+
 ### Email Pricing 404 Fix — February 2026 ✅
 
 **Category:** Critical Production Bug Fix
