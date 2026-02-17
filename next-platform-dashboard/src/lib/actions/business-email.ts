@@ -137,6 +137,11 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
       );
     }
 
+    // Guard: prevent $0 Paddle transactions (e.g. missing pricing for selected month)
+    if (!retailPrice || retailPrice <= 0) {
+      return { success: false, error: `Unable to calculate price for ${months}-month plan. Please try a different period.` };
+    }
+
     // Create Paddle transaction for payment
     const { createEmailPurchase } = await import('@/lib/paddle/transactions');
     

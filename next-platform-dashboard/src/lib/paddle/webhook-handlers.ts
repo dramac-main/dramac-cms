@@ -759,10 +759,23 @@ async function handleDomainEmailPurchaseCompleted(event: PaddleWebhookEvent): Pr
           );
           
           // Update purchase status to flag for manual review
-          await updatePendingPurchaseStatus(purchase.id as string, 'refund_failed', {
-            refund_error: refundResult.error,
-            needs_manual_refund: true,
-          });
+          // Try 'refund_failed' first (requires dm-12b migration); fall back to 'failed'
+          try {
+            await updatePendingPurchaseStatus(purchase.id as string, 'refund_failed', {
+              refund_error: refundResult.error,
+              needs_manual_refund: true,
+            });
+          } catch {
+            // Fallback: migration not applied yet — use 'failed' + error_details
+            await updatePendingPurchaseStatus(purchase.id as string, 'failed', {
+              error_message: `Auto-refund failed: ${refundResult.error}. MANUAL REFUND REQUIRED.`,
+              error_details: {
+                refund_failed: true,
+                refund_error: refundResult.error,
+                needs_manual_refund: true,
+              },
+            });
+          }
         }
       } catch (refundError) {
         console.error(

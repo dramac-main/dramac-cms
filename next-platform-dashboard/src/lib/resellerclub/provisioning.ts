@@ -253,6 +253,12 @@ export async function provisionDomainRegistration(
     
     const contactId = String(contact.contactId);
     
+    // GUARD: Ensure contactId is valid before calling RC registration API
+    if (!contactId || contactId === 'undefined' || contactId === 'null' || contactId === '') {
+      throw new Error(`[Provisioning] Invalid contactId="${contactId}" — cannot register domain without a valid ResellerClub contact. Contact response: ${JSON.stringify(contact)}`);
+    }
+    console.log(`[Provisioning] Using RC contact ${contactId} for domain ${domainName}`);
+    
     // Register domain via ResellerClub
     const result = await domainService.register({
       domainName,
@@ -444,6 +450,12 @@ async function provisionMultipleDomains(
     });
     
     const contactId = String(contact.contactId);
+    
+    // GUARD: Ensure contactId is valid before calling RC registration API
+    if (!contactId || contactId === 'undefined' || contactId === 'null' || contactId === '') {
+      throw new Error(`[Provisioning] Invalid contactId="${contactId}" — cannot register domains without a valid ResellerClub contact. Contact response: ${JSON.stringify(contact)}`);
+    }
+    console.log(`[Provisioning] Using RC contact ${contactId} for ${domains.length} domain(s)`);
     
     // Process each domain sequentially
     for (const domainConfig of domains) {

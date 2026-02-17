@@ -90,10 +90,13 @@ export async function autoRefundTransaction(
     const adjustmentId = adjustment.id;
     console.log(`[Paddle] Auto-refund created: ${adjustmentId} for transaction ${paddleTransactionId}`);
 
-    // Update the pending purchase status to 'refunded'
+    // Update the pending purchase status
+    // Use 'failed' as fallback status if migration dm-12b hasn't added 'refunded' yet
     if (pendingPurchaseId) {
       const admin = createAdminClient() as SupabaseClient;
-      await admin
+      
+      // Try 'refunded' first (requires dm-12b migration)
+      const { error: updateError } = await admin
         .from('pending_purchases')
         .update({
           status: 'refunded',
@@ -102,6 +105,24 @@ export async function autoRefundTransaction(
           refunded_at: new Date().toISOString(),
         })
         .eq('id', pendingPurchaseId);
+      
+      // Fallback: if 'refunded' status violates CHECK constraint, use 'failed' + error_details
+      if (updateError) {
+        console.warn(`[Paddle] Could not set status='refunded', falling back to 'failed':`, updateError.message);
+        await admin
+          .from('pending_purchases')
+          .update({
+            status: 'failed',
+            error_message: `Auto-refunded: ${reason}`,
+            error_details: {
+              refunded: true,
+              paddle_refund_id: adjustmentId,
+              refund_reason: reason,
+              refunded_at: new Date().toISOString(),
+            },
+          })
+          .eq('id', pendingPurchaseId);
+      }
     }
 
     return { success: true, adjustmentId };
@@ -406,20 +427,18 @@ export async function createEmailPurchase(
     // =========================================================================
     // PRE-FLIGHT BALANCE CHECK — Same safety mechanism as domain purchases
     // =========================================================================
+    // Pre-flight balance check — FAIL-OPEN design (consistent with domain flow)
+    // If RC balance is low, warn but allow checkout. The provisioning step will catch
+    // actual failures and the auto-refund mechanism handles refunds automatically.
+    // Blocking users on a balance check that may have false positives damages UX.
     const balanceCheck = await checkResellerBalance(params.wholesaleAmount);
     if (!balanceCheck.sufficient) {
-      console.error(
-        `[Paddle] PRE-FLIGHT BLOCK: RC balance ($${balanceCheck.balance.toFixed(2)}) ` +
-        `insufficient for ${params.domainName} email (needs $${balanceCheck.required.toFixed(2)}, ` +
-        `shortfall: $${balanceCheck.shortfall.toFixed(2)})`
+      console.warn(
+        `[Paddle] PRE-FLIGHT WARNING: RC balance ($${balanceCheck.balance.toFixed(2)}) ` +
+        `may be insufficient for ${params.domainName} email (needs $${balanceCheck.required.toFixed(2)}, ` +
+        `shortfall: $${balanceCheck.shortfall.toFixed(2)}). Proceeding — auto-refund will handle failures.`
       );
-      throw new Error(
-        `Unable to process this email order at the moment. ` +
-        `Please try again later or contact support. (Code: INSUFFICIENT_RESELLER_BALANCE)`
-      );
-    }
-
-    if (balanceCheck.balance > 0) {
+    } else if (balanceCheck.balance > 0) {
       console.log(
         `[Paddle] Pre-flight OK: RC balance $${balanceCheck.balance.toFixed(2)} >= ` +
         `wholesale cost $${balanceCheck.required.toFixed(2)} for ${params.domainName} email`

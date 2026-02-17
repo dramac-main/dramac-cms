@@ -49,15 +49,25 @@ export class ContactService {
     if (params.faxCountryCode) apiParams['fax-cc'] = params.faxCountryCode;
     if (params.fax) apiParams['fax'] = params.fax;
     
-    const response = await this.client.post<string | { entityid: string }>(
+    const response = await this.client.post<string | number | { entityid: string }>(
       'contacts/add.json', 
       apiParams
     );
     
-    // Response can be just the ID or an object
-    const contactId = typeof response === 'string' 
-      ? response 
-      : String(response.entityid);
+    // RC may return: a plain number (e.g. 12345), a string, or an object { entityid: "12345" }
+    let contactId: string;
+    if (typeof response === 'number' || typeof response === 'string') {
+      contactId = String(response);
+    } else if (response && typeof response === 'object' && 'entityid' in response) {
+      contactId = String(response.entityid);
+    } else {
+      throw new Error(`[ContactService] Unexpected response from contacts/add.json: ${JSON.stringify(response)}`);
+    }
+    
+    // GUARD: Ensure we actually got a valid contact ID
+    if (!contactId || contactId === 'undefined' || contactId === 'null' || contactId === '') {
+      throw new Error(`[ContactService] contacts/add.json returned invalid contactId="${contactId}". Response: ${JSON.stringify(response)}`);
+    }
     
     return { contactId };
   }
@@ -132,21 +142,36 @@ export class ContactService {
     
     if (options?.type) params['type'] = options.type;
     
-    const response = await this.client.get<SearchResponse<Record<string, unknown>>>(
+    const response = await this.client.get<Record<string, unknown>>(
       'contacts/search.json',
       params
     );
     
     const contacts: Contact[] = [];
-    if (response.result && Array.isArray(response.result)) {
-      for (const item of response.result) {
-        contacts.push(this.mapContact(item));
+    
+    // RC returns results as numbered keys: {"1": {...}, "2": {...}, "recsindb": "5", "recsonpage": "5"}
+    // NOT as { result: [...] }. We must iterate and pick objects with contact data.
+    if (response && typeof response === 'object') {
+      // First try the array format (in case RC ever sends it)
+      if (Array.isArray((response as any).result)) {
+        for (const item of (response as any).result) {
+          contacts.push(this.mapContact(item));
+        }
+      } else {
+        // RC's actual format: numbered keys with contact objects
+        for (const [key, value] of Object.entries(response)) {
+          // Skip metadata keys; contact entries are numeric keys with object values
+          if (key === 'recsindb' || key === 'recsonpage' || key === 'result') continue;
+          if (value && typeof value === 'object' && !Array.isArray(value)) {
+            contacts.push(this.mapContact(value as Record<string, unknown>));
+          }
+        }
       }
     }
     
     return {
       contacts,
-      total: parseInt(response.recsindb || '0'),
+      total: parseInt(String((response as any)?.recsindb || '0')),
     };
   }
   

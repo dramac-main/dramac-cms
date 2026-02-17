@@ -212,7 +212,7 @@ export default function PurchaseSuccessPage() {
           <h2 className="text-xl font-semibold mb-2">Error</h2>
           <p className="text-muted-foreground mb-6">{error}</p>
           <Button onClick={() => router.push('/dashboard/domains')}>
-            Go to Domains
+            Back to Dashboard
           </Button>
         </Card>
       </div>
@@ -280,10 +280,10 @@ export default function PurchaseSuccessPage() {
                     <div className="font-semibold">{purchase.purchase_data.domains[0].years} {purchase.purchase_data.domains[0].years === 1 ? 'year' : 'years'}</div>
                   </div>
                 )}
-                {purchase.purchase_data?.mailboxes && (
+                {(purchase.purchase_data?.mailboxes || purchase.purchase_data?.number_of_accounts) && (
                   <div>
                     <div className="text-sm text-muted-foreground">Mailboxes</div>
-                    <div className="font-semibold">{purchase.purchase_data.mailboxes}</div>
+                    <div className="font-semibold">{purchase.purchase_data.number_of_accounts || purchase.purchase_data.mailboxes}</div>
                   </div>
                 )}
                 <div>
@@ -326,7 +326,7 @@ export default function PurchaseSuccessPage() {
                 </p>
               )}
               <Button onClick={handleContinue}>
-                Go to Domains
+                {purchase.purchase_type === 'email_order' ? 'Go to Email' : 'Go to Domains'}
               </Button>
             </div>
           )}
@@ -365,7 +365,7 @@ export default function PurchaseSuccessPage() {
                 )}
               </Button>
               <Button onClick={handleContinue}>
-                Go to Domains
+                {purchase.purchase_type === 'email_order' ? 'Go to Email' : 'Go to Domains'}
               </Button>
             </div>
           )}
