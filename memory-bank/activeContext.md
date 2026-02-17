@@ -2,6 +2,26 @@
 
 ## Recent Work
 
+### Paddle Stale Transaction Fix — Idempotency Key Reuse — February 2026 ✅
+
+**Category:** Critical Production Bug Fix
+**Commit:** `1ed4429`
+**Files Changed:** 1
+
+#### Problem
+After the per-year rate fix (`93337b0`), the Paddle popup still showed the OLD amount ($116.98) instead of the corrected amount ($221.96). The platform Order Summary displayed correctly, but Paddle was out of sync.
+
+#### Root Cause
+`generateIdempotencyKey()` only used `agencyId + purchaseType + domainName` — it did NOT include years or amount. When the user retried checkout, the same key matched a stale `pending_purchases` record from before the price fix, returning the OLD Paddle transaction with the OLD amount.
+
+#### Fix
+1. **Idempotency key now includes years + amount in cents**: `{agencyId}:domain_register:{domain}-{years}yr:{amountCents}`
+2. **Stale cleanup**: Old pending_purchases for the same domain with a different key are automatically deleted
+3. **Improved Paddle display**: Line item name changed to `"dramac.io (2 Years)"` instead of `"dramac.io - 2yr"` to avoid confusion with Paddle's quantity adjuster
+4. **Email purchases**: Also include amount in idempotency key for consistency
+
+---
+
 ### RC Per-Year Rate Fix — All Prices & Savings Corrected — February 2026 ✅
 
 **Category:** Critical Production Bug Fix (Root Cause)

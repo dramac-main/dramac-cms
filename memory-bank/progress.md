@@ -1,11 +1,22 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅**
 
 ---
 
-## Latest Update: February 2026 - RC Per-Year Rate Fix (Root Cause) ✅
+## Latest Update: February 2026 - Paddle Stale Transaction Fix ✅
+
+**Commit:** `1ed4429`
+**Files Changed:** 1 (`src/lib/paddle/transactions.ts`)
+
+**Problem:** After the per-year rate fix, Paddle popup still showed the OLD amount ($116.98) while the platform showed the correct amount ($221.96). The `generateIdempotencyKey()` didn't include years or amount, so the old `pending_purchases` record was returned instead of creating a fresh Paddle transaction.
+
+**Fix:** Idempotency key now includes years + amount in cents: `{agencyId}:domain_register:{domain}-{years}yr:{amountCents}`. Stale pending purchases for the same domain are cleaned up. Paddle line item display improved to avoid quantity/years confusion.
+
+---
+
+## Previous Update: RC Per-Year Rate Fix (Root Cause) ✅
 
 **Commit:** `93337b0`
 **Files Changed:** 6
