@@ -74,7 +74,7 @@ export default async function EmailAccountsPage({ params }: EmailAccountsPagePro
             </div>
             {accounts.length < order.number_of_accounts && (
               <Button asChild>
-                <a href="#email-accounts">
+                <a href="#accounts-table">
                   <Plus className="h-4 w-4 mr-2" />
                   Add Account
                 </a>
@@ -85,7 +85,7 @@ export default async function EmailAccountsPage({ params }: EmailAccountsPagePro
       </Card>
 
       {/* Accounts Table */}
-      <Card>
+      <Card id="accounts-table">
         <CardHeader>
           <CardTitle>All Email Accounts</CardTitle>
           <CardDescription>
@@ -97,6 +97,7 @@ export default async function EmailAccountsPage({ params }: EmailAccountsPagePro
             accounts={accounts} 
             orderId={orderId}
             maxAccounts={order.number_of_accounts}
+            domainName={order.domain_name}
           />
         </CardContent>
       </Card>

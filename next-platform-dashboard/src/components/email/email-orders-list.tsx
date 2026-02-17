@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
 import { formatCurrency } from "@/lib/locale-config";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -177,9 +177,9 @@ function EmailOrderCard({ order }: { order: EmailOrdersListProps['orders'][0] })
 
           {/* Pricing */}
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Monthly Cost</p>
+            <p className="text-sm text-muted-foreground mb-1">Price</p>
             <p className="font-medium">
-              {formatCurrency(order.retail_price / 12)}/mo
+              {order.retail_price > 0 ? formatCurrency(order.retail_price) : '—'}
             </p>
           </div>
 

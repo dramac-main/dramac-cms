@@ -29,7 +29,7 @@ import { createBusinessEmailOrder, getBusinessEmailPricing } from "@/lib/actions
 import { openPaddleTransactionCheckout } from "@/lib/paddle/paddle-client";
 import { formatCurrency } from "@/lib/locale-config";
 import { toast } from "sonner";
-import { Loader2, Mail } from "lucide-react";
+import { Loader2, Mail, AlertCircle } from "lucide-react";
 
 /**
  * Extract add pricing from RC email_account_ranges structure.
@@ -88,6 +88,8 @@ export function EmailPurchaseWizard() {
   const [isPending, startTransition] = useTransition();
   const [pricePerAccount, setPricePerAccount] = useState<number | null>(null);
   const [pricingCurrency, setPricingCurrency] = useState("USD");
+  const [pricingLoading, setPricingLoading] = useState(true);
+  const [pricingError, setPricingError] = useState<string | null>(null);
 
   // Pre-fill domain from URL query params (?domain=example.com&domainId=xxx)
   const domainFromUrl = searchParams.get('domain') || '';
@@ -114,6 +116,8 @@ export function EmailPurchaseWizard() {
   // Fetch real pricing from ResellerClub on mount
   useEffect(() => {
     async function loadPricing() {
+      setPricingLoading(true);
+      setPricingError(null);
       try {
         const result = await getBusinessEmailPricing();
         if (result.success && result.data) {
@@ -138,10 +142,16 @@ export function EmailPurchaseWizard() {
                 setPricePerAccount(monthlyPrice);
               }
             }
+          } else {
+            setPricingError('Email pricing not available. Please try again later.');
           }
+        } else {
+          setPricingError(result.error || 'Failed to load pricing');
         }
       } catch {
-        // If pricing fetch fails, we'll show "Final pricing will be calculated at checkout"
+        setPricingError('Failed to connect to pricing service');
+      } finally {
+        setPricingLoading(false);
       }
     }
     loadPricing();
@@ -276,8 +286,6 @@ export function EmailPurchaseWizard() {
                         <SelectItem value="3">3 Months</SelectItem>
                         <SelectItem value="6">6 Months</SelectItem>
                         <SelectItem value="12">12 Months (Best Value)</SelectItem>
-                        <SelectItem value="24">24 Months</SelectItem>
-                        <SelectItem value="36">36 Months</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>
@@ -294,7 +302,17 @@ export function EmailPurchaseWizard() {
             {/* Pricing Summary */}
             <div className="bg-muted p-4 rounded-lg space-y-3">
               <h4 className="font-medium">Order Summary</h4>
-              {totalPrice !== null ? (
+              {pricingLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading pricing...
+                </div>
+              ) : pricingError ? (
+                <div className="flex items-center gap-2 text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  {pricingError}
+                </div>
+              ) : totalPrice !== null ? (
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{numberOfAccounts} email account{numberOfAccounts > 1 ? 's' : ''} × {months} month{months > 1 ? 's' : ''}</span>
@@ -314,7 +332,7 @@ export function EmailPurchaseWizard() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Final pricing will be calculated at checkout
+                  Unable to calculate price for selected options
                 </p>
               )}
             </div>
@@ -327,7 +345,7 @@ export function EmailPurchaseWizard() {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" disabled={isPending || pricingLoading || !!pricingError || totalPrice === null}>
                 {isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

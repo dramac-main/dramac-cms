@@ -34,14 +34,20 @@ export const emailOrderService = {
     // 2. Get order details from ResellerClub
     const orderDetails = await businessEmailApi.getOrderDetails(rcResult.orderId);
 
-    // 3. Get pricing info
-    const pricing = await businessEmailApi.getResellerPricing();
-    const wholesalePrice = calculateWholesalePrice(
-      pricing, 
-      orderDetails.productKey, 
-      params.months, 
-      params.numberOfAccounts
-    );
+    // 3. Get wholesale pricing for margin tracking
+    // Note: We use reseller-cost-price (what we actually pay RC) for accurate margin calculation
+    let wholesalePrice = 0;
+    try {
+      const pricing = await businessEmailApi.getResellerCostPricing();
+      wholesalePrice = calculateWholesalePrice(
+        pricing, 
+        orderDetails.productKey, 
+        params.months, 
+        params.numberOfAccounts
+      );
+    } catch (pricingError) {
+      console.warn('[EmailOrderService] Failed to fetch wholesale pricing, using 0:', pricingError);
+    }
 
     // 4. Calculate expiry date
     const expiryDate = new Date();

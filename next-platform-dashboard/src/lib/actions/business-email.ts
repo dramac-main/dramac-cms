@@ -69,8 +69,8 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
     if (isNaN(numberOfAccounts) || numberOfAccounts < 1) {
       return { success: false, error: 'Invalid number of accounts' };
     }
-    if (isNaN(months) || ![1, 3, 6, 12, 24, 36].includes(months)) {
-      return { success: false, error: 'Invalid subscription period' };
+    if (isNaN(months) || ![1, 3, 6, 12].includes(months)) {
+      return { success: false, error: 'Invalid subscription period. Choose 1, 3, 6, or 12 months.' };
     }
 
     // Get customer ID from agency — create one if it doesn't exist yet
@@ -111,9 +111,6 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
       .eq('agency_id', profile.agency_id)
       .single();
 
-    // Get pricing from cache or live API
-    const { pricingCacheService } = await import('@/lib/resellerclub/pricing-cache');
-    
     // Try to get customer pricing first (includes RC markups)
     const customerPricing = await businessEmailApi.getCustomerPricing(customerId);
     const productKey = 'eeliteus'; // Default to US datacenter
@@ -124,6 +121,8 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
     // Get wholesale cost for margin tracking
     const wholesalePricing = await businessEmailApi.getResellerCostPricing();
     const wholesalePrice = calculateBasePrice(wholesalePricing, months, numberOfAccounts);
+    
+    console.log(`[BusinessEmail] Pricing for ${domainName}: ${numberOfAccounts} accounts × ${months}mo → base=$${basePrice.toFixed(2)}, wholesale=$${wholesalePrice.toFixed(2)}`);
     
     // Calculate retail price
     let retailPrice = basePrice;
@@ -335,8 +334,8 @@ export async function renewBusinessEmailOrder(
   if (!user) return { success: false, error: 'Not authenticated' };
 
   try {
-    if (![1, 3, 6, 12, 24, 36].includes(months)) {
-      return { success: false, error: 'Invalid renewal period' };
+    if (![1, 3, 6, 12].includes(months)) {
+      return { success: false, error: 'Invalid renewal period. Choose 1, 3, 6, or 12 months.' };
     }
 
     const order = await emailOrderService.renewOrder(orderId, months);
@@ -587,6 +586,15 @@ export async function getBusinessEmailPricing(): Promise<{
     if (customerId) {
       // Use customer pricing (same as what the server action charges)
       const pricing = await businessEmailApi.getCustomerPricing(customerId);
+      // Log the eeliteus pricing structure for debugging
+      const emailPricing = pricing?.['eeliteus'];
+      if (emailPricing?.email_account_ranges) {
+        const firstSlab = Object.keys(emailPricing.email_account_ranges)[0];
+        const firstSlabData = emailPricing.email_account_ranges[firstSlab];
+        console.log(`[BusinessEmail] Customer pricing loaded — first slab "${firstSlab}":`, JSON.stringify(firstSlabData?.add || {}));
+      } else {
+        console.warn('[BusinessEmail] No eeliteus pricing in customer-price response. Keys:', Object.keys(pricing).filter(k => k.includes('eelite')));
+      }
       return { success: true, data: pricing };
     } else {
       // Fallback to reseller pricing if no customer ID yet
