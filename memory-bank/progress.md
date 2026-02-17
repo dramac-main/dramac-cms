@@ -1,17 +1,32 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅**
 
 ---
 
-## Latest Update: February 2026 - Comprehensive E-Commerce Module Overhaul ✅
+## Latest Update: February 2026 - Domain Search TLD Parsing + Year Pricing Pipeline Fix ✅
 
-**Commit:** `790e588`
-**Files Changed:** 19
+**Commit:** `69bcb52`
+**Files Changed:** 11
 
 **What was done:**
-Deep scan of entire e-commerce module (~235 files). Identified and fixed all critical issues. Zero TypeScript errors in e-commerce files.
+Fixed three interrelated production bugs in the domain search and checkout pipeline.
+
+### Bug 1: Domain Name TLD Parsing ("1044.io" → "1044io.io")
+- **Root cause:** `normalizeDomainKeyword()` stripped ALL non-alphanumeric characters including dots, so "1044.io" became "1044io", then TLDs got appended → "1044io.io"
+- **Fix:** `normalizeDomainKeyword()` now preserves dots. New `parseDomainKeyword()` detects if user typed a full domain (e.g. "1044.io") and extracts SLD ("1044") and TLD (".io"). `searchDomains()` uses the extracted SLD for API calls and prioritizes the detected TLD.
+- **Files:** `domain-keyword.ts`, `domains.ts` (server action), `domain-search.tsx`
+
+### Bug 2: Year Switching Not Working (Missing Multi-Year Prices)
+- **Root cause:** `parsePricingResponse()` in RC domains service HARDCODED only years 1, 2, 5 — missing years 3, 4, 6, 7, 8, 9, 10. Also, `mapDomainPrice()` used `Object.fromEntries(Object.entries(...))` which produced string keys. After JSON roundtrip through sessionStorage, lookups like `obj[2]` worked but `obj[3]` returned undefined.
+- **Fix:** `parsePricingResponse()` now extracts ALL years 1–10. `DomainPrice.register/renew` changed from `{1: number, 2?: number, 5?: number}` to `Record<number, number>`. All `mapDomainPrice` calls now explicitly convert keys to `Number(key)`. `getFallbackPrice()` auto-generates multi-year entries. Year dropdown always shows 1, 2, 3, 5, 10 options.
+- **Files:** `resellerclub/domains.ts`, `resellerclub/types.ts`, `domain-fallback-prices.ts`, `domain-cart.tsx`
+
+### Bug 3: Paddle Amount Mismatch (String/Number Key Coercion)
+- **Root cause:** `getRetailForYears()` helper used `item.retailPrices?.[item.years]` which could fail when keys were strings (after JSON.parse of sessionStorage data). The fallback `retailPrice * years` gave different amounts than the RC multi-year price.
+- **Fix:** `getRetailForYears()` and `getWholesaleForYears()` in ALL 4 files (domain-search-client, domain-cart, domain-checkout, cart-page-client) now check both numeric and string key lookups with `Number()` coercion. The displayed price exactly matches what flows to Paddle.
+- **Files:** `domain-search-client.tsx`, `domain-cart.tsx`, `domain-checkout.tsx`, `cart-page-client.tsx`, `domain-results.tsx`
 
 ### Fixes Applied:
 1. **Studio API routes** — Wrong table names (ecommerce_* → mod_ecommod01_*), wrong column names

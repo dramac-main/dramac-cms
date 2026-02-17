@@ -2,7 +2,62 @@
 
 ## Recent Work
 
-### Comprehensive E-Commerce Module Overhaul — February 2026 ✅
+### Domain Search TLD Parsing + Year Pricing Pipeline Fix — February 2026 ✅
+
+**Category:** Critical Production Bug Fix
+**Commit:** `69bcb52`
+**Files Changed:** 11
+
+#### Overview
+Fixed three interrelated production bugs in the domain search and checkout pipeline that caused:
+1. Domain names displaying incorrectly (e.g. "1044io.io" instead of "1044.io")
+2. Year switching not working (2-year, 3-year etc. prices missing or wrong)
+3. Paddle checkout amounts not matching displayed prices
+
+#### Root Causes & Fixes:
+
+**Bug 1 — Domain TLD Parsing:**
+- `normalizeDomainKeyword()` stripped dots → "1044.io" became "1044io" → search returned "1044io.io"
+- Fix: Preserve dots, new `parseDomainKeyword()` extracts SLD/TLD from full domain input
+- `searchDomains()` uses extracted SLD for API calls, prioritizes detected TLD
+
+**Bug 2 — Year Pricing Missing:**
+- RC `parsePricingResponse()` hardcoded years 1, 2, 5 only — missed 3, 4, 6-10
+- `DomainPrice` type used fixed keys `{1: number, 2?: number, 5?: number}` — now `Record<number, number>`
+- Year dropdown filtered out years without explicit pricing — now always shows 1, 2, 3, 5, 10
+- Fallback prices only had 1yr and 2yr — `getFallbackPrice()` now generates all standard years
+
+**Bug 3 — Price Map Key Coercion:**
+- `Object.fromEntries(Object.entries())` produces string keys → JSON roundtrip preserves strings
+- `obj[2]` works for string key "2" in JS but inconsistent across browsers/versions
+- Fix: All `mapDomainPrice` calls now explicitly `Number(key)` for consistency
+- All `getRetailForYears()` helpers check both numeric and string key variants
+- The exact price shown in UI is now passed through to Paddle transaction
+
+#### Files Changed:
+- `src/lib/domain-keyword.ts` — `normalizeDomainKeyword` preserves dots, new `parseDomainKeyword`
+- `src/lib/actions/domains.ts` — Uses `parseDomainKeyword`, numeric keys in all `Object.fromEntries`
+- `src/lib/resellerclub/domains.ts` — `parsePricingResponse` extracts years 1-10
+- `src/lib/resellerclub/types.ts` — `DomainPrice.register/renew` → `Record<number, number>`
+- `src/lib/domain-fallback-prices.ts` — `getFallbackPrice` generates multi-year entries
+- `src/components/domains/domain-cart.tsx` — Safe price lookup, always show all year options
+- `src/components/domains/domain-checkout.tsx` — Safe price lookup
+- `src/components/domains/domain-results.tsx` — Safe price display
+- `src/components/domains/domain-search.tsx` — Preserve dots in user input
+- `src/app/(dashboard)/dashboard/domains/search/domain-search-client.tsx` — Safe price lookup
+- `src/app/(dashboard)/dashboard/domains/cart/cart-page-client.tsx` — Safe price lookup
+
+---
+
+### Previous: Pre-Flight Balance Check Changed to Fail-Open — February 2026 ✅
+
+**Commit:** `0a36cdf`
+
+The pre-flight RC balance check was BLOCKING checkout by throwing an error when balance was insufficient. Changed to warn-only (fail-open) design — auto-refund mechanism handles post-payment provisioning failures as the safety net.
+
+---
+
+### Previous: Comprehensive E-Commerce Module Overhaul — February 2026 ✅
 
 **Category:** E-Commerce Module Deep Scan & Fix
 **Commit:** `790e588`
