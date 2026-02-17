@@ -153,16 +153,22 @@ export interface PendingPurchase {
 
 /**
  * Generate idempotency key for purchase
- * IMPORTANT: Must be deterministic (no timestamp) for true idempotency
+ * IMPORTANT: Must be deterministic for true idempotency.
+ * Includes a price fingerprint so price corrections invalidate stale transactions.
  */
 function generateIdempotencyKey(
   agencyId: string,
   purchaseType: string,
-  identifier: string
+  identifier: string,
+  amountCents?: number
 ): string {
-  // Format: {agencyId}:{purchaseType}:{identifier}
+  // Format: {agencyId}:{purchaseType}:{identifier}[:{amountCents}]
   // For multi-domain purchases, identifier should be a sorted, joined list
-  return `${agencyId}:${purchaseType}:${identifier}`;
+  const base = `${agencyId}:${purchaseType}:${identifier}`;
+  if (amountCents != null && amountCents > 0) {
+    return `${base}:${amountCents}`;
+  }
+  return base;
 }
 
 /**
@@ -177,11 +183,14 @@ export async function createDomainPurchase(
   
   const admin = createAdminClient() as SupabaseClient;
   
-  // Generate idempotency key
+  // Generate idempotency key — includes years + amount so price/year changes
+  // create a fresh transaction instead of reusing a stale one
+  const retailCents = Math.round(params.retailAmount * 100);
   const idempotencyKey = generateIdempotencyKey(
     params.agencyId,
     params.purchaseType,
-    params.domainName
+    `${params.domainName}-${params.years}yr`,
+    retailCents
   );
   
   // Check if purchase already exists (maybeSingle avoids error if not found)
@@ -209,6 +218,23 @@ export async function createDomainPurchase(
         .delete()
         .eq('id', existing.id);
     }
+  }
+  
+  // Also clean up any OLD pending purchases for the same domain(s) that have
+  // a different idempotency key (e.g. user changed years or price was corrected).
+  // This prevents orphaned pending_purchases from accumulating.
+  try {
+    const domainIdentifier = `${params.domainName}`;
+    await admin
+      .from('pending_purchases')
+      .delete()
+      .eq('agency_id', params.agencyId)
+      .eq('purchase_type', params.purchaseType)
+      .eq('status', 'pending_payment')
+      .neq('idempotency_key', idempotencyKey)
+      .like('idempotency_key', `%:${domainIdentifier}%`);
+  } catch {
+    // Non-critical — just cleanup, don't block checkout
   }
   
   try {
@@ -245,7 +271,7 @@ export async function createDomainPurchase(
     }
 
     // Create Paddle transaction with custom non-catalog item
-    const description = `${params.purchaseType.replace('domain_', 'Domain ')} - ${params.domainName} (${params.years} year${params.years > 1 ? 's' : ''})`;
+    const description = `${params.purchaseType.replace('domain_', 'Domain ')} - ${params.domainName} (${params.years} year${params.years > 1 ? 's' : ''})${params.privacy ? ' + Privacy Protection' : ''}`;
     
     const transaction: Transaction = await paddle.transactions.create({
       items: [
@@ -253,15 +279,15 @@ export async function createDomainPurchase(
           quantity: 1,
           price: {
             description,
-            name: `${params.domainName} - ${params.years}yr`,
+            name: `${params.domainName} (${params.years} Year${params.years > 1 ? 's' : ''})`,
             unitPrice: {
               amount: String(Math.round(params.retailAmount * 100)), // Convert to cents
               currencyCode: (params.currency || 'USD') as any,
             },
             product: {
-              name: `Domain ${params.purchaseType.split('_')[1]}`,
+              name: `Domain ${params.purchaseType.split('_')[1]} - ${params.years}yr`,
               taxCategory: 'standard',
-              description: `${params.purchaseType.replace('_', ' ')} for ${params.domainName}`,
+              description: `${params.purchaseType.replace('_', ' ')} for ${params.domainName} (${params.years} year${params.years > 1 ? 's' : ''})`,
             },
           },
         },
@@ -331,11 +357,12 @@ export async function createEmailPurchase(
   
   const admin = createAdminClient() as SupabaseClient;
   
-  // Generate idempotency key
+  // Generate idempotency key — includes months + amount
   const idempotencyKey = generateIdempotencyKey(
     params.agencyId,
     'email_order',
-    `${params.domainName}-${params.months}mo`
+    `${params.domainName}-${params.months}mo`,
+    Math.round(params.retailAmount * 100)
   );
   
   // Check if purchase already exists (use maybeSingle to avoid errors if not found)
