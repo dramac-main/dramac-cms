@@ -314,6 +314,7 @@ export async function openPaddleTransactionCheckout(
         locale: 'en',
         successUrl: params.successUrl,
         allowLogout: false,
+        showAddDiscounts: false, // Hide discount field — non-catalog items, no catalog discounts apply
       },
     });
   } catch (checkoutError: any) {

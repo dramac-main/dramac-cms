@@ -284,6 +284,12 @@ export async function createDomainPurchase(
               amount: String(Math.round(params.retailAmount * 100)), // Convert to cents
               currencyCode: (params.currency || 'USD') as any,
             },
+            // Lock quantity to exactly 1 — prevents Paddle checkout from showing
+            // a quantity stepper that confuses users (they think it's years, not items)
+            quantity: {
+              minimum: 1,
+              maximum: 1,
+            },
             product: {
               name: `Domain ${params.purchaseType.split('_')[1]} - ${params.years}yr`,
               taxCategory: 'standard',
@@ -433,6 +439,11 @@ export async function createEmailPurchase(
             unitPrice: {
               amount: String(Math.round(params.retailAmount * 100)), // Convert to cents
               currencyCode: (params.currency || 'USD') as any,
+            },
+            // Lock quantity to exactly 1 — prevents checkout quantity editing
+            quantity: {
+              minimum: 1,
+              maximum: 1,
             },
             product: {
               name: 'Business Email',
