@@ -1,11 +1,22 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅**
 
 ---
 
-## Latest Update: February 2026 - Paddle Stale Transaction Fix ✅
+## Latest Update: February 2026 - Email Pricing 404 Fix ✅
+
+**Commit:** `e76bed3`
+**Files Changed:** 1 (`src/lib/resellerclub/email/client.ts`)
+
+**Problem:** All 3 email pricing endpoints used non-existent `eelite/*-pricing.json` URLs (HTTP 404). Business Email doesn't have product-specific pricing endpoints — must use the generic Products API (`products/customer-price.json`, etc.) which returns ALL products. Email pricing is under the `eeliteus` key.
+
+**Fix:** Changed endpoint URLs from `eelite/*-pricing.json` → `products/*-price.json`. Made `customerId` optional. Existing code already correctly extracts `pricing['eeliteus']`.
+
+---
+
+## Previous Update: Paddle Stale Transaction Fix ✅
 
 **Commit:** `1ed4429`
 **Files Changed:** 1 (`src/lib/paddle/transactions.ts`)

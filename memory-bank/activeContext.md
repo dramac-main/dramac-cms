@@ -2,6 +2,28 @@
 
 ## Recent Work
 
+### Email Pricing 404 Fix — February 2026 ✅
+
+**Category:** Critical Production Bug Fix
+**Commit:** `e76bed3`
+**Files Changed:** 1 (`src/lib/resellerclub/email/client.ts`)
+
+#### Root Cause: All 3 Email Pricing Endpoints Used Non-Existent URLs
+The email API client used `eelite/customer-pricing.json`, `eelite/reseller-pricing.json`, and `eelite/reseller-cost-pricing.json` — **none of these endpoints exist** in the ResellerClub API. They all return HTTP 404.
+
+Business Email does NOT have product-specific pricing endpoints. It must use the **generic Products API**:
+- `products/customer-price.json` (optional `customer-id`)
+- `products/reseller-price.json`
+- `products/reseller-cost-price.json`
+
+These generic endpoints return ALL products (domains, email, hosting). The email pricing is under the `eeliteus` key. The existing code (from prior commit `5a9e037`) already correctly extracts `pricing['eeliteus']` — only the endpoint URLs were wrong.
+
+**Fix:** Changed all 3 endpoint URLs from `eelite/*-pricing.json` to `products/*-price.json`. Made `customerId` optional in `getCustomerPricing()` since the generic endpoint works without it.
+
+**Reference:** Domain pricing already uses these same `products/*` endpoints correctly at `domains.ts:171` and `pricing-cache.ts:75`.
+
+---
+
 ### Email Purchase Flow Comprehensive Overhaul — February 2026 ✅
 
 **Category:** Critical Production Bug Fix (10 issues)
