@@ -71,10 +71,14 @@ export function DomainCheckout({
     }).format(price);
   };
 
+  // RC API register[N] = per-year rate for N-year tenure. Total = rate * years.
   const getRetailForYears = (item: DomainCartItem): number => {
-    const exactPrice = item.retailPrices?.[item.years] ?? item.retailPrices?.[String(item.years) as any];
-    if (exactPrice && Number(exactPrice) > 0) return Number(exactPrice);
-    const perYear = Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
+    const perYearForTenure = Number(
+      item.retailPrices?.[item.years] ?? item.retailPrices?.[String(item.years) as any] ?? 0
+    );
+    const perYear = perYearForTenure > 0
+      ? perYearForTenure
+      : Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
     return Math.round(perYear * item.years * 100) / 100;
   };
 

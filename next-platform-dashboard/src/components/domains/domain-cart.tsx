@@ -37,17 +37,18 @@ export function DomainCartComponent({
     }).format(price);
   };
   
-  /** Get the correct retail price for the given year count.
-   *  Looks up retailPrices[years] first (exact multi-year price from RC API),
-   *  then falls back to retailPrices[1] * years if not available. */
+  /** Get the correct retail TOTAL for the selected year count.
+   *  RC API register[N] is the per-year rate for an N-year tenure.
+   *  Total = perYearRate * years.  Falls back to register[1] if the
+   *  exact tenure key is not present. */
   const getRetailForYears = (item: DomainCartItem): number => {
-    // Try exact year-keyed price from RC API
-    const exactPrice = item.retailPrices?.[item.years] ?? item.retailPrices?.[String(item.years) as any];
-    if (exactPrice && Number(exactPrice) > 0) {
-      return Number(exactPrice);
-    }
-    // Fallback: multiply 1-year price by years
-    const perYear = Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
+    // Per-year rate for the chosen tenure (RC returns per-year, NOT total)
+    const perYearForTenure = Number(
+      item.retailPrices?.[item.years] ?? item.retailPrices?.[String(item.years) as any] ?? 0
+    );
+    const perYear = perYearForTenure > 0
+      ? perYearForTenure
+      : Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
     return Math.round(perYear * item.years * 100) / 100;
   };
 
@@ -139,12 +140,15 @@ export function DomainCartComponent({
                     </SelectTrigger>
                     <SelectContent>
                       {[1, 2, 3, 5, 10].map(yr => {
-                        // Calculate real savings vs 1yr * N
+                        // RC register[N] = per-year rate for N-year tenure.
+                        // Savings = how much cheaper the per-year rate is vs 1-year rate.
+                        // e.g. register[1]=$10/yr, register[2]=$9/yr → Save 10%
                         const perYear1 = Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
-                        const linearPrice = perYear1 * yr;
-                        const exactPrice = Number(item.retailPrices?.[yr] ?? item.retailPrices?.[String(yr) as any]) || 0;
-                        const actualPrice = exactPrice > 0 ? exactPrice : linearPrice;
-                        const savings = linearPrice > 0 && exactPrice > 0 ? Math.round((1 - actualPrice / linearPrice) * 100) : 0;
+                        const perYearN = Number(item.retailPrices?.[yr] ?? item.retailPrices?.[String(yr) as any]) || 0;
+                        // Only show savings if the per-year rate for longer tenure is genuinely lower
+                        const savings = yr > 1 && perYear1 > 0 && perYearN > 0 && perYearN < perYear1
+                          ? Math.round((1 - perYearN / perYear1) * 100)
+                          : 0;
                         return (
                           <SelectItem key={yr} value={String(yr)}>
                             {yr} Year{yr > 1 ? 's' : ''}{savings > 0 ? ` (Save ${savings}%)` : ''}

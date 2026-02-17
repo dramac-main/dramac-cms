@@ -731,14 +731,17 @@ export async function createDomainCartCheckout(params: {
         const rcCost = wholesaleByTld[tld];
         const fallbackBase = 12.99;
 
-        const baseWholesale = rcCost?.register?.[years] || (rcCost?.register?.[1] || fallbackBase) * years;
+        // RC API register[N] = per-year rate for N-year tenure. Total = rate * years.
+        const wholesalePerYear = rcCost?.register?.[years] || rcCost?.register?.[1] || fallbackBase;
+        const baseWholesale = Math.round(wholesalePerYear * years * 100) / 100;
 
         let retailForDomain: number;
         const hasRcSellingPrice = !!rcSelling?.register?.[1];
 
         if (hasRcSellingPrice) {
-          const rcSellingYears = rcSelling!.register[years] || (rcSelling!.register[1] || 0) * years;
-          retailForDomain = applyMarkup(rcSellingYears);
+          const sellingPerYear = rcSelling!.register[years] || rcSelling!.register[1] || 0;
+          const rcSellingTotal = Math.round(sellingPerYear * years * 100) / 100;
+          retailForDomain = applyMarkup(rcSellingTotal);
         } else {
           if (markupValue > 0) {
             retailForDomain = applyMarkup(baseWholesale);

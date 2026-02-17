@@ -47,16 +47,23 @@ export function CartPageClient() {
   const handleComplete = async (contactInfo: ContactFormData): Promise<void | { checkoutUrl: string }> => {
     // Create checkout for all domains in cart
     // Helper to get the correct retail price for the selected year count
+    // RC API register[N] = per-year rate for N-year tenure. Total = rate * years.
     const getRetailForYears = (item: DomainCartItem): number => {
-      const exactPrice = item.retailPrices?.[item.years] ?? item.retailPrices?.[String(item.years) as any];
-      if (exactPrice && Number(exactPrice) > 0) return Number(exactPrice);
-      const perYear = Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
+      const perYearForTenure = Number(
+        item.retailPrices?.[item.years] ?? item.retailPrices?.[String(item.years) as any] ?? 0
+      );
+      const perYear = perYearForTenure > 0
+        ? perYearForTenure
+        : Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
       return Math.round(perYear * item.years * 100) / 100;
     };
     const getWholesaleForYears = (item: DomainCartItem): number => {
-      const exactPrice = item.wholesalePrices?.[item.years] ?? item.wholesalePrices?.[String(item.years) as any];
-      if (exactPrice && Number(exactPrice) > 0) return Number(exactPrice);
-      const perYear = Number(item.wholesalePrices?.[1] ?? item.wholesalePrices?.['1' as any]) || item.wholesalePrice || 0;
+      const perYearForTenure = Number(
+        item.wholesalePrices?.[item.years] ?? item.wholesalePrices?.[String(item.years) as any] ?? 0
+      );
+      const perYear = perYearForTenure > 0
+        ? perYearForTenure
+        : Number(item.wholesalePrices?.[1] ?? item.wholesalePrices?.['1' as any]) || item.wholesalePrice || 0;
       return Math.round(perYear * item.years * 100) / 100;
     };
 
