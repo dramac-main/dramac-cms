@@ -27,20 +27,8 @@ export interface DomainAvailability {
 }
 
 export interface DomainPrice {
-  register: {
-    1: number;
-    2?: number;
-    3?: number;
-    5?: number;
-    10?: number;
-  };
-  renew: {
-    1: number;
-    2?: number;
-    3?: number;
-    5?: number;
-    10?: number;
-  };
+  register: Record<number, number>;
+  renew: Record<number, number>;
   transfer: number;
   restore?: number;
   currency: string;

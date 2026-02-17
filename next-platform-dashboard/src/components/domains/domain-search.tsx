@@ -76,8 +76,9 @@ export function DomainSearch({ onSelect, onAddToCart, className }: DomainSearchP
   }, [selectedTlds]);
   
   const handleKeywordChange = useCallback((value: string) => {
+    // Allow dots in input so users can type full domains like "1044.io" or "example.com"
     const cleaned = normalizeDomainKeyword(value);
-    setKeyword(cleaned);
+    setKeyword(value.toLowerCase().trim()); // Show what user typed (preserve dots)
     
     // Debounce search
     if (searchTimeout) {

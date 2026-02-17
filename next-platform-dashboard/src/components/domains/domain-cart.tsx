@@ -41,11 +41,13 @@ export function DomainCartComponent({
    *  Looks up retailPrices[years] first (exact multi-year price from RC API),
    *  then falls back to retailPrices[1] * years if not available. */
   const getRetailForYears = (item: DomainCartItem): number => {
-    if (item.retailPrices?.[item.years]) {
-      return item.retailPrices[item.years];
+    // Try exact year-keyed price from RC API
+    const exactPrice = item.retailPrices?.[item.years] ?? item.retailPrices?.[String(item.years) as any];
+    if (exactPrice && Number(exactPrice) > 0) {
+      return Number(exactPrice);
     }
     // Fallback: multiply 1-year price by years
-    const perYear = item.retailPrices?.[1] || item.retailPrice || 0;
+    const perYear = Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
     return Math.round(perYear * item.years * 100) / 100;
   };
 
@@ -137,14 +139,12 @@ export function DomainCartComponent({
                     </SelectTrigger>
                     <SelectContent>
                       {[1, 2, 3, 5, 10].map(yr => {
-                        // Only show year options that have pricing data
-                        const hasPrice = item.retailPrices?.[yr] || yr === 1;
-                        if (!hasPrice && yr > 1) return null;
                         // Calculate real savings vs 1yr * N
-                        const perYear1 = item.retailPrices?.[1] || item.retailPrice || 0;
+                        const perYear1 = Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
                         const linearPrice = perYear1 * yr;
-                        const actualPrice = item.retailPrices?.[yr] || linearPrice;
-                        const savings = linearPrice > 0 ? Math.round((1 - actualPrice / linearPrice) * 100) : 0;
+                        const exactPrice = Number(item.retailPrices?.[yr] ?? item.retailPrices?.[String(yr) as any]) || 0;
+                        const actualPrice = exactPrice > 0 ? exactPrice : linearPrice;
+                        const savings = linearPrice > 0 && exactPrice > 0 ? Math.round((1 - actualPrice / linearPrice) * 100) : 0;
                         return (
                           <SelectItem key={yr} value={String(yr)}>
                             {yr} Year{yr > 1 ? 's' : ''}{savings > 0 ? ` (Save ${savings}%)` : ''}

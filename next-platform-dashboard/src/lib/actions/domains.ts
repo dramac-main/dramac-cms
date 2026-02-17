@@ -9,7 +9,7 @@ import { domainService } from "@/lib/resellerclub/domains";
 import { customerService } from "@/lib/resellerclub/customers";
 import { contactService } from "@/lib/resellerclub/contacts";
 import { arePurchasesAllowed, TLD_CATEGORIES } from "@/lib/resellerclub/config";
-import { normalizeDomainKeyword } from "@/lib/domain-keyword";
+import { normalizeDomainKeyword, parseDomainKeyword } from "@/lib/domain-keyword";
 import { createDomainPurchase } from "@/lib/paddle/transactions";
 import { getFallbackPrice } from "@/lib/domain-fallback-prices";
 import type { 
@@ -150,8 +150,30 @@ export async function searchDomains(
     }
     
     // Use provided TLDs or fall back to popular TLDs from config
-    const allConfigTlds = Object.values(TLD_CATEGORIES).flat();
-    const popularTlds = tlds || allConfigTlds;
+    const allConfigTlds = Object.values(TLD_CATEGORIES).flat() as string[];
+    let popularTlds = tlds || allConfigTlds;
+
+    // Detect if user typed a full domain name like "1044.io" or "example.com"
+    // If so, extract the SLD as keyword and prioritize the detected TLD
+    const parsed = parseDomainKeyword(cleanKeyword, allConfigTlds);
+    const searchSld = parsed.sld;
+    
+    if (!searchSld || searchSld.length < 1) {
+      return { success: false, error: 'Keyword must be at least 1 character' };
+    }
+
+    if (parsed.detectedTld) {
+      // User typed a full domain (e.g. "1044.io") — ensure detected TLD is checked first
+      const detectedTld = parsed.detectedTld.startsWith('.') ? parsed.detectedTld : '.' + parsed.detectedTld;
+      if (!popularTlds.includes(detectedTld)) {
+        // Add the detected TLD at the front so it's included even if not in the default set
+        popularTlds = [detectedTld, ...popularTlds];
+      } else {
+        // Move detected TLD to the front for priority
+        popularTlds = [detectedTld, ...popularTlds.filter(t => t !== detectedTld)];
+      }
+      console.log(`[Domains] Detected full domain input "${cleanKeyword}" → SLD="${searchSld}", TLD="${detectedTld}"`);
+    }
 
     // Get agency pricing settings (markup + pricing mode)
     const { data: pricing } = await getTable(supabase, 'agency_domain_pricing')
@@ -186,7 +208,7 @@ export async function searchDomains(
     // Try ResellerClub API first (live data)
     if (isClientAvailable()) {
       try {
-        const availability = await domainService.suggestDomains(cleanKeyword, popularTlds);
+        const availability = await domainService.suggestDomains(searchSld, popularTlds);
         
         // Fetch TWO price tiers from ResellerClub in parallel:
         // 1. Customer/selling pricing (products/customer-price.json) — the SELLING
@@ -200,8 +222,16 @@ export async function searchDomains(
         let wholesaleByTld: Record<string, SimplePrice> = {};
 
         const mapDomainPrice = (price: any): SimplePrice => ({
-          register: Object.fromEntries(Object.entries(price.register || {}).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
-          renew: Object.fromEntries(Object.entries(price.renew || {}).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
+          register: Object.fromEntries(
+            Object.entries(price.register || {})
+              .filter(([, v]) => v != null && Number(v) > 0)
+              .map(([k, v]) => [Number(k), Number(v)])
+          ) as Record<number, number>,
+          renew: Object.fromEntries(
+            Object.entries(price.renew || {})
+              .filter(([, v]) => v != null && Number(v) > 0)
+              .map(([k, v]) => [Number(k), Number(v)])
+          ) as Record<number, number>,
           transfer: Number(price.transfer) || 0,
         });
 
@@ -269,10 +299,10 @@ export async function searchDomains(
           if (hasRcSellingPrice) {
             // Use RC selling prices as base, then apply any DRAMAC additional markup
             retailRegister = Object.fromEntries(
-              Object.entries(rcSelling!.register).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])
+              Object.entries(rcSelling!.register).map(([y, p]) => [Number(y), applyMarkup(Number(p) || 0)])
             ) as Record<number, number>;
             retailRenew = Object.fromEntries(
-              Object.entries(rcSelling!.renew).map(([y, p]) => [y, applyMarkup(Number(p) || 0)])
+              Object.entries(rcSelling!.renew).map(([y, p]) => [Number(y), applyMarkup(Number(p) || 0)])
             ) as Record<number, number>;
             retailTransfer = applyMarkup(rcSelling!.transfer || 0);
           } else {
@@ -284,10 +314,10 @@ export async function searchDomains(
               return Math.round(base * 1.3 * 100) / 100;
             };
             retailRegister = Object.fromEntries(
-              Object.entries(wholesaleRegister).map(([y, p]) => [y, costMarkup(Number(p) || 0)])
+              Object.entries(wholesaleRegister).map(([y, p]) => [Number(y), costMarkup(Number(p) || 0)])
             ) as Record<number, number>;
             retailRenew = Object.fromEntries(
-              Object.entries(wholesaleRenew).map(([y, p]) => [y, costMarkup(Number(p) || 0)])
+              Object.entries(wholesaleRenew).map(([y, p]) => [Number(y), costMarkup(Number(p) || 0)])
             ) as Record<number, number>;
             retailTransfer = costMarkup(wholesaleTransfer);
           }
@@ -333,7 +363,7 @@ export async function searchDomains(
     let fallbackAvailability: Array<{ domain: string; available: boolean }> = [];
     try {
       const { checkAvailabilityFallback } = await import('@/lib/domain-availability-fallback');
-      const domainNames = popularTlds.map(tld => cleanKeyword + tld);
+      const domainNames = popularTlds.map(tld => searchSld + tld);
       const fbResults = await checkAvailabilityFallback(domainNames);
       fallbackAvailability = fbResults.map(r => ({ domain: r.domain, available: r.available }));
     } catch (fbError) {
@@ -341,7 +371,7 @@ export async function searchDomains(
     }
     
     const results: DomainSearchResult[] = popularTlds.map(tld => {
-      const domainName = cleanKeyword + tld;
+      const domainName = searchSld + tld;
       const fb = getFallbackPrice(tld);
       const fbResult = fallbackAvailability.find(r => r.domain === domainName);
       
@@ -364,10 +394,10 @@ export async function searchDomains(
         },
         retailPrices: {
           register: Object.fromEntries(
-            Object.entries(fb.register).map(([y, p]) => [y, fallbackMarkup(Number(p))])
+            Object.entries(fb.register).map(([y, p]) => [Number(y), fallbackMarkup(Number(p))])
           ) as Record<number, number>,
           renew: Object.fromEntries(
-            Object.entries(fb.renew).map(([y, p]) => [y, fallbackMarkup(Number(p))])
+            Object.entries(fb.renew).map(([y, p]) => [Number(y), fallbackMarkup(Number(p))])
           ) as Record<number, number>,
           transfer: fallbackMarkup(fb.transfer),
         },
@@ -665,8 +695,16 @@ export async function createDomainCartCheckout(params: {
       let wholesaleByTld: Record<string, SimplePrice> = {};
 
       const mapDomainPrice = (price: any): SimplePrice => ({
-        register: Object.fromEntries(Object.entries(price.register || {}).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
-        renew: Object.fromEntries(Object.entries(price.renew || {}).filter(([, v]) => v != null && Number(v) > 0)) as Record<number, number>,
+        register: Object.fromEntries(
+          Object.entries(price.register || {})
+            .filter(([, v]) => v != null && Number(v) > 0)
+            .map(([k, v]) => [Number(k), Number(v)])
+        ) as Record<number, number>,
+        renew: Object.fromEntries(
+          Object.entries(price.renew || {})
+            .filter(([, v]) => v != null && Number(v) > 0)
+            .map(([k, v]) => [Number(k), Number(v)])
+        ) as Record<number, number>,
         transfer: Number(price.transfer) || 0,
       });
 

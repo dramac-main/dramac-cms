@@ -272,17 +272,19 @@ export class DomainService {
         // e.g. { "0": { "pricing": { "addnewdomain": { "1": "9.99" } } } }
         const pricingData = this.unwrapSlabPricing(tldData);
         
+        // Extract ALL year keys (1–10) that have valid pricing from RC
+        const registerPrices: Record<number, number> = {};
+        const renewPrices: Record<number, number> = {};
+        for (let yr = 1; yr <= 10; yr++) {
+          const regPrice = this.extractPrice(pricingData, 'addnewdomain', yr);
+          if (regPrice > 0) registerPrices[yr] = regPrice;
+          const renPrice = this.extractPrice(pricingData, 'renewdomain', yr);
+          if (renPrice > 0) renewPrices[yr] = renPrice;
+        }
+
         prices[tld] = {
-          register: {
-            1: this.extractPrice(pricingData, 'addnewdomain', 1),
-            2: this.extractPrice(pricingData, 'addnewdomain', 2),
-            5: this.extractPrice(pricingData, 'addnewdomain', 5),
-          },
-          renew: {
-            1: this.extractPrice(pricingData, 'renewdomain', 1),
-            2: this.extractPrice(pricingData, 'renewdomain', 2),
-            5: this.extractPrice(pricingData, 'renewdomain', 5),
-          },
+          register: registerPrices,
+          renew: renewPrices,
           transfer: this.extractPrice(pricingData, 'transferdomain', 1),
           restore: this.extractPrice(pricingData, 'restoredomain', 1),
           currency: DEFAULT_CURRENCY,

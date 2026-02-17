@@ -72,8 +72,10 @@ export function DomainCheckout({
   };
 
   const getRetailForYears = (item: DomainCartItem): number => {
-    if (item.retailPrices?.[item.years]) return item.retailPrices[item.years];
-    return Math.round((item.retailPrices?.[1] || item.retailPrice || 0) * item.years * 100) / 100;
+    const exactPrice = item.retailPrices?.[item.years] ?? item.retailPrices?.[String(item.years) as any];
+    if (exactPrice && Number(exactPrice) > 0) return Number(exactPrice);
+    const perYear = Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
+    return Math.round(perYear * item.years * 100) / 100;
   };
 
   const totalPrice = items.reduce((total, item) => {

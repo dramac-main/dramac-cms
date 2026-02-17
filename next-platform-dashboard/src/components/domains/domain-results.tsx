@@ -123,13 +123,13 @@ export function DomainResults({
                   <div className="text-right flex items-center gap-4">
                     <div>
                       <p className="font-bold text-xl">
-                        {formatPrice(result.retailPrices.register[1] || 0)}
+                        {formatPrice(Number(result.retailPrices.register[1] ?? result.retailPrices.register['1' as any]) || 0)}
                         <span className="text-sm font-normal text-muted-foreground">/yr</span>
                       </p>
-                      {result.retailPrices.renew[1] && 
-                       result.retailPrices.renew[1] !== result.retailPrices.register[1] && (
+                      {(Number(result.retailPrices.renew[1] ?? result.retailPrices.renew['1' as any]) || 0) > 0 && 
+                       (Number(result.retailPrices.renew[1] ?? result.retailPrices.renew['1' as any]) || 0) !== (Number(result.retailPrices.register[1] ?? result.retailPrices.register['1' as any]) || 0) && (
                         <p className="text-xs text-muted-foreground">
-                          Renews at {formatPrice(result.retailPrices.renew[1])}/yr
+                          Renews at {formatPrice(Number(result.retailPrices.renew[1] ?? result.retailPrices.renew['1' as any]) || 0)}/yr
                         </p>
                       )}
                     </div>

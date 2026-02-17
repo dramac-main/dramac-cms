@@ -124,7 +124,31 @@ export const DEFAULT_FALLBACK_PRICE: FallbackPriceEntry = {
 /**
  * Get fallback wholesale prices for a given TLD.
  * Returns a consistent price structure whether or not the TLD is known.
+ * Automatically generates multi-year prices (3, 5, 10) if not explicitly defined,
+ * by multiplying the 1-year price.
  */
 export function getFallbackPrice(tld: string): FallbackPriceEntry {
-  return FALLBACK_PRICES[tld] || DEFAULT_FALLBACK_PRICE;
+  const base = FALLBACK_PRICES[tld] || DEFAULT_FALLBACK_PRICE;
+  
+  // Fill in missing year keys (3, 5, 10) by multiplying the 1-year price
+  const registerPerYear = base.register[1] || 14.99;
+  const renewPerYear = base.renew[1] || 16.99;
+  
+  const register: Record<number, number> = { ...base.register };
+  const renew: Record<number, number> = { ...base.renew };
+  
+  for (const yr of [1, 2, 3, 5, 10]) {
+    if (!register[yr] || register[yr] <= 0) {
+      register[yr] = Math.round(registerPerYear * yr * 100) / 100;
+    }
+    if (!renew[yr] || renew[yr] <= 0) {
+      renew[yr] = Math.round(renewPerYear * yr * 100) / 100;
+    }
+  }
+  
+  return {
+    register,
+    renew,
+    transfer: base.transfer,
+  };
 }

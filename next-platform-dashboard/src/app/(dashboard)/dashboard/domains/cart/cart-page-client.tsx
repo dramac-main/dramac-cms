@@ -48,12 +48,16 @@ export function CartPageClient() {
     // Create checkout for all domains in cart
     // Helper to get the correct retail price for the selected year count
     const getRetailForYears = (item: DomainCartItem): number => {
-      if (item.retailPrices?.[item.years]) return item.retailPrices[item.years];
-      return Math.round((item.retailPrices?.[1] || item.retailPrice || 0) * item.years * 100) / 100;
+      const exactPrice = item.retailPrices?.[item.years] ?? item.retailPrices?.[String(item.years) as any];
+      if (exactPrice && Number(exactPrice) > 0) return Number(exactPrice);
+      const perYear = Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
+      return Math.round(perYear * item.years * 100) / 100;
     };
     const getWholesaleForYears = (item: DomainCartItem): number => {
-      if (item.wholesalePrices?.[item.years]) return item.wholesalePrices[item.years];
-      return Math.round((item.wholesalePrices?.[1] || item.wholesalePrice || 0) * item.years * 100) / 100;
+      const exactPrice = item.wholesalePrices?.[item.years] ?? item.wholesalePrices?.[String(item.years) as any];
+      if (exactPrice && Number(exactPrice) > 0) return Number(exactPrice);
+      const perYear = Number(item.wholesalePrices?.[1] ?? item.wholesalePrices?.['1' as any]) || item.wholesalePrice || 0;
+      return Math.round(perYear * item.years * 100) / 100;
     };
 
     const result = await createDomainCartCheckout({

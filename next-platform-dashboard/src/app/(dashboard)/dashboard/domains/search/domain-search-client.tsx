@@ -23,8 +23,8 @@ export function DomainSearchClient() {
 
     // Calculate privacy price using same markup ratio as the domain itself
     // ResellerClub charges ~$3/year wholesale for WHOIS privacy
-    const wholesaleBase = domain.prices.register[1] || 1;
-    const retailBase = domain.retailPrices.register[1] || wholesaleBase;
+    const wholesaleBase = Number(domain.prices.register[1] ?? domain.prices.register['1' as any]) || 1;
+    const retailBase = Number(domain.retailPrices.register[1] ?? domain.retailPrices.register['1' as any]) || wholesaleBase;
     const markupRatio = wholesaleBase > 0 ? retailBase / wholesaleBase : 1;
     const privacyCostPerYear = Math.round(3 * markupRatio * 100) / 100;
 
@@ -32,8 +32,8 @@ export function DomainSearchClient() {
       type: 'registration',
       domainName: domain.domain,
       years: 1,
-      wholesalePrice: domain.prices.register[1] || 0,
-      retailPrice: domain.retailPrices.register[1] || 0,
+      wholesalePrice: Number(domain.prices.register[1] ?? domain.prices.register['1' as any]) || 0,
+      retailPrice: Number(domain.retailPrices.register[1] ?? domain.retailPrices.register['1' as any]) || 0,
       wholesalePrices: { ...domain.prices.register },
       retailPrices: { ...domain.retailPrices.register },
       privacy: true,
@@ -51,8 +51,10 @@ export function DomainSearchClient() {
   };
 
   const getRetailForYears = (item: DomainCartItem): number => {
-    if (item.retailPrices?.[item.years]) return item.retailPrices[item.years];
-    return Math.round((item.retailPrices?.[1] || item.retailPrice || 0) * item.years * 100) / 100;
+    const exactPrice = item.retailPrices?.[item.years] ?? item.retailPrices?.[String(item.years) as any];
+    if (exactPrice && Number(exactPrice) > 0) return Number(exactPrice);
+    const perYear = Number(item.retailPrices?.[1] ?? item.retailPrices?.['1' as any]) || item.retailPrice || 0;
+    return Math.round(perYear * item.years * 100) / 100;
   };
 
   const totalPrice = cart.reduce((sum, item) => 
