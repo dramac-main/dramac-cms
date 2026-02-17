@@ -1,11 +1,40 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅**
 
 ---
 
-## Latest Update: February 2026 - Domain Search TLD Parsing + Year Pricing Pipeline Fix ✅
+## Latest Update: February 2026 - RC Per-Year Rate Fix (Root Cause) ✅
+
+**Commit:** `93337b0`
+**Files Changed:** 6
+
+**What was done:**
+Discovered and fixed the **fundamental root cause** of all domain pricing discrepancies: ResellerClub API `customer-price.json` returns **per-year prices** (price per year for that tenure), NOT total prices. The entire codebase treated `register[N]` as the total for N years.
+
+### The Bug:
+- RC API: `register[2] = 58.49` means **$58.49/year** for 2-year registration (total: $116.98)
+- Code treated it as: $58.49 **total** for 2 years
+- Savings calculation: `1 - 58.49 / (58.49 * 2) = 50%` ← WRONG (comparing per-year vs total)
+- Paddle received per-year rate instead of total amount
+
+### The Fix:
+1. `getRetailForYears()` in 4 UI files → returns `perYearRate * years` (total)
+2. `getWholesaleForYears()` → same per-year × years fix
+3. Savings: compares `register[N]` vs `register[1]` (per-year rates only)
+4. Server fallback: `wholesalePerYear * years` for totals
+5. Fallback prices: converted from total format → per-year format for RC consistency
+6. `getFallbackPrice()`: populates multi-year keys with same per-year rate
+
+### Result:
+- No more bogus "Save 50%/67%/80%/90%" labels (savings only shown for genuine RC discounts)
+- Paddle checkout amount = correct total (per-year × years + privacy)
+- Platform price perfectly syncs with Paddle popup
+
+---
+
+## Previous Update: Domain Search TLD Parsing + Year Pricing Pipeline Fix ✅
 
 **Commit:** `69bcb52`
 **Files Changed:** 11

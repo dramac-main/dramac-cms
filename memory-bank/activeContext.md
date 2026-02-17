@@ -2,6 +2,52 @@
 
 ## Recent Work
 
+### RC Per-Year Rate Fix — All Prices & Savings Corrected — February 2026 ✅
+
+**Category:** Critical Production Bug Fix (Root Cause)
+**Commit:** `93337b0`
+**Files Changed:** 6
+
+#### Overview
+Discovered and fixed the **fundamental root cause** of all domain pricing issues: the ResellerClub API `customer-price.json` returns **per-year prices** keyed by tenure length (e.g. `register[2] = $58.49` means $58.49/year for a 2-year registration), but the entire codebase treated `register[N]` as the **total price for N years**. This caused:
+- **Bogus savings percentages**: "2 Years (Save 50%)", "3 Years (Save 67%)", "5 Years (Save 80%)" — comparing per-year rate vs total
+- **Wrong Paddle checkout amount**: sending per-year rate instead of total
+- **Mismatched platform vs Paddle prices**
+
+#### RC API Format (from official docs):
+```
+"productkey": { "action-name": { "tenure-in-years": "per_year_price" } }
+```
+- `register[1] = 58.49` → $58.49/yr for 1yr term (total: $58.49)
+- `register[2] = 58.49` → $58.49/yr for 2yr term (total: $116.98)
+- Savings only exist if `register[N] < register[1]` (lower per-year rate for longer terms)
+
+#### Fixes Applied:
+1. **`getRetailForYears()` in 4 files** — Now returns `perYearRate * years` (the total), not `register[N]` directly
+2. **`getWholesaleForYears()`** — Same fix: per-year rate × years
+3. **Savings calculation** — Compares per-year rates (`register[N]` vs `register[1]`), only shows savings when RC genuinely offers lower per-year rate for longer tenure
+4. **Server fallback path** — `createDomainCartCheckout` fallback: `wholesalePerYear * years`
+5. **Fallback prices** — Converted from total format to per-year format for consistency with RC
+6. **`getFallbackPrice()`** — Populates multi-year keys with same per-year rate (no fake discounts)
+
+#### Files Changed:
+- `src/components/domains/domain-cart.tsx` — getRetailForYears + savings calc
+- `src/components/domains/domain-checkout.tsx` — getRetailForYears
+- `src/app/(dashboard)/dashboard/domains/cart/cart-page-client.tsx` — getRetailForYears + getWholesaleForYears
+- `src/app/(dashboard)/dashboard/domains/search/domain-search-client.tsx` — getRetailForYears
+- `src/lib/actions/domains.ts` — server fallback pricing path
+- `src/lib/domain-fallback-prices.ts` — all entries now per-year; getFallbackPrice consistent
+
+#### Price Flow (now correct end-to-end):
+```
+RC API → register[N] (per-year rate) → stored in retailPrices/wholesalePrices maps
+→ getRetailForYears(): perYearRate * years = TOTAL
+→ displayedRetailPrice = total + privacy → sent to server
+→ createDomainCartCheckout → Paddle transaction → correct amount in cents
+```
+
+---
+
 ### Domain Search TLD Parsing + Year Pricing Pipeline Fix — February 2026 ✅
 
 **Category:** Critical Production Bug Fix
