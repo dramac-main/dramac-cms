@@ -2,6 +2,66 @@
 
 ## Recent Work
 
+### Email Purchase Flow Comprehensive Overhaul — February 2026 ✅
+
+**Category:** Critical Production Bug Fix (10 issues)
+**Commit:** `5a9e037`
+**Files Changed:** 8
+
+#### CRITICAL: RC Email Pricing Response Structure Completely Wrong
+The `EmailPricingResponse` type and all pricing parsers (UI + server) assumed a flat structure: `productKey → months → { addnewaccount, renewaccount }`. But the actual RC API returns a deeply nested structure with account-range slabs:
+
+**Actual RC structure (confirmed from API docs):**
+```
+"eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": 0.86, "12": 10.20 }, "renew": {...} }, "6-25": {...} } }
+```
+
+This caused `calculateBasePrice()` to always return $0, which was caught by the $0 guard from prior fix but meant email checkout ALWAYS failed with "Unable to calculate price."
+
+**Fix:** Rewrote `EmailPricingResponse` type, `calculateBasePrice()`, `calculateWholesalePrice()`, and UI `loadPricing()` to navigate the real structure: productKey → email_account_ranges → find correct slab for account count → add → months → price × accounts.
+
+#### CRITICAL: UI vs Server Pricing Source Mismatch
+UI called `getResellerPricing()` (reseller-pricing.json) while server action called `getCustomerPricing()` (customer-pricing.json) — different endpoints returning different prices.
+
+**Fix:** `getBusinessEmailPricing()` now uses `getCustomerPricing()` when a customerId exists, falling back to `getResellerPricing()`. Both UI and server now use the same pricing source.
+
+#### CRITICAL: Missing Required `auto-renew` Parameter
+RC `eelite/add.json` requires `auto-renew` (Boolean, Required per API docs). The code omitted it, which could cause order creation failures.
+
+**Fix:** Added `'auto-renew': false` to createOrder request.
+
+#### CRITICAL: Fragile Response Handling for createOrder
+RC may return entityid as a number (like domain contacts). Code expected a typed object — could silently fail.
+
+**Fix:** Added defensive response handling (typeof checks for number/string/object + actionstatus error check).
+
+#### HIGH: No Stale Pending Purchase Cleanup for Email
+Domain flow had cleanup for orphaned pending_purchases; email flow didn't.
+
+**Fix:** Added identical cleanup block: delete old `pending_payment` records for the same domain with different idempotency keys.
+
+#### HIGH: domainId Never Passed From Form
+The form only sent domainName, not domainId from URL params — email orders had NULL domain_id, breaking domain-to-email linkage.
+
+**Fix:** Form now reads `domainId` from URL searchParams and appends it to formData.
+
+#### HIGH: retry_count Never Incremented
+Retry handler checked `retry_count >= 5` but never incremented it — users could retry infinitely.
+
+**Fix:** Added `retry_count: retryCount + 1` to the status update.
+
+#### MEDIUM: Domain Regex Too Restrictive
+Regex required minimum 3-char second-level domain, rejecting valid domains like `x.io`, `ab.co`.
+
+**Fix:** Changed `{1,61}` to `{0,61}` with optional middle group.
+
+#### MEDIUM: Success Page Missing Email Period
+Email purchases have `months` in purchase_data but the success page only displayed `years`.
+
+**Fix:** Added months display section for email purchases.
+
+---
+
 ### Domain reg-contact-id Fix + Refund Tracking + Email Flow Fixes — February 2026 ✅
 
 **Category:** Critical Production Bug Fix (Multiple)
