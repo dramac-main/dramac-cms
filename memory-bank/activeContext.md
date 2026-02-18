@@ -2,6 +2,95 @@
 
 ## Recent Work
 
+### Titan Mail REST API + 3-Plan Support + Supplier Neutrality ✅
+
+**Category:** API Integration + Feature Addition + UX  
+**Commit:** `ede928d`  
+**Files Changed:** 10 (876 insertions, 21 deletions)
+
+#### Context
+User showed screenshots of all 3 plans (Professional, Business, Enterprise) in their RC panel under MY SHOP > TITAN MAIL. Key feedback:
+- "Why are you even mentioning ResellerClub?" → Remove supplier name from customer-facing UI
+- "You can live powered by Titan if it is required" → Titan branding is OK
+- "I only see one package" → Professional plan was missing because it only exists in the NEWER Titan Mail REST API
+- "Pull correct data" → Everything must come from the API, not hardcoded
+
+#### Critical Discovery
+ResellerClub has **TWO separate email APIs**:
+1. **Legacy Business Email API**: `/api/eelite/...` endpoints, product keys `eeliteus`/`enterpriseemailus`, only Business + Enterprise
+2. **NEW Titan Mail REST API** (KB/3483): `/restapi/product/{product_key}/...` endpoints, product key `titanmailglobal`, has ALL 3 plans via `plan-id`:
+   - Professional = 1762 (5GB), Business = 1756 (10GB), Enterprise = 1757 (50GB), Free Trial = 1755
+
+#### What Was Built
+
+1. **`titan-client.ts`** (NEW) — Complete Titan Mail REST API client:
+   - All endpoints: createOrder, renewOrder, getOrderDetails, addSeats, suspendOrder, unsuspendOrder, deleteOrder, getAutoLoginUrl, upgradePlan
+   - Plan IDs for both Global and India regions
+   - Auth via existing RESELLERCLUB_CONFIG
+   - Base URL: replaces `/api` → `/restapi` in the config URL
+
+2. **`email/index.ts`** — Now exports titan-client alongside legacy businessEmailApi
+
+3. **`business-email.ts`** — Key changes:
+   - `flattenTitanMailPricing()`: Detects nested Titan Mail pricing (e.g., `titanmailglobal.1762.email_account_ranges`) and explodes into synthetic top-level keys (`titanmailglobal_1762`)
+   - `resolveTitanPlanId()`: Maps product keys to Titan Mail plan IDs (synthetic keys, legacy keys, direct keys)
+   - `isTitanMailProduct()`: Detects titanmail product keys for API routing
+   - Both `getBusinessEmailPricing()` and `createBusinessEmailOrder()` now apply the flattener
+   - Form reads `planId` from FormData and passes to Paddle purchase
+
+4. **`email-purchase-wizard.tsx`** — Updated:
+   - `KNOWN_PLANS` now includes all Titan Mail variants: `titanmailglobal_1762` (Professional), `titanmailglobal_1756` (Business), `titanmailglobal_1757` (Enterprise), plus India variants
+   - `resolvePlanMeta()` handles Titan Mail synthetic keys dynamically
+   - `extractPlanId()` extracts plan-id from synthetic keys
+   - `onSubmit()` passes `planId` in FormData for Titan Mail plans
+   - Legacy `eeliteus`/`enterpriseemailus` keys still supported
+
+5. **`transactions.ts`** — `CreateEmailPurchaseParams` now includes `planId`. `resolveEmailPlanDisplayName()` handles legacy keys, Titan plan IDs, and synthetic keys. `purchase_data` stores `plan_id`.
+
+6. **Discovery endpoint** (NEW): `GET /api/admin/email-plans/discover` — Super admin only. Calls RC pricing API and returns ALL email product keys found, their structure, sample pricing. Critical for verifying what keys the API returns.
+
+7. **Purchase page** — Restored "powered by Titan" subtitle (user approved)
+
+8. **Supplier neutrality** — Replaced all "ResellerClub" mentions in:
+   - `domain-pricing-config.tsx` (5 places → "supplier")
+   - `billing-integration.tsx` (1 place → "the provider")
+
+#### Key Architecture Decision
+The pricing pipeline uses a "flattener" pattern: the raw RC API response (which may have nested Titan Mail structures) is flattened into synthetic top-level keys before being passed to the wizard. This means:
+- The wizard's dynamic parsing (any key with `email_account_ranges`) continues to work
+- Both flat (legacy) and nested (Titan Mail) pricing structures are supported
+- New plans are auto-discovered without code changes
+
+#### Next Steps — CRITICAL
+1. **Deploy and hit `/api/admin/email-plans/discover`** to verify what pricing keys the RC API actually returns for Titan Mail
+2. If `titanmailglobal` appears with nested plan pricing → the flattener handles it automatically
+3. If the API returns separate keys per plan → they'll be auto-discovered
+4. If the API does NOT return Titan Mail pricing → need to investigate an alternative pricing source
+5. The webhook handler for Paddle payment completion needs to route to `titanMailApi.createOrder()` for Titan Mail products (instead of legacy `businessEmailApi.createOrder()`)
+
+#### User-Visible Pricing (from RC screenshots)
+- **Professional**: 1mo=$1.20 (cost $0.60), 12mo=$11.52 (cost $0.48/mo)
+- **Business**: 1mo=$1.68 (cost $0.84), 12mo=$17.28 (cost $0.72/mo)
+- **Enterprise**: 1mo=$2.90 (cost $1.45), 12mo=$29.04 (cost $1.21/mo)
+
+---
+
+### Dynamic Email Pricing + Wizard Enhancement ✅
+
+**Category:** Pricing Pipeline + UX  
+**Commit:** `f5689d1`  
+**Files Changed:** 7
+
+#### What Was Built
+- Fixed Business Email endpoint: `eelite/add.json` → `eelite/us/add.json`
+- Made pricing cache dynamic (auto-discover all plans from API)
+- Added `getAllCachedEmailPlans()` to pricing cache
+- Updated wizard to be fully dynamic (parse ALL keys from API response)
+- Removed "ResellerClub" from fine print
+- Added collapsible "Compare all plans" table
+
+---
+
 ### Enterprise Email Plan + Dual Plan Selector ✅
 
 **Category:** Feature Addition + UX Overhaul  

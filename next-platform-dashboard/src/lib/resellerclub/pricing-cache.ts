@@ -12,6 +12,65 @@ import type { EmailPricingResponse } from './email/types';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SupabaseClient = any;
 
+/**
+ * Flatten Titan Mail `plans`-structured pricing into standard `email_account_ranges` shape.
+ * Shared by both the pricing cache (for DB storage) and the server action (for wizard display).
+ *
+ * RC confirmed structure:
+ *   titanmailglobal: { plans: { "1762": { add: { "1": 0.60, "12": 5.76 }, renew: {...} } } }
+ *
+ * Converted to:
+ *   titanmailglobal_1762: { email_account_ranges: { "1-200000": { add: {...}, renew: {...} } } }
+ */
+function flattenTitanMailForCache(pricing: EmailPricingResponse): EmailPricingResponse {
+  const TITAN_KEYS = ['titanmailglobal', 'titanmailindia'];
+  const result = { ...pricing };
+
+  for (const parentKey of TITAN_KEYS) {
+    const parentValue = pricing[parentKey];
+    if (!parentValue || typeof parentValue !== 'object') continue;
+    if (parentValue.email_account_ranges) continue; // already flat
+
+    const pv = parentValue as Record<string, unknown>;
+    const plans = pv.plans as Record<string, unknown> | undefined;
+
+    if (plans && typeof plans === 'object') {
+      let foundAny = false;
+      for (const [planId, planData] of Object.entries(plans)) {
+        if (typeof planData !== 'object' || planData === null) continue;
+        const pd = planData as Record<string, unknown>;
+        const syntheticKey = `${parentKey}_${planId}`;
+
+        if (pd.email_account_ranges) {
+          result[syntheticKey] = planData as EmailPricingResponse[string];
+          foundAny = true;
+        } else if (pd.add || pd.renew) {
+          // Direct add/renew pricing — wrap in a single slab
+          result[syntheticKey] = {
+            email_account_ranges: {
+              '1-200000': {
+                add: (pd.add as Record<string, number>) || {},
+                renew: (pd.renew as Record<string, number>) || {},
+              },
+            },
+          };
+          foundAny = true;
+        } else {
+          // Check for range-keyed sub-keys
+          const subKeys = Object.keys(pd);
+          if (subKeys.some(k => /^\d+-\d+$/.test(k))) {
+            result[syntheticKey] = { email_account_ranges: pd };
+            foundAny = true;
+          }
+        }
+      }
+      if (foundAny) delete result[parentKey];
+    }
+  }
+
+  return result;
+}
+
 export interface PricingSyncResult {
   success: boolean;
   syncType: 'domain' | 'email' | 'full';
@@ -226,13 +285,16 @@ export const pricingCacheService = {
         
         // Upsert each product + slab + tenure combination into cache
         // RC response structure: { "eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": 0.86, "12": 10.20 }, "renew": {...} } } } }
-        // When productKeys is empty, cache ALL plans found in the response (auto-discovery)
+        // Titan Mail uses a `plans` structure — flatten it first so we cache synthetic keys.
+        const flattenedPricing = flattenTitanMailForCache(pricing);
+
+        // When productKeys is empty, cache ALL plans found in the flattened response (auto-discovery)
         const keysToCache = productKeys.length > 0
           ? productKeys
-          : Object.keys(pricing).filter(k => pricing[k]?.email_account_ranges);
+          : Object.keys(flattenedPricing).filter(k => flattenedPricing[k]?.email_account_ranges);
 
         for (const productKey of keysToCache) {
-          const productPricing = pricing[productKey];
+          const productPricing = flattenedPricing[productKey];
           if (!productPricing?.email_account_ranges) continue;
           
           const ranges = productPricing.email_account_ranges as Record<string, { add?: Record<string, number>; renew?: Record<string, number> }>;

@@ -1,37 +1,44 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅**
 
 ---
 
-## Latest Update: February 2026 - Enterprise Email Plan + Dual Plan Selector ✅
+## Latest Update: February 2026 - Titan Mail REST API + 3-Plan Support ✅
 
-**Commit:** `f39dcf2`
-**Files Changed:** 7
+**Commits:** `f5689d1` (dynamic pricing + wizard), `ede928d` (Titan Mail client + supplier neutrality)
+**Files Changed:** 10
 
-**What was done:**
-1. **`types.ts`** — Added `enterpriseemailus` + `enterpriseemailin` to `EmailPlanType`. Added `EMAIL_PLAN_DEFINITIONS` with Business (10GB) and Enterprise (50GB) definitions including features, storageGB, isPopular.
-2. **`client.ts`** — `createOrder()` now routes Enterprise orders to `enterpriseemail/us/add.json` (no `product-key` param) and Business to `eelite/add.json` (with `product-key`).
-3. **`business-email.ts`** — `createBusinessEmailOrder()` reads `productKey` from form (was hardcoded `eeliteus`). `calculateBasePrice()` accepts `productKey` param. `getBusinessEmailPricing()` merges Business + Enterprise cached data.
-4. **`transactions.ts`** — Paddle checkout shows "Business Email" or "Enterprise Email" based on `productKey`.
-5. **`pricing-cache.ts`** — Default refresh list now includes `enterpriseemailus` alongside `eeliteus`.
-6. **`email-purchase-wizard.tsx`** — Full rewrite with plan selector UI: Business vs Enterprise side-by-side cards with live RC pricing, "Most Popular" badge, feature lists, per-month starting price. Passing `productKey` in FormData on submit.
-7. **`purchase/page.tsx`** — Simplified: removed redundant features grid, now just header + wizard.
+### Critical Discovery
+ResellerClub has **TWO separate email APIs**:
+1. **Legacy Business Email API**: `/api/eelite/...`, keys `eeliteus`/`enterpriseemailus`, only Business + Enterprise
+2. **NEW Titan Mail REST API** (KB/3483): `/restapi/product/{product_key}/...`, key `titanmailglobal`, ALL 3 plans via `plan-id`:
+   - Professional = 1762 (5GB), Business = 1756 (10GB), Enterprise = 1757 (50GB), Free Trial = 1755
 
-**RC API facts confirmed:**
-- Business Email: `eelite/add.json`, product key `eeliteus`, 10GB/mailbox
-- Enterprise Email: `enterpriseemail/us/add.json`, NO product-key param, 50GB/mailbox
-- "Professional" package doesn't exist in RC — only Business and Enterprise
-- Both plans priced via single `products/customer-price.json` call
+### What Was Built
+1. **`titan-client.ts`** (NEW) — Complete Titan Mail REST API client with all endpoints (create, renew, upgrade, suspend, SSO, seats, delete). Uses `/restapi/product/titanmailglobal/...` base path.
+2. **`flattenTitanMailPricing()`** in business-email.ts — Detects nested Titan Mail pricing structures and explodes plan sub-keys into synthetic top-level keys (e.g., `titanmailglobal_1762`).
+3. **`resolveTitanPlanId()`** — Maps any product key (legacy, synthetic, direct) to a Titan Mail plan-id.
+4. **Wizard updated** — `KNOWN_PLANS` includes all Titan Mail variants. `extractPlanId()` extracts plan-id from synthetic keys. `onSubmit()` passes `planId` in FormData.
+5. **Paddle transactions** — `planId` stored in `purchase_data`. `resolveEmailPlanDisplayName()` handles all key formats.
+6. **Discovery endpoint** — `GET /api/admin/email-plans/discover` (super_admin). Returns all email product keys from RC pricing API.
+7. **Supplier neutrality** — All "ResellerClub" replaced with "supplier"/"the provider" in domain-pricing-config.tsx and billing-integration.tsx.
+8. **"powered by Titan"** restored in purchase page (user approved Titan branding).
 
-**⚠️ DB migrations still needed (run in Supabase):**
-1. `migrations/dm-11-pricing-cache-schema.sql` (base table)
-2. `migrations/dm-11b-email-pricing-cache-slab-support.sql` (adds account_slab column)
+### ⚠️ CRITICAL Next Steps
+1. **Deploy and verify pricing keys** — Hit `/api/admin/email-plans/discover` to see what keys RC returns for Titan Mail
+2. **Webhook handler** — After Paddle payment, must route to `titanMailApi.createOrder()` for titanmail product keys (not legacy API)
+3. **Verify 3 plans display** — After pricing cache is populated with Titan Mail keys, all 3 plans should appear automatically
+
+### Pricing from User's RC Panel
+- **Professional**: 1mo=$1.20 (cost $0.60), 12mo=$11.52 (cost $0.48/mo)
+- **Business**: 1mo=$1.68 (cost $0.84), 12mo=$17.28 (cost $0.72/mo)
+- **Enterprise**: 1mo=$2.90 (cost $1.45), 12mo=$29.04 (cost $1.21/mo)
 
 ---
 
-## Previous Update: February 2026 - Email Pricing Overhaul ✅
+## Previous Update: February 2026 - Enterprise Email Plan + Dual Plan Selector ✅
 
 **Commit:** `13c6888`
 **Files Changed:** 7

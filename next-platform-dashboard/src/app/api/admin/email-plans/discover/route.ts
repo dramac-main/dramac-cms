@@ -1,6 +1,6 @@
 // src/app/api/admin/email-plans/discover/route.ts
 // Diagnostic endpoint — calls the RC pricing API and returns ALL email product keys found.
-// Helps discover the Titan Mail pricing structure dynamically.
+// Also drills into Titan Mail `plans` structure to reveal the exact pricing shape.
 // 
 // GET /api/admin/email-plans/discover  (requires super_admin)
 
@@ -30,7 +30,6 @@ export async function GET() {
     }
 
     // Fetch ALL products from the pricing API (returns everything in one call)
-    // Use getResellerPricing (no customer-id needed) to see all available product keys
     const [sellingPricing, costPricing] = await Promise.allSettled([
       businessEmailApi.getResellerPricing(),
       businessEmailApi.getResellerCostPricing(),
@@ -39,7 +38,24 @@ export async function GET() {
     const customerData = sellingPricing.status === 'fulfilled' ? sellingPricing.value : null;
     const costData = costPricing.status === 'fulfilled' ? costPricing.value : null;
 
-    // Find all keys that look like email products (have email_account_ranges or plan-based pricing)
+    const TITAN_KEYS = ['titanmailglobal', 'titanmailindia'];
+
+    // Full raw data for Titan Mail keys — essential for understanding their pricing structure
+    const titanRawData: Record<string, {
+      sellingRaw: unknown;
+      costRaw: unknown;
+    }> = {};
+
+    for (const key of TITAN_KEYS) {
+      if (customerData?.[key] || costData?.[key]) {
+        titanRawData[key] = {
+          sellingRaw: customerData?.[key] ?? null,
+          costRaw: costData?.[key] ?? null,
+        };
+      }
+    }
+
+    // Summary of all email-like products
     const emailPlans: Record<string, {
       key: string;
       hasEmailAccountRanges: boolean;
@@ -56,7 +72,6 @@ export async function GET() {
         const hasRanges = 'email_account_ranges' in v;
         const topKeys = Object.keys(v);
 
-        // Include any key that has email_account_ranges or starts with known prefixes
         const isEmailLike = hasRanges
           || key.startsWith('eelite')
           || key.startsWith('enterprise')
@@ -69,7 +84,6 @@ export async function GET() {
           const firstSlab = slabs?.[0];
           const samplePricing = firstSlab && ranges ? ranges[firstSlab] as Record<string, unknown> : undefined;
 
-          // Check cost pricing for same key
           let costSample: Record<string, unknown> | undefined;
           if (costData?.[key]) {
             const cv = costData[key] as Record<string, unknown>;
@@ -91,7 +105,6 @@ export async function GET() {
       }
     }
 
-    // Also list ALL top-level keys in the response for full visibility
     const allKeys = customerData ? Object.keys(customerData).sort() : [];
 
     return NextResponse.json({
@@ -100,6 +113,8 @@ export async function GET() {
       totalProductKeys: allKeys.length,
       emailPlans,
       emailPlanCount: Object.keys(emailPlans).length,
+      // Full raw Titan Mail data — shows exact pricing structure
+      titanMailFullData: titanRawData,
       allProductKeys: allKeys,
     });
   } catch (error) {
@@ -110,3 +125,4 @@ export async function GET() {
     );
   }
 }
+

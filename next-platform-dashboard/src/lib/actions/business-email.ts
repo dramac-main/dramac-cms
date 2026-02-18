@@ -865,15 +865,20 @@ export async function getBusinessEmailOrderByDomainId(domainId: string): Promise
 // ============================================================================
 
 /**
- * Flatten nested Titan Mail pricing into separate top-level keys.
+ * Flatten Titan Mail pricing into the standard `email_account_ranges` shape.
  *
- * The RC `products/customer-price.json` response may return Titan Mail pricing in either:
- * 1. Flat: each plan has its own top-level key (e.g. `titanmailglobal_1762`, or just `eeliteus`)
- * 2. Nested: `titanmailglobal` → { planId: { email_account_ranges: {...} } }
+ * RC returns Titan Mail with `plans` instead of `email_account_ranges`:
  *
- * This function detects nested structures and explodes them into synthetic keys
- * like `titanmailglobal_1762`, `titanmailglobal_1756`, etc.
- * Keys that already have `email_account_ranges` directly are left as-is.
+ * Shape A — plans keyed by plan-id with direct add/renew pricing:
+ *   titanmailglobal: { plans: { "1762": { add: { "1": 0.60, "12": 5.76 }, renew: {...} }, "1756": {...} } }
+ *
+ * Shape B — plans keyed by plan-id with slab sub-structure:
+ *   titanmailglobal: { plans: { "1762": { email_account_ranges: { "1-5": { add: {...}, renew: {...} } } } } }
+ *
+ * In both cases we convert each plan into a synthetic top-level key
+ * `titanmailglobal_<planId>` with a standard `email_account_ranges` shape.
+ *
+ * Shape C — parent already has email_account_ranges → legacy key, leave as-is.
  */
 function flattenTitanMailPricing(pricing: EmailPricingResponse): EmailPricingResponse {
   const TITAN_KEYS = ['titanmailglobal', 'titanmailindia'];
@@ -883,25 +888,74 @@ function flattenTitanMailPricing(pricing: EmailPricingResponse): EmailPricingRes
     const parentValue = pricing[parentKey];
     if (!parentValue || typeof parentValue !== 'object') continue;
 
-    // If the parent already has email_account_ranges, it's flat — leave it
+    // Shape C: already flat with email_account_ranges — leave as-is
     if (parentValue.email_account_ranges) continue;
 
-    // Check if sub-keys are plan IDs with email_account_ranges
+    const pv = parentValue as Record<string, unknown>;
+
+    // Shape A / B: has a `plans` key
+    const plans = pv.plans as Record<string, unknown> | undefined;
+    if (plans && typeof plans === 'object') {
+      let foundAnyPlan = false;
+
+      for (const [planId, planData] of Object.entries(plans)) {
+        if (typeof planData !== 'object' || planData === null) continue;
+        const pd = planData as Record<string, unknown>;
+
+        const syntheticKey = `${parentKey}_${planId}`;
+
+        // Shape B: plan has its own email_account_ranges
+        if (pd.email_account_ranges) {
+          result[syntheticKey] = planData as EmailPricingResponse[string];
+          foundAnyPlan = true;
+          continue;
+        }
+
+        // Shape A: plan has direct add/renew pricing (no slabs)
+        // Normalise into a single "1-200000" slab so the rest of the system works
+        if (pd.add || pd.renew) {
+          result[syntheticKey] = {
+            email_account_ranges: {
+              '1-200000': {
+                add: (pd.add as Record<string, number>) || {},
+                renew: (pd.renew as Record<string, number>) || {},
+              },
+            },
+          };
+          foundAnyPlan = true;
+          continue;
+        }
+
+        // Shape A variant: plan has per-account-count sub-keys (numeric range keys)
+        // e.g. { "1-5": { add: {...}, renew: {...} }, "6-25": {...} }
+        const subKeys = Object.keys(pd);
+        const hasRangeKeys = subKeys.some(k => /^\d+-\d+$/.test(k));
+        if (hasRangeKeys) {
+          result[syntheticKey] = {
+            email_account_ranges: pd,
+          };
+          foundAnyPlan = true;
+        }
+      }
+
+      if (foundAnyPlan) {
+        delete result[parentKey];
+      }
+      continue;
+    }
+
+    // No `plans` key — check if sub-keys are plan IDs with email_account_ranges directly
     let foundNestedPlans = false;
-    for (const [subKey, subValue] of Object.entries(parentValue)) {
+    for (const [subKey, subValue] of Object.entries(pv)) {
       if (
         typeof subValue === 'object' &&
         subValue !== null &&
         'email_account_ranges' in (subValue as Record<string, unknown>)
       ) {
-        // Create synthetic key: e.g. titanmailglobal_1762
-        const syntheticKey = `${parentKey}_${subKey}`;
-        result[syntheticKey] = subValue as EmailPricingResponse[string];
+        result[`${parentKey}_${subKey}`] = subValue as EmailPricingResponse[string];
         foundNestedPlans = true;
       }
     }
-
-    // Remove the parent key if we flattened its children
     if (foundNestedPlans) {
       delete result[parentKey];
     }
