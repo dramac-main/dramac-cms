@@ -1055,16 +1055,36 @@ function calculateBasePrice(
   productKey: string = 'eeliteus'
 ): number {
   // Navigate the real RC structure: productKey → email_account_ranges → slab → add → months
-  const productPricing = pricing[productKey];
+  let productPricing = pricing[productKey];
   if (!productPricing) {
-    // Try fallback to eeliteus if the specific plan isn't in the response
-    const fallback = pricing['eeliteus'];
-    if (!fallback) {
-      console.warn(`[EmailPricing] No pricing found for product key: ${productKey}`);
-      return 0;
+    // For Titan Mail synthetic keys (e.g. titanmailglobal_1762), the live RC
+    // customer-price.json may return the parent key ("titanmailglobal") in a flat
+    // Shape C structure (with email_account_ranges directly) rather than exploded
+    // per-plan keys. Try the parent key first before falling back to eeliteus,
+    // since eeliteus is a completely different (legacy) product with its own price.
+    const titanMatch = productKey.match(/^(titanmail(?:global|india))_\d+$/);
+    if (titanMatch) {
+      const parentKey = titanMatch[1];
+      const parentPricing = pricing[parentKey];
+      if (parentPricing?.email_account_ranges) {
+        console.log(`[EmailPricing] ${productKey} not found — using parent key ${parentKey} (Shape C flat pricing)`);
+        productPricing = parentPricing;
+      } else {
+        // Titan Mail key with no pricing at all — do NOT fall back to eeliteus
+        // (different product; would charge the wrong price entirely).
+        console.warn(`[EmailPricing] No pricing found for ${productKey} or parent ${parentKey}. Keys available:`, Object.keys(pricing));
+        return 0;
+      }
+    } else {
+      // Legacy key (eeliteus, enterpriseemailus, etc.) — fall back to eeliteus
+      const fallback = pricing['eeliteus'];
+      if (!fallback) {
+        console.warn(`[EmailPricing] No pricing found for product key: ${productKey}`);
+        return 0;
+      }
+      console.warn(`[EmailPricing] No pricing for ${productKey}, falling back to eeliteus`);
+      return calculateBasePrice(pricing, months, accounts, 'eeliteus');
     }
-    console.warn(`[EmailPricing] No pricing for ${productKey}, falling back to eeliteus`);
-    return calculateBasePrice(pricing, months, accounts, 'eeliteus');
   }
   
   const ranges = productPricing.email_account_ranges;
