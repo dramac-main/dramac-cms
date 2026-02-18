@@ -2,6 +2,52 @@
 
 ## Recent Work
 
+### Email Pricing Overhaul — Slab-Based Cache + Hostinger-Inspired UX ✅
+
+**Category:** Pricing Pipeline Fix + UX Redesign
+**Commit:** `13c6888`
+**Files Changed:** 7 (6 modified + 1 new migration)
+
+#### Root Cause — Pricing Cache Was Completely Broken
+The `refreshEmailPricing()` in `pricing-cache.ts` used a flat structure (`productPricing[months]?.addnewaccount`) that doesn't match the actual RC API response. RC returns a slab-based nested structure: `eeliteus → email_account_ranges → slab → add/renew → months → price`.
+
+Additionally, the cache was populated by the daily cron but **never read** — the wizard and server action both called the RC API live, ignoring the cache entirely.
+
+#### Fixes Applied:
+
+1. **Pricing cache parser rewritten** — `refreshEmailPricing()` now correctly navigates `email_account_ranges → slab → add/renew → months → price`. Months fixed from `[1,3,6,12,24,36]` to `[1,3,6,12]`. Endpoint strings fixed from wrong `eelite/*-pricing.json` to correct `products/*-price.json`. Added `account_slab` to upsert with updated onConflict.
+
+2. **New `getCachedEmailPricing()` method** — Reads from `email_pricing_cache` table and reconstructs the RC response structure for consumption. Uses 24hr TTL. Returns null on cache miss.
+
+3. **`getBusinessEmailPricing()` cache-first strategy** — Now uses cached pricing with live fallback (matching domain pricing pattern). Returns both `data` (customer) and `costData` (wholesale). Triggers background cache refresh on miss.
+
+4. **Email purchase wizard completely rewritten** — Hostinger-inspired pricing display:
+   - Per-month hero price with strikethrough original + savings badge
+   - Quick comparison tiles for all billing periods (clickable, with savings %)
+   - Renewal pricing shown when different from purchase price
+   - Total due today with itemized discount breakdown
+   - Refresh pricing button, loading spinner, error/retry states
+   - Purchase button shows total amount
+   - Fine print: "All plans are paid upfront. Prices sync automatically from ResellerClub."
+
+5. **Purchase page features grid improved** — Now uses proper icons (Mail, Lock, Globe, Smartphone, Calendar, Shield) with colored backgrounds instead of simple checkmarks.
+
+6. **DB migration `dm-11b`** — Adds `account_slab` column, makes prices nullable, fixes months CHECK constraint to `(1,3,6,12)`, updates unique constraint to include `account_slab`.
+
+7. **Provisioning logging** — Added debug log before email order creation showing domain, accounts, months, product, customerId.
+
+#### Key Technical Details:
+- RC slabs: `1-5`, `6-25`, `26-49`, `50-200000`
+- RC months: `1, 3, 6, 12` only
+- RC prices: TOTAL per-account for the full tenure (not per-month)
+- Product keys: `eeliteus` (US), `eelitein` (India), `eeliteuk` (UK)
+- Daily cron at 02:00 UTC refreshes both domain and email pricing caches
+
+#### ⚠️ Action Required:
+Run migration `dm-11b-email-pricing-cache-slab-support.sql` in Supabase before the cron next runs or before any email purchase attempts. The old table schema will cause upsert failures.
+
+---
+
 ### Email Purchase Flow Deep Fix — February 2026 ✅
 
 **Category:** UX + Bug Fixes (7 issues across 5 files)
