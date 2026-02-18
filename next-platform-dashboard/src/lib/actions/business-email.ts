@@ -15,6 +15,7 @@ import {
   businessEmailApi,
   emailDnsService,
 } from "@/lib/resellerclub/email";
+import { pricingCacheService } from "@/lib/resellerclub/pricing-cache";
 import type { 
   EmailOrder, 
   EmailAccount, 
@@ -551,11 +552,17 @@ export async function syncBusinessEmailAccounts(emailOrderId: string): Promise<{
 // ============================================================================
 
 /**
- * Get email pricing from ResellerClub (customer pricing for consistency with server action)
+ * Get email pricing from ResellerClub — uses cache with live fallback.
+ * Returns both 'add' (new purchase) and 'renew' pricing for all slabs.
+ * Prices auto-update via daily cron job (/api/cron/resellerclub-sync).
+ * 
+ * When you update prices in ResellerClub panel, the daily sync picks them up
+ * automatically. You can also force a refresh via POST /api/admin/pricing/refresh.
  */
 export async function getBusinessEmailPricing(): Promise<{
   success: boolean;
   data?: EmailPricingResponse;
+  costData?: EmailPricingResponse;
   error?: string;
 }> {
   try {
@@ -583,24 +590,61 @@ export async function getBusinessEmailPricing(): Promise<{
       customerId = undefined;
     }
 
-    if (customerId) {
-      // Use customer pricing (same as what the server action charges)
-      const pricing = await businessEmailApi.getCustomerPricing(customerId);
-      // Log the eeliteus pricing structure for debugging
-      const emailPricing = pricing?.['eeliteus'];
-      if (emailPricing?.email_account_ranges) {
-        const firstSlab = Object.keys(emailPricing.email_account_ranges)[0];
-        const firstSlabData = emailPricing.email_account_ranges[firstSlab];
-        console.log(`[BusinessEmail] Customer pricing loaded — first slab "${firstSlab}":`, JSON.stringify(firstSlabData?.add || {}));
-      } else {
-        console.warn('[BusinessEmail] No eeliteus pricing in customer-price response. Keys:', Object.keys(pricing).filter(k => k.includes('eelite')));
+    // Try cache first (refreshed daily by cron), fall back to live API
+    let customerPricing: EmailPricingResponse | null = null;
+    let costPricing: EmailPricingResponse | null = null;
+    
+    // 1. Try cached customer pricing
+    customerPricing = await pricingCacheService.getCachedEmailPricing('eeliteus', 'customer');
+    
+    if (!customerPricing) {
+      // Cache miss — fetch live from RC
+      console.log('[BusinessEmail] Customer pricing cache miss, fetching live...');
+      try {
+        customerPricing = customerId 
+          ? await businessEmailApi.getCustomerPricing(customerId)
+          : await businessEmailApi.getResellerPricing();
+          
+        // Trigger background cache refresh
+        if (customerId) {
+          pricingCacheService.refreshEmailPricing(customerId, ['customer']).catch(err => {
+            console.error('[BusinessEmail] Background cache refresh failed:', err);
+          });
+        }
+      } catch (error) {
+        console.error('[BusinessEmail] Live pricing fetch failed:', error);
+        return { success: false, error: 'Failed to load pricing from provider' };
       }
-      return { success: true, data: pricing };
-    } else {
-      // Fallback to reseller pricing if no customer ID yet
-      const pricing = await businessEmailApi.getResellerPricing();
-      return { success: true, data: pricing };
     }
+    
+    // 2. Try cached cost pricing (for margin tracking)
+    costPricing = await pricingCacheService.getCachedEmailPricing('eeliteus', 'cost');
+    
+    if (!costPricing) {
+      try {
+        costPricing = await businessEmailApi.getResellerCostPricing();
+      } catch {
+        // Cost pricing is optional — continue without it
+      }
+    }
+
+    // Validate pricing structure
+    const emailPricing = customerPricing?.['eeliteus'];
+    if (emailPricing?.email_account_ranges) {
+      const slabs = Object.keys(emailPricing.email_account_ranges);
+      const firstSlab = slabs[0];
+      const firstSlabData = emailPricing.email_account_ranges[firstSlab];
+      console.log(`[BusinessEmail] Pricing loaded — ${slabs.length} slabs, first="${firstSlab}":`, 
+        JSON.stringify({ add: firstSlabData?.add || {}, renew: firstSlabData?.renew || {} }));
+    } else {
+      console.warn('[BusinessEmail] No eeliteus pricing found. Keys:', Object.keys(customerPricing || {}).filter(k => k.includes('eelite')));
+    }
+    
+    return { 
+      success: true, 
+      data: customerPricing || undefined,
+      costData: costPricing || undefined,
+    };
   } catch (error) {
     console.error('Get business email pricing error:', error);
     return { 

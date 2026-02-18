@@ -774,6 +774,8 @@ export async function provisionEmailOrder(
       throw new Error('Failed to create ResellerClub customer for this agency. Please contact support.');
     }
     
+    console.log(`[Provisioning] Email order: domain=${domainName}, accounts=${numberOfAccounts}, months=${months}, product=${productKey}, customerId=${customerId}`);
+    
     // Create email order via ResellerClub
     const order = await emailOrderService.createOrder({
       agencyId: purchase.agency_id,

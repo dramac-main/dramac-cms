@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Mail, Check } from "lucide-react";
+import { ArrowLeft, Mail, Check, Shield, Smartphone, Globe, Calendar, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmailPurchaseWizard } from "@/components/email/email-purchase-wizard";
@@ -10,6 +10,39 @@ export const metadata: Metadata = {
   title: `Purchase Email | ${PLATFORM.name}`,
   description: "Purchase business email for your domain",
 };
+
+const EMAIL_FEATURES = [
+  {
+    icon: Mail,
+    title: "Custom Email Address",
+    description: "yourname@yourdomain.com",
+  },
+  {
+    icon: Lock,
+    title: "10GB Storage",
+    description: "Per mailbox with anti-spam protection",
+  },
+  {
+    icon: Globe,
+    title: "Webmail Access",
+    description: "Access from any browser, anywhere",
+  },
+  {
+    icon: Smartphone,
+    title: "Mobile Apps",
+    description: "iOS and Android support",
+  },
+  {
+    icon: Calendar,
+    title: "Calendar & Contacts",
+    description: "Built-in productivity tools",
+  },
+  {
+    icon: Shield,
+    title: "Security & Encryption",
+    description: "End-to-end encrypted email",
+  },
+];
 
 export default function PurchaseEmailPage() {
   return (
@@ -24,90 +57,34 @@ export default function PurchaseEmailPage() {
         <div>
           <h1 className="text-2xl font-semibold">Purchase Business Email</h1>
           <p className="text-muted-foreground">
-            Add professional email to your domain
+            Professional email powered by Titan — trusted by millions worldwide
           </p>
         </div>
       </div>
 
-      {/* Features */}
+      {/* Features Grid */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Business Email Features
-          </CardTitle>
+          <CardTitle className="text-lg">Everything included in every plan</CardTitle>
           <CardDescription>
-            Powered by Titan - Professional email for your business
+            All the tools you need for professional business communication
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="flex items-start gap-3">
-              <div className="h-6 w-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                <Check className="h-4 w-4 text-green-600" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {EMAIL_FEATURES.map((feature) => (
+              <div key={feature.title} className="flex items-start gap-3">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <feature.icon className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-sm">{feature.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {feature.description}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="font-medium">Custom Email Address</p>
-                <p className="text-sm text-muted-foreground">
-                  yourname@yourdomain.com
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="h-6 w-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                <Check className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <p className="font-medium">10GB Storage</p>
-                <p className="text-sm text-muted-foreground">
-                  Per email account
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="h-6 w-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                <Check className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <p className="font-medium">Webmail Access</p>
-                <p className="text-sm text-muted-foreground">
-                  Access from any browser
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="h-6 w-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                <Check className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <p className="font-medium">Mobile Apps</p>
-                <p className="text-sm text-muted-foreground">
-                  iOS and Android support
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="h-6 w-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                <Check className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <p className="font-medium">Calendar & Contacts</p>
-                <p className="text-sm text-muted-foreground">
-                  Built-in productivity tools
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="h-6 w-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0">
-                <Check className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <p className="font-medium">Anti-Spam Protection</p>
-                <p className="text-sm text-muted-foreground">
-                  Built-in spam filtering
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </CardContent>
       </Card>

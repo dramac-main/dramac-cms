@@ -33,7 +33,7 @@ export interface CreateEmailOrderParams {
   domainName: string;
   customerId: string;
   numberOfAccounts: number;
-  months: number; // 1, 3, 6, 12, 24, 36
+  months: number; // 1, 3, 6, or 12 (RC only supports these)
   productKey?: EmailPlanType;
   invoiceOption?: 'NoInvoice' | 'PayInvoice' | 'KeepInvoice';
 }
@@ -55,7 +55,7 @@ export interface DeleteEmailAccountParams {
 
 export interface RenewEmailOrderParams {
   orderId: string;
-  months: number; // 1, 3, 6, 12, 24, 36
+  months: number; // 1, 3, 6, or 12 (RC only supports these)
   numberOfAccounts: number;
   invoiceOption?: 'NoInvoice' | 'PayInvoice' | 'KeepInvoice';
 }

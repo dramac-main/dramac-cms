@@ -196,7 +196,7 @@ export const pricingCacheService = {
     let apiCallsMade = 0;
     let lastError: Error | null = null;
     
-    const monthsOptions = [1, 3, 6, 12, 24, 36];
+    const monthsOptions = [1, 3, 6, 12];
     
     try {
       for (const pricingType of pricingTypes) {
@@ -207,13 +207,13 @@ export const pricingCacheService = {
         try {
           if (pricingType === 'customer') {
             pricing = await businessEmailApi.getCustomerPricing(customerId);
-            endpoint = 'eelite/customer-pricing.json';
+            endpoint = 'products/customer-price.json';
           } else if (pricingType === 'cost') {
             pricing = await businessEmailApi.getResellerCostPricing();
-            endpoint = 'eelite/reseller-cost-pricing.json';
+            endpoint = 'products/reseller-cost-price.json';
           } else if (pricingType === 'reseller') {
             pricing = await businessEmailApi.getResellerPricing();
-            endpoint = 'eelite/reseller-pricing.json';
+            endpoint = 'products/reseller-pricing.json';
           }
           apiCallsMade++;
         } catch (error) {
@@ -222,39 +222,47 @@ export const pricingCacheService = {
           continue; // Try next pricing type
         }
         
-        // Upsert each product + tenure combination into cache
+        // Upsert each product + slab + tenure combination into cache
+        // RC response structure: { "eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": 0.86, "12": 10.20 }, "renew": {...} } } } }
         for (const productKey of productKeys) {
           const productPricing = pricing[productKey];
-          if (!productPricing) continue;
+          if (!productPricing?.email_account_ranges) continue;
           
-          for (const months of monthsOptions) {
-            const monthPricing = productPricing[String(months)];
-            if (!monthPricing) continue;
+          const ranges = productPricing.email_account_ranges as Record<string, { add?: Record<string, number>; renew?: Record<string, number> }>;
+          
+          for (const [slab, slabData] of Object.entries(ranges)) {
+            if (!slabData || typeof slabData !== 'object') continue;
             
-            try {
-              const addPrice = parseFloat(monthPricing.addnewaccount);
-              const renewPrice = parseFloat(monthPricing.renewaccount);
+            for (const months of monthsOptions) {
+              const addPrice = slabData.add?.[String(months)];
+              const renewPrice = slabData.renew?.[String(months)];
               
-              await admin
-                .from('email_pricing_cache')
-                .upsert({
-                  product_key: productKey,
-                  pricing_type: pricingType,
-                  currency: 'USD',
-                  months,
-                  add_account_price: toCents(addPrice),
-                  renew_account_price: toCents(renewPrice),
-                  source_api_endpoint: endpoint,
-                  last_refreshed_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString(),
-                }, {
-                  onConflict: 'product_key,months,pricing_type',
-                });
+              // Skip if neither price exists
+              if (addPrice == null && renewPrice == null) continue;
               
-              emailProductsRefreshed++;
-            } catch (error) {
-              console.error(`[PricingCache] Failed to cache ${productKey}/${months}mo ${pricingType} pricing:`, error);
-              lastError = error as Error;
+              try {
+                await admin
+                  .from('email_pricing_cache')
+                  .upsert({
+                    product_key: productKey,
+                    pricing_type: pricingType,
+                    currency: 'USD',
+                    months,
+                    account_slab: slab,
+                    add_account_price: addPrice != null ? toCents(Number(addPrice)) : null,
+                    renew_account_price: renewPrice != null ? toCents(Number(renewPrice)) : null,
+                    source_api_endpoint: endpoint,
+                    last_refreshed_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                  }, {
+                    onConflict: 'product_key,months,pricing_type,account_slab',
+                  });
+                
+                emailProductsRefreshed++;
+              } catch (error) {
+                console.error(`[PricingCache] Failed to cache ${productKey}/${slab}/${months}mo ${pricingType} pricing:`, error);
+                lastError = error as Error;
+              }
             }
           }
         }
@@ -383,6 +391,59 @@ export const pricingCacheService = {
       }
     } catch (error) {
       console.error('[PricingCache] Error getting cached price:', error);
+      return null;
+    }
+  },
+  
+  /**
+   * Get cached email pricing for all slabs and tenures
+   * Returns structured data matching the RC API response shape
+   */
+  async getCachedEmailPricing(
+    productKey: string = 'eeliteus',
+    pricingType: 'customer' | 'reseller' | 'cost' = 'customer',
+    maxAgeHours = 24
+  ): Promise<EmailPricingResponse | null> {
+    const admin = createAdminClient() as SupabaseClient;
+    
+    try {
+      const maxAge = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000).toISOString();
+      
+      const { data: cached } = await admin
+        .from('email_pricing_cache')
+        .select('*')
+        .eq('product_key', productKey)
+        .eq('pricing_type', pricingType)
+        .gte('last_refreshed_at', maxAge);
+      
+      if (!cached || cached.length === 0) {
+        return null; // Cache miss — caller should fetch live
+      }
+      
+      // Reconstruct the RC response structure from cached rows
+      // { "eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": price, "12": price }, "renew": {...} } } } }
+      const ranges: Record<string, { add: Record<string, number>; renew: Record<string, number> }> = {};
+      
+      for (const row of cached) {
+        const slab = row.account_slab || '1-5';
+        if (!ranges[slab]) {
+          ranges[slab] = { add: {}, renew: {} };
+        }
+        if (row.add_account_price != null) {
+          ranges[slab].add[String(row.months)] = toDollars(row.add_account_price);
+        }
+        if (row.renew_account_price != null) {
+          ranges[slab].renew[String(row.months)] = toDollars(row.renew_account_price);
+        }
+      }
+      
+      return {
+        [productKey]: {
+          email_account_ranges: ranges,
+        },
+      } as EmailPricingResponse;
+    } catch (error) {
+      console.error('[PricingCache] Error getting cached email pricing:', error);
       return null;
     }
   },
