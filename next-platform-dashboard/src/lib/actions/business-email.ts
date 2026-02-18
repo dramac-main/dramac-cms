@@ -604,37 +604,43 @@ export async function getBusinessEmailPricing(): Promise<{
     let customerPricing: EmailPricingResponse | null = null;
     let costPricing: EmailPricingResponse | null = null;
     
-    // 1. Try cache — get ALL email plans in a single query (includes Business, Enterprise,
-    //    Professional, and any other plan the RC account has enabled).
-    customerPricing = await pricingCacheService.getAllCachedEmailPlans('customer');
-
-    // If cache hit but no Titan Mail plans, the cache pre-dates Titan Mail support.
-    // Bypass it and fetch live so the wizard shows all plans; background refresh will
-    // repopulate the cache with synthetic Titan Mail keys for the next request.
-    const cacheMissingTitanMail = customerPricing !== null &&
-      !Object.keys(customerPricing).some(k => k.startsWith('titanmail'));
-
-    if (!customerPricing || cacheMissingTitanMail) {
-      // Cache miss or incomplete — fetch live from RC (returns ALL products in one call)
-      console.log(
-        cacheMissingTitanMail
-          ? '[BusinessEmail] Customer pricing cache incomplete (no Titan Mail plans), fetching live...'
-          : '[BusinessEmail] Customer pricing cache miss, fetching live...'
-      );
+    // 1. ALWAYS fetch live customer pricing when customerId is available.
+    //
+    //    IMPORTANT: The pricing cache is populated by a background job that may run
+    //    without a customer-id, so it stores RC default/reseller prices that do NOT
+    //    include the customer-specific markup the reseller has configured in RC.
+    //    Using stale cache here means the wizard would display the wrong (lower) price
+    //    while Paddle correctly charges the marked-up price — a confusing mismatch.
+    //
+    //    Live fetch is fast (single RC API call) and ensures the displayed price
+    //    exactly matches what Paddle will charge. Cache is only used as a fallback.
+    if (customerId) {
       try {
-        customerPricing = customerId
-          ? await businessEmailApi.getCustomerPricing(customerId)
-          : await businessEmailApi.getResellerPricing();
+        customerPricing = await businessEmailApi.getCustomerPricing(customerId);
 
-        // Trigger background cache refresh (auto-discovers all plans including Titan Mail)
-        if (customerId) {
-          pricingCacheService.refreshEmailPricing(customerId, ['customer']).catch(err => {
-            console.error('[BusinessEmail] Background cache refresh failed:', err);
-          });
-        }
+        // Trigger background cache refresh so plan availability data stays current
+        pricingCacheService.refreshEmailPricing(customerId, ['customer']).catch(err => {
+          console.error('[BusinessEmail] Background cache refresh failed:', err);
+        });
       } catch (error) {
-        console.error('[BusinessEmail] Live pricing fetch failed:', error);
-        return { success: false, error: 'Failed to load pricing from provider' };
+        console.error('[BusinessEmail] Live pricing fetch failed, falling back to cache:', error);
+        // Only fall back to cache if live fetch fails (network error, RC down, etc.)
+        customerPricing = await pricingCacheService.getAllCachedEmailPlans('customer');
+        if (!customerPricing) {
+          return { success: false, error: 'Failed to load pricing from provider' };
+        }
+      }
+    } else {
+      // No customerId — use cache or fall back to reseller pricing
+      customerPricing = await pricingCacheService.getAllCachedEmailPlans('customer');
+      if (!customerPricing) {
+        console.log('[BusinessEmail] No customerId and no cache — fetching reseller pricing');
+        try {
+          customerPricing = await businessEmailApi.getResellerPricing();
+        } catch (error) {
+          console.error('[BusinessEmail] Reseller pricing fetch failed:', error);
+          return { success: false, error: 'Failed to load pricing from provider' };
+        }
       }
     }
 
