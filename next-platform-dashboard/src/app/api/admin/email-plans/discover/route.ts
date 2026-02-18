@@ -1,11 +1,14 @@
 // src/app/api/admin/email-plans/discover/route.ts
-// Diagnostic endpoint — calls the RC pricing API and returns ALL email product keys found.
-// Also drills into Titan Mail `plans` structure to reveal the exact pricing shape.
-// 
+// Diagnostic endpoint — calls ALL three RC pricing APIs and returns full Titan Mail data.
+//   reseller-price.json      → your configured selling prices (per-account/month rates)
+//   reseller-cost-price.json → what you pay RC
+//   customer-price.json      → what the WIZARD actually uses (includes your markup)
+//
 // GET /api/admin/email-plans/discover  (requires super_admin)
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { isConfigured } from '@/lib/resellerclub/config';
 import { businessEmailApi } from '@/lib/resellerclub/email';
 
@@ -17,7 +20,7 @@ export async function GET() {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, agency_id')
       .eq('id', user.id)
       .single();
 
@@ -29,92 +32,79 @@ export async function GET() {
       return NextResponse.json({ error: 'RC not configured' }, { status: 400 });
     }
 
-    // Fetch ALL products from the pricing API (returns everything in one call)
-    const [sellingPricing, costPricing] = await Promise.allSettled([
+    // Get the admin's RC customer-id (needed for customer-price.json)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const admin = createAdminClient() as any;
+    const { data: agency } = await admin
+      .from('agencies')
+      .select('resellerclub_customer_id')
+      .eq('id', profile.agency_id)
+      .single();
+
+    const customerId: string | undefined = agency?.resellerclub_customer_id;
+
+    // Fetch from all three pricing endpoints in parallel
+    const [sellingResult, costResult, customerResult] = await Promise.allSettled([
       businessEmailApi.getResellerPricing(),
       businessEmailApi.getResellerCostPricing(),
+      customerId
+        ? businessEmailApi.getCustomerPricing(customerId)
+        : Promise.reject(new Error('No customer-id available')),
     ]);
 
-    const customerData = sellingPricing.status === 'fulfilled' ? sellingPricing.value : null;
-    const costData = costPricing.status === 'fulfilled' ? costPricing.value : null;
+    const sellingData  = sellingResult.status  === 'fulfilled' ? sellingResult.value  : null;
+    const costData     = costResult.status     === 'fulfilled' ? costResult.value     : null;
+    const customerData = customerResult.status === 'fulfilled' ? customerResult.value : null;
 
-    const TITAN_KEYS = ['titanmailglobal', 'titanmailindia'];
+    // Titan Mail raw data from all three endpoints — critical for debugging the pricing format.
+    // Compare reseller vs customer to understand if prices are per-month or total-for-tenure.
+    const titanMailFullData = {
+      fromResellerPrice: {
+        note: 'reseller-price.json — your configured selling prices (per-account/month rates)',
+        titanmailglobal: sellingData?.['titanmailglobal'] ?? null,
+        titanmailindia:  sellingData?.['titanmailindia']  ?? null,
+      },
+      fromCostPrice: {
+        note: 'reseller-cost-price.json — what you pay RC',
+        titanmailglobal: costData?.['titanmailglobal'] ?? null,
+        titanmailindia:  costData?.['titanmailindia']  ?? null,
+      },
+      fromCustomerPrice: {
+        note: `customer-price.json (customerId=${customerId ?? 'MISSING'}) — what the WIZARD uses`,
+        titanmailglobal:   customerData?.['titanmailglobal']   ?? null,
+        titanmailindia:    customerData?.['titanmailindia']    ?? null,
+        eeliteus:          customerData?.['eeliteus']          ?? null,
+        enterpriseemailus: customerData?.['enterpriseemailus'] ?? null,
+      },
+    };
 
-    // Full raw data for Titan Mail keys — essential for understanding their pricing structure
-    const titanRawData: Record<string, {
-      sellingRaw: unknown;
-      costRaw: unknown;
-    }> = {};
-
-    for (const key of TITAN_KEYS) {
-      if (customerData?.[key] || costData?.[key]) {
-        titanRawData[key] = {
-          sellingRaw: customerData?.[key] ?? null,
-          costRaw: costData?.[key] ?? null,
-        };
-      }
-    }
-
-    // Summary of all email-like products
-    const emailPlans: Record<string, {
-      key: string;
-      hasEmailAccountRanges: boolean;
-      topLevelKeys: string[];
-      slabs?: string[];
-      samplePricing?: Record<string, unknown>;
-      costSamplePricing?: Record<string, unknown>;
-    }> = {};
-
-    if (customerData) {
-      for (const [key, value] of Object.entries(customerData)) {
+    // Summary of email-like plans from the reseller-price endpoint
+    const emailPlanSummary: Record<string, unknown> = {};
+    if (sellingData) {
+      for (const [key, value] of Object.entries(sellingData)) {
         if (typeof value !== 'object' || value === null) continue;
         const v = value as Record<string, unknown>;
-        const hasRanges = 'email_account_ranges' in v;
-        const topKeys = Object.keys(v);
-
-        const isEmailLike = hasRanges
+        const isEmailLike = 'email_account_ranges' in v
+          || 'plans' in v
           || key.startsWith('eelite')
           || key.startsWith('enterprise')
           || key.startsWith('titanmail')
           || key.includes('email');
-
         if (isEmailLike) {
-          const ranges = v.email_account_ranges as Record<string, unknown> | undefined;
-          const slabs = ranges ? Object.keys(ranges) : undefined;
-          const firstSlab = slabs?.[0];
-          const samplePricing = firstSlab && ranges ? ranges[firstSlab] as Record<string, unknown> : undefined;
-
-          let costSample: Record<string, unknown> | undefined;
-          if (costData?.[key]) {
-            const cv = costData[key] as Record<string, unknown>;
-            const cr = cv.email_account_ranges as Record<string, unknown> | undefined;
-            const cs = cr ? Object.keys(cr) : undefined;
-            const csFirst = cs?.[0];
-            costSample = csFirst && cr ? cr[csFirst] as Record<string, unknown> : undefined;
-          }
-
-          emailPlans[key] = {
-            key,
-            hasEmailAccountRanges: hasRanges,
-            topLevelKeys: topKeys,
-            slabs,
-            samplePricing,
-            costSamplePricing: costSample,
-          };
+          emailPlanSummary[key] = { topLevelKeys: Object.keys(v) };
         }
       }
     }
 
-    const allKeys = customerData ? Object.keys(customerData).sort() : [];
+    const allKeys = sellingData ? Object.keys(sellingData).sort() : [];
 
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
+      customerId: customerId ?? null,
       totalProductKeys: allKeys.length,
-      emailPlans,
-      emailPlanCount: Object.keys(emailPlans).length,
-      // Full raw Titan Mail data — shows exact pricing structure
-      titanMailFullData: titanRawData,
+      emailPlanSummary,
+      titanMailFullData,
       allProductKeys: allKeys,
     });
   } catch (error) {
@@ -125,4 +115,3 @@ export async function GET() {
     );
   }
 }
-
