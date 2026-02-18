@@ -180,7 +180,7 @@ export function BillingIntegration({ config }: BillingIntegrationProps) {
               DRAMAC receives the wholesale amount, you receive the markup
             </li>
             <li>
-              Domain is automatically registered through ResellerClub
+              Domain is automatically registered through the provider
             </li>
             <li>
               A billing record is created for your accounting

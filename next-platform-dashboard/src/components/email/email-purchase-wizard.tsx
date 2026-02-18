@@ -47,11 +47,11 @@ interface PlanMeta {
 }
 
 // Known plan metadata keyed by RC product key
+// Includes both legacy keys (eeliteus) and Titan Mail synthetic keys (titanmailglobal_<planId>)
 const KNOWN_PLANS: Record<string, PlanMeta> = {
-  // Professional plan — cheapest tier (~5 GB/mailbox)
-  // Key is discovered dynamically from the API; common candidates listed here
-  // so we display nice names before the actual key is confirmed.
-  eeliteprous: {
+  // ── Titan Mail keys (new REST API — /restapi/product/titanmailglobal/) ──
+  // Synthetic keys created by flattenTitanMailPricing: titanmailglobal_<planId>
+  titanmailglobal_1762: {
     name: "Professional",
     tagline: "For individuals & freelancers",
     storageGB: 5,
@@ -64,7 +64,57 @@ const KNOWN_PLANS: Record<string, PlanMeta> = {
       "Anti-spam & virus protection",
     ],
   },
-  // Business plan — mid tier (10 GB/mailbox)
+  titanmailglobal_1756: {
+    name: "Business",
+    tagline: "For individuals & small teams",
+    storageGB: 10,
+    isPopular: false,
+    features: [
+      "10 GB storage per mailbox",
+      "Custom domain email",
+      "Webmail & mobile apps",
+      "Calendar & contacts sync",
+      "Anti-spam & virus protection",
+    ],
+  },
+  titanmailglobal_1757: {
+    name: "Enterprise",
+    tagline: "For growing businesses",
+    storageGB: 50,
+    isPopular: true,
+    features: [
+      "50 GB storage per mailbox",
+      "Custom domain email",
+      "Webmail & mobile apps",
+      "Calendar & contacts sync",
+      "Anti-spam & virus protection",
+      "Priority 24/7 support",
+      "Advanced admin controls",
+    ],
+  },
+  // India variants
+  titanmailindia_1761: {
+    name: "Professional",
+    tagline: "For individuals & freelancers",
+    storageGB: 5,
+    isPopular: false,
+    features: ["5 GB storage per mailbox", "Custom domain email", "Webmail & mobile apps", "Calendar & contacts sync", "Anti-spam & virus protection"],
+  },
+  titanmailindia_1758: {
+    name: "Business",
+    tagline: "For individuals & small teams",
+    storageGB: 10,
+    isPopular: false,
+    features: ["10 GB storage per mailbox", "Custom domain email", "Webmail & mobile apps", "Calendar & contacts sync", "Anti-spam & virus protection"],
+  },
+  titanmailindia_1759: {
+    name: "Enterprise",
+    tagline: "For growing businesses",
+    storageGB: 50,
+    isPopular: true,
+    features: ["50 GB storage per mailbox", "Custom domain email", "Webmail & mobile apps", "Calendar & contacts sync", "Anti-spam & virus protection", "Priority 24/7 support", "Advanced admin controls"],
+  },
+  // ── Legacy Business Email keys ──
   eeliteus: {
     name: "Business",
     tagline: "For individuals & small teams",
@@ -78,7 +128,7 @@ const KNOWN_PLANS: Record<string, PlanMeta> = {
       "Anti-spam & virus protection",
     ],
   },
-  // Enterprise plan — top tier (50 GB/mailbox)
+  // ── Legacy Enterprise Email keys ──
   enterpriseemailus: {
     name: "Enterprise",
     tagline: "For growing businesses",
@@ -102,11 +152,48 @@ const KNOWN_PLANS: Record<string, PlanMeta> = {
  */
 function resolvePlanMeta(key: string): PlanMeta {
   if (KNOWN_PLANS[key]) return KNOWN_PLANS[key];
+
+  // Try to extract plan name from Titan Mail synthetic keys (titanmailglobal_<planId>)
+  const titanMatch = key.match(/^titanmail(?:global|india)_(\d+)$/);
+  if (titanMatch) {
+    const planId = parseInt(titanMatch[1]);
+    const PLAN_NAMES: Record<number, { name: string; storage: number }> = {
+      1762: { name: 'Professional', storage: 5 },
+      1761: { name: 'Professional', storage: 5 },
+      1756: { name: 'Business', storage: 10 },
+      1758: { name: 'Business', storage: 10 },
+      1757: { name: 'Enterprise', storage: 50 },
+      1759: { name: 'Enterprise', storage: 50 },
+      1755: { name: 'Business (Trial)', storage: 10 },
+      1760: { name: 'Business (Trial)', storage: 10 },
+    };
+    const plan = PLAN_NAMES[planId];
+    if (plan) {
+      return {
+        name: plan.name,
+        tagline: plan.name === 'Professional' ? 'For individuals & freelancers' :
+                 plan.name === 'Business' ? 'For individuals & small teams' :
+                 'For growing businesses',
+        storageGB: plan.storage,
+        isPopular: plan.name === 'Enterprise',
+        features: [
+          `${plan.storage} GB storage per mailbox`,
+          'Custom domain email',
+          'Webmail & mobile apps',
+          'Calendar & contacts sync',
+          'Anti-spam & virus protection',
+          ...(plan.name === 'Enterprise' ? ['Priority 24/7 support', 'Advanced admin controls'] : []),
+        ],
+      };
+    }
+  }
+
   // Auto-generate for unknown keys (e.g. newly added plans from the provider)
   const humanName = key
     .replace(/us$|in$|uk$/, '')       // strip region suffix
     .replace(/eelite/, 'Business')
     .replace(/enterprise(email)?/, 'Enterprise')
+    .replace(/titanmail(global|india)?_?\d*/, 'Email')
     .replace(/[_-]/g, ' ')
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .trim()
@@ -125,6 +212,15 @@ function resolvePlanMeta(key: string): PlanMeta {
       'Anti-spam & virus protection',
     ],
   };
+}
+
+/**
+ * Extract the Titan Mail plan-id from a synthetic key like `titanmailglobal_1762`.
+ * Returns null for non-Titan keys.
+ */
+function extractPlanId(key: string): number | null {
+  const match = key.match(/^titanmail(?:global|india)_(\d+)$/);
+  return match ? parseInt(match[1]) : null;
 }
 
 // ============================================================================
@@ -377,6 +473,12 @@ export function EmailPurchaseWizard() {
     formData.append('numberOfAccounts', values.numberOfAccounts);
     formData.append('months', values.months);
     formData.append('productKey', selectedPlan);
+
+    // Pass Titan Mail plan-id if this is a Titan Mail plan
+    const planId = extractPlanId(selectedPlan);
+    if (planId) {
+      formData.append('planId', String(planId));
+    }
 
     const domainId = searchParams.get('domainId');
     if (domainId) formData.append('domainId', domainId);

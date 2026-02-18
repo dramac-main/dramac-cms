@@ -159,6 +159,7 @@ export interface CreateEmailPurchaseParams {
   numberOfAccounts: number;
   months: number;
   productKey?: string;
+  planId?: number;
   wholesaleAmount: number;
   retailAmount: number;
   currency?: string;
@@ -461,9 +462,7 @@ export async function createEmailPurchase(
     }
 
     // Create Paddle transaction with custom non-catalog item
-    const isEnterprise = params.productKey === 'enterpriseemailus' || params.productKey === 'enterpriseemailin';
-    const isBusiness = !params.productKey || params.productKey === 'eeliteus' || params.productKey === 'eelitein' || params.productKey === 'eeliteuk';
-    const planName = isEnterprise ? 'Enterprise Email' : isBusiness ? 'Business Email' : 'Professional Email';
+    const planName = resolveEmailPlanDisplayName(params.productKey, params.planId);
     const description = `${planName} - ${params.domainName} (${params.numberOfAccounts} account${params.numberOfAccounts > 1 ? 's' : ''}, ${params.months} month${params.months > 1 ? 's' : ''})`;
 
     const transaction: Transaction = await paddle.transactions.create({
@@ -513,6 +512,7 @@ export async function createEmailPurchase(
           number_of_accounts: params.numberOfAccounts,
           months: params.months,
           product_key: params.productKey || 'eeliteus',
+          plan_id: params.planId || null,
         },
         wholesale_amount: params.wholesaleAmount,
         retail_amount: params.retailAmount,
@@ -609,4 +609,37 @@ export async function updatePendingPurchaseStatus(
     console.error('[Paddle] Failed to update pending purchase:', error);
     throw error;
   }
+}
+
+/**
+ * Resolve a human-readable email plan name from product key and/or plan ID.
+ * Handles legacy keys (eeliteus, enterpriseemailus), Titan Mail plan IDs,
+ * and synthetic flattened keys (titanmailglobal_1762).
+ */
+function resolveEmailPlanDisplayName(productKey?: string, planId?: number): string {
+  // Titan Mail plan IDs → name mapping
+  const PLAN_ID_NAMES: Record<number, string> = {
+    1762: 'Professional Email', 1761: 'Professional Email',
+    1756: 'Business Email',     1758: 'Business Email',
+    1757: 'Enterprise Email',   1759: 'Enterprise Email',
+    1755: 'Business Email (Trial)', 1760: 'Business Email (Trial)',
+  };
+
+  if (planId && PLAN_ID_NAMES[planId]) return PLAN_ID_NAMES[planId];
+
+  if (productKey) {
+    // Synthetic key: titanmailglobal_<planId>
+    const match = productKey.match(/^titanmail(?:global|india)_(\d+)$/);
+    if (match) {
+      const id = parseInt(match[1]);
+      if (PLAN_ID_NAMES[id]) return PLAN_ID_NAMES[id];
+    }
+
+    // Legacy keys
+    if (productKey.startsWith('enterpriseemail')) return 'Enterprise Email';
+    if (productKey.startsWith('eelite')) return 'Business Email';
+    if (productKey.startsWith('titanmail')) return 'Email';
+  }
+
+  return 'Email';
 }

@@ -14,6 +14,8 @@ import {
   emailAccountService, 
   businessEmailApi,
   emailDnsService,
+  titanMailApi,
+  TITAN_PLAN_IDS,
 } from "@/lib/resellerclub/email";
 import { pricingCacheService } from "@/lib/resellerclub/pricing-cache";
 import type { 
@@ -63,6 +65,8 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
     const months = parseInt(formData.get('months') as string);
     const clientId = formData.get('clientId') as string | null;
     const productKey = (formData.get('productKey') as string | null) || 'eeliteus';
+    const planIdRaw = formData.get('planId') as string | null;
+    const planId = planIdRaw ? parseInt(planIdRaw) : null;
 
     // Validate inputs
     if (!domainName) {
@@ -114,13 +118,15 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
       .single();
 
     // Try to get customer pricing first (includes RC markups)
-    const customerPricing = await businessEmailApi.getCustomerPricing(customerId);
+    const rawCustomerPricing = await businessEmailApi.getCustomerPricing(customerId);
+    const customerPricing = flattenTitanMailPricing(rawCustomerPricing);
     
     // Calculate base price from customer pricing for the selected plan
     const basePrice = calculateBasePrice(customerPricing, months, numberOfAccounts, productKey);
     
     // Get wholesale cost for margin tracking
-    const wholesalePricing = await businessEmailApi.getResellerCostPricing();
+    const rawWholesalePricing = await businessEmailApi.getResellerCostPricing();
+    const wholesalePricing = flattenTitanMailPricing(rawWholesalePricing);
     const wholesalePrice = calculateBasePrice(wholesalePricing, months, numberOfAccounts, productKey);
     
     console.log(`[BusinessEmail] Pricing for ${domainName}: ${numberOfAccounts} accounts × ${months}mo → base=$${basePrice.toFixed(2)}, wholesale=$${wholesalePrice.toFixed(2)}`);
@@ -145,6 +151,9 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
     // Create Paddle transaction for payment
     const { createEmailPurchase } = await import('@/lib/paddle/transactions');
     
+    // Resolve the Titan Mail plan-id if the product key is a Titan Mail variant
+    const resolvedPlanId = planId || resolveTitanPlanId(productKey);
+
     const purchase = await createEmailPurchase({
       agencyId: profile.agency_id,
       userId: user.id,
@@ -154,6 +163,7 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
       numberOfAccounts,
       months,
       productKey,
+      planId: resolvedPlanId || undefined,
       wholesaleAmount: wholesalePrice,
       retailAmount: retailPrice,
       currency: 'USD',
@@ -635,6 +645,12 @@ export async function getBusinessEmailPricing(): Promise<{
     );
     console.log(`[BusinessEmail] Pricing loaded — available plans: ${availablePlans.join(', ')}`);
 
+    // Flatten any nested Titan Mail pricing (e.g. titanmailglobal → per-plan sub-keys)
+    // RC may return plan-specific pricing under the parent product key.
+    // We flatten them into synthetic top-level keys so the wizard sees them as separate plans.
+    customerPricing = flattenTitanMailPricing(customerPricing || {});
+    costPricing = costPricing ? flattenTitanMailPricing(costPricing) : costPricing;
+
     return {
       success: true,
       data: customerPricing || undefined,
@@ -849,6 +865,52 @@ export async function getBusinessEmailOrderByDomainId(domainId: string): Promise
 // ============================================================================
 
 /**
+ * Flatten nested Titan Mail pricing into separate top-level keys.
+ *
+ * The RC `products/customer-price.json` response may return Titan Mail pricing in either:
+ * 1. Flat: each plan has its own top-level key (e.g. `titanmailglobal_1762`, or just `eeliteus`)
+ * 2. Nested: `titanmailglobal` → { planId: { email_account_ranges: {...} } }
+ *
+ * This function detects nested structures and explodes them into synthetic keys
+ * like `titanmailglobal_1762`, `titanmailglobal_1756`, etc.
+ * Keys that already have `email_account_ranges` directly are left as-is.
+ */
+function flattenTitanMailPricing(pricing: EmailPricingResponse): EmailPricingResponse {
+  const TITAN_KEYS = ['titanmailglobal', 'titanmailindia'];
+  const result = { ...pricing };
+
+  for (const parentKey of TITAN_KEYS) {
+    const parentValue = pricing[parentKey];
+    if (!parentValue || typeof parentValue !== 'object') continue;
+
+    // If the parent already has email_account_ranges, it's flat — leave it
+    if (parentValue.email_account_ranges) continue;
+
+    // Check if sub-keys are plan IDs with email_account_ranges
+    let foundNestedPlans = false;
+    for (const [subKey, subValue] of Object.entries(parentValue)) {
+      if (
+        typeof subValue === 'object' &&
+        subValue !== null &&
+        'email_account_ranges' in (subValue as Record<string, unknown>)
+      ) {
+        // Create synthetic key: e.g. titanmailglobal_1762
+        const syntheticKey = `${parentKey}_${subKey}`;
+        result[syntheticKey] = subValue as EmailPricingResponse[string];
+        foundNestedPlans = true;
+      }
+    }
+
+    // Remove the parent key if we flattened its children
+    if (foundNestedPlans) {
+      delete result[parentKey];
+    }
+  }
+
+  return result;
+}
+
+/**
  * Calculate base price from RC email pricing response.
  * 
  * RC response structure (confirmed from API docs):
@@ -945,4 +1007,39 @@ function applyMarkup(
     default:
       return basePrice;
   }
+}
+
+/**
+ * Resolve a Titan Mail plan-id from a product key.
+ * Handles both:
+ * - Direct product keys like `titanmailglobal` (defaults to Business)
+ * - Synthetic flattened keys like `titanmailglobal_1762` (extracts the plan-id)
+ * - Legacy keys like `eeliteus` → mapped to Titan Mail Business
+ * - Legacy keys like `enterpriseemailus` → mapped to Titan Mail Enterprise
+ */
+function resolveTitanPlanId(productKey: string): number | null {
+  // Check for synthetic keys: titanmailglobal_<planId> or titanmailindia_<planId>
+  const titanSyntheticMatch = productKey.match(/^titanmail(?:global|india)_(\d+)$/);
+  if (titanSyntheticMatch) return parseInt(titanSyntheticMatch[1]);
+
+  // Direct titanmailglobal key without plan suffix — shouldn't happen in normal flow
+  if (productKey === 'titanmailglobal') return TITAN_PLAN_IDS.global.business;
+  if (productKey === 'titanmailindia') return TITAN_PLAN_IDS.india.business;
+
+  // Legacy key mapping — these correspond to Titan Mail plans
+  if (productKey === 'eeliteus') return TITAN_PLAN_IDS.global.business;
+  if (productKey === 'enterpriseemailus') return TITAN_PLAN_IDS.global.enterprise;
+  if (productKey === 'eelitein') return TITAN_PLAN_IDS.india.business;
+  if (productKey === 'enterpriseemailin') return TITAN_PLAN_IDS.india.enterprise;
+
+  // Unknown key — no plan-id
+  return null;
+}
+
+/**
+ * Check whether a product key should route through the new Titan Mail REST API.
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function isTitanMailProduct(productKey: string): boolean {
+  return productKey.startsWith('titanmailglobal') || productKey.startsWith('titanmailindia');
 }

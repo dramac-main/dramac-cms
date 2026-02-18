@@ -4,8 +4,23 @@
 // Types
 export * from './types';
 
-// API Client
+// API Clients
 export { businessEmailApi } from './client';
+export {
+  titanMailApi,
+  TITAN_PRODUCT_KEYS,
+  TITAN_PLAN_IDS,
+  TITAN_PLANS,
+  titanPlanName,
+} from './titan-client';
+export type {
+  TitanRegion,
+  TitanPlanName,
+  TitanPlanInfo,
+  TitanCreateOrderParams,
+  TitanCreateOrderResult,
+  TitanOrderDetails,
+} from './titan-client';
 
 // Services
 export { emailOrderService } from './order-service';

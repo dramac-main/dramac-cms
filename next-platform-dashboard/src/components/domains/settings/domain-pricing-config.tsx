@@ -80,8 +80,8 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
         <CardHeader>
           <CardTitle>Default Pricing Markup</CardTitle>
           <CardDescription>
-            Your ResellerClub selling prices already include the profit margin you set in your RC panel.
-            This setting adds an <strong>additional</strong> markup on top. Set to 0% to use your RC selling prices exactly as configured.
+            Your supplier selling prices already include the profit margin you configured.
+            This setting adds an <strong>additional</strong> markup on top. Set to 0% to use your supplier prices exactly as configured.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -98,7 +98,7 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
                     Percentage Markup
                   </Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Add a percentage on top of ResellerClub selling prices (0% = use RC prices as-is)
+                    Add a percentage on top of supplier selling prices (0% = use supplier prices as-is)
                   </p>
                 </div>
               </div>
@@ -111,7 +111,7 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
                     Fixed Markup
                   </Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Add a fixed currency amount on top of ResellerClub selling prices
+                    Add a fixed currency amount on top of supplier selling prices
                   </p>
                 </div>
               </div>
@@ -124,7 +124,7 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
                     Custom Price
                   </Label>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Set your own retail price regardless of ResellerClub pricing
+                    Set your own retail price regardless of supplier pricing
                   </p>
                 </div>
               </div>
@@ -159,7 +159,7 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
             <h4 className="text-sm font-medium mb-3">Price Preview (example .com domain)</h4>
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">RC Selling Price</p>
+                <p className="text-muted-foreground">Supplier Price</p>
                 <p className="font-semibold text-lg">${exampleWholesale.toFixed(2)}</p>
               </div>
               <div>
@@ -178,7 +178,7 @@ export function DomainPricingConfig({ config }: DomainPricingConfigProps) {
             <div className="mt-2 pt-2 border-t">
               <p className="text-xs text-muted-foreground">
                 {parseFloat(markupValue) === 0 
-                  ? 'Prices match your ResellerClub selling prices exactly'
+                  ? 'Prices match your supplier selling prices exactly'
                   : `Additional markup: ${((exampleRetail - exampleWholesale) / exampleWholesale * 100).toFixed(1)}%`}
               </p>
             </div>
