@@ -608,15 +608,25 @@ export async function getBusinessEmailPricing(): Promise<{
     //    Professional, and any other plan the RC account has enabled).
     customerPricing = await pricingCacheService.getAllCachedEmailPlans('customer');
 
-    if (!customerPricing) {
-      // Cache miss — fetch live from RC (returns ALL products in one call)
-      console.log('[BusinessEmail] Customer pricing cache miss, fetching live...');
+    // If cache hit but no Titan Mail plans, the cache pre-dates Titan Mail support.
+    // Bypass it and fetch live so the wizard shows all plans; background refresh will
+    // repopulate the cache with synthetic Titan Mail keys for the next request.
+    const cacheMissingTitanMail = customerPricing !== null &&
+      !Object.keys(customerPricing).some(k => k.startsWith('titanmail'));
+
+    if (!customerPricing || cacheMissingTitanMail) {
+      // Cache miss or incomplete — fetch live from RC (returns ALL products in one call)
+      console.log(
+        cacheMissingTitanMail
+          ? '[BusinessEmail] Customer pricing cache incomplete (no Titan Mail plans), fetching live...'
+          : '[BusinessEmail] Customer pricing cache miss, fetching live...'
+      );
       try {
         customerPricing = customerId
           ? await businessEmailApi.getCustomerPricing(customerId)
           : await businessEmailApi.getResellerPricing();
 
-        // Trigger background cache refresh (auto-discovers all plans)
+        // Trigger background cache refresh (auto-discovers all plans including Titan Mail)
         if (customerId) {
           pricingCacheService.refreshEmailPricing(customerId, ['customer']).catch(err => {
             console.error('[BusinessEmail] Background cache refresh failed:', err);
@@ -639,17 +649,18 @@ export async function getBusinessEmailPricing(): Promise<{
       }
     }
 
-    // Log available plans (for diagnostics)
-    const availablePlans = Object.keys(customerPricing || {}).filter(k =>
+    // Flatten any nested Titan Mail pricing (titanmailglobal → per-plan synthetic keys)
+    // RC returns plan-specific pricing under the parent key; we normalise them into
+    // separate top-level keys (e.g. titanmailglobal_1762) so the wizard treats them
+    // as distinct purchaseable plans.
+    customerPricing = flattenTitanMailPricing(customerPricing || {});
+    costPricing = costPricing ? flattenTitanMailPricing(costPricing) : costPricing;
+
+    // Log available plans AFTER flattening so the list reflects what the wizard will see
+    const availablePlans = Object.keys(customerPricing).filter(k =>
       (customerPricing?.[k] as { email_account_ranges?: unknown })?.email_account_ranges
     );
     console.log(`[BusinessEmail] Pricing loaded — available plans: ${availablePlans.join(', ')}`);
-
-    // Flatten any nested Titan Mail pricing (e.g. titanmailglobal → per-plan sub-keys)
-    // RC may return plan-specific pricing under the parent product key.
-    // We flatten them into synthetic top-level keys so the wizard sees them as separate plans.
-    customerPricing = flattenTitanMailPricing(customerPricing || {});
-    costPricing = costPricing ? flattenTitanMailPricing(costPricing) : costPricing;
 
     return {
       success: true,
