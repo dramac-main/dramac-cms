@@ -1094,8 +1094,8 @@ function calculateBasePrice(
     return 0;
   }
   
-  // Price is total-for-tenure per account. Multiply by number of accounts.
-  return Number(price) * accounts;
+  // Price is PER-ACCOUNT PER-MONTH. Multiply by accounts AND months.
+  return Number(price) * accounts * months;
 }
 
 /**

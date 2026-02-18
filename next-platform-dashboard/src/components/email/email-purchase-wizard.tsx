@@ -228,8 +228,8 @@ function extractPlanId(key: string): number | null {
 // ============================================================================
 
 interface SlabPricing {
-  add: Record<string, number>;   // months → total-per-account price for the tenure
-  renew: Record<string, number>; // months → total-per-account renewal price
+  add: Record<string, number>;   // months → per-account per-MONTH price for that tenure
+  renew: Record<string, number>; // months → per-account per-MONTH renewal price
 }
 
 interface StructuredPricing {
@@ -239,7 +239,8 @@ interface StructuredPricing {
 /**
  * Parse the RC pricing response for a single product key.
  * RC structure: { "eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": 0.86 }, "renew": {...} } } } }
- * Prices = TOTAL per-account for the full tenure (NOT per-month).
+ * Prices = per-account PER-MONTH rates for the given tenure length.
+ * e.g. add["12"] = $0.42 means $0.42/account/month when billed annually.
  */
 function parsePlanPricing(data: Record<string, unknown>, planKey: string): StructuredPricing | null {
   const product = data[planKey] as Record<string, unknown> | undefined;
@@ -282,8 +283,8 @@ function findSlab(slabs: Record<string, SlabPricing>, accounts: number): string 
 
 /**
  * Get the total price for a given configuration.
- * RC prices are total-per-account for the full tenure.
- * Result = perAccountTenurePrice × numberOfAccounts
+ * RC prices are per-account PER-MONTH rates.
+ * Result = ratePerMonth × numberOfAccounts × months
  */
 function getTotalPrice(
   pricing: StructuredPricing,
@@ -295,11 +296,12 @@ function getTotalPrice(
   if (!slab) return null;
   const price = pricing.slabs[slab][action][String(months)];
   if (price == null || isNaN(price)) return null;
-  return price * accounts;
+  return price * accounts * months;
 }
 
 /**
- * Get per-account per-month rate. = tenure price / months
+ * Get per-account per-month rate.
+ * RC prices are ALREADY per-month — just return the rate directly.
  */
 function getPerMonthRate(
   pricing: StructuredPricing,
@@ -311,7 +313,7 @@ function getPerMonthRate(
   if (!slab) return null;
   const price = pricing.slabs[slab][action][String(months)];
   if (price == null || isNaN(price)) return null;
-  return price / months;
+  return price;
 }
 
 /**
