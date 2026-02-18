@@ -1,17 +1,20 @@
 /**
  * Unified Cron Handler
- * 
- * Vercel Hobby plan only allows 1 cron job.
- * This single endpoint dispatches to ALL cron tasks based on time-of-day logic.
- * 
- * Schedule: Every hour (0 * * * *)
- * 
- * Tasks dispatched:
- * - Auto-close stale chats (every run)
- * - Chat maintenance (daily at 2 AM)
- * - Domain health checks (daily at midnight)
- * - Social media publish (daily at noon)
- * - Social media sync (daily at 6 AM)
+ *
+ * Vercel Hobby plan: 1 cron job maximum, daily frequency only.
+ * This single endpoint dispatches ALL daily cron tasks in sequence.
+ *
+ * Schedule: Daily at midnight UTC (0 0 * * *)
+ *
+ * Tasks dispatched (all run once per day):
+ * - Auto-close stale chats
+ * - Chat maintenance
+ * - Domain health checks
+ * - Domain auto-renewal
+ * - Domain expiry notifications
+ * - ResellerClub sync + pricing cache
+ * - Social media publish queue
+ * - Social media sync
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -27,111 +30,30 @@ export async function GET(request: NextRequest) {
   }
 
   const now = new Date();
-  const hour = now.getUTCHours();
-  const results: Record<string, unknown> = { timestamp: now.toISOString(), hour };
+  const results: Record<string, unknown> = { timestamp: now.toISOString() };
   const errors: string[] = [];
+  const baseUrl = getBaseUrl(request);
+  const headers: Record<string, string> = cronSecret ? { authorization: `Bearer ${cronSecret}` } : {};
 
-  // ── Auto-close stale chats (every run) ─────────────────────────────────
-  try {
-    const baseUrl = getBaseUrl(request);
-    const chatCloseRes = await fetch(`${baseUrl}/api/cron/auto-close-chats`, {
-      headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
-    });
-    results.autoCloseChats = await chatCloseRes.json();
-  } catch (err) {
-    errors.push(`auto-close-chats: ${err instanceof Error ? err.message : 'unknown'}`);
-  }
-
-  // ── Chat maintenance (daily at 2 AM UTC) ───────────────────────────────
-  if (hour === 2) {
+  // Helper to call a sub-route and capture result/error
+  async function dispatch(key: string, path: string) {
     try {
-      const baseUrl = getBaseUrl(request);
-      const chatRes = await fetch(`${baseUrl}/api/cron/chat`, {
-        headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
-      });
-      results.chatMaintenance = await chatRes.json();
+      const res = await fetch(`${baseUrl}${path}`, { headers });
+      results[key] = await res.json();
     } catch (err) {
-      errors.push(`chat: ${err instanceof Error ? err.message : 'unknown'}`);
+      errors.push(`${key}: ${err instanceof Error ? err.message : 'unknown'}`);
     }
   }
 
-  // ── Domain health checks (daily at midnight UTC) ───────────────────────
-  if (hour === 0) {
-    try {
-      const baseUrl = getBaseUrl(request);
-      const domainRes = await fetch(`${baseUrl}/api/cron/domain-health`, {
-        headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
-      });
-      results.domainHealth = await domainRes.json();
-    } catch (err) {
-      errors.push(`domain-health: ${err instanceof Error ? err.message : 'unknown'}`);
-    }
-  }
-
-  // ── Domain auto-renewal (daily at 3 AM UTC) ────────────────────────────
-  if (hour === 3) {
-    try {
-      const baseUrl = getBaseUrl(request);
-      const renewRes = await fetch(`${baseUrl}/api/cron/domain-auto-renew`, {
-        headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
-      });
-      results.domainAutoRenew = await renewRes.json();
-    } catch (err) {
-      errors.push(`domain-auto-renew: ${err instanceof Error ? err.message : 'unknown'}`);
-    }
-  }
-
-  // ── Domain expiry notifications (daily at 8 AM UTC) ───────────────────
-  if (hour === 8) {
-    try {
-      const baseUrl = getBaseUrl(request);
-      const notifyRes = await fetch(`${baseUrl}/api/cron/domain-expiry-notifications`, {
-        headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
-      });
-      results.domainExpiryNotifications = await notifyRes.json();
-    } catch (err) {
-      errors.push(`domain-expiry-notifications: ${err instanceof Error ? err.message : 'unknown'}`);
-    }
-  }
-
-  // ── ResellerClub sync + pricing cache (daily at 2 AM UTC) ─────────────
-  if (hour === 2) {
-    try {
-      const baseUrl = getBaseUrl(request);
-      const rcSyncRes = await fetch(`${baseUrl}/api/cron/resellerclub-sync`, {
-        headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
-      });
-      results.resellerclubSync = await rcSyncRes.json();
-    } catch (err) {
-      errors.push(`resellerclub-sync: ${err instanceof Error ? err.message : 'unknown'}`);
-    }
-  }
-
-  // ── Social media publish (daily at noon UTC) ───────────────────────────
-  if (hour === 12) {
-    try {
-      const baseUrl = getBaseUrl(request);
-      const pubRes = await fetch(`${baseUrl}/api/social/publish`, {
-        headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
-      });
-      results.socialPublish = await pubRes.json();
-    } catch (err) {
-      errors.push(`social-publish: ${err instanceof Error ? err.message : 'unknown'}`);
-    }
-  }
-
-  // ── Social media sync (daily at 6 AM UTC) ──────────────────────────────
-  if (hour === 6) {
-    try {
-      const baseUrl = getBaseUrl(request);
-      const syncRes = await fetch(`${baseUrl}/api/social/sync`, {
-        headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
-      });
-      results.socialSync = await syncRes.json();
-    } catch (err) {
-      errors.push(`social-sync: ${err instanceof Error ? err.message : 'unknown'}`);
-    }
-  }
+  // Run all daily tasks
+  await dispatch('autoCloseChats',          '/api/cron/auto-close-chats');
+  await dispatch('chatMaintenance',          '/api/cron/chat');
+  await dispatch('domainHealth',             '/api/cron/domain-health');
+  await dispatch('domainAutoRenew',          '/api/cron/domain-auto-renew');
+  await dispatch('domainExpiryNotifications','/api/cron/domain-expiry-notifications');
+  await dispatch('resellerclubSync',         '/api/cron/resellerclub-sync');
+  await dispatch('socialPublish',            '/api/social/publish');
+  await dispatch('socialSync',               '/api/social/sync');
 
   if (errors.length > 0) {
     results.errors = errors;
