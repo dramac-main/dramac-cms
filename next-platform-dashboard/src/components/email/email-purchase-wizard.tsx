@@ -29,17 +29,16 @@ import { createBusinessEmailOrder, getBusinessEmailPricing } from "@/lib/actions
 import { openPaddleTransactionCheckout } from "@/lib/paddle/paddle-client";
 import { formatCurrency } from "@/lib/locale-config";
 import { toast } from "sonner";
-import { Loader2, AlertCircle, Tag, TrendingDown, RefreshCw, Check } from "lucide-react";
+import { Loader2, AlertCircle, Tag, TrendingDown, RefreshCw, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ============================================================================
-// Plan Definitions (static display — pricing comes from RC API)
+// Plan Metadata (static display data — pricing comes from the API)
+// Any plan key returned by the API will be shown. Keys not in this map
+// get a sensible auto-generated name based on their product key string.
 // ============================================================================
 
-type SupportedPlanKey = "eeliteus" | "enterpriseemailus";
-
-interface PlanDef {
-  key: SupportedPlanKey;
+interface PlanMeta {
   name: string;
   tagline: string;
   storageGB: number;
@@ -47,9 +46,26 @@ interface PlanDef {
   features: string[];
 }
 
-const PLAN_DEFS: PlanDef[] = [
-  {
-    key: "eeliteus",
+// Known plan metadata keyed by RC product key
+const KNOWN_PLANS: Record<string, PlanMeta> = {
+  // Professional plan — cheapest tier (~5 GB/mailbox)
+  // Key is discovered dynamically from the API; common candidates listed here
+  // so we display nice names before the actual key is confirmed.
+  eeliteprous: {
+    name: "Professional",
+    tagline: "For individuals & freelancers",
+    storageGB: 5,
+    isPopular: false,
+    features: [
+      "5 GB storage per mailbox",
+      "Custom domain email",
+      "Webmail & mobile apps",
+      "Calendar & contacts sync",
+      "Anti-spam & virus protection",
+    ],
+  },
+  // Business plan — mid tier (10 GB/mailbox)
+  eeliteus: {
     name: "Business",
     tagline: "For individuals & small teams",
     storageGB: 10,
@@ -62,8 +78,8 @@ const PLAN_DEFS: PlanDef[] = [
       "Anti-spam & virus protection",
     ],
   },
-  {
-    key: "enterpriseemailus",
+  // Enterprise plan — top tier (50 GB/mailbox)
+  enterpriseemailus: {
     name: "Enterprise",
     tagline: "For growing businesses",
     storageGB: 50,
@@ -78,7 +94,38 @@ const PLAN_DEFS: PlanDef[] = [
       "Advanced admin controls",
     ],
   },
-];
+};
+
+/**
+ * Resolve display metadata for a plan key.
+ * Returns the known metadata or generates a sensible fallback.
+ */
+function resolvePlanMeta(key: string): PlanMeta {
+  if (KNOWN_PLANS[key]) return KNOWN_PLANS[key];
+  // Auto-generate for unknown keys (e.g. newly added plans from the provider)
+  const humanName = key
+    .replace(/us$|in$|uk$/, '')       // strip region suffix
+    .replace(/eelite/, 'Business')
+    .replace(/enterprise(email)?/, 'Enterprise')
+    .replace(/[_-]/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .trim()
+    .split(' ')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ') || 'Email';
+  return {
+    name: humanName,
+    tagline: 'Professional email hosting',
+    storageGB: 0,
+    isPopular: false,
+    features: [
+      'Custom domain email',
+      'Webmail & mobile apps',
+      'Calendar & contacts sync',
+      'Anti-spam & virus protection',
+    ],
+  };
+}
 
 // ============================================================================
 // Types & Pricing Helpers
@@ -210,13 +257,16 @@ export function EmailPurchaseWizard() {
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  // Pricing state — keyed by plan key
+  // Pricing state — keyed by plan key (dynamically populated from the API)
   const [pricingLoading, setPricingLoading] = useState(true);
   const [pricingError, setPricingError] = useState<string | null>(null);
   const [allPricing, setAllPricing] = useState<Record<string, StructuredPricing>>({});
 
-  // Selected plan
-  const [selectedPlan, setSelectedPlan] = useState<SupportedPlanKey>("eeliteus");
+  // Selected plan (string — populated from API response keys)
+  const [selectedPlan, setSelectedPlan] = useState<string>("eeliteus");
+
+  // Compare plans toggle
+  const [comparePlansOpen, setComparePlansOpen] = useState(false);
 
   const domainFromUrl = searchParams.get('domain') || '';
 
@@ -245,19 +295,33 @@ export function EmailPurchaseWizard() {
         return;
       }
       const raw = result.data as Record<string, unknown>;
+
+      // Parse ALL plan keys that have email_account_ranges in the response.
+      // This automatically includes Professional and any future plans without
+      // requiring a code change.
       const parsed: Record<string, StructuredPricing> = {};
-      for (const plan of PLAN_DEFS) {
-        const p = parsePlanPricing(raw, plan.key);
-        if (p) parsed[plan.key] = p;
+      for (const [key, value] of Object.entries(raw)) {
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          'email_account_ranges' in value
+        ) {
+          const p = parsePlanPricing(raw, key);
+          if (p) parsed[key] = p;
+        }
       }
+
       if (Object.keys(parsed).length === 0) {
         setPricingError('Pricing not available. Please try again.');
         return;
       }
       setAllPricing(parsed);
-      // Auto-select first available plan
-      const first = PLAN_DEFS.find(p => parsed[p.key])?.key;
-      if (first) setSelectedPlan(first);
+
+      // Auto-select cheapest available plan
+      const cheapestKey = Object.keys(parsed).sort(
+        (a, b) => (getStartingPrice(parsed[a]) || 999) - (getStartingPrice(parsed[b]) || 999)
+      )[0];
+      if (cheapestKey) setSelectedPlan(cheapestKey);
     } catch {
       setPricingError('Failed to connect to pricing service');
     } finally {
@@ -267,7 +331,6 @@ export function EmailPurchaseWizard() {
 
   useEffect(() => {
     loadPricing();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const numberOfAccounts = parseInt(form.watch("numberOfAccounts") || "5");
@@ -295,8 +358,18 @@ export function EmailPurchaseWizard() {
     return { total, perMonthPerAccount, savings, renewTotal, renewPerMonth, monthlyRefRate };
   }, [allPricing, selectedPlan, numberOfAccounts, months]);
 
-  // Plans available from RC (only show plans we have pricing for)
-  const availablePlans = PLAN_DEFS.filter(p => !pricingLoading && allPricing[p.key]);
+  // Plans available from the API — sorted cheapest first
+  const availablePlans = useMemo(() =>
+    Object.keys(allPricing)
+      .filter(() => !pricingLoading)
+      .sort(
+        (a, b) =>
+          (getStartingPrice(allPricing[a]) || 999) -
+          (getStartingPrice(allPricing[b]) || 999)
+      )
+      .map(key => ({ key, meta: resolvePlanMeta(key) })),
+    [allPricing, pricingLoading]
+  );
 
   function onSubmit(values: FormValues) {
     const formData = new FormData();
@@ -334,9 +407,9 @@ export function EmailPurchaseWizard() {
         <p className="text-sm font-medium text-foreground">Select a plan</p>
 
         {pricingLoading ? (
-          <div className="grid sm:grid-cols-2 gap-3">
-            {PLAN_DEFS.map(p => (
-              <div key={p.key} className="h-36 rounded-xl border bg-muted/30 animate-pulse" />
+          <div className="grid sm:grid-cols-3 gap-3">
+            {[0, 1, 2].map(i => (
+              <div key={i} className="h-36 rounded-xl border bg-muted/30 animate-pulse" />
             ))}
           </div>
         ) : pricingError ? (
@@ -349,17 +422,21 @@ export function EmailPurchaseWizard() {
             </Button>
           </div>
         ) : (
-          <div className={cn("grid gap-3", availablePlans.length > 1 ? "sm:grid-cols-2" : "grid-cols-1")}>
-            {availablePlans.map(plan => {
-              const pricing = allPricing[plan.key];
+          <div className={cn(
+            "grid gap-3",
+            availablePlans.length === 1 ? "grid-cols-1" :
+            availablePlans.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"
+          )}>
+            {availablePlans.map(({ key, meta }) => {
+              const pricing = allPricing[key];
               const startingPrice = pricing ? getStartingPrice(pricing) : null;
-              const isSelected = selectedPlan === plan.key;
+              const isSelected = selectedPlan === key;
 
               return (
                 <button
-                  key={plan.key}
+                  key={key}
                   type="button"
-                  onClick={() => setSelectedPlan(plan.key)}
+                  onClick={() => setSelectedPlan(key)}
                   className={cn(
                     "relative text-left rounded-xl border p-4 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                     isSelected
@@ -367,7 +444,7 @@ export function EmailPurchaseWizard() {
                       : "border-border bg-card hover:border-primary/40 hover:bg-accent/20"
                   )}
                 >
-                  {plan.isPopular && (
+                  {meta.isPopular && (
                     <Badge className="absolute -top-2.5 left-4 bg-primary text-primary-foreground text-[10px] px-2 py-0 h-5">
                       Most Popular
                     </Badge>
@@ -382,9 +459,9 @@ export function EmailPurchaseWizard() {
                   <div className="flex items-start gap-2 mb-3 pr-6">
                     <div>
                       <p className={cn("font-semibold text-sm", isSelected && "text-primary")}>
-                        {plan.name} Email
+                        {meta.name} Email
                       </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{plan.tagline}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{meta.tagline}</p>
                     </div>
                     {startingPrice != null && (
                       <div className="ml-auto text-right shrink-0">
@@ -397,7 +474,7 @@ export function EmailPurchaseWizard() {
                   </div>
 
                   <ul className="space-y-1">
-                    {plan.features.slice(0, 4).map(f => (
+                    {meta.features.slice(0, 4).map(f => (
                       <li key={f} className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <Check className="h-3 w-3 text-primary shrink-0" />
                         {f}
@@ -581,7 +658,7 @@ export function EmailPurchaseWizard() {
                           <span className="text-muted-foreground text-xs">/mo per mailbox</span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {PLAN_DEFS.find(p => p.key === selectedPlan)?.name} Email · {months}-month term
+                          {resolvePlanMeta(selectedPlan).name} Email · {months}-month term
                         </p>
                       </div>
                       {pricingDetails.savings > 0 && (
@@ -665,12 +742,118 @@ export function EmailPurchaseWizard() {
               </div>
 
               <p className="text-[11px] text-muted-foreground text-center">
-                Paid upfront for the selected period. Prices sync from ResellerClub daily.
+                Paid upfront for the selected period. Pricing updates automatically.
               </p>
             </form>
           </Form>
         </CardContent>
       </Card>
+
+      {/* ================================================================ */}
+      {/* Compare Plans */}
+      {/* ================================================================ */}
+      {availablePlans.length > 1 && !pricingLoading && (
+        <div className="border rounded-xl overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setComparePlansOpen(v => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/40 transition-colors"
+          >
+            <span>Compare all plans</span>
+            {comparePlansOpen
+              ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
+              : <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            }
+          </button>
+
+          {comparePlansOpen && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-t">
+                <thead>
+                  <tr className="bg-muted/40">
+                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-36">Feature</th>
+                    {availablePlans.map(({ key, meta }) => (
+                      <th key={key} className="text-center px-4 py-2.5 font-medium">
+                        <span className={cn(selectedPlan === key && "text-primary")}>
+                          {meta.name}
+                        </span>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {/* Storage */}
+                  <tr>
+                    <td className="px-4 py-2.5 text-muted-foreground">Storage</td>
+                    {availablePlans.map(({ key, meta }) => (
+                      <td key={key} className="px-4 py-2.5 text-center font-medium">
+                        {meta.storageGB > 0 ? `${meta.storageGB} GB` : '—'}
+                      </td>
+                    ))}
+                  </tr>
+                  {/* Starting price */}
+                  <tr className="bg-muted/20">
+                    <td className="px-4 py-2.5 text-muted-foreground">From (1 mo)</td>
+                    {availablePlans.map(({ key }) => {
+                      const p = allPricing[key];
+                      const price = p ? getStartingPrice(p) : null;
+                      return (
+                        <td key={key} className={cn("px-4 py-2.5 text-center font-semibold", selectedPlan === key && "text-primary")}>
+                          {price != null ? `${formatCurrency(price, 'USD')}/mo` : '—'}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  {/* 12-month price */}
+                  <tr>
+                    <td className="px-4 py-2.5 text-muted-foreground">From (12 mo)</td>
+                    {availablePlans.map(({ key }) => {
+                      const p = allPricing[key];
+                      const price = p ? getPerMonthRate(p, 1, 12) : null;
+                      const savings = p ? getSavingsPercent(p, 1, 12) : 0;
+                      return (
+                        <td key={key} className="px-4 py-2.5 text-center">
+                          {price != null ? (
+                            <span className="flex flex-col items-center gap-0.5">
+                              <span className={cn("font-semibold", selectedPlan === key && "text-primary")}>
+                                {formatCurrency(price, 'USD')}/mo
+                              </span>
+                              {savings > 0 && (
+                                <span className="text-[10px] text-green-600 dark:text-green-400">Save {savings}%</span>
+                              )}
+                            </span>
+                          ) : '—'}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                  {/* Common features */}
+                  {[
+                    'Custom domain email',
+                    'Webmail & mobile apps',
+                    'Calendar & contacts sync',
+                    'Anti-spam & virus protection',
+                    'Priority 24/7 support',
+                    'Advanced admin controls',
+                  ].map(feature => (
+                    <tr key={feature} className="odd:bg-muted/10">
+                      <td className="px-4 py-2.5 text-muted-foreground">{feature}</td>
+                      {availablePlans.map(({ key, meta }) => (
+                        <td key={key} className="px-4 py-2.5 text-center">
+                          {meta.features.includes(feature)
+                            ? <Check className="h-4 w-4 text-primary mx-auto" />
+                            : <span className="text-muted-foreground/40 text-base leading-none">—</span>
+                          }
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

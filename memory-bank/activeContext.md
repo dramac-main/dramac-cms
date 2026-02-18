@@ -2,6 +2,58 @@
 
 ## Recent Work
 
+### Enterprise Email Plan + Dual Plan Selector ✅
+
+**Category:** Feature Addition + UX Overhaul  
+**Commit:** `f39dcf2`  
+**Files Changed:** 7
+
+#### Context
+User asked: "In ResellerClub we have three packages: Business, Enterprise and Professional. Why don't we have that on our platform?" and "The prices are different for all packages — we need proper pricing."
+
+RC API research confirmed only **two** email products exist:
+- **Business Email** — `eeliteus`, endpoint `eelite/add.json`, 10GB/mailbox, requires `product-key` param
+- **Enterprise Email** — `enterpriseemailus`, endpoint `enterpriseemail/us/add.json`, 50GB/mailbox, NO `product-key` param
+- "Professional" does NOT exist in RC API
+
+#### What Was Built
+
+1. **`types.ts`** — Added `enterpriseemailus` + `enterpriseemailin` to `EmailPlanType`. Added `EMAIL_PLAN_DEFINITIONS` array (name, tagline, storageGB, isPopular, features).
+
+2. **`client.ts`** — `createOrder()` routes Enterprise → `enterpriseemail/us/add.json` (no product-key) and Business → `eelite/add.json` (with product-key).
+
+3. **`business-email.ts`** — `createBusinessEmailOrder()` reads `productKey` from FormData (was hardcoded `eeliteus`). `calculateBasePrice(pricing, months, accounts, productKey)` added `productKey` param. `getBusinessEmailPricing()` merges Business + Enterprise from cache separately.
+
+4. **`transactions.ts`** — Paddle checkout name is "Business Email" or "Enterprise Email" based on `productKey`.
+
+5. **`pricing-cache.ts`** — Default refresh: `['eeliteus', 'enterpriseemailus', 'eelitein', 'enterpriseemailin']`.
+
+6. **`email-purchase-wizard.tsx`** — Complete rewrite:
+   - **Plan selector** at top: Business vs Enterprise cards side by side
+   - Each card: plan name, tagline, starting price (per-month for 1 mailbox, 1 month), 4 features, "Most Popular" badge on Enterprise, selected state with ring
+   - Only plans with live RC pricing from `getBusinessEmailPricing()` are shown
+   - `selectedPlan` state (SupportedPlanKey) drives pricing and form submission
+   - FormData includes `productKey: selectedPlan` on submit
+   - Configuration form below: domain, mailboxes (1-100), billing period
+   - Period comparison tiles + savings badges
+   - Itemized price breakdown with strikethrough + savings
+
+7. **`purchase/page.tsx`** — Simplified to just: back arrow + title + wizard (removed features grid Card).
+
+#### UX Design
+- Plan cards: 2-column on sm+ breakpoints
+- Only plans where RC pricing data was returned are shown (graceful degradation)
+- Pricing for SELECTED plan updates dynamically as mailboxes/period changes
+- Period tiles are clickable shortcuts to change billing period
+- Skeletons shown while pricing loads
+
+#### ⚠️ DB Migrations Still Required
+Must run in Supabase (in order):
+1. `migrations/dm-11-pricing-cache-schema.sql`
+2. `migrations/dm-11b-email-pricing-cache-slab-support.sql`
+
+---
+
 ### Email Pricing Overhaul — Slab-Based Cache + Hostinger-Inspired UX ✅
 
 **Category:** Pricing Pipeline Fix + UX Redesign

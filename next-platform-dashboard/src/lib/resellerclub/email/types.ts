@@ -6,8 +6,9 @@
 // ============================================================================
 
 // RC email product types
-// Business Email (eeliteus): Titan Business plan, 10GB/mailbox, endpoint eelite/add.json
-// Enterprise Email (enterpriseemailus): Titan Enterprise plan, 50GB/mailbox, endpoint enterpriseemail/us/add.json
+// Business Email (eeliteus): Business plan, 10GB/mailbox, endpoint eelite/us/add.json
+// Enterprise Email (enterpriseemailus): Enterprise plan, 50GB/mailbox, endpoint enterpriseemail/us/add.json
+// Additional plans (e.g. Professional) are discovered dynamically from the pricing API response
 export type EmailPlanType =
   | 'eeliteus'          // Business Email - US
   | 'eelitein'          // Business Email - India

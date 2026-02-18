@@ -182,12 +182,14 @@ export const pricingCacheService = {
   },
   
   /**
-   * Refresh email pricing cache from ResellerClub
+   * Refresh email pricing cache from the pricing API.
+   * Pass an empty productKeys array (default) to auto-cache ALL plans found in the API response.
+   * This enables automatic discovery of new plans (e.g. Professional) without code changes.
    */
   async refreshEmailPricing(
     customerId: string,
     pricingTypes: Array<'customer' | 'reseller' | 'cost'> = ['customer', 'cost'],
-    productKeys: string[] = ['eeliteus', 'enterpriseemailus', 'eelitein', 'enterpriseemailin']
+    productKeys: string[] = [] // Empty = auto-discover all plans from the API response
   ): Promise<PricingSyncResult> {
     const startTime = Date.now();
     const admin = createAdminClient() as SupabaseClient;
@@ -224,7 +226,12 @@ export const pricingCacheService = {
         
         // Upsert each product + slab + tenure combination into cache
         // RC response structure: { "eeliteus": { "email_account_ranges": { "1-5": { "add": { "1": 0.86, "12": 10.20 }, "renew": {...} } } } }
-        for (const productKey of productKeys) {
+        // When productKeys is empty, cache ALL plans found in the response (auto-discovery)
+        const keysToCache = productKeys.length > 0
+          ? productKeys
+          : Object.keys(pricing).filter(k => pricing[k]?.email_account_ranges);
+
+        for (const productKey of keysToCache) {
           const productPricing = pricing[productKey];
           if (!productPricing?.email_account_ranges) continue;
           
@@ -448,6 +455,62 @@ export const pricingCacheService = {
     }
   },
   
+  /**
+   * Get ALL cached email plans merged into a single RC-shaped response.
+   * Returns all product keys that have been cached (e.g. eeliteus, enterpriseemailus, + any
+   * dynamically discovered plans such as Professional) in one `EmailPricingResponse`.
+   */
+  async getAllCachedEmailPlans(
+    pricingType: 'customer' | 'reseller' | 'cost' = 'customer',
+    maxAgeHours = 24
+  ): Promise<EmailPricingResponse | null> {
+    const admin = createAdminClient() as SupabaseClient;
+
+    try {
+      const maxAge = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000).toISOString();
+
+      const { data: cached } = await admin
+        .from('email_pricing_cache')
+        .select('*')
+        .eq('pricing_type', pricingType)
+        .gte('last_refreshed_at', maxAge);
+
+      if (!cached || cached.length === 0) {
+        return null;
+      }
+
+      // Group rows by product_key → slab → action → months
+      const products: Record<string, Record<string, { add: Record<string, number>; renew: Record<string, number> }>> = {};
+
+      for (const row of cached) {
+        const key = row.product_key as string;
+        const slab = (row.account_slab as string) || '1-5';
+
+        if (!products[key]) products[key] = {};
+        if (!products[key][slab]) products[key][slab] = { add: {}, renew: {} };
+
+        if (row.add_account_price != null) {
+          products[key][slab].add[String(row.months)] = toDollars(row.add_account_price as number);
+        }
+        if (row.renew_account_price != null) {
+          products[key][slab].renew[String(row.months)] = toDollars(row.renew_account_price as number);
+        }
+      }
+
+      if (Object.keys(products).length === 0) return null;
+
+      // Reconstruct RC-shaped response
+      const result: EmailPricingResponse = {};
+      for (const [key, ranges] of Object.entries(products)) {
+        result[key] = { email_account_ranges: ranges };
+      }
+      return result;
+    } catch (error) {
+      console.error('[PricingCache] Error getting all cached email plans:', error);
+      return null;
+    }
+  },
+
   /**
    * Check if pricing cache is stale
    */

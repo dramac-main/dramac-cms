@@ -1,11 +1,37 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅**
 
 ---
 
-## Latest Update: February 2026 - Email Pricing Overhaul ✅
+## Latest Update: February 2026 - Enterprise Email Plan + Dual Plan Selector ✅
+
+**Commit:** `f39dcf2`
+**Files Changed:** 7
+
+**What was done:**
+1. **`types.ts`** — Added `enterpriseemailus` + `enterpriseemailin` to `EmailPlanType`. Added `EMAIL_PLAN_DEFINITIONS` with Business (10GB) and Enterprise (50GB) definitions including features, storageGB, isPopular.
+2. **`client.ts`** — `createOrder()` now routes Enterprise orders to `enterpriseemail/us/add.json` (no `product-key` param) and Business to `eelite/add.json` (with `product-key`).
+3. **`business-email.ts`** — `createBusinessEmailOrder()` reads `productKey` from form (was hardcoded `eeliteus`). `calculateBasePrice()` accepts `productKey` param. `getBusinessEmailPricing()` merges Business + Enterprise cached data.
+4. **`transactions.ts`** — Paddle checkout shows "Business Email" or "Enterprise Email" based on `productKey`.
+5. **`pricing-cache.ts`** — Default refresh list now includes `enterpriseemailus` alongside `eeliteus`.
+6. **`email-purchase-wizard.tsx`** — Full rewrite with plan selector UI: Business vs Enterprise side-by-side cards with live RC pricing, "Most Popular" badge, feature lists, per-month starting price. Passing `productKey` in FormData on submit.
+7. **`purchase/page.tsx`** — Simplified: removed redundant features grid, now just header + wizard.
+
+**RC API facts confirmed:**
+- Business Email: `eelite/add.json`, product key `eeliteus`, 10GB/mailbox
+- Enterprise Email: `enterpriseemail/us/add.json`, NO product-key param, 50GB/mailbox
+- "Professional" package doesn't exist in RC — only Business and Enterprise
+- Both plans priced via single `products/customer-price.json` call
+
+**⚠️ DB migrations still needed (run in Supabase):**
+1. `migrations/dm-11-pricing-cache-schema.sql` (base table)
+2. `migrations/dm-11b-email-pricing-cache-slab-support.sql` (adds account_slab column)
+
+---
+
+## Previous Update: February 2026 - Email Pricing Overhaul ✅
 
 **Commit:** `13c6888`
 **Files Changed:** 7

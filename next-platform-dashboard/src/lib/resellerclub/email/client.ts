@@ -45,12 +45,12 @@ export const businessEmailApi = {
 
     const client = getResellerClubClient();
 
-    // Enterprise Email uses a different API endpoint than Business Email.
-    // Business Email:  POST /api/eelite/add.json        (product-key required)
-    // Enterprise Email: POST /api/enterpriseemail/us/add.json (no product-key param)
+    // Enterprise Email uses a different API endpoint than Business Email/Professional Email.
+    // Business/Professional Email: POST /api/eelite/us/add.json   (product-key selects plan)
+    // Enterprise Email:            POST /api/enterpriseemail/us/add.json (no product-key)
     const isEnterprise =
       params.productKey === 'enterpriseemailus' || params.productKey === 'enterpriseemailin';
-    const endpoint = isEnterprise ? 'enterpriseemail/us/add.json' : 'eelite/add.json';
+    const endpoint = isEnterprise ? 'enterpriseemail/us/add.json' : 'eelite/us/add.json';
 
     const payload: Record<string, unknown> = {
       'domain-name': params.domainName,

@@ -23,7 +23,7 @@ export default function PurchaseEmailPage() {
         <div>
           <h1 className="text-xl font-semibold">Purchase Email</h1>
           <p className="text-sm text-muted-foreground">
-            Professional email for your domain — powered by Titan
+            Professional email hosting for your domain
           </p>
         </div>
       </div>

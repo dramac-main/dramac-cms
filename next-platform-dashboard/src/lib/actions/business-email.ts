@@ -62,6 +62,7 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
     const numberOfAccounts = parseInt(formData.get('numberOfAccounts') as string);
     const months = parseInt(formData.get('months') as string);
     const clientId = formData.get('clientId') as string | null;
+    const productKey = (formData.get('productKey') as string | null) || 'eeliteus';
 
     // Validate inputs
     if (!domainName) {
@@ -593,19 +594,9 @@ export async function getBusinessEmailPricing(): Promise<{
     let customerPricing: EmailPricingResponse | null = null;
     let costPricing: EmailPricingResponse | null = null;
     
-    // 1. Try cache — need both Business (eeliteus) AND Enterprise (enterpriseemailus).
-    //    Cache stores them as separate rows, but live API returns all in one call.
-    //    Strategy: try to merge from cache; if either plan is missing, fetch live.
-    const cachedBusiness = await pricingCacheService.getCachedEmailPricing('eeliteus', 'customer');
-    const cachedEnterprise = await pricingCacheService.getCachedEmailPricing('enterpriseemailus', 'customer');
-    
-    if (cachedBusiness) {
-      // Merge enterprise data into the response if available
-      customerPricing = {
-        ...cachedBusiness,
-        ...(cachedEnterprise || {}),
-      };
-    }
+    // 1. Try cache — get ALL email plans in a single query (includes Business, Enterprise,
+    //    Professional, and any other plan the RC account has enabled).
+    customerPricing = await pricingCacheService.getAllCachedEmailPlans('customer');
 
     if (!customerPricing) {
       // Cache miss — fetch live from RC (returns ALL products in one call)
@@ -615,7 +606,7 @@ export async function getBusinessEmailPricing(): Promise<{
           ? await businessEmailApi.getCustomerPricing(customerId)
           : await businessEmailApi.getResellerPricing();
 
-        // Trigger background cache refresh
+        // Trigger background cache refresh (auto-discovers all plans)
         if (customerId) {
           pricingCacheService.refreshEmailPricing(customerId, ['customer']).catch(err => {
             console.error('[BusinessEmail] Background cache refresh failed:', err);
@@ -627,13 +618,8 @@ export async function getBusinessEmailPricing(): Promise<{
       }
     }
 
-    // 2. Try cached cost pricing (for margin tracking)
-    const cachedBusinessCost = await pricingCacheService.getCachedEmailPricing('eeliteus', 'cost');
-    const cachedEnterpriseCost = await pricingCacheService.getCachedEmailPricing('enterpriseemailus', 'cost');
-    
-    if (cachedBusinessCost) {
-      costPricing = { ...cachedBusinessCost, ...(cachedEnterpriseCost || {}) };
-    }
+    // 2. Try cached cost pricing (for margin tracking) — all plans
+    costPricing = await pricingCacheService.getAllCachedEmailPlans('cost');
     
     if (!costPricing) {
       try {
@@ -643,9 +629,9 @@ export async function getBusinessEmailPricing(): Promise<{
       }
     }
 
-    // Log available plans
+    // Log available plans (for diagnostics)
     const availablePlans = Object.keys(customerPricing || {}).filter(k =>
-      k.startsWith('eelite') || k.startsWith('enterprise')
+      (customerPricing?.[k] as { email_account_ranges?: unknown })?.email_account_ranges
     );
     console.log(`[BusinessEmail] Pricing loaded — available plans: ${availablePlans.join(', ')}`);
 
