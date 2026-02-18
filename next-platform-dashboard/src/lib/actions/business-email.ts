@@ -114,14 +114,13 @@ export async function createBusinessEmailOrder(formData: FormData): Promise<{
 
     // Try to get customer pricing first (includes RC markups)
     const customerPricing = await businessEmailApi.getCustomerPricing(customerId);
-    const productKey = 'eeliteus'; // Default to US datacenter
     
-    // Calculate base price from customer pricing (what RC says customer should pay)
-    const basePrice = calculateBasePrice(customerPricing, months, numberOfAccounts);
+    // Calculate base price from customer pricing for the selected plan
+    const basePrice = calculateBasePrice(customerPricing, months, numberOfAccounts, productKey);
     
     // Get wholesale cost for margin tracking
     const wholesalePricing = await businessEmailApi.getResellerCostPricing();
-    const wholesalePrice = calculateBasePrice(wholesalePricing, months, numberOfAccounts);
+    const wholesalePrice = calculateBasePrice(wholesalePricing, months, numberOfAccounts, productKey);
     
     console.log(`[BusinessEmail] Pricing for ${domainName}: ${numberOfAccounts} accounts × ${months}mo → base=$${basePrice.toFixed(2)}, wholesale=$${wholesalePrice.toFixed(2)}`);
     
@@ -594,17 +593,28 @@ export async function getBusinessEmailPricing(): Promise<{
     let customerPricing: EmailPricingResponse | null = null;
     let costPricing: EmailPricingResponse | null = null;
     
-    // 1. Try cached customer pricing
-    customerPricing = await pricingCacheService.getCachedEmailPricing('eeliteus', 'customer');
+    // 1. Try cache — need both Business (eeliteus) AND Enterprise (enterpriseemailus).
+    //    Cache stores them as separate rows, but live API returns all in one call.
+    //    Strategy: try to merge from cache; if either plan is missing, fetch live.
+    const cachedBusiness = await pricingCacheService.getCachedEmailPricing('eeliteus', 'customer');
+    const cachedEnterprise = await pricingCacheService.getCachedEmailPricing('enterpriseemailus', 'customer');
     
+    if (cachedBusiness) {
+      // Merge enterprise data into the response if available
+      customerPricing = {
+        ...cachedBusiness,
+        ...(cachedEnterprise || {}),
+      };
+    }
+
     if (!customerPricing) {
-      // Cache miss — fetch live from RC
+      // Cache miss — fetch live from RC (returns ALL products in one call)
       console.log('[BusinessEmail] Customer pricing cache miss, fetching live...');
       try {
-        customerPricing = customerId 
+        customerPricing = customerId
           ? await businessEmailApi.getCustomerPricing(customerId)
           : await businessEmailApi.getResellerPricing();
-          
+
         // Trigger background cache refresh
         if (customerId) {
           pricingCacheService.refreshEmailPricing(customerId, ['customer']).catch(err => {
@@ -616,9 +626,14 @@ export async function getBusinessEmailPricing(): Promise<{
         return { success: false, error: 'Failed to load pricing from provider' };
       }
     }
-    
+
     // 2. Try cached cost pricing (for margin tracking)
-    costPricing = await pricingCacheService.getCachedEmailPricing('eeliteus', 'cost');
+    const cachedBusinessCost = await pricingCacheService.getCachedEmailPricing('eeliteus', 'cost');
+    const cachedEnterpriseCost = await pricingCacheService.getCachedEmailPricing('enterpriseemailus', 'cost');
+    
+    if (cachedBusinessCost) {
+      costPricing = { ...cachedBusinessCost, ...(cachedEnterpriseCost || {}) };
+    }
     
     if (!costPricing) {
       try {
@@ -628,20 +643,14 @@ export async function getBusinessEmailPricing(): Promise<{
       }
     }
 
-    // Validate pricing structure
-    const emailPricing = customerPricing?.['eeliteus'];
-    if (emailPricing?.email_account_ranges) {
-      const slabs = Object.keys(emailPricing.email_account_ranges);
-      const firstSlab = slabs[0];
-      const firstSlabData = emailPricing.email_account_ranges[firstSlab];
-      console.log(`[BusinessEmail] Pricing loaded — ${slabs.length} slabs, first="${firstSlab}":`, 
-        JSON.stringify({ add: firstSlabData?.add || {}, renew: firstSlabData?.renew || {} }));
-    } else {
-      console.warn('[BusinessEmail] No eeliteus pricing found. Keys:', Object.keys(customerPricing || {}).filter(k => k.includes('eelite')));
-    }
-    
-    return { 
-      success: true, 
+    // Log available plans
+    const availablePlans = Object.keys(customerPricing || {}).filter(k =>
+      k.startsWith('eelite') || k.startsWith('enterprise')
+    );
+    console.log(`[BusinessEmail] Pricing loaded — available plans: ${availablePlans.join(', ')}`);
+
+    return {
+      success: true,
       data: customerPricing || undefined,
       costData: costPricing || undefined,
     };
@@ -866,13 +875,20 @@ export async function getBusinessEmailOrderByDomainId(domainId: string): Promise
 function calculateBasePrice(
   pricing: EmailPricingResponse,
   months: number,
-  accounts: number
+  accounts: number,
+  productKey: string = 'eeliteus'
 ): number {
   // Navigate the real RC structure: productKey → email_account_ranges → slab → add → months
-  const productPricing = pricing['eeliteus'];
+  const productPricing = pricing[productKey];
   if (!productPricing) {
-    console.warn('[EmailPricing] No eeliteus product key found in pricing response');
-    return 0;
+    // Try fallback to eeliteus if the specific plan isn't in the response
+    const fallback = pricing['eeliteus'];
+    if (!fallback) {
+      console.warn(`[EmailPricing] No pricing found for product key: ${productKey}`);
+      return 0;
+    }
+    console.warn(`[EmailPricing] No pricing for ${productKey}, falling back to eeliteus`);
+    return calculateBasePrice(pricing, months, accounts, 'eeliteus');
   }
   
   const ranges = productPricing.email_account_ranges;

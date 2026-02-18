@@ -44,16 +44,29 @@ export const businessEmailApi = {
     }
 
     const client = getResellerClubClient();
-    
-    const response = await client.post<Record<string, unknown>>('eelite/add.json', {
+
+    // Enterprise Email uses a different API endpoint than Business Email.
+    // Business Email:  POST /api/eelite/add.json        (product-key required)
+    // Enterprise Email: POST /api/enterpriseemail/us/add.json (no product-key param)
+    const isEnterprise =
+      params.productKey === 'enterpriseemailus' || params.productKey === 'enterpriseemailin';
+    const endpoint = isEnterprise ? 'enterpriseemail/us/add.json' : 'eelite/add.json';
+
+    const payload: Record<string, unknown> = {
       'domain-name': params.domainName,
       'customer-id': params.customerId,
       'no-of-accounts': params.numberOfAccounts,
       'months': params.months,
-      'product-key': params.productKey || EMAIL_PRODUCT_KEYS.eeliteus,
       'invoice-option': params.invoiceOption || 'NoInvoice',
       'auto-renew': false, // Required parameter per RC API docs
-    });
+    };
+
+    // Business Email requires the product-key param; Enterprise Email does not
+    if (!isEnterprise) {
+      payload['product-key'] = params.productKey || EMAIL_PRODUCT_KEYS.eeliteus;
+    }
+
+    const response = await client.post<Record<string, unknown>>(endpoint, payload);
 
     // Defensive response handling — RC may return number, string, or object
     // (same pattern as domain contacts fix)

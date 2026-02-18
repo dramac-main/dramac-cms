@@ -187,7 +187,7 @@ export const pricingCacheService = {
   async refreshEmailPricing(
     customerId: string,
     pricingTypes: Array<'customer' | 'reseller' | 'cost'> = ['customer', 'cost'],
-    productKeys: string[] = ['eeliteus', 'eelitein', 'eeliteuk']
+    productKeys: string[] = ['eeliteus', 'enterpriseemailus', 'eelitein', 'enterpriseemailin']
   ): Promise<PricingSyncResult> {
     const startTime = Date.now();
     const admin = createAdminClient() as SupabaseClient;

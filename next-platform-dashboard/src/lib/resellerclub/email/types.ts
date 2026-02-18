@@ -5,7 +5,15 @@
 // Business Email Plan Types (Titan via ResellerClub)
 // ============================================================================
 
-export type EmailPlanType = 'eeliteus' | 'eelitein' | 'eeliteuk';
+// RC email product types
+// Business Email (eeliteus): Titan Business plan, 10GB/mailbox, endpoint eelite/add.json
+// Enterprise Email (enterpriseemailus): Titan Enterprise plan, 50GB/mailbox, endpoint enterpriseemail/us/add.json
+export type EmailPlanType =
+  | 'eeliteus'          // Business Email - US
+  | 'eelitein'          // Business Email - India
+  | 'eeliteuk'          // Business Email - UK
+  | 'enterpriseemailus' // Enterprise Email - US
+  | 'enterpriseemailin';// Enterprise Email - India
 
 export interface EmailPlan {
   planKey: EmailPlanType;
@@ -20,10 +28,56 @@ export interface EmailPlan {
 
 // Product keys for ResellerClub
 export const EMAIL_PRODUCT_KEYS = {
-  eeliteus: 'eeliteus',   // Business Email - US datacenter
-  eelitein: 'eelitein',   // Business Email - India datacenter  
-  eeliteuk: 'eeliteuk',   // Business Email - UK datacenter
+  eeliteus: 'eeliteus',                   // Business Email - US datacenter
+  eelitein: 'eelitein',                   // Business Email - India datacenter
+  eeliteuk: 'eeliteuk',                   // Business Email - UK datacenter
+  enterpriseemailus: 'enterpriseemailus', // Enterprise Email - US datacenter
+  enterpriseemailin: 'enterpriseemailin', // Enterprise Email - India datacenter
 } as const;
+
+// Static plan display definitions.
+// Pricing and storage specs come from RC API; features listed here are display-only.
+export interface EmailPlanDefinition {
+  key: EmailPlanType;
+  name: string;
+  tagline: string;
+  storageGB: number;
+  isPopular: boolean;
+  features: string[];
+}
+
+export const EMAIL_PLAN_DEFINITIONS: EmailPlanDefinition[] = [
+  {
+    key: 'eeliteus',
+    name: 'Business',
+    tagline: 'For individuals & small teams',
+    storageGB: 10,
+    isPopular: false,
+    features: [
+      '10GB mailbox storage',
+      'Custom domain email',
+      'Webmail & mobile apps',
+      'Calendar & contacts sync',
+      'Anti-spam & anti-virus',
+    ],
+  },
+  {
+    key: 'enterpriseemailus',
+    name: 'Enterprise',
+    tagline: 'For growing businesses',
+    storageGB: 50,
+    isPopular: true,
+    features: [
+      '50GB mailbox storage',
+      'Custom domain email',
+      'Webmail & mobile apps',
+      'Calendar & contacts sync',
+      'Anti-spam & anti-virus',
+      'Priority 24/7 support',
+      'Advanced admin controls',
+    ],
+  },
+];
 
 // ============================================================================
 // API Request Types

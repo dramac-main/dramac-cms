@@ -461,15 +461,17 @@ export async function createEmailPurchase(
     }
 
     // Create Paddle transaction with custom non-catalog item
-    const description = `Business Email - ${params.domainName} (${params.numberOfAccounts} account${params.numberOfAccounts > 1 ? 's' : ''}, ${params.months} month${params.months > 1 ? 's' : ''})`;
-    
+    const isEnterprise = params.productKey === 'enterpriseemailus' || params.productKey === 'enterpriseemailin';
+    const planName = isEnterprise ? 'Enterprise Email' : 'Business Email';
+    const description = `${planName} - ${params.domainName} (${params.numberOfAccounts} account${params.numberOfAccounts > 1 ? 's' : ''}, ${params.months} month${params.months > 1 ? 's' : ''})`;
+
     const transaction: Transaction = await paddle.transactions.create({
       items: [
         {
           quantity: 1,
           price: {
             description,
-            name: `${params.domainName} Email - ${params.months}mo`,
+            name: `${params.domainName} ${planName} - ${params.months}mo`,
             unitPrice: {
               amount: String(Math.round(params.retailAmount * 100)), // Convert to cents
               currencyCode: (params.currency || 'USD') as any,
@@ -480,9 +482,9 @@ export async function createEmailPurchase(
               maximum: 1,
             },
             product: {
-              name: 'Business Email',
+              name: planName,
               taxCategory: 'standard',
-              description: `Business Email for ${params.domainName}`,
+              description: `${planName} for ${params.domainName}`,
             },
           },
         },
