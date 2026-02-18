@@ -2,6 +2,48 @@
 
 ## Recent Work
 
+### Critical Pricing Math Fix + Plan Filtering + Pricing Strategy ✅
+
+**Category:** Critical Bug Fix + Pricing Pipeline  
+**Commits:** `270d6da` (filter), `64f67fd` (pricing math), `6973dce` (cache bypass)
+
+#### Critical Discovery: RC Prices Are Per-Month Rates
+ALL ResellerClub pricing APIs (`customer-price.json`, `reseller-cost-price.json`, `reseller-price.json`) return **per-account PER-MONTH** rates, NOT total-for-tenure amounts. The code had been treating them as total-for-tenure, causing:
+- Wildly wrong prices for multi-month billing (12mo was 1/12th of correct amount)
+- Absurd savings percentages (93% instead of 22%)
+- Paddle checkout amounts massively undercharged
+
+**Evidence:** RC panel shows "COST PRICE **/mo**" next to values that exactly match the API numbers.
+
+#### Fixes Applied
+1. **`getTotalPrice()`** — Was `rate * accounts`, now `rate * accounts * months`
+2. **`getPerMonthRate()`** — Was `rate / months` (double-dividing!), now just `rate` (already per-month)
+3. **`calculateBasePrice()`** (server action) — Was `rate * accounts`, now `rate * accounts * months`
+4. **`filterWizardPlans()`** (NEW) — Removes India plans, free trials, legacy plans when Titan exists
+5. **Cache bypass** — Detects stale cache missing Titan Mail and fetches live
+
+#### Pricing Pipeline (Confirmed)
+```
+RC customer-price.json (per-account/month rates)
+  → flattenTitanMailPricing() (explode titanmailglobal → synthetic keys)
+  → filterWizardPlans() (keep only 3 Global Titan plans)
+  → Wizard display (shows per-month rate directly)
+  → createBusinessEmailOrder() (rate × accounts × months = Paddle amount)
+  → Optional platform markup (apply_platform_markup flag, OFF by default)
+  → Paddle checkout
+```
+
+#### Pricing Architecture Decision: RC Markup vs Platform Markup
+- **RC customer-price.json** already includes the reseller's configured profit margin
+- **Platform markup** (`apply_platform_markup` in `agency_domain_pricing`) is an ADDITIONAL layer on top
+- Default: `apply_platform_markup = false`, so customers pay the RC customer-price
+- Recommendation: Set RC markup to 0%, control ALL markup from the platform for flexibility
+
+#### Region: Global (Not India)
+Zambia → Africa → uses `titanmailglobal` (NOT `titanmailindia`). India pricing is for India-based customers only.
+
+---
+
 ### Titan Mail REST API + 3-Plan Support + Supplier Neutrality ✅
 
 **Category:** API Integration + Feature Addition + UX  

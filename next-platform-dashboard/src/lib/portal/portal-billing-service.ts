@@ -76,7 +76,7 @@ async function getPortalClientAgency(): Promise<{
   return {
     clientId: client.id,
     agencyId: client.agency_id,
-    paddleCustomerId: (subscription as Record<string, unknown>)?.paddle_customer_id as string || null,
+    paddleCustomerId: (subscription as any)?.paddle_customer_id as string || null,
   };
 }
 
@@ -128,9 +128,10 @@ async function getInvoicesFromDatabase(agencyId: string): Promise<{
   }
 
   // Convert subscriptions to invoice-like records
-  const invoices: PortalInvoice[] = subscriptions.map((sub) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const invoices: PortalInvoice[] = (subscriptions as any[]).map((sub: any) => {
     const planName = getPlanName(sub.plan_id);
-    const paddleSubId = (sub as Record<string, unknown>).paddle_subscription_id as string | null;
+    const paddleSubId = sub.paddle_subscription_id as string | null;
     return {
       id: sub.id,
       invoiceNumber: paddleSubId ? `SUB-${paddleSubId}` : null,

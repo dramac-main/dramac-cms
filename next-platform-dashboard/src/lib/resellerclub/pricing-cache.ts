@@ -59,7 +59,7 @@ function flattenTitanMailForCache(pricing: EmailPricingResponse): EmailPricingRe
           // Check for range-keyed sub-keys
           const subKeys = Object.keys(pd);
           if (subKeys.some(k => /^\d+-\d+$/.test(k))) {
-            result[syntheticKey] = { email_account_ranges: pd };
+            result[syntheticKey] = { email_account_ranges: pd as Record<string, { add?: Record<string, number>; renew?: Record<string, number> }> };
             foundAny = true;
           }
         }
@@ -426,14 +426,14 @@ export const pricingCacheService = {
             ...(cached.register_3yr ? { 3: toDollars(cached.register_3yr) } : {}),
             ...(cached.register_5yr ? { 5: toDollars(cached.register_5yr) } : {}),
             ...(cached.register_10yr ? { 10: toDollars(cached.register_10yr) } : {}),
-          },
+          } as Record<number, number>,
           renew: {
             1: toDollars(cached.renew_1yr),
             ...(cached.renew_2yr ? { 2: toDollars(cached.renew_2yr) } : {}),
             ...(cached.renew_3yr ? { 3: toDollars(cached.renew_3yr) } : {}),
             ...(cached.renew_5yr ? { 5: toDollars(cached.renew_5yr) } : {}),
             ...(cached.renew_10yr ? { 10: toDollars(cached.renew_10yr) } : {}),
-          },
+          } as Record<number, number>,
           transfer: toDollars(cached.transfer_price),
           ...(cached.restore_price ? { restore: toDollars(cached.restore_price) } : {}),
           currency: cached.currency,

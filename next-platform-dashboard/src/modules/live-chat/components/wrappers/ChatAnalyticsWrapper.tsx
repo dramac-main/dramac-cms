@@ -526,7 +526,7 @@ export function ChatAnalyticsWrapper({ siteId }: ChatAnalyticsWrapperProps) {
                   <YAxis fontSize={11} domain={[0, 5]} ticks={[1, 2, 3, 4, 5]} />
                   <Tooltip
                     labelFormatter={(d) => new Date(d as string).toLocaleDateString()}
-                    formatter={(v: unknown, name: string) => {
+                    formatter={(v: unknown, name: string | undefined) => {
                       if (name === 'avgRating') return [Number(v), 'Avg Rating']
                       return [Number(v), 'Ratings Count']
                     }}

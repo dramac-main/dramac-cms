@@ -172,7 +172,8 @@ export class ResellerClubClient {
         // Node runtime: use undici fetch with ProxyAgent (only at runtime, not build)
         const { fetch: undiciFetch, ProxyAgent } = await import('undici');
         const dispatcher = new ProxyAgent(proxyUrl);
-        response = await undiciFetch(url, { ...fetchOptions, dispatcher }) as Response;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        response = await undiciFetch(url, { ...fetchOptions, dispatcher } as any) as unknown as Response;
       } else {
         response = await fetch(url, fetchOptions);
       }

@@ -951,7 +951,7 @@ function flattenTitanMailPricing(pricing: EmailPricingResponse): EmailPricingRes
         const hasRangeKeys = subKeys.some(k => /^\d+-\d+$/.test(k));
         if (hasRangeKeys) {
           result[syntheticKey] = {
-            email_account_ranges: pd,
+            email_account_ranges: pd as Record<string, { add?: Record<string, number>; renew?: Record<string, number> }>,
           };
           foundAnyPlan = true;
         }

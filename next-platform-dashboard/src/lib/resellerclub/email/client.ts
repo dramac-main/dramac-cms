@@ -66,7 +66,7 @@ export const businessEmailApi = {
       payload['product-key'] = params.productKey || EMAIL_PRODUCT_KEYS.eeliteus;
     }
 
-    const response = await client.post<Record<string, unknown>>(endpoint, payload);
+    const response = await client.post<Record<string, unknown>>(endpoint, payload as Record<string, string | number | boolean | string[] | undefined>);
 
     // Defensive response handling — RC may return number, string, or object
     // (same pattern as domain contacts fix)

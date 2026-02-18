@@ -25,7 +25,9 @@ interface PurchaseDetails {
     domainName?: string;
     domain_name?: string;
     years?: number;
+    months?: number;
     mailboxes?: number;
+    number_of_accounts?: number;
     domains?: Array<{ domainName?: string; domain_name?: string; years?: number }>;
     [key: string]: unknown;
   };
@@ -274,7 +276,7 @@ export default function PurchaseSuccessPage() {
                     <div className="font-semibold">{purchase.purchase_data.years} {purchase.purchase_data.years === 1 ? 'year' : 'years'}</div>
                   </div>
                 )}
-                {!purchase.purchase_data?.years && purchase.purchase_data?.domains?.[0]?.years && (
+                {!purchase.purchase_data?.years && !!(purchase.purchase_data.domains?.[0]?.years) && (
                   <div>
                     <div className="text-sm text-muted-foreground">Period</div>
                     <div className="font-semibold">{purchase.purchase_data.domains[0].years} {purchase.purchase_data.domains[0].years === 1 ? 'year' : 'years'}</div>
