@@ -845,6 +845,7 @@ export async function provisionEmailOrder(
       months,
       retailPrice: purchase.retail_amount,
       currency: purchase.currency,
+      productKey, // routes to Titan Mail REST API for titanmailglobal_* keys
     });
     
     const emailOrderId = order.id;

@@ -14,7 +14,9 @@ export type EmailPlanType =
   | 'eelitein'          // Business Email - India
   | 'eeliteuk'          // Business Email - UK
   | 'enterpriseemailus' // Enterprise Email - US
-  | 'enterpriseemailin';// Enterprise Email - India
+  | 'enterpriseemailin' // Enterprise Email - India
+  | 'titanmailglobal'   // Titan Mail - Global (Professional / Business / Enterprise)
+  | 'titanmailindia';   // Titan Mail - India
 
 export interface EmailPlan {
   planKey: EmailPlanType;
@@ -265,6 +267,8 @@ export interface CreateEmailOrderInput {
   months: number;
   retailPrice: number;
   currency?: string;
+  /** RC product key (e.g. 'eeliteus', 'titanmailglobal_1762'). Determines which API is used. */
+  productKey?: string;
 }
 
 export interface CreateEmailAccountInput {

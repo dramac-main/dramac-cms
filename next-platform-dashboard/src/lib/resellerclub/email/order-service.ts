@@ -4,6 +4,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { businessEmailApi } from './client';
+import { titanMailApi, TITAN_PLAN_IDS } from './titan-client';
+import { emailDnsService } from './dns-service';
 import { dnsService } from '@/lib/cloudflare';
 import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import type { 
@@ -22,38 +24,68 @@ export const emailOrderService = {
    */
   async createOrder(params: CreateEmailOrderInput): Promise<EmailOrder> {
     const adminClient = createAdminClient();
-    
-    // 1. Create order in ResellerClub
-    const rcResult = await businessEmailApi.createOrder({
-      domainName: params.domainName,
-      customerId: params.customerId,
-      numberOfAccounts: params.numberOfAccounts,
-      months: params.months,
-    });
 
-    // 2. Get order details from ResellerClub
-    const orderDetails = await businessEmailApi.getOrderDetails(rcResult.orderId);
+    const productKey = params.productKey || 'eeliteus';
+    const isTitan = isTitanMailKey(productKey);
 
-    // 3. Get wholesale pricing for margin tracking
-    // Note: We use reseller-cost-price (what we actually pay RC) for accurate margin calculation
+    let rcOrderId: string;
+    let storedProductKey: string;
     let wholesalePrice = 0;
-    try {
-      const pricing = await businessEmailApi.getResellerCostPricing();
-      wholesalePrice = calculateWholesalePrice(
-        pricing, 
-        orderDetails.productKey, 
-        params.months, 
-        params.numberOfAccounts
-      );
-    } catch (pricingError) {
-      console.warn('[EmailOrderService] Failed to fetch wholesale pricing, using 0:', pricingError);
+
+    if (isTitan) {
+      // ── Titan Mail REST API ──────────────────────────────────────────────
+      const planId = resolveTitanPlanId(productKey);
+      const region = extractTitanRegion(productKey);
+
+      console.log(`[EmailOrderService] Titan Mail order: domain=${params.domainName}, planId=${planId}, region=${region}`);
+
+      const rcResult = await titanMailApi.createOrder({
+        domainName: params.domainName,
+        customerId: params.customerId,
+        planId,
+        numberOfAccounts: params.numberOfAccounts,
+        months: params.months,
+        region,
+      });
+
+      rcOrderId = rcResult.orderId;
+      // Normalize: strip synthetic planId suffix ('titanmailglobal_1762' -> 'titanmailglobal')
+      storedProductKey = normalizeTitanProductKey(productKey);
+      // Wholesale pricing not available via legacy endpoint for Titan plans — left at 0
+    } else {
+      // ── Legacy Business / Enterprise Email API ───────────────────────────
+      const rcResult = await businessEmailApi.createOrder({
+        domainName: params.domainName,
+        customerId: params.customerId,
+        numberOfAccounts: params.numberOfAccounts,
+        months: params.months,
+      });
+
+      rcOrderId = rcResult.orderId;
+
+      // Fetch canonical productKey that RC assigned
+      const orderDetails = await businessEmailApi.getOrderDetails(rcOrderId);
+      storedProductKey = orderDetails.productKey;
+
+      // Wholesale pricing for margin tracking
+      try {
+        const pricing = await businessEmailApi.getResellerCostPricing();
+        wholesalePrice = calculateWholesalePrice(
+          pricing,
+          storedProductKey,
+          params.months,
+          params.numberOfAccounts
+        );
+      } catch (pricingError) {
+        console.warn('[EmailOrderService] Failed to fetch wholesale pricing, using 0:', pricingError);
+      }
     }
 
-    // 4. Calculate expiry date
+    // Calculate expiry date
     const expiryDate = new Date();
     expiryDate.setMonth(expiryDate.getMonth() + params.months);
 
-    // 5. Save to database (using 'any' until table types are generated)
+    // Save to database (using 'any' until table types are generated)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: emailOrder, error } = await (adminClient as any)
       .from('email_orders')
@@ -61,10 +93,10 @@ export const emailOrderService = {
         agency_id: params.agencyId,
         client_id: params.clientId || null,
         domain_id: params.domainId || null,
-        resellerclub_order_id: rcResult.orderId,
+        resellerclub_order_id: rcOrderId,
         resellerclub_customer_id: params.customerId,
         domain_name: params.domainName,
-        product_key: orderDetails.productKey,
+        product_key: storedProductKey,
         number_of_accounts: params.numberOfAccounts,
         used_accounts: 0,
         status: 'Active',
@@ -152,18 +184,36 @@ export const emailOrderService = {
       throw new Error('Order not found');
     }
 
-    // Get details from ResellerClub
-    const rcDetails = await businessEmailApi.getOrderDetails(localOrder.resellerclub_order_id);
+    // Get details from ResellerClub — route to Titan or legacy API based on stored product key
+    let rcStatus: string;
+    let numberOfAccounts: number;
+    let usedAccounts: number;
+    let endTime: string;
+
+    if (isTitanMailKey(localOrder.product_key)) {
+      const region = extractTitanRegion(localOrder.product_key);
+      const rcDetails = await titanMailApi.getOrderDetails(localOrder.resellerclub_order_id, region);
+      rcStatus = rcDetails.currentStatus;
+      numberOfAccounts = rcDetails.numberOfAccounts;
+      usedAccounts = rcDetails.usedAccounts;
+      endTime = rcDetails.endTime;
+    } else {
+      const rcDetails = await businessEmailApi.getOrderDetails(localOrder.resellerclub_order_id);
+      rcStatus = rcDetails.currentStatus;
+      numberOfAccounts = rcDetails.numberOfAccounts;
+      usedAccounts = rcDetails.usedAccounts;
+      endTime = rcDetails.endTime;
+    }
 
     // Update local order
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: updatedOrder, error: updateError } = await (adminClient as any)
       .from('email_orders')
       .update({
-        status: rcDetails.currentStatus,
-        number_of_accounts: rcDetails.numberOfAccounts,
-        used_accounts: rcDetails.usedAccounts,
-        expiry_date: new Date(parseInt(rcDetails.endTime) * 1000).toISOString(),
+        status: rcStatus,
+        number_of_accounts: numberOfAccounts,
+        used_accounts: usedAccounts,
+        expiry_date: new Date(parseInt(endTime) * 1000).toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', orderId)
@@ -191,8 +241,8 @@ export const emailOrderService = {
 
     if (error || !order) throw new Error('Order not found');
 
-    // Get DNS records from ResellerClub
-    const dnsRecords = await businessEmailApi.getDnsRecords(order.resellerclub_order_id);
+    // Get DNS records — emailDnsService falls back to standard Titan Mail records if API fails
+    const dnsRecords = await emailDnsService.getDnsRecords(order.resellerclub_order_id);
 
     // Add MX records
     for (const mx of dnsRecords.mx) {
@@ -255,12 +305,21 @@ export const emailOrderService = {
       throw new Error('Order not found');
     }
 
-    // Renew in ResellerClub
-    await businessEmailApi.renewOrder({
-      orderId: localOrder.resellerclub_order_id,
-      months,
-      numberOfAccounts: localOrder.number_of_accounts,
-    });
+    // Renew in ResellerClub — route to Titan or legacy API based on stored product key
+    if (isTitanMailKey(localOrder.product_key)) {
+      const region = extractTitanRegion(localOrder.product_key);
+      await titanMailApi.renewOrder({
+        orderId: localOrder.resellerclub_order_id,
+        months,
+        region,
+      });
+    } else {
+      await businessEmailApi.renewOrder({
+        orderId: localOrder.resellerclub_order_id,
+        months,
+        numberOfAccounts: localOrder.number_of_accounts,
+      });
+    }
 
     // Calculate new expiry date
     const currentExpiry = new Date(localOrder.expiry_date);
@@ -283,6 +342,40 @@ export const emailOrderService = {
     return updatedOrder as EmailOrder;
   },
 };
+
+// ============================================================================
+// Titan Mail Helper Functions (private)
+// ============================================================================
+
+/** Returns true for any 'titanmailglobal' or 'titanmailindia' key (including synthetic variants). */
+function isTitanMailKey(productKey: string | undefined | null): boolean {
+  if (!productKey) return false;
+  return productKey.startsWith('titanmailglobal') || productKey.startsWith('titanmailindia');
+}
+
+/**
+ * Extract Titan Mail plan ID from a product key.
+ * - Synthetic key 'titanmailglobal_1762' → 1762
+ * - Plain key 'titanmailglobal' → defaults to Business plan (1756)
+ * - Plain key 'titanmailindia'  → defaults to Business plan (1758)
+ */
+function resolveTitanPlanId(productKey: string): number {
+  const match = productKey.match(/^titanmail(?:global|india)_?(\d+)$/);
+  if (match) return parseInt(match[1], 10);
+  if (productKey.includes('india')) return TITAN_PLAN_IDS.india.business;
+  return TITAN_PLAN_IDS.global.business;
+}
+
+/** Determine Titan Mail region from product key. */
+function extractTitanRegion(productKey: string): 'global' | 'india' {
+  return productKey.includes('india') ? 'india' : 'global';
+}
+
+/** Strip the synthetic plan-ID suffix: 'titanmailglobal_1762' → 'titanmailglobal'. */
+function normalizeTitanProductKey(productKey: string): string {
+  const match = productKey.match(/^(titanmail(?:global|india))_?\d*$/);
+  return match ? match[1] : productKey;
+}
 
 // ============================================================================
 // Helper Functions
