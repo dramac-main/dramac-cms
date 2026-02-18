@@ -15,12 +15,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getDomain } from "@/lib/actions/domains";
-import { listDnsRecords, checkZoneActivation } from "@/lib/actions/dns";
+import { listDnsRecords, checkZoneActivation, getDnssecStatus } from "@/lib/actions/dns";
 import { DnsRecordsTable } from "@/components/domains/dns/dns-records-table";
 import { DnsRecordForm } from "@/components/domains/dns/dns-record-form";
 import { DnsTemplatesDropdown } from "@/components/domains/dns/dns-templates-dropdown";
 import { DnsNameservers } from "@/components/domains/dns/dns-nameservers";
 import { DnsPropagationChecker } from "@/components/domains/dns/dns-propagation-checker";
+import { DnssecManager } from "@/components/domains/dns/dnssec-manager";
+import { ZoneFileManager } from "@/components/domains/dns/zone-file-manager";
 import { DnsSyncButton } from "./dns-sync-button";
 
 interface DnsPageProps {
@@ -90,6 +92,12 @@ export default async function DnsPage({ params }: DnsPageProps) {
   
   const domain = response.data;
   const hasCloudflareZone = !!domain.cloudflare_zone_id;
+
+  // Pre-fetch DNSSEC status when zone exists (non-fatal)
+  const dnssecResult = hasCloudflareZone
+    ? await getDnssecStatus(domainId).catch(() => null)
+    : null;
+  const dnssecStatus = dnssecResult?.data ?? { status: 'disabled' as const };
 
   return (
     <div className="space-y-6">
@@ -196,6 +204,20 @@ export default async function DnsPage({ params }: DnsPageProps) {
             <DnsPropagationChecker domainId={domainId} domainName={domain.domain_name} />
           </CardContent>
         </Card>
+      )}
+
+      {/* DNSSEC */}
+      {hasCloudflareZone && (
+        <DnssecManager
+          domainId={domainId}
+          domainName={domain.domain_name}
+          initialStatus={dnssecStatus}
+        />
+      )}
+
+      {/* Zone File Import / Export */}
+      {hasCloudflareZone && (
+        <ZoneFileManager domainId={domainId} domainName={domain.domain_name} />
       )}
 
       {/* Help Card */}

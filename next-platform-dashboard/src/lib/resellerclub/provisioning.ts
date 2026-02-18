@@ -313,7 +313,37 @@ export async function provisionDomainRegistration(
     }
     
     const domainId = domain.id;
-    
+
+    // Auto-create Cloudflare zone so DNS management works immediately (non-fatal)
+    try {
+      const { zoneService } = await import('@/lib/cloudflare');
+      const zone = await zoneService.getOrCreateZone(domainName);
+
+      await admin.from('cloudflare_zones').insert({
+        domain_id: domainId,
+        zone_id: zone.id,
+        name: zone.name,
+        status: zone.status,
+        assigned_nameservers: zone.nameServers,
+        original_nameservers: zone.originalNameServers,
+      });
+
+      await admin.from('domains').update({
+        cloudflare_zone_id: zone.id,
+        nameservers: zone.nameServers,
+      }).eq('id', domainId);
+
+      try {
+        await zoneService.applySecurityDefaults(zone.id);
+      } catch (secErr) {
+        console.warn('[Provisioning] CF security defaults failed (non-fatal):', secErr);
+      }
+
+      console.log(`[Provisioning] Cloudflare zone ${zone.id} auto-created for ${domainName}`);
+    } catch (zoneErr) {
+      console.warn('[Provisioning] Failed to auto-create Cloudflare zone (non-fatal):', zoneErr);
+    }
+
     // Create domain order record
     await admin.from('domain_orders').insert({
       agency_id: purchase.agency_id,
@@ -514,7 +544,35 @@ async function provisionMultipleDomains(
         if (!firstDomainId) {
           firstDomainId = domainId;
         }
-        
+
+        // Auto-create Cloudflare zone (non-fatal)
+        try {
+          const { zoneService } = await import('@/lib/cloudflare');
+          const zone = await zoneService.getOrCreateZone(domainConfig.domainName);
+
+          await admin.from('cloudflare_zones').insert({
+            domain_id: domainId,
+            zone_id: zone.id,
+            name: zone.name,
+            status: zone.status,
+            assigned_nameservers: zone.nameServers,
+            original_nameservers: zone.originalNameServers,
+          });
+
+          await admin.from('domains').update({
+            cloudflare_zone_id: zone.id,
+            nameservers: zone.nameServers,
+          }).eq('id', domainId);
+
+          try {
+            await zoneService.applySecurityDefaults(zone.id);
+          } catch (secErr) {
+            console.warn('[Provisioning] CF security defaults failed (non-fatal):', secErr);
+          }
+        } catch (zoneErr) {
+          console.warn(`[Provisioning] CF zone auto-create failed for ${domainConfig.domainName} (non-fatal):`, zoneErr);
+        }
+
         // Create domain order record
         await admin.from('domain_orders').insert({
           agency_id: purchase.agency_id,

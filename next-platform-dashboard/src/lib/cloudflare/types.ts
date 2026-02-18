@@ -381,3 +381,44 @@ export interface ZoneCreationResult {
 export interface DnsSetupResult {
   recordsCreated: number;
 }
+
+// ============================================================================
+// DNSSEC Types
+// ============================================================================
+
+/**
+ * DNSSEC status for a zone
+ */
+export interface DnssecStatus {
+  /** Current DNSSEC state */
+  status: 'active' | 'pending' | 'disabled' | 'error';
+  /** Full DS record string (e.g. "example.com. 3600 IN DS 2371 13 2 DIGEST") */
+  dsRecord?: string;
+  /** DNSSEC algorithm number (e.g. 13 = ECDSA P-256 SHA-256) */
+  algorithm?: number;
+  /** Key tag identifying the signing key */
+  keyTag?: number;
+  /** Digest type number (e.g. 2 = SHA-256) */
+  digestType?: number;
+  /** Hex digest of the public key */
+  digest?: string;
+  /** ISO timestamp of last modification */
+  modifiedOn?: string;
+}
+
+/**
+ * Cloudflare DNSSEC API response shape
+ * @internal
+ */
+export interface CloudflareDnssecResponse {
+  status: string;
+  flags?: number;
+  algorithm?: string | number;
+  key_type?: string;
+  digest_type?: string | number;
+  digest?: string;
+  ds?: string;
+  key_tag?: number;
+  public_key?: string;
+  modified_on?: string;
+}

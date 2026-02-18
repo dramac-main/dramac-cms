@@ -15,24 +15,8 @@
   },
   "crons": [
     {
-      "path": "/api/cron/domain-health",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/social/publish",
-      "schedule": "0 12 * * *"
-    },
-    {
-      "path": "/api/social/sync",
-      "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/cron/chat",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/resellerclub-sync",
-      "schedule": "0 2 * * *"
+      "path": "/api/cron",
+      "schedule": "0 * * * *"
     }
   ]
 }

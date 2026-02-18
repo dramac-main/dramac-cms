@@ -13,7 +13,7 @@ import { revalidatePath } from "next/cache";
 import { zoneService } from "@/lib/cloudflare/zones";
 import { dnsService } from "@/lib/cloudflare/dns";
 import { propagationService } from "@/lib/cloudflare/propagation";
-import type { DnsRecordType, ExpectedDnsRecord } from "@/lib/cloudflare/types";
+import type { DnsRecordType, ExpectedDnsRecord, DnssecStatus } from "@/lib/cloudflare/types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ============================================================================
@@ -816,6 +816,191 @@ export async function syncDnsRecords(
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to sync DNS records' 
+    };
+  }
+}
+// ============================================================================
+// DNSSEC Actions
+// ============================================================================
+
+/**
+ * Get DNSSEC status for a domain
+ */
+export async function getDnssecStatus(
+  domainId: string
+): Promise<ActionResult<DnssecStatus>> {
+  const supabase = await createClient();
+
+  try {
+    const { data: domain } = await getTable(supabase, 'domains')
+      .select('cloudflare_zone_id')
+      .eq('id', domainId)
+      .single() as { data: Pick<DomainRow, 'cloudflare_zone_id'> | null };
+
+    if (!domain?.cloudflare_zone_id) {
+      return { success: true, data: { status: 'disabled' } };
+    }
+
+    const status = await zoneService.getDnssec(domain.cloudflare_zone_id);
+    return { success: true, data: status };
+  } catch (error) {
+    console.error('[DNS] DNSSEC status error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get DNSSEC status',
+    };
+  }
+}
+
+/**
+ * Enable DNSSEC for a domain
+ */
+export async function enableDnssec(
+  domainId: string
+): Promise<ActionResult<DnssecStatus>> {
+  const supabase = await createClient();
+
+  try {
+    const { data: domain } = await getTable(supabase, 'domains')
+      .select('cloudflare_zone_id')
+      .eq('id', domainId)
+      .single() as { data: Pick<DomainRow, 'cloudflare_zone_id'> | null };
+
+    if (!domain?.cloudflare_zone_id) {
+      return { success: false, error: 'DNS zone not configured' };
+    }
+
+    const status = await zoneService.enableDnssec(domain.cloudflare_zone_id);
+    revalidatePath(`/dashboard/domains/${domainId}/dns`);
+    return { success: true, data: status };
+  } catch (error) {
+    console.error('[DNS] Enable DNSSEC error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to enable DNSSEC',
+    };
+  }
+}
+
+/**
+ * Disable DNSSEC for a domain
+ */
+export async function disableDnssec(
+  domainId: string
+): Promise<ActionResult> {
+  const supabase = await createClient();
+
+  try {
+    const { data: domain } = await getTable(supabase, 'domains')
+      .select('cloudflare_zone_id')
+      .eq('id', domainId)
+      .single() as { data: Pick<DomainRow, 'cloudflare_zone_id'> | null };
+
+    if (!domain?.cloudflare_zone_id) {
+      return { success: false, error: 'DNS zone not configured' };
+    }
+
+    await zoneService.disableDnssec(domain.cloudflare_zone_id);
+    revalidatePath(`/dashboard/domains/${domainId}/dns`);
+    return { success: true };
+  } catch (error) {
+    console.error('[DNS] Disable DNSSEC error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to disable DNSSEC',
+    };
+  }
+}
+
+// ============================================================================
+// Zone File Actions
+// ============================================================================
+
+/**
+ * Export DNS records as a BIND zone file
+ */
+export async function exportZoneFile(
+  domainId: string
+): Promise<ActionResult<{ content: string; filename: string }>> {
+  const supabase = await createClient();
+
+  try {
+    const { data: domain } = await getTable(supabase, 'domains')
+      .select('domain_name, cloudflare_zone_id')
+      .eq('id', domainId)
+      .single() as { data: Pick<DomainRow, 'domain_name' | 'cloudflare_zone_id'> | null };
+
+    if (!domain) {
+      return { success: false, error: 'Domain not found' };
+    }
+
+    if (!domain.cloudflare_zone_id) {
+      return { success: false, error: 'DNS zone not configured' };
+    }
+
+    const content = await dnsService.exportZoneFile(
+      domain.cloudflare_zone_id,
+      domain.domain_name
+    );
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    const filename = `${domain.domain_name}-${dateStr}.zone`;
+
+    return { success: true, data: { content, filename } };
+  } catch (error) {
+    console.error('[DNS] Zone file export error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to export zone file',
+    };
+  }
+}
+
+/**
+ * Import DNS records from a BIND zone file
+ */
+export async function importZoneFile(
+  domainId: string,
+  content: string
+): Promise<ActionResult<{ created: number; errors: string[] }>> {
+  const supabase = await createClient();
+
+  try {
+    const { data: domain } = await getTable(supabase, 'domains')
+      .select('domain_name, cloudflare_zone_id')
+      .eq('id', domainId)
+      .single() as { data: Pick<DomainRow, 'domain_name' | 'cloudflare_zone_id'> | null };
+
+    if (!domain) {
+      return { success: false, error: 'Domain not found' };
+    }
+
+    if (!domain.cloudflare_zone_id) {
+      return { success: false, error: 'DNS zone not configured' };
+    }
+
+    const result = await dnsService.importZoneFile(
+      domain.cloudflare_zone_id,
+      content,
+      domain.domain_name
+    );
+
+    revalidatePath(`/dashboard/domains/${domainId}/dns`);
+
+    return {
+      success: true,
+      data: {
+        created: result.created.length,
+        errors: result.errors.map(
+          (e) => `${e.record.type} ${e.record.name}: ${e.error}`
+        ),
+      },
+    };
+  } catch (error) {
+    console.error('[DNS] Zone file import error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to import zone file',
     };
   }
 }

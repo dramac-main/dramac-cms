@@ -11,6 +11,8 @@ import type {
   CloudflareZoneResponse,
   ZoneActivationStatus,
   ZoneStatus,
+  DnssecStatus,
+  CloudflareDnssecResponse,
 } from './types';
 
 /**
@@ -367,9 +369,56 @@ export class ZoneService {
   }
   
   // ============================================================================
+  // DNSSEC
+  // ============================================================================
+
+  /**
+   * Get DNSSEC status for a zone
+   */
+  async getDnssec(zoneId: string): Promise<DnssecStatus> {
+    const client = getCloudflareClient();
+    const response = await client.get<CloudflareDnssecResponse>(`/zones/${zoneId}/dnssec`);
+    return this.mapDnssec(response.result);
+  }
+
+  /**
+   * Enable DNSSEC for a zone
+   */
+  async enableDnssec(zoneId: string): Promise<DnssecStatus> {
+    const client = getCloudflareClient();
+    const response = await client.patch<CloudflareDnssecResponse>(`/zones/${zoneId}/dnssec`, {
+      status: 'active',
+    });
+    return this.mapDnssec(response.result);
+  }
+
+  /**
+   * Disable DNSSEC for a zone
+   */
+  async disableDnssec(zoneId: string): Promise<void> {
+    const client = getCloudflareClient();
+    await client.delete(`/zones/${zoneId}/dnssec`);
+  }
+
+  // ============================================================================
   // Private Methods
   // ============================================================================
-  
+
+  /**
+   * Map Cloudflare DNSSEC response to DnssecStatus
+   */
+  private mapDnssec(data: CloudflareDnssecResponse): DnssecStatus {
+    return {
+      status: (data.status as DnssecStatus['status']) ?? 'disabled',
+      dsRecord: data.ds,
+      algorithm: data.algorithm !== undefined ? Number(data.algorithm) : undefined,
+      keyTag: data.key_tag,
+      digestType: data.digest_type !== undefined ? Number(data.digest_type) : undefined,
+      digest: data.digest,
+      modifiedOn: data.modified_on,
+    };
+  }
+
   /**
    * Map Cloudflare API response to CloudflareZone
    */

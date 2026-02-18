@@ -12,13 +12,13 @@ import type {
 
 /**
  * Public DNS servers to check propagation against
- * These servers are used to verify DNS records have propagated globally
+ * Each server has its own DoH endpoint for accurate per-resolver results
  */
 const DNS_SERVERS = [
-  { name: 'Google', ip: '8.8.8.8', location: 'Global' },
-  { name: 'Cloudflare', ip: '1.1.1.1', location: 'Global' },
-  { name: 'OpenDNS', ip: '208.67.222.222', location: 'US' },
-  { name: 'Quad9', ip: '9.9.9.9', location: 'Global' },
+  { name: 'Google', ip: '8.8.8.8', location: 'US', dohEndpoint: 'https://dns.google/resolve' },
+  { name: 'Cloudflare', ip: '1.1.1.1', location: 'Global', dohEndpoint: 'https://cloudflare-dns.com/dns-query' },
+  { name: 'OpenDNS', ip: '208.67.222.222', location: 'US', dohEndpoint: 'https://doh.opendns.com/dns-query' },
+  { name: 'Quad9', ip: '9.9.9.9', location: 'Global', dohEndpoint: 'https://dns.quad9.net/dns-query' },
 ] as const;
 
 /**
@@ -72,7 +72,8 @@ export class PropagationService {
         try {
           const resolved = await this.resolveRecord(
             fullName,
-            expected.type
+            expected.type,
+            server.dohEndpoint
           );
           
           const propagated = this.matchesExpected(resolved, expected.content);
@@ -225,10 +226,11 @@ export class PropagationService {
    */
   private async resolveRecord(
     hostname: string,
-    type: DnsRecordType
+    type: DnsRecordType,
+    dohEndpoint?: string
   ): Promise<string | null> {
     try {
-      const results = await this.dohQuery(hostname, type);
+      const results = await this.dohQuery(hostname, type, dohEndpoint);
       return results[0] || null;
     } catch {
       return null;
@@ -243,13 +245,15 @@ export class PropagationService {
   }
   
   /**
-   * DNS-over-HTTPS query using Cloudflare's service
+   * DNS-over-HTTPS query — accepts an optional resolver endpoint
    */
   private async dohQuery(
     name: string,
-    type: DnsRecordType | 'NS'
+    type: DnsRecordType | 'NS',
+    dohEndpoint?: string
   ): Promise<string[]> {
-    const url = new URL(DOH_ENDPOINT);
+    const endpoint = dohEndpoint || DOH_ENDPOINT;
+    const url = new URL(endpoint);
     url.searchParams.set('name', name);
     url.searchParams.set('type', type);
     

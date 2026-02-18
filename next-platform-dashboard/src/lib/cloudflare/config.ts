@@ -70,7 +70,9 @@ export const DNS_TEMPLATES = {
       // DKIM is added per-domain with specific values
     ],
     dkimSelector: 'titan._domainkey',
-    dmarcRecord: 'v=DMARC1; p=none; rua=mailto:dmarc@dramac.app',
+    // dmarcRecord is generated dynamically in applyTitanEmailTemplate
+    // to include the agency's actual reporting email (not a hardcoded platform address)
+    dmarcBaseRecord: 'v=DMARC1; p=none; sp=none; adkim=r; aspf=r',
   },
   
   /**

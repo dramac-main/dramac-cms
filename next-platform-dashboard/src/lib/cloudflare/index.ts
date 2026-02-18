@@ -80,4 +80,8 @@ export type {
   ServiceResult,
   ZoneCreationResult,
   DnsSetupResult,
+
+  // DNSSEC types
+  DnssecStatus,
+  CloudflareDnssecResponse,
 } from './types';

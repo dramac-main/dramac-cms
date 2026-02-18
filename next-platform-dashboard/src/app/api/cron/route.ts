@@ -68,6 +68,45 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // ── Domain auto-renewal (daily at 3 AM UTC) ────────────────────────────
+  if (hour === 3) {
+    try {
+      const baseUrl = getBaseUrl(request);
+      const renewRes = await fetch(`${baseUrl}/api/cron/domain-auto-renew`, {
+        headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
+      });
+      results.domainAutoRenew = await renewRes.json();
+    } catch (err) {
+      errors.push(`domain-auto-renew: ${err instanceof Error ? err.message : 'unknown'}`);
+    }
+  }
+
+  // ── Domain expiry notifications (daily at 8 AM UTC) ───────────────────
+  if (hour === 8) {
+    try {
+      const baseUrl = getBaseUrl(request);
+      const notifyRes = await fetch(`${baseUrl}/api/cron/domain-expiry-notifications`, {
+        headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
+      });
+      results.domainExpiryNotifications = await notifyRes.json();
+    } catch (err) {
+      errors.push(`domain-expiry-notifications: ${err instanceof Error ? err.message : 'unknown'}`);
+    }
+  }
+
+  // ── ResellerClub sync + pricing cache (daily at 2 AM UTC) ─────────────
+  if (hour === 2) {
+    try {
+      const baseUrl = getBaseUrl(request);
+      const rcSyncRes = await fetch(`${baseUrl}/api/cron/resellerclub-sync`, {
+        headers: cronSecret ? { authorization: `Bearer ${cronSecret}` } : {},
+      });
+      results.resellerclubSync = await rcSyncRes.json();
+    } catch (err) {
+      errors.push(`resellerclub-sync: ${err instanceof Error ? err.message : 'unknown'}`);
+    }
+  }
+
   // ── Social media publish (daily at noon UTC) ───────────────────────────
   if (hour === 12) {
     try {
