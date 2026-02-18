@@ -656,7 +656,15 @@ export async function getBusinessEmailPricing(): Promise<{
     customerPricing = flattenTitanMailPricing(customerPricing || {});
     costPricing = costPricing ? flattenTitanMailPricing(costPricing) : costPricing;
 
-    // Log available plans AFTER flattening so the list reflects what the wizard will see
+    // ── Filter plans down to only what the wizard should show ──
+    // 1. Remove India-region plans (titanmailindia_*)
+    // 2. Remove free-trial plans where every add price is $0
+    // 3. Remove legacy pre-Titan products (eeliteus, enterpriseemailus)
+    //    when Titan Mail plans are available — Titan replaces them.
+    customerPricing = filterWizardPlans(customerPricing);
+    costPricing = costPricing ? filterWizardPlans(costPricing) : costPricing;
+
+    // Log available plans AFTER flattening + filtering
     const availablePlans = Object.keys(customerPricing).filter(k =>
       (customerPricing?.[k] as { email_account_ranges?: unknown })?.email_account_ranges
     );
@@ -969,6 +977,61 @@ function flattenTitanMailPricing(pricing: EmailPricingResponse): EmailPricingRes
     }
     if (foundNestedPlans) {
       delete result[parentKey];
+    }
+  }
+
+  return result;
+}
+
+/** True if every `add` price in every slab is $0 (or no add prices at all). */
+function isFreeTrial(plan: EmailPricingResponse[string] | undefined): boolean {
+  if (!plan || typeof plan !== 'object') return true;
+  const ranges = (plan as { email_account_ranges?: Record<string, { add?: Record<string, number> }> })
+    .email_account_ranges;
+  if (!ranges) return true;
+  for (const slab of Object.values(ranges)) {
+    if (slab.add) {
+      for (const price of Object.values(slab.add)) {
+        if (price > 0) return false;
+      }
+    }
+  }
+  return true;
+}
+
+const LEGACY_EMAIL_KEYS = ['eeliteus', 'enterpriseemailus'];
+
+/**
+ * Filter the flattened pricing to only the plans the purchase wizard should show.
+ *
+ * Rules:
+ *  1. Remove India-region plans (titanmailindia_*)
+ *  2. Remove free-trial plans where every add price is $0
+ *  3. Remove legacy pre-Titan products (eeliteus, enterpriseemailus)
+ *     when at least one paid Titan Mail Global plan exists — Titan replaces them.
+ */
+function filterWizardPlans(pricing: EmailPricingResponse): EmailPricingResponse {
+  const result = { ...pricing };
+
+  // Check whether any paid Titan Mail Global plans exist
+  const hasPaidTitanGlobal = Object.keys(result).some(
+    k => k.startsWith('titanmailglobal_') && !isFreeTrial(result[k])
+  );
+
+  for (const key of Object.keys(result)) {
+    // 1. India-region plans
+    if (key.startsWith('titanmailindia')) {
+      delete result[key];
+      continue;
+    }
+    // 2. Free-trial plans ($0 pricing)
+    if (isFreeTrial(result[key])) {
+      delete result[key];
+      continue;
+    }
+    // 3. Legacy plans when Titan Mail is available
+    if (hasPaidTitanGlobal && LEGACY_EMAIL_KEYS.includes(key)) {
+      delete result[key];
     }
   }
 
