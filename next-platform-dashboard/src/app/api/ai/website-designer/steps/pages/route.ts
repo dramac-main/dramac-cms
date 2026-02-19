@@ -99,6 +99,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       pages: result.pages,
+      navbar: result.navbar,
+      footer: result.footer,
       pageCount: result.pages.length,
     });
   } catch (error) {

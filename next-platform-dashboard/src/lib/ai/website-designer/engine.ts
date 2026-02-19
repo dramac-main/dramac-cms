@@ -210,13 +210,16 @@ export class WebsiteDesignerEngine {
   }
 
   /**
-   * STEP 2: Generate all pages from architecture
-   * Takes the architecture from step 1, generates all page content in parallel.
+   * STEP 2: Generate all pages + navbar + footer from architecture
+   * All AI calls run in parallel since they're independent.
+   * Navbar/footer included here to avoid a separate AI call in finalize.
    * Runs in its own serverless function with its own 60s budget.
    */
   async stepPages(input: WebsiteDesignerInput, architecture: SiteArchitecture, formattedContext: string): Promise<{
     success: boolean;
     pages: GeneratedPage[];
+    navbar?: GeneratedComponent;
+    footer?: GeneratedComponent;
     error?: string;
   }> {
     this.userPrompt = input.prompt;
@@ -229,18 +232,31 @@ export class WebsiteDesignerEngine {
 
     try {
       const totalPages = architecture.pages.length;
-      this.reportProgress("generating-pages", `Generating ${totalPages} pages in parallel...`, 0, totalPages);
+      this.reportProgress("generating-pages", `Generating ${totalPages} pages + navigation...`, 0, totalPages);
 
-      // Generate ALL pages concurrently
-      const pages: GeneratedPage[] = await Promise.all(
-        architecture.pages.map((pagePlan) =>
-          this.generatePage(pagePlan, formattedContext)
-        )
+      // Generate ALL pages + navbar + footer concurrently (all independent)
+      const pagePromises = architecture.pages.map((pagePlan) =>
+        this.generatePage(pagePlan, formattedContext)
       );
 
-      this.reportProgress("generating-pages", `All ${totalPages} pages generated`, totalPages, totalPages);
+      // Navbar and footer are generated as temporary page-like results
+      // We extract them separately from the parallel batch
+      const [pages, navbar, footer] = await Promise.all([
+        Promise.all(pagePromises),
+        this.generateNavbar([]),  // Pages list built from architecture
+        this.generateFooter(),
+      ]);
 
-      return { success: true, pages };
+      // Fix navbar links using actual generated pages
+      const navItems = pages
+        .filter((p) => !p.isHomepage)
+        .map((p) => ({ label: p.name, href: p.slug }));
+      const allNavLinks = [{ label: "Home", href: "/" }, ...navItems];
+      navbar.props = { ...navbar.props, links: allNavLinks, navItems: allNavLinks };
+
+      this.reportProgress("generating-pages", `All ${totalPages} pages + navigation generated`, totalPages, totalPages);
+
+      return { success: true, pages, navbar, footer };
     } catch (error) {
       console.error("[WebsiteDesignerEngine] stepPages error:", error);
       return {
@@ -252,25 +268,48 @@ export class WebsiteDesignerEngine {
   }
 
   /**
-   * STEP 3: Generate navbar, footer, finalize everything
-   * Takes architecture + pages, generates shared elements and finalizes output.
-   * Runs in its own serverless function with its own 60s budget.
+   * STEP 3: Finalize — local processing only, NO AI calls, NO DB calls
+   * Takes architecture + pages + navbar + footer from steps 1 & 2.
+   * Applies shared elements, runs quality audit, builds final output.
+   * This is purely CPU work — completes in < 1 second.
    */
-  async stepFinalize(input: WebsiteDesignerInput, architecture: SiteArchitecture, pages: GeneratedPage[], startTime: number): Promise<WebsiteDesignerOutput> {
+  async stepFinalize(
+    input: WebsiteDesignerInput,
+    architecture: SiteArchitecture,
+    pages: GeneratedPage[],
+    startTime: number,
+    navbar?: GeneratedComponent,
+    footer?: GeneratedComponent,
+    siteContext?: { name: string; domain: string; industry: string; description: string }
+  ): Promise<WebsiteDesignerOutput> {
     this.userPrompt = input.prompt;
     this.architecture = architecture;
-    this.context = await buildDataContext(this.siteId);
+
+    // Use provided context instead of DB call (no network needed)
+    if (siteContext) {
+      this.context = {
+        site: { domain: siteContext.domain } as any,
+        client: { name: siteContext.name, industry: siteContext.industry, description: siteContext.description } as any,
+        branding: {} as any,
+        contact: {} as any,
+        social: [],
+        hours: [],
+        locations: [],
+        team: [],
+        services: [],
+        testimonials: [],
+        portfolio: [],
+        faq: [],
+        blog: [],
+        modules: [],
+      };
+    }
 
     try {
-      // Generate navbar + footer IN PARALLEL
-      this.reportProgress("generating-shared-elements", "Creating navigation & footer...", 0, 1);
-      const [navbar, footer] = await Promise.all([
-        this.generateNavbar(pages),
-        this.generateFooter(),
-      ]);
-
-      // Apply shared elements
-      let pagesWithNav = this.applySharedElements(pages, navbar, footer);
+      // Apply shared elements (navbar/footer from step 2)
+      const defaultNavbar: GeneratedComponent = navbar || { id: "shared-navbar", type: "Navbar", props: { logoText: siteContext?.name || "Site", links: [] } };
+      const defaultFooter: GeneratedComponent = footer || { id: "shared-footer", type: "Footer", props: { companyName: siteContext?.name || "Site" } };
+      let pagesWithNav = this.applySharedElements(pages, defaultNavbar, defaultFooter);
 
       // Refinement (if enabled)
       if (this.config.enableRefinement) {
@@ -371,8 +410,8 @@ export class WebsiteDesignerEngine {
         throw new Error(pagesResult.error || "Page generation failed");
       }
 
-      // Step 3: Finalize
-      return await this.stepFinalize(input, archResult.architecture, pagesResult.pages, startTime);
+      // Step 3: Finalize (now purely local — navbar/footer already from step 2)
+      return await this.stepFinalize(input, archResult.architecture, pagesResult.pages, startTime, pagesResult.navbar, pagesResult.footer);
     } catch (error) {
       console.error("[WebsiteDesignerEngine] Error:", error);
       return {

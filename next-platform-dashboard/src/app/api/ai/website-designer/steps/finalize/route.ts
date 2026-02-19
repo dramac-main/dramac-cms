@@ -37,6 +37,14 @@ const RequestSchema = z.object({
   // Data from previous steps
   architecture: z.any(),
   pages: z.any(),
+  navbar: z.any().optional(),
+  footer: z.any().optional(),
+  siteContext: z.object({
+    name: z.string(),
+    domain: z.string(),
+    industry: z.string(),
+    description: z.string(),
+  }).optional(),
   startTime: z.number(),
 });
 
@@ -80,7 +88,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
-    // Run Step 3: Finalize
+    // Run Step 3: Finalize (purely local processing — no AI calls)
     const engine = new WebsiteDesignerEngine(input.siteId, undefined, input.engineConfig);
     const result = await engine.stepFinalize(
       {
@@ -91,7 +99,10 @@ export async function POST(request: NextRequest) {
       },
       input.architecture,
       input.pages,
-      input.startTime
+      input.startTime,
+      input.navbar,
+      input.footer,
+      input.siteContext
     );
 
     return NextResponse.json(result);

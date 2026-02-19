@@ -419,9 +419,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       setEstimatedTotalTime(40 + pageCount * 15); // Update estimate with real page count
       setProgress(30);
 
-      // ===== STEP 2: Pages (own 60s budget) =====
+      // ===== STEP 2: Pages + Navbar + Footer (own 60s budget) =====
       setCurrentStage("generating-pages");
-      setProgressMessage(`Generating ${pageCount} pages in parallel...`);
+      setProgressMessage(`Generating ${pageCount} pages + navigation...`);
       setProgress(35);
 
       const pagesResponse = await fetch("/api/ai/website-designer/steps/pages", {
@@ -446,10 +446,10 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
 
       setProgress(70);
 
-      // ===== STEP 3: Finalize — navbar, footer, quality audit (own 60s budget) =====
-      setCurrentStage("generating-shared-elements");
-      setProgressMessage("Creating navigation, footer & finalizing...");
-      setProgress(75);
+      // ===== STEP 3: Finalize — local processing only (instant) =====
+      setCurrentStage("finalizing");
+      setProgressMessage("Finalizing website...");
+      setProgress(85);
 
       const finalResponse = await fetch("/api/ai/website-designer/steps/finalize", {
         method: "POST",
@@ -458,6 +458,14 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
           ...basePayload,
           architecture: archResult.architecture,
           pages: pagesResult.pages,
+          navbar: pagesResult.navbar,
+          footer: pagesResult.footer,
+          siteContext: {
+            name: archResult.architecture?.intent || "Business",
+            domain: "",
+            industry: archResult.architecture?.intent || "general",
+            description: prompt,
+          },
           startTime,
         }),
       });
