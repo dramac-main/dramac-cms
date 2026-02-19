@@ -305,7 +305,7 @@ async function findPublicCart(siteId: string, userId?: string, sessionId?: strin
         *,
         items:${TABLE_PREFIX}_cart_items(
           *,
-          product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price),
+          product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price, sku),
           variant:${TABLE_PREFIX}_product_variants(id, options, quantity, image_url, price)
         )
       `)
@@ -368,7 +368,7 @@ export async function getPublicCart(cartId: string): Promise<Cart | null> {
         *,
         items:${TABLE_PREFIX}_cart_items(
           *,
-          product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price),
+          product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price, sku),
           variant:${TABLE_PREFIX}_product_variants(id, options, quantity, image_url, price)
         )
       `)
@@ -623,6 +623,7 @@ export async function createPublicOrderFromCart(input: CreateOrderInput): Promis
       order_number: orderNumber,
       customer_id: input.user_id || null,
       customer_email: input.customer_email,
+      customer_name: input.customer_name || null,
       customer_phone: input.customer_phone || null,
       shipping_address: input.shipping_address,
       billing_address: input.billing_address,
@@ -798,11 +799,13 @@ export async function updatePublicOrder(
   if (updates.status) allowedUpdates.status = updates.status
   if (updates.payment_status) allowedUpdates.payment_status = updates.payment_status
   if (updates.fulfillment_status) allowedUpdates.fulfillment_status = updates.fulfillment_status
+  if (updates.payment_transaction_id !== undefined) allowedUpdates.payment_transaction_id = updates.payment_transaction_id
   if (updates.tracking_number !== undefined) allowedUpdates.tracking_number = updates.tracking_number
   if (updates.tracking_url !== undefined) allowedUpdates.tracking_url = updates.tracking_url
   if (updates.internal_notes !== undefined) allowedUpdates.internal_notes = updates.internal_notes
   if (updates.shipped_at !== undefined) allowedUpdates.shipped_at = updates.shipped_at
   if (updates.delivered_at !== undefined) allowedUpdates.delivered_at = updates.delivered_at
+  if (updates.metadata !== undefined) allowedUpdates.metadata = updates.metadata
 
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_orders`)

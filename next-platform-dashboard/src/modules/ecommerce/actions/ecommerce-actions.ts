@@ -750,7 +750,7 @@ export async function findCart(siteId: string, userId?: string, sessionId?: stri
       *,
       items:${TABLE_PREFIX}_cart_items(
         *,
-        product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price),
+        product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price, sku),
         variant:${TABLE_PREFIX}_product_variants(id, options, quantity, image_url, price)
       )
     `)
@@ -780,7 +780,7 @@ export async function getCart(cartId: string): Promise<Cart | null> {
       *,
       items:${TABLE_PREFIX}_cart_items(
         *,
-        product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price),
+        product:${TABLE_PREFIX}_products(id, name, slug, images, status, quantity, base_price, sku),
         variant:${TABLE_PREFIX}_product_variants(id, options, quantity, image_url, price)
       )
     `)
@@ -1057,6 +1057,7 @@ export async function createOrderFromCart(input: CreateOrderInput): Promise<Orde
       order_number: orderNumber,
       customer_id: input.user_id || null,
       customer_email: input.customer_email,
+      customer_name: input.customer_name || null,
       customer_phone: input.customer_phone || null,
       shipping_address: input.shipping_address,
       billing_address: input.billing_address,

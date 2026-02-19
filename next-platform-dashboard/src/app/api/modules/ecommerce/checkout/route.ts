@@ -404,6 +404,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      order_id: order.id,
+      order_number: order.order_number,
       order: {
         id: order.id,
         order_number: order.order_number,
@@ -413,7 +415,7 @@ export async function POST(request: NextRequest) {
         currency: order.currency
       },
       payment: paymentData,
-      paymentUrl
+      payment_url: paymentData.paymentUrl || paymentData.redirectUrl || paymentUrl || null
     })
   } catch (error) {
     console.error('Checkout error:', error)

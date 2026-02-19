@@ -179,8 +179,8 @@ export async function updateOrderStatus(
     event_type: 'status_changed',
     title: `Status changed to ${status}`,
     description: note,
-    user_id: userId,
-    user_name: userName
+    actor_id: userId,
+    actor_name: userName
   })
 
   return { success: true }
@@ -236,8 +236,8 @@ export async function addOrderNote(
       order_id: orderId,
       content,
       is_internal: isInternal,
-      user_id: userId,
-      user_name: userName
+      author_id: userId,
+      author_name: userName
     })
     .select()
     .single()
@@ -249,8 +249,8 @@ export async function addOrderNote(
     event_type: 'note_added',
     title: isInternal ? 'Internal note added' : 'Note added',
     description: content.slice(0, 100),
-    user_id: userId,
-    user_name: userName
+    actor_id: userId,
+    actor_name: userName
   })
 
   return note
@@ -318,8 +318,8 @@ export async function addOrderShipment(
     event_type: 'shipped',
     title: 'Order shipped',
     description: `Shipped via ${shipment.carrier} - ${shipment.tracking_number}`,
-    user_id: userId,
-    user_name: userName,
+    actor_id: userId,
+    actor_name: userName,
     metadata: { shipment_id: data.id }
   })
 
@@ -398,9 +398,9 @@ export async function createRefund(
   await addTimelineEvent(orderId, {
     event_type: 'refund_requested',
     title: 'Refund requested',
-    description: `Amount: ${formatCurrency(refund.amount / 100)} - ${refund.reason}`,
-    user_id: userId,
-    user_name: userName,
+    description: `Amount: ${formatCurrency(refund.amount)} - ${refund.reason}`,
+    actor_id: userId,
+    actor_name: userName,
     metadata: { refund_id: data.id }
   })
 
@@ -436,8 +436,8 @@ export async function processRefund(
   await addTimelineEvent(orderId, {
     event_type: 'refund_processed',
     title: approved ? 'Refund processed' : 'Refund rejected',
-    user_id: userId,
-    user_name: userName,
+    actor_id: userId,
+    actor_name: userName,
     metadata: { refund_id: refundId }
   })
 

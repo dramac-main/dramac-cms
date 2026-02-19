@@ -168,10 +168,10 @@ export function OrderTimeline({ events }: OrderTimelineProps) {
                   >
                     {formatDistanceToNow(new Date(event.created_at), { addSuffix: true })}
                   </time>
-                  {event.user_name && (
+                  {event.actor_name && (
                     <>
                       <span>•</span>
-                      <span>by {event.user_name}</span>
+                      <span>by {event.actor_name}</span>
                     </>
                   )}
                 </div>

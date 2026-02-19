@@ -257,10 +257,33 @@ export async function updateSettings(
     notifications: 'notification_settings',
     inventory: 'inventory_settings',
     legal: 'legal_settings',
-    quotes: 'quote_settings' // Uses separate table via quote-template-actions
+    quotes: 'quote_settings' // Uses separate table (mod_ecommod01_quote_settings)
   }
 
   const column = columnMap[tab]
+
+  // Quote settings use a separate table — redirect to the dedicated table
+  if (tab === 'quotes') {
+    const { data: existingQS } = await supabase
+      .from(`${TABLE_PREFIX}_quote_settings`)
+      .select('id')
+      .eq('site_id', siteId)
+      .single()
+
+    if (existingQS) {
+      const { error } = await supabase
+        .from(`${TABLE_PREFIX}_quote_settings`)
+        .update({ ...data, updated_at: new Date().toISOString() })
+        .eq('site_id', siteId)
+      if (error) return { success: false, error: error.message }
+    } else {
+      const { error } = await supabase
+        .from(`${TABLE_PREFIX}_quote_settings`)
+        .insert({ site_id: siteId, agency_id: agencyId, ...data })
+      if (error) return { success: false, error: error.message }
+    }
+    return { success: true }
+  }
 
   // Check if settings row exists
   const { data: existing } = await supabase

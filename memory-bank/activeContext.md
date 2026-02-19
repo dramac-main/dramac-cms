@@ -3962,7 +3962,63 @@ User → AI Designer Page → POST /api/ai/website-designer
 
 ---
 
-## Latest Session Update (E-Commerce Deep Fix - February 7, 2026)
+## Latest Session — E-Commerce Industry-Standard Fixes (All 8 Complete)
+
+### What Was Implemented
+
+**1. Quotation Mode — Types**
+- `EcommerceSettings` now has: `quotation_mode_enabled`, `quotation_button_label`, `quotation_redirect_url`, `quotation_hide_prices`, `payment_provider`
+- `StorefrontContextValue` now has: `quotationModeEnabled`, `quotationButtonLabel`, `quotationRedirectUrl`, `quotationHidePrices`
+
+**2. Quotation Mode — Context**
+- `storefront-context.tsx`: `StorefrontProvider` now reads from `EcommerceSettings` and exposes all quotation mode values via context
+- Default values: `quotationModeEnabled: false`, `quotationButtonLabel: 'Request a Quote'`, etc.
+
+**3. Quotation Mode — UI Toggle**
+- `quote-settings.tsx`: Prominent master toggle card added at the TOP of the Quote Settings form
+- Shows orange active badge + info message when enabled
+- Exposes: button label customization + hide prices toggle
+- Saves immediately to `EcommerceSettings` via `updateEcommerceSettings()` (separate from QuoteSiteSettings)
+
+**4. Quotation Mode — ProductCardBlock**
+- `product-card-block.tsx`: Reads `quotationModeEnabled`, `quotationButtonLabel`, `quotationHidePrices` from `useStorefront()`
+- Button becomes orange "Request Quote" with FileText icon when quotation mode is active
+- Click navigates to `/quotes?product=<id>` instead of adding to cart
+- Prices hidden across all 4 layout variants when `quotationHidePrices` is true (uses `effectiveShowPrice`)
+
+**5. Cart Auto-Injection — New File Created**
+- `src/components/renderer/ecommerce-cart-injector.tsx` created
+- Follows exact `LiveChatWidgetInjector` pattern
+- Wraps `StorefrontProvider` + `CartIconWidget` as floating bottom-right widget (fixed position, z-999)
+- Only renders when ecommerce module is installed and active
+
+**6. Cart Auto-Injection — Wired into Page Renderer**
+- `src/app/site/[domain]/[[...slug]]/page.tsx` updated
+- `hasEcommerce` check added alongside `hasLiveChat`
+- `<EcommerceCartInjector siteId={data.site.id} />` auto-injected for all published sites
+
+**7. Payment Settings — Real Gateway UI**
+- `ecommerce-settings-dialog.tsx` payment tab completely rebuilt
+- Provider selector: None / Flutterwave / Pesapal / DPO / Manual
+- Flutterwave: public key, secret key (password), environment (test/live) with live mode badge
+- Pesapal: consumer key, secret, environment
+- DPO: info message directing to full settings
+- Manual: textarea for custom payment instructions shown at checkout
+- Warning shown when no gateway is selected
+- Saves `payment_provider`, `flutterwave_config`, `pesapal_config` to DB
+
+**8. Currency Symbol — Fixed**
+- `ecommerce-settings-dialog.tsx` shipping tab: hardcoded `$` replaced with `getCurrencySymbol(currency)` (locale-aware)
+- Works correctly for ZMW (K), USD ($), KES (KSh), ZAR (R), etc.
+
+### Files Modified
+- `src/modules/ecommerce/types/ecommerce-types.ts`
+- `src/modules/ecommerce/context/storefront-context.tsx`
+- `src/modules/ecommerce/components/settings/quote-settings.tsx`
+- `src/modules/ecommerce/studio/components/product-card-block.tsx`
+- `src/modules/ecommerce/components/dialogs/ecommerce-settings-dialog.tsx`
+- `src/app/site/[domain]/[[...slug]]/page.tsx`
+- `src/components/renderer/ecommerce-cart-injector.tsx` (NEW) Update (E-Commerce Deep Fix - February 7, 2026)
 
 ### MAJOR E-COMMERCE FIXES COMPLETED ✅
 

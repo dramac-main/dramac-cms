@@ -5,7 +5,7 @@
  * 
  * Calculates shipping cost based on site's ecommerce settings
  * (shipping zones, free shipping threshold, etc.)
- * Returns cost in cents.
+ * Returns cost in full currency units (e.g. dollars, not cents).
  */
 
 import type {
@@ -23,14 +23,14 @@ interface ShippingCalculationInput {
   shippingAddress: Address
   /** The ecommerce settings for the site (contains shipping_zones, free_shipping_threshold) */
   settings: EcommerceSettings
-  /** Subtotal in cents (after discounts) */
+  /** Subtotal in full currency units (after discounts) */
   subtotal: number
   /** Optional shipping method ID to use. If omitted, uses the first enabled method in matching zone. */
   shippingMethodId?: string
 }
 
 interface ShippingCalculationResult {
-  /** Shipping cost in cents */
+  /** Shipping cost in full currency units */
   cost: number
   /** Name of the shipping method used */
   methodName: string | null
@@ -41,7 +41,7 @@ interface ShippingCalculationResult {
 }
 
 /**
- * Calculate shipping cost in cents.
+ * Calculate shipping cost in full currency units.
  *
  * Logic:
  * 1. If free_shipping_threshold is set and subtotal >= threshold → free shipping

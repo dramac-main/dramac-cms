@@ -8,6 +8,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import type {
   Quote,
@@ -299,7 +300,9 @@ export async function getQuote(
 export async function getQuoteByToken(
   token: string
 ): Promise<QuoteDetailData | null> {
-  const supabase = await getModuleClient()
+  // Use admin client — customer portal is unauthenticated (no auth cookies)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createAdminClient() as any
   
   // Get quote by token
   const { data: quote, error: quoteError } = await supabase

@@ -158,6 +158,14 @@ export async function sendQuote(input: SendQuoteInput): Promise<WorkflowResult> 
       : quote.total || 0
     const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
 
+    // Get store name for email branding
+    const { data: storeSettings } = await supabase
+      .from(`${TABLE_PREFIX}_settings`)
+      .select('store_name')
+      .eq('site_id', input.site_id)
+      .single()
+    const businessName = storeSettings?.store_name || ''
+
     await sendBrandedEmail(quote.agency_id || null, {
       to: { email: quote.customer_email, name: quote.customer_name || undefined },
       emailType: 'quote_sent_customer',
@@ -169,7 +177,7 @@ export async function sendQuote(input: SendQuoteInput): Promise<WorkflowResult> 
         totalAmount: formatted,
         expiryDate: quote.valid_until ? new Date(quote.valid_until).toLocaleDateString('en-US') : undefined,
         viewQuoteUrl: portalUrl,
-        businessName: quote.business_name || '',
+        businessName,
       },
     })
     
@@ -230,9 +238,17 @@ export async function resendQuote(
     })
     
     // Send resend email
-    const portalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/quote/${quote.access_token}`
+    const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/quote/${quote.access_token}`
     const totalAmount = quote.total || 0
     const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
+
+    // Get store name for email branding
+    const { data: siteSettings } = await supabase
+      .from(`${TABLE_PREFIX}_settings`)
+      .select('store_name')
+      .eq('site_id', siteId)
+      .single()
+    const storeName = siteSettings?.store_name || ''
 
     await sendBrandedEmail(quote.agency_id || null, {
       to: { email: quote.customer_email, name: quote.customer_name || undefined },
@@ -245,7 +261,7 @@ export async function resendQuote(
         totalAmount: formatted,
         expiryDate: quote.valid_until ? new Date(quote.valid_until).toLocaleDateString('en-US') : undefined,
         viewQuoteUrl: portalUrl,
-        businessName: quote.business_name || '',
+        businessName: storeName,
       },
     })
     
@@ -298,6 +314,14 @@ export async function sendQuoteReminder(
     const totalAmount = quote.total || 0
     const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
 
+    // Get store name for email branding
+    const { data: reminderSettings } = await supabase
+      .from(`${TABLE_PREFIX}_settings`)
+      .select('store_name')
+      .eq('site_id', siteId)
+      .single()
+    const reminderBusinessName = reminderSettings?.store_name || ''
+
     await sendBrandedEmail(quote.agency_id || null, {
       to: { email: quote.customer_email, name: quote.customer_name || undefined },
       emailType: 'quote_reminder_customer',
@@ -308,7 +332,7 @@ export async function sendQuoteReminder(
         totalAmount: formatted,
         expiryDate: quote.valid_until ? new Date(quote.valid_until).toLocaleDateString('en-US') : undefined,
         viewQuoteUrl: portalUrl,
-        businessName: quote.business_name || '',
+        businessName: reminderBusinessName,
       },
     })
     
@@ -764,9 +788,10 @@ export async function convertQuoteToOrder(input: ConvertToOrderInput): Promise<W
     await supabase.from(`${TABLE_PREFIX}_order_timeline`).insert({
       order_id: newOrder.id,
       event_type: 'created',
+      title: `Order created from Quote ${quote.quote_number}`,
       description: `Order created from Quote ${quote.quote_number}`,
-      performed_by: input.user_id,
-      performed_by_name: input.user_name,
+      actor_id: input.user_id,
+      actor_name: input.user_name,
       metadata: { quote_id: quote.id, quote_number: quote.quote_number }
     })
     

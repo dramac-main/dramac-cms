@@ -436,10 +436,16 @@ export async function addCustomerToGroup(
     })
 
   if (!error) {
-    // Update member count
+    // Update member count — fetch current, compute in JS, then update
+    const { data: group } = await supabase
+      .from(`${TABLE_PREFIX}_customer_groups`)
+      .select('member_count')
+      .eq('id', groupId)
+      .single()
+    const newCount = (group?.member_count || 0) + 1
     await supabase
       .from(`${TABLE_PREFIX}_customer_groups`)
-      .update({ member_count: supabase.sql`member_count + 1` })
+      .update({ member_count: newCount })
       .eq('id', groupId)
   }
 
@@ -462,10 +468,16 @@ export async function removeCustomerFromGroup(
     .eq('group_id', groupId)
 
   if (!error) {
-    // Update member count
+    // Update member count — fetch current, compute in JS, then update
+    const { data: group } = await supabase
+      .from(`${TABLE_PREFIX}_customer_groups`)
+      .select('member_count')
+      .eq('id', groupId)
+      .single()
+    const newCount = Math.max(0, (group?.member_count || 0) - 1)
     await supabase
       .from(`${TABLE_PREFIX}_customer_groups`)
-      .update({ member_count: supabase.sql`GREATEST(0, member_count - 1)` })
+      .update({ member_count: newCount })
       .eq('id', groupId)
   }
 
@@ -492,17 +504,23 @@ export async function addCustomerNote(
     .insert({
       customer_id: customerId,
       content,
-      user_id: userId,
-      user_name: userName
+      author_id: userId,
+      author_name: userName
     })
     .select()
     .single()
 
   if (!error) {
-    // Update notes count
+    // Update notes count — fetch current, compute in JS, then update
+    const { data: customer } = await supabase
+      .from(`${TABLE_PREFIX}_customers`)
+      .select('notes_count')
+      .eq('id', customerId)
+      .single()
+    const newNotesCount = (customer?.notes_count || 0) + 1
     await supabase
       .from(`${TABLE_PREFIX}_customers`)
-      .update({ notes_count: supabase.sql`notes_count + 1` })
+      .update({ notes_count: newNotesCount })
       .eq('id', customerId)
   }
 
@@ -525,10 +543,16 @@ export async function deleteCustomerNote(
     .eq('id', noteId)
 
   if (!error) {
-    // Update notes count
+    // Update notes count — fetch current, compute in JS, then update
+    const { data: customer } = await supabase
+      .from(`${TABLE_PREFIX}_customers`)
+      .select('notes_count')
+      .eq('id', customerId)
+      .single()
+    const newNotesCount = Math.max(0, (customer?.notes_count || 0) - 1)
     await supabase
       .from(`${TABLE_PREFIX}_customers`)
-      .update({ notes_count: supabase.sql`GREATEST(0, notes_count - 1)` })
+      .update({ notes_count: newNotesCount })
       .eq('id', customerId)
   }
 

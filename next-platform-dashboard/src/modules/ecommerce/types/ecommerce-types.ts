@@ -255,6 +255,9 @@ export interface Order {
   customer_notes: string | null
   internal_notes: string | null
   
+  // Source
+  source?: string | null
+  
   // Metadata
   metadata: Record<string, unknown>
   
@@ -527,6 +530,15 @@ export interface CheckoutResult {
   success: boolean
   order_id?: string
   order_number?: string
+  order?: {
+    id: string
+    order_number: string
+    status: string
+    payment_status: string
+    total: number
+    currency: string
+  }
+  payment?: Record<string, unknown>
   payment_url?: string
   error?: string
 }
@@ -989,8 +1001,8 @@ export interface OrderTimelineEvent {
   title: string
   description?: string
   metadata?: Record<string, unknown>
-  user_id?: string
-  user_name?: string
+  actor_id?: string
+  actor_name?: string
   created_at: string
 }
 
@@ -999,8 +1011,8 @@ export interface OrderNote {
   order_id: string
   content: string
   is_internal: boolean
-  user_id: string
-  user_name: string
+  author_id: string
+  author_name: string
   created_at: string
 }
 
@@ -1161,8 +1173,8 @@ export interface CustomerNote {
   id: string
   customer_id: string
   content: string
-  user_id: string
-  user_name: string
+  author_id: string
+  author_name: string
   created_at: string
 }
 
@@ -2085,17 +2097,7 @@ export interface RecentlyViewedResult {
   clear: () => void
 }
 
-/**
- * Cart totals
- */
-export interface CartTotals {
-  subtotal: number
-  discount: number
-  tax: number
-  shipping: number
-  total: number
-  itemCount: number
-}
+// CartTotals is defined above (Checkout section) — single source of truth
 
 /**
  * Result type for useStorefrontCart

@@ -422,7 +422,7 @@ export function CustomerDetailDialog({
                     <div key={note.id} className="p-4 border rounded-lg">
                       <p className="text-sm">{note.content}</p>
                       <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-                        <span>by {note.user_name}</span>
+                        <span>by {note.author_name}</span>
                         <span>
                           {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
                         </span>

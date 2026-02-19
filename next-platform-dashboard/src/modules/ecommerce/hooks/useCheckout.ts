@@ -16,7 +16,6 @@ import { useStorefront } from '../context/storefront-context'
 import { useStorefrontCart } from './useStorefrontCart'
 import type { 
   Address, 
-  CheckoutData, 
   CheckoutResult,
   CartTotals
 } from '../types/ecommerce-types'
@@ -310,7 +309,7 @@ const DEFAULT_TOTALS: CartTotals = {
 
 export function useCheckout(): UseCheckoutResult {
   const { siteId, taxRate, settings: storefrontSettings } = useStorefront()
-  const { items, totals: cartTotals, clearCart } = useStorefrontCart(siteId, undefined, taxRate)
+  const { cart, items, totals: cartTotals, clearCart } = useStorefrontCart(siteId, undefined, taxRate)
   
   const [state, setState] = useState<CheckoutState>(INITIAL_STATE)
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
@@ -459,33 +458,24 @@ export function useCheckout(): UseCheckoutResult {
     setError(null)
     
     try {
-      const checkoutData: CheckoutData = {
-        email: state.email,
-        phone: state.phone || undefined,
-        shipping_address: state.shippingAddress as Address,
-        billing_address: state.useSameAsBilling 
-          ? state.shippingAddress as Address 
-          : state.billingAddress as Address,
-        shipping_method: state.shippingMethod?.id,
-        shipping_amount: state.shippingMethod?.price,
-        customer_notes: state.customerNotes || undefined,
-        payment_method: state.paymentMethod?.id
-      }
-      
-      // Call checkout API
+      const billingAddr = state.useSameAsBilling
+        ? state.shippingAddress as Address
+        : state.billingAddress as Address
+
+      // Build request body matching the checkout API route expectations
       const response = await fetch(`/api/modules/ecommerce/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          site_id: siteId,
-          checkout_data: checkoutData,
-          items: items.map(item => ({
-            product_id: item.product_id,
-            variant_id: item.variant_id,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            custom_options: item.custom_options
-          }))
+          cartId: cart?.id,
+          shippingAddress: state.shippingAddress,
+          billingAddress: billingAddr,
+          customerEmail: state.email,
+          customerName: `${(state.shippingAddress.first_name || '')} ${(state.shippingAddress.last_name || '')}`.trim() || undefined,
+          customerPhone: state.phone || undefined,
+          paymentProvider: state.paymentMethod?.id,
+          shippingMethod: state.shippingMethod?.id,
+          notes: state.customerNotes || undefined
         })
       })
       
@@ -510,7 +500,7 @@ export function useCheckout(): UseCheckoutResult {
     } finally {
       setIsPlacingOrder(false)
     }
-  }, [siteId, items, validation, state, clearCart, clearCheckout])
+  }, [siteId, cart, items, validation, state, clearCart, clearCheckout])
   
   return {
     // State

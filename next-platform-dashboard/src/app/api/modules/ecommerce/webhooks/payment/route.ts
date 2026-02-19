@@ -296,22 +296,27 @@ async function handlePaddleWebhook(body: string, signature: string | null): Prom
       }
     }
 
-    // Handle different event types
+    // Handle different event types (support both Paddle Classic and Paddle Billing event names)
     const eventType = data.event_type || data.alert_name
-    const transactionId = data.subscription_id || data.checkout_id
+    const transactionId = data.data?.id || data.subscription_id || data.checkout_id
     
     switch (eventType) {
+      // Paddle Billing event types
+      case 'transaction.completed':
+      // Paddle Classic event types
       case 'payment_succeeded':
       case 'subscription_payment_succeeded':
         await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
         await updatePublicOrderStatus(siteId, orderId, 'confirmed')
         break
         
+      case 'transaction.payment_failed':
       case 'payment_failed':
       case 'subscription_payment_failed':
         await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
         break
-        
+      
+      case 'adjustment.created':
       case 'payment_refunded':
       case 'subscription_payment_refunded':
         await updatePublicOrderPaymentStatus(siteId, orderId, 'refunded')
@@ -334,9 +339,13 @@ async function handleFlutterwaveWebhook(body: string, signature: string | null):
   try {
     const data = JSON.parse(body)
     
-    // Extract order ID from tx_ref (we encode it in the reference)
+    // Extract order ID from tx_ref or custom_data
+    // tx_ref format may be: orderId, orderId-timestamp, or a UUID
     const txRef = data.data?.tx_ref || data.tx_ref
-    const orderId = txRef?.split('-')[0] // Assuming format: orderId-timestamp
+    const customOrderId = data.data?.meta?.order_id || data.meta?.order_id
+    // If tx_ref looks like a UUID (36 chars with dashes), use it directly
+    // Otherwise try custom_data.order_id
+    const orderId = customOrderId || (txRef?.length === 36 ? txRef : txRef?.split('-').slice(0, 5).join('-'))
     
     if (!orderId) {
       console.error('Flutterwave webhook: No order ID found')
