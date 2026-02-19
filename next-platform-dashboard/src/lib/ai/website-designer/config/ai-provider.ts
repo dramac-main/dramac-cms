@@ -80,27 +80,26 @@ const DEFAULT_PROVIDER: AIProvider = "anthropic";
 /**
  * Task-specific model tier assignments
  * 
- * ALL tasks use FAST tier (Haiku) to fit within Vercel Hobby 60s timeout.
- * The prompts are extremely detailed with industry blueprints, component field
- * specs, color rules, and content formulas — Haiku produces excellent results
- * with this level of structure. Quality comes from prompt engineering, not
- * model size.
+ * HYBRID approach for quality + speed within Vercel Hobby 60s timeout:
+ * - Page content uses PREMIUM (Sonnet 4.6) — better headlines, CTAs, descriptions
+ * - Everything else uses FAST (Haiku 4.5) — structured/constrained outputs
  * 
- * To upgrade quality: switch to Pro plan (300s timeout) and move page-content
- * back to "premium".
+ * Budget: ~8s arch(Haiku) + ~18s pages(Sonnet, parallel) + ~5s nav/footer(Haiku) = ~31s
  */
 const TASK_TIERS: Record<string, AIModelTier> = {
-  // All generation tasks: fast (Haiku) — fits within 60s Vercel Hobby timeout
+  // Structured outputs — Haiku is equally good here (blueprints dictate structure)
   "architecture": "fast",
-  "page-content": "fast",
-  "iteration": "fast",
   "navbar": "fast",
   "footer": "fast",
+  
+  // Creative content — Sonnet 4.6 writes noticeably better copy
+  "page-content": "premium",
+  "iteration": "premium",
   
   // Other tasks (only used when features are explicitly enabled)
   "refinement": "fast",
   "module-configurator": "fast",
-  "content-generation": "fast",
+  "content-generation": "premium",
   "design-inspiration": "fast",
   "module-analysis": "fast",
   "content-optimization": "fast",
