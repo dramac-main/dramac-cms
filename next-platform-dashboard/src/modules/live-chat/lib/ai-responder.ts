@@ -23,7 +23,7 @@ const HANDOFF_KEYWORDS = [
 const CONFIDENCE_THRESHOLD = 0.7
 
 function getModel() {
-  return anthropic('claude-sonnet-4-20250514')
+  return anthropic('claude-sonnet-4-6')
 }
 
 // =============================================================================

@@ -7,9 +7,9 @@ export const anthropic = new Anthropic({
 
 // Available models
 export const AI_MODELS = {
-  opus: "claude-sonnet-4-20250514",
-  sonnet: "claude-sonnet-4-20250514",
-  haiku: "claude-3-haiku-20240307",
+  opus: "claude-sonnet-4-6",
+  sonnet: "claude-sonnet-4-6",
+  haiku: "claude-haiku-4-5-20251001",
 } as const;
 
 // Default model for site generation

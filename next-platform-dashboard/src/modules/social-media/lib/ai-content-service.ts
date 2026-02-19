@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { SocialPlatform, AICaption, AIContentIdea } from '../types'
 import { PLATFORM_CONFIGS } from '../types'
 
-const model = anthropic('claude-sonnet-4-20250514')
+const model = anthropic('claude-sonnet-4-6')
 
 // ============================================================================
 // CAPTION GENERATION
@@ -307,7 +307,7 @@ Guidelines:
 
   try {
     const result = await generateText({
-      model: anthropic('claude-sonnet-4-20250514'),
+      model: anthropic('claude-sonnet-4-6'),
       messages: [
         {
           role: 'user',

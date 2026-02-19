@@ -111,10 +111,9 @@ export const PROVIDER_MODELS: Record<SupportedProvider, string[]> = {
     'gpt-3.5-turbo'
   ],
   anthropic: [
-    'claude-3-5-sonnet-20241022',
-    'claude-3-opus-20240229',
-    'claude-3-sonnet-20240229',
-    'claude-3-haiku-20240307'
+    'claude-sonnet-4-6',
+    'claude-opus-4-6',
+    'claude-haiku-4-5-20251001',
   ],
   google: [
     'gemini-1.5-pro',
@@ -130,7 +129,7 @@ export const PROVIDER_MODELS: Record<SupportedProvider, string[]> = {
 
 export const DEFAULT_MODELS: Record<SupportedProvider, string> = {
   openai: 'gpt-4o',
-  anthropic: 'claude-3-5-sonnet-20241022',
+  anthropic: 'claude-sonnet-4-6',
   google: 'gemini-1.5-pro',
   local: 'llama3.2'
 }
@@ -152,11 +151,10 @@ export const MODEL_COSTS: Record<string, ProviderCosts> = {
   'gpt-4': { inputPer1k: 0.03, outputPer1k: 0.06 },
   'gpt-3.5-turbo': { inputPer1k: 0.0005, outputPer1k: 0.0015 },
   
-  // Anthropic
-  'claude-3-5-sonnet-20241022': { inputPer1k: 0.003, outputPer1k: 0.015 },
-  'claude-3-opus-20240229': { inputPer1k: 0.015, outputPer1k: 0.075 },
-  'claude-3-sonnet-20240229': { inputPer1k: 0.003, outputPer1k: 0.015 },
-  'claude-3-haiku-20240307': { inputPer1k: 0.00025, outputPer1k: 0.00125 },
+  // Anthropic (current pricing as of 2026)
+  'claude-sonnet-4-6': { inputPer1k: 0.003, outputPer1k: 0.015 },
+  'claude-opus-4-6': { inputPer1k: 0.005, outputPer1k: 0.025 },
+  'claude-haiku-4-5-20251001': { inputPer1k: 0.001, outputPer1k: 0.005 },
   
   // Google
   'gemini-1.5-pro': { inputPer1k: 0.00125, outputPer1k: 0.005 },

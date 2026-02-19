@@ -62,7 +62,7 @@ export const TIER_LIMITS: Record<UsageTier, UsageLimits> = {
     monthlyExecutionLimit: 5000,
     maxActiveAgents: 15,
     maxToolsPerAgent: 20,
-    allowedModels: ['gpt-4o-mini', 'gpt-4o', 'claude-3-5-sonnet'],
+    allowedModels: ['gpt-4o-mini', 'gpt-4o', 'claude-sonnet-4-6'],
     customPromptsAllowed: true,
     prioritySupport: true,
     slaGuarantee: false,
@@ -73,7 +73,7 @@ export const TIER_LIMITS: Record<UsageTier, UsageLimits> = {
     monthlyExecutionLimit: 25000,
     maxActiveAgents: 50,
     maxToolsPerAgent: 50,
-    allowedModels: ['gpt-4o-mini', 'gpt-4o', 'claude-3-5-sonnet', 'claude-3-opus'],
+    allowedModels: ['gpt-4o-mini', 'gpt-4o', 'claude-sonnet-4-6', 'claude-opus-4-6'],
     customPromptsAllowed: true,
     prioritySupport: true,
     slaGuarantee: true,
@@ -102,8 +102,8 @@ export const TIER_PRICING: Record<UsageTier, { monthly: number; yearly: number }
 export const TOKEN_COSTS: Record<string, { input: number; output: number }> = {
   'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
   'gpt-4o': { input: 0.0025, output: 0.01 },
-  'claude-3-5-sonnet': { input: 0.003, output: 0.015 },
-  'claude-3-opus': { input: 0.015, output: 0.075 },
+  'claude-sonnet-4-6': { input: 0.003, output: 0.015 },
+  'claude-opus-4-6': { input: 0.005, output: 0.025 },
 };
 
 export class UsageTracker {

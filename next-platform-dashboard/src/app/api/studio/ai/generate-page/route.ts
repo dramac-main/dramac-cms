@@ -18,7 +18,7 @@ const anthropic = new Anthropic({
 });
 
 // Claude model to use
-const CLAUDE_MODEL = "claude-sonnet-4-20250514";
+const CLAUDE_MODEL = "claude-sonnet-4-6";
 
 // Rate limiting (simple in-memory)
 const rateLimiter = new Map<string, { count: number; resetAt: number }>();

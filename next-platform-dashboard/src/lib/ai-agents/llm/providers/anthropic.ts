@@ -26,7 +26,7 @@ export class AnthropicProvider implements LLMProvider {
     this.client = new Anthropic({
       apiKey: config.apiKey || process.env.ANTHROPIC_API_KEY
     })
-    this.defaultModel = config.defaultModel || 'claude-3-5-sonnet-20241022'
+    this.defaultModel = config.defaultModel || 'claude-sonnet-4-6'
   }
 
   async complete(

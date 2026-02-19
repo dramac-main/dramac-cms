@@ -80,7 +80,7 @@ ${imageInstruction}
 Return the regenerated content as a JSON object matching the input structure. Only return the JSON, no explanation.`;
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       max_tokens: 2048,
       messages: [{ role: "user", content: prompt }],
     });

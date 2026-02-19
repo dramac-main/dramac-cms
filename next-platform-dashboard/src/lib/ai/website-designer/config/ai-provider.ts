@@ -52,17 +52,17 @@ const MODEL_CONFIGS: Record<AIProvider, Record<AIModelTier, AIModelConfig>> = {
   anthropic: {
     premium: {
       provider: "anthropic",
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       description: "Best quality for architecture and page content",
     },
     standard: {
       provider: "anthropic",
-      model: "claude-sonnet-4-20250514",
+      model: "claude-sonnet-4-6",
       description: "Good quality for navbar and footer",
     },
     fast: {
       provider: "anthropic",
-      model: "claude-3-5-haiku-20241022",
+      model: "claude-haiku-4-5-20251001",
       description: "Fast and cheap for simple analysis tasks",
     },
   },
@@ -187,9 +187,9 @@ export function estimateCost(tasks: (keyof typeof TASK_TIERS)[]): {
     totalOutput += estimate.output;
   }
 
-  // Claude Sonnet 4 pricing (as of 2025)
-  const inputCostPer1M = 3;    // $3 per 1M input tokens
-  const outputCostPer1M = 15;  // $15 per 1M output tokens
+  // Claude Haiku 4.5 pricing (all tasks use fast tier)
+  const inputCostPer1M = 1;    // $1 per 1M input tokens
+  const outputCostPer1M = 5;   // $5 per 1M output tokens
   
   const estimatedCostUSD = 
     (totalInput / 1_000_000) * inputCostPer1M +

@@ -123,7 +123,7 @@ export async function getAiStatus(): Promise<{
 
   return {
     enabled,
-    model: enabled ? 'claude-sonnet-4-20250514' : 'none',
+    model: enabled ? 'claude-sonnet-4-6' : 'none',
     features: enabled
       ? [
           'Auto-responses when no agents available',
