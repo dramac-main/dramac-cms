@@ -87,7 +87,7 @@ export const mainNavigation: NavGroup[] = [
         dataTour: "transfers",
       },
       {
-        title: "Domain Settings",
+        title: "Domain Management",
         href: "/dashboard/domains/settings",
         icon: Sliders,
         dataTour: "domain-settings",

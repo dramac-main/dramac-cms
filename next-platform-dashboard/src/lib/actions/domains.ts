@@ -1214,6 +1214,238 @@ export async function deleteDomain(domainId: string): Promise<{
 }
 
 // ============================================================================
+// Client Domain Assignment
+// ============================================================================
+
+/**
+ * Assign a domain to a client and/or site.
+ * Updates the domain's client_id and site_id fields.
+ */
+export async function assignDomainToClient(
+  domainId: string,
+  clientId: string | null,
+  siteId: string | null
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const admin = createAdminClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.agency_id) return { success: false, error: "No agency found" };
+
+  try {
+    // Verify domain belongs to this agency
+    const { data: domain, error: domainErr } = await getTable(supabase, "domains")
+      .select("id, agency_id")
+      .eq("id", domainId)
+      .eq("agency_id", profile.agency_id)
+      .single();
+
+    if (domainErr || !domain) {
+      return { success: false, error: "Domain not found" };
+    }
+
+    // If a clientId is provided, verify the client belongs to this agency
+    if (clientId) {
+      const { data: client, error: clientErr } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("id", clientId)
+        .eq("agency_id", profile.agency_id)
+        .single();
+
+      if (clientErr || !client) {
+        return { success: false, error: "Client not found" };
+      }
+    }
+
+    // If a siteId is provided, verify the site belongs to this agency
+    if (siteId) {
+      const { data: site, error: siteErr } = await supabase
+        .from("sites")
+        .select("id")
+        .eq("id", siteId)
+        .eq("agency_id", profile.agency_id)
+        .single();
+
+      if (siteErr || !site) {
+        return { success: false, error: "Site not found" };
+      }
+    }
+
+    // Update the domain
+    const { error: updateErr } = await getTable(admin, "domains")
+      .update({
+        client_id: clientId,
+        site_id: siteId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", domainId);
+
+    if (updateErr) {
+      return { success: false, error: updateErr.message };
+    }
+
+    revalidatePath(`/dashboard/domains/${domainId}`);
+    revalidatePath("/dashboard/domains");
+    if (clientId) {
+      revalidatePath(`/dashboard/clients/${clientId}`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("[Domains] Assign to client error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Assignment failed",
+    };
+  }
+}
+
+/**
+ * Get all domains assigned to a specific client
+ */
+export async function getClientDomains(clientId: string): Promise<{
+  success: boolean;
+  data: DomainWithDetails[];
+  error?: string;
+}> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated", data: [] };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.agency_id) return { success: false, error: "No agency", data: [] };
+
+  try {
+    const { data, error } = await getTable(supabase, "domains")
+      .select("*")
+      .eq("agency_id", profile.agency_id)
+      .eq("client_id", clientId)
+      .neq("status", "cancelled")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("[Domains] Get client domains error:", error);
+      return { success: true, data: [] };
+    }
+
+    return {
+      success: true,
+      data: (data || []) as unknown as DomainWithDetails[],
+    };
+  } catch (error) {
+    console.error("[Domains] Get client domains error:", error);
+    return { success: false, error: "Failed to load client domains", data: [] };
+  }
+}
+
+/**
+ * Get all agency clients (for domain assignment dropdowns)
+ */
+export async function getAgencyClientsForAssignment(): Promise<{
+  success: boolean;
+  data: Array<{ id: string; name: string; company: string | null }>;
+  error?: string;
+}> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated", data: [] };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.agency_id) return { success: false, error: "No agency", data: [] };
+
+  try {
+    const { data, error } = await supabase
+      .from("clients")
+      .select("id, name, company")
+      .eq("agency_id", profile.agency_id)
+      .order("name", { ascending: true });
+
+    if (error) {
+      return { success: true, data: [] };
+    }
+
+    return {
+      success: true,
+      data: (data || []).map((c) => ({
+        id: c.id,
+        name: c.name || "Unnamed Client",
+        company: (c as AnyRecord).company as string | null,
+      })),
+    };
+  } catch (error) {
+    console.error("[Domains] Get agency clients error:", error);
+    return { success: false, error: "Failed to load clients", data: [] };
+  }
+}
+
+/**
+ * Get all agency sites (for domain assignment dropdowns)
+ */
+export async function getAgencySitesForAssignment(): Promise<{
+  success: boolean;
+  data: Array<{ id: string; name: string; subdomain: string }>;
+  error?: string;
+}> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Not authenticated", data: [] };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("agency_id")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile?.agency_id) return { success: false, error: "No agency", data: [] };
+
+  try {
+    const { data, error } = await supabase
+      .from("sites")
+      .select("id, name, subdomain")
+      .eq("agency_id", profile.agency_id)
+      .order("name", { ascending: true });
+
+    if (error) {
+      return { success: true, data: [] };
+    }
+
+    return {
+      success: true,
+      data: (data || []).map((s) => ({
+        id: s.id,
+        name: s.name || "Unnamed Site",
+        subdomain: s.subdomain || "",
+      })),
+    };
+  } catch (error) {
+    console.error("[Domains] Get agency sites error:", error);
+    return { success: false, error: "Failed to load sites", data: [] };
+  }
+}
+
+// ============================================================================
 // ResellerClub Configuration Status
 // ============================================================================
 

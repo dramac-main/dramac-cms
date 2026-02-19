@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClientOverview } from "./client-overview";
 import { ClientSitesList } from "./client-sites-list";
+import { ClientDomainsList } from "./client-domains-list";
 import { ClientActivityLog } from "./client-activity-log";
 import { ClientPortalSettings } from "./client-portal-settings";
 import { ClientDangerZone } from "./client-danger-zone";
@@ -21,7 +22,7 @@ interface ClientDetailTabsProps {
 export function ClientDetailTabs({ client }: ClientDetailTabsProps) {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const validTabs = ["overview", "sites", "portal", "activity", "danger"];
+  const validTabs = ["overview", "sites", "domains", "portal", "activity", "danger"];
   const defaultTab = tabParam && validTabs.includes(tabParam) ? tabParam : "overview";
 
   return (
@@ -29,6 +30,7 @@ export function ClientDetailTabs({ client }: ClientDetailTabsProps) {
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="sites">Sites ({client.sites?.length || 0})</TabsTrigger>
+        <TabsTrigger value="domains">Domains</TabsTrigger>
         <TabsTrigger value="portal">Portal Access</TabsTrigger>
         <TabsTrigger value="activity">Activity</TabsTrigger>
         <TabsTrigger value="danger">Danger Zone</TabsTrigger>
@@ -40,6 +42,10 @@ export function ClientDetailTabs({ client }: ClientDetailTabsProps) {
 
       <TabsContent value="sites">
         <ClientSitesList clientId={client.id} sites={client.sites || []} />
+      </TabsContent>
+
+      <TabsContent value="domains">
+        <ClientDomainsList clientId={client.id} />
       </TabsContent>
 
       <TabsContent value="portal">

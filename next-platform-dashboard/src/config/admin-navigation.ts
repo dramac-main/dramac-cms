@@ -24,6 +24,7 @@ import {
   FlaskConical,
   Blocks,
   DollarSign,
+  Globe,
   type LucideIcon,
 } from "lucide-react";
 
@@ -48,6 +49,7 @@ export const adminNavigationItems: AdminNavItem[] = [
   { name: "Module Analytics", href: "/admin/modules/analytics", icon: BarChart3, group: "Management" },
   { name: "Module Studio", href: "/admin/modules/studio", icon: Blocks, group: "Management" },
   { name: "Domain Pricing", href: "/admin/pricing", icon: DollarSign, group: "Management" },
+  { name: "Domain Controls", href: "/admin/domains", icon: Globe, group: "Management" },
   
   // Revenue & Analytics
   { name: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard, group: "Revenue" },
