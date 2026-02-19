@@ -127,6 +127,7 @@ export class WebsiteDesignerEngine {
     success: boolean;
     architecture: SiteArchitecture;
     formattedContext: string;
+    siteContext: { name: string; domain: string; industry: string; description: string };
     error?: string;
   }> {
     this.userPrompt = input.prompt;
@@ -197,6 +198,12 @@ export class WebsiteDesignerEngine {
         success: true,
         architecture: this.architecture,
         formattedContext,
+        siteContext: {
+          name: this.getBusinessName(),
+          domain: this.context?.site?.domain || "",
+          industry: this.context?.client?.industry || "general",
+          description: this.context?.client?.description || "",
+        },
       };
     } catch (error) {
       console.error("[WebsiteDesignerEngine] stepArchitecture error:", error);
@@ -204,6 +211,7 @@ export class WebsiteDesignerEngine {
         success: false,
         architecture: this.getDefaultArchitecture(),
         formattedContext: "",
+        siteContext: { name: "", domain: "", industry: "general", description: "" },
         error: error instanceof Error ? error.message : "Failed to generate architecture",
       };
     }
@@ -288,9 +296,9 @@ export class WebsiteDesignerEngine {
     // Use provided context instead of DB call (no network needed)
     if (siteContext) {
       this.context = {
-        site: { domain: siteContext.domain } as any,
-        client: { name: siteContext.name, industry: siteContext.industry, description: siteContext.description } as any,
-        branding: {} as any,
+        site: { domain: siteContext.domain, name: siteContext.name } as any,
+        client: { name: siteContext.name, company: siteContext.name, industry: siteContext.industry, description: siteContext.description } as any,
+        branding: { business_name: siteContext.name } as any,
         contact: {} as any,
         social: [],
         hours: [],
@@ -359,7 +367,7 @@ export class WebsiteDesignerEngine {
         success: true,
         site: {
           name: this.getBusinessName(),
-          domain: this.context.site.domain,
+          domain: this.context?.site?.domain || "",
           settings: siteSettings,
           seo: seoSettings,
         },
@@ -1040,10 +1048,11 @@ Configure ALL footer props for a complete, professional result.`,
    */
   private getBusinessName(): string {
     return (
-      this.context?.branding.business_name ||
-      this.context?.client.company ||
-      this.context?.client.company_name ||
-      this.context?.site.name ||
+      this.context?.branding?.business_name ||
+      this.context?.client?.company ||
+      this.context?.client?.company_name ||
+      this.context?.client?.name ||
+      this.context?.site?.name ||
       "Your Business"
     );
   }

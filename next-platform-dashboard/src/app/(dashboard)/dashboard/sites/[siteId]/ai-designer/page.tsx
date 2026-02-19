@@ -460,10 +460,10 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
           pages: pagesResult.pages,
           navbar: pagesResult.navbar,
           footer: pagesResult.footer,
-          siteContext: {
-            name: archResult.architecture?.intent || "Business",
+          siteContext: archResult.siteContext || {
+            name: "Business",
             domain: "",
-            industry: archResult.architecture?.intent || "general",
+            industry: "general",
             description: prompt,
           },
           startTime,

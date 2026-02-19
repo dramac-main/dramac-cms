@@ -196,9 +196,9 @@ export function estimateCost(tasks: (keyof typeof TASK_TIERS)[]): {
     totalOutput += estimate.output;
   }
 
-  // Claude Haiku 4.5 pricing (all tasks use fast tier)
-  const inputCostPer1M = 1;    // $1 per 1M input tokens
-  const outputCostPer1M = 5;   // $5 per 1M output tokens
+  // Rough pricing estimate (mixed Sonnet 4.6 + Haiku 4.5)
+  const inputCostPer1M = 2;    // ~$2 per 1M input tokens (blended)
+  const outputCostPer1M = 8;   // ~$8 per 1M output tokens (blended)
   
   const estimatedCostUSD = 
     (totalInput / 1_000_000) * inputCostPer1M +

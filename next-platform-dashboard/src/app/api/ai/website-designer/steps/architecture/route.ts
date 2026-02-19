@@ -93,6 +93,7 @@ export async function POST(request: NextRequest) {
       success: true,
       architecture: result.architecture,
       formattedContext: result.formattedContext,
+      siteContext: result.siteContext,
       pageCount: result.architecture.pages.length,
     });
   } catch (error) {
