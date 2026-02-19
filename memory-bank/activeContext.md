@@ -2,10 +2,70 @@
 
 ## Recent Work
 
+### AI Website Designer — Bulletproof Shared Elements (Zero DB + AI Fallbacks) ✅
+
+**Category:** Critical Performance Fix — Vercel Timeout Elimination  
+**Commit:** `a2c46cb`  
+**Files Changed:** 3 (engine.ts, shared/route.ts, page.tsx client)  
+**Deployed:** Pushed to origin/main for Vercel auto-deploy
+
+#### Root Cause
+The `/steps/shared` endpoint (navbar + footer generation) consistently returned 504 Gateway Timeout even after setting `maxDuration=300`. Evidence strongly suggests **Vercel Fluid Compute is NOT enabled** on this project, meaning the hard function limit is **60 seconds** regardless of maxDuration setting. The shared endpoint was doing:
+1. Auth check (~1-2s)
+2. Site access DB query (~1-2s)  
+3. `buildDataContext()` — **13 parallel DB queries** (~3-5s)
+4. Two Haiku AI calls in parallel (~10-30s depending on cold start)
+Total: ~15-40s, right at the edge of 60s with cold starts pushing it over.
+
+#### Solution: Three-Layer Defense
+1. **ZERO DB calls** — `stepSharedElements` now receives all business data via `SharedElementsContext` from the architecture step (which already gathered it). Eliminates 13 DB queries and ~5s latency.
+2. **45-second AI timeout** — `Promise.race()` wrapper kills AI calls if they exceed 45s (leaving 15s buffer for cold start + auth).
+3. **Deterministic fallbacks** — If AI calls fail OR timeout, `buildFallbackNavbar()` and `buildFallbackFooter()` construct valid navbar/footer from business data. **The endpoint can NEVER fail.**
+
+#### New Type: `SharedElementsContext`
+```typescript
+export interface SharedElementsContext {
+  name: string; domain: string; industry: string; description: string;
+  logoUrl: string; contactEmail: string; contactPhone: string;
+  contactAddress: Record<string, string | undefined>;
+  social: Array<{ platform: string; url: string }>;
+  hours: Array<{ day: string; openTime: string; closeTime: string; isClosed?: boolean }>;
+  services: string[];
+}
+```
+Populated in `stepArchitecture()`, passed through client → route → engine.
+
+#### Data Flow
+```
+stepArchitecture() → builds full siteContext with contact/social/hours/services
+  ↓ (returned to client)
+client page.tsx → passes siteContext to /steps/shared
+  ↓ (in request body)
+shared/route.ts → passes siteContext to engine.stepSharedElements()
+  ↓ (4th parameter)
+stepSharedElements() → reconstructs this.context from siteContext (NO DB)
+  → tries AI generation with 45s timeout
+  → on failure: uses deterministic fallback navbar/footer
+  → ALWAYS returns { success: true, navbar, footer }
+```
+
+#### Worst-Case Timeline (60s budget)
+| Phase | Time | Budget Used |
+|-------|------|-------------|
+| Cold start | ~5s | 5s |
+| Auth + site access | ~2s | 7s |
+| Context reconstruction | ~0ms | 7s |
+| AI calls (Haiku ×2 parallel) | ~10-15s | 22s |
+| **Total** | **~22s** | **Well under 60s** |
+
+If AI takes >45s → fallback triggers at 45s mark → still under 60s.
+
+---
+
 ### AI Website Designer Per-Page Architecture ✅
 
 **Category:** Critical Performance Fix — Vercel Hobby 60s Timeout  
-**Commits:** `734101e` (hybrid models), `f63c9af` (finalize local-only), `632f0e0` (business name fix), `609ebd2` (per-page architecture)  
+**Commits:** `734101e` (hybrid models), `f63c9af` (finalize local-only), `632f0e0` (business name fix), `609ebd2` (per-page architecture), `9c2e045` (maxDuration 300)  
 **Files Changed:** 5 (2 new, 3 modified)  
 **Deployed:** Pushed to origin/main for Vercel auto-deploy
 

@@ -356,7 +356,10 @@ export class WebsiteDesignerEngine {
       try {
         [navbar, footer] = await Promise.race([
           Promise.all([
-            this.generateNavbar([]),
+            this.generateNavbar(pages.map(p => ({
+              name: p.name, slug: p.slug, title: p.name, description: "",
+              isHomepage: p.isHomepage || false, components: [], seo: {} as PageSEO, order: 0, id: "",
+            })) as GeneratedPage[]),
             this.generateFooter(),
           ]),
           timeoutPromise,
@@ -1049,7 +1052,8 @@ Configure ALL footer props for a complete, professional result.`,
 
   /**
    * Apply navbar and footer to all pages
-   * IMPORTANT: Only add if page doesn't already have these components to avoid duplicates
+   * IMPORTANT: Filters out duplicate navbars, footers, and trailing CTA sections
+   * to prevent the common AI pattern of generating these inside page content.
    */
   private applySharedElements(
     pages: GeneratedPage[],
@@ -1057,23 +1061,31 @@ Configure ALL footer props for a complete, professional result.`,
     footer: GeneratedComponent
   ): GeneratedPage[] {
     return pages.map((page) => {
-      // Check if page already has navbar/footer to avoid duplicates
-      const hasNavbar = page.components.some(
-        (c) => c.type === "Navbar" || c.type === "NavbarBlock" || c.type === "Navigation"
-      );
-      const hasFooter = page.components.some(
-        (c) => c.type === "Footer" || c.type === "FooterBlock"
-      );
-
       // Filter out any navbar/footer components that were accidentally generated in page content
       const filteredComponents = page.components.filter(
         (c) => !["Navbar", "NavbarBlock", "Navigation", "Footer", "FooterBlock"].includes(c.type)
       );
 
+      // Deduplicate: if the LAST component is a CTA that looks like a page-ending CTA
+      // and there's already a CTA earlier in the page, remove the trailing one
+      // (AI often generates two — one mid-page and one at the end that duplicates with footer)
+      const ctaIndices = filteredComponents
+        .map((c, i) => c.type === "CTA" ? i : -1)
+        .filter(i => i >= 0);
+      
+      let finalComponents = filteredComponents;
+      if (ctaIndices.length >= 2) {
+        const lastIdx = ctaIndices[ctaIndices.length - 1];
+        // Only remove if the trailing CTA is truly the last component
+        if (lastIdx === filteredComponents.length - 1) {
+          finalComponents = filteredComponents.slice(0, lastIdx);
+        }
+      }
+
       return {
         ...page,
         // Always use the shared navbar at start and shared footer at end
-        components: [navbar, ...filteredComponents, footer],
+        components: [navbar, ...finalComponents, footer],
       };
     });
   }

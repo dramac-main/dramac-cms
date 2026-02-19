@@ -1,13 +1,36 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅**
 
 ---
 
-## Latest Update: February 2026 - AI Website Designer Per-Page Architecture ✅
+## Latest Update: February 2026 - AI Designer Bulletproof Shared Elements ✅
 
-**Commits:** `734101e`, `f63c9af`, `632f0e0`, `609ebd2` | **Files Changed:** 5 (2 new, 3 modified)
+**Commit:** `a2c46cb` | **Files Changed:** 3
+
+### Problem
+`/steps/shared` (navbar + footer) kept returning 504 Gateway Timeout despite `maxDuration=300`. Root cause: Vercel Fluid Compute likely NOT enabled on this project → hard 60s cap. The endpoint was making 13 redundant DB queries + 2 AI calls, pushing total time over 60s with cold starts.
+
+### Solution: Three-Layer Defense
+1. **ZERO DB calls** — `SharedElementsContext` passed from architecture step (all business data pre-gathered)
+2. **45s AI timeout** — `Promise.race()` kills AI calls at 45s, leaving 15s safety buffer
+3. **Deterministic fallbacks** — `buildFallbackNavbar()` + `buildFallbackFooter()` construct valid components from business data. Endpoint **NEVER fails**.
+
+### Worst-Case Timeline (60s budget)
+| Phase | Time | Total |
+|-------|------|-------|
+| Cold start | ~5s | 5s |
+| Auth + access | ~2s | 7s |
+| Context (from memory) | ~0ms | 7s |
+| AI ×2 parallel (Haiku) | ~15s | 22s |
+| **Total** | **~22s** | **Well under 60s** |
+
+---
+
+## Previous Update: AI Website Designer Per-Page Architecture ✅
+
+**Commits:** `734101e`, `f63c9af`, `632f0e0`, `609ebd2`, `9c2e045` | **Files Changed:** 5 (2 new, 3 modified)
 
 ### Problem
 AI Designer's "pages" step was still timing out on Vercel Hobby (60s limit). Even after splitting into 3 endpoints, `stepPages()` tried to generate ALL pages + navbar + footer in one 60s function. With Sonnet 4.6 at ~20-30s per page, 4-5 pages always exceeded 60s.

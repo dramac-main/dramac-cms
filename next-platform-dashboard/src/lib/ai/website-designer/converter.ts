@@ -566,6 +566,8 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
     "SectionBlock": "Section",
     "QuoteBlock": "Quote",
     "NewsletterBlock": "Newsletter",
+    "AboutBlock": "About",
+    "AboutSection": "About",
     // Direct mappings
     "Hero": "Hero",
     "Features": "Features",
@@ -754,6 +756,16 @@ function transformPropsForStudio(
       hideOnScroll: true,
       showOnScrollUp: true,
       
+      // Layout — PremiumNavbarRender uses 'layout', map from AI's 'variant'
+      layout: (() => {
+        const v = String(props.variant || "standard").toLowerCase();
+        const layoutMap: Record<string, string> = {
+          "modern": "standard", "minimal": "minimal", "classic": "standard",
+          "transparent": "standard", "centered": "centered", "split": "split",
+        };
+        return layoutMap[v] || v;
+      })(),
+      
       // Mobile menu - MUST match site theme (not hardcoded white)
       mobileMenuStyle: props.mobileMenuStyle || "fullscreen",
       mobileBreakpoint: props.mobileBreakpoint || "md",
@@ -838,8 +850,9 @@ function transformPropsForStudio(
         String(props.secondaryButtonText || "")
       ),
       secondaryButtonColor: props.secondaryButtonColor || "#ffffff",
+      // CRITICAL: Outline button text must be VISIBLE — use white (CTA bg is dark)
       secondaryButtonTextColor: props.secondaryButtonTextColor || "#ffffff",
-      secondaryButtonStyle: props.secondaryButtonStyle || "outline",
+      secondaryButtonStyle: props.secondaryButtonStyle || "ghost",
       // Background — use gradient for modern look
       backgroundColor: ctaBg,
       backgroundGradient: props.backgroundGradient ?? true,
@@ -940,15 +953,24 @@ function transformPropsForStudio(
 
   // ContactForm component
   if (type === "ContactForm") {
+    // Determine which optional fields to show from AI fields array or explicit flags
+    const fields = Array.isArray(props.fields) ? props.fields as string[] : ["name", "email", "message"];
     return {
-      headline: props.headline || props.title || "Contact Us",
+      // CRITICAL: Render expects 'title' NOT 'headline'
+      title: props.title || props.headline || "Contact Us",
+      subtitle: props.subtitle || "",
       description: props.description || "",
-      fields: props.fields || ["name", "email", "message"],
+      // Render uses boolean flags, not a fields array
+      showPhone: props.showPhone ?? fields.includes("phone"),
+      showSubject: props.showSubject ?? fields.includes("subject"),
       submitText: props.submitText || props.submitButtonText || props.buttonText || "Send Message",
       successMessage: props.successMessage || "Thank you for your message!",
       // Form styling to match site theme
       backgroundColor: props.backgroundColor || palette().cardBg,
       textColor: props.textColor || palette().textPrimary,
+      borderRadius: props.borderRadius || "lg",
+      shadow: props.shadow || "md",
+      padding: props.padding || "lg",
       // CRITICAL: buttonColor must use brand primary, NOT default blue-600
       buttonColor: props.buttonColor || themePrimary(),
       buttonTextColor: props.buttonTextColor || palette().textOnPrimary,
@@ -967,10 +989,16 @@ function transformPropsForStudio(
     
     return {
       // Branding — use Studio's actual field names
-      companyName: props.companyName || props.businessName || props.logoText || "Brand",
+      companyName: props.companyName || props.businessName || props.logoText || "",
       logo: typeof props.logo === "string" && props.logo.includes("/") ? props.logo : "",
       logoText: props.logoText || props.companyName || props.businessName || "",
-      description: props.description || props.tagline || "",
+      description: (() => {
+        // Filter out generic AI-fabricated descriptions
+        const desc = String(props.description || props.tagline || "");
+        const genericPatterns = [/technology services by/i, /innovative solutions/i, /professional business/i, /your trusted partner/i];
+        if (genericPatterns.some(p => p.test(desc))) return "";
+        return desc;
+      })(),
       
       // Link columns
       columns: Array.isArray(linkColumns) ? linkColumns.map((col: Record<string, unknown>, i: number) => ({
@@ -991,37 +1019,43 @@ function transformPropsForStudio(
         url: social.url || social.href || social.link || "#",
       })) : [],
       
-      // Contact info
-      // Contact info — filter out generic placeholders
+      // Contact info — filter out generic placeholders the AI fabricates
       showContactInfo: (() => {
         const email = props.email || props.contactEmail || "";
         const phone = props.phone || props.contactPhone || "";
         const address = props.address || props.contactAddress || "";
-        // Don't show contact info if it's all placeholder data
+        // Don't show contact info if it's all placeholder/fabricated data
         const isPlaceholder = (v: unknown) => {
-          const s = String(v || "");
-          return !s || s.includes("555") || s.includes("hello@company") || s.includes("123 Main") || s.includes("info@company");
+          const s = String(v || "").toLowerCase();
+          return !s || s.includes("555") || s.includes("hello@company") || s.includes("123 main") ||
+            s.includes("info@company") || s.includes("your@email") || s.includes("example.com") ||
+            s.includes("xxx") || s.includes("000-000") || s.includes("main street") ||
+            s.includes("city, country") || s.includes("city, state") || s.includes("any street") ||
+            s.includes("@yourbusiness") || s.includes("@business") || s.includes("lorem") ||
+            s.includes("(000)") || s.includes("000 000") || /\d{3}[\s-]?\d{3}[\s-]?\d{3,4}/.test(s) === false && s.length > 3 && /\d/.test(s);
         };
         return !isPlaceholder(email) || !isPlaceholder(phone) || !isPlaceholder(address);
       })(),
       contactEmail: (() => {
         const e = String(props.email || props.contactEmail || "");
-        return e.includes("hello@company") || e.includes("info@company") ? "" : e;
+        return /hello@company|info@company|your@|example\.com|@yourbusiness|@business\./i.test(e) ? "" : e;
       })(),
       contactPhone: (() => {
         const p = String(props.phone || props.contactPhone || "");
-        return p.includes("555") || p.includes("(555)") || p.includes("97X") ? "" : p;
+        return /555|97X|\(555\)|\(000\)|000-000|000 000/i.test(p) ? "" : p;
       })(),
       contactAddress: (() => {
         const a = String(props.address || props.contactAddress || "");
-        return a.includes("123 Main") ? "" : a;
+        return /123 main|main street|any street|city,?\s*(country|state)|lorem/i.test(a) ? "" : a;
       })(),
       
       // Copyright & Legal
       copyright: props.copyrightText || props.copyright || `© ${new Date().getFullYear()} All rights reserved.`,
-      legalLinks: props.legalLinks || [
+      // CRITICAL: PremiumFooterRender expects 'bottomLinks' NOT 'legalLinks'
+      bottomLinks: props.bottomLinks || props.legalLinks || [
         { label: "Privacy Policy", href: "/privacy" },
         { label: "Terms of Service", href: "/terms" },
+        { label: "Cookies", href: "/cookies" },
       ],
       
       // Newsletter
@@ -1043,7 +1077,7 @@ function transformPropsForStudio(
 
   // FAQ component
   if (type === "FAQ") {
-    const faqs = props.faqs || props.items || props.questions || [];
+    const faqs = props.faqs || props.items || props.questions || props.faqItems || props.faq_items || [];
     return {
       title: props.headline || props.title || "Frequently Asked Questions",
       subtitle: props.subtitle || "",
@@ -1054,6 +1088,9 @@ function transformPropsForStudio(
         answer: f.answer || f.content || f.response || "",
       })) : [],
       variant: props.variant || "accordion",
+      // Free SEO: enable JSON-LD FAQ schema for search engines
+      enableSchema: props.enableSchema ?? true,
+      expandFirst: props.expandFirst ?? true,
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
       textColor: props.textColor || palette().textPrimary,
       accentColor: props.accentColor || themePrimary(),
@@ -1156,6 +1193,42 @@ function transformPropsForStudio(
     };
   }
 
+  // About component — treat like a rich content section with image
+  if (type === "About") {
+    return {
+      title: props.title || props.headline || "About Us",
+      subtitle: props.subtitle || "",
+      description: props.description || props.content || props.text || "",
+      image: props.image || "",
+      imageAlt: props.imageAlt || "",
+      imagePosition: props.imagePosition || "right",
+      variant: props.variant || "split",
+      // Theme-aware colors
+      backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
+      textColor: props.textColor || palette().textPrimary,
+      titleColor: props.titleColor || palette().textPrimary,
+      accentColor: props.accentColor || themePrimary(),
+    };
+  }
+
+  // Divider component — theme-aware
+  if (type === "Divider") {
+    return {
+      color: props.color || (isDarkTheme() ? "#374151" : "#e5e7eb"),
+      thickness: props.thickness || 1,
+      style: props.style || "solid",
+      width: props.width || "full",
+      marginY: props.marginY || "md",
+    };
+  }
+
+  // Spacer component
+  if (type === "Spacer") {
+    return {
+      size: props.size || props.height || "md",
+    };
+  }
+
   // Gallery component
   if (type === "Gallery") {
     const images = props.images || props.items || props.gallery || [];
@@ -1212,10 +1285,20 @@ function transformPropsForStudio(
         link: logo.link || logo.url || logo.href || "",
       })) : [],
       variant: props.variant || "simple",
-      columns: props.columns || 5,
-      logoGrayscale: props.logoGrayscale ?? true,
-      logoGrayscaleHover: props.logoGrayscaleHover ?? false,
-      backgroundColor: props.backgroundColor || "",
+      // CRITICAL: Render expects responsive columns object, not a single number
+      columns: typeof props.columns === "object" ? props.columns : {
+        mobile: 2,
+        tablet: Math.min(Number(props.columns) || 5, 4),
+        desktop: Number(props.columns) || 5,
+      },
+      // CRITICAL: Render expects 'grayscale' NOT 'logoGrayscale'
+      grayscale: props.grayscale ?? props.logoGrayscale ?? true,
+      hoverColor: props.hoverColor ?? !(props.logoGrayscaleHover ?? false),
+      logoHeight: props.logoHeight || 48,
+      gap: props.gap || "md",
+      // CRITICAL: Render expects 'background' NOT 'backgroundColor'
+      background: props.background || props.backgroundColor || "",
+      padding: props.padding || "lg",
     };
   }
 
@@ -1224,16 +1307,21 @@ function transformPropsForStudio(
     const badges = props.badges || props.items || [];
     return {
       title: props.title || props.headline || "",
-      subtitle: props.subtitle || "",
+      // CRITICAL: Render expects badges as {image, alt, link} — not {icon, text, description}
+      // Map AI's icon/text format to the render's expected structure
       badges: Array.isArray(badges) ? badges.map((b: Record<string, unknown>, i: number) => ({
-        icon: b.icon || "shield-check",
-        text: b.text || b.title || b.label || `Badge ${i + 1}`,
-        description: b.description || "",
+        image: b.image || b.icon || "",
+        alt: b.alt || b.text || b.title || b.label || `Badge ${i + 1}`,
+        link: b.link || b.href || "",
       })) : [],
-      variant: props.variant || "horizontal",
+      // CRITICAL: Render expects 'layout' NOT 'variant'
+      layout: props.layout || props.variant || "horizontal",
+      columns: props.columns || 4,
+      size: props.size || "md",
+      grayscale: props.grayscale ?? false,
+      hoverEffect: props.hoverEffect || "none",
+      gap: props.gap || "md",
       alignment: props.alignment || "center",
-      backgroundColor: props.backgroundColor || "",
-      textColor: props.textColor || "",
     };
   }
 
@@ -1242,8 +1330,16 @@ function transformPropsForStudio(
     return {
       text: props.text || props.quote || props.content || "",
       author: props.author || props.attribution || "",
-      source: props.source || props.role || props.company || "",
-      style: props.style || props.variant || "default",
+      // CRITICAL: Render expects 'authorTitle' NOT 'source'
+      authorTitle: props.authorTitle || props.source || props.role || props.company || "",
+      authorImage: props.authorImage || props.avatar || props.image || "",
+      // CRITICAL: Render expects 'variant' NOT 'style'
+      variant: props.variant || props.style || "bordered",
+      size: props.size || "md",
+      // Theme-aware colors
+      borderColor: props.borderColor || themePrimary(),
+      backgroundColor: props.backgroundColor || palette().cardBg,
+      textColor: props.textColor || palette().textPrimary,
     };
   }
 
