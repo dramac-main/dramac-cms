@@ -5,11 +5,15 @@
  * Generates navbar + footer in parallel.
  * Both use Haiku (fast tier) — completes in ~8-10s total.
  * Called once after all pages are generated.
+ *
+ * ZERO DB CALLS inside engine — receives siteContext from architecture step.
+ * Has bullet-proof fallbacks — this endpoint NEVER fails.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { WebsiteDesignerEngine } from "@/lib/ai/website-designer/engine";
+import type { SharedElementsContext } from "@/lib/ai/website-designer/engine";
 import { z } from "zod";
 
 export const maxDuration = 300;
@@ -43,6 +47,20 @@ const RequestSchema = z.object({
     slug: z.string(),
     isHomepage: z.boolean().optional(),
   })),
+  // Business context from architecture step — avoids redundant DB calls
+  siteContext: z.object({
+    name: z.string(),
+    domain: z.string(),
+    industry: z.string(),
+    description: z.string(),
+    logoUrl: z.string(),
+    contactEmail: z.string(),
+    contactPhone: z.string(),
+    contactAddress: z.record(z.string(), z.string().optional()).default({}),
+    social: z.array(z.object({ platform: z.string(), url: z.string() })).default([]),
+    hours: z.array(z.object({ day: z.string(), openTime: z.string(), closeTime: z.string(), isClosed: z.boolean().optional() })).default([]),
+    services: z.array(z.string()).default([]),
+  }).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -86,6 +104,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate navbar + footer in parallel (both Haiku, ~8-10s)
+    // Zero DB calls inside — siteContext provides all business data
     const engine = new WebsiteDesignerEngine(input.siteId, undefined, input.engineConfig);
     const result = await engine.stepSharedElements(
       {
@@ -95,7 +114,8 @@ export async function POST(request: NextRequest) {
         constraints: input.constraints,
       },
       input.architecture,
-      input.pages
+      input.pages,
+      input.siteContext as SharedElementsContext | undefined
     );
 
     if (!result.success) {

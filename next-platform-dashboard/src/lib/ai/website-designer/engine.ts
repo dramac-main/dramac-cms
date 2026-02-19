@@ -57,6 +57,25 @@ import type {
 import type { BusinessDataContext, DataAvailability } from "./data-context/types";
 
 import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
+
+// =============================================================================
+// SHARED ELEMENTS CONTEXT — Passed from architecture step to shared elements
+// Eliminates redundant DB calls (saves ~5s and avoids timeout risk)
+// =============================================================================
+
+export interface SharedElementsContext {
+  name: string;
+  domain: string;
+  industry: string;
+  description: string;
+  logoUrl: string;
+  contactEmail: string;
+  contactPhone: string;
+  contactAddress: Record<string, string | undefined>;
+  social: Array<{ platform: string; url: string }>;
+  hours: Array<{ day: string; openTime: string; closeTime: string; isClosed?: boolean }>;
+  services: string[];
+}
 // =============================================================================
 // ENGINE CONFIGURATION
 // =============================================================================
@@ -127,7 +146,7 @@ export class WebsiteDesignerEngine {
     success: boolean;
     architecture: SiteArchitecture;
     formattedContext: string;
-    siteContext: { name: string; domain: string; industry: string; description: string };
+    siteContext: SharedElementsContext;
     error?: string;
   }> {
     this.userPrompt = input.prompt;
@@ -203,6 +222,13 @@ export class WebsiteDesignerEngine {
           domain: this.context?.site?.domain || "",
           industry: this.context?.client?.industry || "general",
           description: this.context?.client?.description || "",
+          logoUrl: this.context?.branding?.logo_url || "",
+          contactEmail: this.context?.contact?.email || "",
+          contactPhone: this.context?.contact?.phone || "",
+          contactAddress: (this.context?.contact?.address as Record<string, string | undefined>) || {},
+          social: (this.context?.social || []).map(s => ({ platform: s.platform || "", url: s.url || "" })),
+          hours: (this.context?.hours || []).map(h => ({ day: h.day || "", openTime: h.open_time || "", closeTime: h.close_time || "", isClosed: h.is_closed })),
+          services: (this.context?.services || []).slice(0, 8).map(s => s.name || ""),
         },
       };
     } catch (error) {
@@ -211,7 +237,7 @@ export class WebsiteDesignerEngine {
         success: false,
         architecture: this.getDefaultArchitecture(),
         formattedContext: "",
-        siteContext: { name: "", domain: "", industry: "general", description: "" },
+        siteContext: { name: "", domain: "", industry: "general", description: "", logoUrl: "", contactEmail: "", contactPhone: "", contactAddress: {}, social: [], hours: [], services: [] },
         error: error instanceof Error ? error.message : "Failed to generate architecture",
       };
     }
@@ -258,11 +284,15 @@ export class WebsiteDesignerEngine {
    * STEP 2B: Generate shared elements (navbar + footer)
    * Both use Haiku (fast tier) and run in parallel — completes in ~8-10s.
    * Called once after all pages are generated.
+   *
+   * ZERO DB CALLS — receives all needed context from architecture step via siteContext.
+   * If AI calls fail, returns safe deterministic fallbacks (never throws).
    */
   async stepSharedElements(
     input: WebsiteDesignerInput,
     architecture: SiteArchitecture,
-    pages: Array<{ name: string; slug: string; isHomepage?: boolean }>
+    pages: Array<{ name: string; slug: string; isHomepage?: boolean }>,
+    siteContext?: SharedElementsContext
   ): Promise<{
     success: boolean;
     navbar?: GeneratedComponent;
@@ -272,23 +302,73 @@ export class WebsiteDesignerEngine {
     this.userPrompt = input.prompt;
     this.architecture = architecture;
 
-    // Build context for business name, branding, etc.
-    this.context = await buildDataContext(this.siteId);
+    // Build nav links from actual generated pages
+    const navItems = pages
+      .filter((p) => !p.isHomepage)
+      .map((p) => ({ label: p.name, href: p.slug }));
+    const allNavLinks = [{ label: "Home", href: "/" }, ...navItems];
+
+    // Reconstruct minimal context from siteContext (ZERO DB CALLS)
+    if (siteContext) {
+      this.context = {
+        site: { id: "", name: siteContext.name, domain: siteContext.domain },
+        branding: { business_name: siteContext.name, logo_url: siteContext.logoUrl },
+        client: {
+          company: siteContext.name,
+          company_name: siteContext.name,
+          name: siteContext.name,
+          industry: siteContext.industry,
+          description: siteContext.description,
+        },
+        contact: {
+          email: siteContext.contactEmail,
+          phone: siteContext.contactPhone,
+          address: siteContext.contactAddress,
+        },
+        social: siteContext.social.map(s => ({ id: "", site_id: "", platform: s.platform, url: s.url })),
+        hours: siteContext.hours.map(h => ({ id: "", site_id: "", day: h.day, open_time: h.openTime, close_time: h.closeTime, is_closed: h.isClosed })),
+        services: siteContext.services.map(name => ({ id: "", site_id: "", name })),
+        locations: [],
+        testimonials: [],
+        team: [],
+        portfolio: [],
+        blog: [],
+        faq: [],
+        modules: [],
+      } as unknown as BusinessDataContext;
+    } else {
+      // Legacy fallback — only used by generateWebsite() wrapper
+      this.context = await buildDataContext(this.siteId);
+    }
 
     try {
       this.reportProgress("generating-shared-elements", "Generating navbar & footer...", 0, 2);
 
-      // Both are Haiku (fast tier) — safe to run in parallel within 60s
-      const [navbar, footer] = await Promise.all([
-        this.generateNavbar([]),
-        this.generateFooter(),
-      ]);
+      // Both are Haiku (fast tier) — run in parallel with a 45s safety timeout
+      const AI_TIMEOUT = 45_000; // 45 seconds — leaves 15s buffer for cold start + auth
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("AI generation timed out after 45s")), AI_TIMEOUT)
+      );
 
-      // Fix navbar links using actual generated page names
-      const navItems = pages
-        .filter((p) => !p.isHomepage)
-        .map((p) => ({ label: p.name, href: p.slug }));
-      const allNavLinks = [{ label: "Home", href: "/" }, ...navItems];
+      let navbar: GeneratedComponent;
+      let footer: GeneratedComponent;
+
+      try {
+        [navbar, footer] = await Promise.race([
+          Promise.all([
+            this.generateNavbar([]),
+            this.generateFooter(),
+          ]),
+          timeoutPromise,
+        ]) as [GeneratedComponent, GeneratedComponent];
+      } catch (aiError) {
+        console.warn("[WebsiteDesignerEngine] AI shared elements failed, using deterministic fallback:", aiError);
+        // Deterministic fallback — guaranteed to work, no AI needed
+        navbar = this.buildFallbackNavbar(siteContext, allNavLinks);
+        footer = this.buildFallbackFooter(siteContext, allNavLinks);
+      }
+
+      // Ensure navbar links match actual generated pages
       navbar.props = { ...navbar.props, links: allNavLinks, navItems: allNavLinks };
 
       this.reportProgress("generating-shared-elements", "Navigation generated", 2, 2);
@@ -296,11 +376,91 @@ export class WebsiteDesignerEngine {
       return { success: true, navbar, footer };
     } catch (error) {
       console.error("[WebsiteDesignerEngine] stepSharedElements error:", error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : "Failed to generate shared elements",
-      };
+      // Even on unexpected error, return fallbacks instead of failing
+      const navbar = this.buildFallbackNavbar(siteContext, allNavLinks);
+      const footer = this.buildFallbackFooter(siteContext, allNavLinks);
+      return { success: true, navbar, footer };
     }
+  }
+
+  /**
+   * Build a deterministic navbar without AI — used as fallback when AI times out
+   */
+  private buildFallbackNavbar(
+    ctx?: SharedElementsContext,
+    navLinks?: Array<{ label: string; href: string }>
+  ): GeneratedComponent {
+    const businessName = ctx?.name || this.getBusinessName();
+    return {
+      id: "shared-navbar",
+      type: "Navbar",
+      props: {
+        logoText: businessName,
+        logoSrc: ctx?.logoUrl || "",
+        links: navLinks || [],
+        navItems: navLinks || [],
+        ctaText: "Contact Us",
+        ctaLink: "/contact",
+        sticky: true,
+        variant: "modern",
+        style: this.architecture?.sharedElements?.navbar?.style || "sticky",
+      },
+    };
+  }
+
+  /**
+   * Build a deterministic footer without AI — used as fallback when AI times out
+   */
+  private buildFallbackFooter(
+    ctx?: SharedElementsContext,
+    navLinks?: Array<{ label: string; href: string }>
+  ): GeneratedComponent {
+    const businessName = ctx?.name || this.getBusinessName();
+    const year = new Date().getFullYear();
+    const industry = ctx?.industry || "professional";
+    const description = ctx?.description || `${industry.charAt(0).toUpperCase() + industry.slice(1)} services by ${businessName}`;
+
+    // Build footer columns from available data
+    const columns: Array<{ title: string; links: Array<{ label: string; href: string }> }> = [];
+    
+    // Column 1: Pages
+    if (navLinks && navLinks.length > 0) {
+      columns.push({ title: "Pages", links: navLinks });
+    }
+
+    // Column 2: Services (if available)
+    if (ctx?.services && ctx.services.length > 0) {
+      columns.push({
+        title: "Services",
+        links: ctx.services.map(s => ({ label: s, href: "#" })),
+      });
+    }
+
+    // Column 3: Contact
+    const contactLinks: Array<{ label: string; href: string }> = [];
+    if (ctx?.contactEmail) contactLinks.push({ label: ctx.contactEmail, href: `mailto:${ctx.contactEmail}` });
+    if (ctx?.contactPhone) contactLinks.push({ label: ctx.contactPhone, href: `tel:${ctx.contactPhone}` });
+    if (contactLinks.length > 0) {
+      columns.push({ title: "Contact", links: contactLinks });
+    }
+
+    return {
+      id: "shared-footer",
+      type: "Footer",
+      props: {
+        companyName: businessName,
+        logoText: businessName,
+        description,
+        columns,
+        email: ctx?.contactEmail || "",
+        contactEmail: ctx?.contactEmail || "",
+        phone: ctx?.contactPhone || "",
+        contactPhone: ctx?.contactPhone || "",
+        copyrightText: `© ${year} ${businessName}. All rights reserved.`,
+        socialLinks: (ctx?.social || []).map(s => ({ platform: s.platform, url: s.url })),
+        style: this.architecture?.sharedElements?.footer?.style || "comprehensive",
+      },
+    };
   }
 
   /**
@@ -324,10 +484,10 @@ export class WebsiteDesignerEngine {
     // Use provided context instead of DB call (no network needed)
     if (siteContext) {
       this.context = {
-        site: { domain: siteContext.domain, name: siteContext.name } as any,
-        client: { name: siteContext.name, company: siteContext.name, industry: siteContext.industry, description: siteContext.description } as any,
-        branding: { business_name: siteContext.name } as any,
-        contact: {} as any,
+        site: { id: "", name: siteContext.name, domain: siteContext.domain },
+        client: { name: siteContext.name, company: siteContext.name, industry: siteContext.industry, description: siteContext.description },
+        branding: { business_name: siteContext.name },
+        contact: {},
         social: [],
         hours: [],
         locations: [],
@@ -454,7 +614,8 @@ export class WebsiteDesignerEngine {
       const sharedResult = await this.stepSharedElements(
         input,
         archResult.architecture,
-        pages.map(p => ({ name: p.name, slug: p.slug, isHomepage: p.isHomepage }))
+        pages.map(p => ({ name: p.name, slug: p.slug, isHomepage: p.isHomepage })),
+        archResult.siteContext
       );
 
       // Step 3: Finalize

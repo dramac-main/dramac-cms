@@ -475,6 +475,8 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             slug: p.slug,
             isHomepage: p.isHomepage,
           })),
+          // Pass full business context — avoids redundant DB calls inside engine
+          siteContext: archResult.siteContext,
         }),
       });
 
