@@ -378,7 +378,7 @@ export class ZoneService {
   async getDnssec(zoneId: string): Promise<DnssecStatus> {
     const client = getCloudflareClient();
     const response = await client.get<CloudflareDnssecResponse>(`/zones/${zoneId}/dnssec`);
-    return this.mapDnssec(response.result);
+    return this.mapDnssec(response);
   }
 
   /**
@@ -389,7 +389,7 @@ export class ZoneService {
     const response = await client.patch<CloudflareDnssecResponse>(`/zones/${zoneId}/dnssec`, {
       status: 'active',
     });
-    return this.mapDnssec(response.result);
+    return this.mapDnssec(response);
   }
 
   /**
