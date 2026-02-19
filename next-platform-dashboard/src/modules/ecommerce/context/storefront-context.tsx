@@ -28,7 +28,12 @@ const defaultContextValue: StorefrontContextValue = {
   currencySymbol: DEFAULT_CURRENCY_SYMBOL,
   taxRate: 0,
   formatPrice: () => `${DEFAULT_CURRENCY_SYMBOL}0.00`,
-  isInitialized: false
+  isInitialized: false,
+  // Quotation mode defaults
+  quotationModeEnabled: false,
+  quotationButtonLabel: 'Request a Quote',
+  quotationRedirectUrl: '/quotes',
+  quotationHidePrices: false,
 }
 
 const StorefrontContext = createContext<StorefrontContextValue>(defaultContextValue)
@@ -86,6 +91,12 @@ export function StorefrontProvider({ children, siteId }: StorefrontProviderProps
     return formatCurrency(amount, currency)
   }, [currency])
 
+  // Quotation mode derived values
+  const quotationModeEnabled = settings?.quotation_mode_enabled ?? false
+  const quotationButtonLabel = settings?.quotation_button_label || 'Request a Quote'
+  const quotationRedirectUrl = settings?.quotation_redirect_url || '/quotes'
+  const quotationHidePrices = settings?.quotation_hide_prices ?? false
+
   // Context value
   const value = useMemo((): StorefrontContextValue => ({
     siteId,
@@ -94,8 +105,12 @@ export function StorefrontProvider({ children, siteId }: StorefrontProviderProps
     currencySymbol,
     taxRate,
     formatPrice,
-    isInitialized
-  }), [siteId, settings, currency, currencySymbol, taxRate, formatPrice, isInitialized])
+    isInitialized,
+    quotationModeEnabled,
+    quotationButtonLabel,
+    quotationRedirectUrl,
+    quotationHidePrices,
+  }), [siteId, settings, currency, currencySymbol, taxRate, formatPrice, isInitialized, quotationModeEnabled, quotationButtonLabel, quotationRedirectUrl, quotationHidePrices])
 
   return (
     <StorefrontContext.Provider value={value}>

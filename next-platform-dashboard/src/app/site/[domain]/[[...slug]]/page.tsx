@@ -5,6 +5,7 @@ import { CraftRenderer } from "./craft-renderer";
 import { ModuleInjector } from "@/components/renderer/module-injector";
 import type { InstalledModuleInfo } from "@/types/studio-module";
 import { LiveChatWidgetInjector } from "@/components/renderer/live-chat-widget-injector";
+import { EcommerceCartInjector } from "@/components/renderer/ecommerce-cart-injector";
 
 // Known module slugs that have Studio components
 const KNOWN_MODULE_SLUGS = ["ecommerce", "booking", "crm", "automation", "social-media", "live-chat"];
@@ -274,6 +275,8 @@ export default async function SitePage({ params }: SitePageProps) {
 
   // Check if live-chat module is enabled
   const hasLiveChat = data.modules.some(m => m.slug === 'live-chat' && m.status === 'active');
+  // Check if ecommerce module is enabled — auto-inject floating cart icon
+  const hasEcommerce = data.modules.some(m => m.slug === 'ecommerce' && m.status === 'active');
 
   // Pass data to client component for rendering with modules
   return (
@@ -288,6 +291,9 @@ export default async function SitePage({ params }: SitePageProps) {
       <ModuleInjector siteId={data.site.id} />
       {/* Inject live chat widget if module is enabled */}
       {hasLiveChat && <LiveChatWidgetInjector siteId={data.site.id} />}
+      {/* Auto-inject floating cart icon when ecommerce module is active.
+          Passes hasLiveChat so the cart positions above the chat launcher (no overlap). */}
+      {hasEcommerce && <EcommerceCartInjector siteId={data.site.id} hasLiveChat={hasLiveChat} />}
     </>
   );
 }

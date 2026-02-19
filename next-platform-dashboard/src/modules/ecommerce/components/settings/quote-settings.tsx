@@ -7,7 +7,7 @@
  */
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
 import { 
   Loader2, 
   Save, 
@@ -24,10 +25,14 @@ import {
   Bell, 
   Palette,
   Hash,
-  Clock
+  Clock,
+  ToggleLeft,
+  ShoppingCart,
+  Info
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getQuoteSiteSettings, upsertQuoteSiteSettings } from '../../actions/quote-template-actions'
+import { getEcommerceSettings, updateEcommerceSettings } from '../../actions/ecommerce-actions'
 
 import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
@@ -73,6 +78,12 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [activeTab, setActiveTab] = useState('numbering')
+
+  // Quotation mode state (stored in EcommerceSettings, not QuoteSiteSettings)
+  const [quotationModeEnabled, setQuotationModeEnabled] = useState(false)
+  const [quotationHidePrices, setQuotationHidePrices] = useState(false)
+  const [quotationButtonLabel, setQuotationButtonLabel] = useState('Request a Quote')
+  const [isSavingMode, setIsSavingMode] = useState(false)
   
   const { register, handleSubmit, setValue, watch, reset } = useForm<FormData>({
     defaultValues: {
@@ -96,9 +107,17 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
   useEffect(() => {
     async function loadSettings() {
       try {
-        const settings = await getQuoteSiteSettings(siteId)
-        if (settings) {
-          reset(settings as FormData)
+        const [quoteSettings, ecomSettings] = await Promise.all([
+          getQuoteSiteSettings(siteId),
+          getEcommerceSettings(siteId)
+        ])
+        if (quoteSettings) {
+          reset(quoteSettings as FormData)
+        }
+        if (ecomSettings) {
+          setQuotationModeEnabled(ecomSettings.quotation_mode_enabled ?? false)
+          setQuotationHidePrices(ecomSettings.quotation_hide_prices ?? false)
+          setQuotationButtonLabel(ecomSettings.quotation_button_label || 'Request a Quote')
         }
       } catch (error) {
         console.error('Error loading quote settings:', error)
@@ -128,6 +147,24 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
     }
   }
 
+  // Save quotation mode settings to EcommerceSettings
+  const saveQuotationMode = useCallback(async (updates: {
+    quotation_mode_enabled?: boolean
+    quotation_hide_prices?: boolean
+    quotation_button_label?: string
+  }) => {
+    setIsSavingMode(true)
+    try {
+      await updateEcommerceSettings(siteId, agencyId, updates)
+      toast.success('Quotation mode updated')
+    } catch (error) {
+      console.error('Error updating quotation mode:', error)
+      toast.error('Failed to update quotation mode')
+    } finally {
+      setIsSavingMode(false)
+    }
+  }, [siteId, agencyId])
+
   // Watch values for color preview
   const primaryColor = watch('primary_color')
   const autoReminderEnabled = watch('auto_reminder_enabled')
@@ -142,6 +179,96 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* ================================================================
+          QUOTATION MODE - Master Toggle (industry-standard feature)
+          ================================================================ */}
+      <Card className={`border-2 transition-colors ${
+        quotationModeEnabled
+          ? 'border-orange-500/40 bg-orange-50/50 dark:bg-orange-950/20'
+          : 'border-border'
+      }`}>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className={`p-2 rounded-lg ${
+                quotationModeEnabled ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-muted'
+              }`}>
+                <ToggleLeft className={`h-5 w-5 ${
+                  quotationModeEnabled ? 'text-orange-600' : 'text-muted-foreground'
+                }`} />
+              </div>
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  Quotation Mode
+                  {quotationModeEnabled && (
+                    <Badge variant="secondary" className="bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400">
+                      Active
+                    </Badge>
+                  )}
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  When enabled, <strong>all &quot;Add to Cart&quot; buttons</strong> across your entire store become
+                  &quot;Request a Quote&quot; — no purchases are processed automatically.
+                  Ideal for B2B stores, custom-priced products, and wholesale businesses.
+                </CardDescription>
+              </div>
+            </div>
+            <Switch
+              checked={quotationModeEnabled}
+              disabled={isSavingMode}
+              onCheckedChange={async (checked) => {
+                setQuotationModeEnabled(checked)
+                await saveQuotationMode({ quotation_mode_enabled: checked })
+              }}
+            />
+          </div>
+        </CardHeader>
+        {quotationModeEnabled && (
+          <CardContent className="space-y-4 pt-0">
+            <Separator />
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-orange-100/60 dark:bg-orange-900/20 text-sm text-orange-800 dark:text-orange-300">
+              <Info className="h-4 w-4 mt-0.5 shrink-0" />
+              <p>Quotation mode is active. Customers will request quotes instead of purchasing directly.
+                All pricing remains visible unless you enable &quot;Hide Prices&quot; below.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="quotation_button_label">Button Label</Label>
+                <Input
+                  id="quotation_button_label"
+                  value={quotationButtonLabel}
+                  onChange={(e) => setQuotationButtonLabel(e.target.value)}
+                  onBlur={() => saveQuotationMode({ quotation_button_label: quotationButtonLabel })}
+                  placeholder="Request a Quote"
+                />
+                <p className="text-xs text-muted-foreground">Text shown on product buttons (e.g. &quot;Get a Price&quot;, &quot;Request Quote&quot;)</p>
+              </div>
+              <div className="space-y-3">
+                <Label>Display Options</Label>
+                <div className="flex items-center justify-between p-3 rounded-lg border">
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium">Hide Prices</p>
+                    <p className="text-xs text-muted-foreground">Mask all prices — customers must request a quote to see pricing</p>
+                  </div>
+                  <Switch
+                    checked={quotationHidePrices}
+                    disabled={isSavingMode}
+                    onCheckedChange={async (checked) => {
+                      setQuotationHidePrices(checked)
+                      await saveQuotationMode({ quotation_hide_prices: checked })
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <ShoppingCart className="h-3.5 w-3.5" />
+              <span>The cart is disabled in quotation mode. Customers use the Quotes system instead.</span>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="numbering" className="flex items-center gap-2">

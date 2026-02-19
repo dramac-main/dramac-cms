@@ -397,11 +397,19 @@ export interface EcommerceSettings {
   flutterwave_config: FlutterwaveConfig | null // Primary African e-commerce (Zambia)
   pesapal_config: PesapalConfig | null      // Secondary African option
   dpo_config: DpoConfig | null              // Zambian local backup
+  // Active payment provider selection
+  payment_provider: PaymentProvider | null  // Which gateway is currently active
   
   order_notification_email: string | null
   send_order_confirmation: boolean
   
   continue_selling_when_out_of_stock: boolean
+  
+  // Quotation Mode - When enabled, ALL purchases become quote requests
+  quotation_mode_enabled: boolean
+  quotation_button_label: string | null     // e.g. "Request a Quote", null = use default
+  quotation_redirect_url: string | null    // Where to send customer after requesting quote, null = /quotes
+  quotation_hide_prices: boolean           // Optionally hide prices when in quote mode
   
   // Onboarding state (from Wave 6 ECOM-53)
   onboardingCompleted?: boolean
@@ -1974,6 +1982,11 @@ export interface StorefrontContextValue {
   taxRate: number
   formatPrice: (amount: number) => string
   isInitialized: boolean
+  // Quotation mode
+  quotationModeEnabled: boolean
+  quotationButtonLabel: string
+  quotationRedirectUrl: string
+  quotationHidePrices: boolean
 }
 
 /**

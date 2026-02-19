@@ -7,7 +7,7 @@
 
 import { useState } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
-import { Loader2, Settings, Store, CreditCard, Truck, Bell } from 'lucide-react'
+import { Loader2, Settings, Store, CreditCard, Truck, Bell, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -30,7 +30,8 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 
-import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from '@/lib/locale-config'
+import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, getCurrencySymbol } from '@/lib/locale-config'
+import type { PaymentProvider } from '../../types/ecommerce-types'
 interface EcommerceSettingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -62,6 +63,25 @@ export function EcommerceSettingsDialog({ open, onOpenChange }: EcommerceSetting
   const [lowStockNotifications, setLowStockNotifications] = useState(true)
   const [notificationEmail, setNotificationEmail] = useState(settings?.order_notification_email || '')
 
+  // Payment Settings
+  const [paymentProvider, setPaymentProvider] = useState<PaymentProvider | ''>(
+    (settings?.payment_provider as PaymentProvider) || ''
+  )
+  const [flutterwavePublicKey, setFlutterwavePublicKey] = useState(
+    (settings?.flutterwave_config as { public_key?: string } | null)?.public_key || ''
+  )
+  const [flutterwaveSecretKey, setFlutterwaveSecretKey] = useState('')
+  const [flutterwaveEnvironment, setFlutterwaveEnvironment] = useState<'test' | 'live'>('test')
+  const [pesapalConsumerKey, setPesapalConsumerKey] = useState(
+    (settings?.pesapal_config as { consumer_key?: string } | null)?.consumer_key || ''
+  )
+  const [pesapalConsumerSecret, setPesapalConsumerSecret] = useState('')
+  const [pesapalEnvironment, setPesapalEnvironment] = useState<'demo' | 'live'>('demo')
+  const [manualInstructions, setManualInstructions] = useState('')
+
+  // Derived
+  const currencySymbol = getCurrencySymbol(currency)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -76,6 +96,29 @@ export function EcommerceSettingsDialog({ open, onOpenChange }: EcommerceSetting
         free_shipping_threshold: freeShippingThreshold ? parseFloat(freeShippingThreshold) : null,
         send_order_confirmation: orderNotifications,
         order_notification_email: notificationEmail.trim() || null,
+        payment_provider: paymentProvider || null,
+        ...(paymentProvider === 'flutterwave' && flutterwavePublicKey ? {
+          flutterwave_config: {
+            enabled: true,
+            public_key: flutterwavePublicKey,
+            secret_key: flutterwaveSecretKey,
+            encryption_key: '',
+            webhook_secret_hash: '',
+            secret_hash: '',
+            environment: flutterwaveEnvironment,
+            supported_methods: ['card', 'mobilemoney', 'bank_transfer'],
+          }
+        } : {}),
+        ...(paymentProvider === 'pesapal' && pesapalConsumerKey ? {
+          pesapal_config: {
+            enabled: true,
+            consumer_key: pesapalConsumerKey,
+            consumer_secret: pesapalConsumerSecret,
+            callback_url: '',
+            ipn_url: '',
+            environment: pesapalEnvironment,
+          }
+        } : {}),
       })
       toast.success('Settings saved successfully')
       await refreshSettings()
@@ -236,13 +279,190 @@ export function EcommerceSettingsDialog({ open, onOpenChange }: EcommerceSetting
 
             {/* Payment Settings */}
             <TabsContent value="payments" className="space-y-4 mt-4">
-              <div className="text-center py-8 text-muted-foreground">
-                <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p className="font-medium">Payment Gateway Configuration</p>
-                <p className="text-sm">
-                  Configure Stripe or other payment gateways in your site settings.
-                </p>
+              {/* Provider Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="paymentProvider">Payment Gateway</Label>
+                <Select value={paymentProvider} onValueChange={(v) => setPaymentProvider(v as PaymentProvider | '')}>
+                  <SelectTrigger id="paymentProvider">
+                    <SelectValue placeholder="Select a payment gateway" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None (disable payments)</SelectItem>
+                    <SelectItem value="flutterwave">
+                      🦋 Flutterwave — African cards, mobile money, bank transfer
+                    </SelectItem>
+                    <SelectItem value="pesapal">
+                      🌍 Pesapal — East &amp; Southern Africa
+                    </SelectItem>
+                    <SelectItem value="dpo">
+                      💳 DPO Pay — Zambia &amp; regional
+                    </SelectItem>
+                    <SelectItem value="manual">
+                      📋 Manual Payment — Bank transfer / cash instructions
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+
+              {/* Flutterwave Config */}
+              {paymentProvider === 'flutterwave' && (
+                <div className="space-y-4 border rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <CreditCard className="h-4 w-4 text-orange-500" />
+                    Flutterwave Configuration
+                    <a
+                      href="https://dashboard.flutterwave.com/settings/apis"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto text-xs text-primary flex items-center gap-1 hover:underline"
+                    >
+                      Get API keys <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="flwPublicKey">Public Key</Label>
+                    <Input
+                      id="flwPublicKey"
+                      value={flutterwavePublicKey}
+                      onChange={(e) => setFlutterwavePublicKey(e.target.value)}
+                      placeholder="FLWPUBK_TEST-..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="flwSecretKey">Secret Key</Label>
+                    <Input
+                      id="flwSecretKey"
+                      type="password"
+                      value={flutterwaveSecretKey}
+                      onChange={(e) => setFlutterwaveSecretKey(e.target.value)}
+                      placeholder="FLWSECK_TEST-..."
+                    />
+                    <p className="text-xs text-muted-foreground">Stored encrypted. Leave blank to keep existing key.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="flwEnv">Environment</Label>
+                    <Select value={flutterwaveEnvironment} onValueChange={(v) => setFlutterwaveEnvironment(v as 'test' | 'live')}>
+                      <SelectTrigger id="flwEnv">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="test">🧪 Test / Sandbox</SelectItem>
+                        <SelectItem value="live">🚀 Live / Production</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {flutterwaveEnvironment === 'live' && (
+                    <div className="flex items-center gap-2 p-2 rounded bg-green-50 dark:bg-green-950/20 text-xs text-green-700 dark:text-green-400">
+                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                      Live mode — real transactions will be processed
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Pesapal Config */}
+              {paymentProvider === 'pesapal' && (
+                <div className="space-y-4 border rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <CreditCard className="h-4 w-4 text-blue-500" />
+                    Pesapal Configuration
+                    <a
+                      href="https://developer.pesapal.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto text-xs text-primary flex items-center gap-1 hover:underline"
+                    >
+                      Docs <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pesapalKey">Consumer Key</Label>
+                    <Input
+                      id="pesapalKey"
+                      value={pesapalConsumerKey}
+                      onChange={(e) => setPesapalConsumerKey(e.target.value)}
+                      placeholder="Your Pesapal consumer key"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pesapalSecret">Consumer Secret</Label>
+                    <Input
+                      id="pesapalSecret"
+                      type="password"
+                      value={pesapalConsumerSecret}
+                      onChange={(e) => setPesapalConsumerSecret(e.target.value)}
+                      placeholder="Your Pesapal consumer secret"
+                    />
+                    <p className="text-xs text-muted-foreground">Stored encrypted. Leave blank to keep existing secret.</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pesapalEnv">Environment</Label>
+                    <Select value={pesapalEnvironment} onValueChange={(v) => setPesapalEnvironment(v as 'demo' | 'live')}>
+                      <SelectTrigger id="pesapalEnv">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="demo">🧪 Demo / Sandbox</SelectItem>
+                        <SelectItem value="live">🚀 Live / Production</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
+              {/* DPO Pay Config */}
+              {paymentProvider === 'dpo' && (
+                <div className="space-y-3 border rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <CreditCard className="h-4 w-4 text-purple-500" />
+                    DPO Pay
+                    <a
+                      href="https://secure.3gdirectpay.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto text-xs text-primary flex items-center gap-1 hover:underline"
+                    >
+                      Portal <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 rounded bg-muted text-xs text-muted-foreground">
+                    <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    Configure your DPO company token and service type in the full settings.
+                    Contact DRAMAC support to complete DPO integration.
+                  </div>
+                </div>
+              )}
+
+              {/* Manual Payment Config */}
+              {paymentProvider === 'manual' && (
+                <div className="space-y-3 border rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <CreditCard className="h-4 w-4 text-gray-500" />
+                    Manual Payment Instructions
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Customers will see these instructions at checkout (e.g. bank account details, mobile money number).
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="manualInstructions">Payment Instructions</Label>
+                    <textarea
+                      id="manualInstructions"
+                      className="w-full min-h-20 px-3 py-2 text-sm rounded-md border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+                      value={manualInstructions}
+                      onChange={(e) => setManualInstructions(e.target.value)}
+                      placeholder="e.g. Pay via Airtel Money to: +260 97 123 4567 (DRAMAC AGENCY)&#10;Include your order number as reference."
+                    />
+                  </div>
+                </div>
+              )}
+
+              {!paymentProvider && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 text-sm">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  No payment gateway selected. Customers will not be able to complete purchases.
+                </div>
+              )}
             </TabsContent>
 
             {/* Shipping Settings */}
@@ -250,7 +470,7 @@ export function EcommerceSettingsDialog({ open, onOpenChange }: EcommerceSetting
               <div className="space-y-2">
                 <Label htmlFor="flatRateShipping">Flat Rate Shipping</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">{currencySymbol}</span>
                   <Input
                     id="flatRateShipping"
                     type="number"
@@ -270,7 +490,7 @@ export function EcommerceSettingsDialog({ open, onOpenChange }: EcommerceSetting
               <div className="space-y-2">
                 <Label htmlFor="freeShippingThreshold">Free Shipping Threshold</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">{currencySymbol}</span>
                   <Input
                     id="freeShippingThreshold"
                     type="number"

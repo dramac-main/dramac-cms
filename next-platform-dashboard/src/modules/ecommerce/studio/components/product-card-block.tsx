@@ -11,7 +11,7 @@
 import React, { useState, useCallback } from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import type { Product } from "../../types/ecommerce-types";
-import { ShoppingBag, Star, Heart, Eye, Loader2, AlertCircle } from "lucide-react";
+import { ShoppingBag, Star, Heart, Eye, Loader2, AlertCircle, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStorefrontProduct } from "../../hooks/useStorefrontProduct";
 import { useStorefrontCart } from "../../hooks/useStorefrontCart";
@@ -112,6 +112,12 @@ export function ProductCardBlock({
   const storefront = useStorefront();
   // Use _siteId from Studio canvas, then siteId prop, then context
   const effectiveSiteId = _siteId || siteId || storefront?.siteId;
+  // Quotation mode
+  const quotationModeEnabled = storefront?.quotationModeEnabled ?? false
+  const quotationButtonLabel = storefront?.quotationButtonLabel || 'Request a Quote'
+  const quotationHidePrices = storefront?.quotationHidePrices ?? false
+  // Effective price visibility: hide if prop says so OR if quotation mode hides prices
+  const effectiveShowPrice = showPrice && !quotationHidePrices
   
   // Hooks for real data
   const { product: fetchedProduct, isLoading, error } = useStorefrontProduct(
@@ -143,10 +149,17 @@ export function ProductCardBlock({
     ? Math.round(((productCompareAt - productPrice) / productCompareAt) * 100)
     : 0;
   
-  // Handle add to cart
+  // Handle add to cart (or request quote in quotation mode)
   const handleAddToCart = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!productId || isDemo) return;
+
+    // In quotation mode: navigate to quote request page instead of adding to cart
+    if (quotationModeEnabled) {
+      const quotesUrl = storefront?.quotationRedirectUrl || '/quotes'
+      window.location.href = `${quotesUrl}?product=${productId}`
+      return
+    }
     
     setAddingToCart(true);
     try {
@@ -156,7 +169,7 @@ export function ProductCardBlock({
     } finally {
       setAddingToCart(false);
     }
-  }, [productId, addItem, isDemo]);
+  }, [productId, addItem, isDemo, quotationModeEnabled, storefront?.quotationRedirectUrl]);
   
   // Handle wishlist toggle
   const handleWishlistToggle = useCallback((e: React.MouseEvent) => {
@@ -295,22 +308,30 @@ export function ProductCardBlock({
     )
   );
   
-  // Add to cart button
+  // Add to cart / request quote button
   const AddToCartButton = ({ fullWidth = false }: { fullWidth?: boolean }) => (
     <button
       onClick={handleAddToCart}
       disabled={addingToCart || cartLoading || isDemo}
       className={cn(
-        "px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium",
-        "hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+        "px-4 py-2 rounded-md text-sm font-medium",
+        "transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
         "flex items-center justify-center gap-2",
+        quotationModeEnabled
+          ? "bg-orange-500 hover:bg-orange-600 text-white"
+          : "bg-primary hover:bg-primary/90 text-primary-foreground",
         fullWidth && "w-full"
       )}
     >
       {addingToCart ? (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
-          Adding...
+          {quotationModeEnabled ? 'Requesting...' : 'Adding...'}
+        </>
+      ) : quotationModeEnabled ? (
+        <>
+          <FileText className="h-4 w-4" />
+          {quotationButtonLabel}
         </>
       ) : (
         buttonText
@@ -333,7 +354,7 @@ export function ProductCardBlock({
         </div>
         <div className="mt-3">
           <h3 className="font-medium truncate">{product.name}</h3>
-          {showPrice && (
+          {effectiveShowPrice && (
             <ProductPriceDisplay
               price={productPrice}
               compareAtPrice={productCompareAt}
@@ -362,7 +383,7 @@ export function ProductCardBlock({
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-medium text-sm truncate">{product.name}</h3>
-          {showPrice && (
+          {effectiveShowPrice && (
             <ProductPriceDisplay
               price={productPrice}
               compareAtPrice={productCompareAt}
@@ -409,7 +430,7 @@ export function ProductCardBlock({
           )}
           
           <div className="flex items-center gap-4 mt-2">
-            {showPrice && (
+            {effectiveShowPrice && (
               <ProductPriceDisplay
                 price={productPrice}
                 compareAtPrice={productCompareAt}
@@ -460,7 +481,7 @@ export function ProductCardBlock({
         )}
         
         <div className="flex items-center justify-between mt-3 gap-2">
-          {showPrice && (
+          {effectiveShowPrice && (
             <ProductPriceDisplay
               price={productPrice}
               compareAtPrice={productCompareAt}
