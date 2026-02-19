@@ -3,14 +3,8 @@
   "installCommand": "pnpm install",
   "framework": "nextjs",
   "functions": {
-    "src/app/api/ai/website-designer/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/ai/website-designer/stream/route.ts": {
-      "maxDuration": 60
-    },
     "src/app/api/ai/**/*.ts": {
-      "maxDuration": 60
+      "maxDuration": 300
     }
   },
   "crons": [

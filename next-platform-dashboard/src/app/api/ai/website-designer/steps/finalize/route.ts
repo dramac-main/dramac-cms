@@ -11,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { WebsiteDesignerEngine } from "@/lib/ai/website-designer/engine";
 import { z } from "zod";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const RequestSchema = z.object({
   siteId: z.string().uuid(),

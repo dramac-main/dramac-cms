@@ -226,7 +226,8 @@ export class WebsiteDesignerEngine {
     input: WebsiteDesignerInput,
     architecture: SiteArchitecture,
     pagePlan: PagePlan,
-    formattedContext: string
+    formattedContext: string,
+    industry?: string
   ): Promise<{
     success: boolean;
     page?: GeneratedPage;
@@ -235,10 +236,9 @@ export class WebsiteDesignerEngine {
     this.userPrompt = input.prompt;
     this.architecture = architecture;
 
-    // Build context for blueprint lookup
-    this.context = await buildDataContext(this.siteId);
-    const industry = this.context?.client.industry?.toLowerCase() || "general";
-    this.activeBlueprint = findBlueprint(industry, input.prompt);
+    // Use industry from architecture step to avoid redundant DB call (saves 13 queries per page)
+    const resolvedIndustry = industry?.toLowerCase() || "general";
+    this.activeBlueprint = findBlueprint(resolvedIndustry, input.prompt);
 
     try {
       this.reportProgress("generating-pages", `Generating page: ${pagePlan.name}...`, 0, 1);
@@ -443,7 +443,7 @@ export class WebsiteDesignerEngine {
       // Step 2: Pages (sequential, one at a time)
       const pages: GeneratedPage[] = [];
       for (const pagePlan of archResult.architecture.pages) {
-        const pageResult = await this.stepSinglePage(input, archResult.architecture, pagePlan, archResult.formattedContext);
+        const pageResult = await this.stepSinglePage(input, archResult.architecture, pagePlan, archResult.formattedContext, archResult.siteContext?.industry);
         if (!pageResult.success || !pageResult.page) {
           throw new Error(pageResult.error || `Failed to generate page: ${pagePlan.name}`);
         }

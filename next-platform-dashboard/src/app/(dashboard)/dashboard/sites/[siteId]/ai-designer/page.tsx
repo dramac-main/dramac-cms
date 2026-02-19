@@ -419,7 +419,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       setEstimatedTotalTime(40 + pageCount * 25); // ~25s per page (sequential) + overhead
       setProgress(20);
 
-      // ===== STEP 2A: Generate pages ONE AT A TIME (each gets own 60s budget) =====
+      // ===== STEP 2A: Generate pages ONE AT A TIME (each gets own 300s budget) =====
       setCurrentStage("generating-pages");
       const generatedPages: Array<{
         id: string; name: string; slug: string; title: string;
@@ -440,6 +440,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             architecture: archResult.architecture,
             formattedContext: archResult.formattedContext,
             pagePlan,
+            industry: archResult.siteContext?.industry || "general",
           }),
         });
 

@@ -5,37 +5,36 @@
 
 ---
 
-## Latest Update: February 2026 - AI Website Designer Multi-Step Architecture ✅
+## Latest Update: February 2026 - AI Website Designer Per-Page Architecture ✅
 
-**Commits:** `ce121b5` (schema fix), `5c7e69c` (multi-step) | **Files Changed:** 7 (3 new, 4 modified)
+**Commits:** `734101e`, `f63c9af`, `632f0e0`, `609ebd2` | **Files Changed:** 5 (2 new, 3 modified)
 
 ### Problem
-AI Designer was failing on Vercel Hobby plan (60s limit) due to: (1) monolithic architecture — all AI calls in one serverless function, (2) Zod schema incompatibilities with new Claude models, (3) even fastest models (Haiku) couldn't fit architecture + pages + nav/footer in 60s.
+AI Designer's "pages" step was still timing out on Vercel Hobby (60s limit). Even after splitting into 3 endpoints, `stepPages()` tried to generate ALL pages + navbar + footer in one 60s function. With Sonnet 4.6 at ~20-30s per page, 4-5 pages always exceeded 60s.
 
-### Solution: Multi-Step Client Orchestration
-Split into **3 separate API endpoints** × 60s each = **180s total budget**.
+### Solution: Per-Page API Calls
+Each page gets its own 60s serverless function call.
 
-| Step | Endpoint | What It Does |
-|------|----------|-------------|
-| 1 | `/api/ai/.../steps/architecture` | Data context + design personality + architecture |
-| 2 | `/api/ai/.../steps/pages` | All pages via `Promise.all` |
-| 3 | `/api/ai/.../steps/finalize` | Navbar + footer + quality audit + final output |
+| Step | Endpoint | Model | Time |
+|------|----------|-------|------|
+| 1 | `/steps/architecture` | Haiku 4.5 | ~8-10s |
+| 2A (loop) | `/steps/page` (NEW) | Sonnet 4.6 | ~20-30s per page |
+| 2B | `/steps/shared` (NEW) | Haiku 4.5 | ~8-10s |
+| 3 | `/steps/finalize` | None (CPU) | <1s |
+| — | `/steps/pages` (DEPRECATED) | — | Returns 410 Gone |
 
-### Additional Changes
-| Change | Detail |
-|--------|--------|
-| All tasks → Sonnet 4.6 (premium) | No longer constrained to fast/cheap models |
-| Page cap raised 4 → 8 | Plenty of time now |
-| Zod schemas cleaned | Removed `.int()`, `.min()`, `.max()`, literal unions |
-| Claude model IDs updated (13 files) | Sonnet 4.6, Haiku 4.5, Opus 4.6 |
-| Client `handleGenerate()` rewritten | 3 sequential fetch calls, no more SSE streaming |
+### Additional Fixes (Same Session)
+| Fix | Commit | Detail |
+|-----|--------|--------|
+| Hybrid model strategy | `734101e` | Haiku for planning, Sonnet for content |
+| Finalize local-only | `f63c9af` | Moved navbar/footer to step 2, finalize = pure CPU |
+| Business name bug | `632f0e0` | `getBusinessName()` chain fixed, siteContext pass-through |
+| Per-page architecture | `609ebd2` | Each page gets own 60s budget |
 
-### ⚠️ Zod Schema Rule for Claude API
-AI-facing Zod schemas must NOT use:
-- `.int()` → produces `integer` type (unsupported)
-- `.min()` / `.max()` → produces `minimum`/`maximum`/`minItems`/`maxItems` (unsupported)
-- `z.union([z.literal(1), ...])` → produces integer with constraints
-- Use only: `z.number()`, `z.string()`, `z.array()`, `z.enum()`, `z.boolean()`, `z.object()`
+### Engine Methods
+- `stepSinglePage()` — generates ONE page from a PagePlan
+- `stepSharedElements()` — generates navbar + footer in parallel (both Haiku)
+- `generateWebsite()` — legacy wrapper, now uses per-page loop internally
 
 ---
 

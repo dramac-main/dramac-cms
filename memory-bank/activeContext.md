@@ -2,65 +2,48 @@
 
 ## Recent Work
 
-### AI Website Designer Multi-Step Architecture ✅
+### AI Website Designer Per-Page Architecture ✅
 
-**Category:** Critical Architecture Refactoring  
-**Commits:** `ce121b5` (schema fix), `5c7e69c` (multi-step refactoring)  
-**Files Changed:** 7 (3 new, 4 modified)  
-**Deployed:** Vercel production via CLI
+**Category:** Critical Performance Fix — Vercel Hobby 60s Timeout  
+**Commits:** `734101e` (hybrid models), `f63c9af` (finalize local-only), `632f0e0` (business name fix), `609ebd2` (per-page architecture)  
+**Files Changed:** 5 (2 new, 3 modified)  
+**Deployed:** Pushed to origin/main for Vercel auto-deploy
 
 #### Problem Evolution
-1. **Original issue:** AI Designer timing out at 60s on Vercel Hobby plan
-2. **Previous fix (b43e87f):** Switched to Haiku models, parallelized generation — but architecture alone still took 43s on Haiku, leaving only 17s for everything else
-3. **Schema errors:** New Claude models reject `integer` type, `minItems`/`maxItems`/`minimum`/`maximum` in JSON schema — Zod `.int()` and `.min()`/`.max()` produce these
-4. **Root insight from user:** "If you solve this issue, you solve it for bigger models as well" — the structural problem was trying to do everything in a single 60s serverless function
+1. **Architecture step timeout** → Fixed: switched to Haiku (fast tier)
+2. **Finalize step timeout** → Fixed: moved navbar/footer gen to step 2, made finalize local-only
+3. **Business name bug** → Fixed: `getBusinessName()` wasn't checking `client.name`, siteContext pass-through added
+4. **Pages step timeout (FINAL FIX)** → `stepPages()` tried to generate ALL pages + navbar + footer in parallel in one 60s function. With Sonnet 4.6 at ~20-30s per page, 4-5 pages always exceeded 60s.
 
-#### Solution: Multi-Step Client Orchestration
-Split website generation into **3 separate API endpoints**, each with its own 60s budget. Client calls them sequentially → total budget = **180s** instead of 60s. This eliminates the need for fast/cheap models — now ALL tasks use **Claude Sonnet 4.6** (premium quality).
+#### Solution: Per-Page API Calls
+Each page gets its own 60s serverless function call. Total budget = `pages.length × 60s`.
 
-#### New API Endpoints
-| Endpoint | Purpose | Budget |
-|----------|---------|--------|
-| `/api/ai/website-designer/steps/architecture` | Context + design personality + architecture | 60s |
-| `/api/ai/website-designer/steps/pages` | All pages generated in parallel via `Promise.all` | 60s |
-| `/api/ai/website-designer/steps/finalize` | Navbar + footer (parallel) + quality audit + final assembly | 60s |
+| Endpoint | Purpose | Model | Time |
+|----------|---------|-------|------|
+| `/steps/architecture` | Context + architecture | Haiku 4.5 | ~8-10s |
+| `/steps/page` (NEW) | ONE page per call | Sonnet 4.6 | ~20-30s |
+| `/steps/shared` (NEW) | Navbar + footer in parallel | Haiku 4.5 | ~8-10s |
+| `/steps/finalize` | Local assembly + quality audit | None (CPU) | <1s |
+| `/steps/pages` (DEPRECATED) | Old bulk endpoint | — | Returns 410 Gone |
 
-#### Engine Changes (`engine.ts`)
-- **3 new public methods:** `stepArchitecture(input)`, `stepPages(input, architecture, formattedContext)`, `stepFinalize(input, architecture, pages, startTime)`
-- **`generateWebsite(input)`:** Now a legacy wrapper calling the 3 steps internally
-- **Each step independently calls `buildDataContext(this.siteId)`** since they run in separate serverless functions
-- **Page cap raised from 4 to 8** (plenty of time now)
+#### Engine Methods
+- `stepSinglePage(input, architecture, pagePlan, formattedContext)` — generates ONE page
+- `stepSharedElements(input, architecture, pages)` — generates navbar + footer
+- `generateWebsite(input)` — legacy wrapper, now uses per-page loop internally
 
-#### Client Changes (`page.tsx`)
-- **`handleGenerate()` completely rewritten:** No more SSE streaming. 3 sequential `fetch()` calls with progress updates at fixed percentages (10→30→35→70→75→100)
-- **`enableModuleIntegration` set to `false`** (can re-enable now with more time)
-- **`estimatedTotalTime` set to 120s**
+#### Client Flow (`handleGenerate()`)
+1. Call `/steps/architecture` → get architecture + formattedContext + siteContext
+2. Loop through `architecture.pages` → call `/steps/page` for each page sequentially
+3. Call `/steps/shared` → get navbar + footer
+4. Call `/steps/finalize` → get final output
+5. Progress bar shows per-page updates (20-65% during page gen)
 
-#### Model Upgrades
-- **ALL main tasks → "premium" tier** (Claude Sonnet 4.6 / `claude-sonnet-4-6`)
-- Only module-analysis, responsive, design-inspiration remain on "fast" (Haiku 4.5)
-- Model IDs updated across 13 files in earlier session: Sonnet 4.6 (`claude-sonnet-4-6`), Haiku 4.5 (`claude-haiku-4-5-20251001`), Opus 4.6 (`claude-opus-4-6`)
+#### Model Strategy
+- **Premium (Sonnet 4.6):** page-content, iteration, content-generation
+- **Fast (Haiku 4.5):** architecture, navbar, footer, module-analysis, responsive, design-inspiration
 
-#### Zod Schema Fixes (2 rounds)
-1. **Round 1 (bcc9678):** Removed `.min()`/`.max()` from arrays/numbers in 5 files
-2. **Round 2 (ce121b5):** Removed `.int()` from `priority` field, replaced `z.union([z.literal(1)...])` with `z.number()` for `columns` field in `schemas.ts`
-3. **Rule:** AI-facing Zod schemas must use only `z.number()`, `z.string()`, `z.array()`, `z.enum()`, `z.boolean()`, `z.object()` — NO constraints that produce unsupported JSON schema properties
-
-#### Key Files
-| File | Change |
-|------|--------|
-| `engine.ts` | 3 new step methods, `generateWebsite()` as legacy wrapper |
-| `steps/architecture/route.ts` | NEW — Step 1 endpoint |
-| `steps/pages/route.ts` | NEW — Step 2 endpoint |
-| `steps/finalize/route.ts` | NEW — Step 3 endpoint |
-| `page.tsx` (ai-designer) | `handleGenerate()` rewritten for 3 sequential fetches |
-| `ai-provider.ts` | All tasks → premium tier (Sonnet 4.6) |
-| `schemas.ts` | Removed `.int()`, literal unions |
-
-#### Vercel Deployment Notes
-- GitHub App integration webhook intermittently fails to trigger deployments
-- **Workaround:** Deploy directly via `npx vercel --prod --yes` from CLI
-- Old SSE endpoints (`route.ts`, `stream/route.ts`) still exist but client no longer calls them
+#### Zod Schema Rule (Still Active)
+AI-facing schemas must NOT use `.int()`, `.min()`, `.max()`, literal numeric unions — Claude rejects these JSON schema properties.
 
 ---
 

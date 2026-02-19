@@ -15,7 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 import { WebsiteDesignerEngine } from "@/lib/ai/website-designer/engine";
 import { z } from "zod";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const RequestSchema = z.object({
   siteId: z.string().uuid(),
@@ -49,6 +49,8 @@ const RequestSchema = z.object({
     sections: z.array(z.any()),
     priority: z.number(),
   }),
+  // Industry from architecture step (avoids redundant DB calls)
+  industry: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -102,7 +104,8 @@ export async function POST(request: NextRequest) {
       },
       input.architecture,
       input.pagePlan,
-      input.formattedContext
+      input.formattedContext,
+      input.industry
     );
 
     if (!result.success) {
