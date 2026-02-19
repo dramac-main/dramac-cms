@@ -4859,6 +4859,31 @@ The Puck infrastructure (63 components, config, wrapper) was built in ED-01A/01B
 
 ---
 
+## Comprehensive E-Commerce Bug Fixes ✅
+**Commit:** `f42ce3e` | **Date:** 2026-02-XX | **Files:** 14
+
+### Summary
+Deep end-to-end audit of ~310 e-commerce files. Found and fixed 26+ bugs (3 critical). TypeScript check: 0 new errors.
+
+### Critical Bugs Fixed
+1. **Checkout completely broken** — `useCheckout` hook sent wrong request body, `cartId` never included → every checkout got 400 error
+2. **4x `supabase.sql()` crashes** — Non-existent API in `@supabase/supabase-js` used in customer-actions
+3. **Quote portal auth failure** — Authenticated client used for unauthenticated customer token access
+
+### Other Fixes
+- DB column name mismatches (actor_id/actor_name, author_id/author_name) across types, actions, UI
+- Paddle webhook: Added Billing API event support
+- Flutterwave webhook: Robust tx_ref parsing
+- checkout API: payment_url now populated
+- Public order updates: payment_transaction_id + metadata allowed
+- customer_name + sku added to order/cart flows
+- Quote email: phantom business_name fixed
+- Refund math: removed /100 division
+- Quote settings: correct table routing
+- Expanded CheckoutResult type
+
+---
+
 ## 🚀 PHASE-UI-04A Component Polish - Core UI (January 30, 2026)
 
 **Status**: ✅ COMPLETE - Enhanced core UI components with loading states, variants, presets

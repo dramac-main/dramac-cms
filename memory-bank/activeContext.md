@@ -7866,6 +7866,77 @@ Added 10 new 3D Puck editor components using React Three Fiber and Spline, bring
    - Drop zones for rescheduling
    - Navigate between weeks
 
+---
+
+### Comprehensive E-Commerce Module Bug Fixes ✅
+
+**Category:** Critical Bug Fixes — End-to-End E-Commerce Verification  
+**Commit:** `f42ce3e`  
+**Files Changed:** 14 e-commerce files (230 insertions, 92 deletions)
+
+#### Context
+Deep audit of entire e-commerce system (~310 files) using sub-agents for architecture mapping and bug discovery. Found 26+ bugs across 14 files, 3 critical (checkout completely broken).
+
+#### Critical Fixes
+
+1. **Checkout flow completely broken** (useCheckout.ts)
+   - Hook sent wrong request body shape to checkout API — every checkout would fail with 400 "cartId is required"
+   - `cartId` was never extracted from `useStorefrontCart` hook
+   - Rewrote request body to match actual API expectations: `{ cartId, shippingAddress, billingAddress, customerEmail, customerName, customerPhone, paymentProvider, shippingMethod, notes }`
+
+2. **customer-actions.ts — 4 non-existent supabase.sql() calls**
+   - `supabase.sql` tagged template literal doesn't exist in `@supabase/supabase-js`
+   - Replaced with fetch-current-value-then-update pattern in `addCustomerToGroup`, `removeCustomerFromGroup`, `addCustomerNote`, `deleteCustomerNote`
+
+3. **Quote portal auth failure** (quote-actions.ts)
+   - `getQuoteByToken` used authenticated client (`getModuleClient()`) for unauthenticated customer portal
+   - Changed to `createAdminClient()` — customers accessing quote portal via token link could never load quotes
+
+#### DB Column Name Consistency Fixes
+All code was using wrong column names vs actual migration schema:
+- **order_timeline**: code had `user_id`/`user_name` and `performed_by`/`performed_by_name`, DB has `actor_id`/`actor_name` — fixed in types, actions, and UI (order-timeline.tsx)
+- **order_notes**: code had `user_id`/`user_name`, DB has `author_id`/`author_name` — fixed in types and actions
+- **customer_notes**: code had `user_id`/`user_name`, DB has `author_id`/`author_name` — fixed in types, actions, and UI (customer-detail-dialog.tsx)
+
+#### Payment & Webhook Fixes
+- **Paddle webhook**: Only handled Classic event types, added Billing API events (`transaction.completed`, `transaction.payment_failed`, `adjustment.created`)
+- **Flutterwave webhook**: `tx_ref` parsing made robust, checks `meta.order_id` first
+- **Checkout API**: `payment_url` was always null, now populated from `paymentData.paymentUrl || paymentData.redirectUrl`
+- **Public order updates**: `payment_transaction_id` and `metadata` silently dropped, added to allowlist
+
+#### Data Integrity Fixes
+- Added `customer_name` to order creation in both public and dashboard flows
+- Added `sku` field to all cart product selects
+- Fixed quote email functions using phantom `quote.business_name` → fetches `store_name` from settings
+- Fixed `NEXT_PUBLIC_BASE_URL` → `NEXT_PUBLIC_APP_URL` in `resendQuote`
+- Fixed quote settings to use separate `mod_ecommod01_quote_settings` table
+- Fixed refund amount: removed `/100` division (prices stored as full currency units, not cents)
+- Removed duplicate `CartTotals` interface at line 2091
+- Added `source` field to `Order` type
+- Expanded `CheckoutResult` type to match actual API response shape
+
+#### Files Modified
+- `checkout/route.ts` — payment_url population
+- `webhooks/payment/route.ts` — Paddle Billing + Flutterwave robustness
+- `customer-actions.ts` — supabase.sql replacement
+- `order-actions.ts` — column names + refund math
+- `quote-actions.ts` — admin client for portal
+- `quote-workflow-actions.ts` — column names + business_name + env var
+- `ecommerce-actions.ts` — customer_name + sku
+- `public-ecommerce-actions.ts` — allowlist + customer_name + sku
+- `settings-actions.ts` — quote settings table routing
+- `ecommerce-types.ts` — column names + CheckoutResult + Order.source
+- `useCheckout.ts` — complete request body rewrite
+- `shipping-calculator.ts` — comments (cents → full currency)
+- `order-timeline.tsx` — actor_name display
+- `customer-detail-dialog.tsx` — author_name display
+
+#### Remaining Known Issues (Non-Critical)
+- Duplicate function names across action files (e.g., `getOrders`, `updateOrderStatus` exported from both `ecommerce-actions.ts` and `order-actions.ts`) — import confusion risk but not crashes
+- `QuoteTemplate` type has both `use_count` and `usage_count` fields — potential redundancy
+- Some delete operations lack `site_id` scoping for multi-tenancy security
+- TypeScript: 2 pre-existing errors in `src/lib/cloudflare/zones.ts` (not e-commerce)
+
 4. **ComposerPlatformPreview** (`src/modules/social-media/components/ui/composer-platform-preview.tsx`)
    - Live platform-specific post previews
    - Twitter, LinkedIn, Instagram, Facebook previews
