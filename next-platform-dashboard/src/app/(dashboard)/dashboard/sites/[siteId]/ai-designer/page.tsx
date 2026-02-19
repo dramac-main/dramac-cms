@@ -416,35 +416,78 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       }
 
       const pageCount = archResult.pageCount || archResult.architecture?.pages?.length || 4;
-      setEstimatedTotalTime(40 + pageCount * 15); // Update estimate with real page count
-      setProgress(30);
+      setEstimatedTotalTime(40 + pageCount * 25); // ~25s per page (sequential) + overhead
+      setProgress(20);
 
-      // ===== STEP 2: Pages + Navbar + Footer (own 60s budget) =====
+      // ===== STEP 2A: Generate pages ONE AT A TIME (each gets own 60s budget) =====
       setCurrentStage("generating-pages");
-      setProgressMessage(`Generating ${pageCount} pages + navigation...`);
-      setProgress(35);
+      const generatedPages: Array<{
+        id: string; name: string; slug: string; title: string;
+        description: string; isHomepage: boolean; components: unknown[];
+        seo: unknown; order: number;
+      }> = [];
 
-      const pagesResponse = await fetch("/api/ai/website-designer/steps/pages", {
+      for (let i = 0; i < archResult.architecture.pages.length; i++) {
+        const pagePlan = archResult.architecture.pages[i];
+        setProgressMessage(`Generating page ${i + 1}/${pageCount}: ${pagePlan.name}...`);
+        setProgress(20 + ((i / pageCount) * 45)); // 20-65%
+
+        const pageResponse = await fetch("/api/ai/website-designer/steps/page", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...basePayload,
+            architecture: archResult.architecture,
+            formattedContext: archResult.formattedContext,
+            pagePlan,
+          }),
+        });
+
+        if (!pageResponse.ok) {
+          const err = await pageResponse.json().catch(() => ({ error: `Server error: ${pageResponse.status}` }));
+          throw new Error(err.error || err.message || `Failed to generate page: ${pagePlan.name}`);
+        }
+
+        const pageResult = await pageResponse.json();
+        if (!pageResult.success) {
+          throw new Error(pageResult.error || `Failed to generate page: ${pagePlan.name}`);
+        }
+
+        generatedPages.push(pageResult.page);
+      }
+
+      setProgress(70);
+
+      // ===== STEP 2B: Shared elements — navbar + footer (both Haiku, ~8-10s) =====
+      setCurrentStage("generating-shared-elements");
+      setProgressMessage("Generating navigation & footer...");
+      setProgress(72);
+
+      const sharedResponse = await fetch("/api/ai/website-designer/steps/shared", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...basePayload,
           architecture: archResult.architecture,
-          formattedContext: archResult.formattedContext,
+          pages: generatedPages.map(p => ({
+            name: p.name,
+            slug: p.slug,
+            isHomepage: p.isHomepage,
+          })),
         }),
       });
 
-      if (!pagesResponse.ok) {
-        const err = await pagesResponse.json().catch(() => ({ error: `Server error: ${pagesResponse.status}` }));
-        throw new Error(err.error || err.message || `Page generation failed: ${pagesResponse.status}`);
+      if (!sharedResponse.ok) {
+        const err = await sharedResponse.json().catch(() => ({ error: `Server error: ${sharedResponse.status}` }));
+        throw new Error(err.error || err.message || `Shared elements failed: ${sharedResponse.status}`);
       }
 
-      const pagesResult = await pagesResponse.json();
-      if (!pagesResult.success) {
-        throw new Error(pagesResult.error || "Page generation failed");
+      const sharedResult = await sharedResponse.json();
+      if (!sharedResult.success) {
+        throw new Error(sharedResult.error || "Shared elements generation failed");
       }
 
-      setProgress(70);
+      setProgress(80);
 
       // ===== STEP 3: Finalize — local processing only (instant) =====
       setCurrentStage("finalizing");
@@ -457,9 +500,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
         body: JSON.stringify({
           ...basePayload,
           architecture: archResult.architecture,
-          pages: pagesResult.pages,
-          navbar: pagesResult.navbar,
-          footer: pagesResult.footer,
+          pages: generatedPages,
+          navbar: sharedResult.navbar,
+          footer: sharedResult.footer,
           siteContext: archResult.siteContext || {
             name: "Business",
             domain: "",

@@ -218,14 +218,53 @@ export class WebsiteDesignerEngine {
   }
 
   /**
-   * STEP 2: Generate all pages + navbar + footer from architecture
-   * All AI calls run in parallel since they're independent.
-   * Navbar/footer included here to avoid a separate AI call in finalize.
-   * Runs in its own serverless function with its own 60s budget.
+   * STEP 2A: Generate a SINGLE page from architecture
+   * Each page gets its own 60s serverless function budget.
+   * Called once per page from the client in a sequential loop.
    */
-  async stepPages(input: WebsiteDesignerInput, architecture: SiteArchitecture, formattedContext: string): Promise<{
+  async stepSinglePage(
+    input: WebsiteDesignerInput,
+    architecture: SiteArchitecture,
+    pagePlan: PagePlan,
+    formattedContext: string
+  ): Promise<{
     success: boolean;
-    pages: GeneratedPage[];
+    page?: GeneratedPage;
+    error?: string;
+  }> {
+    this.userPrompt = input.prompt;
+    this.architecture = architecture;
+
+    // Build context for blueprint lookup
+    this.context = await buildDataContext(this.siteId);
+    const industry = this.context?.client.industry?.toLowerCase() || "general";
+    this.activeBlueprint = findBlueprint(industry, input.prompt);
+
+    try {
+      this.reportProgress("generating-pages", `Generating page: ${pagePlan.name}...`, 0, 1);
+      const page = await this.generatePage(pagePlan, formattedContext);
+      this.reportProgress("generating-pages", `Page "${pagePlan.name}" generated`, 1, 1);
+      return { success: true, page };
+    } catch (error) {
+      console.error(`[WebsiteDesignerEngine] stepSinglePage error (${pagePlan.name}):`, error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : `Failed to generate page: ${pagePlan.name}`,
+      };
+    }
+  }
+
+  /**
+   * STEP 2B: Generate shared elements (navbar + footer)
+   * Both use Haiku (fast tier) and run in parallel — completes in ~8-10s.
+   * Called once after all pages are generated.
+   */
+  async stepSharedElements(
+    input: WebsiteDesignerInput,
+    architecture: SiteArchitecture,
+    pages: Array<{ name: string; slug: string; isHomepage?: boolean }>
+  ): Promise<{
+    success: boolean;
     navbar?: GeneratedComponent;
     footer?: GeneratedComponent;
     error?: string;
@@ -233,44 +272,33 @@ export class WebsiteDesignerEngine {
     this.userPrompt = input.prompt;
     this.architecture = architecture;
 
-    // Restore context for blueprint lookup
+    // Build context for business name, branding, etc.
     this.context = await buildDataContext(this.siteId);
-    const industry = this.context?.client.industry?.toLowerCase() || "general";
-    this.activeBlueprint = findBlueprint(industry, input.prompt);
 
     try {
-      const totalPages = architecture.pages.length;
-      this.reportProgress("generating-pages", `Generating ${totalPages} pages + navigation...`, 0, totalPages);
+      this.reportProgress("generating-shared-elements", "Generating navbar & footer...", 0, 2);
 
-      // Generate ALL pages + navbar + footer concurrently (all independent)
-      const pagePromises = architecture.pages.map((pagePlan) =>
-        this.generatePage(pagePlan, formattedContext)
-      );
-
-      // Navbar and footer are generated as temporary page-like results
-      // We extract them separately from the parallel batch
-      const [pages, navbar, footer] = await Promise.all([
-        Promise.all(pagePromises),
-        this.generateNavbar([]),  // Pages list built from architecture
+      // Both are Haiku (fast tier) — safe to run in parallel within 60s
+      const [navbar, footer] = await Promise.all([
+        this.generateNavbar([]),
         this.generateFooter(),
       ]);
 
-      // Fix navbar links using actual generated pages
+      // Fix navbar links using actual generated page names
       const navItems = pages
         .filter((p) => !p.isHomepage)
         .map((p) => ({ label: p.name, href: p.slug }));
       const allNavLinks = [{ label: "Home", href: "/" }, ...navItems];
       navbar.props = { ...navbar.props, links: allNavLinks, navItems: allNavLinks };
 
-      this.reportProgress("generating-pages", `All ${totalPages} pages + navigation generated`, totalPages, totalPages);
+      this.reportProgress("generating-shared-elements", "Navigation generated", 2, 2);
 
-      return { success: true, pages, navbar, footer };
+      return { success: true, navbar, footer };
     } catch (error) {
-      console.error("[WebsiteDesignerEngine] stepPages error:", error);
+      console.error("[WebsiteDesignerEngine] stepSharedElements error:", error);
       return {
         success: false,
-        pages: [],
-        error: error instanceof Error ? error.message : "Failed to generate pages",
+        error: error instanceof Error ? error.message : "Failed to generate shared elements",
       };
     }
   }
@@ -398,7 +426,7 @@ export class WebsiteDesignerEngine {
    * Generate a complete website from a user prompt (LEGACY — single-request mode)
    * 
    * WARNING: This must complete within a single 60s serverless function.
-   * For production use, prefer the multi-step approach (stepArchitecture → stepPages → stepFinalize).
+   * For production use, prefer the multi-step approach (stepArchitecture → stepSinglePage × N → stepSharedElements → stepFinalize).
    */
   async generateWebsite(input: WebsiteDesignerInput): Promise<WebsiteDesignerOutput> {
     const startTime = Date.now();
@@ -412,14 +440,32 @@ export class WebsiteDesignerEngine {
       }
       this.architecture = archResult.architecture;
 
-      // Step 2: Pages
-      const pagesResult = await this.stepPages(input, archResult.architecture, archResult.formattedContext);
-      if (!pagesResult.success) {
-        throw new Error(pagesResult.error || "Page generation failed");
+      // Step 2: Pages (sequential, one at a time)
+      const pages: GeneratedPage[] = [];
+      for (const pagePlan of archResult.architecture.pages) {
+        const pageResult = await this.stepSinglePage(input, archResult.architecture, pagePlan, archResult.formattedContext);
+        if (!pageResult.success || !pageResult.page) {
+          throw new Error(pageResult.error || `Failed to generate page: ${pagePlan.name}`);
+        }
+        pages.push(pageResult.page);
       }
 
-      // Step 3: Finalize (now purely local — navbar/footer already from step 2)
-      return await this.stepFinalize(input, archResult.architecture, pagesResult.pages, startTime, pagesResult.navbar, pagesResult.footer);
+      // Step 2B: Shared elements (navbar + footer)
+      const sharedResult = await this.stepSharedElements(
+        input,
+        archResult.architecture,
+        pages.map(p => ({ name: p.name, slug: p.slug, isHomepage: p.isHomepage }))
+      );
+
+      // Step 3: Finalize
+      return await this.stepFinalize(
+        input,
+        archResult.architecture,
+        pages,
+        startTime,
+        sharedResult.navbar,
+        sharedResult.footer
+      );
     } catch (error) {
       console.error("[WebsiteDesignerEngine] Error:", error);
       return {
