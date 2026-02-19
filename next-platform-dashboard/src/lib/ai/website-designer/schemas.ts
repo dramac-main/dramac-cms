@@ -52,7 +52,7 @@ export const PagePlanSchema = z.object({
   slug: z.string().describe("URL slug for the page (e.g., '/' for home, '/about' for about)"),
   purpose: z.string().describe("Purpose of this page"),
   sections: z.array(SectionPlanSchema).describe("Sections to include on this page"),
-  priority: z.number().int().describe("Page priority (1 = highest, max 99)"),
+  priority: z.number().describe("Page priority as a whole number (1 = highest, max 99)"),
 });
 
 // =============================================================================
@@ -73,7 +73,7 @@ export const NavbarPlanSchema = z.object({
 
 export const FooterPlanSchema = z.object({
   style: z.enum(["minimal", "simple", "comprehensive", "centered"]).describe("Footer style"),
-  columns: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).describe("Number of link columns"),
+  columns: z.number().describe("Number of footer link columns (1, 2, 3, or 4)"),
   newsletter: z.boolean().describe("Include newsletter signup"),
   socialLinks: z.boolean().describe("Include social media links"),
   copyright: z.boolean().describe("Include copyright notice"),
