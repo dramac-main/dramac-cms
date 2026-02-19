@@ -52,7 +52,7 @@ export const PagePlanSchema = z.object({
   slug: z.string().describe("URL slug for the page (e.g., '/' for home, '/about' for about)"),
   purpose: z.string().describe("Purpose of this page"),
   sections: z.array(SectionPlanSchema).describe("Sections to include on this page"),
-  priority: z.number().int().min(1).max(99).describe("Page priority (1 = highest)"),
+  priority: z.number().int().describe("Page priority (1 = highest, max 99)"),
 });
 
 // =============================================================================
@@ -115,7 +115,7 @@ export const SiteArchitectureSchema = z.object({
       "innovative",
     ])
     .describe("Brand voice and tone"),
-  pages: z.array(PagePlanSchema).min(1).max(20).describe("Pages to generate"),
+  pages: z.array(PagePlanSchema).describe("Pages to generate (1-20 pages)"),
   sharedElements: z.object({
     navbar: NavbarPlanSchema,
     footer: FooterPlanSchema,

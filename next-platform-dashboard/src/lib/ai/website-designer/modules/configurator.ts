@@ -24,7 +24,7 @@ import type {
 // =============================================================================
 
 const EcommerceOptionsSchema = z.object({
-  productGridColumns: z.number().min(2).max(5),
+  productGridColumns: z.number().describe("Number of product grid columns (2-5)"),
   showFilters: z.boolean(),
   showQuickView: z.boolean(),
   showCompare: z.boolean(),

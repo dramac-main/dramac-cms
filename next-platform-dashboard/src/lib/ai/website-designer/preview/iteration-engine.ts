@@ -27,7 +27,7 @@ const RefinementScopeSchema = z.object({
   type: z.enum(["component", "page", "style", "content", "general"]),
   targets: z.array(z.string()).describe("Component IDs or page slugs to modify"),
   requiresRegeneration: z.boolean().describe("Whether full page regeneration is needed"),
-  confidence: z.number().min(0).max(1),
+  confidence: z.number().describe("Confidence between 0 and 1"),
 });
 
 const ComponentChangeSchema = z.object({
