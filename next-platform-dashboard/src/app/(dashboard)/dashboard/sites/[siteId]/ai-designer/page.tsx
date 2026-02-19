@@ -375,130 +375,108 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
     setCurrentStage("initializing");
     setGenerationError(null);
     setOutput(null);
-    setEstimatedTotalTime(90); // Reset estimate
+    setEstimatedTotalTime(120); // Multi-step takes longer but won't timeout
+
+    const startTime = Date.now();
+    const basePayload = {
+      siteId,
+      prompt,
+      preferences: {
+        style,
+        colorPreference,
+        layoutDensity: "balanced" as const,
+        animationLevel: "subtle" as const,
+      },
+      engineConfig: {
+        enableModuleIntegration: false,
+        useQuickDesignTokens: true,
+      },
+    };
 
     try {
-      // Use the streaming endpoint for real-time progress
-      const response = await fetch("/api/ai/website-designer/stream", {
+      // ===== STEP 1: Architecture (own 60s budget) =====
+      setCurrentStage("analyzing-prompt");
+      setProgressMessage("Analyzing your requirements & creating architecture...");
+      setProgress(10);
+
+      const archResponse = await fetch("/api/ai/website-designer/steps/architecture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(basePayload),
+      });
+
+      if (!archResponse.ok) {
+        const err = await archResponse.json().catch(() => ({ error: `Server error: ${archResponse.status}` }));
+        throw new Error(err.error || err.message || `Architecture failed: ${archResponse.status}`);
+      }
+
+      const archResult = await archResponse.json();
+      if (!archResult.success) {
+        throw new Error(archResult.error || "Architecture generation failed");
+      }
+
+      const pageCount = archResult.pageCount || archResult.architecture?.pages?.length || 4;
+      setEstimatedTotalTime(40 + pageCount * 15); // Update estimate with real page count
+      setProgress(30);
+
+      // ===== STEP 2: Pages (own 60s budget) =====
+      setCurrentStage("generating-pages");
+      setProgressMessage(`Generating ${pageCount} pages in parallel...`);
+      setProgress(35);
+
+      const pagesResponse = await fetch("/api/ai/website-designer/steps/pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          siteId,
-          prompt,
-          preferences: {
-            style,
-            colorPreference,
-            layoutDensity: "balanced",
-            animationLevel: "subtle",
-          },
-          engineConfig: {
-            enableModuleIntegration: true,  // Detect & integrate booking, ecommerce, CRM, etc.
-            useQuickDesignTokens: true,     // Fast industry-based color tokens
-          },
+          ...basePayload,
+          architecture: archResult.architecture,
+          formattedContext: archResult.formattedContext,
         }),
       });
 
-      if (!response.ok) {
-        // Try to parse error response
-        const contentType = response.headers.get("content-type");
-        if (contentType?.includes("application/json")) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || errorData.error || `Server error: ${response.status}`);
-        } else {
-          // Handle timeout or HTML error responses
-          if (response.status === 524) {
-            throw new Error("Request timed out. The AI is working hard - please try again with a simpler prompt.");
-          }
-          throw new Error(`Server error: ${response.status}. Please try again.`);
-        }
+      if (!pagesResponse.ok) {
+        const err = await pagesResponse.json().catch(() => ({ error: `Server error: ${pagesResponse.status}` }));
+        throw new Error(err.error || err.message || `Page generation failed: ${pagesResponse.status}`);
       }
 
-      // Check if response is SSE
-      const contentType = response.headers.get("content-type");
-      if (!contentType?.includes("text/event-stream")) {
-        // Fallback to regular JSON response
-        const result = await response.json() as WebsiteDesignerOutput;
-        if (!result.success) {
-          throw new Error(result.error || "Generation failed");
-        }
-        setProgress(100);
-        setProgressMessage("Website generated successfully!");
-        setOutput(result);
-        setSelectedPageIndex(0);
-        toast.success(`Generated ${result.pages.length} pages!`);
-        return;
+      const pagesResult = await pagesResponse.json();
+      if (!pagesResult.success) {
+        throw new Error(pagesResult.error || "Page generation failed");
       }
 
-      // Process SSE stream
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error("Failed to read response stream");
+      setProgress(70);
+
+      // ===== STEP 3: Finalize — navbar, footer, quality audit (own 60s budget) =====
+      setCurrentStage("generating-shared-elements");
+      setProgressMessage("Creating navigation, footer & finalizing...");
+      setProgress(75);
+
+      const finalResponse = await fetch("/api/ai/website-designer/steps/finalize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...basePayload,
+          architecture: archResult.architecture,
+          pages: pagesResult.pages,
+          startTime,
+        }),
+      });
+
+      if (!finalResponse.ok) {
+        const err = await finalResponse.json().catch(() => ({ error: `Server error: ${finalResponse.status}` }));
+        throw new Error(err.error || err.message || `Finalization failed: ${finalResponse.status}`);
       }
 
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (line.startsWith("event: ")) {
-            // Event type is tracked on separate line, used for SSE protocol
-            continue;
-          }
-          if (line.startsWith("data: ")) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              
-              // Handle different event types based on data structure
-              if (data.stage) {
-                // Progress event
-                setCurrentStage(data.stage);
-                setProgressMessage(data.message || `${data.stage}...`);
-                
-                // Calculate progress based on stage
-                const stages = ["initializing", "building-context", "analyzing-prompt", "creating-architecture", "generating-pages", "generating-shared-elements", "finalizing"];
-                const stageIndex = stages.indexOf(data.stage);
-                if (stageIndex >= 0) {
-                  const baseProgress = (stageIndex / stages.length) * 100;
-                  const stageProgress = (data.pagesComplete || 0) / Math.max(data.pagesTotal || 1, 1) * (100 / stages.length);
-                  setProgress(Math.min(baseProgress + stageProgress, 95));
-                }
-
-                // Update time estimate based on pages
-                if (data.pagesTotal && data.pagesTotal > 0) {
-                  const newEstimate = 30 + (data.pagesTotal * 20); // 30s base + 20s per page
-                  setEstimatedTotalTime(newEstimate);
-                }
-              } else if (data.success !== undefined) {
-                // Complete event
-                if (data.success) {
-                  setProgress(100);
-                  setProgressMessage("Website generated successfully!");
-                  setOutput(data as WebsiteDesignerOutput);
-                  setSelectedPageIndex(0);
-                  toast.success(`Generated ${data.pages?.length || 0} pages!`);
-                } else {
-                  throw new Error(data.error || "Generation failed");
-                }
-              } else if (data.message && !data.stage) {
-                // Error or info event
-                if (data.error) {
-                  throw new Error(data.message);
-                }
-                setProgressMessage(data.message);
-              }
-            } catch (_parseError) {
-              console.warn("[AI Designer] Failed to parse SSE data:", line);
-            }
-          }
-        }
+      const result = await finalResponse.json();
+      if (!result.success) {
+        throw new Error(result.error || "Finalization failed");
       }
+
+      setProgress(100);
+      setProgressMessage("Website generated successfully!");
+      setOutput(result as WebsiteDesignerOutput);
+      setSelectedPageIndex(0);
+      toast.success(`Generated ${result.pages?.length || 0} pages!`);
     } catch (error) {
       console.error("[AI Designer] Error:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to generate website";

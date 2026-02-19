@@ -119,41 +119,45 @@ export class WebsiteDesignerEngine {
   }
 
   /**
-   * Generate a complete website from a user prompt
+   * STEP 1: Build context + generate architecture
+   * Returns architecture JSON that the client passes to step 2.
+   * This runs in its own serverless function with its own 60s budget.
    */
-  async generateWebsite(input: WebsiteDesignerInput): Promise<WebsiteDesignerOutput> {
-    const startTime = Date.now();
-    this.userPrompt = input.prompt; // Store for use in page generation
+  async stepArchitecture(input: WebsiteDesignerInput): Promise<{
+    success: boolean;
+    architecture: SiteArchitecture;
+    formattedContext: string;
+    error?: string;
+  }> {
+    this.userPrompt = input.prompt;
 
     try {
-      // Step 1: Build data context
+      // Build data context
       this.reportProgress("building-context", "Gathering business information...", 0, 1);
       this.context = await buildDataContext(this.siteId);
       this.availability = checkDataAvailability(this.context);
       const formattedContext = formatContextForAI(this.context);
 
-      // Step 1.5: Get design inspiration
+      // Design inspiration
       let designInspiration: DesignRecommendation | null = null;
       let quickDesignTokens: ReturnType<DesignInspirationEngine["getQuickDesignTokens"]> | null = null;
-      
       const industry = this.context?.client.industry?.toLowerCase() || "general";
       const designEngine = new DesignInspirationEngine(industry, "modern", input.prompt);
 
-      // Step 1.6: Find proven industry blueprint (NEW — CRITICAL for quality)
+      // Find proven industry blueprint
       this.activeBlueprint = findBlueprint(industry, input.prompt);
       if (this.activeBlueprint) {
         console.log(`[WebsiteDesignerEngine] ✅ Found industry blueprint: ${this.activeBlueprint.name} (${this.activeBlueprint.id})`);
       } else {
         console.log(`[WebsiteDesignerEngine] ⚠️ No blueprint found for industry: ${industry} — using AI freeform generation`);
       }
-      
-      // Step 1.7: Generate unique design personality for variety
+
+      // Generate unique design personality for variety
       const designPersonality = getDesignPersonality(industry);
       const personalityContext = formatPersonalityForAI(designPersonality);
       console.log(`[WebsiteDesignerEngine] 🎭 Design personality: ${designPersonality.name} (hero: ${designPersonality.heroStyle}, cards: ${designPersonality.cardStyle})`);
-      
+
       if (this.config.enableDesignInspiration) {
-        // Full AI-powered design analysis (slower but better)
         this.reportProgress("building-context", "Analyzing award-winning design patterns...", 0, 1);
         try {
           designInspiration = await designEngine.getDesignRecommendations();
@@ -162,11 +166,10 @@ export class WebsiteDesignerEngine {
           quickDesignTokens = designEngine.getQuickDesignTokens();
         }
       } else if (this.config.useQuickDesignTokens) {
-        // Quick design tokens (instant, no AI call)
         quickDesignTokens = designEngine.getQuickDesignTokens();
       }
 
-      // Step 2: Analyze prompt and create architecture
+      // Generate architecture via AI
       this.reportProgress("analyzing-prompt", "Analyzing your requirements...", 0, 1);
       this.architecture = await this.createArchitecture(
         input.prompt,
@@ -178,144 +181,121 @@ export class WebsiteDesignerEngine {
         personalityContext
       );
 
-      // Step 2.5: Initialize module integration (only if enabled)
-      if (this.config.enableModuleIntegration && this.context) {
-        this.reportProgress("analyzing-prompt", "Analyzing module requirements...", 0, 1);
-        // Convert our context to module context format (simplified for module analysis)
-        const moduleContext = {
-          client: {
-            industry: this.context.client?.industry,
-            businessName: this.context.client?.company || this.context.branding?.business_name,
-          },
-          site: {
-            domain: this.context.site?.domain,
-            name: this.context.site?.name,
-          },
-          services: this.context.services?.map(s => ({
-            id: s.id,
-            name: s.name,
-            description: s.description,
-            price: typeof s.price === 'string' ? parseFloat(s.price) || undefined : s.price,
-            category: s.category,
-          })),
-          products: [], // Will be populated from e-commerce data if available
-          team: this.context.team?.map(t => ({
-            id: t.id,
-            name: t.name,
-            role: t.role,
-          })),
-          testimonials: this.context.testimonials?.map(t => ({
-            id: t.id,
-            author: t.name || t.author_name || "Anonymous",
-            content: t.content || "",
-          })),
-          social: this.context.social?.map(s => ({
-            platform: s.platform,
-            url: s.url,
-          })),
-          hours: this.context.hours?.map(h => ({
-            day: h.day,
-            open: h.open_time || "09:00",
-            close: h.close_time || "17:00",
-            closed: h.is_closed || false,
-          })),
-        };
-        
-        this.moduleOrchestrator = new ModuleIntegrationOrchestrator(moduleContext);
-        const { configs: moduleConfigs } = await this.moduleOrchestrator.analyzeAndConfigure(
-          input.prompt,
-          this.architecture.intent
-        );
-        
-        // Store module config in architecture for later use
-        if (moduleConfigs.length > 0) {
-          (this.architecture as SiteArchitecture & { moduleConfig?: ModuleConfig[] }).moduleConfig = moduleConfigs;
-        }
-      }
-
-      // Apply constraints if provided
+      // Apply constraints
       if (input.constraints) {
         this.applyConstraints(input.constraints);
       }
 
-      // Step 3: Generate pages IN PARALLEL (pages are independent of each other)
-      // Cap at 4 pages max to fit within Vercel's 60s timeout
-      const MAX_PAGES = 4;
+      // Cap pages (no longer strictly needed with multi-step, but keeps output reasonable)
+      const MAX_PAGES = 8;
       if (this.architecture.pages.length > MAX_PAGES) {
-        console.log(`[WebsiteDesignerEngine] ⚡ Capping pages from ${this.architecture.pages.length} to ${MAX_PAGES} for timeout budget`);
+        console.log(`[WebsiteDesignerEngine] ⚡ Capping pages from ${this.architecture.pages.length} to ${MAX_PAGES}`);
         this.architecture.pages = this.architecture.pages.slice(0, MAX_PAGES);
       }
-      const totalPages = this.architecture.pages.length;
-      this.reportProgress(
-        "generating-pages",
-        `Generating ${totalPages} pages in parallel...`,
-        0,
-        totalPages
-      );
 
-      // Generate ALL pages concurrently — each is an independent AI call
-      let pages: GeneratedPage[] = await Promise.all(
-        this.architecture.pages.map((pagePlan) =>
+      return {
+        success: true,
+        architecture: this.architecture,
+        formattedContext,
+      };
+    } catch (error) {
+      console.error("[WebsiteDesignerEngine] stepArchitecture error:", error);
+      return {
+        success: false,
+        architecture: this.getDefaultArchitecture(),
+        formattedContext: "",
+        error: error instanceof Error ? error.message : "Failed to generate architecture",
+      };
+    }
+  }
+
+  /**
+   * STEP 2: Generate all pages from architecture
+   * Takes the architecture from step 1, generates all page content in parallel.
+   * Runs in its own serverless function with its own 60s budget.
+   */
+  async stepPages(input: WebsiteDesignerInput, architecture: SiteArchitecture, formattedContext: string): Promise<{
+    success: boolean;
+    pages: GeneratedPage[];
+    error?: string;
+  }> {
+    this.userPrompt = input.prompt;
+    this.architecture = architecture;
+
+    // Restore context for blueprint lookup
+    this.context = await buildDataContext(this.siteId);
+    const industry = this.context?.client.industry?.toLowerCase() || "general";
+    this.activeBlueprint = findBlueprint(industry, input.prompt);
+
+    try {
+      const totalPages = architecture.pages.length;
+      this.reportProgress("generating-pages", `Generating ${totalPages} pages in parallel...`, 0, totalPages);
+
+      // Generate ALL pages concurrently
+      const pages: GeneratedPage[] = await Promise.all(
+        architecture.pages.map((pagePlan) =>
           this.generatePage(pagePlan, formattedContext)
         )
       );
 
       this.reportProgress("generating-pages", `All ${totalPages} pages generated`, totalPages, totalPages);
 
-      // Step 3.5: Integrate modules into pages
-      if (this.config.enableModuleIntegration && this.moduleOrchestrator) {
-        this.reportProgress("generating-pages", "Integrating booking & e-commerce modules...", totalPages, totalPages);
-        const moduleConfigs = (this.architecture as SiteArchitecture & { moduleConfig?: ModuleConfig[] }).moduleConfig;
-        if (moduleConfigs && Array.isArray(moduleConfigs)) {
-          pages = this.moduleOrchestrator.integrateModules(pages, moduleConfigs);
-        }
-      }
+      return { success: true, pages };
+    } catch (error) {
+      console.error("[WebsiteDesignerEngine] stepPages error:", error);
+      return {
+        success: false,
+        pages: [],
+        error: error instanceof Error ? error.message : "Failed to generate pages",
+      };
+    }
+  }
 
-      // Step 4: Generate navbar + footer IN PARALLEL (they're independent)
+  /**
+   * STEP 3: Generate navbar, footer, finalize everything
+   * Takes architecture + pages, generates shared elements and finalizes output.
+   * Runs in its own serverless function with its own 60s budget.
+   */
+  async stepFinalize(input: WebsiteDesignerInput, architecture: SiteArchitecture, pages: GeneratedPage[], startTime: number): Promise<WebsiteDesignerOutput> {
+    this.userPrompt = input.prompt;
+    this.architecture = architecture;
+    this.context = await buildDataContext(this.siteId);
+
+    try {
+      // Generate navbar + footer IN PARALLEL
       this.reportProgress("generating-shared-elements", "Creating navigation & footer...", 0, 1);
       const [navbar, footer] = await Promise.all([
         this.generateNavbar(pages),
         this.generateFooter(),
       ]);
 
-      // Step 5: Apply navbar and footer to all pages
+      // Apply shared elements
       let pagesWithNav = this.applySharedElements(pages, navbar, footer);
 
-      // Step 5.5: Run multi-pass refinement (NEW)
+      // Refinement (if enabled)
       if (this.config.enableRefinement) {
         this.reportProgress("finalizing", "Refining website quality...", 0, 1);
-        
         const refinementEngine = new MultiPassRefinementEngine(
           pagesWithNav,
           this.architecture,
           `${this.getBusinessName()} - ${this.context?.client.industry || "business"}: ${this.userPrompt}`,
           (progress) => {
-            this.reportProgress(
-              "finalizing",
-              `Pass ${progress.pass}: ${progress.passName}...`,
-              progress.pass - 1,
-              4
-            );
+            this.reportProgress("finalizing", `Pass ${progress.pass}: ${progress.passName}...`, progress.pass - 1, 4);
           }
         );
-
         const refinementResult = await refinementEngine.refine();
         pagesWithNav = refinementResult.pages;
-        
         console.log(`[WebsiteDesignerEngine] Refinement complete: ${refinementResult.totalImprovements} improvements, score: ${refinementResult.overallScore}/10`);
       }
 
-      // Step 6: Generate navigation structure
+      // Navigation structure
       const navigation = this.generateNavigation(pagesWithNav);
 
-      // Step 6.5: Quality audit — detect and auto-fix imperfections
+      // Quality audit
       this.reportProgress("finalizing", "Running quality audit...", 0, 1);
       const designTokens = this.architecture.designTokens || {};
-      for (let i = 0; i < pagesWithNav.length; i++) {
-        const page = pagesWithNav[i];
+      for (const page of pagesWithNav) {
         const auditResult = auditWebsite(page.components, designTokens);
-        
-        // Apply auto-fixes from the audit
         if (auditResult.autoFixed > 0) {
           const autoFixedIssues = auditResult.issues.filter(issue => issue.autoFixed);
           for (const fix of autoFixedIssues) {
@@ -328,13 +308,12 @@ export class WebsiteDesignerEngine {
         }
       }
 
-      // Step 7: Finalize
+      // Finalize
       this.reportProgress("finalizing", "Finalizing website...", 0, 1);
       const siteSettings = this.generateSiteSettings();
       const seoSettings = this.generateSEO();
       const designSystem = this.buildDesignSystem();
       const contentSummary = this.generateContentSummary(pagesWithNav);
-
       const buildTime = Date.now() - startTime;
 
       return {
@@ -352,6 +331,48 @@ export class WebsiteDesignerEngine {
         estimatedBuildTime: buildTime,
         architecture: this.architecture,
       };
+    } catch (error) {
+      console.error("[WebsiteDesignerEngine] stepFinalize error:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to finalize website",
+        site: { name: "", settings: this.getDefaultSiteSettings(), seo: this.getDefaultSEO() },
+        pages: [],
+        navigation: { main: [], footer: [] },
+        designSystem: this.getDefaultDesignSystem(),
+        contentSummary: this.getEmptyContentSummary(),
+        estimatedBuildTime: Date.now() - startTime,
+        architecture: this.getDefaultArchitecture(),
+      };
+    }
+  }
+
+  /**
+   * Generate a complete website from a user prompt (LEGACY — single-request mode)
+   * 
+   * WARNING: This must complete within a single 60s serverless function.
+   * For production use, prefer the multi-step approach (stepArchitecture → stepPages → stepFinalize).
+   */
+  async generateWebsite(input: WebsiteDesignerInput): Promise<WebsiteDesignerOutput> {
+    const startTime = Date.now();
+    this.userPrompt = input.prompt;
+
+    try {
+      // Step 1: Architecture
+      const archResult = await this.stepArchitecture(input);
+      if (!archResult.success) {
+        throw new Error(archResult.error || "Architecture generation failed");
+      }
+      this.architecture = archResult.architecture;
+
+      // Step 2: Pages
+      const pagesResult = await this.stepPages(input, archResult.architecture, archResult.formattedContext);
+      if (!pagesResult.success) {
+        throw new Error(pagesResult.error || "Page generation failed");
+      }
+
+      // Step 3: Finalize
+      return await this.stepFinalize(input, archResult.architecture, pagesResult.pages, startTime);
     } catch (error) {
       console.error("[WebsiteDesignerEngine] Error:", error);
       return {
