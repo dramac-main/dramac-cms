@@ -2,42 +2,65 @@
 
 ## Recent Work
 
-### AI Website Designer Timeout Fix ✅
+### AI Website Designer Multi-Step Architecture ✅
 
-**Category:** Critical Performance Fix  
-**Commit:** `b43e87f`  
-**Files Changed:** 4
+**Category:** Critical Architecture Refactoring  
+**Commits:** `ce121b5` (schema fix), `5c7e69c` (multi-step refactoring)  
+**Files Changed:** 7 (3 new, 4 modified)  
+**Deployed:** Vercel production via CLI
 
-#### Problem
-AI Website Designer was timing out after 60 seconds on Vercel. The architecture AI call alone (Claude Sonnet 4 / premium tier) was taking ~42 seconds, leaving only ~18s for pages + navbar + footer which need 30s+. The `maxDuration` was set to 60s in `vercel.json` for Vercel Hobby plan (commit `b2f40df`), but the engine was never optimized to fit within that budget.
+#### Problem Evolution
+1. **Original issue:** AI Designer timing out at 60s on Vercel Hobby plan
+2. **Previous fix (b43e87f):** Switched to Haiku models, parallelized generation — but architecture alone still took 43s on Haiku, leaving only 17s for everything else
+3. **Schema errors:** New Claude models reject `integer` type, `minItems`/`maxItems`/`minimum`/`maximum` in JSON schema — Zod `.int()` and `.min()`/`.max()` produce these
+4. **Root insight from user:** "If you solve this issue, you solve it for bigger models as well" — the structural problem was trying to do everything in a single 60s serverless function
 
-#### Root Cause Timeline (from logs)
-- 0s: Engine starts, finds blueprint, generates personality
-- 42s: Architecture AI call returns (Claude Sonnet 4 — too slow!)
-- 45s: First page generation starts
-- 58s: **TIMEOUT** — only got 13s into first page
+#### Solution: Multi-Step Client Orchestration
+Split website generation into **3 separate API endpoints**, each with its own 60s budget. Client calls them sequentially → total budget = **180s** instead of 60s. This eliminates the need for fast/cheap models — now ALL tasks use **Claude Sonnet 4.6** (premium quality).
 
-#### Fixes Applied
-1. **Switched architecture/navbar/footer to Haiku** (fast tier) — saves ~30s. Architecture prompts are well-structured with blueprints, so a fast model produces equally good output.
-2. **Parallelized ALL page generation** via `Promise.all` — saves N×10s (pages are independent)
-3. **Parallelized navbar + footer** generation — saves ~5-8s (they're independent)
-4. **Capped pages at 4 max** to fit within timeout budget
-5. **Disabled module integration by default** — it adds an extra AI call
-6. **Added `export const maxDuration = 60`** to both route files (proper Next.js segment config)
+#### New API Endpoints
+| Endpoint | Purpose | Budget |
+|----------|---------|--------|
+| `/api/ai/website-designer/steps/architecture` | Context + design personality + architecture | 60s |
+| `/api/ai/website-designer/steps/pages` | All pages generated in parallel via `Promise.all` | 60s |
+| `/api/ai/website-designer/steps/finalize` | Navbar + footer (parallel) + quality audit + final assembly | 60s |
 
-#### Expected Performance
-- ~8s architecture (Haiku) + ~12s pages (parallel) + ~5s nav+footer (parallel) = ~25s total
+#### Engine Changes (`engine.ts`)
+- **3 new public methods:** `stepArchitecture(input)`, `stepPages(input, architecture, formattedContext)`, `stepFinalize(input, architecture, pages, startTime)`
+- **`generateWebsite(input)`:** Now a legacy wrapper calling the 3 steps internally
+- **Each step independently calls `buildDataContext(this.siteId)`** since they run in separate serverless functions
+- **Page cap raised from 4 to 8** (plenty of time now)
+
+#### Client Changes (`page.tsx`)
+- **`handleGenerate()` completely rewritten:** No more SSE streaming. 3 sequential `fetch()` calls with progress updates at fixed percentages (10→30→35→70→75→100)
+- **`enableModuleIntegration` set to `false`** (can re-enable now with more time)
+- **`estimatedTotalTime` set to 120s**
+
+#### Model Upgrades
+- **ALL main tasks → "premium" tier** (Claude Sonnet 4.6 / `claude-sonnet-4-6`)
+- Only module-analysis, responsive, design-inspiration remain on "fast" (Haiku 4.5)
+- Model IDs updated across 13 files in earlier session: Sonnet 4.6 (`claude-sonnet-4-6`), Haiku 4.5 (`claude-haiku-4-5-20251001`), Opus 4.6 (`claude-opus-4-6`)
+
+#### Zod Schema Fixes (2 rounds)
+1. **Round 1 (bcc9678):** Removed `.min()`/`.max()` from arrays/numbers in 5 files
+2. **Round 2 (ce121b5):** Removed `.int()` from `priority` field, replaced `z.union([z.literal(1)...])` with `z.number()` for `columns` field in `schemas.ts`
+3. **Rule:** AI-facing Zod schemas must use only `z.number()`, `z.string()`, `z.array()`, `z.enum()`, `z.boolean()`, `z.object()` — NO constraints that produce unsupported JSON schema properties
 
 #### Key Files
 | File | Change |
 |------|--------|
-| `ai-provider.ts` | Architecture/navbar/footer → fast tier (Haiku) |
-| `engine.ts` | `Promise.all` for pages + navbar/footer, 4-page cap, module integration off |
-| `route.ts` | Added `export const maxDuration = 60` |
-| `stream/route.ts` | Added `export const maxDuration = 60` |
+| `engine.ts` | 3 new step methods, `generateWebsite()` as legacy wrapper |
+| `steps/architecture/route.ts` | NEW — Step 1 endpoint |
+| `steps/pages/route.ts` | NEW — Step 2 endpoint |
+| `steps/finalize/route.ts` | NEW — Step 3 endpoint |
+| `page.tsx` (ai-designer) | `handleGenerate()` rewritten for 3 sequential fetches |
+| `ai-provider.ts` | All tasks → premium tier (Sonnet 4.6) |
+| `schemas.ts` | Removed `.int()`, literal unions |
 
-#### Important Note: Vercel Plan
-Currently on **Vercel Hobby plan** → max `maxDuration` is 60s. If upgraded to Pro, can set to 300s and re-enable premium models + module integration for higher quality output.
+#### Vercel Deployment Notes
+- GitHub App integration webhook intermittently fails to trigger deployments
+- **Workaround:** Deploy directly via `npx vercel --prod --yes` from CLI
+- Old SSE endpoints (`route.ts`, `stream/route.ts`) still exist but client no longer calls them
 
 ---
 

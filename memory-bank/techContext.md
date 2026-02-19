@@ -1,6 +1,6 @@
 # Tech Context: Technologies & Setup
 
-**Last Updated**: January 29, 2026
+**Last Updated**: February 19, 2026
 
 ## ⚠️ CRITICAL: Development Workflow
 
@@ -86,6 +86,12 @@
 - **@ai-sdk/openai**: 3.0.26 (OpenAI — fallback only, not used for website generation)
 - **@anthropic-ai/sdk**: 0.71.2 (Anthropic API)
 - **AI Provider Config**: `config/ai-provider.ts` — centralized model selection via `getAIModel(task)`
+- **Claude Model IDs (Latest Feb 2026)**:
+  - Sonnet 4.6: `claude-sonnet-4-6` (premium tier — used for all main AI Designer tasks)
+  - Haiku 4.5: `claude-haiku-4-5-20251001` (fast tier — module analysis, responsive, design inspiration)
+  - Opus 4.6: `claude-opus-4-6` (available but not currently used)
+- **AI Website Designer**: Multi-step architecture — 3 API endpoints, client orchestrates sequentially
+- **⚠️ Zod Schema Rule**: AI-facing schemas must NOT use `.int()`, `.min()`, `.max()`, literal numeric unions — Claude rejects `integer` type and `minimum`/`maximum`/`minItems`/`maxItems` properties
 - **⚠️ IMPORTANT**: OpenAI was tried and reverted. Its strict structured output mode is incompatible with our rich Zod schemas. Do NOT switch back without solving schema compatibility.
 - **Automation Engine**: ✅ COMPLETE (EM-57) - Workflows, triggers, event processing
 - **AI Agents System**: (Phase EM-58) - Intelligent agents with memory, tools, goals

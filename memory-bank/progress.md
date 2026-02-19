@@ -1,11 +1,45 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER TIMEOUT FIX ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅**
 
 ---
 
-## Latest Update: February 2026 - AI Website Designer Timeout Fix ✅
+## Latest Update: February 2026 - AI Website Designer Multi-Step Architecture ✅
+
+**Commits:** `ce121b5` (schema fix), `5c7e69c` (multi-step) | **Files Changed:** 7 (3 new, 4 modified)
+
+### Problem
+AI Designer was failing on Vercel Hobby plan (60s limit) due to: (1) monolithic architecture — all AI calls in one serverless function, (2) Zod schema incompatibilities with new Claude models, (3) even fastest models (Haiku) couldn't fit architecture + pages + nav/footer in 60s.
+
+### Solution: Multi-Step Client Orchestration
+Split into **3 separate API endpoints** × 60s each = **180s total budget**.
+
+| Step | Endpoint | What It Does |
+|------|----------|-------------|
+| 1 | `/api/ai/.../steps/architecture` | Data context + design personality + architecture |
+| 2 | `/api/ai/.../steps/pages` | All pages via `Promise.all` |
+| 3 | `/api/ai/.../steps/finalize` | Navbar + footer + quality audit + final output |
+
+### Additional Changes
+| Change | Detail |
+|--------|--------|
+| All tasks → Sonnet 4.6 (premium) | No longer constrained to fast/cheap models |
+| Page cap raised 4 → 8 | Plenty of time now |
+| Zod schemas cleaned | Removed `.int()`, `.min()`, `.max()`, literal unions |
+| Claude model IDs updated (13 files) | Sonnet 4.6, Haiku 4.5, Opus 4.6 |
+| Client `handleGenerate()` rewritten | 3 sequential fetch calls, no more SSE streaming |
+
+### ⚠️ Zod Schema Rule for Claude API
+AI-facing Zod schemas must NOT use:
+- `.int()` → produces `integer` type (unsupported)
+- `.min()` / `.max()` → produces `minimum`/`maximum`/`minItems`/`maxItems` (unsupported)
+- `z.union([z.literal(1), ...])` → produces integer with constraints
+- Use only: `z.number()`, `z.string()`, `z.array()`, `z.enum()`, `z.boolean()`, `z.object()`
+
+---
+
+## Previous Update: February 2026 - AI Website Designer Timeout Fix ✅
 
 **Commit:** `b43e87f` | **Files Changed:** 4
 

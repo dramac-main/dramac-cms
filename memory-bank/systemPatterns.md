@@ -36,6 +36,43 @@ git push
 - **Editor**: DRAMAC Studio (custom dnd-kit based) - Replacing Puck (Feb 2026)
 - **Rich Text**: TipTap
 - **Email**: Resend (transactional + auth SMTP)
+- **AI Models**: Claude Sonnet 4.6 (`claude-sonnet-4-6`), Haiku 4.5 (`claude-haiku-4-5-20251001`), Opus 4.6 (`claude-opus-4-6`)
+
+---
+
+## 🤖 AI Multi-Step API Pattern (CRITICAL for Vercel Hobby)
+
+### Problem
+Vercel Hobby plan limits serverless functions to **60s max**. Complex AI operations (multiple Claude API calls) can't fit in a single function.
+
+### Solution: Client-Side Orchestration
+Split long AI operations into **multiple API endpoints**, each with its own 60s budget. The client calls them sequentially.
+
+```
+Client (browser)
+  ├── Step 1: POST /api/ai/.../steps/architecture → 60s budget
+  ├── Step 2: POST /api/ai/.../steps/pages → 60s budget (uses Step 1 output)
+  └── Step 3: POST /api/ai/.../steps/finalize → 60s budget (uses Steps 1+2 output)
+```
+
+### Rules
+1. **Each endpoint MUST have `export const maxDuration = 60`** (Next.js segment config)
+2. **Each step must independently rebuild context** — separate serverless functions don't share memory
+3. **Pass results between steps via JSON** in request body (architecture, pages, formattedContext)
+4. **Client tracks progress** with fixed percentage updates per step
+5. **Auth is checked in every endpoint** — user could call any step independently
+
+### Zod Schema Rules for Claude API
+AI-facing Zod schemas must NOT use:
+- `.int()` → produces `integer` type (unsupported by Claude)
+- `.min()` / `.max()` → produces `minimum`/`maximum`/`minItems`/`maxItems` (unsupported)
+- `z.union([z.literal(1), z.literal(2), ...])` on numbers → produces integer with constraints
+- **ONLY use:** `z.number()`, `z.string()`, `z.array()`, `z.enum()`, `z.boolean()`, `z.object()`
+
+### Vercel Deployment
+- GitHub App integration webhook **intermittently fails** to trigger deployments
+- **Workaround:** Deploy via `npx vercel --prod --yes` from CLI
+- `vercel.json` wildcard: `"src/app/api/ai/**/*.ts": { "maxDuration": 60 }`
 
 ---
 
