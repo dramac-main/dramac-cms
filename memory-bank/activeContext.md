@@ -2,6 +2,85 @@
 
 ## Recent Work
 
+### AI Website Designer Timeout Fix ✅
+
+**Category:** Critical Performance Fix  
+**Commit:** `b43e87f`  
+**Files Changed:** 4
+
+#### Problem
+AI Website Designer was timing out after 60 seconds on Vercel. The architecture AI call alone (Claude Sonnet 4 / premium tier) was taking ~42 seconds, leaving only ~18s for pages + navbar + footer which need 30s+. The `maxDuration` was set to 60s in `vercel.json` for Vercel Hobby plan (commit `b2f40df`), but the engine was never optimized to fit within that budget.
+
+#### Root Cause Timeline (from logs)
+- 0s: Engine starts, finds blueprint, generates personality
+- 42s: Architecture AI call returns (Claude Sonnet 4 — too slow!)
+- 45s: First page generation starts
+- 58s: **TIMEOUT** — only got 13s into first page
+
+#### Fixes Applied
+1. **Switched architecture/navbar/footer to Haiku** (fast tier) — saves ~30s. Architecture prompts are well-structured with blueprints, so a fast model produces equally good output.
+2. **Parallelized ALL page generation** via `Promise.all` — saves N×10s (pages are independent)
+3. **Parallelized navbar + footer** generation — saves ~5-8s (they're independent)
+4. **Capped pages at 4 max** to fit within timeout budget
+5. **Disabled module integration by default** — it adds an extra AI call
+6. **Added `export const maxDuration = 60`** to both route files (proper Next.js segment config)
+
+#### Expected Performance
+- ~8s architecture (Haiku) + ~12s pages (parallel) + ~5s nav+footer (parallel) = ~25s total
+
+#### Key Files
+| File | Change |
+|------|--------|
+| `ai-provider.ts` | Architecture/navbar/footer → fast tier (Haiku) |
+| `engine.ts` | `Promise.all` for pages + navbar/footer, 4-page cap, module integration off |
+| `route.ts` | Added `export const maxDuration = 60` |
+| `stream/route.ts` | Added `export const maxDuration = 60` |
+
+#### Important Note: Vercel Plan
+Currently on **Vercel Hobby plan** → max `maxDuration` is 60s. If upgraded to Pro, can set to 300s and re-enable premium models + module integration for higher quality output.
+
+---
+
+### Domain/Email Architecture Restructure — Super Admin Controls + Client Assignment ✅
+
+**Category:** Architecture Restructure + Feature Implementation  
+**Files Created:** 8 new files  
+**Files Modified:** 5 existing files  
+**TypeScript:** Zero new errors (only 2 pre-existing in cloudflare/zones.ts)
+
+#### Problem Analysis (6 Issues Found)
+Deep scan of all domain/email pages, components, actions, and types revealed:
+1. **Billing Integration page** asks agencies for Paddle Product/Price IDs they don't have (single platform Paddle account)
+2. **Pricing config** defaults to 0% with `apply_platform_markup=false` (no effect)
+3. **TLD pricing table** uses hardcoded fake wholesale prices (`WHOLESALE_PRICES` object)
+4. **Client Pricing Tiers** disconnected from actual purchase flow
+5. **White-Label Branding** is only 2 fields (support email + terms URL)
+6. **No role guards** on settings pages — agencies could theoretically access pricing controls
+
+#### Architecture Decision
+- **Pricing controls → Super Admin** (`/admin/domains/`): Platform markup toggle, supplier health, revenue analytics
+- **Agency view → Simplified** (`/dashboard/domains/settings/`): Overview stats, client assignment, branding only
+- **Client assignment → Fully implemented**: New server actions + UI for assigning domains to clients
+- **No breaking changes**: Old pricing/billing pages still exist at their routes, just removed from agency navigation
+
+#### New Files Created
+1. **`/admin/domains/page.tsx`** — Super admin domain & email platform controls overview
+2. **`/admin/domains/pricing/page.tsx`** + **`pricing-client.tsx`** — Platform markup toggle/config
+3. **`/admin/domains/health/page.tsx`** + **`health-client.tsx`** — Supplier (RC) health monitoring
+4. **`/admin/domains/revenue/page.tsx`** + **`revenue-client.tsx`** — Platform-wide revenue analytics
+5. **`/lib/actions/admin-domains.ts`** — Super admin server actions (getPlatformPricingConfig, updatePlatformPricingConfig, checkSupplierHealth, getPlatformRevenueAnalytics)
+6. **`/dashboard/domains/settings/domain-client-assignment.tsx`** — Client component for bulk domain-to-client assignment
+7. **`/components/clients/client-domains-list.tsx`** — Domains tab for client detail page
+
+#### Existing Files Modified
+1. **`/lib/actions/domains.ts`** — Added `assignDomainToClient()`, `getClientDomains()`, `getAgencyClientsForAssignment()`, `getAgencySitesForAssignment()`
+2. **`/components/clients/client-detail-tabs.tsx`** — Added "Domains" tab (6th tab)
+3. **`/config/admin-navigation.ts`** — Added "Domain Controls" entry pointing to `/admin/domains`
+4. **`/config/navigation.ts`** — Renamed "Domain Settings" → "Domain Management"
+5. **`/dashboard/domains/settings/page.tsx`** — Restructured: removed pricing/billing cards, added client assignment section, updated stats
+
+---
+
 ### Critical Pricing Math Fix + Plan Filtering + Pricing Strategy ✅
 
 **Category:** Critical Bug Fix + Pricing Pipeline  

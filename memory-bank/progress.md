@@ -1,11 +1,71 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER TIMEOUT FIX ✅**
 
 ---
 
-## Latest Update: February 2026 - Titan Mail REST API + 3-Plan Support ✅
+## Latest Update: February 2026 - AI Website Designer Timeout Fix ✅
+
+**Commit:** `b43e87f` | **Files Changed:** 4
+
+### Problem
+AI Website Designer timing out at 60s on Vercel. Architecture AI call (Claude Sonnet 4) alone took ~42s of the 60s budget.
+
+### Fixes
+| Fix | Impact |
+|-----|--------|
+| Architecture/navbar/footer → Haiku (fast tier) | Saves ~30s on architecture call |
+| Pages generated in parallel (`Promise.all`) | Saves N×10s (pages are independent) |
+| Navbar + footer generated in parallel | Saves ~5-8s |
+| Pages capped at 4 max | Fits within timeout budget |
+| Module integration disabled by default | Removes extra AI call |
+| `export const maxDuration = 60` on route files | Proper Next.js segment config |
+
+### Expected Performance
+~8s architecture + ~12s pages(parallel) + ~5s nav+footer(parallel) = **~25s total** (well within 60s)
+
+---
+
+## Previous Update: February 2026 - Domain Architecture Restructure + Client Assignment ✅
+
+**Files Created:** 8 new | **Files Modified:** 5 existing | **TypeScript:** 0 new errors
+
+### Architecture Changes
+Moved domain pricing/billing controls from agency level to super admin. Agencies no longer see misleading pricing config, fake TLD tables, or billing integration they can't use.
+
+### New Super Admin Pages (`/admin/domains/`)
+- **Overview** — Stats cards (domains, email, revenue, profit) + links to pricing, health, revenue
+- **Pricing Controls** — Platform markup toggle (`apply_platform_markup`), markup type/value config
+- **Supplier Health** — RC API status, latency, balance, pricing cache freshness
+- **Revenue Analytics** — Platform-wide revenue by period (month/quarter/year), by type, agency count
+
+### New Server Actions (`admin-domains.ts`)
+- `getPlatformPricingConfig()` / `updatePlatformPricingConfig()` — Platform markup management
+- `checkSupplierHealth()` — RC API reachability, balance, cache status
+- `getPlatformRevenueAnalytics()` — Aggregated revenue across all agencies
+
+### Client Domain Assignment (NEW FEATURE)
+- `assignDomainToClient()` — Assign/unassign domain to client + site with validation
+- `getClientDomains()` — Get all domains for a specific client
+- `getAgencyClientsForAssignment()` / `getAgencySitesForAssignment()` — Dropdown data
+- **DomainClientAssignmentSection** — Bulk assignment UI on settings page (search, filter, assign)
+- **ClientDomainsList** — New "Domains" tab on client detail page
+- **ClientDetailTabs** — Now has 6 tabs (added Domains tab)
+
+### Agency Settings Restructured
+- Removed: Pricing Configuration card, Billing Integration card, "Edit Pricing" quick action
+- Added: Client Domain Assignment section with bulk assign, domain stats (assigned/unassigned)
+- Kept: White-Label Branding, Quick Actions (view domains, register, edit branding)
+- Renamed: "Domain Settings" → "Domain Management" in sidebar navigation
+
+### Navigation Updates
+- Admin sidebar: Added "Domain Controls" → `/admin/domains` (with Globe icon)
+- Agency sidebar: Renamed "Domain Settings" → "Domain Management"
+
+---
+
+## Previous Update: Titan Mail REST API + 3-Plan Support ✅
 
 **Commits:** `f5689d1` (dynamic pricing + wizard), `ede928d` (Titan Mail client + supplier neutrality)
 **Files Changed:** 10
