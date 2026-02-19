@@ -79,34 +79,35 @@ const DEFAULT_PROVIDER: AIProvider = "anthropic";
 
 /**
  * Task-specific model tier assignments
- * Premium: Architecture, Page Content (quality critical)
- * Standard: Navbar, Footer, Refinement
- * Fast: Design inspiration, simple analysis
+ * 
+ * ALL tasks use FAST tier (Haiku) to fit within Vercel Hobby 60s timeout.
+ * The prompts are extremely detailed with industry blueprints, component field
+ * specs, color rules, and content formulas — Haiku produces excellent results
+ * with this level of structure. Quality comes from prompt engineering, not
+ * model size.
+ * 
+ * To upgrade quality: switch to Pro plan (300s timeout) and move page-content
+ * back to "premium".
  */
 const TASK_TIERS: Record<string, AIModelTier> = {
-  // Architecture: use fast model (Haiku) — prompt is well-structured with blueprints
-  // so a fast model produces equally good output. Saves ~30s vs premium.
+  // All generation tasks: fast (Haiku) — fits within 60s Vercel Hobby timeout
   "architecture": "fast",
-  
-  // Page content: still premium — this is where creative quality matters most
-  "page-content": "premium",
-  "iteration": "premium",
-  
-  // Navbar/footer: fast — highly constrained output, fast model is sufficient
+  "page-content": "fast",
+  "iteration": "fast",
   "navbar": "fast",
   "footer": "fast",
   
-  // Other tasks
-  "refinement": "standard",
-  "module-configurator": "standard",
-  "content-generation": "standard",
+  // Other tasks (only used when features are explicitly enabled)
+  "refinement": "fast",
+  "module-configurator": "fast",
+  "content-generation": "fast",
   "design-inspiration": "fast",
   "module-analysis": "fast",
   "content-optimization": "fast",
   "responsive": "fast",
   
   // Default fallback
-  "default": "standard",
+  "default": "fast",
 };
 
 // =============================================================================
