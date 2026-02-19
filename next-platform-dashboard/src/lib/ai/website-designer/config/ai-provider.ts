@@ -84,19 +84,22 @@ const DEFAULT_PROVIDER: AIProvider = "anthropic";
  * Fast: Design inspiration, simple analysis
  */
 const TASK_TIERS: Record<string, AIModelTier> = {
-  // Critical - affects entire site structure
-  "architecture": "premium",
+  // Architecture: use fast model (Haiku) — prompt is well-structured with blueprints
+  // so a fast model produces equally good output. Saves ~30s vs premium.
+  "architecture": "fast",
+  
+  // Page content: still premium — this is where creative quality matters most
   "page-content": "premium",
   "iteration": "premium",
   
-  // Important but more constrained
-  "navbar": "standard",
-  "footer": "standard",
+  // Navbar/footer: fast — highly constrained output, fast model is sufficient
+  "navbar": "fast",
+  "footer": "fast",
+  
+  // Other tasks
   "refinement": "standard",
   "module-configurator": "standard",
   "content-generation": "standard",
-  
-  // Simpler tasks
   "design-inspiration": "fast",
   "module-analysis": "fast",
   "content-optimization": "fast",

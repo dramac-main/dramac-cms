@@ -12,6 +12,9 @@ import { WebsiteDesignerEngine } from "@/lib/ai/website-designer/engine";
 import type { GenerationProgress } from "@/lib/ai/website-designer/types";
 import { z } from "zod";
 
+// Vercel route segment config — allow up to 60s for AI generation
+export const maxDuration = 60;
+
 // =============================================================================
 // REQUEST VALIDATION
 // =============================================================================

@@ -88,7 +88,7 @@ const DEFAULT_CONFIG: EngineConfig = {
   useQuickDesignTokens: true,     // Fast industry-based tokens (no AI)
   enableRefinement: false,        // Disabled - adds 4 AI calls!
   refinementPasses: 2,            // If enabled, use 2 passes max
-  enableModuleIntegration: true,  // Enabled - adds ~10-15s (2 AI calls), detects booking/ecommerce/CRM
+  enableModuleIntegration: false, // Disabled by default — adds ~10-15s AI call, exceeds 60s Vercel timeout
 };
 
 // =============================================================================
@@ -238,25 +238,31 @@ export class WebsiteDesignerEngine {
         this.applyConstraints(input.constraints);
       }
 
-      // Step 3: Generate each page
-      const totalPages = this.architecture.pages.length;
-      let pages: GeneratedPage[] = [];
-
-      for (let i = 0; i < totalPages; i++) {
-        const pagePlan = this.architecture.pages[i];
-        this.reportProgress(
-          "generating-pages",
-          `Generating ${pagePlan.name} page...`,
-          i,
-          totalPages,
-          pagePlan.name
-        );
-
-        const page = await this.generatePage(pagePlan, formattedContext);
-        pages.push(page);
+      // Step 3: Generate pages IN PARALLEL (pages are independent of each other)
+      // Cap at 4 pages max to fit within Vercel's 60s timeout
+      const MAX_PAGES = 4;
+      if (this.architecture.pages.length > MAX_PAGES) {
+        console.log(`[WebsiteDesignerEngine] ⚡ Capping pages from ${this.architecture.pages.length} to ${MAX_PAGES} for timeout budget`);
+        this.architecture.pages = this.architecture.pages.slice(0, MAX_PAGES);
       }
+      const totalPages = this.architecture.pages.length;
+      this.reportProgress(
+        "generating-pages",
+        `Generating ${totalPages} pages in parallel...`,
+        0,
+        totalPages
+      );
 
-      // Step 3.5: Integrate modules into pages (NEW)
+      // Generate ALL pages concurrently — each is an independent AI call
+      let pages: GeneratedPage[] = await Promise.all(
+        this.architecture.pages.map((pagePlan) =>
+          this.generatePage(pagePlan, formattedContext)
+        )
+      );
+
+      this.reportProgress("generating-pages", `All ${totalPages} pages generated`, totalPages, totalPages);
+
+      // Step 3.5: Integrate modules into pages
       if (this.config.enableModuleIntegration && this.moduleOrchestrator) {
         this.reportProgress("generating-pages", "Integrating booking & e-commerce modules...", totalPages, totalPages);
         const moduleConfigs = (this.architecture as SiteArchitecture & { moduleConfig?: ModuleConfig[] }).moduleConfig;
@@ -265,10 +271,12 @@ export class WebsiteDesignerEngine {
         }
       }
 
-      // Step 4: Generate shared elements (navbar, footer)
-      this.reportProgress("generating-shared-elements", "Creating navigation...", 0, 1);
-      const navbar = await this.generateNavbar(pages);
-      const footer = await this.generateFooter();
+      // Step 4: Generate navbar + footer IN PARALLEL (they're independent)
+      this.reportProgress("generating-shared-elements", "Creating navigation & footer...", 0, 1);
+      const [navbar, footer] = await Promise.all([
+        this.generateNavbar(pages),
+        this.generateFooter(),
+      ]);
 
       // Step 5: Apply navbar and footer to all pages
       let pagesWithNav = this.applySharedElements(pages, navbar, footer);
