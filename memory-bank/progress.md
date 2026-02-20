@@ -1,11 +1,32 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅**
 
 ---
 
-## Latest Update: February 2026 - E-Commerce Comprehensive Overhaul Session 2 ✅
+## Latest Update: February 2026 - E-Commerce Centralized Currency (Session 4) ✅
+
+**Commit:** `e3101fa` | **Files Changed:** 22 (131 insertions, 219 deletions) | **Build:** ✅ Clean
+
+### Problem
+Despite Session 2 fixing `DEFAULT_CURRENCY` to 'ZMW', product dialog and dashboards still showed `$`. Root causes: (1) existing DB rows had stale `currency: 'USD'` from before the fix, and (2) 20+ dashboard components defined local `formatCurrency`/`formatPrice` functions that hardcoded the currency, bypassing the centralized `useCurrency()` hook.
+
+### Solution
+- **Enhanced `useCurrency()` hook** — Added `formatAmount()` for pre-divided display values alongside existing `formatPrice()` for cents
+- **21 dashboard components** converted to use the centralized hook instead of local functions
+- **DB migration `em-53`** created to UPDATE stale 'USD' rows to 'ZMW'
+- **Architecture rule established**: Dashboard → `useCurrency()` hook | Studio/storefront → `DEFAULT_CURRENCY` from locale-config
+
+### Key Components Fixed
+customers-view, inventory-view, order-detail-dialog, refund-dialog, invoice-template, customer-table, customer-detail-dialog, product-card, order-card, order-items-table, revenue-chart, analytics-view, orders-view, stats-cards, ecommerce-metric-card, home-view, product-data-table, product-columns, EcommerceDashboardEnhanced, loyalty-view, quote-items-editor
+
+### Pending User Action
+⚠️ Run `migrations/em-53-fix-stale-usd-currency.sql` in Supabase SQL Editor
+
+---
+
+## Previous Update: February 2026 - E-Commerce Comprehensive Overhaul Session 2 ✅
 
 **Files Changed:** 35+ | **Bugs Fixed:** 40+ across 13 categories
 

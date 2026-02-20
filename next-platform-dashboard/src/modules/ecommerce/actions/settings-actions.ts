@@ -207,9 +207,18 @@ export async function getAllSettings(
   }
 
   // Merge with defaults to ensure all fields exist
+  // For currency: also sync with top-level `currency` column as source of truth
+  const currencyFromTopLevel = data.currency || defaultCurrencySettings.default_currency
+  const mergedCurrency: CurrencySettings = {
+    ...defaultCurrencySettings,
+    ...data.currency_settings,
+    // Top-level currency column is the source of truth (used by useCurrency() hook)
+    default_currency: data.currency_settings?.default_currency || currencyFromTopLevel,
+  }
+
   return {
     general: { ...defaultGeneralSettings, ...data.general_settings },
-    currency: { ...defaultCurrencySettings, ...data.currency_settings },
+    currency: mergedCurrency,
     tax: { ...defaultTaxSettings, ...data.tax_settings },
     shipping: { ...defaultShippingSettings, ...data.shipping_settings },
     payments: { ...defaultPaymentSettings, ...data.payment_settings },
@@ -334,13 +343,28 @@ export async function updateGeneralSettings(
 
 /**
  * Update currency settings
+ * 
+ * Also syncs the top-level `currency` column so `useCurrency()` hook
+ * always reads the same value as the Settings page shows.
  */
 export async function updateCurrencySettings(
   siteId: string,
   agencyId: string,
   settings: CurrencySettings
 ): Promise<{ success: boolean; error?: string }> {
-  return updateSettings(siteId, agencyId, 'currency', settings as unknown as Record<string, unknown>)
+  // Save the JSONB currency_settings
+  const result = await updateSettings(siteId, agencyId, 'currency', settings as unknown as Record<string, unknown>)
+  
+  if (result.success && settings.default_currency) {
+    // Sync top-level `currency` column so useCurrency() hook reads the same value
+    const supabase = await getModuleClient()
+    await supabase
+      .from(`${TABLE_PREFIX}_settings`)
+      .update({ currency: settings.default_currency })
+      .eq('site_id', siteId)
+  }
+  
+  return result
 }
 
 /**

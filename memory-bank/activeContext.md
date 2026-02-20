@@ -2,6 +2,66 @@
 
 ## Recent Work
 
+### E-Commerce Centralized Currency Formatting (Session 4) ✅
+
+**Category:** Professional-Grade Architecture Fix — Centralized Currency Control  
+**Commit:** `e3101fa`  
+**Files Changed:** 22 (131 insertions, 219 deletions)  
+**Build:** ✅ Compiled successfully, 193 static pages generated  
+**Deployed:** Pushed to origin/main for Vercel auto-deploy
+
+#### Problem
+User reported "product popup still shows dollar sign ($), everything feels hardcoded." Deep audit revealed two root causes:
+1. **Stale DB rows**: User's site was created before the ZMW fix — `initializeEcommerceForSite` only INSERTs if no row exists, so existing settings still had `currency: 'USD'`
+2. **20+ local shadow functions**: Dashboard components defined their OWN `formatCurrency`/`formatPrice` functions with `DEFAULT_CURRENCY` hardcoded, completely bypassing the `useCurrency()` hook from ecommerce-context
+
+#### Solution: Comprehensive Centralization
+- **Enhanced `useCurrency()` hook** in `ecommerce-context.tsx`:
+  - `formatPrice(amountInCents)` — divides by 100, formats with store currency
+  - `formatAmount(displayAmount)` — formats WITHOUT dividing (for pre-divided analytics data)
+  - `currency` — the store's currency code (e.g., 'ZMW')
+  - `currencySymbol` — the store's currency symbol (e.g., 'K')
+- **21 dashboard components** converted from local functions to centralized hook
+- **DB migration** `em-53-fix-stale-usd-currency.sql` created to UPDATE existing 'USD' rows to 'ZMW'
+
+#### Components Fixed (21 total)
+| Component | What Changed |
+|-----------|-------------|
+| `customers-view.tsx` | Removed local formatCurrency, uses useCurrency() |
+| `inventory-view.tsx` | Replaced DEFAULT_CURRENCY import with useCurrency |
+| `order-detail-dialog.tsx` | Uses useCurrency with currency override for order-specific currency |
+| `refund-dialog.tsx` | Uses `const { formatPrice: formatCurrency } = useCurrency()` |
+| `invoice-template.tsx` | Uses useCurrency inside forwardRef with currency override |
+| `customer-table.tsx` | Removed currency prop default, uses useCurrency |
+| `customer-detail-dialog.tsx` | Uses useCurrency |
+| `product-card.tsx` | Removed local formatPrice, added useCurrency in both sub-components |
+| `order-card.tsx` | Removed local formatPrice, added useCurrency in both sub-components |
+| `order-items-table.tsx` | Removed local formatCurrency + currency prop, changed 7 calls |
+| `revenue-chart.tsx` | Removed 2 local functions, inline formatCompactCurrency with currencySymbol |
+| `analytics-view.tsx` | formatPrice for cents, formatAmount for display-ready values |
+| `orders-view.tsx` | Replaced formatCurrency import with useCurrency |
+| `stats-cards.tsx` | Removed local formatCurrency closure, uses hook |
+| `ecommerce-metric-card.tsx` | Fixed AnimatedNumber sub-component to use useCurrency |
+| `home-view.tsx` | Removed DEFAULT_CURRENCY import + prop pass-through |
+| `product-data-table.tsx` | Passes hook currency to createProductColumns |
+| `product-columns.tsx` | Kept DEFAULT_CURRENCY as safety fallback for non-component function |
+| `EcommerceDashboardEnhanced.tsx` | Removed 8 `currency={currency}` pass-throughs |
+| `loyalty-view.tsx` | Replaced DEFAULT_CURRENCY_SYMBOL with currencySymbol from hook |
+| `quote-items-editor.tsx` | Replaced DEFAULT_CURRENCY default with useCurrency |
+
+#### Studio/Mobile Components — NOT Changed (By Design)
+12 studio/mobile storefront components (MobileProductCard, ProductSwipeView, etc.) are NOT wrapped in `EcommerceProvider`, so they can't use `useCurrency()`. They use `DEFAULT_CURRENCY` from `locale-config.ts` which is correctly set to 'ZMW'. This is acceptable since the storefront doesn't have access to the ecommerce context.
+
+#### Key Architecture Rule
+- **Dashboard components** (inside EcommerceProvider) → use `useCurrency()` hook
+- **Studio/storefront components** (outside EcommerceProvider) → use `DEFAULT_CURRENCY` from locale-config
+- **Non-component functions** (like `createProductColumns`) → accept currency as parameter, fallback to `DEFAULT_CURRENCY`
+
+#### Pending Action for User
+⚠️ User must run `migrations/em-53-fix-stale-usd-currency.sql` in Supabase SQL Editor to fix existing DB rows from 'USD' to 'ZMW'.
+
+---
+
 ### E-Commerce Module Comprehensive Overhaul (Session 2) ✅
 
 **Category:** Professional-Grade E-Commerce Fixes — Real-World Testing Response  
