@@ -9,6 +9,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import { DEFAULT_CURRENCY, getCurrencySymbol, formatCurrency } from '@/lib/locale-config'
 import {
   getProducts, getCategories, getOrders, getDiscounts, getEcommerceSettings,
   createProduct, updateProduct, deleteProduct, duplicateProduct,
@@ -189,6 +190,24 @@ export function useDiscounts() {
 export function useEcommerceSettings() {
   const { settings, refreshSettings, updateSettings, isLoading } = useEcommerce()
   return { settings, refresh: refreshSettings, update: updateSettings, isLoading }
+}
+
+/**
+ * Central currency hook — THE single source of truth for currency in e-commerce.
+ * Reads from store settings (DB), falls back to locale-config defaults.
+ * Every component that displays prices should use this hook.
+ */
+export function useCurrency() {
+  const { settings } = useEcommerce()
+  const currency = settings?.currency || DEFAULT_CURRENCY
+  const currencySymbol = getCurrencySymbol(currency)
+
+  const formatPrice = useCallback(
+    (amountInCents: number) => formatCurrency(amountInCents / 100, currency),
+    [currency]
+  )
+
+  return { currency, currencySymbol, formatPrice }
 }
 
 export function useInventory() {

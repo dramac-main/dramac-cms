@@ -7,6 +7,7 @@
 'use client';
 
 import React from 'react';
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config';
 import { 
   Rocket, 
   CheckCircle2, 
@@ -71,7 +72,7 @@ export function LaunchStep({
   const completionPercentage = Math.round((completedCount / checklist.length) * 100);
 
   // Get currency symbol
-  const currencySymbol = data.currencyTax?.currencySymbol || '$';
+  const currencySymbol = data.currencyTax?.currencySymbol || DEFAULT_CURRENCY_SYMBOL;
 
   return (
     <div className="space-y-6">

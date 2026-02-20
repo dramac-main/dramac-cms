@@ -9,6 +9,7 @@
 
 import { useState, useCallback } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
+import { useCurrency } from '../../context/ecommerce-context'
 import { ProductDataTable } from '../tables/product-data-table'
 import { EditProductDialog } from '../dialogs/edit-product-dialog'
 import { ViewProductDialog } from '../dialogs/view-product-dialog'
@@ -47,6 +48,7 @@ export function ProductsView({ onCreateProduct }: ProductsViewProps) {
     siteId,
     agencyId
   } = useEcommerce()
+  const { currency } = useCurrency()
 
   // Dialog states
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
@@ -235,6 +237,7 @@ export function ProductsView({ onCreateProduct }: ProductsViewProps) {
         onBulkAction={handleBulkAction}
         onExport={handleExport}
         onImport={handleImport}
+        currency={currency}
         isLoading={isLoading}
       />
 

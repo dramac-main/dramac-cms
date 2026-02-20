@@ -53,6 +53,7 @@ import {
   Package
 } from 'lucide-react'
 import type { BulkAction, Category } from '../../types/ecommerce-types'
+import { useCurrency } from '../../context/ecommerce-context'
 
 // ============================================================================
 // TYPES
@@ -77,6 +78,7 @@ export function BulkActionsToolbar({
   isExecuting,
   categories
 }: BulkActionsToolbarProps) {
+  const { currencySymbol } = useCurrency()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPriceAdjust, setShowPriceAdjust] = useState(false)
   const [showStockAdjust, setShowStockAdjust] = useState(false)
@@ -273,7 +275,7 @@ export function BulkActionsToolbar({
                   placeholder={priceAdjustType === 'percentage' ? '10' : '5.00'}
                 />
                 <span className="text-muted-foreground">
-                  {priceAdjustType === 'percentage' ? '%' : '$'}
+                  {priceAdjustType === 'percentage' ? '%' : currencySymbol}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">

@@ -639,6 +639,11 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 VALUES ('assets', 'assets', true, 52428800, ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'video/mp4', 'application/pdf']::text[])
 ON CONFLICT (id) DO UPDATE SET public = true, file_size_limit = 52428800;
 
+-- E-Commerce bucket (product images)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('ecommerce', 'ecommerce', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']::text[])
+ON CONFLICT (id) DO UPDATE SET public = true, file_size_limit = 5242880;
+
 -- ============================================================================
 -- RESTORE COMPLETE - NOW INSERT YOUR DATA BELOW
 -- ============================================================================

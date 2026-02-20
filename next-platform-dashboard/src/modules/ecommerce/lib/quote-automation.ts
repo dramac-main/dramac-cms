@@ -8,6 +8,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { sendBrandedEmail } from '@/lib/email/send-branded-email'
+import { formatCurrency, DEFAULT_CURRENCY } from '@/lib/locale-config'
 import { addDays, differenceInDays } from 'date-fns'
 import type { Quote } from '../types/ecommerce-types'
 
@@ -184,7 +185,7 @@ export async function processQuoteReminders(siteId: string): Promise<{ sent: num
       // Send reminder email
       const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/quote/${quote.access_token}`
       const totalAmount = quote.total || 0
-      const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
+      const formatted = formatCurrency(totalAmount / 100, quote.currency || DEFAULT_CURRENCY)
 
       await sendBrandedEmail(quote.agency_id || null, {
         to: { email: quote.customer_email, name: quote.customer_name || undefined },

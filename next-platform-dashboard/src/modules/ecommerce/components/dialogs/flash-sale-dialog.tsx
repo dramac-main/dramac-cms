@@ -11,7 +11,7 @@ import { useState, useEffect } from 'react'
 import { createFlashSale, updateFlashSale } from '../../actions/marketing-actions'
 import type { FlashSale, FlashSaleInput } from '../../types/marketing-types'
 import { Loader2, Zap, Calendar, Percent, Coins } from 'lucide-react'
-import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
+import { useCurrency } from '../../context/ecommerce-context'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -50,6 +50,7 @@ export function FlashSaleDialog({
   onOpenChange, 
   onSuccess 
 }: FlashSaleDialogProps) {
+  const { currencySymbol } = useCurrency()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed_amount'>('percentage')
@@ -235,7 +236,7 @@ export function FlashSaleDialog({
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="discountValue">
-                  {discountType === 'percentage' ? 'Percentage' : `Amount (${DEFAULT_CURRENCY_SYMBOL})`}
+                  {discountType === 'percentage' ? 'Percentage' : `Amount (${currencySymbol})`}
                 </Label>
                 <div className="relative">
                   <Input
@@ -250,7 +251,7 @@ export function FlashSaleDialog({
                     className="pr-8"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    {discountType === 'percentage' ? '%' : '$'}
+                    {discountType === 'percentage' ? '%' : currencySymbol}
                   </span>
                 </div>
               </div>

@@ -8,6 +8,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { DEFAULT_CURRENCY, DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 import type { 
   EcommerceSettingsComplete,
   GeneralSettings,
@@ -53,13 +54,13 @@ const defaultGeneralSettings: GeneralSettings = {
 }
 
 const defaultCurrencySettings: CurrencySettings = {
-  default_currency: 'USD',     // US Dollar default
+  default_currency: DEFAULT_CURRENCY,     // Platform default (ZMW)
   currency_position: 'before', 
-  currency_symbol: '$',        // US Dollar symbol
+  currency_symbol: DEFAULT_CURRENCY_SYMBOL,  // Platform default symbol (K)
   decimal_separator: '.',
   thousand_separator: ',',
   decimal_places: 2,
-  supported_currencies: ['USD', 'ZAR', 'GBP', 'EUR'],  // USD first
+  supported_currencies: [DEFAULT_CURRENCY, 'USD', 'ZAR', 'GBP', 'EUR'],  // Platform default first
   auto_currency_conversion: false
 }
 

@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { useEcommerce } from '../../context/ecommerce-context'
+import { useCurrency } from '../../context/ecommerce-context'
 import { Loader2 } from 'lucide-react'
 import {
   Dialog,
@@ -40,6 +41,7 @@ interface EditProductDialogProps {
 
 export function EditProductDialog({ product, open, onOpenChange }: EditProductDialogProps) {
   const { editProduct, categories } = useEcommerce()
+  const { currencySymbol } = useCurrency()
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   // Form state
@@ -205,7 +207,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
               <div className="space-y-2">
                 <Label htmlFor="basePrice">Price *</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{currencySymbol}</span>
                   <Input
                     id="basePrice"
                     type="number"
@@ -221,7 +223,7 @@ export function EditProductDialog({ product, open, onOpenChange }: EditProductDi
               <div className="space-y-2">
                 <Label htmlFor="compareAtPrice">Compare at Price</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{currencySymbol}</span>
                   <Input
                     id="compareAtPrice"
                     type="number"

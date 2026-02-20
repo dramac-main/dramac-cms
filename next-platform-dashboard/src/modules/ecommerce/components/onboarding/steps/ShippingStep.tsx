@@ -8,6 +8,7 @@
 
 import React from 'react';
 import { Truck, Gift, MapPin } from 'lucide-react';
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config';
 import { cn } from '@/lib/utils';
 import type { StepComponentProps } from '../../../types/onboarding-types';
 import { Switch } from '../ui/Switch';
@@ -37,7 +38,7 @@ export function ShippingStep({
   };
 
   // Get currency symbol from previous step
-  const currencySymbol = data.currencyTax?.currencySymbol || '$';
+  const currencySymbol = data.currencyTax?.currencySymbol || DEFAULT_CURRENCY_SYMBOL;
 
   return (
     <div className="space-y-6">

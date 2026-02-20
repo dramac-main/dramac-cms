@@ -7,6 +7,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 import { 
   startOfMonth, 
   endOfMonth, 
@@ -348,13 +349,14 @@ export async function getQuoteValueDistribution(
     }
     
     // Define ranges
+    const s = DEFAULT_CURRENCY_SYMBOL
     const ranges = [
-      { range: '$0 - $100', min: 0, max: 100, count: 0 },
-      { range: '$100 - $500', min: 100, max: 500, count: 0 },
-      { range: '$500 - $1,000', min: 500, max: 1000, count: 0 },
-      { range: '$1,000 - $5,000', min: 1000, max: 5000, count: 0 },
-      { range: '$5,000 - $10,000', min: 5000, max: 10000, count: 0 },
-      { range: '$10,000+', min: 10000, max: Infinity, count: 0 }
+      { range: `${s}0 - ${s}100`, min: 0, max: 100, count: 0 },
+      { range: `${s}100 - ${s}500`, min: 100, max: 500, count: 0 },
+      { range: `${s}500 - ${s}1,000`, min: 500, max: 1000, count: 0 },
+      { range: `${s}1,000 - ${s}5,000`, min: 1000, max: 5000, count: 0 },
+      { range: `${s}5,000 - ${s}10,000`, min: 5000, max: 10000, count: 0 },
+      { range: `${s}10,000+`, min: 10000, max: Infinity, count: 0 }
     ]
     
     for (const quote of quotes) {

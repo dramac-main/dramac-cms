@@ -187,7 +187,7 @@ export function CurrencySettingsForm({ siteId, agencyId }: CurrencySettingsFormP
                 id="currency_symbol"
                 value={settings.currency_symbol}
                 onChange={(e) => updateField('currency_symbol', e.target.value)}
-                placeholder="$"
+                placeholder="K"
               />
             </div>
           </div>

@@ -78,7 +78,10 @@ export function getCountryList(): Array<{ code: string; name: string }> {
  */
 export function getCurrencyList(): Array<{ code: string; name: string; symbol: string }> {
   return [
-    // US Dollar at top
+    // Zambian Kwacha at top (platform default)
+    { code: 'ZMW', name: 'Zambian Kwacha', symbol: 'K' },
+    
+    // US Dollar
     { code: 'USD', name: 'US Dollar', symbol: '$' },
     
     // African Currencies (Regional)

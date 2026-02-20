@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import { revalidatePath } from 'next/cache'
 import type {
   Quote,
@@ -199,7 +200,7 @@ export async function createQuote(
         tax_amount: 0,
         shipping_amount: input.shipping_amount || 0,
         total: 0,
-        currency: input.currency || 'USD',  // US DOLLAR DEFAULT
+        currency: input.currency || DEFAULT_CURRENCY,  // Platform default
         valid_from: validFrom,
         valid_until: validUntil,
         title: input.title,

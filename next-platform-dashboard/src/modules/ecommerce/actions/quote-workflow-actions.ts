@@ -10,6 +10,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendBrandedEmail } from '@/lib/email/send-branded-email'
+import { formatCurrency, DEFAULT_CURRENCY } from '@/lib/locale-config'
 import { revalidatePath } from 'next/cache'
 import type {
   Quote,
@@ -156,7 +157,7 @@ export async function sendQuote(input: SendQuoteInput): Promise<WorkflowResult> 
           0
         )
       : quote.total || 0
-    const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
+    const formatted = formatCurrency(totalAmount / 100, quote.currency || DEFAULT_CURRENCY)
 
     // Get store name for email branding
     const { data: storeSettings } = await supabase
@@ -240,7 +241,7 @@ export async function resendQuote(
     // Send resend email
     const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/quote/${quote.access_token}`
     const totalAmount = quote.total || 0
-    const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
+    const formatted = formatCurrency(totalAmount / 100, quote.currency || DEFAULT_CURRENCY)
 
     // Get store name for email branding
     const { data: siteSettings } = await supabase
@@ -312,7 +313,7 @@ export async function sendQuoteReminder(
     // Send reminder email
     const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/quote/${quote.access_token}`
     const totalAmount = quote.total || 0
-    const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
+    const formatted = formatCurrency(totalAmount / 100, quote.currency || DEFAULT_CURRENCY)
 
     // Get store name for email branding
     const { data: reminderSettings } = await supabase
@@ -487,7 +488,7 @@ export async function acceptQuote(input: AcceptQuoteInput): Promise<WorkflowResu
     
     // Send acceptance notification email to site owner
     const totalAmount = quote.total || 0
-    const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
+    const formatted = formatCurrency(totalAmount / 100, quote.currency || DEFAULT_CURRENCY)
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/sites/${quote.site_id}/ecommerce`
 
     // Look up site owner email (use admin client since this is a public action)
@@ -598,7 +599,7 @@ export async function rejectQuote(input: RejectQuoteInput): Promise<WorkflowResu
     
     // Send rejection notification to site owner
     const totalAmount = quote.total || 0
-    const formatted = new Intl.NumberFormat('en-US', { style: 'currency', currency: quote.currency || 'USD' }).format(totalAmount)
+    const formatted = formatCurrency(totalAmount / 100, quote.currency || DEFAULT_CURRENCY)
     const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/sites/${quote.site_id}/ecommerce`
 
     const ownerSupabase2 = getPublicModuleClient()

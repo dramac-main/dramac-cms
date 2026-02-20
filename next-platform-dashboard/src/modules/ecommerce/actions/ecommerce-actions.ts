@@ -11,7 +11,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { formatCurrency } from '@/lib/locale-config'
+import { formatCurrency, DEFAULT_CURRENCY } from '@/lib/locale-config'
 import { notifyNewOrder, notifyOrderShipped } from '@/lib/services/business-notifications'
 import type {
   Product, ProductInput, ProductUpdate, ProductFilters,
@@ -1859,7 +1859,7 @@ export async function initializeEcommerceForSite(siteId: string, agencyId: strin
       .insert({
         site_id: siteId,
         agency_id: agencyId,
-        currency: 'USD',              // US DOLLAR DEFAULT
+        currency: DEFAULT_CURRENCY,    // Platform default (ZMW)
         tax_rate: 16,                  // Zambia standard VAT rate
         tax_included_in_price: true,   // Prices shown inclusive
         enable_guest_checkout: true,

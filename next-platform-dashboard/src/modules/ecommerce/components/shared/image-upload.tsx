@@ -87,34 +87,16 @@ export function ImageUpload({
         })
 
       if (error) {
-        // If bucket doesn't exist, try to create it
+        // Provide helpful error messages for common issues
         if (error.message.includes('not found') || error.message.includes('Bucket')) {
-          // Try creating the bucket (this may fail if RLS is strict)
-          const { error: bucketError } = await supabase.storage.createBucket('ecommerce', {
-            public: true,
-            fileSizeLimit: maxSizeMB * 1024 * 1024
-          })
-          
-          if (!bucketError) {
-            // Retry upload
-            const { data: retryData, error: retryError } = await supabase.storage
-              .from('ecommerce')
-              .upload(filename, file, {
-                cacheControl: '3600',
-                upsert: false
-              })
-            
-            if (retryError) throw retryError
-            
-            // Get public URL
-            const { data: urlData } = supabase.storage
-              .from('ecommerce')
-              .getPublicUrl(retryData.path)
-            
-            onChange(urlData.publicUrl)
-            toast.success('Image uploaded successfully')
-            return
-          }
+          console.error('Supabase storage bucket "ecommerce" not found. Run the migration: migrations/em-52-ecommerce-storage-bucket.sql')
+          throw new Error('Storage not configured. The "ecommerce" storage bucket needs to be created in Supabase. Please contact your administrator.')
+        }
+        if (error.message.includes('Payload too large') || error.message.includes('file size')) {
+          throw new Error(`File is too large. Maximum allowed size is ${maxSizeMB}MB.`)
+        }
+        if (error.message.includes('mime') || error.message.includes('type')) {
+          throw new Error(`File type not allowed. Accepted types: ${acceptedTypes.map(t => t.split('/')[1]).join(', ')}`)
         }
         throw error
       }
@@ -128,7 +110,8 @@ export function ImageUpload({
       toast.success('Image uploaded successfully')
     } catch (error) {
       console.error('Upload error:', error)
-      toast.error('Failed to upload image. You can use a URL instead.')
+      const message = error instanceof Error ? error.message : 'Failed to upload image'
+      toast.error(message + '. You can use a URL instead.')
       setShowUrlInput(true)
     } finally {
       setIsUploading(false)
