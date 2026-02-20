@@ -840,6 +840,7 @@ Animation: ${quickDesignTokens.heroPattern.animation}
   /**
    * Generate a single page with all its components
    * Enhanced with blueprint page-specific guidance for proven section order + content formulas
+   * Enhanced with page-type classification for intelligent inner page generation
    */
   private async generatePage(pagePlan: PagePlan, context: string): Promise<GeneratedPage> {
     // Get detailed field info for suggested components
@@ -862,13 +863,17 @@ Animation: ${quickDesignTokens.heroPattern.animation}
       }
     }
 
+    // Build all-pages list for cross-page context (so AI can link to real pages)
+    const allPages = (this.architecture?.pages || []).map(p => ({ name: p.name, slug: p.slug }));
+
     const fullPrompt = buildPagePrompt(
-      pagePlan,
+      { ...pagePlan, slug: pagePlan.slug },
       context,
       (this.architecture?.designTokens || {}) as Record<string, unknown>,
       componentDetails,
       this.userPrompt, // Pass user's original prompt for reference
-      blueprintPageContext // Pass proven blueprint guidance for this specific page
+      blueprintPageContext, // Pass proven blueprint guidance for this specific page
+      allPages, // Pass full site structure for cross-page linking
     );
 
     const { object } = await generateObject({

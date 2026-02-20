@@ -328,6 +328,26 @@ NEVER overdo animations - they should enhance, not distract!
 5. **Industry-appropriate content** and imagery descriptions
 6. **Mobile-optimized** layouts and navigation
 
+## ⚠️ SECTION REQUIREMENTS PER PAGE (CRITICAL)
+The architecture you create determines the QUALITY of every page. Thin section plans produce thin pages.
+
+**MINIMUM SECTIONS PER PAGE TYPE:**
+- **Home page: 6-8 sections** (Hero, Features/Services, Social Proof, Testimonials, Stats, Gallery, CTA, etc.)
+- **About page: 4-6 sections** (Hero, Values/Story, Team, Stats/Timeline, Gallery, CTA)
+- **Services page: 4-6 sections** (Hero, Service Grid, Process/How It Works, FAQ, Testimonials, CTA)
+- **Contact page: 3-5 sections** (Hero, ContactForm, Contact Methods, FAQ, Map)
+- **Pricing page: 3-5 sections** (Hero, Pricing Table, FAQ, CTA)
+- **Portfolio/Gallery page: 3-4 sections** (Hero, Gallery, Testimonials, CTA)
+- **Other pages: 4+ sections** minimum
+
+**Every section plan MUST include:**
+- Clear intent (what this section achieves)
+- Specific suggested component (from the component list)
+- Detailed designNotes (content guidance, layout preferences, item counts)
+- At least 2 contentNeeds items (what content this section requires)
+
+**DO NOT create pages with only 2 sections.** A 2-section page (Hero + CTA) looks like a skeleton. Every page must feel COMPLETE and PROFESSIONAL.
+
 Your output should be so polished that clients can launch immediately!`;
 
 // =============================================================================
@@ -524,6 +544,94 @@ Use high-quality Unsplash images with SPECIFIC, relevant search terms:
 4. Include specific numbers when possible (e.g., "50+ happy clients")
 5. Create appropriate urgency without being pushy
 6. Write for the target audience
+
+## 📄 PAGE-TYPE-SPECIFIC DESIGN GUIDE (CRITICAL FOR INNER PAGES)
+
+When generating a page, identify its TYPE and follow these proven patterns:
+
+### 🏠 HOME PAGE (slug: "/" or "home")
+- **Purpose:** First impression, brand identity, conversion funnel entry
+- **Must have:** Hero (fullscreen/split), 5-8 sections minimum, multiple CTAs
+- **Section flow:** Hero → Trust/Social proof → Services/Features → Showcase → Testimonials → Stats → CTA
+- **Quality bar:** This page gets the most traffic — make it STUNNING
+
+### 📖 ABOUT PAGE (slug: "/about")
+- **Purpose:** Build trust, tell the brand story, humanize the business
+- **Must have:** 4-6 sections minimum — do NOT make this a thin page
+- **Section flow:** Hero (split variant with team/founder photo) → Brand Story (rich About component or Features with 3 core values/pillars) → Team members with real-sounding bios → Timeline/Stats (years, clients, achievements) → Gallery (office/workspace photos) → CTA
+- **Content rules:**
+  - Write a compelling founding story (2-3 paragraphs worth of content)
+  - Each team member needs: name, role, descriptive bio (30+ words), personality
+  - Include company values/mission/vision as distinct items
+  - Stats should feel authentic (don't all be round numbers — use "847+" not "800+")
+- **Common mistake:** Making About pages with just a Hero + 1 paragraph. This is a CONVERSION page — visitors who click About are evaluating trust. Give them substance.
+
+### 🛠️ SERVICES PAGE (slug: "/services", "/what-we-do", "/offerings")
+- **Purpose:** Detail every service, help visitors self-identify their need
+- **Must have:** 4-6 sections minimum
+- **Section flow:** Hero (compact) → Services Grid (Features component, 4-6 items with detailed descriptions) → Process/How It Works (Features with numbered steps) → Pricing or "Request Quote" CTA → Testimonials (service-specific reviews) → FAQ (service questions) → CTA
+- **Content rules:**
+  - Each service needs: icon, title, 30+ word description highlighting BENEFITS
+  - Include what's included, duration, or deliverables
+  - Show a clear process: Step 1 → Step 2 → Step 3
+  - Service descriptions must be specific to THIS business, not generic
+- **Common mistake:** Listing services as bullet points. Each service deserves a rich, benefit-focused description.
+
+### 📞 CONTACT PAGE (slug: "/contact", "/get-in-touch")
+- **Purpose:** Convert interested visitors into leads/customers
+- **Must have:** 3-5 sections
+- **Section flow:** Hero (compact, inviting) → ContactForm (prominent, above fold) → Contact Methods (Features with 3-4 items: phone, email, address, hours) → Map/Location → FAQ (common questions about process, pricing, timeline)
+- **Content rules:**
+  - Form should be the STAR of this page — make it visually prominent
+  - Show multiple contact methods (phone, email, location)
+  - Include business hours prominently
+  - Add a FAQ section (5-6 questions) to handle objections
+  - Use warm, inviting language: "We'd love to hear from you" not "Submit inquiry"
+- **Common mistake:** Making contact pages with just a form. Add context, warmth, and supporting info.
+
+### 💰 PRICING PAGE (slug: "/pricing", "/plans")
+- **Purpose:** Help visitors choose the right plan/package
+- **Must have:** 3-5 sections
+- **Section flow:** Hero (compact) → Pricing (3 tiers, middle highlighted) → Feature Comparison (if applicable) → FAQ (billing, refunds, upgrades) → CTA (free trial or consultation)
+- **Content rules:**
+  - 3 pricing tiers with clear differentiation
+  - Highlight the recommended plan with a badge
+  - List 5-8 features per plan
+  - Include a FAQ addressing pricing objections
+
+### 🖼️ PORTFOLIO / GALLERY / PROJECTS PAGE (slug: "/portfolio", "/work", "/gallery", "/projects")
+- **Purpose:** Showcase work quality and range
+- **Must have:** 3-4 sections
+- **Section flow:** Hero (minimal) → Gallery (masonry or grid, 6-12 items with captions) → Testimonials → CTA ("Start a project")
+- **Content rules:**
+  - Each project needs: image, title, category, brief description
+  - Show variety in project types
+  - Include client names if appropriate
+
+### 📋 FAQ PAGE (slug: "/faq")
+- **Purpose:** Answer common questions, reduce support burden
+- **Section flow:** Hero (compact) → FAQ (8-12 questions in accordion) → CTA
+- **Content rules:**
+  - Group questions by category if 8+
+  - Answers should be comprehensive (3-5 sentences each)
+  - Include questions about pricing, process, timeline, guarantees
+
+### 📝 BLOG / NEWS PAGE (slug: "/blog", "/news")
+- **Purpose:** Content marketing, SEO, thought leadership
+- **Section flow:** Hero (compact) → Gallery (blog post cards, 6-9) → Newsletter → CTA
+
+### 🍽️ MENU PAGE (slug: "/menu", for restaurants)
+- **Purpose:** Display full menu with categories and prices
+- **Section flow:** Hero (compact, food photo) → Features (menu categories with items and prices) → CTA (reservation)
+
+### ⚠️ UNIVERSAL INNER PAGE RULES
+1. **MINIMUM 4 SECTIONS** for any inner page (Hero + 2 content sections + CTA). Thin 2-section pages look amateurish.
+2. **Every inner page ends with a CTA** — the final section should always drive conversion
+3. **Hero on inner pages should be COMPACT** (30-50vh, not fullscreen) — save space for content
+4. **Content must flow logically** — each section should build on the previous one
+5. **Maintain the design language** — same colors, spacing, typography, border-radius as homepage
+6. **Don't repeat homepage content** — inner pages should EXPAND on topics previewed on the homepage
+7. **Each page must feel COMPLETE** — not a skeleton waiting to be filled in
 
 ## OUTPUT FORMAT
 Return an array of fully configured components where EVERY prop is specified.
@@ -910,25 +1018,96 @@ Remember: The user's prompt is the PRIMARY source of truth. The database context
 }
 
 /**
+ * Classify a page by its slug/name to determine its type for AI guidance
+ */
+function classifyPageType(pageName: string, pageSlug?: string): { type: string; minSections: number; guidance: string } {
+  const name = pageName.toLowerCase();
+  const slug = (pageSlug || "").toLowerCase();
+  
+  if (slug === "/" || slug === "" || name === "home" || name === "homepage") {
+    return { type: "homepage", minSections: 6, guidance: "This is the HOMEPAGE — the most important page. It must be STUNNING with 6-8 sections. See the HOME PAGE guide in your system prompt." };
+  }
+  if (name.includes("about") || slug.includes("about") || name.includes("our story") || slug.includes("story")) {
+    return { type: "about", minSections: 4, guidance: "This is an ABOUT page — visitors here are evaluating TRUST. Generate 4-6 rich sections: Hero (split) → Brand Story/Values → Team members (with detailed bios) → Stats/Timeline → Gallery → CTA. Each section must have substantial content. See the ABOUT PAGE guide." };
+  }
+  if (name.includes("service") || slug.includes("service") || name.includes("what we do") || slug.includes("offerings")) {
+    return { type: "services", minSections: 4, guidance: "This is a SERVICES page — visitors want detail. Generate 4-6 sections: Hero (compact) → Services Grid (4-6 items with rich descriptions) → Process/How It Works → Testimonials → FAQ → CTA. Each service needs 30+ word benefit-focused descriptions. See the SERVICES PAGE guide." };
+  }
+  if (name.includes("contact") || slug.includes("contact") || name.includes("get in touch") || slug.includes("reach")) {
+    return { type: "contact", minSections: 3, guidance: "This is a CONTACT page — make the form PROMINENT. Generate 3-5 sections: Hero (compact, inviting) → ContactForm (visually prominent) → Contact Methods (phone/email/address/hours) → FAQ (5-6 common questions) → optional Map. Use warm language." };
+  }
+  if (name.includes("pricing") || slug.includes("pricing") || name.includes("plans") || slug.includes("plans")) {
+    return { type: "pricing", minSections: 3, guidance: "This is a PRICING page. Generate 3-5 sections: Hero (compact) → Pricing table (3 tiers, middle highlighted) → FAQ (billing questions) → CTA. Be transparent with pricing." };
+  }
+  if (name.includes("portfolio") || slug.includes("portfolio") || name.includes("work") || slug.includes("work") || name.includes("projects") || slug.includes("gallery")) {
+    return { type: "portfolio", minSections: 3, guidance: "This is a PORTFOLIO/GALLERY page. Generate 3-4 sections: Hero (minimal) → Gallery (6-12 items with captions) → Testimonials → CTA. Let the work speak for itself." };
+  }
+  if (name.includes("team") || slug.includes("team") || name.includes("attorney") || slug.includes("attorney") || name.includes("staff") || slug.includes("staff")) {
+    return { type: "team", minSections: 3, guidance: "This is a TEAM page. Generate 3-4 sections: Hero (compact) → Team grid (detailed bios, credentials, photos) → CTA. Each team member needs a real-sounding name, role, and 30+ word bio." };
+  }
+  if (name.includes("faq") || slug.includes("faq")) {
+    return { type: "faq", minSections: 3, guidance: "This is a FAQ page. Generate 3 sections: Hero (compact) → FAQ (8-12 questions with comprehensive answers) → CTA. Group questions by category." };
+  }
+  if (name.includes("blog") || slug.includes("blog") || name.includes("news") || slug.includes("news")) {
+    return { type: "blog", minSections: 3, guidance: "This is a BLOG/NEWS page. Generate 3-4 sections: Hero (compact) → Gallery/Cards (6-9 article previews) → Newsletter signup → CTA." };
+  }
+  if (name.includes("menu") || slug.includes("menu")) {
+    return { type: "menu", minSections: 3, guidance: "This is a MENU page. Generate 3-4 sections: Hero (compact, food imagery) → Features (menu items categorized with prices) → CTA (reservation)." };
+  }
+  if (name.includes("listing") || slug.includes("listing") || name.includes("properties") || slug.includes("properties")) {
+    return { type: "listings", minSections: 3, guidance: "This is a LISTINGS page. Generate 3 sections: Hero (compact) → Gallery grid (property/listing cards with details) → CTA." };
+  }
+  if (name.includes("practice") || slug.includes("practice-areas")) {
+    return { type: "practice-areas", minSections: 4, guidance: "This is a PRACTICE AREAS page. Generate 4 sections: Hero (compact) → Features (detailed practice areas, 2-column) → FAQ (legal questions) → CTA (free consultation)." };
+  }
+  // Default — still require substance
+  return { type: "inner-page", minSections: 4, guidance: "This is an inner page. Generate at MINIMUM 4 sections: Hero (compact) → 2+ content sections → CTA. Every inner page must feel COMPLETE, not skeletal." };
+}
+
+/**
  * Build complete prompt for page generation
  * CRITICAL: Emphasizes business context and user intent
  * Enhanced with blueprint page-specific guidance for proven section specs
+ * Enhanced with page-type classification for intelligent inner page generation
  */
 export function buildPagePrompt(
-  pagePlan: { name: string; purpose: string; sections: unknown[] },
+  pagePlan: { name: string; slug?: string; purpose: string; sections: unknown[] },
   context: string,
   designTokens: Record<string, unknown>,
   componentDetails: unknown[],
   userPrompt?: string,
-  blueprintPageContext?: string
+  blueprintPageContext?: string,
+  allPages?: Array<{ name: string; slug: string }>,
 ): string {
-  return `## Page: ${pagePlan.name}
+  const pageClassification = classifyPageType(pagePlan.name, pagePlan.slug);
+  const isHomepage = pageClassification.type === "homepage";
+  
+  return `## Page: ${pagePlan.name}${pagePlan.slug ? ` (${pagePlan.slug})` : ""}
 Purpose: ${pagePlan.purpose}
+Page Type: ${pageClassification.type.toUpperCase()}
+
+## 🎯 PAGE-TYPE SPECIFIC INSTRUCTIONS (READ THIS FIRST)
+${pageClassification.guidance}
+
+**MINIMUM SECTIONS REQUIRED: ${pageClassification.minSections}**
+${!isHomepage ? `
+⚠️ INNER PAGE QUALITY CHECK: You MUST generate at least ${pageClassification.minSections} sections for this page.
+Do NOT create a thin page with just a Hero + 1 section. That looks amateurish.
+If the section plan below has fewer than ${pageClassification.minSections} sections, ADD more appropriate sections for this page type.
+The section plan is a STARTING POINT — you may and SHOULD add more sections to make the page feel complete and professional.
+` : ""}
 
 ## ⚠️ CRITICAL RULES - READ CAREFULLY ⚠️
 1. DO NOT generate Navbar or Footer components - they are added automatically
 2. Use the EXACT business name from context
 3. ALL links must be real page URLs (/, /about, /contact, etc.) - NO "#" placeholders
+${allPages && allPages.length > 0 ? `
+## 🔗 SITE STRUCTURE (All Pages in This Website)
+${allPages.map(p => `- ${p.name}: ${p.slug}`).join("\n")}
+
+**Use these exact slugs for ALL internal links and CTAs.** Every link must point to one of these pages.
+${!isHomepage ? `This is NOT the homepage — your content should EXPAND on topics that may have been previewed on the home page. Go deeper, be more detailed.` : ""}
+` : ""}
 ${blueprintPageContext ? `
 ## 🏗️ PROVEN INDUSTRY BLUEPRINT (FOLLOW THIS EXACTLY — HIGHEST PRIORITY)
 ${blueprintPageContext}
