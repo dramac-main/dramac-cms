@@ -896,7 +896,7 @@ export function getIndustryContentPrompt(industry: string): string {
 /**
  * Parse user prompt to extract key business details
  */
-function parseUserPrompt(userPrompt: string): {
+export function parseUserPrompt(userPrompt: string): {
   businessName: string | null;
   businessType: string | null;
   location: string | null;

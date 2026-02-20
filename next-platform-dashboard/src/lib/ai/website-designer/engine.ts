@@ -32,6 +32,7 @@ import {
   FOOTER_GENERATOR_PROMPT,
   buildArchitecturePrompt,
   buildPagePrompt,
+  parseUserPrompt,
 } from "./prompts";
 import {
   SiteArchitectureSchema,
@@ -150,6 +151,13 @@ export class WebsiteDesignerEngine {
     error?: string;
   }> {
     this.userPrompt = input.prompt;
+
+    // Extract business name from user's prompt (highest priority for naming)
+    const parsed = parseUserPrompt(input.prompt);
+    if (parsed.businessName) {
+      this.extractedBusinessName = parsed.businessName;
+      console.log(`[WebsiteDesignerEngine] 📛 Extracted business name from prompt: "${this.extractedBusinessName}"`);
+    }
 
     try {
       // Build data context
@@ -1269,14 +1277,28 @@ Configure ALL footer props for a complete, professional result.`,
 
   /**
    * Get business name from context
+   * 
+   * Priority chain (most specific → least specific):
+   * 1. User prompt extracted name (set by stepArchitecture → parseUserPrompt)
+   * 2. Site name (sites.name — the ACTUAL site/brand name)
+   * 3. Branding business name (site.settings.business_name — explicit override)
+   * 4. Client company (clients.company — fallback, may be the agency's client name)
+   * 5. Client company_name (alias)
+   * 6. Fallback
+   * 
+   * NOTE: client.name is intentionally EXCLUDED — it's usually the contact person's
+   * personal name (e.g., "John Doe"), not the business name.
    */
   private getBusinessName(): string {
+    // If user explicitly named the business in their prompt, that wins
+    if (this.extractedBusinessName) {
+      return this.extractedBusinessName;
+    }
     return (
+      this.context?.site?.name ||
       this.context?.branding?.business_name ||
       this.context?.client?.company ||
       this.context?.client?.company_name ||
-      this.context?.client?.name ||
-      this.context?.site?.name ||
       "Your Business"
     );
   }

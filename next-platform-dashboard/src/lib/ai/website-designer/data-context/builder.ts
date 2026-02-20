@@ -231,6 +231,7 @@ async function fetchBranding(supabase: SupabaseClient, siteId: string): Promise<
     if (data?.settings && typeof data.settings === "object") {
       const settings = data.settings as Record<string, unknown>;
       return {
+        business_name: (settings.business_name as string) ?? undefined,
         primary_color: (settings.primary_color as string) ?? undefined,
         secondary_color: (settings.secondary_color as string) ?? undefined,
         accent_color: (settings.accent_color as string) ?? undefined,
