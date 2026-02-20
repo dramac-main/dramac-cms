@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { useCurrency } from '../../context/ecommerce-context'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -51,30 +51,6 @@ export interface RevenueChartProps {
   height?: number
   /** Additional class names */
   className?: string
-}
-
-// =============================================================================
-// HELPERS
-// =============================================================================
-
-function formatCurrency(value: number, currency: string = DEFAULT_CURRENCY): string {
-  return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value / 100)
-}
-
-function formatCompactCurrency(value: number, currency: string = DEFAULT_CURRENCY): string {
-  const displayValue = value / 100
-  if (displayValue >= 1000000) {
-    return `${(displayValue / 1000000).toFixed(1)}M`
-  }
-  if (displayValue >= 1000) {
-    return `${(displayValue / 1000).toFixed(1)}K`
-  }
-  return formatCurrency(value, currency)
 }
 
 // =============================================================================
@@ -121,7 +97,6 @@ interface ChartBarProps {
   value: number
   label: string
   maxHeight: number
-  currency: string
   index: number
   total: number
   isHighlighted?: boolean
@@ -136,12 +111,12 @@ function ChartBar({
   value,
   label,
   maxHeight,
-  currency,
   index,
   total,
   isHighlighted,
   onHover,
 }: ChartBarProps) {
+  const { formatPrice } = useCurrency()
   const [showTooltip, setShowTooltip] = React.useState(false)
 
   return (
@@ -206,7 +181,7 @@ function ChartBar({
             textAnchor="middle"
             className="text-xs fill-foreground font-medium"
           >
-            {formatCurrency(value, currency)}
+            {formatPrice(value)}
           </text>
           <text
             x={x + width / 2}
@@ -229,7 +204,6 @@ function ChartBar({
 export function RevenueChart({
   data,
   title = "Revenue",
-  currency = DEFAULT_CURRENCY,
   timeRange = "30d",
   onTimeRangeChange,
   showTimeRangeSelector = true,
@@ -237,7 +211,20 @@ export function RevenueChart({
   height = 300,
   className,
 }: RevenueChartProps) {
+  const { formatPrice, currencySymbol } = useCurrency()
   const [hoveredData, setHoveredData] = React.useState<{ value: number; label: string } | null>(null)
+
+  // Compact currency formatter for chart axis labels
+  const formatCompactCurrency = (value: number): string => {
+    const displayValue = value / 100
+    if (displayValue >= 1000000) {
+      return `${currencySymbol}${(displayValue / 1000000).toFixed(1)}M`
+    }
+    if (displayValue >= 1000) {
+      return `${currencySymbol}${(displayValue / 1000).toFixed(1)}K`
+    }
+    return formatPrice(value)
+  }
 
   if (loading) {
     return <RevenueChartSkeleton height={height} />
@@ -308,7 +295,7 @@ export function RevenueChart({
             <p className="text-sm text-muted-foreground">Total Revenue</p>
             <div className="flex items-center gap-2">
               <span className="text-2xl font-bold">
-                {formatCurrency(totalRevenue, currency)}
+                {formatPrice(totalRevenue)}
               </span>
               {changePercent !== 0 && (
                 <span className={cn(
@@ -329,14 +316,14 @@ export function RevenueChart({
           <div>
             <p className="text-sm text-muted-foreground">Avg. Daily</p>
             <p className="text-xl font-semibold">
-              {formatCurrency(avgRevenue, currency)}
+              {formatPrice(avgRevenue)}
             </p>
           </div>
           
           <div>
             <p className="text-sm text-muted-foreground">Peak Day</p>
             <p className="text-xl font-semibold">
-              {formatCurrency(peakRevenue, currency)}
+              {formatPrice(peakRevenue)}
             </p>
           </div>
 
@@ -374,7 +361,7 @@ export function RevenueChart({
                       textAnchor="end"
                       className="text-[10px] fill-muted-foreground"
                     >
-                      {formatCompactCurrency(tick.value, currency)}
+                      {formatCompactCurrency(tick.value)}
                     </text>
                   </g>
                 ))}
@@ -397,7 +384,6 @@ export function RevenueChart({
                       value={d.revenue}
                       label={d.label || d.date}
                       maxHeight={innerHeight}
-                      currency={currency}
                       index={i}
                       total={data.length}
                       isHighlighted={hoveredData?.label === (d.label || d.date)}

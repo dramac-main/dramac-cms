@@ -8,8 +8,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { formatCurrency } from '@/lib/locale-config'
-import { useEcommerce } from '../../context/ecommerce-context'
+import { useEcommerce, useCurrency } from '../../context/ecommerce-context'
 import { 
   BarChart3, 
   TrendingUp, 
@@ -33,10 +32,10 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts'
-import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 
 export function AnalyticsView() {
   const { orders, products, isLoading } = useEcommerce()
+  const { formatPrice, formatAmount } = useCurrency()
 
   // Calculate analytics
   const analytics = useMemo(() => {
@@ -162,7 +161,7 @@ export function AnalyticsView() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{formatCurrency(analytics.todayRevenue / 100)}</p>
+                <p className="text-2xl font-bold">{formatPrice(analytics.todayRevenue)}</p>
                 <p className="text-sm text-muted-foreground">{analytics.todayOrders} orders</p>
               </div>
               <div className="p-3 rounded-full bg-green-100 dark:bg-green-900/30">
@@ -179,7 +178,7 @@ export function AnalyticsView() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{formatCurrency(analytics.weekRevenue / 100)}</p>
+                <p className="text-2xl font-bold">{formatPrice(analytics.weekRevenue)}</p>
                 <p className="text-sm text-muted-foreground">{analytics.weekOrders} orders</p>
               </div>
               <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
@@ -196,7 +195,7 @@ export function AnalyticsView() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{formatCurrency(analytics.monthRevenue / 100)}</p>
+                <p className="text-2xl font-bold">{formatPrice(analytics.monthRevenue)}</p>
                 <div className="flex items-center gap-1">
                   {analytics.monthGrowth >= 0 ? (
                     <TrendingUp className="h-4 w-4 text-green-500" />
@@ -225,7 +224,7 @@ export function AnalyticsView() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-2xl font-bold">{formatCurrency(analytics.avgOrderValue / 100)}</p>
+                <p className="text-2xl font-bold">{formatPrice(analytics.avgOrderValue)}</p>
                 <p className="text-sm text-muted-foreground">{analytics.monthOrders} orders this month</p>
               </div>
               <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30">
@@ -288,7 +287,7 @@ export function AnalyticsView() {
                 {analytics.topProducts.slice(0, 3).map((product, index) => (
                   <div key={index} className="flex justify-between items-center text-sm">
                     <span className="truncate flex-1 mr-2">{product.name}</span>
-                    <Badge variant="outline">{formatCurrency(product.revenue)}</Badge>
+                    <Badge variant="outline">{formatAmount(product.revenue)}</Badge>
                   </div>
                 ))}
               </div>
@@ -320,7 +319,7 @@ export function AnalyticsView() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="label" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} />
-                  <YAxis className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => formatCurrency(v)} />
+                  <YAxis className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => formatAmount(v)} />
                   <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null
@@ -328,7 +327,7 @@ export function AnalyticsView() {
                       return (
                         <div className="bg-popover border rounded-lg shadow-lg p-3">
                           <p className="font-medium">{d.label}</p>
-                          <p className="text-sm text-muted-foreground">Revenue: {formatCurrency(d.revenue)}</p>
+                          <p className="text-sm text-muted-foreground">Revenue: {formatAmount(d.revenue)}</p>
                           <p className="text-sm text-muted-foreground">Orders: {d.orders}</p>
                         </div>
                       )
@@ -388,7 +387,7 @@ export function AnalyticsView() {
             <ResponsiveContainer width="100%" height={Math.max(200, analytics.topProducts.length * 50)}>
               <BarChart data={analytics.topProducts} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis type="number" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => formatCurrency(v)} />
+                <XAxis type="number" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => formatAmount(v)} />
                 <YAxis type="category" dataKey="name" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} width={120} />
                 <Tooltip
                   content={({ active, payload }) => {
@@ -397,7 +396,7 @@ export function AnalyticsView() {
                     return (
                       <div className="bg-popover border rounded-lg shadow-lg p-3">
                         <p className="font-medium">{d.name}</p>
-                        <p className="text-sm text-muted-foreground">Revenue: {formatCurrency(d.revenue)}</p>
+                        <p className="text-sm text-muted-foreground">Revenue: {formatAmount(d.revenue)}</p>
                         <p className="text-sm text-muted-foreground">Units: {d.count}</p>
                       </div>
                     )

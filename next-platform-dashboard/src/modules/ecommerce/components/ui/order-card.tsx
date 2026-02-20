@@ -38,7 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { Order, OrderStatus, PaymentStatus, FulfillmentStatus } from "../../types/ecommerce-types"
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { useCurrency } from '../../context/ecommerce-context'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -127,14 +127,6 @@ const fulfillmentStatusConfig: Record<FulfillmentStatus, { label: string; classN
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-function formatPrice(price: number, currency: string = DEFAULT_CURRENCY): string {
-  // Order totals are stored in cents — convert to display amounts
-  return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
-    currency,
-  }).format(price / 100)
-}
 
 function formatDate(date: string): string {
   return new Date(date).toLocaleDateString(DEFAULT_LOCALE, {
@@ -269,10 +261,10 @@ function OrderDefaultCard({
   onRefund,
   onCancel,
   onMarkDelivered,
-  currency = DEFAULT_CURRENCY,
   className,
   animationDelay = 0,
 }: OrderCardProps) {
+  const { formatPrice } = useCurrency()
   const status = orderStatusConfig[order.status]
   const payment = paymentStatusConfig[order.payment_status]
   const fulfillment = fulfillmentStatusConfig[order.fulfillment_status]
@@ -320,7 +312,7 @@ function OrderDefaultCard({
 
             <div className="text-right">
               <div className="text-xl font-bold">
-                {formatPrice(order.total, currency)}
+                {formatPrice(order.total)}
               </div>
               <div className="text-sm text-muted-foreground">
                 {itemCount} item{itemCount !== 1 ? 's' : ''}
@@ -422,10 +414,10 @@ function OrderDefaultCard({
 function OrderCompactCard({
   order,
   onClick,
-  currency = DEFAULT_CURRENCY,
   className,
   animationDelay = 0,
 }: OrderCardProps) {
+  const { formatPrice } = useCurrency()
   const status = orderStatusConfig[order.status]
   const StatusIcon = status.icon
 
@@ -465,7 +457,7 @@ function OrderCompactCard({
 
             <div className="text-right">
               <div className="font-semibold text-sm">
-                {formatPrice(order.total, currency)}
+                {formatPrice(order.total)}
               </div>
             </div>
 

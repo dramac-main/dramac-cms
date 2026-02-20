@@ -51,7 +51,6 @@ import { InventoryAlert, InventoryAlertBanner } from './ui/inventory-alert'
 // Import types
 import type { Product, Order, Category, ProductStatus, OrderStatus } from '../types/ecommerce-types'
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -117,7 +116,6 @@ export function EcommerceDashboardEnhanced({
   categories = [],
   isLoading = false,
   error,
-  currency = DEFAULT_CURRENCY,
   onCreateProduct,
   onCreateCategory,
   onCreateDiscount,
@@ -312,7 +310,6 @@ export function EcommerceDashboardEnhanced({
             <RevenueMetricCard
               title="Total Revenue"
               value={totalRevenue}
-              currency={currency}
               change={{ value: 12.5, trend: 'up', period: 'vs last month' }}
               sparklineData={generateMockSparkline()}
               animationDelay={0}
@@ -329,7 +326,6 @@ export function EcommerceDashboardEnhanced({
               value={avgOrderValue}
               variant="conversion"
               isCurrency
-              currency={currency}
               change={{ value: 3.1, trend: 'up' }}
               animationDelay={0.1}
             />
@@ -363,7 +359,6 @@ export function EcommerceDashboardEnhanced({
             <div className="lg:col-span-2">
               <RevenueChart
                 data={revenueData}
-                currency={currency}
                 timeRange={revenueTimeRange}
                 onTimeRangeChange={setRevenueTimeRange}
               />
@@ -408,7 +403,6 @@ export function EcommerceDashboardEnhanced({
                     key={order.id}
                     order={order}
                     variant="compact"
-                    currency={currency}
                     onClick={() => onViewOrder?.(order)}
                     animationDelay={i * 0.05}
                   />
@@ -473,7 +467,6 @@ export function EcommerceDashboardEnhanced({
                   key={product.id}
                   product={product}
                   variant={productViewMode}
-                  currency={currency}
                   onClick={() => onViewProduct?.(product)}
                   onEdit={() => onEditProduct?.(product)}
                   onView={() => onViewProduct?.(product)}
@@ -518,7 +511,6 @@ export function EcommerceDashboardEnhanced({
                 <OrderCard
                   key={order.id}
                   order={order}
-                  currency={currency}
                   onClick={() => onViewOrder?.(order)}
                   onView={() => onViewOrder?.(order)}
                   onFulfill={() => onFulfillOrder?.(order.id)}
@@ -533,7 +525,6 @@ export function EcommerceDashboardEnhanced({
         <TabsContent value="analytics" className="space-y-6">
           <RevenueChart
             data={revenueData}
-            currency={currency}
             timeRange={revenueTimeRange}
             onTimeRangeChange={setRevenueTimeRange}
           />
@@ -542,7 +533,6 @@ export function EcommerceDashboardEnhanced({
             <RevenueMetricCard
               title="This Month"
               value={totalRevenue * 0.4}
-              currency={currency}
               change={{ value: 18.2, trend: 'up', period: 'vs last month' }}
               sparklineData={generateMockSparkline()}
             />

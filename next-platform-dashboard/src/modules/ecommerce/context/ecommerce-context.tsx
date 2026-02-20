@@ -202,12 +202,19 @@ export function useCurrency() {
   const currency = settings?.currency || DEFAULT_CURRENCY
   const currencySymbol = getCurrencySymbol(currency)
 
+  /** Format an amount stored in cents (divides by 100) */
   const formatPrice = useCallback(
     (amountInCents: number) => formatCurrency(amountInCents / 100, currency),
     [currency]
   )
 
-  return { currency, currencySymbol, formatPrice }
+  /** Format a display-ready amount (already divided, e.g. from analytics) */
+  const formatAmount = useCallback(
+    (amount: number) => formatCurrency(amount, currency),
+    [currency]
+  )
+
+  return { currency, currencySymbol, formatPrice, formatAmount }
 }
 
 export function useInventory() {

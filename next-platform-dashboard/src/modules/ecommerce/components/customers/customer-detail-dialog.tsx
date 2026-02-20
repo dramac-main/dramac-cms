@@ -39,7 +39,7 @@ import { cn } from '@/lib/utils'
 import { getCustomerDetail, addCustomerNote } from '../../actions/customer-actions'
 import type { CustomerDetailData, CustomerStatus, Order } from '../../types/ecommerce-types'
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { useCurrency } from '../../context/ecommerce-context'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -77,13 +77,6 @@ const statusConfig: Record<CustomerStatus, { label: string; className: string }>
 // HELPERS
 // ============================================================================
 
-function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
-  return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
-    currency
-  }).format(amount / 100)
-}
-
 function getInitials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 }
@@ -101,6 +94,7 @@ export function CustomerDetailDialog({
   userName,
   onViewOrder
 }: CustomerDetailDialogProps) {
+  const { formatPrice: formatCurrency } = useCurrency()
   const [customer, setCustomer] = useState<CustomerDetailData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [newNote, setNewNote] = useState('')

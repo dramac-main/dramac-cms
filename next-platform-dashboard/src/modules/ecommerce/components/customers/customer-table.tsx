@@ -60,7 +60,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { Customer, CustomerStatus, CustomerGroup, CustomerBulkAction } from '../../types/ecommerce-types'
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { useCurrency } from '../../context/ecommerce-context'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -98,13 +98,6 @@ const statusConfig: Record<CustomerStatus, { label: string; className: string }>
 // HELPERS
 // ============================================================================
 
-function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
-  return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
-    currency
-  }).format(amount / 100)
-}
-
 function getInitials(firstName: string, lastName: string): string {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase()
 }
@@ -120,8 +113,8 @@ export function CustomerTable({
   groups = [],
   onViewCustomer,
   onCustomersChange,
-  currency = DEFAULT_CURRENCY
 }: CustomerTableProps) {
+  const { currency: storeCurrency, formatPrice: formatCurrency } = useCurrency()
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [isBulkExecuting, setIsBulkExecuting] = useState(false)

@@ -9,7 +9,6 @@
 
 import { useState, useEffect } from 'react'
 import { StatsCards, RecentOrdersWidget, LowStockAlerts, ActivityFeed } from '../widgets'
-import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import type { 
   DashboardStats, 
   RecentOrderSummary, 
@@ -47,7 +46,6 @@ export function HomeView({
   onViewProduct,
   onNavigateToOrders,
   onNavigateToProducts,
-  currency = DEFAULT_CURRENCY
 }: HomeViewProps) {
   const [period, setPeriod] = useState<StatsPeriod>('month')
   const [isLoading, setIsLoading] = useState(true)
@@ -102,7 +100,6 @@ export function HomeView({
         stats={stats}
         period={period}
         onPeriodChange={setPeriod}
-        currency={currency}
         isLoading={isLoading}
       />
 

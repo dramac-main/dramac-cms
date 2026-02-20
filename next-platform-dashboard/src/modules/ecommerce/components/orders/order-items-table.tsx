@@ -19,14 +19,13 @@ import {
 import { ImageOff } from 'lucide-react'
 import type { OrderItem } from '../../types/ecommerce-types'
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { useCurrency } from '../../context/ecommerce-context'
 // ============================================================================
 // TYPES
 // ============================================================================
 
 interface OrderItemsTableProps {
   items: OrderItem[]
-  currency?: string
   showSubtotals?: boolean
   subtotal?: number
   shipping?: number
@@ -36,23 +35,11 @@ interface OrderItemsTableProps {
 }
 
 // ============================================================================
-// HELPERS
-// ============================================================================
-
-function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
-  return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
-    currency
-  }).format(amount / 100)
-}
-
-// ============================================================================
 // COMPONENT
 // ============================================================================
 
 export function OrderItemsTable({
   items,
-  currency = DEFAULT_CURRENCY,
   showSubtotals = true,
   subtotal,
   shipping,
@@ -60,6 +47,7 @@ export function OrderItemsTable({
   discount,
   total
 }: OrderItemsTableProps) {
+  const { formatPrice: formatCurrency } = useCurrency()
   // Calculate subtotal if not provided
   const calculatedSubtotal = subtotal ?? items.reduce((sum, item) => {
     return sum + (item.unit_price * item.quantity)
@@ -109,13 +97,13 @@ export function OrderItemsTable({
               </div>
             </TableCell>
             <TableCell className="text-right">
-              {formatCurrency(item.unit_price, currency)}
+              {formatCurrency(item.unit_price)}
             </TableCell>
             <TableCell className="text-center">
               {item.quantity}
             </TableCell>
             <TableCell className="text-right font-medium">
-              {formatCurrency(item.unit_price * item.quantity, currency)}
+              {formatCurrency(item.unit_price * item.quantity)}
             </TableCell>
           </TableRow>
         ))}
@@ -128,7 +116,7 @@ export function OrderItemsTable({
               Subtotal
             </TableCell>
             <TableCell className="text-right">
-              {formatCurrency(calculatedSubtotal, currency)}
+              {formatCurrency(calculatedSubtotal)}
             </TableCell>
           </TableRow>
           
@@ -138,7 +126,7 @@ export function OrderItemsTable({
                 Shipping
               </TableCell>
               <TableCell className="text-right">
-                {formatCurrency(shipping, currency)}
+                {formatCurrency(shipping)}
               </TableCell>
             </TableRow>
           )}
@@ -149,7 +137,7 @@ export function OrderItemsTable({
                 Tax
               </TableCell>
               <TableCell className="text-right">
-                {formatCurrency(tax, currency)}
+                {formatCurrency(tax)}
               </TableCell>
             </TableRow>
           )}
@@ -160,7 +148,7 @@ export function OrderItemsTable({
                 Discount
               </TableCell>
               <TableCell className="text-right text-green-600">
-                -{formatCurrency(discount, currency)}
+                -{formatCurrency(discount)}
               </TableCell>
             </TableRow>
           )}
@@ -171,7 +159,7 @@ export function OrderItemsTable({
                 Total
               </TableCell>
               <TableCell className="text-right font-bold text-lg">
-                {formatCurrency(total, currency)}
+                {formatCurrency(total)}
               </TableCell>
             </TableRow>
           )}

@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/tooltip"
 import type { Product, ProductStatus } from "../../types/ecommerce-types"
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { useCurrency } from '../../context/ecommerce-context'
 // =============================================================================
 // TYPES
 // =============================================================================
@@ -92,18 +92,6 @@ const statusConfig: Record<ProductStatus, { label: string; className: string }> 
     label: 'Archived', 
     className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400' 
   },
-}
-
-// =============================================================================
-// FORMAT HELPERS
-// =============================================================================
-
-function formatPrice(price: number, currency: string = DEFAULT_CURRENCY): string {
-  // Prices are stored in cents in the database — convert to display amounts
-  return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
-    currency,
-  }).format(price / 100)
 }
 
 // =============================================================================
@@ -242,10 +230,12 @@ function ProductGridCard({
   onView,
   selected,
   onSelect,
-  currency = DEFAULT_CURRENCY,
+  currency: currencyProp,
   className,
   animationDelay = 0,
 }: ProductCardProps) {
+  const { currency: storeCurrency, formatPrice } = useCurrency()
+  const currency = currencyProp || storeCurrency
   const status = statusConfig[product.status]
   const hasDiscount = product.compare_at_price && product.compare_at_price > product.base_price
   const primaryImage = product.images?.[0] || null
@@ -339,11 +329,11 @@ function ProductGridCard({
             {/* Price */}
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold">
-                {formatPrice(product.base_price, currency)}
+                {formatPrice(product.base_price)}
               </span>
               {hasDiscount && (
                 <span className="text-sm text-muted-foreground line-through">
-                  {formatPrice(product.compare_at_price!, currency)}
+                  {formatPrice(product.compare_at_price!)}
                 </span>
               )}
             </div>
@@ -431,10 +421,12 @@ function ProductListCard({
   onView,
   selected,
   onSelect,
-  currency = DEFAULT_CURRENCY,
+  currency: currencyProp,
   className,
   animationDelay = 0,
 }: ProductCardProps) {
+  const { currency: storeCurrency, formatPrice } = useCurrency()
+  const currency = currencyProp || storeCurrency
   const status = statusConfig[product.status]
   const hasDiscount = product.compare_at_price && product.compare_at_price > product.base_price
   const primaryImage = product.images?.[0] || null
@@ -498,11 +490,11 @@ function ProductListCard({
             {/* Price */}
             <div className="text-right flex-shrink-0">
               <div className="font-bold">
-                {formatPrice(product.base_price, currency)}
+                {formatPrice(product.base_price)}
               </div>
               {hasDiscount && (
                 <div className="text-sm text-muted-foreground line-through">
-                  {formatPrice(product.compare_at_price!, currency)}
+                  {formatPrice(product.compare_at_price!)}
                 </div>
               )}
             </div>

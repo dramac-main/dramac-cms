@@ -55,13 +55,15 @@ import { Progress } from '@/components/ui/progress'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-import { DEFAULT_LOCALE, formatCurrency, DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
+import { useCurrency } from '../../context/ecommerce-context'
+
 interface LoyaltyViewProps {
   siteId: string
   searchQuery?: string
 }
 
 export function LoyaltyView({ siteId, searchQuery = '' }: LoyaltyViewProps) {
+  const { currencySymbol, formatAmount } = useCurrency()
   const { 
     config, 
     members, 
@@ -213,12 +215,12 @@ export function LoyaltyView({ siteId, searchQuery = '' }: LoyaltyViewProps) {
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <Coins className="h-6 w-6 mx-auto mb-2 text-amber-500" />
               <div className="text-2xl font-bold">{config.points_per_dollar}</div>
-              <div className="text-xs text-muted-foreground">points per {DEFAULT_CURRENCY_SYMBOL}1 spent</div>
+              <div className="text-xs text-muted-foreground">points per {currencySymbol}1 spent</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <Gift className="h-6 w-6 mx-auto mb-2 text-green-500" />
               <div className="text-2xl font-bold">{config.points_value_cents}</div>
-              <div className="text-xs text-muted-foreground">points = {DEFAULT_CURRENCY_SYMBOL}1 discount</div>
+              <div className="text-xs text-muted-foreground">points = {currencySymbol}1 discount</div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <TrendingUp className="h-6 w-6 mx-auto mb-2 text-blue-500" />
@@ -255,7 +257,7 @@ export function LoyaltyView({ siteId, searchQuery = '' }: LoyaltyViewProps) {
               {stats.totalPoints.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              Worth {formatCurrency(stats.totalPoints / (config.points_value_cents || 100))}
+              Worth {formatAmount(stats.totalPoints / (config.points_value_cents || 100))}
             </p>
           </CardContent>
         </Card>

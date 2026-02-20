@@ -10,8 +10,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { formatCurrency } from '@/lib/locale-config'
-import { useEcommerce } from '../../context/ecommerce-context'
+import { useEcommerce, useCurrency } from '../../context/ecommerce-context'
 import { 
   ShoppingCart, 
   Search, 
@@ -85,6 +84,7 @@ const paymentStatusConfig: Record<PaymentStatus, { label: string; className: str
 export function OrdersView({ searchQuery = '', userId = '', userName = 'Store Manager', focusOrderId, onFocusOrderHandled }: OrdersViewProps) {
   const router = useRouter()
   const { orders, isLoading, changeOrderStatus, siteId, settings } = useEcommerce()
+  const { formatPrice } = useCurrency()
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'all'>('all')
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | 'all'>('all')
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
@@ -252,7 +252,7 @@ export function OrdersView({ searchQuery = '', userId = '', userName = 'Store Ma
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="font-medium">{formatCurrency(order.total / 100)}</div>
+                      <div className="font-medium">{formatPrice(order.total)}</div>
                       <div className="text-sm text-muted-foreground">{order.currency}</div>
                     </TableCell>
                     <TableCell>

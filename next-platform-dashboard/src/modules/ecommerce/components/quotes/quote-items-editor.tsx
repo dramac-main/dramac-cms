@@ -39,7 +39,7 @@ import { ProductSelector, ProductSelection } from './product-selector'
 import { calculateItemLineTotal, formatQuoteCurrency } from '../../lib/quote-utils'
 import type { QuoteItem, QuoteItemInput } from '../../types/ecommerce-types'
 
-import { DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { useCurrency } from '../../context/ecommerce-context'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -333,12 +333,12 @@ function EditableItemRow({
 
 export function QuoteItemsEditor({
   items,
-  currency = DEFAULT_CURRENCY,
   onAddItems,
   onUpdateItem,
   onRemoveItem,
   isReadOnly = false
 }: QuoteItemsEditorProps) {
+  const { currency } = useCurrency()
   const [showProductSelector, setShowProductSelector] = useState(false)
   const [showCustomForm, setShowCustomForm] = useState(false)
   

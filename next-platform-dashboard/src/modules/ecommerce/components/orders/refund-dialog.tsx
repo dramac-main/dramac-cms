@@ -41,7 +41,7 @@ import { toast } from 'sonner'
 import { createRefund } from '../../actions/order-actions'
 import type { Order, OrderItem } from '../../types/ecommerce-types'
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { useCurrency } from '../../context/ecommerce-context'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -66,17 +66,6 @@ interface RefundItemState {
 }
 
 // ============================================================================
-// HELPERS
-// ============================================================================
-
-function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
-  return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
-    currency
-  }).format(amount / 100)
-}
-
-// ============================================================================
 // COMPONENT
 // ============================================================================
 
@@ -89,6 +78,7 @@ export function RefundDialog({
   userName,
   onSuccess
 }: RefundDialogProps) {
+  const { formatPrice: formatCurrency } = useCurrency()
   const [isProcessing, setIsProcessing] = useState(false)
   const [reason, setReason] = useState('')
   const [refundMethod, setRefundMethod] = useState<'original_payment' | 'store_credit' | 'other'>('original_payment')

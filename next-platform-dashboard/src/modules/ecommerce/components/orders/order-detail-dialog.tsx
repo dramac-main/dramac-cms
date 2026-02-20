@@ -56,7 +56,7 @@ import {
 } from '../../actions/order-actions'
 import type { OrderDetailData, OrderStatus } from '../../types/ecommerce-types'
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { useCurrency } from '../../context/ecommerce-context'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -113,17 +113,6 @@ const statusConfig: Record<OrderStatus, { label: string; className: string }> = 
 const statuses: OrderStatus[] = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']
 
 // ============================================================================
-// HELPERS
-// ============================================================================
-
-function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
-  return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
-    currency
-  }).format(amount / 100)
-}
-
-// ============================================================================
 // COMPONENT
 // ============================================================================
 
@@ -140,6 +129,11 @@ export function OrderDetailDialog({
   storePhone,
   storeLogo
 }: OrderDetailDialogProps) {
+  const { currency: storeCurrency, formatPrice } = useCurrency()
+  const formatCurrency = (amount: number, currency?: string) => {
+    const cur = currency || storeCurrency
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(amount / 100)
+  }
   const [orderData, setOrderData] = useState<OrderDetailData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)

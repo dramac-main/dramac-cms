@@ -11,7 +11,7 @@ import { forwardRef } from 'react'
 import { format } from 'date-fns'
 import type { InvoiceData } from '../../types/ecommerce-types'
 
-import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
+import { useCurrency } from '../../context/ecommerce-context'
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -21,22 +21,16 @@ interface InvoiceTemplateProps {
 }
 
 // ============================================================================
-// HELPERS
-// ============================================================================
-
-function formatCurrency(amount: number, currency = DEFAULT_CURRENCY): string {
-  return new Intl.NumberFormat(DEFAULT_LOCALE, {
-    style: 'currency',
-    currency
-  }).format(amount / 100)
-}
-
-// ============================================================================
 // COMPONENT
 // ============================================================================
 
 export const InvoiceTemplate = forwardRef<HTMLDivElement, InvoiceTemplateProps>(
   function InvoiceTemplate({ data }, ref) {
+    const { currency: storeCurrency } = useCurrency()
+    const formatCurrency = (amount: number, currency?: string) => {
+      const cur = currency || storeCurrency
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: cur }).format(amount / 100)
+    }
     const { order, store, invoice_number, invoice_date, due_date } = data
     const billingAddress = order.billing_address as Record<string, string> | null
 
