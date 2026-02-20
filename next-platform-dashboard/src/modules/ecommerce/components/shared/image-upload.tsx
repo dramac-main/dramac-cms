@@ -72,11 +72,20 @@ export function ImageUpload({
     }
 
     setIsUploading(true)
+    console.log('[ImageUpload] Starting upload...', { siteId, folder, fileName: file.name, fileSize: file.size, fileType: file.type })
+
+    // 30-second timeout to prevent infinite hanging
+    const controller = new AbortController()
+    const timeout = setTimeout(() => {
+      controller.abort()
+      console.error('[ImageUpload] Upload timed out after 30s')
+    }, 30000)
 
     try {
       // Generate unique filename
       const ext = file.name.split('.').pop()
       const filename = `${siteId}/${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`
+      console.log('[ImageUpload] Uploading to path:', filename)
 
       // Upload to Supabase Storage
       const { data, error } = await supabase.storage
@@ -86,7 +95,10 @@ export function ImageUpload({
           upsert: false
         })
 
+      clearTimeout(timeout)
+
       if (error) {
+        console.error('[ImageUpload] Supabase error:', error)
         // Provide helpful error messages for common issues
         if (error.message.includes('not found') || error.message.includes('Bucket')) {
           console.error('Supabase storage bucket "ecommerce" not found. Run the migration: migrations/em-52-ecommerce-storage-bucket.sql')
@@ -98,20 +110,32 @@ export function ImageUpload({
         if (error.message.includes('mime') || error.message.includes('type')) {
           throw new Error(`File type not allowed. Accepted types: ${acceptedTypes.map(t => t.split('/')[1]).join(', ')}`)
         }
+        if (error.message.includes('security') || error.message.includes('policy') || error.message.includes('403') || error.message.includes('Forbidden')) {
+          throw new Error('Permission denied. Storage security policy may need to be updated.')
+        }
         throw error
       }
+
+      console.log('[ImageUpload] Upload successful:', data.path)
 
       // Get public URL
       const { data: urlData } = supabase.storage
         .from('ecommerce')
         .getPublicUrl(data.path)
 
+      console.log('[ImageUpload] Public URL:', urlData.publicUrl)
       onChange(urlData.publicUrl)
       toast.success('Image uploaded successfully')
     } catch (error) {
-      console.error('Upload error:', error)
-      const message = error instanceof Error ? error.message : 'Failed to upload image'
-      toast.error(message + '. You can use a URL instead.')
+      clearTimeout(timeout)
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        console.error('[ImageUpload] Upload aborted (timeout)')
+        toast.error('Upload timed out. Please try again or use a URL instead.')
+      } else {
+        console.error('[ImageUpload] Upload error:', error)
+        const message = error instanceof Error ? error.message : 'Failed to upload image'
+        toast.error(message + '. You can use a URL instead.')
+      }
       setShowUrlInput(true)
     } finally {
       setIsUploading(false)

@@ -162,11 +162,14 @@ export function CurrencySettingsForm({ siteId, agencyId }: CurrencySettingsFormP
               <Select
                 value={settings.default_currency}
                 onValueChange={(value) => {
-                  updateField('default_currency', value)
                   const curr = currencies.find(c => c.code === value)
-                  if (curr) {
-                    updateField('currency_symbol', curr.symbol)
-                  }
+                  // Update both fields in a single setState to avoid stale closure
+                  setSettings(prev => prev ? {
+                    ...prev,
+                    default_currency: value,
+                    ...(curr ? { currency_symbol: curr.symbol } : {})
+                  } : prev)
+                  setHasChanges(true)
                 }}
               >
                 <SelectTrigger>
@@ -214,8 +217,8 @@ export function CurrencySettingsForm({ siteId, agencyId }: CurrencySettingsFormP
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="before">Before ($100)</SelectItem>
-                  <SelectItem value="after">After (100$)</SelectItem>
+                  <SelectItem value="before">Before ({settings.currency_symbol}100)</SelectItem>
+                  <SelectItem value="after">After (100{settings.currency_symbol})</SelectItem>
                 </SelectContent>
               </Select>
             </div>
