@@ -105,6 +105,9 @@ export async function POST(request: NextRequest) {
     const shipping = shippingResult.cost
     const total = taxableAmount + tax + shipping
 
+    // Convert cents to currency units for payment providers
+    const totalInUnits = total / 100
+
     // Validate payment provider
     const validProviders = ['paddle', 'flutterwave', 'pesapal', 'dpo', 'manual']
     if (!validProviders.includes(paymentProvider)) {
@@ -164,7 +167,7 @@ export async function POST(request: NextRequest) {
           vendorId: paddleConfig.vendor_id,
           orderId: order.id,
           orderNumber: order.order_number,
-          total,
+          total: totalInUnits,
           currency: settings.currency,
           customerEmail,
           // Generate custom checkout data
@@ -172,7 +175,7 @@ export async function POST(request: NextRequest) {
             product: {
               quantity: 1,
               name: `Order ${order.order_number}`,
-              price: total
+              price: totalInUnits
             },
             customer: {
               email: customerEmail
@@ -192,7 +195,7 @@ export async function POST(request: NextRequest) {
           publicKey: fwConfig.public_key,
           orderId: order.id,
           orderNumber: order.order_number,
-          amount: total,
+          amount: totalInUnits,
           currency: settings.currency,
           customer: {
             email: customerEmail,
@@ -268,7 +271,7 @@ export async function POST(request: NextRequest) {
                 body: JSON.stringify({
                   id: order.id,
                   currency: settings.currency,
-                  amount: total,
+                  amount: totalInUnits,
                   description: `Payment for order ${order.order_number}`,
                   callback_url: callbackUrl,
                   notification_id: ipnData.ipn_id,
@@ -303,7 +306,7 @@ export async function POST(request: NextRequest) {
           provider: 'pesapal',
           orderId: order.id,
           orderNumber: order.order_number,
-          amount: total,
+          amount: totalInUnits,
           currency: settings.currency,
           description: `Payment for order ${order.order_number}`,
           callback_url: callbackUrl,
@@ -331,7 +334,7 @@ export async function POST(request: NextRequest) {
   <CompanyToken>${dpoConfig.company_token}</CompanyToken>
   <Request>createToken</Request>
   <Transaction>
-    <PaymentAmount>${total.toFixed(2)}</PaymentAmount>
+    <PaymentAmount>${totalInUnits.toFixed(2)}</PaymentAmount>
     <PaymentCurrency>${settings.currency}</PaymentCurrency>
     <CompanyRef>${order.id}</CompanyRef>
     <RedirectURL>${successUrl}</RedirectURL>
@@ -383,7 +386,7 @@ export async function POST(request: NextRequest) {
           provider: 'dpo',
           orderId: order.id,
           orderNumber: order.order_number,
-          amount: total,
+          amount: totalInUnits,
           currency: settings.currency,
           error: 'Failed to create DPO payment token. Please try again or contact support.',
         }

@@ -171,10 +171,16 @@ export function EditDiscountDialog({ discount, open, onOpenChange }: EditDiscoun
                         Percentage Off
                       </div>
                     </SelectItem>
-                    <SelectItem value="fixed">
+                    <SelectItem value="fixed_amount">
                       <div className="flex items-center">
                         <Coins className="h-4 w-4 mr-2" />
                         Fixed Amount Off
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="free_shipping">
+                      <div className="flex items-center">
+                        <Coins className="h-4 w-4 mr-2" />
+                        Free Shipping
                       </div>
                     </SelectItem>
                   </SelectContent>

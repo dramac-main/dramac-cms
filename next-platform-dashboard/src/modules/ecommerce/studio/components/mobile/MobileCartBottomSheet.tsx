@@ -267,23 +267,23 @@ export function MobileCartBottomSheet({
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span>{formatCurrency(totals.subtotal)}</span>
+                    <span>{formatCurrency(totals.subtotal / 100)}</span>
                   </div>
                   {totals.discount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span>Discount</span>
-                      <span>-{formatCurrency(totals.discount)}</span>
+                      <span>-{formatCurrency(totals.discount / 100)}</span>
                     </div>
                   )}
                   {totals.tax > 0 && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Tax</span>
-                      <span>{formatCurrency(totals.tax)}</span>
+                      <span>{formatCurrency(totals.tax / 100)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-semibold text-base pt-1 border-t">
                     <span>Total</span>
-                    <span>{formatCurrency(totals.total)}</span>
+                    <span>{formatCurrency(totals.total / 100)}</span>
                   </div>
                 </div>
 
@@ -293,7 +293,7 @@ export function MobileCartBottomSheet({
                   className="w-full min-h-[52px] text-base font-semibold"
                   onClick={handleCheckout}
                 >
-                  Checkout • {formatCurrency(totals.total)}
+                  Checkout • {formatCurrency(totals.total / 100)}
                 </Button>
               </div>
             )}

@@ -470,7 +470,7 @@ export function MobileVariantSelector({
           {showPrice && selectedVariant.price !== null && (
             <div className="flex items-center gap-2">
               <span className="text-lg font-semibold">
-                {formatCurrency(selectedVariant.price)}
+                {formatCurrency(selectedVariant.price / 100)}
               </span>
             </div>
           )}

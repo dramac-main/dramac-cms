@@ -204,7 +204,7 @@ export async function getRecentOrders(
       : 'Guest',
     customerEmail: order.customer_email,
     total: order.total,
-    currency: order.currency || 'USD',  // US DOLLAR DEFAULT
+    currency: order.currency || 'ZMW',  // Zambian Kwacha default
     status: order.status as RecentOrderSummary['status'],
     paymentStatus: order.payment_status as RecentOrderSummary['paymentStatus'],
     createdAt: order.created_at

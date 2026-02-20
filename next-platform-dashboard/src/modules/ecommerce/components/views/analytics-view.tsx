@@ -288,7 +288,7 @@ export function AnalyticsView() {
                 {analytics.topProducts.slice(0, 3).map((product, index) => (
                   <div key={index} className="flex justify-between items-center text-sm">
                     <span className="truncate flex-1 mr-2">{product.name}</span>
-                    <Badge variant="outline">{formatCurrency(product.revenue / 100)}</Badge>
+                    <Badge variant="outline">{formatCurrency(product.revenue)}</Badge>
                   </div>
                 ))}
               </div>
@@ -320,7 +320,7 @@ export function AnalyticsView() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="label" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} />
-                  <YAxis className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => `${DEFAULT_CURRENCY_SYMBOL}${v}`} />
+                  <YAxis className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => formatCurrency(v)} />
                   <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null
@@ -328,7 +328,7 @@ export function AnalyticsView() {
                       return (
                         <div className="bg-popover border rounded-lg shadow-lg p-3">
                           <p className="font-medium">{d.label}</p>
-                          <p className="text-sm text-muted-foreground">Revenue: {DEFAULT_CURRENCY_SYMBOL}{d.revenue.toFixed(2)}</p>
+                          <p className="text-sm text-muted-foreground">Revenue: {formatCurrency(d.revenue)}</p>
                           <p className="text-sm text-muted-foreground">Orders: {d.orders}</p>
                         </div>
                       )
@@ -388,7 +388,7 @@ export function AnalyticsView() {
             <ResponsiveContainer width="100%" height={Math.max(200, analytics.topProducts.length * 50)}>
               <BarChart data={analytics.topProducts} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis type="number" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => `${DEFAULT_CURRENCY_SYMBOL}${v}`} />
+                <XAxis type="number" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} tickFormatter={(v: number) => formatCurrency(v)} />
                 <YAxis type="category" dataKey="name" className="text-xs" tick={{ fill: 'currentColor', fontSize: 11 }} width={120} />
                 <Tooltip
                   content={({ active, payload }) => {
@@ -397,7 +397,7 @@ export function AnalyticsView() {
                     return (
                       <div className="bg-popover border rounded-lg shadow-lg p-3">
                         <p className="font-medium">{d.name}</p>
-                        <p className="text-sm text-muted-foreground">Revenue: {DEFAULT_CURRENCY_SYMBOL}{d.revenue.toFixed(2)}</p>
+                        <p className="text-sm text-muted-foreground">Revenue: {formatCurrency(d.revenue)}</p>
                         <p className="text-sm text-muted-foreground">Units: {d.count}</p>
                       </div>
                     )

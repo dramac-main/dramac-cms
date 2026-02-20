@@ -143,7 +143,7 @@ export function StickyAddToCartBar({
             <div className="flex items-center justify-between mb-3">
               <div>
                 <div className="text-lg font-semibold">
-                  {formatCurrency(totalPrice)}
+                  {formatCurrency(totalPrice / 100)}
                 </div>
                 <div className="text-xs text-muted-foreground line-clamp-1">
                   {product.name}

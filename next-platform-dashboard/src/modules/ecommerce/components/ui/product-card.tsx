@@ -99,10 +99,11 @@ const statusConfig: Record<ProductStatus, { label: string; className: string }> 
 // =============================================================================
 
 function formatPrice(price: number, currency: string = DEFAULT_CURRENCY): string {
+  // Prices are stored in cents in the database — convert to display amounts
   return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
-  }).format(price)
+  }).format(price / 100)
 }
 
 // =============================================================================

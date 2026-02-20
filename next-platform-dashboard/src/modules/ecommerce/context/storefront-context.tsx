@@ -86,9 +86,9 @@ export function StorefrontProvider({ children, siteId }: StorefrontProviderProps
   const currencySymbol = CURRENCY_SYMBOLS[currency] || DEFAULT_CURRENCY_SYMBOL
   const taxRate = settings?.tax_rate || 0
 
-  // Format price utility
+  // Format price utility - prices are stored in cents, divide by 100 for display
   const formatPrice = useCallback((amount: number): string => {
-    return formatCurrency(amount, currency)
+    return formatCurrency(amount / 100, currency)
   }, [currency])
 
   // Quotation mode derived values

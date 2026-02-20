@@ -247,9 +247,9 @@ export function ProductGridBlock({
             className="mb-4"
           />
           <div className="flex items-center gap-2 text-sm">
-            <span>{formatCurrency(priceRange[0])}</span>
+            <span>{formatCurrency(priceRange[0] / 100)}</span>
             <span>-</span>
-            <span>{formatCurrency(priceRange[1])}</span>
+            <span>{formatCurrency(priceRange[1] / 100)}</span>
           </div>
         </div>
       </div>

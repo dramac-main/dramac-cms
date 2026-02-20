@@ -2,6 +2,36 @@
 
 ## Recent Work
 
+### E-Commerce Module Comprehensive Overhaul (Session 2) ✅
+
+**Category:** Professional-Grade E-Commerce Fixes — Real-World Testing Response  
+**Files Changed:** 35+  
+**Status:** All critical and medium bugs fixed across 13 categories
+
+#### Summary
+User tested e-commerce module in production, reported multiple bugs. Comprehensive audit via 3+ sub-agents found 40+ bugs. All critical and medium issues fixed:
+
+1. **ZMW Currency** — Default currency changed from USD to ZMW (Zambian Kwacha, K, 16% VAT) in locale-config.ts and onboarding
+2. **Step 5 Product Creation** — `case 5: break;` in onboarding-actions.ts → now calls `createProduct()` with full data
+3. **Image Upload** — Supabase client memoized with `useMemo()` (was recreated per render)
+4. **Dashboard Stats** — Root cause: products never saved + hooks never fired
+5. **Create Product Dialog** — Added 8 new fields (cost price, stock threshold, featured toggle, categories, weight, SEO)
+6. **Hook UUID Fix** — `resolveModuleSlug()` bridges UUID→slug gap in module-hooks-registry.ts
+7. **Price ÷100 Consistency** — 30+ files fixed to divide cents by 100 for display. Payment APIs now receive currency units.
+8. **404 Navigation** — Fixed /dashboard/${siteId} → /dashboard/sites/${siteId} in ecommerce page + 11 revalidatePath calls
+9. **Categories View** — EditCategoryDialog moved out of `<TableBody>` (invalid DOM nesting)
+10. **Discounts View** — Fixed `value="fixed"` → `"fixed_amount"`, added free_shipping option, replaced hardcoded `$` with K
+11. **Analytics View** — Fixed double-division on top products revenue, chart tooltip formatters
+12. **Studio Block Registration** — 13 new blocks registered (Cart, Checkout, Navigation, Quote families)
+13. **Embed Code** — Fixed script filename from nonexistent `dramac-ecommerce.js` to actual `dramac-embed.js`
+
+#### Key Architecture Insights
+- Prices stored in CENTS (×100) in DB. Display must ÷100. `formatCurrency` from locale-config does NOT divide.
+- Hooks registered by slug but called with UUID. `resolveModuleSlug()` queries DB to bridge.
+- Studio blocks need `ComponentDefinition` export + `studioComponents` registration to appear in drag-and-drop.
+
+---
+
 ### AI Website Designer — Bulletproof Shared Elements (Zero DB + AI Fallbacks) ✅
 
 **Category:** Critical Performance Fix — Vercel Timeout Elimination  

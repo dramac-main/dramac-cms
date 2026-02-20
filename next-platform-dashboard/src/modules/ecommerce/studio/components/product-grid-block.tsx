@@ -152,7 +152,7 @@ export function ProductGridBlock({
                 <h3 className="font-medium truncate">{product.name}</h3>
                 {showPrice && (
                   <p className="text-primary font-semibold mt-1">
-                    {formatCurrency(product.price)}
+                    {formatCurrency(product.price / 100)}
                   </p>
                 )}
               </div>

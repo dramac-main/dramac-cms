@@ -129,10 +129,11 @@ const fulfillmentStatusConfig: Record<FulfillmentStatus, { label: string; classN
 // =============================================================================
 
 function formatPrice(price: number, currency: string = DEFAULT_CURRENCY): string {
+  // Order totals are stored in cents — convert to display amounts
   return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency,
-  }).format(price)
+  }).format(price / 100)
 }
 
 function formatDate(date: string): string {

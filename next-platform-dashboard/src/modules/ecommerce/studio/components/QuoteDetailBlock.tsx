@@ -237,10 +237,10 @@ export function QuoteDetailBlock({
                   <td className="py-3">{item.name}</td>
                   <td className="py-3 text-right">{item.quantity}</td>
                   <td className="py-3 text-right">
-                    {formatPrice?.(item.unit_price) || `${DEFAULT_CURRENCY_SYMBOL}${item.unit_price.toFixed(2)}`}
+                    {formatPrice?.(item.unit_price) || `${DEFAULT_CURRENCY_SYMBOL}${(item.unit_price / 100).toFixed(2)}`}
                   </td>
                   <td className="py-3 text-right">
-                    {formatPrice?.(item.line_total) || `${DEFAULT_CURRENCY_SYMBOL}${item.line_total.toFixed(2)}`}
+                    {formatPrice?.(item.line_total) || `${DEFAULT_CURRENCY_SYMBOL}${(item.line_total / 100).toFixed(2)}`}
                   </td>
                 </tr>
               ))}

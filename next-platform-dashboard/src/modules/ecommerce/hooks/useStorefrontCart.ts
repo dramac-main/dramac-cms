@@ -278,7 +278,7 @@ export function useStorefrontCart(
       return { 
         success: result.success, 
         message: result.success 
-          ? `Discount applied: -${formatCurrency(result.discountAmount)}`
+          ? `Discount applied: -${formatCurrency(result.discountAmount / 100)}`
           : result.error || 'Invalid discount code'
       }
     } catch (err) {

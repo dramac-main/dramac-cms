@@ -135,7 +135,7 @@ function AnimatedNumber({
         currency,
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
-      }).format(Math.round(v))
+      }).format(Math.round(v / 100))
     }
     return Math.round(v).toLocaleString()
   })

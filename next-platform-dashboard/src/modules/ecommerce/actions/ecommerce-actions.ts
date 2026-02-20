@@ -1567,7 +1567,7 @@ export async function validateDiscountCode(
     return { valid: false, error: 'Discount code usage limit reached' }
   }
   if (discount.minimum_order_amount && subtotal < discount.minimum_order_amount) {
-    return { valid: false, error: `Minimum order of ${formatCurrency(discount.minimum_order_amount)} required` }
+    return { valid: false, error: `Minimum order of ${formatCurrency(discount.minimum_order_amount / 100)} required` }
   }
   
   // Check once per customer

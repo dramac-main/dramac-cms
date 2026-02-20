@@ -179,7 +179,7 @@ export function ProductSelectorField({
                     {selectedProduct.name}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {formatCurrency(selectedProduct.price)}
+                    {formatCurrency(selectedProduct.price / 100)}
                   </p>
                 </div>
                 <Button
@@ -247,7 +247,7 @@ export function ProductSelectorField({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{product.name}</p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{formatCurrency(product.price)}</span>
+                        <span>{formatCurrency(product.price / 100)}</span>
                         {product.sku && <span>• {product.sku}</span>}
                         {product.categoryName && (
                           <Badge variant="secondary" className="text-[10px] h-4">

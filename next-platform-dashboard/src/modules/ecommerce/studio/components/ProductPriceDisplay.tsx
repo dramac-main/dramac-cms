@@ -60,7 +60,7 @@ export function ProductPriceDisplay({
     if (storefront?.formatPrice) {
       return storefront.formatPrice(amount)
     }
-    return `${DEFAULT_CURRENCY_SYMBOL}${amount.toFixed(2)}`
+    return `${DEFAULT_CURRENCY_SYMBOL}${(amount / 100).toFixed(2)}`
   }
 
   const hasDiscount = compareAtPrice && compareAtPrice > price

@@ -232,17 +232,17 @@ export function CategoriesView({ searchQuery = '', onCreateCategory }: Categorie
               </TableRow>
             </TableHeader>
             <TableBody>
+              {rootCategories.map(category => renderCategory(category))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <EditCategoryDialog 
         category={editingCategory}
         open={showEditDialog} 
         onOpenChange={setShowEditDialog}
       />
-              {rootCategories.map(category => renderCategory(category))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
     </div>
   )
 }

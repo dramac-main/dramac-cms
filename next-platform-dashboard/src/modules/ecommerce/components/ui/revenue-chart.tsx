@@ -63,15 +63,16 @@ function formatCurrency(value: number, currency: string = DEFAULT_CURRENCY): str
     currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(value)
+  }).format(value / 100)
 }
 
 function formatCompactCurrency(value: number, currency: string = DEFAULT_CURRENCY): string {
-  if (value >= 1000000) {
-    return `${(value / 1000000).toFixed(1)}M`
+  const displayValue = value / 100
+  if (displayValue >= 1000000) {
+    return `${(displayValue / 1000000).toFixed(1)}M`
   }
-  if (value >= 1000) {
-    return `${(value / 1000).toFixed(1)}K`
+  if (displayValue >= 1000) {
+    return `${(displayValue / 1000).toFixed(1)}K`
   }
   return formatCurrency(value, currency)
 }

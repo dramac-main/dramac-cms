@@ -15,11 +15,11 @@
 /** Default locale for formatting (US English) */
 export const DEFAULT_LOCALE = 'en-US'
 
-/** Default currency code */
-export const DEFAULT_CURRENCY = 'USD'
+/** Default currency code — Zambian Kwacha (platform is Zambia-based) */
+export const DEFAULT_CURRENCY = 'ZMW'
 
 /** Default currency symbol */
-export const DEFAULT_CURRENCY_SYMBOL = '$'
+export const DEFAULT_CURRENCY_SYMBOL = 'K'
 
 /** Default timezone */
 export const DEFAULT_TIMEZONE = 'Africa/Lusaka'
@@ -30,11 +30,11 @@ export const DEFAULT_COUNTRY = 'ZM'
 /** Default date format */
 export const DEFAULT_DATE_FORMAT = 'MM/DD/YYYY'
 
-/** Default tax rate (0% — tax handled by Paddle as Merchant of Record) */
-export const DEFAULT_TAX_RATE = 0
+/** Default tax rate (16% — Zambia standard VAT rate) */
+export const DEFAULT_TAX_RATE = 16
 
-/** Tax included in price by default (false — Paddle adds tax at checkout) */
-export const DEFAULT_TAX_INCLUDED = false
+/** Tax included in price by default (true — prices shown inclusive of VAT in Zambia) */
+export const DEFAULT_TAX_INCLUDED = true
 
 /** Default weight unit */
 export const DEFAULT_WEIGHT_UNIT = 'kg'

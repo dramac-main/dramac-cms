@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Embed Code Generator View
  * 
  * Phase ECOM-03B: Embed Code Generator
@@ -141,7 +141,7 @@ export function EmbedCodeGenerator({ siteId, agencyId: _agencyId, siteDomain }: 
       case 'product-grid':
         return `<!-- DRAMAC E-Commerce Product Grid -->
 <div id="dramac-products-${siteId.substring(0, 8)}"></div>
-<script src="${baseUrl}/embed/dramac-ecommerce.js" defer></script>
+<script src="${baseUrl}/embed/dramac-embed.js" defer></script>
 <script>
   window.DRAMAC_CONFIG = {
     siteId: '${siteId}',
@@ -161,7 +161,7 @@ export function EmbedCodeGenerator({ siteId, agencyId: _agencyId, siteDomain }: 
       case 'product-card':
         return `<!-- DRAMAC E-Commerce Product Card -->
 <div id="dramac-product-${config.productId?.substring(0, 8) || 'xxx'}"></div>
-<script src="${baseUrl}/embed/dramac-ecommerce.js" defer></script>
+<script src="${baseUrl}/embed/dramac-embed.js" defer></script>
 <script>
   window.DRAMAC_CONFIG = {
     siteId: '${siteId}',
@@ -185,12 +185,12 @@ export function EmbedCodeGenerator({ siteId, agencyId: _agencyId, siteDomain }: 
 >
   ${config.buttonText || 'Buy Now'}
 </button>
-<script src="${baseUrl}/embed/dramac-ecommerce.js" defer></script>`
+<script src="${baseUrl}/embed/dramac-embed.js" defer></script>`
 
       case 'cart-button':
         return `<!-- DRAMAC Cart Widget -->
 <div id="dramac-cart-${siteId.substring(0, 8)}"></div>
-<script src="${baseUrl}/embed/dramac-ecommerce.js" defer></script>
+<script src="${baseUrl}/embed/dramac-embed.js" defer></script>
 <script>
   window.DRAMAC_CONFIG = {
     siteId: '${siteId}',
@@ -203,7 +203,7 @@ export function EmbedCodeGenerator({ siteId, agencyId: _agencyId, siteDomain }: 
       case 'collection':
         return `<!-- DRAMAC Collection -->
 <div id="dramac-collection-${siteId.substring(0, 8)}"></div>
-<script src="${baseUrl}/embed/dramac-ecommerce.js" defer></script>
+<script src="${baseUrl}/embed/dramac-embed.js" defer></script>
 <script>
   window.DRAMAC_CONFIG = {
     siteId: '${siteId}',
@@ -220,7 +220,7 @@ export function EmbedCodeGenerator({ siteId, agencyId: _agencyId, siteDomain }: 
       case 'checkout':
         return `<!-- DRAMAC Checkout Embed -->
 <div id="dramac-checkout-${siteId.substring(0, 8)}"></div>
-<script src="${baseUrl}/embed/dramac-ecommerce.js" defer></script>
+<script src="${baseUrl}/embed/dramac-embed.js" defer></script>
 <script>
   window.DRAMAC_CONFIG = {
     siteId: '${siteId}',

@@ -17,6 +17,7 @@ import type {
   GetOnboardingStatusResult,
 } from '../types/onboarding-types';
 import { updateSettings } from './settings-actions';
+import { createProduct } from './ecommerce-actions';
 
 // ============================================================================
 // HELPER FUNCTION: Get E-commerce Module UUID
@@ -511,7 +512,38 @@ async function applyStepSettings(
         break;
 
       case 5: // First Product
-        // Product creation handled separately if user creates one
+        if (data.firstProduct && !data.firstProduct.skipped && data.firstProduct.name) {
+          try {
+            await createProduct(siteId, agencyId, {
+              name: data.firstProduct.name,
+              description: data.firstProduct.description || null,
+              short_description: null,
+              base_price: Math.round((data.firstProduct.price || 0) * 100), // Store in cents
+              compare_at_price: null,
+              cost_price: null,
+              tax_class: 'standard',
+              is_taxable: true,
+              sku: data.firstProduct.sku || null,
+              barcode: null,
+              track_inventory: true,
+              quantity: data.firstProduct.quantity || 0,
+              low_stock_threshold: 5,
+              weight: null,
+              weight_unit: 'kg',
+              status: 'active', // Auto-publish first product so dashboard shows it
+              is_featured: true, // Feature the first product
+              seo_title: null,
+              seo_description: null,
+              images: data.firstProduct.images || (data.firstProduct.imageUrl ? [data.firstProduct.imageUrl] : []),
+              metadata: { created_via: 'onboarding' },
+              created_by: null,
+            });
+            console.log('[Onboarding] First product created successfully');
+          } catch (productError) {
+            console.error('[Onboarding] Failed to create first product:', productError);
+            // Don't block onboarding completion - product creation is best-effort
+          }
+        }
         break;
     }
   } catch (err) {

@@ -66,6 +66,9 @@ export interface OnboardingData {
     price: number;
     description?: string;
     imageUrl?: string;
+    images?: string[];
+    sku?: string;
+    quantity?: number;
     skipped: boolean;
   };
 }
@@ -185,10 +188,13 @@ export interface GetOnboardingStatusResult {
 // ============================================================================
 
 /**
- * Available currencies - USD is default
+ * Available currencies - ZMW (Zambian Kwacha) is default
  */
 export const AVAILABLE_CURRENCIES = [
-  // USD IS DEFAULT
+  // ZMW IS DEFAULT (Zambia-based platform)
+  { code: 'ZMW', symbol: 'K', name: 'Zambian Kwacha' },
+  
+  // Other common currencies
   { code: 'USD', symbol: '$', name: 'US Dollar' },
   
   // Regional African Currencies
@@ -199,6 +205,9 @@ export const AVAILABLE_CURRENCIES = [
   { code: 'TZS', symbol: 'TSh', name: 'Tanzanian Shilling' },
   { code: 'UGX', symbol: 'USh', name: 'Ugandan Shilling' },
   { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
+  { code: 'GHS', symbol: '₵', name: 'Ghanaian Cedi' },
+  { code: 'RWF', symbol: 'FRw', name: 'Rwandan Franc' },
+  { code: 'MZN', symbol: 'MT', name: 'Mozambican Metical' },
   
   // International Currencies
   { code: 'EUR', symbol: '€', name: 'Euro' },
@@ -282,16 +291,16 @@ export const DEFAULT_ONBOARDING_DATA: OnboardingData = {
     },
   },
   currencyTax: {
-    // USD DEFAULTS
-    currency: 'USD',
-    currencySymbol: '$',
+    // ZMW DEFAULTS (Zambia-based platform)
+    currency: 'ZMW',
+    currencySymbol: 'K',
     currencyPosition: 'before',
     thousandsSeparator: ',',
     decimalSeparator: '.',
-    taxEnabled: false,      // Tax disabled by default
-    taxRate: 0,             // Configure per region
-    taxIncludedInPrice: false, // Prices shown exclusive of tax
-    taxDisplayText: 'Tax',
+    taxEnabled: true,           // VAT is standard in Zambia
+    taxRate: 16,                // Zambia standard VAT rate is 16%
+    taxIncludedInPrice: true,   // Prices typically shown inclusive of VAT
+    taxDisplayText: 'VAT',
   },
   shipping: {
     shippingEnabled: true,

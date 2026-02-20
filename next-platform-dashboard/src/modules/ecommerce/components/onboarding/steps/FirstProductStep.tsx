@@ -2,6 +2,9 @@
  * FirstProductStep Component
  * 
  * PHASE-ECOM-53: Onboarding Wizard - Step 5
+ * 
+ * Enhanced with image upload, SKU, and quantity fields.
+ * Product is actually saved to the database when this step completes.
  */
 
 'use client';
@@ -10,8 +13,10 @@ import React from 'react';
 import { Package, FileSpreadsheet, Sparkles, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StepComponentProps } from '../../../types/onboarding-types';
+import { ImageGalleryUpload } from '../../shared/image-upload';
 
 export function FirstProductStep({
+  siteId,
   data,
   onDataChange,
 }: StepComponentProps) {
@@ -20,6 +25,9 @@ export function FirstProductStep({
     price: 0,
     description: '',
     imageUrl: '',
+    images: [] as string[],
+    sku: '',
+    quantity: 0,
     skipped: false,
   };
 
@@ -40,7 +48,7 @@ export function FirstProductStep({
   };
 
   // Get currency symbol from earlier step
-  const currencySymbol = data.currencyTax?.currencySymbol || '$';
+  const currencySymbol = data.currencyTax?.currencySymbol || 'K';
 
   return (
     <div className="space-y-6">
@@ -89,6 +97,20 @@ export function FirstProductStep({
       {/* Product Form (shown when not skipping) */}
       {!firstProduct.skipped && (
         <div className="space-y-4">
+          {/* Product Images */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Product Images
+            </label>
+            <ImageGalleryUpload
+              value={firstProduct.images || []}
+              onChange={(images: string[]) => handleChange('images', images)}
+              siteId={siteId}
+              folder="products"
+              maxImages={5}
+            />
+          </div>
+
           {/* Product Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -108,30 +130,69 @@ export function FirstProductStep({
             />
           </div>
 
-          {/* Product Price */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Price *
-            </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                {currencySymbol}
-              </span>
+          {/* Product Price & SKU */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Price *
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                  {currencySymbol}
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={firstProduct.price || ''}
+                  onChange={(e) => handleChange('price', parseFloat(e.target.value) || 0)}
+                  placeholder="29.99"
+                  className={cn(
+                    'w-full pl-8 pr-4 py-3 border rounded-lg transition-colors',
+                    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                    'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
+                    'text-gray-900 dark:text-white placeholder:text-gray-400'
+                  )}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                SKU (optional)
+              </label>
               <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={firstProduct.price || ''}
-                onChange={(e) => handleChange('price', parseFloat(e.target.value) || 0)}
-                placeholder="29.99"
+                type="text"
+                value={firstProduct.sku || ''}
+                onChange={(e) => handleChange('sku', e.target.value)}
+                placeholder="e.g., TSH-001"
                 className={cn(
-                  'w-full pl-8 pr-4 py-3 border rounded-lg transition-colors',
+                  'w-full px-4 py-3 border rounded-lg transition-colors',
                   'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                   'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                   'text-gray-900 dark:text-white placeholder:text-gray-400'
                 )}
               />
             </div>
+          </div>
+
+          {/* Quantity */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Starting Quantity
+            </label>
+            <input
+              type="number"
+              min="0"
+              value={firstProduct.quantity || 0}
+              onChange={(e) => handleChange('quantity', parseInt(e.target.value) || 0)}
+              placeholder="10"
+              className={cn(
+                'w-full px-4 py-3 border rounded-lg transition-colors',
+                'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
+                'text-gray-900 dark:text-white placeholder:text-gray-400'
+              )}
+            />
           </div>
 
           {/* Product Description */}
@@ -168,8 +229,8 @@ export function FirstProductStep({
       {/* Info Box */}
       <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
         <p className="text-sm text-blue-700 dark:text-blue-300">
-          <strong>Tip:</strong> You can add more details like images, inventory, 
-          and variants after completing the wizard.
+          <strong>Tip:</strong> Your product will be published as &ldquo;Active&rdquo; and featured
+          on your store. You can add variants, categories, and more details later.
         </p>
       </div>
     </div>

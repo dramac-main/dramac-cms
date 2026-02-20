@@ -66,8 +66,7 @@ function formatPrice(price: number): string {
   return new Intl.NumberFormat(DEFAULT_LOCALE, {
     style: 'currency',
     currency: DEFAULT_CURRENCY,
-  }).format(price)
-}
+  }).format(price / 100)
 
 // ============================================================================
 // SWIPEABLE CARD COMPONENT

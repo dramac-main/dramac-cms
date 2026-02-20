@@ -13,6 +13,7 @@ import type {
   UninstallHookResult,
   HookExecutionOptions,
 } from './types';
+import { createClient } from '@/lib/supabase/server';
 
 // ============================================================================
 // REGISTRY
@@ -86,6 +87,51 @@ export function getRegisteredModuleIds(): string[] {
   return Array.from(moduleHooks.keys());
 }
 
+/**
+ * Resolve a module ID (UUID or slug) to the hook-registered slug.
+ * Hooks are registered by slug (e.g., 'ecommerce'), but module installations
+ * use UUIDs. This resolves UUIDs to slugs by querying the database.
+ */
+async function resolveModuleSlug(moduleIdOrSlug: string): Promise<string> {
+  // If it's already a slug that matches a registered hook, return as-is
+  if (moduleHooks.has(moduleIdOrSlug)) {
+    return moduleIdOrSlug;
+  }
+  
+  // It's likely a UUID — look up the slug from the database
+  try {
+    const supabase = await createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any;
+    
+    // Try modules_v2 first
+    const { data: m2 } = await db
+      .from('modules_v2')
+      .select('slug')
+      .eq('id', moduleIdOrSlug)
+      .single();
+    
+    if (m2?.slug && moduleHooks.has(m2.slug)) {
+      return m2.slug;
+    }
+    
+    // Try module_source
+    const { data: ms } = await db
+      .from('module_source')
+      .select('slug')
+      .eq('id', moduleIdOrSlug)
+      .single();
+    
+    if (ms?.slug && moduleHooks.has(ms.slug)) {
+      return ms.slug;
+    }
+  } catch (err) {
+    console.warn('[ModuleHooksRegistry] Failed to resolve module slug:', err);
+  }
+  
+  return moduleIdOrSlug;
+}
+
 // ============================================================================
 // HOOK EXECUTION
 // ============================================================================
@@ -93,7 +139,7 @@ export function getRegisteredModuleIds(): string[] {
 /**
  * Execute a module's installation hook
  * 
- * @param moduleId - The module ID
+ * @param moduleId - The module ID (UUID or slug)
  * @param siteId - The site ID where module is being installed
  * @param settings - Optional initial settings
  * @param options - Optional execution options
@@ -105,11 +151,13 @@ export async function executeInstallHook(
   settings?: Record<string, unknown>,
   options?: HookExecutionOptions
 ): Promise<InstallHookResult> {
-  const hook = moduleHooks.get(moduleId);
+  // Resolve UUID to slug if needed
+  const resolvedId = await resolveModuleSlug(moduleId);
+  const hook = moduleHooks.get(resolvedId);
   
   if (!hook) {
     console.log(
-      `[ModuleHooksRegistry] No hook registered for module: ${moduleId}, skipping`
+      `[ModuleHooksRegistry] No hook registered for module: ${moduleId} (resolved: ${resolvedId}), skipping`
     );
     return {
       success: true,
@@ -118,7 +166,7 @@ export async function executeInstallHook(
   }
   
   console.log(
-    `[ModuleHooksRegistry] Executing install hook for module: ${moduleId} on site: ${siteId}`
+    `[ModuleHooksRegistry] Executing install hook for module: ${resolvedId} on site: ${siteId}`
   );
   
   try {
@@ -168,7 +216,8 @@ export async function executeUninstallHook(
   moduleId: string,
   siteId: string
 ): Promise<UninstallHookResult> {
-  const hook = moduleHooks.get(moduleId);
+  const resolvedId = await resolveModuleSlug(moduleId);
+  const hook = moduleHooks.get(resolvedId);
   
   if (!hook) {
     console.log(
@@ -233,7 +282,8 @@ export async function executeEnableHook(
   moduleId: string,
   siteId: string
 ): Promise<ToggleHookResult> {
-  const hook = moduleHooks.get(moduleId);
+  const resolvedId = await resolveModuleSlug(moduleId);
+  const hook = moduleHooks.get(resolvedId);
   
   if (!hook?.onEnable) {
     return { success: true };
@@ -269,7 +319,8 @@ export async function executeDisableHook(
   moduleId: string,
   siteId: string
 ): Promise<ToggleHookResult> {
-  const hook = moduleHooks.get(moduleId);
+  const resolvedId = await resolveModuleSlug(moduleId);
+  const hook = moduleHooks.get(resolvedId);
   
   if (!hook?.onDisable) {
     return { success: true };

@@ -137,8 +137,9 @@ export async function GET(request: NextRequest) {
 /**
  * Transform database product to frontend-friendly format
  * 
- * NOTE: Prices are stored in the database as DECIMAL(10,2) in dollar amounts
- * (e.g., 99.99), NOT in cents. Do NOT divide by 100.
+ * NOTE: Prices are stored in the database in CENTS (integer).
+ * The Create Product dialog multiplies by 100 before saving.
+ * We divide by 100 here for display as dollar/kwacha amounts.
  */
 function transformProduct(product: Record<string, unknown>) {
   return {
@@ -146,9 +147,9 @@ function transformProduct(product: Record<string, unknown>) {
     name: product.name,
     slug: product.slug,
     description: product.description,
-    // Prices are stored as dollar amounts (DECIMAL 10,2) — NO conversion needed
-    price: typeof product.base_price === 'number' ? product.base_price : 0,
-    compareAtPrice: typeof product.compare_at_price === 'number' ? product.compare_at_price : null,
+    // Prices are stored in cents — convert to display amounts
+    price: typeof product.base_price === 'number' ? product.base_price / 100 : 0,
+    compareAtPrice: typeof product.compare_at_price === 'number' ? product.compare_at_price / 100 : null,
     // Use first image or null
     image: Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : null,
     images: product.images || [],

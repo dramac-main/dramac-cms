@@ -51,7 +51,7 @@ export interface QuoteItemCardProps {
 // ============================================================================
 
 function defaultFormatPrice(price: number, currency = DEFAULT_CURRENCY_SYMBOL): string {
-  return `${currency}${price.toFixed(2)}`
+  return `${currency}${(price / 100).toFixed(2)}`
 }
 
 // ============================================================================

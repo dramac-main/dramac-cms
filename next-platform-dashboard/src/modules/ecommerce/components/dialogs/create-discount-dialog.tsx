@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 import type { DiscountInput, DiscountType } from '../../types/ecommerce-types'
 
 interface CreateDiscountDialogProps {
@@ -209,7 +210,7 @@ export function CreateDiscountDialog({ open, onOpenChange }: CreateDiscountDialo
                 <Label htmlFor="discountValue">Value *</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    {discountType === 'percentage' ? '%' : '$'}
+                    {discountType === 'percentage' ? '%' : DEFAULT_CURRENCY_SYMBOL}
                   </span>
                   <Input
                     id="discountValue"
@@ -232,7 +233,7 @@ export function CreateDiscountDialog({ open, onOpenChange }: CreateDiscountDialo
           <div className="space-y-2">
             <Label htmlFor="minimumOrderAmount">Minimum Order Amount</Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{DEFAULT_CURRENCY_SYMBOL}</span>
               <Input
                 id="minimumOrderAmount"
                 type="number"

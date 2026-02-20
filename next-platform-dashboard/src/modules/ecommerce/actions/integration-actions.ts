@@ -136,7 +136,7 @@ export async function createApiKey(
     
     if (error) throw error
     
-    revalidatePath('/dashboard/[siteId]/settings')
+    revalidatePath('/dashboard/sites/[siteId]/settings')
     
     return {
       success: true,
@@ -168,7 +168,7 @@ export async function updateApiKey(
     
     if (error) throw error
     
-    revalidatePath('/dashboard/[siteId]/settings')
+    revalidatePath('/dashboard/sites/[siteId]/settings')
     return { success: true }
   } catch (error) {
     console.error('Error updating API key:', error)
@@ -192,7 +192,7 @@ export async function revokeApiKey(
     
     if (error) throw error
     
-    revalidatePath('/dashboard/[siteId]/settings')
+    revalidatePath('/dashboard/sites/[siteId]/settings')
     return { success: true }
   } catch (error) {
     console.error('Error revoking API key:', error)
@@ -235,7 +235,7 @@ export async function rotateApiKey(
     
     if (error) throw error
     
-    revalidatePath('/dashboard/[siteId]/settings')
+    revalidatePath('/dashboard/sites/[siteId]/settings')
     
     return {
       success: true,
@@ -329,7 +329,7 @@ export async function createWebhookEndpoint(
     
     if (error) throw error
     
-    revalidatePath('/dashboard/[siteId]/settings')
+    revalidatePath('/dashboard/sites/[siteId]/settings')
     return { success: true, endpoint: data as WebhookEndpoint }
   } catch (error) {
     console.error('Error creating webhook endpoint:', error)
@@ -354,7 +354,7 @@ export async function updateWebhookEndpoint(
     
     if (error) throw error
     
-    revalidatePath('/dashboard/[siteId]/settings')
+    revalidatePath('/dashboard/sites/[siteId]/settings')
     return { success: true }
   } catch (error) {
     console.error('Error updating webhook endpoint:', error)
@@ -378,7 +378,7 @@ export async function deleteWebhookEndpoint(
     
     if (error) throw error
     
-    revalidatePath('/dashboard/[siteId]/settings')
+    revalidatePath('/dashboard/sites/[siteId]/settings')
     return { success: true }
   } catch (error) {
     console.error('Error deleting webhook endpoint:', error)
@@ -414,7 +414,7 @@ export async function rotateWebhookSecret(
     
     if (error) throw error
     
-    revalidatePath('/dashboard/[siteId]/settings')
+    revalidatePath('/dashboard/sites/[siteId]/settings')
     return { success: true, secret: newSecret }
   } catch (error) {
     console.error('Error rotating webhook secret:', error)
@@ -646,7 +646,7 @@ export async function connectIntegration(
       .update({ status: 'connected' })
       .eq('id', data.id)
     
-    revalidatePath('/dashboard/[siteId]/settings')
+    revalidatePath('/dashboard/sites/[siteId]/settings')
     
     return { 
       success: true, 
@@ -675,7 +675,7 @@ export async function updateIntegration(
     
     if (error) throw error
     
-    revalidatePath('/dashboard/[siteId]/settings')
+    revalidatePath('/dashboard/sites/[siteId]/settings')
     return { success: true }
   } catch (error) {
     console.error('Error updating integration:', error)
@@ -699,7 +699,7 @@ export async function disconnectIntegration(
     
     if (error) throw error
     
-    revalidatePath('/dashboard/[siteId]/settings')
+    revalidatePath('/dashboard/sites/[siteId]/settings')
     return { success: true }
   } catch (error) {
     console.error('Error disconnecting integration:', error)

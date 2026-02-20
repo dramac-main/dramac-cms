@@ -138,7 +138,7 @@ function QuoteCard({ quote, formatPrice, detailUrl }: QuoteCardProps) {
 
           <div className="text-right">
             <p className="text-lg font-semibold">
-              {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${quote.total.toFixed(2)}`}
+              {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
             </p>
             <Link href={href}>
               <Button variant="ghost" size="sm" className="mt-1">
@@ -187,7 +187,7 @@ function QuoteListItem({ quote, formatPrice, detailUrl }: QuoteListItemProps) {
 
         <div className="text-right">
           <p className="font-semibold">
-            {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${quote.total.toFixed(2)}`}
+            {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
           </p>
         </div>
 
@@ -338,7 +338,7 @@ export function QuoteListBlock({
                       <QuoteStatusBadge status={quote.status} size="sm" />
                     </td>
                     <td className="px-4 py-3 text-right font-medium">
-                      {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${quote.total.toFixed(2)}`}
+                      {formatPrice?.(quote.total) || `${DEFAULT_CURRENCY_SYMBOL}${(quote.total / 100).toFixed(2)}`}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link href={href}>

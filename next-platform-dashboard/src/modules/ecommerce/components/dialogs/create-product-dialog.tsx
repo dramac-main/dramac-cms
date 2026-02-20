@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { ImageGalleryUpload } from '../shared/image-upload'
+import { getCurrencySymbol, DEFAULT_CURRENCY } from '@/lib/locale-config'
 import type { ProductInput, ProductStatus } from '../../types/ecommerce-types'
 
 interface CreateProductDialogProps {
@@ -38,8 +39,12 @@ interface CreateProductDialogProps {
 }
 
 export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogProps) {
-  const { addProduct, categories, siteId, agencyId } = useEcommerce()
+  const { addProduct, categories, siteId, agencyId, settings } = useEcommerce()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Get store currency for display
+  const storeCurrency = settings?.currency || DEFAULT_CURRENCY
+  const currencySymbol = getCurrencySymbol(storeCurrency)
   
   // Form state
   const [name, setName] = useState('')
@@ -48,11 +53,18 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
   const [shortDescription, setShortDescription] = useState('')
   const [basePrice, setBasePrice] = useState('')
   const [compareAtPrice, setCompareAtPrice] = useState('')
+  const [costPrice, setCostPrice] = useState('')
   const [sku, setSku] = useState('')
   const [trackInventory, setTrackInventory] = useState(true)
   const [quantity, setQuantity] = useState('0')
+  const [lowStockThreshold, setLowStockThreshold] = useState('5')
   const [status, setStatus] = useState<ProductStatus>('draft')
   const [images, setImages] = useState<string[]>([])
+  const [isFeatured, setIsFeatured] = useState(false)
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([])
+  const [weight, setWeight] = useState('')
+  const [seoTitle, setSeoTitle] = useState('')
+  const [seoDescription, setSeoDescription] = useState('')
 
   const generateSlug = (value: string) => {
     return value
@@ -75,11 +87,18 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
     setShortDescription('')
     setBasePrice('')
     setCompareAtPrice('')
+    setCostPrice('')
     setSku('')
     setTrackInventory(true)
     setQuantity('0')
+    setLowStockThreshold('5')
     setImages([])
     setStatus('draft')
+    setIsFeatured(false)
+    setSelectedCategoryIds([])
+    setWeight('')
+    setSeoTitle('')
+    setSeoDescription('')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,22 +126,24 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
         short_description: shortDescription || null,
         base_price: Math.round(parseFloat(basePrice) * 100),
         compare_at_price: compareAtPrice ? Math.round(parseFloat(compareAtPrice) * 100) : null,
-        cost_price: null,
+        cost_price: costPrice ? Math.round(parseFloat(costPrice) * 100) : null,
         tax_class: 'standard',
         is_taxable: true,
         sku: sku || null,
         barcode: null,
         track_inventory: trackInventory,
         quantity: parseInt(quantity) || 0,
-        low_stock_threshold: 5,
-        weight: null,
+        low_stock_threshold: parseInt(lowStockThreshold) || 5,
+        weight: weight ? parseFloat(weight) : null,
         weight_unit: 'kg',
         status,
-        is_featured: false,
-        seo_title: null,
-        seo_description: null,
+        is_featured: isFeatured,
+        seo_title: seoTitle || null,
+        seo_description: seoDescription || null,
         images: images,
-        metadata: {},
+        metadata: {
+          category_ids: selectedCategoryIds.length > 0 ? selectedCategoryIds : undefined,
+        },
         created_by: null,
       }
 
@@ -207,11 +228,11 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
           {/* Pricing */}
           <div className="space-y-4">
             <h3 className="font-medium">Pricing</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="basePrice">Price *</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{currencySymbol}</span>
                   <Input
                     id="basePrice"
                     type="number"
@@ -227,7 +248,7 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
               <div className="space-y-2">
                 <Label htmlFor="compareAtPrice">Compare at Price</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{currencySymbol}</span>
                   <Input
                     id="compareAtPrice"
                     type="number"
@@ -240,13 +261,58 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
                   />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="costPrice">Cost Price</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{currencySymbol}</span>
+                  <Input
+                    id="costPrice"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={costPrice}
+                    onChange={(e) => setCostPrice(e.target.value)}
+                    placeholder="0.00"
+                    className="pl-7"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Categories */}
+          {categories.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="font-medium">Categories</h3>
+              <div className="flex flex-wrap gap-2">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategoryIds(prev =>
+                        prev.includes(cat.id)
+                          ? prev.filter(id => id !== cat.id)
+                          : [...prev, cat.id]
+                      )
+                    }}
+                    className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
+                      selectedCategoryIds.includes(cat.id)
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'bg-muted hover:bg-muted/80 border-transparent'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Inventory */}
           <div className="space-y-4">
-            <h3 className="font-medium">Inventory</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <h3 className="font-medium">Inventory & Shipping</h3>
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="sku">SKU</Label>
                 <Input
@@ -267,35 +333,103 @@ export function CreateProductDialog({ open, onOpenChange }: CreateProductDialogP
                   disabled={!trackInventory}
                 />
               </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="trackInventory">Track Inventory</Label>
-                <p className="text-sm text-muted-foreground">
-                  Keep track of stock levels
-                </p>
+              <div className="space-y-2">
+                <Label htmlFor="lowStockThreshold">Low Stock Alert</Label>
+                <Input
+                  id="lowStockThreshold"
+                  type="number"
+                  min="0"
+                  value={lowStockThreshold}
+                  onChange={(e) => setLowStockThreshold(e.target.value)}
+                  disabled={!trackInventory}
+                  placeholder="5"
+                />
               </div>
-              <Switch
-                id="trackInventory"
-                checked={trackInventory}
-                onCheckedChange={setTrackInventory}
-              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="trackInventory">Track Inventory</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Keep track of stock levels
+                  </p>
+                </div>
+                <Switch
+                  id="trackInventory"
+                  checked={trackInventory}
+                  onCheckedChange={setTrackInventory}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="weight">Weight (kg)</Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Status */}
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as ProductStatus)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Status & Featured */}
+          <div className="space-y-4">
+            <h3 className="font-medium">Publishing</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={status} onValueChange={(v) => setStatus(v as ProductStatus)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between pt-6">
+                <div>
+                  <Label htmlFor="isFeatured">Featured Product</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Show in featured sections
+                  </p>
+                </div>
+                <Switch
+                  id="isFeatured"
+                  checked={isFeatured}
+                  onCheckedChange={setIsFeatured}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* SEO */}
+          <div className="space-y-4">
+            <h3 className="font-medium">SEO</h3>
+            <div className="space-y-2">
+              <Label htmlFor="seoTitle">SEO Title</Label>
+              <Input
+                id="seoTitle"
+                value={seoTitle}
+                onChange={(e) => setSeoTitle(e.target.value)}
+                placeholder={name || 'Product page title for search engines'}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="seoDescription">SEO Description</Label>
+              <Textarea
+                id="seoDescription"
+                value={seoDescription}
+                onChange={(e) => setSeoDescription(e.target.value)}
+                placeholder={shortDescription || 'Product description for search engines (max 160 characters)'}
+                rows={2}
+              />
+            </div>
           </div>
 
           <DialogFooter>

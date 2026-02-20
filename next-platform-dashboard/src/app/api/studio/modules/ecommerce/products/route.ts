@@ -132,14 +132,14 @@ export async function GET(request: NextRequest) {
         categoryProductIds = new Set((catLinks || []).map((l: { product_id: string }) => l.product_id));
       }
 
-      // Transform data
+      // Transform data — prices stored in cents, convert to display amounts
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let products: ProductOption[] = (data || []).map((product: any) => ({
         id: product.id,
         name: product.name,
         slug: product.slug,
-        price: product.base_price,
-        compareAtPrice: product.compare_at_price,
+        price: typeof product.base_price === 'number' ? product.base_price / 100 : 0,
+        compareAtPrice: typeof product.compare_at_price === 'number' ? product.compare_at_price / 100 : null,
         image: product.images?.[0] || undefined,
         status: product.status,
         inventory: product.quantity,

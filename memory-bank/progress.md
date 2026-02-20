@@ -1,11 +1,47 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅**
 
 ---
 
-## Latest Update: February 2026 - AI Designer Bulletproof Shared Elements ✅
+## Latest Update: February 2026 - E-Commerce Comprehensive Overhaul Session 2 ✅
+
+**Files Changed:** 35+ | **Bugs Fixed:** 40+ across 13 categories
+
+### Problem
+Real-world testing of e-commerce module on app.dramacagency.com revealed: wrong default currency (USD not ZMW), onboarding Step 5 broken (product never saved), image upload hanging, dashboard stats zero, 404 on back navigation, cart missing from Studio drag-and-drop, prices displayed in cents (100× wrong), hardcoded $ symbols, broken discount types, and 13 Studio blocks unregistered.
+
+### Comprehensive Fixes
+
+| # | Category | Key Fix | Files |
+|---|----------|---------|-------|
+| 1 | Currency | ZMW default, K symbol, 16% VAT | locale-config.ts, onboarding-types.ts |
+| 2 | Onboarding | Step 5 `case 5: break;` → createProduct() | onboarding-actions.ts, FirstProductStep.tsx |
+| 3 | Image Upload | Memoized Supabase client | image-upload.tsx |
+| 4 | Dashboard | Root cause: products never saved + hooks never fired | dashboard-actions.ts |
+| 5 | Create Product | 8 new fields, dynamic currency, categories | create-product-dialog.tsx |
+| 6 | Hook UUID | resolveModuleSlug() UUID→slug bridge | module-hooks-registry.ts |
+| 7 | Price ÷100 | 30+ files fixed for cents→display conversion | storefront-context.tsx + 29 more |
+| 8 | 404 Nav | /dashboard/${siteId} → /dashboard/sites/${siteId} | ecommerce/page.tsx, integration-actions.ts |
+| 9 | Categories | EditCategoryDialog moved out of TableBody | categories-view.tsx |
+| 10 | Discounts | "fixed" → "fixed_amount", added free_shipping, K symbol | edit-discount-dialog.tsx, create-discount-dialog.tsx |
+| 11 | Analytics | Double-division fix, chart tooltip formatters | analytics-view.tsx |
+| 12 | Studio | 13 blocks registered (Cart, Checkout, Nav, Quotes) | studio/index.ts |
+| 13 | Embed | dramac-ecommerce.js → dramac-embed.js (6 refs) | embed-code-view.tsx |
+
+### Critical Payment Fix
+Checkout route (`/api/modules/ecommerce/checkout/route.ts`) was sending CENTS to payment providers (Paddle, Flutterwave, Pesapal, DPO) that expect currency units. Added `totalInUnits = total / 100` and updated all 6+ payment amount references.
+
+### Architecture Insights Documented
+- **Price Convention:** All prices in DB are cents (integer ×100). `createProduct` multiplies by 100. Display ÷100.
+- **formatCurrency from locale-config:** Does NOT divide (used by platform billing). E-commerce must divide.
+- **Hook System:** Registered by slug, called by UUID. `resolveModuleSlug()` queries DB.
+- **Studio Registration:** Need `ComponentDefinition` + `studioComponents` entry to appear in palette.
+
+---
+
+## Previous Update: AI Designer Bulletproof Shared Elements ✅
 
 **Commit:** `a2c46cb` | **Files Changed:** 3
 

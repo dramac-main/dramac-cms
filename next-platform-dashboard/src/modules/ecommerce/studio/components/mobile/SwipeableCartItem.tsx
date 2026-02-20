@@ -292,7 +292,7 @@ export function SwipeableCartItem({
 
           {/* Price */}
           <p className="text-sm font-semibold mt-1">
-            {formatCurrency(item.unit_price)}
+            {formatCurrency(item.unit_price / 100)}
           </p>
         </div>
 
@@ -326,7 +326,7 @@ export function SwipeableCartItem({
 
           {/* Line total */}
           <p className="text-sm font-semibold">
-            {formatCurrency(lineTotal)}
+            {formatCurrency(lineTotal / 100)}
           </p>
         </div>
       </motion.div>

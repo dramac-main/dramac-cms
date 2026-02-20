@@ -180,7 +180,7 @@ export function CartProvider({
       const result = await applyDiscountToCart(cart.id, code, subtotal)
       await refresh()
       return result.success 
-        ? { success: true, message: `Discount applied: -${formatCurrency(result.discountAmount)}` }
+        ? { success: true, message: `Discount applied: -${formatCurrency(result.discountAmount / 100)}` }
         : { success: false, message: result.error || 'Invalid code' }
     } catch (err) {
       return { success: false, message: err instanceof Error ? err.message : 'Failed to apply discount' }
@@ -610,13 +610,13 @@ function getDisplayPrice(product: Product, variantId: string | null, currency: s
   if (comparePrice && comparePrice > price) {
     return (
       <>
-        <span className="sf-price-sale">{formatter.format(price)}</span>
-        <span className="sf-price-compare">{formatter.format(comparePrice)}</span>
+        <span className="sf-price-sale">{formatter.format(price / 100)}</span>
+        <span className="sf-price-compare">{formatter.format(comparePrice / 100)}</span>
       </>
     )
   }
 
-  return <span>{formatter.format(price)}</span>
+  return <span>{formatter.format(price / 100)}</span>
 }
 
 function isInStock(product: Product, variantId: string | null): boolean {
@@ -731,7 +731,7 @@ function CartDrawer({ isOpen, onClose, primaryColor, isDark, currency, onCheckou
                         {Object.values(item.variant.options).join(' / ')}
                       </p>
                     )}
-                    <p className="sf-item-price">{formatter.format(item.unit_price)}</p>
+                    <p className="sf-item-price">{formatter.format(item.unit_price / 100)}</p>
                   </div>
                   <div className="sf-item-quantity">
                     <button 
@@ -801,23 +801,23 @@ function CartDrawer({ isOpen, onClose, primaryColor, isDark, currency, onCheckou
               <div className="sf-cart-totals">
                 <div className="sf-total-row">
                   <span>Subtotal</span>
-                  <span>{formatter.format(totals.subtotal)}</span>
+                  <span>{formatter.format(totals.subtotal / 100)}</span>
                 </div>
                 {totals.discount > 0 && (
                   <div className="sf-total-row sf-discount-row">
                     <span>Discount</span>
-                    <span>-{formatter.format(totals.discount)}</span>
+                    <span>-{formatter.format(totals.discount / 100)}</span>
                   </div>
                 )}
                 {totals.tax > 0 && (
                   <div className="sf-total-row">
                     <span>Tax</span>
-                    <span>{formatter.format(totals.tax)}</span>
+                    <span>{formatter.format(totals.tax / 100)}</span>
                   </div>
                 )}
                 <div className="sf-total-row sf-total-final">
                   <span>Total</span>
-                  <span>{formatter.format(totals.total)}</span>
+                  <span>{formatter.format(totals.total / 100)}</span>
                 </div>
               </div>
             )}
