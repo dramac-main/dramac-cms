@@ -2,6 +2,65 @@
 
 ## Recent Work
 
+### E-Commerce Notification System — Complete End-to-End (Session 5) ✅
+
+**Category:** Enterprise E-Commerce — Full Notification Infrastructure  
+**Commit:** `b9ee56b`  
+**Files Changed:** 7 (943 insertions, 30 deletions)  
+**Build:** ✅ Compiled successfully, 193 static pages generated  
+**Deployed:** Pushed to origin/main for Vercel auto-deploy
+
+#### Problem
+12-area e-commerce audit revealed notifications were the highest-ROI gap:
+- `sendOrderEmail()` was a **stub** that only logged timeline events — never sent real emails
+- `notifyOrderShipped()` emailed the customer but never notified the business owner in-app
+- Payment webhooks (Paddle, Flutterwave, Pesapal, DPO) completed transactions but sent **zero** email notifications
+- No delivery, cancellation, refund, or low-stock notifications existed at all
+
+#### Solution: 8 New Email Types + 6 Notification Functions + Full Wiring
+
+**New Email Types** (in `email-types.ts`):
+`order_delivered_customer`, `order_cancelled_customer`, `order_cancelled_owner`, `payment_received_customer`, `refund_issued_customer`, `low_stock_admin`, `back_in_stock_customer`, `abandoned_cart_customer`
+
+**New Branded Templates** (in `branded-templates.ts`):
+8 professional HTML email templates with agency branding, color-coded info boxes, action buttons
+
+**New/Rewritten Notification Functions** (in `business-notifications.ts`):
+- `notifyOrderDelivered()` — in-app to owner + email to customer
+- `notifyOrderCancelled()` — in-app to owner + email to owner + email to customer
+- `notifyPaymentReceived()` — email to customer on successful payment
+- `notifyRefundIssued()` — in-app to owner + email to customer
+- `notifyLowStock()` — in-app to owner + email to owner
+- `notifyOrderShipped()` — FIXED: added missing in-app notification to owner
+
+**Trigger Wiring:**
+| Trigger | Function Called | Location |
+|---------|----------------|----------|
+| `sendOrderEmail()` called | Full Resend implementation | `order-actions.ts` |
+| `markOrderDelivered()` | `notifyOrderDelivered()` | `ecommerce-actions.ts` |
+| `updateOrderStatus('cancelled')` | `notifyOrderCancelled()` | `ecommerce-actions.ts` |
+| `processRefund(approved)` | `notifyRefundIssued()` | `order-actions.ts` |
+| Paddle `transaction.completed` | `notifyPaymentReceived()` | `payment/route.ts` |
+| Paddle `adjustment/refund` | `notifyRefundIssued()` | `payment/route.ts` |
+| Flutterwave success | `notifyPaymentReceived()` | `payment/route.ts` |
+| Pesapal `COMPLETED` | `notifyPaymentReceived()` | `payment/route.ts` |
+| DPO result `000` | `notifyPaymentReceived()` | `payment/route.ts` |
+| `updateAlertLevel()` ok→warning | `notifyLowStock()` | `inventory-actions.ts` |
+
+**Key Design Decisions:**
+- All notifications are **fire-and-forget** with `.catch()` — never break payment/order flows
+- Uses existing `sendBrandedEmail()` pipeline (agency branding, opt-out respect, email_logs)
+- In-app notifications created via existing `createNotification()` service
+- DB-stored templates (Settings UI) remain disconnected from actual sending for now — uses hardcoded `BRANDED_TEMPLATES`
+
+#### Also Fixed in Session 5
+- **Currency Settings JSONB dual-store** — fixed `currency_settings` JSONB not being populated on 3 sites (commit `046278a`)
+- **Currency dropdown stale closure** — two sequential `updateField()` calls overwrote each other, fixed with single functional `setSettings()` updater (commit `abfa968`)
+- **Image upload timeout** — added 30s `AbortController` timeout to prevent infinite hanging (commit `abfa968`)
+- **MCP tool documentation** — added to `techContext.md`, `systemPatterns.md`, `.github/copilot-instructions.md` (commit `c529d25`)
+
+---
+
 ### E-Commerce Centralized Currency Formatting (Session 4) ✅
 
 **Category:** Professional-Grade Architecture Fix — Centralized Currency Control  
