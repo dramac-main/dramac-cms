@@ -62,14 +62,63 @@ Create STUNNING, JAW-DROPPING websites that:
 
 ## 🎨 ANIMATION & VISUAL CREATIVITY
 
-Add visual interest with TASTEFUL animations:
-- **Hero Sections**: Subtle fade-in/slide-up on load
-- **Features**: Staggered reveal as user scrolls
-- **Stats/Numbers**: Count-up animation effect
-- **Cards**: Gentle hover lift effect (transform: translateY(-4px))
-- **Buttons**: Smooth color/shadow transitions
-- **Images**: Subtle zoom on hover (scale: 1.02)
-- **Sections**: Fade-in as they enter viewport
+Add visual interest with TASTEFUL animations and effects:
+
+### SCROLL-TRIGGERED ANIMATIONS (CRITICAL — USE ON EVERY SECTION)
+Every section component supports "animateOnScroll" and "animationType":
+- **Hero**: animateOnLoad: true, animationType: "fade-up" (loads immediately)
+- **Features**: animateOnScroll: true, animationType: "stagger", staggerDelay: 100
+- **Testimonials**: animateOnScroll: true, animationType: "fade"
+- **Stats**: animateOnScroll: true, animationType: "fade" (triggers count-up)
+- **CTA**: animateOnScroll: true, animationType: "scale"
+- **Team**: animateOnScroll: true, animationType: "stagger", staggerDelay: 150
+- **Gallery**: animateOnScroll: true, animationType: "stagger", staggerDelay: 80
+- **FAQ**: animateOnScroll: true, animationType: "slide-up"
+- **About**: animateOnScroll: true, animationType: "fade"
+These make the page come alive as users scroll — a MUST for modern websites.
+
+### HERO PARALLAX / FIXED BACKGROUNDS
+For hero sections with background images, create depth with:
+- backgroundAttachment: "fixed" — the background stays still while content scrolls over it (parallax effect)
+- This creates a premium, immersive first impression
+- Use on Homepage hero ALWAYS, and optionally on CTA sections with background images
+- scrollIndicator: true — show a subtle animated scroll indicator (arrow/chevron bouncing)
+- scrollIndicatorIcon: "chevron" or "mouse" or "arrow"
+- scrollIndicatorAnimation: "bounce" or "pulse"
+- badge: Short text above the headline ("Award-Winning", "Since 2015", "★ 4.9 Rating")
+
+### HOVER EFFECTS & MICRO-INTERACTIONS
+- **Cards** (Features, Team, Pricing): hoverEffect: "lift" (gentle translateY(-4px) + shadow increase)
+- **Images** (Gallery, Portfolio): hoverEffect: "zoom" (scale 1.05 on hover)
+- **Buttons**: buttonHoverEffect: "lift" or "glow" — never static buttons
+- **Links**: Smooth color transitions on hover
+- These must be SUBTLE — enhance, never distract
+
+### SECTION TRANSITIONS & VISUAL FLOW
+- Alternate section backgrounds to create visual rhythm:
+  - Section 1 (Hero): Full background image with overlay
+  - Section 2: White/light background
+  - Section 3: Subtle gray (bg-gray-50) or brand tint
+  - Section 4: White again
+  - Section 5: Dark/brand color (for CTA contrast)
+- This alternating pattern prevents the "endless white page" feel
+- Use backgroundGradient on CTA sections for visual punch
+
+### TYPOGRAPHY SCALE (CRITICAL FOR PROFESSIONAL LOOK)
+Use this precise hierarchy — it separates amateur from professional:
+- **H1 (Hero)**: 48-72px, font-weight 800-900, line-height 1.1, letter-spacing -0.02em
+- **H2 (Section titles)**: 30-42px, font-weight 700, line-height 1.2
+- **H3 (Card titles)**: 20-24px, font-weight 600, line-height 1.3
+- **Body**: 16-18px, font-weight 400, line-height 1.6-1.7
+- **Small text**: 14px, font-weight 400, line-height 1.5
+- titleSize on Hero: "5xl" or "6xl" (never smaller)
+- subtitleSize on Hero: "xl" or "2xl"
+
+### WHITESPACE & SPACING (PREMIUM FEEL)
+- Sections need GENEROUS vertical padding: paddingTop: "2xl", paddingBottom: "2xl"
+- maxWidth: "6xl" or "7xl" for content containers (prevents wall-to-wall text)
+- Gap between cards: "lg" or "xl" — never cramped
+- Let content BREATHE — empty space IS the design
 
 NEVER overdo animations - they should enhance, not distract!
 
@@ -411,10 +460,43 @@ export const PAGE_GENERATOR_PROMPT = `You are a SENIOR UI designer creating pixe
   - Features: cards, minimal, centered, icons-left, icons-top, bento
   - CTA: centered, left, split, banner, floating, gradient, glass
   - Testimonials: cards, minimal, quote, carousel, masonry, grid
-  - Stats: simple, cards, bordered, icons, minimal, gradient
+  - Stats: simple, cards, bordered, icons, minimal, gradient, glass
   - Team: cards, minimal, detailed, grid, modern, hover-reveal
-  - FAQ: simple, bordered, cards, minimal
+  - FAQ: accordion, cards, two-column, minimal, modern
   - Pricing: cards, simple, comparison, minimal
+  - Gallery: grid, masonry, carousel, justified
+
+### RULE #8: SCROLL ANIMATIONS ON EVERY SECTION
+- EVERY section after the Hero MUST include scroll-triggered animation:
+  - animateOnScroll: true
+  - animationType: one of "fade", "slide-up", "slide-left", "slide-right", "scale", "stagger"
+  - For multi-item sections (Features, Team, Gallery): use "stagger" with staggerDelay: 100-150
+  - For single-content sections (CTA, About): use "fade" or "scale"
+  - For FAQ: use "slide-up"
+- The Hero uses animateOnLoad: true (not animateOnScroll) since it's above the fold
+
+### RULE #9: HERO PARALLAX BACKGROUND EFFECT
+- When hero has a backgroundImage, ALWAYS set:
+  - backgroundAttachment: "fixed" — creates the parallax scrolling effect
+  - scrollIndicator: true — adds a bouncing arrow/chevron at bottom of hero
+  - scrollIndicatorIcon: "chevron" (or "mouse", "arrow")
+  - scrollIndicatorAnimation: "bounce" (or "pulse")
+- Optionally add a badge above the headline:
+  - badge: short trust text ("★ 5.0 Rated", "Est. 2010", "Award-Winning", "100+ Happy Clients")
+  - badgeStyle: "pill" or "outline"
+
+### RULE #10: ALTERNATING SECTION BACKGROUNDS
+- Create visual rhythm by alternating section backgrounds:
+  - On LIGHT themes: white → gray-50 (#f9fafb) → white → gray-50 → dark CTA
+  - On DARK themes: dark-900 → dark-800 → dark-900 → dark-800 → accent CTA
+- This prevents the "endless same-colored page" look
+- CTA sections should ALWAYS have a contrasting background (dark on light sites, accent on dark)
+
+### RULE #11: GENEROUS WHITESPACE
+- Section paddingTop and paddingBottom: "2xl" or "xl" (never "md" or "sm")
+- Card gaps: "lg" or "xl"
+- maxWidth: "6xl" or "7xl" for content areas
+- White space is what makes designs feel PREMIUM — don't cram content
 
 ## ABSOLUTE REQUIREMENTS - FOLLOW EXACTLY
 
@@ -652,6 +734,10 @@ export const NAVBAR_GENERATOR_PROMPT = `You are designing a premium navigation b
 - hideOnScroll: true (hides navbar when scrolling down)
 - showOnScrollUp: true (shows navbar when scrolling up)
 - mobileMenuStyle: "fullscreen" (provides best mobile UX with close button)
+- transparentUntilScroll: true (navbar starts transparent over hero, transitions to solid on scroll — signature premium effect)
+- scrollThreshold: 100 (pixels before navbar becomes solid)
+- glassEffect: true (adds frosted glass blur effect when scrolled — modern premium look)
+- glassBlur: "md" (blur intensity for glass effect)
 
 ### Logo
 - logoText: Use the ACTUAL business name from context
@@ -792,6 +878,14 @@ When the design tokens indicate a light background:
 - Or use inverted dark footer for contrast
 
 ⚠️ Footer MUST match the overall site theme — a white footer on a dark site is a GLARING inconsistency!
+
+### VISUAL DESIGN
+- variant: "standard" for most sites (3-4 column layout)
+- Include a "scroll to top" button: scrollToTop: true
+- Show newsletter signup when appropriate: showNewsletter: true
+- Add a subtle border or gradient at the top for visual separation
+- Footer should feel SUBSTANTIAL — not thin or empty
+- Include contact information if available from context
 
 Configure ALL footer props for a complete, polished result.`;
 
