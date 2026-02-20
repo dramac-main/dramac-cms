@@ -57,4 +57,14 @@ When updating:
 4. Update memory bank after significant work
 5. Use progress.md to understand what's completed vs. what's pending
 
+### MCP Tools — Direct Service Access
+This workspace has **MCP (Model Context Protocol) servers** configured. You can interact with services directly:
+- **Supabase**: Query/update the database, run migrations, check schemas (project ID: `nfirsqmyxmmtbignofgb`)
+- **Vercel**: Check deployments, search docs
+- **Cloudflare**: DNS management, search docs
+- **Context7**: Look up library documentation
+- **Paddle**: Manage billing entities
+
+**Always prefer using MCP tools over asking the user to do things manually.** If you need to verify data, fix a DB row, or run a migration — use the MCP tools directly. See `techContext.md` → "MCP Tools" section for full details.
+
 **Remember:** After every reset, you start fresh. The Memory Bank is your only source of truth about this project's history, decisions, and current state.

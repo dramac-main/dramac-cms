@@ -22,6 +22,15 @@ git push
 3. Push to remote repository
 4. Update memory bank with completion status
 
+### MCP Tools — Direct Service Access
+**This workspace has MCP (Model Context Protocol) servers configured.** AI assistants can directly:
+- **Query/update the Supabase database** (project: `nfirsqmyxmmtbignofgb`) — no need to ask the user to run SQL manually
+- **Check Vercel deployments** and search Vercel/Cloudflare docs
+- **Look up library documentation** via Context7
+- **Manage Paddle billing** entities
+
+**See `techContext.md` → "MCP Tools" section for full details, tool names, and usage rules.**
+
 ## Architecture Overview
 
 ### Tech Stack

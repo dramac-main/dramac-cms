@@ -127,6 +127,64 @@
 - **dotenv**: 17.2.3 (environment variables)
 - **pnpm**: Package manager
 
+---
+
+## 🔌 MCP Tools (Model Context Protocol) — AI Can Use These Directly
+
+**IMPORTANT**: This workspace has MCP servers configured. AI assistants can interact with external services DIRECTLY instead of asking the user to run commands manually.
+
+### Available MCP Servers
+
+#### 1. Supabase MCP
+- **Execute SQL**: Run any SQL query against the production database
+  - Tool: `mcp_supabase_execute_sql` (project_id: `nfirsqmyxmmtbignofgb`)
+  - Use for: checking data, debugging issues, verifying migrations worked
+- **Apply Migrations**: Run DDL migrations directly
+  - Tool: `mcp_supabase_apply_migration`
+  - Use for: creating tables, adding columns, creating policies
+- **Generate Types**: Generate TypeScript types from the database schema
+  - Tool: `mcp_supabase_generate_typescript_types`
+
+**Supabase Project ID**: `nfirsqmyxmmtbignofgb`
+**Supabase URL**: `https://nfirsqmyxmmtbignofgb.supabase.co`
+
+**When to use Supabase MCP:**
+- Verifying data after a fix (e.g., "did the currency actually change?")
+- Running one-off data fixes (UPDATE stale rows)
+- Checking table schemas, RLS policies, storage buckets
+- Debugging: "why is this component showing wrong data?" → query the DB directly
+- Running migration SQL files instead of asking the user to paste into SQL Editor
+
+#### 2. Vercel MCP
+- **Search Docs**: Search Vercel documentation
+- **Check Deployments**: List and inspect deployments
+- **Domain Management**: Check domain availability
+- Use for: debugging deployment issues, checking build logs, Vercel config questions
+
+#### 3. Cloudflare MCP
+- **DNS Management**: View DNS settings, get DNS reports
+- **Search Docs**: Search Cloudflare documentation
+- Use for: domain/DNS configuration, Cloudflare-related debugging
+
+#### 4. Context7 MCP
+- **Query Library Docs**: Get up-to-date documentation for any library
+- **Resolve Library IDs**: Find the right library identifier
+- Use for: checking latest API docs for Next.js, Supabase, React, etc.
+
+#### 5. Paddle MCP
+- **Billing Management**: Create/list customers, transactions, subscriptions
+- **Pricing**: Preview prices, manage discounts and products
+- Use for: billing/payment debugging, customer lookup
+
+### MCP Usage Rules
+1. **Always prefer MCP over asking the user** — if you can check or fix something directly, do it
+2. **Verify after fixing** — after running an UPDATE, SELECT to confirm it worked
+3. **Be careful with mutations** — SELECT queries are safe; UPDATE/DELETE should be intentional
+4. **Use for debugging** — when something looks wrong on the UI, query the DB to see what's actually stored
+5. **Migrations**: For schema changes (CREATE TABLE, ALTER TABLE), prefer `mcp_supabase_apply_migration`. For data fixes (UPDATE, INSERT), use `mcp_supabase_execute_sql`
+
+---
+
 ## Development Environment Setup
 
 ### Prerequisites
