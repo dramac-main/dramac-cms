@@ -29,6 +29,14 @@ export type EmailType =
   | "order_confirmation_customer"
   | "order_confirmation_owner"
   | "order_shipped_customer"
+  | "order_delivered_customer"
+  | "order_cancelled_customer"
+  | "order_cancelled_owner"
+  | "payment_received_customer"
+  | "refund_issued_customer"
+  | "low_stock_admin"
+  | "back_in_stock_customer"
+  | "abandoned_cart_customer"
   // Quotes
   | "quote_sent_customer"
   | "quote_reminder_customer"
@@ -79,6 +87,14 @@ export function isValidEmailType(type: string): type is EmailType {
     "order_confirmation_customer",
     "order_confirmation_owner",
     "order_shipped_customer",
+    "order_delivered_customer",
+    "order_cancelled_customer",
+    "order_cancelled_owner",
+    "payment_received_customer",
+    "refund_issued_customer",
+    "low_stock_admin",
+    "back_in_stock_customer",
+    "abandoned_cart_customer",
     "quote_sent_customer",
     "quote_reminder_customer",
     "quote_accepted_owner",
@@ -223,6 +239,67 @@ export interface OrderShippedCustomerData {
   orderNumber: string;
   trackingNumber?: string;
   trackingUrl?: string;
+  businessName: string;
+}
+
+export interface OrderDeliveredCustomerData {
+  customerName: string;
+  orderNumber: string;
+  businessName: string;
+}
+
+export interface OrderCancelledCustomerData {
+  customerName: string;
+  orderNumber: string;
+  reason?: string;
+  businessName: string;
+}
+
+export interface OrderCancelledOwnerData {
+  customerName: string;
+  customerEmail: string;
+  orderNumber: string;
+  total: string;
+  reason?: string;
+  dashboardUrl: string;
+}
+
+export interface PaymentReceivedCustomerData {
+  customerName: string;
+  orderNumber: string;
+  total: string;
+  paymentMethod?: string;
+  businessName: string;
+}
+
+export interface RefundIssuedCustomerData {
+  customerName: string;
+  orderNumber: string;
+  refundAmount: string;
+  reason?: string;
+  businessName: string;
+}
+
+export interface LowStockAdminData {
+  productName: string;
+  currentStock: number;
+  threshold: number;
+  sku?: string;
+  dashboardUrl: string;
+}
+
+export interface BackInStockCustomerData {
+  customerName: string;
+  productName: string;
+  productUrl: string;
+  businessName: string;
+}
+
+export interface AbandonedCartCustomerData {
+  customerName: string;
+  items: Array<{ name: string; quantity: number; price: string }>;
+  total: string;
+  checkoutUrl: string;
   businessName: string;
 }
 

@@ -15,6 +15,8 @@ import {
   updatePublicOrder,
   getPublicEcommerceSettings 
 } from '@/modules/ecommerce/actions/public-ecommerce-actions'
+import { notifyPaymentReceived, notifyRefundIssued } from '@/lib/services/business-notifications'
+import { formatCurrency } from '@/lib/locale-config'
 import type {
   PaddleConfig,
   FlutterwaveConfig
@@ -126,7 +128,18 @@ export async function GET(request: NextRequest) {
               const verifyData = await verifyResponse.json()
               
               if (verifyData.status === 'success' && verifyData.data?.status === 'successful') {
-                await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
+                const fwPaidOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
+                // Send payment confirmation notification
+                if (fwPaidOrder?.customer_email) {
+                  notifyPaymentReceived(
+                    siteId,
+                    fwPaidOrder.order_number,
+                    fwPaidOrder.customer_email,
+                    fwPaidOrder.customer_name || 'Customer',
+                    formatCurrency(fwPaidOrder.total, fwPaidOrder.currency || 'USD'),
+                    'Flutterwave',
+                  ).catch(err => console.error('[Webhook] FW payment notification error:', err))
+                }
                 return NextResponse.redirect(new URL(`/checkout/success?orderId=${orderId}`, request.url))
               } else {
                 console.error('[Flutterwave] Verification failed:', verifyData)
@@ -205,7 +218,18 @@ export async function GET(request: NextRequest) {
               
               if (resultCode === '000') {
                 // Transaction verified as paid
-                await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transToken)
+                const dpoPaidOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transToken)
+                // Send payment confirmation notification
+                if (dpoPaidOrder?.customer_email) {
+                  notifyPaymentReceived(
+                    siteId,
+                    dpoPaidOrder.order_number,
+                    dpoPaidOrder.customer_email,
+                    dpoPaidOrder.customer_name || 'Customer',
+                    formatCurrency(dpoPaidOrder.total, dpoPaidOrder.currency || 'USD'),
+                    'DPO',
+                  ).catch(err => console.error('[Webhook] DPO payment notification error:', err))
+                }
                 return NextResponse.redirect(new URL(`/checkout/success?orderId=${orderId}`, request.url))
               } else {
                 console.error('[DPO] Verification failed, result code:', resultCode)
@@ -305,10 +329,22 @@ async function handlePaddleWebhook(body: string, signature: string | null): Prom
       case 'transaction.completed':
       // Paddle Classic event types
       case 'payment_succeeded':
-      case 'subscription_payment_succeeded':
-        await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
+      case 'subscription_payment_succeeded': {
+        const paidOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transactionId)
         await updatePublicOrderStatus(siteId, orderId, 'confirmed')
+        // Send payment confirmation to customer
+        if (paidOrder?.customer_email) {
+          notifyPaymentReceived(
+            siteId,
+            paidOrder.order_number,
+            paidOrder.customer_email,
+            paidOrder.customer_name || 'Customer',
+            formatCurrency(paidOrder.total, paidOrder.currency || 'USD'),
+            'Paddle',
+          ).catch(err => console.error('[Webhook] Payment notification error:', err))
+        }
         break
+      }
         
       case 'transaction.payment_failed':
       case 'payment_failed':
@@ -318,10 +354,21 @@ async function handlePaddleWebhook(body: string, signature: string | null): Prom
       
       case 'adjustment.created':
       case 'payment_refunded':
-      case 'subscription_payment_refunded':
-        await updatePublicOrderPaymentStatus(siteId, orderId, 'refunded')
+      case 'subscription_payment_refunded': {
+        const refundedOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'refunded')
         await updatePublicOrderStatus(siteId, orderId, 'refunded')
+        // Send refund notification to customer
+        if (refundedOrder?.customer_email) {
+          notifyRefundIssued(
+            siteId,
+            refundedOrder.order_number,
+            refundedOrder.customer_email,
+            refundedOrder.customer_name || 'Customer',
+            formatCurrency(refundedOrder.total, refundedOrder.currency || 'USD'),
+          ).catch(err => console.error('[Webhook] Refund notification error:', err))
+        }
         break
+      }
     }
 
     return NextResponse.json({ received: true })
@@ -385,8 +432,19 @@ async function handleFlutterwaveWebhook(body: string, signature: string | null):
     const transactionId = data.data?.id || data.id
 
     if (status === 'successful') {
-      await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', String(transactionId))
+      const fwPaidOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', String(transactionId))
       await updatePublicOrderStatus(siteId, orderId, 'confirmed')
+      // Send payment confirmation notification
+      if (fwPaidOrder?.customer_email) {
+        notifyPaymentReceived(
+          siteId,
+          fwPaidOrder.order_number,
+          fwPaidOrder.customer_email,
+          fwPaidOrder.customer_name || 'Customer',
+          formatCurrency(fwPaidOrder.total, fwPaidOrder.currency || 'USD'),
+          'Flutterwave',
+        ).catch(err => console.error('[Webhook] FW payment notification error:', err))
+      }
     } else if (status === 'failed') {
       await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
     }
@@ -436,8 +494,19 @@ async function handlePesapalWebhook(body: string, params: URLSearchParams): Prom
     // In production, query Pesapal API for transaction status
     // For now, update based on notification type
     if (orderNotificationType === 'COMPLETED') {
-      await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', orderTrackingId || undefined)
+      const pesaPaidOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', orderTrackingId || undefined)
       await updatePublicOrderStatus(siteId, orderId, 'confirmed')
+      // Send payment confirmation notification
+      if (pesaPaidOrder?.customer_email) {
+        notifyPaymentReceived(
+          siteId,
+          pesaPaidOrder.order_number,
+          pesaPaidOrder.customer_email,
+          pesaPaidOrder.customer_name || 'Customer',
+          formatCurrency(pesaPaidOrder.total, pesaPaidOrder.currency || 'USD'),
+          'Pesapal',
+        ).catch(err => console.error('[Webhook] Pesapal payment notification error:', err))
+      }
     } else if (orderNotificationType === 'FAILED') {
       await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
     }
@@ -489,8 +558,19 @@ async function handleDpoWebhook(body: string, params: URLSearchParams): Promise<
     const resultCode = params.get('Result') || extractFromXml(body, 'Result')
     
     if (resultCode === '000' || transactionApproval) {
-      await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transToken || undefined)
+      const dpoPaidOrder = await updatePublicOrderPaymentStatus(siteId, orderId, 'paid', transToken || undefined)
       await updatePublicOrderStatus(siteId, orderId, 'confirmed')
+      // Send payment confirmation notification
+      if (dpoPaidOrder?.customer_email) {
+        notifyPaymentReceived(
+          siteId,
+          dpoPaidOrder.order_number,
+          dpoPaidOrder.customer_email,
+          dpoPaidOrder.customer_name || 'Customer',
+          formatCurrency(dpoPaidOrder.total, dpoPaidOrder.currency || 'USD'),
+          'DPO',
+        ).catch(err => console.error('[Webhook] DPO payment notification error:', err))
+      }
     } else {
       await updatePublicOrderPaymentStatus(siteId, orderId, 'failed')
     }

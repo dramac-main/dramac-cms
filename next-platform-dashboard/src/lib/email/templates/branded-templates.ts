@@ -430,6 +430,201 @@ const order_shipped_customer: BrandedTemplate = {
     `Your Order Has Shipped!\n\nOrder #${data.orderNumber} is on its way.\n${data.trackingNumber ? `\nTracking: ${data.trackingNumber}` : ""}${data.trackingUrl ? `\nTrack: ${data.trackingUrl}` : ""}\n\nContact ${data.businessName || b.agency_name} for questions.`,
 };
 
+const order_delivered_customer: BrandedTemplate = {
+  subject: (data) =>
+    `Your Order #${data.orderNumber} Has Been Delivered! ✅`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Order Delivered! ✅</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">Your order <strong>#${data.orderNumber}</strong> has been delivered.</p>
+      <p style="${EMAIL_STYLES.text}">We hope you love your purchase! If you have any questions or concerns about your order, please don't hesitate to reach out.</p>
+      <p style="${EMAIL_STYLES.muted}">Thank you for shopping with ${data.businessName || b.agency_name}!</p>`,
+      `Order #${data.orderNumber} delivered`
+    ),
+  text: (data, b) =>
+    `Order Delivered!\n\nYour order #${data.orderNumber} has been delivered.\n\nThank you for shopping with ${data.businessName || b.agency_name}!`,
+};
+
+const order_cancelled_customer: BrandedTemplate = {
+  subject: (data) =>
+    `Order #${data.orderNumber} Has Been Cancelled`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Order Cancelled</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">Your order <strong>#${data.orderNumber}</strong> has been cancelled.</p>
+      ${data.reason ? `<p style="${EMAIL_STYLES.text}"><strong>Reason:</strong> ${data.reason}</p>` : ""}
+      <p style="${EMAIL_STYLES.text}">If you were charged, a refund will be processed automatically. Please allow 5-10 business days for the refund to appear.</p>
+      <p style="${EMAIL_STYLES.muted}">If you have any questions, please contact ${data.businessName || b.agency_name}.</p>`,
+      `Order #${data.orderNumber} cancelled`
+    ),
+  text: (data, b) =>
+    `Order Cancelled\n\nYour order #${data.orderNumber} has been cancelled.${data.reason ? `\nReason: ${data.reason}` : ""}\n\nIf you were charged, a refund will be processed automatically.\n\nContact ${data.businessName || b.agency_name} for questions.`,
+};
+
+const order_cancelled_owner: BrandedTemplate = {
+  subject: (data) =>
+    `❌ Order #${data.orderNumber} Cancelled`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Order Cancelled</h1>
+      <p style="${EMAIL_STYLES.text}">An order has been cancelled.</p>
+      ${emailInfoBox(
+        [
+          { label: "Order", value: `#${String(data.orderNumber)}` },
+          { label: "Customer", value: String(data.customerName) },
+          { label: "Email", value: String(data.customerEmail) },
+          { label: "Total", value: String(data.total) },
+          ...(data.reason ? [{ label: "Reason", value: String(data.reason) }] : []),
+        ],
+        "#fef2f2",
+        "#fecaca"
+      )}
+      ${emailButton(b, String(data.dashboardUrl), "View in Dashboard")}`,
+      `Order #${data.orderNumber} cancelled`
+    ),
+  text: (data) =>
+    `Order Cancelled\n\nOrder #${data.orderNumber}\nCustomer: ${data.customerName} (${data.customerEmail})\nTotal: ${data.total}\n${data.reason ? `Reason: ${data.reason}\n` : ""}\nDashboard: ${data.dashboardUrl}`,
+};
+
+const payment_received_customer: BrandedTemplate = {
+  subject: (data) =>
+    `Payment Confirmed for Order #${data.orderNumber} 💳`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Payment Confirmed! 💳</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">We've received your payment for order <strong>#${data.orderNumber}</strong>.</p>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px;margin:20px 0;text-align:center;">
+        <p style="margin:0 0 4px;color:#6b7280;">Amount Paid</p>
+        <p style="margin:0;font-size:28px;font-weight:700;color:#166534;">${data.total}</p>
+        ${data.paymentMethod ? `<p style="margin:8px 0 0;color:#6b7280;font-size:14px;">via ${data.paymentMethod}</p>` : ""}
+      </div>
+      <p style="${EMAIL_STYLES.text}">Your order is now being processed and you'll receive updates as it progresses.</p>
+      <p style="${EMAIL_STYLES.muted}">Thank you for shopping with ${data.businessName || b.agency_name}!</p>`,
+      `Payment confirmed for order #${data.orderNumber}`
+    ),
+  text: (data, b) =>
+    `Payment Confirmed!\n\nWe've received your payment for order #${data.orderNumber}.\nAmount: ${data.total}\n${data.paymentMethod ? `Method: ${data.paymentMethod}\n` : ""}\nThank you for shopping with ${data.businessName || b.agency_name}!`,
+};
+
+const refund_issued_customer: BrandedTemplate = {
+  subject: (data) =>
+    `Refund Issued for Order #${data.orderNumber}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Refund Issued</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">A refund has been issued for your order <strong>#${data.orderNumber}</strong>.</p>
+      <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:20px;margin:20px 0;text-align:center;">
+        <p style="margin:0 0 4px;color:#6b7280;">Refund Amount</p>
+        <p style="margin:0;font-size:28px;font-weight:700;color:#1e40af;">${data.refundAmount}</p>
+      </div>
+      ${data.reason ? `<p style="${EMAIL_STYLES.text}"><strong>Reason:</strong> ${data.reason}</p>` : ""}
+      <p style="${EMAIL_STYLES.text}">Please allow 5-10 business days for the refund to appear in your account.</p>
+      <p style="${EMAIL_STYLES.muted}">If you have any questions, please contact ${data.businessName || b.agency_name}.</p>`,
+      `Refund issued for order #${data.orderNumber}`
+    ),
+  text: (data, b) =>
+    `Refund Issued\n\nA refund of ${data.refundAmount} has been issued for order #${data.orderNumber}.${data.reason ? `\nReason: ${data.reason}` : ""}\n\nPlease allow 5-10 business days.\n\nContact ${data.businessName || b.agency_name} for questions.`,
+};
+
+const low_stock_admin: BrandedTemplate = {
+  subject: (data) =>
+    `⚠️ Low Stock Alert: ${data.productName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">⚠️ Low Stock Alert</h1>
+      <p style="${EMAIL_STYLES.text}">A product is running low on stock.</p>
+      ${emailInfoBox(
+        [
+          { label: "Product", value: String(data.productName) },
+          ...(data.sku ? [{ label: "SKU", value: String(data.sku) }] : []),
+          { label: "Current Stock", value: String(data.currentStock) },
+          { label: "Threshold", value: String(data.threshold) },
+        ],
+        "#fffbeb",
+        "#fde68a"
+      )}
+      ${emailButton(b, String(data.dashboardUrl), "Manage Inventory")}
+      <p style="${EMAIL_STYLES.muted}">Restock this product to avoid missed sales.</p>`,
+      `Low stock: ${data.productName} (${data.currentStock} remaining)`
+    ),
+  text: (data) =>
+    `Low Stock Alert\n\nProduct: ${data.productName}${data.sku ? `\nSKU: ${data.sku}` : ""}\nCurrent Stock: ${data.currentStock}\nThreshold: ${data.threshold}\n\nDashboard: ${data.dashboardUrl}`,
+};
+
+const back_in_stock_customer: BrandedTemplate = {
+  subject: (data) =>
+    `${data.productName} is Back in Stock! 🎉`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">Back in Stock! 🎉</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">Great news! <strong>${data.productName}</strong> is back in stock and available for purchase.</p>
+      <p style="${EMAIL_STYLES.text}">Don't wait too long — popular items sell out fast!</p>
+      ${emailButton(b, String(data.productUrl), "Shop Now")}
+      <p style="${EMAIL_STYLES.muted}">You're receiving this because you signed up to be notified when this product was restocked.</p>`,
+      `${data.productName} is back in stock`
+    ),
+  text: (data, b) =>
+    `Back in Stock!\n\n${data.productName} is back in stock.\n\nShop now: ${data.productUrl}\n\nThank you, ${data.businessName || b.agency_name}`,
+};
+
+const abandoned_cart_customer: BrandedTemplate = {
+  subject: (data) =>
+    `You left something behind! 🛒`,
+  html: (data, b) => {
+    const items =
+      (data.items as Array<{ name: string; quantity: number; price: string }>) ||
+      [];
+    const itemRows = items
+      .map(
+        (item) =>
+          `<tr><td style="padding:10px;border-bottom:1px solid #f3f4f6;">${item.name}</td><td style="padding:10px;border-bottom:1px solid #f3f4f6;text-align:center;">${item.quantity}</td><td style="padding:10px;border-bottom:1px solid #f3f4f6;text-align:right;">${item.price}</td></tr>`
+      )
+      .join("");
+
+    return baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">You Left Something Behind! 🛒</h1>
+      <p style="${EMAIL_STYLES.text}">Hi ${data.customerName || "there"},</p>
+      <p style="${EMAIL_STYLES.text}">You have items waiting in your cart. Complete your purchase before they're gone!</p>
+      <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+        <thead><tr style="background:#f9fafb;">
+          <th style="padding:10px;text-align:left;border-bottom:2px solid #e5e7eb;">Item</th>
+          <th style="padding:10px;text-align:center;border-bottom:2px solid #e5e7eb;">Qty</th>
+          <th style="padding:10px;text-align:right;border-bottom:2px solid #e5e7eb;">Price</th>
+        </tr></thead>
+        <tbody>${itemRows}</tbody>
+      </table>
+      <div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0;text-align:right;">
+        <span style="font-weight:700;font-size:18px;">Total: ${data.total}</span>
+      </div>
+      ${emailButton(b, String(data.checkoutUrl), "Complete Your Order")}
+      <p style="${EMAIL_STYLES.muted}">If you have any questions, please contact ${data.businessName || b.agency_name}.</p>`,
+      `You left items in your cart`
+    );
+  },
+  text: (data, b) => {
+    const items =
+      (data.items as Array<{ name: string; quantity: number; price: string }>) ||
+      [];
+    const itemLines = items
+      .map((item) => `  ${item.name} x${item.quantity} - ${item.price}`)
+      .join("\n");
+    return `You Left Something Behind!\n\nItems in your cart:\n${itemLines}\n\nTotal: ${data.total}\n\nComplete your order: ${data.checkoutUrl}\n\nContact ${data.businessName || b.agency_name} for questions.`;
+  },
+};
+
 // ============================================================================
 // FORM TEMPLATES
 // ============================================================================
@@ -605,6 +800,14 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   order_confirmation_customer,
   order_confirmation_owner,
   order_shipped_customer,
+  order_delivered_customer,
+  order_cancelled_customer,
+  order_cancelled_owner,
+  payment_received_customer,
+  refund_issued_customer,
+  low_stock_admin,
+  back_in_stock_customer,
+  abandoned_cart_customer,
   quote_sent_customer,
   quote_reminder_customer,
   quote_accepted_owner,

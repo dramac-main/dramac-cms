@@ -9,6 +9,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency } from '@/lib/locale-config'
+import { sendBrandedEmail } from '@/lib/email/send-branded-email'
+import { createAdminClient } from '@/lib/supabase/admin'
 import type { 
   Order,
   OrderStatus,
@@ -421,6 +423,13 @@ export async function processRefund(
 
   const status = approved ? 'processed' : 'rejected'
 
+  // Get refund details
+  const { data: refundData } = await supabase
+    .from(`${TABLE_PREFIX}_order_refunds`)
+    .select('amount, reason')
+    .eq('id', refundId)
+    .single()
+
   const { error } = await supabase
     .from(`${TABLE_PREFIX}_order_refunds`)
     .update({
@@ -441,12 +450,27 @@ export async function processRefund(
     metadata: { refund_id: refundId }
   })
 
-  // If approved, update order status
+  // If approved, update order status and send notification
   if (approved) {
-    await supabase
+    const { data: order } = await supabase
       .from(`${TABLE_PREFIX}_orders`)
       .update({ status: 'refunded' })
       .eq('id', orderId)
+      .select()
+      .single()
+
+    // Send refund notification to customer
+    if (order?.customer_email && refundData) {
+      const { notifyRefundIssued } = await import('@/lib/services/business-notifications')
+      notifyRefundIssued(
+        order.site_id,
+        order.order_number,
+        order.customer_email,
+        order.customer_name || 'Customer',
+        formatCurrency(refundData.amount, order.currency || 'USD'),
+        refundData.reason || undefined,
+      ).catch(err => console.error('[OrderActions] Refund notification error:', err))
+    }
   }
 
   return true
@@ -558,7 +582,10 @@ export async function generateInvoiceNumber(
 }
 
 /**
- * Send order notification email
+ * Send order notification email via Resend
+ * 
+ * Fetches full order data and sends the appropriate branded email
+ * to the customer and/or owner based on the email type.
  */
 export async function sendOrderEmail(
   orderId: string,
@@ -566,21 +593,159 @@ export async function sendOrderEmail(
   userId: string,
   userName: string
 ): Promise<boolean> {
-  // In production, this would integrate with email service
-  // For now, just add timeline event
-
   const supabase = await getModuleClient()
 
-  await supabase
-    .from(`${TABLE_PREFIX}_order_timeline`)
-    .insert({
-      order_id: orderId,
-      event_type: 'email_sent',
-      title: `Email sent: ${emailType}`,
-      user_id: userId,
-      user_name: userName,
-      metadata: { email_type: emailType }
-    })
+  try {
+    // Fetch the order with site info
+    const { data: order } = await supabase
+      .from(`${TABLE_PREFIX}_orders`)
+      .select('*, site_id')
+      .eq('id', orderId)
+      .single()
 
-  return true
+    if (!order) {
+      console.error('[sendOrderEmail] Order not found:', orderId)
+      return false
+    }
+
+    // Get site and agency info for branding
+    const adminClient = createAdminClient()
+    const { data: site } = await adminClient
+      .from('sites')
+      .select('name, agency_id')
+      .eq('id', order.site_id)
+      .single()
+
+    const agencyId = site?.agency_id || null
+    const businessName = site?.name || 'Our Store'
+    const currency = order.currency || 'USD'
+
+    // Get order items for confirmation emails
+    const { data: orderItems } = await supabase
+      .from(`${TABLE_PREFIX}_order_items`)
+      .select('product_name, quantity, unit_price, total_price')
+      .eq('order_id', orderId)
+
+    const formattedItems = (orderItems || []).map((item: { product_name: string; quantity: number; unit_price: number; total_price: number }) => ({
+      name: item.product_name,
+      quantity: item.quantity,
+      price: formatCurrency(item.total_price, currency),
+    }))
+
+    // Map emailType to the branded email type and send
+    switch (emailType) {
+      case 'confirmation': {
+        if (order.customer_email) {
+          await sendBrandedEmail(agencyId, {
+            to: { email: order.customer_email, name: order.customer_name || undefined },
+            emailType: 'order_confirmation_customer',
+            data: {
+              customerName: order.customer_name || 'Customer',
+              orderNumber: order.order_number,
+              items: formattedItems,
+              subtotal: formatCurrency(order.subtotal || 0, currency),
+              shipping: formatCurrency(order.shipping_amount || 0, currency),
+              tax: formatCurrency(order.tax_amount || 0, currency),
+              total: formatCurrency(order.total, currency),
+              shippingAddress: order.shipping_address
+                ? `${order.shipping_address.address_line_1 || ''}${order.shipping_address.city ? `, ${order.shipping_address.city}` : ''}${order.shipping_address.country ? `, ${order.shipping_address.country}` : ''}`
+                : '',
+              businessName,
+            },
+          })
+        }
+        break
+      }
+      case 'shipped': {
+        if (order.customer_email) {
+          await sendBrandedEmail(agencyId, {
+            to: { email: order.customer_email, name: order.customer_name || undefined },
+            emailType: 'order_shipped_customer',
+            data: {
+              customerName: order.customer_name || 'Customer',
+              orderNumber: order.order_number,
+              trackingNumber: order.tracking_number || '',
+              trackingUrl: order.tracking_url || '',
+              businessName,
+            },
+          })
+        }
+        break
+      }
+      case 'delivered': {
+        if (order.customer_email) {
+          await sendBrandedEmail(agencyId, {
+            to: { email: order.customer_email, name: order.customer_name || undefined },
+            emailType: 'order_delivered_customer',
+            data: {
+              customerName: order.customer_name || 'Customer',
+              orderNumber: order.order_number,
+              businessName,
+            },
+          })
+        }
+        break
+      }
+      case 'cancelled': {
+        if (order.customer_email) {
+          await sendBrandedEmail(agencyId, {
+            to: { email: order.customer_email, name: order.customer_name || undefined },
+            emailType: 'order_cancelled_customer',
+            data: {
+              customerName: order.customer_name || 'Customer',
+              orderNumber: order.order_number,
+              businessName,
+            },
+          })
+        }
+        break
+      }
+      case 'refunded': {
+        if (order.customer_email) {
+          await sendBrandedEmail(agencyId, {
+            to: { email: order.customer_email, name: order.customer_name || undefined },
+            emailType: 'refund_issued_customer',
+            data: {
+              customerName: order.customer_name || 'Customer',
+              orderNumber: order.order_number,
+              refundAmount: formatCurrency(order.total, currency),
+              businessName,
+            },
+          })
+        }
+        break
+      }
+    }
+
+    // Add timeline event
+    await supabase
+      .from(`${TABLE_PREFIX}_order_timeline`)
+      .insert({
+        order_id: orderId,
+        event_type: 'email_sent',
+        title: `Email sent: ${emailType}`,
+        user_id: userId,
+        user_name: userName,
+        metadata: { email_type: emailType }
+      })
+
+    console.log(`[sendOrderEmail] ${emailType} email sent for order ${order.order_number}`)
+    return true
+  } catch (error) {
+    console.error('[sendOrderEmail] Error sending email:', error)
+    
+    // Still log the timeline event even if email fails
+    await supabase
+      .from(`${TABLE_PREFIX}_order_timeline`)
+      .insert({
+        order_id: orderId,
+        event_type: 'email_failed',
+        title: `Email failed: ${emailType}`,
+        user_id: userId,
+        user_name: userName,
+        metadata: { email_type: emailType, error: error instanceof Error ? error.message : 'Unknown error' }
+      })
+
+    return false
+  }
 }

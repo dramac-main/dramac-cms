@@ -314,6 +314,27 @@ async function updateAlertLevel(
           alert_dismissed_at: null // Reset dismissal on new alert
         })
         .eq('id', alert.id)
+
+      // Send low stock notification when level transitions to low, critical, or out
+      if (newLevel !== 'ok' && alert.current_alert_level === 'ok') {
+        // Fetch product name for the notification
+        const { data: product } = await supabase
+          .from(`${TABLE_PREFIX}_products`)
+          .select('name, sku')
+          .eq('id', productId)
+          .single()
+
+        if (product) {
+          const { notifyLowStock } = await import('@/lib/services/business-notifications')
+          notifyLowStock(
+            siteId,
+            product.name,
+            currentStock,
+            alert.low_stock_threshold ?? 10,
+            product.sku || undefined,
+          ).catch(err => console.error('[Inventory] Low stock notification error:', err))
+        }
+      }
     }
   } catch (error) {
     console.error('Error updating alert level:', error)

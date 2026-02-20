@@ -424,7 +424,7 @@ export async function notifyNewOrder(data: OrderNotificationData): Promise<void>
 }
 
 /**
- * Send shipping notification to customer
+ * Send shipping notification to customer + in-app notification to owner
  */
 export async function notifyOrderShipped(
   siteId: string,
@@ -442,6 +442,25 @@ export async function notifyOrderShipped(
       .eq('id', siteId)
       .single()
 
+    const { data: agency } = await supabase
+      .from('agencies')
+      .select('owner_id')
+      .eq('id', site?.agency_id)
+      .single()
+
+    // In-app notification to business owner
+    if (agency?.owner_id) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: 'order_shipped',
+        title: `Order #${orderNumber} Shipped`,
+        message: `Order for ${customerName} has been marked as shipped${trackingNumber ? ` (Tracking: ${trackingNumber})` : ''}`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'}/sites/${siteId}/ecommerce/orders`,
+        metadata: { orderNumber, siteId },
+      })
+    }
+
+    // Email to customer
     await sendBrandedEmail(site?.agency_id || null, {
       to: { email: customerEmail, name: customerName },
       emailType: 'order_shipped_customer',
@@ -453,7 +472,328 @@ export async function notifyOrderShipped(
         businessName: site?.name || 'Our Store',
       },
     })
+
+    console.log(`[BusinessNotify] Shipping notifications sent for order ${orderNumber}`)
   } catch (error) {
     console.error('[BusinessNotify] Error sending shipping notification:', error)
+  }
+}
+
+// =============================================================================
+// ORDER DELIVERED NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send delivery notification to customer + in-app notification to owner
+ */
+export async function notifyOrderDelivered(
+  siteId: string,
+  orderNumber: string,
+  customerEmail: string,
+  customerName: string,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient()
+    const { data: site } = await supabase
+      .from('sites')
+      .select('name, agency_id')
+      .eq('id', siteId)
+      .single()
+
+    const { data: agency } = await supabase
+      .from('agencies')
+      .select('owner_id')
+      .eq('id', site?.agency_id)
+      .single()
+
+    // In-app notification to business owner
+    if (agency?.owner_id) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: 'order_delivered',
+        title: `Order #${orderNumber} Delivered`,
+        message: `Order for ${customerName} has been marked as delivered`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'}/sites/${siteId}/ecommerce/orders`,
+        metadata: { orderNumber, siteId },
+      })
+    }
+
+    // Email to customer
+    if (customerEmail) {
+      await sendBrandedEmail(site?.agency_id || null, {
+        to: { email: customerEmail, name: customerName },
+        emailType: 'order_delivered_customer',
+        data: {
+          customerName,
+          orderNumber,
+          businessName: site?.name || 'Our Store',
+        },
+      })
+    }
+
+    console.log(`[BusinessNotify] Delivery notifications sent for order ${orderNumber}`)
+  } catch (error) {
+    console.error('[BusinessNotify] Error sending delivery notification:', error)
+  }
+}
+
+// =============================================================================
+// ORDER CANCELLED NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send cancellation notification to customer + owner
+ */
+export async function notifyOrderCancelled(
+  siteId: string,
+  orderNumber: string,
+  customerEmail: string,
+  customerName: string,
+  total: string,
+  reason?: string,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient()
+    const { data: site } = await supabase
+      .from('sites')
+      .select('name, agency_id')
+      .eq('id', siteId)
+      .single()
+
+    const { data: agency } = await supabase
+      .from('agencies')
+      .select('owner_id')
+      .eq('id', site?.agency_id)
+      .single()
+
+    const { data: ownerProfile } = agency?.owner_id ? await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', agency.owner_id)
+      .single() : { data: null }
+
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'}/sites/${siteId}/ecommerce/orders`
+
+    // In-app notification to business owner
+    if (agency?.owner_id) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: 'order_cancelled',
+        title: `Order #${orderNumber} Cancelled`,
+        message: `Order from ${customerName} (${total}) has been cancelled${reason ? `: ${reason}` : ''}`,
+        link: dashboardUrl,
+        metadata: { orderNumber, siteId },
+      })
+    }
+
+    // Email to business owner
+    if (ownerProfile?.email) {
+      await sendBrandedEmail(site?.agency_id || null, {
+        to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
+        emailType: 'order_cancelled_owner',
+        recipientUserId: agency?.owner_id,
+        data: {
+          customerName,
+          customerEmail,
+          orderNumber,
+          total,
+          reason: reason || '',
+          dashboardUrl,
+        },
+      })
+    }
+
+    // Email to customer
+    if (customerEmail) {
+      await sendBrandedEmail(site?.agency_id || null, {
+        to: { email: customerEmail, name: customerName },
+        emailType: 'order_cancelled_customer',
+        data: {
+          customerName,
+          orderNumber,
+          reason: reason || '',
+          businessName: site?.name || 'Our Store',
+        },
+      })
+    }
+
+    console.log(`[BusinessNotify] Cancellation notifications sent for order ${orderNumber}`)
+  } catch (error) {
+    console.error('[BusinessNotify] Error sending cancellation notification:', error)
+  }
+}
+
+// =============================================================================
+// PAYMENT RECEIVED NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send payment confirmation notification to customer
+ */
+export async function notifyPaymentReceived(
+  siteId: string,
+  orderNumber: string,
+  customerEmail: string,
+  customerName: string,
+  total: string,
+  paymentMethod?: string,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient()
+    const { data: site } = await supabase
+      .from('sites')
+      .select('name, agency_id')
+      .eq('id', siteId)
+      .single()
+
+    if (customerEmail) {
+      await sendBrandedEmail(site?.agency_id || null, {
+        to: { email: customerEmail, name: customerName },
+        emailType: 'payment_received_customer',
+        data: {
+          customerName,
+          orderNumber,
+          total,
+          paymentMethod: paymentMethod || '',
+          businessName: site?.name || 'Our Store',
+        },
+      })
+    }
+
+    console.log(`[BusinessNotify] Payment received notification sent for order ${orderNumber}`)
+  } catch (error) {
+    console.error('[BusinessNotify] Error sending payment notification:', error)
+  }
+}
+
+// =============================================================================
+// REFUND NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send refund notification to customer
+ */
+export async function notifyRefundIssued(
+  siteId: string,
+  orderNumber: string,
+  customerEmail: string,
+  customerName: string,
+  refundAmount: string,
+  reason?: string,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient()
+    const { data: site } = await supabase
+      .from('sites')
+      .select('name, agency_id')
+      .eq('id', siteId)
+      .single()
+
+    const { data: agency } = await supabase
+      .from('agencies')
+      .select('owner_id')
+      .eq('id', site?.agency_id)
+      .single()
+
+    // In-app notification to business owner
+    if (agency?.owner_id) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: 'refund_issued',
+        title: `Refund Issued: Order #${orderNumber}`,
+        message: `Refund of ${refundAmount} issued to ${customerName}${reason ? ` — ${reason}` : ''}`,
+        link: `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'}/sites/${siteId}/ecommerce/orders`,
+        metadata: { orderNumber, siteId },
+      })
+    }
+
+    // Email to customer
+    if (customerEmail) {
+      await sendBrandedEmail(site?.agency_id || null, {
+        to: { email: customerEmail, name: customerName },
+        emailType: 'refund_issued_customer',
+        data: {
+          customerName,
+          orderNumber,
+          refundAmount,
+          reason: reason || '',
+          businessName: site?.name || 'Our Store',
+        },
+      })
+    }
+
+    console.log(`[BusinessNotify] Refund notification sent for order ${orderNumber}`)
+  } catch (error) {
+    console.error('[BusinessNotify] Error sending refund notification:', error)
+  }
+}
+
+// =============================================================================
+// LOW STOCK NOTIFICATIONS
+// =============================================================================
+
+/**
+ * Send low stock alert to business owner
+ */
+export async function notifyLowStock(
+  siteId: string,
+  productName: string,
+  currentStock: number,
+  threshold: number,
+  sku?: string,
+): Promise<void> {
+  try {
+    const supabase = createAdminClient()
+    const { data: site } = await supabase
+      .from('sites')
+      .select('name, agency_id')
+      .eq('id', siteId)
+      .single()
+
+    const { data: agency } = await supabase
+      .from('agencies')
+      .select('owner_id')
+      .eq('id', site?.agency_id)
+      .single()
+
+    const { data: ownerProfile } = agency?.owner_id ? await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', agency.owner_id)
+      .single() : { data: null }
+
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.app'}/sites/${siteId}/ecommerce/products`
+
+    // In-app notification to business owner
+    if (agency?.owner_id) {
+      await createNotification({
+        userId: agency.owner_id,
+        type: 'low_stock',
+        title: `Low Stock: ${productName}`,
+        message: `${productName}${sku ? ` (${sku})` : ''} is low on stock (${currentStock} remaining, threshold: ${threshold})`,
+        link: dashboardUrl,
+        metadata: { productName, currentStock, threshold, siteId },
+      })
+    }
+
+    // Email to business owner
+    if (ownerProfile?.email) {
+      await sendBrandedEmail(site?.agency_id || null, {
+        to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
+        emailType: 'low_stock_admin',
+        recipientUserId: agency?.owner_id,
+        data: {
+          productName,
+          currentStock,
+          threshold,
+          sku: sku || '',
+          dashboardUrl,
+        },
+      })
+    }
+
+    console.log(`[BusinessNotify] Low stock alert sent for ${productName}`)
+  } catch (error) {
+    console.error('[BusinessNotify] Error sending low stock notification:', error)
   }
 }

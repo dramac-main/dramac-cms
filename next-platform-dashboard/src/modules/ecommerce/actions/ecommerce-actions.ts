@@ -12,7 +12,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { formatCurrency, DEFAULT_CURRENCY } from '@/lib/locale-config'
-import { notifyNewOrder, notifyOrderShipped } from '@/lib/services/business-notifications'
+import { notifyNewOrder, notifyOrderShipped, notifyOrderDelivered, notifyOrderCancelled, notifyLowStock } from '@/lib/services/business-notifications'
 import type {
   Product, ProductInput, ProductUpdate, ProductFilters,
   Category, CategoryInput, CategoryUpdate,
@@ -1284,7 +1284,21 @@ export async function updateOrderStatus(siteId: string, orderId: string, status:
     .single()
   
   if (error) throw new Error(error.message)
-  return data as Order
+  
+  const order = data as Order
+
+  // Send cancellation notification when order is cancelled
+  if (status === 'cancelled' && order.customer_email) {
+    notifyOrderCancelled(
+      siteId,
+      order.order_number,
+      order.customer_email,
+      order.customer_name || 'Customer',
+      formatCurrency(order.total, order.currency || DEFAULT_CURRENCY),
+    ).catch(err => console.error('[Ecommerce] Cancellation notification error:', err))
+  }
+
+  return order
 }
 
 export async function updateOrderPaymentStatus(
@@ -1379,7 +1393,20 @@ export async function markOrderDelivered(siteId: string, orderId: string): Promi
     .single()
   
   if (error) throw new Error(error.message)
-  return data as Order
+  
+  const order = data as Order
+
+  // Send delivery notification to customer + owner
+  if (order.customer_email) {
+    notifyOrderDelivered(
+      siteId,
+      order.order_number,
+      order.customer_email,
+      order.customer_name || 'Customer',
+    ).catch(err => console.error('[Ecommerce] Delivery notification error:', err))
+  }
+
+  return order
 }
 
 export async function updateOrder(
