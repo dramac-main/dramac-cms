@@ -2,6 +2,33 @@
 
 ## Recent Work
 
+### E-Commerce Remaining Priorities (Session 6) — ALL COMPLETE ✅
+
+**Commit:** `7fd4cb5` | **Files Changed:** 30 (5,865 insertions, 405 deletions)  
+**Deployed:** Pushed to origin/main for Vercel auto-deploy
+
+All 4 remaining e-commerce priorities from the deep audit are now complete:
+
+#### 1. Payment Settings Alignment ✅
+Complete rewrite of payment-settings.tsx from Stripe/PayPal/Square to actual providers (Paddle, Flutterwave, Pesapal, DPO, Manual).
+
+#### 2. Product Reviews System (Phase ECOM-60) ✅
+Full reviews system: DB (reviews table, stats columns, auto-update trigger, RPC), server actions (public + admin CRUD), hook, 2 Studio blocks (ReviewFormBlock, ReviewListBlock), admin moderation view, wired into sidebar/header/dashboard.
+
+#### 3. Abandoned Cart Recovery (Phase ECOM-61) ✅
+Automation engine with configurable thresholds (1hr/24hr/72hr email delays), cron endpoint, recovery redirect endpoint, unified cron integration, DB migration for tracking columns.
+
+#### 4. Pre-built Store Templates (Phase ECOM-62) ✅
+4 store presets (Fashion, Electronics, Food/Grocery, Digital Products), template application action (creates categories + products + settings), StoreTemplateSelector UI, TemplatesView dashboard view, full sidebar/header/dashboard integration.
+
+#### DB Migrations Applied
+- `em_60_product_reviews` — Reviews table, indexes, RLS policies
+- `em_61_product_review_stats_columns` — average_rating/review_count on products, trigger
+- `em_62_increment_review_helpful` — RPC function for atomic helpful count
+- `em_63_cart_recovery_columns` — Recovery tracking columns + indexes on carts table
+
+---
+
 ### AI Website Designer — Design Personality Pass-Through ✅
 
 **Category:** Critical Design Diversity Fix  

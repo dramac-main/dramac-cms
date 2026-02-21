@@ -1,67 +1,45 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅**
 
 ---
 
-## Latest Update: February 2026 - AI Designer Design Personality Pass-Through ✅
+## Latest Update: February 2026 - E-Commerce Remaining Priorities (Session 6) ✅
 
-**Commit:** `9572548` | **Files Changed:** 5 (50 insertions, 7 deletions)
+**Commit:** `7fd4cb5` | **Files Changed:** 30 (5,865 insertions, 405 deletions) | **Build:** ✅ Clean
 
-### Problem
-Design personality (hero style, card style, animation preference, border radius, shadow, typography scale, background pattern) was generated during architecture step but never passed to per-page generation. Each page's Sonnet 4.6 call had zero personality context, making all sites feel generic.
+### All 4 Remaining E-Commerce Priorities COMPLETED
 
-### Fix
-Wired personality through the full pipeline: architecture API → client → page API → engine → prompt. Also activated `getSectionBackgrounds()` (was dead code) to compute visual rhythm per page. Each page now receives the full personality context and pre-computed background colors.
+#### 1. Payment Settings Alignment ✅
+- Complete rewrite of `payment-settings.tsx` from Stripe/PayPal/Square to actual providers: Paddle, Flutterwave, Pesapal, DPO, Manual
+- Each provider has proper credential fields matching the real API integrations
 
----
+#### 2. Product Reviews System (Phase ECOM-60) ✅
+- **DB Migrations:** `em_60_product_reviews` (reviews table, indexes, RLS), `em_61_product_review_stats_columns` (average_rating/review_count on products, auto-update trigger), `em_62_increment_review_helpful` (RPC function)
+- **Server Actions** (`review-actions.ts`, ~340 lines): Public (getPublicProductReviews, getProductReviewStats, submitReview, markReviewHelpful) + Admin (getReviews, updateReviewStatus, bulkUpdateReviewStatus, addAdminResponse, deleteReview, getReviewCounts)
+- **Hook** (`useStorefrontReviews.ts`): Paginated loading, sort, submit, helpful votes
+- **Studio Blocks:** ReviewFormBlock (star rating input, form validation, success state) + ReviewListBlock (rating distribution, sort, helpful votes, admin responses, load more)
+- **Admin View** (`reviews-view.tsx`, ~480 lines): Status tabs with counts, rating filter, bulk actions, admin respond dialog, detail dialog, pagination
+- **Wired into:** sidebar, header, dashboard, types, hooks/index, studio/index, views/index
 
-## Previous Update: February 2026 - AI Designer Premium Visual Quality Upgrade ✅
+#### 3. Abandoned Cart Recovery (Phase ECOM-61) ✅
+- **Automation Engine** (`cart-recovery-automation.ts`, ~240 lines): processAbandonedCarts per site, configurable thresholds (1hr abandonment, max 3 emails at 1hr/24hr/72hr delays), generates recovery tokens
+- **Cron Endpoint** (`/api/cron/abandoned-carts/route.ts`): CRON_SECRET verified
+- **Recovery Redirect** (`/api/ecommerce/cart-recovery/route.ts`): Validates token, reactivates abandoned carts, redirects to site checkout
+- **Unified Cron Integration:** Dispatch added to `/api/cron/route.ts`
+- **DB Migration** (`em_63_cart_recovery_columns`): recovery_email_sent_at, recovery_email_count, recovery_token, customer_email, customer_name + indexes
 
-**Commit:** `2b2904e` | **Files Changed:** 2 (prompts.ts, converter.ts — 179 insertions)
+#### 4. Pre-built Store Templates (Phase ECOM-62) ✅
+- **Types** (`store-template-types.ts`): StoreTemplate, StoreTemplateCategory, StoreTemplateProduct, StoreTemplateSettings
+- **4 Store Presets** (`store-templates.ts`): Fashion & Apparel (6 cats, 4 products), Electronics & Tech (6 cats, 4 products), Food & Grocery (6 cats, 4 products), Digital Products (6 cats, 4 products)
+- **Application Action** (`store-template-actions.ts`): applyStoreTemplate creates categories, sample products, applies settings; getAvailableTemplates, getSiteTemplateStatus for status tracking
+- **UI Component** (`StoreTemplateSelector.tsx`): Template card grid, selection state, apply with loading, success/error states, already-applied detection
+- **Dashboard View** (`templates-view.tsx`): Full view with sidebar/header integration
+- **Wired into:** sidebar (LayoutTemplate icon), header, dashboard, types (EcommerceView union), views/index, onboarding/index
 
-### Problem
-Deep audit revealed generated websites scored C+ overall — strong on content integrity but significantly lacking in visual polish, animations, and the premium effects that distinguish agency-quality sites. The component renderers already supported 70% more capabilities than the converter was wiring up. Key gaps: no scroll animations (F), no parallax effects (F), no section transitions (F), basic typography (D), no transparent navbar, no hover interactions.
-
-### Fix — Two-Layer Enhancement
-**Prompts:** Added instructions for scroll-triggered animations on every section, hero parallax backgrounds, typography scale system, whitespace rules, section background alternation, transparent navbar, advanced component variants, CTA urgency patterns.
-
-**Converter:** Wired up 40+ renderer props that already existed but were never mapped — parallax `backgroundAttachment: "fixed"`, `transparentUntilScroll`, `glassEffect`, `animateOnScroll` on all 11 section types, carousel controls, hover effects, trust badges, contact CTA on FAQ, scroll indicators on hero.
-
-**Key insight:** Zero new components needed — everything was already built in the renderers.
-
----
-
-## Previous Update: E-Commerce Notification System (Session 5) ✅
-
-**Commit:** `b9ee56b` | **Files Changed:** 7 (943 insertions, 30 deletions) | **Build:** ✅ Clean
-
-### Problem
-12-area e-commerce audit revealed the notification system was the highest-ROI gap: `sendOrderEmail()` was a stub, payment webhooks sent zero notifications, no delivery/cancellation/refund/low-stock notifications existed, and `notifyOrderShipped()` was missing the owner in-app alert.
-
-### Solution
-- **8 new email types** added to `email-types.ts` with corresponding data interfaces
-- **8 professional branded HTML templates** in `branded-templates.ts` with color-coded info boxes
-- **6 notification functions** in `business-notifications.ts` (5 new + 1 rewritten)
-- **`sendOrderEmail()` fully replaced** — from stub to real Resend implementation with order data fetching
-- **All 4 payment webhooks** (Paddle, Flutterwave, Pesapal, DPO) wired with `notifyPaymentReceived()`
-- **Paddle refund webhook** wired with `notifyRefundIssued()`
-- **Order lifecycle** wired: delivery → `notifyOrderDelivered()`, cancel → `notifyOrderCancelled()`, refund → `notifyRefundIssued()`
-- **Inventory alerts** wired: stock level transitions → `notifyLowStock()`
-- All notifications are fire-and-forget with `.catch()` — never break business flows
-
-### Also Fixed in Session 5
-- Currency JSONB dual-store sync (`046278a`)
-- Currency dropdown stale closure (`abfa968`)
-- Image upload 30s timeout (`abfa968`)
-- MCP documentation in memory bank (`c529d25`)
-
-### Remaining E-Commerce Priorities (from audit)
-1. Payment settings alignment (provider config UX)
-2. Product reviews system
-3. Abandoned cart recovery automation (template exists, automation engine needed)
-4. Pre-built store template
+### Remaining E-Commerce Priorities
+All 4 priorities from the audit are now COMPLETE. No remaining e-commerce priorities.
 
 ### Known Gap
 DB-stored notification templates (Settings UI) are disconnected from actual sending — system uses hardcoded `BRANDED_TEMPLATES`. Can be connected in a future iteration to allow per-store template customization.
