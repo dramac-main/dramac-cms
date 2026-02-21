@@ -51,6 +51,9 @@ const RequestSchema = z.object({
   }),
   // Industry from architecture step (avoids redundant DB calls)
   industry: z.string().optional(),
+  // Design personality from architecture step (ensures unique styling per site)
+  personalityContext: z.string().optional(),
+  designPersonality: z.any().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -105,7 +108,9 @@ export async function POST(request: NextRequest) {
       input.architecture,
       input.pagePlan,
       input.formattedContext,
-      input.industry
+      input.industry,
+      input.personalityContext,
+      input.designPersonality
     );
 
     if (!result.success) {
