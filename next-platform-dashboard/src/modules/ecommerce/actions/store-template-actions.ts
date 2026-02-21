@@ -137,6 +137,7 @@ async function createTemplateCategories(
         name: catDef.name,
         slug: catDef.slug,
         description: catDef.description,
+        image_url: catDef.image_url || null,
         sort_order: catDef.sort_order,
         is_active: true,
       })
@@ -152,6 +153,7 @@ async function createTemplateCategories(
               name: child.name,
               slug: child.slug,
               description: child.description,
+              image_url: child.image_url || null,
               sort_order: child.sort_order,
               parent_id: category.id,
               is_active: true,

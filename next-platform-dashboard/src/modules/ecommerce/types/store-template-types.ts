@@ -33,6 +33,7 @@ export interface StoreTemplateCategory {
   name: string
   slug: string
   description: string
+  image_url?: string
   sort_order: number
   children?: StoreTemplateCategory[]
 }
