@@ -720,24 +720,6 @@ function transformPropsForStudio(
       // Animation
       animateOnLoad: props.animateOnLoad ?? true,
       animationType: props.animationType || "fade-up",
-      
-      // PARALLAX: Fixed background creates premium depth effect
-      backgroundAttachment: hasBackgroundImage ? (props.backgroundAttachment || "fixed") : "scroll",
-      
-      // Scroll indicator — subtle animated arrow at bottom of hero
-      scrollIndicator: props.scrollIndicator ?? hasBackgroundImage,
-      scrollIndicatorIcon: props.scrollIndicatorIcon || "chevron",
-      scrollIndicatorAnimation: props.scrollIndicatorAnimation || "bounce",
-      scrollIndicatorSize: props.scrollIndicatorSize || "md",
-      
-      // Mouse parallax — cursor-tracking depth effect
-      enableMouseParallax: props.enableMouseParallax ?? false,
-      mouseParallaxIntensity: props.mouseParallaxIntensity || 20,
-      
-      // Pattern decorations for visual interest
-      showPattern: props.showPattern ?? false,
-      patternType: props.patternType || "dots",
-      patternOpacity: props.patternOpacity || 0.1,
     };
   }
 
@@ -773,14 +755,6 @@ function transformPropsForStudio(
       position: "sticky",
       hideOnScroll: true,
       showOnScrollUp: true,
-      
-      // Transparent navbar over hero — signature premium website effect
-      transparentUntilScroll: props.transparentUntilScroll ?? true,
-      scrollThreshold: props.scrollThreshold || 100,
-      
-      // Glass effect — frosted blur when scrolled (modern premium look)
-      glassEffect: props.glassEffect ?? true,
-      glassBlur: props.glassBlur || "md",
       
       // Layout — PremiumNavbarRender uses 'layout', map from AI's 'variant'
       layout: (() => {
@@ -840,11 +814,7 @@ function transformPropsForStudio(
       cardBorderRadius: props.cardBorderRadius || "lg",
       cardPadding: props.cardPadding || "lg",
       hoverEffect: props.hoverEffect || "lift",
-      gap: props.gap || "lg",
-      // Scroll-triggered animation — sections reveal as user scrolls
-      animateOnScroll: props.animateOnScroll ?? true,
-      animationType: props.animationType || "stagger",
-      staggerDelay: props.staggerDelay || 100,
+      gap: props.gap || "md",
       // Section background — must match site theme
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
       textColor: props.textColor || palette().textPrimary,
@@ -903,14 +873,6 @@ function transformPropsForStudio(
       badge: props.badge || "",
       badgeColor: props.badgeColor || themePrimary(),
       badgeTextColor: props.badgeTextColor || "#ffffff",
-      // Scroll-triggered animation
-      animateOnScroll: props.animateOnScroll ?? true,
-      animationType: props.animationType || "scale",
-      // Button hover effect for interactivity
-      buttonHoverEffect: props.buttonHoverEffect || "lift",
-      // Trust badges for social proof
-      trustBadges: props.trustBadges || [],
-      trustBadgesPosition: props.trustBadgesPosition || "bottom",
     };
   }
 
@@ -946,15 +908,6 @@ function transformPropsForStudio(
       cardBackgroundColor: props.cardBackgroundColor || palette().cardBg,
       cardBorderColor: props.cardBorderColor || palette().cardBorder,
       cardBorderRadius: props.cardBorderRadius || "lg",
-      // Scroll-triggered animation
-      animateOnScroll: props.animateOnScroll ?? true,
-      animationType: props.animationType || "fade",
-      staggerDelay: props.staggerDelay || 150,
-      // Carousel controls (for carousel variant)
-      autoplay: props.autoplay ?? ((props.variant || "cards") === "carousel"),
-      autoplaySpeed: props.autoplaySpeed || 5000,
-      showArrows: props.showArrows ?? true,
-      showDots: props.showDots ?? true,
       // Background — must match site theme
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
       textColor: props.textColor || palette().textPrimary,
@@ -989,11 +942,6 @@ function transformPropsForStudio(
       // Image
       imageShape: props.imageShape || "circle",
       imageBorderColor: props.imageBorderColor || themePrimary(),
-      // Hover & animation
-      hoverEffect: props.hoverEffect || "lift",
-      animateOnScroll: props.animateOnScroll ?? true,
-      animationType: props.animationType || "stagger",
-      staggerDelay: props.staggerDelay || 150,
       // Styling — use palette for harmonious colors
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
       cardBackgroundColor: props.cardBackgroundColor || palette().cardBg,
@@ -1143,14 +1091,6 @@ function transformPropsForStudio(
       // Free SEO: enable JSON-LD FAQ schema for search engines
       enableSchema: props.enableSchema ?? true,
       expandFirst: props.expandFirst ?? true,
-      // Scroll-triggered animation
-      animateOnScroll: props.animateOnScroll ?? true,
-      animationType: props.animationType || "slide-up",
-      // Contact CTA at bottom of FAQ
-      showContactCTA: props.showContactCTA ?? true,
-      contactCTAText: props.contactCTAText || "Still have questions?",
-      contactCTAButtonText: props.contactCTAButtonText || "Contact Us",
-      contactCTAButtonLink: props.contactCTAButtonLink || "/contact",
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
       textColor: props.textColor || palette().textPrimary,
       accentColor: props.accentColor || themePrimary(),
@@ -1182,9 +1122,6 @@ function transformPropsForStudio(
       // Styling
       valueSize: props.valueSize || "3xl",
       valueColor: props.valueColor || themePrimary(),
-      // Scroll-triggered animation (triggers count-up when visible)
-      animateOnScroll: props.animateOnScroll ?? true,
-      animationType: props.animationType || "fade",
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
       textColor: props.textColor || palette().textPrimary,
       accentColor: props.accentColor || themePrimary(),
@@ -1226,10 +1163,6 @@ function transformPropsForStudio(
       cardBackgroundColor: props.cardBackgroundColor || palette().cardBg,
       textColor: props.textColor || palette().textPrimary,
       popularBorderColor: props.popularBorderColor || themePrimary(),
-      // Scroll-triggered animation
-      animateOnScroll: props.animateOnScroll ?? true,
-      animationType: props.animationType || "stagger",
-      staggerDelay: props.staggerDelay || 100,
     };
   }
 
@@ -1270,9 +1203,6 @@ function transformPropsForStudio(
       imageAlt: props.imageAlt || "",
       imagePosition: props.imagePosition || "right",
       variant: props.variant || "split",
-      // Scroll-triggered animation
-      animateOnScroll: props.animateOnScroll ?? true,
-      animationType: props.animationType || "fade",
       // Theme-aware colors
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
       textColor: props.textColor || palette().textPrimary,
@@ -1320,10 +1250,6 @@ function transformPropsForStudio(
       borderRadius: props.borderRadius || "lg",
       hoverEffect: props.hoverEffect || "zoom",
       lightbox: props.lightbox ?? true,
-      // Scroll-triggered animation
-      animateOnScroll: props.animateOnScroll ?? true,
-      animationType: props.animationType || "stagger",
-      staggerDelay: props.staggerDelay || 80,
       // Dark theme backgrounds — use palette
       backgroundColor: props.backgroundColor || (isDarkTheme() ? themeBackground() : ""),
       textColor: props.textColor || palette().textPrimary,
