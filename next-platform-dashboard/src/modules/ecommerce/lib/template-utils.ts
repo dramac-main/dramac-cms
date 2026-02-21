@@ -203,7 +203,7 @@ export function addCategoryNav(
   } = {}
 ): string {
   return addComponent(page, {
-    type: 'CategoryNavBlock',
+    type: 'EcommerceCategoryNav',
     props: {
       layout: props.layout || 'horizontal',
       showIcons: props.showIcons ?? true,
@@ -225,7 +225,7 @@ export function addBreadcrumb(
   } = {}
 ): string {
   return addComponent(page, {
-    type: 'BreadcrumbBlock',
+    type: 'EcommerceBreadcrumb',
     props: {
       showHome: props.showHome ?? true,
       separator: props.separator || '/',
@@ -246,7 +246,7 @@ export function addCartPage(
   } = {}
 ): string {
   return addComponent(page, {
-    type: 'CartPageBlock',
+    type: 'EcommerceCartPage',
     props: {
       showRecommendations: props.showRecommendations ?? true,
       showCouponInput: props.showCouponInput ?? true,
@@ -270,7 +270,7 @@ export function addCheckoutPage(
   } = {}
 ): string {
   return addComponent(page, {
-    type: 'CheckoutPageBlock',
+    type: 'EcommerceCheckoutPage',
     props: {
       steps: props.steps || ['shipping', 'payment', 'review'],
       showOrderSummary: props.showOrderSummary ?? true,
@@ -288,7 +288,7 @@ export function addOrderConfirmation(
   parentId: string
 ): string {
   return addComponent(page, {
-    type: 'OrderConfirmationBlock',
+    type: 'EcommerceOrderConfirmation',
     props: {
       showOrderDetails: true,
       showShippingInfo: true,
@@ -311,7 +311,7 @@ export function addSearchBar(
   } = {}
 ): string {
   return addComponent(page, {
-    type: 'SearchBarBlock',
+    type: 'EcommerceSearchBar',
     props: {
       placeholder: props.placeholder || 'Search products...',
       showSuggestions: props.showSuggestions ?? true,
@@ -328,7 +328,7 @@ export function addFilterSidebar(
   parentId: string
 ): string {
   return addComponent(page, {
-    type: 'FilterSidebarBlock',
+    type: 'EcommerceFilterSidebar',
     props: {
       showPriceFilter: true,
       showCategoryFilter: true,
@@ -351,7 +351,7 @@ export function addFeaturedProducts(
   } = {}
 ): string {
   return addComponent(page, {
-    type: 'FeaturedProductsBlock',
+    type: 'EcommerceFeaturedProducts',
     props: {
       title: props.title || 'Featured Products',
       limit: props.limit || 4,
