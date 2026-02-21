@@ -756,19 +756,8 @@ Animation: ${quickDesignTokens.heroPattern.animation}
     const { object } = await generateObject({
       model: getAIModel("architecture"),
       schema: SiteArchitectureSchema,
-      messages: [
-        {
-          role: "system" as const,
-          content: SITE_ARCHITECT_PROMPT,
-          providerOptions: {
-            anthropic: { cacheControl: { type: "ephemeral" } },
-          },
-        },
-        {
-          role: "user" as const,
-          content: fullPrompt,
-        },
-      ],
+      system: SITE_ARCHITECT_PROMPT,
+      prompt: fullPrompt,
     });
 
     // Apply design tokens to architecture
@@ -913,19 +902,8 @@ Animation: ${quickDesignTokens.heroPattern.animation}
     const { object } = await generateObject({
       model: getAIModel("page-content"),
       schema: PageComponentsOutputSchema,
-      messages: [
-        {
-          role: "system" as const,
-          content: PAGE_GENERATOR_PROMPT,
-          providerOptions: {
-            anthropic: { cacheControl: { type: "ephemeral" } },
-          },
-        },
-        {
-          role: "user" as const,
-          content: fullPrompt,
-        },
-      ],
+      system: PAGE_GENERATOR_PROMPT,
+      prompt: fullPrompt,
     });
 
     // Ensure all components have unique IDs
@@ -965,17 +943,8 @@ Animation: ${quickDesignTokens.heroPattern.animation}
     const { object } = await generateObject({
       model: getAIModel("navbar"),
       schema: NavbarComponentSchema,
-      messages: [
-        {
-          role: "system" as const,
-          content: NAVBAR_GENERATOR_PROMPT,
-          providerOptions: {
-            anthropic: { cacheControl: { type: "ephemeral" } },
-          },
-        },
-        {
-          role: "user" as const,
-          content: `Generate a premium navbar configuration.
+      system: NAVBAR_GENERATOR_PROMPT,
+      prompt: `Generate a premium navbar configuration.
 
 Business: ${this.getBusinessName()}
 Logo: ${this.context?.branding.logo_url || "Use text logo with business name"}
@@ -987,8 +956,6 @@ CTA Text: ${this.architecture?.sharedElements.navbar.ctaText || "Contact Us"}
 Design Tokens: ${JSON.stringify(this.architecture?.designTokens || {})}
 
 Configure ALL navbar fields for a modern, responsive navigation.`,
-        },
-      ],
     });
 
     const allNavLinks = [{ label: "Home", href: "/" }, ...navItems];
@@ -1019,17 +986,8 @@ Configure ALL navbar fields for a modern, responsive navigation.`,
     const { object } = await generateObject({
       model: getAIModel("footer"),
       schema: FooterComponentSchema,
-      messages: [
-        {
-          role: "system" as const,
-          content: FOOTER_GENERATOR_PROMPT,
-          providerOptions: {
-            anthropic: { cacheControl: { type: "ephemeral" } },
-          },
-        },
-        {
-          role: "user" as const,
-          content: `Generate a premium footer configuration.
+      system: FOOTER_GENERATOR_PROMPT,
+      prompt: `Generate a premium footer configuration.
 
 Business: ${this.getBusinessName()}
 Industry: ${this.context?.client.industry || "general"}
@@ -1052,8 +1010,6 @@ Use the ACTUAL services and pages listed above, NOT generic corporate services.
 The tagline must describe this specific business, not a generic company.
 
 Configure ALL footer props for a complete, professional result.`,
-        },
-      ],
     });
 
     // Validate that description actually references this business
