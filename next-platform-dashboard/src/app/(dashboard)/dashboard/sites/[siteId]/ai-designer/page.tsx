@@ -441,8 +441,6 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
             formattedContext: archResult.formattedContext,
             pagePlan,
             industry: archResult.siteContext?.industry || "general",
-            personalityContext: archResult.personalityContext,
-            designPersonality: archResult.designPersonality,
           }),
         });
 

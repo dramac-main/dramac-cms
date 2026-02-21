@@ -94,8 +94,6 @@ export async function POST(request: NextRequest) {
       architecture: result.architecture,
       formattedContext: result.formattedContext,
       siteContext: result.siteContext,
-      designPersonality: result.designPersonality,
-      personalityContext: result.personalityContext,
       pageCount: result.architecture.pages.length,
     });
   } catch (error) {

@@ -1172,8 +1172,6 @@ export function buildPagePrompt(
   userPrompt?: string,
   blueprintPageContext?: string,
   allPages?: Array<{ name: string; slug: string }>,
-  personalityContext?: string,
-  sectionBackgrounds?: string[],
 ): string {
   const pageClassification = classifyPageType(pagePlan.name, pagePlan.slug);
   const isHomepage = pageClassification.type === "homepage";
@@ -1271,21 +1269,6 @@ ${userPrompt ? `
 ## User's Original Request (Reference)
 "${userPrompt}"
 ` : ""}
-${personalityContext ? `
-${personalityContext}
-
-⚠️ The DESIGN PERSONALITY above is what makes this website UNIQUE.
-Follow its instructions for hero style, card style, animations, border radius, shadow, typography scale, and background pattern.
-These choices were selected specifically for this industry and MUST be applied consistently across EVERY section on this page.
-` : ""}
-${sectionBackgrounds && sectionBackgrounds.length > 0 ? `
-## 🎨 SECTION BACKGROUND COLORS (Pre-computed for visual rhythm)
-Apply these background colors to each section IN ORDER:
-${sectionBackgrounds.map((bg, i) => `- Section ${i + 1}: backgroundColor="${bg}"`).join("\n")}
-
-These backgrounds create visual rhythm and prevent the "endless white page" effect.
-Use these EXACT colors for each section's backgroundColor prop.
-` : ""}
 
 ## Business Context
 ${context}
@@ -1304,7 +1287,5 @@ ${JSON.stringify(componentDetails, null, 2)}
 2. Every prop must be fully specified - no undefined values
 3. APPLY design tokens colors to EVERY component - do not leave colors as defaults
 4. Generate professional, compelling content where real data is not available
-5. Ensure color consistency - the same color values should appear throughout
-6. Follow the DESIGN PERSONALITY for styling choices (hero, cards, animations, spacing)
-7. Apply the SECTION BACKGROUND COLORS in order for visual rhythm`;
+5. Ensure color consistency - the same color values should appear throughout`;
 }

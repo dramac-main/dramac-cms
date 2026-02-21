@@ -20,7 +20,7 @@ import { formatContextForAI } from "./data-context/formatter";
 import { checkDataAvailability } from "./data-context/checker";
 import { componentRegistry } from "@/lib/studio/registry";
 import { DesignInspirationEngine, type DesignRecommendation } from "./design/inspiration-engine";
-import { getDesignPersonality, formatPersonalityForAI, getSectionBackgrounds, type DesignPersonality } from "./design/variety-engine";
+import { getDesignPersonality, formatPersonalityForAI } from "./design/variety-engine";
 import { MultiPassRefinementEngine } from "./refinement/multi-pass-engine";
 import { auditWebsite } from "./quality/design-auditor";
 import { ModuleIntegrationOrchestrator } from "./modules/orchestrator";
@@ -148,8 +148,6 @@ export class WebsiteDesignerEngine {
     architecture: SiteArchitecture;
     formattedContext: string;
     siteContext: SharedElementsContext;
-    designPersonality?: DesignPersonality;
-    personalityContext?: string;
     error?: string;
   }> {
     this.userPrompt = input.prompt;
@@ -227,8 +225,6 @@ export class WebsiteDesignerEngine {
         success: true,
         architecture: this.architecture,
         formattedContext,
-        designPersonality,
-        personalityContext,
         siteContext: {
           name: this.getBusinessName(),
           domain: this.context?.site?.domain || "",
@@ -265,9 +261,7 @@ export class WebsiteDesignerEngine {
     architecture: SiteArchitecture,
     pagePlan: PagePlan,
     formattedContext: string,
-    industry?: string,
-    personalityContext?: string,
-    designPersonality?: DesignPersonality
+    industry?: string
   ): Promise<{
     success: boolean;
     page?: GeneratedPage;
@@ -282,7 +276,7 @@ export class WebsiteDesignerEngine {
 
     try {
       this.reportProgress("generating-pages", `Generating page: ${pagePlan.name}...`, 0, 1);
-      const page = await this.generatePage(pagePlan, formattedContext, personalityContext, designPersonality);
+      const page = await this.generatePage(pagePlan, formattedContext);
       this.reportProgress("generating-pages", `Page "${pagePlan.name}" generated`, 1, 1);
       return { success: true, page };
     } catch (error) {
@@ -620,7 +614,7 @@ export class WebsiteDesignerEngine {
       // Step 2: Pages (sequential, one at a time)
       const pages: GeneratedPage[] = [];
       for (const pagePlan of archResult.architecture.pages) {
-        const pageResult = await this.stepSinglePage(input, archResult.architecture, pagePlan, archResult.formattedContext, archResult.siteContext?.industry, archResult.personalityContext, archResult.designPersonality);
+        const pageResult = await this.stepSinglePage(input, archResult.architecture, pagePlan, archResult.formattedContext, archResult.siteContext?.industry);
         if (!pageResult.success || !pageResult.page) {
           throw new Error(pageResult.error || `Failed to generate page: ${pagePlan.name}`);
         }
@@ -856,7 +850,7 @@ Animation: ${quickDesignTokens.heroPattern.animation}
    * Enhanced with blueprint page-specific guidance for proven section order + content formulas
    * Enhanced with page-type classification for intelligent inner page generation
    */
-  private async generatePage(pagePlan: PagePlan, context: string, personalityContext?: string, designPersonality?: DesignPersonality): Promise<GeneratedPage> {
+  private async generatePage(pagePlan: PagePlan, context: string): Promise<GeneratedPage> {
     // Get detailed field info for suggested components
     const componentDetails = pagePlan.sections.map((section) => {
       const component = componentRegistry.get(section.suggestedComponent);
@@ -877,13 +871,6 @@ Animation: ${quickDesignTokens.heroPattern.animation}
       }
     }
 
-    // Generate section backgrounds from personality (visual rhythm)
-    let sectionBackgrounds: string[] | undefined;
-    if (designPersonality) {
-      sectionBackgrounds = getSectionBackgrounds(designPersonality, pagePlan.sections.length);
-      console.log(`[WebsiteDesignerEngine] 🎨 Section backgrounds for ${pagePlan.name}: ${designPersonality.backgroundPattern}`);
-    }
-
     // Build all-pages list for cross-page context (so AI can link to real pages)
     const allPages = (this.architecture?.pages || []).map(p => ({ name: p.name, slug: p.slug }));
 
@@ -895,8 +882,6 @@ Animation: ${quickDesignTokens.heroPattern.animation}
       this.userPrompt, // Pass user's original prompt for reference
       blueprintPageContext, // Pass proven blueprint guidance for this specific page
       allPages, // Pass full site structure for cross-page linking
-      personalityContext, // Pass design personality for unique styling
-      sectionBackgrounds, // Pass pre-computed section backgrounds
     );
 
     const { object } = await generateObject({
