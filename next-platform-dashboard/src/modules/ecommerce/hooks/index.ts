@@ -51,6 +51,9 @@ export type {
   QuoteRequestData
 } from './useQuotations'
 
+// Reviews hook (ECOM-60)
+export { useStorefrontReviews } from './useStorefrontReviews'
+
 // Mobile hooks (ECOM-30, ECOM-31)
 export { useMobile, useBreakpoint, useDeviceInfo, useMediaQuery, usePrefersDarkMode, usePrefersReducedMotion } from './useMobile'
 export type { Breakpoint, BreakpointConfig, DeviceInfo } from './useMobile'

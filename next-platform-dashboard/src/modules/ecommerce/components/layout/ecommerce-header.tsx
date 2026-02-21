@@ -64,6 +64,8 @@ const viewLabels: Record<EcommerceView, string> = {
   inventory: 'Inventory',
   discounts: 'Discounts',
   quotes: 'Quotes',
+  reviews: 'Reviews',
+  templates: 'Templates',
   marketing: 'Marketing',
   analytics: 'Analytics',
   developer: 'Developer',

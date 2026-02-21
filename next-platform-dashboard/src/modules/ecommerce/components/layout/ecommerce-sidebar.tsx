@@ -29,7 +29,9 @@ import {
   Warehouse,
   Megaphone,
   Code2,
-  CodeXml
+  CodeXml,
+  MessageSquareText,
+  LayoutTemplate
 } from 'lucide-react'
 import type { EcommerceView } from '../../types/ecommerce-types'
 
@@ -86,6 +88,8 @@ function getNavItems(pendingOrders: number, lowStockCount: number): NavItemConfi
     },
     { id: 'discounts', label: 'Discounts', icon: Percent },
     { id: 'quotes', label: 'Quotes', icon: FileText },
+    { id: 'reviews', label: 'Reviews', icon: MessageSquareText },
+    { id: 'templates', label: 'Templates', icon: LayoutTemplate },
     { id: 'marketing', label: 'Marketing', icon: Megaphone },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'embed', label: 'Embed', icon: CodeXml },

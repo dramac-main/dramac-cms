@@ -36,3 +36,9 @@ export { DeveloperSettingsView } from './developer-settings-view'
 export { ApiKeysView } from './api-keys-view'
 export { WebhooksView } from './webhooks-view'
 export { IntegrationsView } from './integrations-view'
+
+// Phase ECOM-60: Product Reviews
+export { ReviewsView } from './reviews-view'
+
+// Phase ECOM-62: Store Templates
+export { TemplatesView } from './templates-view'

@@ -55,6 +55,10 @@ import { QuoteRequestBlock } from "./components/QuoteRequestBlock";
 import { QuoteListBlock } from "./components/QuoteListBlock";
 import { QuoteDetailBlock } from "./components/QuoteDetailBlock";
 
+// Review components (ECOM-60)
+import { ReviewFormBlock, reviewFormDefinition } from "./components/ReviewFormBlock";
+import { ReviewListBlock, reviewListDefinition } from "./components/ReviewListBlock";
+
 // Re-export utility components for external use (ECOM-21)
 export { ProductPriceDisplay } from "./components/ProductPriceDisplay";
 export { ProductStockBadge } from "./components/ProductStockBadge";
@@ -89,6 +93,9 @@ export { QuoteItemCard } from "./components/QuoteItemCard";
 export { QuotePriceBreakdown, QuoteSavingsDisplay } from "./components/QuotePriceBreakdown";
 export { QuoteActionButtons } from "./components/QuoteActionButtons";
 export { QuoteRequestBlock, QuoteListBlock, QuoteDetailBlock };
+
+// Re-export Review components (ECOM-60)
+export { ReviewFormBlock, ReviewListBlock };
 
 // =============================================================================
 // BLOCK DEFINITIONS (ECOM-22/23/24/25)
@@ -387,6 +394,16 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
   EcommerceQuoteDetail: {
     ...quoteDetailDefinition,
     render: QuoteDetailBlock,
+  },
+
+  // Review Components (ECOM-60)
+  EcommerceReviewForm: {
+    ...reviewFormDefinition,
+    render: ReviewFormBlock,
+  },
+  EcommerceReviewList: {
+    ...reviewListDefinition,
+    render: ReviewListBlock,
   },
 };
 

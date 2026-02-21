@@ -15,6 +15,7 @@
  * - ResellerClub sync + pricing cache
  * - Social media publish queue
  * - Social media sync
+ * - Abandoned cart recovery (e-commerce)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -54,6 +55,7 @@ export async function GET(request: NextRequest) {
   await dispatch('resellerclubSync',         '/api/cron/resellerclub-sync');
   await dispatch('socialPublish',            '/api/social/publish');
   await dispatch('socialSync',               '/api/social/sync');
+  await dispatch('abandonedCarts',           '/api/cron/abandoned-carts');
 
   if (errors.length > 0) {
     results.errors = errors;

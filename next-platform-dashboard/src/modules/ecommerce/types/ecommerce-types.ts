@@ -604,6 +604,8 @@ export type EcommerceView =
   | 'categories' 
   | 'discounts' 
   | 'quotes'
+  | 'reviews'
+  | 'templates'
   | 'inventory'
   | 'analytics'
   | 'marketing'
@@ -851,7 +853,7 @@ export interface ShippingSettings {
 export interface PaymentGateway {
   id: string
   name: string
-  type: 'stripe' | 'paypal' | 'square' | 'manual' | 'cod' | 'bank_transfer'
+  type: 'paddle' | 'flutterwave' | 'pesapal' | 'dpo' | 'manual' | 'cod' | 'bank_transfer'
   enabled: boolean
   test_mode: boolean
   api_key?: string
@@ -2141,6 +2143,74 @@ export interface StorefrontWishlistResult {
   isInWishlist: (productId: string, variantId?: string) => boolean
   clear: () => void
   itemCount: number
+}
+
+// ============================================================================
+// PRODUCT REVIEWS (Phase ECOM-60)
+// ============================================================================
+
+export type ReviewStatus = 'pending' | 'approved' | 'rejected' | 'flagged'
+
+export interface Review {
+  id: string
+  site_id: string
+  product_id: string
+
+  // Reviewer
+  user_id: string | null
+  reviewer_name: string
+  reviewer_email: string | null
+
+  // Content
+  rating: number
+  title: string | null
+  body: string | null
+
+  // Status
+  status: ReviewStatus
+
+  // Metadata
+  verified_purchase: boolean
+  helpful_count: number
+
+  // Admin
+  admin_response: string | null
+  admin_response_at: string | null
+
+  created_at: string
+  updated_at: string
+}
+
+export interface ReviewInput {
+  site_id: string
+  product_id: string
+  user_id?: string | null
+  reviewer_name: string
+  reviewer_email?: string | null
+  rating: number
+  title?: string
+  body?: string
+}
+
+export interface ReviewStats {
+  averageRating: number
+  totalReviews: number
+  ratingDistribution: Record<1 | 2 | 3 | 4 | 5, number>
+}
+
+export interface StorefrontReviewsResult {
+  reviews: Review[]
+  stats: ReviewStats
+  totalReviews: number
+  currentPage: number
+  isLoading: boolean
+  error: string | null
+  sortBy: 'newest' | 'oldest' | 'highest' | 'lowest' | 'helpful'
+  setSortBy: (sort: 'newest' | 'oldest' | 'highest' | 'lowest' | 'helpful') => void
+  loadMore: () => Promise<void>
+  submitReview: (input: Omit<ReviewInput, 'site_id' | 'product_id'>) => Promise<{ success: boolean; error?: string }>
+  markHelpful: (reviewId: string) => Promise<boolean>
+  hasMore: boolean
 }
 
 // ============================================================================

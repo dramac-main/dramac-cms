@@ -9,6 +9,9 @@
 // Main wizard component
 export { OnboardingWizard } from './OnboardingWizard';
 
+// Store template selector
+export { StoreTemplateSelector } from './StoreTemplateSelector';
+
 // Step components
 export {
   StoreBasicsStep,
