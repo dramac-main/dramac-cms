@@ -64,7 +64,13 @@ interface ComponentRendererProps {
 const MODULE_COMPONENT_TYPES = new Set([
   "BookingServiceSelector", "BookingWidget", "BookingCalendar",
   "BookingForm", "BookingEmbed", "BookingStaffGrid",
-  "ProductGrid", "CartItems", "CartSummary", "CheckoutForm",
+  "EcommerceProductGrid", "EcommerceProductCard", "EcommerceProductCatalog",
+  "EcommerceFeaturedProducts", "EcommerceCartPage", "EcommerceCartDrawer",
+  "EcommerceMiniCart", "EcommerceCheckoutPage", "EcommerceOrderConfirmation",
+  "EcommerceCategoryNav", "EcommerceSearchBar", "EcommerceFilterSidebar",
+  "EcommerceBreadcrumb", "EcommerceProductSort", "EcommerceQuoteRequest",
+  "EcommerceQuoteList", "EcommerceQuoteDetail", "EcommerceReviewForm",
+  "EcommerceReviewList", "ProductDetailBlock", "CategoryHeroBlock",
 ]);
 
 /**

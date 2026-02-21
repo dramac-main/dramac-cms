@@ -409,6 +409,71 @@ export const categoryPageDefinition: PageDefinition = {
 };
 
 // ============================================================================
+// QUOTE REQUEST PAGE TEMPLATE
+// ============================================================================
+
+/**
+ * Create the quote request page template
+ * URL: /quotes
+ * 
+ * This page is created during activation so the quote mode
+ * redirect URL (/quotes) always resolves. The QuoteRequestBlock
+ * handles the full quote submission flow.
+ */
+export function createQuoteRequestTemplate(): StudioPageData {
+  resetIdCounter();
+  const page = createEmptyPage('Request a Quote');
+
+  // Header Section
+  const headerSection = createSection(page, {
+    padding: '32px 24px',
+    backgroundColor: '#f9fafb',
+  });
+
+  const headerContainer = createContainer(page, headerSection, {
+    alignItems: 'center',
+    gap: '16px',
+  });
+
+  createHeading(page, headerContainer, 'Request a Quote', 1);
+
+  // Quote Form Section
+  const formSection = createSection(page, {
+    padding: '32px 24px',
+  });
+
+  const formContainer = createContainer(page, formSection, {
+    gap: '24px',
+  });
+
+  addBreadcrumb(page, formContainer, { showHome: true });
+
+  addComponent(page, {
+    type: 'EcommerceQuoteRequest',
+    props: {
+      showNotes: true,
+      requirePhone: false,
+    },
+  }, formContainer);
+
+  return page;
+}
+
+/**
+ * Quote request page definition
+ */
+export const quotePageDefinition: PageDefinition = {
+  slug: 'quotes',
+  title: 'Request a Quote',
+  metaTitle: 'Request a Quote',
+  metaDescription: 'Submit a quote request for our products and services. We will get back to you with competitive pricing.',
+  status: 'published',
+  content: createQuoteRequestTemplate(),
+  moduleCreated: true,
+  moduleId: 'ecommerce',
+};
+
+// ============================================================================
 // ALL PAGE DEFINITIONS
 // ============================================================================
 
@@ -420,6 +485,7 @@ export const ecommercePageDefinitions: PageDefinition[] = [
   cartPageDefinition,
   checkoutPageDefinition,
   orderConfirmationPageDefinition,
+  quotePageDefinition,
 ];
 
 /**

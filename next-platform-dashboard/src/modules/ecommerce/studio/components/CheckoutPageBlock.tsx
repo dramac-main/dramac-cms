@@ -262,8 +262,32 @@ export function CheckoutPageBlock({
   onOrderComplete,
   className
 }: CheckoutPageBlockProps) {
-  const { formatPrice } = useStorefront()
+  const { formatPrice, quotationModeEnabled, quotationRedirectUrl, quotationButtonLabel } = useStorefront()
   const checkout = useCheckout()
+
+  // Quote mode guard — redirect away from checkout when in quotation mode
+  if (quotationModeEnabled) {
+    const quoteUrl = quotationRedirectUrl || '/quotes'
+    return (
+      <div className={cn('py-12', className)}>
+        <div className="container max-w-4xl mx-auto px-4">
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <ShieldCheck className="h-12 w-12 text-muted-foreground mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Quotation Mode Active</h2>
+              <p className="text-muted-foreground mb-6 max-w-md">
+                This store operates in quotation mode. Instead of checking out directly,
+                please submit a quote request and we&apos;ll get back to you with pricing.
+              </p>
+              <Button asChild>
+                <a href={quoteUrl}>{quotationButtonLabel || 'Request a Quote'}</a>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
   
   const [orderResult, setOrderResult] = React.useState<{
     orderId: string

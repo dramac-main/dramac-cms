@@ -598,10 +598,27 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
     "BookingForm": "BookingForm",
     "BookingEmbed": "BookingEmbed",
     "BookingStaffGrid": "BookingStaffGrid",
-    "ProductGrid": "ProductGrid",
-    "CartItems": "CartItems",
-    "CartSummary": "CartSummary",
-    "CheckoutForm": "CheckoutForm",
+    "ProductGrid": "EcommerceProductGrid",
+    "EcommerceProductGrid": "EcommerceProductGrid",
+    "FeaturedProducts": "EcommerceFeaturedProducts",
+    "EcommerceFeaturedProducts": "EcommerceFeaturedProducts",
+    "ProductCard": "EcommerceProductCard",
+    "EcommerceProductCard": "EcommerceProductCard",
+    "ProductCatalog": "EcommerceProductCatalog",
+    "EcommerceProductCatalog": "EcommerceProductCatalog",
+    "CartItems": "EcommerceCartPage",
+    "CartPage": "EcommerceCartPage",
+    "EcommerceCartPage": "EcommerceCartPage",
+    "CartSummary": "EcommerceMiniCart",
+    "MiniCart": "EcommerceMiniCart",
+    "EcommerceMiniCart": "EcommerceMiniCart",
+    "CheckoutForm": "EcommerceCheckoutPage",
+    "CheckoutPage": "EcommerceCheckoutPage",
+    "EcommerceCheckoutPage": "EcommerceCheckoutPage",
+    "ProductDetail": "ProductDetailBlock",
+    "ProductDetailBlock": "ProductDetailBlock",
+    "CategoryHero": "CategoryHeroBlock",
+    "CategoryHeroBlock": "CategoryHeroBlock",
   };
 
   const studioType = typeMap[genComponent.type] || genComponent.type;
@@ -1352,7 +1369,9 @@ function transformPropsForStudio(
   const MODULE_TYPES = [
     "BookingServiceSelector", "BookingWidget", "BookingCalendar",
     "BookingForm", "BookingEmbed", "BookingStaffGrid",
-    "ProductGrid", "CartItems", "CartSummary", "CheckoutForm",
+    "EcommerceProductGrid", "EcommerceProductCard", "EcommerceProductCatalog",
+    "EcommerceFeaturedProducts", "EcommerceCartPage", "EcommerceMiniCart",
+    "EcommerceCheckoutPage", "ProductDetailBlock", "CategoryHeroBlock",
   ];
 
   if (MODULE_TYPES.includes(type)) {

@@ -61,7 +61,11 @@ export function CartPageBlock({
   showClearCart = true,
   className
 }: CartPageBlockProps) {
-  const { siteId, formatPrice, taxRate } = useStorefront()
+  const { siteId, formatPrice, taxRate, quotationModeEnabled, quotationButtonLabel, quotationRedirectUrl } = useStorefront()
+
+  // In quote mode, change checkout to quote request
+  const effectiveCheckoutHref = quotationModeEnabled ? (quotationRedirectUrl || '/quotes') : checkoutHref
+  const effectiveCheckoutText = quotationModeEnabled ? (quotationButtonLabel || 'Request a Quote') : checkoutText
   const {
     cart,
     items,
@@ -224,8 +228,8 @@ export function CartPageBlock({
               <CartSummaryCard
                 totals={totals}
                 formatPrice={formatPrice}
-                checkoutHref={checkoutHref}
-                checkoutText={checkoutText}
+                checkoutHref={effectiveCheckoutHref}
+                checkoutText={effectiveCheckoutText}
                 isLoading={isUpdating}
                 showDiscount={true}
                 currentDiscount={currentDiscount}

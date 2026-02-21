@@ -59,6 +59,10 @@ import { QuoteDetailBlock } from "./components/QuoteDetailBlock";
 import { ReviewFormBlock, reviewFormDefinition } from "./components/ReviewFormBlock";
 import { ReviewListBlock, reviewListDefinition } from "./components/ReviewListBlock";
 
+// Dynamic route components (ECOM-51)
+import { ProductDetailBlock, productDetailDefinition } from "./components/ProductDetailBlock";
+import { CategoryHeroBlock, categoryHeroDefinition } from "./components/CategoryHeroBlock";
+
 // Re-export utility components for external use (ECOM-21)
 export { ProductPriceDisplay } from "./components/ProductPriceDisplay";
 export { ProductStockBadge } from "./components/ProductStockBadge";
@@ -96,6 +100,9 @@ export { QuoteRequestBlock, QuoteListBlock, QuoteDetailBlock };
 
 // Re-export Review components (ECOM-60)
 export { ReviewFormBlock, ReviewListBlock };
+
+// Re-export Dynamic Route components (ECOM-51)
+export { ProductDetailBlock, CategoryHeroBlock };
 
 // =============================================================================
 // BLOCK DEFINITIONS (ECOM-22/23/24/25)
@@ -404,6 +411,16 @@ export const studioComponents: ModuleStudioExports["studioComponents"] = {
   EcommerceReviewList: {
     ...reviewListDefinition,
     render: ReviewListBlock,
+  },
+
+  // Dynamic Route Components (ECOM-51)
+  ProductDetailBlock: {
+    ...productDetailDefinition,
+    render: ProductDetailBlock,
+  },
+  CategoryHeroBlock: {
+    ...categoryHeroDefinition,
+    render: CategoryHeroBlock,
   },
 };
 
