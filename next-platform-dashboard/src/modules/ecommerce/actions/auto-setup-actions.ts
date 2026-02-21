@@ -89,6 +89,9 @@ export async function createEcommercePages(
   const existingSlugs = new Set(existingPages?.map((p: { slug: string }) => p.slug) || []);
   
   // Create static pages
+  // NOTE: The DB uses a two-table structure:
+  //   - `pages` table: id, site_id, name, slug, seo_title, seo_description, is_homepage, sort_order, ...
+  //   - `page_content` table: id, page_id (FK), content (jsonb), version
   for (const pageDef of ecommercePageDefinitions) {
     // Skip if page already exists
     if (existingSlugs.has(pageDef.slug)) {
@@ -97,37 +100,46 @@ export async function createEcommercePages(
     }
     
     try {
+      // Step 1: Create the page row in `pages` table
       const { data: page, error } = await db
         .from('pages')
         .insert({
           site_id: siteId,
           slug: pageDef.slug,
-          title: pageDef.title,
-          content: pageDef.content,
-          meta_title: pageDef.metaTitle,
-          meta_description: pageDef.metaDescription,
-          status: pageDef.status,
-          // Mark as module-created for cleanup
-          metadata: {
-            module_created: true,
-            module_id: pageDef.moduleId,
-            created_by: 'ecommerce-auto-setup',
-          },
+          name: pageDef.title,
+          seo_title: pageDef.metaTitle || pageDef.title,
+          seo_description: pageDef.metaDescription || '',
+          is_homepage: false,
         })
-        .select('id, slug, title')
+        .select('id, slug, name')
         .single();
       
       if (error) {
         console.error(`[AutoSetup] Failed to create page /${pageDef.slug}:`, error);
         result.errors?.push(`Failed to create /${pageDef.slug}: ${error.message}`);
-      } else {
-        result.pages.push({
-          id: page.id,
-          slug: page.slug,
-          title: page.title,
-        });
-        console.log(`[AutoSetup] Created page /${pageDef.slug}`);
+        continue;
       }
+      
+      // Step 2: Create the page content in `page_content` table
+      const { error: contentError } = await db
+        .from('page_content')
+        .insert({
+          page_id: page.id,
+          content: pageDef.content,
+        });
+      
+      if (contentError) {
+        console.error(`[AutoSetup] Failed to save content for /${pageDef.slug}:`, contentError);
+        result.errors?.push(`Failed to save content for /${pageDef.slug}: ${contentError.message}`);
+        // Page row exists but content failed — still track it
+      }
+      
+      result.pages.push({
+        id: page.id,
+        slug: page.slug,
+        title: page.name,
+      });
+      console.log(`[AutoSetup] Created page /${pageDef.slug} with content`);
     } catch (err) {
       console.error(`[AutoSetup] Error creating page /${pageDef.slug}:`, err);
       result.errors?.push(`Error creating /${pageDef.slug}`);
@@ -189,10 +201,12 @@ async function storeDynamicRouteDefinitions(
 
 /**
  * Delete or mark pages created by a module
+ * Since the pages table has no metadata column, we identify ecommerce pages
+ * by their known slugs defined in ecommercePageDefinitions.
  */
 export async function deletePagesCreatedByModule(
   siteId: string,
-  moduleId: string
+  _moduleId: string
 ): Promise<DeletePagesResult> {
   const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -205,38 +219,35 @@ export async function deletePagesCreatedByModule(
   };
   
   try {
-    // Find pages created by this module
-    // Using a raw filter since Supabase doesn't have native JSONB contains support via SDK
-    const { data: allPages } = await db
-      .from('pages')
-      .select('id, slug, metadata')
-      .eq('site_id', siteId);
+    // Find pages by known ecommerce slugs
+    const ecommerceSlugs = ecommercePageDefinitions.map(p => p.slug);
     
-    // Filter pages that have module_id in metadata
-    const modulePages = (allPages || []).filter(
-      (p: { metadata?: { module_id?: string } }) => 
-        p.metadata?.module_id === moduleId
-    );
+    const { data: modulePages } = await db
+      .from('pages')
+      .select('id, slug')
+      .eq('site_id', siteId)
+      .in('slug', ecommerceSlugs);
     
     if (!modulePages || modulePages.length === 0) {
       return result;
     }
     
-    // Option 2: Mark as orphaned (safer - preserves user changes)
+    // Delete page content first (FK constraint), then pages
     for (const page of modulePages) {
+      // Delete content
+      await db
+        .from('page_content')
+        .delete()
+        .eq('page_id', page.id);
+      
+      // Delete the page row
       const { error } = await db
         .from('pages')
-        .update({
-          metadata: {
-            ...page.metadata,
-            module_orphaned: true,
-            module_removed_at: new Date().toISOString(),
-          },
-        })
+        .delete()
         .eq('id', page.id);
       
       if (error) {
-        result.errors?.push(`Failed to orphan page /${page.slug}`);
+        result.errors?.push(`Failed to delete page /${page.slug}`);
       } else {
         result.pagesRemoved.push(page.slug);
       }
