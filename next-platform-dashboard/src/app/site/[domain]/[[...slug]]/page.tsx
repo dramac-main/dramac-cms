@@ -6,6 +6,7 @@ import { ModuleInjector } from "@/components/renderer/module-injector";
 import type { InstalledModuleInfo } from "@/types/studio-module";
 import { LiveChatWidgetInjector } from "@/components/renderer/live-chat-widget-injector";
 import { EcommerceCartInjector } from "@/components/renderer/ecommerce-cart-injector";
+import { EcommerceSeoInjector } from "@/modules/ecommerce/components/ecommerce-seo-injector";
 
 // Known module slugs that have Studio components
 const KNOWN_MODULE_SLUGS = ["ecommerce", "booking", "crm", "automation", "social-media", "live-chat"];
@@ -25,19 +26,67 @@ export const revalidate = 60;
  */
 export async function generateMetadata({ params }: SitePageProps): Promise<Metadata> {
   const { domain, slug } = await params;
-  const data = await getSiteData(domain, slug?.join("/") || "");
+  const pageSlug = slug?.join("/") || "";
+  const data = await getSiteData(domain, pageSlug);
   
   if (!data) return {};
   
-  return {
+  // Build canonical URL from site domain info
+  const siteUrl = data.site.customDomain
+    ? `https://${data.site.customDomain}`
+    : data.site.subdomain
+    ? `https://${data.site.subdomain}.dramac.app`
+    : undefined;
+  const canonicalUrl = siteUrl && pageSlug ? `${siteUrl}/${pageSlug}` : siteUrl;
+
+  // Base metadata
+  const metadata: Metadata = {
     title: data.page.seoTitle || data.page.name || data.site.name,
     description: data.page.seoDescription || undefined,
     openGraph: {
       title: data.page.seoTitle || data.page.name,
       description: data.page.seoDescription || undefined,
       images: data.page.seoImage ? [data.page.seoImage] : undefined,
+      type: 'website',
     },
   };
+
+  // Add canonical URL
+  if (canonicalUrl) {
+    metadata.alternates = { canonical: canonicalUrl };
+  }
+
+  // Enhance metadata for product pages with product-specific OG tags
+  const normalizedSlug = pageSlug.replace(/^\/+/, '');
+  if (normalizedSlug.startsWith('products/') && data.site.id) {
+    try {
+      const { createAdminClient: createAdmin } = await import('@/lib/supabase/admin');
+      const db = createAdmin() as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const productSlug = normalizedSlug.replace('products/', '');
+      const { data: product } = await db
+        .from('mod_ecommod01_products')
+        .select('name, description, short_description, images, base_price, seo_title, seo_description')
+        .eq('site_id', data.site.id)
+        .eq('slug', productSlug)
+        .eq('status', 'active')
+        .single();
+      
+      if (product) {
+        metadata.title = product.seo_title || product.name;
+        metadata.description = product.seo_description || product.description || product.short_description || undefined;
+        metadata.openGraph = {
+          title: product.seo_title || product.name,
+          description: product.seo_description || product.description || product.short_description || undefined,
+          images: product.images?.length > 0 ? product.images : undefined,
+          type: 'website',
+        };
+      }
+    } catch {
+      // Fall through to default metadata
+    }
+  }
+
+  return metadata;
 }
 
 /**
@@ -294,6 +343,17 @@ export default async function SitePage({ params }: SitePageProps) {
       {/* Auto-inject floating cart icon when ecommerce module is active.
           Passes hasLiveChat so the cart positions above the chat launcher (no overlap). */}
       {hasEcommerce && <EcommerceCartInjector siteId={data.site.id} hasLiveChat={hasLiveChat} />}
+      {/* Inject Schema.org JSON-LD structured data for Google Rich Results.
+          Server-rendered so Googlebot sees it without JS execution. */}
+      {hasEcommerce && (
+        <EcommerceSeoInjector
+          siteId={data.site.id}
+          pageSlug={pageSlug}
+          subdomain={data.site.subdomain}
+          customDomain={data.site.customDomain}
+          siteName={data.site.name}
+        />
+      )}
     </>
   );
 }
