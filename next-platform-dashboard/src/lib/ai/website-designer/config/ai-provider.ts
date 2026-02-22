@@ -80,23 +80,24 @@ const DEFAULT_PROVIDER: AIProvider = "anthropic";
 /**
  * Task-specific model tier assignments
  * 
- * HYBRID STRATEGY for Vercel Hobby (60s per function):
+ * AI-FIRST STRATEGY:
  * 
- * - Architecture: FAST (Haiku) — Blueprint-guided planning task. The blueprint 
- *   provides 90% of the structure. AI-generated designTokens get overwritten 
- *   by blueprint tokens anyway. Haiku handles this in ~8-10s vs 57s for Sonnet.
+ * - Architecture: PREMIUM (Sonnet 4.6) — The creative brain. Makes ALL design
+ *   decisions: colors, fonts, spacing, page structure, section planning, and
+ *   designNotes that guide every page. This is the most important AI call.
  * 
- * - Page Content: PREMIUM (Sonnet 4.6) — THIS is where quality matters. 
- *   The actual copywriting, section details, and component choices that users 
- *   see. Sonnet produces significantly better creative output.
+ * - Page Content: PREMIUM (Sonnet 4.6) — The copywriter. Generates complete
+ *   component configurations with business-specific content, using the design
+ *   tokens and section plans from architecture.
  * 
- * - Navbar/Footer: FAST (Haiku) — Simple structured output. Blueprint-guided.
+ * - Navbar/Footer: FAST (Haiku) — Simple structured output with deterministic
+ *   fallbacks. Speed matters more than creativity here.
  * 
- * Each step runs in its own serverless function (3 × 60s = 180s total budget).
+ * Each step runs in its own serverless function (300s budget per function).
  */
 const TASK_TIERS: Record<string, AIModelTier> = {
-  // Step 1: Architecture planning — blueprint-guided, Haiku is fast & sufficient
-  "architecture": "fast",
+  // Step 1: Architecture planning — the creative brain, needs best model
+  "architecture": "premium",
   
   // Step 2: Page content — quality matters here, use Sonnet 4.6
   "page-content": "premium",
