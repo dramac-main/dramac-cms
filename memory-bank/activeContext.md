@@ -1,10 +1,13 @@
 # Active Context
 
-## Current Focus: AI Website Designer — Button Visibility, Navbar/Footer Branding, Module Integration
+## Current Focus: AI Website Designer — Full Pipeline Completeness
 
-### Status: BUTTON + BRANDING + MODULE FIX DEPLOYED ✅ (commit `0b01874`)
+### Status: COMPLETE PIPELINE AUDIT + PLUMBING FIXES DEPLOYED ✅
 
-### Previous Fixes:
+### Recent Fixes (newest first):
+- Pipeline Plumbing Fix — Registry init, module detection, semantic maps (commit `96fd825`) ✅
+- Complete Component Audit — All 28 module types + Typewriter/Parallax/Badge (commit `ff37f0e`) ✅
+- Button + Branding + Module Fix (commit `0b01874`) ✅
 - Design Quality Fix — Section Dedup + Color Execution (commit `52f891b`) ✅
 - Critical Blank Pages Fix (commit `260d2f0`) ✅
 - Architecture Model Upgrade (commit `8eff0ea`) ✅
@@ -14,7 +17,37 @@
 
 ---
 
-### Button Visibility + Navbar/Footer Branding + Module Integration Fix ✅
+### Pipeline Plumbing Fix (commit `96fd825`) ✅
+
+**Problem:** Even with all types added, the AI was still flying blind because:
+1. Component registry was empty during server-side AI generation (API routes never called `initializeRegistry()`)
+2. `fetchModules()` queried `sites.settings.enabled_modules` which was NEVER populated — the real data lives in `site_module_installations` table
+3. Ecommerce prefix missing from auto-install module map
+4. Semantic fallback map sent "appointment"/"booking" to CTA instead of BookingWidget
+
+**Fixes:**
+1. **component-reference.ts**: Both `generateArchitectureReference()` and `generatePageReference()` now call `initializeRegistry()` if not already done — AI finally sees ALL component prop documentation server-side
+2. **data-context/builder.ts**: Rewrote `fetchModules()` to query `site_module_installations` JOIN `modules_v2` instead of the dead `sites.settings.enabled_modules` field
+3. **auto-install/route.ts**: Added `Ecommerce: "ecommerce"` prefix to `COMPONENT_MODULE_MAP`
+4. **converter.ts**: "appointment"/"bookappointment"/"booking" now map to `BookingWidget` instead of `CTA`
+
+---
+
+### Complete Component Audit (commit `ff37f0e`) ✅
+
+**Problem:** Deep audit found VALID_COMPONENT_TYPES had only 35 of 81 registered component types.
+
+**Fixes (6 files, +225 lines):**
+1. **schemas.ts**: Added 18 missing types (BookingEmbed, BookingStaffGrid, 14 ecommerce types, Typewriter, Parallax, Badge, SocialLinks)
+2. **component-reference.ts**: Added `layout` and `typography` to AI_RELEVANT_CATEGORIES (AI was outputting Section/Heading/Text with zero prop docs)
+3. **converter.ts**: Added 35+ typeMap aliases, 10 missing ecommerce types to KNOWN_REGISTRY_TYPES and MODULE_TYPES handler
+4. **engine.ts**: Module components now get primaryColor/accentColor only (no random backgrounds)
+5. **prompts.ts**: Expanded module component lists from 6→19+ types with key prop documentation
+6. **formatter.ts**: Expanded ecommerce instructions from 4→12 lines
+
+---
+
+### Button + Branding + Module Fix (commit `0b01874`) ✅
 
 **Problem:** After design quality fix, sites still had 3 critical issues:
 - CTA buttons were invisible (white text on white background)

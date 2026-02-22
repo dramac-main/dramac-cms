@@ -1,13 +1,37 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅**
 
 ---
 
-## Latest Update: February 2026 - AI Button Visibility, Navbar/Footer Branding, Module Integration
+## Latest Update: February 2026 - AI Complete Pipeline Audit + Plumbing
 
-### Problem: Invisible Buttons, Unstyled Navbar/Footer, Booking Module Ignored ✅
+### Problem: Types Were Added But Pipeline Was Broken At Every Layer ✅
+
+Deep audit revealed the AI pipeline had 6 layers that all needed to agree on component types, and they were massively out of sync. Beyond types, critical plumbing was broken: registry empty server-side, module detection querying wrong table, semantic maps sending booking to wrong components.
+
+### Fixes Applied (2 commits: `ff37f0e` + `96fd825`):
+
+**Commit `ff37f0e` — Component Audit (6 files, +225 lines):**
+1. **schemas.ts**: VALID_COMPONENT_TYPES expanded from 35→53 types (added 18 missing module + interactive types)
+2. **component-reference.ts**: AI_RELEVANT_CATEGORIES expanded from 8→10 (added layout, typography)
+3. **converter.ts**: Added 35+ typeMap aliases, 10 missing ecommerce types to KNOWN_REGISTRY_TYPES + MODULE_TYPES
+4. **engine.ts**: Module components now get primaryColor/accentColor only (no random backgrounds)
+5. **prompts.ts**: Module component lists expanded from 6→19+ with key prop docs
+6. **formatter.ts**: Ecommerce instructions expanded from 4→12 lines
+
+**Commit `96fd825` — Pipeline Plumbing (4 files, +55/-26 lines):**
+1. **component-reference.ts**: Server-side `initializeRegistry()` call — AI was getting ZERO prop docs
+2. **data-context/builder.ts**: fetchModules() rewritten to query `site_module_installations` JOIN `modules_v2` (was querying empty `sites.settings.enabled_modules`)
+3. **auto-install/route.ts**: Added `Ecommerce` prefix to COMPONENT_MODULE_MAP
+4. **converter.ts**: "appointment"/"booking" semantic maps → BookingWidget instead of CTA
+
+**Build:** ✅ 194/194 pages, zero errors
+
+---
+
+## Previous Update: February 2026 - AI Button Visibility, Navbar/Footer Branding, Module Integration
 
 After design quality fix, generated sites had visible content with color variety, but CTA buttons were invisible (white-on-white), navbar/footer stayed default (no brand colors), and the booking module was installed and enabled but AI never used any booking components.
 
