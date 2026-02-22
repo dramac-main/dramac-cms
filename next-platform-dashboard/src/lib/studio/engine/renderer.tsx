@@ -86,19 +86,45 @@ function ComponentRenderer({
   const definition = getComponent(component.type);
   
   if (!definition) {
-    // Component type not found - show placeholder in dev, hide in prod
+    // Component type not found — try to render a generic fallback
+    // instead of silently dropping the section (which causes blank pages)
+    const props = component.props || {};
+    const title = String(props.title || props.headline || props.text || "");
+    const subtitle = String(props.subtitle || props.description || "");
+    const hasContent = title || subtitle;
+    
     if (process.env.NODE_ENV === "development") {
       return (
         <div 
           key={component.id}
-          className="border-2 border-dashed border-amber-400 bg-amber-50 p-4 rounded text-center"
+          className="border-2 border-dashed border-amber-400 bg-amber-50 p-8 rounded text-center"
         >
-          <p className="text-amber-700 text-sm font-medium">
+          <p className="text-amber-700 text-sm font-medium mb-2">
             Unknown component: {component.type}
           </p>
+          {hasContent && (
+            <div className="text-amber-600 text-xs">
+              {title && <p className="font-semibold">{title}</p>}
+              {subtitle && <p>{subtitle}</p>}
+            </div>
+          )}
         </div>
       );
     }
+    
+    // Production fallback: render the content in a clean section
+    // rather than showing nothing (which is worse)
+    if (hasContent) {
+      return (
+        <section key={component.id} className="py-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            {title && <h2 className="text-3xl font-bold text-gray-900 mb-4">{title}</h2>}
+            {subtitle && <p className="text-lg text-gray-600">{subtitle}</p>}
+          </div>
+        </section>
+      );
+    }
+    
     return null;
   }
   

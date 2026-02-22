@@ -253,6 +253,124 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
     "AboutBlock": "Features",
     "AboutSection": "Features",
     "About": "Features",
+    // Additional common AI variations
+    "ServiceBlock": "Features",
+    "ServiceSection": "Features",
+    "ServiceCards": "Features",
+    "ServiceList": "Features",
+    "Services": "Features",
+    "ServiceGrid": "Features",
+    "BenefitsBlock": "Features",
+    "BenefitsSection": "Features",
+    "Benefits": "Features",
+    "WhyUsBlock": "Features",
+    "WhyUsSection": "Features",
+    "WhyUs": "Features",
+    "WhyChooseUs": "Features",
+    "ProcessBlock": "Features",
+    "ProcessSection": "Features",
+    "Process": "Features",
+    "StepsBlock": "Features",
+    "Steps": "Features",
+    "HowItWorks": "Features",
+    "HowItWorksSection": "Features",
+    // Logo/Trust
+    "LogoCloudBlock": "LogoCloud",
+    "LogoCloudSection": "LogoCloud",
+    "PartnerLogos": "LogoCloud",
+    "Partners": "LogoCloud",
+    "TrustedBy": "LogoCloud",
+    "TrustBadgesBlock": "TrustBadges",
+    "TrustBadgesSection": "TrustBadges",
+    "Badges": "TrustBadges",
+    "Accreditations": "TrustBadges",
+    "Credentials": "TrustBadges",
+    "Certifications": "TrustBadges",
+    // Social proof
+    "SocialProofBlock": "SocialProof",
+    "SocialProofSection": "SocialProof",
+    "Reviews": "Testimonials",
+    "ReviewsBlock": "Testimonials",
+    "ReviewsSection": "Testimonials",
+    "ClientReviews": "Testimonials",
+    // Interactive
+    "AccordionBlock": "Accordion",
+    "AccordionSection": "Accordion",
+    "TabsBlock": "Tabs",
+    "TabsSection": "Tabs",
+    "CarouselBlock": "Carousel",
+    "CarouselSection": "Carousel",
+    "CountdownBlock": "Countdown",
+    "CountdownSection": "Countdown",
+    // Comparison/Pricing variants
+    "ComparisonBlock": "ComparisonTable",
+    "ComparisonSection": "ComparisonTable",
+    "ComparisonTableBlock": "ComparisonTable",
+    // Announcement
+    "AnnouncementBlock": "AnnouncementBar",
+    "AnnouncementBarBlock": "AnnouncementBar",
+    "Banner": "AnnouncementBar",
+    "BannerBlock": "AnnouncementBar",
+    // Map/Location
+    "MapBlock": "Map",
+    "MapSection": "Map",
+    "LocationMap": "Map",
+    "Location": "ContactForm",
+    "LocationBlock": "ContactForm",
+    "LocationSection": "ContactForm",
+    // Video
+    "VideoBlock": "Video",
+    "VideoSection": "Video",
+    "VideoPlayer": "Video",
+    // Contact
+    "ContactBlock": "ContactForm",
+    "ContactSection": "ContactForm",
+    "Contact": "ContactForm",
+    "ContactInfoBlock": "ContactForm",
+    "ContactInfo": "ContactForm",
+    // Newsletter
+    "NewsletterBlock": "Newsletter",
+    "NewsletterSection": "Newsletter",
+    "SubscribeBlock": "Newsletter",
+    "Subscribe": "Newsletter",
+    // Quote
+    "QuoteBlock": "Quote",
+    "QuoteSection": "Quote",
+    "Blockquote": "Quote",
+    // Code
+    "CodeBlockSection": "CodeBlock",
+    // Form
+    "FormBlock": "Form",
+    "FormSection": "Form",
+    // Misc content
+    "ContentSection": "RichText",
+    "Content": "RichText",
+    "MarkdownBlock": "RichText",
+    "Markdown": "RichText",
+    // Image
+    "ImageBlock": "Image",
+    "ImageSection": "Image",
+    // Healthcare-specific AI inventions
+    "PatientInfo": "Features",
+    "PatientInfoSection": "Features",
+    "PatientInfoBlock": "Features",
+    "PatientResources": "Features",
+    "InsuranceAccepted": "Features",
+    "Insurance": "Features",
+    "Appointment": "CTA",
+    "AppointmentBlock": "CTA",
+    "BookAppointment": "CTA",
+    "BookNow": "CTA",
+    "BusinessHours": "Features",
+    "OfficeHours": "Features",
+    "OpeningHours": "Features",
+    // Restaurant-specific
+    "Menu": "Features",
+    "MenuBlock": "Features",
+    "MenuSection": "Features",
+    "FoodMenu": "Features",
+    "Reservation": "CTA",
+    "ReservationBlock": "CTA",
     // Direct mappings
     "Hero": "Hero",
     "Features": "Features",
@@ -275,6 +393,23 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
     "Button": "Button",
     "Divider": "Divider",
     "Spacer": "Spacer",
+    "Accordion": "Accordion",
+    "Tabs": "Tabs",
+    "Carousel": "Carousel",
+    "Countdown": "Countdown",
+    "Modal": "Modal",
+    "Map": "Map",
+    "Video": "Video",
+    "Quote": "Quote",
+    "Newsletter": "Newsletter",
+    "LogoCloud": "LogoCloud",
+    "TrustBadges": "TrustBadges",
+    "SocialProof": "SocialProof",
+    "ComparisonTable": "ComparisonTable",
+    "AnnouncementBar": "AnnouncementBar",
+    "SocialLinks": "SocialLinks",
+    "CodeBlock": "CodeBlock",
+    "Form": "Form",
     // Module component type mappings
     "ServiceSelector": "BookingServiceSelector",
     "BookingServiceSelector": "BookingServiceSelector",
@@ -308,15 +443,110 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
 
   const studioType = typeMap[genComponent.type] || genComponent.type;
 
+  // =========================================================================
+  // FUZZY FALLBACK: If the type isn't recognized by the registry, try
+  // stripping common suffixes the AI sometimes adds (Block, Section, etc.)
+  // and mapping to the closest known registry type.
+  // =========================================================================
+  let resolvedType = studioType;
+  
+  // Check if this type exists in the registry. If not, try fuzzy matching.
+  const KNOWN_REGISTRY_TYPES = new Set([
+    "Hero", "Features", "CTA", "Testimonials", "FAQ", "Stats", "Team", "Gallery",
+    "Pricing", "LogoCloud", "TrustBadges", "SocialProof", "ComparisonTable", "AnnouncementBar",
+    "RichText", "Quote", "CodeBlock", "Heading", "Text", "Image",
+    "ContactForm", "Newsletter", "Form", "FormField",
+    "Accordion", "Tabs", "Carousel", "Countdown", "Modal", "Typewriter", "Parallax",
+    "Map", "Video", "SocialLinks",
+    "Section", "Container", "Columns", "Card", "Divider", "Spacer",
+    "Navbar", "Footer",
+    // Module types
+    "BookingServiceSelector", "BookingWidget", "BookingCalendar", "BookingForm",
+    "BookingEmbed", "BookingStaffGrid",
+    "EcommerceProductGrid", "EcommerceProductCard", "EcommerceProductCatalog",
+    "EcommerceFeaturedProducts", "EcommerceCartPage", "EcommerceMiniCart",
+    "EcommerceCheckoutPage", "EcommerceOrderConfirmation",
+    "ProductDetailBlock", "CategoryHeroBlock",
+  ]);
+  
+  if (!KNOWN_REGISTRY_TYPES.has(resolvedType)) {
+    // Try stripping common suffixes
+    const suffixStripped = resolvedType.replace(/(Block|Section|Component|Widget|Grid|List|Cards?|Panel|Area|Zone|Group|Bar|Row|Display|Wrapper|Item)$/i, '');
+    if (KNOWN_REGISTRY_TYPES.has(suffixStripped)) {
+      console.log(`[Converter] Fuzzy match: "${resolvedType}" → "${suffixStripped}"`);
+      resolvedType = suffixStripped;
+    } else {
+      // Try semantic keyword matching for common AI-invented types
+      const semanticMap: Record<string, string> = {
+        // About/story/mission → Features (grid of cards)
+        "about": "Features", "story": "Features", "ourstory": "Features",
+        "mission": "Features", "values": "Features", "whyus": "Features",
+        "whychooseus": "Features", "benefits": "Features", "advantages": "Features",
+        // Services → Features
+        "services": "Features", "service": "Features", "whatwedo": "Features",
+        "offerings": "Features", "specialties": "Features",
+        // Location/map/hours → ContactForm
+        "location": "ContactForm", "locationmap": "ContactForm", "findus": "ContactForm",
+        "visitreuneus": "ContactForm", "businesshours": "Features", "officehours": "Features",
+        "hours": "Features", "openinghours": "Features",
+        // Credentials/accreditations → TrustBadges
+        "accreditations": "TrustBadges", "credentials": "TrustBadges",
+        "certifications": "TrustBadges", "partners": "LogoCloud",
+        "trustedby": "LogoCloud", "affiliations": "LogoCloud",
+        // Appointment/booking → CTA
+        "appointment": "CTA", "bookappointment": "CTA", "booking": "CTA",
+        "reserve": "CTA", "schedule": "CTA", "getstarted": "CTA",
+        // Contact info → ContactForm
+        "contactinfo": "ContactForm", "contactdetails": "ContactForm",
+        "reachout": "ContactForm", "getintouch": "ContactForm",
+        // Insurance/patient info → Features
+        "insurance": "Features", "insuranceaccepted": "Features",
+        "patientinfo": "Features", "patientresources": "Features",
+        "resources": "Features", "information": "Features",
+        // Process/steps → Features
+        "process": "Features", "howwework": "Features", "howitworks": "Features",
+        "steps": "Features", "workflow": "Features",
+        // Social proof → SocialProof
+        "socialproof": "SocialProof", "reviews": "Testimonials",
+        "clientreviews": "Testimonials", "customerreviews": "Testimonials",
+        // Map → Map
+        "map": "Map", "mapembed": "Map", "googlemaps": "Map",
+        "mapsection": "Map", "locationmap": "Map",
+        // Video → Video
+        "video": "Video", "videoplayer": "Video", "videosection": "Video",
+        // Menu (restaurant) → Features
+        "menu": "Features", "menulist": "Features", "foodmenu": "Features",
+        // Banner/announcement → AnnouncementBar
+        "banner": "AnnouncementBar", "announcement": "AnnouncementBar",
+        // Comparison → ComparisonTable
+        "comparison": "ComparisonTable", "compare": "ComparisonTable",
+      };
+      
+      const normalizedKey = resolvedType.toLowerCase().replace(/[^a-z]/g, '');
+      if (semanticMap[normalizedKey]) {
+        console.log(`[Converter] Semantic match: "${resolvedType}" → "${semanticMap[normalizedKey]}"`);
+        resolvedType = semanticMap[normalizedKey];
+      } else {
+        console.warn(`[Converter] ⚠️ Unknown component type: "${genComponent.type}" → "${resolvedType}" — passing through as-is`);
+      }
+    }
+  }
+
   // First, fix all links in the props
   const fixedProps = fixLinksInObject(genComponent.props || {});
   
   // Transform props to match Studio component expectations
-  const studioProps = transformPropsForStudio(studioType, fixedProps);
+  const studioProps = transformPropsForStudio(resolvedType, fixedProps);
+  
+  // Handle LogoCloud→Features conversion (when no real images available)
+  const finalType = studioProps.__convertedToFeatures ? "Features" : resolvedType;
+  if (studioProps.__convertedToFeatures) {
+    delete studioProps.__convertedToFeatures;
+  }
 
   return {
     id: genComponent.id || nanoid(10),
-    type: studioType,
+    type: finalType,
     props: studioProps,
     parentId: "root",
   };
@@ -727,16 +957,42 @@ function transformPropsForStudio(
   // LogoCloud component
   if (type === "LogoCloud") {
     const logos = props.logos || props.items || props.brands || props.partners || [];
+    // Filter out logos with no image URL — prevents broken images in production
+    const processedLogos = Array.isArray(logos) ? logos.map((logo: Record<string, unknown>, i: number) => ({
+      image: logo.image || logo.src || logo.logo || logo.url || "",
+      alt: logo.alt || logo.name || `Partner ${i + 1}`,
+      link: logo.link || logo.url || logo.href || "",
+    })).filter((logo: { image: string }) => {
+      // Only include logos that have a real image URL
+      return logo.image && (logo.image.startsWith("http") || logo.image.startsWith("/") || logo.image.startsWith("data:"));
+    }) : [];
+    
+    // If no logos have real image URLs, convert this to a text-based component
+    // by returning a Features component with the logo names as feature items
+    if (processedLogos.length === 0 && Array.isArray(logos) && logos.length > 0) {
+      // No real images — render as text-based trust indicators using Features
+      return {
+        ...props,
+        title: props.title || props.headline || "Trusted By",
+        subtitle: props.subtitle || "",
+        description: props.description || "",
+        // Convert logo names to feature items with shield icons
+        features: logos.map((logo: Record<string, unknown>, i: number) => ({
+          id: String(i + 1),
+          title: String(logo.alt || logo.name || logo.text || `Partner ${i + 1}`),
+          description: "",
+          icon: "🛡️",
+        })),
+        __convertedToFeatures: true, // Signal for the caller
+      };
+    }
+    
     return {
       ...props,
       title: props.title || props.headline || "Trusted By",
       subtitle: props.subtitle || "",
       description: props.description || "",
-      logos: Array.isArray(logos) ? logos.map((logo: Record<string, unknown>, i: number) => ({
-        image: logo.image || logo.src || logo.logo || logo.url || "",
-        alt: logo.alt || logo.name || `Partner ${i + 1}`,
-        link: logo.link || logo.url || logo.href || "",
-      })) : [],
+      logos: processedLogos,
       // CRITICAL: Render expects responsive columns object, not a single number
       columns: typeof props.columns === "object" ? props.columns : {
         mobile: 2,
@@ -757,13 +1013,23 @@ function transformPropsForStudio(
     return {
       ...props,
       title: props.title || props.headline || "",
-      badges: Array.isArray(badges) ? badges.map((b: Record<string, unknown>, i: number) => ({
-        image: b.image || b.icon || "",
-        alt: b.alt || b.text || b.title || b.label || `Badge ${i + 1}`,
-        link: b.link || b.href || "",
-      })) : [],
-      // CRITICAL: Render expects 'layout' NOT 'variant'
-      layout: props.layout || props.variant || "horizontal",
+      badges: Array.isArray(badges) ? badges.map((b: Record<string, unknown>, i: number) => {
+        const text = String(b.text || b.title || b.label || b.alt || b.name || `Badge ${i + 1}`);
+        const image = String(b.image || b.icon || "");
+        // If the "image" is actually a short emoji or icon name (not a URL), use as icon
+        // If no real image URL, use shield emoji as default icon
+        const isRealImageUrl = image.startsWith("http") || image.startsWith("/") || image.startsWith("data:");
+        return {
+          icon: isRealImageUrl ? "🛡️" : (image || "🛡️"),
+          text,
+          description: String(b.description || b.tooltip || ""),
+          image: isRealImageUrl ? image : "", // Only pass real URLs
+          link: b.link || b.href || "",
+          featured: b.featured || false,
+        };
+      }) : [],
+      // Use 'pills' variant when no real images — looks better than broken images
+      variant: props.variant || props.layout || "pills",
     };
   }
 

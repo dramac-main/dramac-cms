@@ -53,6 +53,21 @@ Match the site's tone and structure to the business type:
 - Barbershop/salon: service menus with prices, booking CTAs, gallery of work
 Use your judgment for each unique business — don't follow rigid recipes.
 
+## VALID COMPONENT TYPES FOR suggestedComponent
+You MUST use ONLY these exact type names in suggestedComponent:
+Hero, Features, CTA, Testimonials, FAQ, Stats, Team, Gallery, Pricing,
+ContactForm, Newsletter, Accordion, Tabs, Carousel, LogoCloud, TrustBadges,
+SocialProof, ComparisonTable, Map, Video, Quote, RichText, Section, Divider, Spacer
+
+**Important mappings:**
+- For services/benefits/about-us items → use "Features"
+- For booking/appointment CTAs → use "CTA"
+- For trust badges/credentials/accreditations → use "TrustBadges" or "LogoCloud"
+- For reviews/client feedback → use "Testimonials"
+- For contact/location info → use "ContactForm"
+- For expandable info → use "Accordion" or "FAQ"
+Do NOT invent new component type names like "ServicesSection" or "PatientInfo".
+
 ## LINKS
 Every link must point to a real page you're creating (/, /about, /services, /contact, etc.). Never use "#" or empty strings.
 
@@ -70,6 +85,48 @@ Your output should be so well-planned that every page feels complete and profess
 // =============================================================================
 
 export const PAGE_GENERATOR_PROMPT = `You are a world-class UI designer creating complete, polished page layouts. You have full creative control over every visual decision.
+
+## CRITICAL: VALID COMPONENT TYPES
+You MUST use ONLY these exact component type names. Do NOT invent new types.
+Use these versatile components to represent ANY content:
+
+**Primary section components:**
+- Hero — for page headers, hero banners, landing sections
+- Features — for services, benefits, about-us items, process steps, ANY grid of items with title/description/icon
+- CTA — for call-to-action sections, booking prompts, appointment requests, any conversion section
+- Testimonials — for reviews, client feedback, social proof quotes
+- FAQ — for questions and answers, knowledge base sections
+- Stats — for numbers, metrics, achievements, key figures
+- Team — for staff, team members, doctors, professionals
+- Gallery — for image galleries, portfolios, project showcases
+- Pricing — for pricing plans, service packages, membership tiers
+
+**Supporting components:**
+- ContactForm — for contact sections, inquiry forms, location/contact info
+- Newsletter — for email signup, subscription sections
+- Accordion — for expandable content, categorized information
+- Tabs — for tabbed content sections
+- Carousel — for image/content sliders
+- LogoCloud — for partner logos, accreditation badges, trust indicators
+- TrustBadges — for certification badges, awards, credentials
+- SocialProof — for social proof indicators, review summaries
+- ComparisonTable — for feature comparisons, plan comparisons
+- Map — for location maps
+- Video — for embedded videos
+- Quote — for highlighted quotes, testimonials
+- RichText — for long-form text content, articles
+- Section — for generic wrapper sections
+- Divider — for visual separators
+- Spacer — for vertical spacing
+
+**Type mapping guide:**
+- Services list → use "Features" (with service items as features)
+- About us content → use "Features" (with value props as features) or "RichText"
+- Trust/credentials → use "TrustBadges" or "LogoCloud"  
+- Booking/appointment CTA → use "CTA"
+- Patient info/resources → use "Features" or "Accordion"
+- Business hours → use "Features" (each day as a feature item)
+- Reviews → use "Testimonials"
 
 ## ESSENTIAL RULES (prevent actual bugs)
 

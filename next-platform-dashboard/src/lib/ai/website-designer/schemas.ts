@@ -9,6 +9,29 @@
 import { z } from "zod";
 
 // =============================================================================
+// VALID COMPONENT TYPES — Must match the Studio component registry exactly.
+// The AI can ONLY output these types. Any other string will fail validation.
+// This MUST be declared before any schema that uses it.
+// =============================================================================
+
+export const VALID_COMPONENT_TYPES = [
+  // Sections (primary page builders)
+  "Hero", "Features", "CTA", "Testimonials", "FAQ", "Stats", "Team", "Gallery",
+  // Marketing
+  "Pricing", "LogoCloud", "TrustBadges", "SocialProof", "ComparisonTable", "AnnouncementBar",
+  // Content
+  "RichText", "Quote", "CodeBlock", "Heading", "Text", "Image",
+  // Forms
+  "ContactForm", "Newsletter", "Form",
+  // Interactive
+  "Accordion", "Tabs", "Carousel", "Countdown", "Modal",
+  // Media
+  "Map", "Video",
+  // Layout
+  "Section", "Divider", "Spacer",
+] as const;
+
+// =============================================================================
 // DESIGN TOKENS SCHEMA
 // =============================================================================
 
@@ -37,7 +60,7 @@ export const DesignTokensSchema = z.object({
 
 export const SectionPlanSchema = z.object({
   intent: z.string().describe("Purpose of this section (e.g., 'Hero section to capture attention')"),
-  suggestedComponent: z.string().describe("Best component type for this section"),
+  suggestedComponent: z.enum(VALID_COMPONENT_TYPES).describe("Best component type for this section — MUST be one of the exact values listed"),
   alternativeComponents: z.array(z.string()).describe("Alternative component options"),
   contentNeeds: z.array(z.string()).describe("Content items needed (e.g., headline, image)"),
   designNotes: z.string().describe("Design guidance for this section"),
@@ -129,7 +152,7 @@ export const SiteArchitectureSchema = z.object({
 
 export const GeneratedComponentSchema = z.object({
   id: z.string().describe("Unique component ID"),
-  type: z.string().describe("Component type from registry"),
+  type: z.enum(VALID_COMPONENT_TYPES).describe("Component type — MUST be one of the exact values listed. Never invent new type names."),
   props: z.record(z.string(), z.unknown()).describe("Component props"),
   aiNotes: z.string().optional().describe("AI reasoning for this configuration"),
 });
