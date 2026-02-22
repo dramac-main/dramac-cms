@@ -1,16 +1,79 @@
 # Active Context
 
-## Current Focus: AI Website Designer — Critical Blank Pages Fix
+## Current Focus: AI Website Designer — Design Quality & Visual Polish
 
-### Status: CRITICAL FIX DEPLOYED ✅ — Blank Pages Root Cause Fixed
+### Status: DESIGN QUALITY FIX DEPLOYED ✅ — Color Execution + Section Dedup
 
-### Previous: AI-First Redesign (Phase AWD-10) — ALL 7 PHASES COMPLETE ✅
+### Previous Fixes:
+- Critical Blank Pages Fix (commit `260d2f0`) ✅
+- Architecture Model Upgrade (commit `8eff0ea`) ✅
+- AI-First Redesign Phase AWD-10 — ALL 7 PHASES COMPLETE ✅
 
 **Plan Document:** `phases/PHASE-AWD-10-AI-FIRST-REDESIGN.md` (~1170 lines)
 
 ---
 
-### Critical Fix: Blank AI-Generated Pages (Post-Redesign) ✅
+### Design Quality Fix: Generic Styling & Duplicate Sections ✅
+
+**Problem:** After blank pages fix, generated pages had content but looked generic:
+- 3-4 duplicate Testimonials sections ("What Our Patients Say" repeated)
+- All sections used same white background with blue defaults — no visual variety
+- White buttons on white backgrounds (invisible)
+- No design personality — everything looked like a generic template
+- AI had color freedom but no guidance → defaulted to component defaults
+
+**Root Cause Analysis:**
+1. **No section variety rules** — prompts didn't prevent same component type 3+ times
+2. **No color execution guidance** — prompt said "full creative freedom" but AI didn't know WHAT to do
+3. **No visual rhythm instructions** — no guidance about alternating section backgrounds
+4. **No contrast rules** — AI could put white text on white backgrounds
+5. **No design token injection** — when AI omitted colors, components used hardcoded defaults (blue)
+6. **Component reference didn't highlight color props** — buried in 15-25 props per component
+
+**Fixes Implemented (4 files, +342 lines):**
+
+**Fix 1: Prompt — SECTION VARIETY rules (prompts.ts)** ✅
+- Added to SITE_ARCHITECT_PROMPT: max 2 of same type per page
+- Adjacent sections must be different types
+- Merge similar content into one richer section
+- Plan light/dark alternation in designNotes
+- Added DESIGN TOKENS section with industry color examples
+
+**Fix 2: Prompt — DESIGN EXECUTION instructions (prompts.ts)** ✅
+- Replaced vague "CREATIVE FREEDOM" with specific "DESIGN EXECUTION"
+- Explicit color prop list: backgroundColor, textColor, titleColor, accentColor for every section
+- Button props: buttonColor/buttonTextColor with contrast requirements
+- Card props: cardBackgroundColor, cardBorderColor
+- Visual rhythm pattern: Hero (branded) → light → tinted → white → dark → CTA (branded)
+- Contrast rules: light bg → dark text, dark bg → light text, NEVER same-shade combos
+- Section variety: max 2 of same type, different variants/colors if repeated
+
+**Fix 3: Component Reference — ESSENTIAL STYLING PROPS guide (component-reference.ts)** ✅
+- Added color props guide at TOP of page reference output
+- Lists universal, button, card, and decoration color props
+- AI sees this before the individual component references
+- Explicit instruction to use design tokens
+
+**Fix 4: Engine — deduplicateSections() (engine.ts)** ✅
+- Caps any component type at 2 per page (safety net)
+- Skips Navbar, Footer, Hero (structural)
+- Console logs removed sections for debugging
+- Called in stepFinalize() after applySharedElements()
+
+**Fix 5: Engine — injectDesignTokenColors() (engine.ts)** ✅
+- Applies brand colors when AI omits them (safety net)
+- Hero/CTA: branded background with white text
+- Other sections: alternating pattern (white → tinted → dark → repeat)
+- Only injects when AI set ZERO color props (respects intentional choices)
+- Uses lightenColor() to generate subtle brand tints
+- Ensures accentColor is always set
+
+**Commit:** `52f891b` — AI design quality improvements
+**Build:** ✅ 194/194 pages, zero errors
+
+---
+
+### Previous Critical Fix: Blank AI-Generated Pages ✅
 
 **Problem:** After the AI-First Redesign, generated pages appeared blank or nearly empty:
 - Contact page: COMPLETELY blank (only navbar + footer)
