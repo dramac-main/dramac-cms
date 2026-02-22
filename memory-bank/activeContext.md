@@ -1,10 +1,11 @@
 # Active Context
 
-## Current Focus: AI Website Designer — Design Quality & Visual Polish
+## Current Focus: AI Website Designer — Button Visibility, Navbar/Footer Branding, Module Integration
 
-### Status: DESIGN QUALITY FIX DEPLOYED ✅ — Color Execution + Section Dedup
+### Status: BUTTON + BRANDING + MODULE FIX DEPLOYED ✅ (commit `0b01874`)
 
 ### Previous Fixes:
+- Design Quality Fix — Section Dedup + Color Execution (commit `52f891b`) ✅
 - Critical Blank Pages Fix (commit `260d2f0`) ✅
 - Architecture Model Upgrade (commit `8eff0ea`) ✅
 - AI-First Redesign Phase AWD-10 — ALL 7 PHASES COMPLETE ✅
@@ -13,7 +14,55 @@
 
 ---
 
-### Design Quality Fix: Generic Styling & Duplicate Sections ✅
+### Button Visibility + Navbar/Footer Branding + Module Integration Fix ✅
+
+**Problem:** After design quality fix, sites still had 3 critical issues:
+- CTA buttons were invisible (white text on white background)
+- Navbar and Footer stayed default — no brand colors applied
+- Booking module installed and enabled but AI never used booking components
+- Some pages rendering empty (About, Services)
+
+**Root Cause Analysis:**
+1. **CTA `buttonTextColor` defaults to undefined** — destructures as undefined, falls back to `"#ffffff"` in renderer → white-on-white = invisible
+2. **`injectDesignTokenColors()` explicitly skips Navbar/Footer** — `if (type === "Navbar" || type === "Footer") return comp;`
+3. **NavbarComponentSchema missing color fields** — no `ctaColor`, `ctaTextColor`, `linkHoverColor`, `mobileMenuBackground`, `mobileMenuTextColor`
+4. **FooterComponentSchema missing color fields** — no `accentColor`, `newsletterButtonColor`, `newsletterButtonTextColor`
+5. **`enableModuleIntegration: false` in DEFAULT_CONFIG** — ModuleIntegrationOrchestrator imported but NEVER instantiated or called (dead code)
+6. **VALID_COMPONENT_TYPES missing all module types** — BookingWidget, BookingCalendar etc. not in schema = AI can't output them
+7. **Formatter only said "booking is enabled"** — no actionable instructions for AI on what booking components to use
+
+**Fixes Implemented (5 files, +113 lines, commit `0b01874`):**
+
+**Fix 1: Schema — Module component types + Navbar/Footer color fields (schemas.ts)** ✅
+- Added 6 module component types to VALID_COMPONENT_TYPES: BookingWidget, BookingCalendar, BookingServiceSelector, BookingForm, EcommerceProductGrid, EcommerceFeaturedProducts
+- NavbarComponentSchema: added ctaColor, ctaTextColor, linkHoverColor, mobileMenuBackground, mobileMenuTextColor
+- FooterComponentSchema: added accentColor, newsletterButtonColor, newsletterButtonTextColor
+
+**Fix 2: Converter — CTA button visibility + Navbar color passthrough (converter.ts)** ✅
+- CTA buttonTextColor now NEVER defaults to invisible: derives from backgroundColor (if not white) or defaults to "#1f2937"
+- Navbar handler: added passthrough for ctaColor, ctaTextColor, mobileMenuBackground, mobileMenuTextColor
+
+**Fix 3: Engine — Navbar/Footer brand color injection (engine.ts)** ✅
+- `injectDesignTokenColors()` no longer skips Navbar/Footer
+- Navbar: injects ctaColor = primaryColor, ctaTextColor = "#ffffff" when AI doesn't set them
+- Footer: injects accentColor = accent, newsletterButtonColor = primaryColor, newsletterButtonTextColor = "#ffffff"
+
+**Fix 4: Formatter — Actionable module instructions (formatter.ts)** ✅
+- `formatModulesSection()` expanded from 5 to ~35 lines
+- Booking module: "BOOKING MODULE IS ACTIVE — You MUST include booking functionality. Use BookingWidget on homepage, BookingServiceSelector on services page, make CTAs say 'Book Now'"
+- E-commerce module: similar actionable instructions for product grids and featured products
+
+**Fix 5: Prompts — Module awareness + Navbar/Footer color requirements (prompts.ts)** ✅
+- SITE_ARCHITECT_PROMPT: Added module component types to valid list + MODULE AWARENESS section
+- PAGE_GENERATOR_PROMPT: Added module component types to valid list
+- NAVBAR_GENERATOR_PROMPT: Updated COLORS to require ctaColor, ctaTextColor, mobileMenu colors
+- FOOTER_GENERATOR_PROMPT: Updated theme section to require accentColor, newsletterButtonColor
+
+**Build:** ✅ 194/194 pages, zero errors
+
+---
+
+### Previous Fix: Design Quality — Generic Styling & Duplicate Sections ✅
 
 **Problem:** After blank pages fix, generated pages had content but looked generic:
 - 3-4 duplicate Testimonials sections ("What Our Patients Say" repeated)

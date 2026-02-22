@@ -80,15 +80,33 @@ Use your judgment for each unique business — don't follow rigid recipes.
 You MUST use ONLY these exact type names in suggestedComponent:
 Hero, Features, CTA, Testimonials, FAQ, Stats, Team, Gallery, Pricing,
 ContactForm, Newsletter, Accordion, Tabs, Carousel, LogoCloud, TrustBadges,
-SocialProof, ComparisonTable, Map, Video, Quote, RichText, Section, Divider, Spacer
+SocialProof, ComparisonTable, Map, Video, Quote, RichText, Section, Divider, Spacer,
+Typewriter, Parallax, Badge, SocialLinks
 
 **Module components (use when the module is enabled in the business context):**
-- BookingWidget — interactive appointment booking widget (use on homepage or dedicated booking page)
-- BookingCalendar — calendar view for available appointment slots
-- BookingServiceSelector — service selection grid for booking (use on services page)
-- BookingForm — appointment booking form
-- EcommerceProductGrid — product catalog grid (use on shop/products pages)
-- EcommerceFeaturedProducts — featured product showcase (use on homepage)
+
+Booking module (use when booking/appointment module is active):
+- BookingWidget — all-in-one multi-step booking wizard (service → staff → date/time → details → confirmation)
+- BookingCalendar — interactive calendar for selecting appointment dates and time slots
+- BookingServiceSelector — service selection grid/list showing bookable services with prices and duration
+- BookingForm — customer details form for completing a booking (name, email, phone, notes)
+- BookingEmbed — embeddable booking widget (iframe/popup/inline)
+- BookingStaffGrid — team member cards with bio, rating, specialties, and book button
+
+E-commerce module (use when ecommerce/shop module is active):
+- EcommerceProductGrid — product catalog grid with columns and filtering
+- EcommerceFeaturedProducts — featured/new/bestselling product showcase (carousel, row, or hero)
+- EcommerceProductCard — single product card with image, price, rating, add-to-cart
+- EcommerceProductCatalog — full-featured catalog with filters, sorting, pagination, search
+- EcommerceCategoryNav — category navigation (tree/grid/list/cards)
+- EcommerceSearchBar — product search with suggestions
+- EcommerceFilterSidebar — price/category/stock filter sidebar
+- EcommerceBreadcrumb — breadcrumb navigation for product pages
+- EcommerceCartPage — full shopping cart page
+- EcommerceCheckoutPage — checkout with guest checkout option
+- EcommerceReviewForm — product review submission form
+- EcommerceReviewList — product review list with rating distribution
+- ProductDetailBlock — full product detail page (gallery, variants, add-to-cart, reviews)
 
 **Important mappings:**
 - For services/benefits/about-us items → use "Features"
@@ -102,10 +120,14 @@ Do NOT invent new component type names like "ServicesSection" or "PatientInfo".
 
 ## MODULE AWARENESS
 Check the Business Context for "Enabled Features & Modules".
-- If a BOOKING module is enabled: include BookingWidget on the homepage, BookingServiceSelector on the services page.
-  Every CTA should say "Book Now" / "Book Appointment" and link to a booking or contact page.
-- If an E-COMMERCE module is enabled: include EcommerceFeaturedProducts on the homepage, EcommerceProductGrid on a shop page.
-  CTAs should say "Shop Now" / "Browse Products".
+- If a BOOKING module is enabled: include BookingWidget on the homepage, BookingServiceSelector on the services page,
+  BookingStaffGrid on a team/staff page if relevant. Every CTA should say "Book Now" / "Book Appointment".
+  Consider a dedicated /book page with BookingForm. Use BookingCalendar for date selection.
+- If an E-COMMERCE module is enabled: include EcommerceFeaturedProducts on the homepage,
+  EcommerceProductGrid or EcommerceProductCatalog on a /shop or /products page.
+  Add EcommerceCategoryNav for product navigation. CTAs should say "Shop Now" / "Browse Products".
+  Include EcommerceReviewList on product pages for social proof.
+  Use ProductDetailBlock for individual product pages.
 
 ## LINKS
 Every link must point to a real page you're creating (/, /about, /services, /contact, etc.). Never use "#" or empty strings.
@@ -159,21 +181,40 @@ Use these versatile components to represent ANY content:
 - Spacer — for vertical spacing
 
 **Module components (use ONLY when the module is mentioned in the business context):**
-- BookingWidget — interactive appointment booking widget with time slots
-- BookingCalendar — calendar view for available appointments
-- BookingServiceSelector — service selection grid before booking
-- BookingForm — appointment booking form with date/time picker
-- EcommerceProductGrid — product catalog grid with filters
-- EcommerceFeaturedProducts — featured product showcase with images and prices
+
+Booking module:
+- BookingWidget — all-in-one booking wizard. Key props: title, subtitle, layout (standard/compact/wide), showServiceStep, showStaffStep, primaryColor, buttonBackgroundColor, buttonTextColor
+- BookingCalendar — interactive date/time selector. Key props: title, layout (standard/compact/expanded/side-by-side), showTimeSlots, firstDayOfWeek, timeFormat (12h/24h), primaryColor
+- BookingServiceSelector — service cards. Key props: title, layout (grid/list/cards/compact), columns, showPrice, showDuration, showRating, primaryColor, cardBackgroundColor
+- BookingForm — booking details form. Key props: title, layout (single-column/two-column/compact), showNameField, showEmailField, showPhoneField, showNotesField, primaryColor
+- BookingEmbed — embeddable widget. Key props: title, embedType (iframe/popup/inline), primaryColor
+- BookingStaffGrid — team members. Key props: title, layout (grid/list/cards/carousel), columns, showBio, showRating, showAvailability, primaryColor
+
+E-commerce module:
+- EcommerceProductGrid — product grid. Key props: columns (1-6), source (featured/new/sale/category), limit (1-24), showPrice, showRating, cardVariant (card/minimal)
+- EcommerceFeaturedProducts — featured products. Key props: title, subtitle, productSource (featured/new/bestselling/sale), displayMode (carousel/row/hero), columns, showPrice, showRating
+- EcommerceProductCatalog — full catalog. Key props: columns, productsPerPage, showFilters, showSorting, showSearch, showPagination
+- EcommerceCategoryNav — category nav. Key props: variant (tree/grid/list/cards), showProductCount, showImages, title
+- EcommerceSearchBar — product search. Key props: placeholder, showSuggestions
+- EcommerceFilterSidebar — product filters. Key props: showPriceFilter, showCategoryFilter, collapsible
+- EcommerceCartPage — cart page. Key props: showContinueShopping, showDiscountInput
+- EcommerceCheckoutPage — checkout. Key props: enableGuestCheckout, showOrderSummary
+- EcommerceReviewForm — review form. Key props: requireEmail
+- EcommerceReviewList — review list. Key props: showDistribution, pageSize
+- ProductDetailBlock — product page. Key props: showGallery, showVariants, showReviews, galleryPosition (left/right)
 
 **Type mapping guide:**
 - Services list → use "Features" (with service items as features)
 - About us content → use "Features" (with value props as features) or "RichText"
 - Trust/credentials → use "TrustBadges" or "LogoCloud"  
-- Booking/appointment CTA → use "CTA"
+- Booking/appointment CTA → use "CTA" or "BookingWidget" (if booking module active)
 - Patient info/resources → use "Features" or "Accordion"
 - Business hours → use "Features" (each day as a feature item)
-- Reviews → use "Testimonials"
+- Reviews → use "Testimonials" or "EcommerceReviewList" (if ecommerce active)
+- Product showcase → use "EcommerceFeaturedProducts" or "EcommerceProductGrid" (if ecommerce active)
+- Animated headings → use "Typewriter" for typing animation effects
+- Scroll effects → use "Parallax" for immersive parallax sections
+- Staff/team → use "Team" or "BookingStaffGrid" (if booking module active)
 
 ## ESSENTIAL RULES (prevent actual bugs)
 

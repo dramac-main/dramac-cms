@@ -15,7 +15,7 @@
 import { componentRegistry } from "@/lib/studio/registry";
 import type { ComponentDefinition, FieldDefinition } from "@/types/studio";
 
-// Categories that AI should know about (skip layout primitives, internal stuff)
+// Categories that AI should know about — covers all usable component types
 const AI_RELEVANT_CATEGORIES = [
   "sections",
   "marketing",
@@ -25,6 +25,8 @@ const AI_RELEVANT_CATEGORIES = [
   "media",
   "navigation",
   "ecommerce",
+  "layout",
+  "typography",
 ];
 
 /**

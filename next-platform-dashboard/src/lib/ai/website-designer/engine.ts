@@ -997,6 +997,17 @@ Configure ALL footer props for a complete, professional result.`,
         const props = { ...comp.props } as Record<string, unknown>;
         const currentSectionIdx = sectionIdx++;
 
+        // Module components (booking/ecommerce) have their own color systems —
+        // don't inject background colors that would clash with their UI
+        const MODULE_COMPONENT_PREFIXES = ["Booking", "Ecommerce", "ProductDetail", "CategoryHero"];
+        const isModuleComponent = MODULE_COMPONENT_PREFIXES.some(p => comp.type.startsWith(p));
+        if (isModuleComponent) {
+          // Only inject primaryColor/accentColor if not set — let the module handle the rest
+          if (!props.primaryColor) props.primaryColor = primary;
+          if (!props.accentColor) props.accentColor = accent;
+          return { ...comp, props };
+        }
+
         // Check if the AI set ANY color-related prop on this component
         const hasExplicitColors = Object.keys(props).some(k => {
           const kl = k.toLowerCase();

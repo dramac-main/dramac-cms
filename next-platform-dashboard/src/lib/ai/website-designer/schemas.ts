@@ -21,17 +21,27 @@ export const VALID_COMPONENT_TYPES = [
   "Pricing", "LogoCloud", "TrustBadges", "SocialProof", "ComparisonTable", "AnnouncementBar",
   // Content
   "RichText", "Quote", "CodeBlock", "Heading", "Text", "Image",
+  "Badge", "SocialLinks",
   // Forms
   "ContactForm", "Newsletter", "Form",
   // Interactive
   "Accordion", "Tabs", "Carousel", "Countdown", "Modal",
+  "Typewriter", "Parallax",
   // Media
   "Map", "Video",
   // Layout
   "Section", "Divider", "Spacer",
-  // Module components (booking & e-commerce)
+  // Booking module components
   "BookingWidget", "BookingCalendar", "BookingServiceSelector", "BookingForm",
-  "EcommerceProductGrid", "EcommerceFeaturedProducts",
+  "BookingEmbed", "BookingStaffGrid",
+  // E-commerce module components
+  "EcommerceProductGrid", "EcommerceFeaturedProducts", "EcommerceProductCard",
+  "EcommerceProductCatalog", "EcommerceCartPage", "EcommerceMiniCart",
+  "EcommerceCheckoutPage", "EcommerceOrderConfirmation",
+  "EcommerceCategoryNav", "EcommerceSearchBar", "EcommerceFilterSidebar",
+  "EcommerceBreadcrumb", "EcommerceProductSort",
+  "EcommerceQuoteRequest", "EcommerceReviewForm", "EcommerceReviewList",
+  "ProductDetailBlock", "CategoryHeroBlock",
 ] as const;
 
 // =============================================================================

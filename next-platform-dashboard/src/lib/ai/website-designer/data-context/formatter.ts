@@ -576,9 +576,15 @@ function formatModulesSection(modules: EnabledModule[]): string {
       if (modType.includes("ecommerce") || modType.includes("commerce") || modType.includes("shop")) {
         lines.push(`### E-COMMERCE MODULE IS ACTIVE`);
         lines.push(`This is a shopping-enabled business. You MUST include product functionality:`);
-        lines.push(`- Use "EcommerceProductGrid" or "EcommerceFeaturedProducts" to showcase products`);
+        lines.push(`- Use "EcommerceFeaturedProducts" on the homepage to showcase featured/new/bestselling products`);
+        lines.push(`- Use "EcommerceProductGrid" or "EcommerceProductCatalog" on a /shop or /products page`);
+        lines.push(`- Use "EcommerceCategoryNav" for product category navigation on shop pages`);
+        lines.push(`- Use "EcommerceSearchBar" at the top of catalog pages for product search`);
+        lines.push(`- Use "EcommerceFilterSidebar" alongside product grids for filtering`);
+        lines.push(`- Use "EcommerceReviewList" and "EcommerceReviewForm" on product pages for social proof`);
+        lines.push(`- Use "ProductDetailBlock" for individual product detail pages`);
         lines.push(`- Make CTA buttons say "Shop Now" / "Browse Products"`);
-        lines.push(`- Consider adding /shop and /products pages`);
+        lines.push(`- Consider adding /shop, /products, and /cart pages`);
         lines.push(`- Include product-related sections on the homepage`);
         lines.push(``);
       }
