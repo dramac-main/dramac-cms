@@ -1,10 +1,69 @@
 # Active Context
 
-## Current Focus: AI Website Designer — AI-First Redesign (Phase AWD-10)
+## Current Focus: AI Website Designer — Critical Blank Pages Fix
 
-### Status: ALL 7 PHASES COMPLETE ✅ — Build Verified
+### Status: CRITICAL FIX DEPLOYED ✅ — Blank Pages Root Cause Fixed
+
+### Previous: AI-First Redesign (Phase AWD-10) — ALL 7 PHASES COMPLETE ✅
 
 **Plan Document:** `phases/PHASE-AWD-10-AI-FIRST-REDESIGN.md` (~1170 lines)
+
+---
+
+### Critical Fix: Blank AI-Generated Pages (Post-Redesign) ✅
+
+**Problem:** After the AI-First Redesign, generated pages appeared blank or nearly empty:
+- Contact page: COMPLETELY blank (only navbar + footer)
+- About page: Hero + two duplicate "Ready to Get Started?" CTAs, nothing else
+- Broken images showing alt text instead of visuals
+- Pages missing 60-80% of their sections
+
+**Root Cause:** The AI generated creative component type names (e.g., "PatientInfoSection", "Services", "LocationMap", "BusinessHours") that:
+1. Were NOT in the converter's typeMap → passed through as-is
+2. Were NOT in the component registry → `getComponent()` returned undefined
+3. In production, `return null` silently dropped the component → blank pages
+
+**9 issues identified, 5 fixes implemented (4 files, +391 lines):**
+
+**Fix 1: Constrained AI type schema (schemas.ts)** ✅
+- Changed `type: z.string()` → `type: z.enum(VALID_COMPONENT_TYPES)` 
+- 30 valid component types that MUST match the registry
+- Also constrained `suggestedComponent` in SectionPlanSchema
+- AI can no longer invent arbitrary type names
+
+**Fix 2: Triple-layer fuzzy matching in converter (converter.ts)** ✅
+- Added 100+ new typeMap entries for common AI name variations
+- Added suffix stripping: removes Block/Section/Component/Widget/Grid etc.
+- Added semantic keyword matching: "services"→Features, "appointment"→CTA, "accreditations"→TrustBadges
+- Console warnings for truly unknown types (aids debugging)
+
+**Fix 3: Explicit type reference in prompts (prompts.ts)** ✅
+- PAGE_GENERATOR_PROMPT now lists ALL valid types with usage guide
+- Type mapping guide: services→Features, credentials→TrustBadges, booking→CTA
+- SITE_ARCHITECT_PROMPT lists valid suggestedComponent values
+- "Do NOT invent new component type names" instruction
+
+**Fix 4: Production fallback in renderer (renderer.tsx)** ✅
+- Unknown components now render title/description in clean section
+- Never silently drop content in production again
+- Development mode shows enhanced debug info
+
+**Fix 5: Broken images in TrustBadges/LogoCloud (converter.ts)** ✅
+- TrustBadges: Uses text+icon pills when no real image URLs
+- LogoCloud: Filters empty images; converts to Features if all empty
+- No more `<img src="">` broken image tags
+
+**Also deployed: Architecture model upgrade (ai-provider.ts)** ✅
+- Upgraded architecture step from Haiku (fast) → Sonnet 4.6 (premium)
+- Updated stale comments about blueprint-guided planning
+
+**Commits:**
+- `8eff0ea` — Architecture model upgrade
+- `260d2f0` — Blank pages critical fix (schemas + converter + prompts + renderer)
+
+**Build:** ✅ 194/194 pages, zero errors
+
+---
 
 #### Phases 1-3 (Prior Session) ✅
 - Phase 1: Bug Fixes (About→Features mapping, Pricing monthlyPrice→price, FAQ expandFirst→defaultOpen:0, Tailwind safelist)

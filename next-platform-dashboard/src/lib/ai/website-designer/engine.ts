@@ -469,6 +469,12 @@ export class WebsiteDesignerEngine {
       const defaultFooter: GeneratedComponent = footer || { id: "shared-footer", type: "Footer", props: { companyName: siteContext?.name || "Site" } };
       let pagesWithNav = this.applySharedElements(pages, defaultNavbar, defaultFooter);
 
+      // Post-processing: deduplicate excessive same-type sections
+      pagesWithNav = this.deduplicateSections(pagesWithNav);
+
+      // Post-processing: inject design token colors into sections missing explicit colors
+      pagesWithNav = this.injectDesignTokenColors(pagesWithNav);
+
       // Refinement (if enabled)
       if (this.config.enableRefinement) {
         this.reportProgress("finalizing", "Refining website quality...", 0, 1);
@@ -918,6 +924,154 @@ Configure ALL footer props for a complete, professional result.`,
         components: [navbar, ...finalComponents, footer],
       };
     });
+  }
+
+  /**
+   * Remove excessive duplicate sections from pages.
+   * Keeps at most 2 of any component type per page.
+   * This prevents the common AI pattern of generating 3-4 Testimonials sections
+   * or 5+ Features sections on a single page.
+   */
+  private deduplicateSections(pages: GeneratedPage[]): GeneratedPage[] {
+    return pages.map(page => {
+      const typeCounts: Record<string, number> = {};
+      const filteredComponents = page.components.filter(comp => {
+        // Always keep Navbar, Footer, Hero (structural)
+        if (comp.type === "Navbar" || comp.type === "Footer" || comp.type === "Hero") return true;
+
+        typeCounts[comp.type] = (typeCounts[comp.type] || 0) + 1;
+
+        // Keep at most 2 of each type
+        if (typeCounts[comp.type] > 2) {
+          console.log(`[Engine] ✂️ Removing duplicate ${comp.type} section (${typeCounts[comp.type]}th instance) from "${page.name}"`);
+          return false;
+        }
+        return true;
+      });
+
+      return { ...page, components: filteredComponents };
+    });
+  }
+
+  /**
+   * Inject design token colors into components that don't have explicit color props.
+   * This ensures the AI's chosen brand colors are applied even when the AI
+   * doesn't set per-component colors, preventing the "everything is default blue" look.
+   *
+   * Creates visual rhythm by alternating between light and tinted backgrounds.
+   */
+  private injectDesignTokenColors(pages: GeneratedPage[]): GeneratedPage[] {
+    const tokens = this.architecture?.designTokens;
+    if (!tokens?.primaryColor) return pages;
+
+    const primary = tokens.primaryColor;
+    const accent = tokens.accentColor || tokens.secondaryColor || primary;
+    const bg = tokens.backgroundColor || "#ffffff";
+    const text = tokens.textColor || "#0f172a";
+
+    return pages.map(page => {
+      // Track section index (excluding Navbar/Footer)
+      let sectionIdx = 0;
+
+      const components = page.components.map((comp) => {
+        // Skip Navbar and Footer — they have their own color handling
+        if (comp.type === "Navbar" || comp.type === "Footer") return comp;
+
+        const props = { ...comp.props } as Record<string, unknown>;
+        const currentSectionIdx = sectionIdx++;
+
+        // Check if the AI set ANY color-related prop on this component
+        const hasExplicitColors = Object.keys(props).some(k => {
+          const kl = k.toLowerCase();
+          return (kl.includes("color") || kl === "background" || kl.includes("backgroundcolor") || kl.includes("gradient")) 
+                 && props[k] !== undefined && props[k] !== "" && props[k] !== null;
+        });
+
+        // If the AI already set colors, trust its choices
+        if (hasExplicitColors) {
+          // But still ensure accentColor is set if missing
+          if (!props.accentColor) props.accentColor = accent;
+          return { ...comp, props };
+        }
+
+        // AI didn't set colors — inject design token defaults with visual rhythm
+        if (comp.type === "Hero") {
+          // Hero gets branded look — only if no background image
+          if (!props.backgroundImage) {
+            props.backgroundColor = primary;
+            props.titleColor = "#ffffff";
+            props.subtitleColor = "rgba(255,255,255,0.9)";
+            props.descriptionColor = "rgba(255,255,255,0.85)";
+            props.textColor = "#ffffff";
+            props.primaryButtonColor = "#ffffff";
+            props.primaryButtonTextColor = primary;
+            props.secondaryButtonColor = "transparent";
+            props.secondaryButtonTextColor = "#ffffff";
+          }
+        } else if (comp.type === "CTA") {
+          // CTA sections get branded background for conversion emphasis
+          props.backgroundColor = primary;
+          props.titleColor = "#ffffff";
+          props.descriptionColor = "rgba(255,255,255,0.9)";
+          props.textColor = "#ffffff";
+          props.buttonColor = "#ffffff";
+          props.buttonTextColor = primary;
+        } else if (currentSectionIdx % 3 === 0) {
+          // Every 3rd section: tinted background (very light version of primary)
+          props.backgroundColor = this.lightenColor(primary, 0.93);
+          props.textColor = text;
+          props.titleColor = text;
+          props.accentColor = accent;
+        } else if (currentSectionIdx % 3 === 2) {
+          // Every 3rd + 2: dark section for drama
+          props.backgroundColor = "#0f172a";
+          props.textColor = "#f8fafc";
+          props.titleColor = "#ffffff";
+          props.subtitleColor = "rgba(255,255,255,0.7)";
+          props.accentColor = accent;
+          props.cardBackgroundColor = "#1e293b";
+          props.cardBorderColor = "#334155";
+        } else {
+          // Default: clean white
+          props.backgroundColor = bg;
+          props.textColor = text;
+          props.titleColor = text;
+          props.accentColor = accent;
+        }
+
+        return { ...comp, props };
+      });
+
+      return { ...page, components };
+    });
+  }
+
+  /**
+   * Lighten a hex color by blending with white.
+   * amount=0 returns original, amount=1 returns white.
+   * amount=0.93 gives a very subtle tint.
+   */
+  private lightenColor(hex: string, amount: number): string {
+    try {
+      // Strip # if present, handle 3-char hex
+      let cleanHex = hex.replace(/^#/, '');
+      if (cleanHex.length === 3) {
+        cleanHex = cleanHex.split('').map(c => c + c).join('');
+      }
+      if (cleanHex.length !== 6) return "#f8fafc"; // Fallback to light gray
+
+      const r = parseInt(cleanHex.slice(0, 2), 16);
+      const g = parseInt(cleanHex.slice(2, 4), 16);
+      const b = parseInt(cleanHex.slice(4, 6), 16);
+
+      const lr = Math.round(r + (255 - r) * amount);
+      const lg = Math.round(g + (255 - g) * amount);
+      const lb = Math.round(b + (255 - b) * amount);
+
+      return `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
+    } catch {
+      return "#f8fafc";
+    }
   }
 
   // ===========================================================================

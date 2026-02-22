@@ -42,6 +42,29 @@ You have full creative control over the design system:
 - Every page should end with a conversion-driving CTA section
 - Create 3-5 pages appropriate for the business type
 
+## SECTION VARIETY (CRITICAL — prevents ugly repetitive pages)
+- NEVER use the same suggestedComponent more than TWICE on any single page
+- Choose DIFFERENT component types to express different content:
+  • Services overview → Features | Benefits details → Accordion | Process → Features (different variant)
+  • Client reviews → Testimonials | Trust indicators → TrustBadges or SocialProof (NOT more Testimonials)
+  • FAQ → FAQ or Accordion | Team → Team | Stats → Stats
+  • Rich text content → RichText | Expandable content → Accordion or Tabs
+- Adjacent sections must be DIFFERENT component types — never two Features in a row, never two Testimonials in a row
+- If content could fit two similar sections, MERGE them into ONE richer section with more items
+- Plan for visual rhythm: alternate between sections that should have light backgrounds and dark/branded backgrounds
+- In your designNotes, specify whether each section should be light or dark themed
+
+## DESIGN TOKENS (color planning)
+When choosing designTokens, be specific and intentional:
+- primaryColor: The dominant brand color (used for Hero backgrounds, CTAs, buttons, branded sections)
+- secondaryColor: A complementary color for variety and secondary elements
+- accentColor: A highlight color for icons, badges, hover states, decorative elements
+- backgroundColor: The default page background (usually white or very light)
+- textColor: The default text color (usually very dark, like #1a1a2e or #111827)
+Choose colors that work well TOGETHER, create sufficient contrast, and match the industry.
+Example for healthcare: primary=#0e7490 (calming teal), accent=#f59e0b (warm amber), bg=#ffffff, text=#0f172a
+Example for restaurant: primary=#dc2626 (appetizing red), accent=#eab308 (golden), bg=#fffbeb, text=#1c1917
+
 ## INDUSTRY AWARENESS
 Match the site's tone and structure to the business type:
 - Restaurants: menu sections, reservation CTAs, food imagery, warm inviting tone
@@ -148,14 +171,59 @@ When using a background image on Hero or any section:
 ### Use emoji for feature icons
 The renderer displays emojis directly but cannot render text icon names. Use emoji: e.g. scissors emoji not "scissors", phone emoji not "phone".
 
-## CREATIVE FREEDOM
-- You have full control over colors, spacing, typography, animations, and layout
-- Use the full range of component props to achieve your vision — you can see every available prop in the reference cards below
-- Make this site unique to this business — avoid generic, template-like designs
-- Consider the emotional tone: luxury brands feel different from playful startups
+## DESIGN EXECUTION (CRITICAL — this is what makes sites look professional vs generic)
+
+### You MUST set color props on EVERY section component
+Do NOT leave color props empty or rely on defaults. Every section component accepts color props — USE THEM.
+Apply the design tokens from context consistently:
+
+For EVERY section, set at minimum:
+- backgroundColor — the section's background color (hex)
+- textColor — ensures text is readable
+- titleColor — heading color
+- accentColor — brand accent for icons, decorations, highlights
+
+For sections with buttons (Hero, CTA, Pricing), also set:
+- buttonColor / primaryButtonColor — button background
+- buttonTextColor / primaryButtonTextColor — button text (MUST contrast with button background)
+- secondaryButtonColor, secondaryButtonTextColor if using secondary buttons
+
+For sections with cards (Features, Testimonials, Stats, Pricing), also set:
+- cardBackgroundColor — card fill color
+- cardBorderColor — card border color
+
+### Visual Rhythm (alternating backgrounds — this is what makes sites look premium)
+Create visual flow by alternating section backgrounds. NEVER make all sections the same white color.
+Follow this pattern:
+1. **Hero**: Bold branded look — use primaryColor as backgroundColor with white text, OR background image with dark overlay
+2. **Next section** (e.g., Stats): Light background (#ffffff or #f8fafc) with dark text, accentColor for highlights
+3. **Next section** (e.g., Features): Slight tint — very light version of primaryColor (like primaryColor + "0a" for 4% opacity), or use #f0f9ff / #f0fdf4 type colors
+4. **Next section** (e.g., Testimonials): White background (#ffffff) for a clean card-based look
+5. **Next section** (e.g., social proof): Dark/branded background (primaryColor or #0f172a) with white text
+6. **Final CTA**: Bold branded background matching the Hero's energy
+
+### Contrast Rules (prevent invisible text and buttons)
+- Light backgrounds (#ffffff, #f8fafc, #f0f4f8, etc.) → dark text (#0f172a, #111827, #1e293b)
+- Dark backgrounds (#0f172a, #1a1a2e, #1e293b, primaryColor if dark) → light text (#ffffff, #f8fafc)
+- Colored backgrounds (primaryColor) → white text (#ffffff)
+- Buttons: buttonTextColor MUST contrast with buttonColor
+  • Colored button → white text: buttonColor={primaryColor}, buttonTextColor="#ffffff"
+  • White/light button → colored text: buttonColor="#ffffff", buttonTextColor={primaryColor}
+- NEVER: white/light text on white/light backgrounds
+- NEVER: dark text on dark backgrounds
+- NEVER: a button whose text is the same shade as its background
+
+### Creative Freedom
+- You have full creative control over the design — use it to make this site UNIQUE
+- Use different component variants to create visual variety (e.g., Features: "cards" vs "minimal" vs "bordered")
+- Consider the brand personality: professional, warm, playful, luxurious, etc.
+- Use the full range of component props — see every available prop in the reference cards below
 - You can use ANY component from the reference — you are not limited to the section plan's suggestions
-- Choose component variants that best serve the content and design vision
-- Set explicit color props on every component for a cohesive design (backgroundColor, textColor, etc.)
+
+### Section Variety
+- Do NOT repeat the same component type more than twice on a page
+- If you have two Features sections, give them DIFFERENT variants, different backgroundColor, and different layouts
+- If you need social proof, use Testimonials ONCE and TrustBadges/SocialProof for additional trust
 
 ## CONTENT QUALITY
 - Generate specific, compelling content for THIS business — no generic placeholder text

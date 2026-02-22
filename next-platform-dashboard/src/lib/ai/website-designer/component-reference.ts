@@ -209,6 +209,36 @@ export function generatePageReference(
 
   let output = "";
 
+  // Add essential color props guide at the top so AI knows what to set
+  output += `## ESSENTIAL STYLING PROPS — Set these on EVERY section
+
+Every section component accepts these color props. You MUST set them to avoid generic defaults.
+
+**On every section (Hero, Features, CTA, Testimonials, Stats, FAQ, etc.):**
+- backgroundColor: hex color — the section background. ALTERNATE between light/dark for rhythm.
+- textColor: hex color — default text color. Must contrast with backgroundColor.
+- titleColor: hex color — heading/title color.
+- subtitleColor: hex color — subtitle text color.
+- accentColor: hex color — accent for icons, decorations, highlights.
+
+**On sections with buttons (Hero, CTA, Pricing):**
+- buttonColor / primaryButtonColor: hex — button background.
+- buttonTextColor / primaryButtonTextColor: hex — button text. MUST contrast with button bg.
+- secondaryButtonColor / secondaryButtonTextColor: hex — for secondary buttons.
+
+**On sections with cards (Features, Testimonials, Stats, Pricing):**
+- cardBackgroundColor: hex — card fill (use white on colored section bg, or light tint on white bg).
+- cardBorderColor: hex — card border.
+
+**Decorative:**
+- backgroundGradientFrom / backgroundGradientTo: hex — for gradient backgrounds.
+- decoratorColor, badgeColor, badgeTextColor: hex — accent decorations.
+- defaultIconColor / defaultIconBackgroundColor: hex — icon styling.
+
+Apply your design tokens: use primaryColor, secondaryColor, accentColor from context.
+
+`;
+
   if (primary.length > 0) {
     output += "## FULL COMPONENT REFERENCE (use these on this page)\n\n";
     output += primary.map((comp: ComponentDefinition) => {
