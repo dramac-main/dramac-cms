@@ -85,10 +85,18 @@ export {
   PAGE_GENERATOR_PROMPT,
   NAVBAR_GENERATOR_PROMPT,
   FOOTER_GENERATOR_PROMPT,
-  getIndustryContentPrompt,
   buildArchitecturePrompt,
   buildPagePrompt,
 } from "./prompts";
+
+// =============================================================================
+// COMPONENT REFERENCE (Dynamic component discovery for AI)
+// =============================================================================
+
+export {
+  generateArchitectureReference,
+  generatePageReference,
+} from "./component-reference";
 
 // =============================================================================
 // DATA CONTEXT (from AWD-02)
@@ -144,11 +152,6 @@ export type {
 // =============================================================================
 
 export {
-  // Design System Generator
-  DesignSystemGenerator,
-  generateDesignSystemForIndustry,
-  generateDesignSystemFromColor,
-  generateDesignTokens,
   // Color Intelligence
   generatePalette,
   generateColorScale,
@@ -171,8 +174,6 @@ export {
 } from "./design";
 
 export type {
-  DesignSystem,
-  DesignSystemInput,
   DesignMood,
   DesignPreferences,
   ColorPalette,

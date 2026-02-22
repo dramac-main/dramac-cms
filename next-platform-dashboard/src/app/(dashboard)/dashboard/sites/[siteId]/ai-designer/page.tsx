@@ -27,7 +27,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 // import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -36,8 +35,7 @@ import { Progress } from "@/components/ui/progress";
 
 // Import the real Studio Renderer
 import { StudioRenderer } from "@/lib/studio/engine/renderer";
-import { convertPageToStudioFormat, setGeneratedPageSlugs, setDesignTokens } from "@/lib/ai/website-designer/converter";
-import type { DesignTokens } from "@/lib/ai/website-designer/converter";
+import { convertPageToStudioFormat, setGeneratedPageSlugs } from "@/lib/ai/website-designer/converter";
 
 import type { WebsiteDesignerOutput } from "@/lib/ai/website-designer/types";
 import type { StudioPageData } from "@/types/studio";
@@ -65,22 +63,7 @@ const DEVICES: Record<DeviceType, DeviceConfig> = {
   desktop: { width: 1280, height: 800, label: "Desktop", icon: Monitor },
 };
 
-const STYLE_OPTIONS = [
-  { value: "minimal", label: "Minimal & Clean" },
-  { value: "bold", label: "Bold & Modern" },
-  { value: "elegant", label: "Elegant & Sophisticated" },
-  { value: "playful", label: "Playful & Fun" },
-  { value: "corporate", label: "Corporate & Professional" },
-  { value: "creative", label: "Creative & Artistic" },
-];
-
-const COLOR_OPTIONS = [
-  { value: "brand", label: "Match Brand Colors" },
-  { value: "warm", label: "Warm Tones" },
-  { value: "cool", label: "Cool Tones" },
-  { value: "monochrome", label: "Monochrome" },
-  { value: "vibrant", label: "Vibrant & Colorful" },
-];
+// Style/color preference dropdowns removed — AI now makes all design decisions autonomously
 
 // =============================================================================
 // MAIN COMPONENT
@@ -268,8 +251,6 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
   
   // Form state
   const [prompt, setPrompt] = useState("");
-  const [style, setStyle] = useState<string>("minimal");
-  const [colorPreference, setColorPreference] = useState<string>("brand");
   
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false);
@@ -318,20 +299,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       const pageSlugs = output.pages.map(p => p.slug);
       setGeneratedPageSlugs(pageSlugs);
       
-      // Set design tokens from the AI output so all components get themed colors
-      if (output.designSystem?.colors) {
-        const tokens: DesignTokens = {
-          primaryColor: output.designSystem.colors.primary,
-          secondaryColor: output.designSystem.colors.secondary,
-          accentColor: output.designSystem.colors.accent,
-          backgroundColor: output.designSystem.colors.background,
-          textColor: output.designSystem.colors.text,
-        };
-        setDesignTokens(tokens);
-      }
-      
-      // Then convert pages (links will be validated against actual page slugs,
-      // colors will use design tokens instead of hardcoded defaults)
+      // Convert pages — AI's prop values flow through directly (no design token override)
       const map = new Map<string, StudioPageData>();
       for (const page of output.pages) {
         const studioData = convertPageToStudioFormat(page);
@@ -381,15 +349,9 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
     const basePayload = {
       siteId,
       prompt,
-      preferences: {
-        style,
-        colorPreference,
-        layoutDensity: "balanced" as const,
-        animationLevel: "subtle" as const,
-      },
+      preferences: {},
       engineConfig: {
         enableModuleIntegration: false,
-        useQuickDesignTokens: true,
       },
     };
 
@@ -740,42 +702,6 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
                   <p className="text-xs text-muted-foreground">
                     Be specific! Include your business type, key features, and sections you want.
                   </p>
-                </div>
-
-                <Separator />
-
-                {/* Preferences */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="style">Design Style</Label>
-                    <Select value={style} onValueChange={setStyle} disabled={isGenerating}>
-                      <SelectTrigger id="style">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {STYLE_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="color">Color Palette</Label>
-                    <Select value={colorPreference} onValueChange={setColorPreference} disabled={isGenerating}>
-                      <SelectTrigger id="color">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {COLOR_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
 
                 {/* Progress */}

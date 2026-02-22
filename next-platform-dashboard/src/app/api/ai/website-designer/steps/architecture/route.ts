@@ -29,8 +29,6 @@ const RequestSchema = z.object({
     mustIncludeComponents: z.array(z.string()).optional(),
   }).optional(),
   engineConfig: z.object({
-    enableDesignInspiration: z.boolean().optional(),
-    useQuickDesignTokens: z.boolean().optional(),
     enableRefinement: z.boolean().optional(),
     enableModuleIntegration: z.boolean().optional(),
   }).optional(),

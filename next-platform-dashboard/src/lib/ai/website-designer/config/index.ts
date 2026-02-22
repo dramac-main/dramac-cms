@@ -12,13 +12,3 @@ export {
   type AIProvider,
   type AIModelTier,
 } from "./ai-provider";
-
-export {
-  DESIGN_REFERENCES,
-  findDesignReference,
-  getIndustryReferences,
-  formatReferenceForAI,
-  type DesignReference,
-  type SectionReference,
-  type ContentPattern,
-} from "./design-references";

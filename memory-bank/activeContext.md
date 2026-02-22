@@ -1,5 +1,139 @@
 # Active Context
 
+## Current Focus: AI Website Designer — AI-First Redesign (Phase AWD-10)
+
+### Status: ALL 7 PHASES COMPLETE ✅ — Build Verified
+
+**Plan Document:** `phases/PHASE-AWD-10-AI-FIRST-REDESIGN.md` (~1170 lines)
+
+#### Phases 1-3 (Prior Session) ✅
+- Phase 1: Bug Fixes (About→Features mapping, Pricing monthlyPrice→price, FAQ expandFirst→defaultOpen:0, Tailwind safelist)
+- Phase 2: Liberate the Converter (all 15+ handlers → pass-through with `...props`)
+- Phase 3: Remove Override Systems (engine.ts override block removed, converter color math ~200 lines removed)
+
+#### Phases 4-6 (Prior Session) ✅
+
+**Phase 4: Rewrite Prompts + Dynamic Component Discovery** ✅
+- 4.1: Created `component-reference.ts` — NEW file (~195 lines) with `generateArchitectureReference()` and `generatePageReference()`. Reads live from `componentRegistry.getAll()`.
+- 4.2-4.3: Completely rewrote `prompts.ts` from ~1,198 lines → ~330 lines. Empowering tone, dynamic component catalog.
+- 4.4-4.5: Simplified prompt builders. Removed `INDUSTRY_CONTENT_PROMPTS` and `getIndustryContentPrompt()`.
+
+**Phase 5: Eliminate Dropdowns** ✅
+- Removed `STYLE_OPTIONS`, `COLOR_OPTIONS`, dropdowns, dead state from page.tsx
+- AI now makes all design decisions autonomously from the user's prompt
+
+**Phase 6: Wire Personality End-to-End** ✅
+- `personalityContext` stored as class property, flows to every page generation call
+
+#### Phase 7: Dead Code Cleanup (This Session) ✅
+
+**7.1: Deleted 6 dead files (~4,100+ lines removed):**
+- `design/inspiration-engine.ts` (533 lines) — DesignInspirationEngine, AWARD_WINNING_PATTERNS, getQuickDesignTokens
+- `design/variety-engine.ts` (472 lines) — getDesignPersonality, formatPersonalityForAI, 8 PERSONALITIES presets
+- `design/generator.ts` (389 lines) — DesignSystemGenerator class
+- `config/industry-blueprints.ts` (1,644 lines) — findBlueprint, formatBlueprintForAI, 10 industry blueprints
+- `config/design-references.ts` (1,051 lines) — DESIGN_REFERENCES, findDesignReference
+- `prompts.ts.backup` — backup from Phase 4
+
+**7.2: Cleaned converter.ts (~40 lines removed):**
+- Removed local `DesignTokens` interface, `activeDesignTokens` module state, `setDesignTokens()` function
+- Simplified `convertOutputToStudioPages()` — removed `designTokens` parameter
+
+**7.3: Cleaned engine.ts (~200+ lines removed):**
+- Removed 3 dead import blocks (industry-blueprints, inspiration-engine, variety-engine)
+- Removed `enableDesignInspiration` and `useQuickDesignTokens` from EngineConfig + DEFAULT_CONFIG
+- Removed `activeBlueprint` class property
+- Rewrote `stepArchitecture()` — removed entire blueprint/inspiration/quickDesignTokens/personality pipeline
+- Cleaned `stepSinglePage()` — removed findBlueprint() call
+- Simplified `createArchitecture()` from 7 params → 2 params — removed all context injection
+- Cleaned `generatePage()` — removed blueprint page context
+- Cleaned DEFAULT_CONFIG comment (removed stale `enableDesignInspiration` mention)
+
+**7.4: Cleaned API route schemas (8 files):**
+- Removed `enableDesignInspiration` and `useQuickDesignTokens` from all 6 route schemas
+  - 4 step routes: architecture, page, shared, finalize
+  - 2 legacy routes: route.ts, stream/route.ts
+- Removed `useQuickDesignTokens: true` from page.tsx basePayload
+
+**7.5: Cleaned barrel exports (3 files):**
+- `design/index.ts` — removed DesignSystemGenerator (4 exports) and DesignInspirationEngine (3 exports)
+- `config/index.ts` — removed all design-references exports (7 exports)
+- Main `index.ts` — removed DesignSystemGenerator exports (4) + DesignSystem/DesignSystemInput types (2)
+
+**7.6: Grep verification — ZERO remaining dead references** ✅
+
+**Build Verified:** ✅ Compiled in 2.1min, 194/194 static pages, zero errors.
+
+### AI-First Redesign — COMPLETE ✅
+
+All 7 phases implemented. The AI Website Designer now operates on a pure AI-First philosophy:
+- **"The AI is the designer. We are the translator."**
+- No override systems, no hardcoded blueprints, no design token enforcement
+- Dynamic component catalog from live registry
+- AI makes ALL design decisions autonomously from user's prompt
+- Converter is pure pass-through translator (AI output → Studio format)
+
+---
+
+## Previous Focus: E-Commerce Critical Fixes + Google Rich Results SEO
+
+### Latest Session: 3 Critical Commits Pushed ✅
+
+**Commits:**
+- `0cf1e65` — Fix 8 component type mismatches in template-utils.ts
+- `bae98da` — Fix page creation schema mismatch (pages were silently failing)
+- `48cd5cc` — Add Google Rich Results structured data (Schema.org JSON-LD)
+
+---
+
+### Fix 1: Component Type Mismatches in template-utils.ts ✅ (`0cf1e65`)
+
+The auto-generated ecommerce page content used short type names that didn't match the Studio registry's `Ecommerce`-prefixed names. 8 of 12 component types were wrong:
+
+| Wrong (template-utils) | Correct (Studio registry) |
+|------------------------|--------------------------|
+| CartPageBlock | EcommerceCartPage |
+| CheckoutPageBlock | EcommerceCheckoutPage |
+| OrderConfirmationBlock | EcommerceOrderConfirmation |
+| CategoryNavBlock | EcommerceCategoryNav |
+| BreadcrumbBlock | EcommerceBreadcrumb |
+| SearchBarBlock | EcommerceSearchBar |
+| FilterSidebarBlock | EcommerceFilterSidebar |
+| FeaturedProductsBlock | EcommerceFeaturedProducts |
+
+### Fix 2: Page Creation Schema Mismatch ✅ (`bae98da`)
+
+**CRITICAL BUG:** `createEcommercePages()` in auto-setup-actions.ts was using completely wrong column names for the `pages` table. The code tried to INSERT with `title`, `content`, `meta_title`, `meta_description`, `status`, `metadata` — but the actual `pages` table uses `name`, `seo_title`, `seo_description` and stores content in a SEPARATE `page_content` table.
+
+**Result:** Page creation had been **silently failing for ALL sites**. DB query confirmed 0 ecommerce pages exist for any of the 5 sites with ecommerce installed (Ten and Ten, Besto, Sisto, Mesto, Jesto).
+
+**Fix:** Rewrote as two-step process:
+1. INSERT into `pages` with correct columns (`name, slug, seo_title, seo_description, is_homepage`)
+2. INSERT into `page_content` with `page_id, content` (jsonb)
+
+Also fixed `deletePagesCreatedByModule()` to use known ecommerce slugs instead of nonexistent `metadata` column, and properly cascade-delete `page_content` before `pages`.
+
+**User Action Required:** All 5 sites need ecommerce toggled off/on to regenerate pages with correct schema.
+
+### Fix 3: Google Rich Results — Schema.org JSON-LD ✅ (`48cd5cc`)
+
+Implemented comprehensive structured data system for Google Rich Results (product cards in search results):
+
+**New Files:**
+- `src/modules/ecommerce/lib/structured-data.ts` (~300 lines) — Schema.org JSON-LD generators
+- `src/modules/ecommerce/components/ecommerce-seo-injector.tsx` (~340 lines) — Server component
+
+**Schema Types Generated:**
+- **Product pages** (`/products/[slug]`): Full Product schema with offers, AggregateRating, variants (AggregateOffer for price ranges), breadcrumbs, store Organization
+- **Shop pages** (`/shop`): ItemList (enables Google carousel), Organization, WebSite with SearchAction (Sitelinks Search Box)
+- **Category pages** (`/categories/[slug]`): ItemList + Breadcrumb for category products
+- **Quote mode**: Correctly skips product structured data when `quotation_hide_prices` is true (Google requires accurate prices)
+
+**Modified:**
+- `page.tsx` — Added `EcommerceSeoInjector` in render, enhanced `generateMetadata()` for product-specific OG tags + canonical URLs
+
+---
+
 ## Recent Work
 
 ### E-Commerce Remaining Priorities (Session 6) — ALL COMPLETE ✅

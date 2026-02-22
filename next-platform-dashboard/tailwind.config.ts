@@ -44,6 +44,16 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  // Safelist dynamic grid classes used by AI-generated components
+  // These are built at runtime (e.g. `grid-cols-${columns}`) so Tailwind can't detect them
+  safelist: [
+    { pattern: /^grid-cols-[1-6]$/ },
+    { pattern: /^sm:grid-cols-[1-6]$/ },
+    { pattern: /^md:grid-cols-[1-6]$/ },
+    { pattern: /^lg:grid-cols-[1-6]$/ },
+    { pattern: /^xl:grid-cols-[1-6]$/ },
+    { pattern: /^gap-[0-9]+$/ },
+  ],
   theme: {
     container: {
       center: true,

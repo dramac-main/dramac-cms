@@ -14,13 +14,10 @@
 
 import { generateObject } from "ai";
 import { getAIModel, getModelInfo } from "./config/ai-provider";
-import { findBlueprint, formatBlueprintForAI, formatBlueprintPageForAI, type IndustryBlueprint } from "./config/industry-blueprints";
 import { buildDataContext } from "./data-context/builder";
 import { formatContextForAI } from "./data-context/formatter";
 import { checkDataAvailability } from "./data-context/checker";
 import { componentRegistry } from "@/lib/studio/registry";
-import { DesignInspirationEngine, type DesignRecommendation } from "./design/inspiration-engine";
-import { getDesignPersonality, formatPersonalityForAI } from "./design/variety-engine";
 import { MultiPassRefinementEngine } from "./refinement/multi-pass-engine";
 import { auditWebsite } from "./quality/design-auditor";
 import { ModuleIntegrationOrchestrator } from "./modules/orchestrator";
@@ -82,10 +79,6 @@ export interface SharedElementsContext {
 // =============================================================================
 
 export interface EngineConfig {
-  /** Enable design inspiration engine for Dribbble/Awwwards-level designs (adds ~30s) */
-  enableDesignInspiration: boolean;
-  /** Use quick design tokens instead of full AI analysis (fast, no AI call) */
-  useQuickDesignTokens: boolean;
   /** Enable multi-pass refinement for higher quality output (adds 2-4 minutes!) */
   enableRefinement: boolean;
   /** Number of refinement passes (1-4). More passes = better quality but slower */
@@ -99,13 +92,10 @@ export interface EngineConfig {
  * 
  * Heavy features are DISABLED by default to prevent timeouts.
  * For higher quality, enable features in the API call:
- * - enableDesignInspiration: true (for award-winning patterns)
  * - enableRefinement: true (for multi-pass quality improvement)
  * - enableModuleIntegration: true (for booking/e-commerce)
  */
 const DEFAULT_CONFIG: EngineConfig = {
-  enableDesignInspiration: false, // Disabled - adds AI call
-  useQuickDesignTokens: true,     // Fast industry-based tokens (no AI)
   enableRefinement: false,        // Disabled - adds 4 AI calls!
   refinementPasses: 2,            // If enabled, use 2 passes max
   enableModuleIntegration: false, // Disabled by default — adds ~10-15s AI call, exceeds 60s Vercel timeout
@@ -123,7 +113,8 @@ export class WebsiteDesignerEngine {
   private userPrompt: string = ""; // Store user's original prompt
   private onProgress?: (progress: GenerationProgress) => void;
   private config: EngineConfig;
-  private activeBlueprint: IndustryBlueprint | null = null; // Proven industry blueprint
+  private personalityContext: string = ""; // Design personality from architecture, flows to all pages
+  private extractedBusinessName: string | null = null; // Business name extracted from user prompt
   
   // Enhancement Engines
   private moduleOrchestrator: ModuleIntegrationOrchestrator | null = null;
@@ -166,47 +157,14 @@ export class WebsiteDesignerEngine {
       this.availability = checkDataAvailability(this.context);
       const formattedContext = formatContextForAI(this.context);
 
-      // Design inspiration
-      let designInspiration: DesignRecommendation | null = null;
-      let quickDesignTokens: ReturnType<DesignInspirationEngine["getQuickDesignTokens"]> | null = null;
-      const industry = this.context?.client.industry?.toLowerCase() || "general";
-      const designEngine = new DesignInspirationEngine(industry, "modern", input.prompt);
-
-      // Find proven industry blueprint
-      this.activeBlueprint = findBlueprint(industry, input.prompt);
-      if (this.activeBlueprint) {
-        console.log(`[WebsiteDesignerEngine] ✅ Found industry blueprint: ${this.activeBlueprint.name} (${this.activeBlueprint.id})`);
-      } else {
-        console.log(`[WebsiteDesignerEngine] ⚠️ No blueprint found for industry: ${industry} — using AI freeform generation`);
-      }
-
-      // Generate unique design personality for variety
-      const designPersonality = getDesignPersonality(industry);
-      const personalityContext = formatPersonalityForAI(designPersonality);
-      console.log(`[WebsiteDesignerEngine] 🎭 Design personality: ${designPersonality.name} (hero: ${designPersonality.heroStyle}, cards: ${designPersonality.cardStyle})`);
-
-      if (this.config.enableDesignInspiration) {
-        this.reportProgress("building-context", "Analyzing award-winning design patterns...", 0, 1);
-        try {
-          designInspiration = await designEngine.getDesignRecommendations();
-        } catch (error) {
-          console.warn("[WebsiteDesignerEngine] Design inspiration failed, using quick tokens:", error);
-          quickDesignTokens = designEngine.getQuickDesignTokens();
-        }
-      } else if (this.config.useQuickDesignTokens) {
-        quickDesignTokens = designEngine.getQuickDesignTokens();
-      }
+      // AI-First: No blueprint/inspiration/personality overrides.
+      // The AI makes all design decisions based on the user's prompt and business context.
 
       // Generate architecture via AI
       this.reportProgress("analyzing-prompt", "Analyzing your requirements...", 0, 1);
       this.architecture = await this.createArchitecture(
         input.prompt,
         formattedContext,
-        input.preferences,
-        designInspiration,
-        quickDesignTokens,
-        this.activeBlueprint,
-        personalityContext
       );
 
       // Apply constraints
@@ -269,10 +227,6 @@ export class WebsiteDesignerEngine {
   }> {
     this.userPrompt = input.prompt;
     this.architecture = architecture;
-
-    // Use industry from architecture step to avoid redundant DB call (saves 13 queries per page)
-    const resolvedIndustry = industry?.toLowerCase() || "general";
-    this.activeBlueprint = findBlueprint(resolvedIndustry, input.prompt);
 
     try {
       this.reportProgress("generating-pages", `Generating page: ${pagePlan.name}...`, 0, 1);
@@ -664,87 +618,19 @@ export class WebsiteDesignerEngine {
 
   /**
    * Create site architecture from user prompt
-   * Enhanced with design inspiration patterns or quick tokens
+   * AI-First: The AI makes all design decisions autonomously.
+   * Dynamic component reference is injected by buildArchitecturePrompt().
    */
   private async createArchitecture(
     prompt: string,
     context: string,
-    preferences?: WebsiteDesignerInput["preferences"],
-    designInspiration?: DesignRecommendation | null,
-    quickDesignTokens?: ReturnType<DesignInspirationEngine["getQuickDesignTokens"]> | null,
-    blueprint?: IndustryBlueprint | null,
-    personalityContext?: string
   ): Promise<SiteArchitecture> {
     const componentSummary = this.summarizeComponents();
 
-    // BLUEPRINT CONTEXT — Proven industry architecture (HIGHEST PRIORITY)
-    let blueprintContext = "";
-    if (blueprint) {
-      blueprintContext = formatBlueprintForAI(blueprint);
-      console.log(`[WebsiteDesignerEngine] 📋 Injecting ${blueprint.name} blueprint into architecture prompt`);
-    }
-
-    // Enhance prompt with design inspiration if available
-    let inspirationContext = "";
-    if (designInspiration) {
-      // Full AI-powered design inspiration
-      inspirationContext = `
-## DESIGN INSPIRATION (Award-winning patterns to incorporate):
-
-### Hero Pattern
-Name: ${designInspiration.heroPattern.name}
-Description: ${designInspiration.heroPattern.description}
-Animation: ${designInspiration.heroPattern.animationSuggestion}
-
-### Color Scheme
-Style: ${designInspiration.colorScheme.name}
-Primary: ${designInspiration.colorScheme.primary}
-Secondary: ${designInspiration.colorScheme.secondary}
-Accent: ${designInspiration.colorScheme.accent}
-Background: ${designInspiration.colorScheme.background}
-
-### Typography
-Heading: ${designInspiration.typography.heading}
-Body: ${designInspiration.typography.body}
-Style: ${designInspiration.typography.style}
-
-### Layout Recommendations
-${designInspiration.layoutRecommendations.map((l) => `- ${l.section}: ${l.layout} (${l.animation})`).join("\n")}
-
-### Micro-Interactions to Include
-${designInspiration.microInteractions.map((m) => `- ${m}`).join("\n")}
-
-### Design Principles
-${designInspiration.designPrinciples.map((p) => `- ${p}`).join("\n")}
-`;
-    } else if (quickDesignTokens) {
-      // Quick design tokens (pre-curated, no AI call)
-      inspirationContext = `
-## DESIGN TOKENS (Industry-optimized design system):
-
-### Color Scheme: ${quickDesignTokens.colors.name}
-Primary: ${quickDesignTokens.colors.primary}
-Secondary: ${quickDesignTokens.colors.secondary}
-Accent: ${quickDesignTokens.colors.accent}
-Background: ${quickDesignTokens.colors.background}
-Text: ${quickDesignTokens.colors.text}
-
-### Typography: ${quickDesignTokens.typography.name}
-Heading Font: ${quickDesignTokens.typography.heading}
-Body Font: ${quickDesignTokens.typography.body}
-Style: ${quickDesignTokens.typography.style}
-
-### Hero Pattern: ${quickDesignTokens.heroPattern.name}
-${quickDesignTokens.heroPattern.description}
-Animation: ${quickDesignTokens.heroPattern.animation}
-`;
-    }
-
     const fullPrompt = buildArchitecturePrompt(
       prompt,
-      context + inspirationContext + blueprintContext + (personalityContext ? "\n\n" + personalityContext : ""),
-      preferences as Record<string, unknown> | undefined,
-      componentSummary
+      context,
+      componentSummary,
     );
 
     const { object } = await generateObject({
@@ -754,50 +640,10 @@ Animation: ${quickDesignTokens.heroPattern.animation}
       prompt: fullPrompt,
     });
 
-    // Apply design tokens to architecture
+    // AI-First: Trust the AI's design token choices completely
     const architecture = object as SiteArchitecture;
     
-    // Priority: Blueprint > Design Inspiration > Quick Tokens
-    // Blueprint provides proven, tested color/typography combinations
-    if (blueprint) {
-      const palette = blueprint.design.palettes[0]; // Primary proven palette
-      const typo = blueprint.design.typography[0]; // Primary proven typography
-      architecture.designTokens = {
-        ...architecture.designTokens,
-        primaryColor: palette.primary,
-        secondaryColor: palette.secondary,
-        accentColor: palette.accent,
-        backgroundColor: palette.background,
-        textColor: palette.text,
-        fontHeading: typo.heading,
-        fontBody: typo.body,
-      };
-      console.log(`[WebsiteDesignerEngine] 🎨 Applied blueprint palette: ${palette.name} (${palette.mood})`);
-    } else if (designInspiration) {
-      // Apply full AI-powered design inspiration
-      architecture.designTokens = {
-        ...architecture.designTokens,
-        primaryColor: designInspiration.colorScheme.primary,
-        secondaryColor: designInspiration.colorScheme.secondary,
-        accentColor: designInspiration.colorScheme.accent,
-        backgroundColor: designInspiration.colorScheme.background,
-        textColor: designInspiration.colorScheme.text,
-        fontHeading: designInspiration.typography.heading,
-        fontBody: designInspiration.typography.body,
-      };
-    } else if (quickDesignTokens) {
-      // Apply quick design tokens
-      architecture.designTokens = {
-        ...architecture.designTokens,
-        primaryColor: quickDesignTokens.colors.primary,
-        secondaryColor: quickDesignTokens.colors.secondary,
-        accentColor: quickDesignTokens.colors.accent,
-        backgroundColor: quickDesignTokens.colors.background,
-        textColor: quickDesignTokens.colors.text,
-        fontHeading: quickDesignTokens.typography.heading,
-        fontBody: quickDesignTokens.typography.body,
-      };
-    }
+    console.log(`[WebsiteDesignerEngine] 🎨 AI chose design tokens: primary=${architecture.designTokens?.primaryColor}, bg=${architecture.designTokens?.backgroundColor}`);
 
     return architecture;
   }
@@ -862,15 +708,6 @@ Animation: ${quickDesignTokens.heroPattern.animation}
       };
     });
 
-    // Inject blueprint page guidance if available (PROVEN section-by-section specifications)
-    let blueprintPageContext = "";
-    if (this.activeBlueprint) {
-      blueprintPageContext = formatBlueprintPageForAI(this.activeBlueprint, pagePlan.name);
-      if (blueprintPageContext) {
-        console.log(`[WebsiteDesignerEngine] 📄 Injecting blueprint guidance for page: ${pagePlan.name}`);
-      }
-    }
-
     // Build all-pages list for cross-page context (so AI can link to real pages)
     const allPages = (this.architecture?.pages || []).map(p => ({ name: p.name, slug: p.slug }));
 
@@ -879,9 +716,10 @@ Animation: ${quickDesignTokens.heroPattern.animation}
       context,
       (this.architecture?.designTokens || {}) as Record<string, unknown>,
       componentDetails,
-      this.userPrompt, // Pass user's original prompt for reference
-      blueprintPageContext, // Pass proven blueprint guidance for this specific page
-      allPages, // Pass full site structure for cross-page linking
+      this.userPrompt,
+      "", // No blueprint context — AI makes all decisions
+      allPages,
+      this.personalityContext || undefined,
     );
 
     const { object } = await generateObject({
