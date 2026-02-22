@@ -33,6 +33,7 @@ import {
 import { toast } from 'sonner'
 import { getQuoteSiteSettings, upsertQuoteSiteSettings } from '../../actions/quote-template-actions'
 import { getEcommerceSettings, updateEcommerceSettings } from '../../actions/ecommerce-actions'
+import { createQuotePage, deleteQuotePage } from '../../actions/auto-setup-actions'
 
 import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 // ============================================================================
@@ -219,6 +220,22 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
               onCheckedChange={async (checked) => {
                 setQuotationModeEnabled(checked)
                 await saveQuotationMode({ quotation_mode_enabled: checked })
+                // Create or delete the /quotes page based on toggle
+                if (checked) {
+                  const result = await createQuotePage(siteId)
+                  if (result.success) {
+                    toast.success('Quotes page created')
+                  } else {
+                    toast.error('Failed to create quotes page')
+                  }
+                } else {
+                  const result = await deleteQuotePage(siteId)
+                  if (result.success) {
+                    toast.success('Quotes page removed')
+                  } else {
+                    toast.error('Failed to remove quotes page')
+                  }
+                }
               }}
             />
           </div>

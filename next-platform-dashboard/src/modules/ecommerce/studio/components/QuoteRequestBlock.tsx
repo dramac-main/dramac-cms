@@ -26,6 +26,7 @@ import { useStorefront } from '../../context/storefront-context'
 import { useQuotations, QuoteBuilderItem, QuoteRequestData } from '../../hooks/useQuotations'
 import { QuoteItemCard } from './QuoteItemCard'
 import { QuotePriceBreakdown } from './QuotePriceBreakdown'
+import Link from 'next/link'
 
 // ============================================================================
 // TYPES
@@ -74,8 +75,30 @@ export function QuoteRequestBlock({
   description = 'Fill out the form below and we\'ll send you a customized quote.',
   className
 }: QuoteRequestBlockProps) {
-  const { siteId, formatPrice, settings } = useStorefront()
+  const { siteId, formatPrice, settings, quotationModeEnabled, isInitialized } = useStorefront()
   const agencyId = settings?.agency_id
+
+  // Guard: If quotation mode is not enabled, don't show the quote form
+  if (isInitialized && !quotationModeEnabled) {
+    return (
+      <Card className={cn('text-center', className)}>
+        <CardContent className="pt-6">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+            <ShoppingBag className="h-8 w-8 text-gray-400" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900">Quotations Not Available</h3>
+          <p className="mt-2 text-gray-600">
+            This store does not currently accept quote requests. Please browse our products and purchase directly.
+          </p>
+          <Link href="/shop">
+            <Button className="mt-4" variant="default">
+              <ShoppingBag className="mr-2 h-4 w-4" /> Browse Shop
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    )
+  }
   
   const {
     builderItems,

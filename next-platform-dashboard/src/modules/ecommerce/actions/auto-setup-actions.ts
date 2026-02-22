@@ -24,6 +24,7 @@ import type {
 import {
   ecommercePageDefinitions,
   ecommerceDynamicRoutes,
+  quotePageDefinition,
 } from '../lib/page-templates';
 
 // ============================================================================
@@ -220,7 +221,8 @@ export async function deletePagesCreatedByModule(
   
   try {
     // Find pages by known ecommerce slugs
-    const ecommerceSlugs = ecommercePageDefinitions.map(p => p.slug);
+    // Include 'quotes' which is created on-demand (not in ecommercePageDefinitions)
+    const ecommerceSlugs = [...ecommercePageDefinitions.map(p => p.slug), 'quotes'];
     
     const { data: modulePages } = await db
       .from('pages')
@@ -746,4 +748,117 @@ export async function getEcommerceSetupStatus(siteId: string): Promise<{
     settingsApplied,
     onboardingCompleted,
   };
+}
+
+// ============================================================================
+// QUOTATION PAGE MANAGEMENT
+// ============================================================================
+
+/**
+ * Create the /quotes page for a site (called when quotation mode is enabled)
+ */
+export async function createQuotePage(siteId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
+
+  try {
+    // Check if the page already exists
+    const { data: existing } = await db
+      .from('pages')
+      .select('id')
+      .eq('site_id', siteId)
+      .eq('slug', 'quotes')
+      .single();
+
+    if (existing) {
+      console.log('[AutoSetup] Quote page already exists, skipping creation');
+      return { success: true };
+    }
+
+    // Create the page
+    const { data: page, error } = await db
+      .from('pages')
+      .insert({
+        site_id: siteId,
+        slug: quotePageDefinition.slug,
+        name: quotePageDefinition.title,
+        seo_title: quotePageDefinition.metaTitle || quotePageDefinition.title,
+        seo_description: quotePageDefinition.metaDescription || '',
+        is_homepage: false,
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('[AutoSetup] Failed to create quotes page:', error);
+      return { success: false, error: error.message };
+    }
+
+    // Create the page content
+    const { error: contentError } = await db
+      .from('page_content')
+      .insert({
+        page_id: page.id,
+        content: quotePageDefinition.content,
+      });
+
+    if (contentError) {
+      console.error('[AutoSetup] Failed to create quotes page content:', contentError);
+      return { success: false, error: contentError.message };
+    }
+
+    console.log('[AutoSetup] Created /quotes page');
+    return { success: true };
+  } catch (err) {
+    console.error('[AutoSetup] Error creating quotes page:', err);
+    return { success: false, error: 'Failed to create quotes page' };
+  }
+}
+
+/**
+ * Delete the /quotes page for a site (called when quotation mode is disabled)
+ */
+export async function deleteQuotePage(siteId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
+
+  try {
+    // Find the quotes page
+    const { data: page } = await db
+      .from('pages')
+      .select('id')
+      .eq('site_id', siteId)
+      .eq('slug', 'quotes')
+      .single();
+
+    if (!page) {
+      console.log('[AutoSetup] Quote page does not exist, nothing to delete');
+      return { success: true };
+    }
+
+    // Delete content first (FK constraint)
+    await db
+      .from('page_content')
+      .delete()
+      .eq('page_id', page.id);
+
+    // Delete the page
+    const { error } = await db
+      .from('pages')
+      .delete()
+      .eq('id', page.id);
+
+    if (error) {
+      console.error('[AutoSetup] Failed to delete quotes page:', error);
+      return { success: false, error: error.message };
+    }
+
+    console.log('[AutoSetup] Deleted /quotes page');
+    return { success: true };
+  } catch (err) {
+    console.error('[AutoSetup] Error deleting quotes page:', err);
+    return { success: false, error: 'Failed to delete quotes page' };
+  }
 }

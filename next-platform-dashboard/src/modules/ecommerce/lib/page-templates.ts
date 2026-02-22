@@ -416,9 +416,9 @@ export const categoryPageDefinition: PageDefinition = {
  * Create the quote request page template
  * URL: /quotes
  * 
- * This page is created during activation so the quote mode
- * redirect URL (/quotes) always resolves. The QuoteRequestBlock
- * handles the full quote submission flow.
+ * This page is created on-demand when quotation mode is enabled
+ * in settings, and removed when quotation mode is disabled.
+ * The QuoteRequestBlock handles the full quote submission flow.
  */
 export function createQuoteRequestTemplate(): StudioPageData {
   resetIdCounter();
@@ -478,15 +478,21 @@ export const quotePageDefinition: PageDefinition = {
 // ============================================================================
 
 /**
- * All e-commerce page definitions for auto-creation
+ * Core e-commerce page definitions - always created on activation
+ * NOTE: quotePageDefinition is NOT included here. It is created/deleted
+ * dynamically when quotation mode is toggled on/off in settings.
  */
 export const ecommercePageDefinitions: PageDefinition[] = [
   shopPageDefinition,
   cartPageDefinition,
   checkoutPageDefinition,
   orderConfirmationPageDefinition,
-  quotePageDefinition,
 ];
+
+/**
+ * Optional page definitions - created on-demand based on settings
+ */
+export { quotePageDefinition };
 
 /**
  * Dynamic route definitions (stored as metadata, not actual pages)
