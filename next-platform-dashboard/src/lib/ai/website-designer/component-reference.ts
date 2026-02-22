@@ -12,7 +12,7 @@
  * - Full-detail for page generation (component CONFIGURATION): every field, every option, every default
  */
 
-import { componentRegistry } from "@/lib/studio/registry";
+import { componentRegistry, initializeRegistry, isRegistryInitialized } from "@/lib/studio/registry";
 import type { ComponentDefinition, FieldDefinition } from "@/types/studio";
 
 // Categories that AI should know about — covers all usable component types
@@ -126,6 +126,12 @@ function isKeyProp(key: string, field: FieldDefinition): boolean {
  * ~50-80 words per component, ~2,000-3,000 words total
  */
 export function generateArchitectureReference(): string {
+  // Ensure registry is populated — critical for server-side (API routes, engine)
+  // where no client-side component has called initializeRegistry() yet.
+  if (!isRegistryInitialized()) {
+    initializeRegistry();
+  }
+
   const allComponents = componentRegistry.getAll();
   
   const filtered = allComponents.filter(
@@ -185,6 +191,11 @@ export function generatePageReference(
   componentTypes?: string[],
   includeOtherBrief: boolean = true
 ): string {
+  // Ensure registry is populated — critical for server-side (API routes, engine)
+  if (!isRegistryInitialized()) {
+    initializeRegistry();
+  }
+
   const allComponents = componentRegistry.getAll();
   
   const aiRelevant = allComponents.filter(

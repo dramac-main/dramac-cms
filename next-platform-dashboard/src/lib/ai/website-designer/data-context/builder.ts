@@ -579,31 +579,48 @@ async function fetchBlogPosts(
 }
 
 /**
- * Fetch enabled modules
+ * Fetch enabled modules from site_module_installations (the actual source of truth).
+ * 
+ * Previously this read from sites.settings.enabled_modules which was never populated
+ * by any installation flow. The real module installation data lives in the
+ * site_module_installations table, joined with modules_v2 for module details.
  */
 async function fetchModules(supabase: SupabaseClient, siteId: string): Promise<EnabledModule[]> {
   try {
-    const { data } = await supabase
-      .from("sites")
-      .select("settings")
-      .eq("id", siteId)
-      .single();
-    
-    if (data?.settings && typeof data.settings === "object") {
-      const settings = data.settings as Record<string, unknown>;
-      const modules = settings.enabled_modules as Array<Record<string, unknown>> | undefined;
-      if (Array.isArray(modules)) {
-        return modules.map((m) => ({
-          id: (m.id as string) ?? "",
-          site_id: siteId,
-          module_type: (m.module_type as string) ?? "",
-          module_name: (m.module_name as string) ?? undefined,
-          name: (m.name as string) ?? undefined,
-          enabled: (m.enabled as boolean) ?? true,
-          settings: (m.settings as Record<string, unknown>) ?? undefined,
-        }));
-      }
+    // Query active module installations for this site
+    const { data: installations, error: installError } = await supabase
+      .from("site_module_installations")
+      .select("id, module_id, is_enabled, settings")
+      .eq("site_id", siteId)
+      .eq("is_enabled", true);
+
+    if (installError || !installations || installations.length === 0) {
+      return [];
     }
+
+    // Fetch module details (name, slug) from modules_v2
+    const moduleIds = installations.map((i: { module_id: string }) => i.module_id);
+    const { data: modulesData } = await supabase
+      .from("modules_v2")
+      .select("id, name, slug")
+      .in("id", moduleIds);
+
+    const moduleMap = new Map(
+      (modulesData || []).map((m: { id: string; name: string; slug: string }) => [m.id, m])
+    );
+
+    return installations.map((inst: { id: string; module_id: string; is_enabled: boolean; settings: Record<string, unknown> | null }) => {
+      const mod = moduleMap.get(inst.module_id) as { id: string; name: string; slug: string } | undefined;
+      return {
+        id: inst.id,
+        site_id: siteId,
+        module_type: mod?.slug ?? "",
+        module_name: mod?.name ?? undefined,
+        name: mod?.name ?? undefined,
+        enabled: inst.is_enabled,
+        settings: inst.settings ?? undefined,
+      };
+    });
   } catch {
     // Silently fail
   }

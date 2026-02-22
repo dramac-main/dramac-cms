@@ -17,6 +17,7 @@ type RouteContext = { params: Promise<{ siteId: string }> };
 // Component type prefixes that map to module slugs
 const COMPONENT_MODULE_MAP: Record<string, string> = {
   Booking: "booking",
+  Ecommerce: "ecommerce",
   Product: "ecommerce",
   Cart: "ecommerce",
   Checkout: "ecommerce",

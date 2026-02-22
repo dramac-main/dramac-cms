@@ -357,9 +357,9 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
     "PatientResources": "Features",
     "InsuranceAccepted": "Features",
     "Insurance": "Features",
-    "Appointment": "CTA",
-    "AppointmentBlock": "CTA",
-    "BookAppointment": "CTA",
+    "Appointment": "BookingWidget",
+    "AppointmentBlock": "BookingWidget",
+    "BookAppointment": "BookingWidget",
     "BookNow": "CTA",
     "BusinessHours": "Features",
     "OfficeHours": "Features",
@@ -542,7 +542,7 @@ function convertComponentToStudio(genComponent: GeneratedComponent): StudioCompo
         "certifications": "TrustBadges", "partners": "LogoCloud",
         "trustedby": "LogoCloud", "affiliations": "LogoCloud",
         // Appointment/booking → CTA
-        "appointment": "CTA", "bookappointment": "CTA", "booking": "CTA",
+        "appointment": "BookingWidget", "bookappointment": "BookingWidget", "booking": "BookingWidget",
         "reserve": "CTA", "schedule": "CTA", "getstarted": "CTA",
         // Contact info → ContactForm
         "contactinfo": "ContactForm", "contactdetails": "ContactForm",
