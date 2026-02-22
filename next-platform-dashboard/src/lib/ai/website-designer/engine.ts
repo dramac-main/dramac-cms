@@ -974,8 +974,25 @@ Configure ALL footer props for a complete, professional result.`,
       let sectionIdx = 0;
 
       const components = page.components.map((comp) => {
-        // Skip Navbar and Footer — they have their own color handling
-        if (comp.type === "Navbar" || comp.type === "Footer") return comp;
+        // Handle Navbar brand colors
+        if (comp.type === "Navbar") {
+          const navProps = { ...comp.props } as Record<string, unknown>;
+          if (!navProps.ctaColor) navProps.ctaColor = primary;
+          if (!navProps.ctaTextColor) navProps.ctaTextColor = "#ffffff";
+          // If navbar has no explicit backgroundColor, keep default white — it's safe
+          // But ensure CTA is always branded
+          return { ...comp, props: navProps };
+        }
+
+        // Handle Footer brand colors
+        if (comp.type === "Footer") {
+          const footerProps = { ...comp.props } as Record<string, unknown>;
+          if (!footerProps.accentColor) footerProps.accentColor = accent;
+          if (!footerProps.newsletterButtonColor) footerProps.newsletterButtonColor = primary;
+          if (!footerProps.newsletterButtonTextColor) footerProps.newsletterButtonTextColor = "#ffffff";
+          // Only inject bg/text if not set — Footer has sensible dark defaults
+          return { ...comp, props: footerProps };
+        }
 
         const props = { ...comp.props } as Record<string, unknown>;
         const currentSectionIdx = sectionIdx++;

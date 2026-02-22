@@ -82,14 +82,30 @@ Hero, Features, CTA, Testimonials, FAQ, Stats, Team, Gallery, Pricing,
 ContactForm, Newsletter, Accordion, Tabs, Carousel, LogoCloud, TrustBadges,
 SocialProof, ComparisonTable, Map, Video, Quote, RichText, Section, Divider, Spacer
 
+**Module components (use when the module is enabled in the business context):**
+- BookingWidget — interactive appointment booking widget (use on homepage or dedicated booking page)
+- BookingCalendar — calendar view for available appointment slots
+- BookingServiceSelector — service selection grid for booking (use on services page)
+- BookingForm — appointment booking form
+- EcommerceProductGrid — product catalog grid (use on shop/products pages)
+- EcommerceFeaturedProducts — featured product showcase (use on homepage)
+
 **Important mappings:**
 - For services/benefits/about-us items → use "Features"
-- For booking/appointment CTAs → use "CTA"
+- For booking/appointment CTAs → use "CTA" or "BookingWidget" (if booking module is enabled)
 - For trust badges/credentials/accreditations → use "TrustBadges" or "LogoCloud"
 - For reviews/client feedback → use "Testimonials"
 - For contact/location info → use "ContactForm"
 - For expandable info → use "Accordion" or "FAQ"
+- For product displays (if ecommerce enabled) → use "EcommerceProductGrid" or "EcommerceFeaturedProducts"
 Do NOT invent new component type names like "ServicesSection" or "PatientInfo".
+
+## MODULE AWARENESS
+Check the Business Context for "Enabled Features & Modules".
+- If a BOOKING module is enabled: include BookingWidget on the homepage, BookingServiceSelector on the services page.
+  Every CTA should say "Book Now" / "Book Appointment" and link to a booking or contact page.
+- If an E-COMMERCE module is enabled: include EcommerceFeaturedProducts on the homepage, EcommerceProductGrid on a shop page.
+  CTAs should say "Shop Now" / "Browse Products".
 
 ## LINKS
 Every link must point to a real page you're creating (/, /about, /services, /contact, etc.). Never use "#" or empty strings.
@@ -141,6 +157,14 @@ Use these versatile components to represent ANY content:
 - Section — for generic wrapper sections
 - Divider — for visual separators
 - Spacer — for vertical spacing
+
+**Module components (use ONLY when the module is mentioned in the business context):**
+- BookingWidget — interactive appointment booking widget with time slots
+- BookingCalendar — calendar view for available appointments
+- BookingServiceSelector — service selection grid before booking
+- BookingForm — appointment booking form with date/time picker
+- EcommerceProductGrid — product catalog grid with filters
+- EcommerceFeaturedProducts — featured product showcase with images and prices
 
 **Type mapping guide:**
 - Services list → use "Features" (with service items as features)
@@ -264,8 +288,12 @@ export const NAVBAR_GENERATOR_PROMPT = `You are designing a premium navigation b
 
 ## COLORS
 - Match the site's design tokens for consistency
+- Set backgroundColor and textColor to match the site theme
+- Set ctaColor to the PRIMARY brand color (from designTokens.primaryColor)
+- Set ctaTextColor to contrast with ctaColor (white for dark ctaColor, dark for light ctaColor)
+- Set mobileMenuBackground and mobileMenuTextColor to match the navbar theme
 - If the site has a dark theme, use dark navbar with light text
-- Ensure the mobile menu background matches the navbar theme
+- NEVER leave color props empty — always set explicit hex values
 
 Configure ALL navbar props for a modern, responsive navigation.`;
 
@@ -302,6 +330,12 @@ Always include Privacy Policy (/privacy) and Terms of Service (/terms).
 
 ### Theme consistency
 Footer colors must match the site's overall theme. A white footer on a dark site is a glaring inconsistency.
+- Set backgroundColor (typically dark: #0f172a, #1e293b, or a dark version of primaryColor)
+- Set textColor to contrast (white or light gray)
+- Set linkColor and linkHoverColor for navigation links
+- Set accentColor to primaryColor for highlights and decorations
+- Set newsletterButtonColor to primaryColor and newsletterButtonTextColor to white
+- NEVER leave color props empty — always set explicit hex values matching the brand
 
 Configure ALL footer props for a complete, polished result.`;
 

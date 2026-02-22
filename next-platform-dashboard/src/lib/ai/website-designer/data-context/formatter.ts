@@ -552,10 +552,37 @@ function formatBlogSection(blog: BlogPost[]): string {
 function formatModulesSection(modules: EnabledModule[]): string {
   const lines: string[] = ["## Enabled Features & Modules"];
 
-  const moduleList = modules.map((m) => m.module_name || m.name).filter(Boolean);
+  const moduleList = modules.map((m) => m.module_name || m.module_type || m.name).filter(Boolean);
   
   if (moduleList.length > 0) {
     lines.push(`The website has the following features enabled: ${moduleList.join(", ")}`);
+    lines.push("");
+    
+    // Give AI actionable instructions for each module type
+    for (const mod of modules) {
+      const modType = (mod.module_type || mod.module_name || mod.name || "").toLowerCase();
+      
+      if (modType.includes("booking") || modType.includes("appointment")) {
+        lines.push(`### BOOKING MODULE IS ACTIVE`);
+        lines.push(`This is a booking-enabled business. You MUST include booking functionality:`);
+        lines.push(`- Use "BookingWidget" component on the homepage (shows available appointment slots)`);
+        lines.push(`- Use "BookingServiceSelector" on the services page (lets users pick a service to book)`);
+        lines.push(`- Make CTA buttons say "Book Now" / "Book Appointment" and link to /contact or a booking page`);
+        lines.push(`- Consider adding a dedicated /book page with a BookingForm component`);
+        lines.push(`- Every page should have at least one booking CTA`);
+        lines.push(``);
+      }
+      
+      if (modType.includes("ecommerce") || modType.includes("commerce") || modType.includes("shop")) {
+        lines.push(`### E-COMMERCE MODULE IS ACTIVE`);
+        lines.push(`This is a shopping-enabled business. You MUST include product functionality:`);
+        lines.push(`- Use "EcommerceProductGrid" or "EcommerceFeaturedProducts" to showcase products`);
+        lines.push(`- Make CTA buttons say "Shop Now" / "Browse Products"`);
+        lines.push(`- Consider adding /shop and /products pages`);
+        lines.push(`- Include product-related sections on the homepage`);
+        lines.push(``);
+      }
+    }
   }
 
   return lines.join("\n");

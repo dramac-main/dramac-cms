@@ -29,6 +29,9 @@ export const VALID_COMPONENT_TYPES = [
   "Map", "Video",
   // Layout
   "Section", "Divider", "Spacer",
+  // Module components (booking & e-commerce)
+  "BookingWidget", "BookingCalendar", "BookingServiceSelector", "BookingForm",
+  "EcommerceProductGrid", "EcommerceFeaturedProducts",
 ] as const;
 
 // =============================================================================
@@ -212,11 +215,16 @@ export const NavbarComponentSchema = z.object({
   ctaText: z.string().optional(),
   ctaLink: z.string().optional(),
   ctaVariant: z.string().optional(),
-  backgroundColor: z.string().optional(),
-  textColor: z.string().optional(),
+  ctaColor: z.string().optional().describe("CTA button background color — use primary brand color for visibility"),
+  ctaTextColor: z.string().optional().describe("CTA button text color — MUST contrast with ctaColor"),
+  backgroundColor: z.string().optional().describe("Navbar background color — match the site theme"),
+  textColor: z.string().optional().describe("Navbar text/link color — MUST contrast with backgroundColor"),
+  linkHoverColor: z.string().optional().describe("Navbar link hover color"),
   shadow: z.boolean().optional(),
   transparent: z.boolean().optional(),
   mobileMenuStyle: z.string().optional(),
+  mobileMenuBackground: z.string().optional().describe("Mobile menu background — match navbar theme"),
+  mobileMenuTextColor: z.string().optional().describe("Mobile menu text color"),
 });
 
 // =============================================================================
@@ -269,10 +277,13 @@ export const FooterComponentSchema = z.object({
     )
     .optional()
     .describe("Legal links like Privacy Policy, Terms of Service"),
-  backgroundColor: z.string().optional(),
-  textColor: z.string().optional(),
-  linkColor: z.string().optional(),
-  linkHoverColor: z.string().optional(),
+  backgroundColor: z.string().optional().describe("Footer background color — typically dark for contrast"),
+  textColor: z.string().optional().describe("Footer text color — MUST contrast with backgroundColor"),
+  linkColor: z.string().optional().describe("Footer link color"),
+  linkHoverColor: z.string().optional().describe("Footer link hover color"),
+  accentColor: z.string().optional().describe("Accent color for decorative elements"),
+  newsletterButtonColor: z.string().optional().describe("Newsletter subscribe button color"),
+  newsletterButtonTextColor: z.string().optional().describe("Newsletter subscribe button text color"),
   borderTop: z.boolean().optional(),
 });
 

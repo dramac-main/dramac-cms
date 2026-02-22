@@ -644,6 +644,11 @@ function transformPropsForStudio(
         return layoutMap[v] || v;
       })(),
       showCtaInMobileMenu: true,
+      // Color prop passthrough — brand the navbar CTA and mobile menu
+      ctaColor: props.ctaColor || undefined,
+      ctaTextColor: props.ctaTextColor || undefined,
+      mobileMenuBackground: props.mobileMenuBackground || undefined,
+      mobileMenuTextColor: props.mobileMenuTextColor || undefined,
     };
   }
 
@@ -669,12 +674,20 @@ function transformPropsForStudio(
   // CTA component — Studio uses 'buttonText' NOT 'ctaText'
   if (type === "CTA") {
     const buttonText = String(props.ctaText || props.buttonText || "Contact Us");
+    // CRITICAL: Ensure buttonTextColor always contrasts with buttonColor.
+    // Default buttonColor is #ffffff (white) in CTARender, so we need dark text.
+    // If AI set backgroundColor but not buttonTextColor, derive from backgroundColor.
+    const resolvedButtonTextColor = props.buttonTextColor 
+      || (props.backgroundColor && props.backgroundColor !== "#ffffff" && props.backgroundColor !== "#FFFFFF" 
+          ? String(props.backgroundColor) : undefined)
+      || "#1f2937"; // Safe dark fallback — never invisible
     return {
       ...props,
       title: props.headline || props.title || "Ready to Get Started?",
       subtitle: props.subtitle || "",
       description: props.description || "",
       buttonText,
+      buttonTextColor: resolvedButtonTextColor,
       buttonLink: fixLink(String(props.ctaLink || props.buttonLink || ""), buttonText),
       secondaryButtonLink: fixLink(
         String(props.secondaryButtonLink || props.secondaryCtaLink || ""),
