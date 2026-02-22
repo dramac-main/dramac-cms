@@ -286,8 +286,6 @@ export function parseUserPrompt(userPrompt: string): {
 export function buildArchitecturePrompt(
   userPrompt: string,
   context: string,
-  componentSummary: string,
-  personalityContext?: string
 ): string {
   const parsed = parseUserPrompt(userPrompt);
 
@@ -308,10 +306,6 @@ Include appropriate sections for each.` : ""}
 
 ## Business Context (from database — use to supplement, not override user's request)
 ${context}
-
-${personalityContext ? `## Design Personality Context
-${personalityContext}
-` : ""}
 
 ## Full Component Catalog
 The following components are available in the registry. Choose the ones that best serve this business:
@@ -371,17 +365,14 @@ function classifyPageType(pageName: string, pageSlug?: string): { type: string; 
 
 /**
  * Build complete prompt for page generation
- * AI-First: Context + personality + dynamic component reference cards
+ * AI-First: Context + dynamic component reference cards
  */
 export function buildPagePrompt(
   pagePlan: { name: string; slug?: string; purpose: string; sections: unknown[] },
   context: string,
   designTokens: Record<string, unknown>,
-  componentDetails: unknown[],
   userPrompt?: string,
-  blueprintPageContext?: string,
   allPages?: Array<{ name: string; slug: string }>,
-  personalityContext?: string,
 ): string {
   const pageClassification = classifyPageType(pagePlan.name, pagePlan.slug);
   const isHomepage = pageClassification.type === "homepage";
@@ -415,9 +406,6 @@ ${context}
 
 ## Design Tokens (the AI chose these at architecture stage — maintain consistency)
 ${JSON.stringify(designTokens, null, 2)}
-
-${personalityContext ? `## Design Personality (maintain consistency across pages)
-${personalityContext}` : ""}
 
 ## Sections to Generate
 ${JSON.stringify(pagePlan.sections, null, 2)}

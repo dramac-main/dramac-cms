@@ -17,7 +17,6 @@ import { getAIModel, getModelInfo } from "./config/ai-provider";
 import { buildDataContext } from "./data-context/builder";
 import { formatContextForAI } from "./data-context/formatter";
 import { checkDataAvailability } from "./data-context/checker";
-import { componentRegistry } from "@/lib/studio/registry";
 import { MultiPassRefinementEngine } from "./refinement/multi-pass-engine";
 import { auditWebsite } from "./quality/design-auditor";
 import { ModuleIntegrationOrchestrator } from "./modules/orchestrator";
@@ -113,7 +112,6 @@ export class WebsiteDesignerEngine {
   private userPrompt: string = ""; // Store user's original prompt
   private onProgress?: (progress: GenerationProgress) => void;
   private config: EngineConfig;
-  private personalityContext: string = ""; // Design personality from architecture, flows to all pages
   private extractedBusinessName: string | null = null; // Business name extracted from user prompt
   
   // Enhancement Engines
@@ -157,8 +155,7 @@ export class WebsiteDesignerEngine {
       this.availability = checkDataAvailability(this.context);
       const formattedContext = formatContextForAI(this.context);
 
-      // AI-First: No blueprint/inspiration/personality overrides.
-      // The AI makes all design decisions based on the user's prompt and business context.
+      // AI-First: The AI makes all design decisions based on the user's prompt and business context.
 
       // Generate architecture via AI
       this.reportProgress("analyzing-prompt", "Analyzing your requirements...", 0, 1);
@@ -625,12 +622,9 @@ export class WebsiteDesignerEngine {
     prompt: string,
     context: string,
   ): Promise<SiteArchitecture> {
-    const componentSummary = this.summarizeComponents();
-
     const fullPrompt = buildArchitecturePrompt(
       prompt,
       context,
-      componentSummary,
     );
 
     const { object } = await generateObject({
@@ -693,21 +687,9 @@ export class WebsiteDesignerEngine {
 
   /**
    * Generate a single page with all its components
-   * Enhanced with blueprint page-specific guidance for proven section order + content formulas
    * Enhanced with page-type classification for intelligent inner page generation
    */
   private async generatePage(pagePlan: PagePlan, context: string): Promise<GeneratedPage> {
-    // Get detailed field info for suggested components
-    const componentDetails = pagePlan.sections.map((section) => {
-      const component = componentRegistry.get(section.suggestedComponent);
-      return {
-        section: section.intent,
-        component: section.suggestedComponent,
-        fields: component?.fields || {},
-        fieldGroups: component?.fieldGroups || [],
-      };
-    });
-
     // Build all-pages list for cross-page context (so AI can link to real pages)
     const allPages = (this.architecture?.pages || []).map(p => ({ name: p.name, slug: p.slug }));
 
@@ -715,11 +697,8 @@ export class WebsiteDesignerEngine {
       { ...pagePlan, slug: pagePlan.slug },
       context,
       (this.architecture?.designTokens || {}) as Record<string, unknown>,
-      componentDetails,
       this.userPrompt,
-      "", // No blueprint context — AI makes all decisions
       allPages,
-      this.personalityContext || undefined,
     );
 
     const { object } = await generateObject({
@@ -1142,19 +1121,6 @@ Configure ALL footer props for a complete, professional result.`,
   }
 
   /**
-   * Summarize available components for AI
-   */
-  private summarizeComponents(): string {
-    const components = componentRegistry.getAll();
-    return components
-      .map(
-        (c) =>
-          `- ${c.type} (${c.category}): ${c.description || "No description"} [${Object.keys(c.fields || {}).length} fields]`
-      )
-      .join("\n");
-  }
-
-  /**
    * Convert slug to readable name
    */
   private slugToName(slug: string): string {
@@ -1285,7 +1251,7 @@ Configure ALL footer props for a complete, professional result.`,
  * 
  * @param input - The website generation input
  * @param onProgress - Optional progress callback
- * @param config - Optional engine configuration for design inspiration, refinement, and modules
+ * @param config - Optional engine configuration for refinement and modules
  */
 export async function generateWebsiteFromPrompt(
   input: WebsiteDesignerInput,

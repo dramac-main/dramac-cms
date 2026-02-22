@@ -501,7 +501,7 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
     } finally {
       setIsGenerating(false);
     }
-  }, [siteId, prompt, style, colorPreference]);
+  }, [siteId, prompt]);
 
   const handleSaveAndApply = useCallback(async () => {
     if (!output || studioDataMap.size === 0) {
