@@ -3714,6 +3714,10 @@ export interface CTAProps {
   buttonLink?: string;
   buttonColor?: string;
   buttonTextColor?: string;
+  /** Alias for buttonColor — AI sometimes generates this naming convention */
+  primaryButtonColor?: string;
+  /** Alias for buttonTextColor — AI sometimes generates this naming convention */
+  primaryButtonTextColor?: string;
   buttonSize?: "sm" | "md" | "lg" | "xl";
   buttonRadius?: "none" | "sm" | "md" | "lg" | "full";
   buttonStyle?: "solid" | "outline" | "gradient" | "glow" | "3d";
@@ -3853,8 +3857,11 @@ export function CTARender({
   // Primary Button
   buttonText = "Get Started Free",
   buttonLink = "#",
-  buttonColor = "#ffffff",
+  buttonColor,
   buttonTextColor,
+  // Accept primaryButtonColor/primaryButtonTextColor as aliases (AI generates both naming conventions)
+  primaryButtonColor,
+  primaryButtonTextColor,
   buttonSize = "lg",
   buttonRadius = "lg",
   buttonStyle = "solid",
@@ -3951,6 +3958,28 @@ export function CTARender({
   _breakpoint = "desktop",
   _isEditor = false,
 }: CTAProps) {
+  // ==========================================================================
+  // CRITICAL: Resolve button colors with contrast-aware defaults
+  // The AI generates both buttonColor and primaryButtonColor naming conventions.
+  // We accept both and compute contrast-safe defaults when neither is set.
+  // ==========================================================================
+  const bgIsLight = (() => {
+    const bg = String(backgroundColor || "#3b82f6");
+    if (bg === "transparent" || !bg.startsWith("#") || bg.length < 4) return false;
+    try {
+      let clean = bg.replace(/^#/, '');
+      if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+      const r = parseInt(clean.slice(0, 2), 16);
+      const g = parseInt(clean.slice(2, 4), 16);
+      const b = parseInt(clean.slice(4, 6), 16);
+      return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55;
+    } catch { return false; }
+  })();
+  
+  // Resolve final button color: prefer explicit > primary alias > contrast-aware default
+  const resolvedButtonColor = buttonColor || primaryButtonColor || (bgIsLight ? "#0f172a" : "#ffffff");
+  const resolvedButtonTextColor = buttonTextColor || primaryButtonTextColor || (bgIsLight ? "#ffffff" : "#0f172a");
+
   // Normalize image values
   const bgImageUrl = getImageUrl(backgroundImage);
   const ctaImageUrl = getImageUrl(image);
@@ -4083,7 +4112,7 @@ export function CTARender({
     glow: "shadow-lg",
   }[buttonShadow];
   // Dynamic glow shadow using the button's own color
-  const buttonGlowStyle: React.CSSProperties = buttonShadow === "glow" ? { boxShadow: `0 10px 25px -5px ${buttonColor}80` } : {};
+  const buttonGlowStyle: React.CSSProperties = buttonShadow === "glow" ? { boxShadow: `0 10px 25px -5px ${resolvedButtonColor}80` } : {};
   
   const buttonHoverClasses = {
     none: "",
@@ -4245,34 +4274,33 @@ export function CTARender({
     );
   };
   
-  // Primary button styling
+  // Primary button styling — uses resolvedButtonColor/resolvedButtonTextColor (contrast-aware)
   const getPrimaryButtonStyle = (): React.CSSProperties => {
     if (buttonStyle === "gradient") {
       return {
         background: `linear-gradient(135deg, ${buttonGradientFrom}, ${buttonGradientTo})`,
-        color: buttonTextColor || "#ffffff",
+        color: resolvedButtonTextColor,
       };
     }
     if (buttonStyle === "outline") {
       return {
         backgroundColor: "transparent",
-        border: `2px solid ${buttonColor}`,
-        color: buttonColor,
+        border: `2px solid ${resolvedButtonColor}`,
+        // FIXED: outline style was ignoring buttonTextColor — now uses resolved color
+        color: resolvedButtonTextColor || resolvedButtonColor,
       };
     }
     if (buttonStyle === "3d") {
       return {
-        backgroundColor: buttonColor,
-        color: buttonTextColor || "#ffffff",
-        boxShadow: `0 4px 0 ${buttonColor}cc, 0 6px 20px rgba(0,0,0,0.2)`,
+        backgroundColor: resolvedButtonColor,
+        color: resolvedButtonTextColor,
+        boxShadow: `0 4px 0 ${resolvedButtonColor}cc, 0 6px 20px rgba(0,0,0,0.2)`,
         transform: "translateY(-2px)",
       };
     }
-    // CRITICAL: Never use backgroundColor as text fallback — it creates invisible buttons
-    // (e.g. white button with white text, or blue button with blue text)
     return {
-      backgroundColor: buttonColor,
-      color: buttonTextColor || "#ffffff",
+      backgroundColor: resolvedButtonColor,
+      color: resolvedButtonTextColor,
       ...buttonGlowStyle,
     };
   };

@@ -120,9 +120,15 @@ Do NOT invent new component type names like "ServicesSection" or "PatientInfo".
 
 ## MODULE AWARENESS
 Check the Business Context for "Enabled Features & Modules".
-- If a BOOKING module is enabled: include BookingWidget on the homepage, BookingServiceSelector on the services page,
-  BookingStaffGrid on a team/staff page if relevant. Every CTA should say "Book Now" / "Book Appointment".
-  Consider a dedicated /book page with BookingForm. Use BookingCalendar for date selection.
+- If a BOOKING module is enabled: YOU MUST include BookingWidget as a section on the HOMEPAGE (not just a CTA).
+  On the homepage, include "BookingWidget" as one of the section's suggestedComponent values — this renders an
+  interactive booking wizard that lets users pick a service, staff, date/time, and book instantly.
+  On the services page, include "BookingServiceSelector" to show bookable services.
+  On any team/staff page, include "BookingStaffGrid" instead of generic "Team".
+  ALL CTA sections should use button text like "Book Now" / "Book Appointment" / "Schedule Your Visit".
+  Consider a dedicated /book page with BookingForm component.
+  THIS IS NOT OPTIONAL — the business owner installed the booking module because booking is core to their business.
+  A dental/healthcare/salon/spa site WITHOUT visible booking functionality is a FAILURE.
 - If an E-COMMERCE module is enabled: include EcommerceFeaturedProducts on the homepage,
   EcommerceProductGrid or EcommerceProductCatalog on a /shop or /products page.
   Add EcommerceCategoryNav for product navigation. CTAs should say "Shop Now" / "Browse Products".
@@ -249,9 +255,10 @@ For EVERY section, set at minimum:
 - accentColor — brand accent for icons, decorations, highlights
 
 For sections with buttons (Hero, CTA, Pricing), also set:
-- buttonColor / primaryButtonColor — button background
-- buttonTextColor / primaryButtonTextColor — button text (MUST contrast with button background)
-- secondaryButtonColor, secondaryButtonTextColor if using secondary buttons
+- For Hero: primaryButtonColor, primaryButtonTextColor (MUST contrast with primaryButtonColor)
+- For CTA: buttonColor, buttonTextColor (MUST contrast with buttonColor)
+- For both: secondaryButtonColor, secondaryButtonTextColor if using secondary buttons
+- IMPORTANT: CTA uses "buttonColor" not "primaryButtonColor". Hero uses "primaryButtonColor" not "buttonColor".
 
 For sections with cards (Features, Testimonials, Stats, Pricing), also set:
 - cardBackgroundColor — card fill color
@@ -297,6 +304,18 @@ Follow this pattern:
 - Testimonials should feel authentic and specific
 - CTAs should be industry-appropriate (e.g. "Book Appointment" for salons, "Reserve a Table" for restaurants)
 - Include specific numbers when possible (e.g., "500+ happy clients", "15 years of experience")
+
+## MODULE COMPONENTS (CRITICAL)
+Check the Business Context for "Enabled Features & Modules".
+If the BOOKING module is active and this is the HOMEPAGE:
+- You MUST include at least one BookingWidget component (replaces or accompanies a CTA section).
+  The BookingWidget renders an interactive booking wizard — it's not a CTA, it's a real functional component.
+- Replace generic "Contact Us" button text with "Book Now" / "Book Appointment".
+If the BOOKING module is active and this is a SERVICES page:
+- Include a BookingServiceSelector component to show bookable services.
+If the BOOKING module is active, ALL CTA buttons should say "Book Now" / "Schedule Appointment" / "Book Your Visit".
+DO NOT just use generic CTA components when the business has a booking module — use the actual BookingWidget.
+This is the #1 most common mistake — the business owner installed the booking module BECAUSE they need booking, not more "Contact Us" buttons.
 
 ## OUTPUT
 Return fully configured components where every prop is intentionally set.

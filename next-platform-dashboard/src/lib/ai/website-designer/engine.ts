@@ -1015,10 +1015,63 @@ Configure ALL footer props for a complete, professional result.`,
                  && props[k] !== undefined && props[k] !== "" && props[k] !== null;
         });
 
-        // If the AI already set colors, trust its choices
+        // If the AI already set colors, still validate for critical contrast issues
         if (hasExplicitColors) {
-          // But still ensure accentColor is set if missing
           if (!props.accentColor) props.accentColor = accent;
+          
+          // ================================================================
+          // CONTRAST SAFETY NET: Even when AI set explicit colors, check for
+          // catastrophic contrast failures (e.g., white text on white bg)
+          // ================================================================
+          const compBg = String(props.backgroundColor || "");
+          if (compBg) {
+            const bgLum = this.colorLuminance(compBg);
+            const bgIsLight = bgLum > 0.45;
+            
+            // Fix text colors that match the background (invisible text)
+            const textKeys = ["textColor", "titleColor", "descriptionColor", "subtitleColor"];
+            for (const key of textKeys) {
+              const val = props[key];
+              if (val && typeof val === "string" && val.startsWith("#")) {
+                const textLum = this.colorLuminance(val);
+                if (Math.abs(bgLum - textLum) < 0.15) {
+                  // Text is same luminance as background — override
+                  props[key] = bgIsLight ? "#0f172a" : "#ffffff";
+                }
+              }
+            }
+            
+            // For CTA: also fix button colors if not set properly
+            if (comp.type === "CTA") {
+              // Ensure buttonColor is set (AI might have used primaryButtonColor instead)
+              if (!props.buttonColor && props.primaryButtonColor) {
+                props.buttonColor = props.primaryButtonColor;
+              }
+              if (!props.buttonTextColor && props.primaryButtonTextColor) {
+                props.buttonTextColor = props.primaryButtonTextColor;
+              }
+              // If buttonColor still missing, inject branded default
+              if (!props.buttonColor) {
+                props.buttonColor = bgIsLight ? primary : "#ffffff";
+                props.buttonTextColor = props.buttonTextColor || (bgIsLight ? "#ffffff" : primary);
+              }
+            }
+            
+            // For Hero: ensure primaryButtonColor is set
+            if (comp.type === "Hero") {
+              if (!props.primaryButtonColor && props.buttonColor) {
+                props.primaryButtonColor = props.buttonColor;
+              }
+              if (!props.primaryButtonTextColor && props.buttonTextColor) {
+                props.primaryButtonTextColor = props.buttonTextColor;
+              }
+              if (!props.primaryButtonColor) {
+                props.primaryButtonColor = bgIsLight ? primary : "#ffffff";
+                props.primaryButtonTextColor = props.primaryButtonTextColor || (bgIsLight ? "#ffffff" : primary);
+              }
+            }
+          }
+          
           return { ...comp, props };
         }
 
@@ -1100,6 +1153,24 @@ Configure ALL footer props for a complete, professional result.`,
     } catch {
       return "#f8fafc";
     }
+  }
+
+  /**
+   * Calculate relative luminance of a hex color (0 = darkest, 1 = lightest)
+   * Used for contrast safety checks in injectDesignTokenColors.
+   */
+  private colorLuminance(hex: string): number {
+    try {
+      if (!hex || hex === "transparent" || !hex.startsWith("#")) return 0.5;
+      let clean = hex.replace(/^#/, '');
+      if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+      if (clean.length !== 6) return 0.5;
+      const r = parseInt(clean.slice(0, 2), 16) / 255;
+      const g = parseInt(clean.slice(2, 4), 16) / 255;
+      const b = parseInt(clean.slice(4, 6), 16) / 255;
+      const toLinear = (c: number) => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    } catch { return 0.5; }
   }
 
   // ===========================================================================

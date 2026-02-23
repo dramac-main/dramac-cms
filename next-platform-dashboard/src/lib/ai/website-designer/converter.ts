@@ -12,6 +12,61 @@ import type { StudioPageData, StudioComponent } from "@/types/studio";
 import type { GeneratedPage, GeneratedComponent, WebsiteDesignerOutput } from "./types";
 
 // =============================================================================
+// COLOR UTILITY FUNCTIONS
+// =============================================================================
+
+/**
+ * Parse a hex color to RGB values.
+ * Handles 3-char and 6-char hex, with or without #.
+ */
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  let clean = hex.replace(/^#/, '');
+  if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+  if (clean.length !== 6) return null;
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
+  return { r, g, b };
+}
+
+/**
+ * Calculate relative luminance of a color (0 = darkest, 1 = lightest)
+ */
+function luminance(hex: string): number {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 0.5; // Unknown → assume mid
+  const { r, g, b } = rgb;
+  const srgb = [r, g, b].map(v => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+}
+
+/**
+ * Check if a color is "light" (luminance > 0.5)
+ */
+function isLightColor(hex: string): boolean {
+  if (!hex || hex === "transparent") return true;
+  return luminance(hex) > 0.45;
+}
+
+/**
+ * Check if two colors are too similar (would be invisible)
+ * Returns true if they would produce unreadable contrast
+ */
+function colorsMatch(color1: string, color2: string): boolean {
+  if (!color1 || !color2) return false;
+  // Exact match (case-insensitive)
+  if (color1.toLowerCase() === color2.toLowerCase()) return true;
+  // Check luminance difference — if < 0.15, colors are too similar
+  const l1 = luminance(color1);
+  const l2 = luminance(color2);
+  return Math.abs(l1 - l2) < 0.15;
+}
+
+// =============================================================================
 // LINK VALIDATION & FIXING
 // =============================================================================
 
@@ -649,6 +704,12 @@ function transformPropsForStudio(
         String(props.secondaryButtonText || "")
       ),
       contentAlign: props.alignment || props.contentAlign || props.contentAlign,
+      // CRITICAL: Normalize button color prop names — Hero reads primaryButtonColor/primaryButtonTextColor
+      // but AI sometimes generates buttonColor/buttonTextColor instead. Map bidirectionally.
+      primaryButtonColor: props.primaryButtonColor || props.buttonColor || undefined,
+      primaryButtonTextColor: props.primaryButtonTextColor || props.buttonTextColor || undefined,
+      secondaryButtonColor: props.secondaryButtonColor || undefined,
+      secondaryButtonTextColor: props.secondaryButtonTextColor || undefined,
       // CRITICAL: Always add overlay when there's a background image for text readability
       backgroundOverlay: hasBackgroundImage ? true : (props.backgroundOverlay ?? false),
       backgroundOverlayOpacity: hasBackgroundImage ? (props.backgroundOverlayOpacity || 70) : (props.backgroundOverlayOpacity || 0),
@@ -719,27 +780,53 @@ function transformPropsForStudio(
     };
   }
 
-  // CTA component — Studio uses 'buttonText' NOT 'ctaText'
+  // CTA component — CRITICAL prop name normalization
+  // The CTA render reads: buttonColor, buttonTextColor, buttonText
+  // But the AI often generates: primaryButtonColor, primaryButtonTextColor, primaryButtonText
+  // We MUST map both directions to prevent invisible buttons.
   if (type === "CTA") {
-    const buttonText = String(props.ctaText || props.buttonText || "Contact Us");
-    // CRITICAL: Ensure buttonTextColor always contrasts with buttonColor.
-    // Default buttonColor is #ffffff (white) in CTARender, so we need dark text.
-    // If AI set backgroundColor but not buttonTextColor, derive from backgroundColor.
-    const resolvedButtonTextColor = props.buttonTextColor 
-      || (props.backgroundColor && props.backgroundColor !== "#ffffff" && props.backgroundColor !== "#FFFFFF" 
-          ? String(props.backgroundColor) : undefined)
-      || "#1f2937"; // Safe dark fallback — never invisible
+    // Button text: prefer primaryButtonText > ctaText > buttonText (more specific first)
+    const buttonText = String(props.primaryButtonText || props.ctaText || props.buttonText || "Contact Us");
+    
+    // CRITICAL: Normalize button color — CTA reads 'buttonColor' NOT 'primaryButtonColor'
+    // If AI set primaryButtonColor but not buttonColor, map it over.
+    const resolvedButtonColor = props.buttonColor || props.primaryButtonColor || undefined;
+    
+    // CRITICAL: Normalize button text color — same mapping
+    const resolvedButtonTextColor = props.buttonTextColor || props.primaryButtonTextColor || undefined;
+    
+    // CRITICAL: Ensure text/title colors contrast with background
+    // Catches the Insurance CTA bug: textColor=#ffffff on backgroundColor=#FFFFFF
+    const bgColor = String(props.backgroundColor || "#3b82f6");
+    const bgIsLight = isLightColor(bgColor);
+    const resolvedTextColor = props.textColor 
+      ? (colorsMatch(String(props.textColor), bgColor) ? (bgIsLight ? "#0f172a" : "#ffffff") : props.textColor)
+      : undefined; // Let render defaults handle it
+    const resolvedTitleColor = props.titleColor
+      ? (colorsMatch(String(props.titleColor), bgColor) ? (bgIsLight ? "#0f172a" : "#ffffff") : props.titleColor)
+      : undefined;
+
+    // CRITICAL: Prevent duplicate button texts (both buttons saying "Contact Us")
+    let secondaryText = props.secondaryButtonText;
+    if (secondaryText && String(secondaryText).toLowerCase() === buttonText.toLowerCase()) {
+      secondaryText = undefined; // Remove duplicate — one CTA is cleaner
+    }
+
     return {
       ...props,
       title: props.headline || props.title || "Ready to Get Started?",
       subtitle: props.subtitle || "",
       description: props.description || "",
       buttonText,
+      buttonColor: resolvedButtonColor,
       buttonTextColor: resolvedButtonTextColor,
-      buttonLink: fixLink(String(props.ctaLink || props.buttonLink || ""), buttonText),
+      textColor: resolvedTextColor,
+      titleColor: resolvedTitleColor,
+      buttonLink: fixLink(String(props.ctaLink || props.buttonLink || props.primaryButtonLink || ""), buttonText),
+      secondaryButtonText: secondaryText,
       secondaryButtonLink: fixLink(
         String(props.secondaryButtonLink || props.secondaryCtaLink || ""),
-        String(props.secondaryButtonText || "")
+        String(secondaryText || "")
       ),
     };
   }
