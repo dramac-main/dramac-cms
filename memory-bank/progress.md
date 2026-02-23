@@ -1,53 +1,33 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅**
 
 ---
 
-## Latest Update: February 2026 - AI Complete Pipeline Audit + Plumbing
+## Latest Update: February 2026 - AI Button Visibility + Color Contrast + Booking Module Fix
 
-### Problem: Types Were Added But Pipeline Was Broken At Every Layer ✅
+### Problem: Live Site Analysis Revealed 4 Critical Root Causes ✅
 
-Deep audit revealed the AI pipeline had 6 layers that all needed to agree on component types, and they were massively out of sync. Beyond types, critical plumbing was broken: registry empty server-side, module detection querying wrong table, semantic maps sending booking to wrong components.
+Database analysis of the Jesto dental clinic site (https://jesto.sites.dramacagency.com/) revealed:
 
-### Fixes Applied (2 commits: `ff37f0e` + `96fd825`):
+1. **PROP NAME MISMATCH (invisible buttons)**: CTA reads `buttonColor` but AI generates `primaryButtonColor`. Hero reads `primaryButtonColor` but AI generates `buttonColor`. When names don't match → default white (#ffffff) → invisible buttons on white/light sections.
+2. **WHITE-ON-WHITE TEXT**: Insurance CTA had `textColor="#ffffff"` on `backgroundColor="#FFFFFF"`. The `injectDesignTokenColors` trusted AI-set colors without validating contrast.
+3. **ZERO BOOKING COMPONENTS**: Despite booking module installed & enabled (confirmed via `site_module_installations` query), all 7+ pages had zero BookingWidget/BookingServiceSelector/BookingForm. AI prompts were not forceful enough.
+4. **DUPLICATE CTA TEXTS**: Multiple pages had both buttons saying "Contact Us" / "Contact Us".
 
-**Commit `ff37f0e` — Component Audit (6 files, +225 lines):**
-1. **schemas.ts**: VALID_COMPONENT_TYPES expanded from 35→53 types (added 18 missing module + interactive types)
-2. **component-reference.ts**: AI_RELEVANT_CATEGORIES expanded from 8→10 (added layout, typography)
-3. **converter.ts**: Added 35+ typeMap aliases, 10 missing ecommerce types to KNOWN_REGISTRY_TYPES + MODULE_TYPES
-4. **engine.ts**: Module components now get primaryColor/accentColor only (no random backgrounds)
-5. **prompts.ts**: Module component lists expanded from 6→19+ with key prop docs
-6. **formatter.ts**: Ecommerce instructions expanded from 4→12 lines
+### Fixes Applied (4 files, +237 lines, commit `fd3a719`):
 
-**Commit `96fd825` — Pipeline Plumbing (4 files, +55/-26 lines):**
-1. **component-reference.ts**: Server-side `initializeRegistry()` call — AI was getting ZERO prop docs
-2. **data-context/builder.ts**: fetchModules() rewritten to query `site_module_installations` JOIN `modules_v2` (was querying empty `sites.settings.enabled_modules`)
-3. **auto-install/route.ts**: Added `Ecommerce` prefix to COMPONENT_MODULE_MAP
-4. **converter.ts**: "appointment"/"booking" semantic maps → BookingWidget instead of CTA
+1. **converter.ts**: Color utilities + bidirectional prop mapping (Hero: buttonColor→primaryButtonColor, CTA: primaryButtonColor→buttonColor) + contrast validation + duplicate button text removal
+2. **renders.tsx (CTARender)**: Contrast-aware buttonColor default (was hardcoded white) + primaryButtonColor alias props + outline style fix (was ignoring buttonTextColor)
+3. **engine.ts**: colorLuminance() + contrast safety net in hasExplicitColors path (validates text vs background contrast, maps button props even with explicit AI colors)
+4. **prompts.ts**: MANDATORY booking instructions in architecture + MODULE COMPONENTS section in page generator + explicit prop naming guidance
 
 **Build:** ✅ 194/194 pages, zero errors
 
 ---
 
-## Previous Update: February 2026 - AI Button Visibility, Navbar/Footer Branding, Module Integration
-
-After design quality fix, generated sites had visible content with color variety, but CTA buttons were invisible (white-on-white), navbar/footer stayed default (no brand colors), and the booking module was installed and enabled but AI never used any booking components.
-
-### Root Cause: Multiple Safety Net Gaps + Dead Module Integration Code
-
-1. CTA `buttonTextColor` defaults to undefined → resolves to #ffffff (white) → invisible on white button
-2. `injectDesignTokenColors()` explicitly skips Navbar/Footer with early return
-3. NavbarComponentSchema missing 5 color fields (ctaColor, ctaTextColor, etc.)
-4. FooterComponentSchema missing 3 color fields (accentColor, newsletterButton colors)
-5. VALID_COMPONENT_TYPES has zero module types — AI schema rejects booking/ecommerce components
-6. ModuleIntegrationOrchestrator imported but never instantiated (dead code)
-7. Formatter only says "booking is enabled" with no actionable instructions
-
-### Fixes Applied (5 files, +113 lines, commit `0b01874`):
-
-1. **schemas.ts**: Added 6 module component types (BookingWidget, BookingCalendar, BookingServiceSelector, BookingForm, EcommerceProductGrid, EcommerceFeaturedProducts). Added 5 Navbar color fields + 3 Footer color fields.
+## Previous Update: AI Complete Pipeline Audit + Plumbing
 2. **converter.ts**: CTA buttonTextColor now always resolves to visible color (never undefined). Navbar passes through ctaColor/ctaTextColor/mobileMenu colors.
 3. **engine.ts**: `injectDesignTokenColors()` no longer skips Navbar/Footer — injects ctaColor/ctaTextColor for Navbar, accentColor/newsletterButtonColor for Footer.
 4. **formatter.ts**: `formatModulesSection()` expanded to give actionable instructions when booking/ecommerce modules are detected.

@@ -1,10 +1,11 @@
 # Active Context
 
-## Current Focus: AI Website Designer — Full Pipeline Completeness
+## Current Focus: AI Website Designer — Button & Color Consistency
 
-### Status: COMPLETE PIPELINE AUDIT + PLUMBING FIXES DEPLOYED ✅
+### Status: COMPREHENSIVE BUTTON/COLOR/BOOKING FIXES DEPLOYED ✅
 
 ### Recent Fixes (newest first):
+- Button Visibility + Color Contrast + Booking Module Fix (commit `fd3a719`) ✅
 - Pipeline Plumbing Fix — Registry init, module detection, semantic maps (commit `96fd825`) ✅
 - Complete Component Audit — All 28 module types + Typewriter/Parallax/Badge (commit `ff37f0e`) ✅
 - Button + Branding + Module Fix (commit `0b01874`) ✅
@@ -13,41 +14,53 @@
 - Architecture Model Upgrade (commit `8eff0ea`) ✅
 - AI-First Redesign Phase AWD-10 — ALL 7 PHASES COMPLETE ✅
 
-**Plan Document:** `phases/PHASE-AWD-10-AI-FIRST-REDESIGN.md` (~1170 lines)
-
 ---
 
-### Pipeline Plumbing Fix (commit `96fd825`) ✅
+### Button Visibility + Color Contrast + Booking Module Fix (commit `fd3a719`) ✅
 
-**Problem:** Even with all types added, the AI was still flying blind because:
-1. Component registry was empty during server-side AI generation (API routes never called `initializeRegistry()`)
-2. `fetchModules()` queried `sites.settings.enabled_modules` which was NEVER populated — the real data lives in `site_module_installations` table
-3. Ecommerce prefix missing from auto-install module map
-4. Semantic fallback map sent "appointment"/"booking" to CTA instead of BookingWidget
+**Root causes identified via live site database analysis (Jesto dental clinic site):**
 
-**Fixes:**
-1. **component-reference.ts**: Both `generateArchitectureReference()` and `generatePageReference()` now call `initializeRegistry()` if not already done — AI finally sees ALL component prop documentation server-side
-2. **data-context/builder.ts**: Rewrote `fetchModules()` to query `site_module_installations` JOIN `modules_v2` instead of the dead `sites.settings.enabled_modules` field
-3. **auto-install/route.ts**: Added `Ecommerce: "ecommerce"` prefix to `COMPONENT_MODULE_MAP`
-4. **converter.ts**: "appointment"/"bookappointment"/"booking" now map to `BookingWidget` instead of `CTA`
+1. **PROP NAME MISMATCH (the #1 cause of invisible buttons)**:
+   - CTA component reads `buttonColor`/`buttonTextColor` but AI generates `primaryButtonColor`/`primaryButtonTextColor`
+   - Hero component reads `primaryButtonColor`/`primaryButtonTextColor` but AI generates `buttonColor`/`buttonTextColor`
+   - When names don't match, components fall back to defaults → CTA gets white (#ffffff) button = invisible
 
----
+2. **WHITE-ON-WHITE TEXT**: Insurance CTA had `textColor="#ffffff"` on `backgroundColor="#FFFFFF"` — completely invisible.
+   The `injectDesignTokenColors` function trusted AI-set colors without validating contrast.
 
-### Complete Component Audit (commit `ff37f0e`) ✅
+3. **ZERO BOOKING COMPONENTS**: Despite booking module being installed and detected (confirmed in DB), ALL 7+ pages had zero BookingWidget/BookingServiceSelector/BookingForm/BookingCalendar components. The AI prompts were not forceful enough.
 
-**Problem:** Deep audit found VALID_COMPONENT_TYPES had only 35 of 81 registered component types.
+4. **DUPLICATE CTA TEXTS**: Multiple pages had both buttons saying "Contact Us" / "Contact Us"
 
-**Fixes (6 files, +225 lines):**
-1. **schemas.ts**: Added 18 missing types (BookingEmbed, BookingStaffGrid, 14 ecommerce types, Typewriter, Parallax, Badge, SocialLinks)
-2. **component-reference.ts**: Added `layout` and `typography` to AI_RELEVANT_CATEGORIES (AI was outputting Section/Heading/Text with zero prop docs)
-3. **converter.ts**: Added 35+ typeMap aliases, 10 missing ecommerce types to KNOWN_REGISTRY_TYPES and MODULE_TYPES handler
-4. **engine.ts**: Module components now get primaryColor/accentColor only (no random backgrounds)
-5. **prompts.ts**: Expanded module component lists from 6→19+ types with key prop documentation
-6. **formatter.ts**: Expanded ecommerce instructions from 4→12 lines
+**Fixes (4 files, +237 lines):**
 
----
+1. **converter.ts**: 
+   - Added color utility functions (`hexToRgb`, `luminance`, `isLightColor`, `colorsMatch`)
+   - Hero: maps `buttonColor` → `primaryButtonColor` bidirectionally  
+   - CTA: maps `primaryButtonColor` → `buttonColor` bidirectionally
+   - CTA: prioritizes `primaryButtonText` > `ctaText` > `buttonText`
+   - CTA: validates text/title colors contrast against backgroundColor
+   - CTA: removes duplicate secondary button text matching primary
 
-### Button + Branding + Module Fix (commit `0b01874`) ✅
+2. **renders.tsx (CTARender)**:
+   - Changed `buttonColor` default from `"#ffffff"` to contrast-aware computed value based on section background
+   - Added `primaryButtonColor`/`primaryButtonTextColor` as accepted prop aliases in interface and render
+   - All button styles use `resolvedButtonColor`/`resolvedButtonTextColor`
+   - Outline style now uses `resolvedButtonTextColor` (was ignoring `buttonTextColor` entirely)
+   - Glow effect uses resolved color
+
+3. **engine.ts (injectDesignTokenColors)**:
+   - Added `colorLuminance()` method
+   - Even when AI sets explicit colors (`hasExplicitColors = true`), validates contrast safety
+   - Catches white-on-white text and auto-corrects
+   - Maps `primaryButtonColor ↔ buttonColor` for CTA/Hero even with explicit colors
+   - Injects branded button colors when AI set background but not button colors
+
+4. **prompts.ts**:
+   - Architecture: booking module instructions now MANDATORY ("THIS IS NOT OPTIONAL")
+   - Page generator: added new `MODULE COMPONENTS` section with forceful booking rules
+   - Clarified prop naming: CTA uses `buttonColor`, Hero uses `primaryButtonColor`
+   - Explicitly called healthcare/dental without booking a "FAILURE"
 
 **Problem:** After design quality fix, sites still had 3 critical issues:
 - CTA buttons were invisible (white text on white background)
