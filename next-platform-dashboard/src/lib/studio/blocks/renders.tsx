@@ -709,30 +709,165 @@ export function TextRender({
 }
 
 // ============================================================================
-// RICH TEXT - HTML content
+// RICH TEXT - Full section content block with title, subtitle, layout, colors
 // ============================================================================
 
 export interface RichTextProps {
+  // Content
   content?: string;
+  title?: string;
+  subtitle?: string;
+  pullQuote?: string;
+  // Layout
+  layout?: "centered" | "left" | "two-column" | "wide";
+  // Colors
   color?: string;
+  textColor?: string;
+  titleColor?: string;
+  subtitleColor?: string;
+  accentColor?: string;
+  pullQuoteColor?: string;
+  backgroundColor?: string;
+  cardBackgroundColor?: string;
+  // Divider
+  showDivider?: boolean;
+  dividerColor?: string;
+  highlightColor?: string;
+  // Typography
   proseSize?: "sm" | "base" | "lg" | "xl";
-  maxWidth?: "none" | "prose" | "md" | "lg" | "xl";
+  maxWidth?: "none" | "prose" | "md" | "lg" | "xl" | "4xl" | "6xl";
   id?: string;
   className?: string;
 }
 
+/**
+ * Converts markdown-style formatting in text to HTML.
+ * Handles: **bold**, *italic*, \n newlines, bullet points (• or -).
+ * Shared by RichText, Accordion, and Tabs renderers.
+ */
+function markdownToHtml(text: string): string {
+  if (!text) return "";
+  // If it already looks like HTML, return as-is
+  if (/<[a-z][\s\S]*>/i.test(text)) return text;
+  
+  return text
+    // Bold: **text** or __text__
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/__(.+?)__/g, "<strong>$1</strong>")
+    // Italic: *text* or _text_
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/_(.+?)_/g, "<em>$1</em>")
+    // Convert lines starting with • or - into list items
+    .replace(/(?:^|\n)[•\-]\s*(.+)/g, '<li class="ml-4 list-disc">$1</li>')
+    // Paragraphs from double newlines
+    .replace(/\n\n/g, "</p><p>")
+    // Single newlines to line breaks
+    .replace(/\n/g, "<br/>");
+}
+
 export function RichTextRender({
-  content = "<p>Rich text content</p>",
+  content = "",
+  title,
+  subtitle,
+  pullQuote,
+  layout = "centered",
   color,
+  textColor,
+  titleColor,
+  subtitleColor,
+  accentColor,
+  pullQuoteColor,
+  backgroundColor,
+  cardBackgroundColor,
+  showDivider = false,
+  dividerColor,
+  highlightColor,
   proseSize = "base",
-  maxWidth = "prose",
+  maxWidth = "4xl",
   id,
   className = "",
 }: RichTextProps) {
-  const proseSizeClass = { sm: "prose-sm", base: "prose", lg: "prose-lg", xl: "prose-xl" }[proseSize];
-  const maxWClass = { none: "max-w-none", prose: "max-w-prose", md: "max-w-md", lg: "max-w-lg", xl: "max-w-xl" }[maxWidth];
+  const resolvedTextColor = textColor || color || "#1c2b2a";
+  const resolvedTitleColor = titleColor || accentColor || resolvedTextColor;
+  const resolvedSubtitleColor = subtitleColor || resolvedTextColor;
+  const resolvedPullQuoteColor = pullQuoteColor || accentColor || resolvedTitleColor;
+  const resolvedDividerColor = dividerColor || highlightColor || accentColor || resolvedTitleColor;
+  
+  const proseSizeClass = { sm: "prose-sm", base: "prose", lg: "prose-lg", xl: "prose-xl" }[proseSize] || "prose";
+  const maxWClass = { 
+    none: "max-w-none", prose: "max-w-prose", md: "max-w-md", lg: "max-w-lg", 
+    xl: "max-w-xl", "4xl": "max-w-4xl", "6xl": "max-w-6xl" 
+  }[maxWidth] || "max-w-4xl";
 
-  return <div id={id} className={`${proseSizeClass} ${maxWClass} ${className}`} style={{ color }} dangerouslySetInnerHTML={{ __html: content }} />;
+  const htmlContent = markdownToHtml(content);
+  const hasTitle = title && title.length > 0;
+  const hasSubtitle = subtitle && subtitle.length > 0;
+  const hasPullQuote = pullQuote && pullQuote.length > 0;
+  const isTwoColumn = layout === "two-column";
+  const isCentered = layout === "centered";
+
+  return (
+    <section
+      id={id}
+      className={`py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 ${className}`}
+      style={{ backgroundColor: backgroundColor || undefined }}
+    >
+      <div className={`${maxWClass} mx-auto`}>
+        {/* Title & Subtitle */}
+        {(hasTitle || hasSubtitle) && (
+          <div className={`mb-10 md:mb-12 ${isCentered ? "text-center" : ""}`}>
+            {hasTitle && (
+              <h2
+                className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-4"
+                style={{ color: resolvedTitleColor }}
+              >
+                {title}
+              </h2>
+            )}
+            {showDivider && (
+              <div
+                className={`w-16 h-1 rounded-full mb-6 ${isCentered ? "mx-auto" : ""}`}
+                style={{ backgroundColor: resolvedDividerColor }}
+              />
+            )}
+            {hasSubtitle && (
+              <p
+                className="text-lg md:text-xl leading-relaxed max-w-3xl"
+                style={{ color: resolvedSubtitleColor, opacity: 0.85, ...(isCentered ? { marginLeft: "auto", marginRight: "auto" } : {}) }}
+              >
+                {subtitle}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Content area */}
+        <div className={isTwoColumn ? "grid md:grid-cols-2 gap-8 md:gap-12 items-start" : ""}>
+          {/* Main content */}
+          <div
+            className={`${proseSizeClass} max-w-none prose-headings:font-bold prose-p:leading-relaxed prose-strong:font-semibold`}
+            style={{ color: resolvedTextColor, ...(accentColor ? { "--tw-prose-links": accentColor } as React.CSSProperties : {}) }}
+            dangerouslySetInnerHTML={{ __html: htmlContent || "<p>Content goes here.</p>" }}
+          />
+
+          {/* Pull quote (right column in two-column, or below content) */}
+          {hasPullQuote && (
+            <div
+              className={`${isTwoColumn ? "" : "mt-10 md:mt-12"}`}
+              style={cardBackgroundColor ? { backgroundColor: cardBackgroundColor, borderRadius: "12px", padding: "2rem" } : undefined}
+            >
+              <blockquote
+                className="border-l-4 pl-6 py-2 text-xl md:text-2xl font-medium italic leading-relaxed"
+                style={{ borderColor: resolvedDividerColor, color: resolvedPullQuoteColor }}
+              >
+                &ldquo;{pullQuote}&rdquo;
+              </blockquote>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 // ============================================================================
@@ -10350,29 +10485,51 @@ export interface AccordionProps {
     icon?: string;
     defaultOpen?: boolean;
   }>;
+  title?: string;
+  subtitle?: string;
   variant?: "simple" | "bordered" | "separated" | "filled";
   allowMultiple?: boolean;
   iconPosition?: "left" | "right";
   backgroundColor?: string;
   borderColor?: string;
   activeColor?: string;
+  accentColor?: string;
+  iconColor?: string;
   textColor?: string;
+  titleColor?: string;
+  subtitleColor?: string;
   id?: string;
   className?: string;
 }
 
+/**
+ * Converts plain-text content with markdown-like formatting to HTML.
+ * Reuses markdownToHtml defined above.
+ */
+const contentToHtml = markdownToHtml;
+
 export function AccordionRender({
   items = [],
+  title,
+  subtitle,
   variant = "bordered",
   allowMultiple = true,
   iconPosition = "right",
   backgroundColor = "#ffffff",
   borderColor = "#e5e7eb",
   activeColor = "#3b82f6",
+  accentColor,
+  iconColor,
   textColor,
+  titleColor,
+  subtitleColor,
   id,
   className = "",
 }: AccordionProps) {
+  const resolvedTitleColor = titleColor || accentColor || textColor;
+  const resolvedSubtitleColor = subtitleColor || textColor;
+  const resolvedIconColor = iconColor || accentColor || activeColor;
+  
   const variantClasses = {
     simple: "",
     bordered: "border rounded-lg overflow-hidden divide-y",
@@ -10388,26 +10545,40 @@ export function AccordionRender({
   }[variant];
 
   return (
-    <div id={id} className={`${variantClasses} ${className}`} style={{ borderColor }}>
-      {items.map((item, i) => (
-        <details
-          key={i}
-          open={item.defaultOpen}
-          className={`group ${itemClasses}`}
-          style={variant === "filled" ? { backgroundColor: "#f9fafb" } : { backgroundColor }}
-        >
-          <summary className={`p-4 md:p-5 cursor-pointer list-none flex items-center ${iconPosition === "left" ? "flex-row-reverse justify-end" : "justify-between"} gap-4 font-medium transition-colors hover:opacity-80`} style={{ color: textColor }}>
-            <span className="flex-1">{item.title}</span>
-            <svg className={`w-5 h-5 flex-shrink-0 transition-transform duration-200 group-open:rotate-180`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </summary>
-          <div className="px-4 md:px-5 pb-4 md:pb-5 text-sm md:text-base leading-relaxed opacity-80" style={{ color: textColor }}>
-            {item.content}
+    <section id={id} className={`py-16 md:py-20 px-4 sm:px-6 lg:px-8 ${className}`} style={{ backgroundColor }}>
+      <div className="max-w-4xl mx-auto">
+        {/* Section title & subtitle */}
+        {(title || subtitle) && (
+          <div className="mb-10 md:mb-12 text-center">
+            {title && <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: resolvedTitleColor }}>{title}</h2>}
+            {subtitle && <p className="text-lg md:text-xl leading-relaxed max-w-3xl mx-auto" style={{ color: resolvedSubtitleColor, opacity: 0.85 }}>{subtitle}</p>}
           </div>
-        </details>
-      ))}
-    </div>
+        )}
+        {/* Accordion items */}
+        <div className={variantClasses} style={{ borderColor }}>
+          {items.map((item, i) => (
+            <details
+              key={i}
+              open={item.defaultOpen || i === 0}
+              className={`group ${itemClasses}`}
+              style={variant === "filled" ? { backgroundColor: "#f9fafb" } : {}}
+            >
+              <summary className={`p-4 md:p-5 cursor-pointer list-none flex items-center ${iconPosition === "left" ? "flex-row-reverse justify-end" : "justify-between"} gap-4 font-semibold text-base md:text-lg transition-colors hover:opacity-80`} style={{ color: textColor }}>
+                <span className="flex-1">{item.title}</span>
+                <svg className="w-5 h-5 flex-shrink-0 transition-transform duration-200 group-open:rotate-180" style={{ color: resolvedIconColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+              <div
+                className="px-4 md:px-5 pb-4 md:pb-5 text-sm md:text-base leading-relaxed"
+                style={{ color: textColor, opacity: 0.85 }}
+                dangerouslySetInnerHTML={{ __html: contentToHtml(item.content || "") }}
+              />
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 // ============================================================================
@@ -10420,6 +10591,8 @@ export interface TabsProps {
     content?: string;
     icon?: string;
   }>;
+  title?: string;
+  subtitle?: string;
   defaultTab?: number;
   variant?: "underline" | "pills" | "boxed";
   size?: "sm" | "md" | "lg";
@@ -10427,53 +10600,96 @@ export interface TabsProps {
   centered?: boolean;
   backgroundColor?: string;
   activeColor?: string;
+  activeTabColor?: string;
+  activeTabTextColor?: string;
+  inactiveTabColor?: string;
+  inactiveTabTextColor?: string;
+  tabBorderColor?: string;
+  contentBackgroundColor?: string;
+  accentColor?: string;
   textColor?: string;
+  titleColor?: string;
+  subtitleColor?: string;
   id?: string;
   className?: string;
 }
 
 export function TabsRender({
   tabs = [],
+  title,
+  subtitle,
   defaultTab = 0,
   variant = "underline",
   size = "md",
   fullWidth = false,
-  centered = false,
+  centered = true,
   backgroundColor,
-  activeColor = "#3b82f6",
+  activeColor,
+  activeTabColor,
+  activeTabTextColor,
+  inactiveTabColor,
+  inactiveTabTextColor,
+  tabBorderColor,
+  contentBackgroundColor,
+  accentColor,
   textColor,
+  titleColor,
+  subtitleColor,
   id,
   className = "",
 }: TabsProps) {
-  const sizeClasses = { sm: "text-sm px-3 py-1.5", md: "text-base px-4 py-2", lg: "text-lg px-5 py-2.5" }[size];
-
-  const variantClasses = {
-    underline: "border-b-2 border-transparent data-[active=true]:border-current",
-    pills: "rounded-lg data-[active=true]:bg-blue-100 data-[active=true]:text-blue-600",
-    boxed: "border-2 border-transparent data-[active=true]:border-gray-300 data-[active=true]:bg-white rounded-t-lg",
-  }[variant];
+  const [activeTab, setActiveTab] = React.useState(defaultTab);
+  const resolvedActiveTabBg = activeTabColor || activeColor || accentColor || "#3b82f6";
+  const resolvedActiveTabText = activeTabTextColor || "#ffffff";
+  const resolvedInactiveTabBg = inactiveTabColor || "transparent";
+  const resolvedInactiveTabText = inactiveTabTextColor || accentColor || textColor || "#6b7280";
+  const resolvedTitleColor = titleColor || textColor;
+  const resolvedSubtitleColor = subtitleColor || textColor;
+  const resolvedContentBg = contentBackgroundColor || undefined;
+  
+  const sizeClasses = { sm: "text-sm px-3 py-2", md: "text-base px-5 py-2.5", lg: "text-lg px-6 py-3" }[size];
 
   return (
-    <div id={id} className={className} style={{ backgroundColor }}>
-      <div className={`flex ${fullWidth ? "w-full" : ""} ${centered ? "justify-center" : ""} ${variant === "underline" ? "border-b border-gray-200" : ""} ${variant === "boxed" ? "bg-gray-100 p-1 rounded-lg gap-1" : "gap-1"}`}>
-        {tabs.map((tab, i) => (
-          <button
-            key={i}
-            data-active={i === defaultTab}
-            className={`${sizeClasses} ${variantClasses} ${fullWidth ? "flex-1" : ""} font-medium transition-all`}
-            style={{ color: i === defaultTab ? activeColor : textColor }}
-          >
-            {tab.icon && <span className="mr-2">{tab.icon}</span>}
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      {tabs[defaultTab]?.content && (
-        <div className="p-4 md:p-6" style={{ color: textColor }}>
-          {tabs[defaultTab].content}
+    <section id={id} className={`py-16 md:py-20 px-4 sm:px-6 lg:px-8 ${className}`} style={{ backgroundColor: backgroundColor || undefined }}>
+      <div className="max-w-4xl mx-auto">
+        {/* Section title & subtitle */}
+        {(title || subtitle) && (
+          <div className="mb-10 md:mb-12 text-center">
+            {title && <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: resolvedTitleColor }}>{title}</h2>}
+            {subtitle && <p className="text-lg md:text-xl leading-relaxed max-w-3xl mx-auto" style={{ color: resolvedSubtitleColor, opacity: 0.85 }}>{subtitle}</p>}
+          </div>
+        )}
+        {/* Tab buttons */}
+        <div className={`flex flex-wrap gap-2 mb-0 ${fullWidth ? "w-full" : ""} ${centered ? "justify-center" : ""}`} style={tabBorderColor ? { borderBottom: `2px solid ${tabBorderColor}`, paddingBottom: "0" } : undefined}>
+          {tabs.map((tab, i) => {
+            const isActive = i === activeTab;
+            return (
+              <button
+                key={i}
+                onClick={() => setActiveTab(i)}
+                className={`${sizeClasses} ${fullWidth ? "flex-1" : ""} font-medium rounded-t-lg transition-all duration-200 cursor-pointer border-b-2`}
+                style={{
+                  backgroundColor: isActive ? resolvedActiveTabBg : resolvedInactiveTabBg,
+                  color: isActive ? resolvedActiveTabText : resolvedInactiveTabText,
+                  borderBottomColor: isActive ? resolvedActiveTabBg : "transparent",
+                }}
+              >
+                {tab.icon && <span className="mr-2">{tab.icon}</span>}
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
-      )}
-    </div>
+        {/* Tab content */}
+        {tabs[activeTab]?.content && (
+          <div
+            className="p-6 md:p-8 rounded-b-lg text-base leading-relaxed"
+            style={{ color: textColor, backgroundColor: resolvedContentBg }}
+            dangerouslySetInnerHTML={{ __html: contentToHtml(tabs[activeTab].content || "") }}
+          />
+        )}
+      </div>
+    </section>
   );
 }
 

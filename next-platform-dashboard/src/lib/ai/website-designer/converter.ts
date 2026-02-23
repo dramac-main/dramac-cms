@@ -1043,11 +1043,28 @@ function transformPropsForStudio(
     };
   }
 
-  // Text/RichText
+  // Text/RichText — Full section content block
   if (type === "Text" || type === "RichText") {
     return {
       ...props,
+      // Content normalization
       content: props.content || props.text || props.body || "",
+      title: props.title || props.headline || "",
+      subtitle: props.subtitle || props.subheadline || "",
+      // Layout
+      layout: props.layout || "centered",
+      // Color normalization — pass all AI-generated colors through
+      textColor: props.textColor || props.color || undefined,
+      titleColor: props.titleColor || undefined,
+      subtitleColor: props.subtitleColor || undefined,
+      backgroundColor: props.backgroundColor || undefined,
+      accentColor: props.accentColor || undefined,
+      pullQuote: props.pullQuote || undefined,
+      pullQuoteColor: props.pullQuoteColor || undefined,
+      showDivider: props.showDivider || false,
+      dividerColor: props.dividerColor || undefined,
+      highlightColor: props.highlightColor || undefined,
+      cardBackgroundColor: props.cardBackgroundColor || undefined,
     };
   }
 
@@ -1056,6 +1073,37 @@ function transformPropsForStudio(
     return {
       ...props,
       text: props.text || props.title || props.content || "",
+    };
+  }
+
+  // Accordion — expandable content section
+  if (type === "Accordion") {
+    const items = props.items || props.sections || [];
+    return {
+      ...props,
+      title: props.title || props.headline || "",
+      subtitle: props.subtitle || "",
+      items: Array.isArray(items) ? items.map((item: Record<string, unknown>) => ({
+        title: item.title || item.heading || "",
+        content: item.content || item.body || item.description || "",
+        icon: item.icon || undefined,
+        defaultOpen: item.defaultOpen || false,
+      })) : [],
+    };
+  }
+
+  // Tabs — tabbed content section
+  if (type === "Tabs") {
+    const tabs = props.tabs || props.items || [];
+    return {
+      ...props,
+      title: props.title || props.headline || "",
+      subtitle: props.subtitle || "",
+      tabs: Array.isArray(tabs) ? tabs.map((tab: Record<string, unknown>) => ({
+        label: tab.label || tab.title || tab.name || "",
+        content: tab.content || tab.body || tab.description || "",
+        icon: tab.icon || undefined,
+      })) : [],
     };
   }
 
