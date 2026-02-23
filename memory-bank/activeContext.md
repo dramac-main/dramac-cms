@@ -1,10 +1,11 @@
 # Active Context
 
-## Current Focus: AI Website Designer — Button & Color Consistency
+## Current Focus: AI Website Designer — Content Section Styling & Interactivity
 
-### Status: COMPREHENSIVE BUTTON/COLOR/BOOKING FIXES DEPLOYED ✅
+### Status: RICHTEXT/ACCORDION/TABS RENDERING FIX DEPLOYED ✅
 
 ### Recent Fixes (newest first):
+- RichText/Accordion/Tabs Full Styling & Interactivity Fix (commit `8fe3906`) ✅
 - Button Visibility + Color Contrast + Booking Module Fix (commit `fd3a719`) ✅
 - Pipeline Plumbing Fix — Registry init, module detection, semantic maps (commit `96fd825`) ✅
 - Complete Component Audit — All 28 module types + Typewriter/Parallax/Badge (commit `ff37f0e`) ✅
@@ -13,6 +14,51 @@
 - Critical Blank Pages Fix (commit `260d2f0`) ✅
 - Architecture Model Upgrade (commit `8eff0ea`) ✅
 - AI-First Redesign Phase AWD-10 — ALL 7 PHASES COMPLETE ✅
+
+---
+
+### RichText/Accordion/Tabs Full Styling & Interactivity Fix (commit `8fe3906`) ✅
+
+**Root cause: Render components were throwing away all AI-generated styling props**
+
+User reported sections appearing as unstyled, left-aligned plain text with no background,
+no title, no structure. Database analysis confirmed the AI was generating full styling
+(title, subtitle, backgroundColor, layout, pullQuote, dividers, accent colors) but the
+render components were ignoring ALL of it.
+
+**1. RichText was a bare `<div>` with just `content` and `color`:**
+  - AI generates: title, subtitle, pullQuote, layout (two-column), backgroundColor,
+    titleColor, subtitleColor, accentColor, dividerColor, highlightColor, pullQuoteColor,
+    cardBackgroundColor, showDivider
+  - Old component read: content, color, proseSize, maxWidth (4 of 16 props)
+  - Result: naked text floating on the left, no background, no section padding
+  - Fix: Complete rewrite as full section component with all props, proper section
+    wrapping (`<section>` with py-16 padding), title/subtitle rendering,
+    pull quote blockquote, two-column grid layout, divider support
+
+**2. Tabs were completely static (no interactivity):**
+  - Buttons rendered but clicking did nothing (no useState, just static defaultTab)
+  - Content rendered as plain text, not HTML (markdown **bold**, ✅, \n all literal)
+  - No section wrapping, no title/subtitle, no AI color props used
+  - Fix: Added useState for active tab, markdownToHtml rendering, full section
+    wrapping, all AI color props (activeTabColor, inactiveTabColor, contentBackgroundColor)
+
+**3. Accordion rendered content as plain text:**
+  - Content with \n newlines collapsed to single line, markdown literal
+  - No section title/subtitle, no section wrapping
+  - Fix: dangerouslySetInnerHTML with markdownToHtml, section wrapper with
+    title/subtitle, auto-opens first item, proper icon colors
+
+**4. Converter had no RichText/Accordion/Tabs prop mapping:**
+  - RichText converter only mapped `content` — now maps all 16 props
+  - Added explicit Accordion converter (items normalization, title/subtitle)
+  - Added explicit Tabs converter (tabs normalization, title/subtitle)
+
+**Shared utility:** `markdownToHtml()` converts **bold**, *italic*, • bullets,
+\n newlines to proper HTML. Used by RichText, Accordion, and Tabs.
+
+**Files changed:** renders.tsx (+285), converter.ts (+47), core-components.ts (+13)
+**Build:** ✅ 194/194 pages, zero errors
 
 ---
 
