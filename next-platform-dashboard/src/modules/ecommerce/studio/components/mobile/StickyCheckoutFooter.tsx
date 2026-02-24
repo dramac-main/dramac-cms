@@ -43,6 +43,7 @@ function defaultFormatPrice(price: number): string {
     style: 'currency',
     currency: DEFAULT_CURRENCY,
   }).format(price / 100)
+}
 
 // ============================================================================
 // COMPONENT

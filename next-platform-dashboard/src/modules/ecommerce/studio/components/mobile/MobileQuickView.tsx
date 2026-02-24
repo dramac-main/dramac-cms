@@ -74,6 +74,7 @@ function formatPrice(price: number): string {
     style: 'currency',
     currency: DEFAULT_CURRENCY,
   }).format(price / 100)
+}
 
 function getColorHex(colorName: string): string | null {
   if (!colorName) return null

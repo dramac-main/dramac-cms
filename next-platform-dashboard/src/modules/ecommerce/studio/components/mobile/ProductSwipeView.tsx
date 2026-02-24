@@ -67,6 +67,7 @@ function formatPrice(price: number): string {
     style: 'currency',
     currency: DEFAULT_CURRENCY,
   }).format(price / 100)
+}
 
 // ============================================================================
 // SWIPEABLE CARD COMPONENT

@@ -49,6 +49,7 @@ function formatPrice(price: number): string {
     style: 'currency',
     currency: DEFAULT_CURRENCY,
   }).format(price / 100)
+}
 
 function calculateDiscount(originalPrice: number, currentPrice: number): number {
   return Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
