@@ -8,6 +8,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '../lib/require-auth'
 import { revalidatePath } from 'next/cache'
 import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { ListeningKeyword, BrandMention, KeywordType, MentionStatus } from '../types'
@@ -23,7 +24,7 @@ export async function getListeningKeywords(
   siteId: string
 ): Promise<{ keywords: ListeningKeyword[]; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { data, error } = await (supabase as any)
       .from('social_listening_keywords')
@@ -51,7 +52,7 @@ export async function addListeningKeyword(
   type: KeywordType
 ): Promise<{ keyword: ListeningKeyword | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { data, error } = await (supabase as any)
       .from('social_listening_keywords')
@@ -86,7 +87,7 @@ export async function updateKeywordStatus(
   isActive: boolean
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { error } = await (supabase as any)
       .from('social_listening_keywords')
@@ -111,7 +112,7 @@ export async function deleteListeningKeyword(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { error } = await (supabase as any)
       .from('social_listening_keywords')
@@ -146,7 +147,7 @@ export async function getBrandMentions(
   }
 ): Promise<{ mentions: BrandMention[]; total: number; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     let query = (supabase as any)
       .from('social_brand_mentions')
@@ -194,7 +195,7 @@ export async function updateMentionStatus(
   status: MentionStatus
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { error } = await (supabase as any)
       .from('social_brand_mentions')
@@ -221,7 +222,7 @@ export async function getMentionStats(
   error: string | null
 }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { data, error } = await (supabase as any)
       .from('social_brand_mentions')

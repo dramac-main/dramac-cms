@@ -9,7 +9,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCallback, useState } from 'react'
-import { ContentCalendar } from './ContentCalendar'
+import { ContentCalendarEnhanced } from './ContentCalendarEnhanced'
 import { deletePost, approvePost, rejectPost, publishPostNow } from '../actions/post-actions'
 import type { SocialAccount, SocialPost } from '../types'
 import { toast } from 'sonner'
@@ -109,7 +109,7 @@ export function ContentCalendarWrapper({
   }, [router, siteId])
 
   return (
-    <ContentCalendar
+    <ContentCalendarEnhanced
       posts={posts}
       accounts={accounts}
       onCreatePost={handleCreatePost}

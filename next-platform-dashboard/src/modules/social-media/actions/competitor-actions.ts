@@ -10,6 +10,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { mapRecord, mapRecords } from '../lib/map-db-record'
+import { requireAuth } from '../lib/require-auth'
 import type { Competitor } from '../types'
 
 // ============================================================================
@@ -23,7 +24,7 @@ export async function getCompetitors(
   siteId: string
 ): Promise<{ competitors: Competitor[]; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { data, error } = await (supabase as any)
       .from('social_competitors')
@@ -58,7 +59,7 @@ export async function addCompetitor(
   }
 ): Promise<{ competitor: Competitor | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { data: competitor, error } = await (supabase as any)
       .from('social_competitors')
@@ -100,7 +101,7 @@ export async function removeCompetitor(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { error } = await (supabase as any)
       .from('social_competitors')
@@ -125,7 +126,7 @@ export async function syncCompetitorData(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     // Update last synced timestamp
     // Real syncing requires platform API access (SM-01 accounts)
@@ -161,7 +162,7 @@ export async function getCompetitorAnalytics(
   error: string | null
 }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     let query = (supabase as any)
       .from('social_competitor_analytics')
@@ -210,7 +211,7 @@ export async function getCompetitorComparison(
   error: string | null
 }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { data, error } = await (supabase as any)
       .from('social_competitors')

@@ -8,6 +8,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '../lib/require-auth'
 import { revalidatePath } from 'next/cache'
 import { DEFAULT_TIMEZONE } from '@/lib/locale-config'
 import { mapRecord, mapRecords } from '../lib/map-db-record'
@@ -39,7 +40,7 @@ export async function getPosts(
   }
 ): Promise<{ posts: SocialPost[]; total: number; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     let query = (supabase as any)
       .from('social_posts')
@@ -97,7 +98,7 @@ export async function getPost(
   postId: string
 ): Promise<{ post: SocialPost | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data, error } = await (supabase as any)
       .from('social_posts')
@@ -139,7 +140,7 @@ export async function createPost(
   }
 ): Promise<{ post: SocialPost | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Determine initial status
     let status: PostStatus = 'draft'
@@ -207,7 +208,7 @@ export async function updatePost(
   }>
 ): Promise<{ post: SocialPost | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
@@ -257,7 +258,7 @@ export async function deletePost(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_posts')
@@ -290,7 +291,7 @@ export async function schedulePost(
   timezone?: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Check if post requires approval
     const { data: post } = await (supabase as any)
@@ -335,7 +336,7 @@ export async function publishPostNow(
   error: string | null 
 }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get post with accounts
     const { data: post, error: fetchError } = await (supabase as any)
@@ -454,7 +455,7 @@ export async function addToQueue(
   siteId: string
 ): Promise<{ success: boolean; scheduledAt: string | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get next available slot from queue
     const { data: nextSlot } = await (supabase as any)
@@ -500,7 +501,7 @@ export async function approvePost(
   notes?: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get post to check if it has scheduled time
     const { data: post } = await (supabase as any)
@@ -554,7 +555,7 @@ export async function rejectPost(
   reason: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_posts')
@@ -622,7 +623,7 @@ export async function bulkDeletePosts(
   postIds: string[]
 ): Promise<{ successCount: number; failCount: number; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_posts')
@@ -651,7 +652,7 @@ export async function duplicatePost(
   userId: string
 ): Promise<{ post: SocialPost | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get original post
     const { data: original, error: fetchError } = await (supabase as any)

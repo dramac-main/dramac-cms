@@ -8,6 +8,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '../lib/require-auth'
 import { revalidatePath } from 'next/cache'
 import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { 
@@ -37,7 +38,7 @@ export async function getInboxItems(
   }
 ): Promise<{ items: InboxItem[]; total: number; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     let query = (supabase as any)
       .from('social_inbox_items')
@@ -105,7 +106,7 @@ export async function getInboxCounts(
   error: string | null
 }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     let baseQuery = (supabase as any)
       .from('social_inbox_items')
@@ -159,7 +160,7 @@ export async function markAsRead(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_inbox_items')
@@ -190,7 +191,7 @@ export async function replyToItem(
   replyText: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get the item
     const { data: item, error: fetchError } = await (supabase as any)
@@ -275,7 +276,7 @@ export async function assignItem(
   assigneeId: string | null
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_inbox_items')
@@ -305,7 +306,7 @@ export async function updatePriority(
   priority: InboxPriority
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_inbox_items')
@@ -333,7 +334,7 @@ export async function archiveItem(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_inbox_items')
@@ -361,7 +362,7 @@ export async function markAsSpam(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_inbox_items')
@@ -389,7 +390,7 @@ export async function flagItem(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_inbox_items')
@@ -418,7 +419,7 @@ export async function addTags(
   tags: string[]
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get current tags
     const { data: item } = await (supabase as any)
@@ -460,7 +461,7 @@ export async function getSavedReplies(
   tenantId?: string
 ): Promise<{ replies: SavedReply[]; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data, error } = await (supabase as any)
       .from('social_saved_replies')
@@ -493,7 +494,7 @@ export async function createSavedReply(
   }
 ): Promise<{ reply: SavedReply | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data: reply, error } = await (supabase as any)
       .from('social_saved_replies')
@@ -526,7 +527,7 @@ export async function useSavedReply(
   replyId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get current count
     const { data: reply } = await (supabase as any)
@@ -559,7 +560,7 @@ export async function deleteSavedReply(
   replyId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_saved_replies')
@@ -587,7 +588,7 @@ export async function bulkArchive(
   itemIds: string[]
 ): Promise<{ successCount: number; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_inbox_items')
@@ -615,7 +616,7 @@ export async function bulkMarkAsRead(
   itemIds: string[]
 ): Promise<{ successCount: number; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_inbox_items')
@@ -647,7 +648,7 @@ export async function syncInbox(
   siteId: string
 ): Promise<{ newItems: number; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     // Get all active accounts for this site
     const { data: accounts, error: accountsError } = await (supabase as any)

@@ -7,6 +7,7 @@
  */
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { 
   Card, 
   CardContent, 
@@ -127,6 +128,8 @@ export function SocialAnalyticsPage({
 }: SocialAnalyticsPageProps) {
   const [dateRange, setDateRange] = useState('7d')
   const [selectedPlatform, setSelectedPlatform] = useState<string>('all')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const router = useRouter()
   
   const hasData = overview && accounts.length > 0
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -169,10 +172,30 @@ export function SocialAnalyticsPage({
               <SelectItem value="90d">Last 90 days</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon">
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="outline" size="icon" disabled={isRefreshing} onClick={() => {
+            setIsRefreshing(true)
+            router.refresh()
+            setTimeout(() => setIsRefreshing(false), 1000)
+          }}>
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => {
+            const csvData = [
+              ['Metric', 'Value', 'Change'],
+              ['Total Followers', String(displayOverview?.totalFollowers || 0), `${displayOverview?.followerGrowth || 0}%`],
+              ['Total Impressions', String(displayOverview?.totalImpressions || 0), `${displayOverview?.impressionChange || 0}%`],
+              ['Total Engagements', String(displayOverview?.totalEngagements || 0), `${displayOverview?.engagementChange || 0}%`],
+              ['Avg Engagement Rate', `${displayOverview?.avgEngagementRate?.toFixed(2) || 0}%`, ''],
+            ]
+            const csv = csvData.map(row => row.join(',')).join('\n')
+            const blob = new Blob([csv], { type: 'text/csv' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `social-analytics-${dateRange}-${new Date().toISOString().split('T')[0]}.csv`
+            a.click()
+            URL.revokeObjectURL(url)
+          }}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>

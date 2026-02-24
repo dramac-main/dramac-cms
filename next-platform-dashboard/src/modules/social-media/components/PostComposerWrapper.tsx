@@ -9,9 +9,9 @@
 
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useState, useEffect } from 'react'
-import { PostComposer } from './PostComposer'
+import { PostComposerEnhanced } from './PostComposerEnhanced'
 import { createPost, updatePost, getPost } from '../actions/post-actions'
-import type { SocialAccount, PostMedia, SocialPlatform } from '../types'
+import type { SocialAccount, PostMedia, SocialPlatform, Campaign, ContentPillar } from '../types'
 import { toast } from 'sonner'
 
 interface PostComposerWrapperProps {
@@ -19,6 +19,8 @@ interface PostComposerWrapperProps {
   tenantId: string
   userId: string
   accounts: SocialAccount[]
+  campaigns?: Campaign[]
+  contentPillars?: ContentPillar[]
 }
 
 export function PostComposerWrapper({
@@ -26,6 +28,8 @@ export function PostComposerWrapper({
   tenantId,
   userId,
   accounts,
+  campaigns = [],
+  contentPillars = [],
 }: PostComposerWrapperProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -88,6 +92,8 @@ export function PostComposerWrapper({
     timezone?: string
     platformContent?: Partial<Record<SocialPlatform, { content: string }>>
     firstComment?: string
+    campaignId?: string
+    contentPillar?: string
   }) => {
     try {
       if (editingPostId) {
@@ -150,8 +156,10 @@ export function PostComposerWrapper({
   }
 
   return (
-    <PostComposer
+    <PostComposerEnhanced
       accounts={accounts}
+      campaigns={campaigns}
+      contentPillars={contentPillars}
       onSubmit={handleSubmit}
       onCancel={handleCancel}
       initialData={initialData}

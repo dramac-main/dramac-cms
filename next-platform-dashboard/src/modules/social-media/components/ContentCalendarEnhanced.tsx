@@ -53,8 +53,8 @@ interface ContentCalendarEnhancedProps {
   onDeletePost: (postId: string) => void
   onDuplicatePost: (post: SocialPost) => void
   onReschedulePost?: (postId: string, newDate: Date) => void
-  _onApprovePost?: (postId: string) => void
-  _onRejectPost?: (postId: string) => void
+  onApprovePost?: (postId: string) => void
+  onRejectPost?: (postId: string) => void
   onPublishNow?: (postId: string) => void
   className?: string
 }
@@ -123,8 +123,8 @@ export function ContentCalendarEnhanced({
   onDeletePost,
   onDuplicatePost,
   onReschedulePost,
-  _onApprovePost,
-  _onRejectPost,
+  onApprovePost,
+  onRejectPost,
   onPublishNow,
   className,
 }: ContentCalendarEnhancedProps) {

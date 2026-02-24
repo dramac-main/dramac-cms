@@ -8,6 +8,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '../lib/require-auth'
 import { revalidatePath } from 'next/cache'
 import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { 
@@ -31,7 +32,7 @@ export async function getSocialAccounts(
   }
 ): Promise<{ accounts: SocialAccount[]; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     let query = (supabase as any)
       .from('social_accounts')
@@ -65,7 +66,7 @@ export async function getSocialAccount(
   accountId: string
 ): Promise<{ account: SocialAccount | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data, error } = await (supabase as any)
       .from('social_accounts')
@@ -104,7 +105,7 @@ export async function createSocialAccount(
   }
 ): Promise<{ account: SocialAccount | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data: account, error } = await (supabase as any)
       .from('social_accounts')
@@ -147,7 +148,7 @@ export async function updateAccountStatus(
   error?: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const updateData: Record<string, unknown> = {
       status,
@@ -202,7 +203,7 @@ export async function disconnectSocialAccount(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_accounts')
@@ -226,7 +227,7 @@ export async function syncAccountStats(
   accountId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     // Get account
     const { data: account, error: fetchError } = await (supabase as any)
@@ -336,7 +337,7 @@ export async function getAccountHealth(
   error: string | null 
 }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data: account, error } = await (supabase as any)
       .from('social_accounts')

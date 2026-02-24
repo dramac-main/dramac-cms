@@ -10,6 +10,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { PostComposerWrapper } from '@/modules/social-media/components'
 import { getSocialAccounts } from '@/modules/social-media/actions/account-actions'
+import { getCampaigns } from '@/modules/social-media/actions/campaign-actions'
+import { getContentPillars } from '@/modules/social-media/actions/pillar-actions'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface PageProps {
@@ -30,6 +32,12 @@ async function ComposerContent({ siteId, userId }: { siteId: string; userId: str
   
   const accountsResult = await getSocialAccounts(siteId)
   const accounts = accountsResult.accounts || []
+  
+  const campaignsResult = await getCampaigns(siteId)
+  const campaigns = campaignsResult.campaigns || []
+  
+  const pillarsResult = await getContentPillars(siteId)
+  const contentPillars = pillarsResult.pillars || []
 
   return (
     <PostComposerWrapper
@@ -37,6 +45,8 @@ async function ComposerContent({ siteId, userId }: { siteId: string; userId: str
       tenantId={tenantId}
       userId={userId}
       accounts={accounts}
+      campaigns={campaigns}
+      contentPillars={contentPillars}
     />
   )
 }

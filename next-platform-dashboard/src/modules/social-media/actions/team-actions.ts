@@ -8,6 +8,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '../lib/require-auth'
 import { revalidatePath } from 'next/cache'
 import { getRoleDefaults } from '../lib/team-utils'
 import { mapRecord, mapRecords } from '../lib/map-db-record'
@@ -30,7 +31,7 @@ export async function getTeamPermissions(
   siteId: string
 ): Promise<{ permissions: TeamPermission[]; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data, error } = await (supabase as any)
       .from('social_team_permissions')
@@ -55,7 +56,7 @@ export async function getUserPermission(
   userId: string
 ): Promise<{ permission: TeamPermission | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data, error } = await (supabase as any)
       .from('social_team_permissions')
@@ -101,7 +102,7 @@ export async function upsertTeamPermission(
   }
 ): Promise<{ permission: TeamPermission | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get default permissions based on role
     const roleDefaults = getRoleDefaults(data.role)
@@ -152,7 +153,7 @@ export async function deleteTeamPermission(
   userId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_team_permissions')
@@ -186,9 +187,8 @@ export async function checkPermission(
       return false
     }
     
-    // Convert camelCase to snake_case for database lookup
-    const snakeCase = permission.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
-    return userPerm[snakeCase as keyof TeamPermission] === true
+    // Permission key is already in camelCase after mapRecord conversion
+    return userPerm[permission as keyof TeamPermission] === true
   } catch {
     return false
   }
@@ -205,7 +205,7 @@ export async function getApprovalWorkflows(
   siteId: string
 ): Promise<{ workflows: ApprovalWorkflow[]; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data, error } = await (supabase as any)
       .from('social_approval_workflows')
@@ -248,7 +248,7 @@ export async function createApprovalWorkflow(
   }
 ): Promise<{ workflow: ApprovalWorkflow | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // If this is set as default, unset other defaults
     if (data.isDefault) {
@@ -300,7 +300,7 @@ export async function updateApprovalWorkflow(
   }>
 ): Promise<{ workflow: ApprovalWorkflow | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // If this is set as default, unset other defaults
     if (updates.isDefault) {
@@ -346,7 +346,7 @@ export async function deleteApprovalWorkflow(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_approval_workflows')
@@ -378,7 +378,7 @@ export async function getPendingApprovals(
   }
 ): Promise<{ requests: any[]; total: number; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get posts pending approval for this site
     let query = (supabase as any)
@@ -414,7 +414,7 @@ export async function createApprovalRequest(
   workflowId: string
 ): Promise<{ request: ApprovalRequest | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get workflow to determine expiration
     const { data: workflow } = await (supabase as any)
@@ -459,7 +459,7 @@ export async function updateApprovalRequest(
   notes?: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_approval_requests')

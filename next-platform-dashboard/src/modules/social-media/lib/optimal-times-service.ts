@@ -108,8 +108,10 @@ export async function computeOptimalTimes(accountId: string): Promise<void> {
     platform: account.platform,
     day_of_week: slot.dayOfWeek,
     hour: slot.hour,
-    score: Math.round(slot.avgEngagement * 100) / 100,
-    post_count: slot.postCount,
+    engagement_score: Math.round(slot.avgEngagement * 100) / 100,
+    reach_score: Math.round(slot.avgEngagement * 100) / 100,
+    combined_score: Math.round(slot.avgEngagement * 100) / 100,
+    sample_size: slot.postCount,
     updated_at: new Date().toISOString(),
   }))
 

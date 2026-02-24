@@ -102,6 +102,7 @@ async function AccountsContent({
   if (!user) {
     const { redirect } = await import('next/navigation')
     redirect('/login')
+    return null // help TypeScript narrow
   }
 
   const { data: site } = await (supabase as any)
@@ -232,6 +233,7 @@ async function AccountsContent({
         mode="connect-panel"
         siteId={siteId}
         tenantId={tenantId}
+        userId={user.id}
         accounts={accounts}
       />
 

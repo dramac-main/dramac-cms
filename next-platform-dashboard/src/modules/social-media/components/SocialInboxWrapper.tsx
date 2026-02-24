@@ -63,14 +63,15 @@ export function SocialInboxWrapper({
   const handleMarkAsRead = useCallback(async (itemIds: string[]) => {
     setIsLoading(true)
     try {
-      for (const itemId of itemIds) {
-        const result = await markAsRead(itemId, siteId)
-        if (result.error) {
-          toast.error(result.error)
-          break
-        }
+      const results = await Promise.all(
+        itemIds.map(itemId => markAsRead(itemId, siteId))
+      )
+      const failed = results.filter(r => r.error)
+      if (failed.length > 0) {
+        toast.error(`Failed to mark ${failed.length} item(s) as read`)
+      } else {
+        toast.success(`Marked ${itemIds.length} item(s) as read`)
       }
-      toast.success(`Marked ${itemIds.length} item(s) as read`)
       router.refresh()
     } finally {
       setIsLoading(false)
@@ -80,14 +81,15 @@ export function SocialInboxWrapper({
   const handleArchive = useCallback(async (itemIds: string[]) => {
     setIsLoading(true)
     try {
-      for (const itemId of itemIds) {
-        const result = await archiveItem(itemId, siteId)
-        if (result.error) {
-          toast.error(result.error)
-          break
-        }
+      const results = await Promise.all(
+        itemIds.map(itemId => archiveItem(itemId, siteId))
+      )
+      const failed = results.filter(r => r.error)
+      if (failed.length > 0) {
+        toast.error(`Failed to archive ${failed.length} item(s)`)
+      } else {
+        toast.success(`Archived ${itemIds.length} item(s)`)
       }
-      toast.success(`Archived ${itemIds.length} item(s)`)
       router.refresh()
     } finally {
       setIsLoading(false)

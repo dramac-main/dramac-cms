@@ -8,6 +8,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '../lib/require-auth'
 import { revalidatePath } from 'next/cache'
 import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { Campaign, CampaignStatus, CampaignGoals } from '../types'
@@ -28,7 +29,7 @@ export async function getCampaigns(
   }
 ): Promise<{ campaigns: Campaign[]; total: number; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     let query = (supabase as any)
       .from('social_campaigns')
@@ -70,7 +71,7 @@ export async function getCampaign(
   campaignId: string
 ): Promise<{ campaign: Campaign | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data, error } = await (supabase as any)
       .from('social_campaigns')
@@ -109,7 +110,7 @@ export async function createCampaign(
   }
 ): Promise<{ campaign: Campaign | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Determine status based on dates
     const now = new Date()
@@ -185,7 +186,7 @@ export async function updateCampaign(
   }>
 ): Promise<{ campaign: Campaign | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
@@ -231,7 +232,7 @@ export async function deleteCampaign(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // First, unlink all posts from this campaign
     await (supabase as any)
@@ -264,7 +265,7 @@ export async function archiveCampaign(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_campaigns')
@@ -293,7 +294,7 @@ export async function pauseCampaign(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_campaigns')
@@ -322,7 +323,7 @@ export async function resumeCampaign(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { error } = await (supabase as any)
       .from('social_campaigns')
@@ -358,7 +359,7 @@ export async function getCampaignPosts(
   }
 ): Promise<{ posts: any[]; total: number; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     let query = (supabase as any)
       .from('social_posts')
@@ -394,7 +395,7 @@ export async function addPostToCampaign(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Update post with campaign ID
     const { error: postError } = await (supabase as any)
@@ -405,9 +406,9 @@ export async function addPostToCampaign(
     if (postError) throw postError
     
     // Update campaign post count
-    const { data: count } = await (supabase as any)
+    const { count } = await (supabase as any)
       .from('social_posts')
-      .select('id', { count: 'exact' })
+      .select('id', { count: 'exact', head: true })
       .eq('campaign_id', campaignId)
     
     await (supabase as any)
@@ -434,7 +435,7 @@ export async function removePostFromCampaign(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Remove campaign ID from post
     const { error: postError } = await (supabase as any)
@@ -446,9 +447,9 @@ export async function removePostFromCampaign(
     if (postError) throw postError
     
     // Update campaign post count
-    const { data: count } = await (supabase as any)
+    const { count } = await (supabase as any)
       .from('social_posts')
-      .select('id', { count: 'exact' })
+      .select('id', { count: 'exact', head: true })
       .eq('campaign_id', campaignId)
     
     await (supabase as any)
@@ -490,7 +491,7 @@ export async function getCampaignAnalytics(
   error: string | null
 }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get campaign with goals
     const { data: campaign, error: campaignError } = await (supabase as any)
@@ -576,7 +577,7 @@ export async function updateCampaignStats(
   campaignId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get totals from posts
     const { data: stats } = await (supabase as any)

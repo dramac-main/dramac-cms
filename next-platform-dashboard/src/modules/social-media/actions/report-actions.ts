@@ -8,6 +8,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '../lib/require-auth'
 import { revalidatePath } from 'next/cache'
 import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { Report, ReportType } from '../types'
@@ -23,7 +24,7 @@ export async function getReports(
   siteId: string
 ): Promise<{ reports: Report[]; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { data, error } = await (supabase as any)
       .from('social_reports')
@@ -47,7 +48,7 @@ export async function getReport(
   reportId: string
 ): Promise<{ report: Report | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { data, error } = await (supabase as any)
       .from('social_reports')
@@ -82,7 +83,7 @@ export async function createReport(
   }
 ): Promise<{ report: Report | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { data: report, error } = await (supabase as any)
       .from('social_reports')
@@ -134,7 +135,7 @@ export async function updateReport(
   }>
 ): Promise<{ report: Report | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const updateData: Record<string, unknown> = {
       updated_at: new Date().toISOString(),
@@ -178,7 +179,7 @@ export async function deleteReport(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { error } = await (supabase as any)
       .from('social_reports')
@@ -203,7 +204,7 @@ export async function duplicateReport(
   siteId: string
 ): Promise<{ report: Report | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     // Get original report
     const { data: original, error: fetchError } = await (supabase as any)

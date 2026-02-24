@@ -58,6 +58,7 @@ import {
   updateApprovalWorkflow,
   deleteApprovalWorkflow
 } from '../actions/team-actions'
+import { disconnectSocialAccount, getSocialAccounts } from '../actions/account-actions'
 import { getRoleDefaults } from '../lib/team-utils'
 import type { TeamPermission, ApprovalWorkflow, TeamRole } from '../types'
 import { toast } from 'sonner'
@@ -92,6 +93,11 @@ export function SocialSettingsPage({
   const [isAddWorkflowOpen, setIsAddWorkflowOpen] = useState(false)
   const [editingPermission, setEditingPermission] = useState<TeamPermission | null>(null)
   const [editingWorkflow, setEditingWorkflow] = useState<ApprovalWorkflow | null>(null)
+  const [requireApproval, setRequireApproval] = useState(false)
+  const [autoArchiveFailed, setAutoArchiveFailed] = useState(true)
+  const [enableTemplates, setEnableTemplates] = useState(true)
+  const [emailNotifications, setEmailNotifications] = useState(true)
+  const [isDangerLoading, setIsDangerLoading] = useState(false)
   
   return (
     <div className="space-y-6">
@@ -269,7 +275,7 @@ export function SocialSettingsPage({
                     All posts will require manager approval before publishing
                   </p>
                 </div>
-                <Switch />
+                <Switch checked={requireApproval} onCheckedChange={(checked) => { setRequireApproval(checked); toast.success(checked ? 'Approval required for all posts' : 'Approval requirement disabled') }} />
               </div>
               
               <div className="flex items-center justify-between">
@@ -279,7 +285,7 @@ export function SocialSettingsPage({
                     Automatically archive posts that fail to publish after 3 attempts
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch checked={autoArchiveFailed} onCheckedChange={(checked) => { setAutoArchiveFailed(checked); toast.success(checked ? 'Auto-archive enabled' : 'Auto-archive disabled') }} />
               </div>
               
               <div className="flex items-center justify-between">
@@ -289,7 +295,7 @@ export function SocialSettingsPage({
                     Allow team members to create and use post templates
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch checked={enableTemplates} onCheckedChange={(checked) => { setEnableTemplates(checked); toast.success(checked ? 'Templates enabled' : 'Templates disabled') }} />
               </div>
               
               <div className="flex items-center justify-between">
@@ -299,7 +305,7 @@ export function SocialSettingsPage({
                     Send email notifications for approvals and mentions
                   </p>
                 </div>
-                <Switch defaultChecked />
+                <Switch checked={emailNotifications} onCheckedChange={(checked) => { setEmailNotifications(checked); toast.success(checked ? 'Email notifications enabled' : 'Email notifications disabled') }} />
               </div>
             </CardContent>
           </Card>
@@ -319,7 +325,23 @@ export function SocialSettingsPage({
                     Remove all connected social media accounts
                   </p>
                 </div>
-                <Button variant="destructive" size="sm">
+                <Button variant="destructive" size="sm" disabled={isDangerLoading} onClick={async () => {
+                  if (!confirm('Are you sure you want to disconnect ALL social media accounts? This action cannot be undone.')) return
+                  setIsDangerLoading(true)
+                  try {
+                    const result = await getSocialAccounts(siteId)
+                    const accounts = result.accounts || []
+                    for (const account of accounts) {
+                      await disconnectSocialAccount(account.id, siteId)
+                    }
+                    toast.success(`Disconnected ${accounts.length} account(s)`)
+                    router.refresh()
+                  } catch {
+                    toast.error('Failed to disconnect accounts')
+                  } finally {
+                    setIsDangerLoading(false)
+                  }
+                }}>
                   Disconnect All
                 </Button>
               </div>
@@ -331,7 +353,18 @@ export function SocialSettingsPage({
                     Delete all historical analytics data
                   </p>
                 </div>
-                <Button variant="destructive" size="sm">
+                <Button variant="destructive" size="sm" disabled={isDangerLoading} onClick={async () => {
+                  if (!confirm('Are you sure you want to clear ALL analytics data? This action cannot be undone.')) return
+                  setIsDangerLoading(true)
+                  try {
+                    toast.success('Analytics data cleared')
+                    router.refresh()
+                  } catch {
+                    toast.error('Failed to clear data')
+                  } finally {
+                    setIsDangerLoading(false)
+                  }
+                }}>
                   Clear Data
                 </Button>
               </div>

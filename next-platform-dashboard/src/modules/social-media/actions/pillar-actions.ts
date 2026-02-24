@@ -10,6 +10,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { mapRecord, mapRecords } from '../lib/map-db-record'
+import { requireAuth } from '../lib/require-auth'
 import type { ContentPillar } from '../types'
 
 /**
@@ -19,7 +20,7 @@ export async function getContentPillars(
   siteId: string
 ): Promise<{ pillars: ContentPillar[]; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { data, error } = await (supabase as any)
       .from('social_content_pillars')
@@ -51,7 +52,7 @@ export async function createContentPillar(
   }
 ): Promise<{ pillar: ContentPillar | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     // Get highest sort order
     const { data: existing } = await (supabase as any)
@@ -104,7 +105,7 @@ export async function updateContentPillar(
   }>
 ): Promise<{ pillar: ContentPillar | null; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const updateData: Record<string, unknown> = {}
     if (updates.name !== undefined) updateData.name = updates.name
@@ -139,7 +140,7 @@ export async function deleteContentPillar(
   siteId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     const { error } = await (supabase as any)
       .from('social_content_pillars')
@@ -175,7 +176,7 @@ export async function getContentPillarDistribution(
   error: string | null
 }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
 
     // Get pillars
     const { data: pillars } = await (supabase as any)

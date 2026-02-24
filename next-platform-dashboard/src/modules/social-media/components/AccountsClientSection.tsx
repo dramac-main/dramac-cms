@@ -51,6 +51,7 @@ type AccountsClientSectionProps =
       mode: 'connect-panel'
       siteId: string
       tenantId: string
+      userId?: string
       accounts?: SocialAccount[]
       account?: never
     }
@@ -59,6 +60,7 @@ type AccountsClientSectionProps =
       siteId: string
       tenantId: string
       account: SocialAccount
+      userId?: string
       accounts?: never
     }
 
@@ -84,10 +86,12 @@ const OAUTH_PLATFORMS = [
 function ConnectPanel({
   siteId,
   tenantId,
+  userId = '',
   accounts = [],
 }: {
   siteId: string
   tenantId: string
+  userId?: string
   accounts: SocialAccount[]
 }) {
   const [blueskyHandle, setBlueskyHandle] = useState('')
@@ -110,7 +114,7 @@ function ConnectPanel({
     }
     setLoadingPlatform('bluesky')
     startTransition(async () => {
-      const result = await connectBlueskyAccount(siteId, tenantId, '', {
+      const result = await connectBlueskyAccount(siteId, tenantId, userId, {
         handle: blueskyHandle,
         appPassword: blueskyPassword,
       })
@@ -137,7 +141,7 @@ function ConnectPanel({
       : `https://${mastodonInstance}`
 
     startTransition(async () => {
-      const result = await registerMastodonApp(instanceUrl, siteId, tenantId, '')
+      const result = await registerMastodonApp(instanceUrl, siteId, tenantId, userId)
       setLoadingPlatform(null)
       if (result.authorizeUrl) {
         window.location.href = result.authorizeUrl
@@ -383,6 +387,7 @@ export function AccountsClientSection(props: AccountsClientSectionProps) {
       <ConnectPanel
         siteId={props.siteId}
         tenantId={props.tenantId}
+        userId={props.userId}
         accounts={props.accounts || []}
       />
     )

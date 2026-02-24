@@ -8,6 +8,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server'
+import { requireAuth } from '../lib/require-auth'
 import { mapRecord, mapRecords } from '../lib/map-db-record'
 import type { 
   DailyAnalytics, 
@@ -53,7 +54,7 @@ export async function getAnalyticsOverview(
   error: string | null
 }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get accounts for site
     let accountsQuery = (supabase as any)
@@ -176,7 +177,7 @@ export async function getDailyAnalytics(
   endDate: string
 ): Promise<{ data: DailyAnalytics[]; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data, error } = await (supabase as any)
       .from('social_analytics_daily')
@@ -202,7 +203,7 @@ export async function getPostAnalytics(
   postId: string
 ): Promise<{ analytics: PostAnalytics[]; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data, error } = await (supabase as any)
       .from('social_post_analytics')
@@ -242,7 +243,7 @@ export async function getTopPosts(
   error: string | null
 }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const metric = options?.metric || 'engagement'
     const limit = options?.limit || 10
@@ -314,7 +315,7 @@ export async function getOptimalTimes(
   accountId: string
 ): Promise<{ times: OptimalTime[]; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     const { data, error } = await (supabase as any)
       .from('social_optimal_times')
@@ -351,7 +352,7 @@ export async function getBestTimesToPost(
   error: string | null
 }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get accounts
     let accountsQuery = (supabase as any)
@@ -433,7 +434,7 @@ export async function recalculateOptimalTimes(
   accountId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Call the database function
     const { error } = await (supabase as any)
@@ -469,7 +470,7 @@ export async function generateReportData(
   error: string | null
 }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get accounts
     let accountsQuery = (supabase as any)
@@ -594,7 +595,7 @@ export async function syncAnalytics(
   accountId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const supabase = await createClient()
+    const { supabase } = await requireAuth()
     
     // Get account
     const { data: account, error: fetchError } = await (supabase as any)
