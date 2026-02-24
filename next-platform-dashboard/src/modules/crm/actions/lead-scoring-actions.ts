@@ -225,7 +225,7 @@ export async function recalculateAllScores(siteId: string): Promise<{ processed:
 /**
  * Get pre-built scoring rule templates for common scenarios
  */
-export function getLeadScoringTemplates(): Partial<LeadScoringRuleInput>[] {
+export async function getLeadScoringTemplates(): Promise<Partial<LeadScoringRuleInput>[]> {
   return [
     {
       name: 'Has Email Address',
