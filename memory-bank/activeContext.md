@@ -1,10 +1,11 @@
 # Active Context
 
-## Current Focus: AI Website Designer — Content Section Styling & Interactivity
+## Current Focus: CRM Module — Comprehensive Industry-Leader Overhaul
 
-### Status: RICHTEXT/ACCORDION/TABS RENDERING FIX DEPLOYED ✅
+### Status: CRM ENHANCEMENT COMPLETE ✅ (Pending DB Migration)
 
 ### Recent Fixes (newest first):
+- CRM Comprehensive Overhaul — Industry-leader features (segments, scoring, forms→CRM, email, bulk ops, merge, import, timeline) ✅
 - RichText/Accordion/Tabs Full Styling & Interactivity Fix (commit `8fe3906`) ✅
 - Button Visibility + Color Contrast + Booking Module Fix (commit `fd3a719`) ✅
 - Pipeline Plumbing Fix — Registry init, module detection, semantic maps (commit `96fd825`) ✅

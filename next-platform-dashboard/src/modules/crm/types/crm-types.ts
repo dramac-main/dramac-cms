@@ -507,6 +507,234 @@ export interface CRMSettings {
 }
 
 // ============================================================================
+// SEGMENTS (Smart Lists)
+// ============================================================================
+
+export type SegmentType = 'dynamic' | 'static'
+export type FilterOperator = 
+  | 'equals' | 'not_equals' 
+  | 'contains' | 'not_contains' | 'starts_with' | 'ends_with'
+  | 'greater_than' | 'less_than' | 'greater_or_equal' | 'less_or_equal'
+  | 'is_empty' | 'is_not_empty' 
+  | 'in' | 'not_in'
+  | 'is_true' | 'is_false'
+  | 'date_before' | 'date_after' | 'date_between'
+
+export interface SegmentFilter {
+  field: string
+  operator: FilterOperator
+  value: string | string[] | number | boolean | null
+}
+
+export interface Segment {
+  id: string
+  site_id: string
+  name: string
+  description?: string | null
+  color: string
+  filters: SegmentFilter[]
+  filter_logic: 'and' | 'or'
+  segment_type: SegmentType
+  contact_count: number
+  last_evaluated_at?: string | null
+  is_active: boolean
+  created_by?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type SegmentInput = Omit<Segment, 'id' | 'created_at' | 'updated_at' | 'contact_count' | 'last_evaluated_at'>
+export type SegmentUpdate = Partial<SegmentInput>
+
+// ============================================================================
+// LEAD SCORING RULES
+// ============================================================================
+
+export type ScoringCategory = 'demographic' | 'behavioral' | 'engagement' | 'firmographic'
+
+export interface ScoringCondition {
+  field: string
+  operator: FilterOperator
+  value: string | string[] | number | boolean | null
+}
+
+export interface LeadScoringRule {
+  id: string
+  site_id: string
+  name: string
+  description?: string | null
+  category: ScoringCategory
+  condition: ScoringCondition
+  points: number
+  max_applications: number
+  is_active: boolean
+  priority: number
+  created_at: string
+  updated_at: string
+}
+
+export type LeadScoringRuleInput = Omit<LeadScoringRule, 'id' | 'created_at' | 'updated_at'>
+export type LeadScoringRuleUpdate = Partial<LeadScoringRuleInput>
+
+// ============================================================================
+// CONTACT NOTES (Rich Text)
+// ============================================================================
+
+export interface ContactNote {
+  id: string
+  site_id: string
+  contact_id?: string | null
+  company_id?: string | null
+  deal_id?: string | null
+  title?: string | null
+  content: string
+  content_plain?: string | null
+  is_pinned: boolean
+  created_by?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type ContactNoteInput = Omit<ContactNote, 'id' | 'created_at' | 'updated_at'>
+export type ContactNoteUpdate = Partial<ContactNoteInput>
+
+// ============================================================================
+// FORM CAPTURES
+// ============================================================================
+
+export type FormCaptureStatus = 'new' | 'processed' | 'duplicate' | 'spam' | 'error'
+export type FormCaptureType = 'contact' | 'newsletter' | 'lead_capture' | 'custom'
+
+export interface FormCapture {
+  id: string
+  site_id: string
+  form_type: FormCaptureType
+  form_name?: string | null
+  page_url?: string | null
+  form_data: Record<string, unknown>
+  contact_id?: string | null
+  deal_id?: string | null
+  status: FormCaptureStatus
+  processing_notes?: string | null
+  utm_source?: string | null
+  utm_medium?: string | null
+  utm_campaign?: string | null
+  utm_content?: string | null
+  referrer_url?: string | null
+  ip_address?: string | null
+  user_agent?: string | null
+  created_at: string
+  // Joined
+  contact?: Contact | null
+}
+
+// ============================================================================
+// CONTACT TIMELINE (360° View)
+// ============================================================================
+
+export type TimelineEventType = 
+  | 'activity' | 'note' | 'email_sent' | 'email_received'
+  | 'deal_created' | 'deal_stage_changed' | 'deal_won' | 'deal_lost'
+  | 'form_submission' | 'tag_added' | 'tag_removed'
+  | 'status_changed' | 'created' | 'score_changed'
+
+export interface TimelineEvent {
+  id: string
+  type: TimelineEventType
+  title: string
+  description?: string | null
+  metadata?: Record<string, unknown>
+  created_at: string
+  created_by?: string | null
+}
+
+// ============================================================================
+// BULK ACTIONS
+// ============================================================================
+
+export type BulkActionType = 
+  | 'delete' | 'update_status' | 'update_lead_status' | 'update_owner'
+  | 'add_tags' | 'remove_tags' | 'add_to_segment' | 'export'
+
+export interface BulkActionRequest {
+  action: BulkActionType
+  contactIds: string[]
+  payload?: Record<string, unknown>
+}
+
+export interface BulkActionResult {
+  success: boolean
+  processed: number
+  failed: number
+  errors?: string[]
+}
+
+// ============================================================================
+// MERGE CONTACTS
+// ============================================================================
+
+export interface MergeCandidate {
+  contact: Contact
+  matchType: 'email' | 'phone' | 'name'
+  confidence: number // 0-100
+}
+
+export interface MergeRequest {
+  primaryContactId: string
+  secondaryContactIds: string[]
+  fieldResolutions: Record<string, string> // field → which contact ID to use
+}
+
+// ============================================================================
+// EMAIL COMPOSE
+// ============================================================================
+
+export interface EmailCompose {
+  to: string[]
+  cc?: string[]
+  bcc?: string[]
+  subject: string
+  body_html: string
+  body_text?: string
+  contact_id?: string
+  deal_id?: string
+  template_id?: string
+}
+
+export interface EmailSendResult {
+  success: boolean
+  message_id?: string
+  error?: string
+}
+
+// ============================================================================
+// IMPORT
+// ============================================================================
+
+export interface ImportFieldMapping {
+  csvColumn: string
+  crmField: string
+}
+
+export interface ImportPreview {
+  totalRows: number
+  validRows: number
+  invalidRows: number
+  duplicateRows: number
+  sampleData: Record<string, unknown>[]
+  headers: string[]
+  errors: { row: number; field: string; message: string }[]
+}
+
+export interface ImportResult {
+  success: boolean
+  imported: number
+  updated: number
+  skipped: number
+  errors: { row: number; message: string }[]
+}
+
+// ============================================================================
 // API RESPONSE TYPES
 // ============================================================================
 

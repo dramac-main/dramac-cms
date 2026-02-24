@@ -12,6 +12,10 @@ export * from './types/crm-types'
 
 // Server Actions
 export * from './actions/crm-actions'
+export * from './actions/segment-actions'
+export * from './actions/lead-scoring-actions'
+export * from './actions/email-actions'
+export * from './actions/bulk-actions'
 
 // Context
 export { CRMProvider, useCRM, useContact, useCompany, useDeal, usePipelineDeals, useContactActivities, useDealActivities } from './context/crm-context'

@@ -53,3 +53,11 @@ export type { PipelineAnalyticsProps } from './pipeline-analytics'
 
 export { DealQuickView } from './deal-quick-view'
 export type { DealQuickViewProps } from './deal-quick-view'
+
+// =============================================================================
+// CRM ENHANCEMENT: New Components
+// =============================================================================
+
+export { ContactTimeline } from './contact-timeline'
+export { BulkActionBar } from './bulk-action-bar'
+export { LeadScoringSettings } from './lead-scoring-settings'

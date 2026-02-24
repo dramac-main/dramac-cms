@@ -16,11 +16,14 @@ import { CompaniesView } from './views/companies-view'
 import { DealsView } from './views/deals-view'
 import { ActivitiesView } from './views/activities-view'
 import { ReportsView } from './views/reports-view'
+import { SegmentsView } from './views/segments-view'
+import { FormCapturesView } from './views/form-captures-view'
 import { CRMProvider, useCRM } from '../context/crm-context'
 import { 
   // Enhanced UI Components (PHASE-UI-10A/10B)
   CRMHeader,
   CRMMetricCards,
+  LeadScoringSettings,
   type TimeRange
 } from './ui'
 import { 
@@ -30,10 +33,17 @@ import {
   Activity, 
   BarChart3,
   RefreshCw,
-  LineChart
+  LineChart,
+  Filter,
+  FileText,
+  Target,
+  GitMerge,
+  Upload,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { ImportContactsDialog } from './dialogs/import-dialog'
+import { MergeContactsDialog } from './dialogs/merge-dialog'
 import type { CRMSettings } from '../types/crm-types'
 
 // ============================================================================
@@ -62,6 +72,8 @@ function CRMDashboardContent() {
   const [activeTab, setActiveTab] = useState('deals')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [timeRange, setTimeRange] = useState<TimeRange>('30d')
+  const [importOpen, setImportOpen] = useState(false)
+  const [mergeOpen, setMergeOpen] = useState(false)
 
   // Calculate summary stats
   const openDeals = deals.filter(d => d.status === 'open')
@@ -184,6 +196,18 @@ function CRMDashboardContent() {
               <LineChart className="h-4 w-4" />
               Analytics
             </TabsTrigger>
+            <TabsTrigger value="segments" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              <Filter className="h-4 w-4" />
+              Segments
+            </TabsTrigger>
+            <TabsTrigger value="forms" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              <FileText className="h-4 w-4" />
+              Form Captures
+            </TabsTrigger>
+            <TabsTrigger value="scoring" className="gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
+              <Target className="h-4 w-4" />
+              Scoring
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -216,7 +240,30 @@ function CRMDashboardContent() {
             </Link>
           </div>
         </TabsContent>
+        <TabsContent value="segments" className="flex-1 m-0">
+          <SegmentsView />
+        </TabsContent>
+        <TabsContent value="forms" className="flex-1 m-0">
+          <FormCapturesView />
+        </TabsContent>
+        <TabsContent value="scoring" className="flex-1 m-0 p-6">
+          <LeadScoringSettings siteId={siteId} />
+        </TabsContent>
       </Tabs>
+
+      {/* CRM Tools Dialogs */}
+      <ImportContactsDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        siteId={siteId}
+        onImported={handleRefresh}
+      />
+      <MergeContactsDialog
+        open={mergeOpen}
+        onOpenChange={setMergeOpen}
+        siteId={siteId}
+        onMerged={handleRefresh}
+      />
     </div>
   )
 }
