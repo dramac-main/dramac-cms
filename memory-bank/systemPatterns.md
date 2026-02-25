@@ -186,35 +186,71 @@ ComponentRenderer (renderer.tsx)
 ## 🎨 Brand Color Inheritance System (CRITICAL for Color Consistency)
 
 ### Problem
-AI-generated websites had inconsistent colors. 146 color fields across 6 booking/ecommerce studio components, 83% with no defaults. Two separate branding systems that didn't connect. Theme CSS variables were dead code.
+AI-generated websites had inconsistent colors. 146 color fields across 6 booking/ecommerce studio components, 83% with no defaults. Two separate branding systems that didn't connect. Theme CSS variables were dead code. E-commerce components used shadcn/ui which read CSS variables from the dashboard's dark/light mode, causing dark mode to leak onto published sites.
 
-### Architecture
+### Architecture (THREE Layers)
 ```
 site.settings.primary_color  ──┐
 site.settings.secondary_color ─┤
 site.settings.accent_color   ──┼──► resolveBrandColors() ──► BrandColorPalette (30+)
 site.settings.theme.* ────────┤                                    │
-                               │                            injectBrandColors()
-                               └                                   │
-                                                        fills unset component props
+site.settings.font_heading ────┤                      ┌────────────┴──────────────┐
+site.settings.font_body ───────┘                      │                           │
+                                                      ▼                           ▼
+                                           generateBrandCSSVars()     injectBrandColors()
+                                                      │                           │
+                                               CSS custom props           fills unset props
+                                               on .studio-renderer       for booking/custom
+                                                      │                   components
+                                                      ▼
+                                            ALL shadcn components
+                                            (bg-card, text-foreground,
+                                             bg-primary, etc.) use
+                                             SITE's colors, not dashboard's
 ```
 
 ### Key Files
-- **`src/lib/studio/engine/brand-colors.ts`** — Core utility: palette resolution, color mapping, injection
-- **`src/lib/studio/engine/renderer.tsx`** — Resolves palette from siteSettings, injects into every component
+- **`src/lib/studio/engine/brand-colors.ts`** — Core utility: palette resolution, color mapping, injection, AND CSS variable generation
+- **`src/lib/studio/engine/renderer.tsx`** — Resolves palette from siteSettings, injects into every component, generates CSS vars, loads Google Fonts
+- **`src/app/globals.css`** — `.studio-renderer` CSS isolation rules (light mode, font inheritance, border reset)
 
 ### How It Works
 1. `resolveBrandColors(source)` derives 30+ semantic colors from 5 core brand colors
-2. `BRAND_COLOR_MAP` maps ~65 component color prop names to palette keys
-3. `injectBrandColors(props, palette)` fills any unset color prop with the brand-derived value
-4. Renderer calls this for every component at render time
+2. `generateBrandCSSVars(palette, fontHeading, fontBody)` converts palette to CSS custom properties (HSL for Tailwind, hex for shadcn)
+3. `BRAND_COLOR_MAP` maps ~65 component color prop names to palette keys
+4. `injectBrandColors(props, palette)` fills any unset color prop with the brand-derived value
+5. Renderer spreads CSS vars on `.studio-renderer` wrapper AND calls `injectBrandColors` for every component
 
-### Two Layers of Enforcement
-1. **AI prompts** (prompts.ts, formatter.ts) mandate the AI use brand colors
-2. **Renderer** (brand-colors.ts) fills any gaps the AI missed at render time
+### THREE Layers of Enforcement
+1. **CSS Variable Layer** — `generateBrandCSSVars()` overrides `--color-card`, `--color-foreground`, etc. on `.studio-renderer`. All shadcn/Tailwind utilities inside published sites use site brand colors.
+2. **Prop Injection Layer** — `injectBrandColors()` fills component color props (for booking/custom components that use inline styles)
+3. **AI Prompts** (prompts.ts, formatter.ts) mandate the AI use brand colors
+
+### CRITICAL RULES for Storefront Components
+**NEVER** do any of the following in storefront-facing components:
+- Use `dark:` Tailwind variants (published sites are ALWAYS light)
+- Use hardcoded Tailwind colors (`bg-white`, `bg-gray-900`, `text-gray-600`)
+- Use hardcoded hex in `defaultProps` (`'#8B5CF6'`) — use empty string
+- Set `color-scheme: dark` or add `.dark` class
+
+**ALWAYS**:
+- Use semantic Tailwind classes: `bg-card`, `text-foreground`, `bg-primary`, `text-muted-foreground`, `border`
+- Accept color props and let brand injection fill them
+- Keep defaultProps color fields as empty strings (`''`)
 
 ### Design Token Persistence
 When AI designer saves, `persistDesignTokensAction` in `sites.ts` writes `architecture.designTokens` to `site.settings.theme`, creating the bridge: AI → DB → renderer.
+
+### Site Settings Fields
+```sql
+primary_color    -- Main brand color (e.g., '#0a7c6e')
+secondary_color  -- Secondary brand color
+accent_color     -- Accent/highlight color
+background_color -- Page background
+text_color       -- Default text color
+font_heading     -- Google Font name for headings (e.g., 'Poppins')
+font_body        -- Google Font name for body text (e.g., 'Inter')
+```
 
 ---
 

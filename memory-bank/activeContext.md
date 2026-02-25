@@ -1,15 +1,96 @@
 # Active Context
 
-## Current Focus: Module Page Branding, Cart Badge, Booking Page COMPLETE
+## Current Focus: Global Branding CSS Variable System COMPLETE
 
-### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `e81e7b41`)
+### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `a6d3bb6f`)
 
 ### Recent Fixes (newest first):
+- Global Branding CSS Variable System — 20 files, 903 insertions, CSS variable isolation for published sites, dark mode fix, font system, booking defaultProps cleanup (commit `a6d3bb6f`) ✅
 - Module Page Branding, Cart Badge, Booking Page, Cart URL — 7 files, 438 insertions, shared Navbar/Footer auto-injection, /book page creation, cart badge fix (commit `e81e7b41`) ✅
 - Build Fix — missing "use client" in booking/studio/index.ts blocking ALL Vercel builds (commit `2635e33f`) ✅
 - Existing Sites Ecommerce Detection — runtime module detection for sites installed before hook system (commit `abf9dfc9`) ✅
 - Smart Navigation System — 4 files, 444 insertions, module-aware navbar & footer with utility icons (commit `2d0ef4dc`) ✅
 - AI Component Awareness + Booking Data Enrichment — 6 files, 198 insertions, 2 critical type name fixes, AI now gets real booking data (commit `de6b96dc`) ✅
+
+---
+
+### Global Branding CSS Variable System (commit `a6d3bb6f`) ✅
+
+**Problem:** E-commerce components on published sites showed dark mode colors and didn't use the site's brand colors. Root cause: e-commerce uses shadcn/ui components (Card, Button, Input) which read CSS variables (`--color-card`, `--color-foreground`, etc.) defined in globals.css for the DASHBOARD. When the dashboard is dark, published site components also go dark. Additionally, fonts and colors were not globally configurable.
+
+**Solution:** Comprehensive global branding architecture — THE mechanism that makes ALL components consistent.
+
+#### Architecture: CSS Variable Isolation Layer
+
+```
+Site Settings (DB)
+  └── primary_color, secondary_color, accent_color,
+      background_color, text_color, font_heading, font_body
+      │
+      ▼
+Brand Color Resolution (brand-colors.ts)
+  └── resolveBrandColors() → BrandColorPalette (30+ colors)
+      │
+      ▼
+CSS Variable Generation (brand-colors.ts → generateBrandCSSVars())
+  └── Converts BrandColorPalette → Record<string, string>
+      Generates BOTH:
+      - --color-* HSL variables (for Tailwind: bg-card, text-foreground, etc.)
+      - --background, --card, etc. hex variables (for shadcn v2 direct refs)
+      - --font-sans, --font-display (for font families)
+      │
+      ▼
+StudioRenderer (renderer.tsx)
+  └── Spreads CSS vars as inline styles on .studio-renderer wrapper
+      CSS custom properties cascade to ALL descendants
+      │
+      ├──▶ Website Components (Navbar, Hero, Footer)
+      │    └── Use brand-injected props + CSS vars
+      │
+      ├──▶ Ecommerce Components (ProductGrid, Cart, Checkout)
+      │    └── shadcn/ui reads CSS vars → gets SITE colors, not dashboard
+      │
+      └──▶ Booking Components (ServiceSelector, Widget, Form)
+           └── Brand injection fills color props from palette
+```
+
+#### Key Files Changed:
+
+| File | Changes |
+|------|---------|
+| `src/lib/studio/engine/brand-colors.ts` | Added `hexToHsl()`, `hexToHslString()`, `generateBrandCSSVars()` — converts brand palette to comprehensive CSS custom properties |
+| `src/lib/studio/engine/renderer.tsx` | Imports `generateBrandCSSVars`, computes `brandCSSVars` from palette + font settings, spreads on wrapper div. Added Google Fonts dynamic loader via useEffect |
+| `src/app/globals.css` | Added `.studio-renderer` CSS isolation block — forces light color-scheme, heading/body font inheritance, border-color reset |
+| 11 ecommerce studio components | Removed ALL `dark:` Tailwind classes from storefront-facing files |
+| 4 booking studio components | Emptied hardcoded `#8B5CF6` purple from `defaultProps` — new instances inherit brand colors |
+
+#### CRITICAL PATTERN — NEVER hardcode colors in storefront components:
+**RULE FOR ALL FUTURE WORK**: Storefront-facing components (those rendered on published sites via StudioRenderer) MUST:
+1. Use Tailwind semantic classes (`bg-card`, `text-foreground`, `bg-primary`, `text-muted-foreground`) — these read from the brand CSS variables
+2. OR accept color props that are filled by `injectBrandColors()` from the brand palette
+3. NEVER use `dark:` Tailwind variants — published sites are ALWAYS light mode
+4. NEVER use hardcoded Tailwind color classes (`bg-white`, `bg-gray-900`, `text-gray-600`) — use semantic equivalents
+5. Hardcoded hex values in defaultProps should be empty strings (`''`) — brand injection fills them
+
+#### Database: Jesto Brand Colors Persisted
+```sql
+-- Jesto site (07f6a9dd-6aa9-4254-8c0a-430b1796e483) now has:
+primary_color: '#0a7c6e'     -- Teal green (from Navbar CTA)
+secondary_color: '#0d5c52'   -- Darker teal (from Navbar background)
+accent_color: '#f59e0b'      -- Amber (for contrast/highlights)
+background_color: '#ffffff'  -- White
+text_color: '#0f172a'        -- Near-black
+font_heading: 'Poppins'      -- Clean modern heading font
+font_body: 'Inter'           -- Professional body font
+```
+
+#### Why This Fixes Dark Mode:
+The `.studio-renderer` div now has CSS custom properties like:
+- `--color-card: 0 0% 100%` (white, from brand palette)
+- `--color-foreground: 222 47% 11%` (dark text, from brand palette)
+- `--color-background: 0 0% 100%` (white, from brand palette)
+
+When shadcn's `bg-card` utility resolves, it reads `hsl(var(--color-card))` — which now returns the SITE'S card color instead of the dashboard's dark mode value. The CSS variables on `.studio-renderer` take cascading priority over the `:root` and `.dark` definitions in globals.css.
 
 ---
 

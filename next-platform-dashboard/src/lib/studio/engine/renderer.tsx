@@ -368,8 +368,10 @@ export function StudioRenderer({
   // and sets --font-sans / --font-display CSS variables.
   const brandCSSVars = useMemo(() => {
     if (!brandPalette) return {};
-    const fontHeading = (siteSettings?.font_heading as string) || null;
-    const fontBody = (siteSettings?.font_body as string) || null;
+    // Read fonts from flat settings first, then theme.* (AI designer saves under theme)
+    const themeObj = siteSettings?.theme as Record<string, unknown> | undefined;
+    const fontHeading = (siteSettings?.font_heading as string) || (themeObj?.fontHeading as string) || null;
+    const fontBody = (siteSettings?.font_body as string) || (themeObj?.fontBody as string) || null;
     return generateBrandCSSVars(brandPalette, fontHeading, fontBody);
   }, [brandPalette, siteSettings]);
 
@@ -377,8 +379,10 @@ export function StudioRenderer({
   // Dynamically load Google Fonts based on site settings.
   // This ensures the published site has the correct fonts available.
   useEffect(() => {
-    const fontHeading = (siteSettings?.font_heading as string) || null;
-    const fontBody = (siteSettings?.font_body as string) || null;
+    // Read fonts from flat settings first, then theme.* (AI designer saves under theme)
+    const themeObj = siteSettings?.theme as Record<string, unknown> | undefined;
+    const fontHeading = (siteSettings?.font_heading as string) || (themeObj?.fontHeading as string) || null;
+    const fontBody = (siteSettings?.font_body as string) || (themeObj?.fontBody as string) || null;
     const fonts = new Set<string>();
     if (fontHeading) fonts.add(fontHeading);
     if (fontBody) fonts.add(fontBody);

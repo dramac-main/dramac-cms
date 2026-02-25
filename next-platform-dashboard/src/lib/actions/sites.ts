@@ -395,9 +395,14 @@ export async function persistDesignTokensAction(
       ...cleanTheme,
     },
     // Set flat branding fields only if not already set
+    // All 7 fields: colors + fonts — ensures renderer can read from flat keys
     ...(currentSettings.primary_color ? {} : designTokens.primaryColor ? { primary_color: designTokens.primaryColor } : {}),
     ...(currentSettings.secondary_color ? {} : designTokens.secondaryColor ? { secondary_color: designTokens.secondaryColor } : {}),
     ...(currentSettings.accent_color ? {} : designTokens.accentColor ? { accent_color: designTokens.accentColor } : {}),
+    ...(currentSettings.background_color ? {} : designTokens.backgroundColor ? { background_color: designTokens.backgroundColor } : {}),
+    ...(currentSettings.text_color ? {} : designTokens.textColor ? { text_color: designTokens.textColor } : {}),
+    ...(currentSettings.font_heading ? {} : designTokens.fontHeading ? { font_heading: designTokens.fontHeading } : {}),
+    ...(currentSettings.font_body ? {} : designTokens.fontBody ? { font_body: designTokens.fontBody } : {}),
   };
 
   const { error: updateError } = await supabase
