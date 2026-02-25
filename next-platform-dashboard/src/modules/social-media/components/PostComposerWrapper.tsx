@@ -10,7 +10,7 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useState, useEffect } from 'react'
 import { PostComposerEnhanced } from './PostComposerEnhanced'
-import { createPost, updatePost, getPost } from '../actions/post-actions'
+import { createPost, updatePost, getPost, publishPostNow } from '../actions/post-actions'
 import type { SocialAccount, PostMedia, SocialPlatform, Campaign, ContentPillar } from '../types'
 import { toast } from 'sonner'
 
@@ -131,7 +131,20 @@ export function PostComposerWrapper({
           return
         }
 
-        toast.success(post.scheduledAt ? 'Post scheduled!' : 'Post saved as draft!')
+        // If no scheduledAt, this is a "Post Now" — publish immediately
+        if (!post.scheduledAt && result.post?.id) {
+          toast.loading('Publishing to platforms...')
+          const publishResult = await publishPostNow(result.post.id, siteId)
+          if (publishResult.error) {
+            toast.dismiss()
+            toast.error(`Published with issues: ${publishResult.error}`)
+          } else {
+            toast.dismiss()
+            toast.success('Post published to all platforms!')
+          }
+        } else {
+          toast.success(post.scheduledAt ? 'Post scheduled!' : 'Post saved as draft!')
+        }
       }
 
       // Navigate back to calendar or dashboard

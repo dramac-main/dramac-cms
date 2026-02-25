@@ -589,54 +589,20 @@ export async function generateReportData(
 }
 
 /**
- * Sync analytics from platforms
+ * Sync analytics from platforms — delegates to the real analytics sync service
+ * which makes actual API calls to Facebook Insights, Twitter v2, Instagram, etc.
  */
 export async function syncAnalytics(
   accountId: string
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const { supabase } = await requireAuth()
+    // Use the real analytics sync service that calls platform APIs
+    const { syncAccountAnalytics } = await import('../lib/analytics-sync-service')
+    const result = await syncAccountAnalytics(accountId)
     
-    // Get account
-    const { data: account, error: fetchError } = await (supabase as any)
-      .from('social_accounts')
-      .select('*')
-      .eq('id', accountId)
-      .single()
-    
-    if (fetchError) throw fetchError
-    if (!account) throw new Error('Account not found')
-    
-    // Platform-specific API calls would go here to fetch analytics
-    // For now, just update sync timestamp
-    
-    const today = new Date().toISOString().split('T')[0]
-    
-    // Upsert today's analytics with placeholder data
-    await (supabase as any)
-      .from('social_analytics_daily')
-      .upsert({
-        account_id: accountId,
-        date: today,
-        followers_count: account.followers_count,
-        followers_gained: 0,
-        followers_lost: 0,
-        posts_published: 0,
-        impressions: 0,
-        reach: 0,
-        engagement_total: 0,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        saves: 0,
-        clicks: 0,
-      }, { onConflict: 'account_id,date' })
-    
-    // Update account sync timestamp
-    await (supabase as any)
-      .from('social_accounts')
-      .update({ last_synced_at: new Date().toISOString() })
-      .eq('id', accountId)
+    if (!result.success) {
+      return { success: false, error: result.error || 'Sync failed' }
+    }
     
     return { success: true, error: null }
   } catch (error) {
