@@ -1,13 +1,59 @@
 # Active Context
 
-## Current Focus: Known Limitations Deep Analysis & Fixes COMPLETE
+## Current Focus: Booking Module Comprehensive Overhaul COMPLETE
 
-### Status: ALL 7 AREAS VERIFIED ✅ (Commit `1c60f66`)
+### Status: ALL FIXES VERIFIED & DEPLOYED ✅ (Commit `8d945ad`)
 
 ### Recent Fixes (newest first):
+- Booking Module Comprehensive Overhaul — 12 files, 300+ lines changed, 16+ bug fixes, Jesto test data seeded (commit `8d945ad`) ✅
 - Known Limitations Deep Analysis — verified all 7 areas are real code, fixed 3 critical issues (commit `1c60f66`) ✅
 - Social Media Phase A Critical Bug Fixes — 11 bug fixes + 93 auth guards across 21 files (commit `8732a76`) ✅
 - CRM Comprehensive Overhaul — Industry-leader features (segments, scoring, forms→CRM, email, bulk ops, merge, import, timeline) ✅
+
+---
+
+### Booking Module Comprehensive Overhaul (commit `8d945ad`) ✅
+
+**Task:** Deep line-by-line audit of entire booking module (13 core files + 6 studio components), fix all bugs, ensure end-to-end functionality, seed Jesto site with test data.
+
+#### Core Action Fixes (booking-actions.ts):
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | cancelAppointment used `.duration` instead of `.duration_minutes` | Changed to `.duration_minutes` matching DB schema |
+| 2 | createAppointment had non-null assertion on service lookup | Added proper validation with descriptive error throw |
+| 3 | createService `price=0` became null due to `\|\|` operator | Changed to `??` (nullish coalescing) throughout |
+| 4 | initializeBookingForSite missing currency field | Added `currency: DEFAULT_CURRENCY` to insert |
+| 5 | No updateAvailability function existed | Added full implementation + export in barrel |
+| 6 | createService had no slug generation fallback | Added slugify from name when no slug provided |
+
+#### Context & Hook Fixes:
+| # | Issue | Fix |
+|---|-------|-----|
+| 7 | booking-storefront-context used authenticated `getSettings` | Switched to `getPublicSettings` (admin client, bypasses RLS) |
+| 8 | useBookingSlots infinite re-render from `date?.toISOString()` in deps | Used stable `dateString` variable + Date reconstruction |
+| 9 | useBookingSlots/useCreateBooking Date serialization across server actions | Reconstruct Date from string, normalize slot dates |
+| 10 | useCreateBooking missing validation + incomplete Appointment object | Added service_id/start_time validation, full Appointment fields |
+
+#### Studio Component Fixes:
+| # | Issue | Fix |
+|---|-------|-----|
+| 11 | BookingFormBlock start_time/end_time from hidden formData (never populated) | Added startTime/endTime/serviceDuration props |
+| 12 | ServiceSelectorBlock unavailable services clickable + no images | Added disabled click, cursor, image rendering, unavailable overlay |
+| 13 | ServiceSelectorBlock `imageAspectRatio` not destructured + duplicate `width` | Added to destructuring, removed duplicate property |
+| 14 | StaffGridBlock hardcoded 5.0 fake rating | Changed to 0, show only when `rating > 0` |
+| 15 | BookingWidgetBlock hardcoded 4.8 staff rating | Changed to 0, explicit `> 0` guard with `.toFixed(1)` |
+| 16 | BookingWidgetBlock confirm step showed raw "09:30" time | Added 12h/24h formatting using timeFormat setting |
+| 17 | BookingWidgetBlock no email validation | Added regex format validation in canGoNext |
+| 18 | Studio field editors (ServiceSelector/StaffSelector) were empty placeholders | Replaced with real data-fetching implementations |
+
+#### Jesto Test Data Seeded (Dental Clinic):
+- **Settings**: Africa/Lusaka timezone, 12h format, ZMW currency, 30-min slots, auto-confirm
+- **8 Services**: Check-up (K150), Cleaning (K250), Whitening (K800), Filling (K350), Root Canal (K1500), Extraction (K400), Implant Consult (K500), Ortho Consult (K300)
+- **4 Staff**: Dr. Mwansa Chisanga (lead), Dr. Natasha Banda (orthodontist), Martha Tembo (hygienist), Dr. Kelvin Mulenga (surgeon)
+- **13 Staff-Service Links**: Each staff member linked to their specialty services
+
+#### Zero Booking TypeScript Errors ✅
+All pre-existing errors are in CRM/e-commerce/tailwind (unrelated)
 
 ---
 
