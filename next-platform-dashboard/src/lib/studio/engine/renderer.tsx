@@ -23,6 +23,8 @@ import { ensureStudioFormat } from "../utils/migrate-puck-data";
 import { getComponent, componentRegistry } from "../registry/component-registry";
 import { initializeRegistry, isRegistryInitialized } from "../registry";
 import { loadModuleComponents } from "../registry/module-loader";
+import { resolveBrandColors, injectBrandColors, extractBrandSource } from "./brand-colors";
+import type { BrandColorPalette } from "./brand-colors";
 import type { StudioComponent } from "@/types/studio";
 import type { InstalledModuleInfo } from "@/types/studio-module";
 
@@ -35,6 +37,8 @@ export interface StudioRendererProps {
   data: unknown;
   /** Theme settings for CSS variables */
   themeSettings?: Record<string, unknown> | null;
+  /** Full site settings object for brand color resolution */
+  siteSettings?: Record<string, unknown> | null;
   /** Site ID for analytics/tracking */
   siteId?: string;
   /** Page ID for analytics/tracking */
@@ -51,6 +55,8 @@ interface ComponentRendererProps {
   depth?: number;
   /** Site ID injected by StudioRenderer so every component can fetch real data */
   siteId?: string;
+  /** Brand color palette resolved from site settings — injected into component props */
+  brandPalette?: BrandColorPalette | null;
 }
 
 // ============================================================================
@@ -81,6 +87,7 @@ function ComponentRenderer({
   components,
   depth = 0,
   siteId,
+  brandPalette,
 }: ComponentRendererProps): React.ReactElement | null {
   // Get component definition from registry
   const definition = getComponent(component.type);
@@ -147,6 +154,7 @@ function ComponentRenderer({
             components={components}
             depth={depth + 1}
             siteId={siteId}
+            brandPalette={brandPalette}
           />
         );
       }).filter(Boolean)
@@ -154,7 +162,15 @@ function ComponentRenderer({
   
   // Only pass children prop if the component accepts children AND has children
   // Build props with siteId injection — components can use this to fetch real data
-  const injectedProps = { ...component.props, siteId: component.props?.siteId || siteId };
+  let injectedProps: Record<string, unknown> = { ...component.props, siteId: component.props?.siteId || siteId };
+
+  // BRAND COLOR INJECTION: Fill unset color props with brand-derived values.
+  // This is the key architectural change — components no longer need to define
+  // their own color defaults. Any color field left empty inherits from the
+  // site's brand palette, ensuring consistency across the entire site.
+  if (brandPalette) {
+    injectedProps = injectBrandColors(injectedProps, brandPalette);
+  }
 
   // Determine if this is a module component that needs containment wrapping
   const isModuleComponent = MODULE_COMPONENT_TYPES.has(component.type);
@@ -211,6 +227,7 @@ interface ZoneRendererProps {
   componentIds: string[];
   components: Record<string, StudioComponent>;
   siteId?: string;
+  brandPalette?: BrandColorPalette | null;
 }
 
 /**
@@ -221,6 +238,7 @@ function ZoneRenderer({
   componentIds, 
   components,
   siteId,
+  brandPalette,
 }: ZoneRendererProps): React.ReactElement {
   return (
     <div data-zone={zoneId} className="studio-zone">
@@ -234,6 +252,7 @@ function ZoneRenderer({
             component={component}
             components={components}
             siteId={siteId}
+            brandPalette={brandPalette}
           />
         );
       })}
@@ -283,11 +302,26 @@ function generateThemeCSS(settings: Record<string, unknown>): React.CSSPropertie
 export function StudioRenderer({
   data,
   themeSettings,
+  siteSettings,
   siteId,
   pageId,
   modules,
   className = "",
 }: StudioRendererProps): React.ReactElement {
+  // Resolve brand color palette from site settings (memoized)
+  // This is the single source of truth for all component colors.
+  // Components with explicit color overrides keep them; unset colors
+  // inherit from this palette automatically.
+  const brandPalette = useMemo(() => {
+    const source = siteSettings
+      ? extractBrandSource(siteSettings)
+      : themeSettings
+        ? { theme: themeSettings as BrandColorPalette extends never ? never : Record<string, string> }
+        : null;
+    if (!source) return null;
+    return resolveBrandColors(source);
+  }, [siteSettings, themeSettings]);
+
   // Ensure registry is initialized synchronously on first render
   const registryReady = useMemo(() => {
     if (!isRegistryInitialized()) {
@@ -384,8 +418,8 @@ export function StudioRenderer({
         // inline styles and theme CSS vars, NOT from Tailwind dark: variants.
         // The "light" class prevents any dark: variant from activating inside.
         colorScheme: "light",
-        backgroundColor: "#ffffff",
-        color: "#111827",
+        backgroundColor: brandPalette?.background || "#ffffff",
+        color: brandPalette?.foreground || "#111827",
       }}
       data-site-id={siteId}
       data-page-id={pageId}
@@ -401,6 +435,7 @@ export function StudioRenderer({
             component={component}
             components={studioData.components}
             siteId={siteId}
+            brandPalette={brandPalette}
           />
         );
       })}
@@ -413,6 +448,7 @@ export function StudioRenderer({
           componentIds={componentIds}
           components={studioData.components}
           siteId={siteId}
+          brandPalette={brandPalette}
         />
       ))}
     </div>

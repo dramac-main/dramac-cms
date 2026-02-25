@@ -55,12 +55,32 @@ You have full creative control over the design system:
 - In your designNotes, specify whether each section should be light or dark themed
 
 ## DESIGN TOKENS (color planning)
-When choosing designTokens, be specific and intentional:
-- primaryColor: The dominant brand color (used for Hero backgrounds, CTAs, buttons, branded sections)
+When choosing designTokens, ALWAYS follow this priority:
+
+### RULE 1: USE EXISTING BRAND COLORS WHEN PROVIDED
+If the "Brand Identity" section in the business context includes a Color Palette,
+you MUST use those exact colors as your designTokens. Do NOT invent different colors.
+- Brand Primary Color → designTokens.primaryColor (use EXACTLY as given)
+- Brand Secondary Color → designTokens.secondaryColor (use EXACTLY as given)
+- Brand Accent Color → designTokens.accentColor (use EXACTLY as given)
+- Brand Background Color → designTokens.backgroundColor (use EXACTLY as given)
+- Brand Text Color → designTokens.textColor (use EXACTLY as given)
+
+### RULE 2: FILL GAPS INTELLIGENTLY
+If some brand colors are missing, choose complementary colors that work with the provided ones.
+If NO brand colors are provided at all, choose colors that match the industry:
+- primaryColor: The dominant brand color (Hero backgrounds, CTAs, buttons, branded sections)
 - secondaryColor: A complementary color for variety and secondary elements
 - accentColor: A highlight color for icons, badges, hover states, decorative elements
 - backgroundColor: The default page background (usually white or very light)
 - textColor: The default text color (usually very dark, like #1a1a2e or #111827)
+
+### RULE 3: CONSISTENCY ACROSS ALL COMPONENTS
+Every component on every page must use the SAME designTokens colors.
+Do NOT assign random colors to individual sections — use the design tokens consistently.
+The rendering engine will automatically derive card backgrounds, borders, button colors,
+input styles, and other UI elements from these 5 core brand colors.
+
 Choose colors that work well TOGETHER, create sufficient contrast, and match the industry.
 Example for healthcare: primary=#0e7490 (calming teal), accent=#f59e0b (warm amber), bg=#ffffff, text=#0f172a
 Example for restaurant: primary=#dc2626 (appetizing red), accent=#eab308 (golden), bg=#fffbeb, text=#1c1917

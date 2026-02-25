@@ -322,3 +322,93 @@ export async function isModuleEnabledForSite(
   const enabledModules = await getSiteEnabledModules(siteId);
   return enabledModules.has(moduleSlug);
 }
+
+/**
+ * Persist AI-generated design tokens into site.settings.theme
+ * 
+ * Called after the AI designer generates a website. Merges the designTokens
+ * into the site's existing settings so that the brand color resolution system
+ * can read them at render time (via resolveBrandColors in brand-colors.ts).
+ * 
+ * Also writes the top-level flat branding fields (primary_color, etc.)
+ * if they are not already set, so older code paths also pick them up.
+ */
+export async function persistDesignTokensAction(
+  siteId: string,
+  designTokens: {
+    primaryColor?: string;
+    secondaryColor?: string;
+    accentColor?: string;
+    backgroundColor?: string;
+    textColor?: string;
+    fontHeading?: string;
+    fontBody?: string;
+    borderRadius?: string;
+    shadowStyle?: string;
+    spacingScale?: string;
+  }
+) {
+  if (!siteId || !designTokens) {
+    return { error: "Missing siteId or designTokens" };
+  }
+
+  const supabase = await createClient();
+
+  // Fetch current settings so we can merge (not overwrite)
+  const { data: site, error: fetchError } = await supabase
+    .from("sites")
+    .select("settings")
+    .eq("id", siteId)
+    .single();
+
+  if (fetchError) {
+    return { error: fetchError.message };
+  }
+
+  const currentSettings = (site?.settings as Record<string, unknown>) || {};
+
+  // Build the theme sub-object from designTokens
+  const themeUpdate = {
+    primaryColor: designTokens.primaryColor,
+    secondaryColor: designTokens.secondaryColor,
+    accentColor: designTokens.accentColor,
+    backgroundColor: designTokens.backgroundColor,
+    textColor: designTokens.textColor,
+    fontHeading: designTokens.fontHeading,
+    fontBody: designTokens.fontBody,
+    borderRadius: designTokens.borderRadius,
+    shadowStyle: designTokens.shadowStyle,
+    spacingScale: designTokens.spacingScale,
+  };
+
+  // Remove undefined values
+  const cleanTheme = Object.fromEntries(
+    Object.entries(themeUpdate).filter(([, v]) => v !== undefined)
+  );
+
+  // Merge into settings: preserve existing settings, nest designTokens under .theme,
+  // and also set flat branding fields if not already present
+  const mergedSettings = {
+    ...currentSettings,
+    theme: {
+      ...((currentSettings.theme as Record<string, unknown>) || {}),
+      ...cleanTheme,
+    },
+    // Set flat branding fields only if not already set
+    ...(currentSettings.primary_color ? {} : designTokens.primaryColor ? { primary_color: designTokens.primaryColor } : {}),
+    ...(currentSettings.secondary_color ? {} : designTokens.secondaryColor ? { secondary_color: designTokens.secondaryColor } : {}),
+    ...(currentSettings.accent_color ? {} : designTokens.accentColor ? { accent_color: designTokens.accentColor } : {}),
+  };
+
+  const { error: updateError } = await supabase
+    .from("sites")
+    .update({ settings: mergedSettings as Json })
+    .eq("id", siteId);
+
+  if (updateError) {
+    return { error: updateError.message };
+  }
+
+  revalidatePath(`/dashboard/sites/${siteId}`);
+  return { success: true };
+}

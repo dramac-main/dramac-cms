@@ -165,24 +165,24 @@ function formatHeader(site: SiteData, client: ClientData): string {
 function formatBrandingSection(branding: BrandingData): string {
   const lines: string[] = ["## Brand Identity"];
 
-  // Colors
+  // Colors — CRITICAL: AI must use these when provided
   if (branding.primary_color || branding.secondary_color || branding.accent_color) {
     lines.push("");
-    lines.push("### Color Palette");
+    lines.push("### Color Palette (MANDATORY — use these exact colors in designTokens)");
     if (branding.primary_color) {
-      lines.push(`- **Primary Color:** ${branding.primary_color}`);
+      lines.push(`- **Primary Color:** ${branding.primary_color} ← USE THIS as designTokens.primaryColor`);
     }
     if (branding.secondary_color) {
-      lines.push(`- **Secondary Color:** ${branding.secondary_color}`);
+      lines.push(`- **Secondary Color:** ${branding.secondary_color} ← USE THIS as designTokens.secondaryColor`);
     }
     if (branding.accent_color) {
-      lines.push(`- **Accent Color:** ${branding.accent_color}`);
+      lines.push(`- **Accent Color:** ${branding.accent_color} ← USE THIS as designTokens.accentColor`);
     }
     if (branding.background_color) {
-      lines.push(`- **Background Color:** ${branding.background_color}`);
+      lines.push(`- **Background Color:** ${branding.background_color} ← USE THIS as designTokens.backgroundColor`);
     }
     if (branding.text_color) {
-      lines.push(`- **Text Color:** ${branding.text_color}`);
+      lines.push(`- **Text Color:** ${branding.text_color} ← USE THIS as designTokens.textColor`);
     }
   }
 

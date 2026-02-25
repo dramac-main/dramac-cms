@@ -21,6 +21,7 @@ import { StorefrontProvider } from "@/modules/ecommerce/context/storefront-conte
 interface CraftRendererProps {
   content: string;
   themeSettings: Record<string, unknown> | null;
+  siteSettings?: Record<string, unknown> | null;
   siteId?: string;
   pageId?: string;
   modules?: InstalledModuleInfo[];
@@ -29,13 +30,14 @@ interface CraftRendererProps {
 export function CraftRenderer({ 
   content, 
   themeSettings,
+  siteSettings,
   siteId,
   pageId,
   modules,
 }: CraftRendererProps) {
   // Check if ecommerce module is installed
   const hasEcommerce = useMemo(
-    () => modules?.some(m => m.moduleSlug === 'ecommerce' || m.moduleType === 'ecommerce') ?? false,
+    () => modules?.some(m => m.slug === 'ecommerce' || m.category === 'ecommerce') ?? false,
     [modules]
   );
 
@@ -43,6 +45,7 @@ export function CraftRenderer({
     <StudioRenderer 
       data={content} 
       themeSettings={themeSettings}
+      siteSettings={siteSettings}
       siteId={siteId}
       pageId={pageId}
       modules={modules}

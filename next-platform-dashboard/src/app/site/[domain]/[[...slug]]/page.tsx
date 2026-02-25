@@ -333,6 +333,7 @@ export default async function SitePage({ params }: SitePageProps) {
       <CraftRenderer 
         content={data.content} 
         themeSettings={data.themeSettings}
+        siteSettings={data.site.settings}
         siteId={data.site.id}
         modules={data.modules}
       />

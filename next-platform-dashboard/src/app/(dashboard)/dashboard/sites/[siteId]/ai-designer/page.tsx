@@ -566,6 +566,22 @@ export default function AIDesignerPage({ params }: AIDesignerPageProps) {
       }
 
       if (savedCount > 0) {
+        // Persist AI-generated design tokens to site.settings.theme
+        // This bridges the AI engine → site branding → renderer pipeline
+        try {
+          if (output.architecture?.designTokens) {
+            const { persistDesignTokensAction } = await import("@/lib/actions/sites");
+            const tokenResult = await persistDesignTokensAction(siteId, output.architecture.designTokens);
+            if (tokenResult.error) {
+              console.error("[AI Designer] Failed to persist design tokens:", tokenResult.error);
+            } else {
+              console.log("[AI Designer] Design tokens saved to site.settings.theme");
+            }
+          }
+        } catch (tokenErr) {
+          console.error("[AI Designer] Design token persistence error (non-fatal):", tokenErr);
+        }
+
         // Auto-install modules based on component types used in the generated pages
         try {
           const allComponentTypes = new Set<string>();
