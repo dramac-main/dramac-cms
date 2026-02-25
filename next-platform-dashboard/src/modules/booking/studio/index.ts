@@ -6,6 +6,8 @@
  * the Booking module is installed on a site.
  */
 
+"use client";
+
 import React, { useState, useEffect } from "react";
 import type { ModuleStudioExports, CustomFieldEditorProps } from "@/types/studio-module";
 import { getPublicServices, getPublicStaff } from "../actions/public-booking-actions";

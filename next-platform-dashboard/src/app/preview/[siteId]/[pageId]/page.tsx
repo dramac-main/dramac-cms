@@ -28,6 +28,7 @@ interface PreviewData {
     id: string;
     name: string;
     subdomain: string;
+    settings?: Record<string, unknown> | null;
     theme_settings: Record<string, unknown> | null;
   } | null;
   content: string | null;
@@ -201,6 +202,7 @@ export default function PreviewPage({ params }: PreviewPageProps) {
       <StudioRenderer
         data={pageContent}
         themeSettings={data.themeSettings || data.site?.theme_settings}
+        siteSettings={data.site?.settings || {}}
         siteId={resolvedParams.siteId}
         pageId={resolvedParams.pageId}
         modules={data.modules}
