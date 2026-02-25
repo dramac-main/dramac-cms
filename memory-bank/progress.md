@@ -1,34 +1,36 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅** + **AI RICHTEXT/ACCORDION/TABS RENDERING FIX ✅** + **CRM COMPREHENSIVE INDUSTRY-LEADER OVERHAUL ✅** + **SOCIAL MEDIA PHASE A CRITICAL BUG FIXES ✅** + **KNOWN LIMITATIONS DEEP ANALYSIS + FIXES ✅** + **BOOKING MODULE COMPREHENSIVE OVERHAUL ✅** + **BRAND COLOR INHERITANCE SYSTEM ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅** + **AI RICHTEXT/ACCORDION/TABS RENDERING FIX ✅** + **CRM COMPREHENSIVE INDUSTRY-LEADER OVERHAUL ✅** + **SOCIAL MEDIA PHASE A CRITICAL BUG FIXES ✅** + **KNOWN LIMITATIONS DEEP ANALYSIS + FIXES ✅** + **BOOKING MODULE COMPREHENSIVE OVERHAUL ✅** + **BRAND COLOR INHERITANCE SYSTEM ✅** + **AI COMPONENT AWARENESS + BOOKING DATA ENRICHMENT ✅**
 
 ---
 
-## Latest Update: February 2026 - Brand Color Inheritance System
+## Latest Update: February 2026 - AI Component Awareness + Booking Data Enrichment
 
-### Task: Fix AI-generated website color inconsistency via centralized brand color palette
+### Task: Ensure AI Designer has full component awareness, booking components render, and real booking data flows to AI
 
-**Problem discovered**: 146 color fields across 6 booking/ecommerce studio components, 83% with no defaults. Theme CSS vars were dead code. AI designer "informed" but not "bound" by brand colors. Zero runtime brand injection existed.
+**Critical Bugs Found & Fixed:**
+1. `ServiceSelectorBlock` had `type: 'ServiceSelector'` but entire pipeline expected `'BookingServiceSelector'` — component could NEVER render when AI generated it
+2. `StaffGridBlock` had `type: 'StaffGrid'` but pipeline expected `'BookingStaffGrid'` — same rendering failure
+3. `AI_RELEVANT_CATEGORIES` was missing `"buttons"` and `"3d"` — Button component + 5 3D effects were invisible to AI
+4. AI received no actual booking data (service names, prices, staff names) — only generic instructions
 
-**Solution**: New brand-colors.ts utility derives 30+ palette values from 5 core brand colors. BRAND_COLOR_MAP maps ~65 component color prop names to palette keys. Renderer injects brand defaults into every component at render time. AI prompts strengthened with 3 mandatory rules. Design tokens now persisted to site.settings.theme when AI designer saves.
+**Solution**: Fixed type names in both component definitions. Added missing categories. Built booking-specific data fetchers that query `mod_bookmod01_services` and `mod_bookmod01_staff` tables. Enriched formatter to include real service names/prices/durations and staff names/titles/specialties in AI context.
 
-### Files Created/Modified (8 files, +581/-13 lines, commit `d83feaeb`):
+### Files Modified (6 files, +198/-6 lines, commit `de6b96dc`):
 
 | File | Changes |
 |------|---------|
-| brand-colors.ts (NEW) | Core brand color resolution system (~400 lines) |
-| renderer.tsx | siteSettings prop, brandPalette resolution + injection into all components |
-| craft-renderer.tsx | siteSettings pass-through + InstalledModuleInfo bug fix |
-| page.tsx (site) | Passes site.settings to CraftRenderer |
-| prompts.ts | 3 mandatory rules for brand color compliance |
-| formatter.ts | Branding marked MANDATORY with explicit mappings |
-| ai-designer/page.tsx | Design token persistence on save |
-| actions/sites.ts | New persistDesignTokensAction server action |
+| ServiceSelectorBlock.tsx | type fix: 'ServiceSelector' → 'BookingServiceSelector' |
+| StaffGridBlock.tsx | type fix: 'StaffGrid' → 'BookingStaffGrid' |
+| component-reference.ts | Added "buttons" + "3d" to AI_RELEVANT_CATEGORIES |
+| data-context/types.ts | Added BookingServiceData, BookingStaffData types + fields on BusinessDataContext |
+| data-context/builder.ts | Added fetchBookingServices() + fetchBookingStaff() using admin client |
+| data-context/formatter.ts | formatModulesSection() outputs real service/staff data for AI |
 
 ---
 
-## Previous Update: February 2026 - Booking Module Comprehensive Overhaul
+## Previous Update: February 2026 - Brand Color Inheritance System
 
 ---
 

@@ -1,10 +1,11 @@
 # Active Context
 
-## Current Focus: Brand Color Inheritance System COMPLETE
+## Current Focus: AI Component Awareness & Booking Data Enrichment COMPLETE
 
-### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `d83feaeb`)
+### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `de6b96dc`)
 
 ### Recent Fixes (newest first):
+- AI Component Awareness + Booking Data Enrichment — 6 files, 198 insertions, 2 critical type name fixes, AI now gets real booking data (commit `de6b96dc`) ✅
 - Brand Color Inheritance System — 8 files, 581 insertions, centralized brand palette for all components (commit `d83feaeb`) ✅
 - Booking Module Comprehensive Overhaul — 12 files, 300+ lines changed, 16+ bug fixes, Jesto test data seeded (commit `8d945ad`) ✅
 - Known Limitations Deep Analysis — verified all 7 areas are real code, fixed 3 critical issues (commit `1c60f66`) ✅
@@ -12,6 +13,43 @@
 - CRM Comprehensive Overhaul — Industry-leader features (segments, scoring, forms→CRM, email, bulk ops, merge, import, timeline) ✅
 
 ---
+
+### AI Component Awareness + Booking Data Enrichment (commit `de6b96dc`) ✅
+
+**Problem 1 (CRITICAL):** `ServiceSelectorBlock` had `type: 'ServiceSelector'` but AI prompts + converter expect `'BookingServiceSelector'`. Registry looked up by `type` field, so when AI generated `BookingServiceSelector` → converter mapped to `BookingServiceSelector` → registry had no match → component never rendered. Same for `StaffGridBlock` (`'StaffGrid'` vs `'BookingStaffGrid'`).
+
+**Problem 2:** `AI_RELEVANT_CATEGORIES` in `component-reference.ts` was missing `"buttons"` and `"3d"` categories. This hid the Button component and 5 3D effects components from the AI entirely.
+
+**Problem 3:** AI received a generic "BOOKING MODULE IS ACTIVE" message but no actual service names, prices, durations, or staff names from the booking module's database tables. AI had to invent placeholder content instead of using real business data.
+
+#### Files Modified:
+| File | Changes |
+|------|---------|
+| `src/modules/booking/studio/components/ServiceSelectorBlock.tsx` | `type: 'ServiceSelector'` → `type: 'BookingServiceSelector'` (CRITICAL rendering fix) |
+| `src/modules/booking/studio/components/StaffGridBlock.tsx` | `type: 'StaffGrid'` → `type: 'BookingStaffGrid'` (CRITICAL rendering fix) |
+| `src/lib/ai/website-designer/component-reference.ts` | Added `"buttons"` and `"3d"` to `AI_RELEVANT_CATEGORIES` |
+| `src/lib/ai/website-designer/data-context/types.ts` | Added `BookingServiceData`, `BookingStaffData` interfaces; added `bookingServices?` and `bookingStaff?` to `BusinessDataContext` |
+| `src/lib/ai/website-designer/data-context/builder.ts` | Added `createAdminClient` import; `fetchBookingServices()` queries `mod_bookmod01_services`; `fetchBookingStaff()` queries `mod_bookmod01_staff` + `mod_bookmod01_staff_services`; wired into main `buildDataContext()` after module detection |
+| `src/lib/ai/website-designer/data-context/formatter.ts` | `formatModulesSection()` now accepts booking data; outputs actual service names/prices/durations and staff names/titles/specialties in the AI context markdown |
+
+#### How AI Component System Works End-to-End:
+```
+1. Registry: componentRegistry Map, keyed by definition.type field
+2. AI prompts: hardcoded VALID COMPONENT TYPES list + MODULE COMPONENTS
+3. component-reference.ts: reads live registry, generates dynamic reference cards (filtered by AI_RELEVANT_CATEGORIES)
+4. Data context: builder.ts → formatter.ts → markdown injected into AI prompts
+5. Converter: TYPE_ALIASES maps AI output names → registry names (handles both old/new)
+6. Renderer: getComponent(component.type) looks up registry → injectBrandColors() → render
+```
+
+#### Type Name Chain (now consistent):
+```
+AI Prompt → "BookingServiceSelector"
+AI Output → "BookingServiceSelector"
+Converter → "BookingServiceSelector" (identity mapping)
+Registry → "BookingServiceSelector" (matches definition.type)
+Renderer → getComponent("BookingServiceSelector") → FOUND ✅
+```
 
 ### Brand Color Inheritance System (commit `d83feaeb`) ✅
 
