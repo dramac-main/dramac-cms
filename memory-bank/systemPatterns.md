@@ -148,6 +148,41 @@ const userId = user.id  // NOT user?.id || ''
 
 ---
 
+## 🧭 Smart Navigation System (Module-Aware Navbar & Footer)
+
+### Problem
+Navigation headers were 100% static — links baked into page JSON at AI generation time. Enabling a module (Booking, E-commerce) had ZERO effect on the navbar. The ecommerce install hook wrote nav items to `site.settings.navigation` but that data was **NEVER READ** at render time. No utility area existed for cart/calendar icons. Footer had zero module awareness.
+
+### Architecture
+```
+site.settings.navigation (DB)  ─┐
+                                 ├─→ getModuleNavigation() ─→ SiteNavigation { main[], utility[], footer[] }
+modules[] (installed modules)  ──┘
+                                         │
+    ┌────────────────────────────────────┘
+    ▼
+ComponentRenderer (renderer.tsx)
+    ├── type === "Navbar" → mergeMainNavLinks() + buildUtilityItems() → injectedProps
+    └── type === "Footer" → mergeFooterLinks() → injectedProps.columns
+```
+
+### Key Files
+| File | Role |
+|------|------|
+| `src/lib/studio/engine/smart-navigation.ts` | Types, constants (BOOKING_NAV_ITEMS etc.), merge functions, icon normalization |
+| `src/lib/studio/blocks/premium-components.tsx` | UtilityIcon component, `utilityItems` prop on PremiumNavbarRender |
+| `src/lib/studio/engine/renderer.tsx` | Runtime injection in ComponentRenderer for Navbar/Footer |
+| `src/lib/ai/website-designer/prompts.ts` | AI told not to add module links (injected automatically) |
+
+### Design Decisions
+- **Runtime merge (not bake-time)**: Module nav items merged at render time, so enabling/disabling a module instantly updates navigation
+- **Dual source**: Ecommerce uses settings.navigation (persisted by install hook); Booking uses runtime detection from modules array
+- **Deduplication by href**: Prevents duplicate links if AI already generated a matching link
+- **Insert before "Contact"**: Module main links placed before Contact for natural ordering
+- **Icon normalization**: Maps PascalCase (ShoppingCart) → lowercase (cart) for UtilityIcon
+
+---
+
 ## 🎨 Brand Color Inheritance System (CRITICAL for Color Consistency)
 
 ### Problem

@@ -1,16 +1,56 @@
 # Active Context
 
-## Current Focus: AI Component Awareness & Booking Data Enrichment COMPLETE
+## Current Focus: Smart Navigation System — Module-Aware Headers & Footers COMPLETE
 
-### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `de6b96dc`)
+### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `2d0ef4dc`)
 
 ### Recent Fixes (newest first):
+- Smart Navigation System — 4 files, 444 insertions, module-aware navbar & footer with utility icons (commit `2d0ef4dc`) ✅
 - AI Component Awareness + Booking Data Enrichment — 6 files, 198 insertions, 2 critical type name fixes, AI now gets real booking data (commit `de6b96dc`) ✅
 - Brand Color Inheritance System — 8 files, 581 insertions, centralized brand palette for all components (commit `d83feaeb`) ✅
 - Booking Module Comprehensive Overhaul — 12 files, 300+ lines changed, 16+ bug fixes, Jesto test data seeded (commit `8d945ad`) ✅
 - Known Limitations Deep Analysis — verified all 7 areas are real code, fixed 3 critical issues (commit `1c60f66`) ✅
 - Social Media Phase A Critical Bug Fixes — 11 bug fixes + 93 auth guards across 21 files (commit `8732a76`) ✅
 - CRM Comprehensive Overhaul — Industry-leader features (segments, scoring, forms→CRM, email, bulk ops, merge, import, timeline) ✅
+
+---
+
+### Smart Navigation System (commit `2d0ef4dc`) ✅
+
+**Problem:** Navigation headers were 100% static — links baked into page JSON at AI generation time. Enabling a module (Booking, E-commerce) had ZERO effect on the navbar. The ecommerce install hook wrote nav items to `site.settings.navigation` but that data was **NEVER READ** at render time. No utility area existed in the navbar for cart/calendar icons. Footer had zero module awareness.
+
+**Solution:** Built a complete Smart Navigation system that merges module-contributed nav items at render time:
+
+#### Architecture:
+```
+1. Module install hooks write nav items to site.settings.navigation (e-commerce already does this)
+2. Booking module: detected from modules array at runtime (no install hook needed)
+3. Renderer: ComponentRenderer detects Navbar/Footer → reads siteSettings.navigation → merges items
+4. PremiumNavbarRender: new utilityItems prop renders icon buttons (cart, calendar) with badges
+5. AI prompts updated: "don't add module links manually — they're injected automatically"
+```
+
+#### Files Created/Modified:
+| File | Changes |
+|------|---------|
+| `src/lib/studio/engine/smart-navigation.ts` | **NEW** — Core infrastructure: types (SmartNavItem, SiteNavigation, NavUtilityItem), constants (BOOKING_NAV_ITEMS, BOOKING_UTILITY_ITEMS, BOOKING_FOOTER_ITEMS), functions (getModuleNavigation, mergeMainNavLinks, buildUtilityItems, mergeFooterLinks), icon name normalization |
+| `src/lib/studio/blocks/premium-components.tsx` | Added UtilityIcon component (cart/calendar/user/search/heart SVGs), `utilityItems` prop to PremiumNavbarProps, utility area rendering (desktop between links and CTA, mobile in menu with labels), badge support |
+| `src/lib/studio/engine/renderer.tsx` | Import smart-navigation functions, added siteSettings/modules to ComponentRendererProps + ZoneRendererProps, smart nav injection when type==="Navbar" (mergeMainNavLinks + buildUtilityItems) and type==="Footer" (mergeFooterLinks), passed through all renderer levels |
+| `src/lib/ai/website-designer/prompts.ts` | NAVBAR_GENERATOR_PROMPT: added utility items and smart nav docs, told AI not to add module links. FOOTER_GENERATOR_PROMPT: same treatment |
+
+#### Key Design Decisions:
+- **Runtime merge, not bake-time**: Module nav items are merged at render time, not during AI generation. This means enabling/disabling a module instantly updates navigation.
+- **Deduplication by href**: If the AI already generated a "Shop" link, the module won't add a duplicate.
+- **Insert before "Contact"**: Module main links are placed before the Contact link for natural ordering.
+- **Booking runtime detection**: Since booking has no install hook, `getModuleNavigation()` detects the booking module from the `modules` array and injects built-in items directly.
+- **Icon normalization**: Maps PascalCase names from ecommerce (e.g., "ShoppingCart") to lowercase keys used by UtilityIcon ("cart").
+
+#### What This Enables:
+- ✅ E-commerce active → Cart icon with badge in navbar, "Shop" link in nav, footer links
+- ✅ Booking active → Calendar icon in navbar, "Book Now" link in nav, footer links
+- ✅ Both modules → Both sets of icons and links appear
+- ✅ Module disabled → Items disappear (not in settings.navigation + not in modules array)
+- ✅ AI designer generates base nav, modules augment at render time
 
 ---
 
