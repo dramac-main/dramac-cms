@@ -24,6 +24,7 @@ import { getComponent, componentRegistry } from "../registry/component-registry"
 import { initializeRegistry, isRegistryInitialized } from "../registry";
 import { loadModuleComponents } from "../registry/module-loader";
 import { resolveBrandColors, injectBrandColors, extractBrandSource } from "./brand-colors";
+import { getModuleNavigation, mergeMainNavLinks, buildUtilityItems, mergeFooterLinks, type SiteNavigation } from "./smart-navigation";
 import type { BrandColorPalette } from "./brand-colors";
 import type { StudioComponent } from "@/types/studio";
 import type { InstalledModuleInfo } from "@/types/studio-module";
@@ -57,6 +58,10 @@ interface ComponentRendererProps {
   siteId?: string;
   /** Brand color palette resolved from site settings — injected into component props */
   brandPalette?: BrandColorPalette | null;
+  /** Site settings — used for smart navigation (module-contributed nav items) */
+  siteSettings?: Record<string, unknown> | null;
+  /** Installed modules — used to determine which modules contribute nav items */
+  modules?: InstalledModuleInfo[];
 }
 
 // ============================================================================
@@ -88,6 +93,8 @@ function ComponentRenderer({
   depth = 0,
   siteId,
   brandPalette,
+  siteSettings,
+  modules,
 }: ComponentRendererProps): React.ReactElement | null {
   // Get component definition from registry
   const definition = getComponent(component.type);
@@ -155,6 +162,8 @@ function ComponentRenderer({
             depth={depth + 1}
             siteId={siteId}
             brandPalette={brandPalette}
+            siteSettings={siteSettings}
+            modules={modules}
           />
         );
       }).filter(Boolean)
@@ -170,6 +179,26 @@ function ComponentRenderer({
   // site's brand palette, ensuring consistency across the entire site.
   if (brandPalette) {
     injectedProps = injectBrandColors(injectedProps, brandPalette);
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // SMART NAVIGATION: When rendering Navbar or Footer, merge module-contributed
+  // navigation items at render time. This is the runtime assembly that makes
+  // enabling a module (Booking, E-commerce) automatically update the navbar
+  // with links ("Shop", "Book Now") and utility icons (cart badge).
+  // ──────────────────────────────────────────────────────────────────────────
+  if (component.type === "Navbar" && siteSettings) {
+    const moduleNav = getModuleNavigation(siteSettings, modules);
+    const existingLinks = (injectedProps.links as Array<{ label: string; href: string }>) || [];
+    injectedProps.links = mergeMainNavLinks(existingLinks, moduleNav.main);
+    injectedProps.utilityItems = buildUtilityItems(moduleNav.utility);
+  }
+  if (component.type === "Footer" && siteSettings) {
+    const moduleNav = getModuleNavigation(siteSettings, modules);
+    if (moduleNav.footer.length > 0) {
+      const existingColumns = (injectedProps.columns as Array<{ title: string; links: Array<{ label: string; href: string }> }>) || [];
+      injectedProps.columns = mergeFooterLinks(existingColumns, moduleNav.footer);
+    }
   }
 
   // Determine if this is a module component that needs containment wrapping
@@ -228,6 +257,8 @@ interface ZoneRendererProps {
   components: Record<string, StudioComponent>;
   siteId?: string;
   brandPalette?: BrandColorPalette | null;
+  siteSettings?: Record<string, unknown> | null;
+  modules?: InstalledModuleInfo[];
 }
 
 /**
@@ -239,6 +270,8 @@ function ZoneRenderer({
   components,
   siteId,
   brandPalette,
+  siteSettings,
+  modules,
 }: ZoneRendererProps): React.ReactElement {
   return (
     <div data-zone={zoneId} className="studio-zone">
@@ -253,6 +286,8 @@ function ZoneRenderer({
             components={components}
             siteId={siteId}
             brandPalette={brandPalette}
+            siteSettings={siteSettings}
+            modules={modules}
           />
         );
       })}
@@ -436,6 +471,8 @@ export function StudioRenderer({
             components={studioData.components}
             siteId={siteId}
             brandPalette={brandPalette}
+            siteSettings={siteSettings}
+            modules={modules}
           />
         );
       })}
@@ -449,6 +486,8 @@ export function StudioRenderer({
           components={studioData.components}
           siteId={siteId}
           brandPalette={brandPalette}
+          siteSettings={siteSettings}
+          modules={modules}
         />
       ))}
     </div>

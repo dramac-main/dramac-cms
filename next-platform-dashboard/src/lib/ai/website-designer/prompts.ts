@@ -359,6 +359,13 @@ export const NAVBAR_GENERATOR_PROMPT = `You are designing a premium navigation b
 - Every href must point to an ACTUAL page being generated
 - Include 4-6 main navigation items
 - Order by importance/user journey
+- Do NOT add module-specific links like "Shop" or "Book Now" — those are injected automatically at render time by the Smart Navigation system when modules (e-commerce, booking) are enabled.
+
+## UTILITY ITEMS (Smart Navigation)
+- The navbar has a utility area for icon buttons (cart, calendar) that is populated automatically at render time based on installed modules.
+- Do NOT generate utilityItems manually — they are injected by the system.
+- If the business has e-commerce, a cart icon with badge is added automatically.
+- If the business has booking, a calendar icon is added automatically.
 
 ## CTA BUTTON
 - ctaText: Match the business type (e.g., "Book Now" for salons, "Reserve" for restaurants, "Shop Now" for e-commerce, "Get Quote" for services)
@@ -395,6 +402,10 @@ export const FOOTER_GENERATOR_PROMPT = `You are designing a premium footer for a
 - Restaurants: Menu categories, Visit column with reservation/hours, About
 - E-commerce: Shop categories, Help (shipping/returns/FAQ), Company info
 - Professional: Service categories, Company, Support/Contact
+
+### Smart Navigation (Module-Contributed Links)
+- Do NOT manually add module-specific links like "Shop All", "My Cart", "Book Appointment" — these are injected automatically at render time by the Smart Navigation system when modules are enabled.
+- Focus on the business's core page links. Module footer links (e-commerce, booking) are merged into the "Quick Links" or first column automatically.
 
 ### Social links
 Only include platforms the business actually uses. If no data provided, include common defaults.

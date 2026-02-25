@@ -47,6 +47,38 @@ const PlayIcon = ({ className = "w-16 h-16" }: { className?: string }) => (
   </svg>
 );
 
+// Utility Icons for smart nav (cart, calendar, user, search, etc.)
+const UtilityIcon = ({ name, className = "w-5 h-5" }: { name: string; className?: string }) => {
+  const icons: Record<string, React.ReactNode> = {
+    cart: (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+      </svg>
+    ),
+    calendar: (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+      </svg>
+    ),
+    user: (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+      </svg>
+    ),
+    search: (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+      </svg>
+    ),
+    heart: (
+      <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+      </svg>
+    ),
+  };
+  return <>{icons[name] || icons["cart"]}</>;
+};
+
 // Social Icons Component
 const SocialIcon = ({ platform, className = "w-5 h-5" }: { platform: string; className?: string }) => {
   const paths: Record<string, React.ReactNode> = {
@@ -161,6 +193,16 @@ export interface PremiumNavbarProps {
   scrollProgressBackground?: string;
   scrollProgressStyle?: "bar" | "line" | "gradient";
   
+  // Utility items (cart icon, account, search — injected by modules)
+  utilityItems?: Array<{
+    id: string;
+    label: string;
+    href: string;
+    icon: string;
+    badge?: string;
+    ariaLabel?: string;
+  }>;
+  
   // Accessibility
   ariaLabel?: string;
   skipToContent?: string;
@@ -260,6 +302,9 @@ export function PremiumNavbarRender({
   scrollProgressColor = "#3b82f6",
   scrollProgressBackground = "transparent",
   scrollProgressStyle = "bar",
+  
+  // Utility items
+  utilityItems = [],
   
   // Accessibility
   ariaLabel = "Main navigation",
@@ -574,6 +619,32 @@ export function PremiumNavbarRender({
             })}
           </div>
 
+          {/* Utility Items (cart icon, etc.) — injected by modules */}
+          {utilityItems && utilityItems.length > 0 && (
+            <div className="hidden md:flex items-center gap-2 mr-2">
+              {utilityItems.map((item) => (
+                <a
+                  key={item.id}
+                  href={item.href}
+                  className="relative p-2 rounded-lg transition-colors hover:opacity-70"
+                  style={{ color: textColor }}
+                  aria-label={item.ariaLabel || item.label}
+                  title={item.label}
+                >
+                  <UtilityIcon name={item.icon} className="w-5 h-5" />
+                  {item.badge && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full"
+                      style={{ backgroundColor: ctaColor, color: ctaTextColor }}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </a>
+              ))}
+            </div>
+          )}
+
           {/* CTA Buttons */}
           <div className={`hidden md:flex items-center gap-3 ${logoPosition === "center" ? "order-3" : ""}`}>
             {secondaryCtaText && (
@@ -756,6 +827,33 @@ export function PremiumNavbarRender({
               </div>
             );
           })}
+
+          {/* Mobile Utility Items */}
+          {utilityItems && utilityItems.length > 0 && (
+            <div className={`pt-4 mt-4 border-t flex items-center justify-center gap-6 ${mobileMenuStyle === "fullscreen" ? "w-full max-w-xs mx-auto" : ""}`} style={{ borderColor }}>
+              {utilityItems.map((item) => (
+                <a
+                  key={item.id}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="relative flex items-center gap-2 p-2 rounded-lg transition-colors"
+                  style={{ color: mobileMenuTextColor }}
+                  aria-label={item.ariaLabel || item.label}
+                >
+                  <UtilityIcon name={item.icon} className="w-5 h-5" />
+                  <span className="text-sm font-medium">{item.label}</span>
+                  {item.badge && (
+                    <span
+                      className="min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full"
+                      style={{ backgroundColor: ctaColor, color: ctaTextColor }}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </a>
+              ))}
+            </div>
+          )}
 
           {/* Mobile CTAs */}
           {showCtaInMobileMenu && (ctaText || secondaryCtaText) && (
