@@ -1,11 +1,46 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅** + **AI RICHTEXT/ACCORDION/TABS RENDERING FIX ✅** + **CRM COMPREHENSIVE INDUSTRY-LEADER OVERHAUL ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅** + **AI RICHTEXT/ACCORDION/TABS RENDERING FIX ✅** + **CRM COMPREHENSIVE INDUSTRY-LEADER OVERHAUL ✅** + **SOCIAL MEDIA PHASE A CRITICAL BUG FIXES ✅**
 
 ---
 
-## Latest Update: February 2026 - CRM Comprehensive Industry-Leader Overhaul
+## Latest Update: February 2026 - Social Media Module Phase A Critical Bug Fixes
+
+### Problem: Deep audit of social media module (84 files, ~22,000 lines) revealed 10+ critical bugs
+
+Comprehensive assessment found: orphaned Enhanced components (UI-11B), broken permission checks, incorrect DB column mappings, dead UI handlers, missing auth guards on 107/109 server action functions, sequential bulk operations, and incorrect Supabase count destructuring.
+
+### Bug Fixes Applied (21 files, +252 lines, -136 lines, commit `8732a76`):
+
+| # | Bug | File(s) | Fix |
+|---|-----|---------|-----|
+| 1 | PostComposerWrapper renders basic PostComposer instead of Enhanced 3-step wizard | PostComposerWrapper.tsx, compose/page.tsx | Switch to PostComposerEnhanced, pass campaigns + content pillars |
+| 2 | ContentCalendarWrapper renders basic ContentCalendar instead of Enhanced | ContentCalendarWrapper.tsx | Switch to ContentCalendarEnhanced with drag-drop + week view |
+| 3 | ContentCalendarEnhanced approve/reject props prefixed with _ (dead props) | ContentCalendarEnhanced.tsx | Rename _onApprovePost → onApprovePost, _onRejectPost → onRejectPost |
+| 4 | checkPermission() converts camelCase → snake_case on already-camelCase object | team-actions.ts | Remove broken snake_case conversion, use permission key directly |
+| 5 | addPostToCampaign/removePostFromCampaign destructure { data: count } instead of { count } | campaign-actions.ts | Fix to { count } with { head: true } for proper count-only queries |
+| 6 | AccountsClientSection passes empty string '' for userId to Bluesky/Mastodon | AccountsClientSection.tsx, accounts/page.tsx | Add userId prop, pass actual user.id from auth |
+| 7 | optimal-times-service writes `score`/`post_count` but DB has `combined_score`/`sample_size` | optimal-times-service.ts | Fix column names to match DB schema (engagement_score, reach_score, combined_score, sample_size) |
+| 8 | SocialSettingsPage General tab switches have no handlers, danger zone buttons dead | SocialSettingsPage.tsx | Wire all 4 toggles with state + toast, wire Disconnect All + Clear Data buttons |
+| 9 | SocialAnalyticsPage Refresh/Export buttons have no click handlers | SocialAnalyticsPage.tsx | Refresh → router.refresh(), Export → CSV download with analytics data |
+| 10 | SocialInboxWrapper bulk markAsRead/archive use sequential for loops | SocialInboxWrapper.tsx | Replace with Promise.all for concurrent bulk operations |
+| 11 | 107 of 109 server action functions had NO auth check | 10 action files + require-auth.ts | Created requireAuth() helper, added to 93 functions across 10 files |
+
+### New File Created:
+- `lib/require-auth.ts` — Reusable `requireAuth()` helper that returns `{ supabase, user }` and throws if unauthenticated
+
+### Zero Social Media TypeScript Errors ✅
+All pre-existing errors are in CRM/e-commerce/AI modules (unrelated)
+
+### Remaining Phase B-D Items (for future sessions):
+- **Phase B**: Wire reschedule drag-drop, add approve/reject buttons to CalendarPostCard, wire selectedPlatform filter
+- **Phase C**: Cross-module integrations (CRM contact → social, e-commerce product cards, booking announcements)
+- **Phase D**: Industry features (A/B testing, UTM tracking, link shortener, content queue, analytics comparison)
+
+---
+
+## Previous Update: February 2026 - CRM Comprehensive Industry-Leader Overhaul
 
 ### Problem: CRM Module at ~55-60% Maturity vs Industry Leaders (HubSpot, Salesforce, GoHighLevel)
 
