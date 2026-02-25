@@ -1,16 +1,72 @@
 # Active Context
 
-## Current Focus: Global Branding CSS Variable System COMPLETE
+## Current Focus: Site Branding Settings UI + Booking Page Overhaul COMPLETE
 
-### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `a6d3bb6f`)
+### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `f54c6afb`)
 
 ### Recent Fixes (newest first):
+- Site Branding Settings UI + Booking Page Overhaul — 7 files, 633 insertions, new Branding tab in site settings, BookingWidget replaces broken ServiceSelector on /book page, CSS variable fallbacks in booking components, AI context builder fix (commit `f54c6afb`) ✅
+- Font fallback + persistDesignTokens all 7 fields — Fixed font reading to fall back to theme.*, fixed persistDesignTokensAction to write all 7 flat fields (commit `0bc91366`) ✅
 - Global Branding CSS Variable System — 20 files, 903 insertions, CSS variable isolation for published sites, dark mode fix, font system, booking defaultProps cleanup (commit `a6d3bb6f`) ✅
 - Module Page Branding, Cart Badge, Booking Page, Cart URL — 7 files, 438 insertions, shared Navbar/Footer auto-injection, /book page creation, cart badge fix (commit `e81e7b41`) ✅
 - Build Fix — missing "use client" in booking/studio/index.ts blocking ALL Vercel builds (commit `2635e33f`) ✅
 - Existing Sites Ecommerce Detection — runtime module detection for sites installed before hook system (commit `abf9dfc9`) ✅
 - Smart Navigation System — 4 files, 444 insertions, module-aware navbar & footer with utility icons (commit `2d0ef4dc`) ✅
 - AI Component Awareness + Booking Data Enrichment — 6 files, 198 insertions, 2 critical type name fixes, AI now gets real booking data (commit `de6b96dc`) ✅
+
+---
+
+### Site Branding Settings UI + Booking Page Overhaul (commit `f54c6afb`) ✅
+
+**Two problems solved:**
+
+#### Problem 1: No central branding UI for individual sites
+The branding settings page at `/dashboard/settings/branding` was for AGENCY-LEVEL white-labeling, not individual site branding. Users had no way to set/edit brand colors and fonts for a specific site.
+
+**Solution:** Created a full "Branding" tab in site settings (`/dashboard/sites/[siteId]/settings?tab=branding`) with:
+- 5 color pickers (primary, secondary, accent, background, text) with native color input + hex text input
+- 2 font selectors (heading, body) with 18 Google Fonts options
+- Live color swatch preview + font preview section
+- Info box explaining how the system works
+- Save/Reset buttons
+
+**Key files:**
+| File | Changes |
+|------|---------|
+| `src/components/sites/site-branding-settings.tsx` | NEW — Full branding UI component (~320 lines) |
+| `src/app/(dashboard)/dashboard/sites/[siteId]/settings/page.tsx` | Added "Branding" tab (import, TabsTrigger, TabsContent) |
+| `src/lib/actions/sites.ts` | Added `getSiteBrandingAction`, `updateSiteBrandingAction`, `SiteBrandingData` interface |
+
+**Data flow fixes:**
+| File | Fix |
+|------|-----|
+| `src/lib/actions/sites.ts` | `persistDesignTokensAction` now ALWAYS overwrites flat branding fields (was conditional on absence) |
+| `src/lib/actions/sites.ts` | `updateSiteBrandingAction` writes to BOTH flat fields AND `theme.*` for full compatibility |
+| `src/lib/ai/website-designer/data-context/builder.ts` | `fetchBranding()` now reads flat fields with `theme.*` camelCase fallback; added `background_color` and `text_color` |
+
+#### Problem 2: /book page used wrong component — Select button did nothing
+The `/book` page used `BookingServiceSelector` which is a **browse-only catalog** — clicking Select just highlights the card (sets state) with no further flow. The actual booking wizard is `BookingWidget` (1181-line, 5-step wizard: Service → Staff → Date/Time → Details → Confirmation).
+
+**Solution:**
+| File | Changes |
+|------|---------|
+| `src/modules/booking/actions/auto-setup-actions.ts` | Replaced `BOOKING_PAGE_CONTENT` template — `BookingServiceSelector` → `BookingWidget` with full wizard props, zero hardcoded colors |
+| `BookingWidgetBlock.tsx` | Removed all hardcoded `#8B5CF6` and `#ffffff` defaults; added resolved color variables (`pc`, `btnTxt`, `slotSelTxt`, `successClr`, `errorClr`, `ratingClr`) that fall back to CSS variables (`var(--brand-primary, #8B5CF6)`) |
+| `ServiceSelectorBlock.tsx` | Same pattern — resolved colors with CSS variable fallbacks, empty defaultProps |
+| **Database** | Updated Jesto's existing `/book` page content to use `BookingWidget` (SQL UPDATE) |
+
+#### CRITICAL PATTERN — Booking Component Distinction:
+- **`BookingWidget`** (BookingWidgetBlock.tsx, 1181 lines): Full 5-step wizard with real data hooks (`useBookingServices`, `useBookingStaff`, `useBookingSlots`, `useCreateBooking`). Has `handleConfirm` that calls `createBooking()`. Use this for `/book` pages.
+- **`BookingServiceSelector`** (ServiceSelectorBlock.tsx, 758 lines): Browse-only service catalog. Clicking Select just sets `selectedServiceId` state and fires `onServiceSelect` callback. Use this for embedding service lists within other pages (e.g., homepage "Our Services" section).
+
+#### CRITICAL PATTERN — Color Fallback in Booking Components:
+```typescript
+// Resolved colors — fall back to CSS variables from the branding system
+const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
+const btnTxt = buttonTextColor || 'var(--brand-button-text, #ffffff)'
+// Then use pc, btnTxt, etc. in all JSX instead of raw primaryColor/buttonTextColor
+```
+This ensures: (1) explicit prop values win, (2) CSS variables from brand system are next, (3) hardcoded fallback is last resort.
 
 ---
 

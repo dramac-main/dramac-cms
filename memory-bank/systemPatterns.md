@@ -239,7 +239,25 @@ site.settings.font_body ───────┘                      │       
 - Keep defaultProps color fields as empty strings (`''`)
 
 ### Design Token Persistence
-When AI designer saves, `persistDesignTokensAction` in `sites.ts` writes `architecture.designTokens` to `site.settings.theme`, creating the bridge: AI → DB → renderer.
+When AI designer saves, `persistDesignTokensAction` in `sites.ts` writes `architecture.designTokens` to `site.settings.theme`, creating the bridge: AI → DB → renderer. It now ALWAYS overwrites flat branding fields (primary_color, secondary_color, etc.) to keep them in sync.
+
+### Site Branding Settings UI
+Individual sites have a **"Branding" tab** in site settings (`/dashboard/sites/[siteId]/settings?tab=branding`) that lets users edit brand colors and fonts. This is the **central location** for all branding — changes propagate everywhere through the CSS variable system.
+
+**Key actions:**
+- `getSiteBrandingAction(siteId)` — Reads flat fields with `theme.*` fallback
+- `updateSiteBrandingAction(siteId, branding)` — Writes to BOTH flat fields AND `theme.*` for full compatibility
+
+### Booking Component Distinction (CRITICAL)
+- **`BookingWidget`** (BookingWidgetBlock.tsx): Full 5-step wizard (Service → Staff → Date/Time → Details → Confirmation). Uses real data hooks. Has `handleConfirm` → `createBooking()`. **Use for /book pages.**
+- **`BookingServiceSelector`** (ServiceSelectorBlock.tsx): Browse-only catalog. Select just highlights. No booking flow. **Use for embedding service lists in other pages.**
+
+### Color Fallback Pattern in Booking Components
+```typescript
+const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
+const btnTxt = buttonTextColor || 'var(--brand-button-text, #ffffff)'
+// Use pc, btnTxt in all JSX — never raw primaryColor/buttonTextColor
+```
 
 ### Site Settings Fields
 ```sql
