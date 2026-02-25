@@ -146,8 +146,8 @@ export function OrderConfirmationBlock({
       <div className="container max-w-4xl mx-auto px-4">
         {/* Success Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle2 className="h-8 w-8 text-green-600" />
           </div>
           
           <h1 className="text-2xl md:text-3xl font-bold mb-2">
@@ -226,7 +226,7 @@ export function OrderConfirmationBlock({
               )}
               
               {order.estimated_delivery && (
-                <p className="text-sm text-green-600 dark:text-green-400">
+                <p className="text-sm text-green-600">
                   Estimated delivery: {order.estimated_delivery}
                 </p>
               )}

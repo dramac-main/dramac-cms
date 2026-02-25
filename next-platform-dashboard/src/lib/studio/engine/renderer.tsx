@@ -23,7 +23,7 @@ import { ensureStudioFormat } from "../utils/migrate-puck-data";
 import { getComponent, componentRegistry } from "../registry/component-registry";
 import { initializeRegistry, isRegistryInitialized } from "../registry";
 import { loadModuleComponents } from "../registry/module-loader";
-import { resolveBrandColors, injectBrandColors, extractBrandSource } from "./brand-colors";
+import { resolveBrandColors, injectBrandColors, extractBrandSource, generateBrandCSSVars } from "./brand-colors";
 import { getModuleNavigation, mergeMainNavLinks, buildUtilityItems, mergeFooterLinks, type SiteNavigation } from "./smart-navigation";
 import type { BrandColorPalette } from "./brand-colors";
 import type { StudioComponent } from "@/types/studio";
@@ -357,6 +357,54 @@ export function StudioRenderer({
     return resolveBrandColors(source);
   }, [siteSettings, themeSettings]);
 
+  // ── GLOBAL BRANDING CSS VARIABLES ────────────────────────────────────
+  // Generate CSS custom properties from the brand palette. These override
+  // every Tailwind and shadcn CSS variable inside the published site.
+  // This is THE mechanism that makes `bg-card`, `text-foreground`,
+  // `bg-primary`, `border`, etc. use the site's brand colors instead
+  // of the dashboard's dark/light mode colors.
+  //
+  // Also handles fonts: reads font_heading / font_body from site settings
+  // and sets --font-sans / --font-display CSS variables.
+  const brandCSSVars = useMemo(() => {
+    if (!brandPalette) return {};
+    const fontHeading = (siteSettings?.font_heading as string) || null;
+    const fontBody = (siteSettings?.font_body as string) || null;
+    return generateBrandCSSVars(brandPalette, fontHeading, fontBody);
+  }, [brandPalette, siteSettings]);
+
+  // ── GOOGLE FONTS LOADER ──────────────────────────────────────────────
+  // Dynamically load Google Fonts based on site settings.
+  // This ensures the published site has the correct fonts available.
+  useEffect(() => {
+    const fontHeading = (siteSettings?.font_heading as string) || null;
+    const fontBody = (siteSettings?.font_body as string) || null;
+    const fonts = new Set<string>();
+    if (fontHeading) fonts.add(fontHeading);
+    if (fontBody) fonts.add(fontBody);
+    if (fonts.size === 0) return;
+
+    // Build Google Fonts URL
+    const families = Array.from(fonts)
+      .map((f) => `family=${f.replace(/ /g, "+")}:wght@300;400;500;600;700`)
+      .join("&");
+    const href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
+
+    // Don't add if already loaded
+    const existing = document.querySelector(`link[href="${href}"]`);
+    if (existing) return;
+
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+
+    return () => {
+      // Cleanup on unmount (unlikely for published sites, but safe)
+      try { document.head.removeChild(link); } catch { /* noop */ }
+    };
+  }, [siteSettings]);
+
   // Ensure registry is initialized synchronously on first render
   const registryReady = useMemo(() => {
     if (!isRegistryInitialized()) {
@@ -448,10 +496,16 @@ export function StudioRenderer({
       className={`studio-renderer light ${className}`}
       style={{
         ...themeStyles,
+        // ── GLOBAL BRANDING CSS VARIABLES ────────────────────────────────
+        // This spreads ALL CSS custom properties derived from the brand palette.
+        // Every Tailwind utility and shadcn component inside this div will
+        // read these variables instead of the dashboard's :root / .dark values.
+        // This is the single mechanism that ensures:
+        //   1. Published sites NEVER show dark mode (variables are always light)
+        //   2. All components use the site's brand colors
+        //   3. Fonts are consistent across all modules
+        ...(brandCSSVars as React.CSSProperties),
         // Force light mode rendering for website content
-        // Studio-built websites are always light-themed — their colors come from
-        // inline styles and theme CSS vars, NOT from Tailwind dark: variants.
-        // The "light" class prevents any dark: variant from activating inside.
         colorScheme: "light",
         backgroundColor: brandPalette?.background || "#ffffff",
         color: brandPalette?.foreground || "#111827",

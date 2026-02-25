@@ -75,8 +75,8 @@ export function CartSummaryCard({
       {/* Discount */}
       {hasDiscount && (
         <div className="flex justify-between text-sm">
-          <span className="text-green-600 dark:text-green-400">Discount</span>
-          <span className="text-green-600 dark:text-green-400">
+          <span className="text-green-600">Discount</span>
+          <span className="text-green-600">
             -{formatPrice(totals.discount)}
           </span>
         </div>

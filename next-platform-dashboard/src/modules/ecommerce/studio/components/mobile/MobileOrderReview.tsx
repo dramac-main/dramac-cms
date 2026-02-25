@@ -224,7 +224,7 @@ export function MobileOrderReview({
                         <span className="text-xs ml-1">({discountCode})</span>
                       )}
                     </span>
-                    <span className="text-green-600 dark:text-green-400">
+                    <span className="text-green-600">
                       -{formatPrice(totals.discount)}
                     </span>
                   </div>

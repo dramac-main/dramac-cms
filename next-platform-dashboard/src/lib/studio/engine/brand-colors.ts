@@ -400,3 +400,130 @@ export function extractBrandSource(siteSettings: Record<string, unknown>): Brand
     theme: theme || null,
   };
 }
+
+// ============================================================================
+// CSS Custom Property Generation
+// ============================================================================
+
+/**
+ * Convert hex color to HSL component string (e.g., "220 15% 93%").
+ * 
+ * This is the format used by Tailwind CSS variables in brand-variables.css.
+ * The Tailwind config maps `bg-card` → `hsl(var(--color-card))`, where
+ * `--color-card` must be space-separated HSL values WITHOUT the `hsl()` wrapper.
+ */
+function hexToHsl(hex: string): { h: number; s: number; l: number } | null {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return null;
+  const r = rgb.r / 255, g = rgb.g / 255, b = rgb.b / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+function hexToHslString(hex: string): string {
+  const hsl = hexToHsl(hex);
+  if (!hsl) return "0 0% 100%";
+  return `${hsl.h} ${hsl.s}% ${hsl.l}%`;
+}
+
+/**
+ * Generate a complete set of CSS custom property overrides from a brand palette.
+ * 
+ * ARCHITECTURE:
+ * This is the GLOBAL BRANDING CSS VARIABLE LAYER. When applied to `.studio-renderer`,
+ * it overrides EVERY CSS variable that Tailwind utilities and shadcn/ui components
+ * reference. This means:
+ * 
+ * - `bg-card` → uses site's card color (NOT dashboard's)
+ * - `text-foreground` → uses site's text color (NOT dashboard's)
+ * - `bg-primary` → uses site's primary color (NOT dashboard's)
+ * - `bg-muted` → uses site's muted color (NOT dashboard's)
+ * - `border` → uses site's border color (NOT dashboard's)
+ * 
+ * This is the ONE fix that ensures ALL shadcn components (used by ecommerce,
+ * booking, and any other module) render with the site's brand colors.
+ * 
+ * It also forces LIGHT MODE by setting light-appropriate values, which means
+ * even if the dashboard is in dark mode, published site components stay light.
+ * 
+ * @param palette - The resolved brand color palette
+ * @param fontHeading - Google Font name for headings (e.g., "Playfair Display")
+ * @param fontBody - Google Font name for body text (e.g., "Inter")
+ * @returns Record of CSS custom properties to spread on the wrapper element
+ */
+export function generateBrandCSSVars(
+  palette: BrandColorPalette,
+  fontHeading?: string | null,
+  fontBody?: string | null,
+): Record<string, string> {
+  const vars: Record<string, string> = {};
+
+  // ── Tailwind --color-* HSL variables ──────────────────────────────────
+  // These are the variables referenced by Tailwind via `hsl(var(--color-*))`.
+  // Setting them here overrides the dashboard's :root / .dark values.
+  vars["--color-background"] = hexToHslString(palette.background);
+  vars["--color-foreground"] = hexToHslString(palette.foreground);
+  vars["--color-card"] = hexToHslString(palette.card);
+  vars["--color-card-foreground"] = hexToHslString(palette.foreground);
+  vars["--color-popover"] = hexToHslString(palette.card);
+  vars["--color-popover-foreground"] = hexToHslString(palette.foreground);
+  vars["--color-muted"] = hexToHslString(palette.muted);
+  vars["--color-muted-foreground"] = hexToHslString(palette.mutedForeground);
+  vars["--color-border"] = hexToHslString(palette.border);
+  vars["--color-input"] = hexToHslString(palette.inputBorder);
+  vars["--color-ring"] = hexToHslString(palette.primary);
+  vars["--color-primary"] = hexToHslString(palette.primary);
+  vars["--color-primary-foreground"] = hexToHslString(palette.primaryForeground);
+  vars["--color-secondary"] = hexToHslString(palette.secondary);
+  vars["--color-secondary-foreground"] = hexToHslString(palette.secondaryForeground);
+  vars["--color-accent"] = hexToHslString(palette.accent);
+  vars["--color-accent-foreground"] = hexToHslString(palette.accentForeground);
+  vars["--color-success"] = hexToHslString(palette.success);
+  vars["--color-warning"] = hexToHslString(palette.warning);
+  vars["--color-danger"] = hexToHslString(palette.error);
+
+  // ── Shadcn v2 direct CSS variables ────────────────────────────────────
+  // Some shadcn components or raw CSS references use these variables directly
+  // (without the hsl() wrapper). We set them to hex for maximum compatibility.
+  vars["--background"] = palette.background;
+  vars["--foreground"] = palette.foreground;
+  vars["--card"] = palette.card;
+  vars["--card-foreground"] = palette.foreground;
+  vars["--popover"] = palette.card;
+  vars["--popover-foreground"] = palette.foreground;
+  vars["--muted"] = palette.muted;
+  vars["--muted-foreground"] = palette.mutedForeground;
+  vars["--primary"] = palette.primary;
+  vars["--primary-foreground"] = palette.primaryForeground;
+  vars["--secondary"] = palette.secondary;
+  vars["--secondary-foreground"] = palette.secondaryForeground;
+  vars["--accent"] = palette.accent;
+  vars["--accent-foreground"] = palette.accentForeground;
+  vars["--destructive"] = palette.error;
+  vars["--border"] = palette.border;
+  vars["--input"] = palette.inputBorder;
+  vars["--ring"] = palette.primary;
+
+  // ── Font families ─────────────────────────────────────────────────────
+  // These override the dashboard's --font-sans and --font-display variables.
+  // All components that use `font-sans` (body text) or headings get the site's fonts.
+  if (fontBody) {
+    vars["--font-sans"] = `'${fontBody}', ui-sans-serif, system-ui, -apple-system, sans-serif`;
+  }
+  if (fontHeading) {
+    vars["--font-display"] = `'${fontHeading}', ui-sans-serif, system-ui, sans-serif`;
+  }
+
+  return vars;
+}

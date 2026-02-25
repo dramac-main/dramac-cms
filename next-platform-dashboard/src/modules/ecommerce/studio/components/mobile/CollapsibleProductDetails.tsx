@@ -183,10 +183,10 @@ function ShippingContent({ shippingInfo }: { shippingInfo: string }) {
   return (
     <div className="space-y-3">
       <div 
-        className="prose prose-sm dark:prose-invert max-w-none"
+        className="prose prose-sm max-w-none"
         dangerouslySetInnerHTML={{ __html: shippingInfo }}
       />
-      <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+      <div className="flex items-center gap-2 text-sm text-green-600">
         <Package className="h-4 w-4" />
         <span>Free shipping on orders over $50</span>
       </div>
@@ -197,7 +197,7 @@ function ShippingContent({ shippingInfo }: { shippingInfo: string }) {
 function ReturnPolicyContent({ returnPolicy }: { returnPolicy: string }) {
   return (
     <div 
-      className="prose prose-sm dark:prose-invert max-w-none"
+      className="prose prose-sm max-w-none"
       dangerouslySetInnerHTML={{ __html: returnPolicy }}
     />
   )
@@ -208,7 +208,7 @@ function WarrantyContent({ warranty }: { warranty: string }) {
     <div className="flex items-start gap-3">
       <Shield className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
       <div 
-        className="prose prose-sm dark:prose-invert max-w-none"
+        className="prose prose-sm max-w-none"
         dangerouslySetInnerHTML={{ __html: warranty }}
       />
     </div>

@@ -334,6 +334,53 @@
 }
 
 /* =============================================
+   PUBLISHED SITE ISOLATION (studio-renderer)
+   
+   Published websites render inside .studio-renderer.
+   This block COMPLETELY isolates them from the dashboard's
+   dark/light mode CSS variables. All colors come from the
+   brand palette CSS variables injected by StudioRenderer.
+   
+   @phase GLOBAL-BRANDING - CSS Variable Isolation Layer
+   ============================================= */
+
+.studio-renderer {
+  /* Force light color scheme — prevents OS-level dark mode from affecting
+     form controls, scrollbars, and native UI elements */
+  color-scheme: light !important;
+
+  /* Font inheritance: headings use --font-display, body uses --font-sans.
+     These are set dynamically by StudioRenderer from site settings. */
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+}
+
+.studio-renderer h1,
+.studio-renderer h2,
+.studio-renderer h3,
+.studio-renderer h4,
+.studio-renderer h5,
+.studio-renderer h6 {
+  font-family: var(--font-display, var(--font-sans, ui-sans-serif, system-ui, sans-serif));
+}
+
+/* Neutralize dark: variants inside published sites.
+   The Tailwind dark variant is defined as `&:is(.dark *)`, which means
+   dark: classes only activate inside a .dark ancestor. The studio-renderer
+   has class "light", NOT "dark". But as an extra safety layer, we ensure
+   that even if .dark exists on <html>, the studio-renderer's own CSS
+   variables take priority via specificity. */
+.studio-renderer,
+.studio-renderer *,
+.studio-renderer *::before,
+.studio-renderer *::after {
+  /* Ensure no element inside inherits the dashboard's dark mode vars.
+     The CSS custom properties set on .studio-renderer via inline styles
+     already cascade to all descendants, but this ensures border-color
+     also uses the site's border color. */
+  border-color: hsl(var(--color-border));
+}
+
+/* =============================================
    BASE STYLES
    ============================================= */
 

@@ -1,64 +1,74 @@
 # Active Context
 
-## Current Focus: Smart Navigation System — Module-Aware Headers & Footers COMPLETE
+## Current Focus: Module Page Branding, Cart Badge, Booking Page COMPLETE
 
-### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `2d0ef4dc`)
+### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `e81e7b41`)
 
 ### Recent Fixes (newest first):
+- Module Page Branding, Cart Badge, Booking Page, Cart URL — 7 files, 438 insertions, shared Navbar/Footer auto-injection, /book page creation, cart badge fix (commit `e81e7b41`) ✅
+- Build Fix — missing "use client" in booking/studio/index.ts blocking ALL Vercel builds (commit `2635e33f`) ✅
+- Existing Sites Ecommerce Detection — runtime module detection for sites installed before hook system (commit `abf9dfc9`) ✅
 - Smart Navigation System — 4 files, 444 insertions, module-aware navbar & footer with utility icons (commit `2d0ef4dc`) ✅
 - AI Component Awareness + Booking Data Enrichment — 6 files, 198 insertions, 2 critical type name fixes, AI now gets real booking data (commit `de6b96dc`) ✅
-- Brand Color Inheritance System — 8 files, 581 insertions, centralized brand palette for all components (commit `d83feaeb`) ✅
-- Booking Module Comprehensive Overhaul — 12 files, 300+ lines changed, 16+ bug fixes, Jesto test data seeded (commit `8d945ad`) ✅
-- Known Limitations Deep Analysis — verified all 7 areas are real code, fixed 3 critical issues (commit `1c60f66`) ✅
-- Social Media Phase A Critical Bug Fixes — 11 bug fixes + 93 auth guards across 21 files (commit `8732a76`) ✅
-- CRM Comprehensive Overhaul — Industry-leader features (segments, scoring, forms→CRM, email, bulk ops, merge, import, timeline) ✅
 
 ---
 
-### Smart Navigation System (commit `2d0ef4dc`) ✅
+### Module Page Branding System (commit `e81e7b41`) ✅
 
-**Problem:** Navigation headers were 100% static — links baked into page JSON at AI generation time. Enabling a module (Booking, E-commerce) had ZERO effect on the navbar. The ecommerce install hook wrote nav items to `site.settings.navigation` but that data was **NEVER READ** at render time. No utility area existed in the navbar for cart/calendar icons. Footer had zero module awareness.
+**Problem:** Multiple issues with module pages:
+1. Cart icon in navbar showed raw `{{cartCount}}` template string instead of actual count
+2. Module pages (shop, cart, checkout, order-confirmation) had NO Navbar/Footer — looked unbranded
+3. No /book page existed — "Book Now" link was a 404
+4. Floating cart button linked to `/shop/cart` instead of `/cart`
 
-**Solution:** Built a complete Smart Navigation system that merges module-contributed nav items at render time:
+**Solution:** Comprehensive fix across 7 files:
 
-#### Architecture:
-```
-1. Module install hooks write nav items to site.settings.navigation (e-commerce already does this)
-2. Booking module: detected from modules array at runtime (no install hook needed)
-3. Renderer: ComponentRenderer detects Navbar/Footer → reads siteSettings.navigation → merges items
-4. PremiumNavbarRender: new utilityItems prop renders icon buttons (cart, calendar) with badges
-5. AI prompts updated: "don't add module links manually — they're injected automatically"
-```
+#### Fix 1: Cart Badge Template Stripping
+- `buildUtilityItems()` in `smart-navigation.ts` now strips badges matching `{{...}}` pattern
+- Removed `badge: "{{cartCount}}"` from `ECOMMERCE_UTILITY_ITEMS` constant
+- Removed `badge: "{{cartCount}}"` from `auto-setup-actions.ts` nav items
+- Cleaned stored `{{cartCount}}` from Jesto site's `settings.navigation.utility` in DB
+- **Industry standard**: Navbar cart icon is just a link, floating cart button shows live count
 
-#### Files Created/Modified:
+#### Fix 2: Shared Navbar/Footer Auto-Injection
+- In `page.tsx` `processData()`: detects if page content has a Navbar component
+- If missing, extracts `shared-navbar` and `shared-footer` from the site's homepage
+- Injects them into the page content (prepend navbar, append footer)
+- **Works for ALL module pages on ALL sites** — no per-site or per-module code needed
+- Module-created pages automatically get consistent site branding
+
+#### Fix 3: /book Page Auto-Creation
+- Created `/book` page for Jesto site in DB with proper content:
+  - Hero section with branded heading + description
+  - `BookingServiceSelector` component for service browsing
+  - Navbar/Footer auto-injected at render time
+- Created `booking/actions/auto-setup-actions.ts` — `createBookingPages()` / `deleteBookingPages()`
+- Created `booking/hooks/installation-hook.ts` — `bookingInstallationHook`
+- Registered booking hook in `init-hooks.ts`
+- Future booking installations auto-create the /book page
+
+#### Fix 4: Floating Cart URL
+- `ecommerce-cart-injector.tsx`: Changed `cartUrl` from `/shop/cart` to `/cart`
+
+#### Files Changed:
 | File | Changes |
 |------|---------|
-| `src/lib/studio/engine/smart-navigation.ts` | **NEW** — Core infrastructure: types (SmartNavItem, SiteNavigation, NavUtilityItem), constants (BOOKING_NAV_ITEMS, BOOKING_UTILITY_ITEMS, BOOKING_FOOTER_ITEMS), functions (getModuleNavigation, mergeMainNavLinks, buildUtilityItems, mergeFooterLinks), icon name normalization |
-| `src/lib/studio/blocks/premium-components.tsx` | Added UtilityIcon component (cart/calendar/user/search/heart SVGs), `utilityItems` prop to PremiumNavbarProps, utility area rendering (desktop between links and CTA, mobile in menu with labels), badge support |
-| `src/lib/studio/engine/renderer.tsx` | Import smart-navigation functions, added siteSettings/modules to ComponentRendererProps + ZoneRendererProps, smart nav injection when type==="Navbar" (mergeMainNavLinks + buildUtilityItems) and type==="Footer" (mergeFooterLinks), passed through all renderer levels |
-| `src/lib/ai/website-designer/prompts.ts` | NAVBAR_GENERATOR_PROMPT: added utility items and smart nav docs, told AI not to add module links. FOOTER_GENERATOR_PROMPT: same treatment |
+| `src/lib/studio/engine/smart-navigation.ts` | Stripped `{{cartCount}}` badge from constant, added regex filter in `buildUtilityItems()` |
+| `src/app/site/[domain]/[[...slug]]/page.tsx` | Added shared Navbar/Footer injection (~60 lines) in `processData()` |
+| `src/components/renderer/ecommerce-cart-injector.tsx` | Fixed cart URL from `/shop/cart` to `/cart` |
+| `src/modules/ecommerce/actions/auto-setup-actions.ts` | Removed `badge: "{{cartCount}}"` from nav items |
+| `src/modules/booking/actions/auto-setup-actions.ts` | **NEW** — Booking page auto-creation action |
+| `src/modules/booking/hooks/installation-hook.ts` | **NEW** — Booking module installation hook |
+| `src/lib/modules/hooks/init-hooks.ts` | Registered `bookingInstallationHook` |
 
-#### Key Design Decisions:
-- **Runtime merge, not bake-time**: Module nav items are merged at render time, not during AI generation. This means enabling/disabling a module instantly updates navigation.
-- **Deduplication by href**: If the AI already generated a "Shop" link, the module won't add a duplicate.
-- **Insert before "Contact"**: Module main links are placed before the Contact link for natural ordering.
-- **Booking runtime detection**: Since booking has no install hook, `getModuleNavigation()` detects the booking module from the `modules` array and injects built-in items directly.
-- **Icon normalization**: Maps PascalCase names from ecommerce (e.g., "ShoppingCart") to lowercase keys used by UtilityIcon ("cart").
+#### Key Architecture Decision: Runtime Navbar/Footer Injection
+Instead of duplicating Navbar/Footer content into every module page at creation time, we inject them at render time from the homepage. Benefits:
+- Always uses the LATEST version of Navbar/Footer (user updates propagate instantly)
+- No complex page creation logic needed — module hooks just create module-specific content
+- Works retroactively for all existing module pages
+- The smart navigation system still applies (module links, utility icons)
 
-#### What This Enables:
-- ✅ E-commerce active → Cart icon with badge in navbar, "Shop" link in nav, footer links
-- ✅ Booking active → Calendar icon in navbar, "Book Now" link in nav, footer links
-- ✅ Both modules → Both sets of icons and links appear
-- ✅ Module disabled → Items disappear (not in settings.navigation + not in modules array)
-- ✅ AI designer generates base nav, modules augment at render time
-
----
-
-### AI Component Awareness + Booking Data Enrichment (commit `de6b96dc`) ✅
-
-**Problem 1 (CRITICAL):** `ServiceSelectorBlock` had `type: 'ServiceSelector'` but AI prompts + converter expect `'BookingServiceSelector'`. Registry looked up by `type` field, so when AI generated `BookingServiceSelector` → converter mapped to `BookingServiceSelector` → registry had no match → component never rendered. Same for `StaffGridBlock` (`'StaffGrid'` vs `'BookingStaffGrid'`).
-
-**Problem 2:** `AI_RELEVANT_CATEGORIES` in `component-reference.ts` was missing `"buttons"` and `"3d"` categories. This hid the Button component and 5 3D effects components from the AI entirely.
+---**Problem 2:** `AI_RELEVANT_CATEGORIES` in `component-reference.ts` was missing `"buttons"` and `"3d"` categories. This hid the Button component and 5 3D effects components from the AI entirely.
 
 **Problem 3:** AI received a generic "BOOKING MODULE IS ACTIVE" message but no actual service names, prices, durations, or staff names from the booking module's database tables. AI had to invent placeholder content instead of using real business data.
 

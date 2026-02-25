@@ -352,8 +352,8 @@ export function CheckoutPageBlock({
         <div className="container max-w-4xl mx-auto px-4">
           <Card className="text-center py-12">
             <CardContent>
-              <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mx-auto mb-6">
-                <ShieldCheck className="h-8 w-8 text-green-600 dark:text-green-400" />
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+                <ShieldCheck className="h-8 w-8 text-green-600" />
               </div>
               <h1 className="text-2xl font-bold mb-2">Order Placed Successfully!</h1>
               <p className="text-muted-foreground mb-4">

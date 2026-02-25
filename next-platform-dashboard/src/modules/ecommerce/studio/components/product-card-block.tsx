@@ -265,7 +265,7 @@ export function ProductCardBlock({
         <button
           onClick={handleWishlistToggle}
           className={cn(
-            "p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-sm transition-colors",
+            "p-2 rounded-full bg-card/90 backdrop-blur-sm shadow-sm transition-colors",
             inWishlist ? "text-red-500" : "text-muted-foreground hover:text-red-500"
           )}
           title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
@@ -276,7 +276,7 @@ export function ProductCardBlock({
       {showQuickView && onQuickView && (
         <button
           onClick={handleQuickView}
-          className="p-2 rounded-full bg-white/90 backdrop-blur-sm shadow-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="p-2 rounded-full bg-card/90 backdrop-blur-sm shadow-sm text-muted-foreground hover:text-foreground transition-colors"
           title="Quick view"
         >
           <Eye className="h-4 w-4" />

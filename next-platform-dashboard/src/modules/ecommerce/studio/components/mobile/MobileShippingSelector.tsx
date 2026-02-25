@@ -135,7 +135,7 @@ export function MobileShippingSelector({
                   {option.name}
                 </span>
                 {option.isEco && (
-                  <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-2 py-0.5 rounded-full">
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
                     🌱 Eco
                   </span>
                 )}
@@ -155,7 +155,7 @@ export function MobileShippingSelector({
               <span
                 className={cn(
                   'font-semibold',
-                  isFree ? 'text-green-600 dark:text-green-400' : 'text-foreground'
+                  isFree ? 'text-green-600' : 'text-foreground'
                 )}
               >
                 {formatPrice(option.price)}
