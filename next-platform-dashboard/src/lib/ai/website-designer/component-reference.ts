@@ -27,6 +27,8 @@ const AI_RELEVANT_CATEGORIES = [
   "ecommerce",
   "layout",
   "typography",
+  "buttons",
+  "3d",
 ];
 
 /**

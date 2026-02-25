@@ -300,6 +300,33 @@ export interface EnabledModule {
   settings?: Record<string, unknown>;
 }
 
+/**
+ * Booking service from the booking module tables
+ */
+export interface BookingServiceData {
+  id: string;
+  name: string;
+  description?: string;
+  price?: number;
+  currency?: string;
+  duration_minutes?: number;
+  category?: string;
+  is_featured?: boolean;
+}
+
+/**
+ * Booking staff from the booking module tables
+ */
+export interface BookingStaffData {
+  id: string;
+  name: string;
+  title?: string;
+  bio?: string;
+  image_url?: string;
+  specialties?: string[];
+  service_ids?: string[];
+}
+
 // =============================================================================
 // AGGREGATE TYPES
 // =============================================================================
@@ -322,6 +349,10 @@ export interface BusinessDataContext {
   blog: BlogPost[];
   faq: FAQItem[];
   modules: EnabledModule[];
+  /** Booking module services fetched from mod_bookmod01_services */
+  bookingServices?: BookingServiceData[];
+  /** Booking module staff fetched from mod_bookmod01_staff */
+  bookingStaff?: BookingStaffData[];
 }
 
 // =============================================================================

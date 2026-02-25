@@ -602,9 +602,9 @@ export function StaffGridBlock({
 // =============================================================================
 
 export const staffGridDefinition: ComponentDefinition = {
-  type: 'StaffGrid',
+  type: 'BookingStaffGrid',
   label: 'Staff Grid',
-  description: 'Display team members with bio, rating, specialties — 50+ customization options',
+  description: 'Display team members with bio, rating, specialties, and book button — 50+ customization options. Use instead of generic Team component for booking-enabled businesses.',
   category: 'content',
   icon: 'Users',
   keywords: ['staff', 'team', 'grid', 'members', 'booking', 'professionals', 'therapist', 'employees'],

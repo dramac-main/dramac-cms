@@ -11,6 +11,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   BusinessDataContext,
   SiteData,
@@ -27,6 +28,8 @@ import type {
   BlogPost,
   FAQItem,
   EnabledModule,
+  BookingServiceData,
+  BookingStaffData,
   DataContextBuilderOptions,
 } from "./types";
 
@@ -147,6 +150,22 @@ export async function buildDataContext(
   }
   if (results[10].status === "fulfilled") {
     context.modules = results[10].value || [];
+  }
+
+  // If booking module is active, fetch booking-specific data from module tables
+  const hasBookingModule = context.modules.some(
+    (m) => {
+      const t = (m.module_type || m.module_name || m.name || "").toLowerCase();
+      return t.includes("booking") || t.includes("appointment");
+    }
+  );
+  if (hasBookingModule) {
+    const [bookingServices, bookingStaff] = await Promise.all([
+      fetchBookingServices(siteId),
+      fetchBookingStaff(siteId),
+    ]);
+    context.bookingServices = bookingServices;
+    context.bookingStaff = bookingStaff;
   }
 
   // Build contact from multiple sources
@@ -625,6 +644,92 @@ async function fetchModules(supabase: SupabaseClient, siteId: string): Promise<E
     // Silently fail
   }
   return [];
+}
+
+// =============================================================================
+// BOOKING MODULE DATA FETCHERS
+// =============================================================================
+
+const BOOKING_TABLE_PREFIX = "mod_bookmod01";
+
+/**
+ * Fetch booking services from the booking module's dedicated table.
+ * Uses the admin client to bypass RLS (same pattern as public-booking-actions.ts).
+ */
+async function fetchBookingServices(siteId: string): Promise<BookingServiceData[]> {
+  try {
+    const admin = createAdminClient() as any;
+    const { data, error } = await admin
+      .from(`${BOOKING_TABLE_PREFIX}_services`)
+      .select("id, name, description, price, currency, duration_minutes, category, is_featured")
+      .eq("site_id", siteId)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true });
+
+    if (error || !data) return [];
+
+    return (data as any[]).map((s) => ({
+      id: s.id,
+      name: s.name ?? "",
+      description: s.description ?? undefined,
+      price: s.price != null ? Number(s.price) : undefined,
+      currency: s.currency ?? undefined,
+      duration_minutes: s.duration_minutes != null ? Number(s.duration_minutes) : undefined,
+      category: s.category ?? undefined,
+      is_featured: s.is_featured ?? undefined,
+    }));
+  } catch (err) {
+    console.error("[DataContextBuilder] fetchBookingServices error:", err);
+    return [];
+  }
+}
+
+/**
+ * Fetch booking staff from the booking module's dedicated table.
+ * Uses the admin client to bypass RLS.
+ */
+async function fetchBookingStaff(siteId: string): Promise<BookingStaffData[]> {
+  try {
+    const admin = createAdminClient() as any;
+    const { data, error } = await admin
+      .from(`${BOOKING_TABLE_PREFIX}_staff`)
+      .select("id, name, title, bio, image_url, specialties")
+      .eq("site_id", siteId)
+      .eq("is_active", true)
+      .order("name", { ascending: true });
+
+    if (error || !data) return [];
+
+    // Also fetch staff-service assignments for service mapping
+    const staffIds = (data as any[]).map((s) => s.id);
+    const { data: assignments } = await admin
+      .from(`${BOOKING_TABLE_PREFIX}_staff_services`)
+      .select("staff_id, service_id")
+      .eq("site_id", siteId)
+      .in("staff_id", staffIds);
+
+    const staffServiceMap = new Map<string, string[]>();
+    if (assignments) {
+      for (const a of assignments as any[]) {
+        const existing = staffServiceMap.get(a.staff_id) || [];
+        existing.push(a.service_id);
+        staffServiceMap.set(a.staff_id, existing);
+      }
+    }
+
+    return (data as any[]).map((s) => ({
+      id: s.id,
+      name: s.name ?? "",
+      title: s.title ?? undefined,
+      bio: s.bio ?? undefined,
+      image_url: s.image_url ?? undefined,
+      specialties: Array.isArray(s.specialties) ? s.specialties : undefined,
+      service_ids: staffServiceMap.get(s.id) ?? undefined,
+    }));
+  } catch (err) {
+    console.error("[DataContextBuilder] fetchBookingStaff error:", err);
+    return [];
+  }
 }
 
 // =============================================================================

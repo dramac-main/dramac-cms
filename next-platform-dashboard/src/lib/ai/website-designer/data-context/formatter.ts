@@ -22,6 +22,8 @@ import type {
   BlogPost,
   FAQItem,
   EnabledModule,
+  BookingServiceData,
+  BookingStaffData,
 } from "./types";
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
 
@@ -96,7 +98,7 @@ export function formatContextForAI(context: BusinessDataContext): string {
 
   // Enabled modules
   if (context.modules?.length > 0) {
-    sections.push(formatModulesSection(context.modules));
+    sections.push(formatModulesSection(context.modules, context.bookingServices, context.bookingStaff));
   }
 
   return sections.filter(Boolean).join("\n\n---\n\n");
@@ -549,7 +551,11 @@ function formatBlogSection(blog: BlogPost[]): string {
 /**
  * Format enabled modules
  */
-function formatModulesSection(modules: EnabledModule[]): string {
+function formatModulesSection(
+  modules: EnabledModule[],
+  bookingServices?: BookingServiceData[],
+  bookingStaff?: BookingStaffData[]
+): string {
   const lines: string[] = ["## Enabled Features & Modules"];
 
   const moduleList = modules.map((m) => m.module_name || m.module_type || m.name).filter(Boolean);
@@ -571,6 +577,54 @@ function formatModulesSection(modules: EnabledModule[]): string {
         lines.push(`- Consider adding a dedicated /book page with a BookingForm component`);
         lines.push(`- Every page should have at least one booking CTA`);
         lines.push(``);
+
+        // Include actual booking services from the booking module tables
+        if (bookingServices && bookingServices.length > 0) {
+          lines.push(`#### ACTUAL BOOKING SERVICES (from database — use these real names and prices!):`);
+          for (const svc of bookingServices) {
+            const parts: string[] = [`- **${svc.name}**`];
+            if (svc.price != null) {
+              const currency = svc.currency || DEFAULT_CURRENCY_SYMBOL;
+              parts.push(`${currency}${svc.price}`);
+            }
+            if (svc.duration_minutes) {
+              parts.push(`${svc.duration_minutes} min`);
+            }
+            if (svc.category) {
+              parts.push(`(${svc.category})`);
+            }
+            lines.push(parts.join(" — "));
+            if (svc.description) {
+              lines.push(`  ${svc.description}`);
+            }
+          }
+          lines.push(``);
+          lines.push(`Use these EXACT service names in headings, cards, pricing tables, and BookingServiceSelector labels.`);
+          lines.push(`Do NOT invent placeholder service names — the real services are listed above.`);
+          lines.push(``);
+        }
+
+        // Include actual booking staff from the booking module tables
+        if (bookingStaff && bookingStaff.length > 0) {
+          lines.push(`#### ACTUAL BOOKING STAFF (from database — use these real names!):`);
+          for (const staff of bookingStaff) {
+            const parts: string[] = [`- **${staff.name}**`];
+            if (staff.title) {
+              parts.push(staff.title);
+            }
+            if (staff.specialties && staff.specialties.length > 0) {
+              parts.push(`Specialties: ${staff.specialties.join(", ")}`);
+            }
+            lines.push(parts.join(" — "));
+            if (staff.bio) {
+              lines.push(`  ${staff.bio.substring(0, 150)}${staff.bio.length > 150 ? "..." : ""}`);
+            }
+          }
+          lines.push(``);
+          lines.push(`Use these EXACT staff names in team sections, staff grids (BookingStaffGrid), and "Meet Our Team" pages.`);
+          lines.push(`Do NOT invent placeholder staff names — the real staff are listed above.`);
+          lines.push(``);
+        }
       }
       
       if (modType.includes("ecommerce") || modType.includes("commerce") || modType.includes("shop")) {

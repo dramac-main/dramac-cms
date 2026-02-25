@@ -590,9 +590,9 @@ export function ServiceSelectorBlock({
 // =============================================================================
 
 export const serviceSelectorDefinition: ComponentDefinition = {
-  type: 'ServiceSelector',
+  type: 'BookingServiceSelector',
   label: 'Service Selector',
-  description: 'Display bookable services in grid, list, or card layout — 50+ customization options',
+  description: 'Display bookable services in grid, list, or card layout — 50+ customization options. Use on services pages for booking-enabled businesses.',
   category: 'interactive',
   icon: 'Tag',
   keywords: ['booking', 'service', 'selector', 'menu', 'price', 'catalog', 'appointment'],
