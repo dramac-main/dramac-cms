@@ -9,7 +9,7 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react'
-import { getSettings } from '../actions/booking-actions'
+import { getPublicSettings } from '../actions/public-booking-actions'
 import type { BookingSettings } from '../types/booking-types'
 import {
   DEFAULT_CURRENCY,
@@ -79,7 +79,7 @@ export function BookingStorefrontProvider({ children, siteId }: BookingStorefron
 
     async function loadSettings() {
       try {
-        const data = await getSettings(siteId)
+        const data = await getPublicSettings(siteId)
         setSettings(data)
       } catch (err) {
         console.error('[BookingStorefront] Error loading settings:', err)

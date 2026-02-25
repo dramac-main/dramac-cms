@@ -6,8 +6,9 @@
  * the Booking module is installed on a site.
  */
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import type { ModuleStudioExports, CustomFieldEditorProps } from "@/types/studio-module";
+import { getPublicServices, getPublicStaff } from "../actions/public-booking-actions";
 
 // Import components
 import { 
@@ -49,12 +50,24 @@ export { BookingEmbedBlock } from "./components/BookingEmbedBlock";
 
 /**
  * Service Selector Field Editor
- * For selecting a service in the properties panel
+ * For selecting a service in the properties panel — fetches real services
  */
 function ServiceSelectorField(props: CustomFieldEditorProps) {
   const { value, onChange, siteId } = props;
-  
-  // Simple select for now - would be enhanced with actual service data
+  const [services, setServices] = useState<{ id: string; name: string; price: number | null; duration_minutes: number }[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!siteId) return;
+    setLoading(true);
+    getPublicServices(siteId)
+      .then((data: any[]) => {
+        setServices(data.map((s: any) => ({ id: s.id, name: s.name, price: s.price, duration_minutes: s.duration_minutes })));
+      })
+      .catch(() => setServices([]))
+      .finally(() => setLoading(false));
+  }, [siteId]);
+
   return React.createElement(
     "div",
     { className: "space-y-2" },
@@ -63,31 +76,48 @@ function ServiceSelectorField(props: CustomFieldEditorProps) {
       {
         value: (value as string) || "",
         onChange: (e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value || null),
-        className: "w-full px-3 py-2 border rounded-md bg-background",
+        className: "w-full px-3 py-2 border rounded-md bg-background text-sm",
+        disabled: loading,
       },
-      React.createElement("option", { value: "" }, "Select a service..."),
-      React.createElement(
-        "option",
-        { value: "placeholder" },
-        siteId ? `Site: ${siteId.slice(0, 8)}…` : "No site selected"
+      React.createElement("option", { value: "" }, loading ? "Loading services..." : "All services (default)"),
+      ...services.map((s) =>
+        React.createElement(
+          "option",
+          { key: s.id, value: s.id },
+          `${s.name} — ${s.duration_minutes}min${s.price != null ? ` · ${s.price}` : ''}`
+        )
       )
     ),
     React.createElement(
       "p",
       { className: "text-xs text-muted-foreground" },
-      "Choose a service to pre-select for this block"
+      services.length > 0
+        ? `${services.length} service${services.length !== 1 ? 's' : ''} available`
+        : siteId ? "No services found — add services in Booking module" : "Save site first to load services"
     )
   );
 }
 
 /**
  * Staff Selector Field Editor
- * For selecting a staff member in the properties panel
+ * For selecting a staff member in the properties panel — fetches real staff
  */
 function StaffSelectorField(props: CustomFieldEditorProps) {
   const { value, onChange, siteId } = props;
-  
-  // Simple select for now - would be enhanced with actual staff data
+  const [staffList, setStaffList] = useState<{ id: string; name: string; email: string | null }[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!siteId) return;
+    setLoading(true);
+    getPublicStaff(siteId)
+      .then((data: any[]) => {
+        setStaffList(data.map((s: any) => ({ id: s.id, name: s.name, email: s.email })));
+      })
+      .catch(() => setStaffList([]))
+      .finally(() => setLoading(false));
+  }, [siteId]);
+
   return React.createElement(
     "div",
     { className: "space-y-2" },
@@ -96,19 +126,24 @@ function StaffSelectorField(props: CustomFieldEditorProps) {
       {
         value: (value as string) || "",
         onChange: (e: React.ChangeEvent<HTMLSelectElement>) => onChange(e.target.value || null),
-        className: "w-full px-3 py-2 border rounded-md bg-background",
+        className: "w-full px-3 py-2 border rounded-md bg-background text-sm",
+        disabled: loading,
       },
-      React.createElement("option", { value: "" }, "Any available staff"),
-      React.createElement(
-        "option",
-        { value: "placeholder" },
-        siteId ? `Site: ${siteId.slice(0, 8)}…` : "No site selected"
+      React.createElement("option", { value: "" }, loading ? "Loading staff..." : "Any available staff"),
+      ...staffList.map((s) =>
+        React.createElement(
+          "option",
+          { key: s.id, value: s.id },
+          `${s.name}${s.email ? ` (${s.email})` : ''}`
+        )
       )
     ),
     React.createElement(
       "p",
       { className: "text-xs text-muted-foreground" },
-      "Choose a staff member to pre-select for this block"
+      staffList.length > 0
+        ? `${staffList.length} staff member${staffList.length !== 1 ? 's' : ''} available`
+        : siteId ? "No staff found — add staff in Booking module" : "Save site first to load staff"
     )
   );
 }

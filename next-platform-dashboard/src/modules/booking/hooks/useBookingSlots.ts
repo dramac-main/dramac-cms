@@ -32,8 +32,11 @@ export function useBookingSlots(
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Stable date string to prevent infinite re-renders
+  const dateString = date ? date.toISOString().split('T')[0] : null
+
   const fetchSlots = useCallback(async () => {
-    if (!siteId || !serviceId || !date) {
+    if (!siteId || !serviceId || !dateString) {
       setSlots([])
       setIsLoading(false)
       return
@@ -43,16 +46,24 @@ export function useBookingSlots(
     setError(null)
 
     try {
+      // Reconstruct Date from stable string for server action
+      const dateForQuery = new Date(dateString + 'T00:00:00')
       // Uses admin client — safe for public site visitors (bypasses RLS)
-      const data = await getPublicAvailableSlots(siteId, serviceId, date, staffId)
-      setSlots(data)
+      const data = await getPublicAvailableSlots(siteId, serviceId, dateForQuery, staffId)
+      // Server actions serialize Date objects to strings — normalize slot times
+      const normalizedSlots = data.map((slot: any) => ({
+        ...slot,
+        start: typeof slot.start === 'string' ? new Date(slot.start) : slot.start,
+        end: typeof slot.end === 'string' ? new Date(slot.end) : slot.end,
+      }))
+      setSlots(normalizedSlots)
     } catch (err) {
       console.error('[Booking] Error fetching slots:', err)
       setError(err instanceof Error ? err.message : 'Failed to load time slots')
     } finally {
       setIsLoading(false)
     }
-  }, [siteId, serviceId, date?.toISOString(), staffId])
+  }, [siteId, serviceId, dateString, staffId])
 
   useEffect(() => {
     fetchSlots()

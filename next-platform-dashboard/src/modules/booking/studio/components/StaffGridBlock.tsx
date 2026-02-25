@@ -317,10 +317,10 @@ export function StaffGridBlock({
       role: s.bio?.split('.')[0] || 'Team Member',
       bio: s.bio || undefined,
       avatar: s.avatar_url || undefined,
-      rating: 5.0,
+      rating: 0, // Real rating will come from review system when connected
       reviewCount: 0,
       specialties: s.services?.map(svc => svc.name) || [],
-      availability: s.timezone || 'Flexible',
+      availability: s.accept_bookings ? 'Available' : 'Unavailable',
       experience: undefined,
       location: undefined,
       bookable: s.accept_bookings && s.is_active,
@@ -506,11 +506,11 @@ export function StaffGridBlock({
                     {staff.role}
                   </p>
 
-                  {/* Rating */}
-                  {showRating && (
+                  {/* Rating — only show when there are reviews */}
+                  {showRating && staff.rating > 0 && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px', justifyContent: contentAlignment === 'center' && !isList ? 'center' : undefined }}>
                       <Star style={{ width: 14, height: 14, fill: starColor, color: starColor }} />
-                      <span style={{ fontWeight: 600, fontSize: ratingFontSize, color: ratingColor || undefined }}>{staff.rating}</span>
+                      <span style={{ fontWeight: 600, fontSize: ratingFontSize, color: ratingColor || undefined }}>{staff.rating.toFixed(1)}</span>
                       {showReviewCount && <span style={{ fontSize: ratingFontSize, opacity: 0.5 }}>({staff.reviewCount} reviews)</span>}
                     </div>
                   )}

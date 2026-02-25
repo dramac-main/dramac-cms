@@ -378,7 +378,7 @@ export function BookingWidgetBlock({
       name: s.name,
       role: s.bio ? s.bio.split('.')[0] : undefined,
       avatar: s.avatar_url || undefined,
-      rating: 4.8,
+      rating: 0,
     }))
   }, [siteId, realStaff])
 
@@ -458,6 +458,7 @@ export function BookingWidgetBlock({
     if (step.id === 'details') {
       if (nameRequired && !formData.name?.trim()) return false
       if (emailRequired && !formData.email?.trim()) return false
+      if (emailRequired && formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return false
       return true
     }
     return true
@@ -713,10 +714,10 @@ export function BookingWidgetBlock({
                   <h4 style={{ fontWeight: '600', fontSize: '15px', margin: 0 }}>{staff.name}</h4>
                   {staff.role && <p style={{ fontSize: '13px', opacity: 0.6, margin: '2px 0 0' }}>{staff.role}</p>}
                 </div>
-                {staff.rating && (
+                {staff.rating != null && staff.rating > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <Star style={{ width: 14, height: 14, fill: ratingColor, color: ratingColor }} />
-                    <span style={{ fontSize: '13px', fontWeight: 500 }}>{staff.rating}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 500 }}>{staff.rating.toFixed(1)}</span>
                   </div>
                 )}
               </div>
@@ -892,7 +893,15 @@ export function BookingWidgetBlock({
                 {selectedTime && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{ opacity: 0.7 }}>Time</span>
-                    <span style={{ fontWeight: 500 }}>{selectedTime}</span>
+                    <span style={{ fontWeight: 500 }}>{(() => {
+                      if (timeFormat === '12h') {
+                        const [h, m] = selectedTime.split(':').map(Number)
+                        const period = h >= 12 ? 'PM' : 'AM'
+                        const displayH = h === 0 ? 12 : h > 12 ? h - 12 : h
+                        return `${displayH}:${String(m).padStart(2, '0')} ${period}`
+                      }
+                      return selectedTime
+                    })()}</span>
                   </div>
                 )}
                 {selectedService && (

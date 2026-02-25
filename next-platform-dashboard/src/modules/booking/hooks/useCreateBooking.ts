@@ -28,16 +28,28 @@ export function useCreateBooking(siteId: string): UseCreateBookingResult {
       throw new Error('No site ID provided')
     }
 
+    if (!input.service_id) {
+      throw new Error('Service is required')
+    }
+
+    if (!input.start_time || !input.end_time) {
+      throw new Error('Start time and end time are required')
+    }
+
     setIsSubmitting(true)
     setError(null)
 
     try {
+      // Ensure dates are properly serialized as ISO strings for the server action
+      const startTimeStr = typeof input.start_time === 'string' ? input.start_time : new Date(input.start_time).toISOString()
+      const endTimeStr = typeof input.end_time === 'string' ? input.end_time : new Date(input.end_time).toISOString()
+      
       const result = await createPublicAppointment(siteId, {
-        serviceId: input.service_id || '',
+        serviceId: input.service_id,
         staffId: input.staff_id || undefined,
-        startTime: input.start_time ? new Date(input.start_time) : new Date(),
-        endTime: input.end_time ? new Date(input.end_time) : new Date(Date.now() + 3600000),
-        customerName: input.customer_name || 'Guest',
+        startTime: new Date(startTimeStr),
+        endTime: new Date(endTimeStr),
+        customerName: input.customer_name ?? 'Guest',
         customerEmail: input.customer_email || '',
         customerPhone: input.customer_phone || undefined,
         notes: input.customer_notes || undefined,
@@ -51,13 +63,21 @@ export function useCreateBooking(siteId: string): UseCreateBookingResult {
       const appointment = {
         id: result.appointmentId || '',
         site_id: siteId,
-        service_id: input.service_id || '',
+        service_id: input.service_id,
         staff_id: input.staff_id || null,
-        start_time: input.start_time || new Date().toISOString(),
-        end_time: input.end_time || new Date().toISOString(),
+        start_time: startTimeStr,
+        end_time: endTimeStr,
         status: (result.status || 'pending') as 'pending' | 'confirmed',
-        customer_name: input.customer_name || 'Guest',
+        customer_name: input.customer_name ?? 'Guest',
         customer_email: input.customer_email || '',
+        customer_phone: input.customer_phone || null,
+        customer_notes: input.customer_notes || null,
+        payment_status: 'not_required' as const,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        metadata: { source: 'online' },
+        custom_fields: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       } as Appointment
       setLastBooking(appointment)
       return appointment

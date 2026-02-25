@@ -62,6 +62,12 @@ export interface BookingFormBlockProps {
   siteId?: string
   serviceId?: string
   staffId?: string
+  /** ISO string or Date - start time for the appointment (from calendar component or query param) */
+  startTime?: string
+  /** ISO string or Date - end time for the appointment */
+  endTime?: string
+  /** Service duration in minutes — used to auto-calculate endTime from startTime */
+  serviceDuration?: number
 
   // Validation
   showValidation?: boolean
@@ -194,6 +200,9 @@ export function BookingFormBlock({
   siteId,
   serviceId,
   staffId,
+  startTime,
+  endTime,
+  serviceDuration = 60,
 
   // Validation
   showValidation = true,
@@ -331,6 +340,15 @@ export function BookingFormBlock({
     try {
       // If siteId is available, create a REAL appointment in the database
       if (siteId) {
+        // Compute start/end times from props or defaults
+        let computedStartTime = startTime || new Date().toISOString()
+        let computedEndTime = endTime || ''
+        if (!computedEndTime && computedStartTime) {
+          // Auto-calculate end time from start time + service duration
+          const startDate = new Date(computedStartTime)
+          computedEndTime = new Date(startDate.getTime() + serviceDuration * 60000).toISOString()
+        }
+        
         const result = await createBooking({
           service_id: serviceId || undefined,
           staff_id: staffId || undefined,
@@ -338,8 +356,8 @@ export function BookingFormBlock({
           customer_email: formData.email || undefined,
           customer_phone: formData.phone || undefined,
           customer_notes: formData.notes || undefined,
-          start_time: formData._startTime || new Date().toISOString(),
-          end_time: formData._endTime || new Date(Date.now() + 3600000).toISOString(),
+          start_time: computedStartTime,
+          end_time: computedEndTime,
           status: 'pending',
           payment_status: 'not_required',
           metadata: {

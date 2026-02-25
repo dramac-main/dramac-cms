@@ -1,12 +1,55 @@
 # Active Context
 
-## Current Focus: Social Media Module — Phase A Critical Bug Fixes COMPLETE
+## Current Focus: Known Limitations Deep Analysis & Fixes COMPLETE
 
-### Status: PHASE A COMPLETE ✅ (Commit `8732a76`)
+### Status: ALL 7 AREAS VERIFIED ✅ (Commit `1c60f66`)
 
 ### Recent Fixes (newest first):
+- Known Limitations Deep Analysis — verified all 7 areas are real code, fixed 3 critical issues (commit `1c60f66`) ✅
 - Social Media Phase A Critical Bug Fixes — 11 bug fixes + 93 auth guards across 21 files (commit `8732a76`) ✅
 - CRM Comprehensive Overhaul — Industry-leader features (segments, scoring, forms→CRM, email, bulk ops, merge, import, timeline) ✅
+
+---
+
+### Known Limitations Deep Analysis (commit `1c60f66`) ✅
+
+**Task:** Deeply analyze all 7 "known limitations" to verify they are real implementations (not stubs) and fix any code-level gaps.
+
+#### Findings Summary — All 7 Areas Are REAL Code:
+
+| Area | Status | What It Needs |
+|------|--------|---------------|
+| Social OAuth (SM-01) | ✅ Fully real, 10 platforms | Platform OAuth credentials |
+| Social Publishing (SM-02) | ✅ Real API calls for 9/10 platforms | Platform API keys + OAuth tokens |
+| Social Analytics (SM-03) | ✅ Real sync service (FB/IG/TW) | Platform API access |
+| Payments (Paddle) | ✅ Full lifecycle, 12+ webhook types | `PADDLE_API_KEY`, client token, webhook secret |
+| Domain Registration (ResellerClub) | ✅ 21+ files, 3000+ lines | `RESELLERCLUB_RESELLER_ID`, API key |
+| CRM Email (Resend) | ✅ Real `resend.emails.send()` | `RESEND_API_KEY` |
+| Abandoned Cart Recovery | ✅ Multi-stage (1h/24h/72h) | `CRON_SECRET`, `RESEND_API_KEY` |
+
+#### 3 Issues Found & Fixed:
+
+**1. DB Schema Mismatch (SM-01) — Migration Applied:**
+- `social_accounts` table was missing 11 columns the code expected
+- Applied migration `sm_01_social_accounts_schema_sync`: added `user_id`, `followers_count`, `following_count`, `posts_count`, `engagement_rate`, `connected_at`, `last_error_at`, `settings`, `auto_reply_enabled`, `monitoring_enabled`, `created_by`
+- Renamed `last_sync_at` → `last_synced_at`
+- Verified: 33 columns confirmed in DB
+
+**2. "Post Now" Button Bug (SM-02) — Code Fixed:**
+- `PostComposerWrapper.tsx`: Both "Post Now" and "Schedule Post" called same `createPost()` which saved as `draft` when no `scheduledAt`
+- Fix: After `createPost()`, if no `scheduledAt`, now calls `publishPostNow()` which sets status to `'publishing'`, calls real platform APIs via `publishToAccount()`, logs to `social_publish_log`
+- Shows loading toast "Publishing to platforms..." during publish
+
+**3. syncAnalytics Stub (SM-03) — Code Fixed:**
+- `analytics-actions.ts`: `syncAnalytics()` was a stub that wrote ALL ZEROS to `social_analytics_daily`
+- Fix: Now delegates to real `syncAccountAnalytics()` from `analytics-sync-service.ts` which makes actual API calls to Facebook Insights, Instagram Business API, Twitter v2
+- The real service was already wired to the cron route but not the UI "Sync Now" button
+
+#### Key Architecture Notes:
+- **Unified Cron**: Single daily cron at midnight UTC (`vercel.json`) dispatches to 9 sub-routes including `socialPublish`, `socialSync`, `abandonedCarts`
+- **Abandoned Cart limitation**: Daily cron means 1-hour first email fires at next midnight, not 1 hour after abandonment
+- **YouTube publishing**: Stubbed (returns error) — all other 9 platforms are real
+- **LinkedIn analytics**: Falls through to `writeBasicAnalytics()` — FB/IG/TW have real API sync
 - RichText/Accordion/Tabs Full Styling & Interactivity Fix (commit `8fe3906`) ✅
 - Button Visibility + Color Contrast + Booking Module Fix (commit `fd3a719`) ✅
 - Pipeline Plumbing Fix — Registry init, module detection, semantic maps (commit `96fd825`) ✅

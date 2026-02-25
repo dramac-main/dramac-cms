@@ -249,6 +249,7 @@ export function ServiceSelectorBlock({
   cardBorderRadius = '10px',
   buttonBorderRadius = '8px',
   imageBorderRadius,
+  imageAspectRatio = 'landscape',
   borderWidth = '1px',
   shadow = 'none',
   cardShadow = 'sm',
@@ -307,6 +308,7 @@ export function ServiceSelectorBlock({
   }, [dataServices, searchQuery, activeCategory, maxServices])
 
   const handleSelect = (service: ServiceItem) => {
+    if (service.available === false) return // Don't allow selecting unavailable services
     setSelectedServiceId(service.id)
     onServiceSelect?.(service)
   }
@@ -444,7 +446,7 @@ export function ServiceSelectorBlock({
                     border: `${isActive ? '2px' : borderWidth} solid ${isActive ? selectedBorder : (cardBorderColor || '#e5e7eb')}`,
                     backgroundColor: isActive ? selectedBg : (cardBackgroundColor || undefined),
                     boxShadow: SHADOW_MAP[cardShadow] || 'none',
-                    cursor: 'pointer',
+                    cursor: service.available === false ? 'not-allowed' : 'pointer',
                     transition: animateCards ? 'all 0.2s ease' : 'none',
                     transform: hoverScale ? undefined : undefined,
                     position: 'relative',
@@ -470,7 +472,36 @@ export function ServiceSelectorBlock({
                   role="button"
                   aria-pressed={isActive}
                   aria-label={`Select ${service.name}`}
+                  aria-disabled={service.available === false}
                 >
+                  {/* Service Image */}
+                  {showImage && service.image && (
+                    <div style={{
+                      paddingTop: imageAspectRatio === 'square' ? '100%' : imageAspectRatio === 'landscape' ? '56.25%' : '75%',
+                      position: 'relative', borderRadius: `${imageBorderRadius || cardBorderRadius} ${imageBorderRadius || cardBorderRadius} 0 0`,
+                      overflow: 'hidden', marginBottom: '12px', marginTop: layout === 'list' ? 0 : `-${cardPadding}`,
+                      marginLeft: layout === 'list' ? `-${cardPadding}` : `-${cardPadding}`,
+                      marginRight: layout === 'list' ? '0' : `-${cardPadding}`,
+                      width: layout === 'list' ? '120px' : `calc(100% + 2 * ${cardPadding})`,
+                      flexShrink: 0,
+                    }}>
+                      <img src={service.image} alt={service.name} loading="lazy" style={{
+                        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                        objectFit: 'cover',
+                      }} />
+                    </div>
+                  )}
+
+                  {/* Unavailable overlay */}
+                  {service.available === false && (
+                    <div style={{
+                      position: 'absolute', top: '8px', left: '8px',
+                      padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 600,
+                      backgroundColor: '#ef4444', color: '#ffffff',
+                    }}>
+                      Unavailable
+                    </div>
+                  )}
                   {/* Featured Badge */}
                   {showFeaturedBadge && service.featured && (
                     <span style={{

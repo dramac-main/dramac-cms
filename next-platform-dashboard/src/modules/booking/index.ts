@@ -48,6 +48,7 @@ export {
   // Availability
   getAvailability,
   createAvailability,
+  updateAvailability,
   deleteAvailability,
   getAvailableSlots,
   
