@@ -20,7 +20,12 @@ import { createClient } from '@/lib/supabase/server';
 
 /**
  * Content JSON for the /book page.
- * Includes a branded hero section and the BookingServiceSelector component.
+ * Uses the BookingWidget component — the full multi-step booking wizard
+ * (Service → Staff → Date/Time → Details → Confirmation).
+ * 
+ * NO hardcoded colors — all colors come from the site's brand palette
+ * via the CSS variable system in StudioRenderer.
+ * 
  * Navbar/Footer are NOT included — they're injected at runtime from the homepage.
  */
 const BOOKING_PAGE_CONTENT = {
@@ -32,7 +37,6 @@ const BOOKING_PAGE_CONTENT = {
       styles: {
         padding: '0',
         maxWidth: '1280px',
-        backgroundColor: '#ffffff',
       },
     },
     children: ['section_booking_hero', 'section_booking_main'],
@@ -46,7 +50,6 @@ const BOOKING_PAGE_CONTENT = {
         margin: '0 auto',
         padding: '48px 24px 32px',
         maxWidth: '1280px',
-        backgroundColor: '#f0fdf4',
       },
       children: ['container_booking_hero'],
       parentId: 'root',
@@ -85,7 +88,7 @@ const BOOKING_PAGE_CONTENT = {
       type: 'RichText',
       props: {
         content:
-          '<p style="text-align: center; font-size: 18px; color: #4b5563; max-width: 600px; margin: 0 auto;">Select a service below and choose a convenient time. Our team is ready to help you with personalized care.</p>',
+          '<p style="text-align: center; font-size: 18px; max-width: 600px; margin: 0 auto;">Select a service below and choose a convenient time. Our team is ready to help you with personalized care.</p>',
         textAlign: 'center',
       },
       parentId: 'container_booking_hero',
@@ -96,23 +99,37 @@ const BOOKING_PAGE_CONTENT = {
       props: {
         margin: '0 auto',
         padding: '32px 24px 64px',
-        maxWidth: '1280px',
-        backgroundColor: '#ffffff',
+        maxWidth: '800px',
       },
-      children: ['booking_service_selector'],
+      children: ['booking_widget'],
       parentId: 'root',
     },
-    booking_service_selector: {
-      id: 'booking_service_selector',
-      type: 'BookingServiceSelector',
+    booking_widget: {
+      id: 'booking_widget',
+      type: 'BookingWidget',
       props: {
-        layout: 'grid',
-        showPricing: true,
-        showDuration: true,
-        showDescription: true,
-        columns: 3,
-        bookButtonText: 'Book Now',
-        backgroundColor: '#ffffff',
+        title: 'Book an Appointment',
+        showHeader: true,
+        showStepIndicator: true,
+        showStepLabels: true,
+        showServiceStep: true,
+        showStaffStep: true,
+        showSummary: true,
+        layout: 'standard',
+        stepIndicatorStyle: 'dots',
+        headerAlignment: 'center',
+        shadow: 'md',
+        borderRadius: '16px',
+        cardBorderRadius: '10px',
+        buttonBorderRadius: '10px',
+        hoverScale: true,
+        animateSteps: true,
+        showSuccessAnimation: true,
+        showNameField: true,
+        showEmailField: true,
+        showPhoneField: true,
+        showNotesField: true,
+        timeFormat: '24h',
       },
       parentId: 'section_booking_main',
     },

@@ -330,8 +330,8 @@ export async function isModuleEnabledForSite(
  * into the site's existing settings so that the brand color resolution system
  * can read them at render time (via resolveBrandColors in brand-colors.ts).
  * 
- * Also writes the top-level flat branding fields (primary_color, etc.)
- * if they are not already set, so older code paths also pick them up.
+ * ALWAYS writes the flat branding fields (primary_color, etc.) so that
+ * the renderer, AI context builder, and branding settings all stay in sync.
  */
 export async function persistDesignTokensAction(
   siteId: string,
@@ -394,15 +394,16 @@ export async function persistDesignTokensAction(
       ...((currentSettings.theme as Record<string, unknown>) || {}),
       ...cleanTheme,
     },
-    // Set flat branding fields only if not already set
-    // All 7 fields: colors + fonts — ensures renderer can read from flat keys
-    ...(currentSettings.primary_color ? {} : designTokens.primaryColor ? { primary_color: designTokens.primaryColor } : {}),
-    ...(currentSettings.secondary_color ? {} : designTokens.secondaryColor ? { secondary_color: designTokens.secondaryColor } : {}),
-    ...(currentSettings.accent_color ? {} : designTokens.accentColor ? { accent_color: designTokens.accentColor } : {}),
-    ...(currentSettings.background_color ? {} : designTokens.backgroundColor ? { background_color: designTokens.backgroundColor } : {}),
-    ...(currentSettings.text_color ? {} : designTokens.textColor ? { text_color: designTokens.textColor } : {}),
-    ...(currentSettings.font_heading ? {} : designTokens.fontHeading ? { font_heading: designTokens.fontHeading } : {}),
-    ...(currentSettings.font_body ? {} : designTokens.fontBody ? { font_body: designTokens.fontBody } : {}),
+    // ALWAYS write flat branding fields — these are the canonical source of truth
+    // for the renderer, AI context builder, and branding settings UI.
+    // Previous behavior only wrote if absent, causing stale data on re-generation.
+    ...(designTokens.primaryColor ? { primary_color: designTokens.primaryColor } : {}),
+    ...(designTokens.secondaryColor ? { secondary_color: designTokens.secondaryColor } : {}),
+    ...(designTokens.accentColor ? { accent_color: designTokens.accentColor } : {}),
+    ...(designTokens.backgroundColor ? { background_color: designTokens.backgroundColor } : {}),
+    ...(designTokens.textColor ? { text_color: designTokens.textColor } : {}),
+    ...(designTokens.fontHeading ? { font_heading: designTokens.fontHeading } : {}),
+    ...(designTokens.fontBody ? { font_body: designTokens.fontBody } : {}),
   };
 
   const { error: updateError } = await supabase
@@ -415,5 +416,113 @@ export async function persistDesignTokensAction(
   }
 
   revalidatePath(`/dashboard/sites/${siteId}`);
+  return { success: true };
+}
+
+// ============================================================================
+// Site Branding Settings
+// ============================================================================
+
+export interface SiteBrandingData {
+  primary_color: string;
+  secondary_color: string;
+  accent_color: string;
+  background_color: string;
+  text_color: string;
+  font_heading: string;
+  font_body: string;
+}
+
+/**
+ * Get site branding data from settings.
+ * Reads flat fields first, falls back to theme.* (camelCase).
+ */
+export async function getSiteBrandingAction(siteId: string): Promise<{
+  data?: SiteBrandingData;
+  error?: string;
+}> {
+  const supabase = await createClient();
+
+  const { data: site, error } = await supabase
+    .from("sites")
+    .select("settings")
+    .eq("id", siteId)
+    .single();
+
+  if (error) return { error: error.message };
+
+  const settings = (site?.settings as Record<string, unknown>) || {};
+  const theme = (settings.theme as Record<string, unknown>) || {};
+
+  return {
+    data: {
+      primary_color: (settings.primary_color as string) || (theme.primaryColor as string) || '',
+      secondary_color: (settings.secondary_color as string) || (theme.secondaryColor as string) || '',
+      accent_color: (settings.accent_color as string) || (theme.accentColor as string) || '',
+      background_color: (settings.background_color as string) || (theme.backgroundColor as string) || '#ffffff',
+      text_color: (settings.text_color as string) || (theme.textColor as string) || '#0f172a',
+      font_heading: (settings.font_heading as string) || (theme.fontHeading as string) || '',
+      font_body: (settings.font_body as string) || (theme.fontBody as string) || '',
+    },
+  };
+}
+
+/**
+ * Update site branding settings.
+ * Writes to BOTH flat fields AND theme.* for full compatibility.
+ * This is the SINGLE source of truth for site branding.
+ */
+export async function updateSiteBrandingAction(
+  siteId: string,
+  branding: SiteBrandingData
+): Promise<{ success?: boolean; error?: string }> {
+  if (!siteId) return { error: "Missing siteId" };
+
+  const supabase = await createClient();
+
+  // Fetch current settings to merge
+  const { data: site, error: fetchError } = await supabase
+    .from("sites")
+    .select("settings")
+    .eq("id", siteId)
+    .single();
+
+  if (fetchError) return { error: fetchError.message };
+
+  const currentSettings = (site?.settings as Record<string, unknown>) || {};
+  const currentTheme = (currentSettings.theme as Record<string, unknown>) || {};
+
+  const mergedSettings = {
+    ...currentSettings,
+    // Flat fields (canonical for renderer + AI context builder)
+    primary_color: branding.primary_color || undefined,
+    secondary_color: branding.secondary_color || undefined,
+    accent_color: branding.accent_color || undefined,
+    background_color: branding.background_color || undefined,
+    text_color: branding.text_color || undefined,
+    font_heading: branding.font_heading || undefined,
+    font_body: branding.font_body || undefined,
+    // Theme sub-object (for AI designer design tokens compatibility)
+    theme: {
+      ...currentTheme,
+      primaryColor: branding.primary_color || undefined,
+      secondaryColor: branding.secondary_color || undefined,
+      accentColor: branding.accent_color || undefined,
+      backgroundColor: branding.background_color || undefined,
+      textColor: branding.text_color || undefined,
+      fontHeading: branding.font_heading || undefined,
+      fontBody: branding.font_body || undefined,
+    },
+  };
+
+  const { error: updateError } = await supabase
+    .from("sites")
+    .update({ settings: mergedSettings as Json })
+    .eq("id", siteId);
+
+  if (updateError) return { error: updateError.message };
+
+  revalidatePath(`/dashboard/sites/${siteId}`);
+  revalidatePath(`/dashboard/sites/${siteId}/settings`);
   return { success: true };
 }

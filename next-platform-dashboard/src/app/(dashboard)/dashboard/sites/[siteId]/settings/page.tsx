@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getSite } from "@/lib/actions/sites";
 import { PageHeader } from "@/components/layout/page-header";
 import { SiteSettingsForm } from "@/components/sites/site-settings-form";
+import { SiteBrandingSettings } from "@/components/sites/site-branding-settings";
 import { SiteDangerZone } from "@/components/sites/site-danger-zone";
 import { SiteModulesTab } from "@/components/sites/site-modules-tab";
 import { BackupList } from "@/components/sites/backup-list";
@@ -31,7 +32,7 @@ export default async function SiteSettingsPage({ params, searchParams }: SiteSet
   const { siteId } = await params;
   const { tab } = await searchParams;
   const site = await getSite(siteId).catch(() => null);
-  const validTabs = ["general", "domains", "seo", "modules", "backups", "danger"];
+  const validTabs = ["general", "branding", "domains", "seo", "modules", "backups", "danger"];
   const defaultTab = tab && validTabs.includes(tab) ? tab : "general";
 
   if (!site) {
@@ -57,6 +58,7 @@ export default async function SiteSettingsPage({ params, searchParams }: SiteSet
       <Tabs defaultValue={defaultTab} className="space-y-6">
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>
+          <TabsTrigger value="branding">Branding</TabsTrigger>
           <TabsTrigger value="domains">Domains</TabsTrigger>
           <TabsTrigger value="seo">SEO</TabsTrigger>
           <TabsTrigger value="modules">Modules</TabsTrigger>
@@ -66,6 +68,10 @@ export default async function SiteSettingsPage({ params, searchParams }: SiteSet
 
         <TabsContent value="general">
           <SiteSettingsForm site={site} section="general" />
+        </TabsContent>
+
+        <TabsContent value="branding">
+          <SiteBrandingSettings siteId={site.id} />
         </TabsContent>
 
         <TabsContent value="domains">

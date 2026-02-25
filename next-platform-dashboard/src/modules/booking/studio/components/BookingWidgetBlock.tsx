@@ -256,7 +256,7 @@ export function BookingWidgetBlock({
   gap = '16px',
 
   // Colors
-  primaryColor = '#8B5CF6',
+  primaryColor = '',
   secondaryColor,
   backgroundColor,
   textColor,
@@ -270,23 +270,23 @@ export function BookingWidgetBlock({
   cardSelectedBorderColor,
   cardSelectedBgColor,
   buttonBackgroundColor,
-  buttonTextColor = '#ffffff',
+  buttonTextColor = '',
   buttonHoverColor,
   secondaryButtonBgColor,
   secondaryButtonTextColor,
   slotBgColor,
   slotSelectedBgColor,
-  slotSelectedTextColor = '#ffffff',
+  slotSelectedTextColor = '',
   summaryBgColor,
-  successColor = '#22c55e',
-  errorColor = '#ef4444',
+  successColor = '',
+  errorColor = '',
   borderColor,
   dividerColor,
   progressBarBgColor,
   inputBorderColor,
   inputFocusBorderColor,
   priceColor,
-  ratingColor = '#f59e0b',
+  ratingColor = '',
 
   // Typography
   titleFontSize = '20px',
@@ -437,16 +437,24 @@ export function BookingWidgetBlock({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate, slotStartHour, slotEndHour, slotInterval, timeFormat, siteId, selectedService?.id, realSlots])
 
+  // Resolved colors — fall back to CSS variables from the branding system
+  const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
+  const btnTxt = buttonTextColor || 'var(--brand-button-text, #ffffff)'
+  const slotSelTxt = slotSelectedTextColor || 'var(--brand-button-text, #ffffff)'
+  const successClr = successColor || '#22c55e'
+  const errorClr = errorColor || '#ef4444'
+  const ratingClr = ratingColor || '#f59e0b'
+
   // Derived colors
-  const btnBg = buttonBackgroundColor || primaryColor
-  const activeStep = stepActiveColor || primaryColor
-  const completedStep = stepCompletedColor || primaryColor
+  const btnBg = buttonBackgroundColor || pc
+  const activeStep = stepActiveColor || pc
+  const completedStep = stepCompletedColor || pc
   const inactiveStep = stepInactiveColor || '#d1d5db'
-  const selBorder = cardSelectedBorderColor || primaryColor
-  const selBg = cardSelectedBgColor || `${primaryColor}08`
-  const slotSelBg = slotSelectedBgColor || primaryColor
-  const focusBorder = inputFocusBorderColor || primaryColor
-  const summaryBg = summaryBgColor || `${primaryColor}05`
+  const selBorder = cardSelectedBorderColor || pc
+  const selBg = cardSelectedBgColor || `${primaryColor ? primaryColor + '08' : 'var(--brand-primary-light, rgba(139,92,246,0.03))'}`
+  const slotSelBg = slotSelectedBgColor || pc
+  const focusBorder = inputFocusBorderColor || pc
+  const summaryBg = summaryBgColor || `${primaryColor ? primaryColor + '05' : 'var(--brand-primary-light, rgba(139,92,246,0.02))'}`
   const secBtnBg = secondaryButtonBgColor || 'transparent'
   const secBtnText = secondaryButtonTextColor || textColor || undefined
 
@@ -528,7 +536,7 @@ export function BookingWidgetBlock({
     const displayMessage = isPending
       ? 'Your appointment request has been submitted and is awaiting confirmation. You will receive an email once confirmed.'
       : successMessage
-    const displayColor = isPending ? '#f59e0b' : successColor
+    const displayColor = isPending ? '#f59e0b' : successClr
     const DisplayIcon = isPending ? Clock : CircleCheck
     return (
       <div className={cn('booking-widget-block', className)} style={{
@@ -547,7 +555,7 @@ export function BookingWidgetBlock({
         <p style={{ fontSize: '14px', opacity: 0.7, margin: '0 0 20px', lineHeight: 1.5 }}>{displayMessage}</p>
         <button onClick={resetWidget} style={{
           padding: '10px 24px', borderRadius: buttonBorderRadius, backgroundColor: btnBg,
-          color: buttonTextColor, border: 'none', fontSize: buttonFontSize, fontWeight: buttonFontWeight, cursor: 'pointer',
+          color: btnTxt, border: 'none', fontSize: buttonFontSize, fontWeight: buttonFontWeight, cursor: 'pointer',
         }}>
           {bookAnotherText}
         </button>
@@ -645,7 +653,7 @@ export function BookingWidgetBlock({
           <div style={{ display: 'flex', flexDirection: 'column', gap }}>
             {loadingServices && siteId ? (
               <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
-                <Loader2 style={{ width: 24, height: 24, animation: 'spin 1s linear infinite', color: primaryColor }} />
+                <Loader2 style={{ width: 24, height: 24, animation: 'spin 1s linear infinite', color: pc }} />
               </div>
             ) : dataServices.length === 0 ? (
               <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>{noServicesMessage}</p>
@@ -669,7 +677,7 @@ export function BookingWidgetBlock({
                     <Clock style={{ width: 14, height: 14 }} /> {service.duration} min
                   </div>
                 </div>
-                <span style={{ fontWeight: priceFontWeight, fontSize: priceFontSize, color: priceColor || primaryColor }}>
+                <span style={{ fontWeight: priceFontWeight, fontSize: priceFontSize, color: priceColor || pc }}>
                   {formatPrice(service.price, service.currency)}
                 </span>
               </div>
@@ -682,7 +690,7 @@ export function BookingWidgetBlock({
           <div style={{ display: 'flex', flexDirection: 'column', gap }}>
             {loadingStaff && siteId ? (
               <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
-                <Loader2 style={{ width: 24, height: 24, animation: 'spin 1s linear infinite', color: primaryColor }} />
+                <Loader2 style={{ width: 24, height: 24, animation: 'spin 1s linear infinite', color: pc }} />
               </div>
             ) : dataStaff.length === 0 ? (
               <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>{noStaffMessage}</p>
@@ -703,9 +711,9 @@ export function BookingWidgetBlock({
                   }} />
                 ) : (
                   <div style={{
-                    width: 44, height: 44, borderRadius: '50%', backgroundColor: `${primaryColor}15`,
+                    width: 44, height: 44, borderRadius: '50%', backgroundColor: `${pc}15`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: primaryColor, fontWeight: 700, fontSize: '16px',
+                    color: pc, fontWeight: 700, fontSize: '16px',
                   }}>
                     {staff.name.charAt(0)}
                   </div>
@@ -716,7 +724,7 @@ export function BookingWidgetBlock({
                 </div>
                 {staff.rating != null && staff.rating > 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Star style={{ width: 14, height: 14, fill: ratingColor, color: ratingColor }} />
+                    <Star style={{ width: 14, height: 14, fill: ratingClr, color: ratingClr }} />
                     <span style={{ fontSize: '13px', fontWeight: 500 }}>{staff.rating.toFixed(1)}</span>
                   </div>
                 )}
@@ -748,8 +756,8 @@ export function BookingWidgetBlock({
                     {date && (
                       <button onClick={() => { setSelectedDate(date); setSelectedTime(null) }} disabled={isPast(date)}
                         style={{
-                          width: '100%', height: '100%', borderRadius: '6px', border: isToday(date) && !isDateSelected(date) ? `2px solid ${primaryColor}` : '2px solid transparent',
-                          backgroundColor: isDateSelected(date) ? primaryColor : undefined,
+                          width: '100%', height: '100%', borderRadius: '6px', border: isToday(date) && !isDateSelected(date) ? `2px solid ${pc}` : '2px solid transparent',
+                          backgroundColor: isDateSelected(date) ? pc : undefined,
                           color: isDateSelected(date) ? '#fff' : isPast(date) ? '#d1d5db' : undefined,
                           fontSize: '13px', fontWeight: isDateSelected(date) ? 600 : 400,
                           cursor: isPast(date) ? 'not-allowed' : 'pointer', opacity: isPast(date) ? 0.4 : 1,
@@ -773,7 +781,7 @@ export function BookingWidgetBlock({
                 </p>
                 {loadingSlots && siteId ? (
                   <div style={{ display: 'flex', justifyContent: 'center', padding: '20px 0' }}>
-                    <Loader2 style={{ width: 20, height: 20, animation: 'spin 1s linear infinite', color: primaryColor }} />
+                    <Loader2 style={{ width: 20, height: 20, animation: 'spin 1s linear infinite', color: pc }} />
                   </div>
                 ) : timeSlots.length === 0 ? (
                   <p style={{ fontSize: '14px', opacity: 0.6, textAlign: 'center', padding: '16px 0' }}>{noSlotsMessage}</p>
@@ -784,7 +792,7 @@ export function BookingWidgetBlock({
                         style={{
                           padding: '7px 10px', borderRadius: '6px', fontSize: '13px',
                           backgroundColor: selectedTime === slot.time ? slotSelBg : slot.available ? (slotBgColor || 'transparent') : '#f3f4f6',
-                          color: selectedTime === slot.time ? slotSelectedTextColor : slot.available ? undefined : '#d1d5db',
+                          color: selectedTime === slot.time ? slotSelTxt : slot.available ? undefined : '#d1d5db',
                           border: `1px solid ${selectedTime === slot.time ? slotSelBg : slot.available ? (cardBorderColor || '#e5e7eb') : 'transparent'}`,
                           cursor: slot.available ? 'pointer' : 'not-allowed', fontWeight: selectedTime === slot.time ? 600 : 400,
                           textDecoration: !slot.available ? 'line-through' : 'none', opacity: !slot.available ? 0.5 : 1,
@@ -806,7 +814,7 @@ export function BookingWidgetBlock({
             {showNameField && (
               <div>
                 <label style={{ fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
-                  <User style={{ width: 14, height: 14, opacity: 0.6 }} /> Full Name {nameRequired && <span style={{ color: errorColor }}>*</span>}
+                  <User style={{ width: 14, height: 14, opacity: 0.6 }} /> Full Name {nameRequired && <span style={{ color: errorClr }}>*</span>}
                 </label>
                 <input type="text" value={formData.name || ''} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
                   placeholder="Enter your name" style={{
@@ -821,7 +829,7 @@ export function BookingWidgetBlock({
             {showEmailField && (
               <div>
                 <label style={{ fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
-                  <Mail style={{ width: 14, height: 14, opacity: 0.6 }} /> Email {emailRequired && <span style={{ color: errorColor }}>*</span>}
+                  <Mail style={{ width: 14, height: 14, opacity: 0.6 }} /> Email {emailRequired && <span style={{ color: errorClr }}>*</span>}
                 </label>
                 <input type="email" value={formData.email || ''} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
                   placeholder="name@business.com" style={{
@@ -907,7 +915,7 @@ export function BookingWidgetBlock({
                 {selectedService && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: `1px solid ${dividerColor || '#e5e7eb'}`, marginTop: '4px' }}>
                     <span style={{ fontWeight: 600 }}>Total</span>
-                    <span style={{ fontWeight: priceFontWeight, fontSize: priceFontSize, color: priceColor || primaryColor }}>
+                    <span style={{ fontWeight: priceFontWeight, fontSize: priceFontSize, color: priceColor || pc }}>
                       {formatPrice(selectedService.price, selectedService.currency)}
                     </span>
                   </div>
@@ -945,14 +953,14 @@ export function BookingWidgetBlock({
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
           {bookingError && (
-            <p style={{ fontSize: '13px', color: errorColor, margin: 0, textAlign: 'right' }}>
+            <p style={{ fontSize: '13px', color: errorClr, margin: 0, textAlign: 'right' }}>
               {bookingError}
             </p>
           )}
           {currentStepId === 'confirm' ? (
           <button onClick={handleConfirm} disabled={isSubmitting} style={{
             padding: '10px 24px', borderRadius: buttonBorderRadius,
-            backgroundColor: isSubmitting ? `${btnBg}80` : btnBg, color: buttonTextColor,
+            backgroundColor: isSubmitting ? `${btnBg}80` : btnBg, color: btnTxt,
             border: 'none', fontSize: buttonFontSize, fontWeight: buttonFontWeight,
             cursor: isSubmitting ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
             transition: 'all 0.2s ease',
@@ -966,7 +974,7 @@ export function BookingWidgetBlock({
         ) : (
           <button onClick={goNext} disabled={!canGoNext()} style={{
             padding: '10px 24px', borderRadius: buttonBorderRadius,
-            backgroundColor: canGoNext() ? btnBg : `${btnBg}40`, color: buttonTextColor,
+            backgroundColor: canGoNext() ? btnBg : `${btnBg}40`, color: btnTxt,
             border: 'none', fontSize: buttonFontSize, fontWeight: buttonFontWeight,
             cursor: canGoNext() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: '6px',
             transition: 'all 0.2s ease',

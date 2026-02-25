@@ -203,7 +203,7 @@ export function ServiceSelectorBlock({
   cardPadding = '16px',
 
   // Colors
-  primaryColor = '#8B5CF6',
+  primaryColor = '',
   secondaryColor,
   backgroundColor,
   textColor,
@@ -215,17 +215,17 @@ export function ServiceSelectorBlock({
   cardSelectedBgColor,
   cardSelectedBorderColor,
   buttonBackgroundColor,
-  buttonTextColor = '#ffffff',
+  buttonTextColor = '',
   buttonHoverColor,
   priceColor,
   durationColor,
-  ratingColor = '#f59e0b',
+  ratingColor = '',
   categoryColor,
   categoryBgColor,
   searchBgColor,
   searchBorderColor,
   featuredBadgeBgColor,
-  featuredBadgeTextColor = '#ffffff',
+  featuredBadgeTextColor = '',
   dividerColor,
   descriptionColor,
 
@@ -321,10 +321,16 @@ export function ServiceSelectorBlock({
     }
   }
 
-  const btnBg = buttonBackgroundColor || primaryColor
-  const selectedBorder = cardSelectedBorderColor || primaryColor
-  const selectedBg = cardSelectedBgColor || `${primaryColor}08`
-  const badgeBg = featuredBadgeBgColor || primaryColor
+  // Resolved colors — fall back to CSS variables from the branding system
+  const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
+  const btnTxt = buttonTextColor || 'var(--brand-button-text, #ffffff)'
+  const badgeTxt = featuredBadgeTextColor || '#ffffff'
+  const ratingClr = ratingColor || '#f59e0b'
+
+  const btnBg = buttonBackgroundColor || pc
+  const selectedBorder = cardSelectedBorderColor || pc
+  const selectedBg = cardSelectedBgColor || `${primaryColor ? primaryColor + '08' : 'var(--brand-primary-light, rgba(139,92,246,0.03))'}`
+  const badgeBg = featuredBadgeBgColor || pc
 
   const isGrid = layout === 'grid' || layout === 'cards'
 
@@ -398,8 +404,8 @@ export function ServiceSelectorBlock({
                   onClick={() => setActiveCategory(null)}
                   style={{
                     padding: '6px 12px', borderRadius: '9999px', fontSize: categoryFontSize, fontWeight: 500,
-                    border: `1px solid ${!activeCategory ? primaryColor : (cardBorderColor || '#e5e7eb')}`,
-                    backgroundColor: !activeCategory ? primaryColor : 'transparent',
+                    border: `1px solid ${!activeCategory ? pc : (cardBorderColor || '#e5e7eb')}`,
+                    backgroundColor: !activeCategory ? pc : 'transparent',
                     color: !activeCategory ? '#fff' : undefined, cursor: 'pointer',
                   }}
                 >
@@ -411,8 +417,8 @@ export function ServiceSelectorBlock({
                     onClick={() => setActiveCategory(cat)}
                     style={{
                       padding: '6px 12px', borderRadius: '9999px', fontSize: categoryFontSize, fontWeight: 500,
-                      border: `1px solid ${activeCategory === cat ? primaryColor : (cardBorderColor || '#e5e7eb')}`,
-                      backgroundColor: activeCategory === cat ? primaryColor : (categoryBgColor || 'transparent'),
+                      border: `1px solid ${activeCategory === cat ? pc : (cardBorderColor || '#e5e7eb')}`,
+                      backgroundColor: activeCategory === cat ? pc : (categoryBgColor || 'transparent'),
                       color: activeCategory === cat ? '#fff' : (categoryColor || undefined), cursor: 'pointer',
                     }}
                   >
@@ -507,7 +513,7 @@ export function ServiceSelectorBlock({
                     <span style={{
                       position: 'absolute', top: '8px', right: '8px',
                       padding: '2px 8px', borderRadius: '9999px', fontSize: '10px', fontWeight: 600,
-                      backgroundColor: badgeBg, color: featuredBadgeTextColor,
+                      backgroundColor: badgeBg, color: badgeTxt,
                     }}>
                       {featuredBadgeText}
                     </span>
@@ -518,7 +524,7 @@ export function ServiceSelectorBlock({
                     <span style={{
                       display: 'inline-block', fontSize: categoryFontSize, fontWeight: 500,
                       padding: '2px 8px', borderRadius: '4px', marginBottom: '8px',
-                      backgroundColor: categoryBgColor || `${primaryColor}10`, color: categoryColor || primaryColor,
+                      backgroundColor: categoryBgColor || `${primaryColor ? primaryColor + '10' : 'var(--brand-primary-light, rgba(139,92,246,0.06))'}`, color: categoryColor || pc,
                     }}>
                       {service.category}
                     </span>
@@ -547,8 +553,8 @@ export function ServiceSelectorBlock({
                       )}
                       {showRating && service.rating && (
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: durationFontSize }}>
-                          <Star style={{ width: 14, height: 14, fill: ratingColor, color: ratingColor }} />
-                          <span style={{ color: ratingColor, fontWeight: 500 }}>{service.rating}</span>
+                          <Star style={{ width: 14, height: 14, fill: ratingClr, color: ratingClr }} />
+                          <span style={{ color: ratingClr, fontWeight: 500 }}>{service.rating}</span>
                           {service.reviewCount && <span style={{ opacity: 0.5 }}>({service.reviewCount})</span>}
                         </span>
                       )}
@@ -558,16 +564,16 @@ export function ServiceSelectorBlock({
                   {/* Price + Select */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: layout === 'list' ? 0 : '12px', gap: '8px' }}>
                     {showPrice && (
-                      <span style={{ fontWeight: priceFontWeight, fontSize: priceFontSize, color: priceColor || primaryColor }}>
+                      <span style={{ fontWeight: priceFontWeight, fontSize: priceFontSize, color: priceColor || pc }}>
                         {formatPrice(service.price, service.currency)}
                       </span>
                     )}
                     <button
                       style={{
                         padding: '6px 16px', borderRadius: buttonBorderRadius,
-                        backgroundColor: isActive ? `${primaryColor}20` : btnBg,
-                        color: isActive ? primaryColor : buttonTextColor,
-                        border: isActive ? `1px solid ${primaryColor}` : '1px solid transparent',
+                        backgroundColor: isActive ? `${primaryColor ? primaryColor + '20' : 'var(--brand-primary-light, rgba(139,92,246,0.12))'}` : btnBg,
+                        color: isActive ? pc : btnTxt,
+                        border: isActive ? `1px solid ${pc}` : '1px solid transparent',
                         fontSize: buttonFontSize, fontWeight: buttonFontWeight, cursor: 'pointer',
                         transition: 'all 0.15s ease',
                       }}
@@ -613,10 +619,10 @@ export const serviceSelectorDefinition: ComponentDefinition = {
     columns: 2,
     mobileColumns: 1,
     headerAlignment: 'left',
-    primaryColor: '#8B5CF6',
-    buttonTextColor: '#ffffff',
-    featuredBadgeTextColor: '#ffffff',
-    ratingColor: '#f59e0b',
+    primaryColor: '',
+    buttonTextColor: '',
+    featuredBadgeTextColor: '',
+    ratingColor: '',
     borderRadius: '12px',
     cardBorderRadius: '10px',
     buttonBorderRadius: '8px',

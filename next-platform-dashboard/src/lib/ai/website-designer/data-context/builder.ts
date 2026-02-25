@@ -237,10 +237,10 @@ type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
  * Fetch branding data
  */
 async function fetchBranding(supabase: SupabaseClient, siteId: string): Promise<BrandingData | null> {
-  // The branding might be stored directly on the site or in a separate table
-  // Try site_settings first, then fall back to checking site.settings
+  // Read from sites.settings — checks BOTH flat fields AND theme.* (camelCase)
+  // Flat fields are canonical (written by branding settings UI + AI designer)
+  // theme.* is fallback (written by AI designer only)
   try {
-    // Try to get from a branding/settings table if it exists
     const { data } = await supabase
       .from("sites")
       .select("settings")
@@ -249,14 +249,17 @@ async function fetchBranding(supabase: SupabaseClient, siteId: string): Promise<
     
     if (data?.settings && typeof data.settings === "object") {
       const settings = data.settings as Record<string, unknown>;
+      const theme = (settings.theme as Record<string, unknown>) || {};
       return {
         business_name: (settings.business_name as string) ?? undefined,
-        primary_color: (settings.primary_color as string) ?? undefined,
-        secondary_color: (settings.secondary_color as string) ?? undefined,
-        accent_color: (settings.accent_color as string) ?? undefined,
+        primary_color: (settings.primary_color as string) || (theme.primaryColor as string) || undefined,
+        secondary_color: (settings.secondary_color as string) || (theme.secondaryColor as string) || undefined,
+        accent_color: (settings.accent_color as string) || (theme.accentColor as string) || undefined,
+        background_color: (settings.background_color as string) || (theme.backgroundColor as string) || undefined,
+        text_color: (settings.text_color as string) || (theme.textColor as string) || undefined,
         logo_url: (settings.logo_url as string) ?? undefined,
-        heading_font: (settings.heading_font as string) ?? undefined,
-        body_font: (settings.body_font as string) ?? undefined,
+        heading_font: (settings.font_heading as string) || (theme.fontHeading as string) || undefined,
+        body_font: (settings.font_body as string) || (theme.fontBody as string) || undefined,
       };
     }
   } catch {
