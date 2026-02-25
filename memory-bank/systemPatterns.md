@@ -148,6 +148,41 @@ const userId = user.id  // NOT user?.id || ''
 
 ---
 
+## 🎨 Brand Color Inheritance System (CRITICAL for Color Consistency)
+
+### Problem
+AI-generated websites had inconsistent colors. 146 color fields across 6 booking/ecommerce studio components, 83% with no defaults. Two separate branding systems that didn't connect. Theme CSS variables were dead code.
+
+### Architecture
+```
+site.settings.primary_color  ──┐
+site.settings.secondary_color ─┤
+site.settings.accent_color   ──┼──► resolveBrandColors() ──► BrandColorPalette (30+)
+site.settings.theme.* ────────┤                                    │
+                               │                            injectBrandColors()
+                               └                                   │
+                                                        fills unset component props
+```
+
+### Key Files
+- **`src/lib/studio/engine/brand-colors.ts`** — Core utility: palette resolution, color mapping, injection
+- **`src/lib/studio/engine/renderer.tsx`** — Resolves palette from siteSettings, injects into every component
+
+### How It Works
+1. `resolveBrandColors(source)` derives 30+ semantic colors from 5 core brand colors
+2. `BRAND_COLOR_MAP` maps ~65 component color prop names to palette keys
+3. `injectBrandColors(props, palette)` fills any unset color prop with the brand-derived value
+4. Renderer calls this for every component at render time
+
+### Two Layers of Enforcement
+1. **AI prompts** (prompts.ts, formatter.ts) mandate the AI use brand colors
+2. **Renderer** (brand-colors.ts) fills any gaps the AI missed at render time
+
+### Design Token Persistence
+When AI designer saves, `persistDesignTokensAction` in `sites.ts` writes `architecture.designTokens` to `site.settings.theme`, creating the bridge: AI → DB → renderer.
+
+---
+
 ## 🇿🇲 Locale & Currency Pattern (CRITICAL)
 
 ### Centralized Locale Config

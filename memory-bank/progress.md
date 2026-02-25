@@ -1,42 +1,34 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅** + **AI RICHTEXT/ACCORDION/TABS RENDERING FIX ✅** + **CRM COMPREHENSIVE INDUSTRY-LEADER OVERHAUL ✅** + **SOCIAL MEDIA PHASE A CRITICAL BUG FIXES ✅** + **KNOWN LIMITATIONS DEEP ANALYSIS + FIXES ✅** + **BOOKING MODULE COMPREHENSIVE OVERHAUL ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅** + **AI RICHTEXT/ACCORDION/TABS RENDERING FIX ✅** + **CRM COMPREHENSIVE INDUSTRY-LEADER OVERHAUL ✅** + **SOCIAL MEDIA PHASE A CRITICAL BUG FIXES ✅** + **KNOWN LIMITATIONS DEEP ANALYSIS + FIXES ✅** + **BOOKING MODULE COMPREHENSIVE OVERHAUL ✅** + **BRAND COLOR INHERITANCE SYSTEM ✅**
 
 ---
 
-## Latest Update: February 2026 - Booking Module Comprehensive Overhaul
+## Latest Update: February 2026 - Brand Color Inheritance System
 
-### Task: Deep audit of entire booking module — 13 core files + 6 studio components, end-to-end fixes
+### Task: Fix AI-generated website color inconsistency via centralized brand color palette
 
-Comprehensive line-by-line audit revealed 16+ bugs across core actions, storefront context, hooks, and studio components. All fixed. Jesto dental clinic seeded with 8 services, 4 staff, 13 staff-service links.
+**Problem discovered**: 146 color fields across 6 booking/ecommerce studio components, 83% with no defaults. Theme CSS vars were dead code. AI designer "informed" but not "bound" by brand colors. Zero runtime brand injection existed.
 
-### Files Modified (12 files, +300/-72 lines, commit `8d945ad`):
+**Solution**: New brand-colors.ts utility derives 30+ palette values from 5 core brand colors. BRAND_COLOR_MAP maps ~65 component color prop names to palette keys. Renderer injects brand defaults into every component at render time. AI prompts strengthened with 3 mandatory rules. Design tokens now persisted to site.settings.theme when AI designer saves.
+
+### Files Created/Modified (8 files, +581/-13 lines, commit `d83feaeb`):
 
 | File | Changes |
 |------|---------|
-| booking-actions.ts | Fixed cancelAppointment field, createAppointment validation, createService price=0, added updateAvailability, currency, slug fallback |
-| booking-storefront-context.tsx | Switched from authenticated to public settings action |
-| useBookingSlots.ts | Fixed infinite re-render, Date serialization |
-| useCreateBooking.ts | Added validation, Date serialization, complete Appointment object |
-| index.ts (barrel) | Added updateAvailability export |
-| BookingFormBlock.tsx | Added startTime/endTime props instead of hidden formData |
-| BookingWidgetBlock.tsx | Email validation, time formatting, real rating (0 default), explicit rating guard |
-| ServiceSelectorBlock.tsx | Image rendering, unavailable overlay, imageAspectRatio fix, duplicate width fix |
-| StaffGridBlock.tsx | Removed fake ratings, show only when > 0 |
-| studio/index.ts | Real data-fetching ServiceSelector/StaffSelector field editors |
+| brand-colors.ts (NEW) | Core brand color resolution system (~400 lines) |
+| renderer.tsx | siteSettings prop, brandPalette resolution + injection into all components |
+| craft-renderer.tsx | siteSettings pass-through + InstalledModuleInfo bug fix |
+| page.tsx (site) | Passes site.settings to CraftRenderer |
+| prompts.ts | 3 mandatory rules for brand color compliance |
+| formatter.ts | Branding marked MANDATORY with explicit mappings |
+| ai-designer/page.tsx | Design token persistence on save |
+| actions/sites.ts | New persistDesignTokensAction server action |
 
-### Jesto Test Data (site_id: 07f6a9dd-6aa9-4254-8c0a-430b1796e483):
-- 1 settings row (Africa/Lusaka, ZMW, 12h, auto-confirm)
-- 8 dental services (K150-K1500)
-- 4 staff members with realistic availability schedules
-- 13 staff-service assignment links
+---
 
-### Remaining Enhancement Stubs (low priority, non-breaking):
-- StaffGridBlock/ServiceSelectorBlock `mobileColumns` — needs CSS media queries or responsive hook
-- StaffGridBlock `layout='carousel'` — needs scroll-snap implementation
-- BookingFormBlock floating label position — declared but not rendered
-- BookingEmbedBlock "Connect Site" button — decorative in studio editor (no onClick needed)
+## Previous Update: February 2026 - Booking Module Comprehensive Overhaul
 
 ---
 

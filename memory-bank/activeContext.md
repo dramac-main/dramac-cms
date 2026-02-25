@@ -1,10 +1,11 @@
 # Active Context
 
-## Current Focus: Booking Module Comprehensive Overhaul COMPLETE
+## Current Focus: Brand Color Inheritance System COMPLETE
 
-### Status: ALL FIXES VERIFIED & DEPLOYED ✅ (Commit `8d945ad`)
+### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `d83feaeb`)
 
 ### Recent Fixes (newest first):
+- Brand Color Inheritance System — 8 files, 581 insertions, centralized brand palette for all components (commit `d83feaeb`) ✅
 - Booking Module Comprehensive Overhaul — 12 files, 300+ lines changed, 16+ bug fixes, Jesto test data seeded (commit `8d945ad`) ✅
 - Known Limitations Deep Analysis — verified all 7 areas are real code, fixed 3 critical issues (commit `1c60f66`) ✅
 - Social Media Phase A Critical Bug Fixes — 11 bug fixes + 93 auth guards across 21 files (commit `8732a76`) ✅
@@ -12,7 +13,45 @@
 
 ---
 
-### Booking Module Comprehensive Overhaul (commit `8d945ad`) ✅
+### Brand Color Inheritance System (commit `d83feaeb`) ✅
+
+**Problem:** AI-generated websites had inconsistent colors. 146 color-type fields across 6 booking/ecommerce components, with 83% (121) having no default value. Theme CSS variables (`--theme-primary`) were dead code. AI was "informed" but not "bound" by brand colors. No runtime brand injection existed.
+
+**Solution:** Centralized brand color palette derived from site branding settings, injected into every component at render time.
+
+#### Architecture:
+```
+site.settings.primary_color ──┐
+site.settings.theme.*  ───────┤
+                               ├──► resolveBrandColors() ──► BrandColorPalette (30+ colors)
+                               │                                    │
+                               │                              injectBrandColors()
+                               │                                    │
+                               │                         fills unset component props
+```
+
+#### Files Created:
+| File | Purpose |
+|------|---------|
+| `src/lib/studio/engine/brand-colors.ts` (~400 lines) | Core utility: BrandColorPalette type, BRAND_COLOR_MAP (~65 mappings), resolveBrandColors(), injectBrandColors(), extractBrandSource(), color manipulation utils (hexToRgb, rgbToHex, luminance, isLight, lighten, darken, contrastingForeground, tint) |
+
+#### Files Modified:
+| File | Changes |
+|------|---------|
+| `src/lib/studio/engine/renderer.tsx` | Added siteSettings prop, brandPalette resolution via useMemo, injection into every ComponentRenderer, brand-based page wrapper colors |
+| `src/app/site/[domain]/[[...slug]]/craft-renderer.tsx` | Added siteSettings pass-through, fixed moduleSlug→slug / moduleType→category (InstalledModuleInfo) |
+| `src/app/site/[domain]/[[...slug]]/page.tsx` | Passes data.site.settings to CraftRenderer |
+| `src/lib/ai/website-designer/prompts.ts` | 3 mandatory rules for brand color compliance in AI architect prompt |
+| `src/lib/ai/website-designer/data-context/formatter.ts` | Branding section marked "MANDATORY" with explicit mapping instructions |
+| `src/app/(dashboard)/dashboard/sites/[siteId]/ai-designer/page.tsx` | handleSaveAndApply persists designTokens to site.settings.theme via new server action |
+| `src/lib/actions/sites.ts` | New persistDesignTokensAction: merges designTokens into site.settings.theme + flat branding fields |
+
+#### Key Design Decisions:
+1. **Keep all 146 color fields** for studio power-user overrides — but they all default to brand palette
+2. **Inject at render time** (not at AI generation time) — catches anything the AI missed
+3. **Two layers of enforcement**: (a) AI prompts mandate brand colors, (b) renderer fills gaps with brand palette
+4. **Flat + theme sources**: reads from both `site.settings.primary_color` and `site.settings.theme.primaryColor`
+5. **Color manipulation**: derives 30+ semantic colors from just 5 core brand colors (primary, secondary, accent, bg, fg)
 
 **Task:** Deep line-by-line audit of entire booking module (13 core files + 6 studio components), fix all bugs, ensure end-to-end functionality, seed Jesto site with test data.
 
