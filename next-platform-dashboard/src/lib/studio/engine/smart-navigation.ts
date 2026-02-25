@@ -93,6 +93,56 @@ export const BOOKING_FOOTER_ITEMS: SmartNavItem[] = [
 ];
 
 // ============================================================================
+// Constants — E-commerce module nav items (mirrors auto-setup-actions.ts)
+// These are used as runtime fallback for sites installed BEFORE PHASE-ECOM-50
+// deployed the install hook that writes to site.settings.navigation.
+// ============================================================================
+
+export const ECOMMERCE_NAV_ITEMS: SmartNavItem[] = [
+  {
+    id: "ecom-shop",
+    label: "Shop",
+    href: "/shop",
+    icon: "cart",
+    position: "main",
+    sortOrder: 100,
+    moduleId: "ecommerce",
+  },
+];
+
+export const ECOMMERCE_UTILITY_ITEMS: SmartNavItem[] = [
+  {
+    id: "ecom-cart",
+    label: "Cart",
+    href: "/cart",
+    icon: "cart",
+    position: "utility",
+    sortOrder: 10,
+    badge: "{{cartCount}}",
+    moduleId: "ecommerce",
+  },
+];
+
+export const ECOMMERCE_FOOTER_ITEMS: SmartNavItem[] = [
+  {
+    id: "ecom-footer-shop",
+    label: "Shop All",
+    href: "/shop",
+    position: "footer",
+    sortOrder: 1,
+    moduleId: "ecommerce",
+  },
+  {
+    id: "ecom-footer-cart",
+    label: "My Cart",
+    href: "/cart",
+    position: "footer",
+    sortOrder: 2,
+    moduleId: "ecommerce",
+  },
+];
+
+// ============================================================================
 // Navigation Assembly — merge static links + module-contributed items
 // ============================================================================
 
@@ -100,8 +150,10 @@ export const BOOKING_FOOTER_ITEMS: SmartNavItem[] = [
  * Read module-contributed navigation from site.settings.navigation
  * AND detect installed modules that declare built-in nav items.
  *
- * Ecommerce: writes to site.settings.navigation via install hook → we read it.
- * Booking: has no install hook → we detect the module and inject BOOKING_NAV_ITEMS.
+ * Two-layer strategy ensures EVERY site gets module nav:
+ *   Layer 1: Read settings.navigation (populated by install hooks for new installs)
+ *   Layer 2: Runtime detection from modules array (catches existing sites that
+ *            were installed before the hook system, or modules without hooks)
  *
  * The `modules` param is the installed modules array from page.tsx.
  */
@@ -121,19 +173,32 @@ export function getModuleNavigation(
     }
   }
 
-  // 2. Detect modules that contribute nav items but don't write to settings.navigation
+  // 2. Runtime detection — inject built-in items for active modules that
+  //    are missing from settings.navigation (covers pre-existing sites)
   if (modules) {
     const activeModules = new Set(
       modules.filter(m => m.status === "active").map(m => m.slug)
     );
 
-    // Booking module: inject built-in nav items if not already present from settings
+    // Booking module: inject if not already present from settings
     if (activeModules.has("booking")) {
       const hasBookingMain = result.main.some(i => i.moduleId === "booking");
       if (!hasBookingMain) {
         result.main.push(...BOOKING_NAV_ITEMS);
         result.utility.push(...BOOKING_UTILITY_ITEMS);
         result.footer.push(...BOOKING_FOOTER_ITEMS);
+      }
+    }
+
+    // E-commerce module: inject if not already present from settings
+    // This is the safety net for sites installed before PHASE-ECOM-50
+    // deployed the install hook that writes to site.settings.navigation.
+    if (activeModules.has("ecommerce")) {
+      const hasEcomMain = result.main.some(i => i.moduleId === "ecommerce");
+      if (!hasEcomMain) {
+        result.main.push(...ECOMMERCE_NAV_ITEMS);
+        result.utility.push(...ECOMMERCE_UTILITY_ITEMS);
+        result.footer.push(...ECOMMERCE_FOOTER_ITEMS);
       }
     }
   }
