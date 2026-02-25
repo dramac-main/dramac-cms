@@ -316,7 +316,9 @@ const ECOMMERCE_NAV_ITEMS: NavigationItem[] = [
     icon: 'ShoppingCart',
     position: 'utility',
     sortOrder: 10,
-    badge: '{{cartCount}}', // Dynamic badge
+    // No badge here — the live cart count is handled by the floating
+    // EcommerceCartInjector widget (industry standard). Template strings
+    // like "{{cartCount}}" can't be resolved server-side.
     moduleId: 'ecommerce',
   },
 ];

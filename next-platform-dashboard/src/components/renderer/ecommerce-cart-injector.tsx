@@ -55,7 +55,7 @@ function CartWidgetInner({ siteId, hasLiveChat }: CartWidgetInnerProps) {
     >
       <CartIconWidget
         siteId={siteId}
-        cartUrl="/shop/cart"
+        cartUrl="/cart"
         size="lg"
         className={cn(
           // Floating pill style

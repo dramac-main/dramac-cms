@@ -205,6 +205,84 @@ async function processData(site: any, pageSlug: string, supabase: ReturnType<typ
     }
   }
 
+  // ──────────────────────────────────────────────────────────────────────────
+  // SHARED NAVBAR/FOOTER INJECTION
+  //
+  // Module-created pages (shop, cart, checkout, order-confirmation, book)
+  // often don't include Navbar/Footer in their content JSON because the
+  // install hooks only create the module-specific components. This leaves
+  // those pages without site branding — no header, no footer.
+  //
+  // Fix: If the current page's components don't include a Navbar, find the
+  // homepage's shared-navbar and shared-footer and inject them. This gives
+  // every page consistent site branding without requiring module hooks to
+  // know about the site's design.
+  //
+  // Industry standard: Shopify, Wix, Squarespace all use a shared header/
+  // footer that wraps every page on the site.
+  // ──────────────────────────────────────────────────────────────────────────
+  if (content && typeof content === 'object') {
+    const components = (content as Record<string, unknown>).components as Record<string, { type?: string }> | undefined;
+    const rootObj = (content as Record<string, unknown>).root as { children?: string[] } | undefined;
+
+    // Check if this page has ANY Navbar component
+    const hasNavbar = components
+      ? Object.values(components).some((c) => c?.type === 'Navbar')
+      : false;
+
+    if (!hasNavbar && rootObj?.children) {
+      // Find the homepage to extract its shared Navbar and Footer
+      const homepage = pages.find((p: any) => p.is_homepage);
+      if (homepage) {
+        let homeContent: Record<string, unknown> | null = null;
+        if (homepage.page_content) {
+          if (Array.isArray(homepage.page_content) && homepage.page_content.length > 0) {
+            homeContent = homepage.page_content[0].content as Record<string, unknown>;
+          } else if (typeof homepage.page_content === 'object' && 'content' in homepage.page_content) {
+            homeContent = (homepage.page_content as { content: Record<string, unknown> }).content;
+          }
+        }
+
+        if (homeContent) {
+          const homeComponents = homeContent.components as Record<string, { id?: string; type?: string; [k: string]: unknown }> | undefined;
+          if (homeComponents) {
+            // Find Navbar and Footer component entries from the homepage
+            let navbarEntry: [string, { id?: string; type?: string; [k: string]: unknown }] | undefined;
+            let footerEntry: [string, { id?: string; type?: string; [k: string]: unknown }] | undefined;
+
+            for (const [key, comp] of Object.entries(homeComponents)) {
+              if (comp?.type === 'Navbar' && !navbarEntry) navbarEntry = [key, comp];
+              if (comp?.type === 'Footer' && !footerEntry) footerEntry = [key, comp];
+            }
+
+            // Deep clone the content so we don't mutate the original
+            const mutableContent = JSON.parse(JSON.stringify(content)) as {
+              root: { children: string[] };
+              components: Record<string, unknown>;
+            };
+
+            // Inject navbar at the top
+            if (navbarEntry) {
+              const [navKey, navComp] = navbarEntry;
+              // Use the same key from the homepage — keeps the ID stable
+              mutableContent.components[navKey] = { ...navComp, parentId: 'root' };
+              mutableContent.root.children.unshift(navKey);
+            }
+
+            // Inject footer at the bottom
+            if (footerEntry) {
+              const [footerKey, footerComp] = footerEntry;
+              mutableContent.components[footerKey] = { ...footerComp, parentId: 'root' };
+              mutableContent.root.children.push(footerKey);
+            }
+
+            content = mutableContent;
+          }
+        }
+      }
+    }
+  }
+
   // Extract theme settings
   const siteSettings = site.settings || {};
   const themeSettings = siteSettings.theme || null;

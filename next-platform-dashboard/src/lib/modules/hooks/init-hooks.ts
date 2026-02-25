@@ -9,6 +9,7 @@
 
 import { registerModuleHook } from './module-hooks-registry';
 import { ecommerceInstallationHook } from '@/modules/ecommerce/hooks/installation-hook';
+import { bookingInstallationHook } from '@/modules/booking/hooks/installation-hook';
 
 // Track initialization state
 let initialized = false;
@@ -28,6 +29,9 @@ export function initializeModuleHooks(): void {
 
   // Register e-commerce module hook (the hook contains its own moduleId)
   registerModuleHook(ecommerceInstallationHook);
+
+  // Register booking module hook — auto-creates /book page
+  registerModuleHook(bookingInstallationHook);
 
   // Future: Register other module hooks here
   // registerModuleHook(blogInstallationHook);

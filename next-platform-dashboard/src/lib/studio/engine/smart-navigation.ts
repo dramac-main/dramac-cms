@@ -118,7 +118,8 @@ export const ECOMMERCE_UTILITY_ITEMS: SmartNavItem[] = [
     icon: "cart",
     position: "utility",
     sortOrder: 10,
-    badge: "{{cartCount}}",
+    // No badge — live cart count is handled by the floating
+    // EcommerceCartInjector widget (industry standard pattern).
     moduleId: "ecommerce",
   },
 ];
@@ -262,6 +263,12 @@ export function mergeMainNavLinks(
  *
  * Icon names are normalized to lowercase keys that match the UtilityIcon
  * component in premium-components.tsx (e.g. "ShoppingCart" → "cart").
+ *
+ * Badge handling: Template strings like "{{cartCount}}" are stripped — the
+ * navbar cart icon is rendered as a clean link to /cart. The live cart count
+ * is shown by the floating EcommerceCartInjector widget (industry standard:
+ * Shopify/Wix use a floating cart button with live count, navbar icon is
+ * just a link).
  */
 export function buildUtilityItems(
   moduleUtilityItems: SmartNavItem[]
@@ -273,7 +280,9 @@ export function buildUtilityItems(
       label: item.label,
       href: item.href,
       icon: normalizeIconName(item.icon || "cart"),
-      badge: item.badge,
+      // Strip template badges (e.g. "{{cartCount}}") — they can't be
+      // resolved server-side. Only pass through concrete numeric badges.
+      badge: item.badge && /^\{\{.*\}\}$/.test(item.badge) ? undefined : item.badge,
       ariaLabel: item.label,
     }));
 }
