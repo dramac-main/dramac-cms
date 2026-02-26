@@ -424,6 +424,7 @@ const typographyComponents: ComponentDefinition[] = [
         type: "select",
         label: "Font Family",
         options: [
+          { label: "Inherit from Brand", value: "" },
           { label: "System Default", value: "system-ui, -apple-system, sans-serif" },
           { label: "Inter", value: "'Inter', sans-serif" },
           { label: "Roboto", value: "'Roboto', sans-serif" },
@@ -435,7 +436,7 @@ const typographyComponents: ComponentDefinition[] = [
           { label: "Georgia (Serif)", value: "Georgia, serif" },
           { label: "Monospace", value: "'SF Mono', 'Fira Code', monospace" },
         ],
-        defaultValue: "system-ui, -apple-system, sans-serif",
+        defaultValue: "",
       },
       fontSize: {
         type: "select",

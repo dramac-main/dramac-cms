@@ -63,6 +63,7 @@ export const COMMON_COLORS = [
 
 // Font families available in the editor
 export const FONT_FAMILIES = [
+  { label: 'Inherit from Brand', value: '' },
   { label: 'System Default', value: 'system-ui, -apple-system, sans-serif' },
   { label: 'Geist Sans', value: 'var(--font-geist-sans), sans-serif' },
   { label: 'Geist Mono', value: 'var(--font-geist-mono), monospace' },

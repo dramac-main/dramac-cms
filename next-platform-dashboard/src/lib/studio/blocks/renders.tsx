@@ -3718,7 +3718,7 @@ export function FeaturesRender({
           {/* Title */}
           <h2
             className={`${titleSizeClasses} font-bold mb-4`}
-            style={{ color: titleColor || textColor, fontFamily: titleFont }}
+            style={{ color: titleColor || textColor, fontFamily: titleFont || undefined }}
           >
             {title}
           </h2>
@@ -3768,7 +3768,7 @@ export function FeaturesRender({
               <div className={iconPosition === "left" ? "flex-1" : ""}>
                 <h3
                   className={`${featureTitleSizeClasses} ${featureTitleWeightClasses} mb-2`}
-                  style={{ color: featureTitleColor || textColor, fontFamily: featureTitleFont }}
+                  style={{ color: featureTitleColor || textColor, fontFamily: featureTitleFont || undefined }}
                 >
                   {feature.title}
                 </h3>
@@ -6062,7 +6062,7 @@ export function FAQRender({
           {/* Title */}
           <h2
             className={`${titleSizeClasses} font-bold mb-4`}
-            style={{ color: titleColor || textColor, fontFamily: titleFont }}
+            style={{ color: titleColor || textColor, fontFamily: titleFont || undefined }}
           >
             {title}
           </h2>
@@ -6885,7 +6885,7 @@ export function StatsRender({
             {title && (
               <h2
                 className={`${titleSizeClasses} font-bold mb-4`}
-                style={{ color: titleColor || textColor, fontFamily: titleFont }}
+                style={{ color: titleColor || textColor, fontFamily: titleFont || undefined }}
               >
                 {title}
               </h2>
@@ -6953,7 +6953,7 @@ export function StatsRender({
                     {/* Value */}
                     <div 
                       className={`${valueSizeClasses} ${valueFontWeightClasses} flex items-center`}
-                      style={{ color: valueColor || textColor, fontFamily: valueFont }}
+                      style={{ color: valueColor || textColor, fontFamily: valueFont || undefined }}
                     >
                       {/* Icon - Inline */}
                       {iconPosition === "inline" && renderIcon(stat)}
@@ -7743,7 +7743,7 @@ export function TeamRender({
           {/* Title */}
           <h2
             className={`${titleSizeClasses} font-bold mb-4`}
-            style={{ color: titleColor || textColor, fontFamily: titleFont }}
+            style={{ color: titleColor || textColor, fontFamily: titleFont || undefined }}
           >
             {title}
           </h2>
@@ -7827,7 +7827,7 @@ export function TeamRender({
               {/* Name */}
               <h3
                 className={`${nameSizeClasses} ${nameFontWeightClasses} mb-1`}
-                style={{ color: nameColor || textColor, fontFamily: nameFont }}
+                style={{ color: nameColor || textColor, fontFamily: nameFont || undefined }}
               >
                 {member.name}
               </h3>
@@ -8504,7 +8504,7 @@ export function GalleryRender({
             {title && (
               <h2
                 className={`${titleSizeClasses} font-bold mb-4`}
-                style={{ color: titleColor || textColor, fontFamily: titleFont }}
+                style={{ color: titleColor || textColor, fontFamily: titleFont || undefined }}
               >
                 {title}
               </h2>

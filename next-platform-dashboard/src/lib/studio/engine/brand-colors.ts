@@ -402,6 +402,7 @@ const BRAND_FONT_MAP: Record<string, "heading" | "body"> = {
 
   // Section / block title fonts → heading
   titleFont: "heading",
+  titleFontFamily: "heading",
   featureTitleFont: "heading",
 
   // Person name fonts (team, testimonials) → heading (display emphasis)
@@ -432,12 +433,18 @@ export function injectBrandFonts(
   const result = { ...props };
   const fonts = { heading: fontHeading || fontBody || "", body: fontBody || "" };
 
+  // Old default value that was stored in DB before the brand font system.
+  // Treat it as "unset" so brand fonts can take over.
+  const LEGACY_SYSTEM_FONT = "system-ui, -apple-system, sans-serif";
+
   for (const [propName, fontType] of Object.entries(BRAND_FONT_MAP)) {
     const currentValue = result[propName];
-    if (
-      (currentValue === undefined || currentValue === null || currentValue === "") &&
-      fonts[fontType]
-    ) {
+    const isUnset =
+      currentValue === undefined ||
+      currentValue === null ||
+      currentValue === "" ||
+      currentValue === LEGACY_SYSTEM_FONT;
+    if (isUnset && fonts[fontType]) {
       result[propName] = fonts[fontType];
     }
   }
