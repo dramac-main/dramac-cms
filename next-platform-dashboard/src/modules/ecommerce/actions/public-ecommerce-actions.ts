@@ -818,3 +818,74 @@ export async function updatePublicOrder(
   if (error) throw new Error(error.message)
   return data as Order
 }
+
+// ============================================================================
+// PUBLIC ORDER LOOKUP (guest customers)
+// ============================================================================
+
+/**
+ * Look up an order by order number + customer email.
+ * Allows guest customers to check order status without logging in.
+ * Returns order with items if found, null otherwise.
+ */
+export async function lookupPublicOrder(
+  siteId: string,
+  orderNumber: string,
+  customerEmail: string
+): Promise<{ order: Order; items: Array<Record<string, unknown>> } | null> {
+  const supabase = getPublicClient()
+
+  // Find order matching both order number AND email (prevents enumeration)
+  const { data: order, error } = await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .select('*')
+    .eq('site_id', siteId)
+    .eq('order_number', orderNumber.trim())
+    .ilike('customer_email', customerEmail.trim())
+    .single()
+
+  if (error || !order) return null
+
+  // Fetch order items
+  const { data: items } = await supabase
+    .from(`${TABLE_PREFIX}_order_items`)
+    .select('*')
+    .eq('order_id', order.id)
+    .order('created_at', { ascending: true })
+
+  return {
+    order: order as Order,
+    items: (items || []) as Array<Record<string, unknown>>
+  }
+}
+
+/**
+ * Get a public order by ID (for order confirmation page after checkout).
+ * Only returns the order if it belongs to the specified site.
+ */
+export async function getPublicOrderById(
+  siteId: string,
+  orderId: string
+): Promise<{ order: Order; items: Array<Record<string, unknown>> } | null> {
+  const supabase = getPublicClient()
+
+  const { data: order, error } = await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .select('*')
+    .eq('site_id', siteId)
+    .eq('id', orderId)
+    .single()
+
+  if (error || !order) return null
+
+  const { data: items } = await supabase
+    .from(`${TABLE_PREFIX}_order_items`)
+    .select('*')
+    .eq('order_id', order.id)
+    .order('created_at', { ascending: true })
+
+  return {
+    order: order as Order,
+    items: (items || []) as Array<Record<string, unknown>>
+  }
+}

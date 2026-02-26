@@ -1275,9 +1275,40 @@ export async function getCustomerOrders(siteId: string, customerId: string): Pro
 export async function updateOrderStatus(siteId: string, orderId: string, status: Order['status']): Promise<Order> {
   const supabase = await getModuleClient()
   
+  // Validate status transition
+  const { data: currentOrder, error: fetchError } = await supabase
+    .from(`${TABLE_PREFIX}_orders`)
+    .select('status')
+    .eq('site_id', siteId)
+    .eq('id', orderId)
+    .single()
+  
+  if (fetchError || !currentOrder) throw new Error(fetchError?.message || 'Order not found')
+  
+  const VALID_TRANSITIONS: Record<string, string[]> = {
+    pending:    ['processing', 'confirmed', 'cancelled'],
+    confirmed:  ['processing', 'shipped', 'cancelled'],
+    processing: ['shipped', 'cancelled'],
+    shipped:    ['delivered', 'cancelled'],
+    delivered:  ['refunded'],
+    cancelled:  ['pending'], // allow re-opening
+    refunded:   [],
+  }
+  
+  const allowed = VALID_TRANSITIONS[currentOrder.status as string] || []
+  if (!allowed.includes(status)) {
+    throw new Error(`Cannot transition order from '${currentOrder.status}' to '${status}'`)
+  }
+  
+  const updates: Record<string, unknown> = { status }
+  
+  // Auto-set timestamps
+  if (status === 'shipped') updates.shipped_at = new Date().toISOString()
+  if (status === 'delivered') updates.delivered_at = new Date().toISOString()
+  
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_orders`)
-    .update({ status })
+    .update(updates)
     .eq('site_id', siteId)
     .eq('id', orderId)
     .select()
@@ -1297,6 +1328,18 @@ export async function updateOrderStatus(siteId: string, orderId: string, status:
       formatCurrency(order.total, order.currency || DEFAULT_CURRENCY),
     ).catch(err => console.error('[Ecommerce] Cancellation notification error:', err))
   }
+  
+  // Send shipping notification when order is shipped
+  if (status === 'shipped' && order.customer_email) {
+    notifyOrderShipped(
+      siteId,
+      order.order_number,
+      order.customer_email,
+      order.customer_name || 'Customer',
+      order.tracking_number || undefined,
+      order.tracking_url || undefined,
+    ).catch(err => console.error('[Ecommerce] Shipping notification error:', err))
+  }
 
   return order
 }
@@ -1315,9 +1358,9 @@ export async function updateOrderPaymentStatus(
   // Auto-update order status based on payment
   if (paymentStatus === 'paid') {
     updates.status = 'confirmed'
-  } else if (paymentStatus === 'failed') {
-    updates.status = 'cancelled'
   }
+  // Note: payment 'failed' does NOT auto-cancel — the customer may retry.
+  // Only explicit admin action or webhook exhaustion should cancel.
   
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_orders`)

@@ -189,9 +189,26 @@ function escapeHtml(str: string): string {
 }
 
 /**
+ * Sanitize a CSS color value to prevent CSS injection.
+ * Only allows valid hex colors, named colors, rgb/hsl functions.
+ */
+function sanitizeCSSColor(value: string): string {
+  const trimmed = (value || '').trim()
+  // Allow hex colors
+  if (/^#[0-9a-fA-F]{3,8}$/.test(trimmed)) return trimmed
+  // Allow named colors (letters only)
+  if (/^[a-zA-Z]{3,30}$/.test(trimmed)) return trimmed
+  // Allow rgb/rgba/hsl/hsla functions with safe characters
+  if (/^(?:rgb|hsl)a?\([0-9,.\s%]+\)$/.test(trimmed)) return trimmed
+  // Fallback to safe default
+  return '#0f172a'
+}
+
+/**
  * Generate the CSS styles for print-ready document
  */
-function generateStyles(primaryColor: string): string {
+function generateStyles(unsafePrimaryColor: string): string {
+  const primaryColor = sanitizeCSSColor(unsafePrimaryColor)
   return `
     * { margin: 0; padding: 0; box-sizing: border-box; }
     

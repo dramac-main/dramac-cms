@@ -11,6 +11,7 @@
 "use client";
 
 import React, { useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import { Loader2, ShoppingBag } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -79,12 +80,14 @@ export function ProductGridBlock({
   const isLoading = resolvedSiteId ? hookLoading : false;
   const products = realProducts || [];
 
-  // Navigate to product detail page on click
+  const router = useRouter();
+
+  // Navigate to product detail page on click (SPA navigation)
   const handleProductClick = useCallback((productId: string) => {
     const product = products.find(p => p.id === productId);
     const slug = product?.slug || productId;
-    window.location.href = `/products/${slug}`;
-  }, [products]);
+    router.push(`/products/${slug}`);
+  }, [products, router]);
 
   // Get responsive values
   const columnsValue = typeof columns === "object" ? columns : { mobile: columns, tablet: columns, desktop: columns };

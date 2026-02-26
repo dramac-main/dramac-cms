@@ -24,6 +24,13 @@ import { OrderSummaryCard } from './OrderSummaryCard'
 import { CartEmptyState } from './CartEmptyState'
 import { useCheckout, type CheckoutStep } from '../../hooks/useCheckout'
 import { useStorefront } from '../../context/storefront-context'
+import { useMobile } from '../../hooks/useMobile'
+import { MobileCheckoutPage } from './mobile/MobileCheckoutPage'
+import type { CheckoutData as MobileCheckoutData } from './mobile/MobileCheckoutPage'
+import type { ShippingOption as MobileShippingOption } from './mobile/MobileShippingSelector'
+import type { PaymentMethod as MobilePaymentMethod, PaymentMethodType as MobilePaymentMethodType } from './mobile/MobilePaymentSelector'
+import type { OrderSummaryTotals } from './mobile/MobileOrderReview'
+import type { Address as MobileAddress } from './mobile/MobileAddressInput'
 import Link from 'next/link'
 
 // ============================================================================
@@ -253,6 +260,63 @@ function ReviewStep({ checkout, formatPrice }: StepProps) {
 }
 
 // ============================================================================
+// MOBILE DATA MAPPERS
+// ============================================================================
+
+/** Map useCheckout ShippingMethod[] → mobile ShippingOption[] */
+function toMobileShippingOptions(
+  methods: { id: string; name: string; description?: string; price: number; estimated_days?: string }[]
+): MobileShippingOption[] {
+  return methods.map(m => ({
+    id: m.id,
+    name: m.name,
+    speed: 'standard' as const,
+    price: m.price,
+    estimatedDays: m.estimated_days || '3-7 days',
+    description: m.description,
+  }))
+}
+
+/** Map useCheckout PaymentMethod[] → mobile PaymentMethod[] */
+function toMobilePaymentMethods(
+  methods: { id: string; name: string; icon?: string; description?: string }[]
+): MobilePaymentMethod[] {
+  const typeMap: Record<string, MobilePaymentMethodType> = {
+    paddle: 'card',
+    flutterwave: 'bank',
+    pesapal: 'bank',
+    dpo: 'card',
+    manual: 'bank',
+  }
+  return methods.map(m => ({
+    id: m.id,
+    type: typeMap[m.id] || 'card',
+    label: m.name,
+    description: m.description,
+  }))
+}
+
+/** Map CartTotals → mobile OrderSummaryTotals */
+function toMobileTotals(t: { subtotal: number; shipping: number; tax: number; discount: number; total: number }): OrderSummaryTotals {
+  return { subtotal: t.subtotal, shipping: t.shipping, tax: t.tax, discount: t.discount, total: t.total }
+}
+
+/** Map mobile camelCase Address → snake_case checkout address */
+function fromMobileAddress(a: Partial<MobileAddress>): Record<string, string> {
+  return {
+    first_name: a.firstName || '',
+    last_name: a.lastName || '',
+    company: a.company || '',
+    address_line_1: a.address1 || '',
+    address_line_2: a.address2 || '',
+    city: a.city || '',
+    state: a.state || '',
+    postal_code: a.postalCode || '',
+    country: a.country || '',
+  }
+}
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -264,6 +328,7 @@ export function CheckoutPageBlock({
 }: CheckoutPageBlockProps) {
   const { formatPrice, quotationModeEnabled, quotationRedirectUrl, quotationButtonLabel } = useStorefront()
   const checkout = useCheckout()
+  const isMobile = useMobile()
 
   // Quote mode guard — redirect away from checkout when in quotation mode
   if (quotationModeEnabled) {
@@ -395,6 +460,116 @@ export function CheckoutPageBlock({
     }
   }
   
+  // Handle mobile checkout submission — calls API directly with mobile form data
+  const handleMobileSubmit = async (data: MobileCheckoutData) => {
+    const shippingAddr = fromMobileAddress(data.shippingAddress)
+    const billingAddr = data.billingAddressSameAsShipping
+      ? shippingAddr
+      : fromMobileAddress(data.billingAddress)
+    
+    const customerName = `${data.shippingAddress.firstName || ''} ${data.shippingAddress.lastName || ''}`.trim()
+    
+    const response = await fetch('/api/modules/ecommerce/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cartId: checkout.cartId,
+        shippingAddress: shippingAddr,
+        billingAddress: billingAddr,
+        customerEmail: data.contact.email,
+        customerName: customerName || undefined,
+        customerPhone: data.contact.phone || undefined,
+        paymentProvider: data.paymentMethodId,
+        shippingMethod: data.shippingMethodId,
+      })
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.error || 'Failed to place order')
+    }
+    
+    const result = await response.json()
+    
+    if (result.success && result.order_id && result.order_number) {
+      const payment = result.payment as Record<string, unknown> | undefined
+      const paymentUrl = result.payment_url as string | undefined
+      const provider = payment?.provider as string | undefined
+      
+      // Redirect-based payments (Pesapal, DPO)
+      if (paymentUrl && (provider === 'pesapal' || provider === 'dpo')) {
+        window.location.href = paymentUrl
+        return
+      }
+      
+      // Paddle client-side overlay
+      if (provider === 'paddle' && payment?.checkoutData) {
+        const PaddleJS = (window as unknown as Record<string, unknown>).Paddle as {
+          Checkout?: { open: (config: Record<string, unknown>) => void }
+        } | undefined
+        
+        if (PaddleJS?.Checkout?.open) {
+          PaddleJS.Checkout.open({
+            override: (payment.checkoutData as Record<string, unknown>).successUrl,
+            email: data.contact.email,
+            passthrough: JSON.stringify({ orderId: result.order_id }),
+            successCallback: () => {
+              setOrderResult({ orderId: result.order_id!, orderNumber: result.order_number! })
+              if (onOrderComplete) onOrderComplete(result.order_id!, result.order_number!)
+            },
+            closeCallback: () => {}
+          })
+          return
+        }
+      }
+      
+      // Flutterwave inline checkout
+      if (provider === 'flutterwave' && payment?.publicKey) {
+        const FlutterwaveCheckout = (window as unknown as Record<string, unknown>).FlutterwaveCheckout as
+          ((config: Record<string, unknown>) => void) | undefined
+        
+        if (FlutterwaveCheckout) {
+          FlutterwaveCheckout({
+            public_key: payment.publicKey as string,
+            tx_ref: `order_${result.order_id}_${Date.now()}`,
+            amount: payment.amount as number,
+            currency: payment.currency as string,
+            customer: payment.customer as Record<string, unknown>,
+            customizations: payment.customizations as Record<string, unknown>,
+            redirect_url: payment.redirectUrl as string,
+            callback: () => {
+              setOrderResult({ orderId: result.order_id!, orderNumber: result.order_number! })
+              if (onOrderComplete) onOrderComplete(result.order_id!, result.order_number!)
+            },
+            onclose: () => {}
+          })
+          return
+        }
+      }
+      
+      // Manual payment / fallback — clear cart, show success
+      const hasClientPayment = provider === 'paddle' || provider === 'flutterwave'
+      if (!hasClientPayment) {
+        await checkout.resetCart()
+        checkout.clearCheckout()
+      }
+      
+      const instructions = provider === 'manual'
+        ? (payment?.instructions as string) || 'Please contact us for payment instructions.'
+        : undefined
+      
+      setOrderResult({
+        orderId: result.order_id,
+        orderNumber: result.order_number,
+        paymentInstructions: instructions
+      })
+      
+      if (onOrderComplete) onOrderComplete(result.order_id, result.order_number)
+    } else {
+      throw new Error(result.error || 'Order placement failed')
+    }
+  }
+  
   // Render step content
   const renderStep = () => {
     switch (checkout.currentStep) {
@@ -465,6 +640,22 @@ export function CheckoutPageBlock({
           </Card>
         </div>
       </div>
+    )
+  }
+
+  // Mobile checkout — full-screen collapsible accordion layout
+  if (isMobile) {
+    return (
+      <MobileCheckoutPage
+        items={checkout.items}
+        totals={toMobileTotals(checkout.totals)}
+        shippingOptions={toMobileShippingOptions(checkout.availableShippingMethods)}
+        paymentMethods={toMobilePaymentMethods(checkout.availablePaymentMethods)}
+        onSubmit={handleMobileSubmit}
+        onBack={() => window.history.back()}
+        loading={checkout.isPlacingOrder}
+        className={className}
+      />
     )
   }
 

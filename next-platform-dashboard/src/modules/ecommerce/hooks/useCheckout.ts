@@ -100,6 +100,10 @@ export interface UseCheckoutResult {
   placeOrder: () => Promise<CheckoutResult>
   clearCheckout: () => void
   
+  // Cart access (for mobile checkout flow)
+  cartId: string | null
+  resetCart: () => Promise<boolean>
+  
   // Loading states
   isLoading: boolean
   isPlacingOrder: boolean
@@ -547,6 +551,10 @@ export function useCheckout(): UseCheckoutResult {
     // Actions
     placeOrder,
     clearCheckout,
+    
+    // Cart access (for mobile checkout flow)
+    cartId: cart?.id || null,
+    resetCart: clearCart,
     
     // Loading states
     isLoading: false,

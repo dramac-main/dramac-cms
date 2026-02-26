@@ -14,6 +14,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { getImageUrl, type ImageValue } from "@/lib/studio/utils/image-helpers";
 import { NavCartBadge } from "@/modules/ecommerce/studio/components/NavCartBadge";
 
@@ -330,6 +331,9 @@ export function PremiumNavbarRender({
   const [scrollProgress, setScrollProgress] = useState(0);
   const navRef = useRef<HTMLElement>(null);
   
+  // Active page detection for nav link highlighting
+  const pathname = usePathname();
+  
   // Check if effects should run: either not in editor, or live effects enabled
   const enableEffects = !_isEditor || _liveEffects;
 
@@ -581,21 +585,38 @@ export function PremiumNavbarRender({
               const linkText = link.label || link.text || '';
               if (!linkText) return null;
               
+              // Active state detection
+              const linkHref = link.href || '#';
+              const isActive = pathname === linkHref || (linkHref !== '/' && pathname?.startsWith(linkHref));
+              
+              // Active indicator styles
+              const activeClass = isActive ? (
+                linkActiveIndicator === 'underline' ? 'border-b-2 border-current pb-0.5' :
+                linkActiveIndicator === 'dot' ? '' :
+                linkActiveIndicator === 'background' ? 'bg-black/5 rounded-md px-3 py-1' :
+                'opacity-100'
+              ) : 'opacity-80';
+              
               return (
                 <div key={i} className="relative group">
                   <a
-                    href={link.href || "#"}
+                    href={linkHref}
                     target={link.target || "_self"}
-                    className={`inline-flex items-center gap-1 ${linkFontSizeClasses[linkFontSize]} ${linkWeightClasses[linkFontWeight]} ${getLinkHoverClass()}`}
+                    className={`inline-flex items-center gap-1 ${linkFontSizeClasses[linkFontSize]} ${linkWeightClasses[linkFontWeight]} ${getLinkHoverClass()} ${activeClass}`}
                     style={{ 
                       color: textColor,
                       textTransform: linkTextTransform,
                     }}
                     onMouseEnter={() => link.hasDropdown && setOpenDropdown(i)}
                     onMouseLeave={() => setOpenDropdown(null)}
+                    aria-current={isActive ? 'page' : undefined}
                   >
                     {linkText}
                     {link.hasDropdown && <ChevronDownIcon className="w-4 h-4 transition-transform group-hover:rotate-180" />}
+                    {/* Active dot indicator */}
+                    {isActive && linkActiveIndicator === 'dot' && (
+                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-current" />
+                    )}
                   </a>
                 
                   {/* Dropdown Menu */}

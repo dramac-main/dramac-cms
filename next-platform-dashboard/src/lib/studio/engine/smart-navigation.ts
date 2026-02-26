@@ -108,9 +108,27 @@ export const ECOMMERCE_NAV_ITEMS: SmartNavItem[] = [
     sortOrder: 100,
     moduleId: "ecommerce",
   },
+  {
+    id: "ecom-categories",
+    label: "Categories",
+    href: "/categories",
+    icon: "grid",
+    position: "main",
+    sortOrder: 101,
+    moduleId: "ecommerce",
+  },
 ];
 
 export const ECOMMERCE_UTILITY_ITEMS: SmartNavItem[] = [
+  {
+    id: "ecom-search",
+    label: "Search",
+    href: "/shop?search=",
+    icon: "search",
+    position: "utility",
+    sortOrder: 5,
+    moduleId: "ecommerce",
+  },
   {
     id: "ecom-cart",
     label: "Cart",

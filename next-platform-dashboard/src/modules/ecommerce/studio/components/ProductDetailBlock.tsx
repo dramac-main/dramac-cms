@@ -227,13 +227,15 @@ export function ProductDetailBlock({
           <>
             <button
               onClick={() => setSelectedImage(i => (i - 1 + images.length) % images.length)}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all hover:scale-110"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 min-w-[44px] min-h-[44px] flex items-center justify-center shadow-lg transition-all hover:scale-110"
+              aria-label="Previous image"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={() => setSelectedImage(i => (i + 1) % images.length)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all hover:scale-110"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-3 min-w-[44px] min-h-[44px] flex items-center justify-center shadow-lg transition-all hover:scale-110"
+              aria-label="Next image"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
@@ -339,7 +341,7 @@ export function ProductDetailBlock({
                 key={v.id}
                 onClick={() => setSelectedVariant(v.id)}
                 className={cn(
-                  'px-4 py-2 border rounded-md text-sm transition-colors',
+                  'px-4 py-2.5 min-h-[44px] border rounded-md text-sm transition-colors',
                   selectedVariant === v.id
                     ? 'border-primary bg-primary/5 text-primary'
                     : 'border-gray-200 hover:border-gray-300'
@@ -360,8 +362,9 @@ export function ProductDetailBlock({
           <div className="flex items-center border rounded-md">
             <button
               onClick={() => setQuantity(q => Math.max(1, q - 1))}
-              className="px-3 py-2 hover:bg-gray-50 transition-colors"
+              className="px-4 py-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-50 transition-colors"
               disabled={quantity <= 1}
+              aria-label="Decrease quantity"
             >
               <Minus className="h-4 w-4" />
             </button>
@@ -370,8 +373,9 @@ export function ProductDetailBlock({
             </span>
             <button
               onClick={() => setQuantity(q => q + 1)}
-              className="px-3 py-2 hover:bg-gray-50 transition-colors"
+              className="px-4 py-3 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-gray-50 transition-colors"
               disabled={product.track_inventory && quantity >= product.quantity}
+              aria-label="Increase quantity"
             >
               <Plus className="h-4 w-4" />
             </button>
