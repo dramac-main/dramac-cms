@@ -1,51 +1,88 @@
 # Active Context
 
-## Current Focus: Site Branding Settings UI + Booking Page Overhaul COMPLETE
+## Current Focus: Unified Branding Audit — Emails, Live Chat, Fonts, Embeds COMPLETE
 
-### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `f54c6afb`)
+### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `97828886`)
 
 ### Recent Fixes (newest first):
+- Unified Branding Across Emails, Live Chat, Fonts, Embeds — 13 files, 320 insertions, comprehensive end-to-end branding audit + fixes across entire platform (commit `97828886`) ✅
 - Site Branding Settings UI + Booking Page Overhaul — 7 files, 633 insertions, new Branding tab in site settings, BookingWidget replaces broken ServiceSelector on /book page, CSS variable fallbacks in booking components, AI context builder fix (commit `f54c6afb`) ✅
 - Font fallback + persistDesignTokens all 7 fields — Fixed font reading to fall back to theme.*, fixed persistDesignTokensAction to write all 7 flat fields (commit `0bc91366`) ✅
 - Global Branding CSS Variable System — 20 files, 903 insertions, CSS variable isolation for published sites, dark mode fix, font system, booking defaultProps cleanup (commit `a6d3bb6f`) ✅
-- Module Page Branding, Cart Badge, Booking Page, Cart URL — 7 files, 438 insertions, shared Navbar/Footer auto-injection, /book page creation, cart badge fix (commit `e81e7b41`) ✅
-- Build Fix — missing "use client" in booking/studio/index.ts blocking ALL Vercel builds (commit `2635e33f`) ✅
-- Existing Sites Ecommerce Detection — runtime module detection for sites installed before hook system (commit `abf9dfc9`) ✅
-- Smart Navigation System — 4 files, 444 insertions, module-aware navbar & footer with utility icons (commit `2d0ef4dc`) ✅
-- AI Component Awareness + Booking Data Enrichment — 6 files, 198 insertions, 2 critical type name fixes, AI now gets real booking data (commit `de6b96dc`) ✅
 
 ---
 
-### Site Branding Settings UI + Booking Page Overhaul (commit `f54c6afb`) ✅
+### Unified Branding Audit (commit `97828886`) ✅
 
-**Two problems solved:**
+**Comprehensive end-to-end audit to ensure ALL parts of the platform use site's central branding.**
 
-#### Problem 1: No central branding UI for individual sites
-The branding settings page at `/dashboard/settings/branding` was for AGENCY-LEVEL white-labeling, not individual site branding. Users had no way to set/edit brand colors and fonts for a specific site.
+#### Problem: Branding was fragmented across emails, live chat, fonts, and embeds
+1. **Email**: Order resend emails (`sendOrderEmail`) called `sendBrandedEmail` WITHOUT `siteId` — customers got agency default branding instead of site branding
+2. **Live Chat**: Widget was completely isolated from site branding — read only from `mod_chat_widget_settings`, never from `sites` table. Hardcoded `#2563eb` blue and `system-ui` fonts
+3. **Fonts**: Three gaps caused inconsistent fonts across published sites:
+   - Text component had hardcoded `system-ui` default in `defaultProps` that overrode CSS cascade
+   - StorefrontWidget had hardcoded `system-ui` font
+   - No font prop injection — `BRAND_COLOR_MAP` mapped ~65 color props but ZERO font props
+4. **Embeds**: Module embed page, booking embed page, and module-embed-renderer all had hardcoded `system-ui` fonts instead of site fonts
 
-**Solution:** Created a full "Branding" tab in site settings (`/dashboard/sites/[siteId]/settings?tab=branding`) with:
-- 5 color pickers (primary, secondary, accent, background, text) with native color input + hex text input
-- 2 font selectors (heading, body) with 18 Google Fonts options
-- Live color swatch preview + font preview section
-- Info box explaining how the system works
-- Save/Reset buttons
+#### Solution: 13 files fixed across 5 subsystems
 
-**Key files:**
-| File | Changes |
-|------|---------|
-| `src/components/sites/site-branding-settings.tsx` | NEW — Full branding UI component (~320 lines) |
-| `src/app/(dashboard)/dashboard/sites/[siteId]/settings/page.tsx` | Added "Branding" tab (import, TabsTrigger, TabsContent) |
-| `src/lib/actions/sites.ts` | Added `getSiteBrandingAction`, `updateSiteBrandingAction`, `SiteBrandingData` interface |
-
-**Data flow fixes:**
+**Email Fixes:**
 | File | Fix |
 |------|-----|
-| `src/lib/actions/sites.ts` | `persistDesignTokensAction` now ALWAYS overwrites flat branding fields (was conditional on absence) |
-| `src/lib/actions/sites.ts` | `updateSiteBrandingAction` writes to BOTH flat fields AND `theme.*` for full compatibility |
-| `src/lib/ai/website-designer/data-context/builder.ts` | `fetchBranding()` now reads flat fields with `theme.*` camelCase fallback; added `background_color` and `text_color` |
+| `order-actions.ts` | Added `siteId: order.site_id` to all 5 `sendBrandedEmail` calls in `sendOrderEmail()` |
+| `email-branding.ts` | Enhanced agency + site branding resolution |
+| `send-branded-email.ts` | Enhanced branded email pipeline |
+| `business-notifications.ts` | Verified all 8 customer-facing calls correctly pass `siteId` |
 
-#### Problem 2: /book page used wrong component — Select button did nothing
-The `/book` page used `BookingServiceSelector` which is a **browse-only catalog** — clicking Select just highlights the card (sets state) with no further flow. The actual booking wizard is `BookingWidget` (1181-line, 5-step wizard: Service → Staff → Date/Time → Details → Confirmation).
+**Live Chat Fixes:**
+| File | Fix |
+|------|-----|
+| `widget/route.ts` | Now fetches site branding from `sites` table — uses site primary color, name, logo, fonts as fallbacks |
+| `ChatWidget.tsx` | Added `fontFamily`/`fontHeading` to `WidgetPublicSettings` type. Replaced hardcoded `system-ui` fonts with `settings.fontFamily`. Fixed "Try Again" button color. |
+
+**Font System Fixes:**
+| File | Fix |
+|------|-----|
+| `brand-colors.ts` | Added `BRAND_FONT_MAP` (maps 5 font props to heading/body) + `injectBrandFonts()` function |
+| `renderer.tsx` | Calls `injectBrandFonts()` after `injectBrandColors()` for every component |
+| `core-components.ts` | Text component `fontFamily` default changed from `"system-ui, -apple-system, sans-serif"` to `""` (empty — inherits from CSS cascade) |
+| `StorefrontWidget.tsx` | Font changed from `system-ui` to `'inherit'` to respect CSS cascade |
+
+**Embed Fixes:**
+| File | Fix |
+|------|-----|
+| `embed/[moduleId]/[siteId]/page.tsx` | Fetches site font settings + loads Google Fonts + uses site font in CSS |
+| `embed/booking/[siteId]/page.tsx` | Same — site fonts + Google Fonts |
+| `module-embed-renderer.tsx` | Accepts `siteFontFamily` prop, passes to iframe HTML generation |
+
+#### Key Architecture: BRAND_FONT_MAP
+```typescript
+const BRAND_FONT_MAP: Record<string, "heading" | "body"> = {
+  fontFamily: "body",        // Text, Heading, Button components
+  titleFont: "heading",      // Section title fonts
+  featureTitleFont: "heading", // Feature card titles
+  nameFont: "heading",       // Person names (team, testimonials)
+  valueFont: "heading",      // Statistic values
+};
+```
+
+#### Key Architecture: Dual Email System
+- **Legacy** (`send-email.ts` + `templates.ts`): Platform emails — shows "Dramac". NOT a bug.
+- **Branded** (`send-branded-email.ts` + `branded-templates.ts`): Customer emails — must ALWAYS pass `siteId` for site-specific branding.
+
+#### Audit Findings Summary
+| Area | Status | Detail |
+|------|--------|--------|
+| Email branded pipeline | ✅ Fixed | 5 missing `siteId` in order-actions.ts |
+| Email legacy pipeline | ⚠️ Intentional | Platform-level emails show "Dramac" — correct |
+| Live chat colors | ✅ Fixed | Falls back to site primary color |
+| Live chat fonts | ✅ Fixed | Reads site fonts, passes to widget |
+| Font CSS cascade | ✅ Fixed | Text default emptied, StorefrontWidget inherits |
+| Font prop injection | ✅ Fixed | New `injectBrandFonts()` fills titleFont, nameFont, etc. |
+| Module embeds | ✅ Fixed | Fetches site fonts, loads Google Fonts |
+| Booking embeds | ✅ Fixed | Same |
+| 8 admin UI fonts | ✅ No change needed | Dashboard UI — not customer-facing |
 
 **Solution:**
 | File | Changes |

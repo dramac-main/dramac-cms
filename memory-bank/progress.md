@@ -1,11 +1,35 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅** + **AI RICHTEXT/ACCORDION/TABS RENDERING FIX ✅** + **CRM COMPREHENSIVE INDUSTRY-LEADER OVERHAUL ✅** + **SOCIAL MEDIA PHASE A CRITICAL BUG FIXES ✅** + **KNOWN LIMITATIONS DEEP ANALYSIS + FIXES ✅** + **BOOKING MODULE COMPREHENSIVE OVERHAUL ✅** + **BRAND COLOR INHERITANCE SYSTEM ✅** + **AI COMPONENT AWARENESS + BOOKING DATA ENRICHMENT ✅** + **SMART NAVIGATION SYSTEM ✅** + **GLOBAL BRANDING CSS VARIABLE SYSTEM ✅** + **SITE BRANDING UI + BOOKING PAGE OVERHAUL ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅** + **AI RICHTEXT/ACCORDION/TABS RENDERING FIX ✅** + **CRM COMPREHENSIVE INDUSTRY-LEADER OVERHAUL ✅** + **SOCIAL MEDIA PHASE A CRITICAL BUG FIXES ✅** + **KNOWN LIMITATIONS DEEP ANALYSIS + FIXES ✅** + **BOOKING MODULE COMPREHENSIVE OVERHAUL ✅** + **BRAND COLOR INHERITANCE SYSTEM ✅** + **AI COMPONENT AWARENESS + BOOKING DATA ENRICHMENT ✅** + **SMART NAVIGATION SYSTEM ✅** + **GLOBAL BRANDING CSS VARIABLE SYSTEM ✅** + **SITE BRANDING UI + BOOKING PAGE OVERHAUL ✅** + **UNIFIED BRANDING AUDIT (EMAILS + CHAT + FONTS + EMBEDS) ✅**
 
 ---
 
-## Latest Update: February 2026 - Site Branding Settings UI + Booking Page Overhaul
+## Latest Update: February 2026 - Unified Branding Audit (Emails, Live Chat, Fonts, Embeds)
+
+### Task: Comprehensive end-to-end branding verification across the entire platform
+
+**Problem:** Site branding was fragmented — emails showed "DRAMAC" instead of client branding, live chat ignored site settings, fonts were inconsistent due to hardcoded `system-ui` defaults, and embed pages didn't load site fonts.
+
+**Deep audit revealed:**
+- Two parallel email systems (Legacy + Branded) — Legacy is intentional for platform emails
+- `sendOrderEmail()` missing `siteId` on all 5 `sendBrandedEmail` calls
+- Live chat widget completely isolated from site branding (hardcoded colors, fonts, no site lookup)
+- `BRAND_COLOR_MAP` mapped ~65 color props but ZERO font props
+- Text component `fontFamily: "system-ui"` default overrode CSS cascade
+- Module/booking embed pages had hardcoded `system-ui` fonts
+
+**Solution:** 13 files, +320 lines (commit `97828886`):
+| Subsystem | Files | Key Changes |
+|-----------|-------|-------------|
+| Email | 4 | Added `siteId` to order emails, enhanced branding pipeline |
+| Live Chat | 2 | Widget API fetches site branding, ChatWidget uses site fonts |
+| Font System | 4 | `BRAND_FONT_MAP` + `injectBrandFonts()`, emptied Text default, StorefrontWidget inherits |
+| Embeds | 3 | Site font fetch + Google Fonts loading in module/booking embeds |
+
+---
+
+## Previous Update: February 2026 - Site Branding Settings UI + Booking Page Overhaul
 
 ### Task: Create central branding UI for individual sites + Fix broken /book page
 

@@ -210,21 +210,24 @@ site.settings.font_body ───────┘                      │       
 ```
 
 ### Key Files
-- **`src/lib/studio/engine/brand-colors.ts`** — Core utility: palette resolution, color mapping, injection, AND CSS variable generation
-- **`src/lib/studio/engine/renderer.tsx`** — Resolves palette from siteSettings, injects into every component, generates CSS vars, loads Google Fonts
+- **`src/lib/studio/engine/brand-colors.ts`** — Core utility: palette resolution, color mapping, injection, font injection, AND CSS variable generation
+- **`src/lib/studio/engine/renderer.tsx`** — Resolves palette from siteSettings, injects colors AND fonts into every component, generates CSS vars, loads Google Fonts
 - **`src/app/globals.css`** — `.studio-renderer` CSS isolation rules (light mode, font inheritance, border reset)
 
 ### How It Works
 1. `resolveBrandColors(source)` derives 30+ semantic colors from 5 core brand colors
-2. `generateBrandCSSVars(palette, fontHeading, fontBody)` converts palette to CSS custom properties (HSL for Tailwind, hex for shadcn)
+2. `generateBrandCSSVars(palette, fontHeading, fontBody)` converts palette to CSS custom properties (HSL for Tailwind, hex for shadcn, fonts)
 3. `BRAND_COLOR_MAP` maps ~65 component color prop names to palette keys
-4. `injectBrandColors(props, palette)` fills any unset color prop with the brand-derived value
-5. Renderer spreads CSS vars on `.studio-renderer` wrapper AND calls `injectBrandColors` for every component
+4. `BRAND_FONT_MAP` maps 5 component font prop names to heading/body font sources
+5. `injectBrandColors(props, palette)` fills any unset color prop with the brand-derived value
+6. `injectBrandFonts(props, fontHeading, fontBody)` fills any unset font prop with the brand font
+7. Renderer spreads CSS vars on `.studio-renderer` wrapper AND calls `injectBrandColors` + `injectBrandFonts` for every component
 
-### THREE Layers of Enforcement
-1. **CSS Variable Layer** — `generateBrandCSSVars()` overrides `--color-card`, `--color-foreground`, etc. on `.studio-renderer`. All shadcn/Tailwind utilities inside published sites use site brand colors.
-2. **Prop Injection Layer** — `injectBrandColors()` fills component color props (for booking/custom components that use inline styles)
-3. **AI Prompts** (prompts.ts, formatter.ts) mandate the AI use brand colors
+### FOUR Layers of Enforcement
+1. **CSS Variable Layer** — `generateBrandCSSVars()` overrides `--color-card`, `--color-foreground`, `--font-sans`, `--font-display` etc. on `.studio-renderer`. All shadcn/Tailwind utilities inside published sites use site brand colors and fonts.
+2. **Color Prop Injection Layer** — `injectBrandColors()` fills component color props (for booking/custom components that use inline styles)
+3. **Font Prop Injection Layer** — `injectBrandFonts()` fills component font props (`titleFont`, `nameFont`, `fontFamily`, etc.) with brand heading/body fonts
+4. **AI Prompts** (prompts.ts, formatter.ts) mandate the AI use brand colors
 
 ### CRITICAL RULES for Storefront Components
 **NEVER** do any of the following in storefront-facing components:
@@ -300,15 +303,34 @@ import { DEFAULT_CURRENCY, DEFAULT_TIMEZONE, formatCurrency } from '@/lib/locale
 
 ## 📧 Email & Notification Pattern
 
-### Email Architecture (Single Pipeline)
+### Email Architecture (Dual System)
 ```
 src/lib/email/
-├── resend-client.ts      # Resend SDK init (getResend(), isEmailEnabled(), getEmailFrom())
-├── send-email.ts         # Core sendEmail(to, type, data) function → Resend API
-├── email-types.ts        # EmailType union (18 types) + data interfaces
-├── templates.ts          # HTML+text template generators per type (18 templates)
-└── index.ts              # Re-exports
+├── resend-client.ts              # Resend SDK init (getResend(), isEmailEnabled(), getEmailFrom())
+├── send-email.ts                 # LEGACY: sendEmail(to, type, data) → platform-level emails (welcome, billing, etc.)
+├── send-branded-email.ts         # BRANDED: sendBrandedEmail(agencyId, opts) → customer-facing emails with site branding
+├── email-branding.ts             # Agency + site branding resolution (getAgencyBranding → applySiteBranding overlay)
+├── email-types.ts                # EmailType union (18 types) + data interfaces
+├── templates.ts                  # LEGACY: HTML templates (hardcoded "Dramac" — platform emails only)
+├── templates/branded-templates.ts # BRANDED: Dynamic templates with (data, branding) => string
+└── index.ts                      # Re-exports
 ```
+
+### ⚠️ CRITICAL: Two Email Pipelines
+1. **Legacy Pipeline** (`send-email.ts` + `templates.ts`): Platform-level emails only — welcome, password reset, billing alerts. Shows "Dramac" branding. This is INTENTIONAL for platform communications.
+2. **Branded Pipeline** (`send-branded-email.ts` + `branded-templates.ts` + `email-branding.ts`): Customer-facing emails — booking confirmations, order confirmations, shipping notifications. Shows site-specific branding (logo, colors, name) with agency fallback.
+
+### Email Branding Resolution Order
+```
+sendBrandedEmail(agencyId, { siteId?, emailType, to, data })
+  └── getAgencyBranding(agencyId)  → agency base branding from DB
+       └── applySiteBranding(agencyBranding, siteId)  → overlays site colors/logo/name
+            └── buildEmailBranding(merged)  → final EmailBranding object
+                 └── branded template renders with branding.primaryColor, branding.companyName, etc.
+```
+
+### CRITICAL: Always pass siteId for customer-facing emails
+All `sendBrandedEmail` calls in `business-notifications.ts` and `order-actions.ts` MUST include `siteId` so the customer gets the site's branding, not the agency default.
 
 ### Notification Architecture
 ```
