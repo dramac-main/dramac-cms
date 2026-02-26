@@ -1,16 +1,46 @@
 # Active Context
 
-## Current Focus: Site Logo System + Booking End-to-End Fixes COMPLETE
+## Current Focus: E-Commerce Product Image Fix + World-Class Component Upgrade
 
-### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `f965699c`)
+### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `53fe93c4`)
 
 ### Recent Fixes (newest first):
+- E-Commerce Product Images + World-Class Component Upgrade — CRITICAL image bug fixed (images never showed), all ecom components upgraded with next/image, product navigation, professional gallery (commit `53fe93c4`) ✅
 - Site Logo System + Booking End-to-End Fixes — logo/favicon upload in site branding settings, staff filtering by service, min notice hours, max advance days, weekday-aware fallback, buffer times, server-side validations (commit `f965699c`) ✅
 - Font Branding Cascade Fix — Legacy system-ui override treated as unset, 8 inline fontFamily guards, field defaultValue fix, titleFontFamily in BRAND_FONT_MAP (commit `c380e8bb`) ✅
 - Unified Branding Across Emails, Live Chat, Fonts, Embeds — 13 files, 320 insertions, comprehensive end-to-end branding audit + fixes across entire platform (commit `97828886`) ✅
 - Site Branding Settings UI + Booking Page Overhaul — 7 files, 633 insertions, new Branding tab in site settings, BookingWidget replaces broken ServiceSelector on /book page, CSS variable fallbacks in booking components, AI context builder fix (commit `f54c6afb`) ✅
 - Font fallback + persistDesignTokens all 7 fields — Fixed font reading to fall back to theme.*, fixed persistDesignTokensAction to write all 7 flat fields (commit `0bc91366`) ✅
 - Global Branding CSS Variable System — 20 files, 903 insertions, CSS variable isolation for published sites, dark mode fix, font system, booking defaultProps cleanup (commit `a6d3bb6f`) ✅
+
+---
+
+### E-Commerce Product Images + World-Class Component Upgrade (commit `53fe93c4`) ✅
+
+**Problems found (deep audit of 43+ ecommerce component files):**
+1. **CRITICAL IMAGE BUG** — `product-grid-block.tsx` line 98: `p.images?.[0]?.url` on a `string[]` always returned `undefined`. Product images NEVER displayed on the shop page.
+2. **Two duplicate ProductGridBlock files** — `product-grid-block.tsx` (simple, 280 lines, buggy) registered as `EcommerceProductGrid` and `ProductGridBlock.tsx` (enhanced, 696 lines, working) registered as `EcommerceProductCatalog`. Shop page template used the buggy simple one.
+3. **ProductImageGallery type mismatch** — Expected `{url: string, alt?: string}[]` but `Product.images` is `string[]`. Gallery broke when passed real product data.
+4. **No next/image optimization** — All components used raw `<img>` tags despite Supabase storage being configured in `next.config.ts` remotePatterns.
+5. **No product navigation** — Clicking product cards didn't navigate to product detail pages.
+6. **Shop page template too basic** — No featured products section, minimal layout.
+
+**Solution (5 files, 240 insertions, 138 deletions):**
+
+| File | Changes |
+|------|---------|
+| `product-grid-block.tsx` | **Complete rewrite** — Now delegates to `ProductCardBlock` for professional cards with hover effects, wishlist, add-to-cart, sale badges. Added product click → `/products/[slug]` navigation. Added empty state UI. |
+| `product-card-block.tsx` | Added `next/image` for Supabase-hosted images with `fill` + `sizes` for responsive optimization. Auto product navigation: clicking card goes to `/products/[slug]`. Lazy loading with `loading="lazy"` and `decoding="async"` fallback. |
+| `ProductImageGallery.tsx` | Now accepts `(ProductImage | string)[]` — normalizes `string[]` to `ProductImage[]` internally. Works with both formats. |
+| `ProductDetailBlock.tsx` | Gallery upgraded to `next/image` with `fill` + `sizes`. Larger thumbnails (w-20 h-20), `rounded-xl` corners, image counter badge, smooth hover transitions on gallery arrows. |
+| `page-templates.ts` | Shop page now has Featured Products carousel section before the main grid, better spacing (48px padding), professional layout structure. |
+
+**Key Architecture Discovery:**
+- Two grid components exist: `EcommerceProductGrid` (simple) and `EcommerceProductCatalog` (enhanced with filters/sort/pagination)
+- Both are registered in `studio/index.ts` — the enhanced one aliases `ProductGridBlock` from `ProductGridBlock.tsx` (capital P)
+- Shop page template uses `EcommerceProductGrid` — the simple one. Now fixed to delegate to `ProductCardBlock` for quality.
+- `Product.images` is `string[]` (confirmed in `ecommerce-types.ts` line 100) — NOT `{url: string}[]`
+- `Product.slug` exists (line 67) — used for product detail page navigation
 
 ---
 
