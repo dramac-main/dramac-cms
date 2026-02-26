@@ -72,11 +72,11 @@ export function FirstProductStep({
           className={cn(
             'p-4 border rounded-lg text-center transition-all',
             !firstProduct.skipped
-              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+              ? 'border-primary bg-primary/5 dark:bg-primary/10'
               : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
           )}
         >
-          <Sparkles className="w-6 h-6 mx-auto mb-2 text-blue-500" />
+          <Sparkles className="w-6 h-6 mx-auto mb-2 text-primary" />
           <p className="font-medium text-gray-900 dark:text-white text-sm">Add Product</p>
         </button>
         <button
@@ -85,7 +85,7 @@ export function FirstProductStep({
           className={cn(
             'p-4 border rounded-lg text-center transition-all',
             firstProduct.skipped
-              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+              ? 'border-primary bg-primary/5 dark:bg-primary/10'
               : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
           )}
         >
@@ -123,7 +123,7 @@ export function FirstProductStep({
               placeholder="e.g., Premium T-Shirt"
               className={cn(
                 'w-full px-4 py-3 border rounded-lg transition-colors',
-                'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
                 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                 'text-gray-900 dark:text-white placeholder:text-gray-400'
               )}
@@ -149,7 +149,7 @@ export function FirstProductStep({
                   placeholder="29.99"
                   className={cn(
                     'w-full pl-8 pr-4 py-3 border rounded-lg transition-colors',
-                    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                    'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
                     'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                     'text-gray-900 dark:text-white placeholder:text-gray-400'
                   )}
@@ -167,7 +167,7 @@ export function FirstProductStep({
                 placeholder="e.g., TSH-001"
                 className={cn(
                   'w-full px-4 py-3 border rounded-lg transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                  'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
                   'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                   'text-gray-900 dark:text-white placeholder:text-gray-400'
                 )}
@@ -188,7 +188,7 @@ export function FirstProductStep({
               placeholder="10"
               className={cn(
                 'w-full px-4 py-3 border rounded-lg transition-colors',
-                'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
                 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                 'text-gray-900 dark:text-white placeholder:text-gray-400'
               )}
@@ -207,7 +207,7 @@ export function FirstProductStep({
               rows={3}
               className={cn(
                 'w-full px-4 py-3 border rounded-lg transition-colors resize-none',
-                'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
                 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                 'text-gray-900 dark:text-white placeholder:text-gray-400'
               )}
@@ -227,8 +227,8 @@ export function FirstProductStep({
       )}
 
       {/* Info Box */}
-      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <p className="text-sm text-blue-700 dark:text-blue-300">
+      <div className="p-4 bg-primary/5 dark:bg-primary/10 rounded-lg">
+        <p className="text-sm text-primary dark:text-primary/80">
           <strong>Tip:</strong> Your product will be published as &ldquo;Active&rdquo; and featured
           on your store. You can add variants, categories, and more details later.
         </p>

@@ -248,12 +248,12 @@ export function ConvertToOrderDialog({
             </div>
             
             {/* What will be created */}
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
-              <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-2 flex items-center gap-2">
+            <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 rounded-lg p-4">
+              <h4 className="font-medium text-primary dark:text-primary/80 mb-2 flex items-center gap-2">
                 <Package className="h-4 w-4" />
                 New Order Will Include:
               </h4>
-              <ul className="text-sm text-blue-600 dark:text-blue-400 space-y-1">
+              <ul className="text-sm text-primary/80 dark:text-primary/70 space-y-1">
                 <li>• All {quote.items?.length || 0} line items from the quote</li>
                 <li>• Customer information: {quote.customer_name}</li>
                 <li>• Pricing: {formatQuoteCurrency(quote.total, quote.currency)}</li>

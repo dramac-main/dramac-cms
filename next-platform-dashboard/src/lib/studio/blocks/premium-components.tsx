@@ -15,6 +15,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { getImageUrl, type ImageValue } from "@/lib/studio/utils/image-helpers";
+import { NavCartBadge } from "@/modules/ecommerce/studio/components/NavCartBadge";
 
 // ============================================================================
 // SHARED TYPES & UTILITIES
@@ -193,6 +194,9 @@ export interface PremiumNavbarProps {
   scrollProgressBackground?: string;
   scrollProgressStyle?: "bar" | "line" | "gradient";
   
+  // Site ID (injected by renderer for module features)
+  siteId?: string;
+
   // Utility items (cart icon, account, search — injected by modules)
   utilityItems?: Array<{
     id: string;
@@ -303,7 +307,8 @@ export function PremiumNavbarRender({
   scrollProgressBackground = "transparent",
   scrollProgressStyle = "bar",
   
-  // Utility items
+  // Site & Utility items
+  siteId,
   utilityItems = [],
   
   // Accessibility
@@ -632,14 +637,17 @@ export function PremiumNavbarRender({
                   title={item.label}
                 >
                   <UtilityIcon name={item.icon} className="w-5 h-5" />
-                  {item.badge && (
+                  {/* Live cart badge for e-commerce cart icon */}
+                  {item.id === 'ecom-cart' && siteId ? (
+                    <NavCartBadge siteId={siteId} badgeBg={ctaColor} badgeText={ctaTextColor} />
+                  ) : item.badge ? (
                     <span
                       className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full"
                       style={{ backgroundColor: ctaColor, color: ctaTextColor }}
                     >
                       {item.badge}
                     </span>
-                  )}
+                  ) : null}
                 </a>
               ))}
             </div>
@@ -842,14 +850,17 @@ export function PremiumNavbarRender({
                 >
                   <UtilityIcon name={item.icon} className="w-5 h-5" />
                   <span className="text-sm font-medium">{item.label}</span>
-                  {item.badge && (
+                  {/* Live cart badge for e-commerce cart icon */}
+                  {item.id === 'ecom-cart' && siteId ? (
+                    <NavCartBadge siteId={siteId} badgeBg={ctaColor} badgeText={ctaTextColor} />
+                  ) : item.badge ? (
                     <span
                       className="min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full"
                       style={{ backgroundColor: ctaColor, color: ctaTextColor }}
                     >
                       {item.badge}
                     </span>
-                  )}
+                  ) : null}
                 </a>
               ))}
             </div>

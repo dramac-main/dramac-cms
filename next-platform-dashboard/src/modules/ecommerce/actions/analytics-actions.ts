@@ -61,11 +61,11 @@ function getSavedReportsTable() { return `${TABLE_PREFIX}_saved_reports` }
 // Order type for internal use
 interface OrderRow {
   id: string
-  total_cents: number
-  subtotal_cents?: number
-  tax_cents?: number
-  shipping_cents?: number
-  discount_cents?: number
+  total: number
+  subtotal?: number
+  tax_amount?: number
+  shipping_amount?: number
+  discount_amount?: number
   status: string
   created_at: string
   customer_id?: string
@@ -78,8 +78,8 @@ interface OrderItemRow {
   product_id: string
   product_name: string
   quantity: number
-  unit_price_cents: number
-  total_cents: number
+  unit_price: number
+  total_price: number
 }
 
 // ============================================================================
@@ -99,7 +99,7 @@ export async function getSalesOverview(
     // Get orders in date range
     const { data: orders, error: ordersError } = await supabase
       .from(getOrdersTable())
-      .select('id, total_cents, subtotal_cents, tax_cents, shipping_cents, discount_cents, status, created_at')
+      .select('id, total, subtotal, tax_amount, shipping_amount, discount_amount, status, created_at')
       .eq('site_id', siteId)
       .gte('created_at', dateRange.start)
       .lte('created_at', dateRange.end)
@@ -113,7 +113,7 @@ export async function getSalesOverview(
       ['completed', 'shipped', 'delivered'].includes(o.status)
     )
     
-    const totalRevenue = completedOrders.reduce((sum: number, o: OrderRow) => sum + (o.total_cents || 0), 0)
+    const totalRevenue = completedOrders.reduce((sum: number, o: OrderRow) => sum + (o.total || 0), 0)
     const totalOrders = completedOrders.length
     const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0
     
@@ -131,7 +131,7 @@ export async function getSalesOverview(
     }
     
     // Calculate totals
-    const grossRevenue = completedOrders.reduce((sum: number, o: OrderRow) => sum + (o.subtotal_cents || o.total_cents || 0), 0)
+    const grossRevenue = completedOrders.reduce((sum: number, o: OrderRow) => sum + (o.subtotal || o.total || 0), 0)
     const refunds = 0 // Would need refund tracking
     
     const overview: SalesOverview = {
@@ -170,7 +170,7 @@ export async function getSalesByPeriod(
     // Get orders with timestamps
     const { data: orders, error } = await supabase
       .from(getOrdersTable())
-      .select('id, total_cents, created_at, status')
+      .select('id, total, created_at, status')
       .eq('site_id', siteId)
       .gte('created_at', dateRange.start)
       .lte('created_at', dateRange.end)
@@ -234,7 +234,7 @@ export async function getSalesByPeriod(
       
       const existing = grouped.get(periodKey) || { revenue: 0, orders: 0, products: 0 }
       grouped.set(periodKey, {
-        revenue: existing.revenue + (order.total_cents || 0),
+        revenue: existing.revenue + (order.total || 0),
         orders: existing.orders + 1,
         products: existing.products + (orderItemsMap.get(order.id) || 0)
       })
@@ -269,7 +269,7 @@ export async function getSalesByChannel(
     // Get orders with channel info
     const { data: orders, error } = await supabase
       .from(getOrdersTable())
-      .select('total_cents, metadata, status')
+      .select('total, metadata, status')
       .eq('site_id', siteId)
       .gte('created_at', dateRange.start)
       .lte('created_at', dateRange.end)
@@ -287,7 +287,7 @@ export async function getSalesByChannel(
       const channel = metadata?.channel || 'direct'
       const existing = channelMap.get(channel) || { revenue: 0, orders: 0 }
       channelMap.set(channel, {
-        revenue: existing.revenue + (order.total_cents || 0),
+        revenue: existing.revenue + (order.total || 0),
         orders: existing.orders + 1
       })
     }
@@ -320,7 +320,7 @@ export async function getRevenueBreakdown(
     
     const { data: orders, error } = await supabase
       .from(getOrdersTable())
-      .select('subtotal_cents, tax_cents, shipping_cents, discount_cents, total_cents, status')
+      .select('subtotal, tax_amount, shipping_amount, discount_amount, total, status')
       .eq('site_id', siteId)
       .gte('created_at', dateRange.start)
       .lte('created_at', dateRange.end)
@@ -331,12 +331,12 @@ export async function getRevenueBreakdown(
     const typedOrders = (orders || []) as OrderRow[]
     
     const breakdown: RevenueBreakdown = {
-      gross_revenue: typedOrders.reduce((sum: number, o: OrderRow) => sum + (o.subtotal_cents || 0), 0),
-      discounts: typedOrders.reduce((sum: number, o: OrderRow) => sum + (o.discount_cents || 0), 0),
-      shipping_collected: typedOrders.reduce((sum: number, o: OrderRow) => sum + (o.shipping_cents || 0), 0),
-      tax_collected: typedOrders.reduce((sum: number, o: OrderRow) => sum + (o.tax_cents || 0), 0),
+      gross_revenue: typedOrders.reduce((sum: number, o: OrderRow) => sum + (o.subtotal || 0), 0),
+      discounts: typedOrders.reduce((sum: number, o: OrderRow) => sum + (o.discount_amount || 0), 0),
+      shipping_collected: typedOrders.reduce((sum: number, o: OrderRow) => sum + (o.shipping_amount || 0), 0),
+      tax_collected: typedOrders.reduce((sum: number, o: OrderRow) => sum + (o.tax_amount || 0), 0),
       refunds: 0,
-      net_revenue: typedOrders.reduce((sum: number, o: OrderRow) => sum + (o.total_cents || 0), 0)
+      net_revenue: typedOrders.reduce((sum: number, o: OrderRow) => sum + (o.total || 0), 0)
     }
     
     return { data: breakdown, error: null }
@@ -381,7 +381,7 @@ export async function getProductPerformance(
     // Get order items
     const { data: orderItems, error: itemsError } = await supabase
       .from(getOrderItemsTable())
-      .select('product_id, product_name, quantity, total_cents')
+      .select('product_id, product_name, quantity, total_price')
       .in('order_id', orderIds)
     
     if (itemsError) throw itemsError
@@ -405,7 +405,7 @@ export async function getProductPerformance(
       }
       
       existing.unitsSold += item.quantity || 0
-      existing.revenue += item.total_cents || 0
+      existing.revenue += item.total_price || 0
       existing.orders += 1
       
       productMap.set(item.product_id, existing)
@@ -547,12 +547,12 @@ export async function getCategoryPerformance(
     // Get order items
     const { data: orderItems, error: itemsError } = await supabase
       .from(getOrderItemsTable())
-      .select('product_id, quantity, total_cents, unit_price_cents')
+      .select('product_id, quantity, total_price, unit_price')
       .in('order_id', orderIds)
     
     if (itemsError) throw itemsError
     
-    type OrderItemSimple = { product_id: string; quantity: number; total_cents: number; unit_price_cents: number }
+    type OrderItemSimple = { product_id: string; quantity: number; total_price: number; unit_price: number }
     const typedItems = (orderItems || []) as OrderItemSimple[]
     
     // Aggregate by category
@@ -574,11 +574,11 @@ export async function getCategoryPerformance(
         prices: []
       }
       
-      existing.revenue += item.total_cents || 0
+      existing.revenue += item.total_price || 0
       existing.units += item.quantity || 0
       existing.orders += 1
       existing.products.add(item.product_id)
-      if (item.unit_price_cents) existing.prices.push(item.unit_price_cents)
+      if (item.unit_price) existing.prices.push(item.unit_price)
       
       categoryStats.set(categoryId, existing)
     }
@@ -624,7 +624,7 @@ export async function getCustomerInsights(
     // Get orders in date range with customer info
     const { data: orders, error: ordersError } = await supabase
       .from(getOrdersTable())
-      .select('id, customer_id, total_cents, created_at, status')
+      .select('id, customer_id, total, created_at, status')
       .eq('site_id', siteId)
       .gte('created_at', dateRange.start)
       .lte('created_at', dateRange.end)
@@ -632,7 +632,7 @@ export async function getCustomerInsights(
     
     if (ordersError) throw ordersError
     
-    type OrderWithCustomer = { id: string; customer_id: string | null; total_cents: number; created_at: string; status: string }
+    type OrderWithCustomer = { id: string; customer_id: string | null; total: number; created_at: string; status: string }
     const typedOrders = (orders || []) as OrderWithCustomer[]
     
     // Count unique customers
@@ -670,7 +670,7 @@ export async function getCustomerInsights(
     }
     
     // Calculate total revenue in period
-    const totalRevenue = typedOrders.reduce((sum: number, o: OrderWithCustomer) => sum + (o.total_cents || 0), 0)
+    const totalRevenue = typedOrders.reduce((sum: number, o: OrderWithCustomer) => sum + (o.total || 0), 0)
     
     const insights: CustomerInsights = {
       total_customers: totalCustomers,
@@ -703,14 +703,14 @@ export async function getCustomerLifetimeValue(
     // Get all completed orders grouped by customer
     const { data: orders, error } = await supabase
       .from(getOrdersTable())
-      .select('customer_id, total_cents, created_at')
+      .select('customer_id, total, created_at')
       .eq('site_id', siteId)
       .in('status', ['completed', 'shipped', 'delivered'])
       .order('created_at', { ascending: true })
     
     if (error) throw error
     
-    type OrderSimple = { customer_id: string | null; total_cents: number; created_at: string }
+    type OrderSimple = { customer_id: string | null; total: number; created_at: string }
     const typedOrders = (orders || []) as OrderSimple[]
     
     // Aggregate by customer
@@ -723,8 +723,8 @@ export async function getCustomerLifetimeValue(
       if (!order.customer_id) continue
       
       const existing = customerMap.get(order.customer_id) || { totalSpent: 0, orders: [] }
-      existing.totalSpent += order.total_cents || 0
-      existing.orders.push({ date: order.created_at, amount: order.total_cents || 0 })
+      existing.totalSpent += order.total || 0
+      existing.orders.push({ date: order.created_at, amount: order.total || 0 })
       customerMap.set(order.customer_id, existing)
     }
     
@@ -800,13 +800,13 @@ export async function getCustomerSegmentation(
     // Get all customer orders
     const { data: orders, error } = await supabase
       .from(getOrdersTable())
-      .select('customer_id, total_cents, created_at')
+      .select('customer_id, total, created_at')
       .eq('site_id', siteId)
       .in('status', ['completed', 'shipped', 'delivered'])
     
     if (error) throw error
     
-    type OrderSimple = { customer_id: string | null; total_cents: number; created_at: string }
+    type OrderSimple = { customer_id: string | null; total: number; created_at: string }
     const typedOrders = (orders || []) as OrderSimple[]
     
     // Aggregate by customer
@@ -815,7 +815,7 @@ export async function getCustomerSegmentation(
     for (const order of typedOrders) {
       if (!order.customer_id) continue
       const existing = customerStats.get(order.customer_id) || { total: 0, count: 0, lastOrder: '' }
-      existing.total += order.total_cents || 0
+      existing.total += order.total || 0
       existing.count += 1
       if (order.created_at > existing.lastOrder) {
         existing.lastOrder = order.created_at
@@ -996,27 +996,24 @@ export async function getCartAbandonmentRate(
     // Get carts in date range
     const { data: carts, error: cartsError } = await supabase
       .from(getCartsTable())
-      .select('id, status, total_cents, created_at')
+      .select('id, status, created_at')
       .eq('site_id', siteId)
       .gte('created_at', dateRange.start)
       .lte('created_at', dateRange.end)
     
     if (cartsError) throw cartsError
     
-    type CartRow = { id: string; status: string; total_cents: number; created_at: string }
+    type CartRow = { id: string; status: string; created_at: string }
     const typedCarts = (carts || []) as CartRow[]
     
     const totalCarts = typedCarts.length
     const abandonedCarts = typedCarts.filter((c: CartRow) => c.status === 'abandoned').length
     const recoveredCarts = typedCarts.filter((c: CartRow) => c.status === 'converted').length
     
-    const abandonedValue = typedCarts
-      .filter((c: CartRow) => c.status === 'abandoned')
-      .reduce((sum: number, c: CartRow) => sum + (c.total_cents || 0), 0)
-    
-    const recoveredValue = typedCarts
-      .filter((c: CartRow) => c.status === 'converted')
-      .reduce((sum: number, c: CartRow) => sum + (c.total_cents || 0), 0)
+    // Note: Cart table has no total column — cart values would need to be
+    // calculated by summing cart_items. For now, report counts only.
+    const abandonedValue = 0
+    const recoveredValue = 0
     
     const abandonment: CartAbandonment = {
       total_carts: totalCarts,

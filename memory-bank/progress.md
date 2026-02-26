@@ -1,11 +1,76 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅** + **AI RICHTEXT/ACCORDION/TABS RENDERING FIX ✅** + **CRM COMPREHENSIVE INDUSTRY-LEADER OVERHAUL ✅** + **SOCIAL MEDIA PHASE A CRITICAL BUG FIXES ✅** + **KNOWN LIMITATIONS DEEP ANALYSIS + FIXES ✅** + **BOOKING MODULE COMPREHENSIVE OVERHAUL ✅** + **BRAND COLOR INHERITANCE SYSTEM ✅** + **AI COMPONENT AWARENESS + BOOKING DATA ENRICHMENT ✅** + **SMART NAVIGATION SYSTEM ✅** + **GLOBAL BRANDING CSS VARIABLE SYSTEM ✅** + **SITE BRANDING UI + BOOKING PAGE OVERHAUL ✅** + **UNIFIED BRANDING AUDIT (EMAILS + CHAT + FONTS + EMBEDS) ✅** + **FONT BRANDING CASCADE FIX ✅** + **SITE LOGO SYSTEM + BOOKING E2E FIXES ✅** + **ECOMMERCE PRODUCT IMAGES + WORLD-CLASS UPGRADE ✅** + **HARDCODED BRAND COLOR ELIMINATION ✅** + **E-COMMERCE CRITICAL FIXES (LOGO RLS + PAYMENT FLOW + CART SYNC) ✅** + **PRODUCTION-READY PHASE DOCUMENTS (E-COMMERCE + BOOKING) ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅** + **AI RICHTEXT/ACCORDION/TABS RENDERING FIX ✅** + **CRM COMPREHENSIVE INDUSTRY-LEADER OVERHAUL ✅** + **SOCIAL MEDIA PHASE A CRITICAL BUG FIXES ✅** + **KNOWN LIMITATIONS DEEP ANALYSIS + FIXES ✅** + **BOOKING MODULE COMPREHENSIVE OVERHAUL ✅** + **BRAND COLOR INHERITANCE SYSTEM ✅** + **AI COMPONENT AWARENESS + BOOKING DATA ENRICHMENT ✅** + **SMART NAVIGATION SYSTEM ✅** + **GLOBAL BRANDING CSS VARIABLE SYSTEM ✅** + **SITE BRANDING UI + BOOKING PAGE OVERHAUL ✅** + **UNIFIED BRANDING AUDIT (EMAILS + CHAT + FONTS + EMBEDS) ✅** + **FONT BRANDING CASCADE FIX ✅** + **SITE LOGO SYSTEM + BOOKING E2E FIXES ✅** + **ECOMMERCE PRODUCT IMAGES + WORLD-CLASS UPGRADE ✅** + **HARDCODED BRAND COLOR ELIMINATION ✅** + **E-COMMERCE CRITICAL FIXES (LOGO RLS + PAYMENT FLOW + CART SYNC) ✅** + **PRODUCTION-READY PHASE DOCUMENTS (E-COMMERCE + BOOKING) ✅** + **ECOM PRODUCTION-READY SECTIONS 1-6 (BUGS + BRANDING) ✅**
 
 ---
 
-## Latest Update: February 2026 - Production-Ready Phase Documents Created
+## Latest Update: February 2026 - E-Commerce Production-Ready Sections 1-6
+
+### Task: Execute PHASE-ECOM-PRODUCTION-READY sections 1-6 (Critical Bugs + Branding)
+
+**BUG 1: `customer_name` column missing from `mod_ecommod01_orders` (DB migration)**
+- Applied `ALTER TABLE mod_ecommod01_orders ADD COLUMN IF NOT EXISTS customer_name text` via Supabase MCP
+- Verified column exists: type `text`, nullable `YES`
+
+**BUG 2: Analytics `_cents` column names (22 replacements in analytics-actions.ts)**
+- Verified actual DB schema: `total`, `subtotal`, `tax_amount`, `shipping_amount`, `discount_amount` (NOT `_cents`)
+- `mod_ecommod01_order_items` has `total_price` and `unit_price` (NOT `total_cents`/`unit_price_cents`)
+- `mod_ecommod01_carts` has NO total column (cart abandonment query switched to count-only)
+- Fixed `OrderRow` interface, `OrderItemRow` interface, all `.select()` queries, all calculations
+
+**BUG 3: Country dropdown (complete AddressForm.tsx overhaul)**
+- Replaced Radix UI `<Select>` with native `<select>` (fixes portal branding leak + better mobile UX)
+- Replaced hardcoded 8-country array with `getCountryList()` (50+ countries, Zambia first)
+- All inputs: `h-12 text-base` (48px touch targets, 16px prevents iOS zoom), `enterKeyHint="next"`, `inputMode` attributes
+- Updated placeholders to Zambian defaults (Lusaka, +260...)
+
+**BUG 4: Cart badge not showing (new NavCartBadge component + navbar wiring)**
+- Created `src/modules/ecommerce/studio/components/NavCartBadge.tsx` — client component
+  - Fetches cart count via `/api/modules/ecommerce/cart?siteId=...&sessionId=...`
+  - Listens to `cart-updated` CustomEvent for real-time sync
+  - Renders absolute-positioned badge with count (hidden when 0, "99+" cap)
+- Modified `src/lib/studio/blocks/premium-components.tsx`:
+  - Added `siteId?: string` to `PremiumNavbarProps` interface
+  - Added `NavCartBadge` import
+  - Desktop utility items: renders `NavCartBadge` for `item.id === 'ecom-cart'`
+  - Mobile utility items: same treatment
+
+**Section 6: Branding — 55 line changes across 14 files**
+- All onboarding step components: `focus:ring-blue-500` → `focus:ring-primary`, info boxes → `primary/5`
+- OnboardingWizard: active step + CTA → `bg-primary text-primary-foreground`
+- Switch.tsx: `bg-blue-600` → `bg-primary`
+- quote-portal-view.tsx (CUSTOMER-FACING): notes → primary colors
+- convert-to-order-dialog.tsx: info box → primary colors
+- order-card.tsx: active stepper → `bg-primary`
+- ecommerce-metric-card.tsx: orders variant → primary + CSS var
+- inventory-settings.tsx + payment-settings.tsx: info boxes → primary colors
+
+**Files Modified/Created:**
+| File | Type | Changes |
+|------|------|---------|
+| `analytics-actions.ts` | Modified | 22 column name replacements |
+| `AddressForm.tsx` | Modified | Native select, full country list, mobile optimization |
+| `NavCartBadge.tsx` | **New** | Live cart badge client component |
+| `premium-components.tsx` | Modified | NavCartBadge wiring, siteId prop |
+| `OnboardingWizard.tsx` | Modified | 2 branding fixes |
+| `Switch.tsx` | Modified | 2 branding fixes |
+| `StoreBasicsStep.tsx` | Modified | 6 branding fixes |
+| `PaymentsStep.tsx` | Modified | 4 branding fixes |
+| `ShippingStep.tsx` | Modified | 3 branding fixes |
+| `CurrencyTaxStep.tsx` | Modified | 6 branding fixes |
+| `FirstProductStep.tsx` | Modified | 11 branding fixes |
+| `LaunchStep.tsx` | Modified | 6 branding fixes |
+| `order-card.tsx` | Modified | 1 branding fix |
+| `ecommerce-metric-card.tsx` | Modified | 2 branding fixes |
+| `inventory-settings.tsx` | Modified | 1 branding fix |
+| `payment-settings.tsx` | Modified | 4 branding fixes |
+| `quote-portal-view.tsx` | Modified | 1 branding fix |
+| `convert-to-order-dialog.tsx` | Modified | 1 branding fix |
+
+---
+
+## Previous Update: February 2026 - Production-Ready Phase Documents Created
 
 ### Task: Create comprehensive AI phase documents for e-commerce and booking modules
 

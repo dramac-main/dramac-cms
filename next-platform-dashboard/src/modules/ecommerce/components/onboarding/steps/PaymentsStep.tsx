@@ -154,7 +154,7 @@ export function PaymentsStep({
                 className={cn(
                   'w-full p-4 border rounded-lg text-left transition-all',
                   isSelected
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-500'
+                    ? 'border-primary bg-primary/5 dark:bg-primary/10 ring-1 ring-primary'
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 )}
               >
@@ -170,7 +170,7 @@ export function PaymentsStep({
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="text-blue-500 hover:text-blue-600"
+                            className="text-primary hover:text-primary/80"
                           >
                             <ExternalLink className="w-3 h-3" />
                           </a>
@@ -188,7 +188,7 @@ export function PaymentsStep({
                     className={cn(
                       'w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors',
                       isSelected
-                        ? 'border-blue-500 bg-blue-500'
+                        ? 'border-primary bg-primary'
                         : 'border-gray-300 dark:border-gray-600'
                     )}
                   >
@@ -209,8 +209,8 @@ export function PaymentsStep({
       )}
 
       {/* Info Box */}
-      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <p className="text-sm text-blue-700 dark:text-blue-300">
+      <div className="p-4 bg-primary/5 dark:bg-primary/10 rounded-lg">
+        <p className="text-sm text-primary dark:text-primary/80">
           <strong>Note:</strong> You&apos;ll need to configure API keys for each provider
           in Settings → Payments after completing the wizard.
         </p>

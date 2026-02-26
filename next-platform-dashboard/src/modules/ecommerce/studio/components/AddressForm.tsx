@@ -12,13 +12,7 @@ import React from 'react'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { getCountryList } from '../../lib/settings-utils'
 import type { Address } from '../../types/ecommerce-types'
 
 // ============================================================================
@@ -36,19 +30,10 @@ interface AddressFormProps {
 }
 
 // ============================================================================
-// COUNTRIES LIST (subset for demo - expand as needed)
+// COUNTRIES LIST — Full list with Zambia at top (from settings-utils)
 // ============================================================================
 
-const COUNTRIES = [
-  { code: 'US', name: 'United States' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'NZ', name: 'New Zealand' }
-]
+const COUNTRIES = getCountryList()
 
 // ============================================================================
 // COMPONENT
@@ -80,6 +65,8 @@ export function AddressForm({
             placeholder="John"
             disabled={disabled}
             autoComplete="given-name"
+            enterKeyHint="next"
+            className="h-12 text-base"
           />
         </div>
         <div className="space-y-2">
@@ -91,6 +78,8 @@ export function AddressForm({
             placeholder="Doe"
             disabled={disabled}
             autoComplete="family-name"
+            enterKeyHint="next"
+            className="h-12 text-base"
           />
         </div>
       </div>
@@ -106,6 +95,8 @@ export function AddressForm({
             placeholder="Company name"
             disabled={disabled}
             autoComplete="organization"
+            enterKeyHint="next"
+            className="h-12 text-base"
           />
         </div>
       )}
@@ -120,6 +111,8 @@ export function AddressForm({
           placeholder="123 Main Street"
           disabled={disabled}
           autoComplete="address-line1"
+          enterKeyHint="next"
+          className="h-12 text-base"
         />
       </div>
 
@@ -133,6 +126,8 @@ export function AddressForm({
           placeholder="Apt 4B"
           disabled={disabled}
           autoComplete="address-line2"
+          enterKeyHint="next"
+          className="h-12 text-base"
         />
       </div>
 
@@ -144,9 +139,11 @@ export function AddressForm({
             id="city"
             value={address.city || ''}
             onChange={(e) => handleChange('city', e.target.value)}
-            placeholder="New York"
+            placeholder="Lusaka"
             disabled={disabled}
             autoComplete="address-level2"
+            enterKeyHint="next"
+            className="h-12 text-base"
           />
         </div>
         <div className="space-y-2">
@@ -155,9 +152,11 @@ export function AddressForm({
             id="state"
             value={address.state || ''}
             onChange={(e) => handleChange('state', e.target.value)}
-            placeholder="NY"
+            placeholder="Lusaka Province"
             disabled={disabled}
             autoComplete="address-level1"
+            enterKeyHint="next"
+            className="h-12 text-base"
           />
         </div>
         <div className="space-y-2">
@@ -166,32 +165,38 @@ export function AddressForm({
             id="postal_code"
             value={address.postal_code || ''}
             onChange={(e) => handleChange('postal_code', e.target.value)}
-            placeholder="10001"
+            placeholder="10101"
             disabled={disabled}
             autoComplete="postal-code"
+            enterKeyHint="next"
+            className="h-12 text-base"
           />
         </div>
       </div>
 
-      {/* Country */}
+      {/* Country — Native select for brand consistency + better mobile UX */}
       <div className="space-y-2">
         <Label htmlFor="country">Country *</Label>
-        <Select
+        <select
+          id="country"
           value={address.country || ''}
-          onValueChange={(value) => handleChange('country', value)}
+          onChange={(e) => handleChange('country', e.target.value)}
           disabled={disabled}
+          autoComplete="country"
+          className={cn(
+            'flex h-12 w-full rounded-md border border-input bg-background px-3 py-2 text-base',
+            'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+            'appearance-none bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23666%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E")] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-10'
+          )}
         >
-          <SelectTrigger id="country" className="w-full">
-            <SelectValue placeholder="Select a country" />
-          </SelectTrigger>
-          <SelectContent>
-            {COUNTRIES.map((country) => (
-              <SelectItem key={country.code} value={country.code}>
-                {country.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <option value="" disabled>Select a country</option>
+          {COUNTRIES.map((country) => (
+            <option key={country.code} value={country.code}>
+              {country.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Phone (optional) */}
@@ -201,11 +206,14 @@ export function AddressForm({
           <Input
             id="phone"
             type="tel"
+            inputMode="tel"
             value={address.phone || ''}
             onChange={(e) => handleChange('phone', e.target.value)}
             placeholder="+260 97 1234567"
             disabled={disabled}
             autoComplete="tel"
+            enterKeyHint="done"
+            className="h-12 text-base"
           />
         </div>
       )}
@@ -261,11 +269,14 @@ export function ShippingAddressForm({
               <Input
                 id="email"
                 type="email"
+                inputMode="email"
                 value={email || ''}
                 onChange={(e) => onEmailChange(e.target.value)}
                 placeholder="email@example.com"
                 disabled={props.disabled}
                 autoComplete="email"
+                enterKeyHint="next"
+                className="h-12 text-base"
               />
             </div>
           )}
@@ -276,11 +287,14 @@ export function ShippingAddressForm({
               <Input
                 id="contact_phone"
                 type="tel"
+                inputMode="tel"
                 value={phone || ''}
                 onChange={(e) => onPhoneChange(e.target.value)}
                 placeholder="+260 97 1234567"
                 disabled={props.disabled}
                 autoComplete="tel"
+                enterKeyHint="next"
+                className="h-12 text-base"
               />
             </div>
           )}

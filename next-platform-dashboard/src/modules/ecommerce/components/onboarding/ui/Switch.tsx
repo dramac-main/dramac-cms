@@ -41,7 +41,7 @@ const sizeClasses = {
 };
 
 const colorClasses = {
-  blue: 'bg-blue-600',
+  blue: 'bg-primary',
   green: 'bg-green-600',
   yellow: 'bg-yellow-500',
   purple: 'bg-purple-600',
@@ -69,7 +69,7 @@ export function Switch({
       onClick={() => onCheckedChange(!checked)}
       className={cn(
         'relative inline-flex shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
         'disabled:cursor-not-allowed disabled:opacity-50',
         sizes.track,
         checked ? activeColor : 'bg-gray-200 dark:bg-gray-700',

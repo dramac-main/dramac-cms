@@ -77,7 +77,7 @@ export function LaunchStep({
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
           <Rocket className="w-8 h-8 text-white" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -94,13 +94,13 @@ export function LaunchStep({
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Setup Progress
           </span>
-          <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+          <span className="text-sm font-bold text-primary">
             {completionPercentage}%
           </span>
         </div>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
           <div
-            className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-500"
+            className="bg-primary h-2 rounded-full transition-all duration-500"
             style={{ width: `${completionPercentage}%` }}
           />
         </div>
@@ -178,26 +178,26 @@ export function LaunchStep({
       </div>
 
       {/* Next Steps */}
-      <div className="p-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg">
+      <div className="p-4 bg-primary/5 dark:bg-primary/10 rounded-lg">
         <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-500" />
           Recommended Next Steps
         </h4>
         <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
           <li className="flex items-start gap-2">
-            <span className="text-blue-500">•</span>
+            <span className="text-primary">•</span>
             <span>Configure payment provider API keys in Settings</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-500">•</span>
+            <span className="text-primary">•</span>
             <span>Add more products to your catalog</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-500">•</span>
+            <span className="text-primary">•</span>
             <span>Set up shipping zones for accurate delivery rates</span>
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-blue-500">•</span>
+            <span className="text-primary">•</span>
             <span>Customize your storefront appearance</span>
           </li>
         </ul>

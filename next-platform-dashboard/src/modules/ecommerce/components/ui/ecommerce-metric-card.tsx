@@ -80,7 +80,7 @@ const variantConfig = {
   default: {
     iconBg: "bg-primary/10",
     iconColor: "text-primary",
-    sparkline: "#3b82f6",
+    sparkline: "var(--color-primary, #3b82f6)",
   },
   revenue: {
     iconBg: "bg-green-100 dark:bg-green-900/30",
@@ -88,9 +88,9 @@ const variantConfig = {
     sparkline: "#22c55e",
   },
   orders: {
-    iconBg: "bg-blue-100 dark:bg-blue-900/30",
-    iconColor: "text-blue-600 dark:text-blue-400",
-    sparkline: "#3b82f6",
+    iconBg: "bg-primary/10",
+    iconColor: "text-primary",
+    sparkline: "var(--color-primary, #3b82f6)",
   },
   inventory: {
     iconBg: "bg-purple-100 dark:bg-purple-900/30",

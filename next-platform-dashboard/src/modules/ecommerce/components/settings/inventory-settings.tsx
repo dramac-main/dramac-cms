@@ -276,12 +276,12 @@ export function InventorySettingsForm({ siteId, agencyId }: InventorySettingsFor
             </div>
           </div>
 
-          <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4">
+          <div className="rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 p-4">
             <div className="flex gap-3">
-              <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-blue-700 dark:text-blue-300">
+              <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-primary dark:text-primary/80">
                 <p className="font-medium">How stock reservation works</p>
-                <p className="mt-1 text-blue-600 dark:text-blue-400">
+                <p className="mt-1 text-primary/80 dark:text-primary/70">
                   When a customer adds items to their cart and starts checkout, 
                   stock is reserved for the duration you specify. If the order 
                   isn&apos;t completed within that time, the stock is automatically released.

@@ -75,7 +75,7 @@ export function CurrencyTaxStep({
           onChange={(e) => handleChange('currency', e.target.value)}
           className={cn(
             'w-full px-4 py-3 border rounded-lg transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+            'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
             'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
             'text-gray-900 dark:text-white'
           )}
@@ -100,7 +100,7 @@ export function CurrencyTaxStep({
             className={cn(
               'px-4 py-3 border rounded-lg transition-colors text-center',
               currencyTax.currencyPosition === 'before'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                ? 'border-primary bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary/80'
                 : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
             )}
           >
@@ -113,7 +113,7 @@ export function CurrencyTaxStep({
             className={cn(
               'px-4 py-3 border rounded-lg transition-colors text-center',
               currencyTax.currencyPosition === 'after'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                ? 'border-primary bg-primary/5 dark:bg-primary/10 text-primary dark:text-primary/80'
                 : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
             )}
           >
@@ -156,7 +156,7 @@ export function CurrencyTaxStep({
                 onChange={(e) => handleChange('taxRate', parseFloat(e.target.value) || 0)}
                 className={cn(
                   'w-full px-4 py-3 border rounded-lg transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                  'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
                   'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                   'text-gray-900 dark:text-white'
                 )}
@@ -169,7 +169,7 @@ export function CurrencyTaxStep({
                 id="taxIncluded"
                 checked={currencyTax.taxIncludedInPrice}
                 onChange={(e) => handleChange('taxIncludedInPrice', e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
               />
               <label htmlFor="taxIncluded" className="text-sm text-gray-700 dark:text-gray-300">
                 Prices include tax

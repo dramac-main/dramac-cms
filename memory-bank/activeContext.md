@@ -1,8 +1,42 @@
 # Active Context
 
-## Current Focus: Production-Ready Phase Documents for E-Commerce & Booking Modules
+## Current Focus: E-Commerce Production-Ready Phase — Sections 1-6 Complete
 
-### Status: PHASE DOCUMENTS CREATED ✅
+### Status: SECTIONS 1-6 IMPLEMENTED ✅ (4 Critical Bugs Fixed + Branding Audit)
+
+### Latest Work: PHASE-ECOM-PRODUCTION-READY Sections 1-6
+
+Executed sections 1-6 of `phases/PHASE-ECOM-PRODUCTION-READY.md`. Sections 1-4 were context/reference. Sections 5-6 required active implementation.
+
+**Section 5: Critical Bugs Fixed**
+
+| Bug | Root Cause | Fix | Files |
+|-----|------------|-----|-------|
+| **BUG 1: `customer_name` column missing** | Column never added to `mod_ecommod01_orders` table | Applied DB migration via Supabase MCP: `ALTER TABLE mod_ecommod01_orders ADD COLUMN IF NOT EXISTS customer_name text` | Database only |
+| **BUG 2: Analytics `_cents` columns** | 47 occurrences of wrong column names (`total_cents`, `subtotal_cents`, etc.) | 22 replacements fixing all column refs to match actual DB schema (`total`, `subtotal`, `tax_amount`, `shipping_amount`, `discount_amount`, `total_price`, `unit_price`) | `analytics-actions.ts` |
+| **BUG 3: Country dropdown** | Hardcoded 8-country list (no Zambia), Radix Select portal escapes branding | Native `<select>` with `getCountryList()` (50+ countries, Zambia first), h-12 touch targets, text-base to prevent iOS zoom, enterKeyHint, inputMode attributes | `AddressForm.tsx` |
+| **BUG 4: Cart badge not showing** | Navbar cart icon rendered as plain `<a>` with no live count | Created `NavCartBadge.tsx` client component (fetches cart count via API, listens to `cart-updated` events), wired into PremiumNavbarRender for both desktop and mobile | `NavCartBadge.tsx` (new), `premium-components.tsx` |
+
+**Section 6: Branding System Fixes**
+
+Comprehensive audit found 55 individual hardcoded blue brand-color violations across 14 files. All fixed:
+- Onboarding wizard steps (StoreBasicsStep, PaymentsStep, ShippingStep, CurrencyTaxStep, FirstProductStep, LaunchStep): focus rings, info boxes, selected states, icons → `primary` / `primary/5` / `primary/10`
+- OnboardingWizard.tsx: active step indicator, CTA button → `bg-primary text-primary-foreground`
+- Switch.tsx: active color and focus ring → `bg-primary` / `ring-primary`
+- quote-portal-view.tsx (CUSTOMER-FACING): notes container → `primary/5` border + text
+- convert-to-order-dialog.tsx: info container → `primary/5`
+- order-card.tsx: active step circle → `bg-primary text-primary-foreground`
+- ecommerce-metric-card.tsx: orders variant + sparkline → `primary` / CSS var
+- inventory-settings.tsx: info box → `primary/5`
+- payment-settings.tsx: 4 provider info boxes (Flutterwave, Pesapal, DPO, Paddle) → `primary/5`
+
+**TypeScript Check:** All modified files compile clean. Pre-existing errors in unrelated modules (CRM, booking, AI designer) remain.
+
+**Remaining from PHASE-ECOM-PRODUCTION-READY:** Sections 7-22 not yet started (checkout flow, order lifecycle, payment integration, email system, analytics, storefront widget, quotation system, PDF, navigation, SEO, testing).
+
+---
+
+### Previous Focus: Production-Ready Phase Documents for E-Commerce & Booking Modules
 
 ### Phase Documents Created (Latest Work)
 Two comprehensive AI phase documents created for fresh-session AI to make both modules production-ready:

@@ -37,8 +37,8 @@ export function StoreBasicsStep({
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Store className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Store className="w-8 h-8 text-primary" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           Let&apos;s set up your store
@@ -60,7 +60,7 @@ export function StoreBasicsStep({
           placeholder="My Awesome Store"
           className={cn(
             'w-full px-4 py-3 border rounded-lg transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+            'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
             'placeholder:text-gray-400 dark:placeholder:text-gray-500',
             'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
             'text-gray-900 dark:text-white'
@@ -81,7 +81,7 @@ export function StoreBasicsStep({
           rows={3}
           className={cn(
             'w-full px-4 py-3 border rounded-lg transition-colors resize-none',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+            'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
             'placeholder:text-gray-400 dark:placeholder:text-gray-500',
             'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
             'text-gray-900 dark:text-white'
@@ -103,7 +103,7 @@ export function StoreBasicsStep({
             placeholder="store@example.com"
             className={cn(
               'w-full pl-11 pr-4 py-3 border rounded-lg transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+              'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
               'placeholder:text-gray-400 dark:placeholder:text-gray-500',
               'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
               'text-gray-900 dark:text-white'
@@ -131,7 +131,7 @@ export function StoreBasicsStep({
             placeholder="+260 97 1234567"
             className={cn(
               'w-full pl-11 pr-4 py-3 border rounded-lg transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+              'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
               'placeholder:text-gray-400 dark:placeholder:text-gray-500',
               'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
               'text-gray-900 dark:text-white'

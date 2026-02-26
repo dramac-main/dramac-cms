@@ -249,7 +249,7 @@ export function OnboardingWizard({
                     index + 1 < currentStep
                       ? 'bg-green-500 text-white'
                       : index + 1 === currentStep
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-primary text-primary-foreground'
                       : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                   )}
                 >
@@ -315,7 +315,7 @@ export function OnboardingWizard({
               disabled={isSaving}
               className={cn(
                 'flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors',
-                'bg-blue-600 text-white hover:bg-blue-700',
+                'bg-primary text-primary-foreground hover:bg-primary/90',
                 'disabled:opacity-50 disabled:cursor-not-allowed'
               )}
             >

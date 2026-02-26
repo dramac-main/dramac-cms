@@ -95,7 +95,7 @@ export function ShippingStep({
                 onChange={(e) => handleChange('defaultShippingRate', parseFloat(e.target.value) || 0)}
                 className={cn(
                   'w-full pl-10 pr-4 py-3 border rounded-lg transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                  'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
                   'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                   'text-gray-900 dark:text-white'
                 )}
@@ -145,7 +145,7 @@ export function ShippingStep({
                     onChange={(e) => handleChange('freeShippingThreshold', parseFloat(e.target.value) || 0)}
                     className={cn(
                       'w-full pl-10 pr-4 py-3 border rounded-lg transition-colors',
-                      'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                      'focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent',
                       'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
                       'text-gray-900 dark:text-white'
                     )}
@@ -160,8 +160,8 @@ export function ShippingStep({
           </div>
 
           {/* Info Box */}
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <p className="text-sm text-blue-700 dark:text-blue-300">
+          <div className="p-4 bg-primary/5 dark:bg-primary/10 rounded-lg">
+            <p className="text-sm text-primary dark:text-primary/80">
               <strong>Tip:</strong> You can set up advanced shipping zones and rates
               later in Settings → Shipping.
             </p>

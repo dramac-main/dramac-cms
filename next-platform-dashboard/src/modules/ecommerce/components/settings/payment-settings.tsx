@@ -122,9 +122,9 @@ function FlutterwaveConfigForm({
 }) {
   return (
     <div className="space-y-4">
-      <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900 flex gap-2">
-        <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-        <p className="text-xs text-blue-700 dark:text-blue-300">
+      <div className="p-3 bg-primary/5 dark:bg-primary/10 rounded-lg border border-primary/20 dark:border-primary/30 flex gap-2">
+        <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+        <p className="text-xs text-primary dark:text-primary/80">
           Get your API keys from the{' '}
           <a href="https://dashboard.flutterwave.com/settings/apis" target="_blank" rel="noopener noreferrer" className="underline font-medium">
             Flutterwave Dashboard → Settings → API Keys
@@ -245,9 +245,9 @@ function PesapalConfigForm({
 }) {
   return (
     <div className="space-y-4">
-      <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900 flex gap-2">
-        <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-        <p className="text-xs text-blue-700 dark:text-blue-300">
+      <div className="p-3 bg-primary/5 dark:bg-primary/10 rounded-lg border border-primary/20 dark:border-primary/30 flex gap-2">
+        <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+        <p className="text-xs text-primary dark:text-primary/80">
           Get your API credentials from the{' '}
           <a href="https://dashboard.pesapal.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">
             Pesapal Dashboard
@@ -337,9 +337,9 @@ function DpoConfigForm({
 }) {
   return (
     <div className="space-y-4">
-      <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900 flex gap-2">
-        <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-        <p className="text-xs text-blue-700 dark:text-blue-300">
+      <div className="p-3 bg-primary/5 dark:bg-primary/10 rounded-lg border border-primary/20 dark:border-primary/30 flex gap-2">
+        <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+        <p className="text-xs text-primary dark:text-primary/80">
           Get your Company Token from the{' '}
           <a href="https://www.directpayonline.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">
             DPO Dashboard
@@ -418,9 +418,9 @@ function PaddleConfigForm({
 }) {
   return (
     <div className="space-y-4">
-      <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900 flex gap-2">
-        <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-        <p className="text-xs text-blue-700 dark:text-blue-300">
+      <div className="p-3 bg-primary/5 dark:bg-primary/10 rounded-lg border border-primary/20 dark:border-primary/30 flex gap-2">
+        <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+        <p className="text-xs text-primary dark:text-primary/80">
           Get your API credentials from the{' '}
           <a href="https://vendors.paddle.com/authentication" target="_blank" rel="noopener noreferrer" className="underline font-medium">
             Paddle Dashboard → Developer Tools

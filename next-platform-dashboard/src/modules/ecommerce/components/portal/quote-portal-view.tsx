@@ -272,9 +272,9 @@ export function QuotePortalView({ quote, token }: QuotePortalViewProps) {
           
           {/* Notes to Customer */}
           {quote.notes_to_customer && (
-            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg">
-              <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-2">Notes</h4>
-              <p className="text-sm text-blue-600 dark:text-blue-400 whitespace-pre-wrap">
+            <div className="mb-6 p-4 bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 rounded-lg">
+              <h4 className="font-medium text-primary dark:text-primary/80 mb-2">Notes</h4>
+              <p className="text-sm text-primary/80 dark:text-primary/70 whitespace-pre-wrap">
                 {quote.notes_to_customer}
               </p>
             </div>
