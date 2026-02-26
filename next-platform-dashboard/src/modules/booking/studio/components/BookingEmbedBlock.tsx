@@ -164,7 +164,7 @@ export function BookingEmbedBlock({
   gap = '12px',
 
   // Colors
-  primaryColor = '#8B5CF6',
+  primaryColor = '',
   backgroundColor,
   textColor,
   headerBackgroundColor,
@@ -177,7 +177,7 @@ export function BookingEmbedBlock({
   codeBackgroundColor,
   codeTextColor,
   buttonBackgroundColor,
-  buttonTextColor: btnTextColor = '#ffffff',
+  buttonTextColor: btnTextColor = '',
   buttonHoverColor,
   embedBorderColor,
   embedBackgroundColor,
@@ -217,19 +217,23 @@ export function BookingEmbedBlock({
   const [activeTab, setActiveTab] = useState<'preview' | 'code'>('preview')
   const [copied, setCopied] = useState(false)
 
+  // Resolved colors — fall back to CSS variables from the branding system
+  const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
+  const resolvedBtnText = btnTextColor || 'var(--brand-button-text, #ffffff)'
+
   const resolvedUrl = embedUrl || (siteId ? `https://book.dramac.app/${siteId}` : '')
-  const btnBg = buttonBackgroundColor || primaryColor
-  const activeTabColor = tabActiveColor || primaryColor
-  const activeTabBg = tabActiveBgColor || `${primaryColor}10`
+  const btnBg = buttonBackgroundColor || pc
+  const activeTabColor = tabActiveColor || pc
+  const activeTabBg = tabActiveBgColor || `${pc}10`
   const inactiveTab = tabInactiveColor || undefined
-  const noSiteIcon = noSiteIconColor || primaryColor
+  const noSiteIcon = noSiteIconColor || pc
 
   const embedCode = resolvedUrl
     ? `<iframe\n  src="${resolvedUrl}"\n  width="${embedWidth}"\n  height="${embedHeight}"\n  frameborder="0"\n  allow="payment"\n  style="border-radius: ${embedBorderRadius}; border: ${showBorder ? `1px solid ${embedBorderColor || '#e5e7eb'}` : 'none'};"\n  ${allowFullscreen ? 'allowfullscreen' : ''}\n  ${lazyLoad ? 'loading="lazy"' : ''}\n></iframe>`
     : ''
 
   const popupCode = resolvedUrl
-    ? `<script>\n  function openBooking() {\n    window.open('${resolvedUrl}', 'booking', 'width=500,height=700');\n  }\n</script>\n<button onclick="openBooking()"\n  style="padding: 12px 24px; background: ${primaryColor}; color: #fff; border: none; border-radius: ${buttonBorderRadius}; cursor: pointer; font-size: ${buttonFontSize};">\n  ${buttonText}\n</button>`
+    ? `<script>\n  function openBooking() {\n    window.open('${resolvedUrl}', 'booking', 'width=500,height=700');\n  }\n</script>\n<button onclick="openBooking()"\n  style="padding: 12px 24px; background: ${pc}; color: #fff; border: none; border-radius: ${buttonBorderRadius}; cursor: pointer; font-size: ${buttonFontSize};">\n  ${buttonText}\n</button>`
     : ''
 
   const handleCopy = async () => {
@@ -274,7 +278,7 @@ export function BookingEmbedBlock({
         <p style={{ fontSize: subtitleFontSize, opacity: 0.6, margin: '0 0 20px', lineHeight: 1.5 }}>{noSiteDescription}</p>
         <button style={{
           padding: btnSizes[buttonSize], borderRadius: buttonBorderRadius,
-          backgroundColor: btnBg, color: btnTextColor,
+          backgroundColor: btnBg, color: resolvedBtnText,
           border: 'none', fontSize: buttonFontSize, fontWeight: buttonFontWeight, cursor: 'pointer',
           display: 'inline-flex', alignItems: 'center', gap: '8px',
         }}>
@@ -387,7 +391,7 @@ export function BookingEmbedBlock({
                 onClick={() => window.open(resolvedUrl, 'booking', 'width=500,height=700')}
                 style={{
                   padding: btnSizes[buttonSize], borderRadius: buttonBorderRadius,
-                  backgroundColor: btnBg, color: btnTextColor,
+                  backgroundColor: btnBg, color: resolvedBtnText,
                   border: 'none', fontSize: buttonFontSize, fontWeight: buttonFontWeight, cursor: 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: '8px',
                 }}

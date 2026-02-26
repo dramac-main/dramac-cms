@@ -220,7 +220,7 @@ export function BookingFormBlock({
   labelPosition = 'top',
 
   // Colors
-  primaryColor = '#8B5CF6',
+  primaryColor = '',
   backgroundColor,
   textColor,
   headerBackgroundColor,
@@ -232,7 +232,7 @@ export function BookingFormBlock({
   inputTextColor,
   inputPlaceholderColor,
   buttonBackgroundColor,
-  buttonTextColor = '#ffffff',
+  buttonTextColor = '',
   buttonHoverColor,
   errorColor = '#ef4444',
   successColor = '#22c55e',
@@ -285,8 +285,12 @@ export function BookingFormBlock({
   // Real booking creation hook — only active when siteId exists
   const { createBooking } = useCreateBooking(siteId || '')
 
-  const btnBg = buttonBackgroundColor || primaryColor
-  const focusBorder = inputFocusBorderColor || primaryColor
+  // Resolved colors — fall back to CSS variables from the branding system
+  const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
+  const btnTxt = buttonTextColor || 'var(--brand-button-text, #ffffff)'
+
+  const btnBg = buttonBackgroundColor || pc
+  const focusBorder = inputFocusBorderColor || pc
   const asteriskColor = requiredAsteriskColor || errorColor
   const successBg = successBgColor || `${successColor}08`
 
@@ -518,14 +522,14 @@ export function BookingFormBlock({
           flexDirection: !isTwoCol ? 'column' : undefined,
           gap: fieldGap,
         }}>
-          {showNameField && renderField('name', nameLabel, namePlaceholder, nameRequired, <User style={{ width: 14, height: 14, color: iconColor || primaryColor, opacity: 0.7 }} />)}
-          {showEmailField && renderField('email', emailLabel, emailPlaceholder, emailRequired, <Mail style={{ width: 14, height: 14, color: iconColor || primaryColor, opacity: 0.7 }} />, 'email')}
-          {showPhoneField && renderField('phone', phoneLabel, phonePlaceholder, phoneRequired, <Phone style={{ width: 14, height: 14, color: iconColor || primaryColor, opacity: 0.7 }} />, 'tel')}
-          {showCompanyField && renderField('company', companyLabel, companyPlaceholder, false, <FileText style={{ width: 14, height: 14, color: iconColor || primaryColor, opacity: 0.7 }} />)}
-          {showAddressField && renderField('address', addressLabel, addressPlaceholder, false, <FileText style={{ width: 14, height: 14, color: iconColor || primaryColor, opacity: 0.7 }} />)}
+          {showNameField && renderField('name', nameLabel, namePlaceholder, nameRequired, <User style={{ width: 14, height: 14, color: iconColor || pc, opacity: 0.7 }} />)}
+          {showEmailField && renderField('email', emailLabel, emailPlaceholder, emailRequired, <Mail style={{ width: 14, height: 14, color: iconColor || pc, opacity: 0.7 }} />, 'email')}
+          {showPhoneField && renderField('phone', phoneLabel, phonePlaceholder, phoneRequired, <Phone style={{ width: 14, height: 14, color: iconColor || pc, opacity: 0.7 }} />, 'tel')}
+          {showCompanyField && renderField('company', companyLabel, companyPlaceholder, false, <FileText style={{ width: 14, height: 14, color: iconColor || pc, opacity: 0.7 }} />)}
+          {showAddressField && renderField('address', addressLabel, addressPlaceholder, false, <FileText style={{ width: 14, height: 14, color: iconColor || pc, opacity: 0.7 }} />)}
           {showNotesField && (
             <div style={{ gridColumn: isTwoCol ? '1 / -1' : undefined }}>
-              {renderField('notes', notesLabel, notesPlaceholder, notesRequired, <FileText style={{ width: 14, height: 14, color: iconColor || primaryColor, opacity: 0.7 }} />, 'textarea')}
+              {renderField('notes', notesLabel, notesPlaceholder, notesRequired, <FileText style={{ width: 14, height: 14, color: iconColor || pc, opacity: 0.7 }} />, 'textarea')}
             </div>
           )}
         </div>
@@ -548,7 +552,7 @@ export function BookingFormBlock({
             padding: '12px 24px',
             borderRadius: buttonBorderRadius,
             backgroundColor: isSubmitting ? `${btnBg}80` : btnBg,
-            color: buttonTextColor,
+            color: btnTxt,
             fontSize: buttonFontSize,
             fontWeight: buttonFontWeight,
             border: 'none',

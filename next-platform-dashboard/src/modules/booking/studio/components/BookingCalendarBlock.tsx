@@ -198,7 +198,7 @@ export function BookingCalendarBlock({
   gap,
 
   // Colors
-  primaryColor = '#8B5CF6',
+  primaryColor = '',
   secondaryColor,
   backgroundColor,
   textColor,
@@ -368,11 +368,14 @@ export function BookingCalendarBlock({
   const resolvedTitleFontSize = resolveResponsive(titleFontSize, calendarSize === 'lg' ? '20px' : '16px')
   const slotCols = resolveResponsive(timeSlotsColumns, layout === 'side-by-side' ? 2 : 4)
 
-  const accentColor = selectedDayBgColor || primaryColor
-  const slotAccent = slotSelectedBgColor || primaryColor
-  const todayBorder = todayBorderColor || primaryColor
-  const hoverBg = dayHoverColor || `${primaryColor}15`
-  const slotHover = slotHoverColor || `${primaryColor}15`
+  // Resolved colors — fall back to CSS variables from the branding system
+  const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
+
+  const accentColor = selectedDayBgColor || pc
+  const slotAccent = slotSelectedBgColor || pc
+  const todayBorder = todayBorderColor || pc
+  const hoverBg = dayHoverColor || `${pc}15`
+  const slotHover = slotHoverColor || `${pc}15`
   const unavailColor = slotUnavailableColor || disabledDayColor || '#d1d5db'
   const legendAvail = legendDotAvailableColor || '#22c55e'
   const legendUnavail = legendDotUnavailableColor || unavailColor
@@ -453,8 +456,8 @@ export function BookingCalendarBlock({
               <button
                 onClick={goToToday}
                 style={{
-                  padding: '4px 12px', borderRadius: '9999px', border: `1px solid ${primaryColor}`,
-                  background: 'transparent', color: primaryColor, fontSize: '12px', fontWeight: 500, cursor: 'pointer'
+                  padding: '4px 12px', borderRadius: '9999px', border: `1px solid ${pc}`,
+                  background: 'transparent', color: pc, fontSize: '12px', fontWeight: 500, cursor: 'pointer'
                 }}
               >
                 {todayLabel}
@@ -533,7 +536,7 @@ export function BookingCalendarBlock({
               </p>
             ) : isLoadingSlots ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 0' }}>
-                <div style={{ width: 24, height: 24, border: `3px solid ${primaryColor}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                <div style={{ width: 24, height: 24, border: `3px solid ${pc}`, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                 <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
               </div>
             ) : (

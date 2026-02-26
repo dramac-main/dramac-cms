@@ -120,8 +120,8 @@ export function CRMContactFormRender(props: CRMContactFormProps) {
     showCompany = false,
     showSubject = true,
     backgroundColor = '#ffffff',
-    buttonColor = '#3b82f6',
-    buttonTextColor = '#ffffff',
+    buttonColor = 'var(--brand-primary, #3b82f6)',
+    buttonTextColor = 'var(--brand-button-text, #ffffff)',
     textColor = '#1e293b',
     borderRadius = 'xl',
     shadow = 'lg',
@@ -279,8 +279,8 @@ export function CRMLeadCaptureFormRender(props: CRMLeadCaptureFormProps) {
     showCompany = true,
     layout = 'horizontal',
     backgroundColor = '#f8fafc',
-    buttonColor = '#3b82f6',
-    buttonTextColor = '#ffffff',
+    buttonColor = 'var(--brand-primary, #3b82f6)',
+    buttonTextColor = 'var(--brand-button-text, #ffffff)',
     siteId,
   } = props
 
@@ -413,8 +413,8 @@ export function CRMNewsletterFormRender(props: CRMNewsletterFormProps) {
     successMessage = "You're subscribed! Check your inbox.",
     layout = 'inline',
     backgroundColor = 'transparent',
-    buttonColor = '#3b82f6',
-    buttonTextColor = '#ffffff',
+    buttonColor = 'var(--brand-primary, #3b82f6)',
+    buttonTextColor = 'var(--brand-button-text, #ffffff)',
     siteId,
   } = props
 

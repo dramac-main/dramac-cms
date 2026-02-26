@@ -237,7 +237,7 @@ export function StaffGridBlock({
   cardPadding = '20px',
 
   // Colors
-  primaryColor = '#8B5CF6',
+  primaryColor = '',
   secondaryColor,
   backgroundColor,
   textColor,
@@ -258,7 +258,7 @@ export function StaffGridBlock({
   availableDotColor = '#22c55e',
   unavailableDotColor = '#ef4444',
   buttonBackgroundColor,
-  buttonTextColor: btnTextColor = '#ffffff',
+  buttonTextColor: btnTextColor = '',
   buttonHoverColor,
   searchBgColor,
   searchBorderColor,
@@ -345,11 +345,15 @@ export function StaffGridBlock({
     return staff.slice(0, maxStaff)
   }, [dataStaff, searchQuery, activeSpecialty, maxStaff, sortBy])
 
-  const btnBg = buttonBackgroundColor || primaryColor
+  // Resolved colors — fall back to CSS variables from the branding system
+  const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
+  const resolvedBtnText = btnTextColor || 'var(--brand-button-text, #ffffff)'
+
+  const btnBg = buttonBackgroundColor || pc
   const avSize = AVATAR_SIZES[avatarSize]
   const avBorderRadius = avatarBorderRadius || (avatarShape === 'circle' ? '50%' : avatarShape === 'rounded' ? '12px' : '4px')
-  const specBg = specialtyBgColor || `${primaryColor}10`
-  const specText = specialtyTextColor || primaryColor
+  const specBg = specialtyBgColor || `${pc}10`
+  const specText = specialtyTextColor || pc
   const isGrid = layout === 'grid' || layout === 'cards'
   const isList = layout === 'list'
 
@@ -419,15 +423,15 @@ export function StaffGridBlock({
               <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                 <button onClick={() => setActiveSpecialty(null)} style={{
                   padding: '4px 12px', borderRadius: specialtyBorderRadius, fontSize: specialtyFontSize, fontWeight: 500,
-                  border: `1px solid ${!activeSpecialty ? primaryColor : (borderColor || '#e5e7eb')}`,
-                  backgroundColor: !activeSpecialty ? primaryColor : 'transparent',
+                  border: `1px solid ${!activeSpecialty ? pc : (borderColor || '#e5e7eb')}`,
+                  backgroundColor: !activeSpecialty ? pc : 'transparent',
                   color: !activeSpecialty ? '#fff' : undefined, cursor: 'pointer',
                 }}>All</button>
                 {allSpecialties.map(sp => (
                   <button key={sp} onClick={() => setActiveSpecialty(sp)} style={{
                     padding: '4px 12px', borderRadius: specialtyBorderRadius, fontSize: specialtyFontSize, fontWeight: 500,
-                    border: `1px solid ${activeSpecialty === sp ? primaryColor : (borderColor || '#e5e7eb')}`,
-                    backgroundColor: activeSpecialty === sp ? primaryColor : 'transparent',
+                    border: `1px solid ${activeSpecialty === sp ? pc : (borderColor || '#e5e7eb')}`,
+                    backgroundColor: activeSpecialty === sp ? pc : 'transparent',
                     color: activeSpecialty === sp ? '#fff' : undefined, cursor: 'pointer',
                   }}>{sp}</button>
                 ))}
@@ -482,11 +486,11 @@ export function StaffGridBlock({
                 {showAvatar && (
                   <div style={{
                     width: avSize, height: avSize, borderRadius: avBorderRadius,
-                    backgroundColor: avatarBgColor || `${primaryColor}12`,
-                    border: `2px solid ${avatarBorderColor || `${primaryColor}30`}`,
+                    backgroundColor: avatarBgColor || `${pc}12`,
+                    border: `2px solid ${avatarBorderColor || `${pc}30`}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     margin: !isList && contentAlignment === 'center' ? '0 auto 12px' : isList ? 0 : '0 0 12px',
-                    color: primaryColor, fontWeight: 700, fontSize: `${avSize * 0.4}px`,
+                    color: pc, fontWeight: 700, fontSize: `${avSize * 0.4}px`,
                     flexShrink: 0, overflow: 'hidden',
                   }}>
                     {staff.avatar ? (
@@ -573,7 +577,7 @@ export function StaffGridBlock({
                     style={{
                       padding: '8px 16px', borderRadius: buttonBorderRadius,
                       backgroundColor: staff.bookable ? btnBg : '#e5e7eb',
-                      color: staff.bookable ? btnTextColor : '#9ca3af',
+                      color: staff.bookable ? resolvedBtnText : '#9ca3af',
                       border: 'none', fontSize: buttonFontSize, fontWeight: buttonFontWeight,
                       cursor: staff.bookable ? 'pointer' : 'not-allowed',
                       display: 'flex', alignItems: 'center', gap: '6px',
@@ -631,8 +635,8 @@ export const staffGridDefinition: ComponentDefinition = {
     avatarShape: 'circle',
     contentAlignment: 'center',
     sortBy: 'name',
-    primaryColor: '#8B5CF6',
-    buttonTextColor: '#ffffff',
+    primaryColor: '',
+    buttonTextColor: '',
     starColor: '#f59e0b',
     availableDotColor: '#22c55e',
     unavailableDotColor: '#ef4444',
