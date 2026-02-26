@@ -1,6 +1,7 @@
 import { getModuleForEmbed } from '@/lib/modules/embed/embed-service'
 import { ModuleEmbedRenderer } from '@/components/modules/embed/module-embed-renderer'
 import { validateEmbedToken } from '@/lib/modules/embed/embed-auth'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface EmbedPageProps {
   params: Promise<{ moduleId: string; siteId: string }>
@@ -97,12 +98,30 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
 
   const themeClass = theme === 'dark' ? 'dark' : theme === 'light' ? '' : ''
 
+  // Fetch site font settings for branding
+  const supabase = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: siteData } = await (supabase as any).from('sites').select('settings').eq('id', siteId).single()
+  const siteSettings = (siteData?.settings || {}) as Record<string, string>
+  const siteFontBody = siteSettings.font_body || ''
+  const siteFontHeading = siteSettings.font_heading || ''
+  const siteFontFamily = siteFontBody
+    ? `'${siteFontBody}', system-ui, -apple-system, sans-serif`
+    : "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+  const googleFontsUrl = [siteFontBody, siteFontHeading]
+    .filter(Boolean)
+    .map(f => f!.replace(/ /g, '+'))
+    .join('&family=')
+
   return (
     <html lang="en" className={themeClass}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="noindex, nofollow" />
         <title>{module.name} - Embedded</title>
+        {googleFontsUrl && (
+          <link href={`https://fonts.googleapis.com/css2?family=${googleFontsUrl}:wght@300;400;500;600;700&display=swap`} rel="stylesheet" />
+        )}
         <style>{`
           :root {
             --background: 255 255 255;
@@ -124,7 +143,7 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
             padding: 0; 
             background: rgb(var(--background));
             color: rgb(var(--foreground));
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: ${siteFontFamily};
             ${width ? `width: ${width};` : ''}
             ${height ? `min-height: ${height};` : 'min-height: 100vh;'}
           }
@@ -146,6 +165,7 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
             settings={installation?.settings || {}}
             siteId={siteId}
             theme={theme}
+            siteFontFamily={siteFontFamily}
           />
         </div>
         {/* PostMessage bridge for parent communication */}

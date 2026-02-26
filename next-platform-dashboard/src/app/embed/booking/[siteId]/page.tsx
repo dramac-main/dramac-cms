@@ -136,6 +136,19 @@ export default async function BookingEmbedPage({ params, searchParams }: Booking
   const showServices = hideServices !== '1'
   const showStaff = hideStaff !== '1'
 
+  // Fetch site font settings for branding
+  const { data: siteData } = await db.from('sites').select('settings').eq('id', siteId).single()
+  const siteSettings = (siteData?.settings || {}) as Record<string, string>
+  const siteFontBody = siteSettings.font_body || ''
+  const siteFontHeading = siteSettings.font_heading || ''
+  const siteFontFamily = siteFontBody
+    ? `'${siteFontBody}', system-ui, -apple-system, sans-serif`
+    : "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+  const googleFontsUrl = [siteFontBody, siteFontHeading]
+    .filter(Boolean)
+    .map(f => f!.replace(/ /g, '+'))
+    .join('&family=')
+
   // Build settings for the booking widget
   const instSettings = (bookingInstallation?.settings || {}) as Record<string, unknown>
   const timezone = (instSettings.timezone as string) || 'Africa/Lusaka'
@@ -150,6 +163,9 @@ export default async function BookingEmbedPage({ params, searchParams }: Booking
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="robots" content="noindex, nofollow" />
         <title>Book an Appointment</title>
+        {googleFontsUrl && (
+          <link href={`https://fonts.googleapis.com/css2?family=${googleFontsUrl}:wght@300;400;500;600;700&display=swap`} rel="stylesheet" />
+        )}
         <style>{`
           :root {
             --primary: ${primaryColor};
@@ -157,7 +173,7 @@ export default async function BookingEmbedPage({ params, searchParams }: Booking
           }
           html, body {
             margin: 0; padding: 0;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: ${siteFontFamily};
             background: #fff;
             color: #111827;
             min-height: 100vh;

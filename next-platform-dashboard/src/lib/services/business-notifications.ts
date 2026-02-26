@@ -162,11 +162,12 @@ export async function notifyNewBooking(data: BookingNotificationData): Promise<v
       })
     }
 
-    // 3. Email to customer
+    // 3. Email to customer (uses SITE branding — customer sees the business name/colors)
     if (data.customerEmail) {
       await sendBrandedEmail(site.agency_id, {
         to: { email: data.customerEmail, name: data.customerName },
         emailType: 'booking_confirmation_customer',
+        siteId: data.siteId,
         data: {
           customerName: data.customerName,
           serviceName: data.serviceName,
@@ -280,11 +281,12 @@ export async function notifyBookingCancelled(data: BookingCancellationData): Pro
       })
     }
 
-    // 3. Email to customer
+    // 3. Email to customer (uses SITE branding)
     if (data.customerEmail) {
       await sendBrandedEmail(site.agency_id, {
         to: { email: data.customerEmail, name: data.customerName },
         emailType: 'booking_cancelled_customer',
+        siteId: data.siteId,
         data: {
           customerName: data.customerName,
           serviceName: data.serviceName,
@@ -398,11 +400,12 @@ export async function notifyNewOrder(data: OrderNotificationData): Promise<void>
       })
     }
 
-    // 3. Email to customer
+    // 3. Email to customer (uses SITE branding)
     if (data.customerEmail) {
       await sendBrandedEmail(site.agency_id, {
         to: { email: data.customerEmail, name: data.customerName },
         emailType: 'order_confirmation_customer',
+        siteId: data.siteId,
         data: {
           customerName: data.customerName,
           orderNumber: data.orderNumber,
@@ -460,10 +463,11 @@ export async function notifyOrderShipped(
       })
     }
 
-    // Email to customer
+    // Email to customer (uses SITE branding)
     await sendBrandedEmail(site?.agency_id || null, {
       to: { email: customerEmail, name: customerName },
       emailType: 'order_shipped_customer',
+      siteId,
       data: {
         customerName,
         orderNumber,
@@ -518,11 +522,12 @@ export async function notifyOrderDelivered(
       })
     }
 
-    // Email to customer
+    // Email to customer (uses SITE branding)
     if (customerEmail) {
       await sendBrandedEmail(site?.agency_id || null, {
         to: { email: customerEmail, name: customerName },
         emailType: 'order_delivered_customer',
+        siteId,
         data: {
           customerName,
           orderNumber,
@@ -603,11 +608,12 @@ export async function notifyOrderCancelled(
       })
     }
 
-    // Email to customer
+    // Email to customer (uses SITE branding)
     if (customerEmail) {
       await sendBrandedEmail(site?.agency_id || null, {
         to: { email: customerEmail, name: customerName },
         emailType: 'order_cancelled_customer',
+        siteId,
         data: {
           customerName,
           orderNumber,
@@ -650,6 +656,7 @@ export async function notifyPaymentReceived(
       await sendBrandedEmail(site?.agency_id || null, {
         to: { email: customerEmail, name: customerName },
         emailType: 'payment_received_customer',
+        siteId,
         data: {
           customerName,
           orderNumber,
@@ -707,11 +714,12 @@ export async function notifyRefundIssued(
       })
     }
 
-    // Email to customer
+    // Email to customer (uses SITE branding)
     if (customerEmail) {
       await sendBrandedEmail(site?.agency_id || null, {
         to: { email: customerEmail, name: customerName },
         emailType: 'refund_issued_customer',
+        siteId,
         data: {
           customerName,
           orderNumber,

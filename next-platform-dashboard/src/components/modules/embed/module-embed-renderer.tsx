@@ -8,6 +8,7 @@ interface ModuleEmbedRendererProps {
   settings?: Record<string, unknown>
   siteId: string
   theme?: 'light' | 'dark' | 'auto'
+  siteFontFamily?: string
   onError?: (error: Error) => void
   onLoad?: () => void
 }
@@ -23,6 +24,7 @@ export function ModuleEmbedRenderer({
   settings = {},
   siteId,
   theme: _theme = 'auto',
+  siteFontFamily,
   onError,
   onLoad,
 }: ModuleEmbedRendererProps) {
@@ -52,13 +54,13 @@ export function ModuleEmbedRenderer({
   const { html, error } = useMemo(() => {
     try {
       const transpiled = transpileForBrowser(module.renderCode)
-      const moduleHtml = generateModuleHtml(module, mergedSettings, siteId, transpiled)
+      const moduleHtml = generateModuleHtml(module, mergedSettings, siteId, transpiled, siteFontFamily)
       return { html: moduleHtml, error: null }
     } catch (e) {
       const err = e instanceof Error ? e : new Error('Failed to render module')
       return { html: '', error: err }
     }
-  }, [module, mergedSettings, siteId])
+  }, [module, mergedSettings, siteId, siteFontFamily])
 
   // Call onError/onLoad callbacks
   useEffect(() => {
@@ -133,8 +135,10 @@ function generateModuleHtml(
   module: LoadedStudioModule,
   settings: Record<string, unknown>,
   siteId: string,
-  transpiledCode: string
+  transpiledCode: string,
+  siteFontFamily?: string
 ): string {
+  const fontStack = siteFontFamily || "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
   return `
 <!DOCTYPE html>
 <html>
@@ -147,7 +151,7 @@ function generateModuleHtml(
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
     body { 
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: ${fontStack};
       line-height: 1.5;
     }
     #module-root { padding: 16px; }

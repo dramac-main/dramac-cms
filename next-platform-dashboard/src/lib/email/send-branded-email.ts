@@ -2,14 +2,19 @@
  * Send Branded Email
  * 
  * Phase WL-02: Email System Overhaul
+ * Phase BRAND-AUDIT: Added site-level branding for customer-facing emails
  * 
  * Wrapper around sendEmail() that automatically fetches agency branding
  * and renders branded templates. This is the primary email sending function
  * for all agency-context emails.
+ * 
+ * When siteId is provided, customer-facing emails show the SITE's name and
+ * colors instead of the agency's. This ensures booking/order confirmation
+ * emails look like they come from "Jesto Spa" rather than the agency.
  */
 
 import { resend, isEmailEnabled, getEmailFrom, getEmailReplyTo } from "./resend-client";
-import { buildEmailBranding, type EmailBranding } from "./email-branding";
+import { buildEmailBranding, applySiteBranding, type EmailBranding, type SiteBrandingData } from "./email-branding";
 import { renderBrandedTemplate } from "./templates/branded-templates";
 import { shouldSendEmail } from "./notification-prefs";
 import { getAgencyBranding } from "@/lib/queries/branding";
@@ -24,6 +29,13 @@ export interface SendBrandedEmailOptions {
   data: Record<string, unknown>;
   /** Recipient user ID (for unsubscribe links) */
   recipientUserId?: string;
+  /** 
+   * Site ID for site-level branding.
+   * When provided, the email header/footer will show the site's name and colors
+   * instead of the agency's. Use this for all CUSTOMER-FACING emails
+   * (booking confirmations, order confirmations, etc.)
+   */
+  siteId?: string;
 }
 
 /**
@@ -61,7 +73,23 @@ export async function sendBrandedEmail(
     const agencyBranding = agencyId ? await getAgencyBranding(agencyId) : null;
 
     // 2. Build email branding from agency data
-    const branding = buildEmailBranding(agencyBranding, options.recipientUserId);
+    let branding = buildEmailBranding(agencyBranding, options.recipientUserId);
+
+    // 2b. Apply site-level branding overlay for customer-facing emails
+    // When siteId is provided, the email shows the site's name and colors
+    // instead of the agency's. This is critical for booking/order emails
+    // where customers expect to see the business they interacted with.
+    if (options.siteId) {
+      try {
+        const siteBranding = await fetchSiteBranding(options.siteId);
+        if (siteBranding) {
+          branding = applySiteBranding(branding, siteBranding);
+        }
+      } catch (err) {
+        // Non-critical — fall back to agency branding if site fetch fails
+        console.warn("[Email] Failed to fetch site branding, using agency branding:", err);
+      }
+    }
 
     // 3. Render branded template
     const { subject, html, text } = renderBrandedTemplate(
@@ -158,5 +186,57 @@ async function logEmailSent(params: {
       });
   } catch {
     // Non-critical — don't let logging break email sending
+  }
+}
+
+// ============================================================================
+// Site Branding Fetcher
+// ============================================================================
+
+// In-memory cache for site branding (3 minute TTL)
+const siteBrandingCache = new Map<string, { data: SiteBrandingData | null; expiry: number }>();
+const SITE_CACHE_TTL = 3 * 60 * 1000;
+
+/**
+ * Fetch site name and branding settings from the database.
+ * Cached in-memory for 3 minutes to avoid repeated DB calls.
+ */
+async function fetchSiteBranding(siteId: string): Promise<SiteBrandingData | null> {
+  // Check cache
+  const cached = siteBrandingCache.get(siteId);
+  if (cached && cached.expiry > Date.now()) {
+    return cached.data;
+  }
+
+  try {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const supabase = createAdminClient();
+
+    const { data: site, error } = await supabase
+      .from("sites")
+      .select("name, settings")
+      .eq("id", siteId)
+      .single();
+
+    if (error || !site) {
+      siteBrandingCache.set(siteId, { data: null, expiry: Date.now() + SITE_CACHE_TTL });
+      return null;
+    }
+
+    const settings = (site.settings || {}) as Record<string, unknown>;
+    const result: SiteBrandingData = {
+      name: site.name || "",
+      primary_color: (settings.primary_color as string) || null,
+      accent_color: (settings.accent_color as string) || null,
+      secondary_color: (settings.secondary_color as string) || null,
+      // Sites don't have a logo_url column directly — check settings for one
+      logo_url: (settings.logo_url as string) || (settings.site_logo_url as string) || null,
+    };
+
+    siteBrandingCache.set(siteId, { data: result, expiry: Date.now() + SITE_CACHE_TTL });
+    return result;
+  } catch (err) {
+    console.error("[Email] Error fetching site branding:", err);
+    return null;
   }
 }

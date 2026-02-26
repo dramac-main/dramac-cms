@@ -23,7 +23,7 @@ import { ensureStudioFormat } from "../utils/migrate-puck-data";
 import { getComponent, componentRegistry } from "../registry/component-registry";
 import { initializeRegistry, isRegistryInitialized } from "../registry";
 import { loadModuleComponents } from "../registry/module-loader";
-import { resolveBrandColors, injectBrandColors, extractBrandSource, generateBrandCSSVars } from "./brand-colors";
+import { resolveBrandColors, injectBrandColors, injectBrandFonts, extractBrandSource, generateBrandCSSVars } from "./brand-colors";
 import { getModuleNavigation, mergeMainNavLinks, buildUtilityItems, mergeFooterLinks, type SiteNavigation } from "./smart-navigation";
 import type { BrandColorPalette } from "./brand-colors";
 import type { StudioComponent } from "@/types/studio";
@@ -179,6 +179,16 @@ function ComponentRenderer({
   // site's brand palette, ensuring consistency across the entire site.
   if (brandPalette) {
     injectedProps = injectBrandColors(injectedProps, brandPalette);
+  }
+
+  // BRAND FONT INJECTION: Fill unset font props with brand-derived values.
+  // Ensures consistent typography across the entire site. Font fields like
+  // titleFont, nameFont, fontFamily etc. inherit from the site's brand fonts
+  // unless the user explicitly customized them in Studio.
+  if (siteSettings) {
+    const fontHeading = (siteSettings.font_heading as string) || (siteSettings.theme as Record<string, unknown>)?.fontHeading as string || null;
+    const fontBody = (siteSettings.font_body as string) || (siteSettings.theme as Record<string, unknown>)?.fontBody as string || null;
+    injectedProps = injectBrandFonts(injectedProps, fontHeading, fontBody);
   }
 
   // ──────────────────────────────────────────────────────────────────────────

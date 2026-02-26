@@ -538,7 +538,7 @@ const typographyComponents: ComponentDefinition[] = [
     defaultProps: {
       text: "Your text content goes here.",
       htmlTag: "p",
-      fontFamily: "system-ui, -apple-system, sans-serif",
+      fontFamily: "",
       alignment: "left",
       fontSize: "base",
       fontWeight: "400",

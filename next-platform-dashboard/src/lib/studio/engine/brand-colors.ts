@@ -382,6 +382,69 @@ export function injectBrandColors(
   return result;
 }
 
+// ============================================================================
+// BRAND FONT INJECTION
+// ============================================================================
+
+/**
+ * Map of component font prop names → which brand font they should inherit.
+ * 
+ * "heading" → uses the site's heading font (e.g., Playfair Display)
+ * "body"    → uses the site's body font (e.g., Inter)
+ * 
+ * This is the FONT counterpart to BRAND_COLOR_MAP. It ensures that any
+ * component font field left empty inherits from the site's brand fonts,
+ * giving a uniform typographic experience across the entire site.
+ */
+const BRAND_FONT_MAP: Record<string, "heading" | "body"> = {
+  // General font family (Text, Heading, Button, etc.)
+  fontFamily: "body",
+
+  // Section / block title fonts → heading
+  titleFont: "heading",
+  featureTitleFont: "heading",
+
+  // Person name fonts (team, testimonials) → heading (display emphasis)
+  nameFont: "heading",
+
+  // Statistic value fonts → heading (display emphasis)
+  valueFont: "heading",
+};
+
+/**
+ * Inject brand-derived font defaults into a component's props.
+ * 
+ * Only fills in fonts that are NOT already explicitly set (by the user in Studio).
+ * This preserves any studio customizations while ensuring consistency.
+ * 
+ * @param props - The component's current props
+ * @param fontHeading - The site's heading font (e.g., "Playfair Display")
+ * @param fontBody - The site's body font (e.g., "Inter")
+ * @returns Props with brand fonts filled in for any unset font fields
+ */
+export function injectBrandFonts(
+  props: Record<string, unknown>,
+  fontHeading?: string | null,
+  fontBody?: string | null,
+): Record<string, unknown> {
+  if (!fontHeading && !fontBody) return props;
+
+  const result = { ...props };
+  const fonts = { heading: fontHeading || fontBody || "", body: fontBody || "" };
+
+  for (const [propName, fontType] of Object.entries(BRAND_FONT_MAP)) {
+    const currentValue = result[propName];
+    if (
+      (currentValue === undefined || currentValue === null || currentValue === "") &&
+      fonts[fontType]
+    ) {
+      result[propName] = fonts[fontType];
+    }
+  }
+
+  return result;
+}
+
 /**
  * Extract brand color source from site settings (as stored in the DB).
  * 

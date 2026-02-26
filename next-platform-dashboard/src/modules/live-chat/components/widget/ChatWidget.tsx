@@ -50,6 +50,8 @@ export interface WidgetPublicSettings {
   enableSoundNotifications: boolean
   enableSatisfactionRating: boolean
   language: string
+  fontFamily: string | null
+  fontHeading: string | null
 }
 
 export interface WidgetDepartment {
@@ -500,7 +502,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
   if (loadError) {
     return (
       <div className="h-full w-full flex flex-col items-center justify-center gap-3 p-6 text-center"
-        style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+        style={{ fontFamily: settings?.fontFamily ? `'${settings.fontFamily}', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
       >
         <p className="text-sm text-gray-500">Unable to load chat</p>
         <button
@@ -529,7 +531,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
               .catch(() => setLoadError(true))
           }}
           className="px-4 py-2 rounded-lg text-white text-sm"
-          style={{ backgroundColor: '#2563eb' }}
+          style={{ backgroundColor: settings?.primaryColor || '#2563eb' }}
         >
           Try Again
         </button>
@@ -562,7 +564,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     <div
       className="h-full w-full flex flex-col"
       style={{
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontFamily: settings.fontFamily ? `'${settings.fontFamily}', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif` : '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         '--widget-primary': settings.primaryColor,
         '--widget-text': settings.textColor,
       } as React.CSSProperties}

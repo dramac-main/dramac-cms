@@ -639,6 +639,7 @@ export async function sendOrderEmail(
           await sendBrandedEmail(agencyId, {
             to: { email: order.customer_email, name: order.customer_name || undefined },
             emailType: 'order_confirmation_customer',
+            siteId: order.site_id,
             data: {
               customerName: order.customer_name || 'Customer',
               orderNumber: order.order_number,
@@ -661,6 +662,7 @@ export async function sendOrderEmail(
           await sendBrandedEmail(agencyId, {
             to: { email: order.customer_email, name: order.customer_name || undefined },
             emailType: 'order_shipped_customer',
+            siteId: order.site_id,
             data: {
               customerName: order.customer_name || 'Customer',
               orderNumber: order.order_number,
@@ -677,6 +679,7 @@ export async function sendOrderEmail(
           await sendBrandedEmail(agencyId, {
             to: { email: order.customer_email, name: order.customer_name || undefined },
             emailType: 'order_delivered_customer',
+            siteId: order.site_id,
             data: {
               customerName: order.customer_name || 'Customer',
               orderNumber: order.order_number,
@@ -691,6 +694,7 @@ export async function sendOrderEmail(
           await sendBrandedEmail(agencyId, {
             to: { email: order.customer_email, name: order.customer_name || undefined },
             emailType: 'order_cancelled_customer',
+            siteId: order.site_id,
             data: {
               customerName: order.customer_name || 'Customer',
               orderNumber: order.order_number,
@@ -705,6 +709,7 @@ export async function sendOrderEmail(
           await sendBrandedEmail(agencyId, {
             to: { email: order.customer_email, name: order.customer_name || undefined },
             emailType: 'refund_issued_customer',
+            siteId: order.site_id,
             data: {
               customerName: order.customer_name || 'Customer',
               orderNumber: order.order_number,

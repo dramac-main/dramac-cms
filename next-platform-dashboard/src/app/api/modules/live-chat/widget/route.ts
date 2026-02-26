@@ -82,19 +82,33 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Return default settings if none configured
+    // Fetch site branding to use as fallback defaults
+    const { data: siteData } = await supabase
+      .from('sites')
+      .select('name, settings')
+      .eq('id', siteId)
+      .single()
+
+    const siteSettings = (siteData?.settings || {}) as Record<string, unknown>
+    const themeObj = (siteSettings.theme || {}) as Record<string, unknown>
+    const sitePrimaryColor = (siteSettings.primary_color as string) || (themeObj.primaryColor as string) || null
+    const siteFontBody = (siteSettings.font_body as string) || (themeObj.fontBody as string) || null
+    const siteFontHeading = (siteSettings.font_heading as string) || (themeObj.fontHeading as string) || null
+    const siteName = siteData?.name || null
+
+    // Return default settings if none configured — seed from site branding
     if (!settingsData) {
       return NextResponse.json(
         {
           settings: {
-            primaryColor: '#2563eb',
+            primaryColor: sitePrimaryColor || '#2563eb',
             textColor: '#ffffff',
             position: 'bottom-right',
             launcherIcon: 'MessageCircle',
             launcherSize: 56,
             borderRadius: 16,
             zIndex: 2147483647,
-            companyName: null,
+            companyName: siteName,
             welcomeMessage: 'Hi there! How can we help you today?',
             awayMessage: 'We\'re currently away. Leave a message and we\'ll get back to you.',
             offlineMessage: 'We\'re currently offline. Please leave a message and we\'ll respond as soon as possible.',
@@ -109,7 +123,7 @@ export async function GET(request: NextRequest) {
             businessHours: {},
             timezone: 'Africa/Lusaka',
             autoOpenDelaySeconds: 0,
-            logoUrl: null,
+            logoUrl: (siteSettings.logo_url as string) || null,
             showAgentAvatar: true,
             showAgentName: true,
             showTypingIndicator: true,
@@ -118,6 +132,8 @@ export async function GET(request: NextRequest) {
             enableSoundNotifications: true,
             enableSatisfactionRating: true,
             language: 'en',
+            fontFamily: siteFontBody || null,
+            fontHeading: siteFontHeading || null,
           },
           departments: [],
         },
@@ -128,19 +144,21 @@ export async function GET(request: NextRequest) {
     const settings = mapRecord<ChatWidgetSettings>(settingsData)
 
     // Only return public-facing fields (strip sensitive data)
+    // Fall back to site branding for colors/name/logo when chat settings use defaults
+    const isDefaultPrimary = !settings.primaryColor || settings.primaryColor === '#2563eb'
     const publicSettings = {
-      primaryColor: settings.primaryColor,
-      textColor: settings.textColor,
+      primaryColor: (isDefaultPrimary && sitePrimaryColor) ? sitePrimaryColor : (settings.primaryColor || '#2563eb'),
+      textColor: settings.textColor || '#ffffff',
       position: settings.position,
       launcherIcon: settings.launcherIcon,
       launcherSize: settings.launcherSize,
       borderRadius: settings.borderRadius,
       zIndex: settings.zIndex,
-      companyName: settings.companyName,
+      companyName: settings.companyName || siteName,
       welcomeMessage: settings.welcomeMessage,
       awayMessage: settings.awayMessage,
       offlineMessage: settings.offlineMessage,
-      logoUrl: settings.logoUrl,
+      logoUrl: settings.logoUrl || (siteSettings.logo_url as string) || null,
       preChatEnabled: settings.preChatEnabled,
       preChatNameRequired: settings.preChatNameRequired,
       preChatEmailRequired: settings.preChatEmailRequired,
@@ -160,6 +178,8 @@ export async function GET(request: NextRequest) {
       enableSoundNotifications: settings.enableSoundNotifications,
       enableSatisfactionRating: settings.enableSatisfactionRating,
       language: settings.language,
+      fontFamily: siteFontBody || null,
+      fontHeading: siteFontHeading || null,
     }
 
     // Fetch departments if department selector is enabled

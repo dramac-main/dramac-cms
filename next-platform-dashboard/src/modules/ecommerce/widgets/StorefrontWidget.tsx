@@ -354,7 +354,7 @@ export function StorefrontWidget({
         style={{
           '--sf-primary': primaryColor,
           '--sf-radius': `${borderRadius}px`,
-          fontFamily: 'system-ui, -apple-system, sans-serif'
+          fontFamily: 'inherit'
         } as React.CSSProperties}
       >
         <style>{storefrontStyles}</style>

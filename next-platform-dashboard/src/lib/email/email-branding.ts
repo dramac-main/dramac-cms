@@ -2,9 +2,15 @@
  * Email Branding System
  * 
  * Phase WL-02: Email System Overhaul
+ * Phase BRAND-AUDIT: Added site-level branding for customer-facing emails
  * 
- * Provides branding types and utilities for agency-branded transactional emails.
- * Every email sent to customers shows the agency's brand, not "Dramac".
+ * Provides branding types and utilities for branded transactional emails.
+ * 
+ * TWO LEVELS OF BRANDING:
+ * - Agency branding: Used for owner/internal emails (dashboard context)
+ * - Site branding: Used for customer-facing emails (booking confirmations,
+ *   order confirmations, etc.) — shows the site name, colors, and logo
+ *   so customers see the business they interacted with, not the agency.
  */
 
 import type { AgencyBranding } from "@/types/branding";
@@ -97,5 +103,60 @@ export function buildEmailBranding(
       ? `${appUrl}/unsubscribe?uid=${recipientId}`
       : null,
     social_links: agencyBranding.email_social_links ?? {},
+  };
+}
+
+// ============================================================================
+// Site-Level Branding Overlay
+// ============================================================================
+
+/**
+ * Site branding data used to override agency branding in customer-facing emails.
+ * Fetched from sites.name + sites.settings JSONB column.
+ */
+export interface SiteBrandingData {
+  name: string;
+  primary_color?: string | null;
+  accent_color?: string | null;
+  secondary_color?: string | null;
+  logo_url?: string | null;
+}
+
+/**
+ * Apply site-level branding on top of agency branding.
+ * 
+ * For customer-facing emails (booking confirmations, order confirmations, etc.),
+ * the customer should see the SITE's name and colors — not the agency's.
+ * A customer who booked at "Jesto Spa" should receive an email from "Jesto Spa",
+ * not from the agency that manages it.
+ * 
+ * This overlays site-specific data onto the base agency branding:
+ * - Site name replaces agency_name in header/footer
+ * - Site colors replace primary/accent colors
+ * - Site logo replaces header logo (if available)
+ * - Other fields (social links, footer address, etc.) fall through from agency
+ * 
+ * @param baseBranding - The agency-level email branding (base layer)
+ * @param site - The site's name and settings
+ * @returns EmailBranding with site-level overrides applied
+ */
+export function applySiteBranding(
+  baseBranding: EmailBranding,
+  site: SiteBrandingData
+): EmailBranding {
+  return {
+    ...baseBranding,
+    // Site name replaces agency name in the email header, footer, and copyright
+    agency_name: site.name || baseBranding.agency_name,
+    // "From: Jesto Spa" instead of "From: Agency Name"
+    from_name: site.name || baseBranding.from_name,
+    // Footer says "Sent by Jesto Spa" (unless agency has custom footer text)
+    footer_text: baseBranding.footer_text ?? `Sent by ${site.name}`,
+    // Use site's primary color for the email header background
+    primary_color: site.primary_color || baseBranding.primary_color,
+    // Use site's accent color for buttons
+    accent_color: site.accent_color || site.secondary_color || baseBranding.accent_color,
+    // Use site logo if available, otherwise fall through to agency logo
+    logo_url: site.logo_url || baseBranding.logo_url,
   };
 }
