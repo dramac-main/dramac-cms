@@ -1,10 +1,11 @@
 # Active Context
 
-## Current Focus: Font Branding Cascade Fix — Legacy System-UI Override COMPLETE
+## Current Focus: Site Logo System + Booking End-to-End Fixes COMPLETE
 
-### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `c380e8bb`)
+### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `f965699c`)
 
 ### Recent Fixes (newest first):
+- Site Logo System + Booking End-to-End Fixes — logo/favicon upload in site branding settings, staff filtering by service, min notice hours, max advance days, weekday-aware fallback, buffer times, server-side validations (commit `f965699c`) ✅
 - Font Branding Cascade Fix — Legacy system-ui override treated as unset, 8 inline fontFamily guards, field defaultValue fix, titleFontFamily in BRAND_FONT_MAP (commit `c380e8bb`) ✅
 - Unified Branding Across Emails, Live Chat, Fonts, Embeds — 13 files, 320 insertions, comprehensive end-to-end branding audit + fixes across entire platform (commit `97828886`) ✅
 - Site Branding Settings UI + Booking Page Overhaul — 7 files, 633 insertions, new Branding tab in site settings, BookingWidget replaces broken ServiceSelector on /book page, CSS variable fallbacks in booking components, AI context builder fix (commit `f54c6afb`) ✅
@@ -13,45 +14,63 @@
 
 ---
 
-### Font Branding Cascade Fix (commit `c380e8bb`) ✅
+### Site Logo System + Booking End-to-End Fixes (commit `f965699c`) ✅
 
-**Problem:** Despite the unified branding audit (commit `97828886`), fonts on published pages (especially /book) were STILL showing `system-ui` instead of the site's configured Poppins/Inter. Screenshot evidence confirmed the issue.
+**Three problems addressed:**
+1. **No site logo system** — `SiteBrandingData` only had colors+fonts, no logo upload capability. Email templates fall back to "Dramac" text because `logo_url` is always null.
+2. **Booking staff not filtered by service** — Widget showed ALL staff regardless of selected service.
+3. **Booking constraints not enforced** — `min_booking_notice_hours`, `max_booking_advance_days`, buffer times, and weekday awareness were all unimplemented.
 
-**Root Cause Analysis (deep audit):**
-Old pages created BEFORE the brand font system had `fontFamily: "system-ui, -apple-system, sans-serif"` stored in component props in the DB. The `injectBrandFonts()` function only checked for `""`, `null`, `undefined` — it saw this stored value as a "user override" and skipped injection. The inline `style={{ fontFamily: "system-ui..." }}` then overrode the CSS variable cascade (`var(--font-sans)`).
+**Solution (4 files, +490 lines):**
 
-**Secondary Issues Found:**
-1. 8 render functions in `renders.tsx` had `fontFamily: titleFont` without `|| undefined` guard — an empty string `""` becomes `font-family: ""` in CSS, which is invalid but still overrides the cascade
-2. `titleFontFamily` (used by BookingWidgetBlock, ServiceSelectorBlock, BookingEmbedBlock) was missing from `BRAND_FONT_MAP`
-3. Text component field definition still had `defaultValue: "system-ui, -apple-system, sans-serif"` and "System Default" as first option — a UX trap
-
-**Solution (4 files, commit `c380e8bb`):**
-
+#### Site Logo & Favicon:
 | File | Fix |
 |------|-----|
-| `brand-colors.ts` | `injectBrandFonts()` now treats `"system-ui, -apple-system, sans-serif"` as unset (same as null/undefined/empty) |
-| `brand-colors.ts` | Added `titleFontFamily: "heading"` to `BRAND_FONT_MAP` |
-| `renders.tsx` | Added `|| undefined` guard to 8 unguarded `fontFamily` inline styles (Features, Pricing, Stats, Team, Testimonials) |
-| `core-components.ts` | Text fontFamily select: added "Inherit from Brand" (value `""`) as first option, changed `defaultValue` to `""` |
-| `field-utils.ts` | `FONT_FAMILIES` array: added "Inherit from Brand" (value `""`) as first option |
+| `sites.ts` | Added `logo_url`, `favicon_url` to `SiteBrandingData`; read/write in get/update branding actions |
+| `sites.ts` | NEW `uploadSiteLogoAction()` — uploads to Supabase Storage `branding/sites/{siteId}/`, updates settings |
+| `sites.ts` | NEW `removeSiteLogoAction()` — clears logo/favicon URL from settings |
+| `site-branding-settings.tsx` | Added Logo & Favicon upload section with preview, replace, and remove buttons |
 
-**Key Pattern — Legacy Font Handling:**
+**Logo propagation:** Once a logo is uploaded, `applySiteBranding()` in `email-branding.ts` already reads `site.logo_url` and applies it to emails. The `getSiteBrandingAction` now returns `logo_url` which feeds into this pipeline. Logo appears in email headers (via `baseEmailTemplate`), navigation, and any component reading site settings.
+
+#### Booking — Staff Filtering:
+| File | Fix |
+|------|-----|
+| `BookingWidgetBlock.tsx` | `dataStaff` memo now filters `realStaff` by `selectedService.id` using staff's `services[]` array |
+| `BookingWidgetBlock.tsx` | Changing service resets `selectedStaff` to null |
+
+#### Booking — Date/Time Constraints:
+| File | Fix |
+|------|-----|
+| `BookingWidgetBlock.tsx` | Added `useBookingSettings` hook, `earliestBookableDate`, `latestBookableDate` memos |
+| `BookingWidgetBlock.tsx` | `isBeforeMinNotice()`, `isBeyondMaxAdvance()`, `isDateDisabled()` functions control calendar |
+| `BookingWidgetBlock.tsx` | Calendar buttons use `isDateDisabled()` instead of just `isPast()` |
+
+#### Booking — Server-Side Validations:
+| File | Fix |
+|------|-----|
+| `public-booking-actions.ts` | `getPublicAvailableSlots`: Past dates return [], min notice hours filter, max advance days check |
+| `public-booking-actions.ts` | Weekday-aware fallback: Mon-Fri 9-5 default when no rules (NOT 7-day anymore), weekends empty |
+| `public-booking-actions.ts` | Buffer times enforced in conflict checking (blockedStart/blockedEnd include bufferBefore/After) |
+| `public-booking-actions.ts` | `createPublicAppointment`: Server validates past dates, min notice, max advance, buffer conflicts |
+
+**Key Pattern — isDateDisabled (widget):**
 ```typescript
-const LEGACY_SYSTEM_FONT = "system-ui, -apple-system, sans-serif";
-const isUnset = currentValue === undefined || currentValue === null || currentValue === "" || currentValue === LEGACY_SYSTEM_FONT;
+const isDateDisabled = (d: Date) => isPast(d) || isBeforeMinNotice(d) || isBeyondMaxAdvance(d)
 ```
 
-**Updated BRAND_FONT_MAP:**
+**Key Pattern — Weekday-aware fallback (server):**
 ```typescript
-const BRAND_FONT_MAP: Record<string, "heading" | "body"> = {
-  fontFamily: "body",          // Text, Heading, Button components
-  titleFont: "heading",        // Section title fonts
-  titleFontFamily: "heading",  // Booking widget title fonts (NEW)
-  featureTitleFont: "heading", // Feature card titles
-  nameFont: "heading",         // Person names (team, testimonials)
-  valueFont: "heading",        // Statistic values
-};
+const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5
+const rules = (availabilityRules?.length > 0) ? availabilityRules
+  : isWeekday ? [{ start_time: '09:00', end_time: '17:00', staff_id: null }]
+  : [] // No default slots for weekends
 ```
+
+---
+
+### Remaining Email Branding Note:
+The **legacy email system** (`templates.ts`) still has 23+ hardcoded "Dramac" references used by platform-level emails (auth, team invitations, billing). These are intentionally platform-level emails — customers don't see them. All **customer-facing emails** (booking confirmations, order receipts, etc.) use the branded pipeline (`sendBrandedEmail` → `applySiteBranding`) which now properly uses the site logo when uploaded.
 
 ---
 
