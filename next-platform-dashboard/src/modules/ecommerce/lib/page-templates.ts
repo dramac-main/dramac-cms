@@ -34,31 +34,48 @@ import {
 /**
  * Create the main shop page template
  * URL: /shop
+ * 
+ * Professional layout:
+ * 1. Hero banner with search
+ * 2. Featured products carousel (new arrivals / bestsellers)
+ * 3. Category navigation
+ * 4. Full product catalog with filters, sorting, and pagination
  */
 export function createShopPageTemplate(): StudioPageData {
   resetIdCounter();
   const page = createEmptyPage('Shop');
   
-  // Hero Section with Search
+  // ── Hero Section ─────────────────────────────────────────
   const heroSection = createSection(page, {
-    padding: '32px 24px',
-    backgroundColor: '#f9fafb',
+    padding: '48px 24px',
+    backgroundColor: '#f8fafc',
   });
   
   const heroContainer = createContainer(page, heroSection, {
     alignItems: 'center',
-    gap: '24px',
+    gap: '20px',
   });
   
-  createHeading(page, heroContainer, 'Shop Our Products', 1);
+  createHeading(page, heroContainer, 'Explore Our Collection', 1);
   addSearchBar(page, heroContainer, {
-    placeholder: 'Search for products...',
+    placeholder: 'Search products, categories, brands...',
     showSuggestions: true,
   });
   
-  // Category Navigation
+  // ── Featured Products Section ────────────────────────────
+  const featuredSection = createSection(page, {
+    padding: '48px 24px',
+  });
+  
+  addFeaturedProducts(page, featuredSection, {
+    title: 'Featured Products',
+    limit: 8,
+  });
+  
+  // ── Category Navigation ──────────────────────────────────
   const categorySection = createSection(page, {
-    padding: '24px',
+    padding: '32px 24px',
+    backgroundColor: '#f8fafc',
   });
   
   addCategoryNav(page, categorySection, {
@@ -67,13 +84,13 @@ export function createShopPageTemplate(): StudioPageData {
     showCount: true,
   });
   
-  // Main Product Grid Section
+  // ── Main Product Grid Section ────────────────────────────
   const mainSection = createSection(page, {
-    padding: '32px 24px',
+    padding: '48px 24px',
   });
   
   const mainContainer = createContainer(page, mainSection, {
-    gap: '32px',
+    gap: '24px',
   });
   
   addBreadcrumb(page, mainContainer, { showHome: true });
@@ -207,8 +224,8 @@ export function createOrderConfirmationTemplate(): StudioPageData {
   
   // Main Section
   const mainSection = createSection(page, {
-    padding: '48px 24px',
-    backgroundColor: '#f0fdf4', // Light green background
+    padding: '64px 24px',
+    backgroundColor: '#f0fdf4',
   });
   
   const mainContainer = createContainer(page, mainSection, {
@@ -218,17 +235,12 @@ export function createOrderConfirmationTemplate(): StudioPageData {
   
   addOrderConfirmation(page, mainContainer);
   
-  // Continue Shopping Section
+  // Recommended Products Section
   const shopSection = createSection(page, {
-    padding: '48px 24px',
+    padding: '64px 24px',
   });
   
-  const shopContainer = createContainer(page, shopSection, {
-    gap: '24px',
-  });
-  
-  createHeading(page, shopContainer, 'Continue Shopping', 2);
-  addFeaturedProducts(page, shopContainer, {
+  addFeaturedProducts(page, shopSection, {
     title: 'You Might Also Like',
     limit: 4,
   });

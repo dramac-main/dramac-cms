@@ -10,6 +10,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
+import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import {
   ShoppingCart, Heart, Share2, Minus, Plus,
@@ -188,17 +189,31 @@ export function ProductDetailBlock({
   }
 
   // Main render
+  const isSupabaseImage = (url: string) => url?.includes('.supabase.co/') || url?.includes('unsplash.com');
+
   const galleryContent = showGallery && (
     <div className="space-y-4">
       {/* Main image */}
-      <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 border">
-        <img
-          src={images[selectedImage]}
-          alt={product.name}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 border">
+        {isSupabaseImage(images[selectedImage]) ? (
+          <Image
+            src={images[selectedImage]}
+            alt={product.name}
+            fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-cover"
+            priority
+          />
+        ) : (
+          <img
+            src={images[selectedImage]}
+            alt={product.name}
+            className="w-full h-full object-cover"
+            loading="eager"
+          />
+        )}
         {hasDiscount && (
-          <Badge className="absolute top-3 left-3 bg-red-500 text-white">
+          <Badge className="absolute top-3 left-3 bg-red-500 text-white text-sm px-3 py-1">
             -{discountPercent}%
           </Badge>
         )}
@@ -212,17 +227,23 @@ export function ProductDetailBlock({
           <>
             <button
               onClick={() => setSelectedImage(i => (i - 1 + images.length) % images.length)}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all hover:scale-110"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={() => setSelectedImage(i => (i + 1) % images.length)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-md"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all hover:scale-110"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
           </>
+        )}
+        {/* Image counter */}
+        {images.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/60 text-white text-xs font-medium px-3 py-1 rounded-full backdrop-blur-sm">
+            {selectedImage + 1} / {images.length}
+          </div>
         )}
       </div>
       {/* Thumbnail strip */}
@@ -233,11 +254,17 @@ export function ProductDetailBlock({
               key={i}
               onClick={() => setSelectedImage(i)}
               className={cn(
-                'flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-colors',
-                selectedImage === i ? 'border-primary' : 'border-transparent hover:border-gray-300'
+                'relative flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all',
+                selectedImage === i 
+                  ? 'border-primary ring-2 ring-primary/20' 
+                  : 'border-transparent hover:border-gray-300 opacity-70 hover:opacity-100'
               )}
             >
-              <img src={img} alt="" className="w-full h-full object-cover" />
+              {isSupabaseImage(img) ? (
+                <Image src={img} alt="" fill sizes="80px" className="object-cover" />
+              ) : (
+                <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
+              )}
             </button>
           ))}
         </div>

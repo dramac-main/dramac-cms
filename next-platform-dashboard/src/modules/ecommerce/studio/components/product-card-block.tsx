@@ -9,6 +9,7 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
+import Image from "next/image";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import type { Product } from "../../types/ecommerce-types";
 import { ShoppingBag, Star, Heart, Eye, Loader2, AlertCircle, FileText } from "lucide-react";
@@ -191,12 +192,16 @@ export function ProductCardBlock({
     }
   }, [productId, onQuickView]);
   
-  // Handle card click
+  // Handle card click — navigate to product detail page
   const handleCardClick = useCallback(() => {
     if (productId && onProductClick) {
       onProductClick(productId);
+    } else if (productId && !isDemo && product) {
+      // Auto-navigate to product detail page
+      const slug = (product as Product).slug || productId;
+      window.location.href = `/products/${slug}`;
     }
-  }, [productId, onProductClick]);
+  }, [productId, onProductClick, product, isDemo]);
 
   const aspectClasses = {
     square: "aspect-square",
@@ -292,18 +297,34 @@ export function ProductCardBlock({
     </div>
   ) : null;
   
-  // Product image
+  // Product image — uses next/image for Supabase-hosted images, falls back to <img> for others
+  const isSupabaseImage = primaryImage?.includes('.supabase.co/') || primaryImage?.includes('unsplash.com');
+  
   const ProductImage = ({ className }: { className?: string }) => (
     primaryImage && !imageError ? (
-      <img
-        src={primaryImage}
-        alt={product.name}
-        className={cn("w-full h-full object-cover", hoverClasses[hoverEffect], className)}
-        onError={() => setImageError(true)}
-      />
+      isSupabaseImage ? (
+        <Image
+          src={primaryImage}
+          alt={product.name}
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          className={cn("object-cover", hoverClasses[hoverEffect], className)}
+          onError={() => setImageError(true)}
+          loading="lazy"
+        />
+      ) : (
+        <img
+          src={primaryImage}
+          alt={product.name}
+          className={cn("w-full h-full object-cover", hoverClasses[hoverEffect], className)}
+          onError={() => setImageError(true)}
+          loading="lazy"
+          decoding="async"
+        />
+      )
     ) : (
       <div className="w-full h-full bg-muted flex items-center justify-center">
-        <ShoppingBag className="h-12 w-12 text-muted-foreground" />
+        <ShoppingBag className="h-12 w-12 text-muted-foreground/40" />
       </div>
     )
   );

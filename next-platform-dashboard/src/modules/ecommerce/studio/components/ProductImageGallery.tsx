@@ -28,8 +28,8 @@ export interface ProductImage {
 }
 
 interface ProductImageGalleryProps {
-  /** Array of images */
-  images: ProductImage[]
+  /** Array of images — accepts string URLs or ProductImage objects */
+  images: (ProductImage | string)[]
   /** Product name for alt text fallback */
   productName?: string
   /** Layout style */
@@ -56,7 +56,7 @@ const aspectRatioClasses = {
 // ============================================================================
 
 export function ProductImageGallery({
-  images,
+  images: rawImages,
   productName = 'Product',
   layout = 'thumbnails-bottom',
   aspectRatio = 'square',
@@ -64,6 +64,13 @@ export function ProductImageGallery({
   enableZoom = true,
   className
 }: ProductImageGalleryProps) {
+  // Normalize images — accept both string[] and ProductImage[]
+  const images: ProductImage[] = rawImages.map((img, i) =>
+    typeof img === 'string'
+      ? { url: img, alt: `${productName} ${i + 1}` }
+      : img
+  )
+  
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
   const [imageError, setImageError] = useState<Record<number, boolean>>({})

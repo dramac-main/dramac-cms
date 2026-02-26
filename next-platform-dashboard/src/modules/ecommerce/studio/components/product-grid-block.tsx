@@ -1,30 +1,26 @@
 /**
  * E-Commerce Product Grid - Studio Block
  * 
- * Displays a grid of products from the store catalog.
- * Supports responsive columns and different product sources.
- * Fetches real data in preview/production mode, shows demo data in editor.
+ * Displays a responsive grid of products from the store catalog.
+ * Delegates rendering to ProductCardBlock for professional-grade
+ * product cards with hover effects, wishlist, and cart integration.
+ * 
+ * Fetches real data in preview/production mode, shows demo cards in editor.
  */
 
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
-import { formatCurrency } from "@/lib/locale-config";
-import { ShoppingBag, Loader2 } from "lucide-react";
+import { Loader2, ShoppingBag } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useStorefrontProducts } from "../../hooks";
+import { useStorefront } from "../../context/storefront-context";
+import { ProductCardBlock } from "./product-card-block";
 
 // =============================================================================
 // TYPES
 // =============================================================================
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image?: string;
-  rating?: number;
-}
 
 interface ProductGridProps {
   // Grid settings
@@ -61,24 +57,16 @@ export function ProductGridBlock({
   categoryId: _categoryId,
   productIds: _productIds = [],
   limit = 8,
-  showRating: _showRating = true,
+  showRating = true,
   showPrice = true,
   cardVariant = "card",
   siteId,
   _isEditor = false,
   _siteId,
 }: ProductGridProps) {
-  // Resolve siteId from either new renderer injection or legacy _siteId
-  const resolvedSiteId = siteId || _siteId || '';
-
-  // Demo products for editor preview when no site is connected
-  const demoProducts: Product[] = useMemo(() => Array.from({ length: limit }, (_, i) => ({
-    id: `demo-${i + 1}`,
-    name: `Product ${i + 1}`,
-    price: 49.99 + i * 10,
-    image: undefined,
-    rating: 4 + (i % 10) * 0.1,
-  })), [limit]);
+  // Context
+  const storefront = useStorefront();
+  const resolvedSiteId = _siteId || siteId || storefront?.siteId || '';
 
   // Use the storefront products hook for real data
   const { products: realProducts, isLoading: hookLoading } = useStorefrontProducts(resolvedSiteId, {
@@ -88,91 +76,138 @@ export function ProductGridBlock({
     sortBy: source === 'new' ? 'newest' : undefined,
   });
 
-  // Map real products to the display format
-  const mappedProducts: Product[] = useMemo(() => {
-    if (resolvedSiteId && realProducts.length > 0) {
-      return realProducts.map((p: any) => ({
-        id: p.id,
-        name: p.name,
-        price: p.base_price ?? p.price ?? 0,
-        image: p.images?.[0]?.url || p.image_url || undefined,
-        rating: p.average_rating || undefined,
-      }));
-    }
-    return [];
-  }, [resolvedSiteId, realProducts]);
-
   const isLoading = resolvedSiteId ? hookLoading : false;
-  const displayProducts = !resolvedSiteId ? demoProducts : mappedProducts;
+  const products = realProducts || [];
+
+  // Navigate to product detail page on click
+  const handleProductClick = useCallback((productId: string) => {
+    const product = products.find(p => p.id === productId);
+    const slug = product?.slug || productId;
+    window.location.href = `/products/${slug}`;
+  }, [products]);
 
   // Get responsive values
-  const columnsValue = typeof columns === "object" ? columns : { mobile: columns };
+  const columnsValue = typeof columns === "object" ? columns : { mobile: columns, tablet: columns, desktop: columns };
   const gapValue = typeof gap === "object" ? gap.mobile : gap;
+  const gapTablet = typeof gap === "object" && gap.tablet ? gap.tablet : gapValue;
+  const gapDesktop = typeof gap === "object" && gap.desktop ? gap.desktop : gapTablet;
 
-  const gridStyle: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: `repeat(${columnsValue.mobile || 2}, 1fr)`,
-    gap: gapValue,
-  };
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="product-grid-wrapper">
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <span className="ml-3 text-muted-foreground text-sm">Loading products...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (!isLoading && products.length === 0 && resolvedSiteId) {
+    return (
+      <div className="product-grid-wrapper">
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <ShoppingBag className="h-12 w-12 text-muted-foreground mb-3" />
+          <h3 className="font-medium text-lg mb-1">No products found</h3>
+          <p className="text-sm text-muted-foreground">
+            Products will appear here once they are added to your store.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Demo state (no site connected - editor mode)
+  if (!resolvedSiteId) {
+    const demoCount = Math.min(limit, 8);
+    return (
+      <div className="product-grid-wrapper">
+        <div
+          className={cn("product-grid grid")}
+          style={{
+            gridTemplateColumns: `repeat(${columnsValue.mobile || 2}, 1fr)`,
+            gap: gapValue,
+          }}
+        >
+          {Array.from({ length: demoCount }).map((_, i) => (
+            <ProductCardBlock
+              key={`demo-${i}`}
+              productId={null}
+              variant={cardVariant === "minimal" ? "minimal" : "card"}
+              showPrice={showPrice}
+              showRating={showRating}
+              showButton={true}
+              showWishlistButton={true}
+              showQuickView={false}
+              showStockBadge={false}
+              showSaleBadge={true}
+              buttonText="Add to Cart"
+              imageAspect="square"
+              hoverEffect="zoom"
+              padding={{ mobile: "12px" }}
+              borderRadius={{ mobile: "8px" }}
+            />
+          ))}
+        </div>
+        <style jsx>{`
+          @media (min-width: 768px) {
+            .product-grid { grid-template-columns: repeat(${columnsValue.tablet || columnsValue.mobile || 2}, 1fr) !important; gap: ${gapTablet} !important; }
+          }
+          @media (min-width: 1024px) {
+            .product-grid { grid-template-columns: repeat(${columnsValue.desktop || columnsValue.tablet || columnsValue.mobile || 2}, 1fr) !important; gap: ${gapDesktop} !important; }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="product-grid-wrapper">
-      {/* Loading State */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      )}
-      
-      {/* Product Grid */}
-      {!isLoading && (
-        <div 
-          className="product-grid"
-          style={gridStyle}
-        >
-          {displayProducts.map((product) => (
-            <div 
-              key={product.id}
-              className={`${cardVariant === "minimal" ? "" : "bg-card border rounded-lg overflow-hidden"} group`}
-            >
-              <div className="aspect-square relative overflow-hidden bg-muted rounded-lg">
-                {product.image ? (
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <ShoppingBag className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-              <div className={cardVariant === "minimal" ? "mt-3" : "p-4"}>
-                <h3 className="font-medium truncate">{product.name}</h3>
-                {showPrice && (
-                  <p className="text-primary font-semibold mt-1">
-                    {formatCurrency(product.price / 100)}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Product Grid — delegates to ProductCardBlock for rich cards */}
+      <div 
+        className={cn("product-grid grid")}
+        style={{
+          gridTemplateColumns: `repeat(${columnsValue.mobile || 2}, 1fr)`,
+          gap: gapValue,
+        }}
+      >
+        {products.map((product) => (
+          <ProductCardBlock
+            key={product.id}
+            productId={product.id}
+            siteId={resolvedSiteId}
+            variant={cardVariant === "minimal" ? "minimal" : "card"}
+            showPrice={showPrice}
+            showRating={showRating}
+            showButton={true}
+            showWishlistButton={true}
+            showQuickView={false}
+            showStockBadge={false}
+            showSaleBadge={true}
+            buttonText="Add to Cart"
+            imageAspect="square"
+            hoverEffect="zoom"
+            padding={{ mobile: "12px" }}
+            borderRadius={{ mobile: "8px" }}
+            onProductClick={handleProductClick}
+          />
+        ))}
+      </div>
       
       {/* Responsive CSS */}
       <style jsx>{`
         @media (min-width: 768px) {
           .product-grid {
-            grid-template-columns: repeat(${columnsValue.tablet || columnsValue.mobile || 2}, 1fr);
-            gap: ${typeof gap === "object" && gap.tablet ? gap.tablet : gapValue};
+            grid-template-columns: repeat(${columnsValue.tablet || columnsValue.mobile || 2}, 1fr) !important;
+            gap: ${gapTablet} !important;
           }
         }
         @media (min-width: 1024px) {
           .product-grid {
-            grid-template-columns: repeat(${columnsValue.desktop || columnsValue.tablet || columnsValue.mobile || 2}, 1fr);
-            gap: ${typeof gap === "object" && gap.desktop ? gap.desktop : (typeof gap === "object" && gap.tablet ? gap.tablet : gapValue)};
+            grid-template-columns: repeat(${columnsValue.desktop || columnsValue.tablet || columnsValue.mobile || 2}, 1fr) !important;
+            gap: ${gapDesktop} !important;
           }
         }
       `}</style>
