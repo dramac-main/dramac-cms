@@ -419,7 +419,7 @@ const order_shipped_customer: BrandedTemplate = {
           ? `<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:20px;margin:20px 0;">
         <p style="margin:0 0 8px;color:#6b7280;">Tracking Number:</p>
         <p style="margin:0;font-weight:600;font-size:18px;">${data.trackingNumber}</p>
-        ${data.trackingUrl ? `<p style="margin:8px 0 0;"><a href="${data.trackingUrl}" style="color:#2563eb;">Track Your Package →</a></p>` : ""}
+        ${data.trackingUrl ? `<p style="margin:8px 0 0;"><a href="${data.trackingUrl}" style="color:#0f766e;">Track Your Package →</a></p>` : ""}
       </div>`
           : ""
       }

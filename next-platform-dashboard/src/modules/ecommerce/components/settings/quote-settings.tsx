@@ -100,7 +100,7 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
       max_reminders: 2,
       send_acceptance_notification: true,
       send_rejection_notification: true,
-      primary_color: '#2563eb'
+      primary_color: ''
     }
   })
 
@@ -633,12 +633,12 @@ export function QuoteSettingsForm({ siteId, agencyId }: QuoteSettingsFormProps) 
                     <Input
                       id="primary_color"
                       {...register('primary_color')}
-                      placeholder="#2563eb"
+                      placeholder="Site brand color"
                       className="flex-1"
                     />
                     <div 
                       className="w-10 h-10 rounded-md border"
-                      style={{ backgroundColor: primaryColor || '#2563eb' }}
+                      style={{ backgroundColor: primaryColor || '#0f172a' }}
                     />
                   </div>
                 </div>

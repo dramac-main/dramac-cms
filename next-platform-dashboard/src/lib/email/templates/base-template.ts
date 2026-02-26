@@ -171,7 +171,7 @@ export function emailButton(
   href: string,
   text: string
 ): string {
-  const bg = branding.accent_color || "#3B82F6";
+  const bg = branding.accent_color || "#0F172A";
   const fg = getContrastColor(bg);
   return `<p style="margin:24px 0;text-align:center;">
   <a href="${href}" style="display:inline-block;padding:12px 28px;background:${bg};color:${fg};text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">${text}</a>

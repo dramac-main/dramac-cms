@@ -16,9 +16,9 @@ interface EmailTemplate {
 // Common styles
 const STYLES = {
   container: "max-width: 600px; margin: 0 auto; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;",
-  heading: "color: #7c3aed; font-size: 24px; font-weight: 600; margin-bottom: 16px;",
+  heading: "color: #1e293b; font-size: 24px; font-weight: 600; margin-bottom: 16px;",
   text: "color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;",
-  button: "display: inline-block; padding: 12px 24px; background: #7c3aed; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;",
+  button: "display: inline-block; padding: 12px 24px; background: #1e293b; color: white; text-decoration: none; border-radius: 6px; font-weight: 500;",
   muted: "color: #6b7280; font-size: 14px; margin-top: 24px;",
   footer: "margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 12px;",
 };
@@ -626,7 +626,7 @@ View in dashboard: ${data.dashboardUrl}
         <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 20px; margin: 20px 0;">
           <p style="margin: 0 0 8px; color: #6b7280;">Tracking Number:</p>
           <p style="margin: 0; font-weight: 600; font-size: 18px;">${data.trackingNumber}</p>
-          ${data.trackingUrl ? `<p style="margin: 8px 0 0;"><a href="${data.trackingUrl}" style="color: #2563eb;">Track Your Package →</a></p>` : ''}
+          ${data.trackingUrl ? `<p style="margin: 8px 0 0;"><a href="${data.trackingUrl}" style="color: #0f766e;">Track Your Package →</a></p>` : ''}
         </div>
       ` : ''}
       <p style="${STYLES.muted}">If you have any questions, please contact ${data.businessName}.</p>

@@ -81,7 +81,7 @@ export function QuoteTemplateDialog({
   const [validityDays, setValidityDays] = useState(30)
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
   
-  const [primaryColor, setPrimaryColor] = useState('#2563eb')
+  const [primaryColor, setPrimaryColor] = useState('')
   const [showLogo, setShowLogo] = useState(true)
   
   // Load template data
@@ -100,7 +100,7 @@ export function QuoteTemplateDialog({
       setTaxRate(0) // Not in existing interface
       setValidityDays(template.default_validity_days)
       setCurrency(DEFAULT_CURRENCY) // Not in existing interface
-      setPrimaryColor('#3b82f6') // Not in existing interface
+      setPrimaryColor('') // Not in existing interface
       setShowLogo(true) // Not in existing interface
     } else if (open) {
       // Reset form for new template
@@ -117,7 +117,7 @@ export function QuoteTemplateDialog({
       setTaxRate(0)
       setValidityDays(30)
       setCurrency(DEFAULT_CURRENCY)
-      setPrimaryColor('#2563eb')
+      setPrimaryColor('')
       setShowLogo(true)
     }
   }, [open, template])
@@ -368,7 +368,7 @@ export function QuoteTemplateDialog({
                 <Input
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
-                  placeholder="#2563eb"
+                  placeholder="Site brand color"
                   className="flex-1"
                 />
               </div>

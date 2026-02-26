@@ -49,7 +49,7 @@ const DEFAULT_EMAIL_BRANDING: EmailBranding = {
   reply_to: `support@${PLATFORM.emailDomain}`,
   logo_url: null,
   primary_color: "#0F172A",
-  accent_color: "#3B82F6",
+  accent_color: "#0F172A",
   agency_name: PLATFORM.name,
   footer_text: null,
   footer_address: null,

@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           settings: {
-            primaryColor: sitePrimaryColor || '#2563eb',
+            primaryColor: sitePrimaryColor || '#0F172A',
             textColor: '#ffffff',
             position: 'bottom-right',
             launcherIcon: 'MessageCircle',
@@ -145,9 +145,9 @@ export async function GET(request: NextRequest) {
 
     // Only return public-facing fields (strip sensitive data)
     // Fall back to site branding for colors/name/logo when chat settings use defaults
-    const isDefaultPrimary = !settings.primaryColor || settings.primaryColor === '#2563eb'
+    const isDefaultPrimary = !settings.primaryColor || settings.primaryColor === '#2563eb' || settings.primaryColor === '#0F172A'
     const publicSettings = {
-      primaryColor: (isDefaultPrimary && sitePrimaryColor) ? sitePrimaryColor : (settings.primaryColor || '#2563eb'),
+      primaryColor: (isDefaultPrimary && sitePrimaryColor) ? sitePrimaryColor : (settings.primaryColor || '#0F172A'),
       textColor: settings.textColor || '#ffffff',
       position: settings.position,
       launcherIcon: settings.launcherIcon,

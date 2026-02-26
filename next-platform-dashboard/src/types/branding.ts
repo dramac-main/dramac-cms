@@ -62,7 +62,7 @@ export const DEFAULT_BRANDING: Omit<AgencyBranding, "id" | "agency_id" | "create
   apple_touch_icon_url: null,
   primary_color: "#0F172A",
   primary_foreground: "#FFFFFF",
-  accent_color: "#3B82F6",
+  accent_color: "#0F172A",
   accent_foreground: "#FFFFFF",
   email_from_name: null,
   email_reply_to: null,

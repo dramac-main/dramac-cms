@@ -75,7 +75,7 @@ function formatDate(iso: string): string {
  * Generate a professional HTML payout statement.
  */
 export function generatePayoutStatementHTML(data: PayoutStatementData): string {
-  const primaryColor = data.primaryColor || '#2563eb'
+  const primaryColor = data.primaryColor || '#0f172a'
   const companyName = data.companyName || 'DRAMAC Platform'
   const currency = data.currency || 'USD'
 

@@ -279,7 +279,7 @@ const defaultConfig: Required<StorefrontConfig> = {
   showCategories: true,
   productsPerPage: 12,
   theme: 'light',
-  primaryColor: '#2563eb',
+  primaryColor: '',
   borderRadius: 8,
   showSearch: true,
   showFilters: true,
@@ -346,13 +346,14 @@ export function StorefrontWidget({
 
   const isDark = theme === 'dark'
   const taxRate = settings?.tax_rate || 0
+  const resolvedPrimary = primaryColor || 'var(--brand-primary, #0f172a)'
 
   return (
     <CartProvider siteId={siteId} sessionId={sessionId} userId={userId} taxRate={taxRate}>
       <div 
         className={`storefront-widget ${isDark ? 'sf-dark' : 'sf-light'}`}
         style={{
-          '--sf-primary': primaryColor,
+          '--sf-primary': resolvedPrimary,
           '--sf-radius': `${borderRadius}px`,
           fontFamily: 'inherit'
         } as React.CSSProperties}

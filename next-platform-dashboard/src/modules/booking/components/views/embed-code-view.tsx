@@ -65,7 +65,7 @@ interface EmbedConfig {
 
 const DEFAULT_CONFIG: EmbedConfig = {
   widgetType: 'full',
-  primaryColor: '#8B5CF6',
+  primaryColor: '',
   borderRadius: 8,
   showHeader: true,
   showServiceSelector: true,

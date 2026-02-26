@@ -396,11 +396,11 @@ function ComponentPlaceholder({ type, props }: ComponentPlaceholderProps) {
     case "Hero":
       return (
         <div
-          className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center bg-gradient-to-br from-blue-600 to-purple-700 text-white"
+          className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center text-white"
           style={
             backgroundImage
               ? { backgroundImage: `url(${backgroundImage})`, backgroundSize: "cover" }
-              : undefined
+              : { background: 'linear-gradient(to bottom right, var(--brand-primary, #3b82f6), var(--brand-secondary, #8b5cf6))' }
           }
         >
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
@@ -412,7 +412,7 @@ function ComponentPlaceholder({ type, props }: ComponentPlaceholderProps) {
             </p>
           )}
           {(ctaText || buttonText) && (
-            <button className="px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold">
+            <button className="px-8 py-3 bg-white rounded-lg font-semibold" style={{ color: 'var(--brand-primary, #3b82f6)' }}>
               {ctaText || buttonText}
             </button>
           )}
@@ -506,7 +506,7 @@ function ComponentPlaceholder({ type, props }: ComponentPlaceholderProps) {
     case "CTA":
     case "CallToAction":
       return (
-        <section className="py-20 px-8 bg-blue-600 text-white text-center">
+        <section className="py-20 px-8 text-white text-center" style={{ backgroundColor: 'var(--brand-primary, #3b82f6)' }}>
           <h2 className="text-3xl font-bold mb-4">
             {headline || title || "Ready to get started?"}
           </h2>
@@ -515,7 +515,7 @@ function ComponentPlaceholder({ type, props }: ComponentPlaceholderProps) {
               {description}
             </p>
           )}
-          <button className="px-8 py-3 bg-white text-blue-600 rounded-lg font-semibold">
+          <button className="px-8 py-3 bg-white rounded-lg font-semibold" style={{ color: 'var(--brand-primary, #3b82f6)' }}>
             {ctaText || buttonText || "Get Started"}
           </button>
         </section>
@@ -559,9 +559,10 @@ function ComponentPlaceholder({ type, props }: ComponentPlaceholderProps) {
                 className={cn(
                   "p-8 rounded-lg",
                   plan === "Pro"
-                    ? "bg-blue-600 text-white"
+                    ? "text-white"
                     : "bg-white border"
                 )}
+                style={plan === "Pro" ? { backgroundColor: 'var(--brand-primary, #3b82f6)' } : undefined}
               >
                 <h3 className="text-xl font-bold mb-2">{plan}</h3>
                 <div className="text-3xl font-bold mb-6">
@@ -577,9 +578,13 @@ function ComponentPlaceholder({ type, props }: ComponentPlaceholderProps) {
                   className={cn(
                     "w-full py-2 rounded font-medium",
                     plan === "Pro"
-                      ? "bg-white text-blue-600"
-                      : "bg-blue-600 text-white"
+                      ? "bg-white"
+                      : "text-white"
                   )}
+                  style={{
+                    backgroundColor: plan === "Pro" ? undefined : 'var(--brand-primary, #3b82f6)',
+                    color: plan === "Pro" ? 'var(--brand-primary, #3b82f6)' : undefined
+                  }}
                 >
                   Get Started
                 </button>
@@ -611,7 +616,7 @@ function ComponentPlaceholder({ type, props }: ComponentPlaceholderProps) {
                 rows={4}
                 className="w-full p-3 border rounded-lg"
               />
-              <button className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium">
+              <button className="w-full py-3 text-white rounded-lg font-medium" style={{ backgroundColor: 'var(--brand-primary, #3b82f6)' }}>
                 Send Message
               </button>
             </div>

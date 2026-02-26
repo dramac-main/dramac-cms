@@ -531,7 +531,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
               .catch(() => setLoadError(true))
           }}
           className="px-4 py-2 rounded-lg text-white text-sm"
-          style={{ backgroundColor: settings?.primaryColor || '#2563eb' }}
+          style={{ backgroundColor: settings?.primaryColor || '#0F172A' }}
         >
           Try Again
         </button>
@@ -542,7 +542,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
   if (!settings || widgetState === 'loading') {
     return (
       <div className="h-full w-full flex items-center justify-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-gray-800" />
       </div>
     )
   }

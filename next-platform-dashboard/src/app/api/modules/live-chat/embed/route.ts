@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
     var isOpen = false;
     var position = settings.position || 'bottom-right';
     var isRight = position === 'bottom-right';
-    var primaryColor = settings.primaryColor || '#2563eb';
+    var primaryColor = settings.primaryColor || '#0F172A';
     var launcherSize = settings.launcherSize || 56;
     var zIndex = settings.zIndex || 2147483647;
     var borderRadius = settings.borderRadius || 16;

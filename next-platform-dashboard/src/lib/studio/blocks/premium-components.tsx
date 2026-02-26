@@ -243,7 +243,7 @@ export function PremiumNavbarRender({
   ctaText = "Get Started",
   ctaLink = "#",
   ctaStyle = "solid",
-  ctaColor = "#3b82f6",
+  ctaColor = "",
   ctaTextColor = "#ffffff",
   ctaSize = "md",
   ctaBorderRadius = "md",
@@ -299,7 +299,7 @@ export function PremiumNavbarRender({
   showScrollProgress = false,
   scrollProgressPosition = "top",
   scrollProgressHeight = 3,
-  scrollProgressColor = "#3b82f6",
+  scrollProgressColor = "",
   scrollProgressBackground = "transparent",
   scrollProgressStyle = "bar",
   
@@ -493,7 +493,7 @@ export function PremiumNavbarRender({
     switch (linkHoverEffect) {
       case "opacity": return "hover:opacity-70 transition-opacity";
       case "underline": return "hover:underline underline-offset-4 transition-all";
-      case "color": return "hover:text-blue-500 transition-colors";
+      case "color": return "hover:opacity-80 transition-opacity";
       case "background": return "hover:bg-gray-100 px-3 py-1 -mx-3 rounded transition-colors";
       default: return "";
     }
@@ -1032,14 +1032,14 @@ export function PremiumHeroRender({
   
   // Badge
   badge,
-  badgeColor = "#3b82f6",
+  badgeColor = "",
   badgeTextColor = "#ffffff",
   badgeStyle = "pill",
   
   // Primary CTA
   primaryButtonText = "Get Started Free",
   primaryButtonLink = "#",
-  primaryButtonColor = "#3b82f6",
+  primaryButtonColor = "",
   primaryButtonTextColor = "#ffffff",
   primaryButtonStyle = "solid",
   primaryButtonSize = "lg",
@@ -1995,7 +1995,7 @@ export function PremiumFooterRender({
   newsletterDescription = "Get the latest updates and news directly in your inbox.",
   newsletterPlaceholder = "Enter your email",
   newsletterButtonText = "Subscribe",
-  newsletterButtonColor = "#3b82f6",
+  newsletterButtonColor = "",
   newsletterPosition = "column",
   
   // Contact
@@ -2024,7 +2024,7 @@ export function PremiumFooterRender({
   layout = "stacked",
   backgroundColor = "#0f172a",
   textColor = "#e2e8f0",
-  accentColor = "#3b82f6",
+  accentColor = "",
   linkColor = "#94a3b8",
   linkHoverColor = "#ffffff",
   dividerColor = "#334155",

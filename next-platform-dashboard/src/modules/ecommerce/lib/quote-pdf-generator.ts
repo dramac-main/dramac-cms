@@ -53,7 +53,7 @@ export function generatePDFData(
     items: items.sort((a, b) => a.sort_order - b.sort_order),
     options: {
       includeCompanyLogo: true,
-      primaryColor: '#2563eb',
+      primaryColor: '',
       showTerms: true,
       documentType: 'quote',
       ...options
@@ -154,7 +154,7 @@ export function formatQuoteForPDF(data: QuotePDFData) {
     footer: options.customFooter || null,
     
     // Styling
-    primaryColor: options.primaryColor || '#2563eb'
+    primaryColor: options.primaryColor || '#0f172a'
   }
 }
 
@@ -283,12 +283,12 @@ function generateStyles(primaryColor: string): string {
     }
     
     .status-draft { background: #f3f4f6; color: #6b7280; }
-    .status-sent { background: #dbeafe; color: #1d4ed8; }
+    .status-sent { background: #e0f2fe; color: #0369a1; }
     .status-viewed { background: #e9d5ff; color: #7c3aed; }
     .status-accepted { background: #dcfce7; color: #16a34a; }
     .status-rejected { background: #fee2e2; color: #dc2626; }
     .status-expired { background: #fef3c7; color: #d97706; }
-    .status-converted { background: #dbeafe; color: #2563eb; }
+    .status-converted { background: #d1fae5; color: #059669; }
     
     /* Info Grid */
     .info-grid {

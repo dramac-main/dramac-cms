@@ -174,7 +174,7 @@ function tint(hex: string, amount = 0.92): string {
  */
 export function resolveBrandColors(source: BrandColorSource): BrandColorPalette {
   // Resolve core colors with priority: theme > site settings > defaults
-  const primary = source.theme?.primaryColor || source.primaryColor || "#3b82f6";
+  const primary = source.theme?.primaryColor || source.primaryColor || "#0f172a";
   const secondary = source.theme?.secondaryColor || source.secondaryColor || darken(primary, 0.15);
   const accent = source.theme?.accentColor || source.accentColor || "#f59e0b";
   const background = source.theme?.backgroundColor || source.backgroundColor || "#ffffff";
@@ -268,8 +268,25 @@ const BRAND_COLOR_MAP: Record<string, keyof BrandColorPalette> = {
   buttonBackgroundColor: "buttonBg",
   buttonTextColor: "buttonText",
   buttonHoverColor: "buttonHover",
+  buttonColor: "buttonBg",
+  primaryButtonColor: "buttonBg",
   secondaryButtonBgColor: "secondaryButtonBg",
   secondaryButtonTextColor: "secondaryButtonText",
+  submitColor: "buttonBg",
+  ctaColor: "buttonBg",
+  newsletterButtonColor: "buttonBg",
+
+  // Gradient colors
+  gradientFrom: "primary",
+  gradientTo: "secondary",
+  buttonGradientFrom: "primary",
+  buttonGradientTo: "secondary",
+  backgroundGradientFrom: "primary",
+  backgroundGradientTo: "secondary",
+
+  // Link colors
+  linkColor: "primary",
+  linkHoverColor: "buttonHover",
 
   // Slot / selection colors (booking)
   slotBgColor: "muted",
@@ -283,6 +300,8 @@ const BRAND_COLOR_MAP: Record<string, keyof BrandColorPalette> = {
   inputBorderColor: "inputBorder",
   inputFocusBorderColor: "inputFocus",
   inputBackgroundColor: "input",
+  focusBorderColor: "inputFocus",
+  focusRingColor: "inputFocus",
 
   // Border & divider
   borderColor: "border",
@@ -319,6 +338,7 @@ const BRAND_COLOR_MAP: Record<string, keyof BrandColorPalette> = {
   tabInactiveColor: "mutedForeground",
   toolbarBackgroundColor: "background",
   toolbarTextColor: "foreground",
+  activeColor: "primary",
 
   // Code block (embed)
   codeBackgroundColor: "muted",
@@ -337,9 +357,39 @@ const BRAND_COLOR_MAP: Record<string, keyof BrandColorPalette> = {
   categoryBgColor: "muted",
   durationColor: "mutedForeground",
 
-  // Badge colors
+  // Badge / accent decorators
+  badgeColor: "primary",
+  decoratorColor: "primary",
   featuredBadgeBgColor: "primary",
   featuredBadgeTextColor: "primaryForeground",
+  featuredBorderColor: "primary",
+  popularBorderColor: "primary",
+  highlightedBadgeColor: "primary",
+
+  // Icon colors
+  defaultIconColor: "primary",
+  iconColor: "primary",
+  iconBorderColor: "primary",
+
+  // Interactive / effect colors
+  glowColor: "primary",
+  loadingSpinnerColor: "primary",
+  hoverColor: "buttonHover",
+  activeCategoryColor: "primary",
+  numberBackgroundColor: "primary",
+  socialHoverColor: "primary",
+  skillColor: "primary",
+  imageBorderColor: "primary",
+  indicatorColor: "primary",
+  ringColor: "primary",
+  activeThumbnailBorder: "primary",
+  scrollProgressColor: "primary",
+  dotsColor: "primary",
+
+  // FlipCard / particle / progress
+  frontBackgroundColor: "primary",
+  particleColor: "primary",
+  progressColor: "primary",
 
   // Search
   searchBgColor: "input",
@@ -351,11 +401,48 @@ const BRAND_COLOR_MAP: Record<string, keyof BrandColorPalette> = {
 };
 
 /**
+ * Known placeholder/default colors that were hardcoded in old component defaults.
+ * If a prop has one of these values, it means the user never customized it —
+ * they just got the old hardcoded fallback. We should replace it with the
+ * site's actual brand color.
+ *
+ * This ensures existing pages created before the branding system was complete
+ * automatically pick up the site's brand colors without needing to be re-saved.
+ */
+const PLACEHOLDER_COLORS = new Set([
+  "#3b82f6",   // Tailwind blue-500 (old primary default)
+  "#3B82F6",   // Case variant
+  "#2563eb",   // Tailwind blue-600
+  "#2563EB",   // Case variant
+  "#8b5cf6",   // Tailwind violet-500 (old secondary/gradient default)
+  "#8B5CF6",   // Case variant
+  "#6366f1",   // Tailwind indigo-500 (old flip card/particle default)
+  "#6366F1",   // Case variant
+  "#1d4ed8",   // Tailwind blue-700
+  "#1D4ED8",   // Case variant
+]);
+
+/**
+ * Check if a color value is a derivative of a known placeholder
+ * (e.g., "#3b82f610" is "#3b82f6" with 10% alpha).
+ */
+function isPlaceholderColor(value: unknown): boolean {
+  if (typeof value !== "string") return false;
+  const v = value.toLowerCase();
+  // Exact match
+  if (PLACEHOLDER_COLORS.has(v)) return true;
+  // Alpha-suffixed match (e.g., "#3b82f610", "#3b82f620")
+  if (v.length === 9 && PLACEHOLDER_COLORS.has(v.slice(0, 7))) return true;
+  return false;
+}
+
+/**
  * Inject brand-derived color defaults into a component's props.
  * 
- * Only fills in colors that are NOT already explicitly set.
- * This preserves any studio customizations while ensuring consistency
- * for the ~83% of color fields that typically have no value.
+ * Fills in colors that are NOT already explicitly set, AND replaces
+ * known placeholder colors from old defaults with the site's actual
+ * brand colors. This ensures both new and existing components
+ * properly inherit site branding.
  * 
  * @param props - The component's current props
  * @param palette - The resolved brand color palette
@@ -368,12 +455,13 @@ export function injectBrandColors(
   const result = { ...props };
 
   for (const [propName, paletteKey] of Object.entries(BRAND_COLOR_MAP)) {
-    // Only inject if the prop is not already set
     const currentValue = result[propName];
+    // Inject if: empty/null/undefined OR matches a known placeholder default
     if (
       currentValue === undefined ||
       currentValue === null ||
-      currentValue === ""
+      currentValue === "" ||
+      isPlaceholderColor(currentValue)
     ) {
       result[propName] = palette[paletteKey];
     }

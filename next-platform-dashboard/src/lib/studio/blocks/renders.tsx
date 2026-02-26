@@ -479,8 +479,8 @@ export function HeadingRender({
   fontWeight = "bold",
   uppercase = false,
   gradient = false,
-  gradientFrom = "#3b82f6",
-  gradientTo = "#8b5cf6",
+  gradientFrom = "",
+  gradientTo = "",
   marginBottom = "md",
   id,
   className = "",
@@ -893,7 +893,7 @@ export function QuoteRender({
   author = "Author Name",
   authorTitle,
   authorImage,
-  borderColor = "#3b82f6",
+  borderColor = "",
   backgroundColor,
   textColor = "#374151",
   variant = "bordered",
@@ -1092,8 +1092,8 @@ export function ButtonRender({
   hoverBorderColor,
   
   // Gradient
-  gradientFrom = "#3b82f6",
-  gradientTo = "#8b5cf6",
+  gradientFrom = "",
+  gradientTo = "",
   gradientDirection = "to-r",
   
   // Border & Radius
@@ -1105,7 +1105,7 @@ export function ButtonRender({
   shadow = "none",
   hoverShadow,
   glowOnHover = false,
-  glowColor = "#3b82f6",
+  glowColor = "",
   
   // Width & Sizing
   fullWidth = false,
@@ -1131,7 +1131,7 @@ export function ButtonRender({
   loadingText,
   
   // Focus
-  focusRingColor = "#3b82f6",
+  focusRingColor = "",
   focusRingWidth = "2",
   focusRingOffset = "2",
   
@@ -1313,7 +1313,7 @@ export function ButtonRender({
     customStyles.background = `linear-gradient(${gradientDir}, ${gradientFrom}, ${gradientTo})`;
     customStyles.color = textColor || "#ffffff";
   } else if (variant === "primary") {
-    customStyles.backgroundColor = backgroundColor || "#3b82f6";
+    customStyles.backgroundColor = backgroundColor || "var(--brand-primary, #3b82f6)";
     customStyles.color = textColor || "#ffffff";
   } else if (variant === "secondary") {
     customStyles.backgroundColor = backgroundColor || "rgba(107,114,128,0.12)";
@@ -1648,7 +1648,7 @@ export function ImageRender({
   // Badge
   showBadge = false,
   badgeText,
-  badgeColor = "#3b82f6",
+  badgeColor = "",
   badgePosition = "top-right",
   
   // Misc
@@ -2070,7 +2070,7 @@ export function VideoRender({
   // Loading
   loading = "lazy",
   showLoadingSpinner = false,
-  loadingSpinnerColor = "#3b82f6",
+  loadingSpinnerColor = "",
   
   // Caption
   caption,
@@ -2679,7 +2679,8 @@ export function MapRender({
         href={getDirectionsUrl()}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline"
+        className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium hover:underline"
+        style={{ color: 'var(--brand-primary, #3b82f6)' }}
       >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -2817,7 +2818,7 @@ export function HeroRender({
   textColor,
   primaryButtonText = "Get Started",
   primaryButtonLink = "#",
-  primaryButtonColor = "#3b82f6",
+  primaryButtonColor = "",
   secondaryButtonText,
   secondaryButtonLink = "#",
   image,
@@ -2825,7 +2826,7 @@ export function HeroRender({
   imagePosition = "right",
   videoSrc,
   badge,
-  badgeColor = "#3b82f6",
+  badgeColor = "",
   minHeight = "auto",
   contentAlign = "center",
   paddingY = "lg",
@@ -3225,7 +3226,7 @@ export function FeaturesRender({
   subtitleColor,
   descriptionColor,
   badgeStyle = "pill",
-  badgeColor = "#3b82f6",
+  badgeColor = "",
   badgeTextColor = "#ffffff",
   
   // Features
@@ -3241,7 +3242,7 @@ export function FeaturesRender({
   backgroundColor = "#ffffff",
   cardBackgroundColor = "#ffffff",
   cardHoverBackgroundColor,
-  featuredCardBackground = "#3b82f610",
+  featuredCardBackground = "",
   showBorder = true,
   cardBorderColor = "#e5e7eb",
   cardBorderWidth = "1",
@@ -3258,10 +3259,10 @@ export function FeaturesRender({
   iconShape = "rounded",
   iconPosition = "top",
   showIconBackground = true,
-  defaultIconColor = "#3b82f6",
+  defaultIconColor = "",
   defaultIconBackgroundColor,
   iconBorder = false,
-  iconBorderColor = "#3b82f6",
+  iconBorderColor = "",
   
   // Title & Description
   featureTitleSize = "lg",
@@ -3275,8 +3276,8 @@ export function FeaturesRender({
   // Links
   showLinks = true,
   linkStyle = "arrow",
-  linkColor = "#3b82f6",
-  linkHoverColor = "#2563eb",
+  linkColor = "",
+  linkHoverColor = "",
   defaultLinkText = "Learn more",
   
   // Numbering
@@ -3287,7 +3288,7 @@ export function FeaturesRender({
   
   // Highlight/Featured
   highlightFeatured = false,
-  featuredBorderColor = "#3b82f6",
+  featuredBorderColor = "",
   featuredBadgeText = "Popular",
   
   // Section Sizing
@@ -3311,7 +3312,7 @@ export function FeaturesRender({
   // Decorative
   showDecorators = false,
   decoratorStyle = "blur",
-  decoratorColor = "#3b82f6",
+  decoratorColor = "",
   decoratorPosition = "both-sides",
   
   // Animation
@@ -3335,7 +3336,7 @@ export function FeaturesRender({
   
   // Colors
   textColor,
-  accentColor = "#3b82f6",
+  accentColor = "",
   
   id,
   className = "",
@@ -3984,7 +3985,7 @@ export function CTARender({
   descriptionMaxWidth = "lg",
   // Badge
   badge,
-  badgeColor = "#3b82f6",
+  badgeColor = "",
   badgeTextColor = "#ffffff",
   badgeStyle = "pill",
   badgeIcon,
@@ -4000,8 +4001,8 @@ export function CTARender({
   buttonSize = "lg",
   buttonRadius = "lg",
   buttonStyle = "solid",
-  buttonGradientFrom = "#3b82f6",
-  buttonGradientTo = "#8b5cf6",
+  buttonGradientFrom = "",
+  buttonGradientTo = "",
   buttonIcon = "arrow",
   buttonIconPosition = "right",
   buttonShadow = "lg",
@@ -4023,10 +4024,10 @@ export function CTARender({
   buttonLayout = "horizontal",
   buttonGap = "md",
   // Background
-  backgroundColor = "#3b82f6",
+  backgroundColor = "",
   backgroundGradient = false,
-  backgroundGradientFrom = "#3b82f6",
-  backgroundGradientTo = "#8b5cf6",
+  backgroundGradientFrom = "",
+  backgroundGradientTo = "",
   backgroundGradientDirection = "to-br",
   backgroundImage,
   backgroundImagePosition = "center",
@@ -4099,7 +4100,7 @@ export function CTARender({
   // We accept both and compute contrast-safe defaults when neither is set.
   // ==========================================================================
   const bgIsLight = (() => {
-    const bg = String(backgroundColor || "#3b82f6");
+    const bg = String(backgroundColor || "#ffffff");
     if (bg === "transparent" || !bg.startsWith("#") || bg.length < 4) return false;
     try {
       let clean = bg.replace(/^#/, '');
@@ -4939,7 +4940,7 @@ export function TestimonialsRender({
   showDots = true,
   arrowStyle = "circle",
   arrowColor = "#374151",
-  dotsColor = "#3b82f6",
+  dotsColor = "",
   dotsPosition = "bottom",
   infiniteLoop = true,
   slidesToShow = 3,
@@ -4951,14 +4952,14 @@ export function TestimonialsRender({
   // Featured
   featuredCardScale = 1.05,
   featuredCardShadow = "xl",
-  featuredBorderColor = "#3b82f6",
+  featuredBorderColor = "",
   // Decorative
   showDecorator = false,
   decoratorType = "quotes",
-  decoratorColor = "#3b82f6",
+  decoratorColor = "",
   decoratorOpacity = 10,
   textColor,
-  accentColor = "#3b82f6",
+  accentColor = "",
   id,
   className = "",
   _breakpoint = "desktop",
@@ -5508,7 +5509,7 @@ export function FAQRender({
   subtitleColor,
   descriptionColor,
   badgeStyle = "pill",
-  badgeColor = "#3b82f6",
+  badgeColor = "",
   badgeTextColor = "#ffffff",
   
   // FAQ Items
@@ -5579,7 +5580,7 @@ export function FAQRender({
   sectionGap = "lg",
   
   // Accent & Theme
-  accentColor = "#3b82f6",
+  accentColor = "",
   textColor,
   
   // Categories & Search
@@ -5587,7 +5588,7 @@ export function FAQRender({
   categoryPosition = "top",
   categoryStyle = "pills",
   categoryColor = "#6b7280",
-  activeCategoryColor = "#3b82f6",
+  activeCategoryColor = "",
   showSearch = false,
   searchPlaceholder = "Search questions...",
   searchPosition: _searchPosition = "top",
@@ -5602,7 +5603,7 @@ export function FAQRender({
   showNumbers = false,
   numberStyle = "circle",
   numberColor = "#ffffff",
-  numberBackgroundColor = "#3b82f6",
+  numberBackgroundColor = "",
   
   // Helpful Section
   showHelpful = false,
@@ -5621,7 +5622,7 @@ export function FAQRender({
   // Decorative Elements
   showDecorators = false,
   decoratorStyle = "dots",
-  decoratorColor = "#3b82f6",
+  decoratorColor = "",
   decoratorPosition = "top-right",
   
   // Background
@@ -6372,7 +6373,7 @@ export function StatsRender({
   subtitleColor,
   descriptionColor,
   badgeStyle = "pill",
-  badgeColor = "#3b82f6",
+  badgeColor = "",
   badgeTextColor = "#ffffff",
   
   // Stats Items
@@ -6403,8 +6404,8 @@ export function StatsRender({
   iconPosition = "top",
   iconSize = "lg",
   iconStyle = "default",
-  iconBackgroundColor = "#3b82f620",
-  defaultIconColor = "#3b82f6",
+  iconBackgroundColor = "",
+  defaultIconColor = "",
   
   // Counter Animation
   animateNumbers = false,
@@ -6419,7 +6420,7 @@ export function StatsRender({
   backgroundColor = "#111827",
   cardBackgroundColor = "rgba(255,255,255,0.05)",
   cardHoverBackgroundColor,
-  highlightedCardBackground = "#3b82f620",
+  highlightedCardBackground = "",
   cardBorder = false,
   cardBorderColor = "#ffffff20",
   cardBorderWidth = "1",
@@ -6430,7 +6431,7 @@ export function StatsRender({
   hoverEffect = "lift",
   
   // Accent & Dividers
-  accentColor = "#3b82f6",
+  accentColor = "",
   textColor = "#ffffff",
   showDividers = false,
   dividerStyle = "solid",
@@ -6464,7 +6465,7 @@ export function StatsRender({
   // Decorative Elements
   showDecorators = false,
   decoratorStyle = "blur",
-  decoratorColor = "#3b82f6",
+  decoratorColor = "",
   decoratorPosition = "both-sides",
   
   // Animation
@@ -7195,7 +7196,7 @@ export function TeamRender({
   subtitleColor,
   descriptionColor,
   badgeStyle = "pill",
-  badgeColor = "#3b82f6",
+  badgeColor = "",
   badgeTextColor = "#ffffff",
   
   // Team Members
@@ -7211,7 +7212,7 @@ export function TeamRender({
   backgroundColor = "#ffffff",
   cardBackgroundColor = "#f9fafb",
   cardHoverBackgroundColor,
-  featuredCardBackground = "#3b82f610",
+  featuredCardBackground = "",
   cardBorder = false,
   cardBorderColor = "#e5e7eb",
   cardBorderWidth = "1",
@@ -7225,7 +7226,7 @@ export function TeamRender({
   imageSize = "lg",
   imageShape = "circle",
   imageBorder = false,
-  imageBorderColor = "#3b82f6",
+  imageBorderColor = "",
   imageBorderWidth = "3",
   imagePosition = "top",
   showImageOverlay = false,
@@ -7256,7 +7257,7 @@ export function TeamRender({
   socialSize = "md",
   socialStyle = "icons",
   socialColor = "#9ca3af",
-  socialHoverColor = "#3b82f6",
+  socialHoverColor = "",
   showLinkedIn = true,
   showTwitter = true,
   showInstagram = false,
@@ -7268,8 +7269,8 @@ export function TeamRender({
   // Skills
   showSkills = false,
   skillStyle = "tags",
-  skillColor = "#3b82f6",
-  skillBackgroundColor = "#3b82f620",
+  skillColor = "",
+  skillBackgroundColor = "",
   maxSkillsShown = 3,
   
   // Location
@@ -7309,7 +7310,7 @@ export function TeamRender({
   // Decorative Elements
   showDecorators = false,
   decoratorStyle = "blur",
-  decoratorColor = "#3b82f6",
+  decoratorColor = "",
   decoratorPosition = "both-sides",
   
   // Animation
@@ -7334,7 +7335,7 @@ export function TeamRender({
   
   // Text colors
   textColor,
-  accentColor = "#3b82f6",
+  accentColor = "",
   
   id,
   className = "",
@@ -8090,7 +8091,7 @@ export function GalleryRender({
   subtitleColor,
   descriptionColor,
   badgeStyle = "pill",
-  badgeColor = "#3b82f6",
+  badgeColor = "",
   badgeTextColor = "#ffffff",
   
   // Images
@@ -8175,7 +8176,7 @@ export function GalleryRender({
   // Decorative
   showDecorators = false,
   decoratorStyle = "blur",
-  decoratorColor = "#3b82f6",
+  decoratorColor = "",
   decoratorPosition = "both-sides",
   
   // Animation
@@ -8200,7 +8201,7 @@ export function GalleryRender({
   
   // Colors
   textColor,
-  accentColor = "#3b82f6",
+  accentColor = "",
   
   id,
   className = "",
@@ -8766,7 +8767,7 @@ function NavbarWithMenu({
   ctaText,
   ctaLink = "#",
   ctaVariant = "solid",
-  ctaColor = "#3b82f6",
+  ctaColor = "",
   ctaSize = "md",
   ctaRadius = "md",
   showCtaOnMobile = true,
@@ -9032,7 +9033,7 @@ export function FooterRender({
   textColor = "#ffffff",
   linkColor = "#94a3b8",
   linkHoverColor = "#ffffff",
-  accentColor = "#3b82f6",
+  accentColor = "",
   variant = "columns",
   paddingY = "lg",
   id,
@@ -9151,7 +9152,7 @@ export function SocialLinksRender({
   size = "md",
   variant = "icons",
   color = "#6b7280",
-  hoverColor = "#3b82f6",
+  hoverColor = "",
   gap = "md",
   id,
   className = "",
@@ -9307,7 +9308,7 @@ export function FormRender({
   submitVariant = "primary",
   submitSize = "md",
   submitFullWidth = false,
-  submitColor = "#3b82f6",
+  submitColor = "",
   submitPosition = "left",
   
   // Reset Button
@@ -9709,7 +9710,7 @@ export function FormFieldRender({
   
   // Border & Colors
   borderColor = "#d1d5db",
-  focusBorderColor = "#3b82f6",
+  focusBorderColor = "",
   backgroundColor = "#ffffff",
   textColor,
   borderRadius = "lg",
@@ -9898,7 +9899,7 @@ export function FormFieldRender({
             required={required}
             disabled={disabled}
             className="w-4 h-4 rounded"
-            style={{ accentColor: focusBorderColor || "#3b82f6" }}
+            style={{ accentColor: focusBorderColor || "var(--brand-primary, #3b82f6)" }}
             onChange={handleChange}
           />
           {label && !hideLabel && (
@@ -10107,7 +10108,7 @@ export function ContactFormRender({
   const shadowClasses = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" }[shadow];
   // Detect if we're on a dark background
   const isDark = backgroundColor ? parseInt(backgroundColor.replace('#','').substring(0,2), 16) < 100 : false;
-  const resolvedButtonColor = buttonColor || (isDark ? "#e5a956" : "#3b82f6");
+  const resolvedButtonColor = buttonColor || (isDark ? "#e5a956" : "var(--brand-primary, #3b82f6)");
   const resolvedTextColor = textColor || (isDark ? "#f9fafb" : "#1f2937");
   const resolvedSubtitleColor = isDark ? "#9ca3af" : "#6b7280";
   const resolvedInputBg = inputBackgroundColor || (isDark ? "#374151" : "#ffffff");
@@ -10166,7 +10167,7 @@ export function NewsletterRender({
   buttonText = "Subscribe",
   variant = "inline",
   backgroundColor,
-  buttonColor = "#3b82f6",
+  buttonColor = "",
   textColor,
   size = "md",
   successMessage,
@@ -10333,7 +10334,7 @@ export function CountdownRender({
   backgroundColor,
   cardBackgroundColor = "#f3f4f6",
   textColor,
-  accentColor = "#3b82f6",
+  accentColor = "",
   showLabels = true,
   id,
   className = "",
@@ -10406,7 +10407,7 @@ export function PricingRender({
   columns = 3,
   backgroundColor = "#ffffff",
   cardBackgroundColor = "#ffffff",
-  popularBorderColor = "#3b82f6",
+  popularBorderColor = "",
   textColor,
   paddingY = "lg",
   id,
@@ -10517,7 +10518,7 @@ export function AccordionRender({
   iconPosition = "right",
   backgroundColor = "#ffffff",
   borderColor = "#e5e7eb",
-  activeColor = "#3b82f6",
+  activeColor = "",
   accentColor,
   iconColor,
   textColor,
@@ -10639,7 +10640,7 @@ export function TabsRender({
   className = "",
 }: TabsProps) {
   const [activeTab, setActiveTab] = React.useState(defaultTab);
-  const resolvedActiveTabBg = activeTabColor || activeColor || accentColor || "#3b82f6";
+  const resolvedActiveTabBg = activeTabColor || activeColor || accentColor || "var(--brand-primary, #3b82f6)";
   const resolvedActiveTabText = activeTabTextColor || "#ffffff";
   const resolvedInactiveTabBg = inactiveTabColor || "transparent";
   const resolvedInactiveTabText = inactiveTabTextColor || accentColor || textColor || "#6b7280";
@@ -10900,7 +10901,7 @@ export function ProgressRender({
   showValue = false,
   size = "md",
   variant = "default",
-  color = "#3b82f6",
+  color = "",
   backgroundColor = "#e5e7eb",
   rounded = true,
   animate = false,
@@ -10924,7 +10925,7 @@ export function ProgressRender({
           style={{
             width: `${percentage}%`,
             backgroundColor: variant === "gradient" ? undefined : color,
-            backgroundImage: variant === "gradient" ? `linear-gradient(90deg, ${color}, #8b5cf6)` : undefined,
+            backgroundImage: variant === "gradient" ? `linear-gradient(90deg, ${color}, var(--brand-secondary, #8b5cf6))` : undefined,
           }}
         />
       </div>
@@ -10962,7 +10963,7 @@ export function AlertRender({
   onClose,
 }: AlertProps) {
   const variantStyles: Record<string, { bg: string; border: string; text: string; iconColor: string }> = {
-    info: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-800", iconColor: "text-blue-500" },
+    info: { bg: "bg-sky-50", border: "border-sky-200", text: "text-sky-800", iconColor: "text-sky-500" },
     success: { bg: "bg-green-50", border: "border-green-200", text: "text-green-800", iconColor: "text-green-500" },
     warning: { bg: "bg-yellow-50", border: "border-yellow-200", text: "text-yellow-800", iconColor: "text-yellow-500" },
     error: { bg: "bg-red-50", border: "border-red-200", text: "text-red-800", iconColor: "text-red-500" },
@@ -11241,7 +11242,7 @@ export function AnnouncementBarRender({
     success: "bg-green-600 text-white",
     warning: "bg-yellow-500 text-black",
     error: "bg-red-600 text-white",
-    info: "bg-blue-600 text-white",
+    info: "bg-sky-600 text-white",
     gradient: "bg-gradient-to-r from-purple-600 via-pink-600 to-red-500 text-white",
   }[variant];
 
@@ -11710,7 +11711,7 @@ export function ComparisonTableRender({
   title,
   subtitle,
   variant = "simple",
-  highlightColor = "bg-blue-50 border-blue-500",
+  highlightColor = "bg-sky-50 border-sky-500",
   checkColor = "text-green-500",
   crossColor = "text-gray-300",
   stickyHeader = true,
@@ -11938,7 +11939,7 @@ export interface CardFlip3DProps {
 }
 
 export function CardFlip3DRender({
-  frontBackgroundColor = "#6366f1",
+  frontBackgroundColor = "",
   backBackgroundColor = "#ec4899",
   frontImage,
   backImage,
@@ -12237,7 +12238,7 @@ export interface ParticleBackgroundProps {
 
 export function ParticleBackgroundRender({
   particleCount = 50,
-  particleColor = "#6366f1",
+  particleColor = "",
   particleSize = 4,
   speed = 1,
   connected = true,

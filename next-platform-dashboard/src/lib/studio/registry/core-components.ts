@@ -638,8 +638,8 @@ const buttonComponents: ComponentDefinition[] = [
       hoverBorderColor: { type: "color", label: "Hover Border Color" },
       
       // Gradient
-      gradientFrom: { type: "color", label: "Gradient Start", defaultValue: "#3b82f6" },
-      gradientTo: { type: "color", label: "Gradient End", defaultValue: "#8b5cf6" },
+      gradientFrom: { type: "color", label: "Gradient Start", defaultValue: "" },
+      gradientTo: { type: "color", label: "Gradient End", defaultValue: "" },
       gradientDirection: {
         type: "select",
         label: "Gradient Direction",
@@ -686,7 +686,7 @@ const buttonComponents: ComponentDefinition[] = [
         options: presetOptions.shadow,
       },
       glowOnHover: { type: "toggle", label: "Glow on Hover" },
-      glowColor: { type: "color", label: "Glow Color", defaultValue: "#3b82f6" },
+      glowColor: { type: "color", label: "Glow Color", defaultValue: "" },
       
       // Width
       fullWidth: { type: "toggle", label: "Full Width", defaultValue: false },
@@ -767,7 +767,7 @@ const buttonComponents: ComponentDefinition[] = [
       },
       
       // Focus
-      focusRingColor: { type: "color", label: "Focus Ring Color", defaultValue: "#3b82f6" },
+      focusRingColor: { type: "color", label: "Focus Ring Color", defaultValue: "" },
       
       // Icon Styling
       iconSize: {
@@ -1156,7 +1156,7 @@ const mediaComponents: ComponentDefinition[] = [
       // Badge
       showBadge: { type: "toggle", label: "Show Badge" },
       badgeText: { type: "text", label: "Badge Text" },
-      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#3b82f6" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "" },
       badgePosition: {
         type: "select",
         label: "Badge Position",
@@ -1356,7 +1356,7 @@ const mediaComponents: ComponentDefinition[] = [
         defaultValue: "lazy",
       },
       showLoadingSpinner: { type: "toggle", label: "Show Loading Spinner" },
-      loadingSpinnerColor: { type: "color", label: "Spinner Color", defaultValue: "#3b82f6" },
+      loadingSpinnerColor: { type: "color", label: "Spinner Color", defaultValue: "" },
       
       // Caption
       caption: { type: "text", label: "Caption" },
@@ -1765,7 +1765,7 @@ const sectionComponents: ComponentDefinition[] = [
       },
       // === Badge ===
       badge: { type: "text", label: "Badge Text" },
-      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#3b82f6" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "" },
       badgeTextColor: { type: "color", label: "Badge Text Color", defaultValue: "#ffffff" },
       badgeStyle: {
         type: "select",
@@ -1780,7 +1780,7 @@ const sectionComponents: ComponentDefinition[] = [
       // === Primary CTA ===
       primaryButtonText: { type: "text", label: "Primary Button", defaultValue: "Get Started" },
       primaryButtonLink: { type: "link", label: "Primary Button Link" },
-      primaryButtonColor: { type: "color", label: "Primary Button Color", defaultValue: "#3b82f6" },
+      primaryButtonColor: { type: "color", label: "Primary Button Color", defaultValue: "" },
       primaryButtonTextColor: { type: "color", label: "Primary Button Text", defaultValue: "#ffffff" },
       primaryButtonStyle: {
         type: "select",
@@ -2201,7 +2201,7 @@ const sectionComponents: ComponentDefinition[] = [
       titleWeight: "bold",
       titleAlign: "center",
       primaryButtonText: "Get Started",
-      primaryButtonColor: "#3b82f6",
+      primaryButtonColor: "",
       primaryButtonStyle: "solid",
       primaryButtonSize: "lg",
       primaryButtonRadius: "lg",
@@ -2282,7 +2282,7 @@ const sectionComponents: ComponentDefinition[] = [
         ],
         defaultValue: "pill",
       },
-      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#3b82f6" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "" },
       badgeTextColor: { type: "color", label: "Badge Text Color", defaultValue: "#ffffff" },
       
       // Features
@@ -2359,7 +2359,7 @@ const sectionComponents: ComponentDefinition[] = [
       backgroundColor: { type: "color", label: "Background Color", defaultValue: "#ffffff" },
       cardBackgroundColor: { type: "color", label: "Card Background", defaultValue: "#ffffff" },
       cardHoverBackgroundColor: { type: "color", label: "Card Hover Background" },
-      featuredCardBackground: { type: "color", label: "Featured Card Background", defaultValue: "#3b82f610" },
+      featuredCardBackground: { type: "color", label: "Featured Card Background", defaultValue: "" },
       showBorder: { type: "toggle", label: "Show Card Border", defaultValue: true },
       cardBorderColor: { type: "color", label: "Card Border Color", defaultValue: "#e5e7eb" },
       cardBorderWidth: {
@@ -2479,10 +2479,10 @@ const sectionComponents: ComponentDefinition[] = [
         defaultValue: "top",
       },
       showIconBackground: { type: "toggle", label: "Show Icon Background", defaultValue: true },
-      defaultIconColor: { type: "color", label: "Default Icon Color", defaultValue: "#3b82f6" },
+      defaultIconColor: { type: "color", label: "Default Icon Color", defaultValue: "" },
       defaultIconBackgroundColor: { type: "color", label: "Default Icon Background" },
       iconBorder: { type: "toggle", label: "Show Icon Border" },
-      iconBorderColor: { type: "color", label: "Icon Border Color", defaultValue: "#3b82f6" },
+      iconBorderColor: { type: "color", label: "Icon Border Color", defaultValue: "" },
       
       // Title & Description
       featureTitleSize: {
@@ -2534,8 +2534,8 @@ const sectionComponents: ComponentDefinition[] = [
         ],
         defaultValue: "arrow",
       },
-      linkColor: { type: "color", label: "Link Color", defaultValue: "#3b82f6" },
-      linkHoverColor: { type: "color", label: "Link Hover Color", defaultValue: "#2563eb" },
+      linkColor: { type: "color", label: "Link Color", defaultValue: "" },
+      linkHoverColor: { type: "color", label: "Link Hover Color", defaultValue: "" },
       defaultLinkText: { type: "text", label: "Default Link Text", defaultValue: "Learn more" },
       
       // Numbering
@@ -2555,7 +2555,7 @@ const sectionComponents: ComponentDefinition[] = [
       
       // Featured Highlight
       highlightFeatured: { type: "toggle", label: "Highlight Featured Items" },
-      featuredBorderColor: { type: "color", label: "Featured Border Color", defaultValue: "#3b82f6" },
+      featuredBorderColor: { type: "color", label: "Featured Border Color", defaultValue: "" },
       featuredBadgeText: { type: "text", label: "Featured Badge Text", defaultValue: "Popular" },
       
       // Section Sizing
@@ -2661,7 +2661,7 @@ const sectionComponents: ComponentDefinition[] = [
         ],
         defaultValue: "blur",
       },
-      decoratorColor: { type: "color", label: "Decorator Color", defaultValue: "#3b82f6" },
+      decoratorColor: { type: "color", label: "Decorator Color", defaultValue: "" },
       decoratorPosition: {
         type: "select",
         label: "Decorator Position",
@@ -2725,7 +2725,7 @@ const sectionComponents: ComponentDefinition[] = [
       
       // Colors
       textColor: { type: "color", label: "Text Color" },
-      accentColor: { type: "color", label: "Accent Color", defaultValue: "#3b82f6" },
+      accentColor: { type: "color", label: "Accent Color", defaultValue: "" },
     },
     fieldGroups: [
       { id: "header", label: "Header", icon: "type", fields: ["title", "subtitle", "description", "badge", "badgeIcon"], defaultExpanded: true },
@@ -2754,7 +2754,7 @@ const sectionComponents: ComponentDefinition[] = [
       showShadow: true,
       backgroundColor: "#ffffff",
       cardBackgroundColor: "#ffffff",
-      accentColor: "#3b82f6",
+      accentColor: "",
       features: [
         { icon: "⚡", title: "Lightning Fast", description: "Optimized for performance with sub-second load times", link: "#", isFeatured: false },
         { icon: "🛡️", title: "Enterprise Security", description: "Bank-level encryption and security protocols", link: "#", isFeatured: true },
@@ -2851,7 +2851,7 @@ const sectionComponents: ComponentDefinition[] = [
       },
       // === Badge ===
       badge: { type: "text", label: "Badge Text" },
-      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#3b82f6" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "" },
       badgeTextColor: { type: "color", label: "Badge Text Color", defaultValue: "#ffffff" },
       badgeStyle: {
         type: "select",
@@ -2909,8 +2909,8 @@ const sectionComponents: ComponentDefinition[] = [
         ],
         defaultValue: "solid",
       },
-      buttonGradientFrom: { type: "color", label: "Button Gradient Start", defaultValue: "#3b82f6" },
-      buttonGradientTo: { type: "color", label: "Button Gradient End", defaultValue: "#8b5cf6" },
+      buttonGradientFrom: { type: "color", label: "Button Gradient Start", defaultValue: "" },
+      buttonGradientTo: { type: "color", label: "Button Gradient End", defaultValue: "" },
       buttonIcon: {
         type: "select",
         label: "Button Icon",
@@ -3061,10 +3061,10 @@ const sectionComponents: ComponentDefinition[] = [
         defaultValue: "md",
       },
       // === Background ===
-      backgroundColor: { type: "color", label: "Background Color", defaultValue: "#3b82f6" },
+      backgroundColor: { type: "color", label: "Background Color", defaultValue: "" },
       backgroundGradient: { type: "toggle", label: "Use Gradient Background", defaultValue: false },
-      backgroundGradientFrom: { type: "color", label: "Gradient Start", defaultValue: "#3b82f6" },
-      backgroundGradientTo: { type: "color", label: "Gradient End", defaultValue: "#8b5cf6" },
+      backgroundGradientFrom: { type: "color", label: "Gradient Start", defaultValue: "" },
+      backgroundGradientTo: { type: "color", label: "Gradient End", defaultValue: "" },
       backgroundGradientDirection: {
         type: "select",
         label: "Gradient Direction",
@@ -3384,7 +3384,7 @@ const sectionComponents: ComponentDefinition[] = [
       description: "Join thousands of satisfied customers using our platform today.",
       buttonText: "Get Started Free",
       variant: "centered",
-      backgroundColor: "#3b82f6",
+      backgroundColor: "",
       textColor: "#ffffff",
     },
     ai: {
@@ -3779,7 +3779,7 @@ const sectionComponents: ComponentDefinition[] = [
         ],
         defaultValue: "quotes",
       },
-      decoratorColor: { type: "color", label: "Decorator Color", defaultValue: "#3b82f6" },
+      decoratorColor: { type: "color", label: "Decorator Color", defaultValue: "" },
       decoratorOpacity: {
         type: "number",
         label: "Decorator Opacity %",
@@ -3789,7 +3789,7 @@ const sectionComponents: ComponentDefinition[] = [
       },
       // === General ===
       textColor: { type: "color", label: "Text Color" },
-      accentColor: { type: "color", label: "Accent Color", defaultValue: "#3b82f6" },
+      accentColor: { type: "color", label: "Accent Color", defaultValue: "" },
     },
     fieldGroups: [
       { id: "header", label: "Header", fields: ["title", "titleSize", "titleColor", "titleWeight", "titleAlign", "subtitle", "subtitleColor", "description", "descriptionColor"] },
@@ -4239,7 +4239,7 @@ const sectionComponents: ComponentDefinition[] = [
       iconPosition: "right",
       iconStyle: "chevron",
       cardBorderRadius: "lg",
-      accentColor: "#3b82f6",
+      accentColor: "",
       paddingY: "lg",
     },
     ai: {
@@ -4637,7 +4637,7 @@ const sectionComponents: ComponentDefinition[] = [
       valueSize: "xl",
       backgroundColor: "#111827",
       textColor: "#ffffff",
-      accentColor: "#3b82f6",
+      accentColor: "",
       paddingY: "lg",
       headerAlign: "center",
     },
@@ -4715,7 +4715,7 @@ const sectionComponents: ComponentDefinition[] = [
         ],
         defaultValue: "pill",
       },
-      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#3b82f6" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "" },
       badgeTextColor: { type: "color", label: "Badge Text Color", defaultValue: "#ffffff" },
       
       // Team Members
@@ -4798,7 +4798,7 @@ const sectionComponents: ComponentDefinition[] = [
       backgroundColor: { type: "color", label: "Background Color", defaultValue: "#ffffff" },
       cardBackgroundColor: { type: "color", label: "Card Background", defaultValue: "#f9fafb" },
       cardHoverBackgroundColor: { type: "color", label: "Card Hover Background" },
-      featuredCardBackground: { type: "color", label: "Featured Card Background", defaultValue: "#3b82f610" },
+      featuredCardBackground: { type: "color", label: "Featured Card Background", defaultValue: "" },
       cardBorder: { type: "toggle", label: "Show Card Border" },
       cardBorderColor: { type: "color", label: "Card Border Color", defaultValue: "#e5e7eb" },
       cardBorderWidth: {
@@ -4900,7 +4900,7 @@ const sectionComponents: ComponentDefinition[] = [
         defaultValue: "circle",
       },
       imageBorder: { type: "toggle", label: "Show Image Border" },
-      imageBorderColor: { type: "color", label: "Image Border Color", defaultValue: "#3b82f6" },
+      imageBorderColor: { type: "color", label: "Image Border Color", defaultValue: "" },
       imageBorderWidth: {
         type: "select",
         label: "Image Border Width",
@@ -5025,7 +5025,7 @@ const sectionComponents: ComponentDefinition[] = [
         defaultValue: "icons",
       },
       socialColor: { type: "color", label: "Social Icon Color", defaultValue: "#9ca3af" },
-      socialHoverColor: { type: "color", label: "Social Hover Color", defaultValue: "#3b82f6" },
+      socialHoverColor: { type: "color", label: "Social Hover Color", defaultValue: "" },
       showLinkedIn: { type: "toggle", label: "Show LinkedIn", defaultValue: true },
       showTwitter: { type: "toggle", label: "Show Twitter", defaultValue: true },
       showInstagram: { type: "toggle", label: "Show Instagram" },
@@ -5046,8 +5046,8 @@ const sectionComponents: ComponentDefinition[] = [
         ],
         defaultValue: "tags",
       },
-      skillColor: { type: "color", label: "Skill Text Color", defaultValue: "#3b82f6" },
-      skillBackgroundColor: { type: "color", label: "Skill Background", defaultValue: "#3b82f620" },
+      skillColor: { type: "color", label: "Skill Text Color", defaultValue: "" },
+      skillBackgroundColor: { type: "color", label: "Skill Background", defaultValue: "" },
       maxSkillsShown: { type: "number", label: "Max Skills Shown", min: 1, max: 10, defaultValue: 3 },
       
       // Location
@@ -5197,7 +5197,7 @@ const sectionComponents: ComponentDefinition[] = [
         ],
         defaultValue: "blur",
       },
-      decoratorColor: { type: "color", label: "Decorator Color", defaultValue: "#3b82f6" },
+      decoratorColor: { type: "color", label: "Decorator Color", defaultValue: "" },
       decoratorPosition: {
         type: "select",
         label: "Decorator Position",
@@ -5262,7 +5262,7 @@ const sectionComponents: ComponentDefinition[] = [
       
       // Colors
       textColor: { type: "color", label: "Text Color" },
-      accentColor: { type: "color", label: "Accent Color", defaultValue: "#3b82f6" },
+      accentColor: { type: "color", label: "Accent Color", defaultValue: "" },
     },
     fieldGroups: [
       { id: "header", label: "Header", icon: "type", fields: ["title", "subtitle", "description", "badge", "badgeIcon"], defaultExpanded: true },
@@ -5293,7 +5293,7 @@ const sectionComponents: ComponentDefinition[] = [
       showSocial: true,
       backgroundColor: "#ffffff",
       cardBackgroundColor: "#f9fafb",
-      accentColor: "#3b82f6",
+      accentColor: "",
       members: [
         { name: "Alex Johnson", role: "CEO & Founder", bio: "Visionary leader with 15+ years of experience", image: "/placeholder-avatar.svg", linkedin: "#", twitter: "#", email: "alex@example.com" },
         { name: "Sarah Chen", role: "CTO", bio: "Tech innovator passionate about AI", image: "/placeholder-avatar.svg", linkedin: "#", github: "#", email: "sarah@example.com" },
@@ -5360,7 +5360,7 @@ const sectionComponents: ComponentDefinition[] = [
         ],
         defaultValue: "pill",
       },
-      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#3b82f6" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "" },
       badgeTextColor: { type: "color", label: "Badge Text Color", defaultValue: "#ffffff" },
       
       // Images
@@ -5731,7 +5731,7 @@ const sectionComponents: ComponentDefinition[] = [
         ],
         defaultValue: "blur",
       },
-      decoratorColor: { type: "color", label: "Decorator Color", defaultValue: "#3b82f6" },
+      decoratorColor: { type: "color", label: "Decorator Color", defaultValue: "" },
       decoratorPosition: {
         type: "select",
         label: "Decorator Position",
@@ -5803,7 +5803,7 @@ const sectionComponents: ComponentDefinition[] = [
       
       // Colors
       textColor: { type: "color", label: "Text Color" },
-      accentColor: { type: "color", label: "Accent Color", defaultValue: "#3b82f6" },
+      accentColor: { type: "color", label: "Accent Color", defaultValue: "" },
     },
     fieldGroups: [
       { id: "header", label: "Header", icon: "type", fields: ["title", "subtitle", "description", "badge", "badgeIcon"], defaultExpanded: true },
@@ -5833,7 +5833,7 @@ const sectionComponents: ComponentDefinition[] = [
       hoverEffect: "zoom",
       showCaption: true,
       backgroundColor: "#ffffff",
-      accentColor: "#3b82f6",
+      accentColor: "",
       images: [
         { src: "/placeholder.svg", alt: "Gallery Image 1", caption: "Beautiful landscape" },
         { src: "/placeholder.svg", alt: "Gallery Image 2", caption: "Modern architecture" },
@@ -5994,7 +5994,7 @@ const navigationComponents: ComponentDefinition[] = [
         ],
         defaultValue: "solid",
       },
-      ctaColor: { type: "color", label: "CTA Color", defaultValue: "#3b82f6" },
+      ctaColor: { type: "color", label: "CTA Color", defaultValue: "" },
       ctaTextColor: { type: "color", label: "CTA Text Color", defaultValue: "#ffffff" },
       ctaSize: {
         type: "select",
@@ -6237,7 +6237,7 @@ const navigationComponents: ComponentDefinition[] = [
         label: "Progress Height (px)",
         defaultValue: 3,
       },
-      scrollProgressColor: { type: "color", label: "Progress Color", defaultValue: "#3b82f6" },
+      scrollProgressColor: { type: "color", label: "Progress Color", defaultValue: "" },
       scrollProgressBackground: { type: "color", label: "Progress Background", defaultValue: "transparent" },
       scrollProgressStyle: {
         type: "select",
@@ -6282,7 +6282,7 @@ const navigationComponents: ComponentDefinition[] = [
       linkHoverEffect: "opacity",
       ctaText: "Get Started",
       ctaStyle: "solid",
-      ctaColor: "#3b82f6",
+      ctaColor: "",
       ctaTextColor: "#ffffff",
       ctaSize: "md",
       ctaBorderRadius: "md",
@@ -6376,7 +6376,7 @@ const navigationComponents: ComponentDefinition[] = [
       },
       newsletterPlaceholder: { type: "text", label: "Email Placeholder", defaultValue: "Enter your email" },
       newsletterButtonText: { type: "text", label: "Subscribe Button", defaultValue: "Subscribe" },
-      newsletterButtonColor: { type: "color", label: "Subscribe Button Color", defaultValue: "#3b82f6" },
+      newsletterButtonColor: { type: "color", label: "Subscribe Button Color", defaultValue: "" },
       // === Social Links ===
       showSocialLinks: { type: "toggle", label: "Show Social Links", defaultValue: true },
       socialLinksTitle: { type: "text", label: "Social Links Title", defaultValue: "Follow Us" },
@@ -6548,7 +6548,7 @@ const navigationComponents: ComponentDefinition[] = [
       newsletterDescription: "Subscribe to our newsletter for the latest updates.",
       newsletterPlaceholder: "Enter your email",
       newsletterButtonText: "Subscribe",
-      newsletterButtonColor: "#3b82f6",
+      newsletterButtonColor: "",
       showSocialLinks: true,
       socialLinksTitle: "Follow Us",
       socialLinks: [
@@ -6860,7 +6860,7 @@ const formComponents: ComponentDefinition[] = [
         defaultValue: "md",
       },
       submitFullWidth: { type: "toggle", label: "Full Width Submit", defaultValue: false },
-      submitColor: { type: "color", label: "Submit Color", defaultValue: "#3b82f6" },
+      submitColor: { type: "color", label: "Submit Color", defaultValue: "" },
       submitPosition: {
         type: "select",
         label: "Submit Position",
@@ -6913,7 +6913,7 @@ const formComponents: ComponentDefinition[] = [
       submitText: "Submit",
       submitVariant: "primary",
       submitSize: "md",
-      submitColor: "#3b82f6",
+      submitColor: "",
     },
     ai: {
       description: "A premium form container with built-in submit button, validation states, success/error messages, and flexible layouts including vertical, horizontal, and grid options",
@@ -7112,7 +7112,7 @@ const formComponents: ComponentDefinition[] = [
       backgroundColor: { type: "color", label: "Background Color", defaultValue: "#ffffff" },
       textColor: { type: "color", label: "Text Color" },
       borderColor: { type: "color", label: "Border Color", defaultValue: "#d1d5db" },
-      focusBorderColor: { type: "color", label: "Focus Border Color", defaultValue: "#3b82f6" },
+      focusBorderColor: { type: "color", label: "Focus Border Color", defaultValue: "" },
       
       // Icon
       iconEmoji: { type: "text", label: "Icon Emoji" },
@@ -7479,7 +7479,7 @@ const interactiveComponents: ComponentDefinition[] = [
         { label: "Medium", value: "md" },
         { label: "Full", value: "full" },
       ], defaultValue: "sm" },
-      activeThumbnailBorder: { type: "color", label: "Active Thumbnail Border", defaultValue: "#3b82f6" },
+      activeThumbnailBorder: { type: "color", label: "Active Thumbnail Border", defaultValue: "" },
       // === Counter ===
       showCounter: { type: "toggle", label: "Show Counter", defaultValue: false },
       counterPosition: { type: "select", label: "Counter Position", options: [
@@ -7499,7 +7499,7 @@ const interactiveComponents: ComponentDefinition[] = [
         { label: "Top", value: "top" },
         { label: "Bottom", value: "bottom" },
       ], defaultValue: "bottom" },
-      progressColor: { type: "color", label: "Progress Color", defaultValue: "#3b82f6" },
+      progressColor: { type: "color", label: "Progress Color", defaultValue: "" },
       progressHeight: { type: "number", label: "Progress Height (px)", min: 2, max: 10, defaultValue: 3 },
       // === Captions ===
       showCaptions: { type: "toggle", label: "Show Captions", defaultValue: true },
@@ -7636,7 +7636,7 @@ const interactiveComponents: ComponentDefinition[] = [
       numberColor: { type: "color", label: "Number Color", defaultValue: "#1f2937" },
       labelColor: { type: "color", label: "Label Color", defaultValue: "#6b7280" },
       separatorColor: { type: "color", label: "Separator Color", defaultValue: "#9ca3af" },
-      accentColor: { type: "color", label: "Accent Color", defaultValue: "#3b82f6" },
+      accentColor: { type: "color", label: "Accent Color", defaultValue: "" },
       // === Size ===
       size: { type: "select", label: "Size", options: [
         { label: "Small", value: "sm" },
@@ -8114,7 +8114,7 @@ const interactiveComponents: ComponentDefinition[] = [
         { label: "All", value: "all" },
       ], defaultValue: "border" },
       popularBadgeText: { type: "text", label: "Popular Badge Text", defaultValue: "Most Popular" },
-      popularBorderColor: { type: "color", label: "Popular Border Color", defaultValue: "#3b82f6" },
+      popularBorderColor: { type: "color", label: "Popular Border Color", defaultValue: "" },
       popularBackgroundColor: { type: "color", label: "Popular Background" },
       popularScale: { type: "number", label: "Popular Scale", min: 1, max: 1.2, step: 0.02, defaultValue: 1.05 },
       popularGlow: { type: "toggle", label: "Popular Glow", defaultValue: false },
@@ -8393,7 +8393,7 @@ const interactiveComponents: ComponentDefinition[] = [
         { label: "Lifted", value: "lifted" },
       ], defaultValue: "underline" },
       backgroundColor: { type: "color", label: "Tabs Background" },
-      activeColor: { type: "color", label: "Active Tab Color", defaultValue: "#3b82f6" },
+      activeColor: { type: "color", label: "Active Tab Color", defaultValue: "" },
       inactiveColor: { type: "color", label: "Inactive Tab Color" },
       activeBackgroundColor: { type: "color", label: "Active Tab Background" },
       hoverColor: { type: "color", label: "Hover Color" },
@@ -8431,7 +8431,7 @@ const interactiveComponents: ComponentDefinition[] = [
         { label: "Pill", value: "pill" },
         { label: "None", value: "none" },
       ], defaultValue: "underline" },
-      indicatorColor: { type: "color", label: "Indicator Color", defaultValue: "#3b82f6" },
+      indicatorColor: { type: "color", label: "Indicator Color", defaultValue: "" },
       indicatorHeight: { type: "select", label: "Indicator Height", options: [
         { label: "1px", value: "1" },
         { label: "2px", value: "2" },
@@ -8736,8 +8736,8 @@ const uiComponents: ComponentDefinition[] = [
       customColor: { type: "color", label: "Custom Background Color" },
       customTextColor: { type: "color", label: "Custom Text Color" },
       gradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
-      gradientFrom: { type: "color", label: "Gradient Start", defaultValue: "#3b82f6" },
-      gradientTo: { type: "color", label: "Gradient End", defaultValue: "#8b5cf6" },
+      gradientFrom: { type: "color", label: "Gradient Start", defaultValue: "" },
+      gradientTo: { type: "color", label: "Gradient End", defaultValue: "" },
       outline: { type: "toggle", label: "Outline Style", defaultValue: false },
       glass: { type: "toggle", label: "Glass Effect", defaultValue: false },
       // === Size & Shape ===
@@ -8980,7 +8980,7 @@ const uiComponents: ComponentDefinition[] = [
         { label: "2px", value: "2" },
         { label: "4px", value: "4" },
       ], defaultValue: "2" },
-      ringColor: { type: "color", label: "Ring Color", defaultValue: "#3b82f6" },
+      ringColor: { type: "color", label: "Ring Color", defaultValue: "" },
       ringOffset: { type: "select", label: "Ring Offset", options: [
         { label: "None", value: "0" },
         { label: "2px", value: "2" },
@@ -9137,11 +9137,11 @@ const uiComponents: ComponentDefinition[] = [
         { label: "Striped", value: "striped" },
         { label: "Segmented", value: "segmented" },
       ], defaultValue: "default" },
-      color: { type: "color", label: "Bar Color", defaultValue: "#3b82f6" },
+      color: { type: "color", label: "Bar Color", defaultValue: "" },
       trackColor: { type: "color", label: "Track Color", defaultValue: "#e5e7eb" },
       gradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
-      gradientFrom: { type: "color", label: "Gradient Start", defaultValue: "#3b82f6" },
-      gradientTo: { type: "color", label: "Gradient End", defaultValue: "#8b5cf6" },
+      gradientFrom: { type: "color", label: "Gradient Start", defaultValue: "" },
+      gradientTo: { type: "color", label: "Gradient End", defaultValue: "" },
       gradientDirection: { type: "select", label: "Gradient Direction", options: [
         { label: "To Right", value: "to-r" },
         { label: "To Left", value: "to-l" },
@@ -9209,7 +9209,7 @@ const uiComponents: ComponentDefinition[] = [
       size: "md",
       variant: "default",
       rounded: "full",
-      color: "#3b82f6",
+      color: "",
       trackColor: "#e5e7eb",
       animate: true,
     },
@@ -9625,10 +9625,10 @@ const marketingComponents: ComponentDefinition[] = [
         { label: "Medium", value: "md" },
         { label: "Large", value: "lg" },
       ], defaultValue: "md" },
-      backgroundColor: { type: "color", label: "Background Color", defaultValue: "#3b82f6" },
+      backgroundColor: { type: "color", label: "Background Color", defaultValue: "" },
       backgroundGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
-      backgroundGradientFrom: { type: "color", label: "Gradient Start", defaultValue: "#3b82f6" },
-      backgroundGradientTo: { type: "color", label: "Gradient End", defaultValue: "#8b5cf6" },
+      backgroundGradientFrom: { type: "color", label: "Gradient Start", defaultValue: "" },
+      backgroundGradientTo: { type: "color", label: "Gradient End", defaultValue: "" },
       backgroundGradientDirection: { type: "select", label: "Gradient Direction", options: [
         { label: "To Right", value: "to-r" },
         { label: "To Left", value: "to-l" },
@@ -9748,7 +9748,7 @@ const marketingComponents: ComponentDefinition[] = [
     defaultProps: {
       text: "🎉 Special offer! Get 20% off with code SAVE20",
       linkText: "Shop Now →",
-      backgroundColor: "#3b82f6",
+      backgroundColor: "",
       textColor: "#ffffff",
       closable: true,
       sticky: true,
@@ -9871,7 +9871,7 @@ const marketingComponents: ComponentDefinition[] = [
       backgroundGradientFrom: { type: "color", label: "Gradient Start", defaultValue: "#f3f4f6" },
       backgroundGradientTo: { type: "color", label: "Gradient End", defaultValue: "#ffffff" },
       textColor: { type: "color", label: "Text Color" },
-      accentColor: { type: "color", label: "Accent Color", defaultValue: "#3b82f6" },
+      accentColor: { type: "color", label: "Accent Color", defaultValue: "" },
       countColor: { type: "color", label: "Count Color" },
       labelColor: { type: "color", label: "Label Color" },
       // === Typography ===
@@ -9931,7 +9931,7 @@ const marketingComponents: ComponentDefinition[] = [
       badgeIcon: { type: "text", label: "Badge Icon (emoji)", defaultValue: "✓" },
       showIcon: { type: "toggle", label: "Show Icon", defaultValue: false },
       icon: { type: "text", label: "Icon (emoji)", defaultValue: "👥" },
-      iconColor: { type: "color", label: "Icon Color", defaultValue: "#3b82f6" },
+      iconColor: { type: "color", label: "Icon Color", defaultValue: "" },
       iconSize: { type: "select", label: "Icon Size", options: [
         { label: "Small", value: "sm" },
         { label: "Medium", value: "md" },
@@ -10104,7 +10104,7 @@ const marketingComponents: ComponentDefinition[] = [
         { label: "Large", value: "lg" },
         { label: "XL", value: "xl" },
       ], defaultValue: "md" },
-      iconColor: { type: "color", label: "Icon Color", defaultValue: "#3b82f6" },
+      iconColor: { type: "color", label: "Icon Color", defaultValue: "" },
       iconBackgroundColor: { type: "color", label: "Icon Background" },
       iconBackgroundShape: { type: "select", label: "Icon Background Shape", options: [
         { label: "None", value: "none" },
@@ -10282,7 +10282,7 @@ const marketingComponents: ComponentDefinition[] = [
         { label: "Outlined", value: "outlined" },
         { label: "Solid", value: "solid" },
       ], defaultValue: "pill" },
-      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#3b82f6" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "" },
       badgeTextColor: { type: "color", label: "Badge Text Color", defaultValue: "#ffffff" },
       // === Logos Array ===
       logos: { type: "array", label: "Logos", itemFields: {
@@ -10459,7 +10459,7 @@ const marketingComponents: ComponentDefinition[] = [
         { label: "Lines", value: "lines" },
         { label: "Blur", value: "blur" },
       ], defaultValue: "blur" },
-      decoratorColor: { type: "color", label: "Decorator Color", defaultValue: "#3b82f6" },
+      decoratorColor: { type: "color", label: "Decorator Color", defaultValue: "" },
       decoratorPosition: { type: "select", label: "Decorator Position", options: [
         { label: "Top Left", value: "top-left" },
         { label: "Top Right", value: "top-right" },
@@ -10598,10 +10598,10 @@ const marketingComponents: ComponentDefinition[] = [
         { label: "Shadow", value: "shadow" },
         { label: "Scale", value: "scale" },
       ], defaultValue: "background" },
-      highlightedColumnColor: { type: "color", label: "Highlighted Color", defaultValue: "#3b82f610" },
-      highlightedColumnBorder: { type: "color", label: "Highlighted Border", defaultValue: "#3b82f6" },
+      highlightedColumnColor: { type: "color", label: "Highlighted Color", defaultValue: "" },
+      highlightedColumnBorder: { type: "color", label: "Highlighted Border", defaultValue: "" },
       highlightedBadgeText: { type: "text", label: "Highlighted Badge", defaultValue: "Most Popular" },
-      highlightedBadgeColor: { type: "color", label: "Highlighted Badge Color", defaultValue: "#3b82f6" },
+      highlightedBadgeColor: { type: "color", label: "Highlighted Badge Color", defaultValue: "" },
       // === Row Style ===
       rowBackgroundColor: { type: "color", label: "Row Background", defaultValue: "#ffffff" },
       rowAlternateColor: { type: "color", label: "Alternate Row Color", defaultValue: "#f9fafb" },
@@ -10821,9 +10821,9 @@ const effectsComponents: ComponentDefinition[] = [
       frontSubtitle: { type: "text", label: "Front Subtitle" },
       frontDescription: { type: "textarea", label: "Front Description", defaultValue: "Hover to flip" },
       frontImage: { type: "image", label: "Front Image" },
-      frontBackgroundColor: { type: "color", label: "Front Color", defaultValue: "#6366f1" },
+      frontBackgroundColor: { type: "color", label: "Front Color", defaultValue: "" },
       frontGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
-      frontGradientFrom: { type: "color", label: "Gradient From", defaultValue: "#6366f1" },
+      frontGradientFrom: { type: "color", label: "Gradient From", defaultValue: "" },
       frontGradientTo: { type: "color", label: "Gradient To", defaultValue: "#ec4899" },
       frontIcon: { type: "text", label: "Front Icon (emoji)" },
       frontBadge: { type: "text", label: "Front Badge Text" },
@@ -10835,7 +10835,7 @@ const effectsComponents: ComponentDefinition[] = [
       backBackgroundColor: { type: "color", label: "Back Color", defaultValue: "#ec4899" },
       backGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
       backGradientFrom: { type: "color", label: "Gradient From", defaultValue: "#ec4899" },
-      backGradientTo: { type: "color", label: "Gradient To", defaultValue: "#6366f1" },
+      backGradientTo: { type: "color", label: "Gradient To", defaultValue: "" },
       backContent: { type: "textarea", label: "Rich Back Content (HTML)" },
       // === Flip Behavior ===
       flipOn: { type: "select", label: "Flip Trigger", options: [
@@ -10906,7 +10906,7 @@ const effectsComponents: ComponentDefinition[] = [
       ], defaultValue: "solid" },
       // === Effects ===
       hoverGlow: { type: "toggle", label: "Hover Glow", defaultValue: false },
-      glowColor: { type: "color", label: "Glow Color", defaultValue: "#6366f1" },
+      glowColor: { type: "color", label: "Glow Color", defaultValue: "" },
       glowIntensity: { type: "select", label: "Glow Intensity", options: [
         { label: "Subtle", value: "subtle" },
         { label: "Medium", value: "medium" },
@@ -10970,7 +10970,7 @@ const effectsComponents: ComponentDefinition[] = [
       frontDescription: "Hover to flip",
       backTitle: "Back Side",
       backDescription: "Amazing content here",
-      frontBackgroundColor: "#6366f1",
+      frontBackgroundColor: "",
       backBackgroundColor: "#ec4899",
       flipOn: "hover",
       flipDirection: "horizontal",
@@ -11017,12 +11017,12 @@ const effectsComponents: ComponentDefinition[] = [
       description: { type: "textarea", label: "Description", defaultValue: "Hover to see 3D tilt effect" },
       icon: { type: "text", label: "Icon (emoji)" },
       badge: { type: "text", label: "Badge Text" },
-      badgeColor: { type: "color", label: "Badge Color", defaultValue: "#3b82f6" },
+      badgeColor: { type: "color", label: "Badge Color", defaultValue: "" },
       // === Background ===
       backgroundColor: { type: "color", label: "Background Color", defaultValue: "#1f2937" },
       backgroundImage: { type: "image", label: "Background Image" },
       backgroundGradient: { type: "toggle", label: "Use Gradient", defaultValue: false },
-      gradientFrom: { type: "color", label: "Gradient From", defaultValue: "#6366f1" },
+      gradientFrom: { type: "color", label: "Gradient From", defaultValue: "" },
       gradientTo: { type: "color", label: "Gradient To", defaultValue: "#ec4899" },
       gradientDirection: { type: "select", label: "Gradient Direction", options: [
         { label: "To Right", value: "to-r" },
@@ -11328,7 +11328,7 @@ const effectsComponents: ComponentDefinition[] = [
       particleOpacity: { type: "number", label: "Particle Opacity", min: 0, max: 1, step: 0.1, defaultValue: 0.8 },
       particleOpacityVariation: { type: "number", label: "Opacity Variation", min: 0, max: 0.5, step: 0.1, defaultValue: 0.2 },
       // === Color ===
-      particleColor: { type: "color", label: "Particle Color", defaultValue: "#6366f1" },
+      particleColor: { type: "color", label: "Particle Color", defaultValue: "" },
       multiColor: { type: "toggle", label: "Multi-Color Mode", defaultValue: false },
       colorPalette: { type: "text", label: "Color Palette (comma-separated)" },
       colorMode: { type: "select", label: "Color Mode", options: [
@@ -11438,7 +11438,7 @@ const effectsComponents: ComponentDefinition[] = [
     },
     defaultProps: {
       particleCount: 50,
-      particleColor: "#6366f1",
+      particleColor: "",
       particleSize: 4,
       speed: 1,
       connected: true,
