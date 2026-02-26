@@ -3,6 +3,10 @@
  * 
  * Client-side hook that calls server actions to get real availability data.
  * Used by BookingCalendarBlock, BookingWidgetBlock.
+ * 
+ * IMPORTANT: Passes date as YYYY-MM-DD string to the server to avoid
+ * timezone conversion issues. All slot times use UTC convention where
+ * the UTC hour matches the intended wall-clock hour.
  */
 'use client'
 
@@ -23,6 +27,19 @@ export interface UseBookingSlotsResult {
   refetch: () => Promise<void>
 }
 
+/**
+ * Build a YYYY-MM-DD string from a Date using LOCAL date components.
+ * This avoids the bug where `date.toISOString().split('T')[0]` can
+ * produce the previous day for timezones east of UTC (e.g., UTC+5
+ * midnight local = 19:00 UTC previous day → wrong date string).
+ */
+function toLocalDateString(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 export function useBookingSlots(
   siteId: string,
   options: UseBookingSlotsOptions = {}
@@ -32,8 +49,10 @@ export function useBookingSlots(
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Stable date string to prevent infinite re-renders
-  const dateString = date ? date.toISOString().split('T')[0] : null
+  // Stable date string using LOCAL components to prevent timezone-induced date shift.
+  // Previously used date.toISOString().split('T')[0] which could produce the wrong
+  // date for timezones east of UTC (the root cause of the double-booking bug).
+  const dateString = date ? toLocalDateString(date) : null
 
   const fetchSlots = useCallback(async () => {
     if (!siteId || !serviceId || !dateString) {
@@ -46,10 +65,10 @@ export function useBookingSlots(
     setError(null)
 
     try {
-      // Reconstruct Date from stable string for server action
-      const dateForQuery = new Date(dateString + 'T00:00:00')
-      // Uses admin client — safe for public site visitors (bypasses RLS)
-      const data = await getPublicAvailableSlots(siteId, serviceId, dateForQuery, staffId)
+      // Pass the date as a YYYY-MM-DD string to the server action.
+      // This avoids timezone conversion issues entirely — the server
+      // constructs all dates using Date.UTC() from the string components.
+      const data = await getPublicAvailableSlots(siteId, serviceId, dateString, staffId)
       // Server actions serialize Date objects to strings — normalize slot times
       const normalizedSlots = data.map((slot: any) => ({
         ...slot,

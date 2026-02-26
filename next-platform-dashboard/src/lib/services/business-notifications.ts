@@ -139,48 +139,61 @@ export async function notifyNewBooking(data: BookingNotificationData): Promise<v
       },
     })
 
-    // 2. Email to business owner
+    // 2 & 3. Email to business owner + customer — sent in PARALLEL for faster delivery.
+    // Previously sequential (one after another), which doubled email latency.
+    const emailPromises: Promise<unknown>[] = []
+
+    // Email to business owner
     if (ownerProfile?.email) {
-      await sendBrandedEmail(site.agency_id, {
-        to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
-        emailType: 'booking_confirmation_owner',
-        recipientUserId: agency.owner_id,
-        data: {
-          customerName: data.customerName,
-          customerEmail: data.customerEmail,
-          customerPhone: data.customerPhone || '',
-          serviceName: data.serviceName,
-          staffName: data.staffName || '',
-          date: dateStr,
-          time: timeStr,
-          duration: durationStr,
-          price: priceStr,
-          status: data.status,
-          dashboardUrl,
-          bookingId: data.appointmentId,
-        },
-      })
+      emailPromises.push(
+        sendBrandedEmail(site.agency_id, {
+          to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
+          emailType: 'booking_confirmation_owner',
+          recipientUserId: agency.owner_id,
+          data: {
+            customerName: data.customerName,
+            customerEmail: data.customerEmail,
+            customerPhone: data.customerPhone || '',
+            serviceName: data.serviceName,
+            staffName: data.staffName || '',
+            date: dateStr,
+            time: timeStr,
+            duration: durationStr,
+            price: priceStr,
+            status: data.status,
+            dashboardUrl,
+            bookingId: data.appointmentId,
+          },
+        })
+      )
     }
 
-    // 3. Email to customer (uses SITE branding — customer sees the business name/colors)
+    // Email to customer (uses SITE branding — customer sees the business name/colors)
     if (data.customerEmail) {
-      await sendBrandedEmail(site.agency_id, {
-        to: { email: data.customerEmail, name: data.customerName },
-        emailType: 'booking_confirmation_customer',
-        siteId: data.siteId,
-        data: {
-          customerName: data.customerName,
-          serviceName: data.serviceName,
-          staffName: data.staffName || '',
-          date: dateStr,
-          time: timeStr,
-          duration: durationStr,
-          price: priceStr,
-          status: data.status,
-          businessName,
-          bookingId: data.appointmentId,
-        },
-      })
+      emailPromises.push(
+        sendBrandedEmail(site.agency_id, {
+          to: { email: data.customerEmail, name: data.customerName },
+          emailType: 'booking_confirmation_customer',
+          siteId: data.siteId,
+          data: {
+            customerName: data.customerName,
+            serviceName: data.serviceName,
+            staffName: data.staffName || '',
+            date: dateStr,
+            time: timeStr,
+            duration: durationStr,
+            price: priceStr,
+            status: data.status,
+            businessName,
+            bookingId: data.appointmentId,
+          },
+        })
+      )
+    }
+
+    // Fire both emails at the same time — cuts email latency in half
+    if (emailPromises.length > 0) {
+      await Promise.all(emailPromises)
     }
 
     console.log(`[BusinessNotify] Booking notifications sent for appointment ${data.appointmentId}`)

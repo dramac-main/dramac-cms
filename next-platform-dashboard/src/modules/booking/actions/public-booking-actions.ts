@@ -163,26 +163,39 @@ export async function getPublicSettings(siteId: string): Promise<BookingSettings
  * - max_booking_advance_days: rejects dates too far in the future
  * - Weekday-aware default fallback (Mon-Fri 9-5 when no rules)
  * - Buffer times around existing appointments
+ * 
+ * TIMEZONE FIX: Accepts a YYYY-MM-DD date string instead of a Date object.
+ * All internal dates use Date.UTC() so the calendar date is never shifted
+ * by timezone conversion (the root cause of the double-booking bug).
  */
 export async function getPublicAvailableSlots(
   siteId: string,
   serviceId: string,
-  date: Date,
+  dateStr: string,   // YYYY-MM-DD — no timezone ambiguity
   staffId?: string
 ): Promise<TimeSlot[]> {
   try {
     const supabase = getPublicClient()
     
+    // === PARSE DATE STRING INTO UTC COMPONENTS ===
+    const [year, month, day] = dateStr.split('-').map(Number)
+    if (!year || !month || !day) {
+      console.error('[Booking Public] Invalid date string:', dateStr)
+      return []
+    }
+    
+    // All date construction uses Date.UTC() — no timezone shift possible
+    const requestedDate = new Date(Date.UTC(year, month - 1, day))
+    const dayStart = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0))
+    const dayEnd = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))
+    
     // === SERVER-SIDE DATE VALIDATION ===
     const now = new Date()
-    const today = new Date(now)
-    today.setHours(0, 0, 0, 0)
+    // Build "today" in UTC for comparison
+    const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
     
-    const requestedDate = new Date(date)
-    requestedDate.setHours(0, 0, 0, 0)
-    
-    // Reject past dates
-    if (requestedDate < today) {
+    // Reject past dates (lenient: allow today even if server is ahead)
+    if (requestedDate < todayUTC) {
       return []
     }
     
@@ -209,9 +222,7 @@ export async function getPublicAvailableSlots(
     const maxAdvanceDays = settings?.max_booking_advance_days ?? 365
     
     // Enforce max_booking_advance_days — reject dates too far in the future
-    const maxDate = new Date(now)
-    maxDate.setDate(maxDate.getDate() + maxAdvanceDays)
-    maxDate.setHours(23, 59, 59, 999)
+    const maxDate = new Date(now.getTime() + maxAdvanceDays * 24 * 60 * 60 * 1000)
     if (requestedDate > maxDate) {
       return []
     }
@@ -248,15 +259,15 @@ export async function getPublicAvailableSlots(
     if (staffIds.length === 0) return []
     
     // 4. Get availability rules
-    const dayOfWeek = date.getDay()
-    const dateString = date.toISOString().split('T')[0]
+    // Use UTC day-of-week from our constructed date (consistent with Date.UTC)
+    const dayOfWeek = requestedDate.getUTCDay()
     
     const { data: availabilityRules } = await supabase
       .from(`${TABLE_PREFIX}_availability`)
       .select('*')
       .eq('site_id', siteId)
       .eq('rule_type', 'available')
-      .or(`day_of_week.eq.${dayOfWeek},specific_date.eq.${dateString}`)
+      .or(`day_of_week.eq.${dayOfWeek},specific_date.eq.${dateStr}`)
       .order('priority', { ascending: false })
     
     // 5. Get blocked rules
@@ -265,14 +276,10 @@ export async function getPublicAvailableSlots(
       .select('*')
       .eq('site_id', siteId)
       .in('rule_type', ['blocked', 'holiday'])
-      .or(`day_of_week.eq.${dayOfWeek},specific_date.eq.${dateString}`)
+      .or(`day_of_week.eq.${dayOfWeek},specific_date.eq.${dateStr}`)
     
     // 6. Get existing appointments for conflict checking (include buffer consideration)
-    const dayStart = new Date(date)
-    dayStart.setHours(0, 0, 0, 0)
-    const dayEnd = new Date(date)
-    dayEnd.setHours(23, 59, 59, 999)
-    
+    // Use the UTC day boundaries — matches how appointments are stored
     const { data: existingAppointments } = await supabase
       .from(`${TABLE_PREFIX}_appointments`)
       .select('start_time, end_time, staff_id, status')
@@ -304,8 +311,8 @@ export async function getPublicAvailableSlots(
       if (ruleStaffId && !staffIds.includes(ruleStaffId)) continue
       if (!rule.start_time || !rule.end_time) continue
       
-      const startTime = parseTime(rule.start_time, date)
-      const endTime = parseTime(rule.end_time, date)
+      const startTime = parseTimeUTC(rule.start_time, year, month - 1, day)
+      const endTime = parseTimeUTC(rule.end_time, year, month - 1, day)
       
       let slotStart = new Date(startTime)
       
@@ -317,8 +324,8 @@ export async function getPublicAvailableSlots(
         
         const isBlocked = (blockedRules ?? []).some((block: any) => {
           if (!block.start_time || !block.end_time) return false
-          const blockStart = parseTime(block.start_time, date)
-          const blockEnd = parseTime(block.end_time, date)
+          const blockStart = parseTimeUTC(block.start_time, year, month - 1, day)
+          const blockEnd = parseTimeUTC(block.end_time, year, month - 1, day)
           return slotStart >= blockStart && slotStart < blockEnd
         })
         
@@ -346,14 +353,21 @@ export async function getPublicAvailableSlots(
       }
     }
     
-    // Deduplicate by start time and return all (available status is already set)
-    const seen = new Set<string>()
-    return slots.filter(s => {
+    // Deduplicate by start time — when multiple staff generate the same time,
+    // keep the slot as AVAILABLE if ANY staff member has it available.
+    // This prevents random availability when processing order differs.
+    const slotMap = new Map<string, TimeSlot>()
+    for (const s of slots) {
       const key = s.start.toISOString()
-      if (seen.has(key)) return false
-      seen.add(key)
-      return true
-    })
+      const existing = slotMap.get(key)
+      if (!existing) {
+        slotMap.set(key, s)
+      } else if (s.available && !existing.available) {
+        // Prefer the available version — at least one staff is free
+        slotMap.set(key, s)
+      }
+    }
+    return Array.from(slotMap.values())
   } catch (err) {
     console.error('[Booking Public] getPublicAvailableSlots unexpected error:', err)
     return []
@@ -479,6 +493,12 @@ export async function createPublicAppointment(
     
     if (error) {
       console.error('[Booking Public] createPublicAppointment error:', error)
+      // Handle unique constraint violation from idx_prevent_double_booking
+      // This catches the race condition where two requests pass the conflict
+      // check simultaneously but the DB index prevents the second insert.
+      if (error.code === '23505') {
+        return { success: false, error: 'This time slot is no longer available. Please select another time.' }
+      }
       return { success: false, error: 'Failed to create appointment. Please try again.' }
     }
     
@@ -521,9 +541,11 @@ export async function createPublicAppointment(
 // HELPERS
 // =============================================================================
 
-function parseTime(timeStr: string, date: Date): Date {
+/**
+ * Parse a time string (HH:MM) into a UTC Date for the given date components.
+ * Uses Date.UTC() to avoid any timezone ambiguity.
+ */
+function parseTimeUTC(timeStr: string, year: number, month: number, day: number): Date {
   const [hours, minutes] = timeStr.split(':').map(Number)
-  const result = new Date(date)
-  result.setHours(hours, minutes, 0, 0)
-  return result
+  return new Date(Date.UTC(year, month, day, hours, minutes, 0, 0))
 }

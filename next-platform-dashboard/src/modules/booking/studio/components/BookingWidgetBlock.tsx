@@ -351,12 +351,15 @@ export function BookingWidgetBlock({
   const { services: realServices, isLoading: loadingServices } = useBookingServices(siteId || '')
   const { staff: realStaff, isLoading: loadingStaff } = useBookingStaff(siteId || '')
   const { settings: bookingSettings } = useBookingSettings(siteId || '')
-  const { slots: realSlots, isLoading: loadingSlots } = useBookingSlots(siteId || '', {
+  const { slots: realSlots, isLoading: loadingSlots, refetch: refetchSlots } = useBookingSlots(siteId || '', {
     serviceId: selectedService?.id,
     date: selectedDate || undefined,
     staffId: selectedStaff?.id,
   })
   const { createBooking, isSubmitting: isCreatingBooking } = useCreateBooking(siteId || '')
+  
+  // Track recently booked slots for immediate UI feedback (belt-and-suspenders)
+  const [recentlyBookedSlots, setRecentlyBookedSlots] = useState<Set<string>>(new Set())
 
   // Booking constraints from settings
   const minNoticeHours = bookingSettings?.min_booking_notice_hours ?? 0
@@ -467,10 +470,16 @@ export function BookingWidgetBlock({
     if (siteId) {
       return realSlots.map(s => {
         const startDate = s.start instanceof Date ? s.start : new Date(s.start)
+        // Use UTC methods — server generates slot times using Date.UTC()
+        // so getUTCHours/getUTCMinutes gives the intended wall-clock hour.
+        const utcH = startDate.getUTCHours()
+        const utcM = startDate.getUTCMinutes()
+        const timeKey = `${String(utcH).padStart(2, '0')}:${String(utcM).padStart(2, '0')}`
         return {
-          time: startDate.toTimeString().slice(0, 5),
-          display: formatTime(startDate.getHours(), startDate.getMinutes()),
-          available: s.available !== false,
+          time: timeKey,
+          display: formatTime(utcH, utcM),
+          // Mark as unavailable if server says so OR if we just booked this slot
+          available: s.available !== false && !recentlyBookedSlots.has(timeKey),
         }
       })
     }
@@ -483,7 +492,7 @@ export function BookingWidgetBlock({
     }
     return slots
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDate, slotStartHour, slotEndHour, slotInterval, timeFormat, siteId, selectedService?.id, realSlots])
+  }, [selectedDate, slotStartHour, slotEndHour, slotInterval, timeFormat, siteId, selectedService?.id, realSlots, recentlyBookedSlots])
 
   // Resolved colors — fall back to CSS variables from the branding system
   const pc = primaryColor || 'var(--brand-primary, #8B5CF6)'
@@ -528,16 +537,20 @@ export function BookingWidgetBlock({
     setBookingError(null)
     try {
       if (siteId && selectedService?.id) {
-        // Build start/end times from selected date + time
+        // Build start/end times from selected date + time using Date.UTC()
+        // This matches the server's UTC convention — no timezone shift.
         let startTime = new Date().toISOString()
         let endTime = new Date().toISOString()
         if (selectedDate && selectedTime) {
           const [h, m] = selectedTime.split(':').map(Number)
-          const start = new Date(selectedDate)
-          start.setHours(h, m, 0, 0)
-          startTime = start.toISOString()
-          const end = new Date(start.getTime() + (selectedService.duration || 60) * 60000)
-          endTime = end.toISOString()
+          const y = selectedDate.getFullYear()
+          const mo = selectedDate.getMonth()
+          const d = selectedDate.getDate()
+          // Use Date.UTC so the UTC hour matches the intended wall-clock hour
+          const startMs = Date.UTC(y, mo, d, h, m, 0, 0)
+          startTime = new Date(startMs).toISOString()
+          const endMs = startMs + (selectedService.duration || 60) * 60000
+          endTime = new Date(endMs).toISOString()
         }
         const result = await createBooking({
           service_id: selectedService.id,
@@ -557,6 +570,13 @@ export function BookingWidgetBlock({
           },
         })
         setBookingStatus(result.status === 'confirmed' ? 'confirmed' : 'pending')
+        
+        // Immediately mark this slot as booked locally (belt-and-suspenders)
+        if (selectedTime) {
+          setRecentlyBookedSlots(prev => new Set([...prev, selectedTime]))
+        }
+        // Refetch slots from server to get fresh conflict data
+        refetchSlots().catch(() => {})
       } else {
         // Demo mode — simulate delay
         await new Promise(r => setTimeout(r, 1500))

@@ -269,9 +269,12 @@ export function BookingCalendarBlock({
     if (siteId) {
       return realSlots.map(s => {
         const startDate = s.start instanceof Date ? s.start : new Date(s.start)
+        // Use UTC methods — server generates slot times using Date.UTC()
+        const utcH = startDate.getUTCHours()
+        const utcM = startDate.getUTCMinutes()
         return {
-          time: `${startDate.getHours().toString().padStart(2, '0')}:${startDate.getMinutes().toString().padStart(2, '0')}`,
-          display: formatTimeHelper(startDate.getHours(), startDate.getMinutes(), timeFormat),
+          time: `${utcH.toString().padStart(2, '0')}:${utcM.toString().padStart(2, '0')}`,
+          display: formatTimeHelper(utcH, utcM, timeFormat),
           available: s.available,
         }
       })
