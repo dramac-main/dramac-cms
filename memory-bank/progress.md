@@ -1,31 +1,104 @@
 # Progress: What Works & What's Left
 
 **Last Updated**: February 2026  
-**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅** + **AI RICHTEXT/ACCORDION/TABS RENDERING FIX ✅** + **CRM COMPREHENSIVE INDUSTRY-LEADER OVERHAUL ✅** + **SOCIAL MEDIA PHASE A CRITICAL BUG FIXES ✅** + **KNOWN LIMITATIONS DEEP ANALYSIS + FIXES ✅** + **BOOKING MODULE COMPREHENSIVE OVERHAUL ✅** + **BRAND COLOR INHERITANCE SYSTEM ✅** + **AI COMPONENT AWARENESS + BOOKING DATA ENRICHMENT ✅** + **SMART NAVIGATION SYSTEM ✅** + **GLOBAL BRANDING CSS VARIABLE SYSTEM ✅** + **SITE BRANDING UI + BOOKING PAGE OVERHAUL ✅** + **UNIFIED BRANDING AUDIT (EMAILS + CHAT + FONTS + EMBEDS) ✅** + **FONT BRANDING CASCADE FIX ✅** + **SITE LOGO SYSTEM + BOOKING E2E FIXES ✅** + **ECOMMERCE PRODUCT IMAGES + WORLD-CLASS UPGRADE ✅**
+**Overall Completion**: 100% (40 of 40 enterprise phases) + Enhancement Phases + Domain Module + ALL FIXES + **FULL 12-CATEGORY DEEP AUDIT SWEEP ✅** + **DOMAIN PRICING FINAL FIX ✅** + **LIVE CHAT RATING + SECURITY FIXES ✅** + **DOMAIN/EMAIL SYSTEM RESTRUCTURE + PADDLE CHECKOUT FIX ✅** + **LIVE CHAT COMPREHENSIVE REWORK ✅** + **PLATFORM-WIDE AUDIT ✅** + **CRITICAL PROVISIONING + PRICING + AGENT + WEBHOOK FIXES ✅** + **RC CUSTOMER ENDPOINT FIX ✅** + **PROVISIONING AUTO-CREATE + RETRY ✅** + **RC CONTACT GUARDS + CHAT RATING FIX ✅** + **RC STRING BUG + INDUSTRY RATING ✅** + **PAYMENT SAFETY MECHANISMS ✅** + **E-COMMERCE MODULE OVERHAUL ✅** + **DOMAIN SEARCH/PRICING PIPELINE FIX ✅** + **RC PER-YEAR RATE FIX ✅** + **PADDLE IDEMPOTENCY KEY FIX ✅** + **EMAIL PRICING 404 FIX ✅** + **EMAIL PURCHASE DEEP FIX ✅** + **EMAIL PRICING OVERHAUL ✅** + **ENTERPRISE EMAIL PLAN + DUAL PLAN SELECTOR ✅** + **TITAN MAIL REST API + 3-PLAN SUPPORT ✅** + **DOMAIN ARCHITECTURE RESTRUCTURE + CLIENT ASSIGNMENT ✅** + **AI DESIGNER MULTI-STEP ARCHITECTURE ✅** + **AI DESIGNER BULLETPROOF SHARED ELEMENTS ✅** + **E-COMMERCE COMPREHENSIVE OVERHAUL SESSION 2 ✅** + **E-COMMERCE CENTRALIZED CURRENCY SESSION 4 ✅** + **E-COMMERCE NOTIFICATION SYSTEM SESSION 5 ✅** + **AI DESIGNER PREMIUM VISUAL QUALITY UPGRADE ✅** + **E-COMMERCE REMAINING PRIORITIES SESSION 6 ✅** + **E-COMMERCE ACTIVATION CRITICAL FIXES ✅** + **GOOGLE RICH RESULTS STRUCTURED DATA ✅** + **AI-FIRST REDESIGN ALL 7 PHASES ✅** + **AI BLANK PAGES CRITICAL FIX ✅** + **AI DESIGN QUALITY & VISUAL POLISH ✅** + **AI BUTTON + BRANDING + MODULE FIX ✅** + **AI COMPLETE PIPELINE AUDIT + PLUMBING ✅** + **AI BUTTON VISIBILITY + COLOR CONTRAST + BOOKING FIX ✅** + **AI RICHTEXT/ACCORDION/TABS RENDERING FIX ✅** + **CRM COMPREHENSIVE INDUSTRY-LEADER OVERHAUL ✅** + **SOCIAL MEDIA PHASE A CRITICAL BUG FIXES ✅** + **KNOWN LIMITATIONS DEEP ANALYSIS + FIXES ✅** + **BOOKING MODULE COMPREHENSIVE OVERHAUL ✅** + **BRAND COLOR INHERITANCE SYSTEM ✅** + **AI COMPONENT AWARENESS + BOOKING DATA ENRICHMENT ✅** + **SMART NAVIGATION SYSTEM ✅** + **GLOBAL BRANDING CSS VARIABLE SYSTEM ✅** + **SITE BRANDING UI + BOOKING PAGE OVERHAUL ✅** + **UNIFIED BRANDING AUDIT (EMAILS + CHAT + FONTS + EMBEDS) ✅** + **FONT BRANDING CASCADE FIX ✅** + **SITE LOGO SYSTEM + BOOKING E2E FIXES ✅** + **ECOMMERCE PRODUCT IMAGES + WORLD-CLASS UPGRADE ✅** + **HARDCODED BRAND COLOR ELIMINATION ✅** + **E-COMMERCE CRITICAL FIXES (LOGO RLS + PAYMENT FLOW + CART SYNC) ✅** + **PRODUCTION-READY PHASE DOCUMENTS (E-COMMERCE + BOOKING) ✅**
 
 ---
 
-## Latest Update: February 2026 - E-Commerce Product Images + World-Class Component Upgrade
+## Latest Update: February 2026 - Production-Ready Phase Documents Created
 
-### Task: Fix broken product images + Upgrade all ecommerce storefront components to professional quality
+### Task: Create comprehensive AI phase documents for e-commerce and booking modules
 
-**CRITICAL BUG FOUND:** `product-grid-block.tsx` accessed `p.images?.[0]?.url` on a `string[]` — `.url` on a string always returned `undefined`. Product images NEVER showed on the shop page.
+Two massive phase documents created for fresh AI sessions to make both modules production-ready:
 
-**Additional Issues:** Two duplicate grid components (simple buggy one was used), ProductImageGallery type mismatch, no next/image optimization, no product navigation links.
+**`phases/PHASE-ECOM-PRODUCTION-READY.md`** — E-Commerce Module:
+- 22 sections, covers every table (49), file, component, action, API route
+- 6 critical bugs documented with root causes and fix requirements
+- Full checkout flow, order lifecycle, payment integration details
+- Complete DB schema with every column name and type
+- Testing checklist with 60+ items
 
-**Solution (5 files, +240/-138, commit `53fe93c4`):**
+**`phases/PHASE-BOOKING-PRODUCTION-READY.md`** — Booking Module:
+- 18 sections, covers every table (8), file (51), component, action, hook
+- 6 bugs documented (most critical: zero mobile responsiveness, non-interactive embed)
+- Full 5-step booking widget flow, availability algorithm, staff management
+- Complete DB schema with every column name and type
+- 20+ missing features catalogued with priority levels
+- Testing checklist with 50+ items
 
-| File | Key Changes |
-|------|-------------|
-| `product-grid-block.tsx` | Complete rewrite — delegates to ProductCardBlock for rich cards |
-| `product-card-block.tsx` | next/image optimization, auto product navigation to /products/[slug] |
-| `ProductImageGallery.tsx` | Accepts both string[] and ProductImage[], normalizes internally |
-| `ProductDetailBlock.tsx` | next/image gallery, larger thumbnails, image counter, rounded-xl |
-| `page-templates.ts` | Shop page now includes Featured Products carousel section |
+**Key Bugs Catalogued:**
+- E-com: `customer_name` column missing from orders table (order blocker)
+- E-com: Analytics queries use `_cents` column names that don't exist (40+ occurrences)
+- E-com: Country dropdown only has 8 Western countries (no Zambia)
+- E-com: Cart badge not showing on navbar
+- Booking: BookingWidgetBlock has ZERO mobile responsiveness (all inline styles)
+- Booking: Embed page is static HTML (can't complete bookings)
+- Booking: Hardcoded purple/blue colors in multiple locations
+- Booking: Automated reminders never fire (DB/settings exist, no scheduler)
 
 ---
 
-## Previous Update: February 2026 - Site Logo System + Booking End-to-End Fixes
+## Previous Update: February 2026 - E-Commerce Critical Fixes (Logo Upload RLS, Payment Flow, Cart Sync, Quotation Mode)
+
+### Task: End-to-end e-commerce audit and fix — logo upload, payment collection, cart sync, quotation mode
+
+**Deep audit of 43+ e-commerce files revealed 2 critical + 5 medium issues:**
+
+**CRITICAL FIX 1: Logo Upload RLS Error**
+- `uploadSiteLogoAction` and `removeSiteLogoAction` used `createClient()` (anon key with RLS) for Supabase Storage operations
+- Storage bucket "branding" RLS policy blocked anonymous inserts → `StorageApiError: new row violates row-level security policy`
+- **Fix:** Switched to `createAdminClient()` (service role key, bypasses RLS)
+- **Cascade effect:** Fixes email branding (logos were always null because upload was broken)
+
+**CRITICAL FIX 2: Checkout Payment Never Collected**
+- `handlePlaceOrder` in CheckoutPageBlock.tsx immediately showed "Order Placed Successfully!" without opening any payment UI
+- API route correctly builds `paymentData` for each provider (Paddle overlay data, Flutterwave inline data, Pesapal/DPO redirect URLs, manual instructions) but client ignored it
+- **Fix:** `handlePlaceOrder` now routes to correct payment UI based on provider type
+- `useCheckout.placeOrder()` now only clears cart for manual/redirect payments; client-side providers (Paddle/Flutterwave) clear after payment callback
+
+**MEDIUM FIXES:**
+- CartDrawerBlock + MiniCartBlock: quotation mode awareness (adapted titles, button text/links)
+- product-card-block: sonner toast notifications for add-to-cart success/failure, `useRouter().push()` instead of `window.location.href`
+- useStorefrontCart: `cart-updated` custom event bus for cross-component state sync
+
+**Solution (7 files, commit `2e2bbce0`):**
+
+| File | Changes |
+|------|---------|
+| `sites.ts` | `createAdminClient()` for upload/remove logo actions |
+| `useCheckout.ts` | Conditional cart clearing based on payment provider |
+| `useStorefrontCart.ts` | `cart-updated` event bus for cross-instance sync |
+| `CartDrawerBlock.tsx` | Quotation mode: title, button label, checkout href |
+| `CheckoutPageBlock.tsx` | Full payment flow routing (Paddle/Flutterwave/Pesapal/DPO/Manual) |
+| `MiniCartBlock.tsx` | Quotation mode: button label, checkout href |
+| `product-card-block.tsx` | Toast notifications, Next.js router for quotes |
+
+---
+
+## Previous Update: February 2026 - Hardcoded Brand Color Elimination (Complete Platform Audit)
+
+**CRITICAL BUG:** Published sites showed hardcoded blue (#3b82f6, #2563eb) instead of the site's actual brand colors. Buttons, links, alerts, PDF invoices, email templates, booking embeds, ecommerce widgets — all ignored the CSS variable branding system.
+
+**Root causes:** `resolveBrandColors()` defaulted to `#3b82f6`, `DEFAULT_BRANDING.accent_color` was `#3B82F6`, ~127 instances of hardcoded `#3b82f6` in renders.tsx/core-components.ts, semantic "info" states conflated with brand blue, ecommerce/booking/PDF generators had hardcoded defaults.
+
+**Solution (21 files, +320/-225 lines, commit `3ac8bec6`):**
+
+| Category | Files | Key Changes |
+|----------|-------|-------------|
+| Brand Engine | `brand-colors.ts`, `branding.ts` | Default `#3b82f6` → `#0f172a` (neutral), KNOWN_BLUE_DEFAULTS detection |
+| Published Renderers | `renders.tsx`, `core-components.ts`, `premium-components.tsx`, `button-block.tsx` | ~127 hardcoded blues → empty strings, info states → sky-* classes |
+| Preview | `PreviewRenderer.tsx` | Fixed duplicate style attribute |
+| Email | 4 template files | Site branding resolution instead of hardcoded blues |
+| Live Chat | 3 files | CSS variable system instead of hardcoded blues |
+| Ecommerce | `StorefrontWidget.tsx`, `quote-pdf-generator.ts`, `quote-template-dialog.tsx`, `quote-settings.tsx` | Empty defaults (inherit brand), semantic status badges |
+| Booking | `embed-code-view.tsx`, `settings-view.tsx` | Removed hardcoded `#8B5CF6` |
+| PDF | `payout-statement-generator.ts` | Neutral `#0f172a` fallback |
+
+**Key Patterns:** Empty string defaults let CSS `var(--brand-primary)` take over. `#0f172a` (slate-900) as last-resort neutral fallback where CSS vars can't reach (PDFs, emails). Semantic `sky-*` replaces `blue-*` for info states.
+
+---
+
+## Previous Update: February 2026 - E-Commerce Product Images + World-Class Component Upgrade
 
 **Problems:**
 1. No logo_url in SiteBrandingData — emails always showed text name instead of logo

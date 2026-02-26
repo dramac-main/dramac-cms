@@ -1,17 +1,77 @@
 # Active Context
 
-## Current Focus: E-Commerce Product Image Fix + World-Class Component Upgrade
+## Current Focus: Production-Ready Phase Documents for E-Commerce & Booking Modules
 
-### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `53fe93c4`)
+### Status: PHASE DOCUMENTS CREATED ✅
+
+### Phase Documents Created (Latest Work)
+Two comprehensive AI phase documents created for fresh-session AI to make both modules production-ready:
+
+1. **`phases/PHASE-ECOM-PRODUCTION-READY.md`** — 22-section comprehensive document covering:
+   - Full platform context, tech stack, rendering pipeline
+   - Complete DB schema (all 49 tables, every column name/type)
+   - Full file inventory (every file with purpose)
+   - 6 critical bugs (customer_name column missing, analytics _cents columns wrong, country dropdown, cart badge, mobile checkout disconnected, Radix portal branding)
+   - Branding system, checkout flow, order lifecycle, payment integration, email system, analytics, storefront widget, quotation system, PDF generation, navigation, SEO, testing checklist
+
+2. **`phases/PHASE-BOOKING-PRODUCTION-READY.md`** — 18-section comprehensive document covering:
+   - Full platform context, tech stack
+   - Complete DB schema (8 tables, every column name/type)
+   - Full file inventory (51 files with paths, purposes)
+   - 6 bugs (zero mobile responsiveness, embed page non-interactive, script embed missing, hardcoded colors, admin weekend availability, settings tab overflow)
+   - Booking widget 5-step flow, embed system, staff management, availability algorithm, email notifications, admin dashboard, analytics, settings system, 20+ missing features, testing checklist
+
+**These documents are self-contained — a fresh AI session with no prior context can use them to fully fix either module.**
+
+---
+
+### Previous Focus: E-Commerce End-to-End Audit & Critical Fixes
+
+### Previous Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `2e2bbce0`)
 
 ### Recent Fixes (newest first):
+- E-Commerce Critical Fixes — Logo upload RLS, payment flow, cart sync, quotation mode (commit `2e2bbce0`) ✅
+- Hardcoded Brand Color Elimination — Comprehensive audit + fix of ALL customer-facing hardcoded blue/purple colors across 21 files. Published sites now fully respect site branding via CSS variable system. Neutral #0f172a fallback replaces #3b82f6 everywhere. (commit `3ac8bec6`) ✅
 - E-Commerce Product Images + World-Class Component Upgrade — CRITICAL image bug fixed (images never showed), all ecom components upgraded with next/image, product navigation, professional gallery (commit `53fe93c4`) ✅
 - Site Logo System + Booking End-to-End Fixes — logo/favicon upload in site branding settings, staff filtering by service, min notice hours, max advance days, weekday-aware fallback, buffer times, server-side validations (commit `f965699c`) ✅
 - Font Branding Cascade Fix — Legacy system-ui override treated as unset, 8 inline fontFamily guards, field defaultValue fix, titleFontFamily in BRAND_FONT_MAP (commit `c380e8bb`) ✅
 - Unified Branding Across Emails, Live Chat, Fonts, Embeds — 13 files, 320 insertions, comprehensive end-to-end branding audit + fixes across entire platform (commit `97828886`) ✅
-- Site Branding Settings UI + Booking Page Overhaul — 7 files, 633 insertions, new Branding tab in site settings, BookingWidget replaces broken ServiceSelector on /book page, CSS variable fallbacks in booking components, AI context builder fix (commit `f54c6afb`) ✅
-- Font fallback + persistDesignTokens all 7 fields — Fixed font reading to fall back to theme.*, fixed persistDesignTokensAction to write all 7 flat fields (commit `0bc91366`) ✅
-- Global Branding CSS Variable System — 20 files, 903 insertions, CSS variable isolation for published sites, dark mode fix, font system, booking defaultProps cleanup (commit `a6d3bb6f`) ✅
+
+---
+
+### E-Commerce Critical Fixes (commit `2e2bbce0`) ✅
+
+**Deep Audit Scope:** 43+ e-commerce components, hooks, actions, API routes, and email templates.
+
+**CRITICAL FIXES:**
+
+| Issue | Root Cause | Fix |
+|-------|------------|-----|
+| **Logo upload RLS error** (`StorageApiError: new row violates row-level security policy`) | `uploadSiteLogoAction` and `removeSiteLogoAction` in `sites.ts` used `createClient()` (anon key, RLS-bound) for storage operations | Switched both to `createAdminClient()` (service role key, bypasses RLS) |
+| **Payment never collected** — checkout showed "Order Placed Successfully!" without opening any payment UI | `handlePlaceOrder` in `CheckoutPageBlock.tsx` ignored `payment` and `payment_url` from API response | Now routes to correct payment flow: Paddle overlay, Flutterwave modal, Pesapal/DPO redirect, manual instructions |
+| **Cart cleared before payment** | `useCheckout.placeOrder()` cleared cart immediately on success, even for client-side payment providers | Only clears cart for manual/redirect payments; Paddle/Flutterwave clear after payment callback |
+
+**MEDIUM FIXES:**
+
+| Issue | Root Cause | Fix |
+|-------|------------|-----|
+| **CartDrawer ignores quotation mode** | Hardcoded `checkoutHref = '/checkout'` and "Checkout" label | Reads `quotationModeEnabled` from storefront context; adapts button text/link/title |
+| **MiniCart ignores quotation mode** | Same hardcoded checkout link | Same quotation mode awareness |
+| **No add-to-cart feedback** | `addItem()` returned boolean but no toast shown | Added sonner toast notifications for success/failure |
+| **Cart badges don't sync** | Each `useStorefrontCart` instance is independent | Added `cart-updated` custom event bus — all instances listen and refresh |
+| **Quotation redirect uses full reload** | `window.location.href` in product-card-block | Switched to Next.js `useRouter().push()` |
+
+**CASCADE FIX:**
+- Email branding now works: logo upload fix unblocks site logo storage → `applySiteBranding()` pipeline can now read actual `site.logo_url` instead of null
+
+**Files Modified (7 files):**
+- `src/lib/actions/sites.ts` — createAdminClient for upload/remove
+- `src/modules/ecommerce/hooks/useCheckout.ts` — conditional cart clearing
+- `src/modules/ecommerce/hooks/useStorefrontCart.ts` — cart-updated event bus
+- `src/modules/ecommerce/studio/components/CartDrawerBlock.tsx` — quotation mode
+- `src/modules/ecommerce/studio/components/CheckoutPageBlock.tsx` — payment flow routing
+- `src/modules/ecommerce/studio/components/MiniCartBlock.tsx` — quotation mode
+- `src/modules/ecommerce/studio/components/product-card-block.tsx` — toasts + router
 
 ---
 
