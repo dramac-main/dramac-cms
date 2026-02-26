@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { createSiteSchema, updateSiteSchema } from "@/lib/validations/site";
 import type { SiteFilters } from "@/types/site";
@@ -547,7 +548,8 @@ export async function updateSiteBrandingAction(
 export async function uploadSiteLogoAction(
   formData: FormData
 ): Promise<{ url?: string; error?: string }> {
-  const supabase = await createClient();
+  // Use admin client to bypass storage RLS policies
+  const supabase = createAdminClient();
   const file = formData.get("file") as File;
   const siteId = formData.get("siteId") as string;
   const type = (formData.get("type") as string) || "logo"; // "logo" or "favicon"
@@ -635,7 +637,8 @@ export async function removeSiteLogoAction(
 ): Promise<{ success?: boolean; error?: string }> {
   if (!siteId) return { error: "Missing siteId" };
 
-  const supabase = await createClient();
+  // Use admin client to bypass storage RLS policies
+  const supabase = createAdminClient();
 
   const { data: site } = await supabase
     .from("sites")

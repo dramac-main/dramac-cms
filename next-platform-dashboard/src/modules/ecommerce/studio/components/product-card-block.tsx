@@ -10,10 +10,12 @@
 
 import React, { useState, useCallback } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import type { ComponentDefinition, ResponsiveValue } from "@/types/studio";
 import type { Product } from "../../types/ecommerce-types";
 import { ShoppingBag, Star, Heart, Eye, Loader2, AlertCircle, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { useStorefrontProduct } from "../../hooks/useStorefrontProduct";
 import { useStorefrontCart } from "../../hooks/useStorefrontCart";
 import { useStorefrontWishlist } from "../../hooks/useStorefrontWishlist";
@@ -111,6 +113,7 @@ export function ProductCardBlock({
 }: ProductCardProps) {
   // Context
   const storefront = useStorefront();
+  const router = useRouter();
   // Use _siteId from Studio canvas, then siteId prop, then context
   const effectiveSiteId = _siteId || siteId || storefront?.siteId;
   // Quotation mode
@@ -158,19 +161,30 @@ export function ProductCardBlock({
     // In quotation mode: navigate to quote request page instead of adding to cart
     if (quotationModeEnabled) {
       const quotesUrl = storefront?.quotationRedirectUrl || '/quotes'
-      window.location.href = `${quotesUrl}?product=${productId}`
+      router.push(`${quotesUrl}?product=${productId}`)
       return
     }
     
     setAddingToCart(true);
     try {
-      await addItem(productId, null, 1);
+      const success = await addItem(productId, null, 1);
+      if (success) {
+        toast.success('Added to cart', {
+          description: product?.name ? `${product.name} added to your cart` : 'Item added to your cart',
+          duration: 3000,
+        })
+        // Dispatch custom event so other cart components can refresh
+        window.dispatchEvent(new CustomEvent('cart-updated'))
+      } else {
+        toast.error('Failed to add item to cart')
+      }
     } catch (err) {
       console.error("Failed to add to cart:", err);
+      toast.error('Failed to add item to cart')
     } finally {
       setAddingToCart(false);
     }
-  }, [productId, addItem, isDemo, quotationModeEnabled, storefront?.quotationRedirectUrl]);
+  }, [productId, addItem, isDemo, quotationModeEnabled, storefront?.quotationRedirectUrl, router, product?.name]);
   
   // Handle wishlist toggle
   const handleWishlistToggle = useCallback((e: React.MouseEvent) => {

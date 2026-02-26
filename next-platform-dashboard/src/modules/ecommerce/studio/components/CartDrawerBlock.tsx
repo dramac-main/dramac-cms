@@ -60,11 +60,15 @@ const DEFAULT_TOTALS: CartTotals = {
 export function CartDrawerBlock({
   trigger,
   side = 'right',
-  checkoutHref = '/checkout',
+  checkoutHref: checkoutHrefProp = '/checkout',
   shopLink = '/shop',
   className
 }: CartDrawerBlockProps) {
-  const { siteId, formatPrice, taxRate } = useStorefront()
+  const { siteId, formatPrice, taxRate, quotationModeEnabled, quotationButtonLabel, quotationRedirectUrl } = useStorefront()
+  
+  // In quotation mode, redirect to quotes page instead of checkout
+  const checkoutHref = quotationModeEnabled ? (quotationRedirectUrl || '/quotes') : checkoutHrefProp
+  const checkoutLabel = quotationModeEnabled ? (quotationButtonLabel || 'Request a Quote') : 'Checkout'
   const {
     cart,
     items,
@@ -126,7 +130,7 @@ export function CartDrawerBlock({
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2">
               <ShoppingCart className="h-5 w-5" />
-              Your Cart
+              {quotationModeEnabled ? 'Your Items' : 'Your Cart'}
               {itemCount > 0 && (
                 <Badge variant="secondary">{itemCount}</Badge>
               )}
@@ -172,6 +176,7 @@ export function CartDrawerBlock({
                 totals={totals}
                 formatPrice={formatPrice}
                 checkoutHref={checkoutHref}
+                checkoutText={checkoutLabel}
                 isLoading={isUpdating}
                 showDiscount={true}
                 currentDiscount={currentDiscount}

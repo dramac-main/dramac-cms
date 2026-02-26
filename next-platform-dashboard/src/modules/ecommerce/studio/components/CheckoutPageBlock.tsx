@@ -292,16 +292,101 @@ export function CheckoutPageBlock({
   const [orderResult, setOrderResult] = React.useState<{
     orderId: string
     orderNumber: string
+    paymentInstructions?: string
   } | null>(null)
   
-  // Handle place order
+  // Handle place order — routes to correct payment flow based on provider
   const handlePlaceOrder = async () => {
     const result = await checkout.placeOrder()
     
     if (result.success && result.order_id && result.order_number) {
+      const payment = result.payment as Record<string, unknown> | undefined
+      const paymentUrl = result.payment_url as string | undefined
+      const provider = payment?.provider as string | undefined
+      
+      // Handle redirect-based payment providers (Pesapal, DPO)
+      if (paymentUrl && (provider === 'pesapal' || provider === 'dpo')) {
+        // Redirect to external payment page
+        window.location.href = paymentUrl
+        return
+      }
+      
+      // Handle Paddle (client-side JS overlay)
+      if (provider === 'paddle' && payment?.checkoutData) {
+        const paddleData = payment as Record<string, unknown>
+        const checkoutData = paddleData.checkoutData as Record<string, unknown>
+        // Check if Paddle.js is loaded globally
+        const PaddleJS = (window as unknown as Record<string, unknown>).Paddle as {
+          Checkout?: { open: (config: Record<string, unknown>) => void }
+        } | undefined
+        
+        if (PaddleJS?.Checkout?.open) {
+          PaddleJS.Checkout.open({
+            product: (checkoutData.product as Record<string, unknown>)?.price 
+              ? undefined 
+              : undefined,
+            override: checkoutData.successUrl,
+            email: (checkoutData.customer as Record<string, string>)?.email,
+            passthrough: JSON.stringify({ orderId: result.order_id }),
+            successCallback: () => {
+              setOrderResult({
+                orderId: result.order_id!,
+                orderNumber: result.order_number!
+              })
+              if (onOrderComplete) {
+                onOrderComplete(result.order_id!, result.order_number!)
+              }
+            },
+            closeCallback: () => {
+              // Payment was cancelled — order still exists as pending
+            }
+          })
+          return
+        }
+        // Paddle.js not loaded — fall through to success with pending payment notice
+      }
+      
+      // Handle Flutterwave (client-side inline checkout)
+      if (provider === 'flutterwave' && payment?.publicKey) {
+        const FlutterwaveCheckout = (window as unknown as Record<string, unknown>).FlutterwaveCheckout as 
+          ((config: Record<string, unknown>) => void) | undefined
+        
+        if (FlutterwaveCheckout) {
+          FlutterwaveCheckout({
+            public_key: payment.publicKey as string,
+            tx_ref: `order_${result.order_id}_${Date.now()}`,
+            amount: payment.amount as number,
+            currency: payment.currency as string,
+            customer: payment.customer as Record<string, unknown>,
+            customizations: payment.customizations as Record<string, unknown>,
+            redirect_url: payment.redirectUrl as string,
+            callback: () => {
+              setOrderResult({
+                orderId: result.order_id!,
+                orderNumber: result.order_number!
+              })
+              if (onOrderComplete) {
+                onOrderComplete(result.order_id!, result.order_number!)
+              }
+            },
+            onclose: () => {
+              // Payment modal closed — order still pending
+            }
+          })
+          return
+        }
+        // Flutterwave JS not loaded — fall through
+      }
+      
+      // Manual payment or fallback — show success with instructions
+      const instructions = provider === 'manual' 
+        ? (payment?.instructions as string) || 'Please contact us for payment instructions.'
+        : undefined
+      
       setOrderResult({
         orderId: result.order_id,
-        orderNumber: result.order_number
+        orderNumber: result.order_number,
+        paymentInstructions: instructions
       })
       
       if (onOrderComplete) {
@@ -359,9 +444,18 @@ export function CheckoutPageBlock({
               <p className="text-muted-foreground mb-4">
                 Your order #{orderResult.orderNumber} has been placed.
               </p>
-              <p className="text-sm text-muted-foreground mb-6">
-                You will receive a confirmation email shortly.
-              </p>
+              {orderResult.paymentInstructions ? (
+                <div className="bg-muted rounded-lg p-4 mb-6 text-left max-w-md">
+                  <p className="font-medium text-sm mb-2">Payment Instructions:</p>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {orderResult.paymentInstructions}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground mb-6">
+                  You will receive a confirmation email shortly.
+                </p>
+              )}
               <Button asChild>
                 <Link href={`${successHref}?order=${orderResult.orderId}`}>
                   View Order Details

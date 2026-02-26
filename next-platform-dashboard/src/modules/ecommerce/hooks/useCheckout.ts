@@ -487,9 +487,18 @@ export function useCheckout(): UseCheckoutResult {
       const result: CheckoutResult = await response.json()
       
       if (result.success) {
-        // Clear cart and checkout state on success
-        await clearCart()
-        clearCheckout()
+        const provider = (result.payment as Record<string, unknown>)?.provider as string | undefined
+        const hasRedirectPayment = result.payment_url && (provider === 'pesapal' || provider === 'dpo')
+        const hasClientPayment = provider === 'paddle' || provider === 'flutterwave'
+        
+        // For manual payment or unknown providers: clear cart immediately
+        // For redirect-based payment: clear cart (user navigates away)
+        // For client-side payment (Paddle/Flutterwave): DON'T clear yet — 
+        //   the checkout component will handle clearing after payment callback
+        if (!hasClientPayment || hasRedirectPayment) {
+          await clearCart()
+          clearCheckout()
+        }
       }
       
       return result

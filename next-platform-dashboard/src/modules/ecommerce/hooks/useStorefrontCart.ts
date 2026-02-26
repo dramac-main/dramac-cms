@@ -126,6 +126,23 @@ export function useStorefrontCart(
     initCart()
   }, [initCart])
 
+  // Listen for cart-updated events from other components
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      // Re-fetch cart data when another component updates the cart
+      if (cart?.id) {
+        getPublicCart(cart.id).then((refreshedCart) => {
+          if (refreshedCart) {
+            setCart(refreshedCart)
+          }
+        }).catch(console.error)
+      }
+    }
+
+    window.addEventListener('cart-updated', handleCartUpdate)
+    return () => window.removeEventListener('cart-updated', handleCartUpdate)
+  }, [cart?.id])
+
   // Refresh cart
   const refresh = useCallback(async () => {
     if (!cart?.id) return
@@ -173,6 +190,10 @@ export function useStorefrontCart(
       const refreshedCart = await getPublicCart(cart.id)
       if (refreshedCart) {
         setCart(refreshedCart)
+      }
+      // Notify other cart instances
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cart-updated'))
       }
       return true
     } catch (err) {

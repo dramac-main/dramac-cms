@@ -61,12 +61,16 @@ export function MiniCartBlock({
   trigger,
   maxItems = 3,
   cartHref = '/cart',
-  checkoutHref = '/checkout',
+  checkoutHref: checkoutHrefProp = '/checkout',
   shopLink = '/shop',
   align = 'end',
   className
 }: MiniCartBlockProps) {
-  const { siteId, formatPrice, taxRate } = useStorefront()
+  const { siteId, formatPrice, taxRate, quotationModeEnabled, quotationButtonLabel, quotationRedirectUrl } = useStorefront()
+  
+  // In quotation mode, redirect to quotes page instead of checkout
+  const checkoutHref = quotationModeEnabled ? (quotationRedirectUrl || '/quotes') : checkoutHrefProp
+  const checkoutLabel = quotationModeEnabled ? (quotationButtonLabel || 'Request a Quote') : 'Checkout'
   const {
     items,
     totals: cartTotals,
@@ -116,7 +120,7 @@ export function MiniCartBlock({
           <div className="flex items-center justify-between">
             <h4 className="font-semibold flex items-center gap-2">
               <ShoppingCart className="h-4 w-4" />
-              Cart
+              {quotationModeEnabled ? 'Items' : 'Cart'}
               {itemCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   {itemCount}
@@ -201,7 +205,7 @@ export function MiniCartBlock({
                   onClick={() => setOpen(false)}
                 >
                   <Link href={checkoutHref}>
-                    Checkout
+                    {checkoutLabel}
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </Link>
                 </Button>
