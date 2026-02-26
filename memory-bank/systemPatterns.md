@@ -226,8 +226,25 @@ site.settings.font_body ───────┘                      │       
 ### FOUR Layers of Enforcement
 1. **CSS Variable Layer** — `generateBrandCSSVars()` overrides `--color-card`, `--color-foreground`, `--font-sans`, `--font-display` etc. on `.studio-renderer`. All shadcn/Tailwind utilities inside published sites use site brand colors and fonts.
 2. **Color Prop Injection Layer** — `injectBrandColors()` fills component color props (for booking/custom components that use inline styles)
-3. **Font Prop Injection Layer** — `injectBrandFonts()` fills component font props (`titleFont`, `nameFont`, `fontFamily`, etc.) with brand heading/body fonts
+3. **Font Prop Injection Layer** — `injectBrandFonts()` fills component font props (`titleFont`, `titleFontFamily`, `nameFont`, `fontFamily`, etc.) with brand heading/body fonts. **Treats legacy `"system-ui, -apple-system, sans-serif"` as unset** (old pages stored this before the brand system existed).
 4. **AI Prompts** (prompts.ts, formatter.ts) mandate the AI use brand colors
+
+### CRITICAL: Legacy Font Value Handling
+Old pages stored `fontFamily: "system-ui, -apple-system, sans-serif"` in DB props before the brand font system. `injectBrandFonts()` treats this value as "unset" alongside `null`, `undefined`, and `""`:
+```typescript
+const LEGACY_SYSTEM_FONT = "system-ui, -apple-system, sans-serif";
+const isUnset = currentValue === undefined || currentValue === null || currentValue === "" || currentValue === LEGACY_SYSTEM_FONT;
+```
+
+### CRITICAL: Inline fontFamily Guard Pattern
+All `fontFamily` inline styles MUST use `|| undefined` to prevent empty strings from overriding the CSS cascade:
+```typescript
+// ✅ CORRECT — empty/falsy font doesn't override CSS variables
+style={{ fontFamily: titleFont || undefined }}
+
+// ❌ WRONG — empty string "" becomes font-family: "" in CSS, blocks cascade
+style={{ fontFamily: titleFont }}
+```
 
 ### CRITICAL RULES for Storefront Components
 **NEVER** do any of the following in storefront-facing components:

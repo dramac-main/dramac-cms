@@ -1,14 +1,57 @@
 # Active Context
 
-## Current Focus: Unified Branding Audit — Emails, Live Chat, Fonts, Embeds COMPLETE
+## Current Focus: Font Branding Cascade Fix — Legacy System-UI Override COMPLETE
 
-### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `97828886`)
+### Status: ALL CHANGES VERIFIED & DEPLOYED ✅ (Commit `c380e8bb`)
 
 ### Recent Fixes (newest first):
+- Font Branding Cascade Fix — Legacy system-ui override treated as unset, 8 inline fontFamily guards, field defaultValue fix, titleFontFamily in BRAND_FONT_MAP (commit `c380e8bb`) ✅
 - Unified Branding Across Emails, Live Chat, Fonts, Embeds — 13 files, 320 insertions, comprehensive end-to-end branding audit + fixes across entire platform (commit `97828886`) ✅
 - Site Branding Settings UI + Booking Page Overhaul — 7 files, 633 insertions, new Branding tab in site settings, BookingWidget replaces broken ServiceSelector on /book page, CSS variable fallbacks in booking components, AI context builder fix (commit `f54c6afb`) ✅
 - Font fallback + persistDesignTokens all 7 fields — Fixed font reading to fall back to theme.*, fixed persistDesignTokensAction to write all 7 flat fields (commit `0bc91366`) ✅
 - Global Branding CSS Variable System — 20 files, 903 insertions, CSS variable isolation for published sites, dark mode fix, font system, booking defaultProps cleanup (commit `a6d3bb6f`) ✅
+
+---
+
+### Font Branding Cascade Fix (commit `c380e8bb`) ✅
+
+**Problem:** Despite the unified branding audit (commit `97828886`), fonts on published pages (especially /book) were STILL showing `system-ui` instead of the site's configured Poppins/Inter. Screenshot evidence confirmed the issue.
+
+**Root Cause Analysis (deep audit):**
+Old pages created BEFORE the brand font system had `fontFamily: "system-ui, -apple-system, sans-serif"` stored in component props in the DB. The `injectBrandFonts()` function only checked for `""`, `null`, `undefined` — it saw this stored value as a "user override" and skipped injection. The inline `style={{ fontFamily: "system-ui..." }}` then overrode the CSS variable cascade (`var(--font-sans)`).
+
+**Secondary Issues Found:**
+1. 8 render functions in `renders.tsx` had `fontFamily: titleFont` without `|| undefined` guard — an empty string `""` becomes `font-family: ""` in CSS, which is invalid but still overrides the cascade
+2. `titleFontFamily` (used by BookingWidgetBlock, ServiceSelectorBlock, BookingEmbedBlock) was missing from `BRAND_FONT_MAP`
+3. Text component field definition still had `defaultValue: "system-ui, -apple-system, sans-serif"` and "System Default" as first option — a UX trap
+
+**Solution (4 files, commit `c380e8bb`):**
+
+| File | Fix |
+|------|-----|
+| `brand-colors.ts` | `injectBrandFonts()` now treats `"system-ui, -apple-system, sans-serif"` as unset (same as null/undefined/empty) |
+| `brand-colors.ts` | Added `titleFontFamily: "heading"` to `BRAND_FONT_MAP` |
+| `renders.tsx` | Added `|| undefined` guard to 8 unguarded `fontFamily` inline styles (Features, Pricing, Stats, Team, Testimonials) |
+| `core-components.ts` | Text fontFamily select: added "Inherit from Brand" (value `""`) as first option, changed `defaultValue` to `""` |
+| `field-utils.ts` | `FONT_FAMILIES` array: added "Inherit from Brand" (value `""`) as first option |
+
+**Key Pattern — Legacy Font Handling:**
+```typescript
+const LEGACY_SYSTEM_FONT = "system-ui, -apple-system, sans-serif";
+const isUnset = currentValue === undefined || currentValue === null || currentValue === "" || currentValue === LEGACY_SYSTEM_FONT;
+```
+
+**Updated BRAND_FONT_MAP:**
+```typescript
+const BRAND_FONT_MAP: Record<string, "heading" | "body"> = {
+  fontFamily: "body",          // Text, Heading, Button components
+  titleFont: "heading",        // Section title fonts
+  titleFontFamily: "heading",  // Booking widget title fonts (NEW)
+  featureTitleFont: "heading", // Feature card titles
+  nameFont: "heading",         // Person names (team, testimonials)
+  valueFont: "heading",        // Statistic values
+};
+```
 
 ---
 
