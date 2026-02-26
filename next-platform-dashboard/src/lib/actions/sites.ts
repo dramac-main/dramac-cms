@@ -431,6 +431,8 @@ export interface SiteBrandingData {
   text_color: string;
   font_heading: string;
   font_body: string;
+  logo_url: string;
+  favicon_url: string;
 }
 
 /**
@@ -463,6 +465,8 @@ export async function getSiteBrandingAction(siteId: string): Promise<{
       text_color: (settings.text_color as string) || (theme.textColor as string) || '#0f172a',
       font_heading: (settings.font_heading as string) || (theme.fontHeading as string) || '',
       font_body: (settings.font_body as string) || (theme.fontBody as string) || '',
+      logo_url: (settings.logo_url as string) || '',
+      favicon_url: (settings.favicon_url as string) || '',
     },
   };
 }
@@ -502,6 +506,8 @@ export async function updateSiteBrandingAction(
     text_color: branding.text_color || undefined,
     font_heading: branding.font_heading || undefined,
     font_body: branding.font_body || undefined,
+    logo_url: branding.logo_url || undefined,
+    favicon_url: branding.favicon_url || undefined,
     // Theme sub-object (for AI designer design tokens compatibility)
     theme: {
       ...currentTheme,
@@ -512,6 +518,143 @@ export async function updateSiteBrandingAction(
       textColor: branding.text_color || undefined,
       fontHeading: branding.font_heading || undefined,
       fontBody: branding.font_body || undefined,
+      logoUrl: branding.logo_url || undefined,
+      faviconUrl: branding.favicon_url || undefined,
+    },
+  };
+
+  const { error: updateError } = await supabase
+    .from("sites")
+    .update({ settings: mergedSettings as Json })
+    .eq("id", siteId);
+
+  if (updateError) return { error: updateError.message };
+
+  revalidatePath(`/dashboard/sites/${siteId}`);
+  revalidatePath(`/dashboard/sites/${siteId}/settings`);
+  return { success: true };
+}
+
+// ============================================================================
+// Site Logo & Favicon Upload
+// ============================================================================
+
+/**
+ * Upload a logo image for a site.
+ * Stores in Supabase Storage "branding" bucket under sites/{siteId}/ path.
+ * Updates the site settings.logo_url with the public URL.
+ */
+export async function uploadSiteLogoAction(
+  formData: FormData
+): Promise<{ url?: string; error?: string }> {
+  const supabase = await createClient();
+  const file = formData.get("file") as File;
+  const siteId = formData.get("siteId") as string;
+  const type = (formData.get("type") as string) || "logo"; // "logo" or "favicon"
+
+  if (!file || !siteId) {
+    return { error: "Missing file or site ID" };
+  }
+
+  // Validate file type
+  const validTypes = ["image/png", "image/jpeg", "image/webp", "image/svg+xml", "image/x-icon"];
+  if (!validTypes.includes(file.type)) {
+    return { error: "Invalid file type. Please upload PNG, JPEG, WebP, SVG, or ICO." };
+  }
+
+  // Validate file size (max 2MB)
+  if (file.size > 2 * 1024 * 1024) {
+    return { error: "File too large. Maximum size is 2MB." };
+  }
+
+  const fileExt = file.name.split(".").pop() || "png";
+  const fileName = `sites/${siteId}/${type}-${Date.now()}.${fileExt}`;
+
+  // Upload to storage
+  const { error: uploadError } = await supabase.storage
+    .from("branding")
+    .upload(fileName, file, {
+      cacheControl: "3600",
+      upsert: true,
+    });
+
+  if (uploadError) {
+    console.error(`[Sites] Error uploading ${type}:`, uploadError);
+    return { error: `Failed to upload ${type}` };
+  }
+
+  // Get public URL
+  const { data: urlData } = supabase.storage
+    .from("branding")
+    .getPublicUrl(fileName);
+
+  const publicUrl = urlData.publicUrl;
+
+  // Update site settings with the new URL
+  const settingsField = type === "favicon" ? "favicon_url" : "logo_url";
+  
+  const { data: site } = await supabase
+    .from("sites")
+    .select("settings")
+    .eq("id", siteId)
+    .single();
+
+  const currentSettings = (site?.settings as Record<string, unknown>) || {};
+  const currentTheme = (currentSettings.theme as Record<string, unknown>) || {};
+
+  const mergedSettings = {
+    ...currentSettings,
+    [settingsField]: publicUrl,
+    theme: {
+      ...currentTheme,
+      [type === "favicon" ? "faviconUrl" : "logoUrl"]: publicUrl,
+    },
+  };
+
+  const { error: updateError } = await supabase
+    .from("sites")
+    .update({ settings: mergedSettings as Json })
+    .eq("id", siteId);
+
+  if (updateError) {
+    console.error(`[Sites] Error updating settings with ${type} URL:`, updateError);
+    return { error: `Uploaded but failed to save ${type} URL` };
+  }
+
+  revalidatePath(`/dashboard/sites/${siteId}`);
+  revalidatePath(`/dashboard/sites/${siteId}/settings`);
+  return { url: publicUrl };
+}
+
+/**
+ * Remove (clear) the logo or favicon URL from site settings.
+ */
+export async function removeSiteLogoAction(
+  siteId: string,
+  type: "logo" | "favicon" = "logo"
+): Promise<{ success?: boolean; error?: string }> {
+  if (!siteId) return { error: "Missing siteId" };
+
+  const supabase = await createClient();
+
+  const { data: site } = await supabase
+    .from("sites")
+    .select("settings")
+    .eq("id", siteId)
+    .single();
+
+  const currentSettings = (site?.settings as Record<string, unknown>) || {};
+  const currentTheme = (currentSettings.theme as Record<string, unknown>) || {};
+
+  const settingsField = type === "favicon" ? "favicon_url" : "logo_url";
+  const themeField = type === "favicon" ? "faviconUrl" : "logoUrl";
+
+  const mergedSettings = {
+    ...currentSettings,
+    [settingsField]: undefined,
+    theme: {
+      ...currentTheme,
+      [themeField]: undefined,
     },
   };
 

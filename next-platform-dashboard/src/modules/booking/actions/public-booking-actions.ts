@@ -156,6 +156,13 @@ export async function getPublicSettings(siteId: string): Promise<BookingSettings
  * Get available time slots for a service/date (public-facing)
  * This is the most complex operation — calculates availability from rules,
  * existing appointments, and staff schedules.
+ * 
+ * Enforces:
+ * - Past dates return empty
+ * - min_booking_notice_hours: filters out slots too close to now
+ * - max_booking_advance_days: rejects dates too far in the future
+ * - Weekday-aware default fallback (Mon-Fri 9-5 when no rules)
+ * - Buffer times around existing appointments
  */
 export async function getPublicAvailableSlots(
   siteId: string,
@@ -165,6 +172,19 @@ export async function getPublicAvailableSlots(
 ): Promise<TimeSlot[]> {
   try {
     const supabase = getPublicClient()
+    
+    // === SERVER-SIDE DATE VALIDATION ===
+    const now = new Date()
+    const today = new Date(now)
+    today.setHours(0, 0, 0, 0)
+    
+    const requestedDate = new Date(date)
+    requestedDate.setHours(0, 0, 0, 0)
+    
+    // Reject past dates
+    if (requestedDate < today) {
+      return []
+    }
     
     // 1. Get service details
     const { data: serviceData, error: serviceError } = await supabase
@@ -182,9 +202,22 @@ export async function getPublicAvailableSlots(
     
     const service = serviceData as Service
     
-    // 2. Get settings for slot interval
+    // 2. Get settings for slot interval, notice hours, max advance days
     const settings = await getPublicSettings(siteId)
     const slotInterval = settings?.slot_interval_minutes ?? 30
+    const minNoticeHours = settings?.min_booking_notice_hours ?? 0
+    const maxAdvanceDays = settings?.max_booking_advance_days ?? 365
+    
+    // Enforce max_booking_advance_days — reject dates too far in the future
+    const maxDate = new Date(now)
+    maxDate.setDate(maxDate.getDate() + maxAdvanceDays)
+    maxDate.setHours(23, 59, 59, 999)
+    if (requestedDate > maxDate) {
+      return []
+    }
+    
+    // Calculate the earliest bookable moment (now + min notice hours)
+    const earliestBookableTime = new Date(now.getTime() + minNoticeHours * 60 * 60 * 1000)
     
     // 3. Get eligible staff
     let staffIds: string[] = []
@@ -234,7 +267,7 @@ export async function getPublicAvailableSlots(
       .in('rule_type', ['blocked', 'holiday'])
       .or(`day_of_week.eq.${dayOfWeek},specific_date.eq.${dateString}`)
     
-    // 6. Get existing appointments for conflict checking
+    // 6. Get existing appointments for conflict checking (include buffer consideration)
     const dayStart = new Date(date)
     dayStart.setHours(0, 0, 0, 0)
     const dayEnd = new Date(date)
@@ -253,11 +286,18 @@ export async function getPublicAvailableSlots(
     const duration = service.duration_minutes
     const bufferBefore = service.buffer_before_minutes || 0
     const bufferAfter = service.buffer_after_minutes || 0
-    const totalMinutes = duration + bufferBefore + bufferAfter
+    const totalBlockedMinutes = duration + bufferBefore + bufferAfter
     
+    // Weekday-aware fallback: Mon-Fri (1-5) get 9-5, weekends (0,6) get nothing
+    const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5
     const rules = (availabilityRules && availabilityRules.length > 0)
       ? availabilityRules
-      : [{ start_time: '09:00', end_time: '17:00', staff_id: null }]
+      : isWeekday
+        ? [{ start_time: '09:00', end_time: '17:00', staff_id: null }]
+        : [] // No default slots for weekends — return empty
+    
+    // If no rules apply (weekend with no explicit availability), return empty
+    if (rules.length === 0) return []
     
     for (const rule of rules) {
       const ruleStaffId = rule.staff_id
@@ -269,8 +309,11 @@ export async function getPublicAvailableSlots(
       
       let slotStart = new Date(startTime)
       
-      while (slotStart.getTime() + totalMinutes * 60000 <= endTime.getTime()) {
+      while (slotStart.getTime() + totalBlockedMinutes * 60000 <= endTime.getTime()) {
         const slotEnd = new Date(slotStart.getTime() + duration * 60000)
+        // The full blocked window includes buffers
+        const blockedStart = new Date(slotStart.getTime() - bufferBefore * 60000)
+        const blockedEnd = new Date(slotEnd.getTime() + bufferAfter * 60000)
         
         const isBlocked = (blockedRules ?? []).some((block: any) => {
           if (!block.start_time || !block.end_time) return false
@@ -279,17 +322,23 @@ export async function getPublicAvailableSlots(
           return slotStart >= blockStart && slotStart < blockEnd
         })
         
+        // Check conflict with buffer times — existing appointments block
+        // the window [apt.start - bufferBefore, apt.end + bufferAfter]
         const hasConflict = (existingAppointments ?? []).some((apt: any) => {
           if (ruleStaffId && apt.staff_id !== ruleStaffId) return false
           const aptStart = new Date(apt.start_time)
           const aptEnd = new Date(apt.end_time)
-          return slotStart < aptEnd && slotEnd > aptStart
+          // Does this slot (with its buffers) overlap with the appointment?
+          return blockedStart < aptEnd && blockedEnd > aptStart
         })
+        
+        // Enforce min_booking_notice_hours — filter out slots too close to now
+        const isTooSoon = slotStart < earliestBookableTime
         
         slots.push({
           start: new Date(slotStart),
           end: new Date(slotEnd),
-          available: !isBlocked && !hasConflict,
+          available: !isBlocked && !hasConflict && !isTooSoon,
           staffId: ruleStaffId || staffIds[0],
         })
         
@@ -297,7 +346,7 @@ export async function getPublicAvailableSlots(
       }
     }
     
-    // Deduplicate by start time and return only available
+    // Deduplicate by start time and return all (available status is already set)
     const seen = new Set<string>()
     return slots.filter(s => {
       const key = s.start.toISOString()
@@ -314,6 +363,13 @@ export async function getPublicAvailableSlots(
 /**
  * Create an appointment (public-facing)
  * This is the only WRITE operation exposed publicly.
+ * 
+ * Server-side validations:
+ * - Service must be active and bookable
+ * - Start time must be in the future
+ * - Start time must respect min_booking_notice_hours
+ * - Start time must be within max_booking_advance_days
+ * - No double-booking conflicts (with buffer times)
  */
 export async function createPublicAppointment(
   siteId: string,
@@ -331,10 +387,20 @@ export async function createPublicAppointment(
   try {
     const supabase = getPublicClient()
     
+    // === SERVER-SIDE VALIDATION ===
+    const now = new Date()
+    const startTime = new Date(input.startTime)
+    const endTime = new Date(input.endTime)
+    
+    // Reject bookings in the past
+    if (startTime <= now) {
+      return { success: false, error: 'Cannot book appointments in the past' }
+    }
+    
     // Verify service exists and is bookable
     const { data: service } = await supabase
       .from(`${TABLE_PREFIX}_services`)
-      .select('id, name, price, duration_minutes, currency, require_confirmation')
+      .select('id, name, price, duration_minutes, currency, require_confirmation, buffer_before_minutes, buffer_after_minutes')
       .eq('site_id', siteId)
       .eq('id', input.serviceId)
       .eq('is_active', true)
@@ -345,14 +411,40 @@ export async function createPublicAppointment(
       return { success: false, error: 'Service not available for online booking' }
     }
     
-    // Check for conflicts (only check same staff if staffId provided)
+    // Get settings for validation
+    const settings = await getPublicSettings(siteId)
+    const minNoticeHours = settings?.min_booking_notice_hours ?? 0
+    const maxAdvanceDays = settings?.max_booking_advance_days ?? 365
+    
+    // Enforce min_booking_notice_hours
+    if (minNoticeHours > 0) {
+      const earliestAllowed = new Date(now.getTime() + minNoticeHours * 60 * 60 * 1000)
+      if (startTime < earliestAllowed) {
+        return { success: false, error: `Bookings require at least ${minNoticeHours} hours advance notice` }
+      }
+    }
+    
+    // Enforce max_booking_advance_days
+    const maxDate = new Date(now)
+    maxDate.setDate(maxDate.getDate() + maxAdvanceDays)
+    maxDate.setHours(23, 59, 59, 999)
+    if (startTime > maxDate) {
+      return { success: false, error: `Cannot book more than ${maxAdvanceDays} days in advance` }
+    }
+    
+    // Check for conflicts with buffer times
+    const bufferBefore = service.buffer_before_minutes || 0
+    const bufferAfter = service.buffer_after_minutes || 0
+    const blockedStart = new Date(startTime.getTime() - bufferBefore * 60000)
+    const blockedEnd = new Date(endTime.getTime() + bufferAfter * 60000)
+    
     let conflictQuery = supabase
       .from(`${TABLE_PREFIX}_appointments`)
       .select('id')
       .eq('site_id', siteId)
       .neq('status', 'cancelled')
-      .lt('start_time', input.endTime.toISOString())
-      .gt('end_time', input.startTime.toISOString())
+      .lt('start_time', blockedEnd.toISOString())
+      .gt('end_time', blockedStart.toISOString())
     
     if (input.staffId) {
       conflictQuery = conflictQuery.eq('staff_id', input.staffId)

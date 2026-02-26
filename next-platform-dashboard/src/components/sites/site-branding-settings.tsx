@@ -3,16 +3,17 @@
 /**
  * Site Branding Settings
  * 
- * THE central location for all site branding: colors, fonts, everything.
+ * THE central location for all site branding: logo, favicon, colors, fonts.
  * Changes here affect the ENTIRE published site — all pages, all modules,
  * all components. The AI designer also reads these values.
+ * Email templates use the logo and colors from here for customer-facing emails.
  * 
- * This writes to sites.settings flat fields (primary_color, font_heading, etc.)
+ * This writes to sites.settings flat fields (primary_color, font_heading, logo_url, etc.)
  * AND to sites.settings.theme (for AI designer compatibility).
  */
 
-import { useState, useEffect, useCallback } from "react";
-import { Loader2, Paintbrush, Type, Eye, RotateCcw } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Loader2, Paintbrush, Type, Eye, RotateCcw, Upload, ImageIcon, Trash2, Globe } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,8 @@ import { toast } from "sonner";
 import {
   getSiteBrandingAction,
   updateSiteBrandingAction,
+  uploadSiteLogoAction,
+  removeSiteLogoAction,
   type SiteBrandingData,
 } from "@/lib/actions/sites";
 
@@ -61,6 +64,10 @@ interface SiteBrandingSettingsProps {
 export function SiteBrandingSettings({ siteId }: SiteBrandingSettingsProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingFavicon, setIsUploadingFavicon] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const faviconInputRef = useRef<HTMLInputElement>(null);
   const [branding, setBranding] = useState<SiteBrandingData>({
     primary_color: "",
     secondary_color: "",
@@ -69,6 +76,8 @@ export function SiteBrandingSettings({ siteId }: SiteBrandingSettingsProps) {
     text_color: "#0f172a",
     font_heading: "",
     font_body: "",
+    logo_url: "",
+    favicon_url: "",
   });
 
   const loadBranding = useCallback(async () => {
@@ -101,6 +110,40 @@ export function SiteBrandingSettings({ siteId }: SiteBrandingSettingsProps) {
     setBranding((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleFileUpload = async (file: File, type: "logo" | "favicon") => {
+    const setUploading = type === "logo" ? setIsUploadingLogo : setIsUploadingFavicon;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("siteId", siteId);
+      formData.append("type", type);
+      const result = await uploadSiteLogoAction(formData);
+      if (result.url) {
+        const field = type === "favicon" ? "favicon_url" : "logo_url";
+        setBranding((prev) => ({ ...prev, [field]: result.url! }));
+        toast.success(`${type === "logo" ? "Logo" : "Favicon"} uploaded successfully!`);
+      } else {
+        toast.error(result.error || `Failed to upload ${type}`);
+      }
+    } catch {
+      toast.error(`Failed to upload ${type}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = async (type: "logo" | "favicon") => {
+    const result = await removeSiteLogoAction(siteId, type);
+    if (result.success) {
+      const field = type === "favicon" ? "favicon_url" : "logo_url";
+      setBranding((prev) => ({ ...prev, [field]: "" }));
+      toast.success(`${type === "logo" ? "Logo" : "Favicon"} removed.`);
+    } else {
+      toast.error(result.error || `Failed to remove ${type}`);
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -114,6 +157,145 @@ export function SiteBrandingSettings({ siteId }: SiteBrandingSettingsProps) {
 
   return (
     <div className="space-y-6">
+      {/* Logo & Favicon Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <ImageIcon className="h-5 w-5 text-primary" />
+            <div>
+              <CardTitle>Logo & Favicon</CardTitle>
+              <CardDescription>
+                Your site logo appears on every page, in emails sent to customers, and anywhere your brand is shown.
+                The favicon appears in browser tabs.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {/* Logo Upload */}
+            <div className="space-y-3">
+              <Label>Site Logo</Label>
+              <p className="text-xs text-muted-foreground">Used in navigation, emails, invoices, and all branded content. Recommended: 400×100px PNG or SVG.</p>
+              <div className="flex items-start gap-3">
+                {branding.logo_url ? (
+                  <div className="relative group">
+                    <div className="h-20 w-40 rounded-lg border bg-muted/30 flex items-center justify-center overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={branding.logo_url} alt="Site logo" className="max-h-full max-w-full object-contain p-2" />
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleRemoveImage("logo")}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    className="h-20 w-40 rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => logoInputRef.current?.click()}
+                  >
+                    {isUploadingLogo ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    ) : (
+                      <>
+                        <Upload className="h-5 w-5 text-muted-foreground mb-1" />
+                        <span className="text-xs text-muted-foreground">Upload logo</span>
+                      </>
+                    )}
+                  </div>
+                )}
+                {branding.logo_url && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={isUploadingLogo}
+                  >
+                    {isUploadingLogo ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
+                    Replace
+                  </Button>
+                )}
+              </div>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFileUpload(file, "logo");
+                  e.target.value = "";
+                }}
+              />
+            </div>
+
+            {/* Favicon Upload */}
+            <div className="space-y-3">
+              <Label>Favicon</Label>
+              <p className="text-xs text-muted-foreground">Appears in browser tabs. Recommended: 32×32px PNG or ICO.</p>
+              <div className="flex items-start gap-3">
+                {branding.favicon_url ? (
+                  <div className="relative group">
+                    <div className="h-16 w-16 rounded-lg border bg-muted/30 flex items-center justify-center overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={branding.favicon_url} alt="Favicon" className="max-h-full max-w-full object-contain p-1" />
+                    </div>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleRemoveImage("favicon")}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div
+                    className="h-16 w-16 rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
+                    onClick={() => faviconInputRef.current?.click()}
+                  >
+                    {isUploadingFavicon ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    ) : (
+                      <>
+                        <Globe className="h-4 w-4 text-muted-foreground mb-0.5" />
+                        <span className="text-[10px] text-muted-foreground">Upload</span>
+                      </>
+                    )}
+                  </div>
+                )}
+                {branding.favicon_url && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => faviconInputRef.current?.click()}
+                    disabled={isUploadingFavicon}
+                  >
+                    {isUploadingFavicon ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Upload className="h-4 w-4 mr-1" />}
+                    Replace
+                  </Button>
+                )}
+              </div>
+              <input
+                ref={faviconInputRef}
+                type="file"
+                accept="image/png,image/x-icon,image/svg+xml"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFileUpload(file, "favicon");
+                  e.target.value = "";
+                }}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Colors Section */}
       <Card>
         <CardHeader>
@@ -369,7 +551,8 @@ export function SiteBrandingSettings({ siteId }: SiteBrandingSettingsProps) {
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground">
             <strong>How it works:</strong> These settings are the central source of truth for your website&apos;s visual identity.
-            All pages, navigation, booking module, shop, and every component automatically use these colors and fonts.
+            Your logo, colors, and fonts are used across all pages, navigation, booking module, shop, email templates, and every component.
+            Customer-facing emails (booking confirmations, order receipts) will show your site logo and colors.
             When the AI designer generates content, it reads these settings and uses them as mandatory design tokens.
           </p>
         </CardContent>

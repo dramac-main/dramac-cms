@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import type { ComponentDefinition } from '@/types/studio'
 import { useBookingServices, useBookingStaff, useBookingSlots, useCreateBooking } from '../../hooks'
+import { useBookingSettings } from '../../hooks/useBookingSettings'
 import type { Service, Staff } from '../../types/booking-types'
 
 import { DEFAULT_LOCALE, DEFAULT_CURRENCY } from '@/lib/locale-config'
@@ -349,12 +350,35 @@ export function BookingWidgetBlock({
   // ── Real Data Hooks ──────────────────────────────────────────────────────
   const { services: realServices, isLoading: loadingServices } = useBookingServices(siteId || '')
   const { staff: realStaff, isLoading: loadingStaff } = useBookingStaff(siteId || '')
+  const { settings: bookingSettings } = useBookingSettings(siteId || '')
   const { slots: realSlots, isLoading: loadingSlots } = useBookingSlots(siteId || '', {
     serviceId: selectedService?.id,
     date: selectedDate || undefined,
     staffId: selectedStaff?.id,
   })
   const { createBooking, isSubmitting: isCreatingBooking } = useCreateBooking(siteId || '')
+
+  // Booking constraints from settings
+  const minNoticeHours = bookingSettings?.min_booking_notice_hours ?? 0
+  const maxAdvanceDays = bookingSettings?.max_booking_advance_days ?? 365
+  
+  // Calculate the earliest and latest bookable dates
+  const earliestBookableDate = useMemo(() => {
+    const d = new Date()
+    if (minNoticeHours > 0) {
+      d.setTime(d.getTime() + minNoticeHours * 60 * 60 * 1000)
+    }
+    // Zero out the time to get the date boundary
+    d.setHours(0, 0, 0, 0)
+    return d
+  }, [minNoticeHours])
+  
+  const latestBookableDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + maxAdvanceDays)
+    d.setHours(23, 59, 59, 999)
+    return d
+  }, [maxAdvanceDays])
 
   // Map DB services to display format — demo only when no siteId (Studio editor)
   const dataServices: ServiceItem[] = useMemo(() => {
@@ -370,17 +394,29 @@ export function BookingWidgetBlock({
     }))
   }, [siteId, realServices])
 
-  // Map DB staff to display format — demo only when no siteId (Studio editor)
+  // Map DB staff to display format — filtered by selected service when applicable
+  // Demo only when no siteId (Studio editor)
   const dataStaff: StaffMember[] = useMemo(() => {
     if (!siteId) return DEMO_STAFF
-    return realStaff.map((s: Staff) => ({
+    // Filter staff to only those who can perform the selected service
+    const filteredStaff = selectedService
+      ? realStaff.filter((s: Staff) => {
+          // If staff has services assigned, check if the selected service is in the list
+          if (s.services && s.services.length > 0) {
+            return s.services.some((svc: any) => svc.id === selectedService.id)
+          }
+          // If no services assigned (generalist), include them
+          return true
+        })
+      : realStaff
+    return filteredStaff.map((s: Staff) => ({
       id: s.id,
       name: s.name,
       role: s.bio ? s.bio.split('.')[0] : undefined,
       avatar: s.avatar_url || undefined,
       rating: 0,
     }))
-  }, [siteId, realStaff])
+  }, [siteId, realStaff, selectedService])
 
   const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December']
   const dayNames = firstDayOfWeek === 'monday' ? ['Mo','Tu','We','Th','Fr','Sa','Su'] : ['Su','Mo','Tu','We','Th','Fr','Sa']
@@ -411,6 +447,18 @@ export function BookingWidgetBlock({
 
   const isToday = (d: Date) => d.toDateString() === new Date().toDateString()
   const isPast = (d: Date) => { const t = new Date(); t.setHours(0,0,0,0); return d < t }
+  // Enforce min_booking_notice_hours: don't allow dates before the earliest bookable date
+  const isBeforeMinNotice = (d: Date) => {
+    if (!siteId || minNoticeHours <= 0) return false
+    const dayEnd = new Date(d); dayEnd.setHours(23, 59, 59, 999)
+    return dayEnd < earliestBookableDate
+  }
+  // Enforce max_booking_advance_days: don't allow dates past the maximum
+  const isBeyondMaxAdvance = (d: Date) => {
+    if (!siteId) return false
+    return d > latestBookableDate
+  }
+  const isDateDisabled = (d: Date) => isPast(d) || isBeforeMinNotice(d) || isBeyondMaxAdvance(d)
   const isDateSelected = (d: Date) => selectedDate?.toDateString() === d.toDateString()
 
   const timeSlots = useMemo((): TimeSlot[] => {
@@ -658,7 +706,7 @@ export function BookingWidgetBlock({
             ) : dataServices.length === 0 ? (
               <p style={{ textAlign: 'center', opacity: 0.6, padding: '20px' }}>{noServicesMessage}</p>
             ) : dataServices.map(service => (
-              <div key={service.id} onClick={() => { setSelectedService(service); if (autoAdvance) goNext() }}
+              <div key={service.id} onClick={() => { setSelectedService(service); setSelectedStaff(null); if (autoAdvance) goNext() }}
                 style={{
                   padding: '14px', borderRadius: cardBorderRadius,
                   border: `${selectedService?.id === service.id ? '2px' : borderWidth} solid ${selectedService?.id === service.id ? selBorder : (cardBorderColor || '#e5e7eb')}`,
@@ -754,13 +802,13 @@ export function BookingWidgetBlock({
                 {calendarDays.map((date, idx) => (
                   <div key={idx} style={{ aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {date && (
-                      <button onClick={() => { setSelectedDate(date); setSelectedTime(null) }} disabled={isPast(date)}
+                      <button onClick={() => { setSelectedDate(date); setSelectedTime(null) }} disabled={isDateDisabled(date)}
                         style={{
                           width: '100%', height: '100%', borderRadius: '6px', border: isToday(date) && !isDateSelected(date) ? `2px solid ${pc}` : '2px solid transparent',
                           backgroundColor: isDateSelected(date) ? pc : undefined,
-                          color: isDateSelected(date) ? '#fff' : isPast(date) ? '#d1d5db' : undefined,
+                          color: isDateSelected(date) ? '#fff' : isDateDisabled(date) ? '#d1d5db' : undefined,
                           fontSize: '13px', fontWeight: isDateSelected(date) ? 600 : 400,
-                          cursor: isPast(date) ? 'not-allowed' : 'pointer', opacity: isPast(date) ? 0.4 : 1,
+                          cursor: isDateDisabled(date) ? 'not-allowed' : 'pointer', opacity: isDateDisabled(date) ? 0.4 : 1,
                           transition: 'all 0.15s ease',
                         }}
                       >
