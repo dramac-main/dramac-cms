@@ -504,7 +504,7 @@ export const ecommercePageDefinitions: PageDefinition[] = [
 /**
  * Optional page definitions - created on-demand based on settings
  */
-export { quotePageDefinition };
+// quotePageDefinition is already exported via its const declaration above
 
 /**
  * Dynamic route definitions (stored as metadata, not actual pages)

@@ -220,7 +220,7 @@ export function CustomerTable({
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
-      cell: ({ row }) => formatCurrency(row.original.total_spent, currency)
+      cell: ({ row }) => formatCurrency(row.original.total_spent)
     },
     // Actions
     {
@@ -260,7 +260,7 @@ export function CustomerTable({
         )
       }
     }
-  ], [currency, onViewCustomer])
+  ], [storeCurrency, onViewCustomer])
 
   // Table instance
   const table = useReactTable({

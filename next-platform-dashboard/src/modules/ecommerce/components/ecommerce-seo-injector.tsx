@@ -245,7 +245,7 @@ async function ShopPageSeo({
   // Fetch first 20 active products for the ItemList
   const { data: products } = await db
     .from(`${TABLE_PREFIX}_products`)
-    .select('id, name, slug, images, base_price, status')
+    .select('id, name, slug, images, base_price, track_inventory, quantity, status')
     .eq('site_id', siteId)
     .eq('status', 'active')
     .order('is_featured', { ascending: false })
@@ -320,7 +320,7 @@ async function CategoryPageSeo({
     const productIds = productLinks.map((l: { product_id: string }) => l.product_id);
     const { data: productData } = await db
       .from(`${TABLE_PREFIX}_products`)
-      .select('id, name, slug, images, base_price, status')
+      .select('id, name, slug, images, base_price, track_inventory, quantity, status')
       .in('id', productIds)
       .eq('status', 'active')
       .limit(20);
@@ -346,6 +346,7 @@ async function CategoryPageSeo({
   if (settings) {
     schemas.push(generateStoreJsonLd(settings, siteUrl));
   }
+  schemas.push(generateWebSiteSearchJsonLd(storeName, siteUrl));
 
   return (
     <>

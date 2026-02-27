@@ -366,7 +366,7 @@ export function CustomerDetailDialog({
                       <div className="flex items-center justify-between mt-2 text-sm text-muted-foreground">
                         <span>{format(new Date(order.created_at), 'MMM d, yyyy')}</span>
                         <span className="font-medium text-foreground">
-                          {formatCurrency(order.total, order.currency)}
+                          {formatCurrency(order.total)}
                         </span>
                       </div>
                     </div>

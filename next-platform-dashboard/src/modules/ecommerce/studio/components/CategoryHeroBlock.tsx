@@ -12,7 +12,7 @@
 import React, { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Loader2, Grid3X3, AlertCircle } from 'lucide-react'
-import { getPublicCategories } from '../../actions/public-ecommerce-actions'
+import { getPublicCategories, getPublicProductsByCategory } from '../../actions/public-ecommerce-actions'
 import { getPublicProducts } from '../../actions/public-ecommerce-actions'
 import { useStorefront } from '../../context/storefront-context'
 import type { Category } from '../../types/ecommerce-types'
@@ -95,10 +95,7 @@ export function CategoryHeroBlock({
         // Fetch product count for this category
         if (showProductCount) {
           try {
-            const productsResult = await getPublicProducts(effectiveSiteId, {
-              categoryId: found.id,
-              status: 'active',
-            }, 1, 1)
+            const productsResult = await getPublicProductsByCategory(effectiveSiteId, found.id, 1, 1)
             setProductCount(productsResult.total || 0)
           } catch {
             setProductCount(0)
@@ -197,7 +194,7 @@ export function CategoryHeroBlock({
 // DEFINITION
 // =============================================================================
 
-export const categoryHeroDefinition: ComponentDefinition = {
+export const categoryHeroDefinition: Omit<ComponentDefinition, 'render'> = {
   type: 'CategoryHeroBlock',
   label: 'Category Hero',
   description: 'Hero banner for category pages with name, description, image, and product count',
@@ -211,9 +208,9 @@ export const categoryHeroDefinition: ComponentDefinition = {
     minHeight: '200px',
   },
   fields: {
-    showImage: { type: 'boolean', label: 'Show Image', description: 'Display category image as background' },
-    showDescription: { type: 'boolean', label: 'Show Description', description: 'Display category description' },
-    showProductCount: { type: 'boolean', label: 'Show Product Count', description: 'Display number of products' },
+    showImage: { type: 'toggle', label: 'Show Image', description: 'Display category image as background' },
+    showDescription: { type: 'toggle', label: 'Show Description', description: 'Display category description' },
+    showProductCount: { type: 'toggle', label: 'Show Product Count', description: 'Display number of products' },
     overlayOpacity: {
       type: 'number',
       label: 'Overlay Opacity',

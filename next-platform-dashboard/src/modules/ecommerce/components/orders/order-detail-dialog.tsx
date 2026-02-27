@@ -358,7 +358,6 @@ export function OrderDetailDialog({
               <div className="rounded-lg border">
                 <OrderItemsTable
                   items={orderData.items || []}
-                  currency={orderData.currency}
                   subtotal={orderData.subtotal}
                   shipping={orderData.shipping_total || orderData.shipping_amount}
                   tax={orderData.tax_total || orderData.tax_amount}

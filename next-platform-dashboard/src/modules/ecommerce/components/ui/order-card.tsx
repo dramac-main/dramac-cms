@@ -39,6 +39,7 @@ import {
 import type { Order, OrderStatus, PaymentStatus, FulfillmentStatus } from "../../types/ecommerce-types"
 
 import { useCurrency } from '../../context/ecommerce-context'
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 // =============================================================================
 // TYPES
 // =============================================================================

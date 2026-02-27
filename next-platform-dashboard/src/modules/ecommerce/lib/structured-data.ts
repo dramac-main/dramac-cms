@@ -63,7 +63,7 @@ export function generateProductJsonLd(
   const availability = getAvailability(product);
 
   // Build offers — if variants exist with different prices, create multiple offers
-  const offers = buildOffers(product, productUrl, currency, availability);
+  const offers = buildOffers(product, productUrl, currency, availability, options);
 
   // Core product schema
   const schema: Record<string, unknown> = {
@@ -123,7 +123,7 @@ export function generateProductJsonLd(
   if (reviewStats && reviewStats.totalReviews > 0 && reviewStats.averageRating > 0) {
     schema.aggregateRating = {
       '@type': 'AggregateRating',
-      ratingValue: reviewStats.averageRating,
+      ratingValue: Math.min(5, Math.max(1, reviewStats.averageRating)),
       reviewCount: reviewStats.totalReviews,
       bestRating: 5,
       worstRating: 1,
@@ -142,6 +142,7 @@ function buildOffers(
   productUrl: string,
   currency: string,
   availability: string,
+  options: StructuredDataOptions,
 ): Record<string, unknown> {
   const hasVariantPrices = product.variants?.some(v => v.price !== null && v.price !== product.base_price);
 
@@ -153,8 +154,8 @@ function buildOffers(
         .filter(v => v.price !== null && v.is_active)
         .map(v => v.price as number),
     ];
-    const lowPrice = Math.min(...prices) / 100;
-    const highPrice = Math.max(...prices) / 100;
+    const lowPrice = Math.min(...prices);
+    const highPrice = Math.max(...prices);
 
     return {
       '@type': 'AggregateOffer',
@@ -168,23 +169,26 @@ function buildOffers(
   }
 
   // Single price — use Offer
+  const { storeName: sellerName } = options;
   const offer: Record<string, unknown> = {
     '@type': 'Offer',
-    price: (product.base_price / 100).toFixed(2),
+    price: Number(product.base_price).toFixed(2),
     priceCurrency: currency,
     availability: `https://schema.org/${availability}`,
     url: productUrl,
     seller: {
       '@type': 'Organization',
-      name: product.metadata?.brand as string || undefined,
+      name: (product.metadata?.brand as string) || sellerName || 'Store',
     },
   };
 
-  // Add compare-at price as the "original" price (for sale indication)
+  // Add sale metadata for Google rich results
   if (product.compare_at_price && product.compare_at_price > product.base_price) {
-    // Google doesn't have a direct "was" price, but we can hint at it
-    // via the itemCondition and priceValidUntil
     offer.itemCondition = 'https://schema.org/NewCondition';
+    // priceValidUntil is required by Google for Product rich results
+    const validUntil = new Date();
+    validUntil.setFullYear(validUntil.getFullYear() + 1);
+    offer.priceValidUntil = validUntil.toISOString().split('T')[0];
   }
 
   return offer;
@@ -215,6 +219,18 @@ export function generateProductListJsonLd(
       url: `${siteUrl}/products/${product.slug}`,
       name: product.name,
       image: product.images?.[0] || undefined,
+      item: {
+        '@type': 'Product',
+        name: product.name,
+        url: `${siteUrl}/products/${product.slug}`,
+        image: product.images?.[0] || undefined,
+        offers: {
+          '@type': 'Offer',
+          price: Number(product.base_price).toFixed(2),
+          priceCurrency: options.currency,
+          availability: `https://schema.org/${product.track_inventory && product.quantity <= 0 ? 'OutOfStock' : 'InStock'}`,
+        },
+      },
     })),
   };
 }
@@ -270,7 +286,7 @@ export function generateStoreJsonLd(
   if (settings.store_address) {
     schema.address = {
       '@type': 'PostalAddress',
-      streetAddress: settings.store_address.line1,
+      streetAddress: settings.store_address.address_line_1,
       addressLocality: settings.store_address.city,
       addressRegion: settings.store_address.state,
       postalCode: settings.store_address.postal_code,

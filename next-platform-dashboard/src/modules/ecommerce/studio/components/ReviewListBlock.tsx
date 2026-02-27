@@ -329,7 +329,7 @@ export const reviewListDefinition = {
   type: 'EcommerceReviewList',
   label: 'Review List',
   description: 'Display product reviews with ratings, sort, and helpful votes',
-  category: 'ecommerce',
+  category: 'ecommerce' as const,
   icon: 'MessageSquare',
   fields: {
     showDistribution: {

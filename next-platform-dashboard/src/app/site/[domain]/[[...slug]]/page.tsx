@@ -65,20 +65,74 @@ export async function generateMetadata({ params }: SitePageProps): Promise<Metad
       const productSlug = normalizedSlug.replace('products/', '');
       const { data: product } = await db
         .from('mod_ecommod01_products')
-        .select('name, description, short_description, images, base_price, seo_title, seo_description')
+        .select('name, description, short_description, images, base_price, currency, seo_title, seo_description')
         .eq('site_id', data.site.id)
         .eq('slug', productSlug)
         .eq('status', 'active')
         .single();
       
       if (product) {
-        metadata.title = product.seo_title || product.name;
-        metadata.description = product.seo_description || product.description || product.short_description || undefined;
+        const productTitle = product.seo_title || product.name;
+        const productDesc = product.seo_description || product.description || product.short_description || undefined;
+        const productImages = product.images?.length > 0 ? product.images : undefined;
+
+        metadata.title = productTitle;
+        metadata.description = productDesc;
         metadata.openGraph = {
-          title: product.seo_title || product.name,
-          description: product.seo_description || product.description || product.short_description || undefined,
-          images: product.images?.length > 0 ? product.images : undefined,
+          title: productTitle,
+          description: productDesc,
+          images: productImages,
+          type: 'website', // Note: 'product' is not a standard OG type in Next.js Metadata API
+        };
+        // Twitter card for product pages
+        metadata.twitter = {
+          card: 'summary_large_image',
+          title: productTitle,
+          description: productDesc,
+          images: productImages,
+        };
+        // Add product price as additional meta via other
+        if (product.base_price) {
+          metadata.other = {
+            'product:price:amount': String(product.base_price),
+            'product:price:currency': product.currency || 'ZMW',
+          };
+        }
+      }
+    } catch {
+      // Fall through to default metadata
+    }
+  }
+
+  // Enhance metadata for category pages
+  if (normalizedSlug.startsWith('categories/') && data.site.id) {
+    try {
+      const { createAdminClient: createAdmin } = await import('@/lib/supabase/admin');
+      const db = createAdmin() as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      const catSlug = normalizedSlug.replace('categories/', '');
+      const { data: category } = await db
+        .from('mod_ecommod01_categories')
+        .select('name, description, image_url')
+        .eq('site_id', data.site.id)
+        .eq('slug', catSlug)
+        .single();
+      
+      if (category) {
+        const catTitle = `${category.name} — ${data.site.name}`;
+        const catDesc = category.description || `Browse ${category.name} products`;
+        metadata.title = catTitle;
+        metadata.description = catDesc;
+        metadata.openGraph = {
+          title: catTitle,
+          description: catDesc,
+          images: category.image_url ? [category.image_url] : undefined,
           type: 'website',
+        };
+        metadata.twitter = {
+          card: category.image_url ? 'summary_large_image' : 'summary',
+          title: catTitle,
+          description: catDesc,
+          images: category.image_url ? [category.image_url] : undefined,
         };
       }
     } catch {

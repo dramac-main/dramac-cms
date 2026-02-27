@@ -1,38 +1,71 @@
 # Active Context
 
-## Current Focus: E-Commerce Production-Ready Phase — Sections 1-6 Complete
+## Current Focus: E-Commerce Production-Ready Phase — Sections 1-18 Complete
 
-### Status: SECTIONS 1-6 IMPLEMENTED ✅ (4 Critical Bugs Fixed + Branding Audit)
+### Status: SECTIONS 1-18 IMPLEMENTED ✅ (Commit `17c4eefd`)
 
-### Latest Work: PHASE-ECOM-PRODUCTION-READY Sections 1-6
+### Latest Work: PHASE-ECOM-PRODUCTION-READY Sections 7-18
 
-Executed sections 1-6 of `phases/PHASE-ECOM-PRODUCTION-READY.md`. Sections 1-4 were context/reference. Sections 5-6 required active implementation.
+Executed sections 7-18 of `phases/PHASE-ECOM-PRODUCTION-READY.md`. All changes committed and pushed.
 
-**Section 5: Critical Bugs Fixed**
+**Commits:**
+- `85b2e9da` — Sections 1-6 (4 bugs fixed + 55 branding violations)
+- `17c4eefd` — Sections 7-18 (9 files, 390 insertions, 14 deletions)
 
-| Bug | Root Cause | Fix | Files |
-|-----|------------|-----|-------|
-| **BUG 1: `customer_name` column missing** | Column never added to `mod_ecommod01_orders` table | Applied DB migration via Supabase MCP: `ALTER TABLE mod_ecommod01_orders ADD COLUMN IF NOT EXISTS customer_name text` | Database only |
-| **BUG 2: Analytics `_cents` columns** | 47 occurrences of wrong column names (`total_cents`, `subtotal_cents`, etc.) | 22 replacements fixing all column refs to match actual DB schema (`total`, `subtotal`, `tax_amount`, `shipping_amount`, `discount_amount`, `total_price`, `unit_price`) | `analytics-actions.ts` |
-| **BUG 3: Country dropdown** | Hardcoded 8-country list (no Zambia), Radix Select portal escapes branding | Native `<select>` with `getCountryList()` (50+ countries, Zambia first), h-12 touch targets, text-base to prevent iOS zoom, enterKeyHint, inputMode attributes | `AddressForm.tsx` |
-| **BUG 4: Cart badge not showing** | Navbar cart icon rendered as plain `<a>` with no live count | Created `NavCartBadge.tsx` client component (fetches cart count via API, listens to `cart-updated` events), wired into PremiumNavbarRender for both desktop and mobile | `NavCartBadge.tsx` (new), `premium-components.tsx` |
+**Section 7 — Mobile Checkout Wiring:**
+- Wired `MobileCheckoutPage` (23 pre-built mobile components) into `CheckoutPageBlock.tsx`
+- Added `useMobile()` hook for device detection (768px breakpoint)
+- Created 4 data adapter functions bridging desktop `useCheckout()` ↔ mobile component interfaces:
+  - `toMobileShippingOptions()` — snake_case to camelCase shipping
+  - `toMobilePaymentMethods()` — provider enum to mobile payment methods
+  - `toMobileTotals()` — CartTotals to mobile OrderSummaryTotals
+  - `fromMobileAddress()` — mobile camelCase Address to desktop snake_case
+- Created `handleMobileSubmit()` — full payment provider routing (Paddle overlay, Flutterwave inline, Pesapal/DPO redirect, Manual)
+- Exposed `cartId` and `resetCart` from `useCheckout()` hook for mobile flow
 
-**Section 6: Branding System Fixes**
+**Section 8 — Checkout Flow:** Already complete from prior session (h-12 text-base touch targets, autoComplete, enterKeyHint)
 
-Comprehensive audit found 55 individual hardcoded blue brand-color violations across 14 files. All fixed:
-- Onboarding wizard steps (StoreBasicsStep, PaymentsStep, ShippingStep, CurrencyTaxStep, FirstProductStep, LaunchStep): focus rings, info boxes, selected states, icons → `primary` / `primary/5` / `primary/10`
-- OnboardingWizard.tsx: active step indicator, CTA button → `bg-primary text-primary-foreground`
-- Switch.tsx: active color and focus ring → `bg-primary` / `ring-primary`
-- quote-portal-view.tsx (CUSTOMER-FACING): notes container → `primary/5` border + text
-- convert-to-order-dialog.tsx: info container → `primary/5`
-- order-card.tsx: active step circle → `bg-primary text-primary-foreground`
-- ecommerce-metric-card.tsx: orders variant + sparkline → `primary` / CSS var
-- inventory-settings.tsx: info box → `primary/5`
-- payment-settings.tsx: 4 provider info boxes (Flutterwave, Pesapal, DPO, Paddle) → `primary/5`
+**Section 9 — Cart System:** Already adequate (product images via `getItemImage()`, empty state, Continue Shopping link)
 
-**TypeScript Check:** All modified files compile clean. Pre-existing errors in unrelated modules (CRM, booking, AI designer) remain.
+**Section 10 — Product Pages Mobile:**
+- `ProductDetailBlock.tsx`: Gallery nav arrows → `p-3 min-w-[44px] min-h-[44px]` + aria-labels
+- Quantity +/- buttons → `px-4 py-3 min-w-[44px] min-h-[44px]` + aria-labels
+- Variant selector buttons → `py-2.5 min-h-[44px]`
+- `product-grid-block.tsx`: `window.location.href` → `router.push()` for SPA navigation
 
-**Remaining from PHASE-ECOM-PRODUCTION-READY:** Sections 7-22 not yet started (checkout flow, order lifecycle, payment integration, email system, analytics, storefront widget, quotation system, PDF, navigation, SEO, testing).
+**Section 11 — Order Lifecycle:**
+- `VALID_TRANSITIONS` map prevents invalid state changes (e.g., can't go delivered → processing)
+- Auto-timestamps: `shipped_at` set when → shipped, `delivered_at` when → delivered
+- `notifyOrderShipped()` called automatically on status → shipped
+- New public functions: `lookupPublicOrder(siteId, orderNumber, email)` + `getPublicOrderById(siteId, orderId)`
+
+**Section 12 — Payment Integration:**
+- Removed aggressive auto-cancel: `paymentStatus === 'failed'` no longer forces `status = 'cancelled'`
+- Customer can retry; only explicit admin action should cancel
+
+**Section 13 — Email Notifications:**
+- Shipping notification wired via `updateOrderStatus()` → `notifyOrderShipped()`
+- `customer_name` column added in Section 5 (Bug 1)
+
+**Section 14 — Analytics:** Complete from Section 5 (Bug 2 — all _cents columns fixed)
+
+**Section 15 — Storefront Widget:** Complete from Section 6 (primaryColor branding fix)
+
+**Section 16 — Quotation System + Section 17 — PDF Generation:**
+- Added `sanitizeCSSColor()` function to `quote-pdf-generator.ts`
+- Validates hex, named colors, rgb/hsl functions; rejects CSS injection; falls back to `#0f172a`
+- Renamed parameter → `unsafePrimaryColor`, reassigned to `primaryColor = sanitizeCSSColor(...)` so all 11 template string references are automatically sanitized
+
+**Section 18 — Navigation Integration:**
+- Added "Categories" nav item (`/categories`, sortOrder 101) to `ECOMMERCE_NAV_ITEMS` in `smart-navigation.ts`
+- Added "Search" utility item (`/shop?search=`, sortOrder 5) to `ECOMMERCE_UTILITY_ITEMS`
+- Added `usePathname()` + active state highlighting in `premium-components.tsx` PremiumNavbarRender
+- Supports all `linkActiveIndicator` modes: underline, dot, background, none
+- Added `aria-current="page"` for accessibility
+
+**TypeScript Check:** Only pre-existing errors in unrelated modules (CRM, booking, AI designer — 118 errors in 28 files). No new errors introduced by sections 7-18 changes.
+
+**Remaining from PHASE-ECOM-PRODUCTION-READY:** Sections 19-22 (SEO/structured data, testing checklist, final review).
 
 ---
 

@@ -56,6 +56,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 import { useCurrency } from '../../context/ecommerce-context'
+import { DEFAULT_LOCALE } from '@/lib/locale-config'
 
 interface LoyaltyViewProps {
   siteId: string

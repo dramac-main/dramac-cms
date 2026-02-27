@@ -144,7 +144,7 @@ export function ProductDetailBlock({
       window.location.href = `${quotationRedirectUrl}?product=${product.id}`
       return
     }
-    await addItem(product.id, quantity, selectedVariant || undefined)
+    await addItem(product.id, selectedVariant || null, quantity)
   }
 
   const handleShare = () => {
@@ -347,7 +347,7 @@ export function ProductDetailBlock({
                     : 'border-gray-200 hover:border-gray-300'
                 )}
               >
-                {v.name}
+                {Object.values(v.options || {}).join(' / ') || v.sku || v.id}
               </button>
             ))}
           </div>
@@ -494,7 +494,7 @@ export function ProductDetailBlock({
 // DEFINITION
 // =============================================================================
 
-export const productDetailDefinition: ComponentDefinition = {
+export const productDetailDefinition: Omit<ComponentDefinition, 'render'> = {
   type: 'ProductDetailBlock',
   label: 'Product Detail',
   description: 'Full product detail page with gallery, pricing, variants, and add to cart',
@@ -514,15 +514,15 @@ export const productDetailDefinition: ComponentDefinition = {
     stickyAddToCart: true,
   },
   fields: {
-    showGallery: { type: 'boolean', label: 'Show Gallery', description: 'Display product image gallery' },
-    showVariants: { type: 'boolean', label: 'Show Variants', description: 'Display product variant selector' },
-    showQuantity: { type: 'boolean', label: 'Show Quantity', description: 'Display quantity selector' },
-    showAddToCart: { type: 'boolean', label: 'Show Add to Cart', description: 'Display add to cart button' },
-    showWishlist: { type: 'boolean', label: 'Show Wishlist', description: 'Display wishlist button' },
-    showShare: { type: 'boolean', label: 'Show Share', description: 'Display share button' },
-    showDescription: { type: 'boolean', label: 'Show Description', description: 'Display product description tab' },
-    showSpecifications: { type: 'boolean', label: 'Show Details', description: 'Display product details tab' },
-    showReviews: { type: 'boolean', label: 'Show Reviews', description: 'Display product reviews' },
+    showGallery: { type: 'toggle', label: 'Show Gallery', description: 'Display product image gallery' },
+    showVariants: { type: 'toggle', label: 'Show Variants', description: 'Display product variant selector' },
+    showQuantity: { type: 'toggle', label: 'Show Quantity', description: 'Display quantity selector' },
+    showAddToCart: { type: 'toggle', label: 'Show Add to Cart', description: 'Display add to cart button' },
+    showWishlist: { type: 'toggle', label: 'Show Wishlist', description: 'Display wishlist button' },
+    showShare: { type: 'toggle', label: 'Show Share', description: 'Display share button' },
+    showDescription: { type: 'toggle', label: 'Show Description', description: 'Display product description tab' },
+    showSpecifications: { type: 'toggle', label: 'Show Details', description: 'Display product details tab' },
+    showReviews: { type: 'toggle', label: 'Show Reviews', description: 'Display product reviews' },
     galleryPosition: {
       type: 'select',
       label: 'Gallery Position',
@@ -531,6 +531,6 @@ export const productDetailDefinition: ComponentDefinition = {
         { label: 'Right', value: 'right' },
       ],
     },
-    stickyAddToCart: { type: 'boolean', label: 'Sticky Info Panel', description: 'Make product info sticky on scroll' },
+    stickyAddToCart: { type: 'toggle', label: 'Sticky Info Panel', description: 'Make product info sticky on scroll' },
   },
 }

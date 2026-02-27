@@ -279,7 +279,7 @@ export const reviewFormDefinition = {
   type: 'EcommerceReviewForm',
   label: 'Review Form',
   description: 'Form for customers to submit product reviews with star ratings',
-  category: 'ecommerce',
+  category: 'ecommerce' as const,
   icon: 'MessageSquarePlus',
   fields: {
     requireEmail: {
