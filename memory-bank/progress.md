@@ -5,7 +5,34 @@
 
 ---
 
-## Latest Update: February 2026 - E-Commerce Production-Ready Sections 19-22 (FINAL)
+## Latest Update: February 2026 - E-Commerce Production-Ready Price Fix + Verification
+
+### Task: Deep verification audit of all 22 sections + fix structured-data.ts price format
+### Commit: `5b6e2a9f` — 5 files changed (fix + cleanup)
+
+**⚠️ CRITICAL DISCOVERY: Database stores ALL prices as CENTS (integers), NOT decimal.**
+- Phase doc (`PHASE-ECOM-PRODUCTION-READY.md`) Section 19 incorrectly states "Money columns are numeric (decimal like 250.00), NOT cents"
+- Reality: `create-product-dialog.tsx` uses `Math.round(parseFloat(basePrice) * 100)` → stores 25000 for $250.00
+- ALL `/100` divisions in display code are CORRECT and must NOT be removed
+
+**Fix Applied:**
+- `structured-data.ts`: Restored `(price / 100).toFixed(2)` in AggregateOffer, Offer, and ItemList prices
+  (Prior commit `478a34fc` had wrongly removed these based on incorrect phase doc claim)
+- `CategoryHeroBlock.tsx`: Removed dead `getPublicProducts` import
+- `ProductDetailBlock.tsx`: Removed dead `Copy` import from lucide-react
+
+**Deep Verification Results (all passing):**
+- ✅ All 4 critical bugs properly fixed (customer_name, analytics columns, country dropdown, cart badge)
+- ✅ All SEO/structured data checks (14/14 pass)
+- ✅ All admin dashboard + checkout flow checks (15/15 pass)
+- ✅ All order lifecycle + payments + nav checks (16/16 pass)
+- ✅ TypeScript: ZERO ecommerce errors
+- ✅ No double-divide bugs anywhere in the codebase
+- ✅ No hardcoded brand colors (only legitimate color swatch maps)
+
+---
+
+## Previous Update: February 2026 - E-Commerce Production-Ready Sections 19-22 (FINAL)
 
 ### Task: Execute PHASE-ECOM-PRODUCTION-READY sections 19-22 (SEO, Rendering, Admin TS Fixes, Verification)
 ### Commit: `478a34fc` — 16 files, 211 insertions, 79 deletions

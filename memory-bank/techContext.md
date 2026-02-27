@@ -77,6 +77,16 @@
   - Will be removed after Paddle migration
 - **Stripe**: (NOT USED for platform billing)
   - Only mentioned in legacy code/database types
+
+### ⚠️ E-Commerce Price Storage (CRITICAL)
+- **ALL monetary values stored as CENTS (integers)** — e.g., $250.00 → 25000
+- Product create: `Math.round(parseFloat(input) * 100)` (dollars → cents for DB)
+- Product edit display: `(product.base_price / 100).toFixed(2)` (cents → dollars for UI)
+- Cart items: raw `product.base_price` (cents)
+- Orders: `unit_price * quantity` (all cents)
+- Checkout API: `total / 100` to convert cents to dollars for payment providers
+- **DO NOT remove `/100` divisions** — they convert cents to display dollars
+- **Phase doc PHASE-ECOM-PRODUCTION-READY.md Section 19 is WRONG** about "decimal not cents"
   - May be used by E-commerce module for client stores (optional)
   - NOT for DRAMAC platform subscription billing
 

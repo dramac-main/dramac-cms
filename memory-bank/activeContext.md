@@ -2,47 +2,51 @@
 
 ## Current Focus: E-Commerce Production-Ready Phase — ALL 22 SECTIONS COMPLETE ✅
 
-### Status: ALL SECTIONS 1-22 IMPLEMENTED ✅ (Commit `478a34fc`)
+### Status: ALL SECTIONS 1-22 IMPLEMENTED + PRICE FORMAT FIX ✅ (Commit `5b6e2a9f`)
 
-### Latest Work: PHASE-ECOM-PRODUCTION-READY Sections 19-22
+### Latest Work: Deep Verification Audit + Critical Price Format Fix
 
-Executed sections 19-22 of `phases/PHASE-ECOM-PRODUCTION-READY.md`. All changes committed and pushed.
+Deep verification audit of all 22 sections confirmed everything was correctly implemented, 
+but discovered a CRITICAL issue: the phase document incorrectly stated prices are stored as 
+decimal (250.00), when they are actually stored as **CENTS (25000)**.
 
 **Commits:**
 - `85b2e9da` — Sections 1-6 (4 bugs fixed + 55 branding violations)
 - `17c4eefd` — Sections 7-18 (9 files, 390 insertions, 14 deletions)
 - `478a34fc` — Sections 19-22 (16 files, 211 insertions, 79 deletions)
+- `5b6e2a9f` — Fix: restored /100 in structured-data.ts + dead import cleanup
 
-**Section 19 — SEO & Structured Data:**
-- Fixed `structured-data.ts`: address.line1 → address_line_1 (matching Address interface)
-- Removed incorrect /100 price division (prices are decimal, not cents)
-- Fixed seller name fallback (undefined → store name fallback)
-- Added `priceValidUntil` for sale items (Google Rich Results requirement)
-- Clamped `aggregateRating.ratingValue` to 1-5 range
-- Enriched ItemList items with nested Product/Offer schemas (price + availability)
-- Updated `buildOffers` signature to accept `options` parameter
-- Added Twitter Card metadata for product pages (`summary_large_image`)
-- Added `product:price:amount` and `product:price:currency` OG tags
-- Added complete category page metadata enrichment (title, description, OG, Twitter cards)
+### ⚠️ CRITICAL KNOWLEDGE: Database Price Storage Format
 
-**Section 20 — Published Site Rendering:**
-- Added `track_inventory, quantity` to product selects for availability data
-- Added `WebSite SearchAction` JSON-LD to category pages (was missing, only on shop page)
+**ALL monetary values in the e-commerce module are stored as CENTS (integers).**
 
-**Section 21 — Admin Dashboard TypeScript Fixes (14 files, zero ecommerce TS errors):**
-- Added missing `DEFAULT_LOCALE` imports (order-card, revenue-chart, loyalty-view)
-- Fixed `formatCurrency` 2-arg calls → 1-arg (customer-detail-dialog, customer-table)
-- Removed non-existent `currency` prop from OrderItemsTable (order-detail-dialog)
-- Removed duplicate `quotePageDefinition` export (page-templates)
-- Fixed CategoryHeroBlock: `boolean` → `toggle`, `ComponentDefinition` → `Omit<ComponentDefinition, 'render'>`, `categoryId` filter → `getPublicProductsByCategory()`
-- Fixed ProductDetailBlock: `addItem` args reorder (productId, variantId, quantity), `v.name` → `Object.values(v.options).join(' / ')`, `boolean` → `toggle` for all 10 fields, `ComponentDefinition` → `Omit<ComponentDefinition, 'render'>`
-- Fixed ReviewFormBlock/ReviewListBlock: `category: 'ecommerce'` → `category: 'ecommerce' as const` for ComponentCategory typing
+| Value | DB Storage | Display |
+|-------|-----------|---------|
+| $250.00 | `25000` | `(25000 / 100).toFixed(2)` → `"250.00"` |
+| $9.99 | `999` | `(999 / 100).toFixed(2)` → `"9.99"` |
 
-**Section 22 — Verification:**
-- TypeScript check: ZERO ecommerce module errors
-- Pre-existing errors in other modules (CRM, booking, AI designer) — not part of this scope
+**Evidence:**
+- `create-product-dialog.tsx`: `Math.round(parseFloat(basePrice) * 100)` — user types dollars, stored as cents
+- `edit-product-dialog.tsx`: `(product.base_price / 100).toFixed(2)` — cents displayed as dollars
+- Cart items use raw `product.base_price` (cents)
+- Orders sum `unit_price * quantity` (all cents)
+- Checkout API: `const totalInUnits = total / 100` — converts cents to dollars for payment providers
 
-**ECOM PRODUCTION-READY PHASE: 100% COMPLETE — All 22 sections implemented across 3 commits.**
+**Price formatting chain (all correct, do NOT remove /100):**
+- `analytics-utils.ts formatCurrency(cents)` — accepts cents, divides by 100 internally
+- `@/lib/locale-config formatCurrency(amount)` — accepts DOLLARS, does NOT divide
+- `ecommerce-context.tsx useCurrency().formatPrice(cents)` — divides by 100, calls locale-config
+- `storefront-context.tsx formatPrice(cents)` — divides by 100, calls locale-config
+- Local `defaultFormatPrice` functions — all divide by 100
+
+**⚠️ The phase document (`PHASE-ECOM-PRODUCTION-READY.md`) Section 19 is WRONG when it says 
+"Money columns are numeric (decimal like 250.00), NOT cents". This is incorrect. DO NOT 
+remove /100 divisions from price display code.**
+
+### Commit `5b6e2a9f` Details:
+- **Restored /100 in structured-data.ts**: AggregateOffer lowPrice/highPrice, single Offer price, ItemList prices
+- **Removed dead imports**: `getPublicProducts` from CategoryHeroBlock.tsx, `Copy` from ProductDetailBlock.tsx
+- **Prior commit `478a34fc` had wrongly removed /100 from structured-data.ts** based on incorrect phase doc claim
 
 ---
 
