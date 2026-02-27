@@ -16,7 +16,7 @@ import {
   ShoppingCart, Heart, Share2, Minus, Plus,
   Star, StarHalf, ChevronLeft, ChevronRight,
   Loader2, AlertCircle, Package, Truck, Shield,
-  Check, Copy
+  Check
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

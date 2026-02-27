@@ -159,8 +159,8 @@ function buildOffers(
 
     return {
       '@type': 'AggregateOffer',
-      lowPrice: lowPrice.toFixed(2),
-      highPrice: highPrice.toFixed(2),
+      lowPrice: (lowPrice / 100).toFixed(2),
+      highPrice: (highPrice / 100).toFixed(2),
       priceCurrency: currency,
       offerCount: product.variants.filter(v => v.is_active).length + 1,
       availability: `https://schema.org/${availability}`,
@@ -172,7 +172,7 @@ function buildOffers(
   const { storeName: sellerName } = options;
   const offer: Record<string, unknown> = {
     '@type': 'Offer',
-    price: Number(product.base_price).toFixed(2),
+    price: (Number(product.base_price) / 100).toFixed(2),
     priceCurrency: currency,
     availability: `https://schema.org/${availability}`,
     url: productUrl,
@@ -226,7 +226,7 @@ export function generateProductListJsonLd(
         image: product.images?.[0] || undefined,
         offers: {
           '@type': 'Offer',
-          price: Number(product.base_price).toFixed(2),
+          price: (Number(product.base_price) / 100).toFixed(2),
           priceCurrency: options.currency,
           availability: `https://schema.org/${product.track_inventory && product.quantity <= 0 ? 'OutOfStock' : 'InStock'}`,
         },
