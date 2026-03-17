@@ -1,18 +1,18 @@
-'use server'
+"use server";
 
-import { createHash } from 'crypto'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { loadStudioModuleForRender } from '../studio-module-loader'
-import type { LoadedStudioModule } from '../studio-module-loader'
+import { createHash } from "crypto";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { loadStudioModuleForRender } from "../studio-module-loader";
+import type { LoadedStudioModule } from "../studio-module-loader";
 
 export interface EmbedModuleResponse {
-  module: LoadedStudioModule | null
+  module: LoadedStudioModule | null;
   installation: {
-    id: string
-    settings: Record<string, unknown>
-    is_enabled: boolean
-  } | null
-  error?: string
+    id: string;
+    settings: Record<string, unknown>;
+    is_enabled: boolean;
+  } | null;
+  error?: string;
 }
 
 /**
@@ -20,41 +20,45 @@ export interface EmbedModuleResponse {
  */
 export async function getModuleForEmbed(
   moduleId: string,
-  siteId: string
+  siteId: string,
 ): Promise<EmbedModuleResponse> {
-  const supabase = createAdminClient()
+  const supabase = createAdminClient();
 
   // Get installation
   const { data: installation, error: installError } = await supabase
-    .from('site_module_installations')
-    .select('id, settings, is_enabled')
-    .eq('site_id', siteId)
-    .eq('module_id', moduleId)
-    .single()
+    .from("site_module_installations")
+    .select("id, settings, is_enabled")
+    .eq("site_id", siteId)
+    .eq("module_id", moduleId)
+    .single();
 
   if (installError || !installation) {
-    return { module: null, installation: null, error: 'Module not installed on this site' }
+    return {
+      module: null,
+      installation: null,
+      error: "Module not installed on this site",
+    };
   }
 
   if (!installation.is_enabled) {
-    return { module: null, installation: null, error: 'Module is disabled' }
+    return { module: null, installation: null, error: "Module is disabled" };
   }
 
   // Load module
-  const loadedModule = await loadStudioModuleForRender(moduleId)
-  
+  const loadedModule = await loadStudioModuleForRender(moduleId);
+
   if (!loadedModule) {
-    return { module: null, installation: null, error: 'Module not found' }
+    return { module: null, installation: null, error: "Module not found" };
   }
 
-  return { 
-    module: loadedModule, 
+  return {
+    module: loadedModule,
     installation: {
       id: installation.id,
-      settings: installation.settings as Record<string, unknown> || {},
-      is_enabled: installation.is_enabled
-    }
-  }
+      settings: (installation.settings as Record<string, unknown>) || {},
+      is_enabled: installation.is_enabled,
+    },
+  };
 }
 
 /**
@@ -63,14 +67,14 @@ export async function getModuleForEmbed(
 export async function generateEmbedCode(
   moduleId: string,
   siteId: string,
-  token: string
+  token: string,
 ): Promise<{
-  iframe: string
-  webComponent: string
-  javascript: string
+  iframe: string;
+  webComponent: string;
+  javascript: string;
 }> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://app.dramac.com'
-  const embedUrl = `${baseUrl}/embed/${moduleId}/${siteId}?token=${token}`
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com";
+  const embedUrl = `${baseUrl}/embed/${moduleId}/${siteId}?token=${token}`;
 
   return {
     // Simple iFrame embed
@@ -113,8 +117,8 @@ export async function generateEmbedCode(
       console.log('Module event:', event, data);
     }
   });
-</script>`
-  }
+</script>`,
+  };
 }
 
 /**
@@ -123,36 +127,37 @@ export async function generateEmbedCode(
 export async function createEmbedToken(
   siteId: string,
   moduleId: string,
-  expiresInDays: number = 365
+  expiresInDays: number = 365,
 ): Promise<{ token: string; expiresAt: Date }> {
-  const supabase = createAdminClient()
+  const supabase = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
-  
-  const expiresAt = new Date()
-  expiresAt.setDate(expiresAt.getDate() + expiresInDays)
+  const db = supabase as any;
+
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 
   // Generate secure token
   const tokenData = {
     siteId,
     moduleId,
-    exp: expiresAt.getTime()
-  }
-  const token = Buffer.from(JSON.stringify(tokenData)).toString('base64url')
+    exp: expiresAt.getTime(),
+  };
+  const token = Buffer.from(JSON.stringify(tokenData)).toString("base64url");
 
   // Store token (optional - for revocation capability)
-  await db
-    .from('module_embed_tokens')
-    .upsert({
+  await db.from("module_embed_tokens").upsert(
+    {
       site_id: siteId,
       module_id: moduleId,
       token_hash: hashToken(token),
-      expires_at: expiresAt.toISOString()
-    }, {
-      onConflict: 'site_id,module_id'
-    })
+      expires_at: expiresAt.toISOString(),
+    },
+    {
+      onConflict: "site_id,module_id",
+    },
+  );
 
-  return { token, expiresAt }
+  return { token, expiresAt };
 }
 
 /**
@@ -160,43 +165,43 @@ export async function createEmbedToken(
  */
 export async function getEmbedToken(
   siteId: string,
-  moduleId: string
+  moduleId: string,
 ): Promise<{ token: string; expiresAt: Date } | null> {
-  const supabase = createAdminClient()
+  const supabase = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
-  
+  const db = supabase as any;
+
   const { data } = await db
-    .from('module_embed_tokens')
-    .select('token_hash, expires_at, is_revoked')
-    .eq('site_id', siteId)
-    .eq('module_id', moduleId)
-    .single()
+    .from("module_embed_tokens")
+    .select("token_hash, expires_at, is_revoked")
+    .eq("site_id", siteId)
+    .eq("module_id", moduleId)
+    .single();
 
   if (!data || data.is_revoked) {
-    return null
+    return null;
   }
 
   // Regenerate the deterministic token from stored data
-  const expiresAt = new Date(data.expires_at)
+  const expiresAt = new Date(data.expires_at);
   const tokenData = {
     siteId,
     moduleId,
-    exp: expiresAt.getTime()
-  }
-  const token = Buffer.from(JSON.stringify(tokenData)).toString('base64url')
-  
+    exp: expiresAt.getTime(),
+  };
+  const token = Buffer.from(JSON.stringify(tokenData)).toString("base64url");
+
   // Verify the regenerated token matches the stored hash
   if (hashToken(token) !== data.token_hash) {
-    return null
+    return null;
   }
-  
+
   return {
     token,
-    expiresAt
-  }
+    expiresAt,
+  };
 }
 
 function hashToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex')
+  return createHash("sha256").update(token).digest("hex");
 }

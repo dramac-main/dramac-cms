@@ -36,6 +36,24 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Cache embed JS scripts at CDN edge for 1 hour, allow stale for 1 day
+        source: "/embed/:script*.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+          },
+          {
+            key: "Access-Control-Allow-Origin",
+            value: "*",
+          },
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
+          },
+        ],
+      },
+      {
         // Apply security headers to all routes except embed and checkout-related
         source: "/((?!embed|pricing|dashboard/billing|settings/billing).*)",
         headers: [

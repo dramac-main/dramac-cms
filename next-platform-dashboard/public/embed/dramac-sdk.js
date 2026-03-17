@@ -5,7 +5,7 @@
  * initialization, events, and settings.
  * 
  * Usage:
- * <script src="https://app.dramac.com/embed/dramac-sdk.js"></script>
+ * <script src="https://app.dramacagency.com/embed/dramac-sdk.js"></script>
  * <script>
  *   const module = DramacSDK.init({
  *     moduleId: 'your-module-id',
@@ -20,9 +20,22 @@
 (function(global) {
   'use strict';
 
+  // Auto-detect script origin
+  function getScriptOrigin() {
+    try {
+      var scripts = document.querySelectorAll('script[src]');
+      for (var i = 0; i < scripts.length; i++) {
+        if (scripts[i].src && scripts[i].src.indexOf('dramac-sdk.js') !== -1) {
+          return new URL(scripts[i].src).origin;
+        }
+      }
+    } catch (e) { /* fallback */ }
+    return global.location ? global.location.origin : 'https://app.dramacagency.com';
+  }
+
   var DramacSDK = {
     _instances: {},
-    _baseUrl: 'https://app.dramac.com',
+    _baseUrl: getScriptOrigin(),
     _version: '1.0.0',
     _debug: false,
 
