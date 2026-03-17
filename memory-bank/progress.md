@@ -11,12 +11,12 @@
 
 **5 Production Fixes:**
 
-| Category | Files | Fixes |
-|----------|-------|-------|
-| Origin detection | dramac-embed.js, dramac-sdk.js | Auto-detect script origin instead of hardcoded app.dramac.com |
-| E-Commerce compatibility | dramac-embed.js | Added DRAMAC_CONFIG auto-init + buy-button data-attribute handlers |
-| CDN caching | next.config.ts | Cache-Control + CORS headers for /embed/*.js static scripts |
-| Domain fix | embed-service.ts | Fallback domain corrected to app.dramacagency.com |
+| Category                 | Files                          | Fixes                                                              |
+| ------------------------ | ------------------------------ | ------------------------------------------------------------------ |
+| Origin detection         | dramac-embed.js, dramac-sdk.js | Auto-detect script origin instead of hardcoded app.dramac.com      |
+| E-Commerce compatibility | dramac-embed.js                | Added DRAMAC_CONFIG auto-init + buy-button data-attribute handlers |
+| CDN caching              | next.config.ts                 | Cache-Control + CORS headers for /embed/\*.js static scripts       |
+| Domain fix               | embed-service.ts               | Fallback domain corrected to app.dramacagency.com                  |
 
 **Embed Infrastructure:** 3 public scripts, 6 embed routes, 2 API endpoints, token auth system — all verified functional.
 

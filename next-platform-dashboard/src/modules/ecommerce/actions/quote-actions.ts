@@ -1,17 +1,17 @@
 /**
  * Quote Server Actions
- * 
+ *
  * Phase ECOM-11A: Quote Server Actions & Core Logic
- * 
+ *
  * Server actions for managing quotes, items, and calculations
  */
-'use server'
+"use server";
 
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { sendBrandedEmail } from '@/lib/email/send-branded-email'
-import { DEFAULT_CURRENCY } from '@/lib/locale-config'
-import { revalidatePath } from 'next/cache'
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { sendBrandedEmail } from "@/lib/email/send-branded-email";
+import { DEFAULT_CURRENCY } from "@/lib/locale-config";
+import { revalidatePath } from "next/cache";
 import type {
   Quote,
   QuoteItem,
@@ -26,20 +26,24 @@ import type {
   QuoteTableFilters,
   QuoteBulkAction,
   BulkActionResult,
-  QuoteSettings
-} from '../types/ecommerce-types'
-import { formatQuoteNumber, calculateQuoteTotals, calculateItemLineTotal } from '../lib/quote-utils'
+  QuoteSettings,
+} from "../types/ecommerce-types";
+import {
+  formatQuoteNumber,
+  calculateQuoteTotals,
+  calculateItemLineTotal,
+} from "../lib/quote-utils";
 
-const TABLE_PREFIX = 'mod_ecommod01'
+const TABLE_PREFIX = "mod_ecommod01";
 
 // ============================================================================
 // SUPABASE CLIENT
 // ============================================================================
 
 async function getModuleClient() {
-  const supabase = await createClient()
+  const supabase = await createClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return supabase as any
+  return supabase as any;
 }
 
 // ============================================================================
@@ -50,55 +54,55 @@ async function getModuleClient() {
  * Generate unique quote number for a site
  */
 export async function generateQuoteNumber(siteId: string): Promise<string> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   // Get or create quote settings
   let { data: settings } = await supabase
     .from(`${TABLE_PREFIX}_quote_settings`)
-    .select('*')
-    .eq('site_id', siteId)
-    .single()
-  
+    .select("*")
+    .eq("site_id", siteId)
+    .single();
+
   // If no settings exist, create default
   if (!settings) {
     const { data: site } = await supabase
-      .from('sites')
-      .select('agency_id')
-      .eq('id', siteId)
-      .single()
-    
-    if (!site) throw new Error('Site not found')
-    
+      .from("sites")
+      .select("agency_id")
+      .eq("id", siteId)
+      .single();
+
+    if (!site) throw new Error("Site not found");
+
     const { data: newSettings, error } = await supabase
       .from(`${TABLE_PREFIX}_quote_settings`)
       .insert({
         site_id: siteId,
         agency_id: site.agency_id,
-        quote_number_prefix: 'QUO-',
+        quote_number_prefix: "QUO-",
         quote_number_counter: 1000,
-        quote_number_format: '{prefix}{counter}'
+        quote_number_format: "{prefix}{counter}",
       })
       .select()
-      .single()
-    
-    if (error) throw error
-    settings = newSettings
+      .single();
+
+    if (error) throw error;
+    settings = newSettings;
   }
-  
+
   // Generate quote number
   const quoteNumber = formatQuoteNumber(
     settings.quote_number_format,
     settings.quote_number_prefix,
-    settings.quote_number_counter
-  )
-  
+    settings.quote_number_counter,
+  );
+
   // Increment counter
   await supabase
     .from(`${TABLE_PREFIX}_quote_settings`)
     .update({ quote_number_counter: settings.quote_number_counter + 1 })
-    .eq('id', settings.id)
-  
-  return quoteNumber
+    .eq("id", settings.id);
+
+  return quoteNumber;
 }
 
 // ============================================================================
@@ -113,31 +117,29 @@ export async function logQuoteActivity(
   activityType: QuoteActivityType,
   description: string,
   options?: {
-    performedBy?: string
-    performedByName?: string
-    ipAddress?: string
-    userAgent?: string
-    oldValue?: Record<string, unknown>
-    newValue?: Record<string, unknown>
-    metadata?: Record<string, unknown>
-  }
+    performedBy?: string;
+    performedByName?: string;
+    ipAddress?: string;
+    userAgent?: string;
+    oldValue?: Record<string, unknown>;
+    newValue?: Record<string, unknown>;
+    metadata?: Record<string, unknown>;
+  },
 ): Promise<void> {
-  const supabase = await getModuleClient()
-  
-  await supabase
-    .from(`${TABLE_PREFIX}_quote_activities`)
-    .insert({
-      quote_id: quoteId,
-      activity_type: activityType,
-      description,
-      performed_by: options?.performedBy,
-      performed_by_name: options?.performedByName,
-      ip_address: options?.ipAddress,
-      user_agent: options?.userAgent,
-      old_value: options?.oldValue,
-      new_value: options?.newValue,
-      metadata: options?.metadata || {}
-    })
+  const supabase = await getModuleClient();
+
+  await supabase.from(`${TABLE_PREFIX}_quote_activities`).insert({
+    quote_id: quoteId,
+    activity_type: activityType,
+    description,
+    performed_by: options?.performedBy,
+    performed_by_name: options?.performedByName,
+    ip_address: options?.ipAddress,
+    user_agent: options?.userAgent,
+    old_value: options?.oldValue,
+    new_value: options?.newValue,
+    metadata: options?.metadata || {},
+  });
 }
 
 // ============================================================================
@@ -150,33 +152,33 @@ export async function logQuoteActivity(
 export async function createQuote(
   input: QuoteInput,
   userId?: string,
-  userName?: string
+  userName?: string,
 ): Promise<{ success: boolean; quote?: Quote; error?: string }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   try {
     // Generate quote number
-    const quoteNumber = await generateQuoteNumber(input.site_id)
-    
+    const quoteNumber = await generateQuoteNumber(input.site_id);
+
     // Calculate validity date
-    const validFrom = input.valid_from || new Date().toISOString()
-    let validUntil = input.valid_until
-    
+    const validFrom = input.valid_from || new Date().toISOString();
+    let validUntil = input.valid_until;
+
     if (!validUntil) {
       // Get default validity from settings
       const { data: settings } = await supabase
         .from(`${TABLE_PREFIX}_quote_settings`)
-        .select('default_validity_days')
-        .eq('site_id', input.site_id)
-        .single()
-      
-      const validityDays = settings?.default_validity_days || 30
-      const expiryDate = new Date()
-      expiryDate.setDate(expiryDate.getDate() + validityDays)
-      expiryDate.setHours(23, 59, 59, 999)
-      validUntil = expiryDate.toISOString()
+        .select("default_validity_days")
+        .eq("site_id", input.site_id)
+        .single();
+
+      const validityDays = settings?.default_validity_days || 30;
+      const expiryDate = new Date();
+      expiryDate.setDate(expiryDate.getDate() + validityDays);
+      expiryDate.setHours(23, 59, 59, 999);
+      validUntil = expiryDate.toISOString();
     }
-    
+
     // Create quote
     const { data: quote, error } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
@@ -192,7 +194,7 @@ export async function createQuote(
         customer_phone: input.customer_phone,
         billing_address: input.billing_address,
         shipping_address: input.shipping_address,
-        status: 'draft',
+        status: "draft",
         subtotal: 0,
         discount_type: input.discount_type,
         discount_value: input.discount_value || 0,
@@ -201,7 +203,7 @@ export async function createQuote(
         tax_amount: 0,
         shipping_amount: input.shipping_amount || 0,
         total: 0,
-        currency: input.currency || DEFAULT_CURRENCY,  // Platform default
+        currency: input.currency || DEFAULT_CURRENCY, // Platform default
         valid_from: validFrom,
         valid_until: validUntil,
         title: input.title,
@@ -213,72 +215,75 @@ export async function createQuote(
         // Only set created_by if it's a valid UUID (not empty string or placeholder)
         created_by: userId && userId.length > 10 ? userId : null,
         last_modified_by: userId && userId.length > 10 ? userId : null,
-        metadata: input.metadata || {}
+        metadata: input.metadata || {},
       })
       .select()
-      .single()
-    
-    if (error) throw error
-    
+      .single();
+
+    if (error) throw error;
+
     // Log activity
     await logQuoteActivity(
       quote.id,
-      'created',
+      "created",
       `Quote ${quoteNumber} created`,
       {
         performedBy: userId,
-        performedByName: userName
-      }
-    )
-    
+        performedByName: userName,
+      },
+    );
+
     // Notify agency owner about new quote request
     if (quote.agency_id) {
       try {
-        const adminSupabase = createAdminClient()
+        const adminSupabase = createAdminClient();
         const { data: agency } = await adminSupabase
-          .from('agencies')
-          .select('owner_id')
-          .eq('id', quote.agency_id)
-          .single()
-        
+          .from("agencies")
+          .select("owner_id")
+          .eq("id", quote.agency_id)
+          .single();
+
         if (agency?.owner_id) {
           const { data: ownerProfile } = await adminSupabase
-            .from('profiles')
-            .select('email, full_name')
-            .eq('id', agency.owner_id)
-            .single()
-          
+            .from("profiles")
+            .select("email, full_name")
+            .eq("id", agency.owner_id)
+            .single();
+
           if (ownerProfile?.email) {
-            const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/sites/${input.site_id}/ecommerce`
+            const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || ""}/dashboard/sites/${input.site_id}/ecommerce`;
             await sendBrandedEmail(quote.agency_id, {
-              to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
-              emailType: 'quote_request_owner',
+              to: {
+                email: ownerProfile.email,
+                name: ownerProfile.full_name || undefined,
+              },
+              emailType: "quote_request_owner",
               recipientUserId: agency.owner_id,
               data: {
-                customerName: quote.customer_name || 'Customer',
-                customerEmail: quote.customer_email || '',
-                customerPhone: quote.customer_phone || '',
+                customerName: quote.customer_name || "Customer",
+                customerEmail: quote.customer_email || "",
+                customerPhone: quote.customer_phone || "",
                 quoteNumber: quote.quote_number,
                 dashboardUrl,
               },
-            })
+            });
           }
         }
       } catch (emailError) {
         // Don't fail quote creation if notification fails
-        console.error('Failed to send quote request notification:', emailError)
+        console.error("Failed to send quote request notification:", emailError);
       }
     }
-    
-    revalidatePath('/ecommerce')
-    
-    return { success: true, quote }
+
+    revalidatePath("/ecommerce");
+
+    return { success: true, quote };
   } catch (error) {
-    console.error('Error creating quote:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to create quote' 
-    }
+    console.error("Error creating quote:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create quote",
+    };
   }
 }
 
@@ -287,95 +292,102 @@ export async function createQuote(
  */
 export async function getQuote(
   siteId: string,
-  quoteId: string
+  quoteId: string,
 ): Promise<QuoteDetailData | null> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   // Get quote
   const { data: quote, error: quoteError } = await supabase
     .from(`${TABLE_PREFIX}_quotes`)
-    .select('*')
-    .eq('id', quoteId)
-    .eq('site_id', siteId)
-    .single()
-  
-  if (quoteError || !quote) return null
-  
+    .select("*")
+    .eq("id", quoteId)
+    .eq("site_id", siteId)
+    .single();
+
+  if (quoteError || !quote) return null;
+
   // Get items
   const { data: items } = await supabase
     .from(`${TABLE_PREFIX}_quote_items`)
-    .select('*')
-    .eq('quote_id', quoteId)
-    .order('sort_order', { ascending: true })
-  
+    .select("*")
+    .eq("quote_id", quoteId)
+    .order("sort_order", { ascending: true });
+
   // Get activities
   const { data: activities } = await supabase
     .from(`${TABLE_PREFIX}_quote_activities`)
-    .select('*')
-    .eq('quote_id', quoteId)
-    .order('created_at', { ascending: false })
-  
+    .select("*")
+    .eq("quote_id", quoteId)
+    .order("created_at", { ascending: false });
+
   // Get customer if linked
-  let customer = null
+  let customer = null;
   if (quote.customer_id) {
     const { data: customerData } = await supabase
       .from(`${TABLE_PREFIX}_customers`)
-      .select('*')
-      .eq('id', quote.customer_id)
-      .single()
-    
-    customer = customerData
+      .select("*")
+      .eq("id", quote.customer_id)
+      .single();
+
+    customer = customerData;
   }
-  
+
   return {
     ...quote,
     items: items || [],
     activities: activities || [],
-    customer
-  }
+    customer,
+  };
 }
 
 /**
  * Get quote by access token (for customer portal)
  */
 export async function getQuoteByToken(
-  token: string
+  token: string,
 ): Promise<QuoteDetailData | null> {
   // Use admin client — customer portal is unauthenticated (no auth cookies)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supabase = createAdminClient() as any
-  
+  const supabase = createAdminClient() as any;
+
   // Get quote by token
   const { data: quote, error: quoteError } = await supabase
     .from(`${TABLE_PREFIX}_quotes`)
-    .select('*')
-    .eq('access_token', token)
-    .single()
-  
-  if (quoteError || !quote) return null
-  
+    .select("*")
+    .eq("access_token", token)
+    .single();
+
+  if (quoteError || !quote) return null;
+
   // Get items
   const { data: items } = await supabase
     .from(`${TABLE_PREFIX}_quote_items`)
-    .select('*')
-    .eq('quote_id', quote.id)
-    .order('sort_order', { ascending: true })
-  
+    .select("*")
+    .eq("quote_id", quote.id)
+    .order("sort_order", { ascending: true });
+
   // Get activities (limited for customer view)
   const { data: activities } = await supabase
     .from(`${TABLE_PREFIX}_quote_activities`)
-    .select('*')
-    .eq('quote_id', quote.id)
-    .in('activity_type', ['created', 'sent', 'viewed', 'accepted', 'rejected', 'expired'])
-    .order('created_at', { ascending: false })
-    .limit(10)
-  
+    .select("*")
+    .eq("quote_id", quote.id)
+    .in("activity_type", [
+      "created",
+      "sent",
+      "viewed",
+      "accepted",
+      "rejected",
+      "expired",
+    ])
+    .order("created_at", { ascending: false })
+    .limit(10);
+
   return {
     ...quote,
     items: items || [],
     activities: activities || [],
-    customer: null
-  }
+    customer: null,
+  };
 }
 
 /**
@@ -385,76 +397,78 @@ export async function getQuotes(
   siteId: string,
   filters?: Partial<QuoteTableFilters>,
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 20,
 ): Promise<{ quotes: QuoteSummary[]; total: number }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   // Build query
   let query = supabase
     .from(`${TABLE_PREFIX}_quotes`)
-    .select('*, items:mod_ecommod01_quote_items(count)', { count: 'exact' })
-    .eq('site_id', siteId)
-    .order('created_at', { ascending: false })
-  
+    .select("*, items:mod_ecommod01_quote_items(count)", { count: "exact" })
+    .eq("site_id", siteId)
+    .order("created_at", { ascending: false });
+
   // Apply filters
-  if (filters?.status && filters.status !== 'all') {
-    query = query.eq('status', filters.status)
+  if (filters?.status && filters.status !== "all") {
+    query = query.eq("status", filters.status);
   }
-  
+
   if (filters?.search) {
-    const searchTerm = `%${filters.search}%`
+    const searchTerm = `%${filters.search}%`;
     query = query.or(
-      `quote_number.ilike.${searchTerm},customer_name.ilike.${searchTerm},customer_email.ilike.${searchTerm},customer_company.ilike.${searchTerm}`
-    )
+      `quote_number.ilike.${searchTerm},customer_name.ilike.${searchTerm},customer_email.ilike.${searchTerm},customer_company.ilike.${searchTerm}`,
+    );
   }
-  
+
   if (filters?.dateFrom) {
-    query = query.gte('created_at', filters.dateFrom)
+    query = query.gte("created_at", filters.dateFrom);
   }
-  
+
   if (filters?.dateTo) {
-    query = query.lte('created_at', filters.dateTo)
+    query = query.lte("created_at", filters.dateTo);
   }
-  
+
   if (filters?.expiresFrom) {
-    query = query.gte('valid_until', filters.expiresFrom)
+    query = query.gte("valid_until", filters.expiresFrom);
   }
-  
+
   if (filters?.expiresTo) {
-    query = query.lte('valid_until', filters.expiresTo)
+    query = query.lte("valid_until", filters.expiresTo);
   }
-  
+
   if (filters?.minTotal !== null && filters?.minTotal !== undefined) {
-    query = query.gte('total', filters.minTotal)
+    query = query.gte("total", filters.minTotal);
   }
-  
+
   if (filters?.maxTotal !== null && filters?.maxTotal !== undefined) {
-    query = query.lte('total', filters.maxTotal)
+    query = query.lte("total", filters.maxTotal);
   }
-  
+
   if (filters?.customerId) {
-    query = query.eq('customer_id', filters.customerId)
+    query = query.eq("customer_id", filters.customerId);
   }
-  
+
   // Check for expired quotes filter
   if (filters?.hasExpired === true) {
-    query = query.lt('valid_until', new Date().toISOString())
+    query = query.lt("valid_until", new Date().toISOString());
   } else if (filters?.hasExpired === false) {
-    query = query.or(`valid_until.is.null,valid_until.gte.${new Date().toISOString()}`)
+    query = query.or(
+      `valid_until.is.null,valid_until.gte.${new Date().toISOString()}`,
+    );
   }
-  
+
   // Pagination
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
-  query = query.range(from, to)
-  
-  const { data, error, count } = await query
-  
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
+
   if (error) {
-    console.error('Error fetching quotes:', error)
-    return { quotes: [], total: 0 }
+    console.error("Error fetching quotes:", error);
+    return { quotes: [], total: 0 };
   }
-  
+
   // Transform to QuoteSummary
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const quotes: QuoteSummary[] = (data || []).map((q: any) => ({
@@ -469,10 +483,10 @@ export async function getQuotes(
     valid_until: q.valid_until,
     items_count: q.items?.[0]?.count || 0,
     created_at: q.created_at,
-    updated_at: q.updated_at
-  }))
-  
-  return { quotes, total: count || 0 }
+    updated_at: q.updated_at,
+  }));
+
+  return { quotes, total: count || 0 };
 }
 
 /**
@@ -483,59 +497,59 @@ export async function updateQuote(
   quoteId: string,
   updates: QuoteUpdate,
   userId?: string,
-  userName?: string
+  userName?: string,
 ): Promise<{ success: boolean; quote?: Quote; error?: string }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   try {
     // Get current quote for comparison
     const { data: currentQuote } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
-      .select('*')
-      .eq('id', quoteId)
-      .eq('site_id', siteId)
-      .single()
-    
+      .select("*")
+      .eq("id", quoteId)
+      .eq("site_id", siteId)
+      .single();
+
     if (!currentQuote) {
-      return { success: false, error: 'Quote not found' }
+      return { success: false, error: "Quote not found" };
     }
-    
+
     // Update quote
     const { data: quote, error } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
       .update({
         ...updates,
-        last_modified_by: userId
+        last_modified_by: userId,
       })
-      .eq('id', quoteId)
-      .eq('site_id', siteId)
+      .eq("id", quoteId)
+      .eq("site_id", siteId)
       .select()
-      .single()
-    
-    if (error) throw error
-    
+      .single();
+
+    if (error) throw error;
+
     // Log activity
     await logQuoteActivity(
       quoteId,
-      'updated',
+      "updated",
       `Quote ${quote.quote_number} updated`,
       {
         performedBy: userId,
         performedByName: userName,
         oldValue: currentQuote,
-        newValue: quote
-      }
-    )
-    
-    revalidatePath('/ecommerce')
-    
-    return { success: true, quote }
+        newValue: quote,
+      },
+    );
+
+    revalidatePath("/ecommerce");
+
+    return { success: true, quote };
   } catch (error) {
-    console.error('Error updating quote:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update quote' 
-    }
+    console.error("Error updating quote:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update quote",
+    };
   }
 }
 
@@ -548,86 +562,86 @@ export async function updateQuoteStatus(
   status: QuoteStatus,
   userId?: string,
   userName?: string,
-  notes?: string
+  notes?: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   try {
     // Get current quote
     const { data: currentQuote } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
-      .select('status, quote_number')
-      .eq('id', quoteId)
-      .eq('site_id', siteId)
-      .single()
-    
+      .select("status, quote_number")
+      .eq("id", quoteId)
+      .eq("site_id", siteId)
+      .single();
+
     if (!currentQuote) {
-      return { success: false, error: 'Quote not found' }
+      return { success: false, error: "Quote not found" };
     }
-    
+
     // Build update object with status-specific timestamps
     const updateData: Record<string, unknown> = {
       status,
-      last_modified_by: userId
-    }
-    
+      last_modified_by: userId,
+    };
+
     // Add status-specific timestamps
-    const now = new Date().toISOString()
-    if (status === 'sent') {
-      updateData.sent_at = now
-    } else if (status === 'viewed') {
-      updateData.viewed_at = now
+    const now = new Date().toISOString();
+    if (status === "sent") {
+      updateData.sent_at = now;
+    } else if (status === "viewed") {
+      updateData.viewed_at = now;
       // Only set first_viewed_at if not already set
       const { data: existingQuote } = await supabase
         .from(`${TABLE_PREFIX}_quotes`)
-        .select('first_viewed_at, view_count')
-        .eq('id', quoteId)
-        .single()
-      
+        .select("first_viewed_at, view_count")
+        .eq("id", quoteId)
+        .single();
+
       if (!existingQuote?.first_viewed_at) {
-        updateData.first_viewed_at = now
+        updateData.first_viewed_at = now;
       }
-      updateData.view_count = (existingQuote?.view_count || 0) + 1
-    } else if (status === 'accepted' || status === 'rejected') {
-      updateData.responded_at = now
+      updateData.view_count = (existingQuote?.view_count || 0) + 1;
+    } else if (status === "accepted" || status === "rejected") {
+      updateData.responded_at = now;
       if (notes) {
-        updateData.response_notes = notes
+        updateData.response_notes = notes;
       }
-    } else if (status === 'converted') {
-      updateData.converted_at = now
+    } else if (status === "converted") {
+      updateData.converted_at = now;
     }
-    
+
     // Update quote
     const { error } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
       .update(updateData)
-      .eq('id', quoteId)
-      .eq('site_id', siteId)
-    
-    if (error) throw error
-    
+      .eq("id", quoteId)
+      .eq("site_id", siteId);
+
+    if (error) throw error;
+
     // Log activity
     await logQuoteActivity(
       quoteId,
-      'status_changed',
+      "status_changed",
       `Status changed from ${currentQuote.status} to ${status}`,
       {
         performedBy: userId,
         performedByName: userName,
         oldValue: { status: currentQuote.status },
-        newValue: { status }
-      }
-    )
-    
-    revalidatePath('/ecommerce')
-    
-    return { success: true }
+        newValue: { status },
+      },
+    );
+
+    revalidatePath("/ecommerce");
+
+    return { success: true };
   } catch (error) {
-    console.error('Error updating quote status:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update status' 
-    }
+    console.error("Error updating quote status:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update status",
+    };
   }
 }
 
@@ -636,28 +650,28 @@ export async function updateQuoteStatus(
  */
 export async function deleteQuote(
   siteId: string,
-  quoteId: string
+  quoteId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   try {
     const { error } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
       .delete()
-      .eq('id', quoteId)
-      .eq('site_id', siteId)
-    
-    if (error) throw error
-    
-    revalidatePath('/ecommerce')
-    
-    return { success: true }
+      .eq("id", quoteId)
+      .eq("site_id", siteId);
+
+    if (error) throw error;
+
+    revalidatePath("/ecommerce");
+
+    return { success: true };
   } catch (error) {
-    console.error('Error deleting quote:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to delete quote' 
-    }
+    console.error("Error deleting quote:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to delete quote",
+    };
   }
 }
 
@@ -668,32 +682,32 @@ export async function duplicateQuote(
   siteId: string,
   quoteId: string,
   userId?: string,
-  userName?: string
+  userName?: string,
 ): Promise<{ success: boolean; quote?: Quote; error?: string }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   try {
     // Get original quote with items
-    const original = await getQuote(siteId, quoteId)
+    const original = await getQuote(siteId, quoteId);
     if (!original) {
-      return { success: false, error: 'Original quote not found' }
+      return { success: false, error: "Original quote not found" };
     }
-    
+
     // Generate new quote number
-    const quoteNumber = await generateQuoteNumber(siteId)
-    
+    const quoteNumber = await generateQuoteNumber(siteId);
+
     // Calculate new validity
     const { data: settings } = await supabase
       .from(`${TABLE_PREFIX}_quote_settings`)
-      .select('default_validity_days')
-      .eq('site_id', siteId)
-      .single()
-    
-    const validityDays = settings?.default_validity_days || 30
-    const validUntil = new Date()
-    validUntil.setDate(validUntil.getDate() + validityDays)
-    validUntil.setHours(23, 59, 59, 999)
-    
+      .select("default_validity_days")
+      .eq("site_id", siteId)
+      .single();
+
+    const validityDays = settings?.default_validity_days || 30;
+    const validUntil = new Date();
+    validUntil.setDate(validUntil.getDate() + validityDays);
+    validUntil.setHours(23, 59, 59, 999);
+
     // Create new quote
     const { data: newQuote, error: quoteError } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
@@ -709,7 +723,7 @@ export async function duplicateQuote(
         customer_phone: original.customer_phone,
         billing_address: original.billing_address,
         shipping_address: original.shipping_address,
-        status: 'draft',
+        status: "draft",
         subtotal: original.subtotal,
         discount_type: original.discount_type,
         discount_value: original.discount_value,
@@ -730,13 +744,13 @@ export async function duplicateQuote(
         // Only set created_by if it's a valid UUID (not empty string or placeholder)
         created_by: userId && userId.length > 10 ? userId : null,
         last_modified_by: userId && userId.length > 10 ? userId : null,
-        metadata: { ...original.metadata, duplicated_from: original.id }
+        metadata: { ...original.metadata, duplicated_from: original.id },
       })
       .select()
-      .single()
-    
-    if (quoteError) throw quoteError
-    
+      .single();
+
+    if (quoteError) throw quoteError;
+
     // Copy items
     if (original.items && original.items.length > 0) {
       const newItems = original.items.map((item, index) => ({
@@ -753,47 +767,46 @@ export async function duplicateQuote(
         tax_rate: item.tax_rate,
         line_total: item.line_total,
         options: item.options,
-        sort_order: index
-      }))
-      
-      await supabase
-        .from(`${TABLE_PREFIX}_quote_items`)
-        .insert(newItems)
+        sort_order: index,
+      }));
+
+      await supabase.from(`${TABLE_PREFIX}_quote_items`).insert(newItems);
     }
-    
+
     // Log activity on original
     await logQuoteActivity(
       quoteId,
-      'duplicated',
+      "duplicated",
       `Quote duplicated as ${quoteNumber}`,
       {
         performedBy: userId,
         performedByName: userName,
-        metadata: { new_quote_id: newQuote.id }
-      }
-    )
-    
+        metadata: { new_quote_id: newQuote.id },
+      },
+    );
+
     // Log activity on new
     await logQuoteActivity(
       newQuote.id,
-      'created',
+      "created",
       `Quote ${quoteNumber} created (duplicated from ${original.quote_number})`,
       {
         performedBy: userId,
         performedByName: userName,
-        metadata: { duplicated_from: quoteId }
-      }
-    )
-    
-    revalidatePath('/ecommerce')
-    
-    return { success: true, quote: newQuote }
+        metadata: { duplicated_from: quoteId },
+      },
+    );
+
+    revalidatePath("/ecommerce");
+
+    return { success: true, quote: newQuote };
   } catch (error) {
-    console.error('Error duplicating quote:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to duplicate quote' 
-    }
+    console.error("Error duplicating quote:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to duplicate quote",
+    };
   }
 }
 
@@ -808,42 +821,42 @@ export async function addQuoteItem(
   siteId: string,
   input: QuoteItemInput,
   userId?: string,
-  userName?: string
+  userName?: string,
 ): Promise<{ success: boolean; item?: QuoteItem; error?: string }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   try {
     // Verify quote exists and belongs to site
     const { data: quote } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
-      .select('id, quote_number')
-      .eq('id', input.quote_id)
-      .eq('site_id', siteId)
-      .single()
-    
+      .select("id, quote_number")
+      .eq("id", input.quote_id)
+      .eq("site_id", siteId)
+      .single();
+
     if (!quote) {
-      return { success: false, error: 'Quote not found' }
+      return { success: false, error: "Quote not found" };
     }
-    
+
     // Calculate line total
     const lineTotal = calculateItemLineTotal(
       input.quantity,
       input.unit_price,
       input.discount_percent || 0,
-      input.tax_rate || 0
-    )
-    
+      input.tax_rate || 0,
+    );
+
     // Get max sort order
     const { data: maxOrderResult } = await supabase
       .from(`${TABLE_PREFIX}_quote_items`)
-      .select('sort_order')
-      .eq('quote_id', input.quote_id)
-      .order('sort_order', { ascending: false })
+      .select("sort_order")
+      .eq("quote_id", input.quote_id)
+      .order("sort_order", { ascending: false })
       .limit(1)
-      .single()
-    
-    const sortOrder = input.sort_order ?? ((maxOrderResult?.sort_order || 0) + 1)
-    
+      .single();
+
+    const sortOrder = input.sort_order ?? (maxOrderResult?.sort_order || 0) + 1;
+
     // Insert item
     const { data: item, error } = await supabase
       .from(`${TABLE_PREFIX}_quote_items`)
@@ -861,37 +874,41 @@ export async function addQuoteItem(
         tax_rate: input.tax_rate || 0,
         line_total: lineTotal,
         options: input.options || {},
-        sort_order: sortOrder
+        sort_order: sortOrder,
       })
       .select()
-      .single()
-    
-    if (error) throw error
-    
+      .single();
+
+    if (error) throw error;
+
     // Recalculate quote totals
-    await recalculateQuoteTotals(siteId, input.quote_id)
-    
+    await recalculateQuoteTotals(siteId, input.quote_id);
+
     // Log activity
     await logQuoteActivity(
       input.quote_id,
-      'item_added',
+      "item_added",
       `Added item: ${input.name}`,
       {
         performedBy: userId,
         performedByName: userName,
-        newValue: { item_id: item.id, name: input.name, quantity: input.quantity }
-      }
-    )
-    
-    revalidatePath('/ecommerce')
-    
-    return { success: true, item }
+        newValue: {
+          item_id: item.id,
+          name: input.name,
+          quantity: input.quantity,
+        },
+      },
+    );
+
+    revalidatePath("/ecommerce");
+
+    return { success: true, item };
   } catch (error) {
-    console.error('Error adding quote item:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to add item' 
-    }
+    console.error("Error adding quote item:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to add item",
+    };
   }
 }
 
@@ -904,82 +921,88 @@ export async function updateQuoteItem(
   itemId: string,
   updates: QuoteItemUpdate,
   userId?: string,
-  userName?: string
+  userName?: string,
 ): Promise<{ success: boolean; item?: QuoteItem; error?: string }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   try {
     // Verify quote exists and belongs to site
     const { data: quote } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
-      .select('id')
-      .eq('id', quoteId)
-      .eq('site_id', siteId)
-      .single()
-    
+      .select("id")
+      .eq("id", quoteId)
+      .eq("site_id", siteId)
+      .single();
+
     if (!quote) {
-      return { success: false, error: 'Quote not found' }
+      return { success: false, error: "Quote not found" };
     }
-    
+
     // Get current item
     const { data: currentItem } = await supabase
       .from(`${TABLE_PREFIX}_quote_items`)
-      .select('*')
-      .eq('id', itemId)
-      .eq('quote_id', quoteId)
-      .single()
-    
+      .select("*")
+      .eq("id", itemId)
+      .eq("quote_id", quoteId)
+      .single();
+
     if (!currentItem) {
-      return { success: false, error: 'Item not found' }
+      return { success: false, error: "Item not found" };
     }
-    
+
     // Calculate new line total if quantity or price changed
-    const quantity = updates.quantity ?? currentItem.quantity
-    const unitPrice = updates.unit_price ?? currentItem.unit_price
-    const discountPercent = updates.discount_percent ?? currentItem.discount_percent
-    const taxRate = updates.tax_rate ?? currentItem.tax_rate
-    
-    const lineTotal = calculateItemLineTotal(quantity, unitPrice, discountPercent, taxRate)
-    
+    const quantity = updates.quantity ?? currentItem.quantity;
+    const unitPrice = updates.unit_price ?? currentItem.unit_price;
+    const discountPercent =
+      updates.discount_percent ?? currentItem.discount_percent;
+    const taxRate = updates.tax_rate ?? currentItem.tax_rate;
+
+    const lineTotal = calculateItemLineTotal(
+      quantity,
+      unitPrice,
+      discountPercent,
+      taxRate,
+    );
+
     // Update item
     const { data: item, error } = await supabase
       .from(`${TABLE_PREFIX}_quote_items`)
       .update({
         ...updates,
-        line_total: lineTotal
+        line_total: lineTotal,
       })
-      .eq('id', itemId)
-      .eq('quote_id', quoteId)
+      .eq("id", itemId)
+      .eq("quote_id", quoteId)
       .select()
-      .single()
-    
-    if (error) throw error
-    
+      .single();
+
+    if (error) throw error;
+
     // Recalculate quote totals
-    await recalculateQuoteTotals(siteId, quoteId)
-    
+    await recalculateQuoteTotals(siteId, quoteId);
+
     // Log activity
     await logQuoteActivity(
       quoteId,
-      'item_updated',
+      "item_updated",
       `Updated item: ${item.name}`,
       {
         performedBy: userId,
         performedByName: userName,
         oldValue: currentItem,
-        newValue: item
-      }
-    )
-    
-    revalidatePath('/ecommerce')
-    
-    return { success: true, item }
+        newValue: item,
+      },
+    );
+
+    revalidatePath("/ecommerce");
+
+    return { success: true, item };
   } catch (error) {
-    console.error('Error updating quote item:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update item' 
-    }
+    console.error("Error updating quote item:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update item",
+    };
   }
 }
 
@@ -991,68 +1014,68 @@ export async function removeQuoteItem(
   quoteId: string,
   itemId: string,
   userId?: string,
-  userName?: string
+  userName?: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   try {
     // Verify quote exists and belongs to site
     const { data: quote } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
-      .select('id')
-      .eq('id', quoteId)
-      .eq('site_id', siteId)
-      .single()
-    
+      .select("id")
+      .eq("id", quoteId)
+      .eq("site_id", siteId)
+      .single();
+
     if (!quote) {
-      return { success: false, error: 'Quote not found' }
+      return { success: false, error: "Quote not found" };
     }
-    
+
     // Get item for logging
     const { data: item } = await supabase
       .from(`${TABLE_PREFIX}_quote_items`)
-      .select('*')
-      .eq('id', itemId)
-      .eq('quote_id', quoteId)
-      .single()
-    
+      .select("*")
+      .eq("id", itemId)
+      .eq("quote_id", quoteId)
+      .single();
+
     if (!item) {
-      return { success: false, error: 'Item not found' }
+      return { success: false, error: "Item not found" };
     }
-    
+
     // Delete item
     const { error } = await supabase
       .from(`${TABLE_PREFIX}_quote_items`)
       .delete()
-      .eq('id', itemId)
-      .eq('quote_id', quoteId)
-    
-    if (error) throw error
-    
+      .eq("id", itemId)
+      .eq("quote_id", quoteId);
+
+    if (error) throw error;
+
     // Recalculate quote totals
-    await recalculateQuoteTotals(siteId, quoteId)
-    
+    await recalculateQuoteTotals(siteId, quoteId);
+
     // Log activity
     await logQuoteActivity(
       quoteId,
-      'item_removed',
+      "item_removed",
       `Removed item: ${item.name}`,
       {
         performedBy: userId,
         performedByName: userName,
-        oldValue: item
-      }
-    )
-    
-    revalidatePath('/ecommerce')
-    
-    return { success: true }
+        oldValue: item,
+      },
+    );
+
+    revalidatePath("/ecommerce");
+
+    return { success: true };
   } catch (error) {
-    console.error('Error removing quote item:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to remove item' 
-    }
+    console.error("Error removing quote item:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to remove item",
+    };
   }
 }
 
@@ -1062,46 +1085,46 @@ export async function removeQuoteItem(
 export async function reorderQuoteItems(
   siteId: string,
   quoteId: string,
-  itemIds: string[]
+  itemIds: string[],
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   try {
     // Verify quote exists and belongs to site
     const { data: quote } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
-      .select('id')
-      .eq('id', quoteId)
-      .eq('site_id', siteId)
-      .single()
-    
+      .select("id")
+      .eq("id", quoteId)
+      .eq("site_id", siteId)
+      .single();
+
     if (!quote) {
-      return { success: false, error: 'Quote not found' }
+      return { success: false, error: "Quote not found" };
     }
-    
+
     // Update sort order for each item
     const updates = itemIds.map((id, index) => ({
       id,
-      sort_order: index
-    }))
-    
+      sort_order: index,
+    }));
+
     for (const update of updates) {
       await supabase
         .from(`${TABLE_PREFIX}_quote_items`)
         .update({ sort_order: update.sort_order })
-        .eq('id', update.id)
-        .eq('quote_id', quoteId)
+        .eq("id", update.id)
+        .eq("quote_id", quoteId);
     }
-    
-    revalidatePath('/ecommerce')
-    
-    return { success: true }
+
+    revalidatePath("/ecommerce");
+
+    return { success: true };
   } catch (error) {
-    console.error('Error reordering quote items:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to reorder items' 
-    }
+    console.error("Error reordering quote items:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to reorder items",
+    };
   }
 }
 
@@ -1114,37 +1137,37 @@ export async function reorderQuoteItems(
  */
 export async function recalculateQuoteTotals(
   siteId: string,
-  quoteId: string
+  quoteId: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   try {
     // Get quote
     const { data: quote } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
-      .select('*')
-      .eq('id', quoteId)
-      .eq('site_id', siteId)
-      .single()
-    
+      .select("*")
+      .eq("id", quoteId)
+      .eq("site_id", siteId)
+      .single();
+
     if (!quote) {
-      return { success: false, error: 'Quote not found' }
+      return { success: false, error: "Quote not found" };
     }
-    
+
     // Get all items
     const { data: items } = await supabase
       .from(`${TABLE_PREFIX}_quote_items`)
-      .select('*')
-      .eq('quote_id', quoteId)
-    
+      .select("*")
+      .eq("quote_id", quoteId);
+
     // Calculate totals
     const totals = calculateQuoteTotals(
       items || [],
       { type: quote.discount_type, value: quote.discount_value },
       quote.shipping_amount,
-      quote.tax_rate
-    )
-    
+      quote.tax_rate,
+    );
+
     // Update quote
     const { error } = await supabase
       .from(`${TABLE_PREFIX}_quotes`)
@@ -1152,20 +1175,21 @@ export async function recalculateQuoteTotals(
         subtotal: totals.subtotal,
         discount_amount: totals.quoteDiscountAmount,
         tax_amount: totals.taxAmount,
-        total: totals.total
+        total: totals.total,
       })
-      .eq('id', quoteId)
-      .eq('site_id', siteId)
-    
-    if (error) throw error
-    
-    return { success: true }
+      .eq("id", quoteId)
+      .eq("site_id", siteId);
+
+    if (error) throw error;
+
+    return { success: true };
   } catch (error) {
-    console.error('Error recalculating quote totals:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to recalculate totals' 
-    }
+    console.error("Error recalculating quote totals:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to recalculate totals",
+    };
   }
 }
 
@@ -1180,68 +1204,80 @@ export async function executeQuoteBulkAction(
   siteId: string,
   action: QuoteBulkAction,
   userId?: string,
-  userName?: string
+  userName?: string,
 ): Promise<BulkActionResult> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   const results: BulkActionResult = {
     success: true,
     affected: 0,
-    errors: []
-  }
-  
+    errors: [],
+  };
+
   for (const quoteId of action.quoteIds) {
     try {
       switch (action.action) {
-        case 'delete':
-          const deleteResult = await deleteQuote(siteId, quoteId)
+        case "delete":
+          const deleteResult = await deleteQuote(siteId, quoteId);
           if (!deleteResult.success) {
-            results.errors.push(deleteResult.error || 'Delete failed')
+            results.errors.push(deleteResult.error || "Delete failed");
           } else {
-            results.affected++
+            results.affected++;
           }
-          break
-          
-        case 'mark_expired':
+          break;
+
+        case "mark_expired":
           const { error: expireError } = await supabase
             .from(`${TABLE_PREFIX}_quotes`)
-            .update({ status: 'expired' })
-            .eq('id', quoteId)
-            .eq('site_id', siteId)
-          
+            .update({ status: "expired" })
+            .eq("id", quoteId)
+            .eq("site_id", siteId);
+
           if (expireError) {
-            results.errors.push(expireError.message)
+            results.errors.push(expireError.message);
           } else {
-            await logQuoteActivity(quoteId, 'expired', 'Quote marked as expired (bulk action)', {
-              performedBy: userId,
-              performedByName: userName
-            })
-            results.affected++
+            await logQuoteActivity(
+              quoteId,
+              "expired",
+              "Quote marked as expired (bulk action)",
+              {
+                performedBy: userId,
+                performedByName: userName,
+              },
+            );
+            results.affected++;
           }
-          break
-          
-        case 'duplicate':
-          const dupResult = await duplicateQuote(siteId, quoteId, userId, userName)
+          break;
+
+        case "duplicate":
+          const dupResult = await duplicateQuote(
+            siteId,
+            quoteId,
+            userId,
+            userName,
+          );
           if (!dupResult.success) {
-            results.errors.push(dupResult.error || 'Duplicate failed')
+            results.errors.push(dupResult.error || "Duplicate failed");
           } else {
-            results.affected++
+            results.affected++;
           }
-          break
-          
+          break;
+
         default:
-          results.errors.push(`Unknown action: ${action.action}`)
+          results.errors.push(`Unknown action: ${action.action}`);
       }
     } catch (error) {
-      results.errors.push(error instanceof Error ? error.message : 'Unknown error')
+      results.errors.push(
+        error instanceof Error ? error.message : "Unknown error",
+      );
     }
   }
-  
-  results.success = results.errors.length === 0
-  
-  revalidatePath('/ecommerce')
-  
-  return results
+
+  results.success = results.errors.length === 0;
+
+  revalidatePath("/ecommerce");
+
+  return results;
 }
 
 // ============================================================================
@@ -1252,21 +1288,21 @@ export async function executeQuoteBulkAction(
  * Get quote settings for a site
  */
 export async function getQuoteSettings(
-  siteId: string
+  siteId: string,
 ): Promise<QuoteSettings | null> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   const { data, error } = await supabase
     .from(`${TABLE_PREFIX}_quote_settings`)
-    .select('*')
-    .eq('site_id', siteId)
-    .single()
-  
-  if (error && error.code !== 'PGRST116') {
-    console.error('Error fetching quote settings:', error)
+    .select("*")
+    .eq("site_id", siteId)
+    .single();
+
+  if (error && error.code !== "PGRST116") {
+    console.error("Error fetching quote settings:", error);
   }
-  
-  return data
+
+  return data;
 }
 
 /**
@@ -1275,27 +1311,27 @@ export async function getQuoteSettings(
 export async function updateQuoteSettings(
   siteId: string,
   agencyId: string,
-  updates: Partial<QuoteSettings>
+  updates: Partial<QuoteSettings>,
 ): Promise<{ success: boolean; settings?: QuoteSettings; error?: string }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   try {
     // Check if settings exist
     const { data: existing } = await supabase
       .from(`${TABLE_PREFIX}_quote_settings`)
-      .select('id')
-      .eq('site_id', siteId)
-      .single()
-    
-    let result
+      .select("id")
+      .eq("site_id", siteId)
+      .single();
+
+    let result;
     if (existing) {
       // Update existing
       result = await supabase
         .from(`${TABLE_PREFIX}_quote_settings`)
         .update(updates)
-        .eq('site_id', siteId)
+        .eq("site_id", siteId)
         .select()
-        .single()
+        .single();
     } else {
       // Insert new
       result = await supabase
@@ -1303,23 +1339,24 @@ export async function updateQuoteSettings(
         .insert({
           site_id: siteId,
           agency_id: agencyId,
-          ...updates
+          ...updates,
         })
         .select()
-        .single()
+        .single();
     }
-    
-    if (result.error) throw result.error
-    
-    revalidatePath('/ecommerce')
-    
-    return { success: true, settings: result.data }
+
+    if (result.error) throw result.error;
+
+    revalidatePath("/ecommerce");
+
+    return { success: true, settings: result.data };
   } catch (error) {
-    console.error('Error updating quote settings:', error)
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to update settings' 
-    }
+    console.error("Error updating quote settings:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to update settings",
+    };
   }
 }
 
@@ -1331,26 +1368,26 @@ export async function updateQuoteSettings(
  * Get quote statistics for dashboard
  */
 export async function getQuoteStats(siteId: string): Promise<{
-  total: number
-  draft: number
-  pending: number
-  sent: number
-  viewed: number
-  accepted: number
-  rejected: number
-  expired: number
-  converted: number
-  totalValue: number
-  acceptedValue: number
-  conversionRate: number
+  total: number;
+  draft: number;
+  pending: number;
+  sent: number;
+  viewed: number;
+  accepted: number;
+  rejected: number;
+  expired: number;
+  converted: number;
+  totalValue: number;
+  acceptedValue: number;
+  conversionRate: number;
 }> {
-  const supabase = await getModuleClient()
-  
+  const supabase = await getModuleClient();
+
   const { data: quotes } = await supabase
     .from(`${TABLE_PREFIX}_quotes`)
-    .select('status, total')
-    .eq('site_id', siteId)
-  
+    .select("status, total")
+    .eq("site_id", siteId);
+
   if (!quotes || quotes.length === 0) {
     return {
       total: 0,
@@ -1364,10 +1401,10 @@ export async function getQuoteStats(siteId: string): Promise<{
       converted: 0,
       totalValue: 0,
       acceptedValue: 0,
-      conversionRate: 0
-    }
+      conversionRate: 0,
+    };
   }
-  
+
   const stats = {
     total: quotes.length,
     draft: 0,
@@ -1380,35 +1417,54 @@ export async function getQuoteStats(siteId: string): Promise<{
     converted: 0,
     totalValue: 0,
     acceptedValue: 0,
-    conversionRate: 0
-  }
-  
+    conversionRate: 0,
+  };
+
   for (const quote of quotes) {
-    stats.totalValue += Number(quote.total) || 0
-    
+    stats.totalValue += Number(quote.total) || 0;
+
     switch (quote.status) {
-      case 'draft': stats.draft++; break
-      case 'pending_approval': stats.pending++; break
-      case 'sent': stats.sent++; break
-      case 'viewed': stats.viewed++; break
-      case 'accepted': 
-        stats.accepted++
-        stats.acceptedValue += Number(quote.total) || 0
-        break
-      case 'rejected': stats.rejected++; break
-      case 'expired': stats.expired++; break
-      case 'converted': 
-        stats.converted++
-        stats.acceptedValue += Number(quote.total) || 0
-        break
+      case "draft":
+        stats.draft++;
+        break;
+      case "pending_approval":
+        stats.pending++;
+        break;
+      case "sent":
+        stats.sent++;
+        break;
+      case "viewed":
+        stats.viewed++;
+        break;
+      case "accepted":
+        stats.accepted++;
+        stats.acceptedValue += Number(quote.total) || 0;
+        break;
+      case "rejected":
+        stats.rejected++;
+        break;
+      case "expired":
+        stats.expired++;
+        break;
+      case "converted":
+        stats.converted++;
+        stats.acceptedValue += Number(quote.total) || 0;
+        break;
     }
   }
-  
+
   // Calculate conversion rate (accepted + converted) / (sent + viewed + accepted + rejected + expired + converted)
-  const responded = stats.sent + stats.viewed + stats.accepted + stats.rejected + stats.expired + stats.converted
-  stats.conversionRate = responded > 0 
-    ? Math.round(((stats.accepted + stats.converted) / responded) * 100) 
-    : 0
-  
-  return stats
+  const responded =
+    stats.sent +
+    stats.viewed +
+    stats.accepted +
+    stats.rejected +
+    stats.expired +
+    stats.converted;
+  stats.conversionRate =
+    responded > 0
+      ? Math.round(((stats.accepted + stats.converted) / responded) * 100)
+      : 0;
+
+  return stats;
 }

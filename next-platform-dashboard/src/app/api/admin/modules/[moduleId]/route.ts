@@ -109,8 +109,29 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const body = await request.json();
 
-    // Remove fields that shouldn't be updated directly
-    const { id: _id, created_at: _created_at, created_by: _created_by, ...updateData } = body;
+    // Whitelist of fields that super admins are allowed to update
+    const ALLOWED_FIELDS = [
+      "name", "description", "long_description", "icon", "banner_image",
+      "category", "tags", "install_level", "current_version", "min_platform_version",
+      "pricing_type", "wholesale_price_monthly", "wholesale_price_yearly", "wholesale_price_one_time",
+      "suggested_retail_monthly", "suggested_retail_yearly",
+      "required_permissions", "provided_hooks", "package_url",
+      "manifest", "settings_schema", "default_settings",
+      "screenshots", "features", "requirements", "changelog",
+      "documentation_url", "support_url",
+      "status", "is_featured", "is_premium", "published_at",
+    ] as const;
+
+    const updateData: Record<string, unknown> = {};
+    for (const key of ALLOWED_FIELDS) {
+      if (key in body) {
+        updateData[key] = body[key];
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+    }
 
     const { data: module, error } = await supabase
       .from("modules_v2")

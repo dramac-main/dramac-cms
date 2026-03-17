@@ -6,7 +6,10 @@ import { PortalHeader } from "@/components/portal/portal-header";
 import { PortalLayoutClient } from "@/components/portal/portal-layout-client";
 import { BrandingProvider } from "@/components/providers/branding-provider";
 import { ServerBrandingStyle } from "@/components/providers/server-branding-style";
-import { getAgencyBranding, getAgencyBrandingBySlug } from "@/lib/queries/branding";
+import {
+  getAgencyBranding,
+  getAgencyBrandingBySlug,
+} from "@/lib/queries/branding";
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 
@@ -16,14 +19,26 @@ export default async function PortalLayout({
   children: React.ReactNode;
 }) {
   const session = await getPortalSession();
-  
+
   if (!session.user) {
     // Check if user is on a public portal route (login/verify)
     const headersList = await headers();
     const url = headersList.get("x-url") || headersList.get("referer") || "";
-    const urlObj = url ? (() => { try { return new URL(url); } catch { return null; } })() : null;
+    const urlObj = url
+      ? (() => {
+          try {
+            return new URL(url);
+          } catch {
+            return null;
+          }
+        })()
+      : null;
     const pathname = urlObj?.pathname || "";
-    const isPublicPortalRoute = pathname === "/portal/login" || pathname === "/portal/verify" || pathname.startsWith("/portal/login/") || pathname.startsWith("/portal/verify/");
+    const isPublicPortalRoute =
+      pathname === "/portal/login" ||
+      pathname === "/portal/verify" ||
+      pathname.startsWith("/portal/login/") ||
+      pathname.startsWith("/portal/verify/");
 
     // Redirect unauthenticated users to portal login for protected routes
     if (!isPublicPortalRoute && pathname.startsWith("/portal")) {
@@ -40,7 +55,10 @@ export default async function PortalLayout({
         return (
           <>
             <ServerBrandingStyle branding={branding} />
-            <BrandingProvider agencyId={branding.agency_id} initialBranding={branding}>
+            <BrandingProvider
+              agencyId={branding.agency_id}
+              initialBranding={branding}
+            >
               {children}
             </BrandingProvider>
           </>
@@ -53,7 +71,9 @@ export default async function PortalLayout({
 
   const [clientInfo, unreadCount, ticketStats] = await Promise.all([
     getClientInfo(session.user.clientId),
-    session.isImpersonating ? Promise.resolve(0) : getUnreadNotificationCount(session.user.clientId),
+    session.isImpersonating
+      ? Promise.resolve(0)
+      : getUnreadNotificationCount(session.user.clientId),
     getTicketStats(session.user.clientId),
   ]);
 
@@ -70,7 +90,7 @@ export default async function PortalLayout({
       openTicketCount={openTicketCount}
       isImpersonating={session.isImpersonating}
       headerComponent={
-        <PortalHeader 
+        <PortalHeader
           user={session.user}
           agencyName={clientInfo?.agencyName || "Agency"}
           isImpersonating={session.isImpersonating}

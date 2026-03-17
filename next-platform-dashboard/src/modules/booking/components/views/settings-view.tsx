@@ -1,48 +1,57 @@
 /**
  * Settings View Component
- * 
+ *
  * Booking module settings management
  */
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import { useBooking } from '../../context/booking-context'
-import { updateSettings } from '../../actions/booking-actions'
-import { 
-  Settings, 
-  Clock, 
-  Bell, 
-  Palette, 
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useBooking } from "../../context/booking-context";
+import { updateSettings } from "../../actions/booking-actions";
+import {
+  Settings,
+  Clock,
+  Bell,
+  Palette,
   CreditCard,
   Globe,
   Mail,
   Loader2,
   Save,
-  Check
-} from 'lucide-react'
-import { toast } from 'sonner'
-import type { BookingSettings, BookingSettingsUpdate } from '../../types/booking-types'
+  Check,
+} from "lucide-react";
+import { toast } from "sonner";
+import type {
+  BookingSettings,
+  BookingSettingsUpdate,
+} from "../../types/booking-types";
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
 interface SettingsViewProps {
-  className?: string
+  className?: string;
 }
 
 // =============================================================================
@@ -50,41 +59,41 @@ interface SettingsViewProps {
 // =============================================================================
 
 const AFRICAN_TIMEZONES = [
-  { value: 'Africa/Lusaka', label: 'Lusaka (CAT)' },
-  { value: 'Africa/Johannesburg', label: 'Johannesburg (SAST)' },
-  { value: 'Africa/Lagos', label: 'Lagos (WAT)' },
-  { value: 'Africa/Nairobi', label: 'Nairobi (EAT)' },
-  { value: 'Africa/Cairo', label: 'Cairo (EET)' },
-  { value: 'Africa/Casablanca', label: 'Casablanca (WET)' },
-  { value: 'Africa/Harare', label: 'Harare (CAT)' },
-  { value: 'Africa/Maputo', label: 'Maputo (CAT)' },
-]
+  { value: "Africa/Lusaka", label: "Lusaka (CAT)" },
+  { value: "Africa/Johannesburg", label: "Johannesburg (SAST)" },
+  { value: "Africa/Lagos", label: "Lagos (WAT)" },
+  { value: "Africa/Nairobi", label: "Nairobi (EAT)" },
+  { value: "Africa/Cairo", label: "Cairo (EET)" },
+  { value: "Africa/Casablanca", label: "Casablanca (WET)" },
+  { value: "Africa/Harare", label: "Harare (CAT)" },
+  { value: "Africa/Maputo", label: "Maputo (CAT)" },
+];
 
 const OTHER_TIMEZONES = [
-  { value: 'UTC', label: 'UTC' },
-  { value: 'Europe/London', label: 'London (GMT/BST)' },
-  { value: 'America/New_York', label: 'New York (EST)' },
-  { value: 'America/Los_Angeles', label: 'Los Angeles (PST)' },
-  { value: 'Asia/Dubai', label: 'Dubai (GST)' },
-]
+  { value: "UTC", label: "UTC" },
+  { value: "Europe/London", label: "London (GMT/BST)" },
+  { value: "America/New_York", label: "New York (EST)" },
+  { value: "America/Los_Angeles", label: "Los Angeles (PST)" },
+  { value: "Asia/Dubai", label: "Dubai (GST)" },
+];
 
 // =============================================================================
 // COMPONENT
 // =============================================================================
 
 export function SettingsView({ className }: SettingsViewProps) {
-  const { siteId, settings, refreshAll } = useBooking()
-  
-  const [activeTab, setActiveTab] = useState('general')
-  const [isSaving, setIsSaving] = useState(false)
-  const [hasChanges, setHasChanges] = useState(false)
-  
+  const { siteId, settings, refreshAll } = useBooking();
+
+  const [activeTab, setActiveTab] = useState("general");
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
   // Form state
   const [formData, setFormData] = useState<Partial<BookingSettingsUpdate>>({
-    business_name: '',
-    timezone: 'Africa/Lusaka',
-    date_format: 'DD/MM/YYYY',
-    time_format: '24h',
+    business_name: "",
+    timezone: "Africa/Lusaka",
+    date_format: "DD/MM/YYYY",
+    time_format: "24h",
     min_booking_notice_hours: 2,
     max_booking_advance_days: 60,
     cancellation_notice_hours: 24,
@@ -92,20 +101,20 @@ export function SettingsView({ className }: SettingsViewProps) {
     auto_confirm: false,
     confirmation_email_enabled: true,
     reminder_hours: [24, 2],
-    accent_color: '',
+    accent_color: "",
     require_payment: false,
     auto_create_crm_contact: true,
-    notification_email: '',
-  })
-  
+    notification_email: "",
+  });
+
   // Load settings
   useEffect(() => {
     if (settings) {
       setFormData({
-        business_name: settings.business_name || '',
-        timezone: settings.timezone || 'Africa/Lusaka',
-        date_format: settings.date_format || 'DD/MM/YYYY',
-        time_format: settings.time_format || '24h',
+        business_name: settings.business_name || "",
+        timezone: settings.timezone || "Africa/Lusaka",
+        date_format: settings.date_format || "DD/MM/YYYY",
+        time_format: settings.time_format || "24h",
         min_booking_notice_hours: settings.min_booking_notice_hours || 2,
         max_booking_advance_days: settings.max_booking_advance_days || 60,
         cancellation_notice_hours: settings.cancellation_notice_hours || 24,
@@ -113,36 +122,36 @@ export function SettingsView({ className }: SettingsViewProps) {
         auto_confirm: settings.auto_confirm ?? false,
         confirmation_email_enabled: settings.confirmation_email_enabled ?? true,
         reminder_hours: settings.reminder_hours || [24, 2],
-        accent_color: settings.accent_color || '',
+        accent_color: settings.accent_color || "",
         require_payment: settings.require_payment ?? false,
         auto_create_crm_contact: settings.auto_create_crm_contact ?? true,
-        notification_email: settings.notification_email || '',
-      })
+        notification_email: settings.notification_email || "",
+      });
     }
-  }, [settings])
-  
+  }, [settings]);
+
   // Handle change
   const handleChange = (field: keyof BookingSettingsUpdate, value: unknown) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    setHasChanges(true)
-  }
-  
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  };
+
   // Save settings
   const handleSave = async () => {
-    setIsSaving(true)
+    setIsSaving(true);
     try {
-      await updateSettings(siteId, formData)
-      await refreshAll()
-      setHasChanges(false)
-      toast.success('Settings saved successfully')
+      await updateSettings(siteId, formData);
+      await refreshAll();
+      setHasChanges(false);
+      toast.success("Settings saved successfully");
     } catch (error) {
-      console.error('Failed to save settings:', error)
-      toast.error('Failed to save settings')
+      console.error("Failed to save settings:", error);
+      toast.error("Failed to save settings");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
-  
+  };
+
   return (
     <div className={className}>
       <div className="p-6">
@@ -157,11 +166,8 @@ export function SettingsView({ className }: SettingsViewProps) {
               Configure your booking system preferences
             </p>
           </div>
-          
-          <Button 
-            onClick={handleSave}
-            disabled={!hasChanges || isSaving}
-          >
+
+          <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -175,7 +181,7 @@ export function SettingsView({ className }: SettingsViewProps) {
             )}
           </Button>
         </div>
-        
+
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6 w-full overflow-x-auto flex-wrap sm:flex-nowrap">
@@ -200,7 +206,7 @@ export function SettingsView({ className }: SettingsViewProps) {
               Payments
             </TabsTrigger>
           </TabsList>
-          
+
           {/* General Settings */}
           <TabsContent value="general">
             <Card>
@@ -216,22 +222,28 @@ export function SettingsView({ className }: SettingsViewProps) {
                     <Label htmlFor="business_name">Business Name</Label>
                     <Input
                       id="business_name"
-                      value={formData.business_name || ''}
-                      onChange={(e) => handleChange('business_name', e.target.value)}
+                      value={formData.business_name || ""}
+                      onChange={(e) =>
+                        handleChange("business_name", e.target.value)
+                      }
                       placeholder="Your Business Name"
                     />
                     <p className="text-xs text-muted-foreground">
                       Displayed in booking confirmations and reminders
                     </p>
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="notification_email">Notification Email</Label>
+                    <Label htmlFor="notification_email">
+                      Notification Email
+                    </Label>
                     <Input
                       id="notification_email"
                       type="email"
-                      value={formData.notification_email || ''}
-                      onChange={(e) => handleChange('notification_email', e.target.value)}
+                      value={formData.notification_email || ""}
+                      onChange={(e) =>
+                        handleChange("notification_email", e.target.value)
+                      }
                       placeholder="bookings@yourbusiness.com"
                     />
                     <p className="text-xs text-muted-foreground">
@@ -239,19 +251,23 @@ export function SettingsView({ className }: SettingsViewProps) {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="timezone">Timezone</Label>
                     <Select
                       value={formData.timezone}
-                      onValueChange={(value) => handleChange('timezone', value)}
+                      onValueChange={(value) => handleChange("timezone", value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select timezone" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="header-africa" disabled className="font-semibold">
+                        <SelectItem
+                          value="header-africa"
+                          disabled
+                          className="font-semibold"
+                        >
                           Africa
                         </SelectItem>
                         {AFRICAN_TIMEZONES.map((tz) => (
@@ -259,7 +275,11 @@ export function SettingsView({ className }: SettingsViewProps) {
                             {tz.label}
                           </SelectItem>
                         ))}
-                        <SelectItem value="header-other" disabled className="font-semibold">
+                        <SelectItem
+                          value="header-other"
+                          disabled
+                          className="font-semibold"
+                        >
                           Other
                         </SelectItem>
                         {OTHER_TIMEZONES.map((tz) => (
@@ -270,12 +290,14 @@ export function SettingsView({ className }: SettingsViewProps) {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="time_format">Time Format</Label>
                     <Select
                       value={formData.time_format}
-                      onValueChange={(value) => handleChange('time_format', value)}
+                      onValueChange={(value) =>
+                        handleChange("time_format", value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -287,24 +309,32 @@ export function SettingsView({ className }: SettingsViewProps) {
                     </Select>
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="date_format">Date Format</Label>
                   <Select
                     value={formData.date_format}
-                    onValueChange={(value) => handleChange('date_format', value)}
+                    onValueChange={(value) =>
+                      handleChange("date_format", value)
+                    }
                   >
                     <SelectTrigger className="w-[200px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="DD/MM/YYYY">DD/MM/YYYY (31/12/2026)</SelectItem>
-                      <SelectItem value="MM/DD/YYYY">MM/DD/YYYY (12/31/2026)</SelectItem>
-                      <SelectItem value="YYYY-MM-DD">YYYY-MM-DD (2026-12-31)</SelectItem>
+                      <SelectItem value="DD/MM/YYYY">
+                        DD/MM/YYYY (31/12/2026)
+                      </SelectItem>
+                      <SelectItem value="MM/DD/YYYY">
+                        MM/DD/YYYY (12/31/2026)
+                      </SelectItem>
+                      <SelectItem value="YYYY-MM-DD">
+                        YYYY-MM-DD (2026-12-31)
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <Label className="text-base">CRM Integration</Label>
@@ -314,13 +344,15 @@ export function SettingsView({ className }: SettingsViewProps) {
                   </div>
                   <Switch
                     checked={formData.auto_create_crm_contact}
-                    onCheckedChange={(checked) => handleChange('auto_create_crm_contact', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("auto_create_crm_contact", checked)
+                    }
                   />
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Booking Rules */}
           <TabsContent value="booking">
             <Card>
@@ -336,7 +368,9 @@ export function SettingsView({ className }: SettingsViewProps) {
                     <Label htmlFor="slot_interval">Time Slot Interval</Label>
                     <Select
                       value={String(formData.slot_interval_minutes)}
-                      onValueChange={(value) => handleChange('slot_interval_minutes', parseInt(value))}
+                      onValueChange={(value) =>
+                        handleChange("slot_interval_minutes", parseInt(value))
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -352,12 +386,17 @@ export function SettingsView({ className }: SettingsViewProps) {
                       Interval between available time slots
                     </p>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="min_notice">Minimum Booking Notice</Label>
                     <Select
                       value={String(formData.min_booking_notice_hours)}
-                      onValueChange={(value) => handleChange('min_booking_notice_hours', parseInt(value))}
+                      onValueChange={(value) =>
+                        handleChange(
+                          "min_booking_notice_hours",
+                          parseInt(value),
+                        )
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -376,13 +415,18 @@ export function SettingsView({ className }: SettingsViewProps) {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="max_advance">Maximum Advance Booking</Label>
                     <Select
                       value={String(formData.max_booking_advance_days)}
-                      onValueChange={(value) => handleChange('max_booking_advance_days', parseInt(value))}
+                      onValueChange={(value) =>
+                        handleChange(
+                          "max_booking_advance_days",
+                          parseInt(value),
+                        )
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -401,12 +445,19 @@ export function SettingsView({ className }: SettingsViewProps) {
                       How far in the future customers can book
                     </p>
                   </div>
-                  
+
                   <div className="space-y-2">
-                    <Label htmlFor="cancellation_notice">Cancellation Notice</Label>
+                    <Label htmlFor="cancellation_notice">
+                      Cancellation Notice
+                    </Label>
                     <Select
                       value={String(formData.cancellation_notice_hours)}
-                      onValueChange={(value) => handleChange('cancellation_notice_hours', parseInt(value))}
+                      onValueChange={(value) =>
+                        handleChange(
+                          "cancellation_notice_hours",
+                          parseInt(value),
+                        )
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -426,7 +477,7 @@ export function SettingsView({ className }: SettingsViewProps) {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <Label className="text-base">Auto-Confirm Bookings</Label>
@@ -436,13 +487,15 @@ export function SettingsView({ className }: SettingsViewProps) {
                   </div>
                   <Switch
                     checked={formData.auto_confirm}
-                    onCheckedChange={(checked) => handleChange('auto_confirm', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("auto_confirm", checked)
+                    }
                   />
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Notifications */}
           <TabsContent value="notifications">
             <Card>
@@ -462,37 +515,39 @@ export function SettingsView({ className }: SettingsViewProps) {
                   </div>
                   <Switch
                     checked={formData.confirmation_email_enabled}
-                    onCheckedChange={(checked) => handleChange('confirmation_email_enabled', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("confirmation_email_enabled", checked)
+                    }
                   />
                 </div>
-                
+
                 <div className="space-y-4">
                   <Label>Reminder Schedule</Label>
                   <p className="text-sm text-muted-foreground">
                     When to send appointment reminders to customers
                   </p>
-                  
+
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                      { hours: 48, label: '48 hours before' },
-                      { hours: 24, label: '24 hours before' },
-                      { hours: 12, label: '12 hours before' },
-                      { hours: 2, label: '2 hours before' },
-                      { hours: 1, label: '1 hour before' },
+                      { hours: 48, label: "48 hours before" },
+                      { hours: 24, label: "24 hours before" },
+                      { hours: 12, label: "12 hours before" },
+                      { hours: 2, label: "2 hours before" },
+                      { hours: 1, label: "1 hour before" },
                     ].map(({ hours, label }) => (
                       <button
                         key={hours}
                         onClick={() => {
-                          const current = formData.reminder_hours || []
+                          const current = formData.reminder_hours || [];
                           const newHours = current.includes(hours)
-                            ? current.filter(h => h !== hours)
-                            : [...current, hours].sort((a, b) => b - a)
-                          handleChange('reminder_hours', newHours)
+                            ? current.filter((h) => h !== hours)
+                            : [...current, hours].sort((a, b) => b - a);
+                          handleChange("reminder_hours", newHours);
                         }}
                         className={`p-3 border rounded-lg text-sm font-medium transition-all ${
                           formData.reminder_hours?.includes(hours)
-                            ? 'border-primary bg-primary/10 text-primary'
-                            : 'hover:border-muted-foreground/50'
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "hover:border-muted-foreground/50"
                         }`}
                       >
                         <div className="flex items-center justify-center gap-2">
@@ -508,7 +563,7 @@ export function SettingsView({ className }: SettingsViewProps) {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Appearance */}
           <TabsContent value="appearance">
             <Card>
@@ -525,22 +580,34 @@ export function SettingsView({ className }: SettingsViewProps) {
                     <input
                       type="color"
                       value={formData.accent_color}
-                      onChange={(e) => handleChange('accent_color', e.target.value)}
+                      onChange={(e) =>
+                        handleChange("accent_color", e.target.value)
+                      }
                       className="w-12 h-12 rounded-lg border cursor-pointer"
                     />
                     <Input
                       value={formData.accent_color}
-                      onChange={(e) => handleChange('accent_color', e.target.value)}
+                      onChange={(e) =>
+                        handleChange("accent_color", e.target.value)
+                      }
                       className="w-32 font-mono"
                       placeholder="#8B5CF6"
                     />
                     <div className="flex gap-2">
-                      {['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'].map((color) => (
+                      {[
+                        "#8B5CF6",
+                        "#3B82F6",
+                        "#10B981",
+                        "#F59E0B",
+                        "#EF4444",
+                      ].map((color) => (
                         <button
                           key={color}
-                          onClick={() => handleChange('accent_color', color)}
+                          onClick={() => handleChange("accent_color", color)}
                           className={`w-8 h-8 rounded-full border-2 ${
-                            formData.accent_color === color ? 'border-foreground' : 'border-transparent'
+                            formData.accent_color === color
+                              ? "border-foreground"
+                              : "border-transparent"
                           }`}
                           style={{ backgroundColor: color }}
                         />
@@ -551,13 +618,13 @@ export function SettingsView({ className }: SettingsViewProps) {
                     Used for buttons, highlights, and selected states
                   </p>
                 </div>
-                
+
                 {/* Preview */}
                 <div className="space-y-2">
                   <Label>Preview</Label>
                   <div className="p-6 border rounded-lg bg-muted/30">
                     <div className="max-w-md mx-auto">
-                      <div 
+                      <div
                         className="p-4 rounded-lg text-white text-center font-semibold"
                         style={{ backgroundColor: formData.accent_color }}
                       >
@@ -568,9 +635,13 @@ export function SettingsView({ className }: SettingsViewProps) {
                           <div
                             key={i}
                             className="w-10 h-10 rounded-lg border-2 flex items-center justify-center text-sm font-medium"
-                            style={{ 
-                              borderColor: i === 2 ? formData.accent_color : undefined,
-                              backgroundColor: i === 2 ? `${formData.accent_color}10` : undefined,
+                            style={{
+                              borderColor:
+                                i === 2 ? formData.accent_color : undefined,
+                              backgroundColor:
+                                i === 2
+                                  ? `${formData.accent_color}10`
+                                  : undefined,
                             }}
                           >
                             {i}
@@ -583,7 +654,7 @@ export function SettingsView({ className }: SettingsViewProps) {
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           {/* Payments */}
           <TabsContent value="payments">
             <Card>
@@ -603,18 +674,26 @@ export function SettingsView({ className }: SettingsViewProps) {
                   </div>
                   <Switch
                     checked={formData.require_payment}
-                    onCheckedChange={(checked) => handleChange('require_payment', checked)}
+                    onCheckedChange={(checked) =>
+                      handleChange("require_payment", checked)
+                    }
                   />
                 </div>
-                
+
                 {formData.require_payment && (
                   <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-                    <p className="text-sm font-medium">Manual Payment Tracking</p>
-                    <p className="text-sm text-muted-foreground">
-                      When enabled, new bookings will be created with &quot;Payment Pending&quot; status. Staff can update payment status (Paid, Pending, Not Required) from the appointment detail panel.
+                    <p className="text-sm font-medium">
+                      Manual Payment Tracking
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Online payment gateway integration is planned for a future update.
+                      When enabled, new bookings will be created with
+                      &quot;Payment Pending&quot; status. Staff can update
+                      payment status (Paid, Pending, Not Required) from the
+                      appointment detail panel.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Online payment gateway integration is planned for a future
+                      update.
                     </p>
                   </div>
                 )}
@@ -624,7 +703,7 @@ export function SettingsView({ className }: SettingsViewProps) {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }
 
-export default SettingsView
+export default SettingsView;

@@ -32,7 +32,7 @@ export function EmbedBookingClient({
           moduleId: "booking",
           siteId,
         },
-        "*"
+        "*",
       );
     } catch {
       // Not in iframe or blocked by CORS — safe to ignore
@@ -48,7 +48,7 @@ export function EmbedBookingClient({
               moduleId: "booking",
               height,
             },
-            "*"
+            "*",
           );
         } catch {
           // Safe to ignore
@@ -64,7 +64,10 @@ export function EmbedBookingClient({
   }, [siteId]);
 
   return (
-    <div ref={containerRef} style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px" }}>
+    <div
+      ref={containerRef}
+      style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px" }}
+    >
       <BookingWidgetBlock
         siteId={siteId}
         primaryColor={primaryColor}
@@ -85,7 +88,7 @@ export function EmbedBookingClient({
                 siteId,
                 booking,
               },
-              "*"
+              "*",
             );
           } catch {
             // Safe to ignore

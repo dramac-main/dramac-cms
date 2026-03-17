@@ -24,13 +24,14 @@ Full audit and fix of the embed infrastructure to make modules embeddable on ext
 
 ### Embed Infrastructure Summary:
 
-| Script | Path | Purpose |
-|--------|------|---------|
+| Script            | Path             | Purpose                                                      |
+| ----------------- | ---------------- | ------------------------------------------------------------ |
 | `dramac-embed.js` | `/public/embed/` | Web Component + DRAMAC_CONFIG auto-init + buy-button handler |
-| `dramac-sdk.js` | `/public/embed/` | Full JavaScript SDK for programmatic embed control |
-| `booking.js` | `/public/embed/` | Lightweight booking widget with button-popup pattern |
+| `dramac-sdk.js`   | `/public/embed/` | Full JavaScript SDK for programmatic embed control           |
+| `booking.js`      | `/public/embed/` | Lightweight booking widget with button-popup pattern         |
 
 **Supported embed patterns:**
+
 - `<dramac-module>` Web Component (token-authenticated)
 - `window.DRAMAC_CONFIG` auto-init (E-Commerce product grids, cards, cart, checkout)
 - `<button class="dramac-buy-button">` data-attribute (quick buy buttons)

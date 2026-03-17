@@ -57,6 +57,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'siteId is required' }, { status: 400 })
     }
 
+    // Verify user has access to this site (defense-in-depth beyond RLS)
+    const { data: site, error: siteError } = await supabase
+      .from('sites')
+      .select('id')
+      .eq('id', siteId)
+      .single()
+
+    if (siteError || !site) {
+      return NextResponse.json({ error: 'Site not found' }, { status: 404 })
+    }
+
     // Single order request
     if (orderId) {
       const order = await getOrder(siteId, orderId)
@@ -129,6 +140,17 @@ export async function PATCH(request: NextRequest) {
 
     if (!orderId) {
       return NextResponse.json({ error: 'orderId is required' }, { status: 400 })
+    }
+
+    // Verify user has access to this site (defense-in-depth beyond RLS)
+    const { data: site, error: siteError } = await supabase
+      .from('sites')
+      .select('id')
+      .eq('id', siteId)
+      .single()
+
+    if (siteError || !site) {
+      return NextResponse.json({ error: 'Site not found' }, { status: 404 })
     }
 
     // Build update object

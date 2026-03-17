@@ -1,12 +1,12 @@
 /**
  * Edit Service Dialog
- * 
+ *
  * Phase EM-51: Booking Module
  */
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { DEFAULT_CURRENCY_SYMBOL } from '@/lib/locale-config'
+import { useState, useEffect } from "react";
+import { DEFAULT_CURRENCY_SYMBOL } from "@/lib/locale-config";
 import {
   Dialog,
   DialogContent,
@@ -14,68 +14,72 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
-import { useBooking } from '../../context/booking-context'
-import { toast } from 'sonner'
-import type { Service } from '../../types/booking-types'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { useBooking } from "../../context/booking-context";
+import { toast } from "sonner";
+import type { Service } from "../../types/booking-types";
 
 interface EditServiceDialogProps {
-  service: Service | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  service: Service | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDialogProps) {
-  const { editService } = useBooking()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  
+export function EditServiceDialog({
+  service,
+  open,
+  onOpenChange,
+}: EditServiceDialogProps) {
+  const { editService } = useBooking();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Form state
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [category, setCategory] = useState('')
-  const [durationMinutes, setDurationMinutes] = useState(60)
-  const [price, setPrice] = useState<string>('')
-  const [color, setColor] = useState('')
-  const [allowOnlineBooking, setAllowOnlineBooking] = useState(true)
-  const [requireConfirmation, setRequireConfirmation] = useState(false)
-  const [maxAttendees, setMaxAttendees] = useState(1)
-  const [bufferBefore, setBufferBefore] = useState(0)
-  const [bufferAfter, setBufferAfter] = useState(0)
-  
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [durationMinutes, setDurationMinutes] = useState(60);
+  const [price, setPrice] = useState<string>("");
+  const [color, setColor] = useState("");
+  const [allowOnlineBooking, setAllowOnlineBooking] = useState(true);
+  const [requireConfirmation, setRequireConfirmation] = useState(false);
+  const [maxAttendees, setMaxAttendees] = useState(1);
+  const [bufferBefore, setBufferBefore] = useState(0);
+  const [bufferAfter, setBufferAfter] = useState(0);
+
   // Load service data when dialog opens
   useEffect(() => {
     if (open && service) {
-      setName(service.name)
-      setDescription(service.description || '')
-      setCategory(service.category || '')
-      setDurationMinutes(service.duration_minutes)
-      setPrice(service.price?.toString() || '')
-      setColor(service.color)
-      setAllowOnlineBooking(service.allow_online_booking)
-      setRequireConfirmation(service.require_confirmation)
-      setMaxAttendees(service.max_attendees)
-      setBufferBefore(service.buffer_before_minutes)
-      setBufferAfter(service.buffer_after_minutes)
+      setName(service.name);
+      setDescription(service.description || "");
+      setCategory(service.category || "");
+      setDurationMinutes(service.duration_minutes);
+      setPrice(service.price?.toString() || "");
+      setColor(service.color);
+      setAllowOnlineBooking(service.allow_online_booking);
+      setRequireConfirmation(service.require_confirmation);
+      setMaxAttendees(service.max_attendees);
+      setBufferBefore(service.buffer_before_minutes);
+      setBufferAfter(service.buffer_after_minutes);
     }
-  }, [open, service])
-  
+  }, [open, service]);
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!service) return
-    
+    e.preventDefault();
+
+    if (!service) return;
+
     if (!name.trim()) {
-      toast.error('Service name is required')
-      return
+      toast.error("Service name is required");
+      return;
     }
-    
-    setIsSubmitting(true)
-    
+
+    setIsSubmitting(true);
+
     try {
       await editService(service.id, {
         name: name.trim(),
@@ -89,20 +93,20 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
         max_attendees: maxAttendees,
         buffer_before_minutes: bufferBefore,
         buffer_after_minutes: bufferAfter,
-      })
-      
-      toast.success('Service updated successfully')
-      onOpenChange(false)
+      });
+
+      toast.success("Service updated successfully");
+      onOpenChange(false);
     } catch (error) {
-      console.error('Error updating service:', error)
-      toast.error('Failed to update service')
+      console.error("Error updating service:", error);
+      toast.error("Failed to update service");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
-  
-  if (!service) return null
-  
+  };
+
+  if (!service) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
@@ -113,7 +117,7 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
               Update the service details below.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-4">
             {/* Name */}
             <div className="grid gap-2">
@@ -126,7 +130,7 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
                 required
               />
             </div>
-            
+
             {/* Description */}
             <div className="grid gap-2">
               <Label htmlFor="description">Description</Label>
@@ -138,7 +142,7 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
                 rows={3}
               />
             </div>
-            
+
             {/* Category */}
             <div className="grid gap-2">
               <Label htmlFor="category">Category</Label>
@@ -149,7 +153,7 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
                 onChange={(e) => setCategory(e.target.value)}
               />
             </div>
-            
+
             {/* Duration and Price */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
@@ -161,7 +165,9 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
                   max={480}
                   step={5}
                   value={durationMinutes}
-                  onChange={(e) => setDurationMinutes(parseInt(e.target.value) || 60)}
+                  onChange={(e) =>
+                    setDurationMinutes(parseInt(e.target.value) || 60)
+                  }
                 />
               </div>
               <div className="grid gap-2">
@@ -177,7 +183,7 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
                 />
               </div>
             </div>
-            
+
             {/* Buffer Times */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
@@ -189,7 +195,9 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
                   max={60}
                   step={5}
                   value={bufferBefore}
-                  onChange={(e) => setBufferBefore(parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    setBufferBefore(parseInt(e.target.value) || 0)
+                  }
                 />
               </div>
               <div className="grid gap-2">
@@ -201,11 +209,13 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
                   max={60}
                   step={5}
                   value={bufferAfter}
-                  onChange={(e) => setBufferAfter(parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    setBufferAfter(parseInt(e.target.value) || 0)
+                  }
                 />
               </div>
             </div>
-            
+
             {/* Color and Max Attendees */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
@@ -235,11 +245,13 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
                   min={1}
                   max={100}
                   value={maxAttendees}
-                  onChange={(e) => setMaxAttendees(parseInt(e.target.value) || 1)}
+                  onChange={(e) =>
+                    setMaxAttendees(parseInt(e.target.value) || 1)
+                  }
                 />
               </div>
             </div>
-            
+
             {/* Switches */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -254,7 +266,7 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
                   onCheckedChange={setAllowOnlineBooking}
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Require Confirmation</Label>
@@ -269,7 +281,7 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
               </div>
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button
               type="button"
@@ -280,11 +292,11 @@ export function EditServiceDialog({ service, open, onOpenChange }: EditServiceDi
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : 'Save Changes'}
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

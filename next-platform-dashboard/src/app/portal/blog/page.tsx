@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { FileText, ExternalLink } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getPortalBlogSites } from "@/lib/blog/post-service";
 import { requirePortalAuth } from "@/lib/portal/portal-auth";
@@ -47,9 +53,7 @@ export default async function PortalBlogPage() {
               </CardHeader>
               <CardContent>
                 <Button asChild className="w-full">
-                  <Link href={`/portal/blog/${site.id}`}>
-                    View Blog Posts
-                  </Link>
+                  <Link href={`/portal/blog/${site.id}`}>View Blog Posts</Link>
                 </Button>
               </CardContent>
             </Card>

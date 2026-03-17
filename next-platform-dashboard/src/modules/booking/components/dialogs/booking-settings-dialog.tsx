@@ -1,11 +1,11 @@
 /**
  * Booking Settings Dialog
- * 
+ *
  * Phase EM-51: Booking Module
  */
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,90 +13,98 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useBooking } from '../../context/booking-context'
-import { updateSettings } from '../../actions/booking-actions'
-import { toast } from 'sonner'
-import type { BookingSettingsUpdate } from '../../types/booking-types'
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useBooking } from "../../context/booking-context";
+import { updateSettings } from "../../actions/booking-actions";
+import { toast } from "sonner";
+import type { BookingSettingsUpdate } from "../../types/booking-types";
 
-import { DEFAULT_TIMEZONE, DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from '@/lib/locale-config'
+import {
+  DEFAULT_TIMEZONE,
+  DEFAULT_CURRENCY,
+  SUPPORTED_CURRENCIES,
+} from "@/lib/locale-config";
 // Common timezones
 const TIMEZONES = [
-  { value: 'Africa/Lusaka', label: 'Lusaka (Zambia)' },
-  { value: 'Africa/Harare', label: 'Harare (Zimbabwe)' },
-  { value: 'Africa/Johannesburg', label: 'Johannesburg (South Africa)' },
-  { value: 'Africa/Nairobi', label: 'Nairobi (Kenya)' },
-  { value: 'Africa/Lagos', label: 'Lagos (Nigeria)' },
-  { value: 'Africa/Cairo', label: 'Cairo (Egypt)' },
-  { value: 'UTC', label: 'UTC' },
-  { value: 'America/New_York', label: 'Eastern Time (US)' },
-  { value: 'America/Chicago', label: 'Central Time (US)' },
-  { value: 'America/Denver', label: 'Mountain Time (US)' },
-  { value: 'America/Los_Angeles', label: 'Pacific Time (US)' },
-  { value: 'Europe/London', label: 'London (UK)' },
-  { value: 'Europe/Paris', label: 'Paris (CET)' },
-  { value: 'Asia/Tokyo', label: 'Tokyo (Japan)' },
-  { value: 'Australia/Sydney', label: 'Sydney (Australia)' },
-]
+  { value: "Africa/Lusaka", label: "Lusaka (Zambia)" },
+  { value: "Africa/Harare", label: "Harare (Zimbabwe)" },
+  { value: "Africa/Johannesburg", label: "Johannesburg (South Africa)" },
+  { value: "Africa/Nairobi", label: "Nairobi (Kenya)" },
+  { value: "Africa/Lagos", label: "Lagos (Nigeria)" },
+  { value: "Africa/Cairo", label: "Cairo (Egypt)" },
+  { value: "UTC", label: "UTC" },
+  { value: "America/New_York", label: "Eastern Time (US)" },
+  { value: "America/Chicago", label: "Central Time (US)" },
+  { value: "America/Denver", label: "Mountain Time (US)" },
+  { value: "America/Los_Angeles", label: "Pacific Time (US)" },
+  { value: "Europe/London", label: "London (UK)" },
+  { value: "Europe/Paris", label: "Paris (CET)" },
+  { value: "Asia/Tokyo", label: "Tokyo (Japan)" },
+  { value: "Australia/Sydney", label: "Sydney (Australia)" },
+];
 
 interface BookingSettingsDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDialogProps) {
-  const { siteId, settings, refreshAll } = useBooking()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  
+export function BookingSettingsDialog({
+  open,
+  onOpenChange,
+}: BookingSettingsDialogProps) {
+  const { siteId, settings, refreshAll } = useBooking();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Form state
-  const [businessName, setBusinessName] = useState('')
-  const [currency, setCurrency] = useState(DEFAULT_CURRENCY)
-  const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE)
-  const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('12h')
-  const [slotInterval, setSlotInterval] = useState(30)
-  const [minBookingNotice, setMinBookingNotice] = useState(24)
-  const [maxBookingAdvance, setMaxBookingAdvance] = useState(90)
-  const [cancellationNotice, setCancellationNotice] = useState(24)
-  const [autoConfirm, setAutoConfirm] = useState(false)
-  const [confirmationEmailEnabled, setConfirmationEmailEnabled] = useState(true)
-  const [autoCreateCrmContact, setAutoCreateCrmContact] = useState(true)
-  const [accentColor, setAccentColor] = useState('')
-  const [notificationEmail, setNotificationEmail] = useState('')
-  
+  const [businessName, setBusinessName] = useState("");
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
+  const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE);
+  const [timeFormat, setTimeFormat] = useState<"12h" | "24h">("12h");
+  const [slotInterval, setSlotInterval] = useState(30);
+  const [minBookingNotice, setMinBookingNotice] = useState(24);
+  const [maxBookingAdvance, setMaxBookingAdvance] = useState(90);
+  const [cancellationNotice, setCancellationNotice] = useState(24);
+  const [autoConfirm, setAutoConfirm] = useState(false);
+  const [confirmationEmailEnabled, setConfirmationEmailEnabled] =
+    useState(true);
+  const [autoCreateCrmContact, setAutoCreateCrmContact] = useState(true);
+  const [accentColor, setAccentColor] = useState("");
+  const [notificationEmail, setNotificationEmail] = useState("");
+
   // Load settings when dialog opens
   useEffect(() => {
     if (open && settings) {
-      setBusinessName(settings.business_name || '')
-      setCurrency(settings.currency || DEFAULT_CURRENCY)
-      setTimezone(settings.timezone || DEFAULT_TIMEZONE)
-      setTimeFormat(settings.time_format || '12h')
-      setSlotInterval(settings.slot_interval_minutes || 30)
-      setMinBookingNotice(settings.min_booking_notice_hours || 24)
-      setMaxBookingAdvance(settings.max_booking_advance_days || 90)
-      setCancellationNotice(settings.cancellation_notice_hours || 24)
-      setAutoConfirm(settings.auto_confirm || false)
-      setConfirmationEmailEnabled(settings.confirmation_email_enabled ?? true)
-      setAutoCreateCrmContact(settings.auto_create_crm_contact ?? true)
-      setAccentColor(settings.accent_color || '')
-      setNotificationEmail(settings.notification_email || '')
+      setBusinessName(settings.business_name || "");
+      setCurrency(settings.currency || DEFAULT_CURRENCY);
+      setTimezone(settings.timezone || DEFAULT_TIMEZONE);
+      setTimeFormat(settings.time_format || "12h");
+      setSlotInterval(settings.slot_interval_minutes || 30);
+      setMinBookingNotice(settings.min_booking_notice_hours || 24);
+      setMaxBookingAdvance(settings.max_booking_advance_days || 90);
+      setCancellationNotice(settings.cancellation_notice_hours || 24);
+      setAutoConfirm(settings.auto_confirm || false);
+      setConfirmationEmailEnabled(settings.confirmation_email_enabled ?? true);
+      setAutoCreateCrmContact(settings.auto_create_crm_contact ?? true);
+      setAccentColor(settings.accent_color || "");
+      setNotificationEmail(settings.notification_email || "");
     }
-  }, [open, settings])
-  
+  }, [open, settings]);
+
   const handleSubmit = async () => {
-    setIsSubmitting(true)
-    
+    setIsSubmitting(true);
+
     try {
       const updates: BookingSettingsUpdate = {
         business_name: businessName.trim() || undefined,
@@ -111,22 +119,22 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
         confirmation_email_enabled: confirmationEmailEnabled,
         auto_create_crm_contact: autoCreateCrmContact,
         accent_color: accentColor,
-        notification_email: notificationEmail.trim() || undefined
-      }
-      
-      await updateSettings(siteId, updates)
-      await refreshAll()
-      
-      toast.success('Settings saved successfully')
-      onOpenChange(false)
+        notification_email: notificationEmail.trim() || undefined,
+      };
+
+      await updateSettings(siteId, updates);
+      await refreshAll();
+
+      toast.success("Settings saved successfully");
+      onOpenChange(false);
     } catch (error) {
-      console.error('Error saving settings:', error)
-      toast.error('Failed to save settings')
+      console.error("Error saving settings:", error);
+      toast.error("Failed to save settings");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
-  
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
@@ -136,14 +144,14 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
             Configure your booking system preferences.
           </DialogDescription>
         </DialogHeader>
-        
+
         <Tabs defaultValue="general" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="booking">Booking Rules</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
-          
+
           <div className="py-4 max-h-[50vh] overflow-y-auto">
             <TabsContent value="general" className="space-y-4 mt-0">
               {/* Business Name */}
@@ -156,7 +164,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
                   onChange={(e) => setBusinessName(e.target.value)}
                 />
               </div>
-              
+
               {/* Currency */}
               <div className="grid gap-2">
                 <Label>Currency</Label>
@@ -173,7 +181,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {/* Timezone */}
               <div className="grid gap-2">
                 <Label>Timezone</Label>
@@ -190,11 +198,14 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {/* Time Format */}
               <div className="grid gap-2">
                 <Label>Time Format</Label>
-                <Select value={timeFormat} onValueChange={(v) => setTimeFormat(v as '12h' | '24h')}>
+                <Select
+                  value={timeFormat}
+                  onValueChange={(v) => setTimeFormat(v as "12h" | "24h")}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -204,7 +215,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
                   </SelectContent>
                 </Select>
               </div>
-              
+
               {/* Accent Color */}
               <div className="grid gap-2">
                 <Label>Accent Color</Label>
@@ -225,12 +236,15 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
                 </div>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="booking" className="space-y-4 mt-0">
               {/* Slot Interval */}
               <div className="grid gap-2">
                 <Label>Time Slot Interval</Label>
-                <Select value={slotInterval.toString()} onValueChange={(v) => setSlotInterval(parseInt(v))}>
+                <Select
+                  value={slotInterval.toString()}
+                  onValueChange={(v) => setSlotInterval(parseInt(v))}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -244,55 +258,67 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
                   The increment between available time slots
                 </p>
               </div>
-              
+
               {/* Min Booking Notice */}
               <div className="grid gap-2">
-                <Label htmlFor="minNotice">Minimum Booking Notice (hours)</Label>
+                <Label htmlFor="minNotice">
+                  Minimum Booking Notice (hours)
+                </Label>
                 <Input
                   id="minNotice"
                   type="number"
                   min={0}
                   max={168}
                   value={minBookingNotice}
-                  onChange={(e) => setMinBookingNotice(parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    setMinBookingNotice(parseInt(e.target.value) || 0)
+                  }
                 />
                 <p className="text-sm text-muted-foreground">
                   How far in advance customers must book
                 </p>
               </div>
-              
+
               {/* Max Booking Advance */}
               <div className="grid gap-2">
-                <Label htmlFor="maxAdvance">Maximum Advance Booking (days)</Label>
+                <Label htmlFor="maxAdvance">
+                  Maximum Advance Booking (days)
+                </Label>
                 <Input
                   id="maxAdvance"
                   type="number"
                   min={1}
                   max={365}
                   value={maxBookingAdvance}
-                  onChange={(e) => setMaxBookingAdvance(parseInt(e.target.value) || 90)}
+                  onChange={(e) =>
+                    setMaxBookingAdvance(parseInt(e.target.value) || 90)
+                  }
                 />
                 <p className="text-sm text-muted-foreground">
                   How far in the future customers can book
                 </p>
               </div>
-              
+
               {/* Cancellation Notice */}
               <div className="grid gap-2">
-                <Label htmlFor="cancelNotice">Cancellation Notice (hours)</Label>
+                <Label htmlFor="cancelNotice">
+                  Cancellation Notice (hours)
+                </Label>
                 <Input
                   id="cancelNotice"
                   type="number"
                   min={0}
                   max={168}
                   value={cancellationNotice}
-                  onChange={(e) => setCancellationNotice(parseInt(e.target.value) || 0)}
+                  onChange={(e) =>
+                    setCancellationNotice(parseInt(e.target.value) || 0)
+                  }
                 />
                 <p className="text-sm text-muted-foreground">
                   Minimum notice required for cancellations
                 </p>
               </div>
-              
+
               {/* Auto Confirm */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -307,7 +333,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
                 />
               </div>
             </TabsContent>
-            
+
             <TabsContent value="notifications" className="space-y-4 mt-0">
               {/* Confirmation Email */}
               <div className="flex items-center justify-between">
@@ -322,7 +348,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
                   onCheckedChange={setConfirmationEmailEnabled}
                 />
               </div>
-              
+
               {/* CRM Integration */}
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
@@ -336,7 +362,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
                   onCheckedChange={setAutoCreateCrmContact}
                 />
               </div>
-              
+
               {/* Notification Email */}
               <div className="grid gap-2">
                 <Label htmlFor="notificationEmail">Notification Email</Label>
@@ -354,7 +380,7 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
             </TabsContent>
           </div>
         </Tabs>
-        
+
         <DialogFooter>
           <Button
             type="button"
@@ -365,10 +391,10 @@ export function BookingSettingsDialog({ open, onOpenChange }: BookingSettingsDia
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : 'Save Settings'}
+            {isSubmitting ? "Saving..." : "Save Settings"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -40,7 +40,7 @@
       var params = [];
       if (c.primaryColor)
         params.push(
-          "color=" + encodeURIComponent(c.primaryColor.replace("#", ""))
+          "color=" + encodeURIComponent(c.primaryColor.replace("#", "")),
         );
       if (c.borderRadius != null)
         params.push("radius=" + encodeURIComponent(c.borderRadius));
@@ -89,12 +89,9 @@
         if (e.data.type === "DRAMAC_BOOKING_COMPLETE") {
           self.close();
         }
-        if (
-          e.data.type === "DRAMAC_RESIZE" &&
-          self._iframe &&
-          e.data.height
-        ) {
-          self._iframe.style.height = Math.min(e.data.height, window.innerHeight * 0.85) + "px";
+        if (e.data.type === "DRAMAC_RESIZE" && self._iframe && e.data.height) {
+          self._iframe.style.height =
+            Math.min(e.data.height, window.innerHeight * 0.85) + "px";
         }
       });
     },

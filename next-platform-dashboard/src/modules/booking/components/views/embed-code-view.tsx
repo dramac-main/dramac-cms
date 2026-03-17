@@ -1,28 +1,34 @@
 /**
  * Embed Code View Component
- * 
+ *
  * Generate embeddable booking widget code for external sites
  */
-'use client'
+"use client";
 
-import { useState, useMemo } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useState, useMemo } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { useBooking } from '../../context/booking-context'
-import { 
-  Code, 
-  Copy, 
+} from "@/components/ui/select";
+import { useBooking } from "../../context/booking-context";
+import {
+  Code,
+  Copy,
   Check,
   ExternalLink,
   Calendar,
@@ -31,32 +37,32 @@ import {
   Monitor,
   Smartphone,
   Tablet,
-  Eye
-} from 'lucide-react'
-import { toast } from 'sonner'
+  Eye,
+} from "lucide-react";
+import { toast } from "sonner";
 
 // =============================================================================
 // TYPES
 // =============================================================================
 
 interface EmbedCodeViewProps {
-  className?: string
+  className?: string;
 }
 
-type WidgetType = 'full' | 'calendar-only' | 'button-popup'
-type PreviewDevice = 'desktop' | 'tablet' | 'mobile'
+type WidgetType = "full" | "calendar-only" | "button-popup";
+type PreviewDevice = "desktop" | "tablet" | "mobile";
 
 interface EmbedConfig {
-  widgetType: WidgetType
-  primaryColor: string
-  borderRadius: number
-  showHeader: boolean
-  showServiceSelector: boolean
-  showStaffSelector: boolean
-  buttonText: string
-  width: string
-  height: string
-  autoResize: boolean
+  widgetType: WidgetType;
+  primaryColor: string;
+  borderRadius: number;
+  showHeader: boolean;
+  showServiceSelector: boolean;
+  showStaffSelector: boolean;
+  buttonText: string;
+  width: string;
+  height: string;
+  autoResize: boolean;
 }
 
 // =============================================================================
@@ -64,59 +70,60 @@ interface EmbedConfig {
 // =============================================================================
 
 const DEFAULT_CONFIG: EmbedConfig = {
-  widgetType: 'full',
-  primaryColor: '',
+  widgetType: "full",
+  primaryColor: "",
   borderRadius: 8,
   showHeader: true,
   showServiceSelector: true,
   showStaffSelector: true,
-  buttonText: 'Book Now',
-  width: '100%',
-  height: '700',
+  buttonText: "Book Now",
+  width: "100%",
+  height: "700",
   autoResize: true,
-}
+};
 
 // =============================================================================
 // COMPONENT
 // =============================================================================
 
 export function EmbedCodeView({ className }: EmbedCodeViewProps) {
-  const { siteId, settings } = useBooking()
-  
-  const [config, setConfig] = useState<EmbedConfig>(DEFAULT_CONFIG)
-  const [copiedType, setCopiedType] = useState<string | null>(null)
-  const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop')
-  const [activeTab, setActiveTab] = useState('generate')
-  
+  const { siteId, settings } = useBooking();
+
+  const [config, setConfig] = useState<EmbedConfig>(DEFAULT_CONFIG);
+  const [copiedType, setCopiedType] = useState<string | null>(null);
+  const [previewDevice, setPreviewDevice] = useState<PreviewDevice>("desktop");
+  const [activeTab, setActiveTab] = useState("generate");
+
   // Get the base URL from environment or fallback
-  const baseUrl = typeof window !== 'undefined' 
-    ? window.location.origin 
-    : 'https://your-domain.com'
-  
+  const baseUrl =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://your-domain.com";
+
   // Generate embed URL
   const embedUrl = useMemo(() => {
     const params = new URLSearchParams({
       type: config.widgetType,
-      color: config.primaryColor.replace('#', ''),
+      color: config.primaryColor.replace("#", ""),
       radius: config.borderRadius.toString(),
-    })
-    
-    if (!config.showHeader) params.append('hideHeader', '1')
-    if (!config.showServiceSelector) params.append('hideServices', '1')
-    if (!config.showStaffSelector) params.append('hideStaff', '1')
-    if (config.widgetType === 'button-popup') {
-      params.append('buttonText', config.buttonText)
+    });
+
+    if (!config.showHeader) params.append("hideHeader", "1");
+    if (!config.showServiceSelector) params.append("hideServices", "1");
+    if (!config.showStaffSelector) params.append("hideStaff", "1");
+    if (config.widgetType === "button-popup") {
+      params.append("buttonText", config.buttonText);
     }
-    
-    return `${baseUrl}/embed/booking/${siteId}?${params.toString()}`
-  }, [siteId, config, baseUrl])
-  
+
+    return `${baseUrl}/embed/booking/${siteId}?${params.toString()}`;
+  }, [siteId, config, baseUrl]);
+
   // Generate iframe code
   const iframeCode = useMemo(() => {
-    const heightAttr = config.autoResize 
-      ? 'style="min-height: 600px; height: auto;"' 
-      : `height="${config.height}"`
-    
+    const heightAttr = config.autoResize
+      ? 'style="min-height: 600px; height: auto;"'
+      : `height="${config.height}"`;
+
     return `<iframe
   src="${embedUrl}"
   width="${config.width}"
@@ -124,9 +131,9 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
   frameborder="0"
   allow="payment"
   title="Booking Widget"
-></iframe>`
-  }, [embedUrl, config])
-  
+></iframe>`;
+  }, [embedUrl, config]);
+
   // Generate script code (for button popup)
   const scriptCode = useMemo(() => {
     return `<!-- DRAMAC Booking Widget -->
@@ -143,33 +150,33 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
     showStaffSelector: ${config.showStaffSelector},
   });
 </script>
-<button data-dramac-booking>Book Now</button>`
-  }, [siteId, config, baseUrl])
-  
+<button data-dramac-booking>Book Now</button>`;
+  }, [siteId, config, baseUrl]);
+
   // Generate WordPress shortcode
   const shortcodeCode = useMemo(() => {
-    return `[dramac_booking site="${siteId}" type="${config.widgetType}" color="${config.primaryColor}"]`
-  }, [siteId, config])
-  
+    return `[dramac_booking site="${siteId}" type="${config.widgetType}" color="${config.primaryColor}"]`;
+  }, [siteId, config]);
+
   // Handle config change
   const handleConfigChange = (field: keyof EmbedConfig, value: unknown) => {
-    setConfig(prev => ({ ...prev, [field]: value }))
-  }
-  
+    setConfig((prev) => ({ ...prev, [field]: value }));
+  };
+
   // Copy to clipboard
   const handleCopy = async (text: string, type: string) => {
-    await navigator.clipboard.writeText(text)
-    setCopiedType(type)
-    toast.success('Copied to clipboard!')
-    setTimeout(() => setCopiedType(null), 2000)
-  }
-  
+    await navigator.clipboard.writeText(text);
+    setCopiedType(type);
+    toast.success("Copied to clipboard!");
+    setTimeout(() => setCopiedType(null), 2000);
+  };
+
   // Preview dimensions
   const previewDimensions = {
-    desktop: { width: '100%', maxWidth: '800px' },
-    tablet: { width: '768px', maxWidth: '768px' },
-    mobile: { width: '375px', maxWidth: '375px' },
-  }
+    desktop: { width: "100%", maxWidth: "800px" },
+    tablet: { width: "768px", maxWidth: "768px" },
+    mobile: { width: "375px", maxWidth: "375px" },
+  };
 
   return (
     <div className={className}>
@@ -184,7 +191,7 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
             Add the booking widget to your website
           </p>
         </div>
-        
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="generate" className="gap-2">
@@ -196,7 +203,7 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
               Preview
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="generate">
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Configuration */}
@@ -211,17 +218,30 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-3 gap-3">
                       {[
-                        { value: 'full', label: 'Full Widget', icon: Layout },
-                        { value: 'calendar-only', label: 'Calendar Only', icon: Calendar },
-                        { value: 'button-popup', label: 'Button Popup', icon: ExternalLink },
+                        { value: "full", label: "Full Widget", icon: Layout },
+                        {
+                          value: "calendar-only",
+                          label: "Calendar Only",
+                          icon: Calendar,
+                        },
+                        {
+                          value: "button-popup",
+                          label: "Button Popup",
+                          icon: ExternalLink,
+                        },
                       ].map(({ value, label, icon: Icon }) => (
                         <button
                           key={value}
-                          onClick={() => handleConfigChange('widgetType', value as WidgetType)}
+                          onClick={() =>
+                            handleConfigChange(
+                              "widgetType",
+                              value as WidgetType,
+                            )
+                          }
                           className={`p-4 border rounded-lg text-center transition-all ${
                             config.widgetType === value
-                              ? 'border-primary bg-primary/10'
-                              : 'hover:border-muted-foreground/50'
+                              ? "border-primary bg-primary/10"
+                              : "hover:border-muted-foreground/50"
                           }`}
                         >
                           <Icon className="h-6 w-6 mx-auto mb-2" />
@@ -231,7 +251,7 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -245,21 +265,27 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                       <input
                         type="color"
                         value={config.primaryColor}
-                        onChange={(e) => handleConfigChange('primaryColor', e.target.value)}
+                        onChange={(e) =>
+                          handleConfigChange("primaryColor", e.target.value)
+                        }
                         className="w-10 h-10 rounded cursor-pointer"
                       />
                       <Input
                         value={config.primaryColor}
-                        onChange={(e) => handleConfigChange('primaryColor', e.target.value)}
+                        onChange={(e) =>
+                          handleConfigChange("primaryColor", e.target.value)
+                        }
                         className="w-28 font-mono"
                       />
                     </div>
-                    
+
                     <div className="flex items-center gap-3">
                       <Label className="w-28">Border Radius</Label>
                       <Select
                         value={String(config.borderRadius)}
-                        onValueChange={(v) => handleConfigChange('borderRadius', parseInt(v))}
+                        onValueChange={(v) =>
+                          handleConfigChange("borderRadius", parseInt(v))
+                        }
                       >
                         <SelectTrigger className="w-32">
                           <SelectValue />
@@ -273,45 +299,53 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="space-y-3 pt-2">
                       <div className="flex items-center justify-between">
                         <Label>Show Header</Label>
                         <Switch
                           checked={config.showHeader}
-                          onCheckedChange={(v) => handleConfigChange('showHeader', v)}
+                          onCheckedChange={(v) =>
+                            handleConfigChange("showHeader", v)
+                          }
                         />
                       </div>
                       <div className="flex items-center justify-between">
                         <Label>Show Service Selector</Label>
                         <Switch
                           checked={config.showServiceSelector}
-                          onCheckedChange={(v) => handleConfigChange('showServiceSelector', v)}
+                          onCheckedChange={(v) =>
+                            handleConfigChange("showServiceSelector", v)
+                          }
                         />
                       </div>
                       <div className="flex items-center justify-between">
                         <Label>Show Staff Selector</Label>
                         <Switch
                           checked={config.showStaffSelector}
-                          onCheckedChange={(v) => handleConfigChange('showStaffSelector', v)}
+                          onCheckedChange={(v) =>
+                            handleConfigChange("showStaffSelector", v)
+                          }
                         />
                       </div>
                     </div>
-                    
-                    {config.widgetType === 'button-popup' && (
+
+                    {config.widgetType === "button-popup" && (
                       <div className="pt-2">
                         <Label>Button Text</Label>
                         <Input
                           value={config.buttonText}
-                          onChange={(e) => handleConfigChange('buttonText', e.target.value)}
+                          onChange={(e) =>
+                            handleConfigChange("buttonText", e.target.value)
+                          }
                           className="mt-2"
                         />
                       </div>
                     )}
                   </CardContent>
                 </Card>
-                
-                {config.widgetType !== 'button-popup' && (
+
+                {config.widgetType !== "button-popup" && (
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg">Dimensions</CardTitle>
@@ -322,7 +356,9 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                           <Label>Width</Label>
                           <Input
                             value={config.width}
-                            onChange={(e) => handleConfigChange('width', e.target.value)}
+                            onChange={(e) =>
+                              handleConfigChange("width", e.target.value)
+                            }
                             placeholder="100% or 600px"
                           />
                         </div>
@@ -330,7 +366,9 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                           <Label>Height</Label>
                           <Input
                             value={config.height}
-                            onChange={(e) => handleConfigChange('height', e.target.value)}
+                            onChange={(e) =>
+                              handleConfigChange("height", e.target.value)
+                            }
                             placeholder="700"
                             disabled={config.autoResize}
                           />
@@ -340,28 +378,32 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                         <Label>Auto-resize height</Label>
                         <Switch
                           checked={config.autoResize}
-                          onCheckedChange={(v) => handleConfigChange('autoResize', v)}
+                          onCheckedChange={(v) =>
+                            handleConfigChange("autoResize", v)
+                          }
                         />
                       </div>
                     </CardContent>
                   </Card>
                 )}
               </div>
-              
+
               {/* Generated Code */}
               <div className="space-y-6">
                 {/* iframe Code */}
-                {config.widgetType !== 'button-popup' && (
+                {config.widgetType !== "button-popup" && (
                   <Card>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">iFrame Embed Code</CardTitle>
+                        <CardTitle className="text-lg">
+                          iFrame Embed Code
+                        </CardTitle>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleCopy(iframeCode, 'iframe')}
+                          onClick={() => handleCopy(iframeCode, "iframe")}
                         >
-                          {copiedType === 'iframe' ? (
+                          {copiedType === "iframe" ? (
                             <Check className="h-4 w-4 mr-2" />
                           ) : (
                             <Copy className="h-4 w-4 mr-2" />
@@ -380,19 +422,21 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                     </CardContent>
                   </Card>
                 )}
-                
+
                 {/* Script Code */}
-                {config.widgetType === 'button-popup' && (
+                {config.widgetType === "button-popup" && (
                   <Card>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">JavaScript Embed</CardTitle>
+                        <CardTitle className="text-lg">
+                          JavaScript Embed
+                        </CardTitle>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleCopy(scriptCode, 'script')}
+                          onClick={() => handleCopy(scriptCode, "script")}
                         >
-                          {copiedType === 'script' ? (
+                          {copiedType === "script" ? (
                             <Check className="h-4 w-4 mr-2" />
                           ) : (
                             <Copy className="h-4 w-4 mr-2" />
@@ -411,7 +455,7 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                     </CardContent>
                   </Card>
                 )}
-                
+
                 {/* Direct Link */}
                 <Card>
                   <CardHeader className="pb-3">
@@ -420,9 +464,9 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleCopy(embedUrl, 'url')}
+                        onClick={() => handleCopy(embedUrl, "url")}
                       >
-                        {copiedType === 'url' ? (
+                        {copiedType === "url" ? (
                           <Check className="h-4 w-4 mr-2" />
                         ) : (
                           <Copy className="h-4 w-4 mr-2" />
@@ -436,28 +480,37 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="flex gap-2">
-                      <Input value={embedUrl} readOnly className="font-mono text-sm" />
+                      <Input
+                        value={embedUrl}
+                        readOnly
+                        className="font-mono text-sm"
+                      />
                       <Button
                         variant="outline"
-                        onClick={() => window.open(embedUrl, '_blank')}
+                        onClick={() => window.open(embedUrl, "_blank")}
                       >
                         <ExternalLink className="h-4 w-4" />
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 {/* WordPress Shortcode */}
                 <Card className="opacity-60">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">WordPress Shortcode <span className="text-xs font-normal text-muted-foreground ml-2 bg-muted px-2 py-0.5 rounded">Coming Soon</span></CardTitle>
+                      <CardTitle className="text-lg">
+                        WordPress Shortcode{" "}
+                        <span className="text-xs font-normal text-muted-foreground ml-2 bg-muted px-2 py-0.5 rounded">
+                          Coming Soon
+                        </span>
+                      </CardTitle>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleCopy(shortcodeCode, 'shortcode')}
+                        onClick={() => handleCopy(shortcodeCode, "shortcode")}
                       >
-                        {copiedType === 'shortcode' ? (
+                        {copiedType === "shortcode" ? (
                           <Check className="h-4 w-4 mr-2" />
                         ) : (
                           <Copy className="h-4 w-4 mr-2" />
@@ -478,7 +531,7 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
               </div>
             </div>
           </TabsContent>
-          
+
           <TabsContent value="preview">
             <Card>
               <CardHeader>
@@ -486,13 +539,15 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                   <CardTitle>Widget Preview</CardTitle>
                   <div className="flex gap-2">
                     {[
-                      { value: 'desktop', icon: Monitor, label: 'Desktop' },
-                      { value: 'tablet', icon: Tablet, label: 'Tablet' },
-                      { value: 'mobile', icon: Smartphone, label: 'Mobile' },
+                      { value: "desktop", icon: Monitor, label: "Desktop" },
+                      { value: "tablet", icon: Tablet, label: "Tablet" },
+                      { value: "mobile", icon: Smartphone, label: "Mobile" },
                     ].map(({ value, icon: Icon, label }) => (
                       <Button
                         key={value}
-                        variant={previewDevice === value ? 'default' : 'outline'}
+                        variant={
+                          previewDevice === value ? "default" : "outline"
+                        }
                         size="sm"
                         onClick={() => setPreviewDevice(value as PreviewDevice)}
                       >
@@ -504,7 +559,7 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <div 
+                <div
                   className="mx-auto bg-muted/30 border rounded-lg overflow-hidden transition-all duration-300"
                   style={previewDimensions[previewDevice]}
                 >
@@ -523,7 +578,7 @@ export function EmbedCodeView({ className }: EmbedCodeViewProps) {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }
 
-export default EmbedCodeView
+export default EmbedCodeView;

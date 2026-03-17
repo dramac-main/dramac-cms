@@ -1,24 +1,27 @@
-import { getModuleForEmbed } from '@/lib/modules/embed/embed-service'
-import { ModuleEmbedRenderer } from '@/components/modules/embed/module-embed-renderer'
-import { validateEmbedToken } from '@/lib/modules/embed/embed-auth'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { getModuleForEmbed } from "@/lib/modules/embed/embed-service";
+import { ModuleEmbedRenderer } from "@/components/modules/embed/module-embed-renderer";
+import { validateEmbedToken } from "@/lib/modules/embed/embed-auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 interface EmbedPageProps {
-  params: Promise<{ moduleId: string; siteId: string }>
-  searchParams: Promise<{ 
-    token?: string
-    theme?: 'light' | 'dark' | 'auto'
-    width?: string
-    height?: string
-  }>
+  params: Promise<{ moduleId: string; siteId: string }>;
+  searchParams: Promise<{
+    token?: string;
+    theme?: "light" | "dark" | "auto";
+    width?: string;
+    height?: string;
+  }>;
 }
 
-export default async function ModuleEmbedPage({ params, searchParams }: EmbedPageProps) {
-  const { moduleId, siteId } = await params
-  const { token, theme = 'auto', width, height } = await searchParams
+export default async function ModuleEmbedPage({
+  params,
+  searchParams,
+}: EmbedPageProps) {
+  const { moduleId, siteId } = await params;
+  const { token, theme = "auto", width, height } = await searchParams;
 
   // Validate embed token
-  const isValid = await validateEmbedToken(token || '', siteId, moduleId)
+  const isValid = await validateEmbedToken(token || "", siteId, moduleId);
   if (!isValid) {
     return (
       <html lang="en">
@@ -35,29 +38,41 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
           `}</style>
         </head>
         <body>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            minHeight: '100vh',
-            padding: '2rem'
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#dc2626', margin: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "100vh",
+              padding: "2rem",
+            }}
+          >
+            <div style={{ textAlign: "center" }}>
+              <h1
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "bold",
+                  color: "#dc2626",
+                  margin: 0,
+                }}
+              >
                 Access Denied
               </h1>
-              <p style={{ color: '#6b7280', marginTop: '0.5rem' }}>
+              <p style={{ color: "#6b7280", marginTop: "0.5rem" }}>
                 Invalid or expired embed token
               </p>
             </div>
           </div>
         </body>
       </html>
-    )
+    );
   }
 
   // Load module and settings
-  const { module, installation, error } = await getModuleForEmbed(moduleId, siteId)
+  const { module, installation, error } = await getModuleForEmbed(
+    moduleId,
+    siteId,
+  );
 
   if (error || !module) {
     return (
@@ -75,43 +90,56 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
           `}</style>
         </head>
         <body>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            minHeight: '100vh',
-            padding: '2rem'
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <h1 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#dc2626', margin: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "100vh",
+              padding: "2rem",
+            }}
+          >
+            <div style={{ textAlign: "center" }}>
+              <h1
+                style={{
+                  fontSize: "1.25rem",
+                  fontWeight: "bold",
+                  color: "#dc2626",
+                  margin: 0,
+                }}
+              >
                 Module Not Available
               </h1>
-              <p style={{ color: '#6b7280', marginTop: '0.5rem' }}>
-                {error || 'Module not found'}
+              <p style={{ color: "#6b7280", marginTop: "0.5rem" }}>
+                {error || "Module not found"}
               </p>
             </div>
           </div>
         </body>
       </html>
-    )
+    );
   }
 
-  const themeClass = theme === 'dark' ? 'dark' : theme === 'light' ? '' : ''
+  const themeClass = theme === "dark" ? "dark" : theme === "light" ? "" : "";
 
   // Fetch site font settings for branding
-  const supabase = createAdminClient()
+  const supabase = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: siteData } = await (supabase as any).from('sites').select('settings').eq('id', siteId).single()
-  const siteSettings = (siteData?.settings || {}) as Record<string, string>
-  const siteFontBody = siteSettings.font_body || ''
-  const siteFontHeading = siteSettings.font_heading || ''
+  const { data: siteData } = await (supabase as any)
+    .from("sites")
+    .select("settings")
+    .eq("id", siteId)
+    .single();
+  const siteSettings = (siteData?.settings || {}) as Record<string, string>;
+  const siteFontBody = siteSettings.font_body || "";
+  const siteFontHeading = siteSettings.font_heading || "";
   const siteFontFamily = siteFontBody
     ? `'${siteFontBody}', system-ui, -apple-system, sans-serif`
-    : "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    : "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
   const googleFontsUrl = [siteFontBody, siteFontHeading]
     .filter(Boolean)
-    .map(f => f!.replace(/ /g, '+'))
-    .join('&family=')
+    .map((f) => f!.replace(/ /g, "+"))
+    .join("&family=");
 
   return (
     <html lang="en" className={themeClass}>
@@ -120,7 +148,10 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
         <meta name="robots" content="noindex, nofollow" />
         <title>{module.name} - Embedded</title>
         {googleFontsUrl && (
-          <link href={`https://fonts.googleapis.com/css2?family=${googleFontsUrl}:wght@300;400;500;600;700&display=swap`} rel="stylesheet" />
+          <link
+            href={`https://fonts.googleapis.com/css2?family=${googleFontsUrl}:wght@300;400;500;600;700&display=swap`}
+            rel="stylesheet"
+          />
         )}
         <style>{`
           :root {
@@ -144,8 +175,8 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
             background: rgb(var(--background));
             color: rgb(var(--foreground));
             font-family: ${siteFontFamily};
-            ${width ? `width: ${width};` : ''}
-            ${height ? `min-height: ${height};` : 'min-height: 100vh;'}
+            ${width ? `width: ${width};` : ""}
+            ${height ? `min-height: ${height};` : "min-height: 100vh;"}
           }
           #embed-root {
             width: 100%;
@@ -169,7 +200,9 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
           />
         </div>
         {/* PostMessage bridge for parent communication */}
-        <script dangerouslySetInnerHTML={{ __html: `
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
           (function() {
             'use strict';
             
@@ -233,20 +266,22 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
               return false;
             };
           })();
-        `}} />
+        `,
+          }}
+        />
       </body>
     </html>
-  )
+  );
 }
 
 // Configure for embedding - disable layout wrapping
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 // Allow embedding from any origin
 export async function generateMetadata() {
   return {
     other: {
-      'X-Frame-Options': 'ALLOWALL',
+      "X-Frame-Options": "ALLOWALL",
     },
-  }
+  };
 }

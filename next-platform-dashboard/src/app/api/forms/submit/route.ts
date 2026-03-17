@@ -104,30 +104,48 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Rate limiting
+    // Rate limiting (database-backed for reliability in serverless)
     if (formSettings.enable_rate_limit) {
       const rateKey = `${siteId}:${formId}:${ip}`;
       const now = Date.now();
       const hourInMs = 3600000;
-      const rateLimit = rateLimitMap.get(rateKey);
       const maxPerHour = formSettings.rate_limit_per_hour || 10;
 
-      if (rateLimit) {
-        if (now < rateLimit.resetAt) {
-          if (rateLimit.count >= maxPerHour) {
-            console.log("[FormSubmit] Rate limit exceeded for:", rateKey);
-            return NextResponse.json(
-              { error: "Too many submissions. Please try again later." },
-              { status: 429 }
-            );
-          }
-          rateLimit.count++;
-        } else {
-          // Reset counter
-          rateLimitMap.set(rateKey, { count: 1, resetAt: now + hourInMs });
-        }
+      // Fast in-memory check first (catches rapid successive requests to same instance)
+      const rateLimit = rateLimitMap.get(rateKey);
+      if (rateLimit && now < rateLimit.resetAt && rateLimit.count >= maxPerHour) {
+        console.log("[FormSubmit] Rate limit exceeded (memory) for:", rateKey);
+        return NextResponse.json(
+          { error: "Too many submissions. Please try again later." },
+          { status: 429 }
+        );
+      }
+
+      // Authoritative database check (survives cold starts and multiple instances)
+      const oneHourAgo = new Date(Date.now() - hourInMs).toISOString();
+      const { count: recentCount } = await supabase
+        .from("form_submissions")
+        .select("*", { count: "exact", head: true })
+        .eq("site_id", siteId)
+        .eq("form_id", formId)
+        .eq("ip_address", ip)
+        .gte("created_at", oneHourAgo);
+
+      if ((recentCount ?? 0) >= maxPerHour) {
+        console.log("[FormSubmit] Rate limit exceeded (db) for:", rateKey);
+        // Update in-memory cache to short-circuit future requests
+        rateLimitMap.set(rateKey, { count: maxPerHour, resetAt: now + hourInMs });
+        return NextResponse.json(
+          { error: "Too many submissions. Please try again later." },
+          { status: 429 }
+        );
+      }
+
+      // Update in-memory cache
+      if (rateLimit && now < rateLimit.resetAt) {
+        rateLimit.count++;
       } else {
-        rateLimitMap.set(rateKey, { count: 1, resetAt: now + hourInMs });
+        rateLimitMap.set(rateKey, { count: (recentCount ?? 0) + 1, resetAt: now + hourInMs });
       }
     }
 

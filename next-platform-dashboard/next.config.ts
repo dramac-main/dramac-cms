@@ -8,9 +8,10 @@ const nextConfig: NextConfig = {
   // Critical for multi-tenant subdomain apps (*.sites.dramacagency.com)
   // Without this, subdomain sites try to load assets from the subdomain origin
   // which fails with 404s because Vercel CDN only maps assets to the primary domain
-  assetPrefix: process.env.NODE_ENV === "production" 
-    ? process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"
-    : undefined,
+  assetPrefix:
+    process.env.NODE_ENV === "production"
+      ? process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com"
+      : undefined,
 
   // Turbopack configuration
   turbopack: {
@@ -41,7 +42,8 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+            value:
+              "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
           },
           {
             key: "Access-Control-Allow-Origin",

@@ -1029,11 +1029,17 @@ export function BookingWidgetBlock({
             </div>
           )}
           {/* Mobile step label */}
-          {showStepLabels && stepIndicatorStyle !== "progress-bar" && stepIndicatorStyle !== "pills" && (
-            <p className="block sm:hidden text-center text-xs mt-2 mb-0" style={{ opacity: 0.7 }}>
-              Step {currentStep + 1} of {steps.length} — {steps[currentStep]?.label}
-            </p>
-          )}
+          {showStepLabels &&
+            stepIndicatorStyle !== "progress-bar" &&
+            stepIndicatorStyle !== "pills" && (
+              <p
+                className="block sm:hidden text-center text-xs mt-2 mb-0"
+                style={{ opacity: 0.7 }}
+              >
+                Step {currentStep + 1} of {steps.length} —{" "}
+                {steps[currentStep]?.label}
+              </p>
+            )}
         </div>
       )}
 
@@ -1429,9 +1435,7 @@ export function BookingWidgetBlock({
                     {noSlotsMessage}
                   </p>
                 ) : (
-                  <div
-                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5"
-                  >
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
                     {timeSlots.map((slot) => (
                       <button
                         key={slot.time}

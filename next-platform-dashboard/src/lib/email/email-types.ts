@@ -1,6 +1,6 @@
 /**
  * Email Types - Transactional Email System
- * 
+ *
  * Defines types for the email notification system using Resend.
  * Note: This is separate from client portal notifications (src/lib/portal/notification-service.ts)
  */

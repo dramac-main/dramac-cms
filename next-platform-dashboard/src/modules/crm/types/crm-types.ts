@@ -1,8 +1,8 @@
 /**
  * CRM Module TypeScript Types
- * 
+ *
  * Phase EM-50: CRM Module - Enterprise Ready
- * 
+ *
  * These types define the data structures for all CRM entities
  */
 
@@ -10,437 +10,483 @@
 // TYPE ALIASES (for component use)
 // ============================================================================
 
-export type ContactStatus = 'active' | 'inactive' | 'archived' | 'lead' | 'customer' | 'churned'
-export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'unqualified' | 'converted'
-export type CompanyStatus = 'active' | 'inactive' | 'archived'
-export type CompanyType = 'prospect' | 'customer' | 'partner' | 'competitor' | 'other'
-export type DealStatus = 'open' | 'won' | 'lost'
+export type ContactStatus =
+  | "active"
+  | "inactive"
+  | "archived"
+  | "lead"
+  | "customer"
+  | "churned";
+export type LeadStatus =
+  | "new"
+  | "contacted"
+  | "qualified"
+  | "unqualified"
+  | "converted";
+export type CompanyStatus = "active" | "inactive" | "archived";
+export type CompanyType =
+  | "prospect"
+  | "customer"
+  | "partner"
+  | "competitor"
+  | "other";
+export type DealStatus = "open" | "won" | "lost";
 
 // ============================================================================
 // CONTACTS
 // ============================================================================
 
 export interface Contact {
-  id: string
-  site_id: string
-  owner_id?: string | null
-  
+  id: string;
+  site_id: string;
+  owner_id?: string | null;
+
   // Basic Info
-  first_name?: string | null
-  last_name?: string | null
-  email?: string | null
-  phone?: string | null
-  mobile?: string | null
-  job_title?: string | null
-  department?: string | null
-  
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  mobile?: string | null;
+  job_title?: string | null;
+  department?: string | null;
+
   // Company
-  company_id?: string | null
-  company?: Company | null
-  
+  company_id?: string | null;
+  company?: Company | null;
+
   // Address
-  address_line_1?: string | null
-  address_line_2?: string | null
-  city?: string | null
-  state?: string | null
-  postal_code?: string | null
-  country?: string | null
-  
+  address_line_1?: string | null;
+  address_line_2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+
   // Status
-  status: ContactStatus
-  lead_status?: LeadStatus | null
-  
+  status: ContactStatus;
+  lead_status?: LeadStatus | null;
+
   // Source
-  source?: string | null
-  source_details?: string | null
-  
+  source?: string | null;
+  source_details?: string | null;
+
   // Social
-  linkedin_url?: string | null
-  twitter_url?: string | null
-  website_url?: string | null
-  
+  linkedin_url?: string | null;
+  twitter_url?: string | null;
+  website_url?: string | null;
+
   // Custom
-  custom_fields: Record<string, unknown>
-  tags: string[]
-  
+  custom_fields: Record<string, unknown>;
+  tags: string[];
+
   // Scoring
-  lead_score: number
-  
+  lead_score: number;
+
   // Timestamps
-  last_contacted_at?: string | null
-  created_at: string
-  updated_at: string
-  
+  last_contacted_at?: string | null;
+  created_at: string;
+  updated_at: string;
+
   // Relations (when joined)
-  activities?: Activity[]
-  deals?: Deal[]
+  activities?: Activity[];
+  deals?: Deal[];
 }
 
-export type ContactInput = Omit<Contact, 'id' | 'created_at' | 'updated_at' | 'company' | 'activities' | 'deals'>
-export type ContactUpdate = Partial<ContactInput>
+export type ContactInput = Omit<
+  Contact,
+  "id" | "created_at" | "updated_at" | "company" | "activities" | "deals"
+>;
+export type ContactUpdate = Partial<ContactInput>;
 
 // ============================================================================
 // COMPANIES
 // ============================================================================
 
 export interface Company {
-  id: string
-  site_id: string
-  owner_id?: string | null
-  
+  id: string;
+  site_id: string;
+  owner_id?: string | null;
+
   // Basic Info
-  name: string
-  domain?: string | null
-  description?: string | null
-  industry?: string | null
-  website?: string | null
-  phone?: string | null
-  
+  name: string;
+  domain?: string | null;
+  description?: string | null;
+  industry?: string | null;
+  website?: string | null;
+  phone?: string | null;
+
   // Size
-  employee_count?: number | null
-  annual_revenue?: number | null
-  
+  employee_count?: number | null;
+  annual_revenue?: number | null;
+
   // Address
-  address_line_1?: string | null
-  address_line_2?: string | null
-  city?: string | null
-  state?: string | null
-  postal_code?: string | null
-  country?: string | null
-  
+  address_line_1?: string | null;
+  address_line_2?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+
   // Status
-  status: CompanyStatus
-  account_type?: CompanyType | null
-  
+  status: CompanyStatus;
+  account_type?: CompanyType | null;
+
   // Custom
-  custom_fields: Record<string, unknown>
-  tags: string[]
-  
+  custom_fields: Record<string, unknown>;
+  tags: string[];
+
   // Timestamps
-  created_at: string
-  updated_at: string
-  
+  created_at: string;
+  updated_at: string;
+
   // Relations (when joined)
-  contacts?: Contact[]
-  deals?: Deal[]
+  contacts?: Contact[];
+  deals?: Deal[];
 }
 
-export type CompanyInput = Omit<Company, 'id' | 'created_at' | 'updated_at' | 'contacts' | 'deals'>
-export type CompanyUpdate = Partial<CompanyInput>
+export type CompanyInput = Omit<
+  Company,
+  "id" | "created_at" | "updated_at" | "contacts" | "deals"
+>;
+export type CompanyUpdate = Partial<CompanyInput>;
 
 // ============================================================================
 // DEALS / OPPORTUNITIES
 // ============================================================================
 
 export interface Deal {
-  id: string
-  site_id: string
-  owner_id?: string | null
-  
+  id: string;
+  site_id: string;
+  owner_id?: string | null;
+
   // Relations
-  contact_id?: string | null
-  contact?: Contact | null
-  company_id?: string | null
-  company?: Company | null
-  
+  contact_id?: string | null;
+  contact?: Contact | null;
+  company_id?: string | null;
+  company?: Company | null;
+
   // Deal Info
-  name: string
-  description?: string | null
-  
+  name: string;
+  description?: string | null;
+
   // Pipeline
-  pipeline_id?: string | null
-  pipeline?: Pipeline | null
-  stage_id?: string | null
-  stage?: PipelineStage | null
-  
+  pipeline_id?: string | null;
+  pipeline?: Pipeline | null;
+  stage_id?: string | null;
+  stage?: PipelineStage | null;
+
   // Value
-  amount?: number | null
-  currency: string
-  probability: number
-  weighted_value?: number | null
-  
+  amount?: number | null;
+  currency: string;
+  probability: number;
+  weighted_value?: number | null;
+
   // Status
-  status: 'open' | 'won' | 'lost'
-  close_reason?: string | null
-  
+  status: "open" | "won" | "lost";
+  close_reason?: string | null;
+
   // Dates
-  expected_close_date?: string | null
-  actual_close_date?: string | null
-  
+  expected_close_date?: string | null;
+  actual_close_date?: string | null;
+
   // Custom
-  custom_fields: Record<string, unknown>
-  tags: string[]
-  
+  custom_fields: Record<string, unknown>;
+  tags: string[];
+
   // Timestamps
-  created_at: string
-  updated_at: string
-  
+  created_at: string;
+  updated_at: string;
+
   // Relations (when joined)
-  activities?: Activity[]
+  activities?: Activity[];
 }
 
-export type DealInput = Omit<Deal, 'id' | 'created_at' | 'updated_at' | 'weighted_value' | 'contact' | 'company' | 'pipeline' | 'stage' | 'activities'>
-export type DealUpdate = Partial<DealInput>
+export type DealInput = Omit<
+  Deal,
+  | "id"
+  | "created_at"
+  | "updated_at"
+  | "weighted_value"
+  | "contact"
+  | "company"
+  | "pipeline"
+  | "stage"
+  | "activities"
+>;
+export type DealUpdate = Partial<DealInput>;
 
 // ============================================================================
 // PIPELINES
 // ============================================================================
 
 export interface Pipeline {
-  id: string
-  site_id: string
-  
-  name: string
-  description?: string | null
-  is_default: boolean
-  is_active: boolean
-  
+  id: string;
+  site_id: string;
+
+  name: string;
+  description?: string | null;
+  is_default: boolean;
+  is_active: boolean;
+
   // Configuration
-  deal_rotting_days: number
-  
+  deal_rotting_days: number;
+
   // Timestamps
-  created_at: string
-  updated_at: string
-  
+  created_at: string;
+  updated_at: string;
+
   // Relations (when joined)
-  stages?: PipelineStage[]
+  stages?: PipelineStage[];
 }
 
-export type PipelineInput = Omit<Pipeline, 'id' | 'created_at' | 'updated_at' | 'stages'>
-export type PipelineUpdate = Partial<PipelineInput>
+export type PipelineInput = Omit<
+  Pipeline,
+  "id" | "created_at" | "updated_at" | "stages"
+>;
+export type PipelineUpdate = Partial<PipelineInput>;
 
 // ============================================================================
 // PIPELINE STAGES
 // ============================================================================
 
 export interface PipelineStage {
-  id: string
-  pipeline_id: string
-  
-  name: string
-  description?: string | null
-  color: string
-  
-  position: number
-  probability: number
-  stage_type: 'open' | 'won' | 'lost'
-  
-  created_at: string
+  id: string;
+  pipeline_id: string;
+
+  name: string;
+  description?: string | null;
+  color: string;
+
+  position: number;
+  probability: number;
+  stage_type: "open" | "won" | "lost";
+
+  created_at: string;
 }
 
-export type PipelineStageInput = Omit<PipelineStage, 'id' | 'created_at'>
-export type PipelineStageUpdate = Partial<PipelineStageInput>
+export type PipelineStageInput = Omit<PipelineStage, "id" | "created_at">;
+export type PipelineStageUpdate = Partial<PipelineStageInput>;
 
 // ============================================================================
 // ACTIVITIES
 // ============================================================================
 
-export type ActivityType = 'call' | 'email' | 'meeting' | 'task' | 'note' | 'sms' | 'chat'
-export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
-export type CallDirection = 'inbound' | 'outbound'
+export type ActivityType =
+  | "call"
+  | "email"
+  | "meeting"
+  | "task"
+  | "note"
+  | "sms"
+  | "chat";
+export type TaskPriority = "low" | "medium" | "high" | "urgent";
+export type CallDirection = "inbound" | "outbound";
 
 export interface Activity {
-  id: string
-  site_id: string
-  
-  activity_type: ActivityType
-  
+  id: string;
+  site_id: string;
+
+  activity_type: ActivityType;
+
   // Relations
-  contact_id?: string | null
-  contact?: Contact | null
-  company_id?: string | null
-  company?: Company | null
-  deal_id?: string | null
-  deal?: Deal | null
-  
+  contact_id?: string | null;
+  contact?: Contact | null;
+  company_id?: string | null;
+  company?: Company | null;
+  deal_id?: string | null;
+  deal?: Deal | null;
+
   // Content
-  subject?: string | null
-  description?: string | null
-  outcome?: string | null
-  
+  subject?: string | null;
+  description?: string | null;
+  outcome?: string | null;
+
   // Call-specific
-  call_duration_seconds?: number | null
-  call_direction?: CallDirection | null
-  call_recording_url?: string | null
-  
+  call_duration_seconds?: number | null;
+  call_direction?: CallDirection | null;
+  call_recording_url?: string | null;
+
   // Email-specific
-  email_thread_id?: string | null
-  email_message_id?: string | null
-  
+  email_thread_id?: string | null;
+  email_message_id?: string | null;
+
   // Meeting-specific
-  meeting_location?: string | null
-  meeting_attendees?: MeetingAttendee[] | null
-  
+  meeting_location?: string | null;
+  meeting_attendees?: MeetingAttendee[] | null;
+
   // Task-specific
-  task_due_date?: string | null
-  task_completed: boolean
-  task_priority?: TaskPriority | null
-  
+  task_due_date?: string | null;
+  task_completed: boolean;
+  task_priority?: TaskPriority | null;
+
   // Assignment
-  assigned_to?: string | null
-  created_by?: string | null
-  
+  assigned_to?: string | null;
+  created_by?: string | null;
+
   // Timestamps
-  scheduled_at?: string | null
-  completed_at?: string | null
-  created_at: string
-  updated_at: string
+  scheduled_at?: string | null;
+  completed_at?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface MeetingAttendee {
-  email: string
-  name?: string
-  status?: 'pending' | 'accepted' | 'declined'
+  email: string;
+  name?: string;
+  status?: "pending" | "accepted" | "declined";
 }
 
-export type ActivityInput = Omit<Activity, 'id' | 'created_at' | 'updated_at' | 'contact' | 'company' | 'deal'>
-export type ActivityUpdate = Partial<ActivityInput>
+export type ActivityInput = Omit<
+  Activity,
+  "id" | "created_at" | "updated_at" | "contact" | "company" | "deal"
+>;
+export type ActivityUpdate = Partial<ActivityInput>;
 
 // ============================================================================
 // CUSTOM FIELDS
 // ============================================================================
 
-export type CustomFieldEntityType = 'contact' | 'company' | 'deal' | 'activity'
-export type CustomFieldType = 
-  | 'text' 
-  | 'number' 
-  | 'currency' 
-  | 'date' 
-  | 'datetime' 
-  | 'select' 
-  | 'multiselect' 
-  | 'checkbox' 
-  | 'url' 
-  | 'email' 
-  | 'phone'
+export type CustomFieldEntityType = "contact" | "company" | "deal" | "activity";
+export type CustomFieldType =
+  | "text"
+  | "number"
+  | "currency"
+  | "date"
+  | "datetime"
+  | "select"
+  | "multiselect"
+  | "checkbox"
+  | "url"
+  | "email"
+  | "phone";
 
 export interface CustomFieldOption {
-  value: string
-  label: string
-  color?: string
+  value: string;
+  label: string;
+  color?: string;
 }
 
 export interface CustomField {
-  id: string
-  site_id: string
-  
-  entity_type: CustomFieldEntityType
-  
-  field_key: string
-  field_label: string
-  field_type: CustomFieldType
-  
-  is_required: boolean
-  default_value?: string | null
-  placeholder?: string | null
-  
-  options?: CustomFieldOption[]
-  
-  position: number
-  is_visible: boolean
-  
-  created_at: string
+  id: string;
+  site_id: string;
+
+  entity_type: CustomFieldEntityType;
+
+  field_key: string;
+  field_label: string;
+  field_type: CustomFieldType;
+
+  is_required: boolean;
+  default_value?: string | null;
+  placeholder?: string | null;
+
+  options?: CustomFieldOption[];
+
+  position: number;
+  is_visible: boolean;
+
+  created_at: string;
 }
 
-export type CustomFieldInput = Omit<CustomField, 'id' | 'created_at'>
-export type CustomFieldUpdate = Partial<CustomFieldInput>
+export type CustomFieldInput = Omit<CustomField, "id" | "created_at">;
+export type CustomFieldUpdate = Partial<CustomFieldInput>;
 
 // ============================================================================
 // TAGS
 // ============================================================================
 
 export interface Tag {
-  id: string
-  site_id: string
-  
-  name: string
-  color: string
-  
-  created_at: string
+  id: string;
+  site_id: string;
+
+  name: string;
+  color: string;
+
+  created_at: string;
 }
 
-export type TagInput = Omit<Tag, 'id' | 'created_at'>
+export type TagInput = Omit<Tag, "id" | "created_at">;
 
 // ============================================================================
 // EMAIL
 // ============================================================================
 
-export type EmailProvider = 'gmail' | 'outlook' | 'smtp'
+export type EmailProvider = "gmail" | "outlook" | "smtp";
 
 export interface EmailConfig {
-  id: string
-  site_id: string
-  user_id: string
-  
-  provider: EmailProvider
-  email_address?: string | null
-  
-  credentials: Record<string, unknown>
-  
-  is_active: boolean
-  last_sync_at?: string | null
-  
-  created_at: string
-  updated_at: string
+  id: string;
+  site_id: string;
+  user_id: string;
+
+  provider: EmailProvider;
+  email_address?: string | null;
+
+  credentials: Record<string, unknown>;
+
+  is_active: boolean;
+  last_sync_at?: string | null;
+
+  created_at: string;
+  updated_at: string;
 }
 
 export interface EmailMessage {
-  id: string
-  site_id: string
-  user_id?: string | null
-  
-  message_id?: string | null
-  thread_id?: string | null
-  
-  contact_id?: string | null
-  deal_id?: string | null
-  
-  from_address?: string | null
-  from_name?: string | null
-  to_addresses: EmailAddress[]
-  cc_addresses?: EmailAddress[]
-  
-  subject?: string | null
-  body_html?: string | null
-  body_text?: string | null
-  
-  sent_at?: string | null
-  is_read: boolean
-  is_outbound: boolean
-  has_attachments: boolean
-  
-  created_at: string
+  id: string;
+  site_id: string;
+  user_id?: string | null;
+
+  message_id?: string | null;
+  thread_id?: string | null;
+
+  contact_id?: string | null;
+  deal_id?: string | null;
+
+  from_address?: string | null;
+  from_name?: string | null;
+  to_addresses: EmailAddress[];
+  cc_addresses?: EmailAddress[];
+
+  subject?: string | null;
+  body_html?: string | null;
+  body_text?: string | null;
+
+  sent_at?: string | null;
+  is_read: boolean;
+  is_outbound: boolean;
+  has_attachments: boolean;
+
+  created_at: string;
 }
 
 export interface EmailAddress {
-  email: string
-  name?: string
+  email: string;
+  name?: string;
 }
 
 export interface EmailTemplate {
-  id: string
-  site_id: string
-  
-  name: string
-  subject: string
-  body_html: string
-  
-  category: string
-  is_active: boolean
-  
-  created_by?: string | null
-  created_at: string
-  updated_at: string
+  id: string;
+  site_id: string;
+
+  name: string;
+  subject: string;
+  body_html: string;
+
+  category: string;
+  is_active: boolean;
+
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface EmailDraft {
-  to: EmailAddress[]
-  cc?: EmailAddress[]
-  bcc?: EmailAddress[]
-  subject: string
-  bodyHtml: string
-  contactId?: string
-  dealId?: string
+  to: EmailAddress[];
+  cc?: EmailAddress[];
+  bcc?: EmailAddress[];
+  subject: string;
+  bodyHtml: string;
+  contactId?: string;
+  dealId?: string;
 }
 
 // ============================================================================
@@ -448,25 +494,25 @@ export interface EmailDraft {
 // ============================================================================
 
 export interface PipelineReport {
-  totalDeals: number
-  totalValue: number
-  weightedValue: number
-  byStage: { stage: string; count: number; value: number }[]
-  avgDealSize: number
-  avgDaysToClose: number
+  totalDeals: number;
+  totalValue: number;
+  weightedValue: number;
+  byStage: { stage: string; count: number; value: number }[];
+  avgDealSize: number;
+  avgDaysToClose: number;
 }
 
 export interface ActivityReport {
-  total: number
-  byType: { type: ActivityType; count: number }[]
-  byDate: { date: string; count: number }[]
+  total: number;
+  byType: { type: ActivityType; count: number }[];
+  byDate: { date: string; count: number }[];
 }
 
 export interface RevenueReport {
-  totalWon: number
-  totalLost: number
-  winRate: number
-  byMonth: { month: string; won: number; lost: number }[]
+  totalWon: number;
+  totalLost: number;
+  winRate: number;
+  byMonth: { month: string; won: number; lost: number }[];
 }
 
 // ============================================================================
@@ -474,9 +520,9 @@ export interface RevenueReport {
 // ============================================================================
 
 export interface CRMSearchResult {
-  contacts: Contact[]
-  companies: Company[]
-  deals: Deal[]
+  contacts: Contact[];
+  companies: Company[];
+  deals: Deal[];
 }
 
 // ============================================================================
@@ -485,188 +531,238 @@ export interface CRMSearchResult {
 
 export interface CRMSettings {
   branding?: {
-    logo_url?: string
-    primary_color?: string
-    company_name?: string
-  }
-  currency?: string
-  date_format?: string
+    logo_url?: string;
+    primary_color?: string;
+    company_name?: string;
+  };
+  currency?: string;
+  date_format?: string;
   features?: {
-    enable_email_integration?: boolean
-    enable_activity_log?: boolean
-    enable_reports?: boolean
-    enable_custom_fields?: boolean
-  }
+    enable_email_integration?: boolean;
+    enable_activity_log?: boolean;
+    enable_reports?: boolean;
+    enable_custom_fields?: boolean;
+  };
   lead_scoring?: {
-    enabled?: boolean
+    enabled?: boolean;
     rules?: Array<{
-      condition: string
-      points: number
-    }>
-  }
+      condition: string;
+      points: number;
+    }>;
+  };
 }
 
 // ============================================================================
 // SEGMENTS (Smart Lists)
 // ============================================================================
 
-export type SegmentType = 'dynamic' | 'static'
-export type FilterOperator = 
-  | 'equals' | 'not_equals' 
-  | 'contains' | 'not_contains' | 'starts_with' | 'ends_with'
-  | 'greater_than' | 'less_than' | 'greater_or_equal' | 'less_or_equal'
-  | 'is_empty' | 'is_not_empty' 
-  | 'in' | 'not_in'
-  | 'is_true' | 'is_false'
-  | 'date_before' | 'date_after' | 'date_between'
+export type SegmentType = "dynamic" | "static";
+export type FilterOperator =
+  | "equals"
+  | "not_equals"
+  | "contains"
+  | "not_contains"
+  | "starts_with"
+  | "ends_with"
+  | "greater_than"
+  | "less_than"
+  | "greater_or_equal"
+  | "less_or_equal"
+  | "is_empty"
+  | "is_not_empty"
+  | "in"
+  | "not_in"
+  | "is_true"
+  | "is_false"
+  | "date_before"
+  | "date_after"
+  | "date_between";
 
 export interface SegmentFilter {
-  field: string
-  operator: FilterOperator
-  value: string | string[] | number | boolean | null
+  field: string;
+  operator: FilterOperator;
+  value: string | string[] | number | boolean | null;
 }
 
 export interface Segment {
-  id: string
-  site_id: string
-  name: string
-  description?: string | null
-  color: string
-  filters: SegmentFilter[]
-  filter_logic: 'and' | 'or'
-  segment_type: SegmentType
-  contact_count: number
-  last_evaluated_at?: string | null
-  is_active: boolean
-  created_by?: string | null
-  created_at: string
-  updated_at: string
+  id: string;
+  site_id: string;
+  name: string;
+  description?: string | null;
+  color: string;
+  filters: SegmentFilter[];
+  filter_logic: "and" | "or";
+  segment_type: SegmentType;
+  contact_count: number;
+  last_evaluated_at?: string | null;
+  is_active: boolean;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
-export type SegmentInput = Omit<Segment, 'id' | 'created_at' | 'updated_at' | 'contact_count' | 'last_evaluated_at'>
-export type SegmentUpdate = Partial<SegmentInput>
+export type SegmentInput = Omit<
+  Segment,
+  "id" | "created_at" | "updated_at" | "contact_count" | "last_evaluated_at"
+>;
+export type SegmentUpdate = Partial<SegmentInput>;
 
 // ============================================================================
 // LEAD SCORING RULES
 // ============================================================================
 
-export type ScoringCategory = 'demographic' | 'behavioral' | 'engagement' | 'firmographic'
+export type ScoringCategory =
+  | "demographic"
+  | "behavioral"
+  | "engagement"
+  | "firmographic";
 
 export interface ScoringCondition {
-  field: string
-  operator: FilterOperator
-  value: string | string[] | number | boolean | null
+  field: string;
+  operator: FilterOperator;
+  value: string | string[] | number | boolean | null;
 }
 
 export interface LeadScoringRule {
-  id: string
-  site_id: string
-  name: string
-  description?: string | null
-  category: ScoringCategory
-  condition: ScoringCondition
-  points: number
-  max_applications: number
-  is_active: boolean
-  priority: number
-  created_at: string
-  updated_at: string
+  id: string;
+  site_id: string;
+  name: string;
+  description?: string | null;
+  category: ScoringCategory;
+  condition: ScoringCondition;
+  points: number;
+  max_applications: number;
+  is_active: boolean;
+  priority: number;
+  created_at: string;
+  updated_at: string;
 }
 
-export type LeadScoringRuleInput = Omit<LeadScoringRule, 'id' | 'created_at' | 'updated_at'>
-export type LeadScoringRuleUpdate = Partial<LeadScoringRuleInput>
+export type LeadScoringRuleInput = Omit<
+  LeadScoringRule,
+  "id" | "created_at" | "updated_at"
+>;
+export type LeadScoringRuleUpdate = Partial<LeadScoringRuleInput>;
 
 // ============================================================================
 // CONTACT NOTES (Rich Text)
 // ============================================================================
 
 export interface ContactNote {
-  id: string
-  site_id: string
-  contact_id?: string | null
-  company_id?: string | null
-  deal_id?: string | null
-  title?: string | null
-  content: string
-  content_plain?: string | null
-  is_pinned: boolean
-  created_by?: string | null
-  created_at: string
-  updated_at: string
+  id: string;
+  site_id: string;
+  contact_id?: string | null;
+  company_id?: string | null;
+  deal_id?: string | null;
+  title?: string | null;
+  content: string;
+  content_plain?: string | null;
+  is_pinned: boolean;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
-export type ContactNoteInput = Omit<ContactNote, 'id' | 'created_at' | 'updated_at'>
-export type ContactNoteUpdate = Partial<ContactNoteInput>
+export type ContactNoteInput = Omit<
+  ContactNote,
+  "id" | "created_at" | "updated_at"
+>;
+export type ContactNoteUpdate = Partial<ContactNoteInput>;
 
 // ============================================================================
 // FORM CAPTURES
 // ============================================================================
 
-export type FormCaptureStatus = 'new' | 'processed' | 'duplicate' | 'spam' | 'error'
-export type FormCaptureType = 'contact' | 'newsletter' | 'lead_capture' | 'custom'
+export type FormCaptureStatus =
+  | "new"
+  | "processed"
+  | "duplicate"
+  | "spam"
+  | "error";
+export type FormCaptureType =
+  | "contact"
+  | "newsletter"
+  | "lead_capture"
+  | "custom";
 
 export interface FormCapture {
-  id: string
-  site_id: string
-  form_type: FormCaptureType
-  form_name?: string | null
-  page_url?: string | null
-  form_data: Record<string, unknown>
-  contact_id?: string | null
-  deal_id?: string | null
-  status: FormCaptureStatus
-  processing_notes?: string | null
-  utm_source?: string | null
-  utm_medium?: string | null
-  utm_campaign?: string | null
-  utm_content?: string | null
-  referrer_url?: string | null
-  ip_address?: string | null
-  user_agent?: string | null
-  created_at: string
+  id: string;
+  site_id: string;
+  form_type: FormCaptureType;
+  form_name?: string | null;
+  page_url?: string | null;
+  form_data: Record<string, unknown>;
+  contact_id?: string | null;
+  deal_id?: string | null;
+  status: FormCaptureStatus;
+  processing_notes?: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_content?: string | null;
+  referrer_url?: string | null;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  created_at: string;
   // Joined
-  contact?: Contact | null
+  contact?: Contact | null;
 }
 
 // ============================================================================
 // CONTACT TIMELINE (360° View)
 // ============================================================================
 
-export type TimelineEventType = 
-  | 'activity' | 'note' | 'email_sent' | 'email_received'
-  | 'deal_created' | 'deal_stage_changed' | 'deal_won' | 'deal_lost'
-  | 'form_submission' | 'tag_added' | 'tag_removed'
-  | 'status_changed' | 'created' | 'score_changed'
+export type TimelineEventType =
+  | "activity"
+  | "note"
+  | "email_sent"
+  | "email_received"
+  | "deal_created"
+  | "deal_stage_changed"
+  | "deal_won"
+  | "deal_lost"
+  | "form_submission"
+  | "tag_added"
+  | "tag_removed"
+  | "status_changed"
+  | "created"
+  | "score_changed";
 
 export interface TimelineEvent {
-  id: string
-  type: TimelineEventType
-  title: string
-  description?: string | null
-  metadata?: Record<string, unknown>
-  created_at: string
-  created_by?: string | null
+  id: string;
+  type: TimelineEventType;
+  title: string;
+  description?: string | null;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  created_by?: string | null;
 }
 
 // ============================================================================
 // BULK ACTIONS
 // ============================================================================
 
-export type BulkActionType = 
-  | 'delete' | 'update_status' | 'update_lead_status' | 'update_owner'
-  | 'add_tags' | 'remove_tags' | 'add_to_segment' | 'export'
+export type BulkActionType =
+  | "delete"
+  | "update_status"
+  | "update_lead_status"
+  | "update_owner"
+  | "add_tags"
+  | "remove_tags"
+  | "add_to_segment"
+  | "export";
 
 export interface BulkActionRequest {
-  action: BulkActionType
-  contactIds: string[]
-  payload?: Record<string, unknown>
+  action: BulkActionType;
+  contactIds: string[];
+  payload?: Record<string, unknown>;
 }
 
 export interface BulkActionResult {
-  success: boolean
-  processed: number
-  failed: number
-  errors?: string[]
+  success: boolean;
+  processed: number;
+  failed: number;
+  errors?: string[];
 }
 
 // ============================================================================
@@ -674,15 +770,15 @@ export interface BulkActionResult {
 // ============================================================================
 
 export interface MergeCandidate {
-  contact: Contact
-  matchType: 'email' | 'phone' | 'name'
-  confidence: number // 0-100
+  contact: Contact;
+  matchType: "email" | "phone" | "name";
+  confidence: number; // 0-100
 }
 
 export interface MergeRequest {
-  primaryContactId: string
-  secondaryContactIds: string[]
-  fieldResolutions: Record<string, string> // field → which contact ID to use
+  primaryContactId: string;
+  secondaryContactIds: string[];
+  fieldResolutions: Record<string, string>; // field → which contact ID to use
 }
 
 // ============================================================================
@@ -690,21 +786,21 @@ export interface MergeRequest {
 // ============================================================================
 
 export interface EmailCompose {
-  to: string[]
-  cc?: string[]
-  bcc?: string[]
-  subject: string
-  body_html: string
-  body_text?: string
-  contact_id?: string
-  deal_id?: string
-  template_id?: string
+  to: string[];
+  cc?: string[];
+  bcc?: string[];
+  subject: string;
+  body_html: string;
+  body_text?: string;
+  contact_id?: string;
+  deal_id?: string;
+  template_id?: string;
 }
 
 export interface EmailSendResult {
-  success: boolean
-  message_id?: string
-  error?: string
+  success: boolean;
+  message_id?: string;
+  error?: string;
 }
 
 // ============================================================================
@@ -712,26 +808,26 @@ export interface EmailSendResult {
 // ============================================================================
 
 export interface ImportFieldMapping {
-  csvColumn: string
-  crmField: string
+  csvColumn: string;
+  crmField: string;
 }
 
 export interface ImportPreview {
-  totalRows: number
-  validRows: number
-  invalidRows: number
-  duplicateRows: number
-  sampleData: Record<string, unknown>[]
-  headers: string[]
-  errors: { row: number; field: string; message: string }[]
+  totalRows: number;
+  validRows: number;
+  invalidRows: number;
+  duplicateRows: number;
+  sampleData: Record<string, unknown>[];
+  headers: string[];
+  errors: { row: number; field: string; message: string }[];
 }
 
 export interface ImportResult {
-  success: boolean
-  imported: number
-  updated: number
-  skipped: number
-  errors: { row: number; message: string }[]
+  success: boolean;
+  imported: number;
+  updated: number;
+  skipped: number;
+  errors: { row: number; message: string }[];
 }
 
 // ============================================================================
@@ -739,15 +835,15 @@ export interface ImportResult {
 // ============================================================================
 
 export interface CRMApiResponse<T> {
-  data?: T
-  error?: string
-  success: boolean
+  data?: T;
+  error?: string;
+  success: boolean;
 }
 
 export interface PaginatedResponse<T> {
-  data: T[]
-  total: number
-  page: number
-  limit: number
-  hasMore: boolean
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
 }

@@ -57,8 +57,22 @@ export async function POST(request: NextRequest) {
     const craftState = convertAItocraft(result.website);
     const craftJson = serializeCraftState(craftState);
 
-    // If pageId provided, save to page_content
+    // If pageId provided, verify ownership then save to page_content
     if (pageId) {
+      // Verify user has access to this page's site (RLS defense-in-depth)
+      const { data: page } = await supabase
+        .from("pages")
+        .select("id, site_id")
+        .eq("id", pageId)
+        .single();
+
+      if (!page) {
+        return NextResponse.json(
+          { error: "Page not found or access denied" },
+          { status: 404 }
+        );
+      }
+
       // First check if page_content exists for this page
       const { data: existingContent } = await supabase
         .from("page_content")
@@ -97,8 +111,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // If siteId provided, update site metadata
+    // If siteId provided, verify ownership then update site metadata
     if (siteId && result.website.metadata) {
+      // Verify user has access to this site (RLS defense-in-depth)
+      const { data: siteCheck } = await supabase
+        .from("sites")
+        .select("id")
+        .eq("id", siteId)
+        .single();
+
+      if (!siteCheck) {
+        return NextResponse.json(
+          { error: "Site not found or access denied" },
+          { status: 404 }
+        );
+      }
+
       const { error: siteError } = await supabase
         .from("sites")
         .update({

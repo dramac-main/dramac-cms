@@ -313,6 +313,31 @@ export async function POST(
       );
     }
 
+    // Validate query input
+    if (typeof query !== 'string') {
+      return NextResponse.json(
+        { errors: [{ message: 'Query must be a string' }] },
+        { status: 400 }
+      );
+    }
+
+    // Limit query length to prevent abuse (10KB max)
+    if (query.length > 10240) {
+      return NextResponse.json(
+        { errors: [{ message: 'Query too large (max 10KB)' }] },
+        { status: 400 }
+      );
+    }
+
+    // Limit nesting depth (count opening braces)
+    const braceCount = (query.match(/{/g) || []).length;
+    if (braceCount > 10) {
+      return NextResponse.json(
+        { errors: [{ message: 'Query too deeply nested' }] },
+        { status: 400 }
+      );
+    }
+
     // Check scopes based on operation type
     const parsed = parseGraphQLQuery(query);
     if (parsed.operationType === 'mutation') {

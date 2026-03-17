@@ -73,7 +73,8 @@ export async function generateEmbedCode(
   webComponent: string;
   javascript: string;
 }> {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL || "https://app.dramacagency.com";
   const embedUrl = `${baseUrl}/embed/${moduleId}/${siteId}?token=${token}`;
 
   return {
