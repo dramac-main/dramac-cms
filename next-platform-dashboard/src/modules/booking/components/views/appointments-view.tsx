@@ -34,6 +34,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { useBooking } from '../../context/booking-context'
 import {
   Search,
@@ -175,6 +185,8 @@ export function AppointmentsView({ onAppointmentClick }: AppointmentsViewProps) 
   const [dateFilter, setDateFilter] = useState('all')
   const [staffFilter, setStaffFilter] = useState<string>('all')
   const [serviceFilter, setServiceFilter] = useState<string>('all')
+  const [deletingApt, setDeletingApt] = useState<Appointment | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   
   // Get staff and service names
   const getStaffName = (staffId?: string | null) => {
@@ -245,13 +257,17 @@ export function AppointmentsView({ onAppointmentClick }: AppointmentsViewProps) 
     }
   }
   
-  const handleDelete = async (apt: Appointment) => {
-    if (!confirm('Are you sure you want to delete this appointment?')) return
+  const handleDelete = async () => {
+    if (!deletingApt || isDeleting) return
+    setIsDeleting(true)
     try {
-      await removeAppointment(apt.id)
+      await removeAppointment(deletingApt.id)
       toast.success('Appointment deleted')
+      setDeletingApt(null)
     } catch {
       toast.error('Failed to delete appointment')
+    } finally {
+      setIsDeleting(false)
     }
   }
   
@@ -464,7 +480,7 @@ export function AppointmentsView({ onAppointmentClick }: AppointmentsViewProps) 
                             className="text-destructive"
                             onClick={(e) => {
                               e.stopPropagation()
-                              handleDelete(apt)
+                              setDeletingApt(apt)
                             }}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
@@ -502,6 +518,27 @@ export function AppointmentsView({ onAppointmentClick }: AppointmentsViewProps) 
         </div>
       </CardContent>
     </Card>
+
+    <AlertDialog open={!!deletingApt} onOpenChange={(open) => { if (!open) setDeletingApt(null) }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Appointment</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete this appointment for &ldquo;{deletingApt?.customer_name}&rdquo;? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </div>
   )
 }

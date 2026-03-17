@@ -406,6 +406,21 @@ export async function createPublicAppointment(
     const startTime = new Date(input.startTime)
     const endTime = new Date(input.endTime)
     
+    // Validate required fields
+    if (!input.customerName?.trim()) {
+      return { success: false, error: 'Customer name is required' }
+    }
+    
+    // Validate email format
+    if (!input.customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.customerEmail)) {
+      return { success: false, error: 'A valid email address is required' }
+    }
+    
+    // Validate start < end
+    if (startTime >= endTime) {
+      return { success: false, error: 'Invalid appointment time range' }
+    }
+    
     // Reject bookings in the past
     if (startTime <= now) {
       return { success: false, error: 'Cannot book appointments in the past' }

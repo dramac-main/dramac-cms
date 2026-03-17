@@ -91,13 +91,16 @@ function getDateRangeStart(range: DateRange): Date {
   const now = new Date()
   switch (range) {
     case '7d':
-      return new Date(now.setDate(now.getDate() - 7))
+      return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
     case '30d':
-      return new Date(now.setDate(now.getDate() - 30))
+      return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
     case '90d':
-      return new Date(now.setDate(now.getDate() - 90))
-    case '1y':
-      return new Date(now.setFullYear(now.getFullYear() - 1))
+      return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000)
+    case '1y': {
+      const yearAgo = new Date(now)
+      yearAgo.setFullYear(yearAgo.getFullYear() - 1)
+      return yearAgo
+    }
     case 'all':
       return new Date(2000, 0, 1)
   }

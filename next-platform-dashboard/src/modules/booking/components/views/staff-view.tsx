@@ -28,6 +28,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { useBooking } from '../../context/booking-context'
 import {
   Search,
@@ -74,6 +84,9 @@ export function StaffView({ onStaffClick, onCreateClick, onEditClick }: StaffVie
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [deletingStaff, setDeletingStaff] = useState<Staff | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   
   // Get services for a staff member
   const getStaffServices = (staffMember: Staff) => {
@@ -110,22 +123,30 @@ export function StaffView({ onStaffClick, onCreateClick, onEditClick }: StaffVie
   
   // Toggle staff status
   const handleToggleStatus = async (staffMember: Staff) => {
+    if (togglingId) return
+    setTogglingId(staffMember.id)
     try {
       await editStaff(staffMember.id, { is_active: !staffMember.is_active })
       toast.success(`Staff member ${staffMember.is_active ? 'deactivated' : 'activated'}`)
     } catch {
       toast.error('Failed to update staff status')
+    } finally {
+      setTogglingId(null)
     }
   }
   
   // Delete staff
-  const handleDelete = async (staffMember: Staff) => {
-    if (!confirm(`Are you sure you want to delete "${staffMember.name}"?`)) return
+  const handleConfirmDelete = async () => {
+    if (!deletingStaff || isDeleting) return
+    setIsDeleting(true)
     try {
-      await removeStaff(staffMember.id)
+      await removeStaff(deletingStaff.id)
       toast.success('Staff member deleted')
+      setDeletingStaff(null)
     } catch {
       toast.error('Failed to delete staff member')
+    } finally {
+      setIsDeleting(false)
     }
   }
   
@@ -245,7 +266,7 @@ export function StaffView({ onStaffClick, onCreateClick, onEditClick }: StaffVie
                               className="text-destructive"
                               onClick={(e) => {
                                 e.stopPropagation()
-                                handleDelete(staffMember)
+                                setDeletingStaff(staffMember)
                               }}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
@@ -309,6 +330,7 @@ export function StaffView({ onStaffClick, onCreateClick, onEditClick }: StaffVie
                             checked={staffMember.is_active}
                             onCheckedChange={() => handleToggleStatus(staffMember)}
                             onClick={(e) => e.stopPropagation()}
+                            disabled={togglingId === staffMember.id}
                           />
                         </div>
                       </div>
@@ -404,6 +426,7 @@ export function StaffView({ onStaffClick, onCreateClick, onEditClick }: StaffVie
                             checked={staffMember.is_active}
                             onCheckedChange={() => handleToggleStatus(staffMember)}
                             onClick={(e) => e.stopPropagation()}
+                            disabled={togglingId === staffMember.id}
                           />
                         </td>
                         <td className="p-3 text-right">
@@ -434,7 +457,7 @@ export function StaffView({ onStaffClick, onCreateClick, onEditClick }: StaffVie
                                 className="text-destructive"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  handleDelete(staffMember)
+                                  setDeletingStaff(staffMember)
                                 }}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
@@ -470,6 +493,27 @@ export function StaffView({ onStaffClick, onCreateClick, onEditClick }: StaffVie
         </div>
       </CardContent>
     </Card>
+
+    <AlertDialog open={!!deletingStaff} onOpenChange={(open) => { if (!open) setDeletingStaff(null) }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Staff Member</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete &ldquo;{deletingStaff?.name}&rdquo;? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleConfirmDelete}
+            disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </div>
   )
 }

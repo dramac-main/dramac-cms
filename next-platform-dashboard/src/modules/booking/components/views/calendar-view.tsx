@@ -252,7 +252,7 @@ export function CalendarView({ onAppointmentClick, onSlotClick }: CalendarViewPr
       
       <CardContent className="p-0 overflow-auto">
         {viewMode === 'week' ? (
-          <div className="min-w-[800px]">
+          <div className="min-w-[600px] lg:min-w-0">
             {/* Week header */}
             <div className="grid grid-cols-8 border-b sticky top-0 bg-background z-10">
               <div className="p-2 text-sm font-medium text-muted-foreground border-r">

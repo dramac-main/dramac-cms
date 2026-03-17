@@ -557,6 +557,13 @@ export async function createAppointment(
     throw new Error("Start time and end time are required");
   }
 
+  // Validate start_time is before end_time
+  const startDate = new Date(input.start_time);
+  const endDate = new Date(input.end_time);
+  if (startDate >= endDate) {
+    throw new Error("Start time must be before end time");
+  }
+
   // Check availability
   const isAvailable = await checkSlotAvailability(
     siteId,
@@ -602,6 +609,10 @@ export async function createAppointment(
 
   if (error) {
     console.error("[Booking] createAppointment error:", error);
+    // Handle unique constraint violation (race condition: double-booking)
+    if (error.code === "23505") {
+      throw new Error("This time slot is no longer available. Please select another time.");
+    }
     throw new Error(error.message);
   }
 
@@ -1077,8 +1088,8 @@ export async function getAvailableSlots(
       return [];
     }
 
-    // 4. Get availability rules
-    const dayOfWeek = date.getDay();
+    // 4. Get availability rules (use UTC for consistency with public booking)
+    const dayOfWeek = date.getUTCDay();
     const dateString = date.toISOString().split("T")[0];
 
     const { data: availabilityRules } = await supabase
@@ -1097,11 +1108,13 @@ export async function getAvailableSlots(
       .in("rule_type", ["blocked", "holiday"])
       .or(`day_of_week.eq.${dayOfWeek},specific_date.eq.${dateString}`);
 
-    // 6. Get existing appointments for this date
-    const dayStart = new Date(date);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(date);
-    dayEnd.setHours(23, 59, 59, 999);
+    // 6. Get existing appointments for this date (UTC boundaries)
+    const dayStart = new Date(Date.UTC(
+      date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0, 0
+    ));
+    const dayEnd = new Date(Date.UTC(
+      date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59, 999
+    ));
 
     const { data: existingAppointments } = await supabase
       .from(`${TABLE_PREFIX}_appointments`)
@@ -1143,6 +1156,9 @@ export async function getAvailableSlots(
 
       while (slotStart.getTime() + totalMinutes * 60000 <= endTime.getTime()) {
         const slotEnd = new Date(slotStart.getTime() + duration * 60000);
+        // Include buffer times for conflict checking (matches public booking logic)
+        const blockedStart = new Date(slotStart.getTime() - bufferBefore * 60000);
+        const blockedEnd = new Date(slotEnd.getTime() + bufferAfter * 60000);
 
         // Check if slot is blocked
         const isBlocked = (blockedRules ?? []).some((block: any) => {
@@ -1152,12 +1168,12 @@ export async function getAvailableSlots(
           return slotStart >= blockStart && slotStart < blockEnd;
         });
 
-        // Check if slot conflicts with existing appointment
+        // Check if slot conflicts with existing appointment (with buffer times)
         const hasConflict = (existingAppointments ?? []).some((apt: any) => {
           if (ruleStaffId && apt.staff_id !== ruleStaffId) return false;
           const aptStart = new Date(apt.start_time);
           const aptEnd = new Date(apt.end_time);
-          return slotStart < aptEnd && slotEnd > aptStart;
+          return blockedStart < aptEnd && blockedEnd > aptStart;
         });
 
         slots.push({
@@ -1189,14 +1205,29 @@ async function checkSlotAvailability(
   try {
     const supabase = await getModuleClient();
 
-    // Check for conflicting appointments
+    // Get service buffer times for accurate conflict check
+    const { data: service } = await supabase
+      .from(`${TABLE_PREFIX}_services`)
+      .select("buffer_before_minutes, buffer_after_minutes")
+      .eq("site_id", siteId)
+      .eq("id", serviceId)
+      .single();
+
+    const bufferBefore = service?.buffer_before_minutes || 0;
+    const bufferAfter = service?.buffer_after_minutes || 0;
+
+    // Expand the conflict window to include buffer times
+    const blockedStart = new Date(startTime.getTime() - bufferBefore * 60000);
+    const blockedEnd = new Date(endTime.getTime() + bufferAfter * 60000);
+
+    // Check for conflicting appointments (with buffer)
     let query = supabase
       .from(`${TABLE_PREFIX}_appointments`)
       .select("id")
       .eq("site_id", siteId)
       .neq("status", "cancelled")
-      .lt("start_time", endTime.toISOString())
-      .gt("end_time", startTime.toISOString());
+      .lt("start_time", blockedEnd.toISOString())
+      .gt("end_time", blockedStart.toISOString());
 
     if (staffId) {
       query = query.eq("staff_id", staffId);
@@ -1212,9 +1243,16 @@ async function checkSlotAvailability(
 
 function parseTime(timeStr: string, date: Date): Date {
   const [hours, minutes] = timeStr.split(":").map(Number);
-  const result = new Date(date);
-  result.setHours(hours, minutes, 0, 0);
-  return result;
+  // Use UTC to match public booking and avoid server timezone drift
+  return new Date(Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate(),
+    hours,
+    minutes,
+    0,
+    0
+  ));
 }
 
 // =============================================================================

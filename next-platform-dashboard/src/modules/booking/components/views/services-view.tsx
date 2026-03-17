@@ -35,6 +35,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { useBooking } from '../../context/booking-context'
 import {
   Search,
@@ -85,6 +95,9 @@ export function ServicesView({ onServiceClick, onCreateClick, onEditClick }: Ser
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [deletingService, setDeletingService] = useState<Service | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   
   // Get unique categories
   const categories = useMemo(() => {
@@ -129,22 +142,30 @@ export function ServicesView({ onServiceClick, onCreateClick, onEditClick }: Ser
   
   // Toggle service status
   const handleToggleStatus = async (service: Service) => {
+    if (togglingId) return
+    setTogglingId(service.id)
     try {
       await editService(service.id, { is_active: !service.is_active })
       toast.success(`Service ${service.is_active ? 'deactivated' : 'activated'}`)
     } catch {
       toast.error('Failed to update service status')
+    } finally {
+      setTogglingId(null)
     }
   }
   
   // Delete service
-  const handleDelete = async (service: Service) => {
-    if (!confirm(`Are you sure you want to delete "${service.name}"?`)) return
+  const handleConfirmDelete = async () => {
+    if (!deletingService || isDeleting) return
+    setIsDeleting(true)
     try {
-      await removeService(service.id)
+      await removeService(deletingService.id)
       toast.success('Service deleted')
+      setDeletingService(null)
     } catch {
       toast.error('Failed to delete service')
+    } finally {
+      setIsDeleting(false)
     }
   }
   
@@ -287,6 +308,7 @@ export function ServicesView({ onServiceClick, onCreateClick, onEditClick }: Ser
                         checked={service.is_active}
                         onCheckedChange={() => handleToggleStatus(service)}
                         onClick={(e) => e.stopPropagation()}
+                        disabled={togglingId === service.id}
                       />
                     </TableCell>
                     <TableCell className="text-right">
@@ -317,7 +339,7 @@ export function ServicesView({ onServiceClick, onCreateClick, onEditClick }: Ser
                             className="text-destructive"
                             onClick={(e) => {
                               e.stopPropagation()
-                              handleDelete(service)
+                              setDeletingService(service)
                             }}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
@@ -351,6 +373,27 @@ export function ServicesView({ onServiceClick, onCreateClick, onEditClick }: Ser
         </div>
       </CardContent>
     </Card>
+
+    <AlertDialog open={!!deletingService} onOpenChange={(open) => { if (!open) setDeletingService(null) }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete Service</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to delete &ldquo;{deletingService?.name}&rdquo;? This action cannot be undone.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleConfirmDelete}
+            disabled={isDeleting}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </div>
   )
 }

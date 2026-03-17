@@ -14,6 +14,17 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -104,6 +115,7 @@ export function AppointmentDetailSheet({
   const [editedNotes, setEditedNotes] = useState<string>('')
   const [isSaving, setIsSaving] = useState(false)
   const [isUpdatingPayment, setIsUpdatingPayment] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   
   if (!appointment) return null
   
@@ -153,14 +165,15 @@ export function AppointmentDetailSheet({
   }
   
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this appointment?')) return
-    
+    setIsDeleting(true)
     try {
       await removeAppointment(appointment.id)
       toast.success('Appointment deleted')
       onOpenChange(false)
     } catch {
       toast.error('Failed to delete appointment')
+    } finally {
+      setIsDeleting(false)
     }
   }
   
@@ -188,7 +201,14 @@ export function AppointmentDetailSheet({
   const statusOption = STATUS_OPTIONS.find((s) => s.value === appointment.status)
   
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={(value) => {
+      if (!value) {
+        setIsEditing(false)
+        setEditedStatus(null)
+        setEditedNotes('')
+      }
+      onOpenChange(value)
+    }}>
       <SheetContent className="sm:max-w-[480px] overflow-y-auto">
         <SheetHeader>
           <div className="flex items-center justify-between">
@@ -487,9 +507,27 @@ export function AppointmentDetailSheet({
                     Full Edit
                   </Button>
                 )}
-                <Button variant="destructive" onClick={handleDelete}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={isDeleting}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Appointment</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this appointment? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </>
             )}
           </div>
