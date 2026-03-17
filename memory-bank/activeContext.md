@@ -1,50 +1,52 @@
 # Active Context
 
-## Current Focus: Automation Module Production Audit — COMPLETED ✅
+## Current Focus: Publish Embed Scripts — COMPLETED ✅
 
-### Status: COMMITTED & PUSHED — `f13afce3` — 2 files changed, 1557 insertions, 1275 deletions
+### Status: COMMITTED & PUSHED — `38081a0d` — 4 files changed, 273 insertions, 89 deletions
 
-### Latest Work: Automation Module Security Audit (Priority 5)
+### Latest Work: Embed Scripts Publishing (Priority 6)
 
-Full production audit of the Automation module (41 files, 0 API routes). Found and fixed 8 security/safety bugs across 2 files.
+Full audit and fix of the embed infrastructure to make modules embeddable on external sites. Found and fixed 4 critical issues across 4 files.
 
-**Commit: `f13afce3`** — Priority 5: Automation Module Security Audit & Fixes
+**Commit: `38081a0d`** — Priority 6: Publish embed scripts — origin detection, DRAMAC_CONFIG support, CDN cache headers
 
 ### Fixes Applied:
 
-1. **SECURITY: Defense-in-depth site_id scoping on mutations** — Added `.eq('site_id', ...)` to:
-   - `updateWorkflow`: Uses fetched `currentWorkflow.site_id` to scope UPDATE query
-   - `deleteWorkflow`: Uses fetched `workflow.site_id` to scope DELETE query
-   - `activateWorkflow`: Uses fetched `workflow.site_id` to scope activation UPDATE query
+1. **CRITICAL: Auto-detect script origin** — Both `dramac-embed.js` and `dramac-sdk.js` had hardcoded `app.dramac.com` as default base URL. Production domain is `app.dramacagency.com`. Both scripts now auto-detect their own origin from the `<script src="...">` tag, matching the pattern already used by `booking.js`.
 
-2. **SECURITY: Connection management siteId parameter + scoping** — Added `siteId` parameter and `.eq('site_id', siteId)` to prevent cross-tenant credential access:
-   - `updateConnection(siteId, connectionId, data)`: Prevents cross-tenant credential updates
-   - `deleteConnection(siteId, connectionId)`: Prevents cross-tenant credential deletion
-   - `testConnection(siteId, connectionId)`: Scopes credential fetch and status update to site
-   - `deleteWebhookEndpoint(siteId, endpointId)`: Scopes webhook deletion to site
+2. **CRITICAL: DRAMAC_CONFIG auto-init pattern** — The E-Commerce embed code generator (`embed-code-view.tsx`) outputs `window.DRAMAC_CONFIG = { ... }` patterns, but `dramac-embed.js` only supported `<dramac-module>` web component. Added auto-init that reads `window.DRAMAC_CONFIG` on DOMContentLoaded and creates an iframe embed in the specified container.
 
-3. **BUG: event-processor.ts calculateNextRun** — Replaced placeholder (always returned 1hr regardless of cron) with actual cron pattern parsing for minute/hour fields, matching the implementation in automation-actions.ts
+3. **NEW: Buy-button data-attribute support** — E-Commerce embed generator outputs `<button class="dramac-buy-button" data-site-id="..." data-product-id="...">` patterns. Added click handler that opens a modal checkout overlay with the product, matching the `booking.js` modal pattern.
 
-### Audit Results (Verified Clean — No Changes Needed):
+4. **CDN cache headers** — Added `Cache-Control: public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400` plus CORS and Content-Type headers for `/embed/*.js` static scripts in `next.config.ts`.
 
-- `execution-engine.ts`: Already has proper site_id from execution context ✅
-- `action-executor.ts`: Already uses `.eq('site_id', siteId)` on CRM/notification actions ✅
-- `ai-actions.ts`: All functions properly take siteId parameter ✅
-- `index.ts`: All barrel exports match actual implementations ✅
-- All 17+ UI components: lucide-react `icons` import verified valid at runtime ✅
-- `resumePausedExecutions()`: Global query is correct for background cron context ✅
+5. **Fallback domain fix** — Updated `embed-service.ts` fallback from `app.dramac.com` to `app.dramacagency.com`.
+
+### Embed Infrastructure Summary:
+
+| Script | Path | Purpose |
+|--------|------|---------|
+| `dramac-embed.js` | `/public/embed/` | Web Component + DRAMAC_CONFIG auto-init + buy-button handler |
+| `dramac-sdk.js` | `/public/embed/` | Full JavaScript SDK for programmatic embed control |
+| `booking.js` | `/public/embed/` | Lightweight booking widget with button-popup pattern |
+
+**Supported embed patterns:**
+- `<dramac-module>` Web Component (token-authenticated)
+- `window.DRAMAC_CONFIG` auto-init (E-Commerce product grids, cards, cart, checkout)
+- `<button class="dramac-buy-button">` data-attribute (quick buy buttons)
+- `DramacSDK.init({...})` programmatic SDK (advanced integrations)
+- `DramacBooking.init({...})` booking-specific widget
 
 ### Previous Commits:
 
+- `f13afce3` — Priority 5: Automation Module Security Audit (8 fixes, 2 files)
 - `58d8732f` — fix(social): production audit (Priority 4, 9 files, 35+ fixes)
 - `899c8bcb` — fix(booking): production-ready (Priority 3, 16 files, 6 bugs)
 - `f5454635` — fix(crm): runtime bugs (Priority 1, 7 bugs)
-- `fec9bc19` — docs: memory bank update
 
 ### Still Remaining from Priority List:
 
-- ~~**Priority 5:** Automation Module production-ready~~ ✅ `f13afce3`
-- **Priority 6:** Embed Scripts publishing
+- ~~**Priority 6:** Embed Scripts publishing~~ ✅ `38081a0d`
 - **Priority 7:** E2E Testing
 
 ### ⚠️ CRITICAL KNOWLEDGE: Database Price Storage Format
