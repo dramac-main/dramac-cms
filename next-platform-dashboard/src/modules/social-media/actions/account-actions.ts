@@ -209,6 +209,7 @@ export async function disconnectSocialAccount(
       .from('social_accounts')
       .delete()
       .eq('id', accountId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     

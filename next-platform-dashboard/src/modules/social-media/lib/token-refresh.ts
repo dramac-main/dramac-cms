@@ -83,6 +83,17 @@ export async function ensureValidToken(accountId: string): Promise<string | null
 
     const tokens = await res.json()
 
+    if (!tokens.access_token) {
+      await (supabase as any)
+        .from('social_accounts')
+        .update({
+          status: 'error',
+          last_error: 'Token refresh response missing access_token',
+        })
+        .eq('id', accountId)
+      return null
+    }
+
     // Update stored tokens
     const updates: Record<string, any> = {
       access_token: tokens.access_token,

@@ -16,10 +16,10 @@ import type { PublishResult } from '@/modules/social-media/types'
 export const maxDuration = 60 // allow up to 60s on Vercel
 
 export async function GET(request: NextRequest) {
-  // Verify cron secret
+  // Verify cron secret (fail closed — deny if CRON_SECRET not configured)
   const authHeader = request.headers.get('authorization')
   if (
-    process.env.CRON_SECRET &&
+    !process.env.CRON_SECRET ||
     authHeader !== `Bearer ${process.env.CRON_SECRET}`
   ) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

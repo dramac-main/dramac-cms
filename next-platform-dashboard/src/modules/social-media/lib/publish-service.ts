@@ -134,6 +134,10 @@ async function publishToFacebook(
         }),
       },
     )
+    if (!photoRes.ok) {
+      const errBody = await photoRes.text().catch(() => 'Unknown error')
+      throw new Error(`Facebook photo API ${photoRes.status}: ${errBody.slice(0, 200)}`)
+    }
     const photo = await photoRes.json()
     if (photo.error) throw new Error(photo.error.message)
 
@@ -152,6 +156,10 @@ async function publishToFacebook(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message: content, access_token: token }),
   })
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => 'Unknown error')
+    throw new Error(`Facebook feed API ${res.status}: ${errBody.slice(0, 200)}`)
+  }
   const data = await res.json()
   if (data.error) throw new Error(data.error.message)
 
@@ -321,6 +329,10 @@ async function publishToTwitter(
     headers,
     body: JSON.stringify(tweetBody),
   })
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => 'Unknown error')
+    throw new Error(`Twitter API ${res.status}: ${errBody.slice(0, 200)}`)
+  }
   const data = await res.json()
   if (data.errors) throw new Error(data.errors[0]?.message || 'Tweet failed')
 

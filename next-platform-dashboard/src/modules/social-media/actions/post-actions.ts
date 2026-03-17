@@ -234,6 +234,7 @@ export async function updatePost(
       .from('social_posts')
       .update(updateData)
       .eq('id', postId)
+      .eq('site_id', siteId)
       .select()
       .single()
     
@@ -264,6 +265,7 @@ export async function deletePost(
       .from('social_posts')
       .delete()
       .eq('id', postId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -298,6 +300,7 @@ export async function schedulePost(
       .from('social_posts')
       .select('requires_approval')
       .eq('id', postId)
+      .eq('site_id', siteId)
       .single()
     
     const status = post?.requires_approval ? 'pending_approval' : 'scheduled'
@@ -311,6 +314,7 @@ export async function schedulePost(
         updated_at: new Date().toISOString(),
       })
       .eq('id', postId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -343,6 +347,7 @@ export async function publishPostNow(
       .from('social_posts')
       .select('*, target_accounts')
       .eq('id', postId)
+      .eq('site_id', siteId)
       .single()
     
     if (fetchError) throw fetchError
@@ -474,6 +479,7 @@ export async function addToQueue(
         updated_at: new Date().toISOString(),
       })
       .eq('id', postId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -508,6 +514,7 @@ export async function approvePost(
       .from('social_posts')
       .select('scheduled_at')
       .eq('id', postId)
+      .eq('site_id', siteId)
       .single()
     
     const newStatus: PostStatus = post?.scheduled_at ? 'scheduled' : 'approved'
@@ -521,6 +528,7 @@ export async function approvePost(
         updated_at: new Date().toISOString(),
       })
       .eq('id', postId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -565,6 +573,7 @@ export async function rejectPost(
         updated_at: new Date().toISOString(),
       })
       .eq('id', postId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -629,6 +638,7 @@ export async function bulkDeletePosts(
       .from('social_posts')
       .delete()
       .in('id', postIds)
+      .eq('site_id', siteId)
     
     if (error) throw error
     

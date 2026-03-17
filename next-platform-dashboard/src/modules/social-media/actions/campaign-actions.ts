@@ -209,6 +209,7 @@ export async function updateCampaign(
       .from('social_campaigns')
       .update(updateData)
       .eq('id', campaignId)
+      .eq('site_id', siteId)
       .select()
       .single()
     
@@ -245,6 +246,7 @@ export async function deleteCampaign(
       .from('social_campaigns')
       .delete()
       .eq('id', campaignId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -274,6 +276,7 @@ export async function archiveCampaign(
         updated_at: new Date().toISOString(),
       })
       .eq('id', campaignId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -303,6 +306,7 @@ export async function pauseCampaign(
         updated_at: new Date().toISOString(),
       })
       .eq('id', campaignId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -332,6 +336,7 @@ export async function resumeCampaign(
         updated_at: new Date().toISOString(),
       })
       .eq('id', campaignId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     

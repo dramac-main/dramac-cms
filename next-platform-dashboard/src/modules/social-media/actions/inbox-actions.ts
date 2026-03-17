@@ -127,7 +127,7 @@ export async function getInboxCounts(
     }
     
     // Get total
-    const { count: total } = await baseQuery.not('status', 'in', '("archived","spam")')
+    const { count: total } = await baseQuery.not('status', 'in', '(archived,spam)')
     
     return {
       counts: {
@@ -169,6 +169,7 @@ export async function markAsRead(
         updated_at: new Date().toISOString(),
       })
       .eq('id', itemId)
+      .eq('site_id', siteId)
       .eq('status', 'new')
     
     if (error) throw error
@@ -198,6 +199,7 @@ export async function replyToItem(
       .from('social_inbox_items')
       .select('*, platform_created_at')
       .eq('id', itemId)
+      .eq('site_id', siteId)
       .single()
     
     if (fetchError) throw fetchError
@@ -220,6 +222,7 @@ export async function replyToItem(
         updated_at: new Date().toISOString(),
       })
       .eq('id', itemId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -286,6 +289,7 @@ export async function assignItem(
         updated_at: new Date().toISOString(),
       })
       .eq('id', itemId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -315,6 +319,7 @@ export async function updatePriority(
         updated_at: new Date().toISOString(),
       })
       .eq('id', itemId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -343,6 +348,7 @@ export async function archiveItem(
         updated_at: new Date().toISOString(),
       })
       .eq('id', itemId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -371,6 +377,7 @@ export async function markAsSpam(
         updated_at: new Date().toISOString(),
       })
       .eq('id', itemId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -399,6 +406,7 @@ export async function flagItem(
         updated_at: new Date().toISOString(),
       })
       .eq('id', itemId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -426,6 +434,7 @@ export async function addTags(
       .from('social_inbox_items')
       .select('tags')
       .eq('id', itemId)
+      .eq('site_id', siteId)
       .single()
     
     const currentTags = item?.tags || []
@@ -438,6 +447,7 @@ export async function addTags(
         updated_at: new Date().toISOString(),
       })
       .eq('id', itemId)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -597,6 +607,7 @@ export async function bulkArchive(
         updated_at: new Date().toISOString(),
       })
       .in('id', itemIds)
+      .eq('site_id', siteId)
     
     if (error) throw error
     
@@ -625,6 +636,7 @@ export async function bulkMarkAsRead(
         updated_at: new Date().toISOString(),
       })
       .in('id', itemIds)
+      .eq('site_id', siteId)
       .eq('status', 'new')
     
     if (error) throw error

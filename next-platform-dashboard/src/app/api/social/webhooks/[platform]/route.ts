@@ -34,7 +34,7 @@ export async function GET(
       const token = url.searchParams.get('hub.verify_token')
       const challenge = url.searchParams.get('hub.challenge')
 
-      if (mode === 'subscribe' && token === process.env.META_WEBHOOK_VERIFY_TOKEN) {
+      if (mode === 'subscribe' && process.env.META_WEBHOOK_VERIFY_TOKEN && token === process.env.META_WEBHOOK_VERIFY_TOKEN) {
         return new Response(challenge, { status: 200 })
       }
       return NextResponse.json({ error: 'Verification failed' }, { status: 403 })
@@ -109,10 +109,15 @@ async function handleMetaWebhook(request: Request, platform: string) {
     }
   }
 
-  const payload = JSON.parse(body)
+  let payload: any
+  try {
+    payload = JSON.parse(body)
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
   const supabase = createAdminClient()
 
-  if (payload.entry) {
+  if (Array.isArray(payload.entry)) {
     for (const entry of payload.entry) {
       // Process changes (comments, messages)
       if (entry.changes) {
