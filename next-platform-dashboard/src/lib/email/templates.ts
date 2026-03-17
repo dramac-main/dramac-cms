@@ -721,6 +721,19 @@ ${data.dashboardUrl ? `View in dashboard: ${data.dashboardUrl}` : ''}
     text: (data) => `Quote Reminder\n\nHi ${data.customerName || 'there'},\n\nReminder about quote ${data.quoteNumber} (${data.totalAmount}).${data.expiryDate ? ` Valid until ${data.expiryDate}.` : ''}\n\n${data.message || ''}${data.viewQuoteUrl ? `\n\nView quote: ${data.viewQuoteUrl}` : ''}`,
   },
 
+  quote_request_owner: {
+    subject: (data) => `📋 New Quote Request ${data.quoteNumber} from ${data.customerName}`,
+    html: (data) => wrapHtml(`
+      <h1 style="${STYLES.heading}">📋 New Quote Request</h1>
+      <p style="${STYLES.text}"><strong>${data.customerName}</strong> has submitted a new quote request <strong>${data.quoteNumber}</strong>.</p>
+      <p style="${STYLES.text}"><strong>Email:</strong> ${data.customerEmail}</p>
+      ${data.customerPhone ? `<p style="${STYLES.text}"><strong>Phone:</strong> ${data.customerPhone}</p>` : ''}
+      ${data.itemCount ? `<p style="${STYLES.text}"><strong>Items:</strong> ${data.itemCount}</p>` : ''}
+      ${data.dashboardUrl ? `<p style="margin: 24px 0;"><a href="${data.dashboardUrl}" style="${STYLES.button}">Review Quote</a></p>` : ''}
+    `),
+    text: (data) => `New Quote Request\n\n${data.customerName} has submitted quote request ${data.quoteNumber}.\nEmail: ${data.customerEmail}${data.customerPhone ? `\nPhone: ${data.customerPhone}` : ''}${data.itemCount ? `\nItems: ${data.itemCount}` : ''}\n\n${data.dashboardUrl ? `Review in dashboard: ${data.dashboardUrl}` : ''}`,
+  },
+
   quote_accepted_owner: {
     subject: (data) => `✅ Quote ${data.quoteNumber} Accepted by ${data.customerName}`,
     html: (data) => wrapHtml(`

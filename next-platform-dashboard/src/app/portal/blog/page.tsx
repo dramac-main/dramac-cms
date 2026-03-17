@@ -3,8 +3,10 @@ import { FileText, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getPortalBlogSites } from "@/lib/blog/post-service";
+import { requirePortalAuth } from "@/lib/portal/portal-auth";
 
 export default async function PortalBlogPage() {
+  await requirePortalAuth();
   const { sites } = await getPortalBlogSites();
 
   return (

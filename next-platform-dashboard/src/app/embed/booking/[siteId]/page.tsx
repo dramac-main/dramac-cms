@@ -302,7 +302,7 @@ export default async function BookingEmbedPage({ params, searchParams }: Booking
               type: 'DRAMAC_MODULE_READY',
               moduleId: 'booking',
               siteId: '${siteId}'
-            }, '*');
+            }, window.location.origin);
 
             var resizeObserver = new ResizeObserver(function(entries) {
               var height = entries[0].contentRect.height;
@@ -310,7 +310,7 @@ export default async function BookingEmbedPage({ params, searchParams }: Booking
                 type: 'DRAMAC_RESIZE',
                 moduleId: 'booking',
                 height: height
-              }, '*');
+              }, window.location.origin);
             });
             resizeObserver.observe(document.body);
           })();

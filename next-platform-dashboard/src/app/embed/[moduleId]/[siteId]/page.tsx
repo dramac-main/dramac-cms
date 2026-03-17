@@ -178,7 +178,7 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
               type: 'DRAMAC_MODULE_READY',
               moduleId: '${moduleId}',
               siteId: '${siteId}'
-            }, '*');
+            }, window.location.origin);
 
             // Listen for messages from parent
             window.addEventListener('message', function(event) {
@@ -208,7 +208,7 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
                 type: 'DRAMAC_RESIZE',
                 moduleId: '${moduleId}',
                 height: height
-              }, '*');
+              }, window.location.origin);
             });
             resizeObserver.observe(document.body);
 
@@ -220,7 +220,7 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
                 event: eventName,
                 payload: payload,
                 moduleId: '${moduleId}'
-              }, '*');
+              }, window.location.origin);
             };
 
             // Error handling
@@ -229,7 +229,7 @@ export default async function ModuleEmbedPage({ params, searchParams }: EmbedPag
                 type: 'DRAMAC_ERROR',
                 message: msg,
                 moduleId: '${moduleId}'
-              }, '*');
+              }, window.location.origin);
               return false;
             };
           })();

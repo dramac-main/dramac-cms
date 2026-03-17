@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { sendEmail } from "@/lib/email/send-email";
 
 interface TeamMember {
   id: string;
@@ -31,7 +33,7 @@ export async function getAgencyTeam(userId: string) {
       .select("id")
       .eq("owner_id", userId)
       .single();
-    
+
     agencyId = agency?.id;
   }
 
@@ -74,12 +76,17 @@ export async function getAgencyTeam(userId: string) {
   return { members };
 }
 
-export async function inviteTeamMember(email: string, role: "admin" | "member") {
+export async function inviteTeamMember(
+  email: string,
+  role: "admin" | "member",
+) {
   const supabase = await createClient();
 
   // Get current user's agency
-  const { data: { user } } = await supabase.auth.getUser();
-  
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   if (!user) {
     return { error: "Not authenticated" };
   }
@@ -98,7 +105,7 @@ export async function inviteTeamMember(email: string, role: "admin" | "member") 
       .select("id")
       .eq("owner_id", user.id)
       .single();
-    
+
     agencyId = agency?.id;
   }
 
@@ -141,10 +148,61 @@ export async function inviteTeamMember(email: string, role: "admin" | "member") 
       return { error: "Failed to add team member" };
     }
   } else {
-    // For new users, we would typically send an invitation email
-    // and create a pending invitation record
-    // For now, we'll return a success message
-    // In production, integrate with Resend or similar email service
+    // New user: invite via Supabase Auth and send team invitation email
+    const adminClient = createAdminClient();
+
+    // Get inviter's name and agency name for the email
+    const { data: inviterProfile } = await supabase
+      .from("profiles")
+      .select("name")
+      .eq("id", user.id)
+      .single();
+
+    const { data: agency } = await supabase
+      .from("agencies")
+      .select("name")
+      .eq("id", agencyId)
+      .single();
+
+    // Create user via Supabase Auth admin (sends magic link email)
+    const { data: invitedUser, error: inviteError } =
+      await adminClient.auth.admin.inviteUserByEmail(email, {
+        data: {
+          pending_team_invite: {
+            agency_id: agencyId,
+            role: role,
+            invited_by: user.id,
+          },
+        },
+        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || "https://app.dramacagency.com"}/auth/callback?next=/onboarding`,
+      });
+
+    if (inviteError) {
+      console.error("Error inviting user:", inviteError);
+      return { error: "Failed to send invitation" };
+    }
+
+    // Also send a branded team invitation email
+    const inviteUrl = `${process.env.NEXT_PUBLIC_BASE_URL || "https://app.dramacagency.com"}/signup?invited=true&email=${encodeURIComponent(email)}`;
+    await sendEmail({
+      to: { email },
+      type: "team_invitation",
+      data: {
+        inviterName: inviterProfile?.name || "A team member",
+        agencyName: agency?.name || "an agency",
+        inviteUrl,
+      },
+    });
+
+    // Create a pending agency_members record (accepted_at = null indicates pending)
+    if (invitedUser?.user) {
+      await adminClient.from("agency_members").insert({
+        agency_id: agencyId,
+        user_id: invitedUser.user.id,
+        role: role,
+        invited_at: new Date().toISOString(),
+      });
+    }
   }
 
   revalidatePath("/settings/team");

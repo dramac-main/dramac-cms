@@ -161,6 +161,12 @@ export async function POST(request: NextRequest) {
     switch (paymentProvider) {
       case 'paddle': {
         const paddleConfig = settings.paddle_config as PaddleConfig
+        if (!paddleConfig?.vendor_id) {
+          return NextResponse.json(
+            { error: 'Paddle payment provider is not configured. Please contact the store owner.' },
+            { status: 400 }
+          )
+        }
         // Paddle checkout is typically handled client-side with Paddle.js
         paymentData = {
           provider: 'paddle',

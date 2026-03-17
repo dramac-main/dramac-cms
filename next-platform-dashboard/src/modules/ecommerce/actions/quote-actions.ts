@@ -9,6 +9,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendBrandedEmail } from '@/lib/email/send-branded-email'
 import { DEFAULT_CURRENCY } from '@/lib/locale-config'
 import { revalidatePath } from 'next/cache'
 import type {
@@ -229,6 +230,45 @@ export async function createQuote(
         performedByName: userName
       }
     )
+    
+    // Notify agency owner about new quote request
+    if (quote.agency_id) {
+      try {
+        const adminSupabase = createAdminClient()
+        const { data: agency } = await adminSupabase
+          .from('agencies')
+          .select('owner_id')
+          .eq('id', quote.agency_id)
+          .single()
+        
+        if (agency?.owner_id) {
+          const { data: ownerProfile } = await adminSupabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', agency.owner_id)
+            .single()
+          
+          if (ownerProfile?.email) {
+            const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || ''}/dashboard/sites/${input.site_id}/ecommerce`
+            await sendBrandedEmail(quote.agency_id, {
+              to: { email: ownerProfile.email, name: ownerProfile.full_name || undefined },
+              emailType: 'quote_request_owner',
+              recipientUserId: agency.owner_id,
+              data: {
+                customerName: quote.customer_name || 'Customer',
+                customerEmail: quote.customer_email || '',
+                customerPhone: quote.customer_phone || '',
+                quoteNumber: quote.quote_number,
+                dashboardUrl,
+              },
+            })
+          }
+        }
+      } catch (emailError) {
+        // Don't fail quote creation if notification fails
+        console.error('Failed to send quote request notification:', emailError)
+      }
+    }
     
     revalidatePath('/ecommerce')
     

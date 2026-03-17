@@ -10072,6 +10072,8 @@ export interface ContactFormProps {
   labelColor?: string;
   successMessage?: string;
   action?: string;
+  siteId?: string;
+  emailTo?: string;
   id?: string;
   className?: string;
 }
@@ -10098,11 +10100,16 @@ export function ContactFormRender({
   inputBorderColor,
   inputTextColor,
   labelColor,
-  successMessage,
-  action = "#",
+  successMessage = "Thanks! We'll be in touch.",
+  siteId,
+  emailTo,
   id,
   className = "",
 }: ContactFormProps) {
+  const [status, setStatus] = React.useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = React.useState("");
+  const formRef = React.useRef<HTMLFormElement>(null);
+
   const paddingClasses = { sm: "p-4 md:p-6", md: "p-6 md:p-8", lg: "p-8 md:p-10" }[padding];
   const radiusClasses = { none: "", sm: "rounded-sm", md: "rounded-md", lg: "rounded-lg", xl: "rounded-xl" }[borderRadius];
   const shadowClasses = { none: "", sm: "shadow-sm", md: "shadow-md", lg: "shadow-lg", xl: "shadow-xl" }[shadow];
@@ -10116,11 +10123,87 @@ export function ContactFormRender({
   const resolvedInputText = inputTextColor || (isDark ? "#f9fafb" : "#1f2937");
   const resolvedLabelColor = labelColor || (isDark ? "#e5e7eb" : "#374151");
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (status === "submitting") return;
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    // Honeypot check — if the hidden field has a value, silently "succeed"
+    if (formData.get("_honeypot")) {
+      setStatus("success");
+      return;
+    }
+
+    const data: Record<string, string> = {};
+    formData.forEach((value, key) => {
+      if (!key.startsWith("_")) {
+        data[key] = String(value);
+      }
+    });
+    if (emailTo) {
+      data._emailTo = emailTo;
+    }
+
+    setStatus("submitting");
+    setErrorMessage("");
+
+    try {
+      const res = await fetch("/api/forms/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          siteId,
+          formId: "contact-form",
+          data,
+          honeypot: formData.get("_honeypot") || "",
+        }),
+      });
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        setErrorMessage(result.error || "Something went wrong. Please try again.");
+        setStatus("error");
+        return;
+      }
+
+      setStatus("success");
+      formRef.current?.reset();
+    } catch {
+      setErrorMessage("Network error. Please check your connection and try again.");
+      setStatus("error");
+    }
+  };
+
+  if (status === "success") {
+    return (
+      <div id={id} className={`max-w-lg mx-auto ${paddingClasses} ${radiusClasses} ${shadowClasses} ${className}`} style={{ backgroundColor }}>
+        <div className="text-center py-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4" style={{ backgroundColor: `${resolvedButtonColor}20` }}>
+            <svg className="w-8 h-8" style={{ color: resolvedButtonColor }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+          </div>
+          <h3 className="text-lg font-semibold mb-2" style={{ color: resolvedTextColor }}>{successMessage}</h3>
+          <button type="button" onClick={() => setStatus("idle")} className="mt-4 text-sm underline opacity-70 hover:opacity-100 transition-opacity" style={{ color: resolvedTextColor }}>
+            Send another message
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div id={id} className={`max-w-lg mx-auto ${paddingClasses} ${radiusClasses} ${shadowClasses} ${className}`} style={{ backgroundColor }}>
       {title && <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-2" style={{ color: resolvedTextColor }}>{title}</h2>}
       {subtitle && <p className="mb-6" style={{ color: resolvedSubtitleColor }}>{subtitle}</p>}
-      <form action={action} method="POST" className="space-y-4 md:space-y-6">
+      {status === "error" && errorMessage && (
+        <div className="mb-4 p-3 rounded-lg text-sm" style={{ backgroundColor: "#fef2f2", color: "#991b1b", border: "1px solid #fecaca" }}>
+          {errorMessage}
+        </div>
+      )}
+      <form ref={formRef} onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+        {/* Honeypot field — hidden from real users, bots fill it triggering spam detection */}
+        <input type="text" name="_honeypot" tabIndex={-1} autoComplete="off" style={{ position: "absolute", left: "-9999px", opacity: 0, height: 0, width: 0 }} aria-hidden="true" />
         <div className="grid md:grid-cols-2 gap-4">
           <FormFieldRender label={nameLabel} name="name" placeholder="Full Name" required labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />
           <FormFieldRender label={emailLabel} name="email" type="email" placeholder="john@example.com" required labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />
@@ -10132,8 +10215,8 @@ export function ContactFormRender({
           </div>
         )}
         <FormFieldRender label={messageLabel} name="message" type="textarea" placeholder="Your message..." rows={5} required labelColor={resolvedLabelColor} backgroundColor={resolvedInputBg} borderColor={resolvedInputBorder} textColor={resolvedInputText} focusBorderColor={resolvedButtonColor} />
-        <button type="submit" className="w-full px-6 py-3 font-medium rounded-lg transition-all duration-200 hover:opacity-90 focus:ring-2 focus:ring-offset-2" style={{ backgroundColor: resolvedButtonColor, color: buttonTextColor, boxShadow: `0 0 0 0 transparent`, ['--tw-ring-color' as string]: resolvedButtonColor }}>
-          {submitText}
+        <button type="submit" disabled={status === "submitting"} className="w-full px-6 py-3 font-medium rounded-lg transition-all duration-200 hover:opacity-90 focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed" style={{ backgroundColor: resolvedButtonColor, color: buttonTextColor, boxShadow: `0 0 0 0 transparent`, ['--tw-ring-color' as string]: resolvedButtonColor }}>
+          {status === "submitting" ? "Sending..." : submitText}
         </button>
       </form>
     </div>

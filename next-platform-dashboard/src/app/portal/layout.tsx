@@ -18,11 +18,20 @@ export default async function PortalLayout({
   const session = await getPortalSession();
   
   if (!session.user) {
-    // For login page: try to get agency branding from URL search params
-    // Portal login URLs can include ?agency=slug for branding
+    // Check if user is on a public portal route (login/verify)
     const headersList = await headers();
     const url = headersList.get("x-url") || headersList.get("referer") || "";
     const urlObj = url ? (() => { try { return new URL(url); } catch { return null; } })() : null;
+    const pathname = urlObj?.pathname || "";
+    const isPublicPortalRoute = pathname === "/portal/login" || pathname === "/portal/verify" || pathname.startsWith("/portal/login/") || pathname.startsWith("/portal/verify/");
+
+    // Redirect unauthenticated users to portal login for protected routes
+    if (!isPublicPortalRoute && pathname.startsWith("/portal")) {
+      redirect("/portal/login");
+    }
+
+    // For login page: try to get agency branding from URL search params
+    // Portal login URLs can include ?agency=slug for branding
     const agencySlug = urlObj?.searchParams?.get("agency") || null;
 
     if (agencySlug) {

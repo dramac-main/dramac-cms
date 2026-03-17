@@ -40,6 +40,7 @@ export type EmailType =
   // Quotes
   | "quote_sent_customer"
   | "quote_reminder_customer"
+  | "quote_request_owner"
   | "quote_accepted_owner"
   | "quote_rejected_owner"
   // Forms
@@ -97,6 +98,7 @@ export function isValidEmailType(type: string): type is EmailType {
     "abandoned_cart_customer",
     "quote_sent_customer",
     "quote_reminder_customer",
+    "quote_request_owner",
     "quote_accepted_owner",
     "quote_rejected_owner",
     "form_submission_owner",

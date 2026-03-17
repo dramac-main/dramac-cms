@@ -711,6 +711,28 @@ const quote_reminder_customer: BrandedTemplate = {
     `Quote Reminder from ${b.agency_name}\n\nQuote: ${data.quoteNumber}\nTotal: ${data.totalAmount}\n${data.expiryDate ? `Expires: ${data.expiryDate}\n` : ""}\n${data.message ? `${data.message}\n\n` : ""}View your quote: ${data.viewQuoteUrl}`,
 };
 
+const quote_request_owner: BrandedTemplate = {
+  subject: (data) => `📋 New Quote Request ${data.quoteNumber} from ${data.customerName}`,
+  html: (data, b) =>
+    baseEmailTemplate(
+      b,
+      `<h1 style="${EMAIL_STYLES.heading}">New Quote Request</h1>
+      <p style="${EMAIL_STYLES.text}">A customer has submitted a new quote request.</p>
+      ${emailInfoBox([
+        { label: "Quote", value: String(data.quoteNumber) },
+        { label: "Customer", value: String(data.customerName) },
+        { label: "Email", value: String(data.customerEmail) },
+        ...(data.customerPhone ? [{ label: "Phone", value: String(data.customerPhone) }] : []),
+        ...(data.itemCount ? [{ label: "Items", value: String(data.itemCount) }] : []),
+      ])}
+      ${emailButton(b, String(data.dashboardUrl), "Review Quote")}
+      <p style="${EMAIL_STYLES.text}">Review the quote and send a proposal to the customer.</p>`,
+      `New quote request ${data.quoteNumber}`
+    ),
+  text: (data) =>
+    `New Quote Request\n\nQuote: ${data.quoteNumber}\nCustomer: ${data.customerName} (${data.customerEmail})${data.customerPhone ? `\nPhone: ${data.customerPhone}` : ''}${data.itemCount ? `\nItems: ${data.itemCount}` : ''}\n\nReview in dashboard: ${data.dashboardUrl}`,
+};
+
 const quote_accepted_owner: BrandedTemplate = {
   subject: (data) => `✅ Quote ${data.quoteNumber} accepted by ${data.customerName}`,
   html: (data, b) =>
@@ -810,6 +832,7 @@ export const BRANDED_TEMPLATES: Record<EmailType, BrandedTemplate> = {
   abandoned_cart_customer,
   quote_sent_customer,
   quote_reminder_customer,
+  quote_request_owner,
   quote_accepted_owner,
   quote_rejected_owner,
   form_submission_owner,

@@ -1,5 +1,6 @@
 'use server'
 
+import { createHash } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { loadStudioModuleForRender } from '../studio-module-loader'
 import type { LoadedStudioModule } from '../studio-module-loader'
@@ -176,17 +177,26 @@ export async function getEmbedToken(
     return null
   }
 
-  // Decode the stored hash back to token (for display purposes)
-  // In production, you'd want to regenerate the token instead
-  const token = Buffer.from(data.token_hash, 'base64').toString()
+  // Regenerate the deterministic token from stored data
+  const expiresAt = new Date(data.expires_at)
+  const tokenData = {
+    siteId,
+    moduleId,
+    exp: expiresAt.getTime()
+  }
+  const token = Buffer.from(JSON.stringify(tokenData)).toString('base64url')
+  
+  // Verify the regenerated token matches the stored hash
+  if (hashToken(token) !== data.token_hash) {
+    return null
+  }
   
   return {
     token,
-    expiresAt: new Date(data.expires_at)
+    expiresAt
   }
 }
 
 function hashToken(token: string): string {
-  // Simple hash for storage - use proper crypto in production
-  return Buffer.from(token).toString('base64')
+  return createHash('sha256').update(token).digest('hex')
 }

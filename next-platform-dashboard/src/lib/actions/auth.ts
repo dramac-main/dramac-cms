@@ -15,7 +15,7 @@ import {
   type ResetPasswordFormData,
 } from "@/lib/validations/auth";
 
-export async function login(formData: LoginFormData) {
+export async function login(formData: LoginFormData, redirectTo?: string) {
   const validated = loginSchema.safeParse(formData);
 
   if (!validated.success) {
@@ -24,7 +24,7 @@ export async function login(formData: LoginFormData) {
 
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error, data: authData } = await supabase.auth.signInWithPassword({
     email: validated.data.email,
     password: validated.data.password,
   });
@@ -33,7 +33,20 @@ export async function login(formData: LoginFormData) {
     return { error: error.message };
   }
 
-  redirect("/dashboard");
+  // Check onboarding status to avoid double-redirect through middleware
+  if (authData.user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarding_completed")
+      .eq("id", authData.user.id)
+      .single();
+
+    if (!profile?.onboarding_completed) {
+      redirect("/onboarding");
+    }
+  }
+
+  redirect(redirectTo || "/dashboard");
 }
 
 export async function signup(formData: SignupFormData) {
@@ -69,11 +82,14 @@ export async function signup(formData: SignupFormData) {
   }
 
   // Generate slug from organization name
-  const slug = validated.data.organizationName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .substring(0, 30) + "-" + Date.now().toString(36);
+  const slug =
+    validated.data.organizationName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .substring(0, 30) +
+    "-" +
+    Date.now().toString(36);
 
   // 2. Create organization using admin client (bypasses RLS)
   // This is necessary because the user session is not yet available after signUp
@@ -105,6 +121,7 @@ export async function signup(formData: SignupFormData) {
     name: validated.data.name,
     role: "admin", // Agency creators are admins of their agency
     agency_id: org.id,
+    onboarding_completed: false,
   });
 
   if (profileError) {
@@ -116,11 +133,13 @@ export async function signup(formData: SignupFormData) {
   }
 
   // 4. Create organization membership (tracks actual ownership) using admin client
-  const { error: memberError } = await adminClient.from("agency_members").insert({
-    agency_id: org.id,
-    user_id: authData.user.id,
-    role: "owner", // Owner in agency_members table
-  });
+  const { error: memberError } = await adminClient
+    .from("agency_members")
+    .insert({
+      agency_id: org.id,
+      user_id: authData.user.id,
+      role: "owner", // Owner in agency_members table
+    });
 
   if (memberError) {
     console.error("Member creation error:", memberError);
@@ -133,7 +152,10 @@ export async function signup(formData: SignupFormData) {
 
   // Check if email confirmation is required
   if (authData.user.identities?.length === 0) {
-    return { success: true, message: "Check your email to confirm your account" };
+    return {
+      success: true,
+      message: "Check your email to confirm your account",
+    };
   }
 
   // Redirect to onboarding to complete profile setup
@@ -151,9 +173,12 @@ export async function forgotPassword(formData: ForgotPasswordFormData) {
   const headersList = await headers();
   const origin = headersList.get("origin");
 
-  const { error } = await supabase.auth.resetPasswordForEmail(validated.data.email, {
-    redirectTo: `${origin}/auth/callback?next=/reset-password`,
-  });
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    validated.data.email,
+    {
+      redirectTo: `${origin}/auth/callback?next=/reset-password`,
+    },
+  );
 
   if (error) {
     return { error: error.message };
@@ -190,7 +215,10 @@ export async function logout() {
 
 export async function getSession() {
   const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
   if (error || !user) {
     return null;
@@ -199,10 +227,12 @@ export async function getSession() {
   // Get user profile with organization
   const { data: profile } = await supabase
     .from("profiles")
-    .select(`
+    .select(
+      `
       *,
       organization:agencies(*)
-    `)
+    `,
+    )
     .eq("id", user.id)
     .single();
 

@@ -115,6 +115,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
   const [isAgentTyping, setIsAgentTyping] = useState(false)
   const [typingAgentName, setTypingAgentName] = useState<string | null>(null)
   const [loadError, setLoadError] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const retryCountRef = useRef(0)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -354,6 +355,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         }
       } catch (err) {
         console.error('[DRAMAC Chat] Failed to start chat:', err)
+        setError('Unable to start chat. Please try again.')
       }
     },
     [siteId, settings]
@@ -388,6 +390,7 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         }
       } catch (err) {
         console.error('[DRAMAC Chat] Failed to send message:', err)
+        setError('Message failed to send. Please try again.')
       }
     },
     [conversationId, visitorId]
@@ -560,6 +563,13 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
     isRead: m.status === 'read',
   }))
 
+  // Auto-clear error after 5 seconds
+  useEffect(() => {
+    if (!error) return
+    const timer = setTimeout(() => setError(null), 5000)
+    return () => clearTimeout(timer)
+  }, [error])
+
   return (
     <div
       className="h-full w-full flex flex-col"
@@ -569,6 +579,12 @@ export function ChatWidget({ siteId }: ChatWidgetProps) {
         '--widget-text': settings.textColor,
       } as React.CSSProperties}
     >
+      {error && (
+        <div style={{ padding: '8px 12px', backgroundColor: '#fef2f2', color: '#991b1b', fontSize: '13px', borderBottom: '1px solid #fecaca', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>{error}</span>
+          <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991b1b', fontWeight: 'bold', padding: '0 4px' }}>&times;</button>
+        </div>
+      )}
       {widgetState === 'launcher' && (
         <WidgetPreChatForm
           settings={settings}

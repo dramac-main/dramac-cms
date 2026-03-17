@@ -886,8 +886,8 @@ export function BookingWidgetBlock({
                 </label>
                 <input type="text" value={formData.name || ''} onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
                   placeholder="Enter your name" style={{
-                    width: '100%', padding: '10px 12px', borderRadius: inputBorderRadius,
-                    border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '14px', outline: 'none',
+                    width: '100%', padding: '12px 14px', borderRadius: inputBorderRadius,
+                    border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '16px', outline: 'none',
                   }}
                   onFocus={(e) => e.target.style.borderColor = focusBorder}
                   onBlur={(e) => e.target.style.borderColor = inputBorderColor || '#e5e7eb'}
@@ -901,8 +901,8 @@ export function BookingWidgetBlock({
                 </label>
                 <input type="email" value={formData.email || ''} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))}
                   placeholder="name@business.com" style={{
-                    width: '100%', padding: '10px 12px', borderRadius: inputBorderRadius,
-                    border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '14px', outline: 'none',
+                    width: '100%', padding: '12px 14px', borderRadius: inputBorderRadius,
+                    border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '16px', outline: 'none',
                   }}
                   onFocus={(e) => e.target.style.borderColor = focusBorder}
                   onBlur={(e) => e.target.style.borderColor = inputBorderColor || '#e5e7eb'}
@@ -916,8 +916,8 @@ export function BookingWidgetBlock({
                 </label>
                 <input type="tel" value={formData.phone || ''} onChange={(e) => setFormData(p => ({ ...p, phone: e.target.value }))}
                   placeholder="+260 97X XXX XXX" style={{
-                    width: '100%', padding: '10px 12px', borderRadius: inputBorderRadius,
-                    border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '14px', outline: 'none',
+                    width: '100%', padding: '12px 14px', borderRadius: inputBorderRadius,
+                    border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '16px', outline: 'none',
                   }}
                   onFocus={(e) => e.target.style.borderColor = focusBorder}
                   onBlur={(e) => e.target.style.borderColor = inputBorderColor || '#e5e7eb'}
@@ -931,8 +931,8 @@ export function BookingWidgetBlock({
                 </label>
                 <textarea value={formData.notes || ''} onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))}
                   placeholder="Any special requests..." rows={3} style={{
-                    width: '100%', padding: '10px 12px', borderRadius: inputBorderRadius,
-                    border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '14px', outline: 'none', resize: 'vertical',
+                    width: '100%', padding: '12px 14px', borderRadius: inputBorderRadius,
+                    border: `1px solid ${inputBorderColor || '#e5e7eb'}`, fontSize: '16px', outline: 'none', resize: 'vertical',
                   }}
                   onFocus={(e) => e.target.style.borderColor = focusBorder}
                   onBlur={(e) => e.target.style.borderColor = inputBorderColor || '#e5e7eb'}

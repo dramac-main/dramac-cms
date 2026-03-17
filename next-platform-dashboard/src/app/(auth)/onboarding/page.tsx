@@ -31,7 +31,13 @@ import {
   FormMessage,
   FormDescription,
 } from "@/components/ui/form";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { StepIndicator } from "@/components/onboarding/step-indicator";
 import { IndustrySelector } from "@/components/onboarding/industry-selector";
@@ -81,11 +87,13 @@ export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
-  
+
   // Additional state for goals/industry
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
   const [teamSize, setTeamSize] = useState<string>("");
-  const [selectedIndustry, setSelectedIndustry] = useState<IndustryId | undefined>();
+  const [selectedIndustry, setSelectedIndustry] = useState<
+    IndustryId | undefined
+  >();
   const [agencyId, setAgencyId] = useState<string | null>(null);
 
   const profileForm = useForm<ProfileValues>({
@@ -110,22 +118,25 @@ export default function OnboardingPage() {
     const checkStatus = async () => {
       try {
         const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
         if (!user) {
           router.push("/login");
           return;
         }
 
         const result = await checkOnboardingStatus();
-        
+
         if (!result.needsOnboarding) {
           router.push("/dashboard");
           return;
         }
 
         // Pre-fill name from auth metadata
-        const userName = user.user_metadata?.full_name || user.user_metadata?.name || "";
+        const userName =
+          user.user_metadata?.full_name || user.user_metadata?.name || "";
         if (userName) {
           profileForm.setValue("fullName", userName);
         }
@@ -139,7 +150,10 @@ export default function OnboardingPage() {
 
         if (profile) {
           if (profile.full_name || profile.name) {
-            profileForm.setValue("fullName", profile.full_name || profile.name || "");
+            profileForm.setValue(
+              "fullName",
+              profile.full_name || profile.name || "",
+            );
           }
           if (profile.job_title) {
             profileForm.setValue("jobTitle", profile.job_title);
@@ -165,10 +179,13 @@ export default function OnboardingPage() {
                 team_size?: string | null;
                 goals?: string[] | null;
               };
-              
+
               agencyForm.setValue("agencyName", agencyData.name || "");
               if (agencyData.description) {
-                agencyForm.setValue("agencyDescription", agencyData.description);
+                agencyForm.setValue(
+                  "agencyDescription",
+                  agencyData.description,
+                );
               }
               if (agencyData.website) {
                 agencyForm.setValue("website", agencyData.website);
@@ -210,7 +227,9 @@ export default function OnboardingPage() {
       if (result.error) throw new Error(result.error);
       setCurrentStep(1);
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Failed to update profile");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update profile",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -229,7 +248,9 @@ export default function OnboardingPage() {
       if (result.agencyId) setAgencyId(result.agencyId);
       setCurrentStep(2);
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Failed to create agency");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create agency",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -250,8 +271,9 @@ export default function OnboardingPage() {
         });
         if (result.error) throw new Error(result.error);
       } catch (error: unknown) {
-        toast.error(error instanceof Error ? error.message : "Failed to save goals");
-        setIsLoading(false);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to save goals",
+        );
         return;
       } finally {
         setIsLoading(false);
@@ -275,8 +297,9 @@ export default function OnboardingPage() {
         });
         if (result.error) throw new Error(result.error);
       } catch (error: unknown) {
-        toast.error(error instanceof Error ? error.message : "Failed to save industry");
-        setIsLoading(false);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to save industry",
+        );
         return;
       } finally {
         setIsLoading(false);
@@ -303,7 +326,9 @@ export default function OnboardingPage() {
       setCurrentStep(5);
       toast.success("Client created!");
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "Failed to create client");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create client",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -371,7 +396,10 @@ export default function OnboardingPage() {
             </CardHeader>
             <CardContent>
               <Form {...profileForm}>
-                <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4">
+                <form
+                  onSubmit={profileForm.handleSubmit(handleProfileSubmit)}
+                  className="space-y-4"
+                >
                   <FormField
                     control={profileForm.control}
                     name="fullName"
@@ -392,19 +420,30 @@ export default function OnboardingPage() {
                       <FormItem>
                         <FormLabel>Job Title</FormLabel>
                         <FormControl>
-                          <Input placeholder="Agency Owner, Designer, etc." {...field} />
+                          <Input
+                            placeholder="Agency Owner, Designer, etc."
+                            {...field}
+                          />
                         </FormControl>
-                        <FormDescription>Optional but helps us personalize your experience</FormDescription>
+                        <FormDescription>
+                          Optional but helps us personalize your experience
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <div className="flex justify-between pt-4">
-                    <Button type="button" variant="ghost" onClick={handleSkipAll}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={handleSkipAll}
+                    >
                       Skip for now
                     </Button>
                     <Button type="submit" disabled={isLoading}>
-                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isLoading && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
                       Continue
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -429,7 +468,10 @@ export default function OnboardingPage() {
             </CardHeader>
             <CardContent>
               <Form {...agencyForm}>
-                <form onSubmit={agencyForm.handleSubmit(handleAgencySubmit)} className="space-y-4">
+                <form
+                  onSubmit={agencyForm.handleSubmit(handleAgencySubmit)}
+                  className="space-y-4"
+                >
                   <FormField
                     control={agencyForm.control}
                     name="agencyName"
@@ -467,19 +509,28 @@ export default function OnboardingPage() {
                       <FormItem>
                         <FormLabel>Website</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://myagency.com" {...field} />
+                          <Input
+                            placeholder="https://myagency.com"
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <div className="flex justify-between pt-4">
-                    <Button type="button" variant="outline" onClick={() => setCurrentStep(0)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCurrentStep(0)}
+                    >
                       <ChevronLeft className="mr-2 h-4 w-4" />
                       Back
                     </Button>
                     <Button type="submit" disabled={isLoading}>
-                      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {isLoading && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
                       Continue
                       <ChevronRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -515,7 +566,9 @@ export default function OnboardingPage() {
                   Back
                 </Button>
                 <Button onClick={handleGoalsNext} disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoading && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Continue
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -533,18 +586,24 @@ export default function OnboardingPage() {
                 Primary Industry
               </CardTitle>
               <CardDescription>
-                What industry do most of your clients belong to? This helps our AI generate better content.
+                What industry do most of your clients belong to? This helps our
+                AI generate better content.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <IndustrySelector value={selectedIndustry} onChange={setSelectedIndustry} />
+              <IndustrySelector
+                value={selectedIndustry}
+                onChange={setSelectedIndustry}
+              />
               <div className="flex justify-between pt-6">
                 <Button variant="outline" onClick={() => setCurrentStep(2)}>
                   <ChevronLeft className="mr-2 h-4 w-4" />
                   Back
                 </Button>
                 <Button onClick={handleIndustryNext} disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoading && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Continue
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -562,12 +621,16 @@ export default function OnboardingPage() {
                 Add Your First Client
               </CardTitle>
               <CardDescription>
-                Create your first client to get started building websites. You can skip this and add clients later.
+                Create your first client to get started building websites. You
+                can skip this and add clients later.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...clientForm}>
-                <form onSubmit={clientForm.handleSubmit(handleClientSubmit)} className="space-y-4">
+                <form
+                  onSubmit={clientForm.handleSubmit(handleClientSubmit)}
+                  className="space-y-4"
+                >
                   <FormField
                     control={clientForm.control}
                     name="clientName"
@@ -588,24 +651,40 @@ export default function OnboardingPage() {
                       <FormItem>
                         <FormLabel>Client Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="client@example.com" type="email" {...field} />
+                          <Input
+                            placeholder="client@example.com"
+                            type="email"
+                            {...field}
+                          />
                         </FormControl>
-                        <FormDescription>Optional - for sending invites later</FormDescription>
+                        <FormDescription>
+                          Optional - for sending invites later
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   <div className="flex justify-between pt-4">
-                    <Button type="button" variant="outline" onClick={() => setCurrentStep(3)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCurrentStep(3)}
+                    >
                       <ChevronLeft className="mr-2 h-4 w-4" />
                       Back
                     </Button>
                     <div className="flex gap-2">
-                      <Button type="button" variant="ghost" onClick={handleSkipClient}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={handleSkipClient}
+                      >
                         Skip
                       </Button>
                       <Button type="submit" disabled={isLoading}>
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isLoading && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
                         Create Client
                         <ChevronRight className="ml-2 h-4 w-4" />
                       </Button>
@@ -626,7 +705,8 @@ export default function OnboardingPage() {
               </div>
               <CardTitle className="text-2xl">You&apos;re All Set!</CardTitle>
               <CardDescription className="text-base">
-                Your agency is ready. Start building amazing websites for your clients.
+                Your agency is ready. Start building amazing websites for your
+                clients.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -634,15 +714,24 @@ export default function OnboardingPage() {
                 <div className="p-4 rounded-lg bg-muted/50">
                   <Rocket className="h-6 w-6 text-primary" />
                   <p className="text-sm font-medium">Visual Editor</p>
-                  <p className="text-xs text-muted-foreground">Drag & drop builder</p>
+                  <p className="text-xs text-muted-foreground">
+                    Drag & drop builder
+                  </p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted/50">
                   <Sparkles className="h-6 w-6 text-primary" />
                   <p className="text-sm font-medium">AI Builder</p>
-                  <p className="text-xs text-muted-foreground">Generate sites instantly</p>
+                  <p className="text-xs text-muted-foreground">
+                    Generate sites instantly
+                  </p>
                 </div>
               </div>
-              <Button size="lg" onClick={handleComplete} disabled={isLoading} className="mt-6">
+              <Button
+                size="lg"
+                onClick={handleComplete}
+                disabled={isLoading}
+                className="mt-6"
+              >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Go to Dashboard
                 <ChevronRight className="ml-2 h-4 w-4" />
